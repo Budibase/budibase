@@ -10,6 +10,7 @@
     popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
   import { getThemeClassNames } from "@budibase/shared-core"
+  import ChatApp from "./ChatApp.svelte"
   import Component from "./Component.svelte"
   import SDK from "@/sdk"
   import {
@@ -57,6 +58,7 @@
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
   import RecaptchaV2 from "./RecaptchaV2.svelte"
   import { ActionTypes } from "@/constants"
+  import { isChatAppHash, isChatAppPath } from "@/utils/appMode"
 
   // Provide contexts
   const context = createContextStore()
@@ -72,12 +74,32 @@
   let dataLoaded = false
   let permissionError = false
   let embedNoScreens = false
+  const chatAppPath = isChatAppPath()
+  const chatAppHash = isChatAppHash()
+  let isChatApp = false
 
   $: displayPreviewDevice =
     $builderStore.previewModalDevice || $builderStore.previewDevice
 
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
+
+  $: {
+    const serverChatPath = $appStore.chatAppPath
+    const routesEmpty = !$routeStore.routes.length
+    isChatApp =
+      dataLoaded &&
+      (serverChatPath || ((chatAppPath || chatAppHash) && routesEmpty))
+  }
+
+  // Require authentication for chat app access
+  $: {
+    if (isChatApp && dataLoaded && !$authStore) {
+      const returnUrl = `${window.location.pathname}${window.location.hash}`
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
+      window.location = "/builder/auth/login"
+    }
+  }
 
   // Handle no matching route
   $: {
@@ -227,7 +249,15 @@
                           {/if}
 
                           <div id="app-body">
-                            {#if permissionError}
+                            {#if isChatApp}
+                              <CustomThemeWrapper>
+                                <ChatApp />
+                                <NotificationDisplay />
+                                <ConfirmationDisplay />
+                                <PeekScreenDisplay />
+                                <InstallPrompt />
+                              </CustomThemeWrapper>
+                            {:else if permissionError}
                               <div class="error">
                                 <Layout justifyItems="center" gap="S">
                                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->

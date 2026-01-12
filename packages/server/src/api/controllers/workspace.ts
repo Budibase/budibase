@@ -120,6 +120,23 @@ function checkWorkspaceUrl(
   }
 }
 
+function isChatAppUrlPath(urlPath: string) {
+  if (!urlPath) {
+    return false
+  }
+
+  const trimmedPath = urlPath.replace(/\/$/, "")
+  if (!trimmedPath) {
+    return false
+  }
+
+  return (
+    /^\/app\/[^/]+\/chat$/.test(trimmedPath) ||
+    /^\/embed\/[^/]+\/chat$/.test(trimmedPath) ||
+    /^\/app_dev_[^/]+\/chat$/.test(trimmedPath)
+  )
+}
+
 function checkWorkspaceName(
   ctx: UserCtx,
   workspaces: Workspace[],
@@ -367,6 +384,7 @@ export async function fetchAppPackage(
   const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
 
   const isDev = isDevWorkspaceID(ctx.params.appId)
+  let isChatPath = false
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
@@ -382,15 +400,24 @@ export async function fetchAppPackage(
 
     const matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+    isChatPath = isChatAppUrlPath(urlPath) && !matchedWorkspaceApp
 
     // disabled workspace apps should appear to not exist
     // if the dev workspace is being served, allow the request regardless
     if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
-      ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
+      if (!isChatPath) {
+        ctx.throw(
+          "No matching workspace app found for URL path: " + urlPath,
+          404
+        )
+      }
+      screens = []
+    } else {
+      screens = screens.filter(
+        s => s.workspaceAppId === matchedWorkspaceApp._id
+      )
+      application.navigation = matchedWorkspaceApp.navigation
     }
-    screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
-
-    application.navigation = matchedWorkspaceApp.navigation
   }
 
   const clientLibPath = await objectStore.clientLibraryUrl(
@@ -411,6 +438,7 @@ export async function fetchAppPackage(
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
     recaptchaKey: recaptchaConfig?.config.siteKey,
     clientCacheKey,
+    chatAppPath: isChatPath,
   }
 }
 

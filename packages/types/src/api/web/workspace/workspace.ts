@@ -45,6 +45,7 @@ export interface FetchAppPackageResponse {
   hasLock: boolean
   recaptchaKey?: string
   clientCacheKey?: string
+  chatAppPath?: boolean
 }
 
 export interface AddWorkspaceSampleDataResponse {

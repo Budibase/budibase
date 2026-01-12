@@ -14,6 +14,7 @@ interface AppStoreState {
   pageWidth?: string
   recaptchaKey?: string
   clientCacheKey?: string
+  chatAppPath?: boolean
 }
 
 const initialState: AppStoreState = {
