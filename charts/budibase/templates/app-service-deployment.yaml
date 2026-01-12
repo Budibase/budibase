@@ -133,7 +133,11 @@ spec:
         - name: LOG_LEVEL
           value: {{ .Values.services.apps.logLevel | quote }}
         - name: REDIS_PASSWORD
-          value: {{ .Values.services.redis.password }}
+          value: {{ .Values.services.redis.password | quote }}
+        {{- if .Values.services.redis.username }}
+        - name: REDIS_USERNAME
+          value: {{ .Values.services.redis.username | quote }}
+        {{- end }}
         - name: REDIS_URL
           {{ if .Values.services.redis.url }}
           value: {{ .Values.services.redis.url }}

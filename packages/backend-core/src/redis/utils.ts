@@ -62,6 +62,7 @@ export enum SelectableDatabase {
 
 export function getRedisConnectionDetails() {
   let password = env.REDIS_PASSWORD
+  let username = env.REDIS_USERNAME
   let url: string[] | string = env.REDIS_URL.split("//")
   // get rid of the protocol
   url = url.length > 1 ? url[1] : url[0]
@@ -80,6 +81,7 @@ export function getRedisConnectionDetails() {
   return {
     host,
     password,
+    username,
     // assume default port for redis if invalid found
     port: isNaN(portNumber) ? 6379 : portNumber,
   }
@@ -97,12 +99,13 @@ export function getRedisClusterOptions(): Redis.ClusterOptions {
 }
 
 export function getRedisOptions(): Redis.RedisOptions {
-  const { host, password, port } = getRedisConnectionDetails()
+  const { host, password, port, username } = getRedisConnectionDetails()
   return {
     connectTimeout: 30000,
     port: port,
     host,
     password,
+    ...(username && { username }),
   }
 }
 
