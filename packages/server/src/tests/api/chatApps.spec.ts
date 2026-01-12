@@ -2,12 +2,12 @@ import { context, docIds } from "@budibase/backend-core"
 import type { ChatApp } from "@budibase/types"
 import TestConfiguration from "../utilities/TestConfiguration"
 
-describe("chat apps suggested questions", () => {
+describe("chat apps conversation starters", () => {
   const config = new TestConfiguration()
   let chatApp: ChatApp
 
   beforeAll(async () => {
-    await config.init("chat-apps-suggested-questions")
+    await config.init("chat-apps-conversation-starters")
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
@@ -29,18 +29,18 @@ describe("chat apps suggested questions", () => {
     config.end()
   })
 
-  it("returns default suggested questions when missing", async () => {
+  it("returns default conversation starters when missing", async () => {
     const headers = await config.defaultHeaders({}, true)
 
     const res = await config.getRequest()!.get("/api/chatapps").set(headers)
 
     expect(res.status).toBe(200)
-    expect(res.body.suggestedQuestions).toEqual([])
+    expect(res.body.conversationStarters).toEqual([])
   })
 
-  it("persists updated suggested questions", async () => {
+  it("persists updated conversation starters", async () => {
     const headers = await config.defaultHeaders({}, true)
-    const suggestedQuestions = [
+    const conversationStarters = [
       {
         id: "q1",
         text: "What can you help with?",
@@ -61,18 +61,18 @@ describe("chat apps suggested questions", () => {
       .set(headers)
       .send({
         ...chatApp,
-        suggestedQuestions,
+        conversationStarters,
       })
 
     expect(res.status).toBe(200)
-    expect(res.body.suggestedQuestions).toEqual(suggestedQuestions)
+    expect(res.body.conversationStarters).toEqual(conversationStarters)
 
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
         const db = context.getWorkspaceDB()
         const stored = await db.get<ChatApp>(chatApp._id!)
-        expect(stored.suggestedQuestions).toEqual(suggestedQuestions)
+        expect(stored.conversationStarters).toEqual(conversationStarters)
       }
     )
   })
