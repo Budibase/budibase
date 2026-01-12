@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from "svelte"
   import CreateExternalDatasourceModal from "../data/_components/CreateExternalDatasourceModal/index.svelte"
   import DatasourceOption from "../data/_components/DatasourceOption.svelte"
   import RestTemplateOption from "../data/_components/RestTemplateOption.svelte"
@@ -17,6 +18,11 @@
     ProgressCircle,
     keepOpen,
     ModalCancelFrom,
+    Popover,
+    Icon,
+    PopoverAlignment,
+    Link,
+    type PopoverAPI,
   } from "@budibase/bbui"
   import {
     sortedIntegrations as integrations,
@@ -31,20 +37,34 @@
     getRestTemplateImportInfoRequest,
   } from "@/helpers/restTemplates"
   import { IntegrationTypes } from "@/constants/backend"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import type {
     RestTemplate,
+    RestTemplateGroup,
+    RestTemplateGroupName,
+    GroupTemplateName,
+    RestTemplateName,
+    RestTemplateWithoutIcon,
     ImportEndpoint,
     Datasource,
     ImportRestQueryRequest,
   } from "@budibase/types"
   import { SourceName } from "@budibase/types"
 
+  $: goto = $gotoStore
+
   let externalDatasourceModal: CreateExternalDatasourceModal
   let externalDatasourceLoading = false
   let templateVersionModal: Modal
   let templateEndpointModal: Modal
+  let templateGroupModal: Modal
   let selectedTemplate: RestTemplate | null = null
+  let selectedTemplateGroup: RestTemplateGroup<RestTemplateGroupName> | null =
+    null
+  let selectedGroupTemplateName: GroupTemplateName | null = null
+  let selectedGroupTemplate: RestTemplateWithoutIcon<GroupTemplateName> | null =
+    null
+  let selectedGroupTemplateDescription = ""
   let templateLoading = false
   let templateLoadingPhase: "info" | "import" | null = null
   let pendingTemplate: RestTemplate | null = null
@@ -52,6 +72,10 @@
   let templateEndpoints: ImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
   let templateDocsBaseUrl: string | undefined = undefined
+  let templatesInfoPopover: PopoverAPI | undefined
+  let templatesInfoAnchor: HTMLElement | undefined
+  let templatesInfoOpen = false
+  let templatesInfoTimeout: ReturnType<typeof setTimeout> | undefined
   $: selectedEndpoint = templateEndpoints.find(
     endpoint => endpoint.id === selectedEndpointId
   )
@@ -64,6 +88,63 @@
     datasource => datasource.source === IntegrationTypes.REST
   )
   $: hasRestDatasources = restDatasources.length > 0
+  $: templateGroupsList = $restTemplates.templateGroups || []
+  $: groupedTemplateNames = new Set<RestTemplateName>(
+    templateGroupsList.flatMap(group =>
+      group.templates.map(template => template.name)
+    )
+  )
+  $: restTemplatesList = ($restTemplates.templates || []).filter(
+    template => !groupedTemplateNames.has(template.name)
+  )
+  $: verifiedRestTemplates = restTemplatesList.filter(
+    template => template.verified
+  )
+  $: unverifiedRestTemplates = restTemplatesList.filter(
+    template => !template.verified
+  )
+  $: verifiedTemplateGroups = templateGroupsList.filter(group => group.verified)
+  $: unverifiedTemplateGroups = templateGroupsList.filter(
+    group => !group.verified
+  )
+  $: verifiedTemplateOptions = [
+    ...verifiedTemplateGroups.map(group => ({
+      type: "group" as const,
+      name: group.name,
+      group,
+    })),
+    ...verifiedRestTemplates.map(template => ({
+      type: "template" as const,
+      name: template.name,
+      template,
+    })),
+  ].sort((a, b) => a.name.localeCompare(b.name))
+  $: unverifiedTemplateOptions = [
+    ...unverifiedTemplateGroups.map(group => ({
+      type: "group" as const,
+      name: group.name,
+      group,
+    })),
+    ...unverifiedRestTemplates.map(template => ({
+      type: "template" as const,
+      name: template.name,
+      template,
+    })),
+  ].sort((a, b) => a.name.localeCompare(b.name))
+  $: selectedGroupTemplate =
+    selectedTemplateGroup && selectedGroupTemplateName
+      ? selectedTemplateGroup.templates.find(
+          template => template.name === selectedGroupTemplateName
+        ) || null
+      : null
+  $: selectedGroupTemplateDescription = selectedGroupTemplate?.description || ""
+  $: groupTemplateOptions = selectedTemplateGroup
+    ? selectedTemplateGroup.templates.map(template => ({
+        label: template.name,
+        value: template.name,
+        description: template.description,
+      }))
+    : []
 
   $: disabled = externalDatasourceLoading
   $: templateDisabled = disabled || templateLoading
@@ -96,6 +177,13 @@
       return
     }
 
+    await importTemplateSelection(template, spec)
+  }
+
+  const importTemplateSelection = async (
+    template: RestTemplate,
+    spec: RestTemplate["specs"][number]
+  ) => {
     templateLoading = true
     templateLoadingPhase = "info"
     try {
@@ -215,7 +303,7 @@
 
       notifications.success(`${pendingTemplate.name} imported successfully`)
       await templateEndpointModal?.hide()
-      $goto(`./datasource/${importResult.datasourceId}`)
+      goto(`./datasource/${importResult.datasourceId}`)
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`
@@ -279,13 +367,51 @@
     await handleTemplateSelection(template, spec)
   }
 
+  const selectTemplateGroup = (
+    group: RestTemplateGroup<RestTemplateGroupName>
+  ) => {
+    selectedTemplateGroup = group
+    selectedGroupTemplateName = group.templates[0]?.name || null
+    templateGroupModal?.show()
+  }
+
+  const cancelGroupSelection = () => {
+    selectedTemplateGroup = null
+    selectedGroupTemplateName = null
+  }
+
+  const confirmGroupSelection = () => {
+    if (!selectedTemplateGroup || !selectedGroupTemplateName) {
+      notifications.error("Select a template")
+      return
+    }
+    if (!selectedGroupTemplate) {
+      notifications.error("Selected template could not be found.")
+      return
+    }
+    templateGroupModal?.hide()
+    selectTemplate({
+      name: selectedGroupTemplate.name,
+      description: selectedGroupTemplate.description,
+      specs: selectedGroupTemplate.specs,
+      icon: selectedTemplateGroup.icon,
+      verified: selectedTemplateGroup.verified,
+    })
+  }
+
   const close = () => {
     if (restDatasources.length) {
-      $goto(`./datasource/${restDatasources[0]._id}`)
+      goto(`./datasource/${restDatasources[0]._id}`)
     } else {
-      $goto("../")
+      goto("../")
     }
   }
+
+  onDestroy(() => {
+    if (templatesInfoTimeout) {
+      clearTimeout(templatesInfoTimeout)
+    }
+  })
 </script>
 
 <CreateExternalDatasourceModal
@@ -299,39 +425,124 @@
   heading="Add new API"
 >
   {#if restIntegration}
-    <div class="subHeading">
-      <Body>Connect to an external API</Body>
-    </div>
+    <br />
     <div class="options bb-options">
       <DatasourceOption
         on:click={openRestModal}
         title="Custom REST API"
         disabled={templateDisabled}
-        centered
       >
         <IntegrationIcon
           integrationType={restIntegration.name}
           schema={restIntegration}
-          size="32"
+          size="20"
         />
       </DatasourceOption>
     </div>
-    <div class="subHeading">
-      <Body>Or choose a template</Body>
-    </div>
-    <div class="options templateOptions">
-      {#each $restTemplates.templates as template (template.name)}
-        <RestTemplateOption
-          on:click={() => selectTemplate(template)}
-          {template}
-          disabled={templateDisabled}
-        />
-      {/each}
-    </div>
+
+    {#if verifiedTemplateOptions.length}
+      <div class="templates-header">
+        <Body
+          size="S"
+          weight="500"
+          color="var(--spectrum-global-color-gray-900)">Verified templates</Body
+        >
+      </div>
+      <div class="options templateOptions">
+        {#each verifiedTemplateOptions as option (option.name)}
+          <RestTemplateOption
+            on:click={() =>
+              option.type === "group"
+                ? selectTemplateGroup(option.group)
+                : selectTemplate(option.template)}
+            template={option.type === "group" ? option.group : option.template}
+            disabled={templateDisabled}
+          />
+        {/each}
+      </div>
+    {/if}
+    {#if unverifiedTemplateOptions.length}
+      <div class="templates-header">
+        <Body
+          size="S"
+          weight="500"
+          color="var(--spectrum-global-color-gray-900)">Templates</Body
+        >
+        <div
+          class="info-icon-wrapper"
+          bind:this={templatesInfoAnchor}
+          role="button"
+          tabindex="0"
+          on:mouseenter={() => {
+            if (templatesInfoTimeout) {
+              clearTimeout(templatesInfoTimeout)
+            }
+            templatesInfoPopover?.show()
+          }}
+          on:mouseleave={() => {
+            templatesInfoTimeout = setTimeout(() => {
+              templatesInfoPopover?.hide()
+            }, 100)
+          }}
+        >
+          <Icon
+            name="info"
+            size="S"
+            color="var(--spectrum-global-color-gray-600)"
+          />
+        </div>
+      </div>
+      <div class="options templateOptions">
+        {#each unverifiedTemplateOptions as option (option.name)}
+          <RestTemplateOption
+            on:click={() =>
+              option.type === "group"
+                ? selectTemplateGroup(option.group)
+                : selectTemplate(option.template)}
+            template={option.type === "group" ? option.group : option.template}
+            disabled={templateDisabled}
+          />
+        {/each}
+      </div>
+    {/if}
   {:else}
     <p class="empty-state">REST API integration is unavailable.</p>
   {/if}
 </CreationPage>
+
+<Popover
+  bind:this={templatesInfoPopover}
+  bind:open={templatesInfoOpen}
+  anchor={templatesInfoAnchor}
+  align={PopoverAlignment.Left}
+  minWidth={400}
+  maxWidth={400}
+  dismissible={false}
+  clickOutsideOverride={true}
+  on:mouseenter={() => {
+    if (templatesInfoTimeout) {
+      clearTimeout(templatesInfoTimeout)
+    }
+  }}
+  on:mouseleave={() => {
+    templatesInfoTimeout = setTimeout(() => {
+      templatesInfoPopover?.hide()
+    }, 100)
+  }}
+>
+  <div class="templates-popover-content">
+    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+      These templates are not verified by Budibase and we cannot guarantee the
+      validity of them. You can review all specs using the following link:{" "}
+      <Link
+        href="https://github.com/Budibase/openapi-rest-templates"
+        target="_blank"
+      >
+        https://github.com/Budibase/openapi-rest-templates
+      </Link>
+    </Body>
+  </div>
+</Popover>
 
 <Modal
   bind:this={templateVersionModal}
@@ -359,6 +570,44 @@
   {/if}
 </Modal>
 
+<Modal bind:this={templateGroupModal} on:hide={cancelGroupSelection}>
+  {#if selectedTemplateGroup}
+    <ModalContent
+      size="M"
+      confirmText="Select"
+      cancelText="Cancel"
+      onConfirm={confirmGroupSelection}
+      onCancel={cancelGroupSelection}
+      disabled={!selectedGroupTemplateName || templateLoading}
+    >
+      <Layout noPadding gap="S">
+        <div class="endpoint-heading">
+          <IntegrationIcon
+            iconUrl={selectedTemplateGroup.icon}
+            integrationType={restIntegration?.name || IntegrationTypes.REST}
+            schema={restIntegration}
+            size="32"
+          />
+        </div>
+        <Heading size="S">{selectedTemplateGroup.name}</Heading>
+        <Body size="M">Select a template to import:</Body>
+        <Select
+          label="Select category"
+          options={groupTemplateOptions}
+          bind:value={selectedGroupTemplateName}
+          disabled={templateLoading}
+        />
+        {#if selectedGroupTemplateDescription}
+          <DescriptionViewer
+            description={selectedGroupTemplateDescription}
+            label={undefined}
+          />
+        {/if}
+      </Layout>
+    </ModalContent>
+  {/if}
+</Modal>
+
 <Modal
   bind:this={templateEndpointModal}
   on:hide={resetEndpointSelection}
@@ -372,88 +621,96 @@
     onCancel={cancelEndpointSelection}
     disabled={!selectedEndpointId || templateLoading}
   >
-    <Layout noPadding gap="M">
-      <div class="endpoint-heading">
-        <IntegrationIcon
-          iconUrl={pendingTemplate?.icon}
-          integrationType={restIntegration?.name || IntegrationTypes.REST}
-          schema={restIntegration}
-          size="32"
-        />
+    <Layout noPadding gap="S">
+      <div class="endpoint-modal">
+        <div class="endpoint-heading">
+          <IntegrationIcon
+            iconUrl={pendingTemplate?.icon}
+            integrationType={restIntegration?.name || IntegrationTypes.REST}
+            schema={restIntegration}
+            size="32"
+          />
+        </div>
+        <Heading size="S">{pendingTemplate?.name}</Heading>
+        <Body size="S">
+          Select the action you want to import from {pendingTemplate?.name}:
+        </Body>
+        {#if templateLoading && templateLoadingPhase === "info"}
+          <div class="endpoint-loading">
+            <ProgressCircle size="S" />
+            <Body size="XS">Loading actions…</Body>
+          </div>
+        {:else if templateLoading && templateLoadingPhase === "import"}
+          <div class="endpoint-loading">
+            <ProgressCircle size="S" />
+            <Body size="XS">Importing selected action…</Body>
+          </div>
+        {:else if templateEndpoints.length > 0}
+          <Select
+            size="L"
+            value={selectedEndpointId}
+            options={templateEndpoints}
+            getOptionValue={endpoint => endpoint.id}
+            getOptionLabel={formatEndpointLabel}
+            getOptionIcon={getEndpointIcon}
+            autocomplete={true}
+            placeholder="Select an action"
+            on:change={onSelectEndpoint}
+          />
+          <DescriptionViewer
+            description={selectedEndpointDescription}
+            baseUrl={templateDocsBaseUrl}
+          />
+        {:else}
+          <Body size="XS">No actions available for this template.</Body>
+        {/if}
       </div>
-      <Heading size="S">Select action</Heading>
-      <Body size="XS">
-        Choose the action you want to import from {pendingTemplate?.name}.
-      </Body>
-      {#if templateLoading && templateLoadingPhase === "info"}
-        <div class="endpoint-loading">
-          <ProgressCircle size="S" />
-          <Body size="XS">Loading actions…</Body>
-        </div>
-      {:else if templateLoading && templateLoadingPhase === "import"}
-        <div class="endpoint-loading">
-          <ProgressCircle size="S" />
-          <Body size="XS">Importing selected action…</Body>
-        </div>
-      {:else if templateEndpoints.length > 0}
-        <Select
-          label="Action"
-          value={selectedEndpointId}
-          options={templateEndpoints}
-          getOptionValue={endpoint => endpoint.id}
-          getOptionLabel={formatEndpointLabel}
-          getOptionIcon={getEndpointIcon}
-          autocomplete={true}
-          placeholder="Select an action"
-          on:change={onSelectEndpoint}
-        />
-        <DescriptionViewer
-          description={selectedEndpointDescription}
-          baseUrl={templateDocsBaseUrl}
-        />
-      {:else}
-        <Body size="XS">No actions available for this template.</Body>
-      {/if}
     </Layout>
   </ModalContent>
 </Modal>
 
 <style>
-  .subHeading {
-    display: flex;
-    align-items: center;
-    margin-top: 12px;
-    margin-bottom: 24px;
-    justify-content: center;
-    gap: 8px;
-  }
-  .subHeading :global(p) {
-    color: var(--spectrum-global-color-gray-600) !important;
-  }
   .options {
     width: 100%;
     display: grid;
-    column-gap: 24px;
-    row-gap: 24px;
+    gap: 16px;
     grid-template-columns: repeat(auto-fit, 235px);
-    justify-content: center;
-    margin-bottom: 48px;
+    margin-bottom: 20px;
     max-width: 1050px;
   }
-  .bb-options {
-    max-width: calc(3 * 235px + 2 * 24px);
-    margin-bottom: 12px;
-  }
-  .bb-options + .subHeading {
-    margin-top: 8px;
-  }
   .templateOptions {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
   .templateModalHeader {
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+  .templates-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 12px 0;
+    font-weight: 600;
+  }
+  .info-icon-wrapper {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .info-icon-wrapper :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+  .templates-popover-content {
+    padding: 16px;
+    margin: 0;
+  }
+  .templates-popover-content :global(p) {
+    margin: 0;
+  }
+  :global(.spectrum-Popover:has(.templates-popover-content)) {
+    background-color: var(--background);
   }
   .versionOptions {
     display: grid;
@@ -464,8 +721,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    border: 1px solid var(--grey-4);
-    border-radius: 4px;
+    border: 0.5px solid var(--grey-2);
+    border-radius: 8px;
     background: var(--background);
     cursor: pointer;
     transition: background 130ms ease-out;
@@ -487,6 +744,49 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .endpoint-modal {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .endpoint-modal > * {
+    min-width: 0;
+  }
+
+  .endpoint-modal :global(.spectrum-Field) {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .endpoint-modal :global(.spectrum-FieldGroup),
+  .endpoint-modal :global(.spectrum-InputGroup),
+  .endpoint-modal :global(.spectrum-Textfield) {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .endpoint-modal :global(.description-viewer) {
+    max-width: 100%;
+  }
+
+  .endpoint-modal :global(.description-content),
+  .endpoint-modal :global(.description-content p),
+  .endpoint-modal :global(.description-content a),
+  .endpoint-modal :global(.description-content code),
+  .endpoint-modal :global(.description-content pre) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .endpoint-modal :global(.description-content pre),
+  .endpoint-modal :global(.description-content code) {
+    white-space: pre-wrap;
   }
 
   .endpoint-heading {

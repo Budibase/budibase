@@ -8,11 +8,11 @@
     Icon,
     ListItem,
   } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { viewsV2 } from "@/stores/builder"
   import { ViewV2Type } from "@budibase/types"
 
-  $goto
+  $: goto = $gotoStore
 
   export let table
   export let firstView = false
@@ -53,7 +53,7 @@
         type: calculation ? ViewV2Type.CALCULATION : undefined,
       })
       notifications.success(`View ${name} created`)
-      $goto(`./${newView.id}`)
+      goto(`./${newView.id}`)
     } catch (error) {
       notifications.error("Error creating view")
     }

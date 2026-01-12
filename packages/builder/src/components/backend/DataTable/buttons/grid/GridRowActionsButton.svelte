@@ -13,10 +13,10 @@
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { getContext } from "svelte"
   import { appStore, rowActions } from "@/stores/builder"
-  import { goto, url } from "@roxi/routify"
+  import { goto as gotoStore, url } from "@roxi/routify"
   import { derived } from "svelte/store"
 
-  $goto
+  $: goto = $gotoStore
   $url
 
   const { datasource } = getContext("grid")
@@ -64,7 +64,7 @@
         newName
       )
       notifications.success("Row action created successfully")
-      $goto($rowActionUrl(newRowAction))
+      goto($rowActionUrl(newRowAction))
     } catch (error) {
       console.error(error)
       notifications.error("Error creating row action")

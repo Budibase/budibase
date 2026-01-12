@@ -11,7 +11,7 @@
     FancyForm,
     FancyInput,
   } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import {
     auth,
     organisation,
@@ -28,7 +28,7 @@
   import { pushNumSessionsInvalidated } from "../../../../../frontend-core/src"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
 
-  $goto
+  $: goto = $gotoStore
 
   let loaded = false
   let form
@@ -58,7 +58,7 @@
         formData?.password
       )
       if ($auth?.user?.forceResetPassword) {
-        $goto("./reset")
+        goto("./reset")
       } else {
         notifications.success("Logged in successfully")
         pushNumSessionsInvalidated(loginResult.invalidatedSessionCount || 0)
@@ -68,12 +68,12 @@
         if (returnUrl) {
           CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
           if (returnUrl.startsWith("/builder")) {
-            $goto(returnUrl)
+            goto(returnUrl)
           } else {
             window.location.assign(returnUrl)
           }
         } else {
-          $goto("/builder")
+          goto("/builder")
         }
       }
     } catch (err) {
@@ -180,7 +180,7 @@
           </Layout>
           <Layout gap="XS" noPadding justifyItems="center">
             <div class="user-actions">
-              <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
+              <ActionButton size="L" quiet on:click={() => goto("./forgot")}>
                 {loginLabels.forgotPassword}
               </ActionButton>
             </div>
