@@ -6,6 +6,7 @@ import { get } from "svelte/store"
 interface ChatAppsStoreState {
   conversations: ChatConversation[]
   chatAppId?: string
+  chatApp?: ChatApp
   currentConversationId?: string
 }
 
@@ -14,6 +15,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     super({
       conversations: [],
       chatAppId: undefined,
+      chatApp: undefined,
       currentConversationId: undefined,
     })
   }
@@ -43,6 +45,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     this.update(state => {
       state.conversations = []
       state.chatAppId = undefined
+      state.chatApp = undefined
       state.currentConversationId = undefined
       return state
     })
@@ -60,16 +63,41 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
       return null
     }
 
-    if (agentId && chatApp.agentId !== agentId) {
+    const defaultAgentId = chatApp.enabledAgents?.find(
+      agent => agent.isDefault
+    )?.agentId
+
+    if (agentId && defaultAgentId !== agentId) {
       chatApp = await API.setChatAppAgent(chatApp._id, agentId)
     }
 
     this.update(state => {
       state.chatAppId = chatApp._id
+      state.chatApp = chatApp
       return state
     })
 
     return chatApp
+  }
+
+  updateEnabledAgents = async (enabledAgents: ChatApp["enabledAgents"]) => {
+    const chatAppId = get(this.store).chatAppId
+    const chatApp = get(this.store).chatApp
+    if (!chatAppId || !chatApp) {
+      return null
+    }
+
+    const updated = await API.updateChatApp({
+      ...chatApp,
+      enabledAgents,
+    })
+
+    this.update(state => {
+      state.chatApp = updated
+      return state
+    })
+
+    return updated
   }
 
   fetchConversations = async (chatAppId?: string) => {

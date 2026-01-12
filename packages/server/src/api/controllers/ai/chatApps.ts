@@ -2,6 +2,15 @@ import { HTTPError } from "@budibase/backend-core"
 import { ChatApp, UpdateChatAppRequest, UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
 
+const ensureEnabledAgents = (chatApp: ChatApp) => {
+  if (!chatApp.enabledAgents?.length) {
+    throw new HTTPError("enabledAgents is required", 400)
+  }
+  if (!chatApp.enabledAgents.some(agent => agent.isDefault)) {
+    throw new HTTPError("default agent is required", 400)
+  }
+}
+
 export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
   const chatApp = await sdk.ai.chatApps.getSingle()
   if (chatApp) {
@@ -11,11 +20,11 @@ export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
 
   const fallbackAgentId = (await sdk.ai.agents.fetch())[0]?._id
   if (!fallbackAgentId) {
-    throw new HTTPError("agentId is required to create a chat app", 400)
+    throw new HTTPError("default agent is required to create a chat app", 400)
   }
 
   const created = await sdk.ai.chatApps.create({
-    agentId: fallbackAgentId,
+    enabledAgents: [{ agentId: fallbackAgentId, isDefault: true }],
   })
   ctx.body = created
 }
@@ -29,9 +38,7 @@ export async function updateChatApp(
     ? { ...chatApp, _id: chatApp._id || chatAppIdFromPath }
     : chatApp
 
-  if (!resolvedChatApp.agentId) {
-    throw new HTTPError("agentId is required", 400)
-  }
+  ensureEnabledAgents(resolvedChatApp)
   const updated = await sdk.ai.chatApps.update(resolvedChatApp)
   ctx.body = updated
 }
@@ -63,9 +70,20 @@ export async function setChatAppAgent(
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   await sdk.ai.agents.getOrThrow(agentId)
 
+  const existingAgents = chatApp.enabledAgents || []
+  const matched = existingAgents.some(agent => agent.agentId === agentId)
+  const enabledAgents = existingAgents.map(agent => ({
+    ...agent,
+    isDefault: agent.agentId === agentId,
+  }))
+
+  if (!matched) {
+    enabledAgents.push({ agentId, isDefault: true })
+  }
+
   const updated = await sdk.ai.chatApps.update({
     ...chatApp,
-    agentId,
+    enabledAgents,
   })
   ctx.body = updated
 }

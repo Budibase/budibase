@@ -78,12 +78,12 @@ describe("chatAppsStore", () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
-      agentId: "agent-1",
+      enabledAgents: [{ agentId: "agent-1", isDefault: true }],
     }
     const updated: ChatApp = {
       ...chatApp,
       _rev: "2",
-      agentId: "agent-2",
+      enabledAgents: [{ agentId: "agent-2", isDefault: true }],
     }
     fetchChatApp.mockResolvedValue(chatApp)
     setChatAppAgent.mockResolvedValue(updated)
@@ -93,6 +93,7 @@ describe("chatAppsStore", () => {
     expect(fetchChatApp).toHaveBeenCalledWith("workspace-123")
     expect(setChatAppAgent).toHaveBeenCalledWith("chatapp-1", "agent-2")
     expect(get(chatAppsStore.store).chatAppId).toEqual("chatapp-1")
+    expect(get(chatAppsStore.store).chatApp).toEqual(updated)
     expect(result).toEqual(updated)
   })
 

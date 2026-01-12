@@ -10,16 +10,17 @@
     Icon,
     ProgressCircle,
     Select,
+    Toggle,
     notifications,
   } from "@budibase/bbui"
   import type {
+    Agent,
     ChatConversation,
     ChatConversationRequest,
   } from "@budibase/types"
   import { params } from "@roxi/routify"
   import { onMount } from "svelte"
   import { Chatbox } from "@budibase/frontend-core/src/components"
-  import type { Agent } from "@budibase/types"
 
   type ChatConversationLike = ChatConversation | ChatConversationRequest
 
@@ -31,13 +32,25 @@
   const NO_MESSAGES_TEXT = "No messages"
   const NO_PREVIEW_TEXT = "No preview available"
 
+  type EnabledAgent = { agentId: string; isDefault?: boolean }
+  type ChatAppState = { chatApp?: { enabledAgents?: EnabledAgent[] } }
+
   let chat: ChatConversationLike = { ...INITIAL_CHAT }
   let loading: boolean = false
   let deletingChat: boolean = false
   let selectedAgentId: string | null = null
 
+  type ChatAppsStoreWithAgents = typeof chatAppsStore & {
+    updateEnabledAgents: (enabledAgents: EnabledAgent[]) => Promise<unknown>
+  }
+
+  const chatAppsStoreWithAgents =
+    chatAppsStore as unknown as ChatAppsStoreWithAgents
+
   $: conversationHistory = $chatAppsStore.conversations || []
   $: agents = $agentsStore.agents || []
+  $: chatApp = ($chatAppsStore as ChatAppState).chatApp
+  $: enabledAgents = chatApp?.enabledAgents || []
 
   const selectAgent = async (agentId: string | null) => {
     selectedAgentId = agentId
@@ -158,13 +171,79 @@
 
   const getAgentOptionValue = (agent: Agent) => agent._id!
   const getAgentOptionLabel = (agent: Agent) => agent.name || "Unnamed Agent"
+  const getDefaultAgentId = (agentsList: EnabledAgent[]) =>
+    agentsList.find((agent: EnabledAgent) => agent.isDefault)?.agentId ||
+    agentsList[0]?.agentId ||
+    null
+
+  const getAgentName = (agentId: string) =>
+    agents.find(agent => agent._id === agentId)?.name || "Unknown agent"
+
+  const isAgentAvailable = (agentId: string) =>
+    enabledAgents.some((agent: EnabledAgent) => agent.agentId === agentId)
+
+  const isDefaultAgent = (agentId: string) =>
+    enabledAgents.some(
+      (agent: EnabledAgent) => agent.agentId === agentId && agent.isDefault
+    )
+
+  const handleAvailabilityToggle = async (
+    agentId: string,
+    enabled: boolean
+  ) => {
+    if (!agentId) {
+      return
+    }
+
+    if (enabled && isAgentAvailable(agentId)) {
+      return
+    }
+
+    if (!enabled && !isAgentAvailable(agentId)) {
+      return
+    }
+
+    const current = enabledAgents
+    let nextEnabledAgents: EnabledAgent[] = []
+
+    if (enabled) {
+      const hasDefault = current.some(agent => agent.isDefault)
+      nextEnabledAgents = [...current, { agentId, isDefault: !hasDefault }]
+    } else {
+      nextEnabledAgents = current.filter(agent => agent.agentId !== agentId)
+      if (!nextEnabledAgents.length) {
+        notifications.error("At least one agent must remain enabled")
+        return
+      }
+      if (!nextEnabledAgents.some(agent => agent.isDefault)) {
+        nextEnabledAgents = nextEnabledAgents.map((agent, index) => ({
+          ...agent,
+          isDefault: index === 0,
+        }))
+      }
+      if (selectedAgentId === agentId) {
+        const fallbackAgentId =
+          nextEnabledAgents.find(agent => agent.isDefault)?.agentId ||
+          nextEnabledAgents[0]?.agentId
+        await selectAgent(fallbackAgentId || null)
+      }
+    }
+
+    await chatAppsStoreWithAgents.updateEnabledAgents(nextEnabledAgents)
+  }
 
   onMount(async () => {
     await agentsStore.init()
-    const chatApp = await chatAppsStore.initConversations()
-    const initialAgentId = chatApp?.agentId
+    await chatAppsStore.initConversations()
+    let initialAgentId = getDefaultAgentId(enabledAgents)
     if (!initialAgentId) {
-      return
+      const fallbackAgent = agents.find(agent => agent._id)
+      if (fallbackAgent?._id) {
+        await handleAvailabilityToggle(fallbackAgent._id, true)
+        initialAgentId = fallbackAgent._id
+      } else {
+        return
+      }
     }
 
     await selectAgent(initialAgentId)
@@ -196,9 +275,50 @@
   <div class="page">
     {#if selectedAgentId}
       <Panel customWidth={260} borderRight noHeaderBorder>
+        <div class="settings-header">
+          <Body size="S" color="var(--spectrum-global-color-gray-800)">
+            Settings
+          </Body>
+        </div>
+        <div class="settings-section">
+          <Body size="S" color="var(--spectrum-global-color-gray-700)">
+            Agents
+          </Body>
+          {#if agents.length}
+            {#each agents as agent (agent._id)}
+              <div class="settings-agent">
+                <div class="settings-agent-info">
+                  <Body size="S">{getAgentOptionLabel(agent)}</Body>
+                  {#if agent._id && isDefaultAgent(agent._id)}
+                    <Body
+                      size="XS"
+                      color="var(--spectrum-global-color-gray-500)"
+                    >
+                      Default
+                    </Body>
+                  {/if}
+                </div>
+                {#if agent._id && !isDefaultAgent(agent._id)}
+                  <Toggle
+                    value={isAgentAvailable(agent._id)}
+                    on:change={event =>
+                      handleAvailabilityToggle(agent._id!, event.detail)}
+                  />
+                {/if}
+              </div>
+            {/each}
+          {:else}
+            <Body size="S" color="var(--spectrum-global-color-gray-500)">
+              No agents found
+            </Body>
+          {/if}
+        </div>
+      </Panel>
+
+      <Panel customWidth={260} borderRight noHeaderBorder>
         <NavHeader
           slot="panel-title-content"
-          title="Chats"
+          title="Recent Chats"
           onAdd={startNewChat}
           searchable={false}
         />
@@ -315,6 +435,31 @@
 
   .agent-selector {
     min-width: 200px;
+  }
+
+  .settings-header {
+    padding: var(--spacing-m);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .settings-section {
+    padding: var(--spacing-m);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .settings-agent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
+  }
+
+  .settings-agent-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xxs);
   }
 
   .empty-state-container {

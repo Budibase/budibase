@@ -31,7 +31,7 @@ describe("chat conversations authorization", () => {
         const now = new Date().toISOString()
         chatApp = {
           _id: docIds.generateChatAppID(),
-          agentId: "agent-1",
+          enabledAgents: [{ agentId: "agent-1", isDefault: true }],
           createdAt: now,
         }
         convoA = {
@@ -52,7 +52,7 @@ describe("chat conversations authorization", () => {
         }
         otherChatApp = {
           _id: docIds.generateChatAppID(),
-          agentId: "agent-2",
+          enabledAgents: [{ agentId: "agent-2", isDefault: true }],
           createdAt: now,
         }
         otherAppConvo = {

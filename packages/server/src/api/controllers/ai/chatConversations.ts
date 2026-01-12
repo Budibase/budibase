@@ -114,10 +114,13 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     }
   }
 
-  const agentId = chatApp.agentId
+  const defaultAgentId = chatApp.enabledAgents?.find(
+    agent => agent.isDefault
+  )?.agentId
+  const agentId = defaultAgentId || chatApp.enabledAgents?.[0]?.agentId
 
   if (!agentId) {
-    throw new HTTPError("agentId is required", 400)
+    throw new HTTPError("default agent is required", 400)
   }
 
   ctx.status = 200

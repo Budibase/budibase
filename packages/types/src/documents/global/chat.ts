@@ -1,12 +1,17 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
 
+export interface ChatAppEnabledAgent {
+  agentId: string
+  isDefault?: boolean
+}
+
 export interface ChatApp extends Document {
   title?: string
   greeting?: string
   description?: string
   theme?: string
-  agentId: string
+  enabledAgents: ChatAppEnabledAgent[]
   live?: boolean
   settings?: Record<string, any>
 }
