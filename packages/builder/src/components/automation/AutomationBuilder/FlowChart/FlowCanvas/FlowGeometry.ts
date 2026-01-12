@@ -9,13 +9,9 @@ export const BRANCH = {
   height: 180,
 }
 
-export const ANCHOR = {
-  width: 320,
-  height: 1,
-}
-
 export const LOOP = {
   minHeight: 260,
+  minWidth: 400,
   clearance: 100,
 }
 

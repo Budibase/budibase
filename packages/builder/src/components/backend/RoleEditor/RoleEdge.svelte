@@ -1,46 +1,61 @@
-<script>
-  import { getBezierPath, BaseEdge, EdgeLabelRenderer } from "@xyflow/svelte"
+<script lang="ts">
+  import {
+    getBezierPath,
+    BaseEdge,
+    EdgeLabel,
+    type EdgeProps,
+  } from "@xyflow/svelte"
   import { Icon, TooltipPosition } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
   import { roles } from "@/stores/builder"
+  import type { Writable } from "svelte/store"
 
-  export let sourceX
-  export let sourceY
-  export let sourcePosition
-  export let targetX
-  export let targetY
-  export let targetPosition
-  export let id
-  export let source
-  export let target
-
-  const { deleteEdge, selectedNodes } = getContext("flow")
-
-  let iconHovered = false
-  let edgeHovered = false
-
-  $: hovered = iconHovered || edgeHovered
-  $: active =
-    hovered ||
-    $selectedNodes.includes(source) ||
-    $selectedNodes.includes(target)
-  $: edgeClasses = getEdgeClasses(active, iconHovered)
-  $: [edgePath, labelX, labelY] = getBezierPath({
+  let {
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
-  })
-  $: sourceRole = $roles.find(x => x._id === source)
-  $: targetRole = $roles.find(x => x._id === target)
-  $: tooltip =
+    id,
+    source,
+    target,
+  }: EdgeProps = $props()
+
+  const { deleteEdge, selectedNodes } = getContext<{
+    deleteEdge: (id: string) => void
+    selectedNodes: Writable<string[]>
+  }>("flow")
+
+  let iconHovered = $state(false)
+  let edgeHovered = $state(false)
+
+  let hovered = $derived(iconHovered || edgeHovered)
+  let active = $derived(
+    hovered ||
+      $selectedNodes.includes(source) ||
+      $selectedNodes.includes(target)
+  )
+  let edgeClasses = $derived(getEdgeClasses(active, iconHovered))
+  let [edgePath, labelX, labelY] = $derived(
+    getBezierPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+    })
+  )
+  let sourceRole = $derived($roles.find(x => x._id === source))
+  let targetRole = $derived($roles.find(x => x._id === target))
+  let tooltip = $derived(
     sourceRole && targetRole
       ? `Stop ${targetRole.uiMetadata.displayName} from inheriting ${sourceRole.uiMetadata.displayName}`
       : null
+  )
 
-  const getEdgeClasses = (active, iconHovered) => {
+  function getEdgeClasses(active: boolean, iconHovered: boolean) {
     let classes = ""
     if (active) classes += `active `
     if (iconHovered) classes += `delete `
@@ -71,26 +86,25 @@
 </script>
 
 <BaseEdge path={edgePath} class={edgeClasses} />
-<EdgeLabelRenderer>
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+<EdgeLabel x={labelX} y={labelY}>
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- svelte-ignore a11y_mouse_events_have_key_events -->
   <div
-    style:transform="translate(-50%, -50%) translate({labelX}px,{labelY}px)"
     class="edge-label nodrag nopan"
     class:active
-    on:click={() => deleteEdge(id)}
-    on:mouseover={() => (iconHovered = true)}
-    on:mouseout={() => (iconHovered = false)}
+    onclick={() => deleteEdge(id)}
+    onmouseover={() => (iconHovered = true)}
+    onmouseout={() => (iconHovered = false)}
   >
     <Icon
       name="trash"
       size="S"
-      {tooltip}
+      tooltip={tooltip || undefined}
       tooltipPosition={TooltipPosition.Top}
     />
   </div>
-</EdgeLabelRenderer>
+</EdgeLabel>
 
 <style>
   .edge-label {

@@ -44,10 +44,6 @@
 
   $: isTrigger = block.type === AutomationStepType.TRIGGER
   $: viewMode = $automationStore.viewMode
-  $: blockRef = block?.id
-    ? $selectedAutomation?.blockRefs?.[block.id]
-    : undefined
-  $: isInsideLoop = blockRef?.pathTo?.some(hop => hop.loopStepId) ?? false
 
   $: triggerInfo = (() => {
     const automationData = $selectedAutomation.data
@@ -119,7 +115,8 @@
   }
 
   function onHandleMouseDown(e: MouseEvent) {
-    if (isTrigger || isInsideLoop) {
+    // Only prevent dragging for the trigger node
+    if (isTrigger) {
       e.preventDefault()
       return
     }
@@ -157,7 +154,7 @@
     id={`block-${block.id}`}
     class={`block ${block.type} hoverable`}
     class:dragging
-    class:draggable={draggable && !isInsideLoop}
+    class:draggable
     class:selected
     class:unexecuted
   >
@@ -180,18 +177,18 @@
             {viewMode}
           />
         </div>
-        {#if draggable && !isInsideLoop}
+        {#if draggable && !isTrigger}
           <div
-            class="handle"
+            class="handle nodrag"
             class:grabbing={dragging}
-            on:mousedown={onHandleMouseDown}
+            onmousedown={onHandleMouseDown}
           >
             <Icon name="dots-six-vertical" weight="bold" />
           </div>
         {/if}
         <div
           class="block-core"
-          on:click={async () => {
+          onclick={async () => {
             if (viewMode === ViewMode.EDITOR) {
               await automationStore.actions.selectNode(block.id)
             } else if (viewMode === ViewMode.LOGS && logStepData) {

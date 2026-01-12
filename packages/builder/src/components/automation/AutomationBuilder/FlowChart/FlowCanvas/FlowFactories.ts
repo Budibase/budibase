@@ -1,5 +1,4 @@
 import type {
-  AnchorNodeData,
   BaseEdgeData,
   BranchEdgeData,
   FlowBlockContext,
@@ -65,21 +64,6 @@ export const branchNode = (
     node.parentId = parentId
     node.extent = "parent"
     if (laneWidth) node.style = `width: ${laneWidth}px;`
-  }
-  return node
-}
-
-export const anchorNode = (
-  id: string,
-  direction?: LayoutDirection,
-  parentId?: string,
-  position: { x: number; y: number } = { x: 0, y: 0 }
-): FlowNode => {
-  const data: AnchorNodeData = { direction }
-  const node: FlowNode = { id, type: "anchor-node", data, position }
-  if (parentId) {
-    node.parentId = parentId
-    node.extent = "parent"
   }
   return node
 }

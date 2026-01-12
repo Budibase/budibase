@@ -154,10 +154,18 @@ export interface Automation extends Document {
   type?: string
   disabled?: boolean
   layoutDirection?: LayoutDirection
+  layout?: AutomationLayout
   testData?: AutomationTriggerResultOutputs
 }
 
 export type LayoutDirection = "TB" | "LR"
+
+export interface AutomationNodePosition {
+  x: number
+  y: number
+}
+
+export type AutomationLayout = Record<string, AutomationNodePosition>
 
 export interface BaseIOStructure {
   type?: AutomationIOType

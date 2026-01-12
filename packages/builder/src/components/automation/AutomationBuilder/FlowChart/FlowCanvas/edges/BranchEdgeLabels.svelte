@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { EdgeLabelRenderer } from "@xyflow/svelte"
   import type { ViewMode } from "@/types/automations"
   import {
     type BranchEdgeData,
@@ -8,49 +7,70 @@
   } from "@/types/automations"
   import DragZone from "../../DragZone.svelte"
   import FlowItemActions from "../../FlowItemActions.svelte"
+  import { EdgeLabel } from "@xyflow/svelte"
 
-  export let data: BranchEdgeData
-  export let labelX: number
-  export let labelY: number
-  export let preBranchLabelX: number
-  export let preBranchLabelY: number
-  export let showEdgeActions: boolean
-  export let showEdgeDrop: boolean
-  export let showPreBranchActions: boolean
-  export let showPreBranchDrop: boolean
-  export let collectBlockExists: boolean
-  export let sourcePathForDrop: FlowBlockPath | undefined
-  export let block: FlowBlockContext | undefined
-  export let handleBranch: () => void
-  export let handleAddBranch: () => void
-  export let viewMode: ViewMode
-  export let isPrimaryBranchEdge: boolean
-  // LR layout sizing/offsets
-  export let edgeDzWidth: number | undefined
-  export let edgeDzOffsetY: number = 0
-  export let preDzWidth: number | undefined
-  export let preDzOffsetY: number = 0
+  interface Props {
+    data: BranchEdgeData
+    labelX: number
+    labelY: number
+    preBranchLabelX: number
+    preBranchLabelY: number
+    showEdgeActions: boolean
+    showEdgeDrop: boolean
+    showPreBranchActions: boolean
+    showPreBranchDrop: boolean
+    collectBlockExists: boolean
+    sourcePathForDrop: FlowBlockPath | undefined
+    block: FlowBlockContext | undefined
+    handleBranch: () => void
+    handleAddBranch: () => void
+    viewMode: ViewMode
+    isPrimaryBranchEdge: boolean
+    edgeDzWidth: number | undefined
+    edgeDzOffsetY?: number
+    preDzWidth: number | undefined
+    preDzOffsetY?: number
+  }
+
+  let {
+    data,
+    labelX,
+    labelY,
+    preBranchLabelX,
+    preBranchLabelY,
+    showEdgeActions,
+    showEdgeDrop,
+    showPreBranchActions,
+    showPreBranchDrop,
+    collectBlockExists,
+    sourcePathForDrop,
+    block,
+    handleBranch,
+    handleAddBranch,
+    viewMode,
+    isPrimaryBranchEdge,
+    edgeDzWidth,
+    edgeDzOffsetY = 0,
+    preDzWidth,
+    preDzOffsetY = 0,
+  }: Props = $props()
 </script>
 
 <!-- Standard edge label (between steps) -->
-<EdgeLabelRenderer>
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
+<EdgeLabel x={labelX} y={labelY + (showEdgeDrop ? edgeDzOffsetY : 0)}>
   {#key `${labelX}-${labelY}-${showEdgeDrop}`}
-    <div
-      class="add-item-label nodrag nopan"
-      style="transform:translate(-50%, -50%) translate({labelX}px,{labelY +
-        (showEdgeDrop ? edgeDzOffsetY : 0)}px);"
-    >
+    <div class="add-item-label nodrag nopan">
       {#if showEdgeDrop && !collectBlockExists}
         <DragZone path={sourcePathForDrop} variant="edge" width={edgeDzWidth} />
       {/if}
       {#if !collectBlockExists}
         {#if showEdgeActions}
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="actions-stack"
-            on:mousedown|stopPropagation
-            on:click|stopPropagation
+            onmousedown={e => e.stopPropagation()}
+            onclick={e => e.stopPropagation()}
           >
             <FlowItemActions {block} on:branch={handleBranch} />
           </div>
@@ -58,17 +78,16 @@
       {/if}
     </div>
   {/key}
-</EdgeLabelRenderer>
+</EdgeLabel>
 
 <!-- Pre-branch label (above branch fan-out on primary branch edge) -->
 {#if !collectBlockExists && (showPreBranchActions || showPreBranchDrop)}
-  <EdgeLabelRenderer>
+  <EdgeLabel
+    x={preBranchLabelX}
+    y={preBranchLabelY + (showPreBranchDrop ? preDzOffsetY : 0)}
+  >
     {#key `${preBranchLabelX}-${preBranchLabelY}-${showPreBranchDrop}`}
-      <div
-        class="add-item-label nodrag nopan"
-        style="transform:translate(-50%, -50%) translate({preBranchLabelX}px,{preBranchLabelY +
-          (showPreBranchDrop ? preDzOffsetY : 0)}px);"
-      >
+      <div class="add-item-label nodrag nopan">
         {#if showPreBranchDrop}
           <DragZone
             path={sourcePathForDrop}
@@ -88,12 +107,11 @@
         </div>
       </div>
     {/key}
-  </EdgeLabelRenderer>
+  </EdgeLabel>
 {/if}
 
 <style>
   .add-item-label {
-    position: absolute;
     color: white;
     pointer-events: all;
     cursor: default;

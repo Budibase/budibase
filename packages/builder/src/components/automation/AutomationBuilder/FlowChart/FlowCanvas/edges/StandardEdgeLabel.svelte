@@ -1,40 +1,51 @@
 <script lang="ts">
-  import { EdgeLabelRenderer } from "@xyflow/svelte"
   import type { FlowBlockContext, FlowBlockPath } from "@/types/automations"
   import DragZone from "../../DragZone.svelte"
   import FlowItemActions from "../../FlowItemActions.svelte"
+  import { EdgeLabel } from "@xyflow/svelte"
 
-  export let labelX: number
-  export let labelY: number
-  export let showEdgeActions: boolean
-  export let showEdgeDrop: boolean
-  export let collectBlockExists: boolean
-  export let sourcePathForDrop: FlowBlockPath | undefined
-  export let block: FlowBlockContext | undefined
-  export let handleBranch: () => void
-  // Orientation-aware dropzone sizing/offset in LR
-  export let dzWidth: number | undefined
-  export let dzOffsetY: number = 0
+  interface Props {
+    labelX: number
+    labelY: number
+    showEdgeActions: boolean
+    showEdgeDrop: boolean
+    collectBlockExists: boolean
+    sourcePathForDrop: FlowBlockPath | undefined
+    block: FlowBlockContext | undefined
+    handleBranch: () => void
+    // Orientation-aware dropzone sizing/offset in LR
+    dzWidth: number | undefined
+    dzOffsetY?: number
+  }
+
+  let {
+    labelX,
+    labelY,
+    showEdgeActions,
+    showEdgeDrop,
+    collectBlockExists,
+    sourcePathForDrop,
+    block,
+    handleBranch,
+    dzWidth,
+    dzOffsetY = 0,
+  }: Props = $props()
 </script>
 
-<EdgeLabelRenderer>
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
+<EdgeLabel x={labelX} y={labelY + (showEdgeDrop ? dzOffsetY : 0)}>
   {#key `${labelX}-${labelY}-${showEdgeDrop}`}
-    <div
-      class="add-item-label nodrag nopan"
-      style="transform:translate(-50%, -50%) translate({labelX}px,{labelY +
-        (showEdgeDrop ? dzOffsetY : 0)}px);"
-    >
+    <div class="add-item-label nodrag nopan">
       {#if showEdgeDrop && !collectBlockExists}
         <DragZone path={sourcePathForDrop} variant="edge" width={dzWidth} />
       {/if}
       {#if !collectBlockExists}
         {#if showEdgeActions}
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="actions-stack"
-            on:mousedown|stopPropagation
-            on:click|stopPropagation
+            onmousedown={e => e.stopPropagation()}
+            onclick={e => e.stopPropagation()}
           >
             <FlowItemActions {block} on:branch={handleBranch} />
           </div>
@@ -42,11 +53,10 @@
       {/if}
     </div>
   {/key}
-</EdgeLabelRenderer>
+</EdgeLabel>
 
 <style>
   .add-item-label {
-    position: absolute;
     color: white;
     pointer-events: all;
     cursor: default;

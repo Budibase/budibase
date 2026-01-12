@@ -1,21 +1,17 @@
 <script lang="ts">
-  import { Switcher, Button } from "@budibase/bbui"
+  import { Button } from "@budibase/bbui"
   import { useSvelteFlow } from "@xyflow/svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import type { HistoryStore } from "@/stores/builder/history"
   import type { Automation } from "@budibase/types"
 
-  export let historyStore: HistoryStore<Automation>
-  export let layoutDirection: "TB" | "LR" = "TB"
-  export let onChangeDirection: (_dir: "TB" | "LR") => void
+  interface Props {
+    historyStore: HistoryStore<Automation>
+  }
+
+  let { historyStore }: Props = $props()
 
   const flow = useSvelteFlow()
-
-  const setDirection = (dir: "TB" | "LR") => {
-    if (dir !== layoutDirection) {
-      onChangeDirection(dir)
-    }
-  }
 </script>
 
 <div class="controls bottom-left">
@@ -23,16 +19,6 @@
     <UndoRedoControl store={historyStore} showButtonGroup />
   </div>
   <Button secondary on:click={() => flow.fitView()}>Auto layout</Button>
-
-  <Switcher
-    leftText="Vertical"
-    rightText="Horizontal"
-    selected={layoutDirection === "LR" ? "right" : "left"}
-    on:left={() => setDirection("TB")}
-    on:right={() => setDirection("LR")}
-    leftIcon="arrow-down"
-    rightIcon="arrow-right"
-  />
 </div>
 
 <style>

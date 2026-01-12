@@ -2,7 +2,7 @@
   import StepNode from "./StepNode.svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import { ViewMode, type StepNodeData } from "@/types/automations"
-  import { Handle, Position } from "@xyflow/svelte"
+  import { Handle, Position, type NodeProps, type Node } from "@xyflow/svelte"
   import { enrichLog } from "../../AutomationStepHelpers"
   import {
     type AutomationStep,
@@ -12,21 +12,22 @@
     type LayoutDirection,
   } from "@budibase/types"
 
-  export let data: StepNodeData
+  type StepNode = Node<StepNodeData>
+  let { data }: NodeProps<StepNode> = $props()
 
   // Extract block and other data
-  $: block = data.block
-  $: viewMode = $automationStore.viewMode
-  $: direction = (data.direction || "TB") as LayoutDirection
-  $: isHorizontal = direction === "LR"
+  let block = $derived(data.block)
+  let viewMode = $derived($automationStore.viewMode)
+  let direction = $derived((data.direction || "TB") as LayoutDirection)
+  let isHorizontal = $derived(direction === "LR")
 
   // Get automation data from store
-  $: automation = $selectedAutomation?.data
-  $: isTrigger = "type" in block && block.type === "TRIGGER"
+  let automation = $derived($selectedAutomation?.data)
+  let isTrigger = $derived("type" in block && block.type === "TRIGGER")
 
   // TODO: Fix Casting this temporarily
   // Don't want to drill down into the block types here
-  $: stepBlock = block as AutomationStep | AutomationTrigger
+  let stepBlock = $derived(block as AutomationStep | AutomationTrigger)
 
   function handleStepSelect(
     stepData: AutomationStepResult | AutomationTriggerResult
@@ -66,8 +67,8 @@
   />
   <div class="xy-flow__handle">
     <Handle
-      isConnectable={false}
-      class="custom-handle"
+      isConnectable={true}
+      class="custom-handle source-handle"
       type="source"
       position={isHorizontal ? Position.Right : Position.Bottom}
     />

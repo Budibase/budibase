@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy, setContext } from "svelte"
-  import { writable, get } from "svelte/store"
+  import { get } from "svelte/store"
   import dayjs from "dayjs"
   import {
     notifications,
@@ -28,12 +28,15 @@
   import { environment } from "@/stores/portal"
   import { type AutomationBlock, ViewMode } from "@/types/automations"
   import { ActionStepID } from "@/constants/backend/automations"
+  import { getBlocks as getBlocksHelper } from "./AutomationStepHelpers"
+  import { buildTopLevelGraph } from "./FlowCanvas/FlowGraphBuilder"
   import {
-    getBlocks as getBlocksHelper,
-    buildTopLevelGraph,
-    dagreLayoutAutomation,
-    type GraphBuildDeps,
-  } from "./AutomationStepHelpers"
+    applyLoopContainerBounds,
+    positionAnchorNodes,
+    computeAutoLayout,
+    isLayoutEmpty,
+  } from "./FlowCanvas/FlowLayout"
+  import type { AutomationLayout } from "@budibase/types"
 
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -42,11 +45,11 @@
   import NodeWrapper from "./FlowCanvas/nodes/NodeWrapper.svelte"
   import CustomEdge from "./FlowCanvas/edges/CustomEdge.svelte"
   import BranchNodeWrapper from "./FlowCanvas/nodes/BranchNodeWrapper.svelte"
-  import AnchorNode from "./FlowCanvas/nodes/AnchorNode.svelte"
   import LoopV2Node from "./FlowCanvas/nodes/LoopV2Node.svelte"
 
   import {
     SvelteFlow,
+    SvelteFlowProvider,
     Background,
     BackgroundVariant,
     useSvelteFlow,
@@ -54,18 +57,22 @@
     type Edge as FlowEdge,
     type NodeTypes,
     type EdgeTypes,
+    type OnConnectEnd,
   } from "@xyflow/svelte"
   import "@xyflow/svelte/dist/style.css"
   import FlowControls from "./Controls.svelte"
 
-  export let automation: UIAutomation
+  interface Props {
+    automation: UIAutomation
+  }
+
+  let { automation }: Props = $props()
 
   const memoAutomation = memo(automation)
 
   const nodeTypes: NodeTypes = {
     "step-node": NodeWrapper as any,
     "branch-node": BranchNodeWrapper as any,
-    "anchor-node": AnchorNode as any,
     "loop-subflow-node": LoopV2Node as any,
   }
   const edgeTypes: EdgeTypes = {
@@ -75,16 +82,18 @@
   let testDataModal: Modal
   let confirmDeleteDialog
   let blockRefs: Record<string, BlockRef> = {}
-  let prodErrors: number = 0
+  let prodErrors = $state<number>(0)
   let paneEl: HTMLDivElement | null = null
-  let changingStatus = false
+  let changingStatus = $state(false)
 
   let initialViewportApplied = false
-  let preserveViewport = false
-  let layoutDirection: LayoutDirection = automation.layoutDirection || "TB"
+  const layoutDirection: LayoutDirection = "LR"
 
-  let nodes = writable<FlowNode[]>([])
-  let edges = writable<FlowEdge[]>([])
+  let nodes = $state.raw<FlowNode[]>([])
+  let edges = $state.raw<FlowEdge[]>([])
+
+  // Track the last block IDs to avoid unnecessary graph rebuilds on layout-only changes
+  let lastBlockIds: string[] = []
 
   const { getViewport, setViewport } = useSvelteFlow()
 
@@ -101,100 +110,188 @@
   setContext("viewPos", viewPos)
   setContext("contentPos", contentPos)
 
-  $: updateGraph(blocks, layoutDirection)
+  let viewMode = $derived($automationStore.viewMode)
 
-  $: $automationStore.showTestModal === true && testDataModal.show()
-
-  $: displayToggleValue =
+  let displayToggleValue = $derived(
     automation.publishStatus.state === PublishResourceState.PUBLISHED
-
-  // Memo auto - selectedAutomation
-  $: memoAutomation.set($selectedAutomation.data || automation)
+  )
 
   // Parse the automation tree state
-  $: $selectedAutomation.blockRefs && refresh()
-  $: blocks = getBlocksHelper(
-    $selectedAutomation.data || $memoAutomation,
-    viewMode
+  let blocks = $derived(
+    getBlocksHelper($selectedAutomation.data || $memoAutomation, viewMode)
+      .filter(x => x.stepId !== ActionStepID.LOOP)
+      .map((block, idx) => ({ ...block, __top: idx }))
   )
-    .filter(x => x.stepId !== ActionStepID.LOOP)
-    .map((block, idx) => ({ ...block, __top: idx }))
 
-  $: viewMode = $automationStore.viewMode
+  // Check if automation has unpublished changes
+  let hasUnpublishedChanges = $derived(
+    $workspaceDeploymentStore.automations[automation._id!]
+      ?.unpublishedChanges === true
+  )
 
-  const updateGraph = async (
-    blocks: AutomationBlock[],
-    direction: LayoutDirection
-  ) => {
-    if (!preserveViewport) {
-      initialViewportApplied = false
+  // Effect to update graph when blocks change structurally
+  $effect(() => {
+    // Only rebuild graph if the block structure has changed, not just layout
+    const currentBlockIds = blocks.map(b => b.id).join(",")
+    if (currentBlockIds !== lastBlockIds.join(",")) {
+      lastBlockIds = blocks.map(b => b.id)
+      updateGraph(blocks)
     }
-    preserveViewport = true
-    const xSpacing = 300
-    const ySpacing = 340
+  })
 
+  // Effect to show test modal
+  $effect(() => {
+    if ($automationStore.showTestModal === true) {
+      testDataModal.show()
+    }
+  })
+
+  // Memo auto - selectedAutomation
+  $effect(() => {
+    memoAutomation.set($selectedAutomation.data || automation)
+  })
+
+  // Parse the automation tree state - refresh when blockRefs change
+  $effect(() => {
+    if ($selectedAutomation.blockRefs) {
+      refresh()
+    }
+  })
+
+  // Focus on trigger when nodes are ready
+  $effect(() => {
+    if (nodes?.length && !initialViewportApplied && paneEl) {
+      focusOnTrigger()
+      initialViewportApplied = true
+    }
+  })
+
+  const buildLayoutMap = (currentNodes: FlowNode[]): AutomationLayout => {
+    const layout: AutomationLayout = {}
+    currentNodes.forEach(node => {
+      layout[node.id] = {
+        x: Math.round(node.position.x),
+        y: Math.round(node.position.y),
+      }
+    })
+    return layout
+  }
+
+  let layoutSaveTimeout: ReturnType<typeof setTimeout> | undefined
+
+  const scheduleLayoutSave = (currentNodes: FlowNode[]) => {
+    if (viewMode !== ViewMode.EDITOR || !$selectedAutomation.data) {
+      return
+    }
+    const layout = buildLayoutMap(currentNodes)
+    if (layoutSaveTimeout) {
+      clearTimeout(layoutSaveTimeout)
+    }
+    layoutSaveTimeout = setTimeout(async () => {
+      if (!$selectedAutomation.data) {
+        return
+      }
+      try {
+        const updatedAutomation = {
+          ...$selectedAutomation.data,
+          layout,
+        } as UIAutomation & { layout: AutomationLayout }
+        await automationStore.actions.save(updatedAutomation as any)
+      } catch (error) {
+        notifications.error("Unable to save node positions")
+      }
+    }, 500)
+  }
+
+  const updateGraph = async (blocks: AutomationBlock[]) => {
     const newNodes: FlowNode[] = []
     const newEdges: FlowEdge[] = []
+    const savedLayout =
+      ($selectedAutomation.data as UIAutomation & { layout?: AutomationLayout })
+        ?.layout ||
+      (automation as UIAutomation & { layout?: AutomationLayout }).layout ||
+      undefined
 
-    const deps: GraphBuildDeps = {
-      xSpacing,
-      ySpacing,
+    // Get the block IDs to check if saved layout has positions for current blocks
+    const blockIds = blocks.map(b => b.id)
+    const needsAutoLayout = isLayoutEmpty(savedLayout, blockIds)
+
+    const deps = {
       blockRefs,
       newNodes,
       newEdges,
-      direction,
+      direction: layoutDirection,
+      layout: needsAutoLayout ? {} : savedLayout,
+      xSpacing: 0,
+      ySpacing: 0,
     }
 
     // Build graph via helpers
     buildTopLevelGraph(blocks, deps)
 
-    // Run Dagre layout with selected direction
-    const laidOut = dagreLayoutAutomation(
-      { nodes: newNodes, edges: newEdges },
-      { rankdir: direction, ranksep: 100, nodesep: 100, compactLoops: true }
-    )
+    // Apply loop container bounds first (needed for layout calculations)
+    applyLoopContainerBounds({ nodes: newNodes, edges: newEdges })
 
-    nodes.set(laidOut.nodes)
-    edges.set(laidOut.edges)
+    const layoutCoverage = savedLayout
+      ? blockIds.filter(id => savedLayout[id] !== undefined).length /
+        blockIds.length
+      : 0
+
+    // If no saved layout exists, compute auto-layout
+    if (needsAutoLayout && newNodes.length > 0) {
+      const computedLayout = computeAutoLayout(
+        { nodes: newNodes, edges: newEdges },
+        layoutDirection
+      )
+
+      // Apply computed positions to nodes
+      newNodes.forEach(node => {
+        const pos = computedLayout[node.id]
+        if (pos) {
+          node.position = { x: pos.x, y: pos.y }
+        }
+      })
+
+      applyLoopContainerBounds({ nodes: newNodes, edges: newEdges })
+
+      if (viewMode === ViewMode.EDITOR && $selectedAutomation.data) {
+        scheduleLayoutSave(newNodes)
+      }
+    }
+
+    positionAnchorNodes({ nodes: newNodes, edges: newEdges }, layoutDirection)
+
+    nodes = newNodes
+    edges = newEdges
   }
 
-  $: if ($nodes?.length && !initialViewportApplied && paneEl) {
-    focusOnTrigger()
-    initialViewportApplied = true
+  const handleNodeDragStop = ({
+    nodes: draggedNodes,
+  }: {
+    nodes: FlowNode[]
+  }) => {
+    // Apply bounds and anchor positioning to the dragged nodes
+    applyLoopContainerBounds({ nodes: draggedNodes, edges })
+    positionAnchorNodes({ nodes: draggedNodes, edges }, layoutDirection)
+    // Save the layout without reassigning nodes (SvelteFlow already updated them via bind:nodes)
+    scheduleLayoutSave(draggedNodes)
   }
-
-  // Check if automation has unpublished changes
-  $: hasUnpublishedChanges =
-    $workspaceDeploymentStore.automations[automation._id!]
-      ?.unpublishedChanges === true
 
   // Keep the trigger focused on load and when changing layout
   const focusOnTrigger = () => {
-    if (!paneEl || $nodes.length === 0) {
+    if (!paneEl || nodes.length === 0) {
       return
     }
 
-    const triggerNode = $nodes[0]
+    const triggerNode = nodes[0]
 
     const paneRect = paneEl.getBoundingClientRect()
-    const nodeWidth = 320
     const nodeHeight = 150
     const nodeOffset = 100
 
-    let x, y
-
-    // These assume the trigger is at x=0, y=0
-    if (layoutDirection === "LR") {
-      // Center vertically with a slight left offset
-      const paneHeight = paneRect.height
-      x = nodeOffset - triggerNode.position.x
-      y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
-    } else {
-      // Vertical mode. Center horizontally, top offset
-      const paneWidth = paneRect.width
-      x = paneWidth / 2 - triggerNode.position.x - nodeWidth / 2
-      y = nodeOffset - triggerNode.position.y
-    }
+    const paneHeight = paneRect.height
+    const x = nodeOffset - triggerNode.position.x
+    const y = paneHeight / 2 - triggerNode.position.y - nodeHeight / 2
 
     setViewport({ x, y, zoom: 1 }, { duration: 0 })
   }
@@ -217,20 +314,6 @@
       await deploymentStore.publishApp()
     } catch (error) {
       notifications.error("Error publishing changes")
-    }
-  }
-
-  const saveDirectionChange = async (direction: LayoutDirection) => {
-    layoutDirection = direction
-    preserveViewport = false
-    try {
-      await automationStore.actions.save({
-        ...automation,
-        layoutDirection,
-      })
-      focusOnTrigger()
-    } catch (error) {
-      notifications.error("Unable to save layout direction")
     }
   }
 
@@ -262,6 +345,48 @@
     }
   }
 
+  // Handle dragging a connection from a handle and dropping on empty canvas
+  const handleConnectEnd: OnConnectEnd = (event, connectionState) => {
+    // If connection landed on a valid target, do nothing (normal connection)
+    if (connectionState.isValid) {
+      return
+    }
+
+    // Only handle in editor mode
+    if (viewMode !== ViewMode.EDITOR) {
+      return
+    }
+
+    const sourceNodeId = connectionState.fromNode?.id
+    if (!sourceNodeId) {
+      return
+    }
+
+    const blockRef = $selectedAutomation?.blockRefs?.[sourceNodeId]
+
+    // Check if we're inside a loop by looking at the path
+    const loopHop = blockRef?.pathTo?.findLast(
+      (h: { loopStepId?: string }) => h.loopStepId !== undefined
+    )
+    const loopStepId = loopHop?.loopStepId
+
+    if (loopStepId) {
+      // Inside a loop - pass loop context
+      automationStore.actions.openActionPanel({
+        id: sourceNodeId,
+        pathTo: blockRef?.pathTo,
+        insertIntoLoopV2: true,
+        loopStepId,
+      })
+    } else {
+      // Regular flow - just pass the block reference
+      automationStore.actions.openActionPanel({
+        id: sourceNodeId,
+        pathTo: blockRef?.pathTo,
+      })
+    }
+  }
+
   onMount(async () => {
     try {
       await automationStore.actions.initAppSelf()
@@ -281,6 +406,9 @@
 
   onDestroy(() => {
     dnd.destroyDnD()
+    if (layoutSaveTimeout) {
+      clearTimeout(layoutSaveTimeout)
+    }
   })
 </script>
 
@@ -315,7 +443,7 @@
           : "left"}
       />
       {#if hasUnpublishedChanges}
-        <button class="unpublished-changes-btn" on:click={publishChanges}>
+        <button class="unpublished-changes-btn" onclick={publishChanges}>
           <StatusLight color="var(--spectrum-global-color-blue-600)" size="L" />
           <div class="unpublished-changes-text">Unpublished changes</div>
         </button>
@@ -349,30 +477,28 @@
 
 <div class="main-flow">
   <div class="root">
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="wrapper"
       bind:this={paneEl}
-      on:mousemove={dnd.handlePointerMove}
-      on:mousedown={dnd.updatePaneRect}
+      onmousemove={dnd.handlePointerMove}
+      onmousedown={dnd.updatePaneRect}
     >
       <SvelteFlow
-        {nodes}
+        bind:nodes
         {nodeTypes}
-        {edges}
+        bind:edges
         {edgeTypes}
         colorMode="system"
-        nodesDraggable={false}
+        nodesDraggable={true}
+        onnodedragstop={handleNodeDragStop}
+        onconnectend={handleConnectEnd}
         minZoom={0.4}
         maxZoom={1}
         deleteKey={null}
         proOptions={{ hideAttribution: true }}
       >
-        <FlowControls
-          historyStore={automationHistoryStore}
-          {layoutDirection}
-          onChangeDirection={saveDirectionChange}
-        />
+        <FlowControls historyStore={automationHistoryStore} />
         <Background variant={BackgroundVariant.Dots} gap={25} />
       </SvelteFlow>
     </div>
@@ -405,7 +531,7 @@
     position: relative;
     height: 100%;
     --xy-background-color: var(--spectrum-global-color-gray-75);
-    --xy-edge-label-background-color: var(--spectrum-global-color-gray-50);
+    --xy-edge-label-background-color: transparent;
     --xy-node-background-color: var(--background);
     --xy-node-border: 1px var(--grey-3) solid;
     --xy-node-boxshadow-selected: 0 0 0 1px
@@ -518,6 +644,19 @@
     height: 8px;
     width: 4px;
     right: -3px;
+  }
+
+  /* Source handle styling - these are draggable to add new nodes */
+  :global(.svelte-flow__handle.custom-handle.source-handle) {
+    cursor: crosshair;
+    transition:
+      background-color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  :global(.svelte-flow__handle.custom-handle.source-handle:hover) {
+    background-color: var(--spectrum-global-color-blue-500);
+    transform: scale(1.3);
   }
 
   .unpublished-changes-btn {

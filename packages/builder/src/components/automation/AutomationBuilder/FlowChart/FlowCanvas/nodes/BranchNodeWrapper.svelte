@@ -2,7 +2,7 @@
   import BranchNode from "./BranchNode.svelte"
   import { selectedAutomation, automationStore } from "@/stores/builder"
   import { ViewMode, type BranchNodeData } from "@/types/automations"
-  import { Handle, Position } from "@xyflow/svelte"
+  import { Handle, Position, type NodeProps, type Node } from "@xyflow/svelte"
   import { enrichLog } from "../../AutomationStepHelpers"
   import { STEP, SUBFLOW } from "../FlowGeometry"
   import {
@@ -11,21 +11,23 @@
     type LayoutDirection,
   } from "@budibase/types"
 
-  export let data: BranchNodeData
+  type BranchNode = Node<BranchNodeData>
+  let { data }: NodeProps<BranchNode> = $props()
 
   // unwrap data passed from SvelteFlow
-  $: block = data.block
-  $: branchIdx = data.branchIdx
-  $: viewMode = $automationStore.viewMode as ViewMode
-  $: automation = $selectedAutomation?.data
-  $: direction = (data.direction || "TB") as LayoutDirection
-  $: isHorizontal = direction === "LR"
-  $: isSubflow = !!data?.isSubflow
-  $: laneWidth = data?.laneWidth || SUBFLOW.laneWidth
-  $: handleOffset =
+  let block = $derived(data.block)
+  let branchIdx = $derived(data.branchIdx)
+  let viewMode = $derived($automationStore.viewMode as ViewMode)
+  let automation = $derived($selectedAutomation?.data)
+  let direction = $derived((data.direction || "TB") as LayoutDirection)
+  let isHorizontal = $derived(direction === "LR")
+  let isSubflow = $derived(!!data?.isSubflow)
+  let laneWidth = $derived(data?.laneWidth || SUBFLOW.laneWidth)
+  let handleOffset = $derived(
     isHorizontal && isSubflow
       ? Math.max(0, Math.round((laneWidth - STEP.width) / 2))
       : 0
+  )
 
   // Handle step selection in logs mode (open details panel)
   function handleStepSelect(
@@ -66,8 +68,8 @@
     />
   </div>
   <Handle
-    isConnectable={false}
-    class="custom-handle"
+    isConnectable={true}
+    class="custom-handle source-handle"
     type="source"
     position={isHorizontal ? Position.Right : Position.Bottom}
     style={isHorizontal && isSubflow

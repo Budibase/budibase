@@ -1,20 +1,27 @@
 <script lang="ts">
-  import { Handle, Position, NodeToolbar } from "@xyflow/svelte"
+  import {
+    Handle,
+    Position,
+    NodeToolbar,
+    type NodeProps,
+    type Node,
+  } from "@xyflow/svelte"
   import { ActionButton, Icon } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "@/stores/builder"
   import type { LayoutDirection } from "@budibase/types"
   import type { LoopV2NodeData } from "@/types/automations"
   import FlowItemStatus from "../../FlowItemStatus.svelte"
 
-  export let data: LoopV2NodeData
-  $: block = data.block
-  $: direction = (data.direction || "TB") as LayoutDirection
-  $: isHorizontal = direction === "LR"
-  $: selected = $automationStore.selectedNodeId === block?.id
-  $: loopChildCount = Array.isArray(block?.inputs?.children)
-    ? block.inputs.children.length
-    : 0
-  $: viewMode = $automationStore.viewMode
+  type LoopV2Node = Node<LoopV2NodeData>
+  let { data }: NodeProps<LoopV2Node> = $props()
+  let block = $derived(data.block)
+  let direction = $derived((data.direction || "TB") as LayoutDirection)
+  let isHorizontal = $derived(direction === "LR")
+  let selected = $derived($automationStore.selectedNodeId === block?.id)
+  let loopChildCount = $derived(
+    Array.isArray(block?.inputs?.children) ? block.inputs.children.length : 0
+  )
+  let viewMode = $derived($automationStore.viewMode)
 
   const addStep = () => {
     // Provide a marker so the side panel knows we're inserting inside the loop subflow
@@ -42,20 +49,20 @@
 />
 
 <Handle
-  isConnectable={false}
-  class="custom-handle"
+  isConnectable={true}
+  class="custom-handle source-handle"
   type="source"
   position={isHorizontal ? Position.Right : Position.Bottom}
 />
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="loop-wrapper">
   <div class="loop-status">
     <FlowItemStatus {block} branch={undefined} hideStatus={false} {viewMode} />
   </div>
   <div
-    on:click|stopPropagation={selectNode}
+    onclick={e => { e.stopPropagation(); selectNode() }}
     class="loop-container"
     class:selected
   >
