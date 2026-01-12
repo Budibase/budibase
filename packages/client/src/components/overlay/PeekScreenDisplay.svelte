@@ -123,7 +123,7 @@
       showDivider={false}
       showCloseIcon={false}
     >
-      <iframe title="Peek" bind:this={iframe} src={$peekStore.href} />
+      <iframe title="Peek" bind:this={iframe} src={$peekStore.href}></iframe>
     </ModalContent>
   </Modal>
 {/if}

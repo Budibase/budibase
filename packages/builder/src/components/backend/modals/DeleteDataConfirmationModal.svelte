@@ -9,14 +9,22 @@
     views,
     viewsV2,
   } from "@/stores/builder"
+  import { themeStore } from "@/stores/portal"
   import { markSkipUnsavedPrompt } from "@/stores/builder/queries"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { helpers, utils } from "@budibase/shared-core"
-  import { SourceType } from "@budibase/types"
-  import { goto, params } from "@roxi/routify"
+  import { SourceType, Theme } from "@budibase/types"
+  import { goto as gotoStore, params as paramsStore } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import { get } from "svelte/store"
   import type { Table, ViewV2, View, Datasource, Query } from "@budibase/types"
+
+  $gotoStore
+  $paramsStore
+
+  $: goto = $gotoStore
+  $: params = $paramsStore
+  $: isDarkTheme = ![Theme.LIGHTEST, Theme.LIGHT].includes($themeStore.theme)
 
   export let source: Table | ViewV2 | Datasource | Query | undefined
 
@@ -66,7 +74,7 @@
   }
 
   async function deleteTable(table: Table & { datasourceId?: string }) {
-    const isSelected = $params.tableId === table._id
+    const isSelected = params.tableId === table._id
     try {
       await tables.delete({
         _id: table._id!,
@@ -78,7 +86,7 @@
       }
       notifications.success("Table deleted")
       if (isSelected) {
-        $goto(`./datasource/${table.datasourceId}`)
+        goto(`./datasource/${table.datasourceId}`)
       }
     } catch (error: any) {
       notifications.error(`Error deleting table - ${error.message}`)
@@ -109,7 +117,7 @@
       const isSelected =
         get(datasources).selectedDatasourceId === datasource._id
       if (isSelected) {
-        $goto("./datasource")
+        goto("./datasource")
       }
     } catch (error) {
       notifications.error("Error deleting datasource")
@@ -121,7 +129,7 @@
       // Go back to the datasource if we are deleting the active query
       if ($queries.selectedQueryId === query._id) {
         markSkipUnsavedPrompt(query._id)
-        $goto(`./datasource/${query.datasourceId}`)
+        goto(`./datasource/${query.datasourceId}`)
       }
       await queries.delete(query)
       await datasources.fetch()
@@ -193,22 +201,24 @@
 >
   <div class="content">
     {#if sourceType}
-      <p class="warning">
+      <div class="warning">
         {buildMessage(sourceType)}
         {#if affectedScreens.length > 0}
           <span class="screens">
             <ul class="screens-list">
               {#each affectedScreens as item}
                 <li>
-                  <Link overBackground target="_blank" href={item.url}
-                    >{item.text}</Link
+                  <Link
+                    overBackground={isDarkTheme}
+                    target="_blank"
+                    href={item.url}>{item.text}</Link
                   >
                 </li>
               {/each}
             </ul>
           </span>
         {/if}
-      </p>
+      </div>
     {/if}
     <p class="warning">This action cannot be undone.</p>
   </div>

@@ -8,7 +8,7 @@
 
   import { hasData } from "@/stores/selectors"
   import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"
-  import { params, goto } from "@roxi/routify"
+  import { params as paramsStore, goto as gotoStore } from "@roxi/routify"
   import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal/index.svelte"
   import CreateInternalTableModal from "./_components/CreateInternalTableModal.svelte"
   import DatasourceOption from "./_components/DatasourceOption.svelte"
@@ -17,6 +17,10 @@
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
   import { IntegrationTypes } from "@/constants/backend"
+
+  // Capture store values for use in async callbacks (Svelte 5 compatibility)
+  $: goto = $gotoStore
+  $: params = $paramsStore
 
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
@@ -30,10 +34,10 @@
     sampleDataLoading = true
 
     try {
-      await API.addSampleData($params.application)
+      await API.addSampleData(params.application)
       await tables.fetch()
       await datasources.fetch()
-      $goto("./table")
+      goto("./table")
     } catch (e) {
       sampleDataLoading = false
       notifications.error("Error creating datasource")
@@ -50,7 +54,7 @@
 
 <CreationPage
   showClose={hasData($datasources, $tables)}
-  onClose={() => $goto("./table")}
+  onClose={() => goto("./table")}
   heading="Add new data source"
 >
   <div class="subHeading">
@@ -67,7 +71,6 @@
     <DatasourceOption
       on:click={() => internalTableModal.show()}
       title="Create new table"
-      description="Non-relational"
       {disabled}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
@@ -75,7 +78,6 @@
     <DatasourceOption
       on:click={createSampleData}
       title="Use sample data"
-      description="Non-relational"
       disabled={disabled || $datasources.hasDefaultData}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
@@ -83,7 +85,6 @@
     <DatasourceOption
       on:click={() => internalTableModal.show({ promptUpload: true })}
       title="Upload CSV / JSON"
-      description="Non-relational"
       {disabled}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
@@ -99,7 +100,6 @@
       <DatasourceOption
         on:click={() => externalDatasourceModal.show(integration)}
         title={integration.friendlyName}
-        description={integration.type}
         {disabled}
       >
         <IntegrationIcon

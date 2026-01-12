@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { flags } from "@/stores/builder"
   import { datasources } from "@/stores/builder/datasources"
   import { queries } from "@/stores/builder/queries"
@@ -64,6 +64,8 @@
 
   export let queryId
   export let datasourceId
+
+  $: goto = $gotoStore
 
   type EndpointWithIcon = ImportEndpoint & {
     icon?: {
@@ -525,7 +527,7 @@
       notifications.success(`Request saved successfully`)
 
       if (isNew && redirectIfNew) {
-        $goto(`../../${_id}`)
+        goto(`../../${_id}`)
       }
 
       const updatedQuery = getSelectedQuery(_id!, builtQuery.datasourceId)
@@ -973,7 +975,7 @@
       class="underlay"
       transition:fade={{ duration: 260 }}
       on:click={() => sidebarExpanded.set(false)}
-    />
+    ></div>
   {/if}
   {#if $sidebarExpanded}
     <div
@@ -1004,7 +1006,7 @@
 
 <style>
   .details :global(.markdown-viewer code) {
-    color: white;
+    color: var(--spectrum-alias-text-color);
   }
   .bottom {
     flex: 1;
@@ -1105,7 +1107,7 @@
     display: flex;
   }
   .send :global(.spectrum-Button-label) {
-    color: white;
+    color: var(--spectrum-alias-text-color);
   }
   .send :global(.icon) {
     color: var(--spectrum-global-color-gray-700);

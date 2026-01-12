@@ -32,11 +32,11 @@
     class:mobile={$previewStore.modalDevice === "mobile"}
     transition:fly={{ duration: 260, y: 130 }}
   >
-    <div class="header placeholder" />
+    <div class="header placeholder"></div>
     <div class="loading placeholder">
       <ProgressCircle />
     </div>
-    <iframe title="Budibase App Preview" {src} />
+    <iframe title="Budibase App Preview" {src}></iframe>
   </div>
 </div>
 

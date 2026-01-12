@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { datasources, integrations, queries } from "@/stores/builder"
   import {
     Icon,
@@ -25,6 +25,8 @@
   import QueryViewerSavePromptModal from "./QueryViewerSavePromptModal.svelte"
   import { Utils } from "@budibase/frontend-core"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
+
+  $: goto = $gotoStore
 
   export let query
   let queryHash
@@ -191,7 +193,7 @@
                 // Set the comparison query hash to match the new query so that the user doesn't
                 // get nagged when navigating to the edit view
                 queryHash = JSON.stringify(newQuery)
-                $goto(`../../${response._id}`)
+                goto(`../../${response._id}`)
               }
             }}
             disabled={loading ||

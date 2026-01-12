@@ -13,7 +13,7 @@
     appStore,
     workspaceAppStore,
   } from "@/stores/builder"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import * as screenTemplating from "@/templates/screenTemplating"
   import { Roles } from "@/constants/backend"
   import { AutoScreenTypes } from "@/constants"
@@ -25,6 +25,8 @@
     Table,
     ViewV2,
   } from "@budibase/types"
+
+  $: goto = $gotoStore
 
   let mode: AutoScreenTypes
   let workspaceAppId: string | undefined
@@ -201,11 +203,11 @@
     if (screen.props?._children?.length) {
       // Focus on the main component for the screen type
       const mainComponent = screen.props?._children?.[0]._id
-      $goto(
+      goto(
         `/builder/workspace/${$appStore.appId}/design/${workspaceAppId}/${screen._id}/${mainComponent}`
       )
     } else {
-      $goto(
+      goto(
         `/builder/workspace/${$appStore.appId}/design/${workspaceAppId}/${screen._id}`
       )
     }

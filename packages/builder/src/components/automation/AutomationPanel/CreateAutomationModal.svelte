@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { automationStore } from "@/stores/builder"
   import {
     notifications,
@@ -11,6 +11,8 @@
     Label,
   } from "@budibase/bbui"
   import { TriggerStepID } from "@/constants/backend/automations"
+
+  $: goto = $gotoStore
 
   export let webhookModal
 
@@ -37,7 +39,7 @@
         webhookModal.show()
       }
       notifications.success(`Automation ${name} created`)
-      $goto(`../automation/${automation._id}`)
+      goto(`../automation/${automation._id}`)
     } catch (error) {
       notifications.error("Error creating automation")
     }

@@ -74,7 +74,7 @@
           <span
             style:background-color={schema?.optionColors?.[option]}
             class="optionCircle"
-          />{option}
+          ></span>{option}
         </Property>
       {/each}
     {:else if schema.type === "options"}
@@ -83,7 +83,7 @@
           <span
             style:background-color={schema?.optionColors?.[option]}
             class="optionCircle"
-          />{option}
+          ></span>{option}
         </Property>
       {/each}
     {:else if schema.type === "json"}

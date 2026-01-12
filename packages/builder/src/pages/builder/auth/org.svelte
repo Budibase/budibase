@@ -8,11 +8,13 @@
     Layout,
     notifications,
   } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { auth, admin } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { get } from "svelte/store"
   import { onMount } from "svelte"
+
+  $: goto = $gotoStore
 
   let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
   $: multiTenancyEnabled = $admin.multiTenancy
@@ -28,7 +30,7 @@
       await auth.setOrg(tenantId)
       // re-init now org selected
       await admin.init()
-      $goto("../")
+      goto("../")
     } catch (error) {
       notifications.error("Error setting organisation")
     }
@@ -41,7 +43,7 @@
   onMount(async () => {
     await auth.checkQueryString()
     if (!multiTenancyEnabled || useAccountPortal) {
-      $goto("../")
+      goto("../")
     } else {
       admin.unload()
     }

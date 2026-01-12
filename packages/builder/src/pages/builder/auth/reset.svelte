@@ -7,11 +7,15 @@
     ProgressCircle,
     notifications,
   } from "@budibase/bbui"
-  import { goto, params } from "@roxi/routify"
+  import { goto as gotoStore, params } from "@roxi/routify"
   import { auth, organisation, admin } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { PasswordRepeatInput } from "@budibase/frontend-core"
   import { onMount } from "svelte"
+
+  $params
+
+  $: goto = $gotoStore
 
   const resetCode = $params["?code"]
   let form
@@ -39,12 +43,12 @@
           // Update self will clear the platform user, so need to login
           await auth.login(email, password, tenantId)
         }
-        $goto("/")
+        goto("/")
       } else {
         await auth.resetPassword(password, resetCode)
         notifications.success("Password reset successfully")
         // send them to login if reset successful
-        $goto("./login")
+        goto("./login")
       }
     } catch (err) {
       loading = false
@@ -93,7 +97,7 @@
           {/if}
         </Button>
       </Layout>
-      <div />
+      <div></div>
     </Layout>
   </div>
 </div>

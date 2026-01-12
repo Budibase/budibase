@@ -20,8 +20,8 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
           .describe("Maximum number of rows to return"),
         startKey: z.string().nullish().describe("Start key for pagination"),
       }),
-      execute: async (input: unknown) => {
-        const { tableId } = input as { tableId: string }
+      execute: async input => {
+        const { tableId } = input
         const rows = await sdk.rows.fetch(tableId)
         return { rows }
       },
@@ -39,7 +39,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
         tableId: z.string().describe("The ID of the table"),
         rowId: z.string().describe("The ID of the row to retrieve"),
       }),
-      execute: async (input: unknown) => {
+      execute: async input => {
         const { tableId, rowId } = input as {
           tableId: string
           rowId: string
@@ -77,12 +77,9 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
               "Values must be plain text - no HTML, markdown, or special characters."
           ),
       }),
-      execute: async (input: unknown) => {
-        const { tableId, data } = input as {
-          tableId: string
-          data: Record<string, unknown>
-        }
-        const row = await sdk.rows.save(tableId, data as any, undefined)
+      execute: async input => {
+        const { tableId, data } = input
+        const row = await sdk.rows.save(tableId, data, undefined)
         return { row }
       },
     }),
@@ -114,12 +111,8 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
               "Values must be plain text - no HTML, markdown, or special characters."
           ),
       }),
-      execute: async (input: unknown) => {
-        const { tableId, rowId, data } = input as {
-          tableId: string
-          rowId: string
-          data: Record<string, unknown>
-        }
+      execute: async input => {
+        const { tableId, rowId, data } = input
         const rowData = { ...data, _id: rowId }
         const row = await sdk.rows.save(tableId, rowData, undefined)
         return { row }
@@ -165,13 +158,8 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
           .describe("Sort configuration"),
         limit: z.number().nullish().describe("Maximum number of results"),
       }),
-      execute: async (input: unknown) => {
-        const { tableId, query, sort, limit } = input as {
-          tableId: string
-          query?: Record<string, unknown> | null
-          sort?: { column: string; order: "ascending" | "descending" } | null
-          limit?: number | null
-        }
+      execute: async input => {
+        const { tableId, query, sort, limit } = input
         const searchParams: RowSearchParams = {
           tableId,
           query: query || {},

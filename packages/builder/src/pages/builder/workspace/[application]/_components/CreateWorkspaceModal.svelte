@@ -12,12 +12,14 @@
   import { API } from "@/api"
   import { appsStore, auth } from "@/stores/portal"
   import { onMount, createEventDispatcher } from "svelte"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
   import * as workspaceValidation from "@budibase/frontend-core/src/utils/validation/yup/app"
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
   import type { AppTemplate } from "@/types"
+
+  $: goto = $gotoStore
 
   export let redirectOnCreate = true
 
@@ -163,7 +165,7 @@
         // Refresh for access to created applications
         await auth.getSelf()
       }
-      $goto(`/builder/workspace/${createdApp.instance._id}`)
+      goto(`/builder/workspace/${createdApp.instance._id}`)
     } catch (error) {
       creating = false
       builderStore.appCreated(false)
