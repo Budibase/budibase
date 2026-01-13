@@ -522,39 +522,6 @@
 {/if}
 
 <style>
-  /* Markdown decorations for CodeEditor */
-  .code-editor :global(.md-header) {
-    font-weight: 600;
-  }
-  .code-editor :global(.md-h1) {
-    color: var(--spectrum-global-color-blue-700);
-    font-size: 1.3em;
-  }
-  .code-editor :global(.md-h2) {
-    color: var(--spectrum-global-color-blue-600);
-    font-size: 1.15em;
-  }
-  .code-editor :global(.md-h3) {
-    color: var(--spectrum-global-color-blue-500);
-    font-size: 1.05em;
-  }
-  .code-editor :global(.md-inline-code) {
-    background-color: var(--spectrum-global-color-gray-200);
-    padding: 1px 4px;
-    border-radius: 3px;
-    font-family: var(--font-mono);
-  }
-  .code-editor :global(.md-bold) {
-    font-weight: 700;
-  }
-  .code-editor :global(.md-italic) {
-    font-style: italic !important;
-  }
-  .code-editor :global(.md-bullet) {
-    color: var(--spectrum-global-color-blue-500);
-    font-weight: 600;
-  }
-
   /* Editor */
   .code-editor {
     font-size: 12px;
@@ -806,5 +773,36 @@
     display: inline-block;
     min-width: fit-content;
     padding-right: 2px !important;
+  }
+
+  /* Markdown decorations for CodeEditor */
+  .code-editor :global(.md-header) {
+    font-weight: 600;
+  }
+  .code-editor :global(.md-h1) {
+    color: #c86240;
+  }
+  .code-editor :global(.md-h2) {
+    color: #c86240;
+  }
+  .code-editor :global(.md-h3) {
+    color: #c86240;
+  }
+
+  .code-editor :global(.md-inline-code) {
+    background-color: var(--spectrum-global-color-gray-200);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+  }
+  .code-editor :global(.md-bold) {
+    font-weight: 700;
+  }
+  .code-editor :global(.md-italic) {
+    font-style: italic !important;
+  }
+  .code-editor :global(.md-bullet) {
+    color: var(--bb-indigo-light);
+    font-weight: 600;
   }
 </style>
