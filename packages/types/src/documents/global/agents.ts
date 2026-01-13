@@ -14,13 +14,6 @@ export interface ToolMetadata {
   sourceLabel?: string
 }
 
-export interface AgentRagConfig {
-  ragMinDistance: number
-  ragTopK: number
-  embeddingModel: string
-  vectorDb: string
-}
-
 export interface Agent extends Document {
   name: string
   description?: string
@@ -32,13 +25,8 @@ export interface Agent extends Document {
   iconColor?: string
   createdBy?: string
   enabledTools?: string[]
-  ragConfig?:
-    | ({
-        enabled: true
-      } & AgentRagConfig)
-    | ({
-        enabled: false
-      } & Partial<AgentRagConfig>)
+  ragConfigId?: string
+  ragEnabled?: boolean
 }
 
 export interface AgentMessageRagSource {

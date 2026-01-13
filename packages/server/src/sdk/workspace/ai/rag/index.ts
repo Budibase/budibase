@@ -1,9 +1,4 @@
-import {
-  AgentRagConfig,
-  type Agent,
-  type AgentFile,
-  type VectorDb,
-} from "@budibase/types"
+import type { Agent, AgentFile, RagConfig, VectorDb } from "@budibase/types"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
@@ -13,7 +8,7 @@ import { createVectorDb, type ChunkInput } from "../vectorDb"
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
 
-interface RagConfig {
+interface ResolvedRagConfig {
   databaseUrl: string
   embeddingModel: string
   embeddingDimensions: number
@@ -40,8 +35,8 @@ const textFileExtensions = new Set([
 const yamlExtensions = new Set([".yaml", ".yml"])
 
 const buildRagConfig = async (
-  ragConfig: AgentRagConfig
-): Promise<RagConfig> => {
+  ragConfig: RagConfig
+): Promise<ResolvedRagConfig> => {
   const databaseUrl = await resolveVectorDatabaseConfig(ragConfig.vectorDb)
 
   const { apiKey, baseUrl, modelId } =
@@ -68,7 +63,7 @@ const resolveVectorDatabaseConfig = async (
   return connectionString
 }
 
-const getVectorDb = (config: RagConfig) =>
+const getVectorDb = (config: ResolvedRagConfig) =>
   createVectorDb({
     databaseUrl: config.databaseUrl,
     embeddingDimensions: config.embeddingDimensions,
@@ -233,7 +228,7 @@ const createChunksFromContent = (content: string, filename?: string) => {
   return chunkDocument(content)
 }
 
-const getEmbedding = async (config: RagConfig, text: string) => {
+const getEmbedding = async (config: ResolvedRagConfig, text: string) => {
   const headers = new Headers()
   headers.append("Content-Type", "application/json")
   headers.append("Authorization", `Bearer ${config.apiKey}`)
@@ -291,15 +286,51 @@ const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
   return buffer.toString("utf-8")
 }
 
+export const getAgentRagConfig = async (
+  agent: Agent
+): Promise<RagConfig | undefined> => {
+  if (!agent.ragEnabled) {
+    return undefined
+  }
+  if (agent.ragConfigId) {
+    return await sdk.ragConfigs.find(agent.ragConfigId)
+  }
+  const legacyConfig = (agent as {
+    ragConfig?: {
+      embeddingModel?: string
+      vectorDb?: string
+      ragMinDistance?: number
+      ragTopK?: number
+      enabled?: boolean
+    }
+  }).ragConfig
+
+  if (
+    legacyConfig?.enabled &&
+    legacyConfig.embeddingModel &&
+    legacyConfig.vectorDb
+  ) {
+    return {
+      name: "Legacy RAG",
+      embeddingModel: legacyConfig.embeddingModel,
+      vectorDb: legacyConfig.vectorDb,
+      ragMinDistance: legacyConfig.ragMinDistance ?? 0.7,
+      ragTopK: legacyConfig.ragTopK ?? 4,
+    }
+  }
+  return undefined
+}
+
 export const ingestAgentFile = async (
   agent: Agent,
   agentFile: AgentFile,
   fileBuffer: Buffer
 ): Promise<ChunkResult> => {
-  if (!agent.ragConfig?.enabled) {
+  const ragConfig = await getAgentRagConfig(agent)
+  if (!ragConfig) {
     throw new Error("RAG not configured")
   }
-  const config = await buildRagConfig(agent.ragConfig)
+  const config = await buildRagConfig(ragConfig)
   const vectorDb = getVectorDb(config)
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
@@ -323,7 +354,7 @@ export const ingestAgentFile = async (
 }
 
 export const deleteAgentFileChunks = async (
-  ragConfig: AgentRagConfig,
+  ragConfig: RagConfig,
   sourceIds: string[]
 ) => {
   if (!sourceIds || sourceIds.length === 0) {
@@ -346,28 +377,28 @@ export interface RetrievedContextResult {
 }
 
 export const retrieveContextForSources = async (
-  agent: Agent,
+  ragConfig: RagConfig,
   question: string,
-  sourceIds: string[],
-  topK: number,
-  similarityThreshold: number
+  sourceIds: string[]
 ): Promise<RetrievedContextResult> => {
   if (!question || question.trim().length === 0 || sourceIds.length === 0) {
     return { text: "", chunks: [] }
   }
-  if (!agent.ragConfig?.enabled) {
-    throw new Error("RAG not configured")
-  }
 
-  const config = await buildRagConfig(agent.ragConfig)
+  const config = await buildRagConfig(ragConfig)
   const vectorDb = getVectorDb(config)
   const queryEmbedding = await getEmbedding(config, question)
-  const rows = await vectorDb.queryNearest(queryEmbedding, sourceIds, topK)
+  const rows = await vectorDb.queryNearest(
+    queryEmbedding,
+    sourceIds,
+    ragConfig.ragTopK
+  )
   if (rows.length === 0) {
     return { text: "", chunks: [] }
   }
 
-  const maxDistance = similarityThreshold === 0 ? 1 : 1 - similarityThreshold
+  const maxDistance =
+    ragConfig.ragMinDistance === 0 ? 1 : 1 - ragConfig.ragMinDistance
   const filtered = rows.filter(row => row.distance <= maxDistance)
   if (filtered.length === 0) {
     return { text: "", chunks: [] }

@@ -7,6 +7,7 @@ import {
 } from "@budibase/types"
 import { listAgentFiles, removeAgentFile } from "./files"
 import { deleteAgentFileChunks } from "../rag"
+import sdk from "../../.."
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
@@ -60,7 +61,8 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
-    ragConfig: request.ragConfig,
+    ragConfigId: request.ragConfigId,
+    ragEnabled: request.ragEnabled ?? false,
   }
 
   const { rev } = await db.put(agent)
@@ -82,7 +84,8 @@ export async function update(request: UpdateAgentRequest): Promise<Agent> {
     ...request,
     updatedAt: new Date().toISOString(),
     enabledTools: request.enabledTools ?? existing?.enabledTools ?? [],
-    ragConfig: request.ragConfig,
+    ragConfigId: request.ragConfigId ?? existing?.ragConfigId,
+    ragEnabled: request.ragEnabled ?? existing?.ragEnabled ?? false,
   }
 
   const { rev } = await db.put(updated)
@@ -96,15 +99,15 @@ export async function remove(agentId: string) {
 
   await db.remove(agent)
 
-  if (agent.ragConfig?.enabled) {
-    // TODO: check what happens with disabled
-    const files = await listAgentFiles(agentId)
-    if (files.length > 0) {
-      await deleteAgentFileChunks(
-        agent.ragConfig,
-        files.map(file => file.ragSourceId).filter(Boolean)
-      )
-      await Promise.all(files.map(file => removeAgentFile(agent, file)))
-    }
+  const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
+
+  const files = await listAgentFiles(agentId)
+  if (files.length > 0 && ragConfig) {
+    await deleteAgentFileChunks(
+      ragConfig,
+      files.map(file => file.ragSourceId).filter(Boolean)
+    )
+
+    await Promise.all(files.map(file => removeAgentFile(agent, file)))
   }
 }
