@@ -84,12 +84,17 @@ export type RestTemplateName =
   | "Volt IO"
   | "Workable"
   | "X"
+  | MicrosoftSharepointRestTemplateName
   | TwilioRestTemplateName
   | ZendeskRestTemplateName
 
-export type RestTemplateGroupName = "Twilio" | "Zendesk"
+export type RestTemplateGroupName =
+  | "Microsoft SharePoint"
+  | "Twilio"
+  | "Zendesk"
 
 export type RestTemplateGroups = {
+  "Microsoft SharePoint": MicrosoftSharepointRestTemplateName
   Twilio: TwilioRestTemplateName
   Zendesk: ZendeskRestTemplateName
 }
@@ -135,6 +140,11 @@ export type TwilioRestTemplateName =
   | "Twilio Wireless"
 
 export type ZendeskRestTemplateName = "Sunshine Conversations"
+
+export type MicrosoftSharepointRestTemplateName =
+  | "SharePoint Drives"
+  | "SharePoint Shares"
+  | "SharePoint Sites"
 
 export interface RestTemplate {
   name: RestTemplateName

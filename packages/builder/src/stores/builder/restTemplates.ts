@@ -508,6 +508,48 @@ const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
   ],
 }
 
+const microsoftSharepointRestTemplateGroup: RestTemplateGroup<
+  "Microsoft SharePoint"
+> = {
+  name: "Microsoft SharePoint",
+  icon: MicrosoftSharepointLogo,
+  verified: true,
+  description:
+    "Microsoft Graph SharePoint APIs for sites, drives, and shared items.",
+  templates: [
+    {
+      name: "SharePoint Sites",
+      description: "SharePoint sites, lists, and content types.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/sites/openapi.yaml",
+        },
+      ],
+    },
+    {
+      name: "SharePoint Drives",
+      description: "Drive items and file operations for SharePoint.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/drives/openapi.yaml",
+        },
+      ],
+    },
+    {
+      name: "SharePoint Shares",
+      description: "Shared items and sharing operations for SharePoint.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/shares/openapi.yaml",
+        },
+      ],
+    },
+  ],
+}
+
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
@@ -1107,19 +1149,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
-      name: "Microsoft SharePoint",
-      description:
-        "Microsoft Graph SharePoint API for sites, lists, drives, and content",
-      specs: [
-        {
-          version: "v1.0",
-          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/openapi.yaml",
-        },
-      ],
-      icon: MicrosoftSharepointLogo,
-      verified: true,
-    },
-    {
       name: "Nanonets",
       description:
         "Break down data barriers with Nanonets AI—extract valuable information from documents, emails, tickets or databases.",
@@ -1444,7 +1473,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: XLogo,
     },
   ],
-  templateGroups: [twilioRestTemplateGroup, zendeskRestTemplateGroup],
+  templateGroups: [
+    twilioRestTemplateGroup,
+    zendeskRestTemplateGroup,
+    microsoftSharepointRestTemplateGroup,
+  ],
 }
 
 export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
