@@ -43,13 +43,6 @@
   let selectedAgentId: string | null = null
   let initializedWorkspaceId: string | null = null
 
-  type ChatAppsStoreWithAgents = typeof chatAppsStore & {
-    updateEnabledAgents: (_enabledAgents: EnabledAgent[]) => Promise<unknown>
-  }
-
-  const chatAppsStoreWithAgents =
-    chatAppsStore as unknown as ChatAppsStoreWithAgents
-
   $: conversationHistory = $chatAppsStore.conversations || []
   $: agents = $agentsStore.agents || []
   $: namedAgents = agents.filter(agent => Boolean(agent?.name))
@@ -232,7 +225,7 @@
       }
     }
 
-    await chatAppsStoreWithAgents.updateEnabledAgents(nextEnabledAgents)
+    await chatAppsStore.updateEnabledAgents(nextEnabledAgents)
   }
 
   onMount(async () => {
