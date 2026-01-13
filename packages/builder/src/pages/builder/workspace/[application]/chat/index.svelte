@@ -56,27 +56,31 @@
   $: enabledAgents = chatApp?.enabledAgents || []
 
   const selectAgent = async (agentId: string | null) => {
-    selectedAgentId = agentId
     if (agentId) {
-      await agentsStore.selectAgent(agentId)
       const chatApp = await chatAppsStore.ensureChatApp(
-        undefined,
+        agentId,
         $params.application
       )
       if (!chatApp?._id) {
+        notifications.error("Could not start chat")
         return
       }
+
+      selectedAgentId = agentId
+      await agentsStore.selectAgent(agentId)
       chat = {
         ...INITIAL_CHAT,
         chatAppId: chatApp._id,
         agentId,
       }
       chatAppsStore.clearCurrentConversationId()
-    } else {
-      await agentsStore.selectAgent(undefined)
-      chatAppsStore.reset()
-      chat = { ...INITIAL_CHAT }
+      return
     }
+
+    selectedAgentId = null
+    await agentsStore.selectAgent(undefined)
+    chatAppsStore.reset()
+    chat = { ...INITIAL_CHAT }
   }
 
   const selectChat = async (selectedChat: ChatConversationWithAgent) => {
