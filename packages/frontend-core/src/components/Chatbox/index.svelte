@@ -142,7 +142,20 @@
       let streamedMessages = [...updatedChat.messages]
 
       for await (const message of messageStream) {
-        streamedMessages = [...streamedMessages, message]
+        if (message?.id) {
+          const existingIndex = streamedMessages.findIndex(
+            existing => existing.id === message.id
+          )
+          if (existingIndex !== -1) {
+            streamedMessages = streamedMessages.map((existing, index) =>
+              index === existingIndex ? message : existing
+            )
+          } else {
+            streamedMessages = [...streamedMessages, message]
+          }
+        } else {
+          streamedMessages = [...streamedMessages, message]
+        }
         chat = {
           ...updatedChat,
           messages: streamedMessages,
