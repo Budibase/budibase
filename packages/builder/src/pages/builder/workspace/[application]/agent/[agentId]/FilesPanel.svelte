@@ -39,18 +39,14 @@
     }
   }
 
-  const formatFileStatus = (file: AgentFile) => {
-    switch (file.status) {
-      case AgentFileStatus.PROCESSING:
-        return "Processing"
-      case AgentFileStatus.FAILED:
-        return "Failed"
-      case AgentFileStatus.READY:
-        return "Ready"
-      default:
-        return file.status
-    }
+  const readableStatus: Record<AgentFileStatus, string> = {
+    [AgentFileStatus.PROCESSING]: "Processing",
+    [AgentFileStatus.READY]: "Failed",
+    [AgentFileStatus.FAILED]: "Ready",
   }
+
+  const formatFileStatus = (file: AgentFile) =>
+    readableStatus[file.status] || file.status
 
   async function handleFileUpload(event: Event) {
     if (!currentAgentId) {
@@ -143,7 +139,7 @@
       <div>Chunks</div>
       <div>Size</div>
       <div>Updated</div>
-      <div />
+      <div></div>
     </div>
     {#each currentFiles as file (file._id)}
       <div class="files-row">
