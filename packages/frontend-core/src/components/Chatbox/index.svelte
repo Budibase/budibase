@@ -22,7 +22,13 @@
       }
     },
   })
-  type ChatConversationLike = ChatConversation | ChatConversationRequest
+  type ChatConversationWithAgent = ChatConversation & { agentId?: string }
+  type ChatConversationRequestWithAgent = ChatConversationRequest & {
+    agentId?: string
+  }
+  type ChatConversationLike =
+    | ChatConversationWithAgent
+    | ChatConversationRequestWithAgent
 
   export let chat: ChatConversationLike
   export let loading: boolean = false

@@ -7,7 +7,6 @@
     Button,
     Icon,
     ProgressCircle,
-    Select,
     Toggle,
     notifications,
   } from "@budibase/bbui"
@@ -20,9 +19,15 @@
   import { onMount } from "svelte"
   import { Chatbox } from "@budibase/frontend-core/src/components"
 
-  type ChatConversationLike = ChatConversation | ChatConversationRequest
+  type ChatConversationWithAgent = ChatConversation & { agentId?: string }
+  type ChatConversationRequestWithAgent = ChatConversationRequest & {
+    agentId?: string
+  }
+  type ChatConversationLike =
+    | ChatConversationWithAgent
+    | ChatConversationRequestWithAgent
 
-  const INITIAL_CHAT: Omit<ChatConversationRequest, "_id" | "_rev"> = {
+  const INITIAL_CHAT: Omit<ChatConversationRequestWithAgent, "_id" | "_rev"> = {
     title: "",
     messages: [],
     chatAppId: "",
@@ -72,12 +77,18 @@
     }
   }
 
-  const selectChat = async (selectedChat: ChatConversation) => {
+  const selectChat = async (selectedChat: ChatConversationWithAgent) => {
     autoSelected = true
-    selectedAgentId = selectedChat.agentId
-    await agentsStore.selectAgent(selectedChat.agentId)
+    const resolvedAgentId =
+      selectedChat.agentId || getFirstEnabledAgentId(enabledAgents)
+    if (!resolvedAgentId) {
+      return
+    }
+    selectedAgentId = resolvedAgentId
+    await agentsStore.selectAgent(resolvedAgentId)
     chat = {
       ...selectedChat,
+      agentId: resolvedAgentId,
       chatAppId: selectedChat.chatAppId || $chatAppsStore.chatAppId || "",
     }
     chatAppsStore.setCurrentConversationId(selectedChat._id!)
@@ -156,17 +167,20 @@
     chatAppsStore.setCurrentConversationId(newCurrentChat._id)
   }
 
-  const handleAgentChange = (event: CustomEvent<string>) => {
-    selectAgent(event.detail || null)
-  }
-
-  const getAgentOptionValue = (agent: Agent) => agent._id!
-  const getAgentOptionLabel = (agent: Agent) => agent.name || "Unnamed Agent"
   const getFirstEnabledAgentId = (agentsList: EnabledAgent[]) =>
     agentsList[0]?.agentId || null
 
+  const getAgentOptionLabel = (agent: Agent) => agent.name || "Unnamed Agent"
+
   const getAgentName = (agentId: string) =>
-    agents.find(agent => agent._id === agentId)?.name || "Unknown agent"
+    agents.find(agent => agent._id === agentId)?.name
+
+  $: enabledAgentList = enabledAgents
+    .map(agent => ({
+      agentId: agent.agentId,
+      name: getAgentName(agent.agentId),
+    }))
+    .filter(agent => Boolean(agent.name))
 
   const isAgentAvailable = (agentId: string) =>
     enabledAgents.some((agent: EnabledAgent) => agent.agentId === agentId)
@@ -244,18 +258,7 @@
 </script>
 
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false}>
-    <div class="agent-selector">
-      <Select
-        placeholder="Select an agent"
-        value={selectedAgentId || undefined}
-        options={agents}
-        getOptionValue={getAgentOptionValue}
-        getOptionLabel={getAgentOptionLabel}
-        on:change={handleAgentChange}
-      />
-    </div>
-  </TopBar>
+  <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false} />
   <div class="page">
     <Panel customWidth={260} borderRight noHeaderBorder>
       <div class="settings-header">
@@ -291,24 +294,15 @@
     </Panel>
 
     <Panel customWidth={260} borderRight noHeaderBorder>
-      <div class="list-section list-actions">
-        <button
-          class="list-item list-item-button list-item-action"
-          on:click={startNewChat}
-        >
-          <Icon name="plus" size="S" />
-          <span>New chat</span>
-        </button>
-      </div>
       <div class="list-section">
         <div class="list-title">Agents</div>
-        {#if enabledAgents.length}
-          {#each enabledAgents as agent (agent.agentId)}
+        {#if enabledAgentList.length}
+          {#each enabledAgentList as agent (agent.agentId)}
             <button
               class="list-item list-item-button"
               on:click={() => selectAgent(agent.agentId)}
             >
-              {getAgentName(agent.agentId)}
+              {agent.name}
             </button>
           {/each}
         {:else}
@@ -339,8 +333,13 @@
     </Panel>
 
     <div class="chat-wrapper">
-      {#if chat._id}
-        <div class="chat-header">
+      <div class="chat-header">
+        <div class="chat-header-agent">
+          <Body size="S" color="var(--spectrum-global-color-gray-700)">
+            {getAgentName(selectedAgentId || "") || "Unknown agent"}
+          </Body>
+        </div>
+        {#if chat._id}
           <Button
             quiet
             warning
@@ -357,8 +356,9 @@
               {/if}
             </span>
           </Button>
-        </div>
-      {/if}
+        {/if}
+      </div>
+
       <Chatbox
         bind:chat
         {loading}
@@ -406,14 +406,15 @@
     gap: var(--spacing-m);
   }
 
+  .chat-header-agent {
+    display: flex;
+    align-items: center;
+  }
+
   .delete-button-content {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
-  }
-
-  .agent-selector {
-    min-width: 200px;
   }
 
   .list-section {
@@ -425,10 +426,6 @@
 
   .list-section + .list-section {
     padding-top: 0;
-  }
-
-  .list-actions {
-    padding-bottom: var(--spacing-s);
   }
 
   .list-item {
