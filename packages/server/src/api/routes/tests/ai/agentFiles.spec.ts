@@ -1,5 +1,7 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { AgentFileStatus } from "@budibase/types"
+import { AgentFileStatus, AIConfigType } from "@budibase/types"
+import nock from "nock"
+import environment from "../../../../environment"
 import * as ragSdk from "../../../../sdk/workspace/ai/rag"
 
 jest.mock("../../../../sdk/workspace/ai/rag", () => {
@@ -20,6 +22,28 @@ describe("agent files", () => {
   const fileBuffer = Buffer.from("Hello from Budibase")
 
   const createAgentWithRag = async () => {
+    const embeddingValidationScope = nock("https://example.com")
+      .post("/v1/embeddings")
+      .reply(200, { data: [] })
+
+    const liteLLMScope = nock(environment.LITELLM_URL)
+      .post("/key/generate")
+      .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
+      .post("/model/new")
+      .reply(200, { model_id: "embed-model-2" })
+      .post("/key/update")
+      .reply(200, { status: "success" })
+
+    const embeddings = await config.api.ai.createConfig({
+      name: "Embeddings",
+      provider: "openai",
+      baseUrl: "https://example.com",
+      model: "text-embedding-3-small",
+      apiKey: "test",
+      liteLLMModelId: "test",
+      isDefault: false,
+      configType: AIConfigType.EMBEDDINGS,
+    })
     const vectorDb = await config.api.vectorDb.create({
       name: "Agent Vector DB",
       provider: "pgvector",
@@ -29,6 +53,15 @@ describe("agent files", () => {
       user: "bb_user",
       password: "secret",
     })
+    const ragConfig = await config.api.ragConfig.create({
+      name: "Agent RAG",
+      embeddingModel: embeddings._id!,
+      vectorDb: vectorDb._id!,
+      ragMinDistance: 0.6,
+      ragTopK: 3,
+    })
+    expect(liteLLMScope.isDone()).toBe(true)
+    expect(embeddingValidationScope.isDone()).toBe(true)
 
     const agent = await config.api.agent.create({
       name: "Support Agent",
@@ -39,21 +72,17 @@ describe("agent files", () => {
 
     const updatedAgent = await config.api.agent.update({
       ...agent,
-      ragConfig: {
-        enabled: true,
-        embeddingModel: "embedding-config",
-        vectorDb: vectorDb._id!,
-        ragMinDistance: 0.6,
-        ragTopK: 3,
-      },
+      ragConfigId: ragConfig._id!,
+      ragEnabled: true,
     })
 
-    return { agent: updatedAgent, vectorDb }
+    return { agent: updatedAgent, vectorDb, ragConfig }
   }
 
   beforeEach(async () => {
     await config.newTenant()
     jest.restoreAllMocks()
+    nock.cleanAll()
   })
 
   it("uploads and lists agent files", async () => {
@@ -102,7 +131,7 @@ describe("agent files", () => {
     const { files } = await config.api.agentFiles.fetch(agent._id!)
     expect(files).toHaveLength(0)
     expect(deleteSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ enabled: true }),
+      expect.objectContaining({ _id: expect.any(String) }),
       [upload.file.ragSourceId]
     )
   })
