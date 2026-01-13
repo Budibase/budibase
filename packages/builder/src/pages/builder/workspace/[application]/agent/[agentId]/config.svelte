@@ -490,7 +490,7 @@
     webSearchConfigModal?.show()
   }
 
-  const handleRagToggleChange = async (e: CustomEvent<boolean>) => {
+  const handleRAGToggleChange = async (e: CustomEvent<boolean>) => {
     if (e.detail && !draft.ragConfigId) {
       ragConfigError = "Select a RAG configuration to enable it."
       notifications.error(ragConfigError)
@@ -816,29 +816,24 @@
 
           <div class="section rag-settings">
             <div class="rag-header">
-              <Heading size="XS">RAG</Heading>
+              <Heading size="XS">File ingestion:</Heading>
             </div>
             <div class="form-row">
               <div class="form-field">
                 <Select
-                  label="Model"
+                  label="RAG configuration"
                   labelPosition="left"
                   bind:value={draft.ragConfigId}
                   getOptionLabel={o => o.name}
                   getOptionValue={o => o._id}
                   options={ragConfigs}
                   placeholder="Select a RAG configuration"
+                  disabled={!ragConfigs.length}
                   on:change={() => {
                     ragConfigError = undefined
                     scheduleSave(true)
                   }}
                   error={ragConfigError}
-                />
-                <Toggle
-                  label="Enable"
-                  labelPosition="left"
-                  value={draft.ragEnabled}
-                  on:change={handleRagToggleChange}
                 />
               </div>
               <div class="form-icon">
@@ -850,6 +845,14 @@
                   />
                 </AbsTooltip>
               </div>
+            </div>
+            <div class="form-field">
+              <Toggle
+                label="Enable"
+                labelPosition="left"
+                value={draft.ragEnabled}
+                on:change={handleRAGToggleChange}
+              />
             </div>
           </div>
 
