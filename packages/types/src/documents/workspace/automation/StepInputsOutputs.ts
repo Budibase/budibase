@@ -265,6 +265,8 @@ export type ExtractFileDataStepOutputs = {
 export type AgentStepInputs = {
   agentId: string
   prompt: string
+  useStructuredOutput?: boolean
+  outputSchema?: Record<string, any>
 }
 
 export type AgentStepOutputs = {
@@ -272,6 +274,7 @@ export type AgentStepOutputs = {
   response?: string
   message?: UIMessage
   usage?: LanguageModelUsage
+  output?: Record<string, any>
 }
 
 export type LoopV2StepInputs = {
