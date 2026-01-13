@@ -295,15 +295,17 @@ export const getAgentRagConfig = async (
   if (agent.ragConfigId) {
     return await sdk.ragConfigs.find(agent.ragConfigId)
   }
-  const legacyConfig = (agent as {
-    ragConfig?: {
-      embeddingModel?: string
-      vectorDb?: string
-      ragMinDistance?: number
-      ragTopK?: number
-      enabled?: boolean
+  const legacyConfig = (
+    agent as {
+      ragConfig?: {
+        embeddingModel?: string
+        vectorDb?: string
+        ragMinDistance?: number
+        ragTopK?: number
+        enabled?: boolean
+      }
     }
-  }).ragConfig
+  ).ragConfig
 
   if (
     legacyConfig?.enabled &&
