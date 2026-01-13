@@ -134,6 +134,7 @@
   const resetGroupSelection = () => {
     activeGroup = null
     activeGroupTemplateName = null
+    searchValue = ""
   }
 
   const confirmGroupTemplateSelection = () => {
@@ -293,7 +294,15 @@
                 <img src={card.icon} alt={card.name} />
               </div>
 
-              {card.name}
+              <div class="api-name">{card.name}</div>
+              {#if card.type === "group"
+                ? card.group.verified
+                : card.template.verified}
+                <i
+                  class="ph ph-seal-check verified-icon"
+                  aria-label="Verified template"
+                ></i>
+              {/if}
             </div>
           {/each}
         </div>
@@ -346,6 +355,14 @@
     object-fit: contain;
   }
 
+  .api-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .api-icon {
     border-radius: 4px;
     display: flex;
@@ -360,6 +377,12 @@
   .api-icon.group-icon {
     width: 48px;
     height: 48px;
+  }
+
+  .verified-icon {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 16px;
+    flex-shrink: 0;
   }
 
   .api-header {
