@@ -224,7 +224,7 @@
           {/if}
         {/if}
         {#if !showTestStatus && !isHeaderTrigger}
-          <span class="action-spacer" />
+          <span class="action-spacer"></span>
         {/if}
         {#if !showTestStatus}
           <Icon

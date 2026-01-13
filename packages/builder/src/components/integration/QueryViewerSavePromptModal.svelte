@@ -1,6 +1,9 @@
 <script>
-  import { goto, beforeUrlChange } from "@roxi/routify"
+  import { goto as gotoStore, beforeUrlChange } from "@roxi/routify"
   import { Body, Modal, ModalContent } from "@budibase/bbui"
+
+  $beforeUrlChange
+  $: goto = $gotoStore
 
   export let checkIsModified = () => {}
   export let attemptSave = () => {}
@@ -18,7 +21,7 @@
 
   const resumeNavigation = () => {
     if (typeof navigateTo == "string") {
-      $goto(typeof navigateTo == "string" ? `${navigateTo}` : navigateTo)
+      goto(typeof navigateTo == "string" ? `${navigateTo}` : navigateTo)
     }
   }
 </script>

@@ -75,7 +75,7 @@
             <ProgressCircle size="S" />
           </div>
         {/if}
-        <span />
+        <span></span>
         <Icon name="copy" size="S" hoverable on:click={copy} />
       {:else}
         <div>Preview</div>
@@ -84,7 +84,7 @@
             <ProgressCircle size="S" />
           </div>
         {/if}
-        <span />
+        <span></span>
         {#if !empty}
           <Icon name="copy" size="S" hoverable on:click={copy} />
         {/if}

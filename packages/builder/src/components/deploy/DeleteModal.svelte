@@ -1,14 +1,16 @@
 <script>
   import { Input, notifications } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { appStore } from "@/stores/builder"
   import { API } from "@/api"
 
+  $: goto = $gotoStore
+
   export let appId
   export let appName
   export let onDeleteSuccess = () => {
-    $goto("/")
+    goto("/")
   }
 
   let deleting = false

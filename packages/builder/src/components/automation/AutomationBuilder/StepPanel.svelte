@@ -318,7 +318,7 @@
     class="divider"
     class:disabled={false}
     use:resizableHandle
-  />
+  ></div>
 </div>
 
 <div class="panel data">

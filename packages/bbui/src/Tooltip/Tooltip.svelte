@@ -10,7 +10,7 @@
 {#if textWrapping}
   <span class="spectrum-Tooltip spectrum-Tooltip--{direction} is-open tooltip">
     <span class="spectrum-Tooltip-label">{text}</span>
-    <span class="spectrum-Tooltip-tip" />
+    <span class="spectrum-Tooltip-tip"></span>
   </span>
 {:else}
   <!-- The default show on hover tooltip does not support text wrapping -->
@@ -18,7 +18,7 @@
     <slot />
     <div class={`spectrum-Tooltip spectrum-Tooltip--${direction}`}>
       <span class="spectrum-Tooltip-label">{text}</span>
-      <span class="spectrum-Tooltip-tip" />
+      <span class="spectrum-Tooltip-tip"></span>
     </div>
   </span>
 {/if}

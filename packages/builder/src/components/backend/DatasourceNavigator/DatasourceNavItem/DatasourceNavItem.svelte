@@ -11,6 +11,11 @@
   import UpdateDatasourceModal from "@/components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
 
+  $goto
+  $params
+
+  $isActive
+
   export let datasource
 
   $: templateIcon =

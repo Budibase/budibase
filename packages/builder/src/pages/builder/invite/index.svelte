@@ -9,11 +9,15 @@
     FancyInput,
   } from "@budibase/bbui"
   import { BUILDER_URLS } from "@budibase/shared-core"
-  import { goto, params } from "@roxi/routify"
+  import { goto as gotoStore, params } from "@roxi/routify"
   import { users, organisation, auth, admin } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
   import { handleError, passwordsMatch } from "../auth/_components/utils"
+
+  $params
+
+  $: goto = $gotoStore
 
   const inviteCode = $params["?code"]
   let form
@@ -57,7 +61,7 @@
       if ($organisation.isSSOEnforced) {
         // auto accept invite and redirect to login
         await users.acceptInvite(inviteCode)
-        $goto("../auth")
+        goto("../auth")
       }
     } catch (error) {
       notifications.error(error.message)
@@ -68,7 +72,7 @@
     try {
       await auth.login(formData.email.trim(), formData.password.trim())
       notifications.success("Logged in successfully")
-      $goto(BUILDER_URLS.WORKSPACES)
+      goto(BUILDER_URLS.WORKSPACES)
     } catch (err) {
       notifications.error(err.message ? err.message : "Something went wrong")
     }
