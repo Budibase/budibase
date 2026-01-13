@@ -3,11 +3,15 @@ import { memo } from "../../../utils"
 import { SortOrder } from "@budibase/types"
 import { Store as StoreContext } from "."
 
+export interface GridSortState {
+  column: string | null | undefined
+  order: SortOrder
+  secondaryColumn?: string | null
+  secondaryOrder?: SortOrder
+}
+
 interface SortStore {
-  sort: Writable<{
-    column: string | null | undefined
-    order: SortOrder
-  }>
+  sort: Writable<GridSortState>
 }
 
 export type Store = SortStore
@@ -17,9 +21,11 @@ export const createStores = (context: StoreContext): SortStore => {
   const $props = get(props)
 
   // Initialise to default props
-  const sort = memo({
+  const sort = memo<GridSortState>({
     column: $props.initialSortColumn,
     order: $props.initialSortOrder || SortOrder.ASCENDING,
+    secondaryColumn: null,
+    secondaryOrder: SortOrder.ASCENDING,
   })
 
   return {
@@ -32,7 +38,12 @@ export const initialise = (context: StoreContext) => {
 
   // Reset sort when initial sort props change
   initialSortColumn.subscribe(newSortColumn => {
-    sort.update(state => ({ ...state, column: newSortColumn }))
+    sort.update(state => ({
+      ...state,
+      column: newSortColumn,
+      secondaryColumn: null,
+      secondaryOrder: SortOrder.ASCENDING,
+    }))
   })
   initialSortOrder.subscribe(newSortOrder => {
     sort.update(state => ({

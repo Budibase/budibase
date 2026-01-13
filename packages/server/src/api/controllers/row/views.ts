@@ -59,15 +59,43 @@ export async function searchView(
 }
 
 function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
+  if (request.sorts?.length) {
+    const [primary] = request.sorts
+    return {
+      sorts: request.sorts,
+      sort: primary?.sort,
+      sortOrder: primary?.sortOrder,
+      sortType: primary?.sortType ?? undefined,
+    }
+  }
+
   if (request.sort) {
     return {
+      sorts: undefined,
       sort: request.sort,
       sortOrder: request.sortOrder,
       sortType: request.sortType ?? undefined,
     }
   }
+
+  if (view.sorts?.length) {
+    const sorts = view.sorts.map(s => ({
+      sort: s.field,
+      sortOrder: s.order,
+      sortType: s.type,
+    }))
+    const [primary] = sorts
+    return {
+      sorts,
+      sort: primary?.sort,
+      sortOrder: primary?.sortOrder,
+      sortType: primary?.sortType,
+    }
+  }
+
   if (view.sort) {
     return {
+      sorts: undefined,
       sort: view.sort.field,
       sortOrder: view.sort.order,
       sortType: view.sort.type,
@@ -75,6 +103,7 @@ function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
   }
 
   return {
+    sorts: undefined,
     sort: undefined,
     sortOrder: undefined,
     sortType: undefined,

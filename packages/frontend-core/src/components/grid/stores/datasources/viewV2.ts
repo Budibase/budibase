@@ -126,6 +126,8 @@ export const initialise = (context: StoreContext) => {
     sort.set({
       column: get(initialSortColumn),
       order: get(initialSortOrder) || SortOrder.ASCENDING,
+      secondaryColumn: null,
+      secondaryOrder: SortOrder.ASCENDING,
     })
 
     // Keep sort and filter state in line with the view definition when in builder
@@ -142,9 +144,13 @@ export const initialise = (context: StoreContext) => {
         }
         // Only override sorting if we don't have an initial sort column
         if (!get(initialSortColumn)) {
+          const primary = $definition.sorts?.[0] || $definition.sort
+          const secondary = $definition.sorts?.[1]
           sort.set({
-            column: $definition.sort?.field,
-            order: $definition.sort?.order || SortOrder.ASCENDING,
+            column: primary?.field,
+            order: primary?.order || SortOrder.ASCENDING,
+            secondaryColumn: secondary?.field ?? null,
+            secondaryOrder: secondary?.order || SortOrder.ASCENDING,
           })
         }
         // Only override filter state if we don't have an initial filter
@@ -158,26 +164,49 @@ export const initialise = (context: StoreContext) => {
       newSort: {
         column: string | null | undefined
         order: SortOrder
+        secondaryColumn?: string | null
+        secondaryOrder?: SortOrder
       },
-      existingSort?: {
-        field: string
-        order?: SortOrder
+      existingView?: {
+        sort?: {
+          field: string
+          order?: SortOrder
+        }
+        sorts?: {
+          field: string
+          order?: SortOrder
+        }[]
       }
     ) {
+      const existingPrimary = existingView?.sorts?.[0] || existingView?.sort
+      const existingSecondary = existingView?.sorts?.[1]
+
       const newColumn = newSort.column ?? null
-      const existingColumn = existingSort?.field ?? null
+      const existingColumn = existingPrimary?.field ?? null
       if (newColumn !== existingColumn) {
         return true
       }
 
-      if (!newColumn) {
-        return false
+      if (newColumn) {
+        const newOrder = newSort.order ?? null
+        const existingOrder = existingPrimary?.order ?? null
+        if (newOrder !== existingOrder) {
+          return true
+        }
       }
 
-      const newOrder = newSort.order ?? null
-      const existingOrder = existingSort?.order ?? null
-      if (newOrder !== existingOrder) {
+      const newSecondaryColumn = newSort.secondaryColumn ?? null
+      const existingSecondaryColumn = existingSecondary?.field ?? null
+      if (newSecondaryColumn !== existingSecondaryColumn) {
         return true
+      }
+
+      if (newSecondaryColumn) {
+        const newSecondaryOrder = newSort.secondaryOrder ?? null
+        const existingSecondaryOrder = existingSecondary?.order ?? null
+        if (newSecondaryOrder !== existingSecondaryOrder) {
+          return true
+        }
       }
 
       return false
@@ -196,18 +225,37 @@ export const initialise = (context: StoreContext) => {
         }
 
         // Skip if nothing actually changed
-        if (!sortHasChanged($sort, $view.sort)) {
+        if (!sortHasChanged($sort, $view)) {
           return
         }
 
         // If we can mutate schema then update the view definition
         if (get(config).canSaveSchema) {
+          const sorts = []
+
+          if ($sort.column) {
+            sorts.push({
+              field: $sort.column,
+              order: $sort.order || SortOrder.ASCENDING,
+            })
+          }
+
+          if ($sort.secondaryColumn && $sort.secondaryColumn !== $sort.column) {
+            sorts.push({
+              field: $sort.secondaryColumn,
+              order: $sort.secondaryOrder || SortOrder.ASCENDING,
+            })
+          }
+
           await datasource.actions.saveDefinition({
             ...$view,
-            sort: {
-              field: $sort.column!,
-              order: $sort.order || SortOrder.ASCENDING,
-            },
+            sort: sorts.length
+              ? {
+                  field: sorts[0].field,
+                  order: sorts[0].order,
+                }
+              : undefined,
+            sorts: sorts.length ? sorts : undefined,
           })
         }
 
@@ -217,9 +265,24 @@ export const initialise = (context: StoreContext) => {
         if ($fetch?.options?.datasource?.id !== $datasource.id) {
           return
         }
+        const requestSorts = []
+        if ($sort.column) {
+          requestSorts.push({
+            sort: $sort.column,
+            sortOrder: $sort.order,
+          })
+        }
+        if ($sort.secondaryColumn && $sort.secondaryColumn !== $sort.column) {
+          requestSorts.push({
+            sort: $sort.secondaryColumn,
+            sortOrder: $sort.secondaryOrder || SortOrder.ASCENDING,
+          })
+        }
+
         $fetch.update({
           sortOrder: $sort.order,
           sortColumn: $sort.column ?? undefined,
+          sorts: requestSorts.length ? requestSorts : undefined,
         })
       })
     )

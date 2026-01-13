@@ -418,31 +418,51 @@ export async function search(
     relationships,
   }
 
-  if (params.sort) {
-    const sortField = table.schema[params.sort]
-    const isAggregateField = aggregations.some(agg => agg.name === params.sort)
+  const sortOptions = params.sorts?.length
+    ? params.sorts
+    : params.sort
+      ? [
+          {
+            sort: params.sort,
+            sortOrder: params.sortOrder,
+            sortType: params.sortType ?? undefined,
+          },
+        ]
+      : []
 
-    if (isAggregateField) {
-      request.sort = {
-        [params.sort]: {
-          direction: params.sortOrder || SortOrder.ASCENDING,
+  if (sortOptions.length) {
+    request.sort = {}
+
+    for (const sortOption of sortOptions) {
+      const sortFieldName = sortOption.sort
+      const sortField = table.schema[sortFieldName]
+      const isAggregateField = aggregations.some(
+        agg => agg.name === sortFieldName
+      )
+      const direction = sortOption.sortOrder || SortOrder.ASCENDING
+
+      if (isAggregateField) {
+        request.sort[sortFieldName] = {
+          direction,
           type: SortType.NUMBER,
-        },
+        }
+        continue
       }
-    } else if (sortField) {
+
+      if (!sortField) {
+        throw new Error(`Unable to sort by ${sortFieldName}`)
+      }
+
       const responseType = isStaticFormula(sortField)
         ? sortField.responseType
         : sortField.type
-      const sortType =
+      const inferredType =
         responseType === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
-      request.sort = {
-        [mapToUserColumn(sortField.name)]: {
-          direction: params.sortOrder || SortOrder.ASCENDING,
-          type: sortType as SortType,
-        },
+
+      request.sort[mapToUserColumn(sortField.name)] = {
+        direction,
+        type: (sortOption.sortType ?? inferredType) as SortType,
       }
-    } else {
-      throw new Error(`Unable to sort by ${params.sort}`)
     }
   }
 

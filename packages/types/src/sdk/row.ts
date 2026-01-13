@@ -30,6 +30,12 @@ export type Aggregation =
   | CountAggregation
   | CountDistinctAggregation
 
+export interface RowSortOption {
+  sort: string
+  sortOrder?: SortOrder
+  sortType?: SortType | null
+}
+
 export interface SearchParams {
   tableId?: string
   viewId?: string
@@ -40,6 +46,7 @@ export interface SearchParams {
   sort?: string
   sortOrder?: SortOrder
   sortType?: SortType
+  sorts?: RowSortOption[]
   version?: string
   disableEscaping?: boolean
   fields?: string[]

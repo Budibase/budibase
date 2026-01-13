@@ -17,6 +17,13 @@
       type: col.schema?.type,
     }))
   $: orderOptions = getOrderOptions($sort.column, columnOptions)
+  $: secondaryColumnOptions = columnOptions.filter(
+    opt => opt.value !== $sort.column
+  )
+  $: secondaryOrderOptions = getOrderOptions(
+    $sort.secondaryColumn,
+    columnOptions
+  )
 
   const getOrderOptions = (column, columnOptions) => {
     const type = columnOptions.find(col => col.value === column)?.type
@@ -49,8 +56,11 @@
 
   const updateSortColumn = e => {
     sort.update(state => ({
+      ...state,
       column: e.detail,
       order: e.detail ? state.order : "ascending",
+      secondaryColumn: null,
+      secondaryOrder: "ascending",
     }))
   }
 
@@ -58,6 +68,23 @@
     sort.update(state => ({
       ...state,
       order: e.detail,
+    }))
+  }
+
+  const updateSecondarySortColumn = e => {
+    sort.update(state => ({
+      ...state,
+      secondaryColumn: e.detail,
+      secondaryOrder: e.detail
+        ? state.secondaryOrder || "ascending"
+        : "ascending",
+    }))
+  }
+
+  const updateSecondarySortOrder = e => {
+    sort.update(state => ({
+      ...state,
+      secondaryOrder: e.detail,
     }))
   }
 </script>
@@ -92,5 +119,25 @@
       on:change={updateSortOrder}
       label="Order"
     />
+
+    <Select
+      placeholder="None"
+      value={$sort.secondaryColumn}
+      options={secondaryColumnOptions}
+      autoWidth
+      on:change={updateSecondarySortColumn}
+      label="Then by"
+    />
+
+    {#if $sort.secondaryColumn}
+      <Select
+        placeholder={null}
+        value={$sort.secondaryOrder || "ascending"}
+        options={secondaryOrderOptions}
+        autoWidth
+        on:change={updateSecondarySortOrder}
+        label="Order"
+      />
+    {/if}
   {/if}
 </DetailPopover>

@@ -132,6 +132,15 @@ export async function search(
       options.sortOrder = options.sortOrder.toLowerCase() as SortOrder
     }
 
+    if (options.sorts?.length) {
+      options.sorts = options.sorts.map(sortOption => ({
+        ...sortOption,
+        sortOrder: sortOption.sortOrder
+          ? (sortOption.sortOrder.toLowerCase() as SortOrder)
+          : undefined,
+      }))
+    }
+
     let result: SearchResponse<Row>
     if (isExternalTable) {
       span?.addTags({ searchType: "external" })

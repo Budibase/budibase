@@ -40,8 +40,15 @@ export default class ViewV2Fetch extends BaseDataFetch<
   }
 
   async getData() {
-    const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
-      this.options
+    const {
+      datasource,
+      limit,
+      sortColumn,
+      sortOrder,
+      sortType,
+      sorts,
+      paginate,
+    } = this.options
     const { cursor, query, definition } = get(this.store)
 
     // If this is a calculation view and we have no calculations, return nothing
@@ -62,10 +69,33 @@ export default class ViewV2Fetch extends BaseDataFetch<
     // If sort/filter params are not defined, update options to store the
     // params built in to this view. This ensures that we can accurately
     // compare old and new params and skip a redundant API call.
-    if (!sortColumn && definition?.sort?.field) {
-      this.options.sortColumn = definition.sort.field
-      this.options.sortOrder = definition.sort.order || SortOrder.ASCENDING
+    const definitionPrimarySort = definition?.sorts?.[0] || definition?.sort
+    if (!sortColumn && definitionPrimarySort?.field) {
+      this.options.sortColumn = definitionPrimarySort.field
+      this.options.sortOrder =
+        definitionPrimarySort.order || SortOrder.ASCENDING
     }
+
+    const definitionSecondarySorts = definition?.sorts?.slice(1) || []
+
+    const requestSorts = sorts?.length
+      ? sorts
+      : sortColumn && definitionSecondarySorts.length
+        ? [
+            {
+              sort: sortColumn,
+              sortOrder: sortOrder,
+              sortType: sortType ?? undefined,
+            },
+            ...definitionSecondarySorts
+              .filter(s => s?.field && s.field !== sortColumn)
+              .map(s => ({
+                sort: s.field,
+                sortOrder: s.order || SortOrder.ASCENDING,
+                sortType: s.type ?? undefined,
+              })),
+          ]
+        : undefined
 
     try {
       const request = {
@@ -76,7 +106,9 @@ export default class ViewV2Fetch extends BaseDataFetch<
         sort: sortColumn,
         sortOrder: sortOrder,
         sortType,
+        sorts: requestSorts,
       }
+
       if (paginate) {
         const res = await this.API.viewV2.fetch(datasource.id, {
           ...request,

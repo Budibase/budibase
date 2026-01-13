@@ -69,6 +69,15 @@ const searchRowRequest = z.object({
   sort: z.string().nullish(),
   sortOrder: z.nativeEnum(SortOrder).optional(),
   sortType: z.nativeEnum(SortType).nullish(),
+  sorts: z
+    .array(
+      z.object({
+        sort: z.string(),
+        sortOrder: z.nativeEnum(SortOrder).optional(),
+        sortType: z.nativeEnum(SortType).nullish(),
+      })
+    )
+    .optional(),
   version: z.string().optional(),
   disableEscaping: z.boolean().optional(),
   countRows: z.boolean().optional(),
@@ -87,6 +96,7 @@ export type SearchViewRowRequest = Pick<
   | "sort"
   | "sortOrder"
   | "sortType"
+  | "sorts"
   | "limit"
   | "bookmark"
   | "paginate"

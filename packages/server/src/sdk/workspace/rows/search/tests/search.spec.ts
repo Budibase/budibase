@@ -4,6 +4,7 @@ import {
   Datasource,
   FieldType,
   NumberFieldMetadata,
+  SortOrder,
   Table,
 } from "@budibase/types"
 
@@ -100,6 +101,48 @@ if (descriptions.length) {
             expect(keys).not.toContain("surname")
             expect(keys).not.toContain("address")
           }
+        })
+      })
+
+      it("supports multi-level sorting", async () => {
+        await config.doInContext(config.devWorkspaceId, async () => {
+          await config.api.row.save(table._id!, {
+            name: "Andrew",
+            surname: "Thompson",
+            age: 30,
+            address: "a",
+          })
+          await config.api.row.save(table._id!, {
+            name: "Andrew",
+            surname: "Kingston",
+            age: 31,
+            address: "b",
+          })
+          await config.api.row.save(table._id!, {
+            name: "Andrew",
+            surname: "Whann",
+            age: 32,
+            address: "c",
+          })
+
+          const result = await search({
+            tableId: table._id!,
+            query: {
+              equal: {
+                name: "Andrew",
+              },
+            },
+            sorts: [
+              { sort: "name", sortOrder: SortOrder.ASCENDING },
+              { sort: "surname", sortOrder: SortOrder.ASCENDING },
+            ],
+          })
+
+          expect(result.rows.map(row => row.surname)).toEqual([
+            "Kingston",
+            "Thompson",
+            "Whann",
+          ])
         })
       })
 

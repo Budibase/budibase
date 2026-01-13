@@ -128,6 +128,19 @@ export function viewValidator() {
           .optional()
           .valid(...Object.values(SortType)),
       }).optional(),
+      sorts: Joi.array()
+        .items(
+          Joi.object({
+            field: Joi.string().required(),
+            order: Joi.string()
+              .optional()
+              .valid(...Object.values(SortOrder)),
+            type: Joi.string()
+              .optional()
+              .valid(...Object.values(SortType)),
+          })
+        )
+        .optional(),
     })
   )
 }
@@ -203,6 +216,15 @@ export function internalSearchValidator() {
       sort: OPTIONAL_STRING,
       sortOrder: OPTIONAL_STRING,
       sortType: OPTIONAL_STRING,
+      sorts: Joi.array()
+        .items(
+          Joi.object({
+            sort: Joi.string().required(),
+            sortOrder: OPTIONAL_STRING.valid(...Object.values(SortOrder)),
+            sortType: OPTIONAL_STRING.valid(...Object.values(SortType)),
+          })
+        )
+        .optional(),
       paginate: Joi.boolean(),
       countRows: Joi.boolean(),
       bookmark: Joi.alternatives()

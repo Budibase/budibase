@@ -108,6 +108,7 @@ export default abstract class BaseDataFetch<
       // Sorting config
       sortColumn: null,
       sortOrder: SortOrder.ASCENDING,
+      sorts: undefined,
       sortType: null,
 
       // Pagination config

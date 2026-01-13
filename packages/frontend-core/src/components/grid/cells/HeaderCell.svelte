@@ -153,6 +153,8 @@
     sort.set({
       column: column.name,
       order: SortOrder.ASCENDING,
+      secondaryColumn: null,
+      secondaryOrder: SortOrder.ASCENDING,
     })
     open = false
   }
@@ -161,6 +163,8 @@
     sort.set({
       column: column.name,
       order: SortOrder.DESCENDING,
+      secondaryColumn: null,
+      secondaryOrder: SortOrder.ASCENDING,
     })
     open = false
   }
@@ -403,6 +407,7 @@
         >
           Sort {sortingLabels.descending}
         </MenuItem>
+
         {#if $config.canEditColumns}
           <MenuItem
             disabled={!canMoveLeft}

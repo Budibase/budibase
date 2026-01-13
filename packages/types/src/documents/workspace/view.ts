@@ -100,6 +100,11 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
+  sorts?: {
+    field: string
+    order?: SortOrder
+    type?: SortType
+  }[]
   schema?: ViewV2Schema
   rowHeight?: number
 }
