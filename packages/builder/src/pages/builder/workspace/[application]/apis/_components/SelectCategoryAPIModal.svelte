@@ -169,16 +169,23 @@
     loadingMore = false
   }
 
-  onMount(() => {
+  const ensureObserver = () => {
     if (!scrollContainer || !loadTrigger) {
       return
     }
-    observer = new IntersectionObserver(handleIntersect, {
-      root: scrollContainer,
-      rootMargin: "80px",
-      threshold: 0.1,
-    })
+    if (!observer) {
+      observer = new IntersectionObserver(handleIntersect, {
+        root: scrollContainer,
+        rootMargin: "80px",
+        threshold: 0.1,
+      })
+    }
+    observer.disconnect()
     observer.observe(loadTrigger)
+  }
+
+  onMount(() => {
+    ensureObserver()
   })
 
   onDestroy(() => {
@@ -187,6 +194,14 @@
       observer = null
     }
   })
+
+  $: if (activeGroup && observer) {
+    observer.disconnect()
+  }
+
+  $: if (!activeGroup && loadTrigger) {
+    ensureObserver()
+  }
 </script>
 
 <div class="api-main" class:scrolling>
