@@ -33,7 +33,7 @@
   let lastConnectorCount = 0
   let searchValue = ""
   let lastSearchValue = ""
-  const itemsPerPage = 15
+  const itemsPerPage = 24
 
   $: normalizedSearchValue = searchValue.trim().toLowerCase()
   $: if (normalizedSearchValue !== lastSearchValue) {
@@ -306,7 +306,7 @@
 <style>
   .grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
   }
 
@@ -341,13 +341,13 @@
   }
 
   .api img {
-    width: 20px;
-    height: 20px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
 
   .api-icon {
     border-radius: 4px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
     display: flex;
     width: 36px;
     height: 36px;
@@ -397,7 +397,7 @@
     min-height: 0;
     position: relative;
     height: calc(
-      (5 * 51px) + (4 * 12px) + var(--spacing-xl) + var(--spacing-l)
+      (6 * 51px) + (5 * 12px) + var(--spacing-xl) + var(--spacing-l)
     );
   }
 
