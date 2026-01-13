@@ -1,14 +1,22 @@
 <script lang="ts">
-  import { aiConfigsStore, featureFlags, vectorDbStore } from "@/stores/portal"
+  import {
+    aiConfigsStore,
+    featureFlags,
+    ragConfigStore,
+    vectorDbStore,
+  } from "@/stores/portal"
   import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
   import {
     AIConfigType,
     type CustomAIProviderConfig,
+    type RagConfig,
     type VectorDb,
   } from "@budibase/types"
   import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
+  import RagConfigModal from "./RagConfigModal.svelte"
+  import RagConfigTile from "./RagConfigTile.svelte"
   import VectorDbModal from "./VectorDbModal.svelte"
   import VectorDbTile from "./VectorDbTile.svelte"
 
@@ -18,6 +26,8 @@
   let modalConfigType: AIConfigType = AIConfigType.COMPLETIONS
   let vectorModal: { show: () => void; hide: () => void }
   let vectorModalConfig: VectorDb | null = null
+  let ragModal: { show: () => void; hide: () => void }
+  let ragModalConfig: RagConfig | null = null
 
   $: privateLLMSEnabled = $featureFlags.PRIVATE_LLMS
 
@@ -26,6 +36,7 @@
     config => config.configType === AIConfigType.EMBEDDINGS
   )
   $: vectorDbs = $vectorDbStore.configs || []
+  $: ragConfigs = $ragConfigStore.configs || []
 
   function openCustomAIConfigModal(
     config?: CustomAIProviderConfig,
@@ -49,10 +60,16 @@
     vectorModal.show()
   }
 
+  const openRagConfigModal = (config?: RagConfig) => {
+    ragModalConfig = config ?? null
+    ragModal.show()
+  }
+
   onMount(async () => {
     try {
       await aiConfigsStore.fetch()
       await vectorDbStore.fetch()
+      await ragConfigStore.fetch()
     } catch (e) {
       notifications.error("Error fetching AI settings")
     }
@@ -111,6 +128,26 @@
         </div>
       {/if}
     </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">RAG configurations</div>
+        <Button size="S" cta on:click={() => openRagConfigModal()}>
+          Add configuration
+        </Button>
+      </div>
+      {#if ragConfigs.length}
+        <div class="ai-list">
+          {#each ragConfigs as config (config._id)}
+            <RagConfigTile {config} onEdit={() => openRagConfigModal(config)} />
+          {/each}
+        </div>
+      {:else}
+        <div class="no-enabled">
+          <Body size="S">No RAG configurations yet</Body>
+        </div>
+      {/if}
+    </div>
   {/if}
 </Layout>
 
@@ -119,6 +156,14 @@
     config={vectorModalConfig}
     onDelete={() => vectorModal.hide()}
     on:hide={() => vectorModal.hide()}
+  />
+</Modal>
+
+<Modal bind:this={ragModal}>
+  <RagConfigModal
+    config={ragModalConfig}
+    onDelete={() => ragModal.hide()}
+    on:hide={() => ragModal.hide()}
   />
 </Modal>
 
