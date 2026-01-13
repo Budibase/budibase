@@ -24,6 +24,11 @@ export const loginTranslations = createTranslationDefinitions(category, [
     defaultValue: "Please enter your password",
   },
   {
+    key: "invalidCredentials",
+    name: "Login invalid credentials message",
+    defaultValue: "Invalid credentials",
+  },
+  {
     key: "forgotPassword",
     name: "Forgot password link",
     defaultValue: "Forgot password?",
