@@ -58,6 +58,7 @@ export const createAIConfig = async (
       apiKey: body.apiKey,
       isDefault: body.isDefault ?? false,
       liteLLMModelId: body.liteLLMModelId,
+      webSearchConfig: body.webSearchConfig,
       configType,
     }
 
@@ -97,6 +98,7 @@ export const updateAIConfig = async (
     apiKey: body.apiKey,
     isDefault: body.isDefault ?? false,
     liteLLMModelId: body.liteLLMModelId,
+    webSearchConfig: body.webSearchConfig,
     configType,
   }
 
