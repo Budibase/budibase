@@ -208,8 +208,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
     return
   } catch (error: any) {
+    const message = error?.message || "Agent action failed"
     ctx.res.write(
-      `data: ${JSON.stringify({ type: "error", content: error.message })}\n\n`
+      `data: ${JSON.stringify({ type: "error", errorText: message, content: message })}\n\n`
     )
     ctx.res.end()
   }

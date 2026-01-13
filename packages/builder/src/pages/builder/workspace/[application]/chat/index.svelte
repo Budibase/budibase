@@ -105,16 +105,11 @@
       const remainingConversations = $chatAppsStore.conversations
       if (remainingConversations.length) {
         const [nextChat] = remainingConversations
-        chat = {
-          ...nextChat,
-          chatAppId: nextChat.chatAppId || $chatAppsStore.chatAppId || "",
-        }
-        chatAppsStore.setCurrentConversationId(nextChat._id!)
+        await selectChat(nextChat)
       } else {
-        chat = {
-          ...INITIAL_CHAT,
-          chatAppId: $chatAppsStore.chatAppId || "",
-        }
+        // Return to blank state (no agent selected)
+        selectedAgentId = null
+        chat = { ...INITIAL_CHAT, chatAppId: $chatAppsStore.chatAppId || "" }
         chatAppsStore.clearCurrentConversationId()
       }
     } catch (err) {
