@@ -133,6 +133,9 @@ export async function run({
 
         const responseText = await streamResult.text
         const usage = await streamResult.usage
+        const output = outputOption
+          ? ((await streamResult.output) as Record<string, any>)
+          : undefined
 
         llmobs.annotate(agentSpan, {
           outputData: responseText,
@@ -144,7 +147,7 @@ export async function run({
           response: responseText,
           usage,
           message: assistantMessage,
-          output: result.output as Record<string, any> | undefined,
+          output,
         }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
