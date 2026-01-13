@@ -32,6 +32,19 @@ export const definition: AutomationStepDefinition = {
           title: "Prompt",
           description: "The task or question to send to the agent",
         },
+        useStructuredOutput: {
+          type: AutomationIOType.BOOLEAN,
+          title: "Use structured output",
+          description:
+            "Constrain the agent response to a specific JSON structure",
+        },
+        outputSchema: {
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.OUTPUT_SCHEMA,
+          title: "Output Schema",
+          description: "Define the structure of the agent's output",
+          dependsOn: "useStructuredOutput",
+        },
       },
       required: ["agentId", "prompt"],
     },
@@ -48,6 +61,11 @@ export const definition: AutomationStepDefinition = {
         steps: {
           type: AutomationIOType.ARRAY,
           description: "The steps taken by the agent",
+        },
+        output: {
+          type: AutomationIOType.OBJECT,
+          description:
+            "Structured output from the agent (when output schema is defined)",
         },
       },
       required: ["response", "success"],

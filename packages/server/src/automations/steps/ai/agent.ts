@@ -5,8 +5,9 @@ import {
   AutomationStepInputBase,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { ToolLoopAgent, stepCountIs } from "ai"
+import { ToolLoopAgent, stepCountIs, Output, jsonSchema } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
 import tracer from "dd-trace"
@@ -20,7 +21,7 @@ export async function run({
 }: {
   inputs: AgentStepInputs
 } & AutomationStepInputBase): Promise<AgentStepOutputs> {
-  const { agentId, prompt } = inputs
+  const { agentId, prompt, useStructuredOutput, outputSchema } = inputs
 
   if (!agentId) {
     return {
@@ -89,6 +90,19 @@ export async function run({
           fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
         })
 
+        let outputOption = undefined
+        if (
+          useStructuredOutput &&
+          outputSchema &&
+          Object.keys(outputSchema).length > 0
+        ) {
+          const normalizedSchema =
+            helpers.structuredOutput.normalizeSchemaForStructuredOutput(
+              outputSchema
+            )
+          outputOption = Output.object({ schema: jsonSchema(normalizedSchema) })
+        }
+
         const agent = new ToolLoopAgent({
           model: litellm.chat(modelId),
           instructions: systemPrompt || undefined,
@@ -98,6 +112,7 @@ export async function run({
           providerOptions: {
             litellm: ai.getLiteLLMProviderOptions(modelName),
           },
+          output: outputOption,
         })
 
         const result = await agent.generate({
@@ -115,6 +130,7 @@ export async function run({
           success: true,
           response: result.text,
           steps,
+          output: result.output as Record<string, any> | undefined,
         }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
