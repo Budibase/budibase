@@ -94,15 +94,13 @@
   $: count = value?.length
   $: conditionText = `${count || "No"} condition${count !== 1 ? "s" : ""} set`
 
-  $: settings = (
-    (componentStore.getComponentSettings(componentInstance?._component) as
-      | ExtendedComponentSetting[]
-      | undefined) ?? []
-  ).concat({
-    label: "Custom CSS",
-    key: "_css",
-    type: "text",
-  })
+  $: settings = componentStore
+    .getComponentSettings(componentInstance?._component)
+    .concat({
+      label: "Custom CSS",
+      key: "_css",
+      type: "text",
+    })
   $: settingOptions = settings
     .filter(
       setting =>
@@ -125,9 +123,7 @@
   const getSettingDefinition = (
     key: string | undefined
   ): ExtendedComponentSetting | undefined => {
-    return settings?.find(setting => setting.key === key) as
-      | ExtendedComponentSetting
-      | undefined
+    return settings.find(setting => setting.key === key)
   }
 
   const addCondition = () => {
