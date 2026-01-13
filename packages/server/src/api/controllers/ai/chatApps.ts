@@ -3,8 +3,19 @@ import { ChatApp, UpdateChatAppRequest, UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
 
 const ensureEnabledAgents = (chatApp: ChatApp) => {
-  if (!chatApp.enabledAgents?.length) {
-    throw new HTTPError("enabledAgents is required", 400)
+  const enabledAgents = chatApp.enabledAgents
+  const hasAtLeastOne = Array.isArray(enabledAgents) && enabledAgents.length > 0
+  const allValid =
+    hasAtLeastOne &&
+    enabledAgents.every(
+      agent => typeof agent?.agentId === "string" && agent.agentId.trim().length
+    )
+
+  if (!allValid) {
+    throw new HTTPError(
+      "enabledAgents must contain at least one valid agentId",
+      400
+    )
   }
 }
 
