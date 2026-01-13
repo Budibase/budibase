@@ -78,7 +78,7 @@
       }
     } catch (err) {
       notifications.error(
-        err.message ? err.message : loginLabels.invalidCredentials
+        loginLabels.invalidCredentials || err?.message || "Invalid credentials"
       )
     }
   }
