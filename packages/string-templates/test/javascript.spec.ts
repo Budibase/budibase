@@ -344,13 +344,18 @@ describe("Javascript", () => {
     })
 
     it("should handle test case 6", async () => {
+      const todayDate = new Date()
+      // add a year and a month
+      todayDate.setMonth(new Date().getMonth() + 1)
+      todayDate.setFullYear(todayDate.getFullYear() + 1)
       const context = {
         "Join Date": DATE,
+        today: todayDate.toISOString(),
       }
       const result = await processJS(
         `
         var rate = 5;
-        var today = new Date();
+        var today = new Date($("today"));
         
         // comment
         function monthDiff(dateFrom, dateTo) {

@@ -40,11 +40,11 @@ export async function run({
 
   return llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
-    async () => {
+    async agentSpan => {
       try {
         const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
-        llmobs.annotate({
+        llmobs.annotate(agentSpan, {
           inputData: prompt,
           metadata: {
             agentId,
@@ -56,7 +56,7 @@ export async function run({
         })
 
         if (appId && isProdWorkspaceID(appId) && agentConfig.live !== true) {
-          llmobs.annotate({
+          llmobs.annotate(agentSpan, {
             outputData: "Agent is paused",
             tags: { error: "agent_paused" },
           })
@@ -73,7 +73,7 @@ export async function run({
         const { modelId, apiKey, baseUrl, modelName } =
           await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agentConfig.aiconfig)
 
-        llmobs.annotate({
+        llmobs.annotate(agentSpan, {
           metadata: {
             modelId,
             modelName,
@@ -112,13 +112,9 @@ export async function run({
         const responseText = await streamResult.text
         const usage = await streamResult.usage
 
-        llmobs.annotate({
+        llmobs.annotate(agentSpan, {
           outputData: responseText,
-          metadata: {
-            stepCount:
-              assistantMessage?.parts.filter(part => part.type === "tool-call")
-                .length ?? 0,
-          },
+          metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
 
         return {
@@ -130,7 +126,7 @@ export async function run({
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
 
-        llmobs.annotate({
+        llmobs.annotate(agentSpan, {
           outputData: errorMessage,
           tags: {
             error: "1",
