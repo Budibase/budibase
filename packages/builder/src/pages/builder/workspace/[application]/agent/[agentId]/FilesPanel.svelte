@@ -41,8 +41,8 @@
 
   const readableStatus: Record<AgentFileStatus, string> = {
     [AgentFileStatus.PROCESSING]: "Processing",
-    [AgentFileStatus.READY]: "Failed",
-    [AgentFileStatus.FAILED]: "Ready",
+    [AgentFileStatus.READY]: "Ready",
+    [AgentFileStatus.FAILED]: "Failed",
   }
 
   const formatFileStatus = (file: AgentFile) =>
