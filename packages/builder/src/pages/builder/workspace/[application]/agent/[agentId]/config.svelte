@@ -820,12 +820,6 @@
             </div>
             <div class="form-row">
               <div class="form-field">
-                <Toggle
-                  label="Enable"
-                  labelPosition="left"
-                  value={draft.ragEnabled}
-                  on:change={handleRagToggleChange}
-                />
                 <Select
                   label="Model"
                   labelPosition="left"
@@ -840,6 +834,12 @@
                   }}
                   error={ragConfigError}
                 />
+                <Toggle
+                  label="Enable"
+                  labelPosition="left"
+                  value={draft.ragEnabled}
+                  on:change={handleRagToggleChange}
+                />
               </div>
               <div class="form-icon">
                 <AbsTooltip text="Manage model configurations">
@@ -853,9 +853,11 @@
             </div>
           </div>
 
-          <div class="section files-section">
-            <FilesPanel currentAgentId={currentAgent?._id} />
-          </div>
+          {#if draft.ragEnabled}
+            <div class="section files-section">
+              <FilesPanel currentAgentId={currentAgent?._id} />
+            </div>
+          {/if}
         </Layout>
       </div>
     </div>
