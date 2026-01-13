@@ -1885,11 +1885,12 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         "Offers one secure place for teachers and students to access the applications they love and depend on.",
       specs: [
         {
-          version: "3.1.0",
-          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/clever/openapi.yaml",
+          version: "3.0.0",
+          url: "https://dev.clever.com/openapi/6054fe66dc8ea400120e9f7a",
         },
       ],
       icon: CleverLogo,
+      verified: true,
     },
     {
       name: "Clickup",
