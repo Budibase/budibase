@@ -20,7 +20,9 @@
   export let config: RagConfig | null
   export let onDelete: (() => void) | null = null
 
-  let errors: Record<string, string> = {}
+  let submitted = false
+  let touched: Record<string, boolean> = {}
+  let fieldErrors: Record<string, string> = {}
   let draft: RagConfig = config
     ? { ...config }
     : {
@@ -48,7 +50,7 @@
     z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
 
   const requiredNumber = (errorMessage: string) =>
-    z.coerce.number({
+    z.number({
       required_error: errorMessage,
       invalid_type_error: errorMessage,
     })
@@ -66,30 +68,33 @@
       .max(10, "Chunks to retrieve must be between 1 and 10."),
   }) satisfies ZodType<RagConfig>
 
-  const validateDraft = (draft: RagConfig) => {
-    const validationResult = ragConfigSchema.safeParse(draft)
-    errors = {}
-    if (!validationResult.success) {
-      errors = Object.values(validationResult.error.issues).reduce<
+  const validateDraft = (draft: RagConfig) => ragConfigSchema.safeParse(draft)
+
+  $: touchField = (field: string) => {
+    touched = { ...touched, [field]: true }
+  }
+
+  $: getError = (field: string) =>
+    submitted || touched[field] ? fieldErrors[field] : undefined
+
+  $: validationResult = validateDraft(draft)
+  $: fieldErrors = validationResult.success
+    ? {}
+    : Object.values(validationResult.error.issues).reduce<
         Record<string, string>
       >((acc, issue) => {
         const field = issue.path[0]
         acc[field] = issue.message
         return acc
       }, {})
-    }
-
-    return validationResult
-  }
-
-  $: canSave = validateDraft(draft).success
 
   async function confirm() {
     try {
-      const { data: validated } = validateDraft(draft)
-      if (!validated) {
+      submitted = true
+      if (!validationResult.success) {
         return keepOpen
       }
+      const validated = validationResult.data
       if (config?._id) {
         await ragConfigStore.edit({
           _id: config._id,
@@ -126,7 +131,6 @@
   confirmText={isEdit ? "Save" : "Create"}
   cancelText="Cancel"
   onConfirm={confirm}
-  disabled={!canSave}
   showSecondaryButton={isEdit}
   secondaryButtonText="Delete"
   secondaryAction={deleteConfig}
@@ -143,7 +147,8 @@
     <Input
       bind:value={draft.name}
       placeholder="Knowledge base RAG"
-      error={errors.name}
+      error={getError("name")}
+      on:blur={() => touchField("name")}
     />
   </div>
   <div class="row">
@@ -153,7 +158,8 @@
       options={embeddingOptions}
       placeholder="Select embeddings model"
       disabled={!embeddingOptions.length}
-      error={errors.embeddingModel}
+      error={getError("embeddingModel")}
+      on:change={() => touchField("embeddingModel")}
     />
   </div>
   <div class="row">
@@ -163,7 +169,8 @@
       options={vectorDbOptions}
       placeholder="Select vector database"
       disabled={!vectorDbOptions.length}
-      error={errors.vectorDb}
+      error={getError("vectorDb")}
+      on:change={() => touchField("vectorDb")}
     />
   </div>
   <div class="row">
@@ -171,12 +178,18 @@
     <Input
       bind:value={draft.ragMinDistance}
       type="number"
-      error={errors.ragMinDistance}
+      error={getError("ragMinDistance")}
+      on:blur={() => touchField("ragMinDistance")}
     />
   </div>
   <div class="row">
     <Label size="M">Chunks to retrieve</Label>
-    <Input bind:value={draft.ragTopK} type="number" error={errors.ragTopK} />
+    <Input
+      bind:value={draft.ragTopK}
+      type="number"
+      error={getError("ragTopK")}
+      on:blur={() => touchField("ragTopK")}
+    />
   </div>
 </ModalContent>
 
