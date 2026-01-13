@@ -5,8 +5,9 @@ import {
   AutomationStepInputBase,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { ToolLoopAgent, stepCountIs } from "ai"
+import { ToolLoopAgent, stepCountIs, Output, jsonSchema } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
 import tracer from "dd-trace"
@@ -20,7 +21,7 @@ export async function run({
 }: {
   inputs: AgentStepInputs
 } & AutomationStepInputBase): Promise<AgentStepOutputs> {
-  const { agentId, prompt } = inputs
+  const { agentId, prompt, useStructuredOutput, outputSchema } = inputs
 
   if (!agentId) {
     return {
@@ -40,11 +41,11 @@ export async function run({
 
   return llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
-    async () => {
+    async agentSpan => {
       try {
         const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
-        llmobs.annotate({
+        llmobs.annotate(agentSpan, {
           inputData: prompt,
           metadata: {
             agentId,
@@ -56,7 +57,7 @@ export async function run({
         })
 
         if (appId && isProdWorkspaceID(appId) && agentConfig.live !== true) {
-          llmobs.annotate({
+          llmobs.annotate(agentSpan, {
             outputData: "Agent is paused",
             tags: { error: "agent_paused" },
           })
@@ -73,7 +74,7 @@ export async function run({
         const { modelId, apiKey, baseUrl, modelName } =
           await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agentConfig.aiconfig)
 
-        llmobs.annotate({
+        llmobs.annotate(agentSpan, {
           metadata: {
             modelId,
             modelName,
@@ -89,6 +90,19 @@ export async function run({
           fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
         })
 
+        let outputOption = undefined
+        if (
+          useStructuredOutput &&
+          outputSchema &&
+          Object.keys(outputSchema).length > 0
+        ) {
+          const normalizedSchema =
+            helpers.structuredOutput.normalizeSchemaForStructuredOutput(
+              outputSchema
+            )
+          outputOption = Output.object({ schema: jsonSchema(normalizedSchema) })
+        }
+
         const agent = new ToolLoopAgent({
           model: litellm.chat(modelId),
           instructions: systemPrompt || undefined,
@@ -98,6 +112,7 @@ export async function run({
           providerOptions: {
             litellm: ai.getLiteLLMProviderOptions(modelName),
           },
+          output: outputOption,
         })
 
         const result = await agent.generate({
@@ -106,7 +121,7 @@ export async function run({
 
         const steps = sdk.ai.agents.attachReasoningToSteps(result.steps)
 
-        llmobs.annotate({
+        llmobs.annotate(agentSpan, {
           outputData: result.text,
           metadata: { stepCount: result.steps?.length ?? 0 },
         })
@@ -115,11 +130,12 @@ export async function run({
           success: true,
           response: result.text,
           steps,
+          output: result.output as Record<string, any> | undefined,
         }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
 
-        llmobs.annotate({
+        llmobs.annotate(agentSpan, {
           outputData: errorMessage,
           tags: {
             error: "1",

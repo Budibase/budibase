@@ -13,7 +13,7 @@
     workspaceAppStore,
     appStore,
   } from "@/stores/builder"
-  import { type Plugin } from "@budibase/types"
+  import { PluginType, type Plugin } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
 
   let actionMenu: any
@@ -35,9 +35,8 @@
 
   $: incompatiblePlugins = ($appStore.usedPlugins || []).filter(plugin => {
     const major = getPluginSvelteMajor(plugin)
-    // `schema.metadata.svelteMajor` only exists on Svelte 5 plugins - treat
-    // absence as legacy (Svelte 4).
-    return major !== CURRENT_SVELTE_MAJOR
+    const isComponentPlugin = plugin?.schema?.type === PluginType.COMPONENT
+    return major !== CURRENT_SVELTE_MAJOR && isComponentPlugin
   })
 
   const hasAcknowledgedSvelte4PluginWarning = (appId?: string) => {

@@ -55,6 +55,7 @@ export type RestTemplateName =
   | "LogisticsOS"
   | "Mastercard"
   | "Measureone"
+  | "Microsoft Teams"
   | "Nanonets"
   | "Notion"
   | "Oyster HR"

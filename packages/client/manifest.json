@@ -783,7 +783,7 @@
         "key": "conditions",
         "nestedOnly": true,
         "contextAccess": {
-          "global": false,
+          "global": true,
           "self": true
         }
       }
