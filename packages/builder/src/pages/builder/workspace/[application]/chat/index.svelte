@@ -52,6 +52,7 @@
 
   $: conversationHistory = $chatAppsStore.conversations || []
   $: agents = $agentsStore.agents || []
+  $: namedAgents = agents.filter(agent => Boolean(agent?.name))
   $: chatApp = ($chatAppsStore as ChatAppState).chatApp
   $: enabledAgents = chatApp?.enabledAgents || []
 
@@ -167,8 +168,6 @@
   const getFirstEnabledAgentId = (agentsList: EnabledAgent[]) =>
     agentsList[0]?.agentId || null
 
-  const getAgentOptionLabel = (agent: Agent) => agent.name || "Unnamed Agent"
-
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
 
@@ -259,11 +258,11 @@
           in the chat side panel. The New chat button opens a new conversation
           with the default agent.
         </Body>
-        {#if agents.length}
-          {#each agents as agent (agent._id)}
+        {#if namedAgents.length}
+          {#each namedAgents as agent (agent._id)}
             <div class="settings-agent">
               <div class="settings-agent-info">
-                <Body size="S">{getAgentOptionLabel(agent)}</Body>
+                <Body size="S">{agent.name}</Body>
               </div>
               {#if agent._id}
                 <Toggle
