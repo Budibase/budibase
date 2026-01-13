@@ -35,7 +35,7 @@
 
   $: incompatiblePlugins = ($appStore.usedPlugins || []).filter(plugin => {
     const major = getPluginSvelteMajor(plugin)
-    const isComponentPlugin = plugin.schema.type === PluginType.COMPONENT
+    const isComponentPlugin = plugin?.schema?.type === PluginType.COMPONENT
     return major !== CURRENT_SVELTE_MAJOR && isComponentPlugin
   })
 
