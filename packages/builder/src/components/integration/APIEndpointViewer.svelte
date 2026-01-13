@@ -1006,7 +1006,7 @@
 
 <style>
   .details :global(.markdown-viewer code) {
-    color: white;
+    color: var(--spectrum-alias-text-color);
   }
   .bottom {
     flex: 1;
@@ -1107,7 +1107,7 @@
     display: flex;
   }
   .send :global(.spectrum-Button-label) {
-    color: white;
+    color: var(--spectrum-alias-text-color);
   }
   .send :global(.icon) {
     color: var(--spectrum-global-color-gray-700);
