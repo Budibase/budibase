@@ -11,18 +11,17 @@
     Icon,
     ActionMenu,
     MenuItem,
+    AbsTooltip,
   } from "@budibase/bbui"
   import {
     AIConfigType,
     ToolType,
     type Agent,
-    type AgentRagConfig,
+    type RagConfig,
     type CustomAIProviderConfig,
     type ToolMetadata,
     type EnrichedBinding,
     type InsertAtPositionFn,
-    type VectorDb,
-    type WithRequired,
     WebSearchProvider,
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
@@ -31,7 +30,7 @@
     agentsStore,
     aiConfigsStore,
     selectedAgent,
-    vectorDbStore,
+    ragConfigStore,
   } from "@/stores/portal"
   import {
     datasources,
@@ -49,7 +48,7 @@
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
-
+  import FilesPanel from "./FilesPanel.svelte"
   import {
     EditorModes,
     hbAutocomplete,
@@ -65,9 +64,8 @@
   } from "../logos/tagIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
-  import FilesPanel from "./FilesPanel.svelte"
-  import type { ZodType } from "zod"
-  import { z } from "zod"
+  import { tick } from "svelte"
+
   $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
@@ -77,12 +75,8 @@
   let currentAgent: Agent | undefined
   let togglingLive = false
   let modelOptions: { label: string; value: string }[] = []
-  let embeddingModelOptions: { label: string; value: string }[] = []
-  let vectorDbOptions: { label: string; value: string }[] = []
   let completionConfigs: CustomAIProviderConfig[] = []
-  let embeddingConfigs: CustomAIProviderConfig[] = []
-  let vectorDbConfigs: VectorDb[] = []
-  let ragErrors: Record<string, string> = {}
+  let ragConfigs: RagConfig[] = []
 
   let insertAtPos: InsertAtPositionFn | undefined
   let toolSearch = ""
@@ -109,6 +103,8 @@
   let lastWebSearchConfigId: string | undefined
   let pendingWebSearchInsert = false
 
+  let ragConfigError: string | undefined
+
   $: currentAgent = $selectedAgent
   $: webSearchConfig = $aiConfigsStore.customConfigs.find(
     config => config._id === draft.aiconfig
@@ -130,15 +126,7 @@
     return undefined
   }
 
-  const defaultRagConfig: Agent["ragConfig"] = {
-    enabled: false,
-    ragMinDistance: 0.7,
-    ragTopK: 4,
-    embeddingModel: "",
-    vectorDb: "",
-  }
-
-  let draft: WithRequired<Agent, "ragConfig">
+  let draft: Agent
   $: draft = {
     name: currentAgent?.name || "",
     description: currentAgent?.description || "",
@@ -148,33 +136,20 @@
     icon: currentAgent?.icon || "",
     iconColor: currentAgent?.iconColor || "",
     enabledTools: currentAgent?.enabledTools || [],
-    ragConfig: currentAgent?.ragConfig || defaultRagConfig,
+    ragConfigId: currentAgent?.ragConfigId,
+    ragEnabled: currentAgent?.ragEnabled || false,
   }
 
   $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
     config => config.configType !== AIConfigType.EMBEDDINGS
   )
 
-  $: embeddingConfigs = ($aiConfigsStore.customConfigs || []).filter(
-    config => config.configType === AIConfigType.EMBEDDINGS
-  )
-
-  $: vectorDbConfigs = $vectorDbStore.configs || []
-
   $: modelOptions = completionConfigs.map(config => ({
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
 
-  $: embeddingModelOptions = embeddingConfigs.map(config => ({
-    label: config.name || config._id || "Unnamed",
-    value: config._id || "",
-  }))
-
-  $: vectorDbOptions = vectorDbConfigs.map(config => ({
-    label: config.name || config._id || "Unnamed",
-    value: config._id || "",
-  }))
+  $: ragConfigs = $ragConfigStore.configs || []
 
   $: {
     const nextAiconfigId = draft.aiconfig || undefined
@@ -515,6 +490,23 @@
     webSearchConfigModal?.show()
   }
 
+  const handleRagToggleChange = async (e: CustomEvent<boolean>) => {
+    if (e.detail && !draft.ragConfigId) {
+      ragConfigError = "Select a RAG configuration to enable it."
+      notifications.error(ragConfigError)
+
+      // Force the toggle to re-render
+      draft.ragEnabled = true
+      await tick()
+      draft.ragEnabled = false
+
+      return
+    }
+
+    draft.ragEnabled = e.detail
+    scheduleSave(true)
+  }
+
   $: if (pendingWebSearchInsert && webSearchConfigured) {
     const searchTool = availableTools.find(
       tool => tool.sourceType === ToolType.SEARCH
@@ -525,52 +517,6 @@
     pendingWebSearchInsert = false
   }
 
-  const requiredString = (errorMessage: string) =>
-    z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
-
-  const requiredNumber = (errorMessage: string) =>
-    z.number({ required_error: errorMessage, invalid_type_error: errorMessage })
-
-  const ragConfigSchema = z.object({
-    enabled: z.boolean(),
-    embeddingModel: requiredString("Embeddings model is required."),
-    vectorDb: requiredString("Vector database is required."),
-    ragMinDistance: requiredNumber("Minimum similarity is required.")
-      .min(0, "Minimum similarity must be between 0 and 1.")
-      .max(1, "Minimum similarity must be between 0 and 1."),
-    ragTopK: requiredNumber("Chunks to retrieve is required.")
-      .int("Chunks to retrieve must be a whole number.")
-      .min(1, "Chunks to retrieve must be between 1 and 10.")
-      .max(10, "Chunks to retrieve must be between 1 and 10."),
-  }) satisfies ZodType<AgentRagConfig>
-
-  const getRagConfigPayload = () => {
-    const ragConfig: Partial<Agent["ragConfig"]> = {
-      ...draft.ragConfig,
-      enabled: true,
-    }
-
-    const validationResult = ragConfigSchema.safeParse(ragConfig)
-    ragErrors = {}
-    if (!validationResult.success) {
-      ragErrors = Object.values(validationResult.error.issues).reduce<
-        Record<string, string>
-      >((acc, issue) => {
-        const field = issue.path[0]
-        acc[field] = issue.message
-        return acc
-      }, {})
-      return undefined
-    }
-
-    return validationResult.data
-  }
-
-  const getDisabledRagConfig = (): Agent["ragConfig"] => ({
-    ...draft.ragConfig,
-    enabled: false,
-  })
-
   async function saveAgent({
     showNotifications = true,
   }: {
@@ -580,20 +526,17 @@
     if (saving) return
 
     saving = true
-    const ragEnabled = !!draft.ragConfig.enabled
+    const ragEnabled = !!draft.ragEnabled
     try {
-      const ragConfig = ragEnabled
-        ? getRagConfigPayload()
-        : getDisabledRagConfig()
-      if (ragEnabled && !ragConfig) {
-        notifications.error("Complete all RAG settings to enable it.")
+      if (ragEnabled && !draft.ragConfigId) {
+        ragConfigError = "Select a RAG configuration to enable it."
+        notifications.error(ragConfigError)
         return
       }
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
         enabledTools: includedToolRuntimeBindings,
-        ragConfig,
       })
 
       if (showNotifications) {
@@ -627,14 +570,12 @@
 
     const nextLive = !currentAgent.live
 
-    const ragEnabled = !!draft.ragConfig.enabled
+    const ragEnabled = !!draft.ragEnabled
     try {
       togglingLive = true
-      const ragConfig = ragEnabled
-        ? getRagConfigPayload()
-        : getDisabledRagConfig()
-      if (ragEnabled && !ragConfig) {
-        notifications.error("Complete all RAG settings to enable it.")
+      if (ragEnabled && !draft.ragConfigId) {
+        ragConfigError = "Select a RAG configuration to enable it."
+        notifications.error(ragConfigError)
         return
       }
 
@@ -643,7 +584,6 @@
         ...draft,
         enabledTools: includedToolRuntimeBindings,
         live: nextLive,
-        ragConfig,
       })
       await deploymentStore.publishApp()
       await agentsStore.fetchAgents()
@@ -665,7 +605,7 @@
     await Promise.all([
       agentsStore.init(),
       aiConfigsStore.fetch(),
-      vectorDbStore.fetch(),
+      ragConfigStore.fetch(),
     ])
 
     if (draft.aiconfig) {
@@ -755,12 +695,13 @@
               />
             </div>
             <div class="form-icon">
-              <ActionButton
-                size="M"
-                icon="sliders-horizontal"
-                tooltip="Manage AI configurations"
-                on:click={() => bb.settings("/ai")}
-              />
+              <AbsTooltip text="Manage AI configurations">
+                <ActionButton
+                  size="M"
+                  icon="sliders-horizontal"
+                  on:click={() => bb.settings("/ai")}
+                />
+              </AbsTooltip>
             </div>
           </div>
 
@@ -875,65 +816,46 @@
 
           <div class="section rag-settings">
             <div class="rag-header">
-              <Heading size="XS">RAG enabled</Heading>
-              <Toggle
-                noPadding
-                bind:value={draft.ragConfig.enabled}
-                on:change={() => scheduleSave(true)}
-              />
+              <Heading size="XS">RAG</Heading>
             </div>
-          </div>
-          {#if draft.ragConfig.enabled}
-            <div class="section rag-settings">
-              <Select
-                label="Embeddings model"
-                labelPosition="left"
-                bind:value={draft.ragConfig.embeddingModel}
-                options={embeddingModelOptions}
-                placeholder="Select embeddings model"
-                disabled={!embeddingModelOptions.length}
-                error={ragErrors.embeddingModel}
-                helpText="Used when encoding knowledge base chunks."
-                on:change={() => scheduleSave(true)}
-              />
-              <Select
-                label="Vector database"
-                labelPosition="left"
-                bind:value={draft.ragConfig.vectorDb}
-                options={vectorDbOptions}
-                placeholder="Select vector database"
-                disabled={!vectorDbOptions.length}
-                error={ragErrors.vectorDb}
-                helpText="Where embeddings are stored and queried."
-                on:change={() => scheduleSave(true)}
-              />
-
-              <Heading size="XS">Relevant context</Heading>
-              <div class="rag-grid">
-                <Input
-                  label="Minimum similarity"
+            <div class="form-row">
+              <div class="form-field">
+                <Toggle
+                  label="Enable"
                   labelPosition="left"
-                  type="number"
-                  bind:value={draft.ragConfig.ragMinDistance}
-                  error={ragErrors.ragMinDistance}
-                  helpText="Chunks below this cosine similarity are ignored."
-                  on:change={() => scheduleSave(true)}
+                  value={draft.ragEnabled}
+                  on:change={handleRagToggleChange}
                 />
-                <Input
-                  label="Chunks to retrieve"
+                <Select
+                  label="Model"
                   labelPosition="left"
-                  type="number"
-                  bind:value={draft.ragConfig.ragTopK}
-                  error={ragErrors.ragTopK}
-                  helpText="Number of chunks retrieved for each query."
-                  on:change={() => scheduleSave(true)}
+                  bind:value={draft.ragConfigId}
+                  getOptionLabel={o => o.name}
+                  getOptionValue={o => o._id}
+                  options={ragConfigs}
+                  placeholder="Select a RAG configuration"
+                  on:change={() => {
+                    ragConfigError = undefined
+                    scheduleSave(true)
+                  }}
+                  error={ragConfigError}
                 />
               </div>
+              <div class="form-icon">
+                <AbsTooltip text="Manage model configurations">
+                  <ActionButton
+                    size="M"
+                    icon="sliders-horizontal"
+                    on:click={() => bb.settings("/ai")}
+                  />
+                </AbsTooltip>
+              </div>
             </div>
-            <div class="section files-section">
-              <FilesPanel currentAgentId={currentAgent?._id} />
-            </div>
-          {/if}
+          </div>
+
+          <div class="section files-section">
+            <FilesPanel currentAgentId={currentAgent?._id} />
+          </div>
         </Layout>
       </div>
     </div>
