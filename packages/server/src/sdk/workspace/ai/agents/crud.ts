@@ -97,15 +97,17 @@ export async function remove(agentId: string) {
 
   await db.remove(agent)
 
-  const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
+  if (agent.ragConfigId) {
+    const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
 
-  const files = await listAgentFiles(agentId)
-  if (files.length > 0 && ragConfig) {
-    await deleteAgentFileChunks(
-      ragConfig,
-      files.map(file => file.ragSourceId).filter(Boolean)
-    )
+    const files = await listAgentFiles(agentId)
+    if (files.length > 0 && ragConfig) {
+      await deleteAgentFileChunks(
+        ragConfig,
+        files.map(file => file.ragSourceId).filter(Boolean)
+      )
 
-    await Promise.all(files.map(file => removeAgentFile(agent, file)))
+      await Promise.all(files.map(file => removeAgentFile(agent, file)))
+    }
   }
 }

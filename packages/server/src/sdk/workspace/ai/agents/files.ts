@@ -84,10 +84,6 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
 
 export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
   const ragConfig = await getAgentRagConfig(agent)
-  if (!ragConfig) {
-    throw new Error("RAG not enabled")
-  }
-
   await deleteAgentFileChunks(ragConfig, [file.ragSourceId])
   const db = context.getWorkspaceDB()
   await db.remove(file)

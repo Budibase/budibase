@@ -4,6 +4,7 @@ import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
 import sdk from "../../.."
 import { createVectorDb, type ChunkInput } from "../vectorDb"
+import { HTTPError } from "@budibase/backend-core"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
@@ -286,41 +287,16 @@ const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
   return buffer.toString("utf-8")
 }
 
-export const getAgentRagConfig = async (
-  agent: Agent
-): Promise<RagConfig | undefined> => {
-  if (!agent.ragEnabled) {
-    return undefined
+export const getAgentRagConfig = async (agent: Agent): Promise<RagConfig> => {
+  if (!agent.ragConfigId) {
+    throw new HTTPError("RAG config not set", 422)
   }
-  if (agent.ragConfigId) {
-    return await sdk.ragConfigs.find(agent.ragConfigId)
-  }
-  const legacyConfig = (
-    agent as {
-      ragConfig?: {
-        embeddingModel?: string
-        vectorDb?: string
-        ragMinDistance?: number
-        ragTopK?: number
-        enabled?: boolean
-      }
-    }
-  ).ragConfig
 
-  if (
-    legacyConfig?.enabled &&
-    legacyConfig.embeddingModel &&
-    legacyConfig.vectorDb
-  ) {
-    return {
-      name: "Legacy RAG",
-      embeddingModel: legacyConfig.embeddingModel,
-      vectorDb: legacyConfig.vectorDb,
-      ragMinDistance: legacyConfig.ragMinDistance ?? 0.7,
-      ragTopK: legacyConfig.ragTopK ?? 4,
-    }
+  const config = await sdk.ragConfigs.find(agent.ragConfigId)
+  if (!config) {
+    throw new HTTPError("RAG config not found", 422)
   }
-  return undefined
+  return config
 }
 
 export const ingestAgentFile = async (
@@ -329,9 +305,6 @@ export const ingestAgentFile = async (
   fileBuffer: Buffer
 ): Promise<ChunkResult> => {
   const ragConfig = await getAgentRagConfig(agent)
-  if (!ragConfig) {
-    throw new Error("RAG not configured")
-  }
   const config = await buildRagConfig(ragConfig)
   const vectorDb = getVectorDb(config)
   const content = await getTextFromBuffer(fileBuffer, agentFile)
