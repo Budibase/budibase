@@ -42,6 +42,7 @@ export enum AutomationCustomIOType {
   TRIGGER_FILTER = "trigger_filter",
   CATEGORIES = "categories",
   AGENT = "agent",
+  OUTPUT_SCHEMA = "outputSchema",
 }
 
 export enum AutomationTriggerStepId {
