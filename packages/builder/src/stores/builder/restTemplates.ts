@@ -91,7 +91,6 @@ interface RestTemplatesState {
   templateGroups: RestTemplateGroup<RestTemplateGroupName>[]
 }
 
-
 const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
   name: "HubSpot",
   icon: HubSpotLogo,
@@ -171,7 +170,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Authors",
-      description: "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
+      description:
+        "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
       specs: [
         {
           version: "v3",
@@ -231,7 +231,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Calls",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -251,7 +252,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Carts",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -261,7 +263,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Cms Content Audit",
-      description: "Use this endpoint to query audit logs of CMS changes that occurred on your HubSpot account.",
+      description:
+        "Use this endpoint to query audit logs of CMS changes that occurred on your HubSpot account.",
       specs: [
         {
           version: "v3",
@@ -271,7 +274,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Commerce Payments",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -281,7 +285,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Commerce Subscriptions",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -291,7 +296,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Communications",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -301,7 +307,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Companies",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -311,7 +318,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Contacts",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2026-03",
@@ -321,7 +329,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Contracts",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -351,7 +360,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Courses",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -361,7 +371,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot CRM Meetings",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -371,7 +382,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Crm Owners",
-      description: "HubSpot uses **owners** to assign CRM objects to specific people in your organization. The endpoints described here are used to get a list of the owners that...",
+      description:
+        "HubSpot uses **owners** to assign CRM objects to specific people in your organization. The endpoints described here are used to get a list of the owners that...",
       specs: [
         {
           version: "v3",
@@ -391,7 +403,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Custom Objects",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2026-03",
@@ -411,7 +424,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Deals",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -421,7 +435,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Discounts",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2026-03",
@@ -441,7 +456,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Emails",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -471,7 +487,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Feedback Submissions",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -481,7 +498,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Fees",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -511,7 +529,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Goal Targets",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -541,7 +560,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Invoices",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -551,7 +571,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Leads",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -571,7 +592,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Line Items",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -581,7 +603,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Listings",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -661,7 +684,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Notes",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -691,7 +715,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Objects",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -701,7 +726,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Orders",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -721,7 +747,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Pages",
-      description: "Use these endpoints for interacting with Landing Pages and Site Pages",
+      description:
+        "Use these endpoints for interacting with Landing Pages and Site Pages",
       specs: [
         {
           version: "v3",
@@ -731,7 +758,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Partner Clients",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -741,7 +769,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Partner Services",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -761,7 +790,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Pipelines",
-      description: "Pipelines represent distinct stages in a workflow, like closing a deal or servicing a support ticket. These endpoints provide access to read and modify pipel...",
+      description:
+        "Pipelines represent distinct stages in a workflow, like closing a deal or servicing a support ticket. These endpoints provide access to read and modify pipel...",
       specs: [
         {
           version: "v3",
@@ -771,7 +801,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Postal Mail",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -781,7 +812,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Posts",
-      description: "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
+      description:
+        "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
       specs: [
         {
           version: "v3",
@@ -791,7 +823,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Products",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -801,7 +834,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Projects",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "v3",
@@ -811,7 +845,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Properties",
-      description: "All HubSpot objects store data in default and custom properties. These endpoints provide access to read and modify object properties in HubSpot.",
+      description:
+        "All HubSpot objects store data in default and custom properties. These endpoints provide access to read and modify object properties in HubSpot.",
       specs: [
         {
           version: "2025-09",
@@ -831,7 +866,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Public App Crm Cards",
-      description: "Allows an app to extend the CRM UI by surfacing custom cards in the sidebar of record pages. These cards are defined up-front as part of app configuration, t...",
+      description:
+        "Allows an app to extend the CRM UI by surfacing custom cards in the sidebar of record pages. These cards are defined up-front as part of app configuration, t...",
       specs: [
         {
           version: "v3",
@@ -851,7 +887,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Quotes",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -871,7 +908,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Schemas",
-      description: "The CRM uses schemas to define how custom objects should store and represent information in the HubSpot CRM. Schemas define details about an object's type, p...",
+      description:
+        "The CRM uses schemas to define how custom objects should store and represent information in the HubSpot CRM. Schemas define details about an object's type, p...",
       specs: [
         {
           version: "v3",
@@ -901,7 +939,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Services",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -921,7 +960,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Site Search",
-      description: "Use these endpoints for searching content on your HubSpot hosted CMS website(s).",
+      description:
+        "Use these endpoints for searching content on your HubSpot hosted CMS website(s).",
       specs: [
         {
           version: "v3",
@@ -931,7 +971,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Source Code",
-      description: "API for managing and retrieving source code files and metadata",
+      description:
+        "API for managing and retrieving source code files and metadata",
       specs: [
         {
           version: "v3",
@@ -961,7 +1002,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Tags",
-      description: "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
+      description:
+        "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
       specs: [
         {
           version: "v3",
@@ -971,7 +1013,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Tasks",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -991,7 +1034,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Taxes",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -1011,7 +1055,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Tickets",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -1021,7 +1066,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Timeline",
-      description: "This feature allows an app to create and configure custom events that can show up in the timelines of certain CRM objects like contacts, companies, tickets,...",
+      description:
+        "This feature allows an app to create and configure custom events that can show up in the timelines of certain CRM objects like contacts, companies, tickets,...",
       specs: [
         {
           version: "v3",
@@ -1071,7 +1117,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Users",
-      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      description:
+        "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
@@ -1081,7 +1128,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Video Conferencing Extension",
-      description: "These APIs allow you to specify URLs that can be used to interact with a video conferencing application, to allow HubSpot to add video conference links to me...",
+      description:
+        "These APIs allow you to specify URLs that can be used to interact with a video conferencing application, to allow HubSpot to add video conference links to me...",
       specs: [
         {
           version: "v3",
@@ -1091,7 +1139,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Visitor Identification",
-      description: "The Visitor Identification API allows you to pass identification information to the HubSpot chat widget for otherwise unknown visitors that were verified by...",
+      description:
+        "The Visitor Identification API allows you to pass identification information to the HubSpot chat widget for otherwise unknown visitors that were verified by...",
       specs: [
         {
           version: "v3",
@@ -1101,7 +1150,8 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Webhooks",
-      description: "Provides a way for apps to subscribe to certain change events in HubSpot. Once configured, apps will receive event payloads containing details about the chan...",
+      description:
+        "Provides a way for apps to subscribe to certain change events in HubSpot. Once configured, apps will receive event payloads containing details about the chan...",
       specs: [
         {
           version: "v3",

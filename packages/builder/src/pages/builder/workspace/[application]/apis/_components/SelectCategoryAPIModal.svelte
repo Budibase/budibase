@@ -295,9 +295,7 @@
               </div>
 
               <div class="api-name">{card.name}</div>
-              {#if card.type === "group"
-                ? card.group.verified
-                : card.template.verified}
+              {#if card.type === "group" ? card.group.verified : card.template.verified}
                 <i
                   class="ph ph-seal-check verified-icon"
                   aria-label="Verified template"
