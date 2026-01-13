@@ -1,22 +1,16 @@
 <script lang="ts">
   import TopBar from "@/components/common/TopBar.svelte"
-  import Panel from "@/components/design/Panel.svelte"
+  import ChatConversationPanel from "./_components/ChatConversationPanel.svelte"
+  import ChatNavigationPanel from "./_components/ChatNavigationPanel.svelte"
+  import ChatSettingsPanel from "./_components/ChatSettingsPanel.svelte"
   import { agentsStore, chatAppsStore } from "@/stores/portal"
-  import {
-    Body,
-    Button,
-    Icon,
-    ProgressCircle,
-    Toggle,
-    notifications,
-  } from "@budibase/bbui"
+  import { notifications } from "@budibase/bbui"
   import type {
     ChatConversation,
     ChatConversationRequest,
   } from "@budibase/types"
   import { params } from "@roxi/routify"
   import { onMount } from "svelte"
-  import { Chatbox } from "@budibase/frontend-core/src/components"
 
   type ChatConversationWithAgent = ChatConversation & { agentId?: string }
   type ChatConversationRequestWithAgent = ChatConversationRequest & {
@@ -40,6 +34,7 @@
   let loading: boolean = false
   let deletingChat: boolean = false
   let selectedAgentId: string | null = null
+  let selectedAgentName: string = ""
   let initializedWorkspaceId: string | null = null
 
   $: conversationHistory = $chatAppsStore.conversations || []
@@ -158,6 +153,10 @@
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
 
+  $: selectedAgentName = selectedAgentId
+    ? getAgentName(selectedAgentId) || "Unknown agent"
+    : ""
+
   const initChatApp = async (workspaceId: string) => {
     if (!workspaceId || initializedWorkspaceId === workspaceId) {
       return
@@ -222,6 +221,21 @@
     await chatAppsStore.updateEnabledAgents(nextEnabledAgents)
   }
 
+  const handleAgentSelected = (event: CustomEvent<{ agentId: string }>) => {
+    selectAgent(event.detail.agentId)
+  }
+
+  const handleConversationSelected = (
+    event: CustomEvent<{ conversationId: string }>
+  ) => {
+    const conversation = conversationHistory.find(
+      convo => convo._id === event.detail.conversationId
+    )
+    if (conversation) {
+      selectChat(conversation)
+    }
+  }
+
   onMount(async () => {
     await agentsStore.init()
   })
@@ -230,140 +244,32 @@
 <div class="wrapper">
   <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false} />
   <div class="page">
-    <Panel customWidth={260} borderRight noHeaderBorder>
-      <div class="settings-header">
-        <Body size="S" color="var(--spectrum-global-color-gray-800)">
-          Settings
-        </Body>
-      </div>
-      <div class="settings-section">
-        <Body size="S" color="var(--spectrum-global-color-gray-700)">
-          Agents
-        </Body>
-        <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-          Use the button below to add agents. After adding them, they’ll appear
-          in the chat side panel. The New chat button opens a new conversation
-          with the default agent.
-        </Body>
-        {#if namedAgents.length}
-          {#each namedAgents as agent (agent._id)}
-            <div class="settings-agent">
-              <div class="settings-agent-info">
-                <Body size="S">{agent.name}</Body>
-              </div>
-              {#if agent._id}
-                <Toggle
-                  value={isAgentAvailable(agent._id)}
-                  on:change={event =>
-                    handleAvailabilityToggle(agent._id!, event.detail)}
-                />
-              {/if}
-            </div>
-          {/each}
-        {:else}
-          <Body size="S" color="var(--spectrum-global-color-gray-500)">
-            No agents found
-          </Body>
-        {/if}
-      </div>
-    </Panel>
+    <ChatSettingsPanel
+      {namedAgents}
+      {isAgentAvailable}
+      {handleAvailabilityToggle}
+    />
 
-    <Panel customWidth={260} borderRight noHeaderBorder>
-      <div class="list-section">
-        <div class="list-title">Agents</div>
-        {#if enabledAgentList.length}
-          {#each enabledAgentList as agent (agent.agentId)}
-            <button
-              class="list-item list-item-button"
-              on:click={() => selectAgent(agent.agentId)}
-            >
-              {agent.name}
-            </button>
-          {/each}
-        {:else}
-          <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-            No agents
-          </Body>
-        {/if}
-      </div>
-      <div class="list-section">
-        <div class="list-title">Recent Chats</div>
-        {#if conversationHistory.length}
-          {#each conversationHistory as conversation}
-            <button
-              class="list-item list-item-button"
-              class:selected={$chatAppsStore.currentConversationId ===
-                conversation._id}
-              on:click={() => selectChat(conversation)}
-            >
-              {conversation.title || "Untitled Chat"}
-            </button>
-          {/each}
-        {:else}
-          <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-            No recent chats
-          </Body>
-        {/if}
-      </div>
-    </Panel>
+    <ChatNavigationPanel
+      {enabledAgentList}
+      {conversationHistory}
+      selectedConversationId={$chatAppsStore.currentConversationId}
+      on:agentSelected={handleAgentSelected}
+      on:conversationSelected={handleConversationSelected}
+    />
 
-    <div class="chat-wrapper">
-      {#if selectedAgentId}
-        <div class="chat-header">
-          <div class="chat-header-agent">
-            <Body size="S" color="var(--spectrum-global-color-gray-700)">
-              {getAgentName(selectedAgentId) || "Unknown agent"}
-            </Body>
-          </div>
-          {#if chat._id}
-            <Button
-              quiet
-              warning
-              disabled={deletingChat || loading}
-              on:click={deleteCurrentChat}
-            >
-              <span class="delete-button-content">
-                {#if deletingChat}
-                  <ProgressCircle size="S" />
-                  Deleting...
-                {:else}
-                  <Icon name="trash" size="S" />
-                  Delete chat
-                {/if}
-              </span>
-            </Button>
-          {/if}
-        </div>
-        <Chatbox
-          bind:chat
-          {loading}
-          workspaceId={$params.application}
-          on:chatSaved={handleChatSaved}
-        />
-      {:else}
-        <div class="chat-empty">
-          <Body size="S" color="var(--spectrum-global-color-gray-700)">
-            Choose an agent to start a chat
-          </Body>
-          <div class="chat-empty-grid">
-            {#if enabledAgentList.length}
-              {#each enabledAgentList as agent (agent.agentId)}
-                <button
-                  class="chat-empty-card"
-                  on:click={() => selectAgent(agent.agentId)}
-                >
-                  {agent.name}
-                </button>
-              {/each}
-            {:else}
-              <Body size="S" color="var(--spectrum-global-color-gray-500)">
-                No enabled agents
-              </Body>
-            {/if}
-          </div>
-        </div>
-      {/if}
-    </div>
+    <ChatConversationPanel
+      bind:chat
+      {loading}
+      {deletingChat}
+      {enabledAgentList}
+      {selectedAgentId}
+      {selectedAgentName}
+      workspaceId={$params.application}
+      on:deleteChat={deleteCurrentChat}
+      on:chatSaved={handleChatSaved}
+      on:agentSelected={handleAgentSelected}
+    />
   </div>
 </div>
 
@@ -385,149 +291,5 @@
     height: 0;
     width: 100%;
     align-items: stretch;
-  }
-
-  .chat-wrapper {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .chat-header {
-    width: 600px;
-    max-width: 100%;
-    margin: 0 auto;
-    padding: var(--spacing-l) 0 var(--spacing-s);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-m);
-  }
-
-  .chat-header-agent {
-    display: flex;
-    align-items: center;
-  }
-
-  .delete-button-content {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
-
-  .list-section {
-    padding: var(--spacing-m);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xxs);
-  }
-
-  .list-section + .list-section {
-    padding-top: 0;
-  }
-
-  .list-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    background: transparent;
-    border: none;
-    padding: var(--spacing-xs) 0;
-    font: inherit;
-    color: var(--spectrum-global-color-gray-700);
-    text-align: left;
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .list-item-button {
-    cursor: pointer;
-  }
-
-  .list-item-button:hover {
-    color: var(--spectrum-global-color-gray-900);
-  }
-
-  .list-item.selected {
-    color: var(--spectrum-global-color-gray-900);
-    font-weight: 600;
-  }
-
-  .list-item-action {
-    color: var(--spectrum-global-color-gray-700);
-  }
-
-  .list-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--spectrum-global-color-gray-500);
-    font-weight: 600;
-    margin-bottom: var(--spacing-xs);
-  }
-
-  .list-item-action span {
-    padding-top: 1px;
-  }
-
-  .settings-header {
-    padding: var(--spacing-m);
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-  }
-
-  .settings-section {
-    padding: var(--spacing-m);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .settings-agent {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
-  }
-
-  .settings-agent-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xxs);
-  }
-
-  .chat-empty {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: var(--spacing-m);
-    padding: var(--spacing-xxl);
-    text-align: center;
-  }
-
-  .chat-empty-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--spacing-m);
-    width: min(520px, 100%);
-  }
-
-  .chat-empty-card {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
-    padding: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-50);
-    color: var(--spectrum-global-color-gray-800);
-    font: inherit;
-    cursor: pointer;
-    text-align: center;
-  }
-
-  .chat-empty-card:hover {
-    border-color: var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-global-color-gray-100);
   }
 </style>
