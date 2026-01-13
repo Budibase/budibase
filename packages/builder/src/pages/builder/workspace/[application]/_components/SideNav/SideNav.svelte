@@ -51,6 +51,11 @@
   } from "@budibase/types"
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
+  import {
+    DISCORD_URL,
+    DOCUMENTATION_URL,
+    SUPPORT_EMAIL,
+  } from "@/constants"
   import { bb } from "@/stores/bb"
   import WorkspaceSelect from "@/components/common/WorkspaceSelect.svelte"
   import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"
@@ -475,6 +480,22 @@
           </div>
           <div>
             <SideNavLink
+              icon="house"
+              text="Home"
+              url={$url("./design")}
+              {collapsed}
+              on:click={keepCollapsed}
+            />
+            <SideNavLink
+              icon="sparkle"
+              text="AI models"
+              {collapsed}
+              on:click={() => {
+                bb.settings("/ai")
+                keepCollapsed()
+              }}
+            />
+            <SideNavLink
               icon="cube"
               text="APIs"
               url={$url("./apis")}
@@ -489,23 +510,42 @@
               on:click={keepCollapsed}
             />
             <SideNavLink
-              icon="user"
-              text="Users"
-              {collapsed}
+              icon="user-plus"
+              text="Invite user"
               on:click={() => {
-                bb.settings("/people/users")
+                builderStore.showBuilderSidePanel()
                 keepCollapsed()
               }}
-            />
-            <SideNavLink
-              icon="sparkle"
-              text="AI models"
               {collapsed}
-              on:click={() => {
-                bb.settings("/ai")
-                keepCollapsed()
-              }}
             />
+            <span class="root-nav" class:error={backupErrorCount}>
+              {#if collapsed && backupErrorCount}
+                <span class="status-indicator">
+                  <StatusLight
+                    color="var(--spectrum-global-color-static-red-600)"
+                    size="M"
+                  />
+                </span>
+              {/if}
+              <SideNavLink
+                icon="gear"
+                text="Settings"
+                {collapsed}
+                on:click={() => {
+                  bb.settings()
+                  keepCollapsed()
+                }}
+              >
+                <svelte:fragment slot="right">
+                  {#if backupErrorCount}
+                    <StatusLight
+                      color="var(--spectrum-global-color-static-red-600)"
+                      size="M"
+                    />
+                  {/if}
+                </svelte:fragment>
+              </SideNavLink>
+            </span>
           </div>
           <div class="favourite-wrapper">
             <hr />
@@ -598,53 +638,48 @@
       </div>
 
       <div class="links">
-        <span class="root-nav" class:error={backupErrorCount}>
-          {#if collapsed && backupErrorCount}
-            <span class="status-indicator">
-              <StatusLight
-                color="var(--spectrum-global-color-static-red-600)"
-                size="M"
-              />
-            </span>
-          {/if}
-          <SideNavLink
-            icon="gear"
-            text="Settings"
-            {collapsed}
-            on:click={() => {
-              bb.settings()
-              keepCollapsed()
-            }}
-          >
-            <svelte:fragment slot="right">
-              {#if backupErrorCount}
-                <StatusLight
-                  color="var(--spectrum-global-color-static-red-600)"
-                  size="M"
-                />
-              {/if}
-            </svelte:fragment>
-          </SideNavLink>
-        </span>
-        {#if $appStore.appId}
-          <SideNavLink
-            icon="user-plus"
-            text="Invite new user"
-            on:click={() => {
-              builderStore.showBuilderSidePanel()
-              keepCollapsed()
-            }}
-            {collapsed}
-          />
-        {/if}
-        <HelpMenu align={PopoverAlignment.RightOutside} let:open>
-          <SideNavLink
-            icon={"question"}
-            text={"Help"}
-            {collapsed}
-            forceActive={open}
-          />
-        </HelpMenu>
+        <SideNavLink
+          icon="book"
+          text="Docs"
+          {collapsed}
+          on:click={() => {
+            window.open(DOCUMENTATION_URL, "_blank")
+            keepCollapsed()
+          }}
+        />
+        <SideNavLink
+          icon="discord-logo"
+          text="Community"
+          {collapsed}
+          on:click={() => {
+            window.open(DISCORD_URL, "_blank")
+            keepCollapsed()
+          }}
+        />
+        <SideNavLink
+          icon="star"
+          text="27.5k Github stars"
+          {collapsed}
+          on:click={() => {
+            window.open("https://github.com/Budibase/budibase", "_blank")
+            keepCollapsed()
+          }}
+        />
+        <SideNavLink
+          icon="paper-plane-tilt"
+          text="Email support"
+          {collapsed}
+          on:click={() => {
+            licensing.goToUpgradePage()
+            keepCollapsed()
+          }}
+        >
+          <svelte:fragment slot="right">
+            <div class="beta-tag-wrapper">
+              <Tag emphasized>Paid</Tag>
+            </div>
+          </svelte:fragment>
+        </SideNavLink>
         <SideNavUserSettings {collapsed} />
       </div>
       <div class="popover-container"></div>
