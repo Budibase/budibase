@@ -22,6 +22,7 @@
   import type { PickerIconInput, ResolvedIcon } from "../../types/Picker"
 
   export let id: string | undefined = undefined
+  export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = false
   export let fieldText: string = ""
   export let fieldIcon: PickerIconInput = undefined
@@ -83,7 +84,6 @@
 
   let button: HTMLButtonElement | null = null
   let component: HTMLUListElement | null = null
-  let optionIconDescriptor: ResolvedIcon | null = null
   let virtualizedOptions: Array<{ option: O; idx: number }> = []
   let virtualPaddingTop = 0
   let virtualPaddingBottom = 0
@@ -224,7 +224,7 @@
 
 <button
   {id}
-  class="spectrum-Picker spectrum-Picker--sizeM"
+  class="spectrum-Picker spectrum-Picker--size{size}"
   class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-open={open}
@@ -340,6 +340,7 @@
           ></li>
         {/if}
         {#each virtualizedOptions as { option, idx } (getOptionValue(option, idx) ?? idx)}
+          {@const optionIcon = resolveIcon(getOptionIcon(option, idx))}
           <li
             class="spectrum-Menu-item"
             class:is-selected={isOptionSelected(getOptionValue(option, idx))}
@@ -351,9 +352,9 @@
             on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
           >
-            {#if (optionIconDescriptor = resolveIcon(getOptionIcon(option, idx)))}
+            {#if optionIcon}
               <span class="option-extra icon">
-                <PickerIcon icon={optionIconDescriptor} {useOptionIconImage} />
+                <PickerIcon icon={optionIcon} {useOptionIconImage} />
               </span>
             {/if}
             {#if getOptionColour(option, idx)}
@@ -419,6 +420,8 @@
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
   }
   .spectrum-Picker-label.auto-width {
     margin-right: var(--spacing-xs);

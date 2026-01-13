@@ -1,9 +1,11 @@
 <script lang="ts">
   import { agentsStore, aiConfigsStore, vectorDbStore } from "@/stores/portal"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { onMount } from "svelte"
   import { AIConfigType } from "@budibase/types"
+
+  $: goto = $gotoStore
 
   export const show = () => {
     modal.show()
@@ -36,7 +38,7 @@
       live: false,
     })
     modal.hide()
-    $goto(`./${newAgent._id}/config`)
+    goto(`./${newAgent._id}/config`)
   }
 
   onMount(() => {

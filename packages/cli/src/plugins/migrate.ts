@@ -21,6 +21,7 @@ type AnalysisResult = {
   packageJson: "needs-migration" | "looks-new"
   wrapper: "needs-migration" | "looks-new" | "not-found"
   schema: "needs-migration" | "looks-new" | "not-found" | "unknown"
+  nodeVersion: "needs-migration" | "looks-new" | "not-found"
   canBuildAfter: boolean
   report: string[]
   rollupFile?: string
@@ -323,11 +324,20 @@ export function migratePackageJson(): MigrationResult {
   dev["@rollup/plugin-commonjs"] = "^25.0.7"
   dev["@rollup/plugin-node-resolve"] = "^15.2.3"
   dev["rollup-plugin-svelte"] = "^7.2.3"
-  // retain others as-is
+  // Bump backend-core for /plugins subpath export compatibility
+  if (dev["@budibase/backend-core"]) {
+    dev["@budibase/backend-core"] = "^2.8.0"
+  }
+  // Remove unused dependencies
   if (dev["npm-run-all"]) {
     delete dev["npm-run-all"]
   }
   json.devDependencies = dev
+
+  // Remove @crownframework/svelte-error-boundary as it's replaced by <svelte:boundary>
+  if (json.dependencies?.["@crownframework/svelte-error-boundary"]) {
+    delete json.dependencies["@crownframework/svelte-error-boundary"]
+  }
 
   if (!json.scripts) json.scripts = {}
   json.scripts["build"] = "rollup -c rollup.config.mjs"
@@ -362,6 +372,69 @@ export function migratePackageJson(): MigrationResult {
     before,
     after,
     message,
+  }
+}
+
+export function findWorkflowFiles(): string[] {
+  const workflowDir = path.join(process.cwd(), ".github", "workflows")
+  if (!fs.existsSync(workflowDir)) {
+    return []
+  }
+  const files = fs.readdirSync(workflowDir)
+  return files
+    .filter(f => f.endsWith(".yml") || f.endsWith(".yaml"))
+    .map(f => path.join(".github", "workflows", f))
+}
+
+export function migrateNodeVersion(): MigrationResult {
+  const workflowFiles = findWorkflowFiles()
+  if (workflowFiles.length === 0) {
+    return {
+      changed: false,
+      message:
+        "No GitHub workflow files found in .github/workflows/ - skipping node version migration.",
+    }
+  }
+
+  const messages: string[] = []
+  let anyChanged = false
+
+  for (const relPath of workflowFiles) {
+    const absPath = path.join(process.cwd(), relPath)
+    const content = fs.readFileSync(absPath, "utf8")
+
+    // Check for node-version: 16 (with or without quotes)
+    const nodeVersion16Pattern = /node-version:\s*['"]?16['"]?/g
+    if (!nodeVersion16Pattern.test(content)) {
+      continue
+    }
+
+    // Replace node-version: 16 with node-version: 18
+    const updated = content.replace(
+      /node-version:\s*['"]?16['"]?/g,
+      "node-version: 18"
+    )
+
+    if (updated !== content) {
+      const backupPath = `${absPath}.pre-svelte5`
+      fs.writeFileSync(backupPath, content)
+      fs.writeFileSync(absPath, updated)
+      anyChanged = true
+      messages.push(`Updated ${relPath}: node-version 16 -> 18`)
+    }
+  }
+
+  if (!anyChanged) {
+    return {
+      changed: false,
+      message:
+        "No workflow files with node-version: 16 found - skipping node version migration.",
+    }
+  }
+
+  return {
+    changed: true,
+    message: messages.join("; "),
   }
 }
 
@@ -517,12 +590,49 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
     ? "looks-new"
     : "needs-migration"
 
+  // node version in workflows
+  let nodeVersionStatus: AnalysisResult["nodeVersion"] = "not-found"
+  const workflowFiles = findWorkflowFiles()
+  if (workflowFiles.length > 0) {
+    let hasNode16 = false
+    let hasNode18OrHigher = false
+    for (const relPath of workflowFiles) {
+      const absPath = path.join(process.cwd(), relPath)
+      const content = fs.readFileSync(absPath, "utf8")
+      if (/node-version:\s*['"]?16['"]?/.test(content)) {
+        hasNode16 = true
+      }
+      if (/node-version:\s*['"]?(18|20|22)['"]?/.test(content)) {
+        hasNode18OrHigher = true
+      }
+    }
+    if (hasNode16) {
+      nodeVersionStatus = "needs-migration"
+      report.push("Will update GitHub workflow files: node-version 16 -> 18.")
+    } else if (hasNode18OrHigher) {
+      nodeVersionStatus = "looks-new"
+      report.push(
+        "GitHub workflow files already use node-version 18 or higher."
+      )
+    } else {
+      nodeVersionStatus = "looks-new"
+      report.push(
+        "GitHub workflow files found but no node-version: 16 detected."
+      )
+    }
+  } else {
+    report.push(
+      "No GitHub workflow files found in .github/workflows/ - skipping node version check."
+    )
+  }
+
   return {
     report,
     rollup: rollupStatus,
     packageJson: packageJsonStatus,
     wrapper: wrapperStatus,
     schema: schemaStatus,
+    nodeVersion: nodeVersionStatus,
     canBuildAfter: true,
     rollupFile,
     wrapperFile,
@@ -553,10 +663,16 @@ export async function runSvelte5Migration() {
         changed: false,
         message: "Skipped wrapper migration due to Rollup template failure.",
       },
+      nodeVersionRes: {
+        changed: false,
+        message:
+          "Skipped node version migration due to Rollup template failure.",
+      },
     }
   }
   const wrapperRes = migrateWrapper()
   const schemaRes = migrateSchemaJson()
   const pkgRes = migratePackageJson()
-  return { pkgRes, schemaRes, rollupRes, wrapperRes }
+  const nodeVersionRes = migrateNodeVersion()
+  return { pkgRes, schemaRes, rollupRes, wrapperRes, nodeVersionRes }
 }

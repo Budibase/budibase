@@ -1,4 +1,4 @@
-import { Document } from "../../"
+import { Document, WebSearchConfig } from "../../"
 
 export enum AIConfigType {
   COMPLETIONS = "completions",
@@ -13,5 +13,6 @@ export interface CustomAIProviderConfig extends Document {
   model: string
   apiKey?: string
   liteLLMModelId: string
+  webSearchConfig?: WebSearchConfig
   configType: AIConfigType
 }

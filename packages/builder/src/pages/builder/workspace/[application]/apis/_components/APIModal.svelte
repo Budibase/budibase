@@ -16,7 +16,7 @@
     type TemplateSelectionEventDetail,
     type UIIntegration,
   } from "@budibase/types"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
@@ -34,6 +34,8 @@
   $beforeUrlChange(() => {
     return true
   })
+
+  $: goto = $gotoStore
 
   $: templatesValue = $restTemplates?.templates || []
   $: templateGroupsValue = $restTemplates?.templateGroups || []
@@ -54,7 +56,7 @@
         await datasources.fetch()
 
         // Go to the new query page.
-        $goto(`./query/new/${ds._id}`)
+        goto(`./query/new/${ds._id}`)
       }
     } catch {
       notifications.error("There was a problem creating your new api")
@@ -169,7 +171,7 @@
       await datasources.fetch()
 
       // Go to the newly created datasource page.
-      $goto(`./datasource/${ds._id}`)
+      goto(`./datasource/${ds._id}`)
 
       notifications.success(`${selectedTemplate.name} API created`)
     } catch (error: any) {
@@ -237,7 +239,7 @@
 </script>
 
 <div class="settings-wrap">
-  <Modal bind:this={modal}>
+  <Modal bind:this={modal} autoFocus={false}>
     <div
       class="spectrum-Dialog--large"
       role="dialog"
