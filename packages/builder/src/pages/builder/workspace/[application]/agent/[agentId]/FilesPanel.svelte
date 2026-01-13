@@ -13,6 +13,7 @@
     AIConfigType,
     type AgentFile,
   } from "@budibase/types"
+  import { helpers } from "@budibase/shared-core"
 
   export let currentAgentId: string | undefined
 
@@ -25,20 +26,6 @@
   $: hasEmbeddingConfig = ($aiConfigsStore.customConfigs || []).some(
     config => config.configType === AIConfigType.EMBEDDINGS
   )
-
-  const formatBytes = (size?: number) => {
-    if (!size) {
-      return "—"
-    }
-    const units = ["B", "KB", "MB", "GB"]
-    let value = size
-    let unitIndex = 0
-    while (value >= 1024 && unitIndex < units.length - 1) {
-      value /= 1024
-      unitIndex += 1
-    }
-    return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unitIndex]}`
-  }
 
   const formatTimestamp = (value?: string | number) => {
     if (!value) {
@@ -177,7 +164,7 @@
           {formatFileStatus(file)}
         </div>
         <div>{file.chunkCount ?? 0}</div>
-        <div>{formatBytes(file.size)}</div>
+        <div>{helpers.formatBytes(file.size, " ")}</div>
         <div>
           {formatTimestamp(
             file.processedAt || file.updatedAt || file.createdAt
