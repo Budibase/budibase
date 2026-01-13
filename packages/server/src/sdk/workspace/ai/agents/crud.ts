@@ -84,8 +84,6 @@ export async function update(request: UpdateAgentRequest): Promise<Agent> {
     ...request,
     updatedAt: new Date().toISOString(),
     enabledTools: request.enabledTools ?? existing?.enabledTools ?? [],
-    ragConfigId: request.ragConfigId ?? existing?.ragConfigId,
-    ragEnabled: request.ragEnabled ?? existing?.ragEnabled ?? false,
   }
 
   const { rev } = await db.put(updated)
