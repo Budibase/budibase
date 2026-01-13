@@ -54,6 +54,7 @@ import LocalizelyLogo from "assets/rest-template-icons/localizely.svg"
 import LogisticsosLogo from "assets/rest-template-icons/logisticsos.svg"
 import MastercardLogo from "assets/rest-template-icons/mastercard.svg"
 import MeasureoneLogo from "assets/rest-template-icons/measureone.svg"
+import MicrosoftTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
 import NanonetsLogo from "assets/rest-template-icons/nanonets.svg"
 import NotionLogo from "assets/rest-template-icons/notion.svg"
 import OysterLogo from "assets/rest-template-icons/oyster.svg"
@@ -1090,6 +1091,19 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
         },
       ],
       icon: MeasureoneLogo,
+    },
+    {
+      name: "Microsoft Teams",
+      description:
+        "Use Microsoft Graph to manage teams, channels, chats, and messages.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-teams/openapi.yaml",
+        },
+      ],
+      icon: MicrosoftTeamsLogo,
+      verified: true,
     },
     {
       name: "Nanonets",
