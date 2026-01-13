@@ -41,7 +41,7 @@
   let loading: boolean = false
   let deletingChat: boolean = false
   let selectedAgentId: string | null = null
-  let chatAppInitialized = false
+  let initializedWorkspaceId: string | null = null
 
   type ChatAppsStoreWithAgents = typeof chatAppsStore & {
     updateEnabledAgents: (_enabledAgents: EnabledAgent[]) => Promise<unknown>
@@ -173,11 +173,17 @@
     agents.find(agent => agent._id === agentId)?.name
 
   const initChatApp = async (workspaceId: string) => {
-    if (chatAppInitialized || !workspaceId) {
+    if (!workspaceId || initializedWorkspaceId === workspaceId) {
       return
     }
 
-    chatAppInitialized = true
+    // Switching applications/workspaces: clear any stale chat state first.
+    initializedWorkspaceId = workspaceId
+    selectedAgentId = null
+    chat = { ...INITIAL_CHAT }
+    chatAppsStore.reset()
+    await agentsStore.selectAgent(undefined)
+
     await chatAppsStore.initConversations(undefined, workspaceId)
   }
 
