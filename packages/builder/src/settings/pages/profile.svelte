@@ -16,13 +16,16 @@
     ButtonGroup,
     Modal,
   } from "@budibase/bbui"
-import { auth } from "@/stores/portal/auth"
-import { admin } from "@/stores/portal/admin"
-import { themeStore } from "@/stores/portal/theme"
-import { userPreferences } from "@/stores/preferences"
-import { type UpdateSelfRequest, type ScreenLayoutType } from "@budibase/types"
-import { ThemeOptions, helpers } from "@budibase/shared-core"
-import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
+  import { auth } from "@/stores/portal/auth"
+  import { admin } from "@/stores/portal/admin"
+  import { themeStore } from "@/stores/portal/theme"
+  import { userPreferences } from "@/stores/preferences"
+  import {
+    type UpdateSelfRequest,
+    type ScreenLayoutType,
+  } from "@budibase/types"
+  import { ThemeOptions, helpers } from "@budibase/shared-core"
+  import ChangePasswordModal from "@budibase/frontend-core/src/components/ChangePasswordModal.svelte"
 
   const { accountPortalAccountUrl } = helpers
 
