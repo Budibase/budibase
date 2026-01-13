@@ -11,7 +11,6 @@
     notifications,
   } from "@budibase/bbui"
   import type {
-    Agent,
     ChatConversation,
     ChatConversationRequest,
   } from "@budibase/types"
