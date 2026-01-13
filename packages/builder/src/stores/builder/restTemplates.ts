@@ -181,7 +181,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
     },
     {
       name: "HubSpot Automation V4",
-      description: "HubSpot Automation Automation V4 API.",
+      description: "HubSpot Automation V4 API.",
       specs: [
         {
           version: "v4",
