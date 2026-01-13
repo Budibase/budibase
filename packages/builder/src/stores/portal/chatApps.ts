@@ -51,8 +51,11 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     })
   }
 
-  ensureChatApp = async (agentId?: string): Promise<ChatApp | null> => {
-    const workspaceId = await this.getWorkspaceId()
+  ensureChatApp = async (
+    agentId?: string,
+    workspaceIdOverride?: string
+  ): Promise<ChatApp | null> => {
+    const workspaceId = workspaceIdOverride || (await this.getWorkspaceId())
     if (!workspaceId) {
       return null
     }
@@ -119,8 +122,8 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return conversations
   }
 
-  initConversations = async (agentId?: string) => {
-    const chatApp = await this.ensureChatApp(agentId)
+  initConversations = async (agentId?: string, workspaceId?: string) => {
+    const chatApp = await this.ensureChatApp(agentId, workspaceId)
     if (chatApp?._id) {
       await this.fetchConversations(chatApp._id)
     }

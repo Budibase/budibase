@@ -41,9 +41,10 @@
   let loading: boolean = false
   let deletingChat: boolean = false
   let selectedAgentId: string | null = null
+  let chatAppInitialized = false
 
   type ChatAppsStoreWithAgents = typeof chatAppsStore & {
-    updateEnabledAgents: (enabledAgents: EnabledAgent[]) => Promise<unknown>
+    updateEnabledAgents: (_enabledAgents: EnabledAgent[]) => Promise<unknown>
   }
 
   const chatAppsStoreWithAgents =
@@ -58,7 +59,10 @@
     selectedAgentId = agentId
     if (agentId) {
       await agentsStore.selectAgent(agentId)
-      const chatApp = await chatAppsStore.ensureChatApp()
+      const chatApp = await chatAppsStore.ensureChatApp(
+        undefined,
+        $params.application
+      )
       if (!chatApp?._id) {
         return
       }
@@ -124,14 +128,6 @@
     }
   }
 
-  const startNewChat = async () => {
-    const firstEnabledAgentId = getFirstEnabledAgentId(enabledAgents)
-    if (!firstEnabledAgentId) {
-      return
-    }
-    await selectAgent(firstEnabledAgentId)
-  }
-
   const handleChatSaved = async (
     event: CustomEvent<{ chatId?: string; chat: ChatConversationLike }>
   ) => {
@@ -172,6 +168,18 @@
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
 
+  const initChatApp = async (workspaceId: string) => {
+    if (chatAppInitialized || !workspaceId) {
+      return
+    }
+
+    chatAppInitialized = true
+    await chatAppsStore.initConversations(undefined, workspaceId)
+  }
+
+  $: if ($params.application) {
+    initChatApp($params.application)
+  }
   $: enabledAgentList = enabledAgents
     .map(agent => ({
       agentId: agent.agentId,
@@ -220,12 +228,6 @@
 
   onMount(async () => {
     await agentsStore.init()
-    await chatAppsStore.initConversations()
-
-    const initialChat = $chatAppsStore.conversations[0]
-    if (initialChat) {
-      await selectChat(initialChat)
-    }
   })
 </script>
 
@@ -241,6 +243,11 @@
       <div class="settings-section">
         <Body size="S" color="var(--spectrum-global-color-gray-700)">
           Agents
+        </Body>
+        <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+          Use the button below to add agents. After adding them, they’ll appear
+          in the chat side panel. The New chat button opens a new conversation
+          with the default agent.
         </Body>
         {#if agents.length}
           {#each agents as agent (agent._id)}
