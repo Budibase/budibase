@@ -41,7 +41,6 @@
   let loading: boolean = false
   let deletingChat: boolean = false
   let selectedAgentId: string | null = null
-  let autoSelected: boolean = false
 
   type ChatAppsStoreWithAgents = typeof chatAppsStore & {
     updateEnabledAgents: (enabledAgents: EnabledAgent[]) => Promise<unknown>
@@ -58,7 +57,6 @@
   const selectAgent = async (agentId: string | null) => {
     selectedAgentId = agentId
     if (agentId) {
-      autoSelected = true
       await agentsStore.selectAgent(agentId)
       const chatApp = await chatAppsStore.ensureChatApp()
       if (!chatApp?._id) {
@@ -78,7 +76,6 @@
   }
 
   const selectChat = async (selectedChat: ChatConversationWithAgent) => {
-    autoSelected = true
     const resolvedAgentId =
       selectedChat.agentId || getFirstEnabledAgentId(enabledAgents)
     if (!resolvedAgentId) {
@@ -221,24 +218,6 @@
     await chatAppsStoreWithAgents.updateEnabledAgents(nextEnabledAgents)
   }
 
-  const maybeAutoSelect = async () => {
-    if (autoSelected || selectedAgentId) {
-      return
-    }
-
-    const firstEnabledAgentId = getFirstEnabledAgentId(enabledAgents)
-    if (firstEnabledAgentId) {
-      await selectAgent(firstEnabledAgentId)
-      return
-    }
-
-    const fallbackAgent = agents.find(agent => agent._id)
-    if (fallbackAgent?._id) {
-      await handleAvailabilityToggle(fallbackAgent._id, true)
-      await selectAgent(fallbackAgent._id)
-    }
-  }
-
   onMount(async () => {
     await agentsStore.init()
     await chatAppsStore.initConversations()
@@ -246,15 +225,8 @@
     const initialChat = $chatAppsStore.conversations[0]
     if (initialChat) {
       await selectChat(initialChat)
-      return
     }
-
-    await maybeAutoSelect()
   })
-
-  $: if ($chatAppsStore.chatAppId && !autoSelected && !selectedAgentId) {
-    void maybeAutoSelect()
-  }
 </script>
 
 <div class="wrapper">
@@ -333,38 +305,61 @@
     </Panel>
 
     <div class="chat-wrapper">
-      <div class="chat-header">
-        <div class="chat-header-agent">
-          <Body size="S" color="var(--spectrum-global-color-gray-700)">
-            {getAgentName(selectedAgentId || "") || "Unknown agent"}
-          </Body>
+      {#if selectedAgentId}
+        <div class="chat-header">
+          <div class="chat-header-agent">
+            <Body size="S" color="var(--spectrum-global-color-gray-700)">
+              {getAgentName(selectedAgentId) || "Unknown agent"}
+            </Body>
+          </div>
+          {#if chat._id}
+            <Button
+              quiet
+              warning
+              disabled={deletingChat || loading}
+              on:click={deleteCurrentChat}
+            >
+              <span class="delete-button-content">
+                {#if deletingChat}
+                  <ProgressCircle size="S" />
+                  Deleting...
+                {:else}
+                  <Icon name="trash" size="S" />
+                  Delete chat
+                {/if}
+              </span>
+            </Button>
+          {/if}
         </div>
-        {#if chat._id}
-          <Button
-            quiet
-            warning
-            disabled={deletingChat || loading}
-            on:click={deleteCurrentChat}
-          >
-            <span class="delete-button-content">
-              {#if deletingChat}
-                <ProgressCircle size="S" />
-                Deleting...
-              {:else}
-                <Icon name="trash" size="S" />
-                Delete chat
-              {/if}
-            </span>
-          </Button>
-        {/if}
-      </div>
-
-      <Chatbox
-        bind:chat
-        {loading}
-        workspaceId={$params.application}
-        on:chatSaved={handleChatSaved}
-      />
+        <Chatbox
+          bind:chat
+          {loading}
+          workspaceId={$params.application}
+          on:chatSaved={handleChatSaved}
+        />
+      {:else}
+        <div class="chat-empty">
+          <Body size="S" color="var(--spectrum-global-color-gray-700)">
+            Choose an agent to start a chat
+          </Body>
+          <div class="chat-empty-grid">
+            {#if enabledAgentList.length}
+              {#each enabledAgentList as agent (agent.agentId)}
+                <button
+                  class="chat-empty-card"
+                  on:click={() => selectAgent(agent.agentId)}
+                >
+                  {agent.name}
+                </button>
+              {/each}
+            {:else}
+              <Body size="S" color="var(--spectrum-global-color-gray-500)">
+                No enabled agents
+              </Body>
+            {/if}
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
@@ -497,5 +492,39 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xxs);
+  }
+
+  .chat-empty {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-m);
+    padding: var(--spacing-xxl);
+    text-align: center;
+  }
+
+  .chat-empty-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-m);
+    width: min(520px, 100%);
+  }
+
+  .chat-empty-card {
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 12px;
+    padding: var(--spacing-m);
+    background: var(--spectrum-global-color-gray-50);
+    color: var(--spectrum-global-color-gray-800);
+    font: inherit;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .chat-empty-card:hover {
+    border-color: var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-100);
   }
 </style>
