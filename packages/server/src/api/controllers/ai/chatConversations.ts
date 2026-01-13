@@ -181,8 +181,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.set("Content-Type", "text/event-stream")
   ctx.set("Cache-Control", "no-cache")
   ctx.set("Connection", "keep-alive")
-  ctx.set("Access-Control-Allow-Origin", "*")
-  ctx.set("Access-Control-Allow-Headers", "Cache-Control")
 
   ctx.res.setHeader("X-Accel-Buffering", "no")
   ctx.res.setHeader("Transfer-Encoding", "chunked")

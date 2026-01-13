@@ -153,6 +153,18 @@
           } else {
             streamedMessages = [...streamedMessages, message]
           }
+        } else if (message?.role === "assistant") {
+          const lastIndex = [...streamedMessages]
+            .reverse()
+            .findIndex(existing => existing.role === "assistant")
+          if (lastIndex !== -1) {
+            const targetIndex = streamedMessages.length - 1 - lastIndex
+            streamedMessages = streamedMessages.map((existing, index) =>
+              index === targetIndex ? message : existing
+            )
+          } else {
+            streamedMessages = [...streamedMessages, message]
+          }
         } else {
           streamedMessages = [...streamedMessages, message]
         }
