@@ -699,7 +699,7 @@
                 <ActionButton
                   size="M"
                   icon="sliders-horizontal"
-                  on:click={() => bb.settings("/ai")}
+                  on:click={() => bb.settings("/ai/aisettings")}
                 />
               </AbsTooltip>
             </div>
@@ -846,7 +846,7 @@
                   <ActionButton
                     size="M"
                     icon="sliders-horizontal"
-                    on:click={() => bb.settings("/ai")}
+                    on:click={() => bb.settings("/ai/embedding-settings")}
                   />
                 </AbsTooltip>
               </div>
