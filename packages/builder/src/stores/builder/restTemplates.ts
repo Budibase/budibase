@@ -41,6 +41,7 @@ import GoodyLogo from "assets/rest-template-icons/goody.svg"
 import HelcimLogo from "assets/rest-template-icons/helcim.svg"
 import HibobLogo from "assets/rest-template-icons/hibob.svg"
 import HomerunLogo from "assets/rest-template-icons/homerun.svg"
+import HubSpotLogo from "assets/rest-template-icons/hubspot.svg"
 import HypatosLogo from "assets/rest-template-icons/hypatos.svg"
 import IntercomLogo from "assets/rest-template-icons/intercom.svg"
 import IroncladLogo from "assets/rest-template-icons/ironclad.svg"
@@ -88,6 +89,1027 @@ import serviceNowSpecData from "assets/rest-template-specs/servicenow.yaml?raw"
 interface RestTemplatesState {
   templates: RestTemplate[]
   templateGroups: RestTemplateGroup<RestTemplateGroupName>[]
+}
+
+
+const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
+  name: "HubSpot",
+  icon: HubSpotLogo,
+  verified: true,
+  description:
+    "CRM, marketing, CMS, and automation APIs for HubSpot's platform.",
+  templates: [
+    {
+      name: "HubSpot Account Info",
+      description: "Get information about a HubSpot account and its API usage.",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Account/Account%20Info/Rollouts/144923/2025-09/accountInfo.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Actions V4",
+      description: "HubSpot Automation Actions V4 API.",
+      specs: [
+        {
+          version: "v4",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Actions%20V4/Rollouts/148901/v4/actionsV4.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot App Uninstalls",
+      description: "HubSpot CRM App Uninstalls API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/App%20Uninstalls/Rollouts/209039/v3/appUninstalls.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Appointments",
+      description: "HubSpot Appointments API.",
+      specs: [
+        {
+          version: "2026-03",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Appointments/Rollouts/424/2026-03/appointments.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Associations",
+      description: "HubSpot Associations API.",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations/Rollouts/130902/2025-09/associations.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Associations Schema",
+      description: "HubSpot CRM Associations Schema API.",
+      specs: [
+        {
+          version: "v4",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations%20Schema/Rollouts/130902/v4/associationsSchema.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Audit Logs",
+      description: "Get information about a HubSpot account and its API usage.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Account/Audit%20Logs/Rollouts/144923/v3/auditLogs.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Authors",
+      description: "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Authors/Rollouts/635/v3/authors.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Automation V4",
+      description: "HubSpot Automation Automation V4 API.",
+      specs: [
+        {
+          version: "v4",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Automation%20V4/Rollouts/144908/v4/automationV4.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Blog Settings",
+      description: "Use these endpoints for interacting with Blog objects",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Blog%20Settings/Rollouts/635/v3/blogSettings.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Bucket_Test111",
+      description: "HubSpot Bucket_Test111 API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Bucket_Test111/Rollouts/424/v3/buckettest111.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Business Units",
+      description: "Retrieve Business Unit information.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Business%20Units/Business%20Units/Rollouts/140946/v3/businessUnits.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Calling Extensions",
+      description: "HubSpot CRM Calling Extensions API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Calling%20Extensions/Rollouts/145891/v3/callingExtensions.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Calls",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Calls/Rollouts/424/2025-09/calls.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Campaigns Public Api",
+      description: "HubSpot Marketing Campaigns Public Api API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Campaigns%20Public%20Api/Rollouts/177944/v3/campaignsPublicApi.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Carts",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Carts/Rollouts/424/2025-09/carts.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Cms Content Audit",
+      description: "Use this endpoint to query audit logs of CMS changes that occurred on your HubSpot account.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Cms%20Content%20Audit/Rollouts/144888/v3/cmsContentAudit.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Commerce Payments",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Commerce%20Payments/Rollouts/424/2025-09/commercePayments.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Commerce Subscriptions",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Commerce%20Subscriptions/Rollouts/206901/2025-09/commerceSubscriptions.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Communications",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Communications/Rollouts/424/2025-09/communications.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Companies",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Companies/Rollouts/424/2025-09/companies.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Contacts",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2026-03",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Contacts/Rollouts/424/2026-03/contacts.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Contracts",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Contracts/Rollouts/424/2025-09/contracts.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Conversations",
+      description: "HubSpot Conversations Inbox & Messages API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Conversations/Rollouts/54902/v3/conversations.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Conversations Inbox & Messages",
+      description: "HubSpot Conversations Inbox & Messages API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Conversations%20Inbox%20&%20Messages/Rollouts/54902/v3/conversationsInboxMessages.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Courses",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Courses/Rollouts/424/2025-09/courses.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot CRM Meetings",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Meetings/Rollouts/424/2025-09/meetings.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Crm Owners",
+      description: "HubSpot uses **owners** to assign CRM objects to specific people in your organization. The endpoints described here are used to get a list of the owners that...",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Crm%20Owners/Rollouts/146888/v3/crmOwners.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Custom Channels",
+      description: "HubSpot Conversations Custom Channels API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Custom%20Channels/Rollouts/160898/v3/customChannels.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Custom Objects",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2026-03",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Custom%20Objects/Rollouts/424/2026-03/customObjects.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Deal Splits",
+      description: "HubSpot CRM Deal Splits API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Deal%20Splits/Rollouts/157885/v3/dealSplits.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Deals",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Deals/Rollouts/424/2025-09/deals.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Discounts",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2026-03",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Discounts/Rollouts/424/2026-03/discounts.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Domains",
+      description: "HubSpot Domains API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Domains/Rollouts/149894/v3/domains.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Emails",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Emails/Rollouts/424/2025-09/emails.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Events",
+      description: "HubSpot Events Events API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Events/Events/Rollouts/147897/v3/events.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Exports",
+      description: "HubSpot CRM Exports API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Exports/Rollouts/95922/v3/exports.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Feedback Submissions",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Feedback%20Submissions/Rollouts/424/2025-09/feedbackSubmissions.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Fees",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Fees/Rollouts/424/2025-09/fees.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Files",
+      description: "Upload and manage files.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Files/Files/Rollouts/140950/v3/files.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Forms",
+      description: "HubSpot Forms API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Forms/Rollouts/144909/v3/forms.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Goal Targets",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Goal%20Targets/Rollouts/424/2025-09/goalTargets.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Hubdb",
+      description: "HubSpot Hubdb API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Hubdb/Rollouts/243927/v3/hubdb.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Imports",
+      description: "HubSpot CRM Imports API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Imports/Rollouts/144903/v3/imports.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Invoices",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Invoices/Rollouts/424/2025-09/invoices.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Leads",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Leads/Rollouts/424/2025-09/leads.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Limits Tracking",
+      description: "HubSpot Limits Tracking API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Limits%20Tracking/Rollouts/199890/v3/limitsTracking.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Line Items",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Line%20Items/Rollouts/424/2025-09/lineItems.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Listings",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Listings/Rollouts/424/2025-09/listings.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Lists",
+      description: "CRUD operations to manage lists and list memberships",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Lists/Rollouts/144891/v3/lists.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Manage Event Definitions",
+      description: "HubSpot Events Manage Event Definitions API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Events/Manage%20Event%20Definitions/Rollouts/138888/v3/manageEventDefinitions.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Marketing Emails",
+      description: "HubSpot Marketing Emails API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Marketing%20Emails/Rollouts/145892/v3/marketingEmails.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Marketing Emails V3",
+      description: "HubSpot Marketing Emails V3 API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Marketing%20Emails%20V3/Rollouts/155892/v3/marketingEmailsV3.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Marketing Events",
+      description: "HubSpot Marketing Marketing Events API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Marketing%20Events/Rollouts/129888/v3/marketingEvents.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Media Bridge",
+      description: "HubSpot CMS Media Bridge API.",
+      specs: [
+        {
+          version: "v1",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Media%20Bridge/Rollouts/787/v1/mediaBridge.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Multicurrency",
+      description: "HubSpot Settings Multicurrency API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Settings/Multicurrency/Rollouts/145897/v3/multicurrency.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Notes",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Notes/Rollouts/424/2025-09/notes.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Oauth",
+      description: "HubSpot Auth Oauth API.",
+      specs: [
+        {
+          version: "v1",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Auth/Oauth/Rollouts/155908/v1/oauth.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Object Library",
+      description: "HubSpot CRM Object Library API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Object%20Library/Rollouts/196908/v3/objectLibrary.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Objects",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Objects/Rollouts/424/2025-09/objects.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Orders",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Orders/Rollouts/424/2025-09/orders.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Origins",
+      description: "HubSpot Meta Origins API.",
+      specs: [
+        {
+          version: "v1",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Meta/Origins/Rollouts/277913/v1/origins.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Pages",
+      description: "Use these endpoints for interacting with Landing Pages and Site Pages",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Pages/Rollouts/59888/v3/pages.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Partner Clients",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Partner%20Clients/Rollouts/424/2025-09/partnerClients.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Partner Services",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Partner%20Services/Rollouts/424/2025-09/partnerServices.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Payments",
+      description: "HubSpot Payments API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Payments/Rollouts/424/v3/payments.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Pipelines",
+      description: "Pipelines represent distinct stages in a workflow, like closing a deal or servicing a support ticket. These endpoints provide access to read and modify pipel...",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Pipelines/Rollouts/145896/v3/pipelines.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Postal Mail",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Postal%20Mail/Rollouts/424/2025-09/postalMail.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Posts",
+      description: "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Posts/Rollouts/635/v3/posts.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Products",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Products/Rollouts/424/2025-09/products.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Projects",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Projects/Rollouts/260890/v3/projects.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Properties",
+      description: "All HubSpot objects store data in default and custom properties. These endpoints provide access to read and modify object properties in HubSpot.",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Properties/Rollouts/145899/2025-09/properties.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Property Validations",
+      description: "HubSpot CRM Property Validations API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Property%20Validations/Rollouts/215885/v3/propertyValidations.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Public App Crm Cards",
+      description: "Allows an app to extend the CRM UI by surfacing custom cards in the sidebar of record pages. These cards are defined up-front as part of app configuration, t...",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Public%20App%20Crm%20Cards/Rollouts/147892/v3/publicAppCrmCards.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Public App Feature Flags V3",
+      description: "HubSpot CRM Public App Feature Flags V3 API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Public%20App%20Feature%20Flags%20V3/Rollouts/195919/v3/publicAppFeatureFlagsV3.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Quotes",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Quotes/Rollouts/424/2025-09/quotes.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Scheduler Meetings",
+      description: "Meetings Service For HubSpot Sales",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Scheduler/Meetings/Rollouts/177892/v3/meetings.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Schemas",
+      description: "The CRM uses schemas to define how custom objects should store and represent information in the HubSpot CRM. Schemas define details about an object's type, p...",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Schemas/Rollouts/145900/v3/schemas.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Send Event Completions",
+      description: "HubSpot Events Send Event Completions API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Events/Send%20Event%20Completions/Rollouts/669/v3/sendEventCompletions.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Sequences",
+      description: "HubSpot Sequences API.",
+      specs: [
+        {
+          version: "v4",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Sequences/Rollouts/177891/v4/sequences.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Services",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Services/Rollouts/424/2025-09/services.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Single-send",
+      description: "HubSpot Single-send API.",
+      specs: [
+        {
+          version: "v4",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Single-send/Rollouts/106894/v4/singlesend.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Site Search",
+      description: "Use these endpoints for searching content on your HubSpot hosted CMS website(s).",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Site%20Search/Rollouts/144890/v3/siteSearch.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Source Code",
+      description: "API for managing and retrieving source code files and metadata",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Source%20Code/Rollouts/140886/v3/sourceCode.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Subscription Lifecycle",
+      description: "HubSpot CRM Subscription Lifecycle API.",
+      specs: [
+        {
+          version: "v1",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Subscription%20Lifecycle/Rollouts/206901/v1/subscriptionLifecycle.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Subscriptions",
+      description: "HubSpot Communication Preferences Subscriptions API.",
+      specs: [
+        {
+          version: "v4",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Communication%20Preferences/Subscriptions/Rollouts/176901/v4/subscriptions.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Tags",
+      description: "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Tags/Rollouts/635/v3/tags.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Tasks",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Tasks/Rollouts/424/2025-09/tasks.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Tax Rates",
+      description: "HubSpot Settings Tax Rates API.",
+      specs: [
+        {
+          version: "v1",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Settings/Tax%20Rates/Rollouts/207908/v1/taxRates.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Taxes",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Taxes/Rollouts/424/2025-09/taxes.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Test Child Api",
+      description: "Get information about a HubSpot account and its API usage.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Account/Test%20Child%20Api/Rollouts/144923/v3/testChildApi.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Tickets",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Tickets/Rollouts/424/2025-09/tickets.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Timeline",
+      description: "This feature allows an app to create and configure custom events that can show up in the timelines of certain CRM objects like contacts, companies, tickets,...",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Timeline/Rollouts/147898/v3/timeline.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Transactional Single Send",
+      description: "HubSpot Transactional Single Send API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Transactional%20Single%20Send/Rollouts/140892/v3/transactionalSingleSend.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Transcriptions",
+      description: "HubSpot Transcriptions API.",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Transcriptions/Rollouts/178922/v3/transcriptions.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Url Redirects",
+      description: "URL redirect operations",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Url%20Redirects/Rollouts/149916/v3/urlRedirects.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot User Provisioning",
+      description: "Add, manage, and remove users from your account",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Settings/User%20Provisioning/Rollouts/144927/v3/userProvisioning.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Users",
+      description: "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
+      specs: [
+        {
+          version: "2025-09",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Users/Rollouts/424/2025-09/users.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Video Conferencing Extension",
+      description: "These APIs allow you to specify URLs that can be used to interact with a video conferencing application, to allow HubSpot to add video conference links to me...",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Video%20Conferencing%20Extension/Rollouts/148903/v3/videoConferencingExtension.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Visitor Identification",
+      description: "The Visitor Identification API allows you to pass identification information to the HubSpot chat widget for otherwise unknown visitors that were verified by...",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Visitor%20Identification/Rollouts/140938/v3/visitorIdentification.json",
+        },
+      ],
+    },
+    {
+      name: "HubSpot Webhooks",
+      description: "Provides a way for apps to subscribe to certain change events in HubSpot. Once configured, apps will receive event payloads containing details about the chan...",
+      specs: [
+        {
+          version: "v3",
+          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Webhooks/Webhooks/Rollouts/147891/v3/webhooks.json",
+        },
+      ],
+    },
+  ],
 }
 
 const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
@@ -1416,7 +2438,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: XLogo,
     },
   ],
-  templateGroups: [twilioRestTemplateGroup, zendeskRestTemplateGroup],
+  templateGroups: [
+    hubspotRestTemplateGroup,
+    twilioRestTemplateGroup,
+    zendeskRestTemplateGroup,
+  ],
 }
 
 export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
