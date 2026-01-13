@@ -99,9 +99,7 @@
   let webSearchConfigured = $derived(
     !!webSearchConfig?.apiKey && !!webSearchConfig.provider
   )
-  let toolsLoaded = $derived(
-    $agentsStore.tools && $agentsStore.tools.length > 0
-  )
+  let toolsLoaded = $derived(!!$agentsStore.tools)
 
   let availableTools: AgentTool[] = $derived.by(() => {
     const tools = $agentsStore.tools || []

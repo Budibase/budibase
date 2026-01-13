@@ -38,7 +38,10 @@ const buildMarkdownDecorations = (view: EditorView): DecorationSet => {
 
   const overlapsHbs = (start: number, end: number) =>
     hbsRanges.some(
-      r => (start >= r.from && start < r.to) || (end > r.from && end <= r.to)
+      r =>
+        (start >= r.from && start < r.to) ||
+        (end > r.from && end <= r.to) ||
+        (start <= r.from && end >= r.to)
     )
 
   for (const { from, to } of view.visibleRanges) {
