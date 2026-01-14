@@ -17,6 +17,47 @@ const markdownClasses = {
   bullet: "md-bullet",
 }
 
+const className = {
+  1: markdownClasses.h1,
+  2: markdownClasses.h2,
+  3: markdownClasses.h3,
+}
+
+type RangeAdjuster = (
+  match: RegExpExecArray,
+  baseStart: number,
+  baseEnd: number
+) => { start: number; end: number }
+
+const processRegexMatches = (
+  regex: RegExp,
+  text: string,
+  from: number,
+  overlapsHbs: (start: number, end: number) => boolean,
+  getClassName: (match: RegExpExecArray) => string,
+  adjustRange?: RangeAdjuster
+) => {
+  const decorations = []
+  regex.lastIndex = 0
+  let match: RegExpExecArray | null
+
+  while ((match = regex.exec(text))) {
+    const baseStart = from + match.index
+    const baseEnd = baseStart + match[0].length
+    const { start, end } = adjustRange
+      ? adjustRange(match, baseStart, baseEnd)
+      : { start: baseStart, end: baseEnd }
+
+    if (overlapsHbs(start, end)) continue
+
+    decorations.push(
+      Decoration.mark({ class: getClassName(match) }).range(start, end)
+    )
+  }
+
+  return decorations
+}
+
 const buildMarkdownDecorations = (view: EditorView): DecorationSet => {
   const decorations = []
 
@@ -46,79 +87,76 @@ const buildMarkdownDecorations = (view: EditorView): DecorationSet => {
 
   for (const { from, to } of view.visibleRanges) {
     const text = view.state.doc.sliceString(from, to)
-    let match: RegExpExecArray | null
 
     // Process headers: # H1, ## H2, ### H3 (at line start)
-    const headerRegex = /^(#{1,3})\s+(.+)$/gm
-    headerRegex.lastIndex = 0
-    while ((match = headerRegex.exec(text))) {
-      const start = from + match.index
-      const end = start + match[0].length
-      if (overlapsHbs(start, end)) continue
-
-      const level = match[1].length
-      const className =
-        level === 1
-          ? markdownClasses.h1
-          : level === 2
-            ? markdownClasses.h2
-            : markdownClasses.h3
-      decorations.push(Decoration.mark({ class: className }).range(start, end))
-    }
+    decorations.push(
+      ...processRegexMatches(
+        /^(#{1,3})\s+(.+)$/gm,
+        text,
+        from,
+        overlapsHbs,
+        match => className[match[1].length as keyof typeof className]
+      )
+    )
 
     // Process inline code: `code`
-    const codeRegex = /`([^`\n]+)`/g
-    codeRegex.lastIndex = 0
-    while ((match = codeRegex.exec(text))) {
-      const start = from + match.index
-      const end = start + match[0].length
-      if (overlapsHbs(start, end)) continue
-      decorations.push(
-        Decoration.mark({ class: markdownClasses.inlineCode }).range(start, end)
+    decorations.push(
+      ...processRegexMatches(
+        /`([^`\n]+)`/g,
+        text,
+        from,
+        overlapsHbs,
+        () => markdownClasses.inlineCode
       )
-    }
+    )
 
     // Process bold: **text** or __text__
-    const boldRegex = /(\*\*|__)([^*_\n]+)\1/g
-    boldRegex.lastIndex = 0
-    while ((match = boldRegex.exec(text))) {
-      const start = from + match.index
-      const end = start + match[0].length
-      if (overlapsHbs(start, end)) continue
-      decorations.push(
-        Decoration.mark({ class: markdownClasses.bold }).range(start, end)
+    decorations.push(
+      ...processRegexMatches(
+        /(\*\*|__)([^*_\n]+)\1/g,
+        text,
+        from,
+        overlapsHbs,
+        () => markdownClasses.bold
       )
-    }
+    )
 
     // Process italic: *text* or _text_ (single markers, not double)
     // Avoid lookbehind so it works across browsers
-    const italicRegex =
-      /(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)|(^|[^_])_(?!_)([^_\n]+)_(?!_)/g
-    italicRegex.lastIndex = 0
-    while ((match = italicRegex.exec(text))) {
-      const prefixLength = match[1]?.length || match[3]?.length || 0
-      const start = from + match.index + prefixLength
-      const end = start + match[0].length - prefixLength
-      if (overlapsHbs(start, end)) continue
-      decorations.push(
-        Decoration.mark({ class: markdownClasses.italic }).range(start, end)
+    decorations.push(
+      ...processRegexMatches(
+        /(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)|(^|[^_])_(?!_)([^_\n]+)_(?!_)/g,
+        text,
+        from,
+        overlapsHbs,
+        () => markdownClasses.italic,
+        (match, baseStart, baseEnd) => {
+          const prefixLength = match[1]?.length || match[3]?.length || 0
+          return {
+            start: baseStart + prefixLength,
+            end: baseEnd - prefixLength,
+          }
+        }
       )
-    }
+    )
 
     // Process bullets: - item or * item (at line start with optional leading space)
-    const bulletRegex = /^(\s*)([*-])\s/gm
-    bulletRegex.lastIndex = 0
-    while ((match = bulletRegex.exec(text))) {
-      const bulletCharStart = from + match.index + match[1].length
-      const bulletCharEnd = bulletCharStart + 1
-      if (overlapsHbs(bulletCharStart, bulletCharEnd)) continue
-      decorations.push(
-        Decoration.mark({ class: markdownClasses.bullet }).range(
-          bulletCharStart,
-          bulletCharEnd
-        )
+    decorations.push(
+      ...processRegexMatches(
+        /^(\s*)([*-])\s/gm,
+        text,
+        from,
+        overlapsHbs,
+        () => markdownClasses.bullet,
+        (match, baseStart) => {
+          const bulletCharStart = baseStart + match[1].length
+          return {
+            start: bulletCharStart,
+            end: bulletCharStart + 1,
+          }
+        }
       )
-    }
+    )
   }
 
   // Sort decorations by start position (required by CodeMirror)

@@ -16,6 +16,7 @@
     closeBracketsKeymap,
     acceptCompletion,
     completionStatus,
+    type Completion,
   } from "@codemirror/autocomplete"
   import {
     lineNumbers,
@@ -31,6 +32,7 @@
     Decoration,
     EditorView,
   } from "@codemirror/view"
+  import type { ViewUpdate } from "@codemirror/view"
   import {
     bracketMatching,
     foldKeymap,
@@ -64,7 +66,7 @@
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
   import AIGen from "./AIGen.svelte"
-  import { hbsTagPlugin } from "./hbsTags"
+  import { hbsTagPlugin, stripHbsDelimiters } from "./hbsTags"
   import { markdownDecorationPlugin } from "./markdownDecorations"
 
   export let label: string | undefined = undefined
@@ -100,6 +102,7 @@
   let isEditorInitialised = false
   let queuedRefresh = false
   let isAIGeneratedContent = false
+  let validBindingSet = new Set<string>()
 
   // Theming!
   let currentTheme = $themeStore?.theme
@@ -134,6 +137,11 @@
 
   // Wait to try and gracefully replace
   $: refresh(value, isEditorInitialised, mounted)
+  $: {
+    validBindingSet = new Set(
+      (bindings || []).map(b => b.readableBinding).filter(Boolean)
+    )
+  }
 
   /**
    * Will refresh the editor contents only after
@@ -192,24 +200,48 @@
   }
 
   // Match decoration for HBS bindings
-  const hbsMatchDeco = new MatchDecorator({
-    regexp: FIND_ANY_HBS_REGEX,
-    decoration: () => {
-      return Decoration.mark({
-        tag: "span",
-        attributes: {
-          class: "binding-wrap",
-        },
-      })
+  const buildHbsMarkDecorations = (view: EditorView, bindings: Set<string>) => {
+    const decos = []
+    const regex = new RegExp(FIND_ANY_HBS_REGEX)
+    const isValidBinding = (binding: string) =>
+      bindings.size === 0 || bindings.has(binding)
+
+    for (const { from, to } of view.visibleRanges) {
+      const text = view.state.doc.sliceString(from, to)
+      let match: RegExpExecArray | null
+      regex.lastIndex = 0
+      while ((match = regex.exec(text))) {
+        const start = from + match.index
+        const end = start + match[0].length
+        const clean = stripHbsDelimiters(match[0])
+        if (!isValidBinding(clean)) {
+          continue
+        }
+        decos.push(
+          Decoration.mark({
+            tag: "span",
+            attributes: {
+              class: "binding-wrap",
+            },
+          }).range(start, end)
+        )
+      }
+    }
+
+    return Decoration.set(decos, true)
+  }
+  const hbsMatchDecoPlugin = ViewPlugin.fromClass(
+    class {
+      decorations
+      constructor(view: EditorView) {
+        this.decorations = buildHbsMarkDecorations(view, validBindingSet)
+      }
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = buildHbsMarkDecorations(update.view, validBindingSet)
+        }
+      }
     },
-  })
-  const hbsMatchDecoPlugin = ViewPlugin.define(
-    view => ({
-      decorations: hbsMatchDeco.createDeco(view),
-      update(u) {
-        this.decorations = hbsMatchDeco.updateDeco(u, this.decorations)
-      },
-    }),
     {
       decorations: v => v.decorations,
     }
@@ -279,12 +311,17 @@
     ]
   }
 
-  const getCompletionIcon = (completion: unknown) => {
-    if (typeof completion !== "object" || completion === null) {
-      return undefined
+  const hasStringIcon = (
+    completion: Completion
+  ): completion is Completion & { icon: string } => {
+    if (!("icon" in completion)) {
+      return false
     }
-    const icon = (completion as { icon?: unknown }).icon
-    return typeof icon === "string" ? icon : undefined
+    return typeof (completion as { icon?: unknown }).icon === "string"
+  }
+
+  const getCompletionIcon = (completion: Completion) => {
+    return hasStringIcon(completion) ? completion.icon : undefined
   }
 
   // None of this is reactive, but it never has been, so we just assume most
@@ -374,7 +411,7 @@
     // HBS only plugins
     else {
       renderBindingsAsTags
-        ? complete.push(hbsTagPlugin(bindingIcons))
+        ? complete.push(hbsTagPlugin(bindingIcons, validBindingSet))
         : complete.push(hbsMatchDecoPlugin)
 
       // Add markdown decorations if enabled (works alongside HBS)

@@ -241,10 +241,10 @@
   })
 
   $effect(() => {
-    const nextAiconfigId = draft.aiconfig || undefined
-    if (nextAiconfigId !== lastWebSearchConfigId) {
-      lastWebSearchConfigId = nextAiconfigId
-      agentsStore.fetchTools(nextAiconfigId)
+    const nextAiConfigId = draft.aiconfig || undefined
+    if (nextAiConfigId !== lastWebSearchConfigId) {
+      lastWebSearchConfigId = nextAiConfigId
+      agentsStore.fetchTools(nextAiConfigId)
     }
   })
 
@@ -465,8 +465,8 @@
   }
 
   function getWebSearchRuntimeBinding(
-    configured: boolean,
-    config: typeof webSearchConfig
+    configured?: boolean,
+    config?: typeof webSearchConfig
   ) {
     if (!configured || !config) {
       return undefined
