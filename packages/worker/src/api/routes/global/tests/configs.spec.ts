@@ -442,5 +442,25 @@ describe("configs", () => {
       expect(res.body.defaultLocale).toEqual("en")
       expect(res.body.locales.en.overrides["login.emailLabel"]).toEqual("Hello")
     })
+
+    it("should expose login and forgot labels without authentication", async () => {
+      await saveConfig(
+        translations({
+          "login.emailLabel": "Public email",
+          "forgotPassword.heading": "Reset password",
+        })
+      )
+      const res = await config
+        .getRequest()
+        .get(
+          `/api/global/configs/public/translations?tenantId=${config.getTenantId()}`
+        )
+        .expect(200)
+        .expect("Content-Type", /json/)
+
+      const overrides = res.body.locales.en.overrides
+      expect(overrides["login.emailLabel"]).toEqual("Public email")
+      expect(overrides["forgotPassword.heading"]).toEqual("Reset password")
+    })
   })
 })
