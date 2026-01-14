@@ -7,6 +7,8 @@ import {
   PKCEMethod,
 } from "@budibase/types"
 import { TestConfiguration, mocks, structures } from "../../../../tests"
+import { resolveTranslationGroup } from "@budibase/shared-core"
+import { processStringSync } from "@budibase/string-templates"
 
 mocks.email.mock()
 
@@ -352,6 +354,21 @@ describe("configs", () => {
       await expect(
         saveConfig(translations({ "login.emailLabel": "Profile test" }))
       ).rejects.toThrow("License does not allow translations")
+    })
+
+    it("should resolve bindings inside translation overrides", async () => {
+      await saveConfig(
+        translations({ "portal.greeting": "Welcome {{ name }}" })
+      )
+      const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
+      const portalLabels = resolveTranslationGroup(
+        "portal",
+        saved.config.locales.en.overrides
+      )
+      const boundValue = processStringSync(portalLabels.greeting, {
+        name: "Budibuddy",
+      })
+      expect(boundValue).toEqual("Welcome Budibuddy")
     })
   })
 
