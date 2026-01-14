@@ -7,7 +7,14 @@ import {
 import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { ToolLoopAgent, stepCountIs, Output, jsonSchema } from "ai"
+import {
+  ToolLoopAgent,
+  stepCountIs,
+  readUIMessageStream,
+  UIMessage,
+  Output,
+  jsonSchema,
+} from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
 import tracer from "dd-trace"
@@ -115,22 +122,32 @@ export async function run({
           output: outputOption,
         })
 
-        const result = await agent.generate({
-          prompt,
-        })
+        const streamResult = await agent.stream({ prompt })
 
-        const steps = sdk.ai.agents.attachReasoningToSteps(result.steps)
+        let assistantMessage: UIMessage | undefined
+        for await (const uiMessage of readUIMessageStream({
+          stream: streamResult.toUIMessageStream({ sendReasoning: true }),
+        })) {
+          assistantMessage = uiMessage
+        }
+
+        const responseText = await streamResult.text
+        const usage = await streamResult.usage
+        const output = outputOption
+          ? ((await streamResult.output) as Record<string, any>)
+          : undefined
 
         llmobs.annotate(agentSpan, {
-          outputData: result.text,
-          metadata: { stepCount: result.steps?.length ?? 0 },
+          outputData: responseText,
+          metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
 
         return {
           success: true,
-          response: result.text,
-          steps,
-          output: result.output as Record<string, any> | undefined,
+          response: responseText,
+          usage,
+          message: assistantMessage,
+          output,
         }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)

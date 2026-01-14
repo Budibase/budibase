@@ -5,7 +5,7 @@ import {
   WebSearchProvider,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import type { StepResult, ToolSet } from "ai"
+import type { ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
 import {
   createRestQueryTool,
@@ -123,59 +123,4 @@ export function createLiteLLMFetch(sessionId: string): typeof fetch {
   }
 
   return liteFetch
-}
-
-/**
- * Extracts reasoning text from an agent step result. First checks if reasoningText
- * is already present on the step, otherwise attempts to extract it from the response
- * body structure (choices[0].message.reasoning). Returns undefined if no reasoning
- * text is found or if extraction fails.
- */
-export const extractReasoningTextFromStep = (
-  step: StepResult<ToolSet>
-): string | undefined => {
-  const existing = step.reasoningText
-  if (existing && existing.trim().length > 0) {
-    return existing
-  }
-
-  const body = step.response?.body
-  if (!body || typeof body !== "object" || !("choices" in body)) {
-    return undefined
-  }
-
-  try {
-    const choices = body.choices
-    if (!Array.isArray(choices) || choices.length === 0) {
-      return undefined
-    }
-    const message = choices[0]?.message
-    const reasoning = message?.reasoning
-    if (typeof reasoning === "string" && reasoning.trim().length > 0) {
-      return reasoning
-    }
-  } catch (error) {
-    console.log("Error extracting reasoning text from step: ", error)
-  }
-
-  return undefined
-}
-
-export const attachReasoningToSteps = (
-  steps?: Array<StepResult<ToolSet>>
-): Array<StepResult<ToolSet>> | undefined => {
-  if (!steps || steps.length === 0) {
-    return steps
-  }
-
-  return steps.map(step => {
-    const reasoningText = extractReasoningTextFromStep(step)
-    if (!reasoningText) {
-      return step
-    }
-    return {
-      ...step,
-      reasoningText,
-    }
-  })
 }
