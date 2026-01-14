@@ -2,6 +2,7 @@ import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
   Agent,
+  AgentFile,
   CreateAgentRequest,
   UpdateAgentRequest,
   ToolMetadata,
@@ -13,6 +14,7 @@ interface AgentStoreState {
   currentAgentId?: string
   tools: ToolMetadata[]
   agentsLoaded: boolean
+  files: AgentFile[]
 }
 
 export class AgentsStore extends BudiStore<AgentStoreState> {
@@ -21,6 +23,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       agents: [],
       tools: [],
       agentsLoaded: false,
+      files: [],
     })
   }
 
@@ -49,8 +52,22 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
     this.update(state => {
       state.currentAgentId = agentId
+      if (agentId) {
+        this.fetchFiles(agentId)
+      } else {
+        state.files = []
+      }
       return state
     })
+  }
+
+  fetchTools = async (aiconfigId?: string) => {
+    const tools = await API.fetchTools(aiconfigId)
+    this.update(state => {
+      state.tools = tools
+      return state
+    })
+    return tools
   }
 
   createAgent = async (agent: CreateAgentRequest) => {
@@ -79,13 +96,46 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await this.fetchAgents()
   }
 
-  fetchTools = async (aiconfigId?: string) => {
-    const tools = await API.fetchTools(aiconfigId)
+  fetchFiles = async (agentId?: string) => {
+    if (!agentId) {
+      this.update(state => {
+        state.files = []
+        return state
+      })
+      return []
+    }
+    const { files } = await API.fetchAgentFiles(agentId)
     this.update(state => {
-      state.tools = tools
+      if (state.currentAgentId === agentId) {
+        state.files = files
+      }
       return state
     })
-    return tools
+    return files
+  }
+
+  uploadAgentFile = async (agentId: string, file: File) => {
+    const { file: uploaded } = await API.uploadAgentFile(agentId, file)
+    this.update(state => {
+      if (state.currentAgentId === agentId) {
+        state.files = [
+          uploaded,
+          ...state.files.filter(existing => existing._id !== uploaded._id),
+        ]
+      }
+      return state
+    })
+    return uploaded
+  }
+
+  deleteAgentFile = async (agentId: string, fileId: string) => {
+    await API.deleteAgentFile(agentId, fileId)
+    this.update(state => {
+      if (state.currentAgentId === agentId) {
+        state.files = state.files.filter(file => file._id !== fileId)
+      }
+      return state
+    })
   }
 }
 export const agentsStore = new AgentsStore()

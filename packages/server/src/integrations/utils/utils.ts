@@ -16,7 +16,6 @@ import { v4 } from "uuid"
 import { parseStringPromise as xmlParser } from "xml2js"
 import { InvalidColumns } from "../../constants"
 import env from "../../environment"
-import { formatBytes } from "../../utilities"
 
 type PrimitiveTypes =
   | FieldType.STRING
@@ -468,7 +467,7 @@ export async function handleFileResponse(
       },
       info: {
         code: response.status,
-        size: formatBytes(size.toString()),
+        size: helpers.formatBytes(size.toString()),
         time: `${Math.round(performance.now() - startTime)}ms`,
       },
     }

@@ -30,6 +30,7 @@
     ConfigType,
     type AIConfig,
     type ProviderConfig,
+    AIConfigType,
   } from "@budibase/types"
   import { ProviderDetails } from "./constants"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
@@ -66,7 +67,9 @@
       }))
     : []
 
-  $: customConfigs = $aiConfigsStore.customConfigs
+  $: chatConfigs = $aiConfigsStore.customConfigs.filter(
+    config => config.configType === AIConfigType.COMPLETIONS
+  )
 
   $: activeProvider = providers.find(p => p.config.active)?.provider
   $: disabledProviders = providers.filter(p => p.provider !== activeProvider)
@@ -187,7 +190,7 @@
         hasLicenseKey = !!licenseKeyResponse?.licenseKey
       }
 
-      customConfigs = await aiConfigsStore.fetch()
+      await aiConfigsStore.fetch()
     } catch {
       notifications.error("Error fetching AI settings")
     }
@@ -270,9 +273,9 @@
           </Button>
         </div>
 
-        {#if customConfigs.length}
+        {#if chatConfigs.length}
           <div class="ai-list">
-            {#each customConfigs as config (config._id)}
+            {#each chatConfigs as config (config._id)}
               <CustomAIConfigTile
                 {config}
                 editHandler={() => openCustomAIConfigModal(config)}
@@ -311,6 +314,7 @@
 <Modal bind:this={customConfigModal}>
   <CustomConfigModal
     config={customModalConfig}
+    type={AIConfigType.COMPLETIONS}
     on:hide={() => {
       customConfigModal.hide()
     }}
