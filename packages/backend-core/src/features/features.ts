@@ -237,7 +237,6 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.AI_AGENTS]: false,
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
-  [FeatureFlag.DUPLICATE_APP]: false,
   [FeatureFlag.COPY_RESOURCES_BETWEEN_WORKSPACES]: false,
   [FeatureFlag.PRIVATE_LLMS]: false,
 }
