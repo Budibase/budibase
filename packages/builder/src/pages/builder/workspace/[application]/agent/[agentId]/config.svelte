@@ -10,18 +10,27 @@
     Icon,
     ActionMenu,
     MenuItem,
+    AbsTooltip,
   } from "@budibase/bbui"
   import {
+    AIConfigType,
     ToolType,
     WebSearchProvider,
     type Agent,
+    type RagConfig,
+    type CustomAIProviderConfig,
     type ToolMetadata,
     type EnrichedBinding,
     type InsertAtPositionFn,
     type CaretPositionFn,
   } from "@budibase/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    selectedAgent,
+    ragConfigStore,
+  } from "@/stores/portal"
   import {
     datasources,
     deploymentStore,
@@ -38,7 +47,7 @@
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
-
+  import FilesPanel from "./FilesPanel.svelte"
   import {
     EditorModes,
     hbAutocomplete,
@@ -54,6 +63,7 @@
   } from "../logos/tagIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
+
   $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
@@ -71,7 +81,9 @@
     promptInstructions: "",
     icon: "",
     iconColor: "",
+    ragConfigId: undefined as string | undefined,
   })
+  let ragConfigError: string | undefined = $state()
 
   let insertAtPos: InsertAtPositionFn | undefined = $state()
   let toolSearch = $state("")
@@ -81,12 +93,18 @@
   let getCaretPosition: CaretPositionFn | undefined = $state.raw()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
+  let completionConfigs = $derived(
+    ($aiConfigsStore.customConfigs || []).filter(
+      config => config.configType !== AIConfigType.EMBEDDINGS
+    )
+  )
   let modelOptions = $derived(
-    $aiConfigsStore.customConfigs.map(config => ({
+    completionConfigs.map(config => ({
       label: config.name || config._id || "Unnamed",
       value: config._id || "",
     }))
   )
+  let ragConfigs = $derived($ragConfigStore.configs || [])
 
   // Web search Config
   let webSearchConfigModal = $state<WebSearchConfigModal>()
@@ -241,6 +259,7 @@
         promptInstructions: agent.promptInstructions || "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
+        ragConfigId: agent.ragConfigId,
       }
       draftAgentId = agent._id
     }
@@ -587,7 +606,8 @@
     if (!$agentsStore.agentsLoaded) {
       await agentsStore.init()
     }
-    await aiConfigsStore.fetch()
+    await Promise.all([aiConfigsStore.fetch(), ragConfigStore.fetch()])
+
     if (draft.aiconfig) {
       agentsStore.fetchTools(draft.aiconfig)
     }
@@ -651,8 +671,8 @@
             </div>
             <div class="form-icon">
               <EditableIcon
-                name={draft.icon}
-                color={draft.iconColor}
+                name={draft.icon || ""}
+                color={draft.iconColor || ""}
                 size="L"
                 on:change={e => {
                   draft.icon = e.detail.name
@@ -675,12 +695,13 @@
               />
             </div>
             <div class="form-icon">
-              <ActionButton
-                size="M"
-                icon="sliders-horizontal"
-                tooltip="Manage AI configurations"
-                on:click={() => bb.settings("/ai")}
-              />
+              <AbsTooltip text="Manage AI configurations">
+                <ActionButton
+                  size="M"
+                  icon="sliders-horizontal"
+                  on:click={() => bb.settings("/ai/aisettings")}
+                />
+              </AbsTooltip>
             </div>
           </div>
 
@@ -796,6 +817,46 @@
                   </div>
                 </div>
               {/each}
+            </div>
+          {/if}
+
+          <div class="section rag-settings">
+            <div class="rag-header">
+              <Heading size="XS">File ingestion:</Heading>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <Select
+                  label="RAG configuration"
+                  labelPosition="left"
+                  bind:value={draft.ragConfigId}
+                  getOptionLabel={o => o.name}
+                  getOptionValue={o => o._id}
+                  options={ragConfigs}
+                  placeholder="Select a RAG configuration"
+                  disabled={!ragConfigs.length}
+                  on:change={() => {
+                    ragConfigError = undefined
+                    scheduleSave(true)
+                  }}
+                  error={ragConfigError}
+                />
+              </div>
+              <div class="form-icon">
+                <AbsTooltip text="Manage model configurations">
+                  <ActionButton
+                    size="M"
+                    icon="sliders-horizontal"
+                    on:click={() => bb.settings("/ai/embedding-settings")}
+                  />
+                </AbsTooltip>
+              </div>
+            </div>
+          </div>
+
+          {#if draft.ragConfigId}
+            <div class="section files-section">
+              <FilesPanel currentAgentId={currentAgent?._id} />
             </div>
           {/if}
         </Layout>
@@ -1071,5 +1132,22 @@
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+
+  .rag-settings {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .files-section,
+  .rag-settings {
+    padding-top: var(--spacing-m);
+    gap: var(--spacing-s);
+  }
+
+  .rag-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
   }
 </style>
