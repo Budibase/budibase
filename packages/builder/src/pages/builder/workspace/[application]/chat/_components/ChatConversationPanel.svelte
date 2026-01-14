@@ -94,7 +94,7 @@
               class="chat-empty-card"
               on:click={() => selectAgent(agent.agentId)}
             >
-              {agent.name}
+              {agent.name || "Unknown agent"}
             </button>
           {/each}
         {:else}
