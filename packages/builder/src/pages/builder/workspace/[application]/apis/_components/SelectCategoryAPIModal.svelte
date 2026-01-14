@@ -313,14 +313,15 @@
 <style>
   .grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 190px);
+    justify-content: space-between;
     gap: 12px;
   }
 
   .api {
     display: flex;
     height: 38px;
-    padding: 6px 12px;
+    padding: 6px 32px 6px 12px;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
@@ -381,6 +382,8 @@
     color: var(--spectrum-global-color-gray-600);
     font-size: 16px;
     flex-shrink: 0;
+    position: absolute;
+    right: 12px;
   }
 
   .api-header {
