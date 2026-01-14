@@ -54,6 +54,8 @@ import LocalizelyLogo from "assets/rest-template-icons/localizely.svg"
 import LogisticsosLogo from "assets/rest-template-icons/logisticsos.svg"
 import MastercardLogo from "assets/rest-template-icons/mastercard.svg"
 import MeasureoneLogo from "assets/rest-template-icons/measureone.svg"
+import MicrosoftSharepointLogo from "assets/rest-template-icons/microsoft-sharepoint.svg"
+import MicrosoftTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
 import NanonetsLogo from "assets/rest-template-icons/nanonets.svg"
 import NotionLogo from "assets/rest-template-icons/notion.svg"
 import OysterLogo from "assets/rest-template-icons/oyster.svg"
@@ -505,6 +507,47 @@ const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
     },
   ],
 }
+
+const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePoint"> =
+  {
+    name: "Microsoft SharePoint",
+    icon: MicrosoftSharepointLogo,
+    verified: true,
+    description:
+      "Microsoft Graph SharePoint APIs for sites, drives, and shared items.",
+    templates: [
+      {
+        name: "SharePoint Sites",
+        description: "SharePoint sites, lists, and content types.",
+        specs: [
+          {
+            version: "v1.0",
+            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/sites/openapi.yaml",
+          },
+        ],
+      },
+      {
+        name: "SharePoint Drives",
+        description: "Drive items and file operations for SharePoint.",
+        specs: [
+          {
+            version: "v1.0",
+            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/drives/openapi.yaml",
+          },
+        ],
+      },
+      {
+        name: "SharePoint Shares",
+        description: "Shared items and sharing operations for SharePoint.",
+        specs: [
+          {
+            version: "v1.0",
+            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/shares/openapi.yaml",
+          },
+        ],
+      },
+    ],
+  }
 
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
@@ -1092,6 +1135,19 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: MeasureoneLogo,
     },
     {
+      name: "Microsoft Teams",
+      description:
+        "Use Microsoft Graph to manage teams, channels, chats, and messages.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-teams/openapi.yaml",
+        },
+      ],
+      icon: MicrosoftTeamsLogo,
+      verified: true,
+    },
+    {
       name: "Nanonets",
       description:
         "Break down data barriers with Nanonets AI—extract valuable information from documents, emails, tickets or databases.",
@@ -1416,7 +1472,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: XLogo,
     },
   ],
-  templateGroups: [twilioRestTemplateGroup, zendeskRestTemplateGroup],
+  templateGroups: [
+    microsoftSharepointRestTemplateGroup,
+    twilioRestTemplateGroup,
+    zendeskRestTemplateGroup,
+  ],
 }
 
 export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
