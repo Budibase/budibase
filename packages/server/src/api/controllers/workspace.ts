@@ -374,14 +374,14 @@ async function clearWorkspaceTranslationOverrides(application: Workspace) {
   const updated: Workspace = {
     ...application,
   }
-  delete (updated as any).translationOverrides
+  delete updated.translationOverrides
   await context.doInWorkspaceContext(application.appId, async () => {
     const db = context.getWorkspaceDB()
     const response = await db.put(updated)
     updated._rev = response.rev
   })
   await cache.workspace.invalidateWorkspaceMetadata(application.appId, updated)
-  delete (application as any).translationOverrides
+  delete application.translationOverrides
 }
 
 export async function fetchAppPackage(
@@ -1123,7 +1123,7 @@ export async function updateWorkspacePackage(
     const application = await sdk.workspaces.metadata.get()
 
     if ("translationOverrides" in workspacePackage) {
-      delete (workspacePackage as any).translationOverrides
+      delete workspacePackage.translationOverrides
     }
 
     const newWorkspacePackage: Workspace = {
@@ -1134,7 +1134,7 @@ export async function updateWorkspacePackage(
         ...workspacePackage.features,
       },
     }
-    delete (newWorkspacePackage as any).translationOverrides
+    delete newWorkspacePackage.translationOverrides
     if (workspacePackage._rev !== application._rev) {
       newWorkspacePackage._rev = application._rev
     }
