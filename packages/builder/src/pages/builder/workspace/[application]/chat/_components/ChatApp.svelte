@@ -1,7 +1,11 @@
 <script lang="ts">
   import { agentsStore, chatAppsStore } from "@/stores/portal"
   import { notifications } from "@budibase/bbui"
-  import type { ChatConversation, DraftChatConversation } from "@budibase/types"
+  import type {
+    ChatConversation,
+    DraftChatConversation,
+    WithoutDocMetadata,
+  } from "@budibase/types"
   import { onMount } from "svelte"
 
   import ChatConversationPanel from "./ChatConversationPanel.svelte"
@@ -9,7 +13,7 @@
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
 
-  const INITIAL_CHAT: Omit<DraftChatConversation, "_id" | "_rev"> = {
+  const INITIAL_CHAT: WithoutDocMetadata<DraftChatConversation> = {
     title: "",
     messages: [],
     chatAppId: "",
