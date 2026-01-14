@@ -196,8 +196,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
 
   if (agent.ragConfigId && latestQuestion && readyFileSources.length > 0) {
-    const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
     try {
+      const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
       const result = await retrieveContextForSources(
         ragConfig,
         latestQuestion,
