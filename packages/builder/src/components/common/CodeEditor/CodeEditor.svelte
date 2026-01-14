@@ -138,7 +138,12 @@
   // Wait to try and gracefully replace
   $: refresh(value, isEditorInitialised, mounted)
   $: {
-    validBindingSet = new Set(
+    validBindingSet.clear()
+    for (const binding of bindings || []) {
+      if (binding.readableBinding) {
+        validBindingSet.add(binding.readableBinding)
+      }
+    }
       (bindings || []).map(b => b.readableBinding).filter(Boolean)
     )
   }
