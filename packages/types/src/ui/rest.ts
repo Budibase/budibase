@@ -87,13 +87,19 @@ export type RestTemplateName =
   | HubSpotRestTemplateName
   | TwilioRestTemplateName
   | ZendeskRestTemplateName
+  | RocketChatRestTemplateName
 
-export type RestTemplateGroupName = "HubSpot" | "Twilio" | "Zendesk"
+export type RestTemplateGroupName =
+  | "HubSpot"
+  | "Rocket.Chat"
+  | "Twilio"
+  | "Zendesk"
 
 export type RestTemplateGroups = {
   HubSpot: HubSpotRestTemplateName
   Twilio: TwilioRestTemplateName
   Zendesk: ZendeskRestTemplateName
+  "Rocket.Chat": RocketChatRestTemplateName
 }
 
 export type HubSpotRestTemplateName =
@@ -240,6 +246,20 @@ export type TwilioRestTemplateName =
   | "Twilio Wireless"
 
 export type ZendeskRestTemplateName = "Sunshine Conversations"
+
+export type RocketChatRestTemplateName =
+  | "Rocket.Chat Authentication"
+  | "Rocket.Chat Content Management"
+  | "Rocket.Chat Integrations"
+  | "Rocket.Chat Marketplace Apps"
+  | "Rocket.Chat Messaging"
+  | "Rocket.Chat Miscellaneous"
+  | "Rocket.Chat Notifications"
+  | "Rocket.Chat Omnichannel"
+  | "Rocket.Chat Rooms"
+  | "Rocket.Chat Settings"
+  | "Rocket.Chat Statistics"
+  | "Rocket.Chat User Management"
 
 export interface RestTemplate {
   name: RestTemplateName
