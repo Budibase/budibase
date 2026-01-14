@@ -7454,7 +7454,7 @@
   resolved "https://registry.yarnpkg.com/@types/js-yaml/-/js-yaml-4.0.9.tgz#cd82382c4f902fed9691a2ed79ec68c5898af4c2"
   integrity sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==
 
-"@types/json-schema@^7.0.15", "@types/json-schema@^7.0.6":
+"@types/json-schema@*", "@types/json-schema@^7.0.15", "@types/json-schema@^7.0.6":
   version "7.0.15"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.15.tgz#596a1747233694d50f6ad8a7869fcb6f56cf5841"
   integrity sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==
@@ -8030,6 +8030,13 @@
   version "0.2.6"
   resolved "https://registry.yarnpkg.com/@types/tmp/-/tmp-0.2.6.tgz#d785ee90c52d7cc020e249c948c36f7b32d1e217"
   integrity sha512-chhaNf2oKHlRkDGt+tiKE2Z5aJ6qalm7Z9rlLdBwmOiAAf09YQvvoLXjWK4HWPF1xU/fqvMgfNfpVoBscA/tKA==
+
+"@types/to-json-schema@^0.2.4":
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/@types/to-json-schema/-/to-json-schema-0.2.4.tgz#51cc28c3fc19342f5a44e6ace7cdefa1e1322f9d"
+  integrity sha512-ENEB7JBlKODdihNrg08RgtLT8DZj43K48dV39yzV93QQPZhbQ+zan8osWpKll3HFEuLsiSttBdJ6QZFGsvRd4Q==
+  dependencies:
+    "@types/json-schema" "*"
 
 "@types/tough-cookie@*", "@types/tough-cookie@^4.0.2":
   version "4.0.5"
