@@ -5,9 +5,12 @@ import { parse as parseYaml } from "yaml"
 import sdk from "../../.."
 import { createVectorDb, type ChunkInput } from "../vectorDb"
 import { HTTPError } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
+import { embedMany } from "ai"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
+const DEFAULT_EMBEDDING_BATCH_SIZE = 64
 
 interface ResolvedRagConfig {
   databaseUrl: string
@@ -229,33 +232,32 @@ const createChunksFromContent = (content: string, filename?: string) => {
   return chunkDocument(content)
 }
 
-const getEmbedding = async (config: ResolvedRagConfig, text: string) => {
-  const headers = new Headers()
-  headers.append("Content-Type", "application/json")
-  headers.append("Authorization", `Bearer ${config.apiKey}`)
-
-  const response = await fetch(`${config.baseUrl}/v1/embeddings`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      model: config.embeddingModel,
-      input: text,
-    }),
+const getEmbeddingModel = async (config: ResolvedRagConfig) => {
+  const openai = ai.createLiteLLMOpenAI({
+    apiKey: config.apiKey,
+    baseUrl: config.baseUrl,
   })
+  return openai.embedding(config.embeddingModel)
+}
 
-  if (!response.ok) {
-    const body = await response.text()
-    throw new Error(
-      `Failed to create embedding (${response.status}): ${body || "Unknown"}`
-    )
+const embedChunks = async (
+  config: ResolvedRagConfig,
+  chunks: string[],
+  batchSize = DEFAULT_EMBEDDING_BATCH_SIZE
+) => {
+  const model = await getEmbeddingModel(config)
+  const embeddings: number[][] = []
+
+  for (let i = 0; i < chunks.length; i += batchSize) {
+    const batch = chunks.slice(i, i + batchSize)
+    const { embeddings: batchEmbeddings } = await embedMany({
+      model,
+      values: batch,
+    })
+    embeddings.push(...batchEmbeddings)
   }
 
-  const json = await response.json()
-  const embedding = json?.data?.[0]?.embedding
-  if (!embedding || !Array.isArray(embedding)) {
-    throw new Error("Embedding response missing data")
-  }
-  return embedding as number[]
+  return embeddings
 }
 
 const isPdfFile = (file?: AgentFile) => {
@@ -315,15 +317,16 @@ export const ingestAgentFile = async (
     return { inserted: 0, total: 0 }
   }
 
-  const payloads: ChunkInput[] = []
-  for (const chunk of chunks) {
-    const embedding = await getEmbedding(config, chunk)
-    payloads.push({
-      hash: hashChunk(chunk),
-      text: chunk,
-      embedding,
-    })
+  const embeddings = await embedChunks(config, chunks)
+  if (embeddings.length !== chunks.length) {
+    throw new Error("Embedding response size mismatch")
   }
+
+  const payloads: ChunkInput[] = chunks.map((chunk, index) => ({
+    hash: hashChunk(chunk),
+    text: chunk,
+    embedding: embeddings[index],
+  }))
 
   return await vectorDb.upsertSourceChunks(agentFile.ragSourceId, payloads)
 }
@@ -362,7 +365,7 @@ export const retrieveContextForSources = async (
 
   const config = await buildRagConfig(ragConfig)
   const vectorDb = getVectorDb(config)
-  const queryEmbedding = await getEmbedding(config, question)
+  const [queryEmbedding] = await embedChunks(config, [question], 1)
   const rows = await vectorDb.queryNearest(
     queryEmbedding,
     sourceIds,
