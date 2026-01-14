@@ -10,12 +10,11 @@
   import ChatConversationPanel from "./ChatConversationPanel.svelte"
   import ChatNavigationPanel from "./ChatNavigationPanel.svelte"
 
-  type ChatConversationWithAgent = ChatConversation & { agentId?: string }
   type ChatConversationRequestWithAgent = ChatConversationRequest & {
     agentId?: string
   }
   type ChatConversationLike =
-    | ChatConversationWithAgent
+    | ChatConversation
     | ChatConversationRequestWithAgent
 
   const INITIAL_CHAT: Omit<ChatConversationRequestWithAgent, "_id" | "_rev"> = {
@@ -136,7 +135,7 @@
     }
   }
 
-  const selectChat = async (selectedChat: ChatConversationWithAgent) => {
+  const selectChat = async (selectedChat: ChatConversation) => {
     const resolvedAgentId = selectedChat.agentId
     if (!resolvedAgentId) {
       return
