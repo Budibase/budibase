@@ -22,7 +22,7 @@ const isSimpleOperationId = (operationId?: string): boolean => {
   if (/[{}]/.test(trimmed)) {
     return false
   }
-  return !trimmed.includes("/")
+  return true
 }
 
 const getShortText = (value?: string): string | undefined => {
