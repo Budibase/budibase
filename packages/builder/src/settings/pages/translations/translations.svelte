@@ -179,8 +179,8 @@
   <Layout noPadding>
     <div class="settings">
       <Body size="S">
-        Define custom text for user-facing elements across all apps in your
-        Budibase installation. Blank fields fall back to Budibase defaults.
+        Define custom text for user-facing elements across all workspace apps in
+        your Budibase installation. Blank fields fall back to Budibase defaults.
       </Body>
       <Divider noMargin />
       <div class="filters">
