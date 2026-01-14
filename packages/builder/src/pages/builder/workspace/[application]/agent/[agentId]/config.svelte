@@ -100,7 +100,6 @@
     !!webSearchConfig?.apiKey && !!webSearchConfig.provider
   )
   let toolsLoaded = $derived(!!$agentsStore.tools)
-
   let availableTools: AgentTool[] = $derived.by(() => {
     const tools = $agentsStore.tools || []
     const mappedTools = tools.map(tool => {
@@ -157,13 +156,20 @@
   let toolMaps = $derived(buildToolMaps(availableTools))
   let readableToRuntimeBinding = $derived(toolMaps.readableToRuntimeBinding)
   let readableToIcon = $derived(toolMaps.readableToIcon)
+
+  /**
+   * Doing this and key'ing the CodeEditor triggers a re-mount of the editor.
+   * Else we would need to do some complex logic in CodeEditor and it's not worth it
+   */
+  let resolvedIconCount = $derived(
+    Object.values(readableToIcon).filter(Boolean).length
+  )
   let includedToolRuntimeBindings = $derived(
     getIncludedToolRuntimeBindings(
       draft.promptInstructions,
       readableToRuntimeBinding
     )
   )
-
   let promptBindings: EnrichedBinding[] = $derived.by(() => {
     return availableTools
       .filter(tool => !!tool.name)
@@ -683,22 +689,24 @@
             <div class="prompt-editor-wrapper">
               <div class="prompt-editor">
                 {#if toolsLoaded}
-                  <CodeEditor
-                    value={draft.promptInstructions || ""}
-                    bindings={promptBindings}
-                    bindingIcons={readableToIcon}
-                    completions={promptCompletions}
-                    mode={EditorModes.Handlebars}
-                    bind:insertAtPos
-                    renderBindingsAsTags={true}
-                    renderMarkdownDecorations={true}
-                    placeholder=""
-                    on:change={event => {
-                      draft.promptInstructions = event.detail || ""
-                      scheduleSave()
-                    }}
-                    bind:getCaretPosition
-                  />
+                  {#key resolvedIconCount}
+                    <CodeEditor
+                      value={draft.promptInstructions || ""}
+                      bindings={promptBindings}
+                      bindingIcons={readableToIcon}
+                      completions={promptCompletions}
+                      mode={EditorModes.Handlebars}
+                      bind:insertAtPos
+                      renderBindingsAsTags={true}
+                      renderMarkdownDecorations={true}
+                      placeholder=""
+                      on:change={event => {
+                        draft.promptInstructions = event.detail || ""
+                        scheduleSave()
+                      }}
+                      bind:getCaretPosition
+                    />
+                  {/key}
                 {/if}
               </div>
               <div class="bindings-bar">

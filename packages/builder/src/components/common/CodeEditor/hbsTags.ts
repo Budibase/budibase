@@ -93,7 +93,11 @@ export const hbsTagPlugin = (
     class {
       decorations
       constructor(view: EditorView) {
-        this.decorations = buildHbsTagDecorations(view, bindingIcons, validBindings)
+        this.decorations = buildHbsTagDecorations(
+          view,
+          bindingIcons,
+          validBindings
+        )
       }
       update(update: ViewUpdate) {
         if (

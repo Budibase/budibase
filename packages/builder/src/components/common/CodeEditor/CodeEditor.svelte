@@ -238,7 +238,10 @@
       }
       update(update: ViewUpdate) {
         if (update.docChanged || update.viewportChanged) {
-          this.decorations = buildHbsMarkDecorations(update.view, validBindingSet)
+          this.decorations = buildHbsMarkDecorations(
+            update.view,
+            validBindingSet
+          )
         }
       }
     },
