@@ -14,6 +14,8 @@ import {
   SettingsInnerConfig,
   SMTPConfig,
   SMTPInnerConfig,
+  TranslationsConfig,
+  TranslationsConfigInner,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../constants"
 import { CacheKey, TTL, withCache } from "../cache"
@@ -28,6 +30,52 @@ import env from "../environment"
  */
 export function generateConfigID(type: ConfigType) {
   return `${DocumentType.CONFIG}${SEPARATOR}${type}`
+}
+
+const DEFAULT_TRANSLATION_LOCALE = "en"
+
+function createDefaultTranslationsConfig(): TranslationsConfig {
+  return {
+    _id: generateConfigID(ConfigType.TRANSLATIONS),
+    type: ConfigType.TRANSLATIONS,
+    config: {
+      defaultLocale: DEFAULT_TRANSLATION_LOCALE,
+      locales: {
+        [DEFAULT_TRANSLATION_LOCALE]: {
+          label: "English",
+          overrides: {},
+        },
+      },
+    },
+  }
+}
+
+function prepareTranslationsConfig(
+  config?: TranslationsConfigInner
+): TranslationsConfigInner {
+  const defaultLocale = config?.defaultLocale || DEFAULT_TRANSLATION_LOCALE
+  const locales = { ...(config?.locales ?? {}) }
+  if (!locales[defaultLocale]) {
+    locales[defaultLocale] = {
+      label:
+        defaultLocale === DEFAULT_TRANSLATION_LOCALE
+          ? "English"
+          : defaultLocale,
+      overrides: {},
+    }
+  }
+  for (const key of Object.keys(locales)) {
+    if (!locales[key].overrides) {
+      locales[key] = {
+        ...locales[key],
+        overrides: {},
+      }
+    }
+  }
+  return {
+    defaultLocale,
+    locales,
+  }
 }
 
 export async function getConfig<T extends Config>(
@@ -53,6 +101,19 @@ export async function save(
   }
   const db = context.getGlobalDB()
   return db.put(config)
+}
+
+export async function getTranslationsConfigDoc(): Promise<TranslationsConfig> {
+  const config = await getConfig<TranslationsConfig>(ConfigType.TRANSLATIONS)
+  if (!config) {
+    return createDefaultTranslationsConfig()
+  }
+  config.config = prepareTranslationsConfig(config.config)
+  return config
+}
+
+export async function getTranslationsConfig(): Promise<TranslationsConfigInner> {
+  return (await getTranslationsConfigDoc()).config
 }
 
 // SETTINGS

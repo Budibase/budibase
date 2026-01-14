@@ -77,6 +77,12 @@ export const orgRoutes = (
           title: "Branding",
           comp: Pages.get("branding"),
         },
+        {
+          path: "translations",
+          access: () => isAdmin,
+          title: "Translations",
+          comp: Pages.get("translations"),
+        },
       ],
     },
     {
@@ -278,11 +284,6 @@ export const appRoutes = (
         { path: "pwa", comp: Pages.get("pwa"), title: "PWA" },
         { path: "embed", comp: Pages.get("embed"), title: "Embed" },
         { path: "scripts", comp: Pages.get("scripts"), title: "Scripts" },
-        {
-          path: "translations",
-          comp: Pages.get("translations"),
-          title: "Translations",
-        },
       ],
     },
   ].map((entry: Route) => ({
