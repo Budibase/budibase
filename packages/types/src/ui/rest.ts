@@ -87,11 +87,9 @@ export type RestTemplateName =
   | MicrosoftSharepointRestTemplateName
   | TwilioRestTemplateName
   | ZendeskRestTemplateName
-  | RocketChatRestTemplateName
 
 export type RestTemplateGroupName =
   | "Microsoft SharePoint"
-  | "Rocket.Chat"
   | "Twilio"
   | "Zendesk"
 
@@ -99,7 +97,6 @@ export type RestTemplateGroups = {
   "Microsoft SharePoint": MicrosoftSharepointRestTemplateName
   Twilio: TwilioRestTemplateName
   Zendesk: ZendeskRestTemplateName
-  "Rocket.Chat": RocketChatRestTemplateName
 }
 
 export type TwilioRestTemplateName =
@@ -148,20 +145,6 @@ export type MicrosoftSharepointRestTemplateName =
   | "SharePoint Drives"
   | "SharePoint Shares"
   | "SharePoint Sites"
-
-export type RocketChatRestTemplateName =
-  | "Rocket.Chat Authentication"
-  | "Rocket.Chat Content Management"
-  | "Rocket.Chat Integrations"
-  | "Rocket.Chat Marketplace Apps"
-  | "Rocket.Chat Messaging"
-  | "Rocket.Chat Miscellaneous"
-  | "Rocket.Chat Notifications"
-  | "Rocket.Chat Omnichannel"
-  | "Rocket.Chat Rooms"
-  | "Rocket.Chat Settings"
-  | "Rocket.Chat Statistics"
-  | "Rocket.Chat User Management"
 
 export interface RestTemplate {
   name: RestTemplateName
