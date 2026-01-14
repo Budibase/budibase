@@ -10,10 +10,14 @@
     Icon,
     ActionMenu,
     MenuItem,
+    AbsTooltip,
   } from "@budibase/bbui"
   import {
+    AIConfigType,
     ToolType,
     type Agent,
+    type RagConfig,
+    type CustomAIProviderConfig,
     type ToolMetadata,
     type EnrichedBinding,
     type InsertAtPositionFn,
@@ -21,7 +25,12 @@
   } from "@budibase/types"
   import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    selectedAgent,
+    ragConfigStore,
+  } from "@/stores/portal"
   import {
     datasources,
     deploymentStore,
@@ -38,7 +47,7 @@
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
-
+  import FilesPanel from "./FilesPanel.svelte"
   import {
     EditorModes,
     hbAutocomplete,
@@ -54,6 +63,7 @@
   } from "../logos/tagIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
+
   $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
@@ -61,18 +71,10 @@
   const RestIconSvg = REST_TAG_ICON_URL
 
   let currentAgent: Agent | undefined
-  let draftAgentId: string | undefined
   let togglingLive = false
   let modelOptions: { label: string; value: string }[] = []
-  let draft = {
-    name: "",
-    description: "",
-    aiconfig: "",
-    goal: "",
-    promptInstructions: "",
-    icon: "",
-    iconColor: "",
-  }
+  let completionConfigs: CustomAIProviderConfig[] = []
+  let ragConfigs: RagConfig[] = []
 
   let insertAtPos: InsertAtPositionFn | undefined
   let toolSearch = ""
@@ -99,6 +101,8 @@
   let lastWebSearchConfigId: string | undefined
   let pendingWebSearchInsert = false
 
+  let ragConfigError: string | undefined
+
   $: currentAgent = $selectedAgent
   $: webSearchConfig = $aiConfigsStore.customConfigs.find(
     config => config._id === draft.aiconfig
@@ -120,23 +124,29 @@
     return undefined
   }
 
-  $: if (currentAgent && currentAgent._id !== draftAgentId) {
-    draft = {
-      name: currentAgent.name || "",
-      description: currentAgent.description || "",
-      aiconfig: currentAgent.aiconfig || "",
-      goal: currentAgent.goal || "",
-      promptInstructions: currentAgent.promptInstructions || "",
-      icon: currentAgent.icon || "",
-      iconColor: currentAgent.iconColor || "",
-    }
-    draftAgentId = currentAgent._id
+  let draft: Agent
+  $: draft = {
+    name: currentAgent?.name || "",
+    description: currentAgent?.description || "",
+    aiconfig: currentAgent?.aiconfig || "",
+    goal: currentAgent?.goal || "",
+    promptInstructions: currentAgent?.promptInstructions || "",
+    icon: currentAgent?.icon || "",
+    iconColor: currentAgent?.iconColor || "",
+    enabledTools: currentAgent?.enabledTools || [],
+    ragConfigId: currentAgent?.ragConfigId,
   }
 
-  $: modelOptions = $aiConfigsStore.customConfigs.map(config => ({
+  $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
+    config => config.configType !== AIConfigType.EMBEDDINGS
+  )
+
+  $: modelOptions = completionConfigs.map(config => ({
     label: config.name || config._id || "Unnamed",
     value: config._id || "",
   }))
+
+  $: ragConfigs = $ragConfigStore.configs || []
 
   $: {
     const nextAiconfigId = draft.aiconfig || undefined
@@ -560,7 +570,12 @@
   }
 
   onMount(async () => {
-    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
+    await Promise.all([
+      agentsStore.init(),
+      aiConfigsStore.fetch(),
+      ragConfigStore.fetch(),
+    ])
+
     if (draft.aiconfig) {
       agentsStore.fetchTools(draft.aiconfig)
     }
@@ -624,8 +639,8 @@
             </div>
             <div class="form-icon">
               <EditableIcon
-                name={draft.icon}
-                color={draft.iconColor}
+                name={draft.icon || ""}
+                color={draft.iconColor || ""}
                 size="L"
                 on:change={e => {
                   draft.icon = e.detail.name
@@ -648,12 +663,13 @@
               />
             </div>
             <div class="form-icon">
-              <ActionButton
-                size="M"
-                icon="sliders-horizontal"
-                tooltip="Manage AI configurations"
-                on:click={() => bb.settings("/ai")}
-              />
+              <AbsTooltip text="Manage AI configurations">
+                <ActionButton
+                  size="M"
+                  icon="sliders-horizontal"
+                  on:click={() => bb.settings("/ai/aisettings")}
+                />
+              </AbsTooltip>
             </div>
           </div>
 
@@ -763,6 +779,46 @@
                   </div>
                 </div>
               {/each}
+            </div>
+          {/if}
+
+          <div class="section rag-settings">
+            <div class="rag-header">
+              <Heading size="XS">File ingestion:</Heading>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <Select
+                  label="RAG configuration"
+                  labelPosition="left"
+                  bind:value={draft.ragConfigId}
+                  getOptionLabel={o => o.name}
+                  getOptionValue={o => o._id}
+                  options={ragConfigs}
+                  placeholder="Select a RAG configuration"
+                  disabled={!ragConfigs.length}
+                  on:change={() => {
+                    ragConfigError = undefined
+                    scheduleSave(true)
+                  }}
+                  error={ragConfigError}
+                />
+              </div>
+              <div class="form-icon">
+                <AbsTooltip text="Manage model configurations">
+                  <ActionButton
+                    size="M"
+                    icon="sliders-horizontal"
+                    on:click={() => bb.settings("/ai/embedding-settings")}
+                  />
+                </AbsTooltip>
+              </div>
+            </div>
+          </div>
+
+          {#if draft.ragConfigId}
+            <div class="section files-section">
+              <FilesPanel currentAgentId={currentAgent?._id} />
             </div>
           {/if}
         </Layout>
@@ -1037,5 +1093,22 @@
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+
+  .rag-settings {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .files-section,
+  .rag-settings {
+    padding-top: var(--spacing-m);
+    gap: var(--spacing-s);
+  }
+
+  .rag-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
   }
 </style>

@@ -6,6 +6,10 @@ import {
   UpdateAIConfigRequest,
   PASSWORD_REPLACEMENT,
   UserCtx,
+  AIConfigType,
+  RequiredKeys,
+  WithoutDocMetadata,
+  ToDocUpdateMetadata,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -43,7 +47,22 @@ export const createAIConfig = async (
     throw new HTTPError("Config name is required", 400)
   }
 
-  const newConfig = await sdk.aiConfigs.create(body)
+  const configType = body.configType ?? AIConfigType.COMPLETIONS
+
+  const createRequest: RequiredKeys<WithoutDocMetadata<CreateAIConfigRequest>> =
+    {
+      name: body.name,
+      provider: body.provider,
+      baseUrl: body.baseUrl,
+      model: body.model,
+      apiKey: body.apiKey,
+      isDefault: body.isDefault ?? false,
+      liteLLMModelId: body.liteLLMModelId,
+      webSearchConfig: body.webSearchConfig,
+      configType,
+    }
+
+  const newConfig = await sdk.aiConfigs.create(createRequest)
 
   ctx.body = sanitizeConfig(newConfig)
 }
@@ -57,11 +76,33 @@ export const updateAIConfig = async (
     throw new HTTPError("Config ID is required for updates", 400)
   }
 
+  if (!body._rev) {
+    throw new HTTPError("Revision is required for updates", 400)
+  }
+
   if (!body.name) {
     throw new HTTPError("Config name is required", 400)
   }
 
-  const updatedConfig = await sdk.aiConfigs.update(body)
+  const configType = body.configType ?? AIConfigType.COMPLETIONS
+
+  const updateRequest: RequiredKeys<
+    ToDocUpdateMetadata<UpdateAIConfigRequest>
+  > = {
+    _id: body._id,
+    _rev: body._rev,
+    name: body.name,
+    provider: body.provider,
+    baseUrl: body.baseUrl,
+    model: body.model,
+    apiKey: body.apiKey,
+    isDefault: body.isDefault ?? false,
+    liteLLMModelId: body.liteLLMModelId,
+    webSearchConfig: body.webSearchConfig,
+    configType,
+  }
+
+  const updatedConfig = await sdk.aiConfigs.update(updateRequest)
 
   ctx.body = sanitizeConfig(updatedConfig)
 }

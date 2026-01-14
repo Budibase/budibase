@@ -37,7 +37,9 @@
   let selectedAgentId: string | null = null
 
   $: conversationHistory = $chatAppsStore.conversations || []
-  $: agents = $agentsStore.agents || []
+  $: agents = [...($agentsStore.agents || [])].sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  )
 
   const selectAgent = async (agentId: string | null) => {
     selectedAgentId = agentId
