@@ -1,19 +1,3 @@
-<script lang="ts" context="module">
-  import type { LanguageModelUsage } from "ai"
-  import type { ChainStepStatus } from "./chainOfThoughtStatus"
-
-  export interface ChainStep {
-    id: string
-    name: string
-    displayName: string
-    status: ChainStepStatus
-    reasoning?: string
-    input?: unknown
-    output?: unknown
-    usage?: LanguageModelUsage
-  }
-</script>
-
 <script lang="ts">
   import { fly } from "svelte/transition"
   import { StatusLight } from "@budibase/bbui"
@@ -22,15 +6,19 @@
     getStatusLabel,
     getStatusLightColor,
   } from "./chainOfThoughtStatus"
+  import { type ChainStep } from "./AgentOutputViewer.svelte"
 
-  export let steps: ChainStep[] = []
-  export let simple: boolean = false
+  interface Props {
+    steps?: ChainStep[]
+    simple?: boolean
+  }
+
+  let { steps = [], simple = false }: Props = $props()
 </script>
 
 <div class="timeline" class:simple>
   {#each steps as step, index (step.id)}
-    {@const isLast = index === steps.length - 1}
-
+    {@const isLast = steps && index === steps.length - 1}
     <div class="step" in:fly={{ y: 8, duration: 200, delay: index * 30 }}>
       <div class="track">
         <div class="node">

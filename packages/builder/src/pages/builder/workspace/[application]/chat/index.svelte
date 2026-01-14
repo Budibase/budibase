@@ -10,10 +10,13 @@
   type EnabledAgent = { agentId: string }
   type ChatAppState = { chatApp?: { enabledAgents?: EnabledAgent[] } }
 
-  $: agents = $agentsStore.agents || []
   $: namedAgents = agents.filter(agent => Boolean(agent?.name))
   $: chatApp = ($chatAppsStore as ChatAppState).chatApp
   $: enabledAgents = chatApp?.enabledAgents || []
+
+  $: agents = [...$agentsStore.agents].sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  )
 
   const isAgentAvailable = (agentId: string) =>
     enabledAgents.some((agent: EnabledAgent) => agent.agentId === agentId)

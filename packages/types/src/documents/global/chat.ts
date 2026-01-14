@@ -1,4 +1,4 @@
-import { Document } from "../../"
+import { AgentMessageMetadata, Document } from "../../"
 import type { UIMessage } from "ai"
 
 export interface ChatAppEnabledAgent {
@@ -19,7 +19,7 @@ export interface ChatConversationRequest extends Document {
   chatAppId: string
   agentId: string
   title?: string
-  messages: UIMessage[]
+  messages: UIMessage<AgentMessageMetadata>[]
 }
 
 export type CreateChatConversationRequest = Pick<

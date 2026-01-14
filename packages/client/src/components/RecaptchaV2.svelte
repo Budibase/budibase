@@ -3,10 +3,21 @@
   import { onMount } from "svelte"
   import { API } from "@/api"
   import { appStore } from "@/stores"
+  import {
+    resolveTranslationGroup,
+    resolveWorkspaceTranslations,
+  } from "@budibase/shared-core"
 
   let token: string = ""
 
   $: recaptchaKey = $appStore.recaptchaKey
+  $: translationOverrides = resolveWorkspaceTranslations(
+    $appStore.application?.translationOverrides
+  )
+  $: recaptchaLabels = resolveTranslationGroup(
+    "recaptcha",
+    translationOverrides
+  )
 
   onMount(() => {
     // need to cast this, there is no easy way to make Typescript aware of this
@@ -29,16 +40,16 @@
     if (verified) {
       location.reload()
     } else {
-      notifications.error("Recaptcha verification failed, please try again")
+      notifications.error(recaptchaLabels.error)
     }
   }
 </script>
 
 <div class="wrapper">
-  <Body>Human verification step required to continue.</Body>
-  <div id="recaptcha-container"></div>
+  <Body>{recaptchaLabels.prompt}</Body>
+  <div id="recaptcha-container" />
   <div>
-    <Button cta on:click={handleSubmit}>Submit</Button>
+    <Button cta on:click={handleSubmit}>{recaptchaLabels.submit}</Button>
   </div>
 </div>
 
