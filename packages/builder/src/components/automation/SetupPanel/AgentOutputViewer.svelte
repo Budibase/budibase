@@ -7,133 +7,72 @@
     MarkdownViewer,
     notifications,
   } from "@budibase/bbui"
-  import { formatNumber } from "@budibase/frontend-core"
-  import ChainOfThought, { type ChainStep } from "./ChainOfThought.svelte"
+  import ChainOfThought from "./ChainOfThought.svelte"
   import ChainOfThoughtModal from "./ChainOfThoughtModal.svelte"
   import type { AgentStepOutputs } from "@budibase/types"
-  import type { ContentPart, ToolCallDisplay } from "@budibase/types"
-  import { type LanguageModelUsage } from "ai"
-  import dayjs from "dayjs"
+  import { type ChainStepStatus } from "./chainOfThoughtStatus"
+  import {
+    isReasoningUIPart,
+    isToolUIPart,
+    getToolName,
+    type LanguageModelUsage,
+  } from "ai"
 
-  type ToolCallDisplayWithReasoning = ToolCallDisplay & {
-    reasoningText?: string
-    stepIndex: number
+  interface Props {
+    outputs: AgentStepOutputs
   }
 
-  type StepContentPart = ContentPart & {
-    stepIndex: number
+  export interface ChainStep {
+    id: string
+    name: string
+    displayName: string
+    status: ChainStepStatus
+    reasoning?: string
+    input?: unknown
+    output?: unknown
+    usage?: LanguageModelUsage
   }
 
-  type StepToolCallPart = Extract<StepContentPart, { type: "tool-call" }>
-  type StepToolResultPart = Extract<StepContentPart, { type: "tool-result" }>
-  type StepReasoningPart = Extract<StepContentPart, { type: "reasoning" }>
+  let { outputs }: Props = $props()
+  let modal = $state<ChainOfThoughtModal>()
 
-  export let outputs: AgentStepOutputs
+  let message = $derived(outputs.message)
+  let response = $derived(outputs.response)
+  let usage = $derived(outputs.usage)
 
-  let modal: ChainOfThoughtModal
+  let reasoningParts = $derived(message?.parts.filter(isReasoningUIPart))
+  let toolParts = $derived(message?.parts.filter(isToolUIPart))
 
-  $: response = outputs.response || ""
-  $: steps = outputs.steps || []
+  let chainSteps = $derived(
+    toolParts?.map((part): ChainStep => {
+      const toolName = getToolName(part)
 
-  $: stepContentParts = steps.flatMap((step, stepIndex) =>
-    step.content.map(part => ({
-      ...part,
-      stepIndex,
-    }))
-  )
-  $: toolCallParts = stepContentParts.filter(
-    (part): part is StepToolCallPart => part.type === "tool-call"
-  )
-  $: toolResultParts = stepContentParts.filter(
-    (part): part is StepToolResultPart => part.type === "tool-result"
-  )
-
-  $: toolResultsMap = new Map(
-    toolResultParts.map(result => [result.toolCallId, result])
-  )
-
-  $: toolCallsDisplay = toolCallParts.map(
-    (call): ToolCallDisplayWithReasoning => {
-      const result = toolResultsMap.get(call.toolCallId)
-      const output = result?.output
-
-      let status: ToolCallDisplay["status"]
-      if (!result) {
-        status = "failed"
-      } else if (output?.error) {
+      let status: ChainStep["status"]
+      if (part.state === "output-error") {
         status = "error"
-      } else {
+      } else if (part.state === "output-available") {
         status = "completed"
+      } else if (
+        part.state === "input-streaming" ||
+        part.state === "input-available"
+      ) {
+        status = "pending"
+      } else {
+        status = "failed"
       }
-
-      const step = steps[call.stepIndex]
-
-      const stepReasoningText =
-        typeof step?.reasoningText === "string" ? step.reasoningText : undefined
-
-      const stepReasoningParts = stepContentParts.filter(
-        (part): part is StepReasoningPart =>
-          part.stepIndex === call.stepIndex && part.type === "reasoning"
-      )
-
-      const contentReasoningText = stepReasoningParts
-        .map(part => part.text)
-        .filter(
-          (text): text is string =>
-            typeof text === "string" && text.trim().length > 0
-        )
-
-      const reasoningSegments: string[] = []
-      if (stepReasoningText && stepReasoningText.trim().length > 0) {
-        reasoningSegments.push(stepReasoningText)
-      }
-      if (contentReasoningText.length > 0) {
-        reasoningSegments.push(...contentReasoningText)
-      }
-
-      const reasoningText =
-        reasoningSegments.length > 0
-          ? reasoningSegments.join("\n\n")
-          : undefined
 
       return {
-        toolCallId: call.toolCallId,
-        toolName: call.toolName,
-        displayName: humanizeToolName(call.toolName),
-        input: call.input,
-        output,
+        id: part.toolCallId,
+        name: toolName,
+        displayName: humanizeToolName(toolName),
         status,
-        reasoningText,
-        stepIndex: call.stepIndex,
+        reasoning: getReasoning(),
+        input: part.input,
+        output: part.state === "output-available" ? part.output : undefined,
+        usage,
       }
-    }
-  )
-
-  $: chainSteps = toolCallsDisplay.map(
-    (call): ChainStep => ({
-      id: call.toolCallId,
-      name: call.toolName,
-      displayName: call.displayName,
-      status: call.status,
-      reasoning: call.reasoningText,
-      input: call.input,
-      output: call.output,
-      usage: steps?.[call.stepIndex]?.usage,
     })
   )
-
-  $: aggregatedUsage = sumUsage(steps.map(step => step.usage))
-  $: usageMeta = formatUsageMeta(aggregatedUsage)
-  $: usageTimestamp = formatTimestamp(
-    steps?.[steps.length - 1]?.response?.timestamp
-  )
-  $: stepsMetaLine = [
-    chainSteps.length ? `${chainSteps.length} steps` : undefined,
-    usageMeta,
-    usageTimestamp,
-  ]
-    .filter(Boolean)
-    .join(" · ")
 
   function humanizeToolName(toolName: string): string {
     return toolName
@@ -143,81 +82,16 @@
       .trim()
   }
 
+  function getReasoning(): string | undefined {
+    if (!reasoningParts || reasoningParts.length === 0) {
+      return undefined
+    }
+    return reasoningParts.map(p => p.text).join("\n\n") || undefined
+  }
+
   function copyToClipboard(text: string) {
     Helpers.copyToClipboard(text)
     notifications.success("Copied to clipboard")
-  }
-
-  const sumUsage = (
-    usages: Array<LanguageModelUsage | undefined>
-  ): LanguageModelUsage | undefined => {
-    const values = usages.filter(
-      (usage): usage is LanguageModelUsage => !!usage
-    )
-    if (values.length === 0) {
-      return
-    }
-
-    const sum = (
-      selector: (_usage: LanguageModelUsage) => number | undefined
-    ) => values.reduce((acc, usage) => acc + (selector(usage) ?? 0), 0)
-
-    return {
-      inputTokens: sum(u => u.inputTokens),
-      inputTokenDetails: {
-        noCacheTokens: sum(u => u.inputTokenDetails?.noCacheTokens),
-        cacheReadTokens: sum(u => u.inputTokenDetails?.cacheReadTokens),
-        cacheWriteTokens: sum(u => u.inputTokenDetails?.cacheWriteTokens),
-      },
-      outputTokens: sum(u => u.outputTokens),
-      outputTokenDetails: {
-        textTokens: sum(u => u.outputTokenDetails?.textTokens),
-        reasoningTokens: sum(u => u.outputTokenDetails?.reasoningTokens),
-      },
-      totalTokens: sum(u => u.totalTokens),
-      reasoningTokens: sum(u => u.reasoningTokens),
-      cachedInputTokens: sum(u => u.cachedInputTokens),
-    }
-  }
-
-  const formatTimestamp = (value: Date): string | undefined => {
-    const display = Helpers.getDateDisplayValue(dayjs(value))
-    return display || undefined
-  }
-
-  const formatUsageMeta = (usage?: LanguageModelUsage): string | undefined => {
-    if (!usage) {
-      return
-    }
-
-    const parts: string[] = []
-
-    const inputTokens = usage.inputTokens
-    const inputTokenDetails = usage.inputTokenDetails
-    const outputTokens = usage.outputTokens
-    const outputTokenDetails = usage.outputTokenDetails
-    const totalTokens = usage.totalTokens
-
-    if (inputTokens !== undefined) {
-      const cacheReadTokens = inputTokenDetails?.cacheReadTokens
-      const cachedPart =
-        cacheReadTokens && cacheReadTokens > 0
-          ? ` (${formatNumber(cacheReadTokens)} cached)`
-          : ""
-      parts.push(`input: ${formatNumber(inputTokens)}${cachedPart}`)
-    }
-    if (outputTokens !== undefined) {
-      parts.push(`output: ${formatNumber(outputTokens)}`)
-    }
-    if (totalTokens !== undefined) {
-      parts.push(`total: ${formatNumber(totalTokens)}`)
-    }
-    const reasoningTokens = outputTokenDetails?.reasoningTokens
-    if (reasoningTokens !== undefined && reasoningTokens > 0) {
-      parts.push(`reasoning: ${formatNumber(reasoningTokens)}`)
-    }
-
-    return parts.length > 0 ? parts.join(" → ") : undefined
   }
 </script>
 
@@ -225,8 +99,8 @@
   bind:this={modal}
   steps={chainSteps}
   {response}
+  {usage}
   title="Agent Execution Details"
-  meta={stepsMetaLine}
 />
 
 <div class="agent-output-viewer">
@@ -249,7 +123,7 @@
     </DetailSummary>
   {/if}
 
-  {#if chainSteps.length > 0}
+  {#if chainSteps && chainSteps.length > 0}
     <DetailSummary
       name={`Execution steps (${chainSteps.length})`}
       initiallyShow
@@ -259,13 +133,13 @@
         slot="actions"
         type="button"
         class="expand-button"
-        on:click={modal?.show}
+        onclick={modal?.show}
       >
         <Icon name="FullScreen" size="S" />
         <span>Expand view</span>
       </button>
       <div class="steps-section">
-        <ChainOfThought steps={chainSteps} simple />
+        <ChainOfThought steps={chainSteps || []} simple={true} />
       </div>
     </DetailSummary>
   {/if}
