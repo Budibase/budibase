@@ -171,6 +171,7 @@ const environment = {
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_URL: process.env.REDIS_URL || "localhost:6379",
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  REDIS_USERNAME: process.env.REDIS_USERNAME,
   REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
@@ -308,6 +309,7 @@ export const SECRETS: EnvironmentKey[] = [
   "MINIO_SECRET_KEY",
   "OPENAI_API_KEY",
   "REDIS_PASSWORD",
+  "REDIS_USERNAME",
 ]
 
 // clean up any environment variable edge cases

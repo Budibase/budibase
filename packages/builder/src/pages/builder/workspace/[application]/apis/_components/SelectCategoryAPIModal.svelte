@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Button, Divider, Pagination, Select } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { Button, CollapsibleSearch, Divider, Select } from "@budibase/bbui"
+  import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
   import type {
     ConnectorCard,
     GroupTemplateName,
@@ -23,12 +23,30 @@
   }>()
 
   let scrolling = false
-  let page: HTMLDivElement | undefined
+  let scrollContainer: HTMLDivElement | undefined
+  let loadTrigger: HTMLDivElement | undefined
+  let observer: IntersectionObserver | null = null
+  let loadingMore = false
   let activeGroup: RestTemplateGroup<RestTemplateGroupName> | null = null
   let activeGroupTemplateName: GroupTemplateName | null = null
   let currentPage = 1
   let lastConnectorCount = 0
-  const itemsPerPage = 12
+  let searchValue = ""
+  let lastSearchValue = ""
+  const itemsPerPage = 15
+
+  $: normalizedSearchValue = searchValue.trim().toLowerCase()
+  $: if (normalizedSearchValue !== lastSearchValue) {
+    lastSearchValue = normalizedSearchValue
+    currentPage = 1
+    if (scrollContainer) {
+      scrollContainer.scrollTop = 0
+    }
+    if (observer && loadTrigger) {
+      observer.disconnect()
+      observer.observe(loadTrigger)
+    }
+  }
 
   $: groupedTemplateNames = new Set<RestTemplateName>(
     templateGroups.flatMap(group =>
@@ -38,15 +56,29 @@
   $: visibleTemplates = (templates || []).filter(
     template => !groupedTemplateNames.has(template.name)
   )
+  $: filteredTemplateGroups = normalizedSearchValue
+    ? templateGroups.filter(
+        group =>
+          group.name.toLowerCase().includes(normalizedSearchValue) ||
+          group.templates.some(template =>
+            template.name.toLowerCase().includes(normalizedSearchValue)
+          )
+      )
+    : templateGroups
+  $: filteredTemplates = normalizedSearchValue
+    ? visibleTemplates.filter(template =>
+        template.name.toLowerCase().includes(normalizedSearchValue)
+      )
+    : visibleTemplates
   $: connectorCards = [
-    ...templateGroups.map<ConnectorCard>(group => ({
+    ...filteredTemplateGroups.map<ConnectorCard>(group => ({
       type: "group",
       name: group.name,
       icon: group.icon,
       key: `group-${group.name}`,
       group,
     })),
-    ...visibleTemplates.map<ConnectorCard>(template => ({
+    ...filteredTemplates.map<ConnectorCard>(template => ({
       type: "template",
       name: template.name,
       icon: template.icon,
@@ -65,11 +97,7 @@
   $: if (currentPage > totalPages) {
     currentPage = totalPages
   }
-  $: pagedConnectorCards = connectorCards.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
-  $: hasPrevPage = currentPage > 1
+  $: pagedConnectorCards = connectorCards.slice(0, currentPage * itemsPerPage)
   $: hasNextPage = currentPage < totalPages
   $: activeGroupOptions = activeGroup
     ? activeGroup.templates.map(template => ({
@@ -127,24 +155,50 @@
     dispatch("custom")
   }
 
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      currentPage -= 1
+  const handleIntersect = async (entries: IntersectionObserverEntry[]) => {
+    if (loadingMore || !hasNextPage) {
+      return
     }
+    const isVisible = entries.some(entry => entry.isIntersecting)
+    if (!isVisible) {
+      return
+    }
+    loadingMore = true
+    currentPage += 1
+    await tick()
+    loadingMore = false
   }
 
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      currentPage += 1
+  onMount(() => {
+    if (!scrollContainer || !loadTrigger) {
+      return
     }
-  }
+    observer = new IntersectionObserver(handleIntersect, {
+      root: scrollContainer,
+      rootMargin: "80px",
+      threshold: 0.1,
+    })
+    observer.observe(loadTrigger)
+  })
+
+  onDestroy(() => {
+    if (observer) {
+      observer.disconnect()
+      observer = null
+    }
+  })
 </script>
 
 <div class="api-main" class:scrolling>
   <div class="api-header">
     <div>API connectors</div>
     {#if !activeGroup}
-      <div>
+      <div class="api-header-actions">
+        <CollapsibleSearch
+          placeholder="Search templates"
+          value={searchValue}
+          on:change={event => (searchValue = event.detail)}
+        />
         <Button
           secondary
           icon="plus"
@@ -157,9 +211,13 @@
     {/if}
   </div>
   <Divider size={"S"} noMargin />
-  <div class="contents-wrap" on:scroll={handleScroll}>
+  <div
+    class="contents-wrap"
+    bind:this={scrollContainer}
+    on:scroll={handleScroll}
+  >
     <div class="shadow"></div>
-    <div bind:this={page} class="contents">
+    <div class="contents">
       {#if activeGroup}
         <div class="group-step">
           <div class="group-step-summary">
@@ -175,7 +233,7 @@
           </div>
           <div class="group-step-body">
             <Select
-              label={`Select category`}
+              label="Select category"
               options={activeGroupOptions}
               bind:value={activeGroupTemplateName}
               disabled={loading}
@@ -224,17 +282,7 @@
             </div>
           {/each}
         </div>
-        {#if totalPages > 1}
-          <div class="pagination">
-            <Pagination
-              page={currentPage}
-              {hasPrevPage}
-              {hasNextPage}
-              {goToPrevPage}
-              {goToNextPage}
-            />
-          </div>
-        {/if}
+        <div class="load-trigger" bind:this={loadTrigger}></div>
       {/if}
     </div>
   </div>
@@ -311,10 +359,17 @@
     font-weight: 600;
   }
 
+  .api-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
   .api-main .contents {
     padding-top: var(--spacing-xl);
     padding-left: var(--spectrum-dialog-confirm-padding);
     padding-right: var(--spectrum-dialog-confirm-padding);
+    padding-bottom: var(--spacing-l);
   }
 
   .api-main :global(hr) {
@@ -326,13 +381,9 @@
     overflow-y: auto;
     min-height: 0;
     position: relative;
-  }
-
-  .pagination {
-    margin-top: var(--spacing-l);
-    display: flex;
-    justify-content: center;
-    padding-bottom: var(--spacing-l);
+    height: calc(
+      (5 * 51px) + (4 * 12px) + var(--spacing-xl) + var(--spacing-l)
+    );
   }
 
   .group-step {
@@ -384,5 +435,9 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-l);
+  }
+
+  .load-trigger {
+    height: 1px;
   }
 </style>

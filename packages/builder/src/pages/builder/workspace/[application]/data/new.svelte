@@ -71,7 +71,6 @@
     <DatasourceOption
       on:click={() => internalTableModal.show()}
       title="Create new table"
-      description="Non-relational"
       {disabled}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
@@ -79,7 +78,6 @@
     <DatasourceOption
       on:click={createSampleData}
       title="Use sample data"
-      description="Non-relational"
       disabled={disabled || $datasources.hasDefaultData}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
@@ -87,7 +85,6 @@
     <DatasourceOption
       on:click={() => internalTableModal.show({ promptUpload: true })}
       title="Upload CSV / JSON"
-      description="Non-relational"
       {disabled}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
@@ -103,7 +100,6 @@
       <DatasourceOption
         on:click={() => externalDatasourceModal.show(integration)}
         title={integration.friendlyName}
-        description={integration.type}
         {disabled}
       >
         <IntegrationIcon
