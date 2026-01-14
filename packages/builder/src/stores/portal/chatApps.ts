@@ -122,7 +122,13 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return conversations
   }
 
-  initConversations = async (agentId?: string, workspaceId?: string) => {
+  initConversations = async ({
+    agentId,
+    workspaceId,
+  }: {
+    agentId?: string
+    workspaceId?: string
+  } = {}) => {
     const chatApp = await this.ensureChatApp(agentId, workspaceId)
     if (chatApp?._id) {
       await this.fetchConversations(chatApp._id)

@@ -58,7 +58,7 @@
           <button
             class="list-item list-item-button"
             class:selected={selectedConversationId === conversation._id}
-            on:click={() => selectConversation(conversation._id)}
+            on:click={() => selectConversation(conversation._id!)}
           >
             {conversation.title || "Untitled Chat"}
           </button>

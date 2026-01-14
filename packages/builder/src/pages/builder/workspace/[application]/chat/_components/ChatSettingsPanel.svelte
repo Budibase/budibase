@@ -38,7 +38,7 @@
             <Toggle
               value={isAgentAvailable(agent._id)}
               on:change={event =>
-                handleAvailabilityToggle(agent._id, event.detail)}
+                handleAvailabilityToggle(agent._id!, event.detail)}
             />
           {/if}
         </div>

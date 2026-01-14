@@ -73,7 +73,7 @@
     chatAppsStore.reset()
     await agentsStore.selectAgent(undefined)
 
-    await chatAppsStore.initConversations(undefined, nextWorkspaceId)
+    await chatAppsStore.initConversations({ workspaceId: nextWorkspaceId })
   }
 
   $: if (workspaceId) {
