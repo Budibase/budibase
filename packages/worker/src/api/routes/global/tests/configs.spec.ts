@@ -5,6 +5,7 @@ import {
   ConfigType,
   GetPublicSettingsResponse,
   PKCEMethod,
+  TranslationsConfig,
 } from "@budibase/types"
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 import { resolveTranslationGroup } from "@budibase/shared-core"
@@ -340,6 +341,35 @@ describe("configs", () => {
       const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
       expect(saved.config.locales.en.overrides["login.emailLabel"]).toEqual(
         "Profile test"
+      )
+    })
+
+    it("should support non-default locales", async () => {
+      const spanishConfig: TranslationsConfig = {
+        type: ConfigType.TRANSLATIONS,
+        config: {
+          defaultLocale: "es",
+          locales: {
+            es: {
+              label: "Spanish",
+              overrides: {
+                "login.emailLabel": "Correo",
+              },
+            },
+            en: {
+              label: "English",
+              overrides: {
+                "login.emailLabel": "Email",
+              },
+            },
+          },
+        },
+      }
+
+      await saveConfig(spanishConfig)
+      const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
+      expect(saved.config.locales.es.overrides["login.emailLabel"]).toEqual(
+        "Correo"
       )
     })
 
