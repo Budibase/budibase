@@ -97,7 +97,7 @@
   $: activeOverrides =
     $translations.config.locales[activeLocale]?.overrides ?? {}
   $: storeLoaded = $translations.loaded
-  const refreshFromStore = (force = false) => {
+  const refreshFromStore = ({ force = false }: { force?: boolean } = {}) => {
     const storeSignature = signature(activeOverrides)
     if (storeLoaded && (force || storeSignature !== lastSyncedSignature)) {
       overrides = { ...activeOverrides }
@@ -108,8 +108,8 @@
   $: refreshFromStore()
 
   onMount(async () => {
-    await translations.init(true)
-    refreshFromStore(true)
+    await translations.init({ force: true })
+    refreshFromStore({ force: true })
   })
 
   $: filteredRows = UI_TRANSLATIONS.filter(definition => {
@@ -153,8 +153,8 @@
     }
     try {
       await translations.saveLocaleOverrides(activeLocale, payload)
-      await translations.init(true)
-      refreshFromStore(true)
+      await translations.init({ force: true })
+      refreshFromStore({ force: true })
       lastSyncedSignature = nextSignature
       overrides = { ...payload }
       notifications.success("Translations saved successfully")

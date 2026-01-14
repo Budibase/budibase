@@ -76,9 +76,7 @@ class TranslationsStore extends BudiStore<TranslationsState> {
     }
   }
 
-  async init(opts?: boolean | { force?: boolean; public?: boolean }) {
-    const options =
-      typeof opts === "boolean" ? { force: opts } : opts || { force: false }
+  async init(options: { force?: boolean; public?: boolean } = {}) {
     const force = options.force ?? false
     const usePublic = options.public ?? false
 
