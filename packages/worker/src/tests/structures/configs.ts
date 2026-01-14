@@ -9,6 +9,7 @@ import {
   OIDCInnerConfig,
   SMTPInnerConfig,
   SettingsInnerConfig,
+  TranslationsConfig,
 } from "@budibase/types"
 
 export function oidc(conf?: Partial<OIDCInnerConfig>): OIDCConfig {
@@ -83,6 +84,23 @@ export function settings(conf?: Partial<SettingsInnerConfig>): SettingsConfig {
       logoUrl: "",
       company: "Budibase",
       ...conf,
+    },
+  }
+}
+
+export function translations(
+  overrides: Record<string, string> = {}
+): TranslationsConfig {
+  return {
+    type: ConfigType.TRANSLATIONS,
+    config: {
+      defaultLocale: "en",
+      locales: {
+        en: {
+          label: "English",
+          overrides,
+        },
+      },
     },
   }
 }

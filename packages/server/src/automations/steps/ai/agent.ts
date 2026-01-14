@@ -5,8 +5,16 @@ import {
   AutomationStepInputBase,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
-import { ToolLoopAgent, stepCountIs } from "ai"
+import {
+  ToolLoopAgent,
+  stepCountIs,
+  readUIMessageStream,
+  UIMessage,
+  Output,
+  jsonSchema,
+} from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
 import tracer from "dd-trace"
@@ -20,7 +28,7 @@ export async function run({
 }: {
   inputs: AgentStepInputs
 } & AutomationStepInputBase): Promise<AgentStepOutputs> {
-  const { agentId, prompt } = inputs
+  const { agentId, prompt, useStructuredOutput, outputSchema } = inputs
 
   if (!agentId) {
     return {
@@ -89,6 +97,19 @@ export async function run({
           fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
         })
 
+        let outputOption = undefined
+        if (
+          useStructuredOutput &&
+          outputSchema &&
+          Object.keys(outputSchema).length > 0
+        ) {
+          const normalizedSchema =
+            helpers.structuredOutput.normalizeSchemaForStructuredOutput(
+              outputSchema
+            )
+          outputOption = Output.object({ schema: jsonSchema(normalizedSchema) })
+        }
+
         const agent = new ToolLoopAgent({
           model: litellm.chat(modelId),
           instructions: systemPrompt || undefined,
@@ -98,23 +119,35 @@ export async function run({
           providerOptions: {
             litellm: ai.getLiteLLMProviderOptions(modelName),
           },
+          output: outputOption,
         })
 
-        const result = await agent.generate({
-          prompt,
-        })
+        const streamResult = await agent.stream({ prompt })
 
-        const steps = sdk.ai.agents.attachReasoningToSteps(result.steps)
+        let assistantMessage: UIMessage | undefined
+        for await (const uiMessage of readUIMessageStream({
+          stream: streamResult.toUIMessageStream({ sendReasoning: true }),
+        })) {
+          assistantMessage = uiMessage
+        }
+
+        const responseText = await streamResult.text
+        const usage = await streamResult.usage
+        const output = outputOption
+          ? ((await streamResult.output) as Record<string, any>)
+          : undefined
 
         llmobs.annotate(agentSpan, {
-          outputData: result.text,
-          metadata: { stepCount: result.steps?.length ?? 0 },
+          outputData: responseText,
+          metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
 
         return {
           success: true,
-          response: result.text,
-          steps,
+          response: responseText,
+          usage,
+          message: assistantMessage,
+          output,
         }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
