@@ -65,6 +65,7 @@ import PodiumLogo from "assets/rest-template-icons/podium.svg"
 import RemoteLogo from "assets/rest-template-icons/remote.svg"
 import ResendLogo from "assets/rest-template-icons/resend.svg"
 import RiveryLogo from "assets/rest-template-icons/rivery.svg"
+import RocketChatLogo from "assets/rest-template-icons/rocketchat.svg"
 import SageLogo from "assets/rest-template-icons/sage.svg"
 import SecodaLogo from "assets/rest-template-icons/secoda.svg"
 import ShipengineLogo from "assets/rest-template-icons/shipengine.svg"
@@ -548,6 +549,134 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
       },
     ],
   }
+const rocketChatRestTemplateGroup: RestTemplateGroup<"Rocket.Chat"> = {
+  name: "Rocket.Chat",
+  icon: RocketChatLogo,
+  verified: true,
+  description: "Open source team chat and omnichannel messaging platform APIs.",
+  templates: [
+    {
+      name: "Rocket.Chat Authentication",
+      description: "Login, user auth, and session management endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/authentication.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Content Management",
+      description: "Content management and moderation endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/content-management.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Integrations",
+      description: "Incoming and outgoing integrations and webhooks.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/integrations.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Marketplace Apps",
+      description: "Marketplace app discovery, install, and management.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/marketplace-apps.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Messaging",
+      description: "Messages, threads, reactions, and uploads.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/messaging.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Miscellaneous",
+      description: "Utility and miscellaneous endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/miscellaneous.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Notifications",
+      description: "Push, email, and notification endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/notifications.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Omnichannel",
+      description: "Livechat, visitor, and omnichannel routing endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/omnichannel.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Rooms",
+      description: "Rooms, channels, and groups management endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/rooms.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Settings",
+      description: "Server settings and configuration endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/settings.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Statistics",
+      description: "Analytics and usage reporting endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/statistics.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat User Management",
+      description: "User, role, and permission management endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/user-management.yaml",
+        },
+      ],
+    },
+  ],
+}
 
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
@@ -1473,9 +1602,10 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
     },
   ],
   templateGroups: [
+    microsoftSharepointRestTemplateGroup,
+    rocketChatRestTemplateGroup,
     twilioRestTemplateGroup,
     zendeskRestTemplateGroup,
-    microsoftSharepointRestTemplateGroup,
   ],
 }
 
