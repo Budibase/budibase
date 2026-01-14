@@ -2,7 +2,11 @@ import { describe, it, expect, vi } from "vitest"
 import blank from "@/templates/screenTemplating/blank"
 import type { Screen } from "@budibase/types"
 
-const mockGetDefaultLayoutPreference = vi.fn(() => "grid")
+const { mockGetDefaultLayoutPreference } = vi.hoisted(() => {
+  return {
+    mockGetDefaultLayoutPreference: vi.fn(() => "grid"),
+  }
+})
 
 vi.mock("@/stores/preferences", () => ({
   getDefaultLayoutPreference: mockGetDefaultLayoutPreference,
