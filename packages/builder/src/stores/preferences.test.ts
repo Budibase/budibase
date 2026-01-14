@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
 import { API } from "@/api"
+import type { UpdateSelfResponse } from "@budibase/types"
 import {
   userPreferences,
   getDefaultLayoutPreference,
@@ -20,7 +21,7 @@ describe("userPreferences store", () => {
   })
 
   it("updates the default layout preference and persists it", async () => {
-    vi.mocked(API.updateSelf).mockResolvedValue(undefined)
+    vi.mocked(API.updateSelf).mockResolvedValue({} as UpdateSelfResponse)
 
     const updatePromise = userPreferences.updateDefaultLayout("flex")
     expect(get(userPreferences.store).savingDefaultLayout).toBe(true)
@@ -54,13 +55,10 @@ describe("userPreferences store", () => {
   })
 
   it("falls back to the default layout when no preference is stored", () => {
-    userPreferences.update(() => {
-      // @ts-expect-error forcing undefined to verify the fallback
-      return {
-        defaultLayout: undefined,
-        savingDefaultLayout: false,
-      }
-    })
+    userPreferences.update(state => ({
+      ...state,
+      defaultLayout: undefined as unknown as typeof state.defaultLayout,
+    }))
 
     expect(getDefaultLayoutPreference()).toBe(DEFAULT_SCREEN_LAYOUT)
   })
