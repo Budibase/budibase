@@ -23,6 +23,15 @@ export class ConfigAPI extends TestAPI {
       .expect("Content-Type", /json/)
   }
 
+  getPublicTranslations = (tenantId?: string) => {
+    const query = tenantId ? `?tenantId=${tenantId}` : ""
+    return this.request
+      .get(`/api/global/configs/public/translations${query}`)
+      .set(this.config.defaultHeaders())
+      .expect(200)
+      .expect("Content-Type", /json/)
+  }
+
   getAIConfig = async () => {
     return await this.getConfig(ConfigType.AI)
   }

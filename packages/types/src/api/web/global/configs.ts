@@ -4,6 +4,7 @@ import {
   SettingsBrandingConfig,
   SettingsConfig,
   SettingsInnerConfig,
+  TranslationsConfigInner,
 } from "../../../documents"
 
 /**
@@ -28,6 +29,9 @@ export interface PublicOIDCConfig {
 }
 
 export type GetPublicOIDCConfigResponse = PublicOIDCConfig[]
+
+export interface GetPublicTranslationsResponse
+  extends TranslationsConfigInner {}
 
 export interface SaveConfigRequest extends Config {}
 export interface SaveConfigResponse {
