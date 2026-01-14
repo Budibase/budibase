@@ -45,6 +45,9 @@
     return $translations.config.locales[locale]?.overrides ?? {}
   })()
   $: loginLabels = resolveTranslationGroup("login", translationOverrides)
+  $: passwordBlankError = loginLabels.passwordError
+  $: passwordIncorrectError =
+    loginLabels.passwordIncorrectError || loginLabels.invalidCredentials
 
   async function login() {
     form.validate()
@@ -78,7 +81,7 @@
       }
     } catch (err) {
       notifications.error(
-        loginLabels.invalidCredentials || err?.message || "Invalid credentials"
+        passwordIncorrectError || err?.message || "Invalid credentials"
       )
     }
   }
@@ -159,7 +162,7 @@
                 validate={() => {
                   let fieldError = {
                     password: !formData.password
-                      ? loginLabels.passwordError
+                      ? passwordBlankError
                       : undefined,
                   }
                   errors = handleError({ ...errors, ...fieldError })
