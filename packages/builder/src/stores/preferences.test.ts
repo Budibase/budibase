@@ -36,9 +36,9 @@ describe("userPreferences store", () => {
   it("restores the previous layout when persisting fails", async () => {
     vi.mocked(API.updateSelf).mockRejectedValue(new Error("failed"))
 
-    await expect(
-      userPreferences.updateDefaultLayout("flex")
-    ).rejects.toThrow("failed")
+    await expect(userPreferences.updateDefaultLayout("flex")).rejects.toThrow(
+      "failed"
+    )
 
     const state = get(userPreferences.store)
     expect(state.defaultLayout).toBe(DEFAULT_SCREEN_LAYOUT)
