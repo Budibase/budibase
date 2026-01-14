@@ -15,7 +15,6 @@ export function createAgentValidator() {
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
       ragConfigId: OPTIONAL_STRING,
-      ragEnabled: Joi.boolean().optional(),
     })
   )
 }
@@ -34,7 +33,6 @@ export function updateAgentValidator() {
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
       ragConfigId: OPTIONAL_STRING,
-      ragEnabled: Joi.boolean().optional(),
     }).unknown(true)
   )
 }

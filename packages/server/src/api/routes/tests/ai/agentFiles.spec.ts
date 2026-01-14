@@ -73,7 +73,6 @@ describe("agent files", () => {
     const updatedAgent = await config.api.agent.update({
       ...agent,
       ragConfigId: ragConfig._id!,
-      ragEnabled: true,
     })
 
     return { agent: updatedAgent, vectorDb, ragConfig }

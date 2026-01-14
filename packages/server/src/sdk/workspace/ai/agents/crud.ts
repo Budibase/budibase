@@ -62,7 +62,6 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
     ragConfigId: request.ragConfigId,
-    ragEnabled: request.ragEnabled ?? false,
   }
 
   const { rev } = await db.put(agent)

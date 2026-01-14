@@ -26,7 +26,6 @@ export interface Agent extends Document {
   createdBy?: string
   enabledTools?: string[]
   ragConfigId?: string
-  ragEnabled?: boolean
 }
 
 export interface AgentMessageRagSource {

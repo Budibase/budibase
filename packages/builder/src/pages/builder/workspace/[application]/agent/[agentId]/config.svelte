@@ -6,7 +6,6 @@
     Layout,
     notifications,
     Select,
-    Toggle,
     ActionButton,
     Icon,
     ActionMenu,
@@ -64,7 +63,6 @@
   } from "../logos/tagIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
-  import { tick } from "svelte"
 
   $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
@@ -137,7 +135,6 @@
     iconColor: currentAgent?.iconColor || "",
     enabledTools: currentAgent?.enabledTools || [],
     ragConfigId: currentAgent?.ragConfigId,
-    ragEnabled: currentAgent?.ragEnabled || false,
   }
 
   $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
@@ -490,23 +487,6 @@
     webSearchConfigModal?.show()
   }
 
-  const handleRAGToggleChange = async (e: CustomEvent<boolean>) => {
-    if (e.detail && !draft.ragConfigId) {
-      ragConfigError = "Select a RAG configuration to enable it."
-      notifications.error(ragConfigError)
-
-      // Force the toggle to re-render
-      draft.ragEnabled = true
-      await tick()
-      draft.ragEnabled = false
-
-      return
-    }
-
-    draft.ragEnabled = e.detail
-    scheduleSave(true)
-  }
-
   $: if (pendingWebSearchInsert && webSearchConfigured) {
     const searchTool = availableTools.find(
       tool => tool.sourceType === ToolType.SEARCH
@@ -526,13 +506,7 @@
     if (saving) return
 
     saving = true
-    const ragEnabled = !!draft.ragEnabled
     try {
-      if (ragEnabled && !draft.ragConfigId) {
-        ragConfigError = "Select a RAG configuration to enable it."
-        notifications.error(ragConfigError)
-        return
-      }
       await agentsStore.updateAgent({
         ...currentAgent,
         ...draft,
@@ -570,14 +544,8 @@
 
     const nextLive = !currentAgent.live
 
-    const ragEnabled = !!draft.ragEnabled
     try {
       togglingLive = true
-      if (ragEnabled && !draft.ragConfigId) {
-        ragConfigError = "Select a RAG configuration to enable it."
-        notifications.error(ragConfigError)
-        return
-      }
 
       await agentsStore.updateAgent({
         ...currentAgent,
@@ -846,17 +814,9 @@
                 </AbsTooltip>
               </div>
             </div>
-            <div class="form-field">
-              <Toggle
-                label="Enable"
-                labelPosition="left"
-                value={draft.ragEnabled}
-                on:change={handleRAGToggleChange}
-              />
-            </div>
           </div>
 
-          {#if draft.ragEnabled}
+          {#if draft.ragConfigId}
             <div class="section files-section">
               <FilesPanel currentAgentId={currentAgent?._id} />
             </div>
@@ -1135,9 +1095,12 @@
     cursor: pointer;
   }
 
-  .files-section,
   .rag-settings {
     border-top: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .files-section,
+  .rag-settings {
     padding-top: var(--spacing-m);
     gap: var(--spacing-s);
   }
