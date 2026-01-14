@@ -51,12 +51,17 @@ export const prepareChatConversationForSave = ({
   const createdAt = existingChat?.createdAt || chat.createdAt || now
   const updatedAt = now
   const rev = existingChat?._rev || chat._rev
+  const agentId = existingChat?.agentId || chat.agentId
+
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
 
   return {
     _id: chatId,
     ...(rev && { _rev: rev }),
     chatAppId,
-    agentId: existingChat?.agentId || chat.agentId || "",
+    agentId,
     userId,
     title: title ?? chat.title,
     messages,
