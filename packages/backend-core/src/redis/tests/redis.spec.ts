@@ -2,9 +2,15 @@ import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { generator, structures } from "../../../tests"
 import RedisWrapper from "../redis"
 import env from "../../environment"
+import { getRedisConnectionDetails } from "../utils"
 import { randomUUID } from "crypto"
 
 jest.setTimeout(30000)
+
+const redisPassword = "budibase"
+const redisUsername = "default"
+let redisHost: string
+let redisPort: number
 
 describe("redis", () => {
   let redis: RedisWrapper
@@ -12,15 +18,20 @@ describe("redis", () => {
 
   beforeAll(async () => {
     container = await new GenericContainer("redis")
+      .withCommand(["redis-server", "--requirepass", redisPassword])
       .withExposedPorts(6379)
       .start()
 
+    redisHost = container.getHost()
+    redisPort = container.getMappedPort(6379)
+
     env._set(
       "REDIS_URL",
-      `${container.getHost()}:${container.getMappedPort(6379)}`
+      `redis://${redisUsername}:${redisPassword}@${redisHost}:${redisPort}`
     )
     env._set("MOCK_REDIS", 0)
-    env._set("REDIS_PASSWORD", 0)
+    env._set("REDIS_PASSWORD", "")
+    env._set("REDIS_USERNAME", "")
   })
 
   afterAll(async () => {
@@ -35,6 +46,19 @@ describe("redis", () => {
 
   afterEach(async () => {
     await redis.finish()
+  })
+
+  describe("connection details", () => {
+    it("reads username and password from URL", () => {
+      const details = getRedisConnectionDetails()
+
+      expect(details).toEqual({
+        host: redisHost,
+        password: redisPassword,
+        username: redisUsername,
+        port: redisPort,
+      })
+    })
   })
 
   describe("store", () => {

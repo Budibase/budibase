@@ -4,6 +4,7 @@ const pro = {
   features: {
     ...actual.features,
     isSSOEnforced: jest.fn(),
+    isTranslationsEnabled: jest.fn(() => Promise.resolve(true)),
   },
   licensing: {
     keys: {

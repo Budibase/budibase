@@ -7,8 +7,10 @@
     clientAppsStore,
     licensing,
     organisation,
+    translations,
   } from "@/stores/portal"
   import type { EnrichedApp } from "@/types"
+  import type { User } from "@budibase/types"
   import {
     ActionMenu,
     Body,
@@ -26,7 +28,7 @@
     ProfileModal,
     UserAvatar,
   } from "@budibase/frontend-core"
-  import { helpers, sdk } from "@budibase/shared-core"
+  import { helpers, sdk, resolveTranslationGroup } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import type { PublishedWorkspaceData } from "@budibase/types"
   import { goto } from "@roxi/routify"
@@ -63,11 +65,39 @@
 
   onMount(async () => {
     try {
-      await clientAppsStore.load()
+      await Promise.all([clientAppsStore.load(), translations.init()])
     } catch (error) {
       notifications.error("Error loading apps")
     }
     loaded = true
+  })
+
+  $: translationOverrides = (() => {
+    if (!$translations.loaded) {
+      return {}
+    }
+    const locale = $translations.config.defaultLocale
+    return $translations.config.locales[locale]?.overrides ?? {}
+  })()
+
+  $: portalLabels = resolveTranslationGroup("portal", translationOverrides)
+  $: profileLabels = resolveTranslationGroup(
+    "profileModal",
+    translationOverrides
+  )
+  $: passwordLabels = resolveTranslationGroup(
+    "passwordModal",
+    translationOverrides
+  )
+  $: menuLabels = resolveTranslationGroup("userMenu", translationOverrides)
+
+  $: currentUser = $auth.user as User | undefined
+  $: greetingText = processStringSync(portalLabels.greeting, {
+    name: currentUser ? helpers.getUserLabel(currentUser) : "",
+  })
+
+  $: introText = processStringSync(portalLabels.intro, {
+    company: $organisation.company || "Budibase",
   })
 </script>
 
@@ -87,7 +117,7 @@
                 icon="user-circle-gear"
                 on:click={() => userInfoModal.show()}
               >
-                My profile
+                {menuLabels.profile}
               </MenuItem>
               <MenuItem
                 icon="lock"
@@ -101,38 +131,33 @@
                   }
                 }}
               >
-                Update password
+                {menuLabels.password}
               </MenuItem>
               {#if sdk.users.hasBuilderPermissions($auth.user)}
                 <MenuItem icon="user-gear" on:click={() => $goto("/builder")}>
-                  Open developer mode
+                  {menuLabels.portal}
                 </MenuItem>
               {/if}
-              <MenuItem icon="sign-out" on:click={logout}>Log out</MenuItem>
+              <MenuItem icon="sign-out" on:click={logout}
+                >{menuLabels.logout}</MenuItem
+              >
             </ActionMenu>
           </div>
           <Layout noPadding gap="XS">
-            <Heading size="M">
-              Hey {helpers.getUserLabel($auth.user)}
-            </Heading>
-            <Body>
-              Welcome to the {$organisation.company} portal. Below you'll find the
-              list of apps that you have access to.
-            </Body>
+            <Heading size="M">{greetingText}</Heading>
+            <Body>{introText}</Body>
           </Layout>
           <Divider />
           {#if $licensing.errUserLimit}
             <div>
               <Layout gap="S" justifyItems="center">
                 <img class="spaceman" alt="spaceman" src={Spaceman} />
-                <Heading size="M">
-                  {"Your apps are currently offline."}
-                </Heading>
-                Please contact the account holder to get them back online.
+                <Heading size="M">{portalLabels.offlineHeading}</Heading>
+                {portalLabels.offlineDescription}
               </Layout>
             </div>
           {:else if userApps.length}
-            <Heading>Apps</Heading>
+            <Heading>{portalLabels.appsHeading}</Heading>
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each userApps as app (app.appId)}
@@ -150,16 +175,13 @@
                       <Heading size="XS">{app.name}</Heading>
                       <Body size="S">
                         {#if app.updatedAt}
-                          {processStringSync(
-                            "Updated {{ duration time 'millisecond' }} ago",
-                            {
-                              time:
-                                new Date().getTime() -
-                                new Date(app.updatedAt).getTime(),
-                            }
-                          )}
+                          {processStringSync(portalLabels.updatedAgo, {
+                            time:
+                              new Date().getTime() -
+                              new Date(app.updatedAt).getTime(),
+                          })}
                         {:else}
-                          Never updated
+                          {portalLabels.neverUpdated}
                         {/if}
                       </Body>
                     </div>
@@ -170,10 +192,8 @@
             </div>
           {:else}
             <Layout gap="XS" noPadding>
-              <Heading size="S">You don't have access to any apps yet.</Heading>
-              <Body size="S">
-                The apps you have access to will be listed here.
-              </Body>
+              <Heading size="S">{portalLabels.noAppsHeading}</Heading>
+              <Body size="S">{portalLabels.noAppsDescription}</Body>
             </Layout>
           {/if}
         </Layout>
@@ -181,13 +201,19 @@
     </Page>
   </div>
   <Modal bind:this={userInfoModal}>
-    <ProfileModal {API} user={$auth.user} on:save={() => auth.getSelf()} />
+    <ProfileModal
+      {API}
+      user={$auth.user}
+      on:save={() => auth.getSelf()}
+      labels={profileLabels}
+    />
   </Modal>
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal
       {API}
       passwordMinLength={$admin.passwordMinLength}
       on:save={() => auth.getSelf()}
+      labels={passwordLabels}
     />
   </Modal>
 {/if}
