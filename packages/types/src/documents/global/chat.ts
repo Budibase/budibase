@@ -27,6 +27,10 @@ export type CreateChatConversationRequest = Pick<
   "chatAppId" | "agentId" | "title"
 >
 
+export type DraftChatConversation = Omit<ChatConversationRequest, "agentId"> & {
+  agentId?: string
+}
+
 export interface ChatConversation extends ChatConversationRequest {
   userId: string
 }

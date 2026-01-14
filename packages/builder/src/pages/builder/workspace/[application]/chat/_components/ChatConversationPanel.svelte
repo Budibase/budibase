@@ -1,19 +1,10 @@
 <script lang="ts">
   import { Body, Button, Icon, ProgressCircle } from "@budibase/bbui"
-  import type {
-    ChatConversation,
-    ChatConversationRequest,
-  } from "@budibase/types"
+  import type { ChatConversation, DraftChatConversation } from "@budibase/types"
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import { createEventDispatcher } from "svelte"
 
-  type ChatConversationWithAgent = ChatConversation & { agentId?: string }
-  type ChatConversationRequestWithAgent = ChatConversationRequest & {
-    agentId?: string
-  }
-  type ChatConversationLike =
-    | ChatConversationWithAgent
-    | ChatConversationRequestWithAgent
+  type ChatConversationLike = ChatConversation | DraftChatConversation
 
   type EnabledAgentListItem = {
     agentId: string

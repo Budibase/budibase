@@ -1,23 +1,15 @@
 <script lang="ts">
   import { agentsStore, chatAppsStore } from "@/stores/portal"
   import { notifications } from "@budibase/bbui"
-  import type {
-    ChatConversation,
-    ChatConversationRequest,
-  } from "@budibase/types"
+  import type { ChatConversation, DraftChatConversation } from "@budibase/types"
   import { onMount } from "svelte"
 
   import ChatConversationPanel from "./ChatConversationPanel.svelte"
   import ChatNavigationPanel from "./ChatNavigationPanel.svelte"
 
-  type ChatConversationRequestWithAgent = ChatConversationRequest & {
-    agentId?: string
-  }
-  type ChatConversationLike =
-    | ChatConversation
-    | ChatConversationRequestWithAgent
+  type ChatConversationLike = ChatConversation | DraftChatConversation
 
-  const INITIAL_CHAT: Omit<ChatConversationRequestWithAgent, "_id" | "_rev"> = {
+  const INITIAL_CHAT: Omit<DraftChatConversation, "_id" | "_rev"> = {
     title: "",
     messages: [],
     chatAppId: "",

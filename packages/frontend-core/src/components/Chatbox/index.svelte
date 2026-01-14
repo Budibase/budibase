@@ -1,9 +1,6 @@
 <script lang="ts">
   import { MarkdownViewer, notifications } from "@budibase/bbui"
-  import type {
-    ChatConversation,
-    ChatConversationRequest,
-  } from "@budibase/types"
+  import type { ChatConversation, DraftChatConversation } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
@@ -22,13 +19,7 @@
       }
     },
   })
-  type ChatConversationWithAgent = ChatConversation & { agentId?: string }
-  type ChatConversationRequestWithAgent = ChatConversationRequest & {
-    agentId?: string
-  }
-  type ChatConversationLike =
-    | ChatConversationWithAgent
-    | ChatConversationRequestWithAgent
+  type ChatConversationLike = ChatConversation | DraftChatConversation
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
