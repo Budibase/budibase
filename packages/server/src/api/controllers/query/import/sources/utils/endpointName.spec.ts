@@ -17,7 +17,7 @@ describe("buildEndpointName", () => {
     expect(name).toBe("getCompany")
   })
 
-  it("uses the GitHub summary when the operationId is complex", () => {
+  it("uses the GitHub operationId when it contains a '/' but is otherwise simple", () => {
     const operation = {
       operationId: "repos/list",
       summary: "List organization repositories",
