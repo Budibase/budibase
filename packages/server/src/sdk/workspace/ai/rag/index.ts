@@ -328,6 +328,7 @@ export const ingestAgentFile = async (
   if (chunks.length === 0) {
     const embeddingDimensions = await getEmbeddingDimensions(config)
     const vectorDb = getVectorDb(config, embeddingDimensions)
+    // This will ensure any existing chunks for the source are removed
     await vectorDb.upsertSourceChunks(agentFile.ragSourceId, [])
     return { inserted: 0, total: 0 }
   }
