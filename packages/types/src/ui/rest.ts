@@ -85,18 +85,21 @@ export type RestTemplateName =
   | "Workable"
   | "X"
   | HubSpotRestTemplateName
+  | MicrosoftSharepointRestTemplateName
   | TwilioRestTemplateName
   | ZendeskRestTemplateName
   | RocketChatRestTemplateName
 
 export type RestTemplateGroupName =
   | "HubSpot"
+  | "Microsoft SharePoint"
   | "Rocket.Chat"
   | "Twilio"
   | "Zendesk"
 
 export type RestTemplateGroups = {
   HubSpot: HubSpotRestTemplateName
+  "Microsoft SharePoint": MicrosoftSharepointRestTemplateName
   Twilio: TwilioRestTemplateName
   Zendesk: ZendeskRestTemplateName
   "Rocket.Chat": RocketChatRestTemplateName
@@ -246,6 +249,11 @@ export type TwilioRestTemplateName =
   | "Twilio Wireless"
 
 export type ZendeskRestTemplateName = "Sunshine Conversations"
+
+export type MicrosoftSharepointRestTemplateName =
+  | "SharePoint Drives"
+  | "SharePoint Shares"
+  | "SharePoint Sites"
 
 export type RocketChatRestTemplateName =
   | "Rocket.Chat Authentication"
