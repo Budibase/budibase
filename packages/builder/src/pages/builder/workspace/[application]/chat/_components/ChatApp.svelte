@@ -46,9 +46,6 @@
   $: enabledAgents = chatApp?.enabledAgents || []
   $: conversationHistory = $chatAppsStore.conversations || []
 
-  const getFirstEnabledAgentId = (agentsList: EnabledAgent[]) =>
-    agentsList[0]?.agentId || null
-
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
 
@@ -140,8 +137,7 @@
   }
 
   const selectChat = async (selectedChat: ChatConversationWithAgent) => {
-    const resolvedAgentId =
-      selectedChat.agentId || getFirstEnabledAgentId(enabledAgents)
+    const resolvedAgentId = selectedChat.agentId
     if (!resolvedAgentId) {
       return
     }
