@@ -174,6 +174,7 @@
     if (!scrollContainer || !loadTrigger) {
       return
     }
+    observer?.disconnect()
     if (!observer) {
       observer = new IntersectionObserver(handleIntersect, {
         root: scrollContainer,
@@ -181,7 +182,6 @@
         threshold: 0.1,
       })
     }
-    observer.disconnect()
     observer.observe(loadTrigger)
   }
 
@@ -196,11 +196,9 @@
     }
   })
 
-  $: if (activeGroup && observer) {
-    observer.disconnect()
-  }
-
-  $: if (!activeGroup && loadTrigger) {
+  $: if (activeGroup) {
+    observer?.disconnect()
+  } else if (loadTrigger) {
     ensureObserver()
   }
 </script>

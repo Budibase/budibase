@@ -56,7 +56,7 @@ const isVersionSegment = (segment: string): boolean => {
 }
 
 const isPathParamSegment = (segment: string): boolean => {
-  return segment.startsWith("{") && segment.endsWith("}")
+  return /^\{[^{}]+\}$/.test(segment)
 }
 
 const humanizeSegment = (segment: string): string => {
