@@ -54,6 +54,7 @@ import LocalizelyLogo from "assets/rest-template-icons/localizely.svg"
 import LogisticsosLogo from "assets/rest-template-icons/logisticsos.svg"
 import MastercardLogo from "assets/rest-template-icons/mastercard.svg"
 import MeasureoneLogo from "assets/rest-template-icons/measureone.svg"
+import MicrosoftSharepointLogo from "assets/rest-template-icons/microsoft-sharepoint.svg"
 import MicrosoftTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
 import NanonetsLogo from "assets/rest-template-icons/nanonets.svg"
 import NotionLogo from "assets/rest-template-icons/notion.svg"
@@ -64,6 +65,7 @@ import PodiumLogo from "assets/rest-template-icons/podium.svg"
 import RemoteLogo from "assets/rest-template-icons/remote.svg"
 import ResendLogo from "assets/rest-template-icons/resend.svg"
 import RiveryLogo from "assets/rest-template-icons/rivery.svg"
+import RocketChatLogo from "assets/rest-template-icons/rocketchat.svg"
 import SageLogo from "assets/rest-template-icons/sage.svg"
 import SecodaLogo from "assets/rest-template-icons/secoda.svg"
 import ShipengineLogo from "assets/rest-template-icons/shipengine.svg"
@@ -501,6 +503,175 @@ const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
         {
           version: "17.2.1",
           url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/zendesk/sunshine-conversations/openapi.yaml",
+        },
+      ],
+    },
+  ],
+}
+
+const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePoint"> =
+  {
+    name: "Microsoft SharePoint",
+    icon: MicrosoftSharepointLogo,
+    verified: true,
+    description:
+      "Microsoft Graph SharePoint APIs for sites, drives, and shared items.",
+    templates: [
+      {
+        name: "SharePoint Sites",
+        description: "SharePoint sites, lists, and content types.",
+        specs: [
+          {
+            version: "v1.0",
+            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/sites/openapi.yaml",
+          },
+        ],
+      },
+      {
+        name: "SharePoint Drives",
+        description: "Drive items and file operations for SharePoint.",
+        specs: [
+          {
+            version: "v1.0",
+            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/drives/openapi.yaml",
+          },
+        ],
+      },
+      {
+        name: "SharePoint Shares",
+        description: "Shared items and sharing operations for SharePoint.",
+        specs: [
+          {
+            version: "v1.0",
+            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/shares/openapi.yaml",
+          },
+        ],
+      },
+    ],
+  }
+const rocketChatRestTemplateGroup: RestTemplateGroup<"Rocket.Chat"> = {
+  name: "Rocket.Chat",
+  icon: RocketChatLogo,
+  verified: true,
+  description: "Open source team chat and omnichannel messaging platform APIs.",
+  templates: [
+    {
+      name: "Rocket.Chat Authentication",
+      description: "Login, user auth, and session management endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/authentication.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Content Management",
+      description: "Content management and moderation endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/content-management.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Integrations",
+      description: "Incoming and outgoing integrations and webhooks.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/integrations.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Marketplace Apps",
+      description: "Marketplace app discovery, install, and management.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/marketplace-apps.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Messaging",
+      description: "Messages, threads, reactions, and uploads.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/messaging.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Miscellaneous",
+      description: "Utility and miscellaneous endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/miscellaneous.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Notifications",
+      description: "Push, email, and notification endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/notifications.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Omnichannel",
+      description: "Livechat, visitor, and omnichannel routing endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/omnichannel.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Rooms",
+      description: "Rooms, channels, and groups management endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/rooms.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Settings",
+      description: "Server settings and configuration endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/settings.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat Statistics",
+      description: "Analytics and usage reporting endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/statistics.yaml",
+        },
+      ],
+    },
+    {
+      name: "Rocket.Chat User Management",
+      description: "User, role, and permission management endpoints.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/RocketChat/Rocket.Chat-Open-API/main/user-management.yaml",
         },
       ],
     },
@@ -1430,7 +1601,12 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: XLogo,
     },
   ],
-  templateGroups: [twilioRestTemplateGroup, zendeskRestTemplateGroup],
+  templateGroups: [
+    microsoftSharepointRestTemplateGroup,
+    rocketChatRestTemplateGroup,
+    twilioRestTemplateGroup,
+    zendeskRestTemplateGroup,
+  ],
 }
 
 export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
