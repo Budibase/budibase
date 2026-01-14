@@ -144,8 +144,6 @@
         validBindingSet.add(binding.readableBinding)
       }
     }
-      (bindings || []).map(b => b.readableBinding).filter(Boolean)
-    )
   }
 
   /**
