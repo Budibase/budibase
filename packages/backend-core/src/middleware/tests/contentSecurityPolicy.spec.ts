@@ -23,6 +23,7 @@ jest.mock("../../environment", () => ({
     isWorker: () => false,
     isApps: () => false,
     isQA: () => false,
+    LOG_LEVEL: "info",
     CUSTOM_CSP_MEDIA_SRC: undefined,
     CUSTOM_CSP_SCRIPT_SRC: undefined,
     CUSTOM_CSP_CONNECT_SRC: undefined,
