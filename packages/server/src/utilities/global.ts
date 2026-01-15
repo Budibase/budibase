@@ -39,7 +39,7 @@ export async function processUser(
   if (workspaceId && user?.userGroups?.length) {
     groupList = opts.groups
       ? opts.groups
-      : await groups.getBulk(user.userGroups)
+      : await groups.getBulk(user.userGroups, { enriched: false })
   }
   // check if a group provides builder access
   const builderAppIds = await groups.getGroupBuilderAppIds(user, {
