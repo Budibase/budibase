@@ -30,25 +30,24 @@ export async function htmlToPdf(el: HTMLElement, opts: PDFOptions = {}) {
       fileName += ".pdf"
     }
 
-    let worker = html2pdf()
-      .set({
-        margin: userOpts.marginPt,
-        filename: fileName,
-        image: { type: "jpeg", quality: 0.95 },
-        html2canvas: { dpi: 192, scale: 2, useCORS: true },
-        jsPDF: {
-          orientation: userOpts.orientation,
-          unit: "pt",
-          format: "a4",
-        },
-        // @ts-expect-error: this is not properly typed in the library
-        pagebreak: { avoid: ".no-break" },
+    // Config
+    const options = {
+      margin: userOpts.marginPt,
+      filename: fileName,
+      image: { type: "jpeg" as "jpeg", quality: 0.95 },
+      html2canvas: { dpi: 192, scale: 2, useCORS: true },
+      jsPDF: {
+        orientation: userOpts.orientation,
+        unit: "pt",
+        format: "a4",
+      },
+      pagebreak: { avoid: ".no-break" },
 
-        // Custom params
-        htmlScale: userOpts.htmlScale,
-      })
-      .from(el)
-      .toPdf()
+      // Custom params
+      htmlScale: userOpts.htmlScale,
+    }
+
+    let worker = html2pdf().set(options).from(el).toPdf()
 
     // Add footer if required
     if (opts.footer) {
