@@ -4,6 +4,7 @@ import {
   events,
   HTTPError,
   redis,
+  utils,
 } from "@budibase/backend-core"
 import { Datasource, Query } from "@budibase/types"
 import { generateQueryID } from "../../../../db/utils"
@@ -23,7 +24,7 @@ interface ImportResult {
 
 type ImporterInput = { data: string } | { url: string }
 
-const OPENAPI_INFO_CACHE_TTL_DAYS = 7
+const OPENAPI_INFO_CACHE_TTL_DAYS = 28
 const SOURCE_FACTORIES: Record<string, () => ImportSource> = {
   "openapi2.0": () => new OpenAPI2(),
   "openapi3.0": () => new OpenAPI3(),
@@ -97,13 +98,15 @@ export async function getImportInfo(
   const client = await redis.clients.getOpenapiImportInfoClient()
   const cachedInfo = await client.get(infoCacheKey)
   if (cachedInfo) {
-    return cachedInfo as ImportInfo
+    const inflated = await utils.gunzipFromBase64(cachedInfo as string)
+    return JSON.parse(inflated) as ImportInfo
   }
   const importer = await createImporter(input)
   const info = importer.getInfo()
+  const encoded = await utils.gzipToBase64(JSON.stringify(info))
   await client.store(
     infoCacheKey,
-    info,
+    encoded,
     cache.TTL.ONE_DAY * OPENAPI_INFO_CACHE_TTL_DAYS
   )
   return info
