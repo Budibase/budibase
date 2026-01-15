@@ -92,7 +92,7 @@ export async function getImportInfo(
 
 async function urlToSpecs(url: string): Promise<string> {
   const cacheKey = `${buildCacheKey({ url })}:urlSpecs`
-  const cachedValue = await cache.get(cacheKey)
+  const cachedValue = await cache.get(cacheKey, { useTenancy: false })
   if (cachedValue) {
     if (typeof cachedValue === "string") {
       return cachedValue
@@ -100,7 +100,9 @@ async function urlToSpecs(url: string): Promise<string> {
     return JSON.stringify(cachedValue)
   }
   const result = await fetchFromUrl(url)
-  await cache.store(cacheKey, result, cache.TTL.ONE_DAY * 7)
+  await cache.store(cacheKey, result, cache.TTL.ONE_DAY * 7, {
+    useTenancy: false,
+  })
   return result
 }
 
@@ -120,14 +122,17 @@ export async function createImporter(
   }
 
   const importerTypeCacheKey = `${buildCacheKey({ data })}:type`
-  const cachedType = await cache.get(importerTypeCacheKey)
+  const cachedType = await cache.get(importerTypeCacheKey, {
+    useTenancy: false,
+  })
 
   const result = await RestImporter.init(data, cachedType)
   if (!cachedType) {
     await cache.store(
       importerTypeCacheKey,
       result.getSource().getImportSource(),
-      cache.TTL.ONE_DAY * 200
+      cache.TTL.ONE_DAY * 200,
+      { useTenancy: false }
     )
   }
 
