@@ -16,6 +16,13 @@ jest.mock("../../cache", () => ({
 jest.mock("../../environment", () => ({
   __esModule: true,
   default: {
+    isDev: () => false,
+    isProd: () => true,
+    isTest: () => true,
+    isJest: () => true,
+    isWorker: () => false,
+    isApps: () => false,
+    isQA: () => false,
     CUSTOM_CSP_MEDIA_SRC: undefined,
     CUSTOM_CSP_SCRIPT_SRC: undefined,
     CUSTOM_CSP_CONNECT_SRC: undefined,
