@@ -29,6 +29,83 @@ env:
   IS_OSS_CONTRIBUTOR: ${{ inputs.run_as_oss == true || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase') }}
 
 jobs:
+  determine-affected:
+    runs-on: ubuntu-24.04
+    outputs:
+      server: ${{ steps.affected.outputs.server }}
+      worker: ${{ steps.affected.outputs.worker }}
+      builder: ${{ steps.affected.outputs.builder }}
+      libraries: ${{ steps.affected.outputs.libraries }}
+      test_libraries: ${{ steps.affected.outputs.test_libraries }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+      - run: yarn --frozen-lockfile
+
+      - name: Determine affected projects
+        id: affected
+        shell: bash
+        run: |
+          if ! ${{ env.ONLY_AFFECTED_TASKS }}; then
+            echo "server=true" >> "$GITHUB_OUTPUT"
+            echo "worker=true" >> "$GITHUB_OUTPUT"
+            echo "builder=true" >> "$GITHUB_OUTPUT"
+            echo "libraries=true" >> "$GITHUB_OUTPUT"
+            echo "test_libraries=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          AFFECTED=$(yarn --silent nx show projects --affected --base=${{ env.NX_BASE_BRANCH }} | tr -d '\r')
+          echo "Affected projects:"
+          echo "$AFFECTED"
+
+          server=false
+          worker=false
+          builder=false
+          libraries=false
+
+          while read -r project; do
+            if [ -z "$project" ]; then
+              continue
+            fi
+
+            case "$project" in
+              "@budibase/server")
+                server=true
+                ;;
+              "@budibase/worker")
+                worker=true
+                ;;
+              "@budibase/builder")
+                builder=true
+                ;;
+              "@budibase/upgrade-tests")
+                ;;
+              *)
+                libraries=true
+                ;;
+            esac
+          done <<< "$AFFECTED"
+
+          test_libraries=false
+          if [ "$libraries" = "true" ] || [ "$builder" = "true" ]; then
+            test_libraries=true
+          fi
+
+          echo "server=$server" >> "$GITHUB_OUTPUT"
+          echo "worker=$worker" >> "$GITHUB_OUTPUT"
+          echo "builder=$builder" >> "$GITHUB_OUTPUT"
+          echo "libraries=$libraries" >> "$GITHUB_OUTPUT"
+          echo "test_libraries=$test_libraries" >> "$GITHUB_OUTPUT"
+
   lint:
     runs-on: ubuntu-24.04
     steps:
@@ -88,6 +165,8 @@ jobs:
       - run: cd charts/budibase && helm lint .
 
   test-libraries:
+    needs: determine-affected
+    if: needs.determine-affected.outputs.test_libraries == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
@@ -122,6 +201,8 @@ jobs:
           fi
 
   test-worker:
+    needs: determine-affected
+    if: needs.determine-affected.outputs.worker == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
@@ -151,6 +232,8 @@ jobs:
           yarn test --verbose --reporters=default --reporters=github-actions
 
   test-server:
+    needs: determine-affected
+    if: needs.determine-affected.outputs.server == 'true'
     runs-on: ubuntu-24.04
     strategy:
       matrix:
