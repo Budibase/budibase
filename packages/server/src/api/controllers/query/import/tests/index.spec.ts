@@ -104,6 +104,10 @@ describe("Rest Importer", () => {
     await config.init()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   let restImporter: RestImporter
 
   const init = async (data: string) => {
