@@ -93,12 +93,14 @@ const CSP_DIRECTIVES = {
 
 const CSPDomainRegex = /^[A-Za-z0-9-*:/.]+$/
 
+type CSPDirectives = Record<string, string[]>
+
 export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   const nonce = crypto.randomBytes(16).toString("base64")
   ctx.state.nonce = nonce
-  let directives = { ...CSP_DIRECTIVES }
+  let directives: CSPDirectives = { ...CSP_DIRECTIVES }
   directives["script-src"] = [
-    ...CSP_DIRECTIVES["script-src"],
+    ...(CSP_DIRECTIVES["script-src"] as string[]),
     `'nonce-${nonce}'`,
   ]
 
@@ -118,8 +120,8 @@ export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
         .split(",")
         .map(d => d.trim())
         .filter(d => CSPDomainRegex.test(d))
-      directives[directive as keyof typeof directives] = [
-        ...(directives[directive as keyof typeof directives] || []),
+      directives[directive] = [
+        ...(directives[directive] || []),
         ...parsedDomains,
       ]
     }
@@ -150,8 +152,8 @@ export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
           ]
 
           for (const directive of directivesToUpdate) {
-            directives[directive as keyof typeof directives] = [
-              ...(directives[directive as keyof typeof directives] || []),
+            directives[directive] = [
+              ...(directives[directive] || []),
               ...inclusions,
             ]
           }
