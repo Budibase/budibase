@@ -137,7 +137,6 @@ export async function createImporter(
   }
 
   let cachedType: string | undefined
-
   const importerTypeCacheKey = cacheKeyBase && `${cacheKeyBase}:type`
   if (importerTypeCacheKey) {
     const client = await redis.clients.getOpenapiImportSpecsClient()
