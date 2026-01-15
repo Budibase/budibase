@@ -264,7 +264,7 @@ export interface RestTemplate {
   description: string
   specs: RestTemplateSpec[]
   icon: string
-  actionsCount: number
+  operationsCount: number
   verified?: true
 }
 
@@ -272,7 +272,7 @@ export interface RestTemplateWithoutIcon<Name> {
   name: Name
   description: string
   specs: RestTemplateSpec[]
-  actionsCount: number
+  operationsCount: number
 }
 
 export interface RestTemplateGroup<
@@ -281,7 +281,7 @@ export interface RestTemplateGroup<
   name: TemplateGroupName
   description: string
   icon: string
-  actionsCount: number
+  operationsCount: number
   verified?: true
   templates: RestTemplateWithoutIcon<RestTemplateGroups[TemplateGroupName]>[]
 }
