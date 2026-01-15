@@ -1,4 +1,3 @@
-// @ts-ignore
 import html2pdf from "html2pdf.js"
 
 export const pxToPt = (px: number) => (px / 4) * 3
@@ -31,28 +30,29 @@ export async function htmlToPdf(el: HTMLElement, opts: PDFOptions = {}) {
       fileName += ".pdf"
     }
 
-    // Config
-    const options = {
-      margin: userOpts.marginPt,
-      filename: fileName,
-      image: { type: "jpeg", quality: 0.95 },
-      html2canvas: { dpi: 192, scale: 2, useCORS: true },
-      jsPDF: {
-        orientation: userOpts.orientation,
-        unit: "pt",
-        format: "a4",
-      },
-      pagebreak: { avoid: ".no-break" },
+    let worker = html2pdf()
+      .set({
+        margin: userOpts.marginPt,
+        filename: fileName,
+        image: { type: "jpeg", quality: 0.95 },
+        html2canvas: { dpi: 192, scale: 2, useCORS: true },
+        jsPDF: {
+          orientation: userOpts.orientation,
+          unit: "pt",
+          format: "a4",
+        },
+        // @ts-expect-error: this is not properly typed in the library
+        pagebreak: { avoid: ".no-break" },
 
-      // Custom params
-      htmlScale: userOpts.htmlScale,
-    }
-
-    let worker = html2pdf().set(options).from(el).toPdf()
+        // Custom params
+        htmlScale: userOpts.htmlScale,
+      })
+      .from(el)
+      .toPdf()
 
     // Add footer if required
     if (opts.footer) {
-      worker = worker.get("pdf").then((pdf: any) => {
+      worker.get("pdf").then(pdf => {
         const totalPages = pdf.internal.getNumberOfPages()
         for (let i = 1; i <= totalPages; i++) {
           pdf.setPage(i)
