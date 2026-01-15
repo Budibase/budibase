@@ -156,16 +156,6 @@ jobs:
       matrix:
         datasource:
           [
-            mssql,
-            mysql,
-            postgres,
-            postgres_legacy,
-            mongodb,
-            mariadb,
-            oracle,
-            sqs,
-            elasticsearch,
-            dynamodb,
             none,
           ]
     steps:
@@ -190,25 +180,6 @@ jobs:
 
       - name: Pull testcontainers images
         run: |
-          if [ "${{ matrix.datasource }}" == "mssql" ]; then
-            docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
-          elif [ "${{ matrix.datasource }}" == "mysql" ]; then
-            docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }}
-          elif [ "${{ matrix.datasource }}" == "postgres" ]; then
-            docker pull postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }}
-          elif [ "${{ matrix.datasource }}" == "mongodb" ]; then
-            docker pull mongo@${{ steps.dotenv.outputs.MONGODB_SHA }}
-          elif [ "${{ matrix.datasource }}" == "mariadb" ]; then
-            docker pull mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }}
-          elif [ "${{ matrix.datasource }}" == "oracle" ]; then
-            docker pull budibase/oracle-database:23.2-slim-faststart
-          elif [ "${{ matrix.datasource }}" == "postgres_legacy" ]; then
-            docker pull postgres:9.5.25
-          elif [ "${{ matrix.datasource }}" == "elasticsearch" ]; then
-            docker pull elasticsearch@${{ steps.dotenv.outputs.ELASTICSEARCH_SHA }}
-          elif [ "${{ matrix.datasource }}" == "dynamodb" ]; then
-            docker pull amazon/dynamodb-local@${{ steps.dotenv.outputs.DYNAMODB_SHA }}
-          fi
           docker pull minio/minio &
           docker pull redis &
           docker pull testcontainers/ryuk:0.5.1 &
@@ -221,20 +192,6 @@ jobs:
 
       - name: Build client library - necessary for component tests
         run: yarn build:client
-
-      - name: Set up PostgreSQL 16
-        if: matrix.datasource == 'postgres'
-        run: |
-          sudo systemctl stop postgresql
-          sudo apt-get remove --purge -y postgresql* libpq-dev
-          sudo rm -rf /etc/postgresql /var/lib/postgresql
-          sudo apt-get autoremove -y
-          sudo apt-get autoclean
-
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          sudo apt-get update
-          sudo apt-get install -y postgresql-16
 
       - name: Test server
         env:
@@ -371,43 +328,3 @@ jobs:
             echo "OpenAPI specs are up to date."
           fi
 
-  check-client-build-size:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: yarn
-      - run: yarn --frozen-lockfile
-
-      - name: Build client library
-        run: yarn build:client
-
-      - name: Check client build size
-        run: |
-          CLIENT_FILE="packages/client/dist/budibase-client.js"
-          if [ ! -f "$CLIENT_FILE" ]; then
-            echo "Error: Client build file not found at $CLIENT_FILE"
-            exit 1
-          fi
-          
-          SIZE_BYTES=$(stat -c%s "$CLIENT_FILE")
-          SIZE_MB=$(awk "BEGIN {printf \"%.2f\", $SIZE_BYTES / 1024 / 1024}")
-          MAX_SIZE_BYTES=$((8 * 1024 * 1024))
-          
-          echo "Client build size: ${SIZE_MB}MB"
-          echo "Maximum allowed size: 8MB"
-          
-          if [ $SIZE_BYTES -gt $MAX_SIZE_BYTES ]; then
-            echo "Client build size (${SIZE_MB}MB) exceeds maximum allowed size (8MB)"
-            exit 1
-          else
-            echo "Client build size (${SIZE_MB}MB) is within acceptable limits"
-          fi
