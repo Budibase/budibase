@@ -17,6 +17,7 @@ import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
 import ServiceNowLogo from "assets/rest-template-icons/servicenow.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
+import SplunkLogo from "assets/rest-template-icons/splunk.svg"
 import StripeLogo from "assets/rest-template-icons/stripe.svg"
 import TwilioLogo from "assets/rest-template-icons/twilio.svg"
 import VirusTotalLogo from "assets/rest-template-icons/virustotal.svg"
@@ -86,7 +87,6 @@ import VoltIOLogo from "assets/rest-template-icons/volt-io.svg"
 import WorkableLogo from "assets/rest-template-icons/workable.svg"
 import XLogo from "assets/rest-template-icons/x.svg"
 import ZendeskLogo from "assets/rest-template-icons/zendesk.svg"
-import serviceNowSpecData from "assets/rest-template-specs/servicenow.yaml?raw"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
@@ -1621,6 +1621,49 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
     ],
   }
 
+const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
+  name: "Splunk",
+  icon: SplunkLogo,
+  verified: true,
+  description:
+    "Official OpenAPI specifications for Splunk Cloud and Splunk Enterprise Security.",
+  templates: [
+    {
+      name: "Splunk Admin Config Service",
+      description:
+        "Admin Config Service (ACS) APIs for Splunk Cloud Platform.",
+      specs: [
+        {
+          version: "v2",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/splunk/admin-config-service/openapi.json",
+        },
+      ],
+    },
+    {
+      name: "Splunk Enterprise Security",
+      description:
+        "Enterprise Security API for managing detection and response data.",
+      specs: [
+        {
+          version: "8.2.1",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/splunk/enterprise-security/openapi.json",
+        },
+      ],
+    },
+    {
+      name: "Splunk Mission Control Automation",
+      description:
+        "Mission Control Automation API for SOAR playbook integrations.",
+      specs: [
+        {
+          version: "3.1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/splunk/mission-control-automation/openapi.json",
+        },
+      ],
+    },
+  ],
+}
+
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
@@ -1758,7 +1801,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "1.0.0",
-          data: serviceNowSpecData,
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/servicenow/openapi.yaml",
         },
       ],
       icon: ServiceNowLogo,
@@ -2548,6 +2591,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templateGroups: [
     hubspotRestTemplateGroup,
     microsoftSharepointRestTemplateGroup,
+    splunkRestTemplateGroup,
     twilioRestTemplateGroup,
     zendeskRestTemplateGroup,
   ],
