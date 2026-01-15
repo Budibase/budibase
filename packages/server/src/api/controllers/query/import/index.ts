@@ -1,4 +1,10 @@
-import { cache, context, events, HTTPError } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  events,
+  HTTPError,
+  redis,
+} from "@budibase/backend-core"
 import { Datasource, Query } from "@budibase/types"
 import { generateQueryID } from "../../../../db/utils"
 import { queryValidation } from "../validation"
@@ -87,17 +93,18 @@ export async function getImportInfo(
   input: { data: string } | { url: string }
 ): Promise<ImportInfo> {
   const infoCacheKey = `${buildCacheKey(input)}:info`
-  const cachedInfo = await cache.get(infoCacheKey, { useTenancy: false })
+
+  const client = await redis.clients.getOpenapiImportInfoClient()
+  const cachedInfo = await client.get(infoCacheKey)
   if (cachedInfo) {
     return cachedInfo as ImportInfo
   }
   const importer = await createImporter(input)
   const info = importer.getInfo()
-  await cache.store(
+  await client.store(
     infoCacheKey,
     info,
-    cache.TTL.ONE_DAY * OPENAPI_INFO_CACHE_TTL_DAYS,
-    { useTenancy: false }
+    cache.TTL.ONE_DAY * OPENAPI_INFO_CACHE_TTL_DAYS
   )
   return info
 }

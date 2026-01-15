@@ -5,6 +5,7 @@ let userClient: Client,
   sessionClient: Client,
   workspaceClient: Client,
   cacheClient: Client,
+  openapiImportInfoClient: Client,
   writethroughClient: Client,
   lockClient: Client,
   socketClient: Client,
@@ -17,6 +18,10 @@ export async function init() {
   sessionClient = await Client.init(utils.Databases.SESSIONS)
   workspaceClient = await Client.init(utils.Databases.WORKSPACE_METADATA)
   cacheClient = await Client.init(utils.Databases.GENERIC_CACHE)
+  openapiImportInfoClient = await Client.init(
+    utils.Databases.OPENAPI_IMPORT_INFO,
+    utils.SelectableDatabase.OPENAPI_IMPORT_INFO
+  )
   lockClient = await Client.init(utils.Databases.LOCKS)
   writethroughClient = await Client.init(utils.Databases.WRITE_THROUGH)
   inviteClient = await Client.init(utils.Databases.INVITATIONS)
@@ -33,6 +38,7 @@ export async function shutdown() {
   await sessionClient?.finish()
   await workspaceClient?.finish()
   await cacheClient?.finish()
+  await openapiImportInfoClient?.finish()
   await writethroughClient?.finish()
   await lockClient?.finish()
   await inviteClient?.finish()
@@ -71,6 +77,13 @@ export async function getCacheClient() {
     await init()
   }
   return cacheClient
+}
+
+export async function getOpenapiImportInfoClient() {
+  if (!openapiImportInfoClient) {
+    await init()
+  }
+  return openapiImportInfoClient
 }
 
 export async function getWritethroughClient() {
