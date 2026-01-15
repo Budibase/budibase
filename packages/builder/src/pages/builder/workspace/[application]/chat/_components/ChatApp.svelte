@@ -31,7 +31,6 @@
 
   let chat: ChatConversationLike = { ...INITIAL_CHAT }
   let deletingChat: boolean = false
-  let initializedWorkspaceId: string | null = null
 
   // Local selection state for display and chat drafting.
   // Synced with `agentsStore.currentAgentId` so external changes (e.g. settings)
@@ -58,26 +57,6 @@
       name: getAgentName(agent.agentId),
     }))
     .filter(agent => Boolean(agent.name))
-
-  const initChatApp = async (nextWorkspaceId: string) => {
-    if (!nextWorkspaceId || initializedWorkspaceId === nextWorkspaceId) {
-      return
-    }
-
-    // Switching applications/workspaces: clear any stale chat state first.
-    initializedWorkspaceId = nextWorkspaceId
-    selectedAgentId = null
-    lastObservedAgentId = null
-    chat = { ...INITIAL_CHAT }
-    chatAppsStore.reset()
-    await agentsStore.selectAgent(undefined)
-
-    await chatAppsStore.initConversations({ workspaceId: nextWorkspaceId })
-  }
-
-  $: if (workspaceId) {
-    initChatApp(workspaceId)
-  }
 
   $: storeAgentId = $agentsStore.currentAgentId || null
   $: if (storeAgentId !== lastObservedAgentId) {
@@ -237,6 +216,10 @@
 
   onMount(async () => {
     await agentsStore.init()
+
+    if (workspaceId) {
+      await chatAppsStore.initConversations({ workspaceId })
+    }
   })
 </script>
 
