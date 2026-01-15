@@ -137,8 +137,16 @@ export const generateAgentToolSourceID = () => {
   return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
 }
 
+export const generateAgentFileID = (agentId: string) => {
+  return `${DocumentType.AGENT_FILE}${SEPARATOR}${agentId}${SEPARATOR}${newid()}`
+}
+
 export const generateAIConfigID = () => {
   return `${DocumentType.AI_CONFIG}${SEPARATOR}${newid()}`
+}
+
+export const generateRagConfigID = () => {
+  return `${DocumentType.RAG_CONFIG}${SEPARATOR}${newid()}`
 }
 
 export const generateWorkspaceAppID = () => {
@@ -147,4 +155,8 @@ export const generateWorkspaceAppID = () => {
 
 export const generateWorkspaceFavouriteID = () => {
   return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
+}
+
+export const generateVectorDbID = () => {
+  return `${DocumentType.VECTOR_STORE}${SEPARATOR}${newid()}`
 }

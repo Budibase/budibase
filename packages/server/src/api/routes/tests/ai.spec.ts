@@ -21,6 +21,7 @@ import {
   ProviderConfig,
   RelationshipType,
   WebSearchProvider,
+  AIConfigType,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
@@ -506,6 +507,7 @@ describe("BudibaseAI", () => {
       apiKey: "sk-test-key",
       isDefault: true,
       liteLLMModelId: "",
+      configType: AIConfigType.COMPLETIONS,
     }
 
     beforeEach(async () => {
@@ -733,6 +735,127 @@ describe("BudibaseAI", () => {
           .tryGet<CustomAIProviderConfig>(created._id!)
       })
       expect(storedConfig?.webSearchConfig?.apiKey).toBe(webSearchApiKey)
+    })
+  })
+
+  describe("embedding provider configs", () => {
+    const defaultEmbeddingRequest = {
+      name: "Embeddings Config",
+      provider: "OpenAI",
+      baseUrl: "https://api.openai.com",
+      model: "text-embedding-3-large",
+      apiKey: "sk-test-key",
+      isDefault: true,
+      liteLLMModelId: "",
+      configType: AIConfigType.EMBEDDINGS,
+    }
+
+    beforeEach(async () => {
+      await config.newTenant()
+      nock.cleanAll()
+    })
+
+    it("creates an embedding config", async () => {
+      const embeddingValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+        .post("/v1/embeddings")
+        .reply(200, { data: [] })
+
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "embed-key-1", key: "embed-secret-1" })
+        .post("/model/new")
+        .reply(200, { model_id: "embed-model-1" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultEmbeddingRequest,
+      })
+      expect(created._id).toBeDefined()
+      expect(created.liteLLMModelId).toBe("embed-model-1")
+      expect(created.apiKey).toBe(PASSWORD_REPLACEMENT)
+      expect(creationScope.isDone()).toBe(true)
+      expect(embeddingValidationScope.isDone()).toBe(true)
+
+      const configs = await config.api.ai.fetchConfigs()
+      expect(
+        configs.filter(c => c.configType === AIConfigType.EMBEDDINGS)
+      ).toHaveLength(1)
+    })
+
+    it("updates an embedding config", async () => {
+      const creationValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+        .post("/v1/embeddings")
+        .reply(200, { data: [] })
+
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
+        .post("/model/new")
+        .reply(200, { model_id: "embed-model-2" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultEmbeddingRequest,
+        name: "Semantic Search",
+      })
+      expect(creationScope.isDone()).toBe(true)
+      expect(creationValidationScope.isDone()).toBe(true)
+
+      const updateValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+        .post("/v1/embeddings")
+        .reply(200, { data: [] })
+
+      const updateScope = nock(environment.LITELLM_URL)
+        .patch(`/model/${created.liteLLMModelId}/update`)
+        .reply(200, { status: "success" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const updated = await config.api.ai.updateConfig({
+        ...created,
+        name: "Updated Embeddings",
+      })
+      expect(updateScope.isDone()).toBe(true)
+      expect(updateValidationScope.isDone()).toBe(true)
+      expect(updated.name).toBe("Updated Embeddings")
+    })
+
+    it("deletes an embedding config and syncs LiteLLM models", async () => {
+      const creationValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+        .post("/v1/embeddings")
+        .reply(200, { data: [] })
+
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "embed-key-3", key: "embed-secret-3" })
+        .post("/model/new")
+        .reply(200, { model_id: "embed-model-3" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultEmbeddingRequest,
+      })
+      expect(creationScope.isDone()).toBe(true)
+      expect(creationValidationScope.isDone()).toBe(true)
+
+      const deleteScope = nock(environment.LITELLM_URL)
+        .post("/key/update", body => {
+          expect(body).toMatchObject({ models: [] })
+          return true
+        })
+        .reply(200, { status: "success" })
+
+      const { deleted } = await config.api.ai.deleteConfig(created._id!)
+      expect(deleted).toBe(true)
+      expect(deleteScope.isDone()).toBe(true)
+
+      const configsResponse = await config.api.ai.fetchConfigs()
+      expect(
+        configsResponse.filter(c => c.configType === AIConfigType.EMBEDDINGS)
+      ).toHaveLength(0)
     })
   })
 

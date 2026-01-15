@@ -1,5 +1,6 @@
 import {
   Agent,
+  AgentFile,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
@@ -30,3 +31,11 @@ export type CreateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<Agent, "createdAt" | "updatedAt">
 export type UpdateAgentResponse = Agent
+
+export interface FetchAgentFilesResponse {
+  files: AgentFile[]
+}
+
+export interface AgentFileUploadResponse {
+  file: AgentFile
+}
