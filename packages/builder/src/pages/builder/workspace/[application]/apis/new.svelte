@@ -466,9 +466,7 @@
       </div>
     </div>
 
-    {#if normalizedTemplateSearch &&
-      !verifiedTemplateOptions.length &&
-      !unverifiedTemplateOptions.length}
+    {#if normalizedTemplateSearch && !verifiedTemplateOptions.length && !unverifiedTemplateOptions.length}
       <p class="empty-state">No templates match your search.</p>
     {/if}
 
