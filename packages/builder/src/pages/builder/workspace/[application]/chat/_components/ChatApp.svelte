@@ -25,8 +25,6 @@
     agentId: "",
   }
 
-  type EnabledAgent = { agentId: string }
-
   export let workspaceId: string
 
   let chat: ChatConversationLike = { ...INITIAL_CHAT }
