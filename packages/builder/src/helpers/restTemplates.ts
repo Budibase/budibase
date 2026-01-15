@@ -39,10 +39,7 @@ export const getRestTemplateImportInfoRequest = (
   if (spec.url) {
     payload.url = spec.url
   }
-  if (spec.data) {
-    payload.data = spec.data
-  }
-  if (!payload.url && !payload.data) {
+  if (!payload.url) {
     return undefined
   }
   return payload

@@ -1,7 +1,6 @@
 export interface RestTemplateSpec {
   version: string
   url?: string
-  data?: string
 }
 
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]

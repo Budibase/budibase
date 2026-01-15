@@ -294,9 +294,6 @@
       if (pendingSpec.url) {
         importBody.url = pendingSpec.url
       }
-      if (pendingSpec.data) {
-        importBody.data = pendingSpec.data
-      }
       const importResult = await queries.importQueries(importBody)
 
       await Promise.all([datasources.fetch(), queries.fetch()])
