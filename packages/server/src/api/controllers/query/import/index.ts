@@ -138,15 +138,12 @@ export async function createImporter(
 
   let cachedType: string | undefined
 
-  const importerTypeCacheKey = cachedType && `${cacheKeyBase}:type`
+  const importerTypeCacheKey = cacheKeyBase && `${cacheKeyBase}:type`
   if (importerTypeCacheKey) {
     const client = await redis.clients.getOpenapiImportSpecsClient()
     cachedType = await client.get(importerTypeCacheKey)
   }
-  const importer = await RestImporter.init(
-    data,
-    cachedType as string | undefined
-  )
+  const importer = await RestImporter.init(data, cachedType)
 
   if (!cachedType && importerTypeCacheKey) {
     const client = await redis.clients.getOpenapiImportSpecsClient()
