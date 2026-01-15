@@ -30,7 +30,7 @@ export enum Databases {
   BPM_EVENTS = "bpmEvents",
   DOC_WRITE_THROUGH = "docWriteThrough",
   RECAPTCHA_SESSION = "recaptchaSession",
-  OPENAPI_IMPORT_INFO = "openapiImportInfo",
+  OPENAPI_IMPORT_SPECS = "openapiImportSpecs",
 }
 
 /**
@@ -46,7 +46,7 @@ export enum SelectableDatabase {
   DEFAULT = 0,
   SOCKET_IO = 1,
   RATE_LIMITING = 2,
-  OPENAPI_IMPORT_INFO = 3,
+  OPENAPI_IMPORT_SPECS = 3,
   UNUSED_3 = 4,
   UNUSED_4 = 5,
   UNUSED_5 = 6,
