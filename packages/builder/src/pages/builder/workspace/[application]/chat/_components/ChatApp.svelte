@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { agentsStore, chatAppsStore } from "@/stores/portal"
+  import {
+    agentsStore,
+    chatAppsStore,
+    currentChatApp,
+    currentConversations,
+  } from "@/stores/portal"
   import { notifications } from "@budibase/bbui"
   import type {
     ChatConversation,
@@ -21,7 +26,6 @@
   }
 
   type EnabledAgent = { agentId: string }
-  type ChatAppState = { chatApp?: { enabledAgents?: EnabledAgent[] } }
 
   export let workspaceId: string
 
@@ -37,9 +41,9 @@
   let lastObservedAgentId: string | null = null
 
   $: agents = $agentsStore.agents || []
-  $: chatApp = ($chatAppsStore as ChatAppState).chatApp
+  $: chatApp = $currentChatApp
   $: enabledAgents = chatApp?.enabledAgents || []
-  $: conversationHistory = $chatAppsStore.conversations || []
+  $: conversationHistory = $currentConversations
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
@@ -165,7 +169,7 @@
 
     try {
       await chatAppsStore.removeConversation(chat._id, $chatAppsStore.chatAppId)
-      const remainingConversations = $chatAppsStore.conversations
+      const remainingConversations = $currentConversations
       if (remainingConversations.length) {
         const [nextChat] = remainingConversations
         await selectChat(nextChat)

@@ -1,21 +1,21 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import { ChatApp, ChatConversation } from "@budibase/types"
-import { get } from "svelte/store"
+import { derived, get } from "svelte/store"
 
 interface ChatAppsStoreState {
-  conversations: ChatConversation[]
   chatAppId?: string
-  chatApp?: ChatApp
+  chatAppsById: Record<string, ChatApp>
+  conversationsByAppId: Record<string, ChatConversation[]>
   currentConversationId?: string
 }
 
 export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
   constructor() {
     super({
-      conversations: [],
       chatAppId: undefined,
-      chatApp: undefined,
+      chatAppsById: {},
+      conversationsByAppId: {},
       currentConversationId: undefined,
     })
   }
@@ -43,9 +43,9 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 
   reset = () => {
     this.update(state => {
-      state.conversations = []
       state.chatAppId = undefined
-      state.chatApp = undefined
+      state.chatAppsById = {}
+      state.conversationsByAppId = {}
       state.currentConversationId = undefined
       return state
     })
@@ -62,7 +62,12 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 
     let chatApp = await API.fetchChatApp(workspaceId)
 
-    if (!chatApp?._id) {
+    if (!chatApp) {
+      return null
+    }
+
+    const chatAppId = chatApp._id
+    if (!chatAppId) {
       return null
     }
 
@@ -71,13 +76,17 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
         agent => agent.agentId === agentId
       )
       if (!isEnabled) {
-        chatApp = await API.setChatAppAgent(chatApp._id, agentId)
+        chatApp = await API.setChatAppAgent(chatAppId, agentId)
       }
     }
 
+    if (!chatApp) {
+      return null
+    }
+
     this.update(state => {
-      state.chatAppId = chatApp._id
-      state.chatApp = chatApp
+      state.chatAppId = chatAppId
+      state.chatAppsById[chatAppId] = chatApp
       return state
     })
 
@@ -85,8 +94,8 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
   }
 
   updateEnabledAgents = async (enabledAgents: ChatApp["enabledAgents"]) => {
-    const chatAppId = get(this.store).chatAppId
-    const chatApp = get(this.store).chatApp
+    const { chatAppId, chatAppsById } = get(this.store)
+    const chatApp = chatAppId ? chatAppsById[chatAppId] : undefined
     if (!chatAppId || !chatApp) {
       return null
     }
@@ -97,7 +106,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     })
 
     this.update(state => {
-      state.chatApp = updated
+      state.chatAppsById[chatAppId] = updated
       return state
     })
 
@@ -107,16 +116,12 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
   fetchConversations = async (chatAppId?: string) => {
     const targetChatAppId = chatAppId || get(this.store).chatAppId
     if (!targetChatAppId) {
-      this.update(state => {
-        state.conversations = []
-        return state
-      })
       return []
     }
 
     const conversations = await API.fetchChatHistory(targetChatAppId)
     this.update(state => {
-      state.conversations = conversations
+      state.conversationsByAppId[targetChatAppId] = conversations
       return state
     })
     return conversations
@@ -166,3 +171,11 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 }
 
 export const chatAppsStore = new ChatAppsStore()
+
+export const currentChatApp = derived(chatAppsStore, state =>
+  state.chatAppId ? state.chatAppsById[state.chatAppId] : undefined
+)
+
+export const currentConversations = derived(chatAppsStore, state =>
+  state.chatAppId ? state.conversationsByAppId[state.chatAppId] || [] : []
+)

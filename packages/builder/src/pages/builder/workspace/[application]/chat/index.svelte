@@ -1,6 +1,6 @@
 <script lang="ts">
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, chatAppsStore } from "@/stores/portal"
+  import { agentsStore, chatAppsStore, currentChatApp } from "@/stores/portal"
   import { notifications } from "@budibase/bbui"
   import { params } from "@roxi/routify"
 
@@ -8,10 +8,9 @@
   import ChatSettingsPanel from "./_components/ChatSettingsPanel.svelte"
 
   type EnabledAgent = { agentId: string }
-  type ChatAppState = { chatApp?: { enabledAgents?: EnabledAgent[] } }
 
   $: namedAgents = agents.filter(agent => Boolean(agent?.name))
-  $: chatApp = ($chatAppsStore as ChatAppState).chatApp
+  $: chatApp = $currentChatApp
   $: enabledAgents = chatApp?.enabledAgents || []
 
   $: agents = [...$agentsStore.agents].sort((a, b) =>
