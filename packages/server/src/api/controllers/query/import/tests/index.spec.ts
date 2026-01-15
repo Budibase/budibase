@@ -1,11 +1,22 @@
-let cacheStore: Record<string, any> = {}
-let openapiImportSpecsStore: Record<string, any> = {}
-let openapiImportSpecsClient = {
-  get: jest.fn((key: string) => openapiImportSpecsStore[key]),
-  store: jest.fn((key: string, value: string) => {
-    openapiImportSpecsStore[key] = value
-  }),
+class ImporterCacheMocks {
+  cacheStore: Record<string, any> = {}
+  openapiImportSpecsStore: Record<string, any> = {}
+  openapiImportSpecsClient = {
+    get: jest.fn((key: string) => this.openapiImportSpecsStore[key]),
+    store: jest.fn((key: string, value: string) => {
+      this.openapiImportSpecsStore[key] = value
+    }),
+  }
+
+  reset() {
+    this.cacheStore = {}
+    this.openapiImportSpecsStore = {}
+    this.openapiImportSpecsClient.get.mockClear()
+    this.openapiImportSpecsClient.store.mockClear()
+  }
 }
+
+let cacheMocks = new ImporterCacheMocks()
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -13,9 +24,9 @@ jest.mock("@budibase/backend-core", () => {
     ...actual,
     cache: {
       ...actual.cache,
-      get: jest.fn().mockImplementation(key => cacheStore[key]),
+      get: jest.fn().mockImplementation(key => cacheMocks.cacheStore[key]),
       store: jest.fn().mockImplementation((key, value) => {
-        cacheStore[key] = value
+        cacheMocks.cacheStore[key] = value
       }),
     },
     redis: {
@@ -24,7 +35,9 @@ jest.mock("@budibase/backend-core", () => {
         ...actual.redis.clients,
         getOpenapiImportSpecsClient: jest
           .fn()
-          .mockImplementation(() => Promise.resolve(openapiImportSpecsClient)),
+          .mockImplementation(() =>
+            Promise.resolve(cacheMocks.openapiImportSpecsClient)
+          ),
       },
     },
   }
@@ -757,11 +770,7 @@ describe("Importer caching", () => {
 
   beforeEach(() => {
     nock.cleanAll()
-    openapiImportSpecsClient.get.mockClear()
-    openapiImportSpecsClient.store.mockClear()
-
-    cacheStore = {}
-    openapiImportSpecsStore = {}
+    cacheMocks.reset()
   })
 
   afterAll(() => {
@@ -776,12 +785,14 @@ describe("Importer caching", () => {
     await createImporter({ url: specUrl })
 
     expect(scope.isDone()).toBe(true)
-    const specStoreCalls = openapiImportSpecsClient.store.mock.calls.filter(
-      ([key]) => key.endsWith(":specs")
-    )
-    const typeStoreCalls = openapiImportSpecsClient.store.mock.calls.filter(
-      ([key]) => key.endsWith(":type")
-    )
+    const specStoreCalls =
+      cacheMocks.openapiImportSpecsClient.store.mock.calls.filter(([key]) =>
+        key.endsWith(":specs")
+      )
+    const typeStoreCalls =
+      cacheMocks.openapiImportSpecsClient.store.mock.calls.filter(([key]) =>
+        key.endsWith(":type")
+      )
     expect(specStoreCalls).toHaveLength(1)
     expect(typeStoreCalls).toHaveLength(1)
     const specKey = specStoreCalls[0][0]
@@ -805,9 +816,10 @@ describe("Importer caching", () => {
 
     await createImporter({ data: spec })
 
-    const typeStoreCalls = openapiImportSpecsClient.store.mock.calls.filter(
-      ([key]) => key.endsWith(":type")
-    )
+    const typeStoreCalls =
+      cacheMocks.openapiImportSpecsClient.store.mock.calls.filter(([key]) =>
+        key.endsWith(":type")
+      )
     expect(typeStoreCalls).toHaveLength(0)
   })
 })
