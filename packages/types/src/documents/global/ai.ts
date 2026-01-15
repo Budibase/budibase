@@ -1,5 +1,10 @@
 import { Document, WebSearchConfig } from "../../"
 
+export enum AIConfigType {
+  COMPLETIONS = "completions",
+  EMBEDDINGS = "embeddings",
+}
+
 export interface CustomAIProviderConfig extends Document {
   name: string
   provider: string
@@ -9,4 +14,5 @@ export interface CustomAIProviderConfig extends Document {
   apiKey?: string
   liteLLMModelId: string
   webSearchConfig?: WebSearchConfig
+  configType: AIConfigType
 }

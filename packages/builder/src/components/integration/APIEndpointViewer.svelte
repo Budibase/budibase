@@ -427,7 +427,7 @@
         id:
           metadata.operationId ||
           `${method.toLowerCase()}::${metadata.originalPath}`,
-        name: metadata.operationId || query.name,
+        name: query.name || metadata.operationId || "",
         method,
         path: metadata.originalPath || "",
         description: metadata.description || "",

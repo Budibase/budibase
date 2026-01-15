@@ -1,6 +1,8 @@
 import {
+  AgentFileUploadResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  FetchAgentFilesResponse,
   FetchAgentsResponse,
   ToolMetadata,
   UpdateAgentRequest,
@@ -15,9 +17,26 @@ export interface AgentEndpoints {
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
+  fetchAgentFiles: (agentId: string) => Promise<FetchAgentFilesResponse>
+  uploadAgentFile: (
+    agentId: string,
+    file: File
+  ) => Promise<AgentFileUploadResponse>
+  deleteAgentFile: (
+    agentId: string,
+    fileId: string
+  ) => Promise<{ deleted: true }>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
+  fetchTools: async (aiconfigId?: string) => {
+    const query = aiconfigId
+      ? `?aiconfigId=${encodeURIComponent(aiconfigId)}`
+      : ""
+    return await API.get({
+      url: `/api/agent/tools${query}`,
+    })
+  },
   fetchAgents: async () => {
     return await API.get({
       url: "/api/agent",
@@ -44,12 +63,25 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchTools: async (aiconfigId?: string) => {
-    const query = aiconfigId
-      ? `?aiconfigId=${encodeURIComponent(aiconfigId)}`
-      : ""
+  fetchAgentFiles: async (agentId: string) => {
     return await API.get({
-      url: `/api/agent/tools${query}`,
+      url: `/api/agent/${agentId}/files`,
+    })
+  },
+
+  uploadAgentFile: async (agentId: string, file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    return await API.post<FormData, AgentFileUploadResponse>({
+      url: `/api/agent/${agentId}/files`,
+      body: formData,
+      json: false,
+    })
+  },
+
+  deleteAgentFile: async (agentId: string, fileId: string) => {
+    return await API.delete({
+      url: `/api/agent/${agentId}/files/${fileId}`,
     })
   },
 })

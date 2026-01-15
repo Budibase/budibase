@@ -260,7 +260,8 @@
 
 <style>
   .spectrum-Dialog--large {
-    width: 720px;
+    width: 920px;
+    max-width: 94vw;
     min-height: 360px;
     max-height: 540px;
     height: auto;
