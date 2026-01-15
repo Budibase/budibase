@@ -36,7 +36,6 @@ jobs:
       worker: ${{ steps.affected.outputs.worker }}
       builder: ${{ steps.affected.outputs.builder }}
       libraries: ${{ steps.affected.outputs.libraries }}
-      test_libraries: ${{ steps.affected.outputs.test_libraries }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -59,7 +58,6 @@ jobs:
             echo "worker=true" >> "$GITHUB_OUTPUT"
             echo "builder=true" >> "$GITHUB_OUTPUT"
             echo "libraries=true" >> "$GITHUB_OUTPUT"
-            echo "test_libraries=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -94,7 +92,6 @@ jobs:
           echo "worker=$worker" >> "$GITHUB_OUTPUT"
           echo "builder=$builder" >> "$GITHUB_OUTPUT"
           echo "libraries=$libraries" >> "$GITHUB_OUTPUT"
-          echo "test_libraries=$test_libraries" >> "$GITHUB_OUTPUT"
 
   lint:
     runs-on: ubuntu-24.04
@@ -156,7 +153,7 @@ jobs:
 
   test-libraries:
     needs: determine-affected
-    if: needs.determine-affected.outputs.test_libraries == 'true'
+    if: needs.determine-affected.outputs.libraries == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
