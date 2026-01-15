@@ -1630,8 +1630,7 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
   templates: [
     {
       name: "Splunk Admin Config Service",
-      description:
-        "Admin Config Service (ACS) APIs for Splunk Cloud Platform.",
+      description: "Admin Config Service (ACS) APIs for Splunk Cloud Platform.",
       specs: [
         {
           version: "v2",
