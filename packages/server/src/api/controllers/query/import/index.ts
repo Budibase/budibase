@@ -17,6 +17,7 @@ interface ImportResult {
 
 type ImporterInput = { data: string } | { url: string }
 
+const OPENAPI_INFO_CACHE_TTL_DAYS = 7
 const SOURCE_FACTORIES: Record<string, () => ImportSource> = {
   "openapi2.0": () => new OpenAPI2(),
   "openapi3.0": () => new OpenAPI3(),
@@ -85,25 +86,24 @@ async function fetchFromUrl(url: string): Promise<string> {
 export async function getImportInfo(
   input: { data: string } | { url: string }
 ): Promise<ImportInfo> {
+  const infoCacheKey = `${buildCacheKey(input)}:info`
+  const cachedInfo = await cache.get(infoCacheKey, { useTenancy: false })
+  if (cachedInfo) {
+    return cachedInfo as ImportInfo
+  }
   const importer = await createImporter(input)
   const info = importer.getInfo()
+  await cache.store(
+    infoCacheKey,
+    info,
+    cache.TTL.ONE_DAY * OPENAPI_INFO_CACHE_TTL_DAYS,
+    { useTenancy: false }
+  )
   return info
 }
 
 async function urlToSpecs(url: string): Promise<string> {
-  const cacheKey = `${buildCacheKey({ url })}:urlSpecs`
-  const cachedValue = await cache.get(cacheKey, { useTenancy: false })
-  if (cachedValue) {
-    if (typeof cachedValue === "string") {
-      return cachedValue
-    }
-    return JSON.stringify(cachedValue)
-  }
-  const result = await fetchFromUrl(url)
-  await cache.store(cacheKey, result, cache.TTL.ONE_DAY * 7, {
-    useTenancy: false,
-  })
-  return result
+  return await fetchFromUrl(url)
 }
 
 export async function createImporter(
@@ -121,22 +121,7 @@ export async function createImporter(
     throw new HTTPError("Import data or url is required", 400)
   }
 
-  const importerTypeCacheKey = `${buildCacheKey({ data })}:type`
-  const cachedType = await cache.get(importerTypeCacheKey, {
-    useTenancy: false,
-  })
-
-  const result = await RestImporter.init(data, cachedType)
-  if (!cachedType) {
-    await cache.store(
-      importerTypeCacheKey,
-      result.getSource().getImportSource(),
-      cache.TTL.ONE_DAY * 200,
-      { useTenancy: false }
-    )
-  }
-
-  return result
+  return await RestImporter.init(data)
 }
 
 export class RestImporter {
