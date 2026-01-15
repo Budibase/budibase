@@ -70,7 +70,7 @@ jobs:
           server=false
           worker=false
           builder=false
-          libraries=false
+          libraries=true
 
           while read -r project; do
             if [ -z "$project" ]; then
@@ -87,18 +87,8 @@ jobs:
               "@budibase/builder")
                 builder=true
                 ;;
-              "@budibase/upgrade-tests")
-                ;;
-              *)
-                libraries=true
-                ;;
             esac
           done <<< "$AFFECTED"
-
-          test_libraries=false
-          if [ "$libraries" = "true" ] || [ "$builder" = "true" ]; then
-            test_libraries=true
-          fi
 
           echo "server=$server" >> "$GITHUB_OUTPUT"
           echo "worker=$worker" >> "$GITHUB_OUTPUT"
