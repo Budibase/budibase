@@ -10,7 +10,7 @@
   export let min = 0
   export let max = 100
   export let step = 1
-  export let value: number | undefined = undefined
+  export let defValue: number | undefined = undefined
   export let disabled = false
   export let readonly = false
   export let validation: UIFieldValidationRule[] | undefined
@@ -72,7 +72,7 @@
     return val
   }
 
-  $: defaultValue = clampValue(value != null ? parseValue(value) : min)
+  $: defaultValue = clampValue(defValue != null ? parseValue(defValue) : min)
 
   $: sliderValue = fieldState
     ? clampValue(parseValue(fieldState.value ?? defaultValue))
@@ -87,6 +87,8 @@
       onChange({ value: nextValue })
     }
   }
+
+  console.log({ min, lowerBound, max, upperBound, step, defValue })
 </script>
 
 <Field
@@ -131,6 +133,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    min-height: 25px;
   }
 
   .slider {

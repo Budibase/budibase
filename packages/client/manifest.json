@@ -9144,22 +9144,25 @@
       {
         "type": "number",
         "label": "Minimum",
-        "key": "min"
+        "key": "min",
+        "defaultValue": 0
       },
       {
         "type": "number",
         "label": "Maximum",
-        "key": "max"
+        "key": "max",
+        "defaultValue": 100
       },
       {
         "type": "number",
         "label": "Step",
-        "key": "step"
+        "key": "step",
+        "defaultValue": 1
       },
       {
         "type": "number",
-        "label": "Value",
-        "key": "value"
+        "label": "Default value",
+        "key": "defValue"
       },
       {
         "type": "boolean",
