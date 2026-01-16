@@ -1,9 +1,55 @@
+class ImporterCacheMocks {
+  cacheStore: Record<string, any> = {}
+  openapiImportSpecsStore: Record<string, any> = {}
+  openapiImportSpecsClient = {
+    get: jest.fn((key: string) => this.openapiImportSpecsStore[key]),
+    store: jest.fn((key: string, value: string) => {
+      this.openapiImportSpecsStore[key] = value
+    }),
+  }
+
+  reset() {
+    this.cacheStore = {}
+    this.openapiImportSpecsStore = {}
+    this.openapiImportSpecsClient.get.mockClear()
+    this.openapiImportSpecsClient.store.mockClear()
+  }
+}
+
+let cacheMocks = new ImporterCacheMocks()
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    cache: {
+      ...actual.cache,
+      get: jest.fn().mockImplementation(key => cacheMocks.cacheStore[key]),
+      store: jest.fn().mockImplementation((key, value) => {
+        cacheMocks.cacheStore[key] = value
+      }),
+    },
+    redis: {
+      ...actual.redis,
+      clients: {
+        ...actual.redis.clients,
+        getOpenapiImportSpecsClient: jest
+          .fn()
+          .mockImplementation(() =>
+            Promise.resolve(cacheMocks.openapiImportSpecsClient)
+          ),
+      },
+    },
+  }
+})
+
 import { events } from "@budibase/backend-core"
+import nock from "nock"
 import { BodyType, Datasource, SourceName } from "@budibase/types"
 import fs from "fs"
 import path from "path"
 import TestConfig from "../../../../../tests/utilities/TestConfiguration"
-import { RestImporter } from "../index"
+import { RestImporter, createImporter, getImportInfo } from "../index"
 
 type Assertions = Record<
   DatasetKey,
@@ -58,11 +104,14 @@ describe("Rest Importer", () => {
     await config.init()
   })
 
+  afterAll(() => {
+    config.end()
+  })
+
   let restImporter: RestImporter
 
   const init = async (data: string) => {
-    restImporter = new RestImporter(data)
-    await restImporter.init()
+    restImporter = await RestImporter.init(data)
   }
 
   const runTest = async (
@@ -86,7 +135,7 @@ describe("Rest Importer", () => {
     assertions: Assertions
   ) => {
     await init(data)
-    const info = await restImporter.getInfo()
+    const info = restImporter.getInfo()
     expect(info.name).toBe(assertions[key].name)
     if (assertions[key].endpoints != null) {
       expect(info.endpoints.length).toBe(assertions[key].endpoints)
@@ -289,7 +338,7 @@ describe("Rest Importer", () => {
   it("imports only the selected endpoint", async () => {
     const dataset = oapi3CrudJson
     await init(dataset)
-    const info = await restImporter.getInfo()
+    const info = restImporter.getInfo()
     const endpoint = info.endpoints[0]
     const datasource = await config.createDatasource()
     const importResult = await config.doInContext(config.devWorkspaceId, () =>
@@ -301,7 +350,7 @@ describe("Rest Importer", () => {
     expect(events.query.imported).toHaveBeenCalledTimes(1)
     expect(events.query.imported).toHaveBeenCalledWith(
       datasource,
-      restImporter.source.getImportSource(),
+      restImporter.getSource().getImportSource(),
       1
     )
     jest.clearAllMocks()
@@ -574,8 +623,10 @@ describe("Rest Importer", () => {
 
     await init(JSON.stringify(openapiWithServerVariables))
     const staticVariables = restImporter.getStaticServerVariables()
+    const info = restImporter.getInfo()
 
     expect(staticVariables).toEqual({ companyDomain: "acme" })
+    expect(info.staticVariables).toEqual(staticVariables)
   })
 
   const openapiWithHeaderSecurity = {
@@ -667,7 +718,7 @@ describe("Rest Importer", () => {
 
   it("exposes security headers via importer info", async () => {
     await init(JSON.stringify(openapiWithHeaderSecurity))
-    const info = await restImporter.getInfo()
+    const info = restImporter.getInfo()
     expect(info.securityHeaders).toEqual(["X-Apikey"])
   })
 
@@ -690,5 +741,89 @@ describe("Rest Importer", () => {
     expect(query.fields.path).toBe("{{baseUrl}}/items")
 
     jest.clearAllMocks()
+  })
+})
+
+describe("Importer caching", () => {
+  const specUrl = "https://example.com/spec.json"
+
+  const buildMinimalOpenApiSpec = () =>
+    JSON.stringify({
+      openapi: "3.0.0",
+      info: { title: "Cache test" },
+      paths: {
+        "/users": {
+          get: {
+            responses: {
+              "200": {
+                description: "ok",
+              },
+            },
+          },
+        },
+      },
+    })
+
+  const mockSpecRequest = (spec: string, url: string, times = 1) => {
+    const parsed = new URL(url)
+    return nock(`${parsed.protocol}//${parsed.host}`)
+      .get(parsed.pathname + (parsed.search || ""))
+      .times(times)
+      .reply(200, spec)
+  }
+
+  beforeEach(() => {
+    nock.cleanAll()
+    cacheMocks.reset()
+  })
+
+  afterAll(() => {
+    nock.cleanAll()
+  })
+
+  it("caches fetched specs for url imports", async () => {
+    const spec = buildMinimalOpenApiSpec()
+    const scope = mockSpecRequest(spec, specUrl, 1)
+
+    await createImporter({ url: specUrl })
+    await createImporter({ url: specUrl })
+
+    expect(scope.isDone()).toBe(true)
+    const specStoreCalls =
+      cacheMocks.openapiImportSpecsClient.store.mock.calls.filter(([key]) =>
+        key.endsWith(":specs")
+      )
+    const typeStoreCalls =
+      cacheMocks.openapiImportSpecsClient.store.mock.calls.filter(([key]) =>
+        key.endsWith(":type")
+      )
+    expect(specStoreCalls).toHaveLength(1)
+    expect(typeStoreCalls).toHaveLength(1)
+    const specKey = specStoreCalls[0][0]
+    const typeKey = typeStoreCalls[0][0]
+    expect(specKey.replace(":specs", "")).toBe(typeKey.replace(":type", ""))
+  })
+
+  it("recomputes import info from cached specs", async () => {
+    const spec = buildMinimalOpenApiSpec()
+    const scope = mockSpecRequest(spec, specUrl, 1)
+
+    const first = await getImportInfo({ url: specUrl })
+    const second = await getImportInfo({ url: specUrl })
+
+    expect(first).toEqual(second)
+    expect(scope.isDone()).toBe(true)
+  })
+
+  it("does not cache importer type for data imports", async () => {
+    const spec = buildMinimalOpenApiSpec()
+
+    await createImporter({ data: spec })
+
+    const typeStoreCalls =
+      cacheMocks.openapiImportSpecsClient.store.mock.calls.filter(([key]) =>
+        key.endsWith(":type")
+      )
+    expect(typeStoreCalls).toHaveLength(0)
   })
 })
