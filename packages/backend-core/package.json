@@ -39,7 +39,7 @@
     "@budibase/pouchdb-replication-stream": "1.2.11",
     "@budibase/shared-core": "*",
     "@budibase/types": "*",
-    "@techpass/passport-openidconnect": "0.3.3",
+    "@govtechsg/passport-openidconnect": "1.0.3",
     "aws-cloudfront-sign": "3.0.2",
     "aws-sdk": "2.1692.0",
     "bcrypt": "5.1.0",
