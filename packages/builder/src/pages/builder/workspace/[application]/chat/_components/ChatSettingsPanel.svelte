@@ -7,12 +7,36 @@
     name?: string
   }
 
+  type EnabledAgent = {
+    agentId: string
+    default?: boolean
+  }
+
   export let namedAgents: NamedAgent[] = []
+  export let enabledAgents: EnabledAgent[] = []
   export let isAgentAvailable: (_agentId: string) => boolean
   export let handleAvailabilityToggle: (
     _agentId: string,
     _enabled: boolean
   ) => void
+
+  $: agentList = namedAgents
+    .filter(agent => agent._id)
+    .map(agent => ({
+      agentId: agent._id!,
+      name: agent.name,
+      default: enabledAgents.find(enabled => enabled.agentId === agent._id)
+        ?.default,
+    }))
+
+  $: enabledAgentList = agentList.filter(agent =>
+    isAgentAvailable(agent.agentId)
+  )
+  $: resolvedDefaultAgent =
+    enabledAgentList.find(agent => agent.default) || enabledAgentList[0]
+  $: otherAgents = agentList.filter(
+    agent => agent.agentId !== resolvedDefaultAgent?.agentId
+  )
 </script>
 
 <Panel customWidth={260} borderRight noHeaderBorder>
@@ -28,26 +52,56 @@
       default agent.
     </Body>
 
-    {#if namedAgents.length}
-      {#each namedAgents as agent (agent._id)}
+    <div class="settings-group">
+      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+        Default agent
+      </Body>
+      {#if resolvedDefaultAgent?.agentId}
         <div class="settings-agent">
           <div class="settings-agent-info">
-            <Body size="S">{agent.name}</Body>
+            <Body size="S">
+              {resolvedDefaultAgent.name || "Unknown agent"}
+            </Body>
           </div>
-          {#if agent._id}
-            <Toggle
-              value={isAgentAvailable(agent._id)}
-              on:change={event =>
-                handleAvailabilityToggle(agent._id!, event.detail)}
-            />
-          {/if}
+          <Toggle
+            value={isAgentAvailable(resolvedDefaultAgent.agentId)}
+            on:change={event =>
+              handleAvailabilityToggle(
+                resolvedDefaultAgent.agentId,
+                event.detail
+              )}
+          />
         </div>
-      {/each}
-    {:else}
-      <Body size="S" color="var(--spectrum-global-color-gray-500)">
-        No agents found
+      {:else}
+        <Body size="S" color="var(--spectrum-global-color-gray-500)">
+          No default agent
+        </Body>
+      {/if}
+    </div>
+
+    <div class="settings-group">
+      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+        Other agents
       </Body>
-    {/if}
+      {#if otherAgents.length}
+        {#each otherAgents as agent (agent.agentId)}
+          <div class="settings-agent">
+            <div class="settings-agent-info">
+              <Body size="S">{agent.name}</Body>
+            </div>
+            <Toggle
+              value={isAgentAvailable(agent.agentId)}
+              on:change={event =>
+                handleAvailabilityToggle(agent.agentId, event.detail)}
+            />
+          </div>
+        {/each}
+      {:else}
+        <Body size="S" color="var(--spectrum-global-color-gray-500)">
+          No other agents
+        </Body>
+      {/if}
+    </div>
   </div>
 </Panel>
 
@@ -62,6 +116,12 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+  }
+
+  .settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
   }
 
   .settings-agent {
