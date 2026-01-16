@@ -56,12 +56,18 @@ export class Thread {
             FORKED_PROCESS: "1",
             FORKED_PROCESS_NAME: type,
           },
+          execArgv: process.execArgv.some(arg =>
+            arg.startsWith("--enable-source-maps")
+          )
+            ? ["--enable-source-maps"]
+            : undefined,
         },
       }
       if (opts.timeoutMs) {
         this.timeoutMs = opts.timeoutMs
         workerOpts.maxCallTime = opts.timeoutMs
       }
+
       this.workers = workerFarm(workerOpts, typeToFile(type), ["execute"])
       Thread.workerRefs.push(this.workers)
     } else {

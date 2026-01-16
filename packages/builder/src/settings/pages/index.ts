@@ -13,6 +13,7 @@ import EmailTemplatesPage from "@/settings/pages/email/EmailTemplates.svelte"
 import EmailTemplatePage from "@/settings/pages/email/Template.svelte"
 import AuditLogsPage from "@/settings/pages/auditLogs/index.svelte"
 import AIPage from "@/settings/pages/ai/index.svelte"
+import EmbeddingsPage from "@/settings/pages/ai/embeddings.svelte"
 import AuthPage from "@/settings/pages/auth/index.svelte"
 import OrgPage from "@/settings/pages/organisation.svelte"
 import BrandingPage from "@/settings/pages/branding.svelte"
@@ -47,6 +48,7 @@ const componentMap = {
   email_template: EmailTemplatePage,
   audit_logs: AuditLogsPage,
   ai: AIPage,
+  embeddings: EmbeddingsPage,
   auth: AuthPage,
   org: OrgPage,
   branding: BrandingPage,

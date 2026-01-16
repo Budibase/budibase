@@ -16,6 +16,7 @@
     closeBracketsKeymap,
     acceptCompletion,
     completionStatus,
+    type Completion,
   } from "@codemirror/autocomplete"
   import {
     lineNumbers,
@@ -31,6 +32,7 @@
     Decoration,
     EditorView,
   } from "@codemirror/view"
+  import type { ViewUpdate } from "@codemirror/view"
   import {
     bracketMatching,
     foldKeymap,
@@ -64,7 +66,8 @@
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
   import AIGen from "./AIGen.svelte"
-  import { hbsTagPlugin } from "./hbsTags"
+  import { hbsTagPlugin, stripHbsDelimiters } from "./hbsTags"
+  import { markdownDecorationPlugin } from "./markdownDecorations"
 
   export let label: string | undefined = undefined
   export let completions: BindingCompletion[] = []
@@ -83,6 +86,7 @@
   export let aiEnabled = true
   export let lineWrapping = true
   export let renderBindingsAsTags = false
+  export let renderMarkdownDecorations = false
   export let getCaretPosition: CaretPositionFn = () => ({
     start: 0,
     end: 0,
@@ -98,6 +102,7 @@
   let isEditorInitialised = false
   let queuedRefresh = false
   let isAIGeneratedContent = false
+  let validBindingSet = new Set<string>()
 
   // Theming!
   let currentTheme = $themeStore?.theme
@@ -132,6 +137,14 @@
 
   // Wait to try and gracefully replace
   $: refresh(value, isEditorInitialised, mounted)
+  $: {
+    validBindingSet.clear()
+    for (const binding of bindings || []) {
+      if (binding.readableBinding) {
+        validBindingSet.add(binding.readableBinding)
+      }
+    }
+  }
 
   /**
    * Will refresh the editor contents only after
@@ -190,24 +203,51 @@
   }
 
   // Match decoration for HBS bindings
-  const hbsMatchDeco = new MatchDecorator({
-    regexp: FIND_ANY_HBS_REGEX,
-    decoration: () => {
-      return Decoration.mark({
-        tag: "span",
-        attributes: {
-          class: "binding-wrap",
-        },
-      })
+  const buildHbsMarkDecorations = (view: EditorView, bindings: Set<string>) => {
+    const decos = []
+    const regex = new RegExp(FIND_ANY_HBS_REGEX)
+    const isValidBinding = (binding: string) =>
+      bindings.size === 0 || bindings.has(binding)
+
+    for (const { from, to } of view.visibleRanges) {
+      const text = view.state.doc.sliceString(from, to)
+      let match: RegExpExecArray | null
+      regex.lastIndex = 0
+      while ((match = regex.exec(text))) {
+        const start = from + match.index
+        const end = start + match[0].length
+        const clean = stripHbsDelimiters(match[0])
+        if (!isValidBinding(clean)) {
+          continue
+        }
+        decos.push(
+          Decoration.mark({
+            tag: "span",
+            attributes: {
+              class: "binding-wrap",
+            },
+          }).range(start, end)
+        )
+      }
+    }
+
+    return Decoration.set(decos, true)
+  }
+  const hbsMatchDecoPlugin = ViewPlugin.fromClass(
+    class {
+      decorations
+      constructor(view: EditorView) {
+        this.decorations = buildHbsMarkDecorations(view, validBindingSet)
+      }
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = buildHbsMarkDecorations(
+            update.view,
+            validBindingSet
+          )
+        }
+      }
     },
-  })
-  const hbsMatchDecoPlugin = ViewPlugin.define(
-    view => ({
-      decorations: hbsMatchDeco.createDeco(view),
-      update(u) {
-        this.decorations = hbsMatchDeco.updateDeco(u, this.decorations)
-      },
-    }),
     {
       decorations: v => v.decorations,
     }
@@ -277,6 +317,19 @@
     ]
   }
 
+  const hasStringIcon = (
+    completion: Completion
+  ): completion is Completion & { icon: string } => {
+    if (!("icon" in completion)) {
+      return false
+    }
+    return typeof (completion as { icon?: unknown }).icon === "string"
+  }
+
+  const getCompletionIcon = (completion: Completion) => {
+    return hasStringIcon(completion) ? completion.icon : undefined
+  }
+
   // None of this is reactive, but it never has been, so we just assume most
   // config flags aren't changed at runtime
   // TODO: work out type for base
@@ -289,6 +342,21 @@
           override: [...completions],
           closeOnBlur: true,
           icons: false,
+          addToOptions: [
+            {
+              render: completion => {
+                const icon = getCompletionIcon(completion)
+                if (icon) {
+                  const img = document.createElement("img")
+                  img.src = icon
+                  img.className = "completion-icon"
+                  return img
+                }
+                return null
+              },
+              position: 20,
+            },
+          ],
           optionClass: completion =>
             "simple" in completion && completion.simple
               ? "autocomplete-option-simple"
@@ -349,8 +417,13 @@
     // HBS only plugins
     else {
       renderBindingsAsTags
-        ? complete.push(hbsTagPlugin(bindingIcons))
+        ? complete.push(hbsTagPlugin(bindingIcons, validBindingSet))
         : complete.push(hbsMatchDecoPlugin)
+
+      // Add markdown decorations if enabled (works alongside HBS)
+      if (renderMarkdownDecorations) {
+        complete.push(markdownDecorationPlugin)
+      }
     }
 
     if (placeholder) {
@@ -516,9 +589,10 @@
   :global(.hbs-tag) {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 2px 5px;
-    border-radius: 4px;
+    vertical-align: middle;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 6px;
     background: #215f9e33;
     opacity: 1;
     font-size: 12px;
@@ -633,6 +707,7 @@
   /* Completion item container */
   .code-editor :global(.autocomplete-option),
   .code-editor :global(.autocomplete-option-simple) {
+    position: relative;
     padding: var(--spacing-s) var(--spacing-m) !important;
     padding-left: calc(16px + 2 * var(--spacing-m)) !important;
     display: flex;
@@ -642,6 +717,16 @@
   }
   .code-editor :global(.autocomplete-option-simple) {
     padding-left: var(--spacing-s) !important;
+  }
+
+  /* Completion item icon */
+  .code-editor :global(.completion-icon) {
+    position: absolute;
+    left: var(--spacing-m);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
   }
 
   /* Highlighted completion item */
@@ -731,5 +816,36 @@
     display: inline-block;
     min-width: fit-content;
     padding-right: 2px !important;
+  }
+
+  /* Markdown decorations for CodeEditor */
+  .code-editor :global(.md-header) {
+    font-weight: 600;
+  }
+  .code-editor :global(.md-h1) {
+    color: #c86240;
+  }
+  .code-editor :global(.md-h2) {
+    color: #c86240;
+  }
+  .code-editor :global(.md-h3) {
+    color: #c86240;
+  }
+
+  .code-editor :global(.md-inline-code) {
+    background-color: var(--spectrum-global-color-gray-200);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+  }
+  .code-editor :global(.md-bold) {
+    font-weight: 700;
+  }
+  .code-editor :global(.md-italic) {
+    font-style: italic !important;
+  }
+  .code-editor :global(.md-bullet) {
+    color: var(--bb-indigo-light);
+    font-weight: 600;
   }
 </style>

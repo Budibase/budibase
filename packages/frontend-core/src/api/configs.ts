@@ -6,6 +6,7 @@ import {
   FindConfigResponse,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
+  GetPublicTranslationsResponse,
   OIDCLogosConfig,
   SaveConfigRequest,
   SaveConfigResponse,
@@ -17,6 +18,9 @@ export interface ConfigEndpoints {
   getConfig: (type: ConfigType) => Promise<FindConfigResponse>
   getTenantConfig: (tentantId: string) => Promise<GetPublicSettingsResponse>
   getOIDCConfigs: (tenantId: string) => Promise<GetPublicOIDCConfigResponse>
+  getPublicTranslations: (
+    tenantId?: string
+  ) => Promise<GetPublicTranslationsResponse>
   getOIDCLogos: () => Promise<Config<OIDCLogosConfig>>
   saveConfig: (config: SaveConfigRequest) => Promise<SaveConfigResponse>
   deleteConfig: (id: string, rev: string) => Promise<DeleteConfigResponse>
@@ -76,6 +80,13 @@ export const buildConfigEndpoints = (API: BaseAPIClient): ConfigEndpoints => ({
   getOIDCConfigs: async tenantId => {
     return await API.get({
       url: `/api/global/configs/public/oidc?tenantId=${tenantId}`,
+    })
+  },
+
+  getPublicTranslations: async tenantId => {
+    const query = tenantId ? `?tenantId=${tenantId}` : ""
+    return await API.get({
+      url: `/api/global/configs/public/translations${query}`,
     })
   },
 

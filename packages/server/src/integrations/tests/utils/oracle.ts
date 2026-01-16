@@ -25,7 +25,7 @@ export async function getDatasource(): Promise<Datasource> {
         })
         .withWaitStrategy(
           Wait.forLogMessage("DATABASE IS READY TO USE!").withStartupTimeout(
-            60000
+            120000
           )
         )
     )

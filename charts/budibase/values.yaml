@@ -558,6 +558,9 @@ services:
     # -- The password to use when connecting to Redis. It's recommended that you change
     # this from the default if you're running Redis in-cluster.
     password: "budibase"
+    # -- The username to use when connecting to Redis. Only required for Redis 6+ with ACL
+    # authentication enabled.
+    username: ""
     # -- How much persistent storage to allocate to Redis.
     storage: 100Mi
     # -- If defined, storageClassName: <storageClass> If set to "-",

@@ -50,18 +50,19 @@
         buttons={collapsedButtons}
       />
     {:else}
-      {#each buttons as { text, type, quiet, disabled, onClick, size, icon, gap }}
+      {#each buttons as button}
         <BlockComponent
           type="button"
           props={{
-            text: text || "Button",
-            onClick,
-            type,
-            quiet,
-            disabled,
-            icon,
-            gap,
-            size: size || "M",
+            text: button?.text || "Button",
+            onClick: button?.onClick,
+            type: button?.type,
+            quiet: button?.quiet,
+            disabled: button?.disabled,
+            icon: button?.icon,
+            gap: button?.gap,
+            size: button?.size || "M",
+            _conditions: button?._conditions || button?.conditions,
           }}
         />
       {/each}

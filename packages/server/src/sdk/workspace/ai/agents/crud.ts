@@ -5,6 +5,9 @@ import {
   DocumentType,
   UpdateAgentRequest,
 } from "@budibase/types"
+import { listAgentFiles, removeAgentFile } from "./files"
+import { deleteAgentFileChunks } from "../rag"
+import sdk from "../../.."
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
@@ -58,6 +61,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
+    ragConfigId: request.ragConfigId,
   }
 
   const { rev } = await db.put(agent)
@@ -91,4 +95,18 @@ export async function remove(agentId: string) {
   const agent = await getOrThrow(agentId)
 
   await db.remove(agent)
+
+  if (agent.ragConfigId) {
+    const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
+
+    const files = await listAgentFiles(agentId)
+    if (files.length > 0 && ragConfig) {
+      await deleteAgentFileChunks(
+        ragConfig,
+        files.map(file => file.ragSourceId).filter(Boolean)
+      )
+
+      await Promise.all(files.map(file => removeAgentFile(agent, file)))
+    }
+  }
 }

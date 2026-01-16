@@ -22,6 +22,7 @@
   import type { PickerIconInput, ResolvedIcon } from "../../types/Picker"
 
   export let id: string | undefined = undefined
+  export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = false
   export let fieldText: string = ""
   export let fieldIcon: PickerIconInput = undefined
@@ -223,7 +224,7 @@
 
 <button
   {id}
-  class="spectrum-Picker spectrum-Picker--sizeM"
+  class="spectrum-Picker spectrum-Picker--size{size}"
   class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-open={open}
@@ -419,6 +420,8 @@
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
   }
   .spectrum-Picker-label.auto-width {
     margin-right: var(--spacing-xs);

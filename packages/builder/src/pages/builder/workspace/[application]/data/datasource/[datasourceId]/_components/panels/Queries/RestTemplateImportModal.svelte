@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import {
     keepOpen,
     ModalContent,
@@ -33,6 +33,8 @@
     ImportEndpoint,
     RestTemplate,
   } from "@budibase/types"
+
+  $: goto = $gotoStore
 
   export let navigateDatasource = false
   export let datasourceId: string | undefined = undefined
@@ -193,9 +195,6 @@
       if (endpointsImportRequest.url) {
         body.url = endpointsImportRequest.url
       }
-      if (endpointsImportRequest.data) {
-        body.data = endpointsImportRequest.data
-      }
       const importResult = await queries.importQueries(body)
       if (!datasourceId) {
         datasourceId = importResult.datasourceId
@@ -206,7 +205,7 @@
       await queries.fetch()
 
       if (navigateDatasource) {
-        $goto(`./datasource/${datasourceId}`)
+        goto(`./datasource/${datasourceId}`)
       }
 
       notifications.success("Imported successfully")

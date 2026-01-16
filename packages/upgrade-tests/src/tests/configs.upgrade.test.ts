@@ -15,6 +15,11 @@ describe("configs", () => {
     configTypes = configTypes.filter(type => type !== ConfigType.RECAPTCHA)
   }
 
+  // translations config was introduced after commit e8a77e8
+  if (upgradeSpansCommit("e8a77e8")) {
+    configTypes = configTypes.filter(type => type !== ConfigType.TRANSLATIONS)
+  }
+
   shouldNotChange.each(configTypes)("config type: %s", async type => {
     const config = await client.config.get(type)
     // In commit 191bf3a we fixed a bug where the AI config type didn't

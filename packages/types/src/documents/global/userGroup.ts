@@ -18,6 +18,10 @@ export interface UserGroup extends Document {
   }
 }
 
+export interface EnrichedUserGroup extends UserGroup {
+  users: GroupUser[]
+}
+
 export interface GroupUser {
   _id: string
   email: string

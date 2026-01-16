@@ -41,10 +41,13 @@ export class HbsTagWidget extends WidgetType {
 
 const buildHbsTagDecorations = (
   view: EditorView,
-  bindingIcons: Record<string, string | undefined>
+  bindingIcons: Record<string, string | undefined>,
+  validBindings?: Set<string>
 ) => {
   const decos = []
   const regex = new RegExp(FIND_ANY_HBS_REGEX)
+  const isValidBinding = (binding: string) =>
+    !validBindings || validBindings.size === 0 || validBindings.has(binding)
 
   // Get all cursor/selection positions to check if cursor is inside a binding
   const cursorPositions = view.state.selection.ranges.map(r => ({
@@ -69,6 +72,9 @@ const buildHbsTagDecorations = (
       }
 
       const clean = stripHbsDelimiters(match[0])
+      if (!isValidBinding(clean)) {
+        continue
+      }
       const icon = bindingIcons?.[clean]
       const widget = new HbsTagWidget(clean, icon)
       decos.push(
@@ -80,13 +86,18 @@ const buildHbsTagDecorations = (
 }
 
 export const hbsTagPlugin = (
-  bindingIcons: Record<string, string | undefined>
+  bindingIcons: Record<string, string | undefined>,
+  validBindings?: Set<string>
 ) =>
   ViewPlugin.fromClass(
     class {
       decorations
       constructor(view: EditorView) {
-        this.decorations = buildHbsTagDecorations(view, bindingIcons)
+        this.decorations = buildHbsTagDecorations(
+          view,
+          bindingIcons,
+          validBindings
+        )
       }
       update(update: ViewUpdate) {
         if (
@@ -94,7 +105,11 @@ export const hbsTagPlugin = (
           update.viewportChanged ||
           update.selectionSet
         ) {
-          this.decorations = buildHbsTagDecorations(update.view, bindingIcons)
+          this.decorations = buildHbsTagDecorations(
+            update.view,
+            bindingIcons,
+            validBindings
+          )
         }
       }
     },
@@ -107,7 +122,7 @@ export const hbsTagPlugin = (
     }
   )
 
-const stripHbsDelimiters = (binding: string) =>
+export const stripHbsDelimiters = (binding: string) =>
   binding
     .replace(/^\s*\{\{\{?/, "")
     .replace(/\}?\}\}\s*$/, "")

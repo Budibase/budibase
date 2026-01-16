@@ -14,7 +14,6 @@ import {
 } from "@budibase/types"
 import get from "lodash/get"
 import qs from "querystring"
-import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
 import { URLSearchParams } from "url"
 import { blacklist } from "@budibase/backend-core"
@@ -23,7 +22,7 @@ import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
-import { utils } from "@budibase/shared-core"
+import { helpers, utils } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getDispatcher } from "../utilities"
 import {
@@ -300,7 +299,7 @@ export class RestIntegration implements IntegrationBase {
       }
     }
 
-    const size = formatBytes(contentLength || "0")
+    const size = helpers.formatBytes(contentLength || "0")
     const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
     // converts headers to plain object
     for (const [key, value] of response.headers.entries()) {

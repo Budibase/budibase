@@ -5,12 +5,15 @@ import {
   ConfigType,
   GetPublicSettingsResponse,
   PKCEMethod,
+  TranslationsConfig,
 } from "@budibase/types"
 import { TestConfiguration, mocks, structures } from "../../../../tests"
+import { resolveTranslationGroup } from "@budibase/shared-core"
+import { processStringSync } from "@budibase/string-templates"
 
 mocks.email.mock()
 
-const { google, smtp, settings, oidc } = structures.configs
+const { google, smtp, settings, oidc, translations } = structures.configs
 
 describe("configs", () => {
   const config = new TestConfiguration()
@@ -321,6 +324,84 @@ describe("configs", () => {
     })
   })
 
+  describe("translations", () => {
+    beforeEach(async () => {
+      await config.deleteConfig(ConfigType.TRANSLATIONS)
+      mocks.licenses.useTranslations()
+      mocks.pro.features.isTranslationsEnabled.mockResolvedValue(true)
+    })
+
+    afterEach(async () => {
+      await config.deleteConfig(ConfigType.TRANSLATIONS)
+      mocks.pro.features.isTranslationsEnabled.mockReset()
+    })
+
+    it("should save translations when feature enabled", async () => {
+      await saveConfig(translations({ "login.emailLabel": "Profile test" }))
+      const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
+      expect(saved.config.locales.en.overrides["login.emailLabel"]).toEqual(
+        "Profile test"
+      )
+    })
+
+    it("should support non-default locales", async () => {
+      const spanishConfig: TranslationsConfig = {
+        type: ConfigType.TRANSLATIONS,
+        config: {
+          defaultLocale: "es",
+          locales: {
+            es: {
+              label: "Spanish",
+              overrides: {
+                "login.emailLabel": "Correo",
+              },
+            },
+            en: {
+              label: "English",
+              overrides: {
+                "login.emailLabel": "Email",
+              },
+            },
+          },
+        },
+      }
+
+      await saveConfig(spanishConfig)
+      const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
+      expect(saved.config.locales.es.overrides["login.emailLabel"]).toEqual(
+        "Correo"
+      )
+    })
+
+    it("should filter invalid override keys", async () => {
+      await saveConfig(translations({ invalid: "value" }))
+      const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
+      expect(saved.config.locales.en.overrides).toEqual({})
+    })
+
+    it("should reject when translations feature disabled", async () => {
+      mocks.pro.features.isTranslationsEnabled.mockResolvedValue(false)
+      await expect(
+        saveConfig(translations({ "login.emailLabel": "Profile test" }))
+      ).rejects.toThrow("License does not allow translations")
+    })
+
+    it("should resolve bindings inside translation overrides", async () => {
+      await saveConfig(
+        translations({ "portal.greeting": "Welcome {{ name }}" })
+      )
+      const saved = await config.api.configs.getConfig(ConfigType.TRANSLATIONS)
+      const portalLabels = resolveTranslationGroup(
+        "portal",
+        saved.config.locales.en.overrides
+      )
+      const boundValue = processStringSync(portalLabels.greeting, {
+        name: "Budibuddy",
+      })
+      expect(boundValue).toEqual("Welcome Budibuddy")
+    })
+  })
+
   describe("GET /api/global/configs/checklist", () => {
     it("should return the correct checklist", async () => {
       await config.saveSmtpConfig()
@@ -370,6 +451,46 @@ describe("configs", () => {
       }
       delete body._rev
       expect(body).toEqual(expected)
+    })
+  })
+
+  describe("GET /api/global/configs/public/translations", () => {
+    beforeEach(async () => {
+      await config.deleteConfig(ConfigType.TRANSLATIONS)
+      mocks.licenses.useTranslations()
+      mocks.pro.features.isTranslationsEnabled.mockResolvedValue(true)
+    })
+
+    afterEach(async () => {
+      await config.deleteConfig(ConfigType.TRANSLATIONS)
+      mocks.pro.features.isTranslationsEnabled.mockReset()
+    })
+
+    it("should return translation overrides", async () => {
+      await saveConfig(translations({ "login.emailLabel": "Hello" }))
+      const res = await config.api.configs.getPublicTranslations()
+      expect(res.body.defaultLocale).toEqual("en")
+      expect(res.body.locales.en.overrides["login.emailLabel"]).toEqual("Hello")
+    })
+
+    it("should expose login and forgot labels without authentication", async () => {
+      await saveConfig(
+        translations({
+          "login.emailLabel": "Public email",
+          "forgotPassword.heading": "Reset password",
+        })
+      )
+      const res = await config
+        .getRequest()
+        .get(
+          `/api/global/configs/public/translations?tenantId=${config.getTenantId()}`
+        )
+        .expect(200)
+        .expect("Content-Type", /json/)
+
+      const overrides = res.body.locales.en.overrides
+      expect(overrides["login.emailLabel"]).toEqual("Public email")
+      expect(overrides["forgotPassword.heading"]).toEqual("Reset password")
     })
   })
 })

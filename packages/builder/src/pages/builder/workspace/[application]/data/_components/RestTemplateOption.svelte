@@ -1,8 +1,12 @@
 <script lang="ts">
   import { Body } from "@budibase/bbui"
-  import { type RestTemplate } from "@budibase/types"
+  import type {
+    RestTemplate,
+    RestTemplateGroup,
+    RestTemplateGroupName,
+  } from "@budibase/types"
 
-  export let template: RestTemplate
+  export let template: RestTemplate | RestTemplateGroup<RestTemplateGroupName>
   export let disabled = false
 </script>
 
@@ -10,24 +14,28 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:click class:disabled class="option">
   <div class="header">
-    <div class="icon">
-      <img src={template.icon} alt={template.name} />
+    <div class="header-main">
+      <div class="icon">
+        <img src={template.icon} alt={template.name} />
+      </div>
+      <Body size="S" color="var(--spectrum-global-color-gray-900)"
+        >{template.name}</Body
+      >
     </div>
-    <Body>{template.name}</Body>
-  </div>
-  <div class="description">
-    <Body size="XS">{template.description}</Body>
+    {#if template.verified}
+      <i class="ph ph-seal-check verified-icon" aria-label="Verified template"
+      ></i>
+    {/if}
   </div>
 </div>
 
 <style>
   .option {
     background-color: var(--background);
-    border: 1px solid var(--grey-4);
-    padding: 16px;
-    border-radius: 4px;
+    border: 0.5px solid var(--spectrum-global-color-gray-200);
+    padding: 10px 16px;
+    border-radius: 8px;
     cursor: pointer;
-    min-height: 100px;
     display: flex;
     flex-direction: column;
   }
@@ -54,22 +62,36 @@
 
   .header {
     display: flex;
-    margin-bottom: 12px;
     align-items: center;
     flex-shrink: 0;
+    justify-content: space-between;
+    gap: 12px;
+    text-rendering: optimizeLegibility !important;
+  }
+
+  .header-main {
+    display: flex;
+    align-items: center;
+    min-width: 0;
   }
 
   .icon {
     display: flex;
     margin-right: 8px;
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: 20px;
+    height: 20px;
   }
 
   .icon img {
     width: 100%;
     height: 100%;
+  }
+
+  .verified-icon {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 16px;
+    flex-shrink: 0;
   }
 
   .disabled {

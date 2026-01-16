@@ -35,6 +35,9 @@ import { APIClient } from "@budibase/frontend-core"
 import BlockComponent from "./components/BlockComponent.svelte"
 import Block from "./components/Block.svelte"
 
+// Expose Svelte modules globally for plugin compatibility
+import "@/svelteGlobals"
+
 // Set up global PWA install prompt handler
 if (typeof window !== "undefined") {
   window.addEventListener("beforeinstallprompt", e => {
@@ -42,36 +45,6 @@ if (typeof window !== "undefined") {
     window.deferredPwaPrompt = e
   })
 }
-
-import * as svelte from "svelte"
-import * as svelteStore from "svelte/store"
-// Legacy Svelte 4 runtime for plugin compatibility
-import * as svelteLegacy from "svelte-legacy"
-// @ts-ignore
-import * as svelteLegacyStore from "svelte-legacy/store"
-// @ts-ignore
-import * as svelteInternal from "svelte/internal/client"
-// @ts-ignore
-import * as svelteLegacyInternal from "svelte-legacy/internal"
-
-window.svelte = svelte
-// Expose legacy runtime under dedicated globals so Svelte 5 consumers stay untouched
-// @ts-ignore - augmenting the window at runtime
-window.svelteLegacy = svelteLegacy
-// @ts-ignore - augmenting the window at runtime
-window.svelteLegacyStore = svelteLegacyStore
-// @ts-ignore - augmenting the window at runtime
-window.svelteLegacyInternal = svelteLegacyInternal
-// Provide the legacy global names that Svelte 4 bundles hardcode
-// @ts-ignore - augmenting the window at runtime
-window.svelte_internal = svelteLegacyInternal
-// @ts-ignore - augmenting the window at runtime
-window.svelte_store = svelteLegacyStore
-// Maintain existing camelCase aliases expected by some plugins
-// @ts-ignore - augmenting the window at runtime
-window.svelteStore = svelteStore
-// @ts-ignore - augmenting the window at runtime
-window.svelteInternal = svelteInternal
 
 // Extend global window scope
 declare global {
@@ -104,9 +77,6 @@ declare global {
     handleBuilderRuntimeEvent: (type: string, data: any) => void
     registerCustomComponent: typeof componentStore.actions.registerCustomComponent
     loadBudibase: typeof loadBudibase
-    svelte: typeof svelte
-    svelteStore: typeof svelteStore
-    svelteInternal: typeof svelteInternal
     INIT_TIME: number
   }
 }

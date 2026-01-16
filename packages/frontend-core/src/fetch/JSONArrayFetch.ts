@@ -11,9 +11,13 @@ export default class JSONArrayFetch extends FieldFetch<JSONArrayFieldDatasource>
     try {
       const { fieldName } = datasource
       const table = await this.API.fetchTableDefinition(datasource.tableId)
+
+      // For Postgres JSON columns, the schema may be directly available on the field
+      // Otherwise, fall back to fetching the schema
       const schema =
-        table.schema[fieldName].schema ??
+        table.schema?.[fieldName]?.schema ??
         getJSONArrayDatasourceSchema(table.schema, datasource)
+
       return { schema }
     } catch (error) {
       return null

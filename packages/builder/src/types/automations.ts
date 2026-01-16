@@ -62,6 +62,7 @@ export enum SchemaFieldTypes {
   QUERY_LIMIT = "query_limit",
   CATEGORIES = "categories",
   AGENT = "agent",
+  OUTPUT_SCHEMA = "output_schema",
 }
 
 export type KeyValuePair = {
@@ -222,6 +223,7 @@ export const customTypeToSchema: Record<string, SchemaFieldTypes> = {
   [AutomationCustomIOType.QUERY_LIMIT]: SchemaFieldTypes.QUERY_LIMIT,
   [AutomationCustomIOType.QUERY_PARAMS]: SchemaFieldTypes.QUERY_PARAMS,
   [AutomationCustomIOType.CATEGORIES]: SchemaFieldTypes.CATEGORIES,
+  [AutomationCustomIOType.OUTPUT_SCHEMA]: SchemaFieldTypes.OUTPUT_SCHEMA,
   ["fields"]: SchemaFieldTypes.FIELDS,
 }
 

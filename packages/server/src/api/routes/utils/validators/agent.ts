@@ -14,6 +14,7 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
+      ragConfigId: OPTIONAL_STRING,
     })
   )
 }
@@ -31,6 +32,7 @@ export function updateAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
+      ragConfigId: OPTIONAL_STRING,
     }).unknown(true)
   )
 }

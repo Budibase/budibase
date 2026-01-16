@@ -7,5 +7,8 @@ if (process.env.DD_APM_ENABLED) {
     // @ts-ignore for some reason dd-trace types don't include this options,
     // even though it's spoken about in the docs.
     debug: process.env.DD_ENV === "qa",
+    llmobs: {
+      mlApp: process.env.DD_LLMOBS_ML_APP || "budibase",
+    },
   })
 }

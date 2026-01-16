@@ -18,3 +18,5 @@ packages/worker/src/constants/templates/tests/
 examples
 hosting
 i18n
+/.nx/cache
+/.nx/workspace-data

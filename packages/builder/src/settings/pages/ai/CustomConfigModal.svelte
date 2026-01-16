@@ -9,10 +9,11 @@
     notifications,
     keepOpen,
   } from "@budibase/bbui"
-  import { type CustomAIProviderConfig } from "@budibase/types"
+  import { AIConfigType, type CustomAIProviderConfig } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
 
   export let config: CustomAIProviderConfig | null
+  export let type: AIConfigType
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
@@ -26,25 +27,38 @@
         model: "",
         apiKey: "",
         liteLLMModelId: "",
+        configType: type,
       }
 
   $: isEdit = !!config
   $: trimmedName = (draft.name || "").trim()
   $: trimmedProvider = (draft.provider || "").trim()
   $: canSave = !!trimmedName && !!trimmedProvider
+  $: typeLabel =
+    draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
 
   async function confirm() {
     try {
       if (draft._id) {
         await aiConfigsStore.updateConfig(draft)
-        notifications.success("Chat configuration updated")
+        notifications.success(
+          `${typeLabel[0].toUpperCase()}${typeLabel.slice(
+            1
+          )} configuration updated`
+        )
       } else {
         const { _id, _rev, ...rest } = draft
         await aiConfigsStore.createConfig(rest)
-        notifications.success("Chat configuration created")
+        notifications.success(
+          `${typeLabel[0].toUpperCase()}${typeLabel.slice(
+            1
+          )} configuration created`
+        )
       }
     } catch (err: any) {
-      notifications.error(err.message || "Failed to save chat configuration")
+      notifications.error(
+        err.message || `Failed to save ${typeLabel} configuration`
+      )
       return keepOpen
     }
   }
@@ -56,10 +70,16 @@
 
     try {
       await aiConfigsStore.deleteConfig(draft._id)
-      notifications.success("Chat configuration deleted")
+      notifications.success(
+        `${typeLabel[0].toUpperCase()}${typeLabel.slice(
+          1
+        )} configuration deleted`
+      )
       dispatch("hide")
     } catch (err: any) {
-      notifications.error(err.message || "Failed to delete chat configuration")
+      notifications.error(
+        err.message || `Failed to delete ${typeLabel} configuration`
+      )
     }
   }
 </script>
@@ -77,7 +97,11 @@
 >
   <div slot="header">
     <Heading size="XS">
-      {isEdit ? `Edit ${draft.name}` : "Add chat configuration"}
+      {#if isEdit}
+        Edit {draft.name}
+      {:else}
+        Add {typeLabel} configuration
+      {/if}
     </Heading>
   </div>
 

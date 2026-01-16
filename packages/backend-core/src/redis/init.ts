@@ -5,6 +5,7 @@ let userClient: Client,
   sessionClient: Client,
   workspaceClient: Client,
   cacheClient: Client,
+  openapiImportSpecsClient: Client,
   writethroughClient: Client,
   lockClient: Client,
   socketClient: Client,
@@ -17,6 +18,10 @@ export async function init() {
   sessionClient = await Client.init(utils.Databases.SESSIONS)
   workspaceClient = await Client.init(utils.Databases.WORKSPACE_METADATA)
   cacheClient = await Client.init(utils.Databases.GENERIC_CACHE)
+  openapiImportSpecsClient = await Client.init(
+    utils.Databases.OPENAPI_IMPORT_SPECS,
+    utils.SelectableDatabase.OPENAPI_IMPORT_SPECS
+  )
   lockClient = await Client.init(utils.Databases.LOCKS)
   writethroughClient = await Client.init(utils.Databases.WRITE_THROUGH)
   inviteClient = await Client.init(utils.Databases.INVITATIONS)
@@ -29,16 +34,17 @@ export async function init() {
 }
 
 export async function shutdown() {
-  if (userClient) await userClient.finish()
-  if (sessionClient) await sessionClient.finish()
-  if (workspaceClient) await workspaceClient.finish()
-  if (cacheClient) await cacheClient.finish()
-  if (writethroughClient) await writethroughClient.finish()
-  if (lockClient) await lockClient.finish()
-  if (inviteClient) await inviteClient.finish()
-  if (passwordResetClient) await passwordResetClient.finish()
-  if (socketClient) await socketClient.finish()
-  if (docWritethroughClient) await docWritethroughClient.finish()
+  await userClient?.finish()
+  await sessionClient?.finish()
+  await workspaceClient?.finish()
+  await cacheClient?.finish()
+  await openapiImportSpecsClient?.finish()
+  await writethroughClient?.finish()
+  await lockClient?.finish()
+  await inviteClient?.finish()
+  await passwordResetClient?.finish()
+  await socketClient?.finish()
+  await docWritethroughClient?.finish()
 }
 
 process.on("exit", async () => {
@@ -71,6 +77,13 @@ export async function getCacheClient() {
     await init()
   }
   return cacheClient
+}
+
+export async function getOpenapiImportSpecsClient() {
+  if (!openapiImportSpecsClient) {
+    await init()
+  }
+  return openapiImportSpecsClient
 }
 
 export async function getWritethroughClient() {

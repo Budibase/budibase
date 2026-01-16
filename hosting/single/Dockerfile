@@ -55,12 +55,22 @@ RUN mkdir -p /litellm
 COPY hosting/litellm_config.yaml /litellm/config.yaml
 
 # Install postgres client for pg_dump utils
-RUN apt install -y software-properties-common apt-transport-https ca-certificates gnupg \
-    && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
-    && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
-    && apt update -y \
-    && apt install postgresql-client-15 -y \
-    && apt remove software-properties-common apt-transport-https gpg -y
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release; \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+      | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg; \
+    echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+      > /etc/apt/sources.list.d/postgresql.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends postgresql-client-15; \
+    rm -rf /var/lib/apt/lists/*; \
+    apt-get purge -y --auto-remove gnupg lsb-release; \
+    rm -f /etc/apt/sources.list.d/postgresql.list
 
 # We use pm2 in order to run multiple node processes in a single container
 RUN npm install --global pm2

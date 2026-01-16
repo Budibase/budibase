@@ -29,6 +29,7 @@ const ignoredFiles = ["definitions", "index", "utils"]
 const threadNames = fs
   .readdirSync(join(dir, "src", "threads"))
   .filter(path => !ignoredFiles.find(file => path.includes(file)))
+  .filter(path => !path.endsWith(".spec.ts"))
   .map(path => path.replace(".ts", ""))
 const files = [
   {

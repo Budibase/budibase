@@ -10,18 +10,25 @@
     Icon,
     ActionMenu,
     MenuItem,
+    AbsTooltip,
   } from "@budibase/bbui"
   import {
+    AIConfigType,
     ToolType,
+    WebSearchProvider,
     type Agent,
     type ToolMetadata,
     type EnrichedBinding,
     type InsertAtPositionFn,
-    WebSearchProvider,
+    type CaretPositionFn,
   } from "@budibase/types"
-  import type { BindingCompletion } from "@/types"
   import TopBar from "@/components/common/TopBar.svelte"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    selectedAgent,
+    ragConfigStore,
+  } from "@/stores/portal"
   import {
     datasources,
     deploymentStore,
@@ -30,7 +37,7 @@
     queries,
   } from "@/stores/builder"
   import EditableIcon from "@/components/common/EditableIcon.svelte"
-  import { onDestroy, onMount } from "svelte"
+  import { onDestroy, onMount, untrack } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import type { IconInfo } from "@/helpers/integrationIcons"
@@ -38,7 +45,7 @@
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
-
+  import FilesPanel from "./FilesPanel.svelte"
   import {
     EditorModes,
     hbAutocomplete,
@@ -54,17 +61,17 @@
   } from "../logos/tagIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
+
   $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
   const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
   const RestIconSvg = REST_TAG_ICON_URL
+  const AUTO_SAVE_DEBOUNCE_MS = 800
 
-  let currentAgent: Agent | undefined
-  let draftAgentId: string | undefined
-  let togglingLive = false
-  let modelOptions: { label: string; value: string }[] = []
-  let draft = {
+  // Agent state
+  let draftAgentId: string | undefined = $state()
+  let draft = $state({
     name: "",
     description: "",
     aiconfig: "",
@@ -72,87 +79,219 @@
     promptInstructions: "",
     icon: "",
     iconColor: "",
-  }
+    ragConfigId: undefined as string | undefined,
+  })
+  let ragConfigError: string | undefined = $state()
 
-  let insertAtPos: InsertAtPositionFn | undefined
-  let toolSearch = ""
-  let promptBindings: EnrichedBinding[] = []
-  let promptCompletions: BindingCompletion[] = []
+  let insertAtPos: InsertAtPositionFn | undefined = $state()
+  let toolSearch = $state("")
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
-  let saving = false
-  const AUTO_SAVE_DEBOUNCE_MS = 800
-  const clearAutoSave = () => {
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout)
-      autoSaveTimeout = undefined
+  let saving = $state(false)
+  let togglingLive = $state(false)
+  let getCaretPosition: CaretPositionFn | undefined = $state.raw()
+
+  let currentAgent: Agent | undefined = $derived($selectedAgent)
+  let completionConfigs = $derived(
+    ($aiConfigsStore.customConfigs || []).filter(
+      config => config.configType !== AIConfigType.EMBEDDINGS
+    )
+  )
+  let modelOptions = $derived(
+    completionConfigs.map(config => ({
+      label: config.name || config._id || "Unnamed",
+      value: config._id || "",
+    }))
+  )
+  let ragConfigs = $derived($ragConfigStore.configs || [])
+
+  // Web search Config
+  let webSearchConfigModal = $state<WebSearchConfigModal>()
+  let lastWebSearchConfigId: string | undefined = $state()
+  let pendingWebSearchInsert = $state(false)
+  let webSearchConfig = $derived(
+    $aiConfigsStore.customConfigs.find(config => config._id === draft.aiconfig)
+      ?.webSearchConfig
+  )
+  let webSearchConfigured = $derived(
+    !!webSearchConfig?.apiKey && !!webSearchConfig.provider
+  )
+  let toolsLoaded = $derived(!!$agentsStore.tools)
+  let availableTools: AgentTool[] = $derived.by(() => {
+    const tools = $agentsStore.tools || []
+    const mappedTools = tools.map(tool => {
+      const sourceType = tool.sourceType
+      const sourceLabel = tool.sourceLabel
+
+      const prefix = getBindingPrefix(sourceType, sourceLabel)
+      const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
+        sourceType,
+        sourceLabel,
+      })
+
+      return {
+        ...tool,
+        sourceLabel,
+        sourceType,
+        readableBinding: `${prefix}.${tool.name}`,
+        runtimeBinding: tool.name,
+        icon,
+        tagIconUrl,
+      }
+    })
+
+    // Add a synthetic web search tool as we want it to always appear
+    const webSearchTool: ToolMetadata = {
+      name: "web_search",
+      description: "Configure web search",
+      sourceType: ToolType.SEARCH,
+      sourceLabel: "Search",
     }
-  }
+    const prefix = getBindingPrefix(
+      webSearchTool.sourceType,
+      webSearchTool.sourceLabel
+    )
+    const { icon, tagIconUrl } = resolveAgentToolIcons(webSearchTool, {
+      sourceType: webSearchTool.sourceType,
+      sourceLabel: webSearchTool.sourceLabel,
+    })
 
-  let availableTools: AgentTool[] = []
-  let filteredTools: AgentTool[] = []
-  let toolSections: Record<string, AgentTool[]> = {}
-  let readableToRuntimeBinding: Record<string, string> = {}
-  let readableToIcon: Record<string, string | undefined> = {}
-  let includedToolRuntimeBindings: string[] = []
-  let includedToolsWithDetails: AgentTool[] = []
-  let webSearchConfigModal: WebSearchConfigModal
-  let lastWebSearchConfigId: string | undefined
-  let pendingWebSearchInsert = false
+    return [
+      {
+        ...webSearchTool,
+        readableBinding: `${prefix}.web_search`,
+        runtimeBinding:
+          getWebSearchRuntimeBinding(webSearchConfigured, webSearchConfig) ||
+          "",
+        icon,
+        tagIconUrl,
+      },
+      ...mappedTools.filter(tool => tool.sourceType !== ToolType.SEARCH),
+    ]
+  })
 
-  $: currentAgent = $selectedAgent
-  $: webSearchConfig = $aiConfigsStore.customConfigs.find(
-    config => config._id === draft.aiconfig
-  )?.webSearchConfig
-  $: webSearchConfigured = Boolean(
-    webSearchConfig?.apiKey && webSearchConfig.provider
+  let toolMaps = $derived(buildToolMaps(availableTools))
+  let readableToRuntimeBinding = $derived(toolMaps.readableToRuntimeBinding)
+  let readableToIcon = $derived(toolMaps.readableToIcon)
+
+  /**
+   * Doing this and key'ing the CodeEditor triggers a re-mount of the editor.
+   * Else we would need to do some complex logic in CodeEditor and it's not worth it
+   */
+  let resolvedIconCount = $derived(
+    Object.values(readableToIcon).filter(Boolean).length
+  )
+  let includedToolRuntimeBindings = $derived(
+    getIncludedToolRuntimeBindings(
+      draft.promptInstructions,
+      readableToRuntimeBinding
+    )
+  )
+  let promptBindings: EnrichedBinding[] = $derived.by(() => {
+    return availableTools
+      .filter(tool => !!tool.name)
+      .filter(
+        tool =>
+          tool.sourceType !== ToolType.SEARCH ||
+          (webSearchConfigured && tool.runtimeBinding)
+      )
+      .map(tool => ({
+        runtimeBinding: tool.runtimeBinding,
+        readableBinding: tool.readableBinding,
+        category: getSectionName(tool.sourceType),
+        display: {
+          name:
+            tool.sourceType === ToolType.SEARCH
+              ? "Web search"
+              : formatToolLabel(tool),
+          type: "tool",
+          rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
+        },
+        icon: tool.tagIconUrl,
+      }))
+  })
+
+  let promptCompletions = $derived.by(() => {
+    return promptBindings.length > 0
+      ? [
+          hbAutocomplete([
+            ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
+          ]),
+        ]
+      : []
+  })
+
+  let includedToolsWithDetails = $derived(
+    includedToolRuntimeBindings
+      .map(runtimeBinding =>
+        availableTools.find(tool => tool.runtimeBinding === runtimeBinding)
+      )
+      .filter((tool): tool is AgentTool => !!tool)
   )
 
-  const getWebSearchRuntimeBinding = () => {
-    if (!webSearchConfigured || !webSearchConfig) {
-      return undefined
-    }
-    if (webSearchConfig.provider === WebSearchProvider.EXA) {
-      return "exa_search"
-    }
-    if (webSearchConfig.provider === WebSearchProvider.PARALLEL) {
-      return "parallel_search"
-    }
-    return undefined
-  }
+  let filteredTools = $derived.by(() => {
+    return availableTools.filter(tool => {
+      const query = toolSearch.toLowerCase()
+      return (
+        tool.name?.toLowerCase().includes(query) ||
+        tool.readableBinding?.toLowerCase().includes(query)
+      )
+    })
+  })
+  let toolSections = $derived(
+    filteredTools.reduce<Record<string, AgentTool[]>>((acc, tool) => {
+      const key = getSectionName(tool.sourceType)
+      acc[key] = acc[key] || []
+      acc[key].push(tool)
+      return acc
+    }, {})
+  )
 
-  $: if (currentAgent && currentAgent._id !== draftAgentId) {
-    draft = {
-      name: currentAgent.name || "",
-      description: currentAgent.description || "",
-      aiconfig: currentAgent.aiconfig || "",
-      goal: currentAgent.goal || "",
-      promptInstructions: currentAgent.promptInstructions || "",
-      icon: currentAgent.icon || "",
-      iconColor: currentAgent.iconColor || "",
+  $effect(() => {
+    const agent = currentAgent
+    if (agent && agent._id !== draftAgentId) {
+      draft = {
+        name: agent.name || "",
+        description: agent.description || "",
+        aiconfig: agent.aiconfig || "",
+        goal: agent.goal || "",
+        promptInstructions: agent.promptInstructions || "",
+        icon: agent.icon || "",
+        iconColor: agent.iconColor || "",
+        ragConfigId: agent.ragConfigId,
+      }
+      draftAgentId = agent._id
     }
-    draftAgentId = currentAgent._id
-  }
+  })
 
-  $: modelOptions = $aiConfigsStore.customConfigs.map(config => ({
-    label: config.name || config._id || "Unnamed",
-    value: config._id || "",
-  }))
-
-  $: {
-    const nextAiconfigId = draft.aiconfig || undefined
-    if (nextAiconfigId !== lastWebSearchConfigId) {
-      lastWebSearchConfigId = nextAiconfigId
-      agentsStore.fetchTools(nextAiconfigId)
+  $effect(() => {
+    const nextAiConfigId = draft.aiconfig || undefined
+    if (nextAiConfigId !== lastWebSearchConfigId) {
+      lastWebSearchConfigId = nextAiConfigId
+      agentsStore.fetchTools(nextAiConfigId)
     }
-  }
+  })
 
-  const resolveAgentToolIcons = (
+  $effect(() => {
+    if (pendingWebSearchInsert && webSearchConfigured) {
+      const searchTool = availableTools.find(
+        tool => tool.sourceType === ToolType.SEARCH
+      )
+      if (searchTool?.readableBinding) {
+        untrack(() => {
+          insertToolBinding(searchTool.readableBinding!)
+          pendingWebSearchInsert = false
+        })
+      }
+    }
+  })
+
+  function resolveAgentToolIcons(
     tool: ToolMetadata,
     {
       sourceType,
       sourceLabel,
     }: { sourceType: ToolType | undefined; sourceLabel: string | undefined }
-  ): { icon?: IconInfo; tagIconUrl?: string } => {
+  ): { icon?: IconInfo; tagIconUrl?: string } {
     if (sourceType === ToolType.BUDIBASE) {
       return {
         icon: { icon: BudibaseLogo },
@@ -183,60 +322,8 @@
     return {}
   }
 
-  $: {
-    const tools = $agentsStore.tools || []
-    availableTools = tools.map(tool => {
-      const sourceType = tool.sourceType
-      const sourceLabel = tool.sourceLabel
-
-      const prefix = getBindingPrefix(sourceType, sourceLabel)
-      const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
-        sourceType,
-        sourceLabel,
-      })
-
-      return {
-        ...tool,
-        sourceLabel,
-        sourceType,
-        readableBinding: `${prefix}.${tool.name}`,
-        runtimeBinding: tool.name,
-        icon,
-        tagIconUrl,
-      }
-    })
-
-    // Below we add a synthetic web search tool as we want it to always appear
-    // and it may not always be configured..
-    const webSearchTool: ToolMetadata = {
-      name: "web_search",
-      description: "Configure web search",
-      sourceType: ToolType.SEARCH,
-      sourceLabel: "Search",
-    }
-    const prefix = getBindingPrefix(
-      webSearchTool.sourceType,
-      webSearchTool.sourceLabel
-    )
-    const { icon, tagIconUrl } = resolveAgentToolIcons(webSearchTool, {
-      sourceType: webSearchTool.sourceType,
-      sourceLabel: webSearchTool.sourceLabel,
-    })
-
-    availableTools = [
-      {
-        ...webSearchTool,
-        readableBinding: `${prefix}.web_search`,
-        runtimeBinding: getWebSearchRuntimeBinding() || "",
-        icon,
-        tagIconUrl,
-      },
-      ...availableTools.filter(tool => tool.sourceType !== ToolType.SEARCH),
-    ]
-  }
-
-  const buildToolMaps = (tools: AgentTool[]) =>
-    tools.reduce(
+  function buildToolMaps(tools: AgentTool[]) {
+    return tools.reduce(
       (acc, tool) => {
         if (tool.readableBinding) {
           acc.readableToIcon[tool.readableBinding] = tool.tagIconUrl
@@ -252,82 +339,18 @@
         readableToIcon: {} as Record<string, string | undefined>,
       }
     )
+  }
 
-  $: ({ readableToRuntimeBinding, readableToIcon } =
-    buildToolMaps(availableTools))
-
-  $: filteredTools = availableTools.filter(tool => {
-    const query = toolSearch.toLowerCase()
-    return (
-      tool.name?.toLowerCase().includes(query) ||
-      tool.readableBinding?.toLowerCase().includes(query)
-    )
-  })
-
-  $: toolSections = filteredTools.reduce<Record<string, AgentTool[]>>(
-    (acc, tool) => {
-      const key = getSectionName(tool.sourceType)
-      acc[key] = acc[key] || []
-      acc[key].push(tool)
-      return acc
-    },
-    {}
-  )
-
-  $: promptBindings = (() => {
-    return availableTools
-      .filter(tool => !!tool.name)
-      .filter(
-        tool =>
-          tool.sourceType !== ToolType.SEARCH ||
-          (webSearchConfigured && tool.runtimeBinding)
-      )
-      .map(tool => ({
-        runtimeBinding: tool.runtimeBinding,
-        readableBinding: tool.readableBinding,
-        category: getSectionName(tool.sourceType),
-        display: {
-          name:
-            tool.sourceType === ToolType.SEARCH
-              ? "Web search"
-              : formatToolLabel(tool),
-          type: "tool",
-          rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
-        },
-        icon: tool.tagIconUrl,
-      }))
-  })()
-
-  $: promptCompletions =
-    promptBindings.length > 0
-      ? [
-          hbAutocomplete([
-            ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
-          ]),
-        ]
-      : []
-
-  $: includedToolRuntimeBindings = getIncludedToolRuntimeBindings(
-    draft.promptInstructions,
-    readableToRuntimeBinding
-  )
-
-  $: includedToolsWithDetails = includedToolRuntimeBindings
-    .map(runtimeBinding =>
-      availableTools.find(tool => tool.runtimeBinding === runtimeBinding)
-    )
-    .filter((tool): tool is AgentTool => !!tool)
-
-  const slugify = (str: string) =>
-    str
+  function slugify(str: string) {
+    return str
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "_")
       .replace(/^_|_$/g, "")
-
-  const getBindingPrefix = (
+  }
+  function getBindingPrefix(
     sourceType: ToolType | undefined,
     sourceLabel: string | undefined
-  ): string => {
+  ): string {
     if (sourceType === ToolType.BUDIBASE) {
       return "budibase"
     }
@@ -340,7 +363,7 @@
     return "tool"
   }
 
-  const getSectionName = (sourceType: ToolType | undefined): string => {
+  function getSectionName(sourceType: ToolType | undefined): string {
     if (sourceType === ToolType.BUDIBASE) {
       return "Budibase"
     }
@@ -353,7 +376,7 @@
     return "Tools"
   }
 
-  const normaliseToolNameForMatch = (name: string) => {
+  function normaliseToolNameForMatch(name: string) {
     const sanitised = name.replace(/[^a-zA-Z0-9_-]/g, "_")
     return sanitised.length > 64
       ? `${sanitised.substring(0, 64)}...`
@@ -409,8 +432,12 @@
 
   const insertToolBinding = (readableBinding: string) => {
     const currentValue = draft.promptInstructions || ""
-    const start = currentValue.length
-    const end = start
+    const caretPos = getCaretPosition?.() ?? {
+      start: currentValue.length,
+      end: currentValue.length,
+    }
+    const start = caretPos.start
+    const end = caretPos.end
     const wrapped = hbInsert(currentValue, start, end, readableBinding)
 
     if (insertAtPos) {
@@ -438,16 +465,17 @@
     insertToolBinding(tool.readableBinding)
   }
 
-  const normaliseBinding = (binding: string) =>
-    binding
+  function normaliseBinding(binding: string) {
+    return binding
       .replace(/^\s*\{\{\s*/, "")
       .replace(/\s*\}\}\s*$/, "")
       .trim()
+  }
 
-  const getIncludedToolRuntimeBindings = (
+  function getIncludedToolRuntimeBindings(
     prompt: string | undefined | null,
     bindingsMap: Record<string, string>
-  ) => {
+  ) {
     const matches = (prompt || "").match(/\{\{[^}]+\}\}/g) || []
     return Array.from(
       new Set(
@@ -457,6 +485,22 @@
           .filter(Boolean)
       )
     )
+  }
+
+  function getWebSearchRuntimeBinding(
+    configured?: boolean,
+    config?: typeof webSearchConfig
+  ) {
+    if (!configured || !config) {
+      return undefined
+    }
+    if (config.provider === WebSearchProvider.EXA) {
+      return "exa_search"
+    }
+    if (config.provider === WebSearchProvider.PARALLEL) {
+      return "parallel_search"
+    }
+    return undefined
   }
 
   const escapeRegExp = (str: string) =>
@@ -475,16 +519,6 @@
 
   const configureWebSearch = () => {
     webSearchConfigModal?.show()
-  }
-
-  $: if (pendingWebSearchInsert && webSearchConfigured) {
-    const searchTool = availableTools.find(
-      tool => tool.sourceType === ToolType.SEARCH
-    )
-    if (searchTool?.readableBinding) {
-      insertToolBinding(searchTool.readableBinding)
-    }
-    pendingWebSearchInsert = false
   }
 
   async function saveAgent({
@@ -559,8 +593,19 @@
     }
   }
 
+  const clearAutoSave = () => {
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout)
+      autoSaveTimeout = undefined
+    }
+  }
+
   onMount(async () => {
-    await Promise.all([agentsStore.init(), aiConfigsStore.fetch()])
+    if (!$agentsStore.agentsLoaded) {
+      await agentsStore.init()
+    }
+    await Promise.all([aiConfigsStore.fetch(), ragConfigStore.fetch()])
+
     if (draft.aiconfig) {
       agentsStore.fetchTools(draft.aiconfig)
     }
@@ -624,8 +669,8 @@
             </div>
             <div class="form-icon">
               <EditableIcon
-                name={draft.icon}
-                color={draft.iconColor}
+                name={draft.icon || ""}
+                color={draft.iconColor || ""}
                 size="L"
                 on:change={e => {
                   draft.icon = e.detail.name
@@ -648,12 +693,13 @@
               />
             </div>
             <div class="form-icon">
-              <ActionButton
-                size="M"
-                icon="sliders-horizontal"
-                tooltip="Manage AI configurations"
-                on:click={() => bb.settings("/ai")}
-              />
+              <AbsTooltip text="Manage AI configurations">
+                <ActionButton
+                  size="M"
+                  icon="sliders-horizontal"
+                  on:click={() => bb.settings("/ai/aisettings")}
+                />
+              </AbsTooltip>
             </div>
           </div>
 
@@ -661,20 +707,26 @@
             <Heading size="XS">Instructions</Heading>
             <div class="prompt-editor-wrapper">
               <div class="prompt-editor">
-                <CodeEditor
-                  value={draft.promptInstructions || ""}
-                  bindings={promptBindings}
-                  bindingIcons={readableToIcon}
-                  completions={promptCompletions}
-                  mode={EditorModes.Handlebars}
-                  bind:insertAtPos
-                  renderBindingsAsTags={true}
-                  placeholder=""
-                  on:change={event => {
-                    draft.promptInstructions = event.detail || ""
-                    scheduleSave()
-                  }}
-                />
+                {#if toolsLoaded}
+                  {#key resolvedIconCount}
+                    <CodeEditor
+                      value={draft.promptInstructions || ""}
+                      bindings={promptBindings}
+                      bindingIcons={readableToIcon}
+                      completions={promptCompletions}
+                      mode={EditorModes.Handlebars}
+                      bind:insertAtPos
+                      renderBindingsAsTags={true}
+                      renderMarkdownDecorations={true}
+                      placeholder=""
+                      on:change={event => {
+                        draft.promptInstructions = event.detail || ""
+                        scheduleSave()
+                      }}
+                      bind:getCaretPosition
+                    />
+                  {/key}
+                {/if}
               </div>
               <div class="bindings-bar">
                 <span class="bindings-bar-text"
@@ -763,6 +815,46 @@
                   </div>
                 </div>
               {/each}
+            </div>
+          {/if}
+
+          <div class="section rag-settings">
+            <div class="rag-header">
+              <Heading size="XS">File ingestion:</Heading>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <Select
+                  label="RAG configuration"
+                  labelPosition="left"
+                  bind:value={draft.ragConfigId}
+                  getOptionLabel={o => o.name}
+                  getOptionValue={o => o._id}
+                  options={ragConfigs}
+                  placeholder="Select a RAG configuration"
+                  disabled={!ragConfigs.length}
+                  on:change={() => {
+                    ragConfigError = undefined
+                    scheduleSave(true)
+                  }}
+                  error={ragConfigError}
+                />
+              </div>
+              <div class="form-icon">
+                <AbsTooltip text="Manage model configurations">
+                  <ActionButton
+                    size="M"
+                    icon="sliders-horizontal"
+                    on:click={() => bb.settings("/ai/embedding-settings")}
+                  />
+                </AbsTooltip>
+              </div>
+            </div>
+          </div>
+
+          {#if draft.ragConfigId}
+            <div class="section files-section">
+              <FilesPanel currentAgentId={currentAgent?._id} />
             </div>
           {/if}
         </Layout>
@@ -1007,6 +1099,7 @@
     display: grid;
     place-items: center;
     flex-shrink: 0;
+    margin-bottom: var(--spacing-xs);
   }
 
   .tool-label {
@@ -1037,5 +1130,22 @@
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+
+  .rag-settings {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .files-section,
+  .rag-settings {
+    padding-top: var(--spacing-m);
+    gap: var(--spacing-s);
+  }
+
+  .rag-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
   }
 </style>

@@ -56,6 +56,7 @@
 
   if (!$admin.cloud) {
     filterOptions.push({ label: "Datasources", value: "datasource" })
+    filterOptions.push({ label: "Automation", value: "automation" })
   }
 
   $: filteredPlugins = $plugins

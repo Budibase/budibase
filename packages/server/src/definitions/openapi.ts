@@ -4,2306 +4,2953 @@
  */
 
 export interface paths {
-  "/applications": {
-    post: operations["appCreate"];
-  };
-  "/applications/{appId}": {
-    get: operations["appGetById"];
-    put: operations["appUpdate"];
-    delete: operations["appDestroy"];
-  };
-  "/applications/{appId}/unpublish": {
-    post: operations["appUnpublish"];
-  };
-  "/applications/{appId}/publish": {
-    post: operations["appPublish"];
-  };
-  "/applications/{appId}/import": {
-    /** This endpoint is only available on a business or enterprise license. */
-    post: operations["appImport"];
-  };
-  "/applications/{appId}/export": {
-    /** This endpoint is only available on a business or enterprise license. */
-    post: operations["appExport"];
-  };
-  "/applications/search": {
-    /** Based on application properties (currently only name) search for applications. */
-    post: operations["appSearch"];
-  };
-  "/metrics": {
-    /** Output metrics in OpenMetrics format compatible with Prometheus */
-    get: operations["metricsGet"];
-  };
-  "/queries/{queryId}": {
-    /** Queries which have been created within a Budibase app can be executed using this, */
-    post: operations["queryExecute"];
-  };
-  "/queries/search": {
-    /** Based on query properties (currently only name) search for queries. */
-    post: operations["querySearch"];
-  };
-  "/roles/assign": {
-    /** This is a business/enterprise only endpoint */
-    post: operations["roleAssign"];
-  };
-  "/roles/unassign": {
-    /** This is a business/enterprise only endpoint */
-    post: operations["roleUnAssign"];
-  };
-  "/tables/{tableId}/rows": {
-    /** Creates a row within the specified table. */
-    post: operations["rowCreate"];
-  };
-  "/tables/{tableId}/rows/{rowId}": {
-    /** This gets a single row, it will be enriched with the full related rows, rather than the squashed "primaryDisplay" format returned by the search endpoint. */
-    get: operations["rowGetById"];
-    /** Updates a row within the specified table. */
-    put: operations["rowUpdate"];
-    /** Deletes a row within the specified table. */
-    delete: operations["rowDestroy"];
-  };
-  "/tables/{tableId}/rows/search": {
-    post: operations["rowSearch"];
-  };
-  "/views/{viewId}/rows/search": {
-    post: operations["rowViewSearch"];
-  };
-  "/tables": {
-    /** Create a table, this could be internal or external. */
-    post: operations["tableCreate"];
-  };
-  "/tables/{tableId}": {
-    /** Lookup a table, this could be internal or external. */
-    get: operations["tableGetById"];
-    /** Update a table, this could be internal or external. */
-    put: operations["tableUpdate"];
-    /** Delete a table, this could be internal or external. */
-    delete: operations["tableDestroy"];
-  };
-  "/tables/search": {
-    /** Based on table properties (currently only name) search for tables. This could be an internal or an external table. */
-    post: operations["tableSearch"];
-  };
-  "/users": {
-    post: operations["userCreate"];
-  };
-  "/users/{userId}": {
-    get: operations["userGetById"];
-    put: operations["userUpdate"];
-    delete: operations["userDestroy"];
-  };
-  "/users/search": {
-    /** Based on user properties (currently only name) search for users. */
-    post: operations["userSearch"];
-  };
-  "/views": {
-    /** Create a view, this can be against an internal or external table. */
-    post: operations["viewCreate"];
-  };
-  "/views/{viewId}": {
-    /** Lookup a view, this could be internal or external. */
-    get: operations["viewGetById"];
-    /** Update a view, this can be against an internal or external table. */
-    put: operations["viewUpdate"];
-    /** Delete a view, this can be against an internal or external table. */
-    delete: operations["viewDestroy"];
-  };
-  "/views/search": {
-    /** Based on view properties (currently only name) search for views. */
-    post: operations["viewSearch"];
-  };
-  "/workspaces": {
-    post: operations["workspaceCreate"];
-  };
-  "/workspaces/{workspaceId}": {
-    get: operations["workspaceGetById"];
-    put: operations["workspaceUpdate"];
-    delete: operations["workspaceDestroy"];
-  };
-  "/workspaces/{workspaceId}/publish": {
-    post: operations["workspacePublish"];
-  };
-  "/workspaces/{workspaceId}/unpublish": {
-    post: operations["workspaceUnpublish"];
-  };
-  "/workspaces/{workspaceId}/import": {
-    /** This endpoint is only available on a business or enterprise license. */
-    post: operations["workspaceImport"];
-  };
-  "/workspaces/{workspaceId}/export": {
-    /** This endpoint is only available on a business or enterprise license. */
-    post: operations["workspaceExport"];
-  };
-  "/workspaces/search": {
-    /** Based on workspace properties (currently only name) search for workspaces. */
-    post: operations["workspaceSearch"];
-  };
+    "/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an application
+         * @deprecated
+         */
+        post: operations["appCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/applications/{appId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrieve an application
+         * @deprecated
+         */
+        get: operations["appGetById"];
+        /**
+         * Update an application
+         * @deprecated
+         */
+        put: operations["appUpdate"];
+        post?: never;
+        /**
+         * Delete an application
+         * @deprecated
+         */
+        delete: operations["appDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/applications/{appId}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish an application
+         * @deprecated
+         */
+        post: operations["appUnpublish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/applications/{appId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish an application
+         * @deprecated
+         */
+        post: operations["appPublish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/applications/{appId}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import an app to an existing app 🔒
+         * @deprecated
+         * @description This endpoint is only available on a business or enterprise license.
+         */
+        post: operations["appImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/applications/{appId}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export an app 🔒
+         * @deprecated
+         * @description This endpoint is only available on a business or enterprise license.
+         */
+        post: operations["appExport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/applications/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search for applications
+         * @deprecated
+         * @description Based on application properties (currently only name) search for applications.
+         */
+        post: operations["appSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrieve Budibase tenant metrics
+         * @description Output metrics in OpenMetrics format compatible with Prometheus
+         */
+        get: operations["metricsGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/queries/{queryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute a query
+         * @description Queries which have been created within a Budibase app can be executed using this,
+         */
+        post: operations["queryExecute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/queries/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search for queries
+         * @description Based on query properties (currently only name) search for queries.
+         */
+        post: operations["querySearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/roles/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assign a role to a list of users
+         * @description This is a business/enterprise only endpoint
+         */
+        post: operations["roleAssign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/roles/unassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Un-assign a role from a list of users
+         * @description This is a business/enterprise only endpoint
+         */
+        post: operations["roleUnAssign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tables/{tableId}/rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a row
+         * @description Creates a row within the specified table.
+         */
+        post: operations["rowCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tables/{tableId}/rows/{rowId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrieve a row
+         * @description This gets a single row, it will be enriched with the full related rows, rather than the squashed "primaryDisplay" format returned by the search endpoint.
+         */
+        get: operations["rowGetById"];
+        /**
+         * Update a row
+         * @description Updates a row within the specified table.
+         */
+        put: operations["rowUpdate"];
+        post?: never;
+        /**
+         * Delete a row
+         * @description Deletes a row within the specified table.
+         */
+        delete: operations["rowDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tables/{tableId}/rows/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Search for rows */
+        post: operations["rowSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/views/{viewId}/rows/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Search for rows in a view */
+        post: operations["rowViewSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a table
+         * @description Create a table, this could be internal or external.
+         */
+        post: operations["tableCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tables/{tableId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrieve a table
+         * @description Lookup a table, this could be internal or external.
+         */
+        get: operations["tableGetById"];
+        /**
+         * Update a table
+         * @description Update a table, this could be internal or external.
+         */
+        put: operations["tableUpdate"];
+        post?: never;
+        /**
+         * Delete a table
+         * @description Delete a table, this could be internal or external.
+         */
+        delete: operations["tableDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tables/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search for tables
+         * @description Based on table properties (currently only name) search for tables. This could be an internal or an external table.
+         */
+        post: operations["tableSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a user */
+        post: operations["userCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Retrieve a user */
+        get: operations["userGetById"];
+        /** Update a user */
+        put: operations["userUpdate"];
+        post?: never;
+        /** Delete a user */
+        delete: operations["userDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search for users
+         * @description Based on user properties (currently only name) search for users.
+         */
+        post: operations["userSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a view
+         * @description Create a view, this can be against an internal or external table.
+         */
+        post: operations["viewCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/views/{viewId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrieve a view
+         * @description Lookup a view, this could be internal or external.
+         */
+        get: operations["viewGetById"];
+        /**
+         * Update a view
+         * @description Update a view, this can be against an internal or external table.
+         */
+        put: operations["viewUpdate"];
+        post?: never;
+        /**
+         * Delete a view
+         * @description Delete a view, this can be against an internal or external table.
+         */
+        delete: operations["viewDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/views/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search for views
+         * @description Based on view properties (currently only name) search for views.
+         */
+        post: operations["viewSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a workspace */
+        post: operations["workspaceCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Retrieve a workspace */
+        get: operations["workspaceGetById"];
+        /** Update a workspace */
+        put: operations["workspaceUpdate"];
+        post?: never;
+        /** Delete a workspace */
+        delete: operations["workspaceDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish a workspace */
+        post: operations["workspacePublish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unpublish a workspace */
+        post: operations["workspaceUnpublish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import a workspace to an existing workspace 🔒
+         * @description This endpoint is only available on a business or enterprise license.
+         */
+        post: operations["workspaceImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export a workspace 🔒
+         * @description This endpoint is only available on a business or enterprise license.
+         */
+        post: operations["workspaceExport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search for workspaces
+         * @description Based on workspace properties (currently only name) search for workspaces.
+         */
+        post: operations["workspaceSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
-
+export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    application: {
-      /** @description The name of the app. */
-      name: string;
-      /** @description The URL by which the app is accessed, this must be URL encoded. */
-      url?: string;
+    schemas: {
+        application: {
+            /** @description The name of the app. */
+            name: string;
+            /** @description The URL by which the app is accessed, this must be URL encoded. */
+            url?: string;
+        };
+        workspace: {
+            /** @description The name of the app. */
+            name: string;
+            /** @description The URL by which the app is accessed, this must be URL encoded. */
+            url?: string;
+        };
+        applicationOutput: {
+            data: {
+                /** @description The name of the app. */
+                name: string;
+                /** @description The URL by which the app is accessed, this must be URL encoded. */
+                url: string;
+                /** @description The ID of the app. */
+                _id: string;
+                /**
+                 * @description The status of the app, stating it if is the development or published version.
+                 * @enum {string}
+                 */
+                status: "development" | "published";
+                /** @description States when the app was created, will be constant. Stored in ISO format. */
+                createdAt: string;
+                /** @description States the last time the app was updated - stored in ISO format. */
+                updatedAt: string;
+                /** @description States the version of the Budibase client this app is currently based on. */
+                version: string;
+                /** @description In a multi-tenant environment this will state the tenant this app is within. */
+                tenantId?: string;
+                /** @description The user this app is currently being built by. */
+                lockedBy?: Record<string, never>;
+            };
+        };
+        workspaceOutput: {
+            data: {
+                /** @description The name of the app. */
+                name: string;
+                /** @description The URL by which the app is accessed, this must be URL encoded. */
+                url: string;
+                /** @description The ID of the app. */
+                _id: string;
+                /**
+                 * @description The status of the app, stating it if is the development or published version.
+                 * @enum {string}
+                 */
+                status: "development" | "published";
+                /** @description States when the app was created, will be constant. Stored in ISO format. */
+                createdAt: string;
+                /** @description States the last time the app was updated - stored in ISO format. */
+                updatedAt: string;
+                /** @description States the version of the Budibase client this app is currently based on. */
+                version: string;
+                /** @description In a multi-tenant environment this will state the tenant this app is within. */
+                tenantId?: string;
+                /** @description The user this app is currently being built by. */
+                lockedBy?: Record<string, never>;
+            };
+        };
+        applicationSearch: {
+            data: {
+                /** @description The name of the app. */
+                name: string;
+                /** @description The URL by which the app is accessed, this must be URL encoded. */
+                url: string;
+                /** @description The ID of the app. */
+                _id: string;
+                /**
+                 * @description The status of the app, stating it if is the development or published version.
+                 * @enum {string}
+                 */
+                status: "development" | "published";
+                /** @description States when the app was created, will be constant. Stored in ISO format. */
+                createdAt: string;
+                /** @description States the last time the app was updated - stored in ISO format. */
+                updatedAt: string;
+                /** @description States the version of the Budibase client this app is currently based on. */
+                version: string;
+                /** @description In a multi-tenant environment this will state the tenant this app is within. */
+                tenantId?: string;
+                /** @description The user this app is currently being built by. */
+                lockedBy?: Record<string, never>;
+            }[];
+        };
+        workspaceSearch: {
+            data: {
+                /** @description The name of the app. */
+                name: string;
+                /** @description The URL by which the app is accessed, this must be URL encoded. */
+                url: string;
+                /** @description The ID of the app. */
+                _id: string;
+                /**
+                 * @description The status of the app, stating it if is the development or published version.
+                 * @enum {string}
+                 */
+                status: "development" | "published";
+                /** @description States when the app was created, will be constant. Stored in ISO format. */
+                createdAt: string;
+                /** @description States the last time the app was updated - stored in ISO format. */
+                updatedAt: string;
+                /** @description States the version of the Budibase client this app is currently based on. */
+                version: string;
+                /** @description In a multi-tenant environment this will state the tenant this app is within. */
+                tenantId?: string;
+                /** @description The user this app is currently being built by. */
+                lockedBy?: Record<string, never>;
+            }[];
+        };
+        deploymentOutput: {
+            data: {
+                /** @description The ID of the app. */
+                _id: string;
+                /**
+                 * @description Status of the deployment, whether it succeeded or failed
+                 * @enum {string}
+                 */
+                status: "SUCCESS" | "FAILURE";
+                /** @description The URL of the published app */
+                appUrl: string;
+            };
+        };
+        appExport: {
+            /** @description An optional password used to encrypt the export. */
+            encryptPassword: string;
+            /** @description Set whether the internal table rows should be excluded from the export. */
+            excludeRows: boolean;
+        };
+        workspaceExport: {
+            /** @description An optional password used to encrypt the export. */
+            encryptPassword: string;
+            /** @description Set whether the internal table rows should be excluded from the export. */
+            excludeRows: boolean;
+        };
+        /** @description The row to be created/updated, based on the table schema. */
+        row: {
+            [key: string]: unknown;
+        };
+        searchOutput: {
+            /** @description An array of rows, these will each contain an _id field which can be used to update or delete them. */
+            data: Record<string, never>[];
+            /** @description If pagination in use, this should be provided. */
+            bookmark?: string | number;
+            /** @description If pagination in use, this will determine if there is another page to fetch. */
+            hasNextPage?: boolean;
+        };
+        rowOutput: {
+            /** @description The row to be created/updated, based on the table schema. */
+            data: {
+                /** @description The ID of the row. */
+                _id: string;
+                /** @description The ID of the table this row comes from. */
+                tableId: string;
+            } & {
+                [key: string]: unknown;
+            };
+        };
+        /** @description The table to be created/updated. */
+        table: {
+            /** @description The name of the table. */
+            name: string;
+            /** @description The name of the column which should be used in relationship tags when relating to this table. */
+            primaryDisplay?: string;
+            schema: {
+                [key: string]: {
+                    /**
+                     * @description A relationship column.
+                     * @enum {string}
+                     */
+                    type?: "link";
+                    /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                    constraints?: {
+                        type?: string;
+                        presence?: boolean | {
+                            /** @description Defines whether the value is allowed to be empty or not. */
+                            allowEmpty?: boolean;
+                        };
+                        /** @description Defines the valid values for this column. */
+                        inclusion?: unknown[];
+                    };
+                    /** @description The name of the column. */
+                    name?: string;
+                    /** @description Defines whether the column is automatically generated. */
+                    autocolumn?: boolean;
+                    /** @description Defines the width of the column in the data UI. */
+                    width?: number;
+                    /** @description The name of the column which a relationship column is related to in another table. */
+                    fieldName?: string;
+                    /** @description The ID of the table which a relationship column is related to. */
+                    tableId?: string;
+                    /**
+                     * @description Defines the type of relationship that this column will be used for.
+                     * @enum {string}
+                     */
+                    relationshipType?: "one-to-many" | "many-to-one" | "many-to-many";
+                    /** @description When using a SQL table that contains many to many relationships this defines the table the relationships are linked through. */
+                    through?: string;
+                    /** @description When using a SQL table that contains a one to many relationship this defines the foreign key. */
+                    foreignKey?: string;
+                    /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for this table. */
+                    throughFrom?: string;
+                    /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table. */
+                    throughTo?: string;
+                } | {
+                    /**
+                     * @description A formula column.
+                     * @enum {string}
+                     */
+                    type?: "formula";
+                    /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                    constraints?: {
+                        type?: string;
+                        presence?: boolean | {
+                            /** @description Defines whether the value is allowed to be empty or not. */
+                            allowEmpty?: boolean;
+                        };
+                        /** @description Defines the valid values for this column. */
+                        inclusion?: unknown[];
+                    };
+                    /** @description The name of the column. */
+                    name?: string;
+                    /** @description Defines whether the column is automatically generated. */
+                    autocolumn?: boolean;
+                    /** @description Defines the width of the column in the data UI. */
+                    width?: number;
+                    /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
+                    formula?: string;
+                    /**
+                     * @description Defines whether this is a static or dynamic formula.
+                     * @enum {string}
+                     */
+                    formulaType?: "static" | "dynamic";
+                } | {
+                    /**
+                     * @description Defines the type of the column, most explain themselves, a link column is a relationship.
+                     * @enum {string}
+                     */
+                    type?: "string" | "longform" | "options" | "number" | "boolean" | "array" | "datetime" | "attachment" | "attachment_single" | "auto" | "ai" | "json" | "internal" | "barcodeqr" | "signature_single" | "bigint" | "bb_reference" | "bb_reference_single";
+                    /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                    constraints?: {
+                        type?: string;
+                        presence?: boolean | {
+                            /** @description Defines whether the value is allowed to be empty or not. */
+                            allowEmpty?: boolean;
+                        };
+                        /** @description Defines the valid values for this column. */
+                        inclusion?: unknown[];
+                    };
+                    /** @description The name of the column. */
+                    name?: string;
+                    /** @description Defines whether the column is automatically generated. */
+                    autocolumn?: boolean;
+                    /** @description Defines the width of the column in the data UI. */
+                    width?: number;
+                };
+            };
+        };
+        tableOutput: {
+            /** @description The table to be created/updated. */
+            data: {
+                /** @description The name of the table. */
+                name: string;
+                /** @description The name of the column which should be used in relationship tags when relating to this table. */
+                primaryDisplay?: string;
+                schema: {
+                    [key: string]: {
+                        /**
+                         * @description A relationship column.
+                         * @enum {string}
+                         */
+                        type?: "link";
+                        /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                        constraints?: {
+                            type?: string;
+                            presence?: boolean | {
+                                /** @description Defines whether the value is allowed to be empty or not. */
+                                allowEmpty?: boolean;
+                            };
+                            /** @description Defines the valid values for this column. */
+                            inclusion?: unknown[];
+                        };
+                        /** @description The name of the column. */
+                        name?: string;
+                        /** @description Defines whether the column is automatically generated. */
+                        autocolumn?: boolean;
+                        /** @description Defines the width of the column in the data UI. */
+                        width?: number;
+                        /** @description The name of the column which a relationship column is related to in another table. */
+                        fieldName?: string;
+                        /** @description The ID of the table which a relationship column is related to. */
+                        tableId?: string;
+                        /**
+                         * @description Defines the type of relationship that this column will be used for.
+                         * @enum {string}
+                         */
+                        relationshipType?: "one-to-many" | "many-to-one" | "many-to-many";
+                        /** @description When using a SQL table that contains many to many relationships this defines the table the relationships are linked through. */
+                        through?: string;
+                        /** @description When using a SQL table that contains a one to many relationship this defines the foreign key. */
+                        foreignKey?: string;
+                        /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for this table. */
+                        throughFrom?: string;
+                        /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table. */
+                        throughTo?: string;
+                    } | {
+                        /**
+                         * @description A formula column.
+                         * @enum {string}
+                         */
+                        type?: "formula";
+                        /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                        constraints?: {
+                            type?: string;
+                            presence?: boolean | {
+                                /** @description Defines whether the value is allowed to be empty or not. */
+                                allowEmpty?: boolean;
+                            };
+                            /** @description Defines the valid values for this column. */
+                            inclusion?: unknown[];
+                        };
+                        /** @description The name of the column. */
+                        name?: string;
+                        /** @description Defines whether the column is automatically generated. */
+                        autocolumn?: boolean;
+                        /** @description Defines the width of the column in the data UI. */
+                        width?: number;
+                        /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
+                        formula?: string;
+                        /**
+                         * @description Defines whether this is a static or dynamic formula.
+                         * @enum {string}
+                         */
+                        formulaType?: "static" | "dynamic";
+                    } | {
+                        /**
+                         * @description Defines the type of the column, most explain themselves, a link column is a relationship.
+                         * @enum {string}
+                         */
+                        type?: "string" | "longform" | "options" | "number" | "boolean" | "array" | "datetime" | "attachment" | "attachment_single" | "auto" | "ai" | "json" | "internal" | "barcodeqr" | "signature_single" | "bigint" | "bb_reference" | "bb_reference_single";
+                        /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                        constraints?: {
+                            type?: string;
+                            presence?: boolean | {
+                                /** @description Defines whether the value is allowed to be empty or not. */
+                                allowEmpty?: boolean;
+                            };
+                            /** @description Defines the valid values for this column. */
+                            inclusion?: unknown[];
+                        };
+                        /** @description The name of the column. */
+                        name?: string;
+                        /** @description Defines whether the column is automatically generated. */
+                        autocolumn?: boolean;
+                        /** @description Defines the width of the column in the data UI. */
+                        width?: number;
+                    };
+                };
+                /** @description The ID of the table. */
+                _id: string;
+            };
+        };
+        tableSearch: {
+            data: {
+                /** @description The name of the table. */
+                name: string;
+                /** @description The name of the column which should be used in relationship tags when relating to this table. */
+                primaryDisplay?: string;
+                schema: {
+                    [key: string]: {
+                        /**
+                         * @description A relationship column.
+                         * @enum {string}
+                         */
+                        type?: "link";
+                        /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                        constraints?: {
+                            type?: string;
+                            presence?: boolean | {
+                                /** @description Defines whether the value is allowed to be empty or not. */
+                                allowEmpty?: boolean;
+                            };
+                            /** @description Defines the valid values for this column. */
+                            inclusion?: unknown[];
+                        };
+                        /** @description The name of the column. */
+                        name?: string;
+                        /** @description Defines whether the column is automatically generated. */
+                        autocolumn?: boolean;
+                        /** @description Defines the width of the column in the data UI. */
+                        width?: number;
+                        /** @description The name of the column which a relationship column is related to in another table. */
+                        fieldName?: string;
+                        /** @description The ID of the table which a relationship column is related to. */
+                        tableId?: string;
+                        /**
+                         * @description Defines the type of relationship that this column will be used for.
+                         * @enum {string}
+                         */
+                        relationshipType?: "one-to-many" | "many-to-one" | "many-to-many";
+                        /** @description When using a SQL table that contains many to many relationships this defines the table the relationships are linked through. */
+                        through?: string;
+                        /** @description When using a SQL table that contains a one to many relationship this defines the foreign key. */
+                        foreignKey?: string;
+                        /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for this table. */
+                        throughFrom?: string;
+                        /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table. */
+                        throughTo?: string;
+                    } | {
+                        /**
+                         * @description A formula column.
+                         * @enum {string}
+                         */
+                        type?: "formula";
+                        /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                        constraints?: {
+                            type?: string;
+                            presence?: boolean | {
+                                /** @description Defines whether the value is allowed to be empty or not. */
+                                allowEmpty?: boolean;
+                            };
+                            /** @description Defines the valid values for this column. */
+                            inclusion?: unknown[];
+                        };
+                        /** @description The name of the column. */
+                        name?: string;
+                        /** @description Defines whether the column is automatically generated. */
+                        autocolumn?: boolean;
+                        /** @description Defines the width of the column in the data UI. */
+                        width?: number;
+                        /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
+                        formula?: string;
+                        /**
+                         * @description Defines whether this is a static or dynamic formula.
+                         * @enum {string}
+                         */
+                        formulaType?: "static" | "dynamic";
+                    } | {
+                        /**
+                         * @description Defines the type of the column, most explain themselves, a link column is a relationship.
+                         * @enum {string}
+                         */
+                        type?: "string" | "longform" | "options" | "number" | "boolean" | "array" | "datetime" | "attachment" | "attachment_single" | "auto" | "ai" | "json" | "internal" | "barcodeqr" | "signature_single" | "bigint" | "bb_reference" | "bb_reference_single";
+                        /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                        constraints?: {
+                            type?: string;
+                            presence?: boolean | {
+                                /** @description Defines whether the value is allowed to be empty or not. */
+                                allowEmpty?: boolean;
+                            };
+                            /** @description Defines the valid values for this column. */
+                            inclusion?: unknown[];
+                        };
+                        /** @description The name of the column. */
+                        name?: string;
+                        /** @description Defines whether the column is automatically generated. */
+                        autocolumn?: boolean;
+                        /** @description Defines the width of the column in the data UI. */
+                        width?: number;
+                    };
+                };
+                /** @description The ID of the table. */
+                _id: string;
+            }[];
+        };
+        /** @description The parameters required for executing a query. */
+        executeQuery: {
+            /** @description This contains the required parameters for the query, this depends on query type, setup and bindings. */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /** @description For supported query types (currently on REST) pagination can be performed using these properties. */
+            pagination?: {
+                /** @description The page which has been returned from a previous query. */
+                page?: string;
+                /** @description The number of rows to return per page. */
+                limit?: number;
+            };
+        };
+        executeQueryOutput: {
+            /** @description The data response from the query. */
+            data: Record<string, never>[];
+            /** @description Extra information that is not part of the main data, e.g. headers. */
+            extra?: {
+                /** @description If carrying out a REST request, this will contain the response headers. */
+                headers?: Record<string, never>;
+                /** @description The raw query response, as a string. */
+                raw?: string;
+            };
+            /** @description If pagination is supported, this will contain the bookmark/anchor information for it. */
+            pagination?: Record<string, never>;
+        };
+        query: {
+            /** @description The ID of the query. */
+            _id: string;
+            /** @description The ID of the datasource the query belongs to. */
+            datasourceId?: string;
+            /** @description The bindings which are required to perform this query. */
+            parameters?: string[];
+            /** @description The fields that are used to perform this query, e.g. the sql statement */
+            fields?: Record<string, never>;
+            /**
+             * @description The verb that describes this query.
+             * @enum {unknown}
+             */
+            queryVerb?: "create" | "read" | "update" | "delete";
+            /** @description The name of the query. */
+            name: string;
+            /** @description The schema of the data returned when the query is executed. */
+            schema: Record<string, never>;
+            /** @description The JavaScript transformer function, applied after the query responds with data. */
+            transformer?: string;
+            /** @description Whether the query has readable data. */
+            readable?: boolean;
+        };
+        querySearch: {
+            data: {
+                /** @description The ID of the query. */
+                _id: string;
+                /** @description The ID of the datasource the query belongs to. */
+                datasourceId?: string;
+                /** @description The bindings which are required to perform this query. */
+                parameters?: string[];
+                /** @description The fields that are used to perform this query, e.g. the sql statement */
+                fields?: Record<string, never>;
+                /**
+                 * @description The verb that describes this query.
+                 * @enum {unknown}
+                 */
+                queryVerb?: "create" | "read" | "update" | "delete";
+                /** @description The name of the query. */
+                name: string;
+                /** @description The schema of the data returned when the query is executed. */
+                schema: Record<string, never>;
+                /** @description The JavaScript transformer function, applied after the query responds with data. */
+                transformer?: string;
+                /** @description Whether the query has readable data. */
+                readable?: boolean;
+            }[];
+        };
+        user: {
+            /** @description The email address of the user, this must be unique. */
+            email: string;
+            /** @description The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure. */
+            password?: string;
+            /**
+             * @description The status of the user, if they are active.
+             * @enum {string}
+             */
+            status?: "active";
+            /** @description The first name of the user */
+            firstName?: string;
+            /** @description The last name of the user */
+            lastName?: string;
+            /** @description If set to true forces the user to reset their password on first login. */
+            forceResetPassword?: boolean;
+            /** @description Describes if the user is a builder user or not. This field can only be set on a business or enterprise license. */
+            builder?: {
+                /** @description If set to true the user will be able to build any app in the system. */
+                global?: boolean;
+            };
+            /** @description Describes if the user is an admin user or not. This field can only be set on a business or enterprise license. */
+            admin?: {
+                /** @description If set to true the user will be able to administrate the system. */
+                global?: boolean;
+            };
+            /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
+            roles?: {
+                [key: string]: string;
+            };
+        };
+        userOutput: {
+            data: {
+                /** @description The email address of the user, this must be unique. */
+                email: string;
+                /** @description The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure. */
+                password?: string;
+                /**
+                 * @description The status of the user, if they are active.
+                 * @enum {string}
+                 */
+                status?: "active";
+                /** @description The first name of the user */
+                firstName?: string;
+                /** @description The last name of the user */
+                lastName?: string;
+                /** @description If set to true forces the user to reset their password on first login. */
+                forceResetPassword?: boolean;
+                /** @description Describes if the user is a builder user or not. This field can only be set on a business or enterprise license. */
+                builder?: {
+                    /** @description If set to true the user will be able to build any app in the system. */
+                    global?: boolean;
+                };
+                /** @description Describes if the user is an admin user or not. This field can only be set on a business or enterprise license. */
+                admin?: {
+                    /** @description If set to true the user will be able to administrate the system. */
+                    global?: boolean;
+                };
+                /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
+                roles?: {
+                    [key: string]: string;
+                };
+                /** @description The ID of the user. */
+                _id: string;
+            };
+        };
+        userSearch: {
+            data: {
+                /** @description The email address of the user, this must be unique. */
+                email: string;
+                /** @description The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure. */
+                password?: string;
+                /**
+                 * @description The status of the user, if they are active.
+                 * @enum {string}
+                 */
+                status?: "active";
+                /** @description The first name of the user */
+                firstName?: string;
+                /** @description The last name of the user */
+                lastName?: string;
+                /** @description If set to true forces the user to reset their password on first login. */
+                forceResetPassword?: boolean;
+                /** @description Describes if the user is a builder user or not. This field can only be set on a business or enterprise license. */
+                builder?: {
+                    /** @description If set to true the user will be able to build any app in the system. */
+                    global?: boolean;
+                };
+                /** @description Describes if the user is an admin user or not. This field can only be set on a business or enterprise license. */
+                admin?: {
+                    /** @description If set to true the user will be able to administrate the system. */
+                    global?: boolean;
+                };
+                /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
+                roles?: {
+                    [key: string]: string;
+                };
+                /** @description The ID of the user. */
+                _id: string;
+            }[];
+        };
+        rowSearch: {
+            query: {
+                /** @description Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used. */
+                allOr?: boolean;
+                /**
+                 * @description A map of field name to the string to search for, this will look for rows that have a value starting with the string value.
+                 * @example {
+                 *       "columnName1": "value",
+                 *       "columnName2": "value"
+                 *     }
+                 */
+                string?: {
+                    [key: string]: string;
+                };
+                /** @description Searches for a sub-string within a string column, e.g. searching for 'dib' will match 'Budibase'. */
+                fuzzy?: Record<string, never>;
+                /**
+                 * @description Searches within a range, the format of this must be in the format of an object with a "low" and "high" property.
+                 * @example {
+                 *       "columnName1": {
+                 *         "low": 10,
+                 *         "high": 20
+                 *       }
+                 *     }
+                 */
+                range?: Record<string, never>;
+                /** @description Searches for rows that have a column value that is exactly the value set. */
+                equal?: Record<string, never>;
+                /** @description Searches for any row which does not contain the specified column value. */
+                notEqual?: Record<string, never>;
+                /**
+                 * @description Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.
+                 * @example {
+                 *       "columnName1": ""
+                 *     }
+                 */
+                empty?: Record<string, never>;
+                /** @description Searches for rows which have the specified column. */
+                notEmpty?: Record<string, never>;
+                /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
+                oneOf?: Record<string, never>;
+                /**
+                 * @description Searches for a value, or set of values in array column types (such as a multi-select). If an array of search options is provided then it must match all.
+                 * @example {
+                 *       "arrayColumn": [
+                 *         "a",
+                 *         "b"
+                 *       ]
+                 *     }
+                 */
+                contains?: Record<string, never>;
+                /**
+                 * @description The logical inverse of contains. Only works on array column types. If an array of values is passed, the row must not match any of them to be returned in the response.
+                 * @example {
+                 *       "arrayColumn": [
+                 *         "a",
+                 *         "b"
+                 *       ]
+                 *     }
+                 */
+                notContains?: Record<string, never>;
+                /**
+                 * @description As with the contains search, only works on array column types and searches for any of the provided values when given an array.
+                 * @example {
+                 *       "arrayColumn": [
+                 *         "a",
+                 *         "b"
+                 *       ]
+                 *     }
+                 */
+                containsAny?: Record<string, never>;
+            };
+            /** @description Enables pagination, by default this is disabled. */
+            paginate?: boolean;
+            /** @description If retrieving another page, the bookmark from the previous request must be supplied. */
+            bookmark?: string | number;
+            /** @description The maximum number of rows to return, useful when paginating, for internal tables this will be limited to 1000, for SQL tables it will be 5000. */
+            limit?: number;
+            /** @description A set of parameters describing the sort behaviour of the search. */
+            sort?: {
+                /**
+                 * @description The order of the sort, by default this is ascending.
+                 * @enum {string}
+                 */
+                order?: "ascending" | "descending";
+                /** @description The name of the column by which the rows will be sorted. */
+                column?: string;
+                /**
+                 * @description Defines whether the column should be treated as a string or as numbers when sorting.
+                 * @enum {string}
+                 */
+                type?: "string" | "number";
+            };
+        };
+        nameSearch: {
+            /** @description The name to be used when searching - this will be used in a case insensitive starts with match. */
+            name: string;
+        };
+        rolesAssign: {
+            /** @description Allow setting users to builders per app. */
+            appBuilder?: {
+                /** @description The app that the users should have app builder privileges granted for. */
+                appId: string;
+            };
+            /** @description Add/remove global builder permissions from the list of users. */
+            builder?: boolean;
+            /** @description Add/remove global admin permissions from the list of users. */
+            admin?: boolean;
+            /** @description Add/remove a per-app role, such as BASIC, ADMIN etc. */
+            role?: {
+                /** @description The role ID, such as BASIC, ADMIN or a custom role ID. */
+                roleId: string;
+                /** @description The app that the role relates to. */
+                appId: string;
+            };
+            /** @description The user IDs to be updated to add/remove the specified roles. */
+            userIds: string[];
+        };
+        rolesUnAssign: {
+            /** @description Allow setting users to builders per app. */
+            appBuilder?: {
+                /** @description The app that the users should have app builder privileges granted for. */
+                appId: string;
+            };
+            /** @description Add/remove global builder permissions from the list of users. */
+            builder?: boolean;
+            /** @description Add/remove global admin permissions from the list of users. */
+            admin?: boolean;
+            /** @description Add/remove a per-app role, such as BASIC, ADMIN etc. */
+            role?: {
+                /** @description The role ID, such as BASIC, ADMIN or a custom role ID. */
+                roleId: string;
+                /** @description The app that the role relates to. */
+                appId: string;
+            };
+            /** @description The user IDs to be updated to add/remove the specified roles. */
+            userIds: string[];
+        };
+        rolesOutput: {
+            data: {
+                /** @description The updated users' IDs */
+                userIds: string[];
+            };
+        };
+        /** @description The view to be created/updated. */
+        view: {
+            /** @description The name of the view. */
+            name: string;
+            /** @description The ID of the table this view is based on. */
+            tableId: string;
+            /**
+             * @description The type of view - standard (empty value) or calculation.
+             * @enum {string}
+             */
+            type?: "calculation";
+            /** @description A column used to display rows from this view - usually used when rendered in tables. */
+            primaryDisplay?: string;
+            /** @description Search parameters for view */
+            query?: {
+                /**
+                 * @description When using groups this defines whether all of the filters must match, or only one of them.
+                 * @enum {string}
+                 */
+                logicalOperator?: "all" | "any";
+                /**
+                 * @description If no filters match, should the view return all rows, or no rows.
+                 * @enum {string}
+                 */
+                onEmptyFilter?: "all" | "none";
+                /** @description A grouping of filters to be applied. */
+                groups?: {
+                    /**
+                     * @description When using groups this defines whether all of the filters must match, or only one of them.
+                     * @enum {string}
+                     */
+                    logicalOperator?: "all" | "any";
+                    /** @description A list of filters to apply */
+                    filters?: {
+                        /**
+                         * @description The type of search operation which is being performed.
+                         * @enum {string}
+                         */
+                        operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                        /** @description The field in the view to perform the search on. */
+                        field?: string;
+                        /** @description The value to search for - the type will depend on the operator in use. */
+                        value?: string | number | boolean | Record<string, never> | unknown[];
+                    }[];
+                    /** @description A grouping of filters to be applied. */
+                    groups?: {
+                        /**
+                         * @description When using groups this defines whether all of the filters must match, or only one of them.
+                         * @enum {string}
+                         */
+                        logicalOperator?: "all" | "any";
+                        /** @description A list of filters to apply */
+                        filters?: {
+                            /**
+                             * @description The type of search operation which is being performed.
+                             * @enum {string}
+                             */
+                            operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                            /** @description The field in the view to perform the search on. */
+                            field?: string;
+                            /** @description The value to search for - the type will depend on the operator in use. */
+                            value?: string | number | boolean | Record<string, never> | unknown[];
+                        }[];
+                    }[];
+                }[];
+            };
+            sort?: {
+                /** @description The field from the table/view schema to sort on. */
+                field: string;
+                /**
+                 * @description The order in which to sort.
+                 * @enum {string}
+                 */
+                order?: "ascending" | "descending";
+                /**
+                 * @description The type of sort to perform (by number, or by alphabetically).
+                 * @enum {string}
+                 */
+                type?: "string" | "number";
+            };
+            schema: {
+                [key: string]: {
+                    /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
+                    visible?: boolean;
+                    /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
+                    readonly?: boolean;
+                    /** @description A number defining where the column shows up in tables, lowest being first. */
+                    order?: number;
+                    /** @description A width for the column, defined in pixels - this affects rendering in tables. */
+                    width?: number;
+                    /** @description If this is a relationship column, we can set the columns we wish to include */
+                    column?: {
+                        readonly?: boolean;
+                    }[];
+                } | {
+                    /**
+                     * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
+                     * @enum {string}
+                     */
+                    calculationType?: "sum" | "avg" | "count" | "min" | "max";
+                    /** @description The field from the table to perform the calculation on. */
+                    field?: string;
+                    /** @description Can be used in tandem with the count calculation type, to count unique entries. */
+                    distinct?: boolean;
+                };
+            };
+        };
+        viewOutput: {
+            /** @description The view to be created/updated. */
+            data: {
+                /** @description The name of the view. */
+                name: string;
+                /** @description The ID of the table this view is based on. */
+                tableId: string;
+                /**
+                 * @description The type of view - standard (empty value) or calculation.
+                 * @enum {string}
+                 */
+                type?: "calculation";
+                /** @description A column used to display rows from this view - usually used when rendered in tables. */
+                primaryDisplay?: string;
+                /** @description Search parameters for view */
+                query?: {
+                    /**
+                     * @description When using groups this defines whether all of the filters must match, or only one of them.
+                     * @enum {string}
+                     */
+                    logicalOperator?: "all" | "any";
+                    /**
+                     * @description If no filters match, should the view return all rows, or no rows.
+                     * @enum {string}
+                     */
+                    onEmptyFilter?: "all" | "none";
+                    /** @description A grouping of filters to be applied. */
+                    groups?: {
+                        /**
+                         * @description When using groups this defines whether all of the filters must match, or only one of them.
+                         * @enum {string}
+                         */
+                        logicalOperator?: "all" | "any";
+                        /** @description A list of filters to apply */
+                        filters?: {
+                            /**
+                             * @description The type of search operation which is being performed.
+                             * @enum {string}
+                             */
+                            operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                            /** @description The field in the view to perform the search on. */
+                            field?: string;
+                            /** @description The value to search for - the type will depend on the operator in use. */
+                            value?: string | number | boolean | Record<string, never> | unknown[];
+                        }[];
+                        /** @description A grouping of filters to be applied. */
+                        groups?: {
+                            /**
+                             * @description When using groups this defines whether all of the filters must match, or only one of them.
+                             * @enum {string}
+                             */
+                            logicalOperator?: "all" | "any";
+                            /** @description A list of filters to apply */
+                            filters?: {
+                                /**
+                                 * @description The type of search operation which is being performed.
+                                 * @enum {string}
+                                 */
+                                operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                                /** @description The field in the view to perform the search on. */
+                                field?: string;
+                                /** @description The value to search for - the type will depend on the operator in use. */
+                                value?: string | number | boolean | Record<string, never> | unknown[];
+                            }[];
+                        }[];
+                    }[];
+                };
+                sort?: {
+                    /** @description The field from the table/view schema to sort on. */
+                    field: string;
+                    /**
+                     * @description The order in which to sort.
+                     * @enum {string}
+                     */
+                    order?: "ascending" | "descending";
+                    /**
+                     * @description The type of sort to perform (by number, or by alphabetically).
+                     * @enum {string}
+                     */
+                    type?: "string" | "number";
+                };
+                schema: {
+                    [key: string]: {
+                        /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
+                        visible?: boolean;
+                        /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
+                        readonly?: boolean;
+                        /** @description A number defining where the column shows up in tables, lowest being first. */
+                        order?: number;
+                        /** @description A width for the column, defined in pixels - this affects rendering in tables. */
+                        width?: number;
+                        /** @description If this is a relationship column, we can set the columns we wish to include */
+                        column?: {
+                            readonly?: boolean;
+                        }[];
+                    } | {
+                        /**
+                         * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
+                         * @enum {string}
+                         */
+                        calculationType?: "sum" | "avg" | "count" | "min" | "max";
+                        /** @description The field from the table to perform the calculation on. */
+                        field?: string;
+                        /** @description Can be used in tandem with the count calculation type, to count unique entries. */
+                        distinct?: boolean;
+                    };
+                };
+                /** @description The ID of the view. */
+                id: string;
+            };
+        };
+        viewSearch: {
+            data: {
+                /** @description The name of the view. */
+                name: string;
+                /** @description The ID of the table this view is based on. */
+                tableId: string;
+                /**
+                 * @description The type of view - standard (empty value) or calculation.
+                 * @enum {string}
+                 */
+                type?: "calculation";
+                /** @description A column used to display rows from this view - usually used when rendered in tables. */
+                primaryDisplay?: string;
+                /** @description Search parameters for view */
+                query?: {
+                    /**
+                     * @description When using groups this defines whether all of the filters must match, or only one of them.
+                     * @enum {string}
+                     */
+                    logicalOperator?: "all" | "any";
+                    /**
+                     * @description If no filters match, should the view return all rows, or no rows.
+                     * @enum {string}
+                     */
+                    onEmptyFilter?: "all" | "none";
+                    /** @description A grouping of filters to be applied. */
+                    groups?: {
+                        /**
+                         * @description When using groups this defines whether all of the filters must match, or only one of them.
+                         * @enum {string}
+                         */
+                        logicalOperator?: "all" | "any";
+                        /** @description A list of filters to apply */
+                        filters?: {
+                            /**
+                             * @description The type of search operation which is being performed.
+                             * @enum {string}
+                             */
+                            operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                            /** @description The field in the view to perform the search on. */
+                            field?: string;
+                            /** @description The value to search for - the type will depend on the operator in use. */
+                            value?: string | number | boolean | Record<string, never> | unknown[];
+                        }[];
+                        /** @description A grouping of filters to be applied. */
+                        groups?: {
+                            /**
+                             * @description When using groups this defines whether all of the filters must match, or only one of them.
+                             * @enum {string}
+                             */
+                            logicalOperator?: "all" | "any";
+                            /** @description A list of filters to apply */
+                            filters?: {
+                                /**
+                                 * @description The type of search operation which is being performed.
+                                 * @enum {string}
+                                 */
+                                operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                                /** @description The field in the view to perform the search on. */
+                                field?: string;
+                                /** @description The value to search for - the type will depend on the operator in use. */
+                                value?: string | number | boolean | Record<string, never> | unknown[];
+                            }[];
+                        }[];
+                    }[];
+                };
+                sort?: {
+                    /** @description The field from the table/view schema to sort on. */
+                    field: string;
+                    /**
+                     * @description The order in which to sort.
+                     * @enum {string}
+                     */
+                    order?: "ascending" | "descending";
+                    /**
+                     * @description The type of sort to perform (by number, or by alphabetically).
+                     * @enum {string}
+                     */
+                    type?: "string" | "number";
+                };
+                schema: {
+                    [key: string]: {
+                        /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
+                        visible?: boolean;
+                        /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
+                        readonly?: boolean;
+                        /** @description A number defining where the column shows up in tables, lowest being first. */
+                        order?: number;
+                        /** @description A width for the column, defined in pixels - this affects rendering in tables. */
+                        width?: number;
+                        /** @description If this is a relationship column, we can set the columns we wish to include */
+                        column?: {
+                            readonly?: boolean;
+                        }[];
+                    } | {
+                        /**
+                         * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
+                         * @enum {string}
+                         */
+                        calculationType?: "sum" | "avg" | "count" | "min" | "max";
+                        /** @description The field from the table to perform the calculation on. */
+                        field?: string;
+                        /** @description Can be used in tandem with the count calculation type, to count unique entries. */
+                        distinct?: boolean;
+                    };
+                };
+                /** @description The ID of the view. */
+                id: string;
+            }[];
+        };
     };
-    workspace: {
-      /** @description The name of the app. */
-      name: string;
-      /** @description The URL by which the app is accessed, this must be URL encoded. */
-      url?: string;
+    responses: never;
+    parameters: {
+        /** @description The ID of the app which this request is targeting. */
+        appId: string;
+        /** @description The ID of the app which this request is targeting. */
+        appIdUrl: string;
+        /** @description The ID of the query which this request is targeting. */
+        queryId: string;
+        /** @description The ID of the row which this request is targeting. */
+        rowId: string;
+        /** @description The ID of the table which this request is targeting. */
+        tableId: string;
+        /** @description The ID of the user which this request is targeting. */
+        userId: string;
+        /** @description The ID of the view which this request is targeting. */
+        viewId: string;
+        /** @description The ID of the workspace which this request is targeting. */
+        workspaceId: string;
     };
-    applicationOutput: {
-      data: {
-        /** @description The name of the app. */
-        name: string;
-        /** @description The URL by which the app is accessed, this must be URL encoded. */
-        url: string;
-        /** @description The ID of the app. */
-        _id: string;
-        /**
-         * @description The status of the app, stating it if is the development or published version.
-         * @enum {string}
-         */
-        status: "development" | "published";
-        /** @description States when the app was created, will be constant. Stored in ISO format. */
-        createdAt: string;
-        /** @description States the last time the app was updated - stored in ISO format. */
-        updatedAt: string;
-        /** @description States the version of the Budibase client this app is currently based on. */
-        version: string;
-        /** @description In a multi-tenant environment this will state the tenant this app is within. */
-        tenantId?: string;
-        /** @description The user this app is currently being built by. */
-        lockedBy?: { [key: string]: unknown };
-      };
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
+}
+export type $defs = Record<string, never>;
+export interface operations {
+    appCreate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["application"];
+            };
+        };
+        responses: {
+            /** @description Returns the created application. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["applicationOutput"];
+                };
+            };
+        };
     };
-    workspaceOutput: {
-      data: {
-        /** @description The name of the app. */
-        name: string;
-        /** @description The URL by which the app is accessed, this must be URL encoded. */
-        url: string;
-        /** @description The ID of the app. */
-        _id: string;
-        /**
-         * @description The status of the app, stating it if is the development or published version.
-         * @enum {string}
-         */
-        status: "development" | "published";
-        /** @description States when the app was created, will be constant. Stored in ISO format. */
-        createdAt: string;
-        /** @description States the last time the app was updated - stored in ISO format. */
-        updatedAt: string;
-        /** @description States the version of the Budibase client this app is currently based on. */
-        version: string;
-        /** @description In a multi-tenant environment this will state the tenant this app is within. */
-        tenantId?: string;
-        /** @description The user this app is currently being built by. */
-        lockedBy?: { [key: string]: unknown };
-      };
+    appGetById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the app which this request is targeting. */
+                appId: components["parameters"]["appIdUrl"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the retrieved application. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["applicationOutput"];
+                };
+            };
+        };
     };
-    applicationSearch: {
-      data: {
-        /** @description The name of the app. */
-        name: string;
-        /** @description The URL by which the app is accessed, this must be URL encoded. */
-        url: string;
-        /** @description The ID of the app. */
-        _id: string;
-        /**
-         * @description The status of the app, stating it if is the development or published version.
-         * @enum {string}
-         */
-        status: "development" | "published";
-        /** @description States when the app was created, will be constant. Stored in ISO format. */
-        createdAt: string;
-        /** @description States the last time the app was updated - stored in ISO format. */
-        updatedAt: string;
-        /** @description States the version of the Budibase client this app is currently based on. */
-        version: string;
-        /** @description In a multi-tenant environment this will state the tenant this app is within. */
-        tenantId?: string;
-        /** @description The user this app is currently being built by. */
-        lockedBy?: { [key: string]: unknown };
-      }[];
+    appUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the app which this request is targeting. */
+                appId: components["parameters"]["appIdUrl"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["application"];
+            };
+        };
+        responses: {
+            /** @description Returns the updated application. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["applicationOutput"];
+                };
+            };
+        };
     };
-    workspaceSearch: {
-      data: {
-        /** @description The name of the app. */
-        name: string;
-        /** @description The URL by which the app is accessed, this must be URL encoded. */
-        url: string;
-        /** @description The ID of the app. */
-        _id: string;
-        /**
-         * @description The status of the app, stating it if is the development or published version.
-         * @enum {string}
-         */
-        status: "development" | "published";
-        /** @description States when the app was created, will be constant. Stored in ISO format. */
-        createdAt: string;
-        /** @description States the last time the app was updated - stored in ISO format. */
-        updatedAt: string;
-        /** @description States the version of the Budibase client this app is currently based on. */
-        version: string;
-        /** @description In a multi-tenant environment this will state the tenant this app is within. */
-        tenantId?: string;
-        /** @description The user this app is currently being built by. */
-        lockedBy?: { [key: string]: unknown };
-      }[];
+    appDestroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the app which this request is targeting. */
+                appId: components["parameters"]["appIdUrl"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the deleted application. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["applicationOutput"];
+                };
+            };
+        };
     };
-    deploymentOutput: {
-      data: {
-        /** @description The ID of the app. */
-        _id: string;
-        /**
-         * @description Status of the deployment, whether it succeeded or failed
-         * @enum {string}
-         */
-        status: "SUCCESS" | "FAILURE";
-        /** @description The URL of the published app */
-        appUrl: string;
-      };
+    appUnpublish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the app which this request is targeting. */
+                appId: components["parameters"]["appIdUrl"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The app was published successfully. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    appPublish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the app which this request is targeting. */
+                appId: components["parameters"]["appIdUrl"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the deployment object. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["deploymentOutput"];
+                };
+            };
+        };
+    };
+    appImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the app which this request is targeting. */
+                appId: components["parameters"]["appIdUrl"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** @description Password for the export if it is encrypted. */
+                    encryptedPassword?: string;
+                    /**
+                     * Format: binary
+                     * @description The app export to import.
+                     */
+                    appExport: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Application has been updated. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
     appExport: {
-      /** @description An optional password used to encrypt the export. */
-      encryptPassword: string;
-      /** @description Set whether the internal table rows should be excluded from the export. */
-      excludeRows: boolean;
-    };
-    workspaceExport: {
-      /** @description An optional password used to encrypt the export. */
-      encryptPassword: string;
-      /** @description Set whether the internal table rows should be excluded from the export. */
-      excludeRows: boolean;
-    };
-    /** @description The row to be created/updated, based on the table schema. */
-    row: { [key: string]: unknown };
-    searchOutput: {
-      /** @description An array of rows, these will each contain an _id field which can be used to update or delete them. */
-      data: { [key: string]: unknown }[];
-      /** @description If pagination in use, this should be provided. */
-      bookmark?: string | number;
-      /** @description If pagination in use, this will determine if there is another page to fetch. */
-      hasNextPage?: boolean;
-    };
-    rowOutput: {
-      /** @description The row to be created/updated, based on the table schema. */
-      data: {
-        /** @description The ID of the row. */
-        _id: string;
-        /** @description The ID of the table this row comes from. */
-        tableId: string;
-      } & { [key: string]: unknown };
-    };
-    /** @description The table to be created/updated. */
-    table: {
-      /** @description The name of the table. */
-      name: string;
-      /** @description The name of the column which should be used in relationship tags when relating to this table. */
-      primaryDisplay?: string;
-      schema: {
-        [key: string]:
-          | {
-              /**
-               * @description A relationship column.
-               * @enum {string}
-               */
-              type?: "link";
-              /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
-              constraints?: {
-                type?: string;
-                presence?:
-                  | boolean
-                  | {
-                      /** @description Defines whether the value is allowed to be empty or not. */
-                      allowEmpty?: boolean;
-                    };
-                /** @description Defines the valid values for this column. */
-                inclusion?: unknown[];
-              };
-              /** @description The name of the column. */
-              name?: string;
-              /** @description Defines whether the column is automatically generated. */
-              autocolumn?: boolean;
-              /** @description Defines the width of the column in the data UI. */
-              width?: number;
-              /** @description The name of the column which a relationship column is related to in another table. */
-              fieldName?: string;
-              /** @description The ID of the table which a relationship column is related to. */
-              tableId?: string;
-              /**
-               * @description Defines the type of relationship that this column will be used for.
-               * @enum {string}
-               */
-              relationshipType?: "one-to-many" | "many-to-one" | "many-to-many";
-              /** @description When using a SQL table that contains many to many relationships this defines the table the relationships are linked through. */
-              through?: string;
-              /** @description When using a SQL table that contains a one to many relationship this defines the foreign key. */
-              foreignKey?: string;
-              /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for this table. */
-              throughFrom?: string;
-              /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table. */
-              throughTo?: string;
-            }
-          | {
-              /**
-               * @description A formula column.
-               * @enum {string}
-               */
-              type?: "formula";
-              /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
-              constraints?: {
-                type?: string;
-                presence?:
-                  | boolean
-                  | {
-                      /** @description Defines whether the value is allowed to be empty or not. */
-                      allowEmpty?: boolean;
-                    };
-                /** @description Defines the valid values for this column. */
-                inclusion?: unknown[];
-              };
-              /** @description The name of the column. */
-              name?: string;
-              /** @description Defines whether the column is automatically generated. */
-              autocolumn?: boolean;
-              /** @description Defines the width of the column in the data UI. */
-              width?: number;
-              /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
-              formula?: string;
-              /**
-               * @description Defines whether this is a static or dynamic formula.
-               * @enum {string}
-               */
-              formulaType?: "static" | "dynamic";
-            }
-          | {
-              /**
-               * @description Defines the type of the column, most explain themselves, a link column is a relationship.
-               * @enum {string}
-               */
-              type?:
-                | "string"
-                | "longform"
-                | "options"
-                | "number"
-                | "boolean"
-                | "array"
-                | "datetime"
-                | "attachment"
-                | "attachment_single"
-                | "auto"
-                | "ai"
-                | "json"
-                | "internal"
-                | "barcodeqr"
-                | "signature_single"
-                | "bigint"
-                | "bb_reference"
-                | "bb_reference_single";
-              /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
-              constraints?: {
-                type?: string;
-                presence?:
-                  | boolean
-                  | {
-                      /** @description Defines whether the value is allowed to be empty or not. */
-                      allowEmpty?: boolean;
-                    };
-                /** @description Defines the valid values for this column. */
-                inclusion?: unknown[];
-              };
-              /** @description The name of the column. */
-              name?: string;
-              /** @description Defines whether the column is automatically generated. */
-              autocolumn?: boolean;
-              /** @description Defines the width of the column in the data UI. */
-              width?: number;
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the app which this request is targeting. */
+                appId: components["parameters"]["appIdUrl"];
             };
-      };
-    };
-    tableOutput: {
-      /** @description The table to be created/updated. */
-      data: {
-        /** @description The name of the table. */
-        name: string;
-        /** @description The name of the column which should be used in relationship tags when relating to this table. */
-        primaryDisplay?: string;
-        schema: {
-          [key: string]:
-            | {
-                /**
-                 * @description A relationship column.
-                 * @enum {string}
-                 */
-                type?: "link";
-                /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
-                constraints?: {
-                  type?: string;
-                  presence?:
-                    | boolean
-                    | {
-                        /** @description Defines whether the value is allowed to be empty or not. */
-                        allowEmpty?: boolean;
-                      };
-                  /** @description Defines the valid values for this column. */
-                  inclusion?: unknown[];
-                };
-                /** @description The name of the column. */
-                name?: string;
-                /** @description Defines whether the column is automatically generated. */
-                autocolumn?: boolean;
-                /** @description Defines the width of the column in the data UI. */
-                width?: number;
-                /** @description The name of the column which a relationship column is related to in another table. */
-                fieldName?: string;
-                /** @description The ID of the table which a relationship column is related to. */
-                tableId?: string;
-                /**
-                 * @description Defines the type of relationship that this column will be used for.
-                 * @enum {string}
-                 */
-                relationshipType?:
-                  | "one-to-many"
-                  | "many-to-one"
-                  | "many-to-many";
-                /** @description When using a SQL table that contains many to many relationships this defines the table the relationships are linked through. */
-                through?: string;
-                /** @description When using a SQL table that contains a one to many relationship this defines the foreign key. */
-                foreignKey?: string;
-                /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for this table. */
-                throughFrom?: string;
-                /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table. */
-                throughTo?: string;
-              }
-            | {
-                /**
-                 * @description A formula column.
-                 * @enum {string}
-                 */
-                type?: "formula";
-                /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
-                constraints?: {
-                  type?: string;
-                  presence?:
-                    | boolean
-                    | {
-                        /** @description Defines whether the value is allowed to be empty or not. */
-                        allowEmpty?: boolean;
-                      };
-                  /** @description Defines the valid values for this column. */
-                  inclusion?: unknown[];
-                };
-                /** @description The name of the column. */
-                name?: string;
-                /** @description Defines whether the column is automatically generated. */
-                autocolumn?: boolean;
-                /** @description Defines the width of the column in the data UI. */
-                width?: number;
-                /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
-                formula?: string;
-                /**
-                 * @description Defines whether this is a static or dynamic formula.
-                 * @enum {string}
-                 */
-                formulaType?: "static" | "dynamic";
-              }
-            | {
-                /**
-                 * @description Defines the type of the column, most explain themselves, a link column is a relationship.
-                 * @enum {string}
-                 */
-                type?:
-                  | "string"
-                  | "longform"
-                  | "options"
-                  | "number"
-                  | "boolean"
-                  | "array"
-                  | "datetime"
-                  | "attachment"
-                  | "attachment_single"
-                  | "auto"
-                  | "ai"
-                  | "json"
-                  | "internal"
-                  | "barcodeqr"
-                  | "signature_single"
-                  | "bigint"
-                  | "bb_reference"
-                  | "bb_reference_single";
-                /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
-                constraints?: {
-                  type?: string;
-                  presence?:
-                    | boolean
-                    | {
-                        /** @description Defines whether the value is allowed to be empty or not. */
-                        allowEmpty?: boolean;
-                      };
-                  /** @description Defines the valid values for this column. */
-                  inclusion?: unknown[];
-                };
-                /** @description The name of the column. */
-                name?: string;
-                /** @description Defines whether the column is automatically generated. */
-                autocolumn?: boolean;
-                /** @description Defines the width of the column in the data UI. */
-                width?: number;
-              };
+            cookie?: never;
         };
-        /** @description The ID of the table. */
-        _id: string;
-      };
-    };
-    tableSearch: {
-      data: {
-        /** @description The name of the table. */
-        name: string;
-        /** @description The name of the column which should be used in relationship tags when relating to this table. */
-        primaryDisplay?: string;
-        schema: {
-          [key: string]:
-            | {
-                /**
-                 * @description A relationship column.
-                 * @enum {string}
-                 */
-                type?: "link";
-                /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
-                constraints?: {
-                  type?: string;
-                  presence?:
-                    | boolean
-                    | {
-                        /** @description Defines whether the value is allowed to be empty or not. */
-                        allowEmpty?: boolean;
-                      };
-                  /** @description Defines the valid values for this column. */
-                  inclusion?: unknown[];
-                };
-                /** @description The name of the column. */
-                name?: string;
-                /** @description Defines whether the column is automatically generated. */
-                autocolumn?: boolean;
-                /** @description Defines the width of the column in the data UI. */
-                width?: number;
-                /** @description The name of the column which a relationship column is related to in another table. */
-                fieldName?: string;
-                /** @description The ID of the table which a relationship column is related to. */
-                tableId?: string;
-                /**
-                 * @description Defines the type of relationship that this column will be used for.
-                 * @enum {string}
-                 */
-                relationshipType?:
-                  | "one-to-many"
-                  | "many-to-one"
-                  | "many-to-many";
-                /** @description When using a SQL table that contains many to many relationships this defines the table the relationships are linked through. */
-                through?: string;
-                /** @description When using a SQL table that contains a one to many relationship this defines the foreign key. */
-                foreignKey?: string;
-                /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for this table. */
-                throughFrom?: string;
-                /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table. */
-                throughTo?: string;
-              }
-            | {
-                /**
-                 * @description A formula column.
-                 * @enum {string}
-                 */
-                type?: "formula";
-                /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
-                constraints?: {
-                  type?: string;
-                  presence?:
-                    | boolean
-                    | {
-                        /** @description Defines whether the value is allowed to be empty or not. */
-                        allowEmpty?: boolean;
-                      };
-                  /** @description Defines the valid values for this column. */
-                  inclusion?: unknown[];
-                };
-                /** @description The name of the column. */
-                name?: string;
-                /** @description Defines whether the column is automatically generated. */
-                autocolumn?: boolean;
-                /** @description Defines the width of the column in the data UI. */
-                width?: number;
-                /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
-                formula?: string;
-                /**
-                 * @description Defines whether this is a static or dynamic formula.
-                 * @enum {string}
-                 */
-                formulaType?: "static" | "dynamic";
-              }
-            | {
-                /**
-                 * @description Defines the type of the column, most explain themselves, a link column is a relationship.
-                 * @enum {string}
-                 */
-                type?:
-                  | "string"
-                  | "longform"
-                  | "options"
-                  | "number"
-                  | "boolean"
-                  | "array"
-                  | "datetime"
-                  | "attachment"
-                  | "attachment_single"
-                  | "auto"
-                  | "ai"
-                  | "json"
-                  | "internal"
-                  | "barcodeqr"
-                  | "signature_single"
-                  | "bigint"
-                  | "bb_reference"
-                  | "bb_reference_single";
-                /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
-                constraints?: {
-                  type?: string;
-                  presence?:
-                    | boolean
-                    | {
-                        /** @description Defines whether the value is allowed to be empty or not. */
-                        allowEmpty?: boolean;
-                      };
-                  /** @description Defines the valid values for this column. */
-                  inclusion?: unknown[];
-                };
-                /** @description The name of the column. */
-                name?: string;
-                /** @description Defines whether the column is automatically generated. */
-                autocolumn?: boolean;
-                /** @description Defines the width of the column in the data UI. */
-                width?: number;
-              };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["appExport"];
+            };
         };
-        /** @description The ID of the table. */
-        _id: string;
-      }[];
+        responses: {
+            /** @description A gzip tarball containing the app export, encrypted if password provided. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/gzip": string;
+                };
+            };
+        };
     };
-    /** @description The parameters required for executing a query. */
-    executeQuery: {
-      /** @description This contains the required parameters for the query, this depends on query type, setup and bindings. */
-      parameters?: { [key: string]: unknown };
-      /** @description For supported query types (currently on REST) pagination can be performed using these properties. */
-      pagination?: {
-        /** @description The page which has been returned from a previous query. */
-        page?: string;
-        /** @description The number of rows to return per page. */
-        limit?: number;
-      };
+    appSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["nameSearch"];
+            };
+        };
+        responses: {
+            /** @description Returns the applications that were found based on the search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["applicationSearch"];
+                };
+            };
+        };
     };
-    executeQueryOutput: {
-      /** @description The data response from the query. */
-      data: { [key: string]: unknown }[];
-      /** @description Extra information that is not part of the main data, e.g. headers. */
-      extra?: {
-        /** @description If carrying out a REST request, this will contain the response headers. */
-        headers?: { [key: string]: unknown };
-        /** @description The raw query response, as a string. */
-        raw?: string;
-      };
-      /** @description If pagination is supported, this will contain the bookmark/anchor information for it. */
-      pagination?: { [key: string]: unknown };
+    metricsGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns tenant metrics. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+        };
     };
-    query: {
-      /** @description The ID of the query. */
-      _id: string;
-      /** @description The ID of the datasource the query belongs to. */
-      datasourceId?: string;
-      /** @description The bindings which are required to perform this query. */
-      parameters?: string[];
-      /** @description The fields that are used to perform this query, e.g. the sql statement */
-      fields?: { [key: string]: unknown };
-      /**
-       * @description The verb that describes this query.
-       * @enum {undefined}
-       */
-      queryVerb?: "create" | "read" | "update" | "delete";
-      /** @description The name of the query. */
-      name: string;
-      /** @description The schema of the data returned when the query is executed. */
-      schema: { [key: string]: unknown };
-      /** @description The JavaScript transformer function, applied after the query responds with data. */
-      transformer?: string;
-      /** @description Whether the query has readable data. */
-      readable?: boolean;
+    queryExecute: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the query which this request is targeting. */
+                queryId: components["parameters"]["queryId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["executeQuery"];
+            };
+        };
+        responses: {
+            /** @description Returns the result of the query execution. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["executeQueryOutput"];
+                };
+            };
+        };
     };
     querySearch: {
-      data: {
-        /** @description The ID of the query. */
-        _id: string;
-        /** @description The ID of the datasource the query belongs to. */
-        datasourceId?: string;
-        /** @description The bindings which are required to perform this query. */
-        parameters?: string[];
-        /** @description The fields that are used to perform this query, e.g. the sql statement */
-        fields?: { [key: string]: unknown };
-        /**
-         * @description The verb that describes this query.
-         * @enum {undefined}
-         */
-        queryVerb?: "create" | "read" | "update" | "delete";
-        /** @description The name of the query. */
-        name: string;
-        /** @description The schema of the data returned when the query is executed. */
-        schema: { [key: string]: unknown };
-        /** @description The JavaScript transformer function, applied after the query responds with data. */
-        transformer?: string;
-        /** @description Whether the query has readable data. */
-        readable?: boolean;
-      }[];
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["nameSearch"];
+            };
+        };
+        responses: {
+            /** @description Returns the queries found based on the search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["querySearch"];
+                };
+            };
+        };
     };
-    user: {
-      /** @description The email address of the user, this must be unique. */
-      email: string;
-      /** @description The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure. */
-      password?: string;
-      /**
-       * @description The status of the user, if they are active.
-       * @enum {string}
-       */
-      status?: "active";
-      /** @description The first name of the user */
-      firstName?: string;
-      /** @description The last name of the user */
-      lastName?: string;
-      /** @description If set to true forces the user to reset their password on first login. */
-      forceResetPassword?: boolean;
-      /** @description Describes if the user is a builder user or not. This field can only be set on a business or enterprise license. */
-      builder?: {
-        /** @description If set to true the user will be able to build any app in the system. */
-        global?: boolean;
-      };
-      /** @description Describes if the user is an admin user or not. This field can only be set on a business or enterprise license. */
-      admin?: {
-        /** @description If set to true the user will be able to administrate the system. */
-        global?: boolean;
-      };
-      /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
-      roles?: { [key: string]: string };
+    roleAssign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["rolesAssign"];
+            };
+        };
+        responses: {
+            /** @description Returns a list of updated user IDs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["rolesOutput"];
+                };
+            };
+        };
     };
-    userOutput: {
-      data: {
-        /** @description The email address of the user, this must be unique. */
-        email: string;
-        /** @description The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure. */
-        password?: string;
-        /**
-         * @description The status of the user, if they are active.
-         * @enum {string}
-         */
-        status?: "active";
-        /** @description The first name of the user */
-        firstName?: string;
-        /** @description The last name of the user */
-        lastName?: string;
-        /** @description If set to true forces the user to reset their password on first login. */
-        forceResetPassword?: boolean;
-        /** @description Describes if the user is a builder user or not. This field can only be set on a business or enterprise license. */
-        builder?: {
-          /** @description If set to true the user will be able to build any app in the system. */
-          global?: boolean;
+    roleUnAssign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        /** @description Describes if the user is an admin user or not. This field can only be set on a business or enterprise license. */
-        admin?: {
-          /** @description If set to true the user will be able to administrate the system. */
-          global?: boolean;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["rolesUnAssign"];
+            };
         };
-        /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
-        roles?: { [key: string]: string };
-        /** @description The ID of the user. */
-        _id: string;
-      };
+        responses: {
+            /** @description Returns a list of updated user IDs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["rolesOutput"];
+                };
+            };
+        };
     };
-    userSearch: {
-      data: {
-        /** @description The email address of the user, this must be unique. */
-        email: string;
-        /** @description The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure. */
-        password?: string;
-        /**
-         * @description The status of the user, if they are active.
-         * @enum {string}
-         */
-        status?: "active";
-        /** @description The first name of the user */
-        firstName?: string;
-        /** @description The last name of the user */
-        lastName?: string;
-        /** @description If set to true forces the user to reset their password on first login. */
-        forceResetPassword?: boolean;
-        /** @description Describes if the user is a builder user or not. This field can only be set on a business or enterprise license. */
-        builder?: {
-          /** @description If set to true the user will be able to build any app in the system. */
-          global?: boolean;
+    rowCreate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the table which this request is targeting. */
+                tableId: components["parameters"]["tableId"];
+            };
+            cookie?: never;
         };
-        /** @description Describes if the user is an admin user or not. This field can only be set on a business or enterprise license. */
-        admin?: {
-          /** @description If set to true the user will be able to administrate the system. */
-          global?: boolean;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["row"];
+            };
         };
-        /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
-        roles?: { [key: string]: string };
-        /** @description The ID of the user. */
-        _id: string;
-      }[];
+        responses: {
+            /** @description Returns the created row, including the ID which has been generated for it. This can be found in the Budibase portal, viewed under the developer information. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["rowOutput"];
+                };
+            };
+        };
+    };
+    rowGetById: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the table which this request is targeting. */
+                tableId: components["parameters"]["tableId"];
+                /** @description The ID of the row which this request is targeting. */
+                rowId: components["parameters"]["rowId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the retrieved row. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["rowOutput"];
+                };
+            };
+        };
+    };
+    rowUpdate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the table which this request is targeting. */
+                tableId: components["parameters"]["tableId"];
+                /** @description The ID of the row which this request is targeting. */
+                rowId: components["parameters"]["rowId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["row"];
+            };
+        };
+        responses: {
+            /** @description Returns the created row, including the ID which has been generated for it. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["rowOutput"];
+                };
+            };
+        };
+    };
+    rowDestroy: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the table which this request is targeting. */
+                tableId: components["parameters"]["tableId"];
+                /** @description The ID of the row which this request is targeting. */
+                rowId: components["parameters"]["rowId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the deleted row, including the ID which has been generated for it. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["rowOutput"];
+                };
+            };
+        };
     };
     rowSearch: {
-      query: {
-        /** @description Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used. */
-        allOr?: boolean;
-        /**
-         * @description A map of field name to the string to search for, this will look for rows that have a value starting with the string value.
-         * @example [object Object]
-         */
-        string?: { [key: string]: string };
-        /** @description Searches for a sub-string within a string column, e.g. searching for 'dib' will match 'Budibase'. */
-        fuzzy?: { [key: string]: unknown };
-        /**
-         * @description Searches within a range, the format of this must be in the format of an object with a "low" and "high" property.
-         * @example [object Object]
-         */
-        range?: { [key: string]: unknown };
-        /** @description Searches for rows that have a column value that is exactly the value set. */
-        equal?: { [key: string]: unknown };
-        /** @description Searches for any row which does not contain the specified column value. */
-        notEqual?: { [key: string]: unknown };
-        /**
-         * @description Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.
-         * @example [object Object]
-         */
-        empty?: { [key: string]: unknown };
-        /** @description Searches for rows which have the specified column. */
-        notEmpty?: { [key: string]: unknown };
-        /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
-        oneOf?: { [key: string]: unknown };
-        /**
-         * @description Searches for a value, or set of values in array column types (such as a multi-select). If an array of search options is provided then it must match all.
-         * @example [object Object]
-         */
-        contains?: { [key: string]: unknown };
-        /**
-         * @description The logical inverse of contains. Only works on array column types. If an array of values is passed, the row must not match any of them to be returned in the response.
-         * @example [object Object]
-         */
-        notContains?: { [key: string]: unknown };
-        /**
-         * @description As with the contains search, only works on array column types and searches for any of the provided values when given an array.
-         * @example [object Object]
-         */
-        containsAny?: { [key: string]: unknown };
-      };
-      /** @description Enables pagination, by default this is disabled. */
-      paginate?: boolean;
-      /** @description If retrieving another page, the bookmark from the previous request must be supplied. */
-      bookmark?: string | number;
-      /** @description The maximum number of rows to return, useful when paginating, for internal tables this will be limited to 1000, for SQL tables it will be 5000. */
-      limit?: number;
-      /** @description A set of parameters describing the sort behaviour of the search. */
-      sort?: {
-        /**
-         * @description The order of the sort, by default this is ascending.
-         * @enum {string}
-         */
-        order?: "ascending" | "descending";
-        /** @description The name of the column by which the rows will be sorted. */
-        column?: string;
-        /**
-         * @description Defines whether the column should be treated as a string or as numbers when sorting.
-         * @enum {string}
-         */
-        type?: "string" | "number";
-      };
-    };
-    nameSearch: {
-      /** @description The name to be used when searching - this will be used in a case insensitive starts with match. */
-      name: string;
-    };
-    rolesAssign: {
-      /** @description Allow setting users to builders per app. */
-      appBuilder?: {
-        /** @description The app that the users should have app builder privileges granted for. */
-        appId: string;
-      };
-      /** @description Add/remove global builder permissions from the list of users. */
-      builder?: boolean;
-      /** @description Add/remove global admin permissions from the list of users. */
-      admin?: boolean;
-      /** @description Add/remove a per-app role, such as BASIC, ADMIN etc. */
-      role?: {
-        /** @description The role ID, such as BASIC, ADMIN or a custom role ID. */
-        roleId: string;
-        /** @description The app that the role relates to. */
-        appId: string;
-      };
-      /** @description The user IDs to be updated to add/remove the specified roles. */
-      userIds: string[];
-    };
-    rolesUnAssign: {
-      /** @description Allow setting users to builders per app. */
-      appBuilder?: {
-        /** @description The app that the users should have app builder privileges granted for. */
-        appId: string;
-      };
-      /** @description Add/remove global builder permissions from the list of users. */
-      builder?: boolean;
-      /** @description Add/remove global admin permissions from the list of users. */
-      admin?: boolean;
-      /** @description Add/remove a per-app role, such as BASIC, ADMIN etc. */
-      role?: {
-        /** @description The role ID, such as BASIC, ADMIN or a custom role ID. */
-        roleId: string;
-        /** @description The app that the role relates to. */
-        appId: string;
-      };
-      /** @description The user IDs to be updated to add/remove the specified roles. */
-      userIds: string[];
-    };
-    rolesOutput: {
-      data: {
-        /** @description The updated users' IDs */
-        userIds: string[];
-      };
-    };
-    /** @description The view to be created/updated. */
-    view: {
-      /** @description The name of the view. */
-      name: string;
-      /** @description The ID of the table this view is based on. */
-      tableId: string;
-      /**
-       * @description The type of view - standard (empty value) or calculation.
-       * @enum {string}
-       */
-      type?: "calculation";
-      /** @description A column used to display rows from this view - usually used when rendered in tables. */
-      primaryDisplay?: string;
-      /** @description Search parameters for view */
-      query?: {
-        /**
-         * @description When using groups this defines whether all of the filters must match, or only one of them.
-         * @enum {string}
-         */
-        logicalOperator?: "all" | "any";
-        /**
-         * @description If no filters match, should the view return all rows, or no rows.
-         * @enum {string}
-         */
-        onEmptyFilter?: "all" | "none";
-        /** @description A grouping of filters to be applied. */
-        groups?: {
-          /**
-           * @description When using groups this defines whether all of the filters must match, or only one of them.
-           * @enum {string}
-           */
-          logicalOperator?: "all" | "any";
-          /** @description A list of filters to apply */
-          filters?: {
-            /**
-             * @description The type of search operation which is being performed.
-             * @enum {string}
-             */
-            operator?:
-              | "equal"
-              | "notEqual"
-              | "empty"
-              | "notEmpty"
-              | "fuzzy"
-              | "string"
-              | "contains"
-              | "notContains"
-              | "containsAny"
-              | "oneOf"
-              | "range";
-            /** @description The field in the view to perform the search on. */
-            field?: string;
-            /** @description The value to search for - the type will depend on the operator in use. */
-            value?:
-              | string
-              | number
-              | boolean
-              | { [key: string]: unknown }
-              | unknown[];
-          }[];
-          /** @description A grouping of filters to be applied. */
-          groups?: {
-            /**
-             * @description When using groups this defines whether all of the filters must match, or only one of them.
-             * @enum {string}
-             */
-            logicalOperator?: "all" | "any";
-            /** @description A list of filters to apply */
-            filters?: {
-              /**
-               * @description The type of search operation which is being performed.
-               * @enum {string}
-               */
-              operator?:
-                | "equal"
-                | "notEqual"
-                | "empty"
-                | "notEmpty"
-                | "fuzzy"
-                | "string"
-                | "contains"
-                | "notContains"
-                | "containsAny"
-                | "oneOf"
-                | "range";
-              /** @description The field in the view to perform the search on. */
-              field?: string;
-              /** @description The value to search for - the type will depend on the operator in use. */
-              value?:
-                | string
-                | number
-                | boolean
-                | { [key: string]: unknown }
-                | unknown[];
-            }[];
-          }[];
-        }[];
-      };
-      sort?: {
-        /** @description The field from the table/view schema to sort on. */
-        field: string;
-        /**
-         * @description The order in which to sort.
-         * @enum {string}
-         */
-        order?: "ascending" | "descending";
-        /**
-         * @description The type of sort to perform (by number, or by alphabetically).
-         * @enum {string}
-         */
-        type?: "string" | "number";
-      };
-      schema: {
-        [key: string]:
-          | {
-              /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
-              visible?: boolean;
-              /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
-              readonly?: boolean;
-              /** @description A number defining where the column shows up in tables, lowest being first. */
-              order?: number;
-              /** @description A width for the column, defined in pixels - this affects rendering in tables. */
-              width?: number;
-              /** @description If this is a relationship column, we can set the columns we wish to include */
-              column?: {
-                readonly?: boolean;
-              }[];
-            }
-          | {
-              /**
-               * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
-               * @enum {string}
-               */
-              calculationType?: "sum" | "avg" | "count" | "min" | "max";
-              /** @description The field from the table to perform the calculation on. */
-              field?: string;
-              /** @description Can be used in tandem with the count calculation type, to count unique entries. */
-              distinct?: boolean;
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
             };
-      };
+            path: {
+                /** @description The ID of the table which this request is targeting. */
+                tableId: components["parameters"]["tableId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["rowSearch"];
+            };
+        };
+        responses: {
+            /** @description The response will contain an array of rows that match the search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["searchOutput"];
+                };
+            };
+        };
     };
-    viewOutput: {
-      /** @description The view to be created/updated. */
-      data: {
-        /** @description The name of the view. */
-        name: string;
-        /** @description The ID of the table this view is based on. */
-        tableId: string;
-        /**
-         * @description The type of view - standard (empty value) or calculation.
-         * @enum {string}
-         */
-        type?: "calculation";
-        /** @description A column used to display rows from this view - usually used when rendered in tables. */
-        primaryDisplay?: string;
-        /** @description Search parameters for view */
-        query?: {
-          /**
-           * @description When using groups this defines whether all of the filters must match, or only one of them.
-           * @enum {string}
-           */
-          logicalOperator?: "all" | "any";
-          /**
-           * @description If no filters match, should the view return all rows, or no rows.
-           * @enum {string}
-           */
-          onEmptyFilter?: "all" | "none";
-          /** @description A grouping of filters to be applied. */
-          groups?: {
-            /**
-             * @description When using groups this defines whether all of the filters must match, or only one of them.
-             * @enum {string}
-             */
-            logicalOperator?: "all" | "any";
-            /** @description A list of filters to apply */
-            filters?: {
-              /**
-               * @description The type of search operation which is being performed.
-               * @enum {string}
-               */
-              operator?:
-                | "equal"
-                | "notEqual"
-                | "empty"
-                | "notEmpty"
-                | "fuzzy"
-                | "string"
-                | "contains"
-                | "notContains"
-                | "containsAny"
-                | "oneOf"
-                | "range";
-              /** @description The field in the view to perform the search on. */
-              field?: string;
-              /** @description The value to search for - the type will depend on the operator in use. */
-              value?:
-                | string
-                | number
-                | boolean
-                | { [key: string]: unknown }
-                | unknown[];
-            }[];
-            /** @description A grouping of filters to be applied. */
-            groups?: {
-              /**
-               * @description When using groups this defines whether all of the filters must match, or only one of them.
-               * @enum {string}
-               */
-              logicalOperator?: "all" | "any";
-              /** @description A list of filters to apply */
-              filters?: {
-                /**
-                 * @description The type of search operation which is being performed.
-                 * @enum {string}
-                 */
-                operator?:
-                  | "equal"
-                  | "notEqual"
-                  | "empty"
-                  | "notEmpty"
-                  | "fuzzy"
-                  | "string"
-                  | "contains"
-                  | "notContains"
-                  | "containsAny"
-                  | "oneOf"
-                  | "range";
-                /** @description The field in the view to perform the search on. */
-                field?: string;
-                /** @description The value to search for - the type will depend on the operator in use. */
-                value?:
-                  | string
-                  | number
-                  | boolean
-                  | { [key: string]: unknown }
-                  | unknown[];
-              }[];
-            }[];
-          }[];
+    rowViewSearch: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the view which this request is targeting. */
+                viewId: components["parameters"]["viewId"];
+            };
+            cookie?: never;
         };
-        sort?: {
-          /** @description The field from the table/view schema to sort on. */
-          field: string;
-          /**
-           * @description The order in which to sort.
-           * @enum {string}
-           */
-          order?: "ascending" | "descending";
-          /**
-           * @description The type of sort to perform (by number, or by alphabetically).
-           * @enum {string}
-           */
-          type?: "string" | "number";
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["rowSearch"];
+            };
         };
-        schema: {
-          [key: string]:
-            | {
-                /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
-                visible?: boolean;
-                /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
-                readonly?: boolean;
-                /** @description A number defining where the column shows up in tables, lowest being first. */
-                order?: number;
-                /** @description A width for the column, defined in pixels - this affects rendering in tables. */
-                width?: number;
-                /** @description If this is a relationship column, we can set the columns we wish to include */
-                column?: {
-                  readonly?: boolean;
-                }[];
-              }
-            | {
-                /**
-                 * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
-                 * @enum {string}
-                 */
-                calculationType?: "sum" | "avg" | "count" | "min" | "max";
-                /** @description The field from the table to perform the calculation on. */
-                field?: string;
-                /** @description Can be used in tandem with the count calculation type, to count unique entries. */
-                distinct?: boolean;
-              };
+        responses: {
+            /** @description The response will contain an array of rows that match the search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["searchOutput"];
+                };
+            };
         };
-        /** @description The ID of the view. */
-        id: string;
-      };
+    };
+    tableCreate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["table"];
+            };
+        };
+        responses: {
+            /** @description Returns the created table, including the ID which has been generated for it. This can be internal or external datasources. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["tableOutput"];
+                };
+            };
+        };
+    };
+    tableGetById: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the table which this request is targeting. */
+                tableId: components["parameters"]["tableId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the retrieved table. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["tableOutput"];
+                };
+            };
+        };
+    };
+    tableUpdate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the table which this request is targeting. */
+                tableId: components["parameters"]["tableId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["table"];
+            };
+        };
+        responses: {
+            /** @description Returns the updated table. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["tableOutput"];
+                };
+            };
+        };
+    };
+    tableDestroy: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the table which this request is targeting. */
+                tableId: components["parameters"]["tableId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the deleted table. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["tableOutput"];
+                };
+            };
+        };
+    };
+    tableSearch: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["nameSearch"];
+            };
+        };
+        responses: {
+            /** @description Returns the found tables, based on the search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["tableSearch"];
+                };
+            };
+        };
+    };
+    userCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["user"];
+            };
+        };
+        responses: {
+            /** @description Returns the created user. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["userOutput"];
+                };
+            };
+        };
+    };
+    userGetById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the user which this request is targeting. */
+                userId: components["parameters"]["userId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the retrieved user. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["userOutput"];
+                };
+            };
+        };
+    };
+    userUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the user which this request is targeting. */
+                userId: components["parameters"]["userId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["user"];
+            };
+        };
+        responses: {
+            /** @description Returns the updated user. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["userOutput"];
+                };
+            };
+        };
+    };
+    userDestroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the user which this request is targeting. */
+                userId: components["parameters"]["userId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the deleted user. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["userOutput"];
+                };
+            };
+        };
+    };
+    userSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["nameSearch"];
+            };
+        };
+        responses: {
+            /** @description Returns the found users based on search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["userSearch"];
+                };
+            };
+        };
+    };
+    viewCreate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["view"];
+            };
+        };
+        responses: {
+            /** @description Returns the created view, including the ID which has been generated for it. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["viewOutput"];
+                };
+            };
+        };
+    };
+    viewGetById: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the view which this request is targeting. */
+                viewId: components["parameters"]["viewId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the retrieved view. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["viewOutput"];
+                };
+            };
+        };
+    };
+    viewUpdate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the view which this request is targeting. */
+                viewId: components["parameters"]["viewId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["view"];
+            };
+        };
+        responses: {
+            /** @description Returns the updated view. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["viewOutput"];
+                };
+            };
+        };
+    };
+    viewDestroy: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the view which this request is targeting. */
+                viewId: components["parameters"]["viewId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the deleted view. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["viewOutput"];
+                };
+            };
+        };
     };
     viewSearch: {
-      data: {
-        /** @description The name of the view. */
-        name: string;
-        /** @description The ID of the table this view is based on. */
-        tableId: string;
-        /**
-         * @description The type of view - standard (empty value) or calculation.
-         * @enum {string}
-         */
-        type?: "calculation";
-        /** @description A column used to display rows from this view - usually used when rendered in tables. */
-        primaryDisplay?: string;
-        /** @description Search parameters for view */
-        query?: {
-          /**
-           * @description When using groups this defines whether all of the filters must match, or only one of them.
-           * @enum {string}
-           */
-          logicalOperator?: "all" | "any";
-          /**
-           * @description If no filters match, should the view return all rows, or no rows.
-           * @enum {string}
-           */
-          onEmptyFilter?: "all" | "none";
-          /** @description A grouping of filters to be applied. */
-          groups?: {
-            /**
-             * @description When using groups this defines whether all of the filters must match, or only one of them.
-             * @enum {string}
-             */
-            logicalOperator?: "all" | "any";
-            /** @description A list of filters to apply */
-            filters?: {
-              /**
-               * @description The type of search operation which is being performed.
-               * @enum {string}
-               */
-              operator?:
-                | "equal"
-                | "notEqual"
-                | "empty"
-                | "notEmpty"
-                | "fuzzy"
-                | "string"
-                | "contains"
-                | "notContains"
-                | "containsAny"
-                | "oneOf"
-                | "range";
-              /** @description The field in the view to perform the search on. */
-              field?: string;
-              /** @description The value to search for - the type will depend on the operator in use. */
-              value?:
-                | string
-                | number
-                | boolean
-                | { [key: string]: unknown }
-                | unknown[];
-            }[];
-            /** @description A grouping of filters to be applied. */
-            groups?: {
-              /**
-               * @description When using groups this defines whether all of the filters must match, or only one of them.
-               * @enum {string}
-               */
-              logicalOperator?: "all" | "any";
-              /** @description A list of filters to apply */
-              filters?: {
-                /**
-                 * @description The type of search operation which is being performed.
-                 * @enum {string}
-                 */
-                operator?:
-                  | "equal"
-                  | "notEqual"
-                  | "empty"
-                  | "notEmpty"
-                  | "fuzzy"
-                  | "string"
-                  | "contains"
-                  | "notContains"
-                  | "containsAny"
-                  | "oneOf"
-                  | "range";
-                /** @description The field in the view to perform the search on. */
-                field?: string;
-                /** @description The value to search for - the type will depend on the operator in use. */
-                value?:
-                  | string
-                  | number
-                  | boolean
-                  | { [key: string]: unknown }
-                  | unknown[];
-              }[];
-            }[];
-          }[];
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path?: never;
+            cookie?: never;
         };
-        sort?: {
-          /** @description The field from the table/view schema to sort on. */
-          field: string;
-          /**
-           * @description The order in which to sort.
-           * @enum {string}
-           */
-          order?: "ascending" | "descending";
-          /**
-           * @description The type of sort to perform (by number, or by alphabetically).
-           * @enum {string}
-           */
-          type?: "string" | "number";
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["nameSearch"];
+            };
         };
-        schema: {
-          [key: string]:
-            | {
-                /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
-                visible?: boolean;
-                /** @description When used in combination with 'visible: true' the column will be visible in row responses but cannot be updated. */
-                readonly?: boolean;
-                /** @description A number defining where the column shows up in tables, lowest being first. */
-                order?: number;
-                /** @description A width for the column, defined in pixels - this affects rendering in tables. */
-                width?: number;
-                /** @description If this is a relationship column, we can set the columns we wish to include */
-                column?: {
-                  readonly?: boolean;
-                }[];
-              }
-            | {
-                /**
-                 * @description This column should be built from a calculation, specifying a type and field. It is important to note when a calculation is configured all non-calculation columns will be used for grouping.
-                 * @enum {string}
-                 */
-                calculationType?: "sum" | "avg" | "count" | "min" | "max";
-                /** @description The field from the table to perform the calculation on. */
-                field?: string;
-                /** @description Can be used in tandem with the count calculation type, to count unique entries. */
-                distinct?: boolean;
-              };
+        responses: {
+            /** @description Returns the found views, based on the search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["viewSearch"];
+                };
+            };
         };
-        /** @description The ID of the view. */
-        id: string;
-      }[];
     };
-  };
-  parameters: {
-    /** @description The ID of the app which this request is targeting. */
-    appId: string;
-    /** @description The ID of the app which this request is targeting. */
-    appIdUrl: string;
-    /** @description The ID of the query which this request is targeting. */
-    queryId: string;
-    /** @description The ID of the row which this request is targeting. */
-    rowId: string;
-    /** @description The ID of the table which this request is targeting. */
-    tableId: string;
-    /** @description The ID of the user which this request is targeting. */
-    userId: string;
-    /** @description The ID of the view which this request is targeting. */
-    viewId: string;
-    /** @description The ID of the workspace which this request is targeting. */
-    workspaceId: string;
-  };
+    workspaceCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["workspace"];
+            };
+        };
+        responses: {
+            /** @description Returns the created workspace. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["workspaceOutput"];
+                };
+            };
+        };
+    };
+    workspaceGetById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the workspace which this request is targeting. */
+                workspaceId: components["parameters"]["workspaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the retrieved workspace. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["workspaceOutput"];
+                };
+            };
+        };
+    };
+    workspaceUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the workspace which this request is targeting. */
+                workspaceId: components["parameters"]["workspaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["workspace"];
+            };
+        };
+        responses: {
+            /** @description Returns the updated workspace. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["workspaceOutput"];
+                };
+            };
+        };
+    };
+    workspaceDestroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the workspace which this request is targeting. */
+                workspaceId: components["parameters"]["workspaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the deleted workspace. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["workspaceOutput"];
+                };
+            };
+        };
+    };
+    workspacePublish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the workspace which this request is targeting. */
+                workspaceId: components["parameters"]["workspaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the deployment object. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["deploymentOutput"];
+                };
+            };
+        };
+    };
+    workspaceUnpublish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the workspace which this request is targeting. */
+                workspaceId: components["parameters"]["workspaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The workspace was published successfully. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    workspaceImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the workspace which this request is targeting. */
+                workspaceId: components["parameters"]["workspaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** @description Password for the file if it is encrypted. */
+                    encryptedPassword?: string;
+                    /**
+                     * Format: binary
+                     * @description The export to import.
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Workspace has been updated. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    workspaceExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the workspace which this request is targeting. */
+                workspaceId: components["parameters"]["workspaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["workspaceExport"];
+            };
+        };
+        responses: {
+            /** @description A gzip tarball containing the workspace export, encrypted if password provided. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/gzip": string;
+                };
+            };
+        };
+    };
+    workspaceSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["nameSearch"];
+            };
+        };
+        responses: {
+            /** @description Returns the workspaces that were found based on the search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["workspaceSearch"];
+                };
+            };
+        };
+    };
 }
-
-export interface operations {
-  appCreate: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the created application. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["applicationOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["application"];
-      };
-    };
-  };
-  appGetById: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** Returns the retrieved application. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["applicationOutput"];
-        };
-      };
-    };
-  };
-  appUpdate: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** Returns the updated application. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["applicationOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["application"];
-      };
-    };
-  };
-  appDestroy: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** Returns the deleted application. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["applicationOutput"];
-        };
-      };
-    };
-  };
-  appUnpublish: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** The app was published successfully. */
-      204: never;
-    };
-  };
-  appPublish: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** Returns the deployment object. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["deploymentOutput"];
-        };
-      };
-    };
-  };
-  /** This endpoint is only available on a business or enterprise license. */
-  appImport: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** Application has been updated. */
-      204: never;
-    };
-    requestBody: {
-      content: {
-        "multipart/form-data": {
-          /** @description Password for the export if it is encrypted. */
-          encryptedPassword?: string;
-          /**
-           * Format: binary
-           * @description The app export to import.
-           */
-          appExport: string;
-        };
-      };
-    };
-  };
-  /** This endpoint is only available on a business or enterprise license. */
-  appExport: {
-    parameters: {
-      path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
-      };
-    };
-    responses: {
-      /** A gzip tarball containing the app export, encrypted if password provided. */
-      200: {
-        content: {
-          "application/gzip": string;
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["appExport"];
-      };
-    };
-  };
-  /** Based on application properties (currently only name) search for applications. */
-  appSearch: {
-    responses: {
-      /** Returns the applications that were found based on the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["applicationSearch"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["nameSearch"];
-      };
-    };
-  };
-  /** Output metrics in OpenMetrics format compatible with Prometheus */
-  metricsGet: {
-    responses: {
-      /** Returns tenant metrics. */
-      200: {
-        content: {
-          "text/plain": string;
-        };
-      };
-    };
-  };
-  /** Queries which have been created within a Budibase app can be executed using this, */
-  queryExecute: {
-    parameters: {
-      path: {
-        /** The ID of the query which this request is targeting. */
-        queryId: components["parameters"]["queryId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the result of the query execution. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["executeQueryOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["executeQuery"];
-      };
-    };
-  };
-  /** Based on query properties (currently only name) search for queries. */
-  querySearch: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the queries found based on the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["querySearch"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["nameSearch"];
-      };
-    };
-  };
-  /** This is a business/enterprise only endpoint */
-  roleAssign: {
-    responses: {
-      /** Returns a list of updated user IDs */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rolesOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["rolesAssign"];
-      };
-    };
-  };
-  /** This is a business/enterprise only endpoint */
-  roleUnAssign: {
-    responses: {
-      /** Returns a list of updated user IDs */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rolesOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["rolesUnAssign"];
-      };
-    };
-  };
-  /** Creates a row within the specified table. */
-  rowCreate: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the created row, including the ID which has been generated for it. This can be found in the Budibase portal, viewed under the developer information. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rowOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["row"];
-      };
-    };
-  };
-  /** This gets a single row, it will be enriched with the full related rows, rather than the squashed "primaryDisplay" format returned by the search endpoint. */
-  rowGetById: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-        /** The ID of the row which this request is targeting. */
-        rowId: components["parameters"]["rowId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the retrieved row. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rowOutput"];
-        };
-      };
-    };
-  };
-  /** Updates a row within the specified table. */
-  rowUpdate: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-        /** The ID of the row which this request is targeting. */
-        rowId: components["parameters"]["rowId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the created row, including the ID which has been generated for it. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rowOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["row"];
-      };
-    };
-  };
-  /** Deletes a row within the specified table. */
-  rowDestroy: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-        /** The ID of the row which this request is targeting. */
-        rowId: components["parameters"]["rowId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the deleted row, including the ID which has been generated for it. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rowOutput"];
-        };
-      };
-    };
-  };
-  rowSearch: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** The response will contain an array of rows that match the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["searchOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["rowSearch"];
-      };
-    };
-  };
-  rowViewSearch: {
-    parameters: {
-      path: {
-        /** The ID of the view which this request is targeting. */
-        viewId: components["parameters"]["viewId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** The response will contain an array of rows that match the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["searchOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["rowSearch"];
-      };
-    };
-  };
-  /** Create a table, this could be internal or external. */
-  tableCreate: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the created table, including the ID which has been generated for it. This can be internal or external datasources. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["table"];
-      };
-    };
-  };
-  /** Lookup a table, this could be internal or external. */
-  tableGetById: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the retrieved table. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableOutput"];
-        };
-      };
-    };
-  };
-  /** Update a table, this could be internal or external. */
-  tableUpdate: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the updated table. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["table"];
-      };
-    };
-  };
-  /** Delete a table, this could be internal or external. */
-  tableDestroy: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the deleted table. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableOutput"];
-        };
-      };
-    };
-  };
-  /** Based on table properties (currently only name) search for tables. This could be an internal or an external table. */
-  tableSearch: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the found tables, based on the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableSearch"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["nameSearch"];
-      };
-    };
-  };
-  userCreate: {
-    responses: {
-      /** Returns the created user. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["user"];
-      };
-    };
-  };
-  userGetById: {
-    parameters: {
-      path: {
-        /** The ID of the user which this request is targeting. */
-        userId: components["parameters"]["userId"];
-      };
-    };
-    responses: {
-      /** Returns the retrieved user. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userOutput"];
-        };
-      };
-    };
-  };
-  userUpdate: {
-    parameters: {
-      path: {
-        /** The ID of the user which this request is targeting. */
-        userId: components["parameters"]["userId"];
-      };
-    };
-    responses: {
-      /** Returns the updated user. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["user"];
-      };
-    };
-  };
-  userDestroy: {
-    parameters: {
-      path: {
-        /** The ID of the user which this request is targeting. */
-        userId: components["parameters"]["userId"];
-      };
-    };
-    responses: {
-      /** Returns the deleted user. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userOutput"];
-        };
-      };
-    };
-  };
-  /** Based on user properties (currently only name) search for users. */
-  userSearch: {
-    responses: {
-      /** Returns the found users based on search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userSearch"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["nameSearch"];
-      };
-    };
-  };
-  /** Create a view, this can be against an internal or external table. */
-  viewCreate: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the created view, including the ID which has been generated for it. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["viewOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["view"];
-      };
-    };
-  };
-  /** Lookup a view, this could be internal or external. */
-  viewGetById: {
-    parameters: {
-      path: {
-        /** The ID of the view which this request is targeting. */
-        viewId: components["parameters"]["viewId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the retrieved view. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["viewOutput"];
-        };
-      };
-    };
-  };
-  /** Update a view, this can be against an internal or external table. */
-  viewUpdate: {
-    parameters: {
-      path: {
-        /** The ID of the view which this request is targeting. */
-        viewId: components["parameters"]["viewId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the updated view. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["viewOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["view"];
-      };
-    };
-  };
-  /** Delete a view, this can be against an internal or external table. */
-  viewDestroy: {
-    parameters: {
-      path: {
-        /** The ID of the view which this request is targeting. */
-        viewId: components["parameters"]["viewId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the deleted view. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["viewOutput"];
-        };
-      };
-    };
-  };
-  /** Based on view properties (currently only name) search for views. */
-  viewSearch: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the found views, based on the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["viewSearch"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["nameSearch"];
-      };
-    };
-  };
-  workspaceCreate: {
-    responses: {
-      /** Returns the created workspace. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["workspaceOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["workspace"];
-      };
-    };
-  };
-  workspaceGetById: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** Returns the retrieved workspace. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["workspaceOutput"];
-        };
-      };
-    };
-  };
-  workspaceUpdate: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** Returns the updated workspace. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["workspaceOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["workspace"];
-      };
-    };
-  };
-  workspaceDestroy: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** Returns the deleted workspace. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["workspaceOutput"];
-        };
-      };
-    };
-  };
-  workspacePublish: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** Returns the deployment object. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["deploymentOutput"];
-        };
-      };
-    };
-  };
-  workspaceUnpublish: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** The workspace was published successfully. */
-      204: never;
-    };
-  };
-  /** This endpoint is only available on a business or enterprise license. */
-  workspaceImport: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** Workspace has been updated. */
-      204: never;
-    };
-    requestBody: {
-      content: {
-        "multipart/form-data": {
-          /** @description Password for the file if it is encrypted. */
-          encryptedPassword?: string;
-          /**
-           * Format: binary
-           * @description The export to import.
-           */
-          file: string;
-        };
-      };
-    };
-  };
-  /** This endpoint is only available on a business or enterprise license. */
-  workspaceExport: {
-    parameters: {
-      path: {
-        /** The ID of the workspace which this request is targeting. */
-        workspaceId: components["parameters"]["workspaceId"];
-      };
-    };
-    responses: {
-      /** A gzip tarball containing the workspace export, encrypted if password provided. */
-      200: {
-        content: {
-          "application/gzip": string;
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["workspaceExport"];
-      };
-    };
-  };
-  /** Based on workspace properties (currently only name) search for workspaces. */
-  workspaceSearch: {
-    responses: {
-      /** Returns the workspaces that were found based on the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["workspaceSearch"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["nameSearch"];
-      };
-    };
-  };
-}
-
-export interface external {}

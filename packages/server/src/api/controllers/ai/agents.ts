@@ -44,6 +44,7 @@ export async function createAgent(
     _deleted: false,
     createdBy: globalId,
     enabledTools: body.enabledTools,
+    ragConfigId: body.ragConfigId,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -71,6 +72,7 @@ export async function updateAgent(
     live: body.live,
     createdBy: body.createdBy,
     enabledTools: body.enabledTools,
+    ragConfigId: body.ragConfigId,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

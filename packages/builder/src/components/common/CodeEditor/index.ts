@@ -430,6 +430,7 @@ export const bindingsToCompletions = (
             type: "binding",
             detail: displayType,
             section: bindingSectionHeader,
+            icon: binding.icon,
             apply: (
               view: EditorView,
               _completion: BindingCompletionOption,

@@ -95,30 +95,37 @@
       {#if description}
         <BlockComponent type="textv2" props={{ text: description }} order={1} />
       {/if}
-      <BlockComponent type="container">
+      <BlockComponent
+        type="container"
+        props={{
+          direction: "column",
+          hAlign: "stretch",
+          vAlign: "top",
+        }}
+      >
         <div class="form-block fields" class:mobile={$context.device.mobile}>
           {#each fields as field, idx}
             <FormBlockComponent {field} {schema} order={idx} />
           {/each}
         </div>
+        {#if buttonPosition === "bottom"}
+          <BlockComponent
+            type="buttongroup"
+            props={{
+              buttons,
+              collapsed: buttonsCollapsed,
+              collapsedText: buttonsCollapsedText,
+            }}
+            styles={{
+              normal: {
+                "margin-top": "20px",
+              },
+            }}
+            order={fields.length + 1}
+          />
+        {/if}
       </BlockComponent>
     </BlockComponent>
-    {#if buttonPosition === "bottom"}
-      <BlockComponent
-        type="buttongroup"
-        props={{
-          buttons,
-          collapsed: buttonsCollapsed,
-          collapsedText: buttonsCollapsedText,
-        }}
-        styles={{
-          normal: {
-            "margin-top": "24",
-          },
-        }}
-        order={1}
-      />
-    {/if}
   </BlockComponent>
 {:else}
   <Placeholder

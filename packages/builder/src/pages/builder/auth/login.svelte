@@ -11,8 +11,15 @@
     FancyForm,
     FancyInput,
   } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
-  import { auth, organisation, oidc, admin } from "@/stores/portal"
+  import { goto as gotoStore } from "@roxi/routify"
+  import {
+    auth,
+    organisation,
+    oidc,
+    admin,
+    translations,
+  } from "@/stores/portal"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
   import GoogleButton from "./_components/GoogleButton.svelte"
   import OIDCButton from "./_components/OIDCButton.svelte"
   import { handleError } from "./_components/utils"
@@ -21,7 +28,7 @@
   import { pushNumSessionsInvalidated } from "../../../../../frontend-core/src"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
 
-  $goto
+  $: goto = $gotoStore
 
   let loaded = false
   let form
@@ -30,6 +37,17 @@
 
   $: company = $organisation.company || "Budibase"
   $: cloud = $admin.cloud
+  $: translationOverrides = (() => {
+    if (!$translations.loaded) {
+      return {}
+    }
+    const locale = $translations.config.defaultLocale
+    return $translations.config.locales[locale]?.overrides ?? {}
+  })()
+  $: loginLabels = resolveTranslationGroup("login", translationOverrides)
+  $: passwordBlankError = loginLabels.passwordError
+  $: passwordIncorrectError =
+    loginLabels.passwordIncorrectError || loginLabels.invalidCredentials
 
   async function login() {
     form.validate()
@@ -43,7 +61,7 @@
         formData?.password
       )
       if ($auth?.user?.forceResetPassword) {
-        $goto("./reset")
+        goto("./reset")
       } else {
         notifications.success("Logged in successfully")
         pushNumSessionsInvalidated(loginResult.invalidatedSessionCount || 0)
@@ -53,16 +71,18 @@
         if (returnUrl) {
           CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
           if (returnUrl.startsWith("/builder")) {
-            $goto(returnUrl)
+            goto(returnUrl)
           } else {
             window.location.assign(returnUrl)
           }
         } else {
-          $goto("/builder")
+          goto("/builder")
         }
       }
     } catch (err) {
-      notifications.error(err.message ? err.message : "Invalid credentials")
+      notifications.error(
+        passwordIncorrectError || err?.message || "Invalid credentials"
+      )
     }
   }
 
@@ -72,7 +92,10 @@
 
   onMount(async () => {
     try {
-      await organisation.init()
+      await Promise.all([
+        organisation.init(),
+        translations.init({ public: true }),
+      ])
     } catch (error) {
       notifications.error("Error getting org config")
     }
@@ -108,7 +131,7 @@
             <Divider />
             <FancyForm bind:this={form}>
               <FancyInput
-                label="Your work email"
+                label={loginLabels.emailLabel}
                 value={formData.username}
                 on:change={e => {
                   formData = {
@@ -119,7 +142,7 @@
                 validate={() => {
                   let fieldError = {
                     username: !formData.username
-                      ? "Please enter a valid email"
+                      ? loginLabels.emailError
                       : undefined,
                   }
                   errors = handleError({ ...errors, ...fieldError })
@@ -127,7 +150,7 @@
                 error={errors.username}
               />
               <FancyInput
-                label="Password"
+                label={loginLabels.passwordLabel}
                 value={formData.password}
                 type="password"
                 on:change={e => {
@@ -139,7 +162,7 @@
                 validate={() => {
                   let fieldError = {
                     password: !formData.password
-                      ? "Please enter your password"
+                      ? passwordBlankError
                       : undefined,
                   }
                   errors = handleError({ ...errors, ...fieldError })
@@ -162,8 +185,8 @@
           </Layout>
           <Layout gap="XS" noPadding justifyItems="center">
             <div class="user-actions">
-              <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
-                Forgot password?
+              <ActionButton size="L" quiet on:click={() => goto("./forgot")}>
+                {loginLabels.forgotPassword}
               </ActionButton>
             </div>
           </Layout>

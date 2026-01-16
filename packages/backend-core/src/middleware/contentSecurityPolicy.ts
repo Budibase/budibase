@@ -2,6 +2,7 @@ import { Ctx, Feature } from "@budibase/types"
 import crypto from "crypto"
 import { Middleware, Next } from "koa"
 import { workspace } from "../cache"
+import env from "../environment"
 
 const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
@@ -92,14 +93,39 @@ const CSP_DIRECTIVES = {
 
 const CSPDomainRegex = /^[A-Za-z0-9-*:/.]+$/
 
+type CSPDirectives = Record<string, string[]>
+
 export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   const nonce = crypto.randomBytes(16).toString("base64")
   ctx.state.nonce = nonce
-  let directives = { ...CSP_DIRECTIVES }
+  let directives: CSPDirectives = { ...CSP_DIRECTIVES }
   directives["script-src"] = [
-    ...CSP_DIRECTIVES["script-src"],
+    ...(CSP_DIRECTIVES["script-src"] as string[]),
     `'nonce-${nonce}'`,
   ]
+
+  // Add custom global CSP additions from environment variables
+  const customCSPs: Record<string, string | undefined> = {
+    "media-src": env.CUSTOM_CSP_MEDIA_SRC,
+    "script-src": env.CUSTOM_CSP_SCRIPT_SRC,
+    "connect-src": env.CUSTOM_CSP_CONNECT_SRC,
+    "img-src": env.CUSTOM_CSP_IMG_SRC,
+    "font-src": env.CUSTOM_CSP_FONT_SRC,
+    "frame-src": env.CUSTOM_CSP_FRAME_SRC,
+  }
+
+  for (const [directive, domains] of Object.entries(customCSPs)) {
+    if (domains) {
+      const parsedDomains = domains
+        .split(",")
+        .map(d => d.trim())
+        .filter(d => CSPDomainRegex.test(d))
+      directives[directive] = [
+        ...(directives[directive] || []),
+        ...parsedDomains,
+      ]
+    }
+  }
 
   // Add custom app CSP whitelist
   const licensed = ctx.user?.license?.features.includes(
@@ -113,10 +139,24 @@ export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
           const inclusions = (script.cspWhitelist || "")
             .split("\n")
             .filter(domain => CSPDomainRegex.test(domain))
-          directives["default-src"] = [
-            ...directives["default-src"],
-            ...inclusions,
+
+          // Apply app whitelist to all relevant directives
+          const directivesToUpdate = [
+            "default-src",
+            "script-src",
+            "connect-src",
+            "media-src",
+            "img-src",
+            "font-src",
+            "frame-src",
           ]
+
+          for (const directive of directivesToUpdate) {
+            directives[directive] = [
+              ...(directives[directive] || []),
+              ...inclusions,
+            ]
+          }
         }
       }
     } catch (err) {

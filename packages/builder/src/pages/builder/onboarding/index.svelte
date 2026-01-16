@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { Body, notifications, Layout, Button } from "@budibase/bbui"
   import { API } from "@/api"
   import {
@@ -10,6 +10,8 @@
   import Spinner from "@/components/common/Spinner.svelte"
   import BBLogo from "assets/BBLogo.svelte"
   import { appsStore } from "@/stores/portal"
+
+  $: goto = $gotoStore
 
   let loading = false
   let onboardingFailed = false
@@ -45,7 +47,7 @@
             })
 
       notifications.success(`Workspace created successfully`)
-      $goto(targetRoute)
+      goto(targetRoute)
     } catch (e: any) {
       loading = false
       onboardingFailed = true

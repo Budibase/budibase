@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { flags } from "@/stores/builder"
   import { datasources } from "@/stores/builder/datasources"
   import { queries } from "@/stores/builder/queries"
@@ -61,9 +61,12 @@
   import { readableToRuntimeMap, runtimeToReadableMap } from "@/dataBinding"
   import ResponsePanel from "./ResponsePanel.svelte"
   import AuthPicker from "./rest/AuthPicker.svelte"
+  import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
 
   export let queryId
   export let datasourceId
+
+  $: goto = $gotoStore
 
   type EndpointWithIcon = ImportEndpoint & {
     icon?: {
@@ -425,7 +428,7 @@
         id:
           metadata.operationId ||
           `${method.toLowerCase()}::${metadata.originalPath}`,
-        name: metadata.operationId || query.name,
+        name: query.name || metadata.operationId || "",
         method,
         path: metadata.originalPath || "",
         description: metadata.description || "",
@@ -525,7 +528,7 @@
       notifications.success(`Request saved successfully`)
 
       if (isNew && redirectIfNew) {
-        $goto(`../../${_id}`)
+        goto(`../../${_id}`)
       }
 
       const updatedQuery = getSelectedQuery(_id!, builtQuery.datasourceId)
@@ -719,6 +722,11 @@
     </div>
     <div class="actions">
       <div class="grouped">
+        {#if query}
+          <div class="access">
+            <AccessLevelSelect {query} label="Access" />
+          </div>
+        {/if}
         {#if query && selectedEndpointOption}
           <AuthPicker
             bind:authConfigId={query.fields.authConfigId}
@@ -1004,7 +1012,7 @@
 
 <style>
   .details :global(.markdown-viewer code) {
-    color: white;
+    color: var(--spectrum-alias-text-color);
   }
   .bottom {
     flex: 1;
@@ -1103,9 +1111,10 @@
   }
   .actions .grouped {
     display: flex;
+    gap: var(--spacing-m);
   }
   .send :global(.spectrum-Button-label) {
-    color: white;
+    color: var(--spectrum-alias-text-color);
   }
   .send :global(.icon) {
     color: var(--spectrum-global-color-gray-700);
@@ -1184,6 +1193,11 @@
     display: flex;
     flex-direction: row;
     gap: var(--spacing-s);
+  }
+  .access {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
   }
   .embed :global(.cm-editor) {
     min-height: 200px;

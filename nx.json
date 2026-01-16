@@ -2,9 +2,7 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "tasksRunnerOptions": {
     "default": {
-      "options": {
-        "cacheableOperations": ["build", "test", "check:types"]
-      }
+      "options": {}
     }
   },
   "targetDefaults": {
@@ -15,7 +13,8 @@
         "{workspaceRoot}/lerna.json",
         "{workspaceRoot}/.github/workflows/*",
         "{workspaceRoot}/tsconfig.build.json"
-      ]
+      ],
+      "cache": true
     },
     "test": {
       "inputs": [
@@ -23,7 +22,11 @@
         "{workspaceRoot}/scripts/*",
         "{workspaceRoot}/lerna.json",
         "{workspaceRoot}/.github/workflows/*"
-      ]
+      ],
+      "cache": true
+    },
+    "check:types": {
+      "cache": true
     }
   },
   "namedInputs": {

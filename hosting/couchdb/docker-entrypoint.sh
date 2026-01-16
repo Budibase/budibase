@@ -48,8 +48,12 @@ if [ "$1" = '/opt/couchdb/bin/couchdb' ]; then
 		# when it creates the files. The approach taken here ensures that the
 		# contents of the datadir have the same permissions as they had when they
 		# were initially created. This should minimize any startup delay.
-		find /opt/couchdb/data -type d ! -perm 0755 -exec chmod -f 0755 '{}' +
-		find /opt/couchdb/data -type f ! -perm 0644 -exec chmod -f 0644 '{}' +
+		CHECK_DIR="/opt/couchdb/data"
+		if [ -d "/data" ]; then
+			CHECK_DIR="/data"
+		fi
+		find "$CHECK_DIR" -type d ! -perm 0755 -exec chmod -f 0755 '{}' +
+		find "$CHECK_DIR" -type f ! -perm 0644 -exec chmod -f 0644 '{}' +
 
 		# Do the same thing for configuration files and directories. Technically
 		# CouchDB only needs read access to the configuration files as all online

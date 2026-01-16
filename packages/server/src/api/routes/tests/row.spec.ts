@@ -11,7 +11,12 @@ import {
 } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { quotas } from "@budibase/pro"
-import { JsTimeoutError } from "@budibase/string-templates"
+import {
+  convertToJS,
+  helpersToRemoveForJs,
+  JsTimeoutError,
+} from "@budibase/string-templates"
+import { getParsedManifest } from "@budibase/string-templates/test/utils"
 import {
   AIOperationEnum,
   AutoFieldSubType,
@@ -50,6 +55,8 @@ import { outputProcessing } from "../../../utilities/rowProcessor"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
+const manifestTimestamp = "2021-01-21T12:00:00"
+const manifestExamples = getParsedManifest()
 interface WaitOptions {
   name: string
   matchFn?: (event: any) => boolean
@@ -75,6 +82,76 @@ async function waitForEvent(
 
 function encodeJS(binding: string) {
   return `{{ js "${Buffer.from(binding).toString("base64")}"}}`
+}
+
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
+}
+
+function prepareManifestFormula(hbs: string) {
+  const rowValues: Record<string, any> = {}
+  const arrays = hbs.match(/\[[^/\]]+\]/g)
+  arrays?.forEach((arrayString, index) => {
+    const fieldName = `array${index}`
+    rowValues[fieldName] = JSON.parse(arrayString.replace(/'/g, '"'))
+    hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), fieldName)
+  })
+  return { formula: hbs, rowValues }
+}
+
+function wrapJsWithFixedDate(js: string, isoDate: string) {
+  return `
+  const __RealDate = Date;
+  const __fixed = new __RealDate("${isoDate}");
+  class __MockDate extends __RealDate {
+    constructor(...args) {
+      return args.length ? new __RealDate(...args) : new __RealDate(__fixed);
+    }
+    static now() {
+      return __fixed.getTime();
+    }
+    static parse = __RealDate.parse;
+    static UTC = __RealDate.UTC;
+  }
+  Date = __MockDate;
+  const __fn = () => {
+${js}
+  };
+  let __result;
+  try {
+    __result = __fn();
+  } finally {
+    Date = __RealDate;
+  }
+  return __result;
+  `
+}
+
+function assertManifestResult(
+  key: string,
+  hbs: string,
+  result: unknown,
+  expected: unknown
+) {
+  if (key === "random") {
+    const match = hbs.match(/{{\s*random\s+([-\d.]+)\s+([-\d.]+)\s*}}/)
+    const min = match ? Number(match[1]) : 0
+    const max = match ? Number(match[2]) : 0
+    const numericResult = Number(result)
+    expect(numericResult).toBeGreaterThanOrEqual(min)
+    expect(numericResult).toBeLessThanOrEqual(max)
+    return
+  }
+
+  if (key === "uuid") {
+    const UUID_REGEX =
+      /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i
+
+    expect(String(result)).toMatch(UUID_REGEX)
+    return
+  }
+
+  expect(result).toEqual(expected)
 }
 
 const descriptions = datasourceDescribe({ plus: true })
@@ -3867,6 +3944,117 @@ if (descriptions.length) {
           const { rows } = await config.api.row.search(table._id!)
           expect(rows[0].formula).toBe("2")
         })
+
+        isInternal &&
+          describe("manifest examples via formula columns", () => {
+            beforeAll(() => {
+              tk.freeze(manifestTimestamp)
+            })
+
+            afterAll(() => {
+              tk.freeze(timestamp)
+            })
+
+            describe.each(Object.keys(manifestExamples))("%s", collection => {
+              const examplesToRun = manifestExamples[collection].filter(
+                ([key, { requiresHbsBody }]) =>
+                  !requiresHbsBody && !["map"].includes(key)
+              )
+
+              examplesToRun.length &&
+                it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
+                  const { formula, rowValues } = prepareManifestFormula(hbs)
+                  const schema: TableSchema = {
+                    formula: {
+                      name: "formula",
+                      type: FieldType.FORMULA,
+                      formula,
+                      formulaType: FormulaType.DYNAMIC,
+                    },
+                  }
+
+                  for (const fieldName of Object.keys(rowValues)) {
+                    schema[fieldName] = {
+                      name: fieldName,
+                      type: FieldType.JSON,
+                    }
+                  }
+
+                  const manifestTable = await config.api.table.save(
+                    saveTableRequest({ schema })
+                  )
+                  await config.api.row.save(manifestTable._id!, rowValues)
+                  const { rows } = await config.api.row.search(
+                    manifestTable._id!
+                  )
+                  const result =
+                    typeof rows[0].formula === "string"
+                      ? rows[0].formula.replace(/&nbsp;/g, " ")
+                      : rows[0].formula
+
+                  assertManifestResult(key, hbs, result, js)
+                })
+            })
+          })
+
+        isInternal &&
+          describe("manifest examples via JS formula columns", () => {
+            beforeAll(() => {
+              tk.freeze(manifestTimestamp)
+            })
+
+            afterAll(() => {
+              tk.freeze(timestamp)
+            })
+
+            describe.each(Object.keys(manifestExamples))("%s", collection => {
+              const examplesToRun = manifestExamples[collection].filter(
+                ([key, { requiresHbsBody }]) =>
+                  !requiresHbsBody && !helpersToRemoveForJs.includes(key)
+              )
+
+              examplesToRun.length &&
+                it.each(examplesToRun)("%s", async (key, { hbs, js }) => {
+                  const { formula, rowValues } = prepareManifestFormula(hbs)
+                  let jsBody = convertToJS(formula)
+                  if (
+                    hbs.includes("durationFromNow") ||
+                    hbs.includes("date now")
+                  ) {
+                    jsBody = wrapJsWithFixedDate(jsBody, manifestTimestamp)
+                  }
+                  const jsFormula = encodeJS(jsBody)
+                  const schema: TableSchema = {
+                    formula: {
+                      name: "formula",
+                      type: FieldType.FORMULA,
+                      formula: jsFormula,
+                      formulaType: FormulaType.DYNAMIC,
+                    },
+                  }
+
+                  for (const fieldName of Object.keys(rowValues)) {
+                    schema[fieldName] = {
+                      name: fieldName,
+                      type: FieldType.JSON,
+                    }
+                  }
+
+                  const manifestTable = await config.api.table.save(
+                    saveTableRequest({ schema })
+                  )
+                  await config.api.row.save(manifestTable._id!, rowValues)
+                  const { rows } = await config.api.row.search(
+                    manifestTable._id!
+                  )
+                  const result =
+                    typeof rows[0].formula === "string"
+                      ? rows[0].formula.replace(/&nbsp;/g, " ")
+                      : rows[0].formula
+                  assertManifestResult(key, hbs, result, js)
+                })
+            })
+          })
 
         isInternal &&
           it("should coerce a static handlebars formula", async () => {

@@ -199,19 +199,17 @@
     <Button secondary on:click={importModal?.show}>Import workspace</Button>
   </div>
   <Divider noMargin />
-  {#if $featureFlags.COPY_RESOURCES_BETWEEN_WORKSPACES}
-    <Layout noPadding gap="XS">
-      <Heading size="XS">Copy resources</Heading>
-      <Body size="S">Copy resources from this workspace to another one</Body>
-    </Layout>
-    <div class="row">
-      <Button secondary on:click={() => cloneResourcesModal.show()}>
-        Copy resources
-      </Button>
-      <CloneResourcesModal bind:this={cloneResourcesModal} />
-    </div>
-    <Divider noMargin />
-  {/if}
+  <Layout noPadding gap="XS">
+    <Heading size="XS">Copy resources</Heading>
+    <Body size="S">Copy resources from this workspace to another one</Body>
+  </Layout>
+  <div class="row">
+    <Button secondary on:click={() => cloneResourcesModal.show()}>
+      Copy resources
+    </Button>
+    <CloneResourcesModal bind:this={cloneResourcesModal} />
+  </div>
+  <Divider noMargin />
   <Layout noPadding gap="XS">
     <div class="row">
       <Heading size="S">Recaptcha</Heading>

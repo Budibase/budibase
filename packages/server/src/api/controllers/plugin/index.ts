@@ -103,8 +103,10 @@ export async function create(
       )
     }
 
-    // Only allow Svelte 5 plugins on this branch
-    if (metadata.schema?.metadata?.svelteMajor !== 5) {
+    if (
+      metadata.schema?.metadata?.svelteMajor !== 5 &&
+      metadata.schema?.type === PluginType.COMPONENT
+    ) {
       throw new Error("Only Svelte 5 plugins are supported on this branch")
     }
 

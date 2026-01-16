@@ -43,6 +43,7 @@
   import WebhookDisplay from "@/components/automation/Shared/WebhookDisplay.svelte"
   import CategorySelector from "./CategorySelector.svelte"
   import AgentSelector from "./AgentSelector.svelte"
+  import StructuredOutputEditor from "./StructuredOutputEditor.svelte"
 
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
   export let context: {} | undefined
@@ -118,6 +119,13 @@
     },
     [SchemaFieldTypes.BOOL]: {
       comp: Checkbox,
+      props: (opts: FieldProps = {} as FieldProps) => {
+        const { key, field } = opts
+        return {
+          text: field.title ?? getFieldLabel(key, field),
+        }
+      },
+      wrapped: false,
     },
     [SchemaFieldTypes.DATE]: {
       comp: DateSelector,
@@ -248,6 +256,10 @@
     },
     [SchemaFieldTypes.AGENT]: {
       comp: AgentSelector,
+      fullWidth: true,
+    },
+    [SchemaFieldTypes.OUTPUT_SCHEMA]: {
+      comp: StructuredOutputEditor,
       fullWidth: true,
     },
   }

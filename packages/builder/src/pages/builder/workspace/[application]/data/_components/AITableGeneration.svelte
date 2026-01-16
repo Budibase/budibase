@@ -65,15 +65,26 @@
     gap: 10px;
   }
 
+  .ai-generation-prompt {
+    width: 100%;
+  }
+
   .ai-generation-examples {
     display: grid;
     gap: 10px;
+    width: 100%;
+    grid-template-columns: 1fr;
   }
 
   @media (min-width: 833px) {
     .ai-generation-examples {
-      grid-auto-flow: column;
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     }
+  }
+
+  .ai-generation-examples :global(.spectrum-ActionButton) {
+    width: 100%;
+    justify-content: center;
   }
   .ai-generation :global(.spectrum-Textfield-input),
   .ai-generation :global(.spectrum-ActionButton) {

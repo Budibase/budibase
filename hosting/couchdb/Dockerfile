@@ -63,9 +63,9 @@ RUN set -eux; \
 # Undo symlinks to /var/log and /var/lib
     rmdir /var/lib/couchdb /var/log/couchdb; \
     rm /opt/couchdb/data /opt/couchdb/var/log; \
-    mkdir -p /opt/couchdb/data /opt/couchdb/var/log; \
-    chown couchdb:couchdb /opt/couchdb/data /opt/couchdb/var/log; \
-    chmod 777 /opt/couchdb/data /opt/couchdb/var/log; \
+    mkdir -p /opt/couchdb/data /opt/couchdb/var/log /data; \
+    chown couchdb:couchdb /opt/couchdb/data /opt/couchdb/var/log /data; \
+    chmod 777 /opt/couchdb/data /opt/couchdb/var/log /data; \
 # Remove file that sets logging to a file
     rm /opt/couchdb/etc/default.d/10-filelog.ini; \
 # Check we own everything in /opt/couchdb. Matches the command in dockerfile_entrypoint.sh
@@ -87,7 +87,7 @@ COPY docker-entrypoint.sh /usr/local/bin
 RUN ln -s usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh # backwards compat
 ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
 
-VOLUME /opt/couchdb/data
+VOLUME /data
 
 # 5984: Main CouchDB endpoint
 # 4369: Erlang portmap daemon (epmd)

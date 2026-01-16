@@ -30,6 +30,7 @@
     | ((_option: O, _index?: number) => string)
     | undefined = undefined
   export let readonly: boolean = false
+  export let size: "S" | "M" | "L" = "M"
   export let quiet: boolean = false
   export let autoWidth: boolean = false
   export let autocomplete: boolean = false
@@ -98,6 +99,7 @@
   bind:open
   bind:searchTerm
   on:loadMore
+  {size}
   {quiet}
   {id}
   {disabled}

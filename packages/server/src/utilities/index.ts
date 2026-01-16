@@ -98,17 +98,6 @@ export function escapeDangerousCharacters(string: string) {
     .replace(/[\t]/g, "\\t")
 }
 
-export function formatBytes(bytes: string) {
-  const units = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-  const byteIncrements = 1024
-  let unit = 0
-  let size = parseInt(bytes, 10) || 0
-  while (size >= byteIncrements && ++unit) {
-    size /= byteIncrements
-  }
-  return `${size.toFixed(size < 10 && unit > 0 ? 1 : 0)}${units[unit]}`
-}
-
 export function convertBookmark(bookmark: string) {
   const IS_NUMBER = /^\d+\.?\d*$/
   if (typeof bookmark === "string" && bookmark.match(IS_NUMBER)) {

@@ -1,16 +1,34 @@
+import {
+  cache,
+  context,
+  events,
+  HTTPError,
+  redis,
+  utils,
+} from "@budibase/backend-core"
+import { Datasource, Query } from "@budibase/types"
 import { generateQueryID } from "../../../../db/utils"
 import { queryValidation } from "../validation"
 import { ImportInfo, ImportSource } from "./sources/base"
 import { Curl } from "./sources/curl"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
-// @ts-ignore
-import { context, events } from "@budibase/backend-core"
-import { Datasource, Query } from "@budibase/types"
+import sdk from "../../../../sdk"
+import * as crypto from "crypto"
+import fetch from "node-fetch"
 
 interface ImportResult {
   errorQueries: Query[]
   queries: Query[]
+}
+
+type ImporterInput = { data: string } | { url: string }
+
+const OPENAPI_SPEC_CACHE_TTL_DAYS = 28
+const SOURCE_FACTORIES: Record<string, () => ImportSource> = {
+  "openapi2.0": () => new OpenAPI2(),
+  "openapi3.0": () => new OpenAPI3(),
+  curl: () => new Curl(),
 }
 
 const assignStaticVariableDefaults = (
@@ -47,28 +65,131 @@ const assignDatasourceHeaderDefaults = (
   }
 }
 
-export class RestImporter {
-  data: string
-  sources: ImportSource[]
-  source!: ImportSource
+const stringToHashKey = (input: string) =>
+  crypto.createHash("sha512").update(JSON.stringify(input)).digest("hex")
 
-  constructor(data: string) {
-    this.data = data
-    this.sources = [new OpenAPI2(), new OpenAPI3(), new Curl()]
+const buildCacheKey = (input: ImporterInput) =>
+  `openapiSpecs:${stringToHashKey(JSON.stringify("data" in input ? input.data : input.url))}`
+
+async function fetchFromUrl(url: string): Promise<string> {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new HTTPError(
+        `Failed to fetch import data (status ${response.status})`,
+        response.status
+      )
+    }
+    return await response.text()
+  } catch (error: any) {
+    if (error instanceof HTTPError) {
+      throw error
+    }
+    const message = error?.message || "Unknown error"
+    throw new HTTPError(`Failed to fetch import data - ${message}`, 502)
+  }
+}
+
+export async function getImportInfo(
+  input: { data: string } | { url: string }
+): Promise<ImportInfo> {
+  const importer = await createImporter(input)
+  return importer.getInfo()
+}
+
+async function urlToSpecs(url: string, cacheKeyBase?: string): Promise<string> {
+  if (!cacheKeyBase) {
+    const result = await fetchFromUrl(url)
+    return result
   }
 
-  init = async () => {
-    for (let source of this.sources) {
-      if (await source.isSupported(this.data)) {
-        this.source = source
-        break
+  const cacheKey = `${cacheKeyBase}:specs`
+  const client = await redis.clients.getOpenapiImportSpecsClient()
+  const cachedSpecs = await client.get(cacheKey)
+  if (cachedSpecs) {
+    return await utils.gunzipFromBase64(cachedSpecs)
+  }
+  const result = await fetchFromUrl(url)
+  const encoded = await utils.gzipToBase64(result)
+  await client.store(
+    cacheKey,
+    encoded,
+    cache.TTL.ONE_DAY * OPENAPI_SPEC_CACHE_TTL_DAYS
+  )
+  return result
+}
+
+export async function createImporter(
+  input: { data?: string } | { url?: string }
+): Promise<RestImporter> {
+  let cacheKeyBase: string | undefined
+  let data: string | undefined
+  if ("url" in input && input.url) {
+    cacheKeyBase = buildCacheKey({ url: input.url })
+    data = await urlToSpecs(input.url, cacheKeyBase)
+  } else if ("data" in input) {
+    data = input.data
+  }
+
+  data = data?.trim()
+  if (!data) {
+    throw new HTTPError("Import data or url is required", 400)
+  }
+
+  let cachedType: string | undefined
+  const importerTypeCacheKey = cacheKeyBase && `${cacheKeyBase}:type`
+  if (importerTypeCacheKey) {
+    const client = await redis.clients.getOpenapiImportSpecsClient()
+    cachedType = await client.get(importerTypeCacheKey)
+  }
+  const importer = await RestImporter.init(data, cachedType)
+
+  if (!cachedType && importerTypeCacheKey) {
+    const client = await redis.clients.getOpenapiImportSpecsClient()
+    await client.store(
+      importerTypeCacheKey,
+      importer.getSource().getImportSource(),
+      cache.TTL.ONE_DAY * OPENAPI_SPEC_CACHE_TTL_DAYS
+    )
+  }
+
+  return importer
+}
+
+export class RestImporter {
+  private source!: ImportSource
+
+  private constructor() {}
+
+  static init = async (data: string, type?: string) => {
+    const importer = new RestImporter()
+    if (type) {
+      const factory = SOURCE_FACTORIES[type]
+      if (!factory) {
+        throw new HTTPError("Unsupported import type", 400)
+      }
+
+      const source = factory()
+      await source.load(data)
+      importer.source = source
+      return importer
+    } else {
+      for (let source of [new OpenAPI3(), new OpenAPI2(), new Curl()]) {
+        if (await source.tryLoad(data)) {
+          importer.source = source
+          break
+        }
       }
     }
+    if (!importer.source) {
+      throw new HTTPError("Unsupported import data", 400)
+    }
+    return importer
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
-    return this.source.getInfo()
-  }
+  getSource = () => this.source
+
+  getInfo = () => this.source.getInfo()
 
   importQueries = async (
     datasourceId: string,
@@ -80,7 +201,7 @@ export class RestImporter {
     const staticVariables =
       await this.getDatasourceStaticVariables(datasourceId)
     // construct the queries
-    let queries = await this.source.getQueries(datasourceId, {
+    let queries = this.source.getQueries(datasourceId, {
       filterIds,
       staticVariables,
     })
@@ -134,7 +255,7 @@ export class RestImporter {
     // events
     const count = successQueries.length
     const importSource = this.source.getImportSource()
-    const datasource: Datasource = await db.get(datasourceId)
+    const datasource = await sdk.datasources.get(datasourceId)
     await events.query.imported(datasource, importSource, count)
     for (let query of successQueries) {
       await events.query.created(datasource, query)
@@ -193,10 +314,10 @@ export class RestImporter {
     if (!datasourceId) {
       return {}
     }
-    const db = context.getWorkspaceDB()
-    let datasource: Datasource | undefined
+
+    let datasource
     try {
-      datasource = await db.get<Datasource>(datasourceId)
+      datasource = await sdk.datasources.get(datasourceId)
     } catch (_err) {
       return {}
     }

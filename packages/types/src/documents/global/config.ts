@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { TranslationOverrides } from "../workspace/workspace"
 
 export interface Config<T = any> extends Document {
   type: ConfigType
@@ -151,6 +152,20 @@ export interface RecaptchaInnerConfig {
 
 export interface RecaptchaConfig extends Config<RecaptchaInnerConfig> {}
 
+export interface TranslationLocaleConfig {
+  label?: string
+  overrides: TranslationOverrides
+  updatedAt?: string
+  updatedBy?: string
+}
+
+export interface TranslationsConfigInner {
+  defaultLocale: string
+  locales: Record<string, TranslationLocaleConfig>
+}
+
+export interface TranslationsConfig extends Config<TranslationsConfigInner> {}
+
 export const isConfig = (config: Object): config is Config =>
   "type" in config && "config" in config
 
@@ -175,6 +190,10 @@ export const isAIConfig = (config: Config): config is AIConfig =>
 export const isRecaptchaConfig = (config: Config): config is RecaptchaConfig =>
   config.type === ConfigType.RECAPTCHA
 
+export const isTranslationsConfig = (
+  config: Config
+): config is TranslationsConfig => config.type === ConfigType.TRANSLATIONS
+
 export enum PKCEMethod {
   S256 = "S256",
   PLAIN = "plain",
@@ -190,6 +209,7 @@ export enum ConfigType {
   SCIM = "scim",
   AI = "ai",
   RECAPTCHA = "recaptcha",
+  TRANSLATIONS = "translations",
 }
 
 export type ConfigTypeToConfig<T extends ConfigType> =
@@ -207,4 +227,8 @@ export type ConfigTypeToConfig<T extends ConfigType> =
               ? SCIMConfig
               : T extends ConfigType.AI
                 ? AIConfig
-                : never
+                : T extends ConfigType.RECAPTCHA
+                  ? RecaptchaConfig
+                  : T extends ConfigType.TRANSLATIONS
+                    ? TranslationsConfig
+                    : never

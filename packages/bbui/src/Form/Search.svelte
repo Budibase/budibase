@@ -30,6 +30,7 @@
     {quiet}
     bind:inputRef
     on:change={onChange}
+    on:clear
     on:click
     on:input
     on:focus

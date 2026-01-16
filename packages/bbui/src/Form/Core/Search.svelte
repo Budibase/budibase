@@ -11,11 +11,21 @@
   export let quiet = false
   export let inputRef: HTMLElement | undefined = undefined
 
-  const dispatch = createEventDispatcher()
+  interface SearchEvents {
+    change: any
+    clear: void
+  }
+
+  const dispatch = createEventDispatcher<SearchEvents>()
   let focus = false
 
   const updateValue = (value: any) => {
     dispatch("change", value)
+  }
+
+  const clearValue = () => {
+    updateValue("")
+    dispatch("clear")
   }
 
   const onFocus = () => {
@@ -71,7 +81,7 @@
     />
   </div>
   <button
-    on:click={() => updateValue("")}
+    on:click={clearValue}
     type="reset"
     class="spectrum-ClearButton spectrum-Search-clearButton"
   >

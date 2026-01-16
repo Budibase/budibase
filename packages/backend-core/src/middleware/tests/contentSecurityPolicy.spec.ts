@@ -13,6 +13,27 @@ jest.mock("../../cache", () => ({
     getWorkspaceMetadata: jest.fn(),
   },
 }))
+jest.mock("../../environment", () => ({
+  __esModule: true,
+  default: {
+    isDev: () => false,
+    isProd: () => true,
+    isTest: () => true,
+    isJest: () => true,
+    isWorker: () => false,
+    isApps: () => false,
+    isQA: () => false,
+    LOG_LEVEL: "info",
+    CUSTOM_CSP_MEDIA_SRC: undefined,
+    CUSTOM_CSP_SCRIPT_SRC: undefined,
+    CUSTOM_CSP_CONNECT_SRC: undefined,
+    CUSTOM_CSP_IMG_SRC: undefined,
+    CUSTOM_CSP_FONT_SRC: undefined,
+    CUSTOM_CSP_FRAME_SRC: undefined,
+  },
+}))
+
+import env from "../../environment"
 
 describe("contentSecurityPolicy middleware", () => {
   let ctx: any
@@ -129,6 +150,11 @@ describe("contentSecurityPolicy middleware", () => {
 
     const cspHeader = ctx.set.mock.calls[0][1]
     expect(cspHeader).toContain(`default-src 'self' ${domain};`)
+    expect(cspHeader).toContain(`script-src 'self' 'unsafe-eval'`)
+    expect(cspHeader).toContain(`${domain}`)
+    expect(cspHeader).toContain(
+      `media-src 'self' https://js.intercomcdn.com https://cdn.budi.live ${domain};`
+    )
     expect(workspace.getWorkspaceMetadata).toHaveBeenCalledWith(appId)
     expect(next).toHaveBeenCalled()
   })
@@ -176,5 +202,36 @@ describe("contentSecurityPolicy middleware", () => {
     expect(cspHeader).not.toContain(invalidDomain)
     expect(workspace.getWorkspaceMetadata).toHaveBeenCalledWith(appId)
     expect(next).toHaveBeenCalled()
+  })
+
+  describe("custom environment variables", () => {
+    it("should add custom domains from environment variables", async () => {
+      // @ts-ignore
+      env.CUSTOM_CSP_MEDIA_SRC = "https://media.example.com"
+      // @ts-ignore
+      env.CUSTOM_CSP_CONNECT_SRC = "https://api.example.com"
+
+      await contentSecurityPolicy(ctx, next)
+
+      const cspHeader = ctx.set.mock.calls[0][1]
+      expect(cspHeader).toContain(
+        "media-src 'self' https://js.intercomcdn.com https://cdn.budi.live https://media.example.com"
+      )
+      expect(cspHeader).toContain("connect-src 'self'")
+      expect(cspHeader).toContain("https://api.example.com")
+    })
+
+    it("should filter out invalid domains in environment variables", async () => {
+      // @ts-ignore
+      env.CUSTOM_CSP_MEDIA_SRC = "https://media.example.com, invalid-domain!!"
+
+      await contentSecurityPolicy(ctx, next)
+
+      const cspHeader = ctx.set.mock.calls[0][1]
+      expect(cspHeader).toContain(
+        "media-src 'self' https://js.intercomcdn.com https://cdn.budi.live https://media.example.com"
+      )
+      expect(cspHeader).not.toContain("invalid-domain!!")
+    })
   })
 })

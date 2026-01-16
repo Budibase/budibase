@@ -25,10 +25,41 @@ export interface Agent extends Document {
   iconColor?: string
   createdBy?: string
   enabledTools?: string[]
+  ragConfigId?: string
+}
+
+export interface AgentMessageRagSource {
+  sourceId: string
+  fileId?: string
+  filename?: string
+  chunkCount: number
+}
+
+export interface AgentMessageMetadata {
+  ragSources?: AgentMessageRagSource[]
 }
 
 export interface AgentChat extends Document {
   agentId?: string
   title: string
-  messages: UIMessage[]
+  messages: UIMessage<AgentMessageMetadata>[]
+}
+
+export enum AgentFileStatus {
+  PROCESSING = "processing",
+  READY = "ready",
+  FAILED = "failed",
+}
+
+export interface AgentFile extends Document {
+  agentId: string
+  filename: string
+  mimetype?: string
+  size?: number
+  ragSourceId: string
+  status: AgentFileStatus
+  chunkCount: number
+  uploadedBy: string
+  errorMessage?: string
+  processedAt?: string
 }
