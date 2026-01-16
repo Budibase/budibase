@@ -24,7 +24,7 @@
     "husky": "^8.0.3",
     "jest": "^30.0.5",
     "kill-port": "^1.6.1",
-    "lerna": "8.2.4",
+    "lerna": "^9.0.3",
     "load-tsconfig": "^0.2.5",
     "madge": "^6.0.0",
     "prettier": "3.5.3",
