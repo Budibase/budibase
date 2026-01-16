@@ -4,6 +4,7 @@ import { admin } from "./admin"
 import analytics from "@/analytics"
 import { BudiStore } from "@/stores/BudiStore"
 import { reset as resetBuilderStores } from "@/stores/builder"
+import { userPreferences } from "@/stores/preferences"
 import { CookieUtils, Constants } from "@budibase/frontend-core"
 import {
   GetGlobalSelfResponse,
@@ -45,6 +46,8 @@ class AuthStore extends BudiStore<PortalAuthStore> {
       isSSO: user != null && isSSOUser(user),
       postLogout: sessionTerminated,
     })
+
+    userPreferences.syncDefaultLayout(user?.defaultLayout)
 
     if (user) {
       analytics
