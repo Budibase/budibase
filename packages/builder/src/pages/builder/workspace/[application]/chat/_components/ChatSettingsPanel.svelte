@@ -1,6 +1,13 @@
 <script lang="ts">
   import Panel from "@/components/design/Panel.svelte"
-  import { Body, Icon, Modal, ModalContent, Toggle } from "@budibase/bbui"
+  import {
+    Body,
+    Checkbox,
+    Icon,
+    Modal,
+    ModalContent,
+    Toggle,
+  } from "@budibase/bbui"
   import type { Agent } from "@budibase/types"
 
   type EnabledAgent = {
@@ -20,9 +27,13 @@
     _agentId: string,
     _enabled: boolean
   ) => void
+  export let handleDefaultToggle: (_agentId: string) => void
 
   let settingsModal: Modal | undefined
+  let selectedAgentId: string | undefined
   let selectedAgent: AgentListItem | undefined
+
+  $: selectedAgent = agentList.find(agent => agent.agentId === selectedAgentId)
 
   $: agentList = namedAgents
     .filter(agent => agent._id)
@@ -43,7 +54,7 @@
   )
 
   const openAgentSettings = (agent: AgentListItem) => {
-    selectedAgent = agent
+    selectedAgentId = agent.agentId
     settingsModal?.show()
   }
 </script>
@@ -139,7 +150,20 @@
     size="M"
     title={`${selectedAgent?.name || "Agent"} settings`}
     showConfirmButton={false}
-  />
+  >
+    <div class="agent-settings">
+      <Checkbox
+        text="Default agent"
+        value={selectedAgent?.agentId === resolvedDefaultAgent?.agentId}
+        disabled={!selectedAgent || !isAgentAvailable(selectedAgent.agentId)}
+        on:change={event => {
+          if (selectedAgent && event.detail) {
+            handleDefaultToggle(selectedAgent.agentId)
+          }
+        }}
+      />
+    </div>
+  </ModalContent>
 </Modal>
 
 <style>
@@ -193,5 +217,11 @@
 
   .settings-gear:hover {
     color: var(--spectrum-global-color-gray-800);
+  }
+
+  .agent-settings {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
   }
 </style>
