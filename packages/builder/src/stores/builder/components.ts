@@ -26,6 +26,7 @@ import {
   builderStore,
   screenComponentsList,
 } from "@/stores/builder"
+import { getDefaultLayoutPreference } from "@/stores/preferences"
 import { buildFormSchema, getSchemaForDatasource } from "@/dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
@@ -468,6 +469,13 @@ export class ComponentStore extends BudiStore<ComponentState> {
     } catch (e) {
       console.error(e)
       throw e
+    }
+
+    const isContainerComponent =
+      componentType === "@budibase/standard-components/container" ||
+      componentType === "container"
+    if (isContainerComponent && presetProps?.layout == null) {
+      instance.layout = getDefaultLayoutPreference()
     }
 
     // Custom post processing for creation only

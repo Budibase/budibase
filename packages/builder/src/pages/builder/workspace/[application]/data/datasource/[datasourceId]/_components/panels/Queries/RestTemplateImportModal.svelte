@@ -195,9 +195,6 @@
       if (endpointsImportRequest.url) {
         body.url = endpointsImportRequest.url
       }
-      if (endpointsImportRequest.data) {
-        body.data = endpointsImportRequest.data
-      }
       const importResult = await queries.importQueries(body)
       if (!datasourceId) {
         datasourceId = importResult.datasourceId
