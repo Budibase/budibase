@@ -173,7 +173,7 @@
     "jest-openapi": "0.14.2",
     "nock": "13.5.4",
     "nodemon": "2.0.15",
-    "openapi-typescript": "5.2.0",
+    "openapi-typescript": "7.10.1",
     "rimraf": "3.0.2",
     "supertest": "6.3.3",
     "swagger-jsdoc": "6.1.0",

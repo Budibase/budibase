@@ -140,12 +140,12 @@ export class OpenAPI2 extends OpenAPISource {
     return metadata
   }
 
-  isSupported = async (data: string): Promise<boolean> => {
+  tryLoad = async (data: string): Promise<boolean> => {
     try {
-      const document: any = await this.parseData(data)
+      let document = await this.parseData(data)
+      document = await this.validate(document)
       if (isOpenAPI2(document)) {
-        this.document = document
-        this.setSecurityHeaders()
+        this.loadDocument(document)
         return true
       } else {
         return false
@@ -153,6 +153,20 @@ export class OpenAPI2 extends OpenAPISource {
     } catch (err) {
       return false
     }
+  }
+
+  load = async (data: string): Promise<void> => {
+    const document = await this.parseData(data)
+    if (isOpenAPI2(document)) {
+      this.loadDocument(document)
+      return
+    }
+    throw new Error("Failed to load OpenAPI 2 document")
+  }
+
+  private loadDocument = (document: OpenAPIV2.Document) => {
+    this.document = document
+    this.setSecurityHeaders()
   }
 
   getUrl = (): URL | undefined => {
@@ -176,8 +190,8 @@ export class OpenAPI2 extends OpenAPISource {
     }
   }
 
-  private getEndpoints = async (): Promise<ImportInfo["endpoints"]> => {
-    const queries = await this.getQueries("")
+  private getEndpoints = (): ImportInfo["endpoints"] => {
+    const queries = this.getQueries("")
     const endpoints: ImportInfo["endpoints"] = []
 
     for (const query of queries) {
@@ -217,7 +231,7 @@ export class OpenAPI2 extends OpenAPISource {
     return endpoints
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
+  getInfo = (): ImportInfo => {
     const name = this.document.info.title || "Swagger Import"
     const rawUrl = this.getUrl()?.href
     const url = rawUrl ? this.convertPathVariables(rawUrl) : undefined
@@ -229,7 +243,7 @@ export class OpenAPI2 extends OpenAPISource {
       name,
       url,
       docsUrl,
-      endpoints: await this.getEndpoints(),
+      endpoints: this.getEndpoints(),
       securityHeaders: this.getSecurityHeaders(),
     }
   }
@@ -242,10 +256,7 @@ export class OpenAPI2 extends OpenAPISource {
     return "openapi2.0"
   }
 
-  getQueries = async (
-    datasourceId: string,
-    options?: GetQueriesOptions
-  ): Promise<Query[]> => {
+  getQueries = (datasourceId: string, options?: GetQueriesOptions): Query[] => {
     const url = this.getUrl()
     const queries = []
     const filterIds = options?.filterIds
