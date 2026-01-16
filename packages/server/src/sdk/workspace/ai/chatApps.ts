@@ -4,6 +4,7 @@ import { ChatApp, DocumentType } from "@budibase/types"
 const withDefaults = (chatApp: ChatApp): ChatApp => ({
   ...chatApp,
   live: chatApp.live ?? false,
+  conversationStarters: chatApp.conversationStarters ?? [],
 })
 
 export async function getSingle(): Promise<ChatApp | undefined> {
