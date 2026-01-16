@@ -162,5 +162,38 @@ describe("oidc", () => {
         "Could not determine user email from profile"
       )
     })
+
+    it("populates first and last name from profile data", async () => {
+      const givenName = "Ada"
+      const familyName = "Lovelace"
+      uiProfile.name = {
+        givenName,
+        familyName,
+      }
+      idProfile.name = {
+        givenName,
+        familyName,
+      }
+
+      await authenticate()
+
+      const expectedDetails = {
+        ...details,
+        profile: {
+          ...details.profile,
+          name: {
+            givenName,
+            familyName,
+          },
+        },
+      }
+
+      expect(sso.authenticate).toHaveBeenCalledWith(
+        expectedDetails,
+        false,
+        mockDone,
+        mockSaveUser
+      )
+    })
   })
 })
