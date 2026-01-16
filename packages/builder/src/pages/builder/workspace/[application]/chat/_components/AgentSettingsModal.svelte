@@ -10,8 +10,8 @@
   export let open = false
   export let selectedAgent: AgentListItem | undefined
   export let defaultAgentId: string | undefined
-  export let isAgentAvailable: (agentId: string) => boolean
-  export let onSetDefault: (agentId: string) => void
+  export let isAgentAvailable: (_agentId: string) => boolean
+  export let onSetDefault: (_agentId: string) => void
   export let onClose: () => void
 
   let modal: Modal | undefined

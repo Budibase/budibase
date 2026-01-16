@@ -9,9 +9,9 @@
 
   export let resolvedDefaultAgent: AgentListItem | undefined
   export let otherAgents: AgentListItem[] = []
-  export let isAgentAvailable: (agentId: string) => boolean
-  export let onToggleEnabled: (agentId: string, enabled: boolean) => void
-  export let onOpenSettings: (agent: AgentListItem) => void
+  export let isAgentAvailable: (_agentId: string) => boolean
+  export let onToggleEnabled: (_agentId: string, _enabled: boolean) => void
+  export let onOpenSettings: (_agent: AgentListItem) => void
 </script>
 
 <div class="settings-group">
