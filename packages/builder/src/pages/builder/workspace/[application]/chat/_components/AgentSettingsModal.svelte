@@ -25,8 +25,13 @@
   }
 
   $: isDefault = selectedAgent?.agentId === defaultAgentId
-  $: isDisabled =
-    !selectedAgent || !isAgentAvailable(selectedAgent.agentId) || isDefault
+  $: isAvailable = selectedAgent && isAgentAvailable(selectedAgent.agentId)
+  $: disabledReason = isDefault
+    ? "This agent is already the default."
+    : !isAvailable
+      ? "Enable this agent to set it as default."
+      : ""
+  $: isDisabled = !selectedAgent || !isAvailable || isDefault
 
   const handleSetDefault = () => {
     if (selectedAgent) {
@@ -45,6 +50,9 @@
       <Button size="S" disabled={isDisabled} on:click={handleSetDefault}>
         Set as default
       </Button>
+      {#if disabledReason}
+        <p class="agent-settings-helper">{disabledReason}</p>
+      {/if}
     </div>
   </ModalContent>
 </Modal>
@@ -54,5 +62,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+  }
+
+  .agent-settings-helper {
+    margin: 0;
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
