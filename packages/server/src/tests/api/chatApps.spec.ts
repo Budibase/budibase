@@ -60,4 +60,42 @@ describe("chat apps validation", () => {
 
     expect(res.status).toBe(400)
   })
+
+  it("allows empty enabledAgents", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      enabledAgents: [],
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.enabledAgents).toEqual([])
+  })
+
+  it("assigns default when missing", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      enabledAgents: [{ agentId: "agent-1" }, { agentId: "agent-2" }],
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.enabledAgents).toEqual([
+      { agentId: "agent-1", default: true },
+      { agentId: "agent-2", default: false },
+    ])
+  })
+
+  it("rejects multiple default agents", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      enabledAgents: [
+        { agentId: "agent-1", default: true },
+        { agentId: "agent-2", default: true },
+      ],
+    })
+
+    expect(res.status).toBe(400)
+  })
 })

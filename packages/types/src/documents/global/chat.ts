@@ -3,6 +3,7 @@ import type { UIMessage } from "ai"
 
 export interface ChatAppEnabledAgent {
   agentId: string
+  default?: boolean
 }
 
 export interface ChatApp extends Document {
