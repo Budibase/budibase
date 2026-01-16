@@ -2,23 +2,6 @@ import { HTTPError } from "@budibase/backend-core"
 import { ChatApp, UpdateChatAppRequest, UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
 
-const ensureEnabledAgents = (chatApp: ChatApp) => {
-  const enabledAgents = chatApp.enabledAgents
-  const hasAtLeastOne = Array.isArray(enabledAgents) && enabledAgents.length > 0
-  const allValid =
-    hasAtLeastOne &&
-    enabledAgents.every(
-      agent => typeof agent?.agentId === "string" && agent.agentId.trim().length
-    )
-
-  if (!allValid) {
-    throw new HTTPError(
-      "enabledAgents must contain at least one valid agentId",
-      400
-    )
-  }
-}
-
 export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
   const chatApp = await sdk.ai.chatApps.getSingle()
   if (chatApp) {
@@ -27,12 +10,10 @@ export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
   }
 
   const fallbackAgentId = (await sdk.ai.agents.fetch())[0]?._id
-  if (!fallbackAgentId) {
-    throw new HTTPError("agentId is required to create a chat app", 400)
-  }
+  const enabledAgents = fallbackAgentId ? [{ agentId: fallbackAgentId }] : []
 
   const created = await sdk.ai.chatApps.create({
-    enabledAgents: [{ agentId: fallbackAgentId }],
+    enabledAgents,
   })
   ctx.body = created
 }
@@ -46,7 +27,6 @@ export async function updateChatApp(
     ? { ...chatApp, _id: chatApp._id || chatAppIdFromPath }
     : chatApp
 
-  ensureEnabledAgents(resolvedChatApp)
   const updated = await sdk.ai.chatApps.update(resolvedChatApp)
   ctx.body = updated
 }
