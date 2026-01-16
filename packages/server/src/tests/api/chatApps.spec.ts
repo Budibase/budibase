@@ -1,5 +1,6 @@
 import { context, docIds } from "@budibase/backend-core"
 import type { ChatApp } from "@budibase/types"
+import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 
 describe("chat apps validation", () => {
@@ -113,5 +114,32 @@ describe("chat apps validation", () => {
     })
 
     expect(res.status).toBe(400)
+  })
+})
+
+describe("chat apps create validation", () => {
+  const config = new TestConfiguration()
+
+  beforeAll(async () => {
+    await config.init("chat-app-create-validation")
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("rejects null enabledAgents", async () => {
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const payload = {
+          enabledAgents: null,
+        } as unknown as Omit<ChatApp, "_id" | "_rev">
+
+        await expect(sdk.ai.chatApps.create(payload)).rejects.toThrow(
+          "enabledAgents must contain valid agentId entries"
+        )
+      }
+    )
   })
 })
