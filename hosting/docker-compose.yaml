@@ -103,8 +103,9 @@ services:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
       - TARGETBUILD=docker-compose
+      - DATA_DIR=/data
     volumes:
-      - couchdb3_data:/opt/couchdb/data
+      - couchdb3_data:/data
 
   redis-service:
     restart: unless-stopped
