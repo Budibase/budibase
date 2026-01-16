@@ -63,9 +63,9 @@
   let selectedTemplateGroup: RestTemplateGroup<RestTemplateGroupName> | null =
     null
   let selectedGroupTemplateName: GroupTemplateName | null = null
-  let selectedGroupTemplate: RestTemplateWithoutIcon<GroupTemplateName> | null =
+  let selectedTemplateGroupItem: RestTemplateWithoutIcon<GroupTemplateName> | null =
     null
-  let selectedGroupTemplateDescription = ""
+  let selectedTemplateGroupItemDescription = ""
   let templateLoading = false
   let templateLoadingPhase: "info" | "import" | null = null
   let pendingTemplate: RestTemplate | null = null
@@ -150,13 +150,14 @@
       template,
     })),
   ].sort((a, b) => a.name.localeCompare(b.name))
-  $: selectedGroupTemplate =
+  $: selectedTemplateGroupItem =
     selectedTemplateGroup && selectedGroupTemplateName
       ? selectedTemplateGroup.templates.find(
           template => template.name === selectedGroupTemplateName
         ) || null
       : null
-  $: selectedGroupTemplateDescription = selectedGroupTemplate?.description || ""
+  $: selectedTemplateGroupItemDescription =
+    selectedTemplateGroupItem?.description || ""
   $: groupTemplateOptions = selectedTemplateGroup
     ? selectedTemplateGroup.templates.map(template => ({
         label: template.name,
@@ -401,15 +402,16 @@
       notifications.error("Select a template")
       return
     }
-    if (!selectedGroupTemplate) {
+    if (!selectedTemplateGroupItem) {
       notifications.error("Selected template could not be found.")
       return
     }
     templateGroupModal?.hide()
     selectTemplate({
-      name: selectedGroupTemplate.name,
-      description: selectedGroupTemplate.description,
-      specs: selectedGroupTemplate.specs,
+      name: selectedTemplateGroupItem.name,
+      description: selectedTemplateGroupItem.description,
+      specs: selectedTemplateGroupItem.specs,
+      operationsCount: selectedTemplateGroupItem.operationsCount,
       icon: selectedTemplateGroup.icon,
       verified: selectedTemplateGroup.verified,
     })
@@ -624,9 +626,9 @@
           bind:value={selectedGroupTemplateName}
           disabled={templateLoading}
         />
-        {#if selectedGroupTemplateDescription}
+        {#if selectedTemplateGroupItemDescription}
           <DescriptionViewer
-            description={selectedGroupTemplateDescription}
+            description={selectedTemplateGroupItemDescription}
             label={undefined}
           />
         {/if}

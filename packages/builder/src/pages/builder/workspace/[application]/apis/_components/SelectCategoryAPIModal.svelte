@@ -106,13 +106,13 @@
         description: template.description,
       }))
     : []
-  $: selectedGroupTemplate =
+  $: selectedTemplateGroupItem =
     activeGroup && activeGroupTemplateName
       ? activeGroup.templates.find(
           template => template.name === activeGroupTemplateName
         ) || null
       : null
-  $: selectedGroupTemplateDescription = activeGroupOptions.find(
+  $: selectedTemplateGroupItemDescription = activeGroupOptions.find(
     option => option.value === activeGroupTemplateName
   )?.description
 
@@ -138,13 +138,13 @@
   }
 
   const confirmGroupTemplateSelection = () => {
-    if (!activeGroup || !selectedGroupTemplate) {
+    if (!activeGroup || !selectedTemplateGroupItem) {
       return
     }
     dispatch("selectTemplate", {
       kind: "group",
       groupName: activeGroup.name,
-      template: selectedGroupTemplate,
+      template: selectedTemplateGroupItem,
     })
   }
 
@@ -252,9 +252,9 @@
               bind:value={activeGroupTemplateName}
               disabled={loading}
             />
-            {#if selectedGroupTemplateDescription}
+            {#if selectedTemplateGroupItemDescription}
               <DescriptionViewer
-                description={selectedGroupTemplateDescription}
+                description={selectedTemplateGroupItemDescription}
                 label={undefined}
               />
             {/if}
@@ -266,7 +266,7 @@
             <Button
               cta
               on:click={confirmGroupTemplateSelection}
-              disabled={!selectedGroupTemplate || loading}
+              disabled={!selectedTemplateGroupItem || loading}
             >
               Use template
             </Button>
