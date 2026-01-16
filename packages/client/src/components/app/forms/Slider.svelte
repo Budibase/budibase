@@ -87,8 +87,6 @@
       onChange({ value: nextValue })
     }
   }
-
-  console.log({ iconLeftSize, iconLeft, iconRightSize, iconRight })
 </script>
 
 <Field
@@ -107,29 +105,37 @@
 >
   <div class="field">
     {#if iconLeft}
-      <Icon name={iconLeft} size={iconLeftSize} color="" onClick=""></Icon>
+      <Icon name={iconLeft} size={iconLeftSize}></Icon>
     {/if}
     {#if fieldState}
-      <CoreSlider
-        min={lowerBound}
-        max={upperBound}
-        {step}
-        value={sliderValue}
-        disabled={isDisabled}
-        id={fieldState.fieldId}
-        on:change={handleChange}
-      />
+      <div class="slider">
+        <CoreSlider
+          min={lowerBound}
+          max={upperBound}
+          {step}
+          value={sliderValue}
+          disabled={isDisabled}
+          id={fieldState.fieldId}
+          on:change={handleChange}
+        />
+      </div>
     {/if}
     {#if iconRight}
-      <Icon name={iconRight} size={iconRightSize} color="" onClick=""></Icon>
+      <Icon name={iconRight} size={iconRightSize}></Icon>
     {/if}
   </div>
 </Field>
 
 <style>
   .field {
-    border: 2px solid red;
     display: flex;
     flex-direction: row;
+    align-items: center;
+  }
+
+  .slider {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 10px;
   }
 </style>
