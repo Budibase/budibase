@@ -256,13 +256,12 @@ export class OpenAPI3 extends OpenAPISource {
     return this.securityHeaders.has(name.toLowerCase())
   }
 
-  isSupported = async (data: string): Promise<boolean> => {
+  tryLoad = async (data: string): Promise<boolean> => {
     try {
-      const document = await this.parseData(data)
+      let document = await this.parseData(data)
+      document = await this.validate(document)
       if (isOpenAPI3(document)) {
-        this.document = document
-        this.serverVariableBindings = {}
-        this.setSecurityHeaders()
+        this.loadDocument(document)
         return true
       } else {
         return false
@@ -270,6 +269,21 @@ export class OpenAPI3 extends OpenAPISource {
     } catch (err) {
       return false
     }
+  }
+
+  load = async (data: string): Promise<void> => {
+    const document = await this.parseData(data)
+    if (isOpenAPI3(document)) {
+      this.loadDocument(document)
+      return
+    }
+    throw new Error("Failed to load OpenAPI 3 document")
+  }
+
+  private loadDocument = (document: OpenAPIV3.Document) => {
+    this.document = document
+    this.serverVariableBindings = {}
+    this.setSecurityHeaders()
   }
 
   getServerVariableBindings = () => {
@@ -288,8 +302,8 @@ export class OpenAPI3 extends OpenAPISource {
     return Array.from(new Set(this.securityHeaders.values()))
   }
 
-  private getEndpoints = async (): Promise<ImportInfo["endpoints"]> => {
-    const queries = await this.getQueries("")
+  private getEndpoints = (): ImportInfo["endpoints"] => {
+    const queries = this.getQueries("")
     const endpoints: ImportInfo["endpoints"] = []
 
     for (const query of queries) {
@@ -329,7 +343,7 @@ export class OpenAPI3 extends OpenAPISource {
     return endpoints
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
+  getInfo = (): ImportInfo => {
     const name = this.document.info.title || "OpenAPI Import"
     let url: string | undefined
     if (this.document.servers?.length) {
@@ -344,8 +358,9 @@ export class OpenAPI3 extends OpenAPISource {
       name,
       url,
       docsUrl,
-      endpoints: await this.getEndpoints(),
+      endpoints: this.getEndpoints(),
       securityHeaders: this.getSecurityHeaders(),
+      staticVariables: this.getServerVariableBindings(),
     }
   }
 
@@ -353,10 +368,7 @@ export class OpenAPI3 extends OpenAPISource {
     return "openapi3.0"
   }
 
-  getQueries = async (
-    datasourceId: string,
-    options?: GetQueriesOptions
-  ): Promise<Query[]> => {
+  getQueries = (datasourceId: string, options?: GetQueriesOptions): Query[] => {
     let url: string | URL | undefined
     let serverVariables: Record<string, ServerVariableObject> = {}
     const primaryServer = this.getPrimaryServer()
