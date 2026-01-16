@@ -19,12 +19,12 @@
 
 <Popover bind:open {anchor} align="left">
   <div class="content">
-    <Heading size="XS">The app users table is read only</Heading>
+    <Heading size="XS">The workspace users table is read only</Heading>
     <Body size="S">
-      You can continue to view the users that have access to your application.
+      You can continue to view the users that have access to this workspace.
     </Body>
     <Body size="S">
-      Manage and invite more application users using the user side panel in the
+      Manage and invite more workspace users using the user side panel in the
       top right of your screen.
     </Body>
     <div class="button">

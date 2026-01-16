@@ -89,7 +89,7 @@
               searchTerm={searchValue}
               {datasourceFilter}
               datasourceSort={sortByDatasourceName}
-              showAppUsers={false}
+              showWorkspaceUsers={false}
               showManageRoles={false}
             />
           </Layout>

@@ -1,11 +1,17 @@
 import { API } from "@/api"
-import { RoleUtils } from "@budibase/frontend-core"
+import { Constants, RoleUtils } from "@budibase/frontend-core"
 import { Role, UIRole } from "@budibase/types"
 import { derived, get, type Writable } from "svelte/store"
 import { DerivedBudiStore } from "../BudiStore"
 
 export class RoleStore extends DerivedBudiStore<Role[], UIRole[]> {
   constructor() {
+    const builtinDisplayNameOverrides: Record<string, string> = {
+      [Constants.Roles.ADMIN]: "Workspace admin",
+      [Constants.Roles.POWER]: "Workspace power user",
+      [Constants.Roles.BASIC]: "Workspace user",
+    }
+
     const makeDerivedStore = (store: Writable<Role[]>) =>
       derived(store, $store => {
         return $store.map<UIRole>(role => ({
@@ -14,7 +20,10 @@ export class RoleStore extends DerivedBudiStore<Role[], UIRole[]> {
           _rev: role._rev!,
           // Ensure we have new metadata for all roles
           uiMetadata: {
-            displayName: role.uiMetadata?.displayName || role.name,
+            displayName:
+              builtinDisplayNameOverrides[role._id || ""] ||
+              role.uiMetadata?.displayName ||
+              role.name,
             color:
               role.uiMetadata?.color ||
               "var(--spectrum-global-color-magenta-400)",

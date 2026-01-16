@@ -142,7 +142,7 @@ const BUILTIN_ROLES = {
     BUILTIN_IDS.ADMIN,
     BuiltinPermissionID.ADMIN,
     {
-      displayName: "App admin",
+      displayName: "Workspace admin",
       description: "Can do everything",
       color: RoleColor.ADMIN,
     }
@@ -152,7 +152,7 @@ const BUILTIN_ROLES = {
     BUILTIN_IDS.POWER,
     BuiltinPermissionID.POWER,
     {
-      displayName: "App power user",
+      displayName: "Workspace power user",
       description: "An app user with more access",
       color: RoleColor.POWER,
     }
@@ -162,7 +162,7 @@ const BUILTIN_ROLES = {
     BUILTIN_IDS.BASIC,
     BuiltinPermissionID.WRITE,
     {
-      displayName: "App user",
+      displayName: "Workspace user",
       description: "Any logged in user",
       color: RoleColor.BASIC,
     }

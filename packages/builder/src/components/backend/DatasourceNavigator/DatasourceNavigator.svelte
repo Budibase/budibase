@@ -26,7 +26,7 @@
 
   export let searchTerm
   export let datasourceFilter = _ => true
-  export let showAppUsers = true
+  export let showWorkspaceUsers = true
   export let showManageRoles = true
   export let datasourceSort
   let toggledDatasources = {}
@@ -70,11 +70,12 @@
     toggledDatasources[datasource._id] = !datasource.open
   }
 
-  const appUsersTableName = "App users"
-  $: showAppUsersTable =
-    showAppUsers &&
+  const workspaceUsersTableName = "Workspace users"
+  $: showWorkspaceUsersTable =
+    showWorkspaceUsers &&
     (!searchTerm ||
-      appUsersTableName.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1)
+      workspaceUsersTableName.toLowerCase().indexOf(searchTerm.toLowerCase()) >
+        -1)
 
   onMount(() => {
     if ($tables.selected) {
@@ -83,14 +84,16 @@
   })
 
   $: showNoResults =
-    searchTerm && !showAppUsersTable && !enrichedDataSources.find(ds => ds.show)
+    searchTerm &&
+    !showWorkspaceUsersTable &&
+    !enrichedDataSources.find(ds => ds.show)
 </script>
 
 <div class="hierarchy-items-container">
-  {#if showAppUsersTable}
+  {#if showWorkspaceUsersTable}
     <NavItem
       icon="users-three"
-      text={appUsersTableName}
+      text={workspaceUsersTableName}
       selected={$isActive("./table/:tableId") &&
         $tables.selected?._id === TableNames.USERS}
       on:click={() => selectTable(TableNames.USERS)}

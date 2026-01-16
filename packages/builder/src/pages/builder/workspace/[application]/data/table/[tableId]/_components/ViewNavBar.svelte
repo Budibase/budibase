@@ -75,7 +75,7 @@
   $: overflowedViews = views.filter(view => !viewVisibiltyMap[view.id])
   $: viewHidden = viewVisibiltyMap[activeId] === false
   $: tableName =
-    table?._id === TableNames.USERS ? "App users" : table?.name || ""
+    table?._id === TableNames.USERS ? "Workspace users" : table?.name || ""
 
   const viewUrl = derived([url, params], ([$url, $params]) => viewId => {
     return $url(`../${$params.tableId}/${encodeURIComponent(viewId)}`)
