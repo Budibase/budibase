@@ -411,9 +411,9 @@
       name: selectedTemplateGroupItem.name,
       description: selectedTemplateGroupItem.description,
       specs: selectedTemplateGroupItem.specs,
+      operationsCount: selectedTemplateGroupItem.operationsCount,
       icon: selectedTemplateGroup.icon,
       verified: selectedTemplateGroup.verified,
-      operationsCount: selectedTemplateGroup.operationsCount,
     })
   }
 
