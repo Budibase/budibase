@@ -6,6 +6,23 @@ const withDefaults = (chatApp: ChatApp): ChatApp => ({
   live: chatApp.live ?? false,
 })
 
+const ensureEnabledAgents = (chatApp: ChatApp) => {
+  const enabledAgents = chatApp.enabledAgents
+  const hasAtLeastOne = Array.isArray(enabledAgents) && enabledAgents.length > 0
+  const allValid =
+    hasAtLeastOne &&
+    enabledAgents.every(
+      agent => typeof agent?.agentId === "string" && agent.agentId.trim().length
+    )
+
+  if (!allValid) {
+    throw new HTTPError(
+      "enabledAgents must contain at least one valid agentId",
+      400
+    )
+  }
+}
+
 export async function getSingle(): Promise<ChatApp | undefined> {
   const db = context.getWorkspaceDB()
   const result = await db.allDocs<ChatApp>(
@@ -36,9 +53,7 @@ export async function create(chatApp: Omit<ChatApp, "_id" | "_rev">) {
   if (existing) {
     throw new HTTPError("Chat App already exists for this workspace", 400)
   }
-  if (!chatApp.agentId) {
-    throw new HTTPError("agentId is required", 400)
-  }
+  ensureEnabledAgents(chatApp)
 
   const now = new Date().toISOString()
   const doc: ChatApp = {
@@ -61,9 +76,7 @@ export async function update(chatApp: ChatApp) {
   if (!existing) {
     throw new HTTPError("Chat App not found", 404)
   }
-  if (!chatApp.agentId) {
-    throw new HTTPError("agentId is required", 400)
-  }
+  ensureEnabledAgents(chatApp)
 
   const now = new Date().toISOString()
   const updated: ChatApp = {

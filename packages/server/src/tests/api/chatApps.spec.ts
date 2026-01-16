@@ -1,0 +1,63 @@
+import { context, docIds } from "@budibase/backend-core"
+import type { ChatApp } from "@budibase/types"
+import TestConfiguration from "../utilities/TestConfiguration"
+
+describe("chat apps validation", () => {
+  const config = new TestConfiguration()
+  let chatApp: ChatApp
+
+  beforeAll(async () => {
+    await config.init("chat-app-validation")
+
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+
+        const doc: ChatApp = {
+          _id: docIds.generateChatAppID(),
+          enabledAgents: [{ agentId: "agent-1" }],
+          createdAt: now,
+          updatedAt: now,
+        }
+
+        const { rev } = await db.put(doc)
+        chatApp = { ...doc, _rev: rev }
+      }
+    )
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  const updateChatApp = async (body: any) => {
+    const headers = await config.defaultHeaders({}, true)
+    return await config
+      .getRequest()!
+      .put(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+      .send(body)
+  }
+
+  it("rejects enabledAgents entries without agentId", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      enabledAgents: [{}],
+    })
+
+    expect(res.status).toBe(400)
+  })
+
+  it("rejects enabledAgents entries with empty agentId", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      enabledAgents: [{ agentId: "" }],
+    })
+
+    expect(res.status).toBe(400)
+  })
+})
