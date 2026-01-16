@@ -9165,6 +9165,30 @@
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled"
+      },
+      {
+        "type": "phosphorIcon",
+        "label": "Left icon",
+        "key": "iconLeft"
+      },
+      {
+        "type": "select",
+        "label": "Left icon size",
+        "key": "iconLeftSize",
+        "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+        "defaultValue": "M"
+      },
+      {
+        "type": "phosphorIcon",
+        "label": "Right icon",
+        "key": "iconRight"
+      },
+      {
+        "type": "select",
+        "label": "Right icon size",
+        "key": "iconRightSize",
+        "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+        "defaultValue": "M"
       }
     ],
     "context": {

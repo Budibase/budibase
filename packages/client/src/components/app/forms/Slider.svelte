@@ -1,6 +1,6 @@
 <script lang="ts">
   import Field from "./Field.svelte"
-  import { CoreSlider } from "@budibase/bbui"
+  import { CoreSlider, Icon } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
   import type { FieldSchema, UIFieldValidationRule } from "@budibase/types"
   import type { FieldApi, FieldState } from "@/types"
@@ -17,6 +17,26 @@
   export let onChange: ((_event: { value: number }) => void) | undefined
   export let span = 6
   export let helpText: string | undefined = undefined
+  export let iconLeft: string | undefined
+  export let iconRight: string | undefined
+  export let iconLeftSize:
+    | "XXS"
+    | "XS"
+    | "S"
+    | "M"
+    | "L"
+    | "XL"
+    | "XXL"
+    | "XXXL" = "M"
+  export let iconRightSize:
+    | "XXS"
+    | "XS"
+    | "S"
+    | "M"
+    | "L"
+    | "XL"
+    | "XXL"
+    | "XXXL" = "M"
 
   let fieldState: FieldState<number>
   let fieldApi: FieldApi
@@ -52,9 +72,7 @@
     return val
   }
 
-  $: defaultValue = clampValue(
-    value != null ? parseValue(value) : min
-  )
+  $: defaultValue = clampValue(value != null ? parseValue(value) : min)
 
   $: sliderValue = fieldState
     ? clampValue(parseValue(fieldState.value ?? defaultValue))
@@ -69,6 +87,8 @@
       onChange({ value: nextValue })
     }
   }
+
+  console.log({ iconLeftSize, iconLeft, iconRightSize, iconRight })
 </script>
 
 <Field
@@ -80,20 +100,36 @@
   {span}
   {helpText}
   type={FieldType.NUMBER}
-  defaultValue={defaultValue}
+  {defaultValue}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
 >
-  {#if fieldState}
-    <CoreSlider
-      min={lowerBound}
-      max={upperBound}
-      step={step}
-      value={sliderValue}
-      disabled={isDisabled}
-      id={fieldState.fieldId}
-      on:change={handleChange}
-    />
-  {/if}
+  <div class="field">
+    {#if iconLeft}
+      <Icon name={iconLeft} size={iconLeftSize} color="" onClick=""></Icon>
+    {/if}
+    {#if fieldState}
+      <CoreSlider
+        min={lowerBound}
+        max={upperBound}
+        {step}
+        value={sliderValue}
+        disabled={isDisabled}
+        id={fieldState.fieldId}
+        on:change={handleChange}
+      />
+    {/if}
+    {#if iconRight}
+      <Icon name={iconRight} size={iconRightSize} color="" onClick=""></Icon>
+    {/if}
+  </div>
 </Field>
+
+<style>
+  .field {
+    border: 2px solid red;
+    display: flex;
+    flex-direction: row;
+  }
+</style>
