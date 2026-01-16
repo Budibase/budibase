@@ -9,8 +9,8 @@
   export let label: string
   export let min = 0
   export let max = 100
-  export let step = 1
-  export let defValue: number = (max + min) / 2
+  export let step: number = 1
+  export let value: number = (max + min) / 2
   export let disabled = false
   export let readonly = false
   export let validation: UIFieldValidationRule[] | undefined
@@ -72,7 +72,7 @@
     return val
   }
 
-  $: defaultValue = clampValue(defValue != null ? parseValue(defValue) : min)
+  $: defaultValue = clampValue(value != null ? parseValue(value) : min)
 
   $: sliderValue = fieldState
     ? clampValue(parseValue(fieldState.value ?? defaultValue))
@@ -88,6 +88,7 @@
     }
   }
 
+  // TODO: Make icons change colour when hovered (like a button does), and clickable to increment/decrement (and make this functionality optional in settings)
   const handleChange = (event: CustomEvent<string | number>) => {
     const nextValue = parseValue(event.detail)
     updateValue(nextValue)
