@@ -1,6 +1,8 @@
 import { Document } from "../document"
 import { ContextUser } from "../../sdk"
 
+export type ScreenLayoutType = "grid" | "flex"
+
 // SSO
 
 export interface SSOProfileJson {
@@ -103,6 +105,7 @@ export interface User
   accountPortalAccess?: boolean
   onboardedAt?: string // deprecated and no longer saved
   tours?: Record<string, Date> // deprecated and no longer saved
+  defaultLayout?: ScreenLayoutType
 }
 
 export type StrippedUser = Pick<User, "_id" | "tenantId" | "email" | "userId">
