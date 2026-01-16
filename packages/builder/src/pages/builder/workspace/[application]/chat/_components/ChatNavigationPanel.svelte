@@ -1,11 +1,12 @@
 <script lang="ts">
   import Panel from "@/components/design/Panel.svelte"
-  import { Body } from "@budibase/bbui"
+  import { Body, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   type EnabledAgentListItem = {
     agentId: string
     name?: string
+    default?: boolean
   }
 
   type ConversationListItem = {
@@ -16,6 +17,9 @@
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationHistory: ConversationListItem[] = []
   export let selectedConversationId: string | undefined
+
+  $: defaultAgent =
+    enabledAgentList.find(agent => agent.default) || enabledAgentList[0]
 
   const dispatch = createEventDispatcher<{
     agentSelected: { agentId: string }
@@ -32,6 +36,20 @@
 </script>
 
 <Panel customWidth={260} borderRight noHeaderBorder>
+  {#if defaultAgent?.agentId}
+    <div class="list-section">
+      <button
+        class="new-chat"
+        on:click={() => selectAgent(defaultAgent.agentId)}
+      >
+        <span class="new-chat-icon">
+          <Icon name="plus" size="S" />
+        </span>
+        <span class="new-chat-label">New chat</span>
+      </button>
+    </div>
+  {/if}
+
   <div class="list-section">
     <div class="list-title">Agents</div>
     {#if enabledAgentList.length}
@@ -82,6 +100,40 @@
 
   .list-section + .list-section {
     padding-top: 0;
+  }
+
+  .new-chat {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    background: transparent;
+    border: none;
+    padding: var(--spacing-xs) 0;
+    font: inherit;
+    color: var(--spectrum-global-color-gray-700);
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .new-chat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #6a9bcc;
+    color: var(--spectrum-global-color-gray-50);
+  }
+
+  .new-chat-label {
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-800);
+  }
+
+  .new-chat:hover .new-chat-icon {
+    background: #5c8dbf;
   }
 
   .list-item {

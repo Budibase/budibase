@@ -71,6 +71,7 @@
   <div class="page">
     <ChatSettingsPanel
       {namedAgents}
+      {enabledAgents}
       {isAgentAvailable}
       {handleAvailabilityToggle}
     />

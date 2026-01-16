@@ -53,6 +53,7 @@
     .map(agent => ({
       agentId: agent.agentId,
       name: getAgentName(agent.agentId),
+      default: agent.default,
     }))
     .filter(agent => Boolean(agent.name))
 
