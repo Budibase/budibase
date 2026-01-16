@@ -74,7 +74,7 @@ export async function create(chatApp: Omit<ChatApp, "_id" | "_rev">) {
     throw new HTTPError("Chat App already exists for this workspace", 400)
   }
   const normalizedEnabledAgents = normalizeEnabledAgents(
-    chatApp.enabledAgents ?? []
+    chatApp.enabledAgents === undefined ? undefined : chatApp.enabledAgents
   )
 
   const now = new Date().toISOString()
@@ -100,7 +100,9 @@ export async function update(chatApp: ChatApp) {
     throw new HTTPError("Chat App not found", 404)
   }
   const normalizedEnabledAgents = normalizeEnabledAgents(
-    chatApp.enabledAgents ?? existing.enabledAgents ?? []
+    chatApp.enabledAgents === undefined
+      ? (existing.enabledAgents ?? [])
+      : chatApp.enabledAgents
   )
 
   const now = new Date().toISOString()

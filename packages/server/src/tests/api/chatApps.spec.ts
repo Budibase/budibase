@@ -34,11 +34,17 @@ describe("chat apps validation", () => {
 
   const updateChatApp = async (body: any) => {
     const headers = await config.defaultHeaders({}, true)
-    return await config
+    const res = await config
       .getRequest()!
       .put(`/api/chatapps/${chatApp._id}`)
       .set(headers)
       .send(body)
+
+    if (res.status === 200 && res.body?._rev) {
+      chatApp = { ...chatApp, _rev: res.body._rev }
+    }
+
+    return res
   }
 
   it("rejects enabledAgents entries without agentId", async () => {
@@ -56,6 +62,16 @@ describe("chat apps validation", () => {
       _id: chatApp._id,
       _rev: chatApp._rev,
       enabledAgents: [{ agentId: "" }],
+    })
+
+    expect(res.status).toBe(400)
+  })
+
+  it("rejects null enabledAgents", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      enabledAgents: null,
     })
 
     expect(res.status).toBe(400)
