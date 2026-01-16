@@ -32,24 +32,14 @@ elif [[ "${TARGETBUILD}" = "single" ]]; then
     sed -i "s#DATA_DIR#/data#g" /opt/clouseau/clouseau.ini
     sed -i "s#DATA_DIR#/data#g" /opt/couchdb/etc/local.ini
 elif [[ "${TARGETBUILD}" = "docker-compose" ]]; then
-    # We remove the database_dir and view_index_dir settings from the local.ini
-    # in docker-compose because it will default to /opt/couchdb/data which is what
-    # our docker-compose was using prior to us switching to using our own CouchDB
-    # image.
-    sed -i "s#^database_dir.*\$##g" /opt/couchdb/etc/local.ini
-    sed -i "s#^view_index_dir.*\$##g" /opt/couchdb/etc/local.ini
-    sed -i "s#^dir=.*\$#dir=/opt/couchdb/data#g" /opt/clouseau/clouseau.ini
+    # We used to store data in /opt/couchdb/data directly. Now we use /data/couch/dbs 
+    # and /data/search to be consistent with other builds and ensure SQS persistence.
+    sed -i "s#DATA_DIR#${DATA_DIR}#g" /opt/clouseau/clouseau.ini
+    sed -i "s#DATA_DIR#${DATA_DIR}#g" /opt/couchdb/etc/local.ini
 elif [[ -n $KUBERNETES_SERVICE_HOST ]]; then
-    # In Kubernetes the directory /opt/couchdb/data has a persistent volume
-    # mount for storing database data.
-    sed -i "s#^dir=.*\$#dir=/opt/couchdb/data#g" /opt/clouseau/clouseau.ini
-
-    # We remove the database_dir and view_index_dir settings from the local.ini
-    # in Kubernetes because it will default to /opt/couchdb/data which is what
-    # our Helm chart was using prior to us switching to using our own CouchDB
-    # image.
-    sed -i "s#^database_dir.*\$##g" /opt/couchdb/etc/local.ini
-    sed -i "s#^view_index_dir.*\$##g" /opt/couchdb/etc/local.ini
+    # In Kubernetes we also want to be consistent with other builds.
+    sed -i "s#DATA_DIR#${DATA_DIR}#g" /opt/clouseau/clouseau.ini
+    sed -i "s#DATA_DIR#${DATA_DIR}#g" /opt/couchdb/etc/local.ini
 
     # We remove the -name setting from the vm.args file in Kubernetes because
     # it will default to the pod FQDN, which is what's required for clustering
@@ -57,8 +47,15 @@ elif [[ -n $KUBERNETES_SERVICE_HOST ]]; then
     sed -i "s/^-name .*$//g" /opt/couchdb/etc/vm.args
 else
     # For all other builds, we use /data for persistent data.
-    sed -i "s#DATA_DIR#/data#g" /opt/clouseau/clouseau.ini
-    sed -i "s#DATA_DIR#/data#g" /opt/couchdb/etc/local.ini
+    sed -i "s#DATA_DIR#${DATA_DIR}#g" /opt/clouseau/clouseau.ini
+    sed -i "s#DATA_DIR#${DATA_DIR}#g" /opt/couchdb/etc/local.ini
+fi
+
+# Migration logic: if we find .couch files in the root DATA_DIR, move them to the subfolder.
+# This handles upgrades from older versions where data was stored directly in DATA_DIR.
+if ls ${DATA_DIR}/*.couch 1> /dev/null 2>&1; then
+    echo "Found existing .couch files in ${DATA_DIR}. Migrating to ${DATA_DIR}/couch/dbs/..."
+    mv ${DATA_DIR}/*.couch ${DATA_DIR}/couch/dbs/
 fi
 
 sed -i "s#COUCHDB_ERLANG_COOKIE#${COUCHDB_ERLANG_COOKIE}#g" /opt/couchdb/etc/vm.args

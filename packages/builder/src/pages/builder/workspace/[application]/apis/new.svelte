@@ -14,6 +14,7 @@
     Modal,
     ModalContent,
     notifications,
+    CollapsibleSearch,
     Select,
     ProgressCircle,
     keepOpen,
@@ -76,6 +77,7 @@
   let templatesInfoAnchor: HTMLElement | undefined
   let templatesInfoOpen = false
   let templatesInfoTimeout: ReturnType<typeof setTimeout> | undefined
+  let templateSearchValue = ""
   $: selectedEndpoint = templateEndpoints.find(
     endpoint => endpoint.id === selectedEndpointId
   )
@@ -97,14 +99,31 @@
   $: restTemplatesList = ($restTemplates.templates || []).filter(
     template => !groupedTemplateNames.has(template.name)
   )
-  $: verifiedRestTemplates = restTemplatesList.filter(
+  $: normalizedTemplateSearch = templateSearchValue.trim().toLowerCase()
+  $: filteredTemplateGroups = normalizedTemplateSearch
+    ? templateGroupsList.filter(
+        group =>
+          group.name.toLowerCase().includes(normalizedTemplateSearch) ||
+          group.templates.some(template =>
+            template.name.toLowerCase().includes(normalizedTemplateSearch)
+          )
+      )
+    : templateGroupsList
+  $: filteredRestTemplates = normalizedTemplateSearch
+    ? restTemplatesList.filter(template =>
+        template.name.toLowerCase().includes(normalizedTemplateSearch)
+      )
+    : restTemplatesList
+  $: verifiedRestTemplates = filteredRestTemplates.filter(
     template => template.verified
   )
-  $: unverifiedRestTemplates = restTemplatesList.filter(
+  $: unverifiedRestTemplates = filteredRestTemplates.filter(
     template => !template.verified
   )
-  $: verifiedTemplateGroups = templateGroupsList.filter(group => group.verified)
-  $: unverifiedTemplateGroups = templateGroupsList.filter(
+  $: verifiedTemplateGroups = filteredTemplateGroups.filter(
+    group => group.verified
+  )
+  $: unverifiedTemplateGroups = filteredTemplateGroups.filter(
     group => !group.verified
   )
   $: verifiedTemplateOptions = [
@@ -423,7 +442,7 @@
 >
   {#if restIntegration}
     <br />
-    <div class="options bb-options">
+    <div class="template-actions">
       <DatasourceOption
         on:click={openRestModal}
         title="Custom REST API"
@@ -435,7 +454,18 @@
           size="20"
         />
       </DatasourceOption>
+      <div class="template-search">
+        <CollapsibleSearch
+          placeholder="Search templates"
+          value={templateSearchValue}
+          on:change={event => (templateSearchValue = event.detail)}
+        />
+      </div>
     </div>
+
+    {#if normalizedTemplateSearch && !verifiedTemplateOptions.length && !unverifiedTemplateOptions.length}
+      <p class="empty-state">No templates match your search.</p>
+    {/if}
 
     {#if verifiedTemplateOptions.length}
       <div class="templates-header">
@@ -669,14 +699,45 @@
 <style>
   .options {
     width: 100%;
+    min-width: 100%;
     display: grid;
     gap: 16px;
-    grid-template-columns: repeat(auto-fit, 235px);
+    grid-template-columns: repeat(auto-fill, 235px);
+    justify-content: flex-start;
     margin-bottom: 20px;
-    max-width: 1050px;
+    max-width: calc(4 * 235px + 3 * 16px);
+    margin-left: auto;
+    margin-right: auto;
   }
   .templateOptions {
     margin-bottom: 20px;
+  }
+  .template-actions {
+    width: 100%;
+    min-width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 235px);
+    gap: 16px;
+    align-items: center;
+    max-width: calc(4 * 235px + 3 * 16px);
+    margin: 12px auto 24px auto;
+  }
+  .template-search {
+    grid-column: -2 / -1;
+    width: 235px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  @media (max-width: 720px) {
+    .template-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .template-search {
+      width: 100%;
+      justify-content: flex-start;
+    }
   }
   .templateModalHeader {
     display: flex;
