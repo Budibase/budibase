@@ -9142,6 +9142,11 @@
         "key": "label"
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "number",
         "label": "Minimum",
         "key": "min",
