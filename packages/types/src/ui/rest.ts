@@ -1,7 +1,6 @@
 export interface RestTemplateSpec {
   version: string
   url?: string
-  data?: string
 }
 
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
@@ -86,18 +85,21 @@ export type RestTemplateName =
   | "X"
   | HubSpotRestTemplateName
   | MicrosoftSharepointRestTemplateName
+  | SplunkRestTemplateName
   | TwilioRestTemplateName
   | ZendeskRestTemplateName
 
 export type RestTemplateGroupName =
   | "HubSpot"
   | "Microsoft SharePoint"
+  | "Splunk"
   | "Twilio"
   | "Zendesk"
 
 export type RestTemplateGroups = {
   HubSpot: HubSpotRestTemplateName
   "Microsoft SharePoint": MicrosoftSharepointRestTemplateName
+  Splunk: SplunkRestTemplateName
   Twilio: TwilioRestTemplateName
   Zendesk: ZendeskRestTemplateName
 }
@@ -244,6 +246,11 @@ export type TwilioRestTemplateName =
   | "Twilio Video"
   | "Twilio Voice"
   | "Twilio Wireless"
+
+export type SplunkRestTemplateName =
+  | "Splunk Admin Config Service"
+  | "Splunk Enterprise Security"
+  | "Splunk Mission Control Automation"
 
 export type ZendeskRestTemplateName = "Sunshine Conversations"
 

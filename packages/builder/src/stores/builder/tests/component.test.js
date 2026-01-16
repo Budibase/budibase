@@ -33,9 +33,15 @@ import {
 } from "@/constants/backend"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Utils } from "@budibase/frontend-core"
+import { screenStore } from "@/stores/builder/screens"
 
 // Could move to fixtures
 const COMP_PREFIX = "@budibase/standard-components"
+const { mockGetDefaultLayoutPreference } = vi.hoisted(() => {
+  return {
+    mockGetDefaultLayoutPreference: vi.fn(() => "grid"),
+  }
+})
 
 vi.mock("@/api", () => {
   return {
@@ -45,8 +51,15 @@ vi.mock("@/api", () => {
   }
 })
 
+vi.mock("@/stores/preferences", () => {
+  return {
+    getDefaultLayoutPreference: mockGetDefaultLayoutPreference,
+  }
+})
+
 vi.mock("@/stores/builder", async () => {
   const mockAppStore = writable()
+  const mockScreenComponentsList = writable([])
   const appStore = {
     subscribe: mockAppStore.subscribe,
     update: mockAppStore.update,
@@ -63,6 +76,7 @@ vi.mock("@/stores/builder", async () => {
   return {
     appStore,
     tables: writable(),
+    screenComponentsList: mockScreenComponentsList,
     get datasources() {
       return datasourcesStore
     },
@@ -105,6 +119,8 @@ describe("Component store", () => {
   beforeEach(async ctx => {
     vi.clearAllMocks()
     vi.resetAllMocks()
+    screenStore.reset()
+    mockGetDefaultLayoutPreference.mockReturnValue("grid")
 
     let componentStoreInstance = new ComponentStore()
     let datasourcesStoreInstance = new DatasourceStore()
@@ -259,6 +275,41 @@ describe("Component store", () => {
 
     const defEmpty = ctx.test.componentStore.getDefinition()
     expect(defEmpty).toBeNull()
+  })
+
+  it("sets container layout from the user preference when not provided", ctx => {
+    baseInitialisation(ctx)
+    const screen = getScreenFixture().json()
+    screen._id = screen._id || "screen-default"
+    screenStore.set({
+      screens: [screen],
+      selectedScreenId: screen._id,
+    })
+    mockGetDefaultLayoutPreference.mockReturnValue("flex")
+
+    const instance = ctx.test.componentStore.createInstance(
+      `${COMP_PREFIX}/container`
+    )
+
+    expect(instance?.layout).toBe("flex")
+  })
+
+  it("does not override container layout when preset props include layout", ctx => {
+    baseInitialisation(ctx)
+    const screen = getScreenFixture().json()
+    screen._id = screen._id || "screen-default"
+    screenStore.set({
+      screens: [screen],
+      selectedScreenId: screen._id,
+    })
+    mockGetDefaultLayoutPreference.mockReturnValue("flex")
+
+    const instance = ctx.test.componentStore.createInstance(
+      `${COMP_PREFIX}/container`,
+      { layout: "grid" }
+    )
+
+    expect(instance?.layout).toBe("grid")
   })
 
   it("Select an appropriate default datasource - Internal Table ", ctx => {

@@ -3,6 +3,7 @@ import { capitalise } from "@/helpers"
 import getValidRoute from "./getValidRoute"
 import { Roles } from "@/constants/backend"
 import { Screen as ScreenDoc } from "@budibase/types"
+import { getDefaultLayoutPreference } from "@/stores/preferences"
 
 const blank = ({
   route,
@@ -17,7 +18,7 @@ const blank = ({
 
   const template = new Screen(workspaceAppId)
     .instanceName("Blank screen")
-    .customProps({ layout: "grid" })
+    .customProps({ layout: getDefaultLayoutPreference() })
     .role(Roles.BASIC)
     .route(validRoute)
     .json()
