@@ -1,30 +1,40 @@
 <script lang="ts">
   import Panel from "@/components/design/Panel.svelte"
-  import { Body, Toggle } from "@budibase/bbui"
-
-  type NamedAgent = {
-    _id?: string
-    name?: string
-  }
+  import { Body } from "@budibase/bbui"
+  import type { Agent } from "@budibase/types"
+  import AgentList from "./AgentList.svelte"
+  import AgentSettingsModal from "./AgentSettingsModal.svelte"
 
   type EnabledAgent = {
     agentId: string
     default?: boolean
   }
 
-  export let namedAgents: NamedAgent[] = []
+  type AgentListItem = Agent & {
+    agentId: string
+    default?: boolean
+  }
+
+  export let namedAgents: Agent[] = []
   export let enabledAgents: EnabledAgent[] = []
   export let isAgentAvailable: (_agentId: string) => boolean
   export let handleAvailabilityToggle: (
     _agentId: string,
     _enabled: boolean
   ) => void
+  export let handleDefaultToggle: (_agentId: string) => void
+
+  let selectedAgentId: string | undefined
+  let selectedAgent: AgentListItem | undefined
+  let isModalOpen = false
+
+  $: selectedAgent = agentList.find(agent => agent.agentId === selectedAgentId)
 
   $: agentList = namedAgents
     .filter(agent => agent._id)
     .map(agent => ({
+      ...agent,
       agentId: agent._id!,
-      name: agent.name,
       default: enabledAgents.find(enabled => enabled.agentId === agent._id)
         ?.default,
     }))
@@ -37,6 +47,11 @@
   $: otherAgents = agentList.filter(
     agent => agent.agentId !== resolvedDefaultAgent?.agentId
   )
+
+  const openAgentSettings = (agent: AgentListItem) => {
+    selectedAgentId = agent.agentId
+    isModalOpen = true
+  }
 </script>
 
 <Panel customWidth={260} borderRight noHeaderBorder>
@@ -52,58 +67,27 @@
       default agent.
     </Body>
 
-    <div class="settings-group">
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        Default agent
-      </Body>
-      {#if resolvedDefaultAgent?.agentId}
-        <div class="settings-agent">
-          <div class="settings-agent-info">
-            <Body size="S">
-              {resolvedDefaultAgent.name || "Unknown agent"}
-            </Body>
-          </div>
-          <Toggle
-            value={isAgentAvailable(resolvedDefaultAgent.agentId)}
-            on:change={event =>
-              handleAvailabilityToggle(
-                resolvedDefaultAgent.agentId,
-                event.detail
-              )}
-          />
-        </div>
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-500)">
-          No default agent
-        </Body>
-      {/if}
-    </div>
-
-    <div class="settings-group">
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        Other agents
-      </Body>
-      {#if otherAgents.length}
-        {#each otherAgents as agent (agent.agentId)}
-          <div class="settings-agent">
-            <div class="settings-agent-info">
-              <Body size="S">{agent.name}</Body>
-            </div>
-            <Toggle
-              value={isAgentAvailable(agent.agentId)}
-              on:change={event =>
-                handleAvailabilityToggle(agent.agentId, event.detail)}
-            />
-          </div>
-        {/each}
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-500)">
-          No other agents
-        </Body>
-      {/if}
-    </div>
+    <AgentList
+      {resolvedDefaultAgent}
+      {otherAgents}
+      {isAgentAvailable}
+      onToggleEnabled={handleAvailabilityToggle}
+      onOpenSettings={openAgentSettings}
+    />
   </div>
 </Panel>
+
+<AgentSettingsModal
+  open={isModalOpen}
+  {selectedAgent}
+  defaultAgentId={resolvedDefaultAgent?.agentId}
+  {isAgentAvailable}
+  onSetDefault={handleDefaultToggle}
+  onClose={() => {
+    isModalOpen = false
+    selectedAgentId = undefined
+  }}
+/>
 
 <style>
   .settings-header {
@@ -116,24 +100,5 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-  }
-
-  .settings-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .settings-agent {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
-  }
-
-  .settings-agent-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xxs);
   }
 </style>
