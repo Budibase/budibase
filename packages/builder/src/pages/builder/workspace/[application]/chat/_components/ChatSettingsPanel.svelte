@@ -1,14 +1,9 @@
 <script lang="ts">
   import Panel from "@/components/design/Panel.svelte"
-  import {
-    Body,
-    Button,
-    Icon,
-    Modal,
-    ModalContent,
-    Toggle,
-  } from "@budibase/bbui"
+  import { Body } from "@budibase/bbui"
   import type { Agent } from "@budibase/types"
+  import AgentList from "./AgentList.svelte"
+  import AgentSettingsModal from "./AgentSettingsModal.svelte"
 
   type EnabledAgent = {
     agentId: string
@@ -29,9 +24,9 @@
   ) => void
   export let handleDefaultToggle: (_agentId: string) => void
 
-  let settingsModal: Modal | undefined
   let selectedAgentId: string | undefined
   let selectedAgent: AgentListItem | undefined
+  let isModalOpen = false
 
   $: selectedAgent = agentList.find(agent => agent.agentId === selectedAgentId)
 
@@ -55,7 +50,7 @@
 
   const openAgentSettings = (agent: AgentListItem) => {
     selectedAgentId = agent.agentId
-    settingsModal?.show()
+    isModalOpen = true
   }
 </script>
 
@@ -72,102 +67,27 @@
       default agent.
     </Body>
 
-    <div class="settings-group">
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        Default agent
-      </Body>
-      {#if resolvedDefaultAgent?.agentId}
-        <div class="settings-agent">
-          <div class="settings-agent-info">
-            <Body size="S">
-              {resolvedDefaultAgent.name || "Unknown agent"}
-            </Body>
-          </div>
-          <div class="settings-agent-actions">
-            <Toggle
-              value={isAgentAvailable(resolvedDefaultAgent.agentId)}
-              on:change={event =>
-                handleAvailabilityToggle(
-                  resolvedDefaultAgent.agentId,
-                  event.detail
-                )}
-            />
-            <button
-              class="settings-gear"
-              type="button"
-              on:click={() => openAgentSettings(resolvedDefaultAgent)}
-              aria-label="Open agent settings"
-            >
-              <Icon name="gear" size="S" />
-            </button>
-          </div>
-        </div>
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-500)">
-          No default agent
-        </Body>
-      {/if}
-    </div>
-
-    <div class="settings-group">
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        Other agents
-      </Body>
-      {#if otherAgents.length}
-        {#each otherAgents as agent (agent.agentId)}
-          <div class="settings-agent">
-            <div class="settings-agent-info">
-              <Body size="S">{agent.name}</Body>
-            </div>
-            <div class="settings-agent-actions">
-              <Toggle
-                value={isAgentAvailable(agent.agentId)}
-                on:change={event =>
-                  handleAvailabilityToggle(agent.agentId, event.detail)}
-              />
-              <button
-                class="settings-gear"
-                type="button"
-                on:click={() => openAgentSettings(agent)}
-                aria-label="Open agent settings"
-              >
-                <Icon name="gear" size="S" />
-              </button>
-            </div>
-          </div>
-        {/each}
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-500)">
-          No other agents
-        </Body>
-      {/if}
-    </div>
+    <AgentList
+      {resolvedDefaultAgent}
+      {otherAgents}
+      {isAgentAvailable}
+      onToggleEnabled={handleAvailabilityToggle}
+      onOpenSettings={openAgentSettings}
+    />
   </div>
 </Panel>
 
-<Modal bind:this={settingsModal}>
-  <ModalContent
-    size="M"
-    title={`${selectedAgent?.name || "Agent"} settings`}
-    showConfirmButton={false}
-  >
-    <div class="agent-settings">
-      <Button
-        size="S"
-        disabled={!selectedAgent ||
-          !isAgentAvailable(selectedAgent.agentId) ||
-          selectedAgent.agentId === resolvedDefaultAgent?.agentId}
-        on:click={() => {
-          if (selectedAgent) {
-            handleDefaultToggle(selectedAgent.agentId)
-          }
-        }}
-      >
-        Set as default
-      </Button>
-    </div>
-  </ModalContent>
-</Modal>
+<AgentSettingsModal
+  open={isModalOpen}
+  {selectedAgent}
+  defaultAgentId={resolvedDefaultAgent?.agentId}
+  {isAgentAvailable}
+  onSetDefault={handleDefaultToggle}
+  onClose={() => {
+    isModalOpen = false
+    selectedAgentId = undefined
+  }}
+/>
 
 <style>
   .settings-header {
@@ -177,52 +97,6 @@
 
   .settings-section {
     padding: var(--spacing-m);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .settings-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .settings-agent {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
-  }
-
-  .settings-agent-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xxs);
-  }
-
-  .settings-agent-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
-
-  .settings-gear {
-    border: none;
-    background: transparent;
-    padding: 0;
-    color: var(--spectrum-global-color-gray-600);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .settings-gear:hover {
-    color: var(--spectrum-global-color-gray-800);
-  }
-
-  .agent-settings {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
