@@ -10,7 +10,7 @@
   export let min = 0
   export let max = 100
   export let step = 1
-  export let defValue: number | undefined = undefined
+  export let defValue: number = (max + min) / 2
   export let disabled = false
   export let readonly = false
   export let validation: UIFieldValidationRule[] | undefined
@@ -80,15 +80,30 @@
 
   $: isDisabled = Boolean(fieldState?.disabled || fieldState?.readonly)
 
-  const handleChange = (event: CustomEvent<string | number>) => {
-    const nextValue = clampValue(parseValue(event.detail))
-    const changed = fieldApi?.setValue(nextValue)
+  const updateValue = (nextValue: number) => {
+    const clampedValue = clampValue(nextValue)
+    const changed = fieldApi?.setValue(clampedValue)
     if (onChange && changed) {
-      onChange({ value: nextValue })
+      onChange({ value: clampedValue })
     }
   }
 
-  console.log({ min, lowerBound, max, upperBound, step, defValue })
+  const handleChange = (event: CustomEvent<string | number>) => {
+    const nextValue = parseValue(event.detail)
+    updateValue(nextValue)
+  }
+
+  const iconClick = (changeBy: number) => {
+    if (!fieldApi || isDisabled) {
+      return
+    }
+    updateValue(sliderValue + changeBy)
+  }
+
+  const handleDecrease = () => iconClick(-step)
+  const handleIncrease = () => iconClick(step)
+
+  $: readonlyIcon = isDisabled || !fieldApi
 </script>
 
 <Field
@@ -107,7 +122,12 @@
 >
   <div class="field">
     {#if iconLeft}
-      <Icon name={iconLeft} size={iconLeftSize}></Icon>
+      <Icon
+        name={iconLeft}
+        size={iconLeftSize}
+        disabled={readonlyIcon}
+        on:click={handleDecrease}
+      />
     {/if}
     {#if fieldState}
       <div class="slider">
@@ -123,7 +143,12 @@
       </div>
     {/if}
     {#if iconRight}
-      <Icon name={iconRight} size={iconRightSize}></Icon>
+      <Icon
+        name={iconRight}
+        size={iconRightSize}
+        disabled={readonlyIcon}
+        on:click={handleIncrease}
+      />
     {/if}
   </div>
 </Field>
