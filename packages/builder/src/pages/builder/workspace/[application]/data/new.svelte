@@ -68,27 +68,27 @@
       </AbsTooltip>
     </div>
     <div class="options bb-options">
-    <DatasourceOption
-      on:click={() => internalTableModal.show()}
-      title="Create new table"
-      {disabled}
-    >
-      <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
-    </DatasourceOption>
-    <DatasourceOption
-      on:click={createSampleData}
-      title="Use sample data"
-      disabled={disabled || $datasources.hasDefaultData}
-    >
-      <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
-    </DatasourceOption>
-    <DatasourceOption
-      on:click={() => internalTableModal.show({ promptUpload: true })}
-      title="Upload CSV / JSON"
-      {disabled}
-    >
-      <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
-    </DatasourceOption>
+      <DatasourceOption
+        on:click={() => internalTableModal.show()}
+        title="Create new table"
+        {disabled}
+      >
+        <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+      </DatasourceOption>
+      <DatasourceOption
+        on:click={createSampleData}
+        title="Use sample data"
+        disabled={disabled || $datasources.hasDefaultData}
+      >
+        <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+      </DatasourceOption>
+      <DatasourceOption
+        on:click={() => internalTableModal.show({ promptUpload: true })}
+        title="Upload CSV / JSON"
+        {disabled}
+      >
+        <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+      </DatasourceOption>
     </div>
   </div>
 
