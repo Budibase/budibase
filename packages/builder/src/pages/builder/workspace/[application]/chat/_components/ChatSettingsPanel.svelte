@@ -1,18 +1,19 @@
 <script lang="ts">
   import Panel from "@/components/design/Panel.svelte"
-  import { Body, Toggle } from "@budibase/bbui"
-
-  type NamedAgent = {
-    _id?: string
-    name?: string
-  }
+  import { Body, Icon, Modal, ModalContent, Toggle } from "@budibase/bbui"
+  import type { Agent } from "@budibase/types"
 
   type EnabledAgent = {
     agentId: string
     default?: boolean
   }
 
-  export let namedAgents: NamedAgent[] = []
+  type AgentListItem = Agent & {
+    agentId: string
+    default?: boolean
+  }
+
+  export let namedAgents: Agent[] = []
   export let enabledAgents: EnabledAgent[] = []
   export let isAgentAvailable: (_agentId: string) => boolean
   export let handleAvailabilityToggle: (
@@ -20,11 +21,14 @@
     _enabled: boolean
   ) => void
 
+  let settingsModal: Modal | undefined
+  let selectedAgent: AgentListItem | undefined
+
   $: agentList = namedAgents
     .filter(agent => agent._id)
     .map(agent => ({
+      ...agent,
       agentId: agent._id!,
-      name: agent.name,
       default: enabledAgents.find(enabled => enabled.agentId === agent._id)
         ?.default,
     }))
@@ -37,6 +41,11 @@
   $: otherAgents = agentList.filter(
     agent => agent.agentId !== resolvedDefaultAgent?.agentId
   )
+
+  const openAgentSettings = (agent: AgentListItem) => {
+    selectedAgent = agent
+    settingsModal?.show()
+  }
 </script>
 
 <Panel customWidth={260} borderRight noHeaderBorder>
@@ -63,14 +72,24 @@
               {resolvedDefaultAgent.name || "Unknown agent"}
             </Body>
           </div>
-          <Toggle
-            value={isAgentAvailable(resolvedDefaultAgent.agentId)}
-            on:change={event =>
-              handleAvailabilityToggle(
-                resolvedDefaultAgent.agentId,
-                event.detail
-              )}
-          />
+          <div class="settings-agent-actions">
+            <Toggle
+              value={isAgentAvailable(resolvedDefaultAgent.agentId)}
+              on:change={event =>
+                handleAvailabilityToggle(
+                  resolvedDefaultAgent.agentId,
+                  event.detail
+                )}
+            />
+            <button
+              class="settings-gear"
+              type="button"
+              on:click={() => openAgentSettings(resolvedDefaultAgent)}
+              aria-label="Open agent settings"
+            >
+              <Icon name="gear" size="S" />
+            </button>
+          </div>
         </div>
       {:else}
         <Body size="S" color="var(--spectrum-global-color-gray-500)">
@@ -89,11 +108,21 @@
             <div class="settings-agent-info">
               <Body size="S">{agent.name}</Body>
             </div>
-            <Toggle
-              value={isAgentAvailable(agent.agentId)}
-              on:change={event =>
-                handleAvailabilityToggle(agent.agentId, event.detail)}
-            />
+            <div class="settings-agent-actions">
+              <Toggle
+                value={isAgentAvailable(agent.agentId)}
+                on:change={event =>
+                  handleAvailabilityToggle(agent.agentId, event.detail)}
+              />
+              <button
+                class="settings-gear"
+                type="button"
+                on:click={() => openAgentSettings(agent)}
+                aria-label="Open agent settings"
+              >
+                <Icon name="gear" size="S" />
+              </button>
+            </div>
           </div>
         {/each}
       {:else}
@@ -104,6 +133,14 @@
     </div>
   </div>
 </Panel>
+
+<Modal bind:this={settingsModal}>
+  <ModalContent
+    size="M"
+    title={`${selectedAgent?.name || "Agent"} settings`}
+    showConfirmButton={false}
+  />
+</Modal>
 
 <style>
   .settings-header {
@@ -135,5 +172,26 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xxs);
+  }
+
+  .settings-agent-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
+  .settings-gear {
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: var(--spectrum-global-color-gray-600);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .settings-gear:hover {
+    color: var(--spectrum-global-color-gray-800);
   }
 </style>
