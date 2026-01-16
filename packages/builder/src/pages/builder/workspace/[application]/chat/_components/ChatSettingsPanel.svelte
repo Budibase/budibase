@@ -2,7 +2,7 @@
   import Panel from "@/components/design/Panel.svelte"
   import {
     Body,
-    Checkbox,
+    Button,
     Icon,
     Modal,
     ModalContent,
@@ -152,16 +152,19 @@
     showConfirmButton={false}
   >
     <div class="agent-settings">
-      <Checkbox
-        text="Default agent"
-        value={selectedAgent?.agentId === resolvedDefaultAgent?.agentId}
-        disabled={!selectedAgent || !isAgentAvailable(selectedAgent.agentId)}
-        on:change={event => {
-          if (selectedAgent && event.detail) {
+      <Button
+        size="S"
+        disabled={!selectedAgent ||
+          !isAgentAvailable(selectedAgent.agentId) ||
+          selectedAgent.agentId === resolvedDefaultAgent?.agentId}
+        on:click={() => {
+          if (selectedAgent) {
             handleDefaultToggle(selectedAgent.agentId)
           }
         }}
-      />
+      >
+        Set as default
+      </Button>
     </div>
   </ModalContent>
 </Modal>
