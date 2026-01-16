@@ -29,8 +29,6 @@
   let ragModal: { show: () => void; hide: () => void }
   let ragModalConfig: RagConfig | null = null
 
-  $: privateLLMSEnabled = $featureFlags.PRIVATE_LLMS
-
   $: customConfigs = $aiConfigsStore.customConfigs || []
   $: embeddingConfigs = customConfigs.filter(
     config => config.configType === AIConfigType.EMBEDDINGS
@@ -78,7 +76,7 @@
 </script>
 
 <Layout noPadding gap="S">
-  {#if privateLLMSEnabled}
+  {#if $featureFlags.AI_AGENTS}
     <div class="section">
       <div class="section-header">
         <div class="section-title">Embeddings models</div>
