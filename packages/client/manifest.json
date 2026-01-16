@@ -9197,6 +9197,17 @@
         "key": "iconRightSize",
         "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
         "defaultValue": "M"
+      },
+      {
+        "type": "boolean",
+        "label": "Clickable icons",
+        "key": "iconIncDec",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "displayValue",
+        "key": "displayValue"
       }
     ],
     "context": {

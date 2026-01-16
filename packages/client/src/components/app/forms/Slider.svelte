@@ -19,6 +19,8 @@
   export let helpText: string | undefined = undefined
   export let iconLeft: string | undefined
   export let iconRight: string | undefined
+  export let iconIncDec: boolean = true
+  export let displayValue
   export let iconLeftSize:
     | "XXS"
     | "XS"
@@ -90,8 +92,8 @@
 
   // TODO: Make icons change colour when hovered (like a button does), and clickable to increment/decrement (and make this functionality optional in settings)
   const handleChange = (event: CustomEvent<string | number>) => {
-    const nextValue = parseValue(event.detail)
-    updateValue(nextValue)
+    const $nextValue = parseValue(event.detail)
+    updateValue($nextValue)
   }
 
   const iconClick = (changeBy: number) => {
@@ -126,8 +128,9 @@
       <Icon
         name={iconLeft}
         size={iconLeftSize}
-        disabled={readonlyIcon}
         on:click={handleDecrease}
+        hoverable={iconIncDec}
+        disabled={!iconIncDec}
       />
     {/if}
     {#if fieldState}
@@ -147,9 +150,13 @@
       <Icon
         name={iconRight}
         size={iconRightSize}
-        disabled={readonlyIcon}
         on:click={handleIncrease}
+        hoverable={iconIncDec}
+        disabled={!iconIncDec}
       />
+    {/if}
+    {#if displayValue}
+      <p class="value-text">{sliderValue}</p>
     {/if}
   </div>
 </Field>
@@ -166,5 +173,9 @@
     flex: 1 1 auto;
     min-width: 0;
     padding: 0 10px;
+  }
+
+  .value-text {
+    padding: 10px;
   }
 </style>
