@@ -82,9 +82,15 @@ function normalizeProfile(
     profileJson.email = idProfile.emails[0].value
   }
 
+  const displayName = uiProfile?.displayName || idProfile.displayName
+
   return {
     id: uiProfile?.id || idProfile.id,
-    name: uiProfile?.name || idProfile.name,
+    name:
+      uiProfile?.name ||
+      idProfile.name ||
+      (!!displayName && { givenName: displayName, familyName: "" }) ||
+      undefined,
     _json: profileJson,
     provider: uiProfile?.provider,
   }

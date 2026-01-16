@@ -72,9 +72,9 @@ describe("oidc", () => {
     }
     let idProfile: OpenIDConnectStrategy.Profile
 
-    beforeEach(async () => {
+    beforeEach(() => {
       jest.clearAllMocks()
-      authenticateFn = await oidc.buildVerifyFn(mockSaveUser)
+      authenticateFn = oidc.buildVerifyFn(mockSaveUser)
       uiProfile = {
         id: profile.id,
         name: profile.name,
@@ -184,6 +184,33 @@ describe("oidc", () => {
           name: {
             givenName,
             familyName,
+          },
+        },
+      }
+
+      expect(sso.authenticate).toHaveBeenCalledWith(
+        expectedDetails,
+        false,
+        mockDone,
+        mockSaveUser
+      )
+    })
+
+    it("falls back to display name when given and family names are missing", async () => {
+      const displayName = "Ada Lovelace"
+      delete uiProfile.name
+      delete idProfile.name
+      uiProfile.displayName = displayName
+
+      await authenticate()
+
+      const expectedDetails = {
+        ...details,
+        profile: {
+          ...details.profile,
+          name: {
+            givenName: displayName,
+            familyName: "",
           },
         },
       }
