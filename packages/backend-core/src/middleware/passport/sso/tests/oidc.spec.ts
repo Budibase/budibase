@@ -1,6 +1,5 @@
 import { generator, structures } from "../../../../../tests"
 import {
-  JwtClaims,
   OIDCInnerConfig,
   SSOAuthDetails,
   SSOProviderType,
@@ -8,9 +7,10 @@ import {
 import * as _sso from "../sso"
 import * as oidc from "../oidc"
 import nock from "nock"
+import type OpenIDConnectStrategy from "@govtechsg/passport-openidconnect"
 
-jest.mock("@techpass/passport-openidconnect")
-const mockStrategy = require("@techpass/passport-openidconnect").Strategy
+jest.mock("@govtechsg/passport-openidconnect")
+const mockStrategy = require("@govtechsg/passport-openidconnect").Strategy
 
 jest.mock("../sso")
 const sso = jest.mocked(_sso)
@@ -58,27 +58,46 @@ describe("oidc", () => {
     const profile = details.profile!
     const issuer = profile.provider
 
-    const sub = generator.string()
     const idToken = generator.string()
-    const params = {}
+    const params: Record<string, unknown> = {}
+    const context: OpenIDConnectStrategy.AuthContext = {}
 
     let authenticateFn: any
-    let jwtClaims: JwtClaims
+    let uiProfile: OpenIDConnectStrategy.MergedProfile & {
+      _json?: {
+        email?: string
+        picture?: string
+      }
+      provider?: string
+    }
+    let idProfile: OpenIDConnectStrategy.Profile
 
     beforeEach(async () => {
       jest.clearAllMocks()
       authenticateFn = await oidc.buildVerifyFn(mockSaveUser)
+      uiProfile = {
+        id: profile.id,
+        name: profile.name,
+        _json: { ...profile._json },
+        provider: profile.provider,
+      }
+      idProfile = {
+        id: profile.id,
+        name: profile.name,
+        emails: [{ value: details.email! }],
+        username: details.email,
+      }
     })
 
     async function authenticate() {
       await authenticateFn(
         issuer,
-        sub,
-        profile,
-        jwtClaims,
+        uiProfile,
+        idProfile,
+        context,
+        idToken,
         details.oauth2.accessToken,
         details.oauth2.refreshToken,
-        idToken,
         params,
         mockDone
       )
@@ -95,12 +114,8 @@ describe("oidc", () => {
       )
     })
 
-    it("uses JWT email to get email", async () => {
-      delete profile._json.email
-
-      jwtClaims = {
-        email: details.email,
-      }
+    it("uses id token email to get email", async () => {
+      delete uiProfile._json?.email
 
       await authenticate()
 
@@ -112,29 +127,36 @@ describe("oidc", () => {
       )
     })
 
-    it("uses JWT username to get email", async () => {
-      delete profile._json.email
-
-      jwtClaims = {
-        email: details.email,
-      }
+    it("uses id token username to get email", async () => {
+      delete uiProfile._json?.email
+      delete idProfile.emails
 
       await authenticate()
 
+      const expectedDetails = {
+        ...details,
+        profile: {
+          ...details.profile,
+          _json: {
+            ...details.profile?._json,
+            email: undefined,
+          },
+        },
+      }
+
       expect(sso.authenticate).toHaveBeenCalledWith(
-        details,
+        expectedDetails,
         false,
         mockDone,
         mockSaveUser
       )
     })
 
-    it("uses JWT invalid username to get email", async () => {
-      delete profile._json.email
+    it("uses invalid id token username to get email", async () => {
+      delete uiProfile._json?.email
+      delete idProfile.emails
 
-      jwtClaims = {
-        preferred_username: "invalidUsername",
-      }
+      idProfile.username = "invalidUsername"
 
       await expect(authenticate()).rejects.toThrow(
         "Could not determine user email from profile"
