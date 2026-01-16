@@ -27,7 +27,6 @@
     "lerna": "7.4.2",
     "load-tsconfig": "^0.2.5",
     "madge": "^6.0.0",
-    "nx-cloud": "16.0.5",
     "prettier": "3.5.3",
     "prettier-plugin-svelte": "^3.4.0",
     "proper-lockfile": "^4.1.2",
