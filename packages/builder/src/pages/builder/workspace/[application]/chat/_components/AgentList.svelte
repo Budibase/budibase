@@ -26,11 +26,6 @@
         </Body>
       </div>
       <div class="settings-agent-actions">
-        <Toggle
-          value={isAgentAvailable(resolvedDefaultAgent.agentId)}
-          on:change={event =>
-            onToggleEnabled(resolvedDefaultAgent.agentId, event.detail)}
-        />
         <button
           class="settings-gear"
           type="button"
