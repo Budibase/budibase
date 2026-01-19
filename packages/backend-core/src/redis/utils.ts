@@ -30,6 +30,7 @@ export enum Databases {
   BPM_EVENTS = "bpmEvents",
   DOC_WRITE_THROUGH = "docWriteThrough",
   RECAPTCHA_SESSION = "recaptchaSession",
+  OPENAPI_IMPORT_SPECS = "openapiImportSpecs",
 }
 
 /**
@@ -45,7 +46,7 @@ export enum SelectableDatabase {
   DEFAULT = 0,
   SOCKET_IO = 1,
   RATE_LIMITING = 2,
-  UNUSED_2 = 3,
+  OPENAPI_IMPORT_SPECS = 3,
   UNUSED_3 = 4,
   UNUSED_4 = 5,
   UNUSED_5 = 6,
@@ -62,14 +63,17 @@ export enum SelectableDatabase {
 
 export function getRedisConnectionDetails() {
   let password = env.REDIS_PASSWORD
+  let username = env.REDIS_USERNAME
   let url: string[] | string = env.REDIS_URL.split("//")
   // get rid of the protocol
   url = url.length > 1 ? url[1] : url[0]
-  // check for a password etc
+  // check for credentials in URL (format: user:pass@host or :pass@host)
   url = url.split("@")
   if (url.length > 1) {
-    // get the password
-    password = url[0].split(":")[1]
+    const credentials = url[0].split(":")
+    // handle both "user:pass@host" and ":pass@host" formats
+    username = username || credentials[0] || undefined
+    password = credentials[1]
     url = url[1]
   } else {
     url = url[0]
@@ -80,6 +84,7 @@ export function getRedisConnectionDetails() {
   return {
     host,
     password,
+    username,
     // assume default port for redis if invalid found
     port: isNaN(portNumber) ? 6379 : portNumber,
   }
@@ -97,12 +102,13 @@ export function getRedisClusterOptions(): Redis.ClusterOptions {
 }
 
 export function getRedisOptions(): Redis.RedisOptions {
-  const { host, password, port } = getRedisConnectionDetails()
+  const { host, password, port, username } = getRedisConnectionDetails()
   return {
     connectTimeout: 30000,
     port: port,
     host,
     password,
+    ...(username && { username }),
   }
 }
 

@@ -10,7 +10,10 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
-import { BUILDER_URLS } from "@budibase/shared-core"
+import {
+  BUILDER_URLS,
+  filterValidTranslationOverrides,
+} from "@budibase/shared-core"
 import {
   AIInnerConfig,
   Config,
@@ -21,13 +24,16 @@ import {
   FindConfigResponse,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
+  GetPublicTranslationsResponse,
   GoogleInnerConfig,
+  TranslationOverrides,
   isAIConfig,
   isGoogleConfig,
   isOIDCConfig,
   isRecaptchaConfig,
   isSettingsConfig,
   isSMTPConfig,
+  isTranslationsConfig,
   OIDCConfigs,
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
@@ -39,9 +45,12 @@ import {
   SMTPInnerConfig,
   SSOConfig,
   SSOConfigType,
+  TranslationsConfigInner,
   UploadConfigFileResponse,
   UserCtx,
 } from "@budibase/types"
+
+const PUBLIC_TRANSLATION_PREFIXES = ["login.", "forgotPassword."]
 import env from "../../../environment"
 import * as email from "../../../utilities/email"
 import { checkAnyUserExists } from "../../../utilities/users"
@@ -299,6 +308,77 @@ export async function processRecaptchaConfig(
   }
 }
 
+function prepareTranslationsConfig(
+  ctx: UserCtx,
+  config?: TranslationsConfigInner
+): TranslationsConfigInner {
+  const defaultLocale = config?.defaultLocale || "en"
+  const locales: TranslationsConfigInner["locales"] = {}
+  const now = new Date().toISOString()
+  const updatedBy = ctx.user?._id
+
+  Object.entries(config?.locales || {}).forEach(([locale, localeConfig]) => {
+    locales[locale] = {
+      label: localeConfig?.label,
+      overrides: filterValidTranslationOverrides(localeConfig?.overrides),
+      updatedAt: localeConfig?.updatedAt || now,
+      updatedBy: localeConfig?.updatedBy || updatedBy,
+    }
+  })
+
+  if (!locales[defaultLocale]) {
+    locales[defaultLocale] = {
+      label: defaultLocale === "en" ? "English" : defaultLocale,
+      overrides: {},
+      updatedAt: now,
+      updatedBy,
+    }
+  }
+
+  return {
+    defaultLocale,
+    locales,
+  }
+}
+
+function filterPublicTranslations(
+  config: TranslationsConfigInner
+): TranslationsConfigInner {
+  const locales: TranslationsConfigInner["locales"] = {}
+  for (const [locale, localeConfig] of Object.entries(config.locales || {})) {
+    const overrides = Object.entries(localeConfig?.overrides || {}).reduce(
+      (acc, [key, value]) => {
+        if (
+          PUBLIC_TRANSLATION_PREFIXES.some(prefix => key.startsWith(prefix))
+        ) {
+          acc[key] = value
+        }
+        return acc
+      },
+      {} as TranslationOverrides
+    )
+    locales[locale] = {
+      ...localeConfig,
+      overrides,
+    }
+  }
+  return {
+    defaultLocale: config.defaultLocale,
+    locales,
+  }
+}
+
+async function processTranslationsConfig(
+  ctx: UserCtx,
+  config: TranslationsConfigInner
+) {
+  const enabled = await pro.features.isTranslationsEnabled()
+  if (!enabled) {
+    throw new ForbiddenError("License does not allow translations")
+  }
+  ctx.request.body.config = prepareTranslationsConfig(ctx, config)
+}
+
 export async function save(
   ctx: UserCtx<SaveConfigRequest, SaveConfigResponse>
 ) {
@@ -334,6 +414,9 @@ export async function save(
         break
       case ConfigType.RECAPTCHA:
         await processRecaptchaConfig(config, existingConfig?.config)
+        break
+      case ConfigType.TRANSLATIONS:
+        await processTranslationsConfig(ctx, config)
         break
     }
   } catch (err: any) {
@@ -436,11 +519,11 @@ export async function find(ctx: UserCtx<void, FindConfigResponse>) {
       break
   }
 
-  stripSecrets(config)
+  stripSecrets(config, ctx)
   ctx.body = config
 }
 
-function stripSecrets(config: Config) {
+function stripSecrets(config: Config, ctx?: UserCtx) {
   if (isAIConfig(config)) {
     for (const key in config.config) {
       if (config.config[key].apiKey) {
@@ -459,6 +542,11 @@ function stripSecrets(config: Config) {
     }
   } else if (isRecaptchaConfig(config)) {
     config.config.secretKey = PASSWORD_REPLACEMENT
+  } else if (isTranslationsConfig(config)) {
+    config.config = prepareTranslationsConfig(
+      ctx || ({} as UserCtx),
+      config.config
+    )
   }
 }
 
@@ -577,6 +665,17 @@ export async function publicSettings(
         googleCallbackUrl,
       },
     }
+  } catch (err: any) {
+    ctx.throw(err.status, err)
+  }
+}
+
+export async function publicTranslations(
+  ctx: Ctx<void, GetPublicTranslationsResponse>
+) {
+  try {
+    const configDoc = await configs.getTranslationsConfigDoc()
+    ctx.body = filterPublicTranslations(configDoc.config)
   } catch (err: any) {
     ctx.throw(err.status, err)
   }

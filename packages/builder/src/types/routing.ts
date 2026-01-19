@@ -54,6 +54,7 @@ export interface Route {
 export interface MatchedRoute {
   entry: Route
   params: Record<string, any>
+  hash?: string
 }
 
 export const buildRoute = (pattern: string) => {
@@ -141,6 +142,8 @@ export const flatten = (
 }
 
 export const match = (path: string, routes: Route[]) => {
+  let hash: string | undefined
+  ;[path, hash] = path.split("#")
   if (!routes) {
     console.error("Router: No configured routes.")
     return null
@@ -166,7 +169,11 @@ export const match = (path: string, routes: Route[]) => {
       const params = Object.fromEntries(
         (keys || []).map((key: string, i: number) => [key, match[i + 1]])
       )
-      return { entry, params }
+      return {
+        entry,
+        params,
+        hash: hash ? `#${hash}` : undefined,
+      }
     }
   }
 }

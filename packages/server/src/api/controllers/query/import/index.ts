@@ -1,4 +1,11 @@
-import { cache, context, events, HTTPError } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  events,
+  HTTPError,
+  redis,
+  utils,
+} from "@budibase/backend-core"
 import { Datasource, Query } from "@budibase/types"
 import { generateQueryID } from "../../../../db/utils"
 import { queryValidation } from "../validation"
@@ -17,6 +24,7 @@ interface ImportResult {
 
 type ImporterInput = { data: string } | { url: string }
 
+const OPENAPI_SPEC_CACHE_TTL_DAYS = 28
 const SOURCE_FACTORIES: Record<string, () => ImportSource> = {
   "openapi2.0": () => new OpenAPI2(),
   "openapi3.0": () => new OpenAPI3(),
@@ -86,30 +94,39 @@ export async function getImportInfo(
   input: { data: string } | { url: string }
 ): Promise<ImportInfo> {
   const importer = await createImporter(input)
-  const info = importer.getInfo()
-  return info
+  return importer.getInfo()
 }
 
-async function urlToSpecs(url: string): Promise<string> {
-  const cacheKey = `${buildCacheKey({ url })}:urlSpecs`
-  const cachedValue = await cache.get(cacheKey)
-  if (cachedValue) {
-    if (typeof cachedValue === "string") {
-      return cachedValue
-    }
-    return JSON.stringify(cachedValue)
+async function urlToSpecs(url: string, cacheKeyBase?: string): Promise<string> {
+  if (!cacheKeyBase) {
+    const result = await fetchFromUrl(url)
+    return result
+  }
+
+  const cacheKey = `${cacheKeyBase}:specs`
+  const client = await redis.clients.getOpenapiImportSpecsClient()
+  const cachedSpecs = await client.get(cacheKey)
+  if (cachedSpecs) {
+    return await utils.gunzipFromBase64(cachedSpecs)
   }
   const result = await fetchFromUrl(url)
-  await cache.store(cacheKey, result, cache.TTL.ONE_DAY * 7)
+  const encoded = await utils.gzipToBase64(result)
+  await client.store(
+    cacheKey,
+    encoded,
+    cache.TTL.ONE_DAY * OPENAPI_SPEC_CACHE_TTL_DAYS
+  )
   return result
 }
 
 export async function createImporter(
   input: { data?: string } | { url?: string }
 ): Promise<RestImporter> {
+  let cacheKeyBase: string | undefined
   let data: string | undefined
   if ("url" in input && input.url) {
-    data = await urlToSpecs(input.url)
+    cacheKeyBase = buildCacheKey({ url: input.url })
+    data = await urlToSpecs(input.url, cacheKeyBase)
   } else if ("data" in input) {
     data = input.data
   }
@@ -119,19 +136,24 @@ export async function createImporter(
     throw new HTTPError("Import data or url is required", 400)
   }
 
-  const importerTypeCacheKey = `${buildCacheKey({ data })}:type`
-  const cachedType = await cache.get(importerTypeCacheKey)
+  let cachedType: string | undefined
+  const importerTypeCacheKey = cacheKeyBase && `${cacheKeyBase}:type`
+  if (importerTypeCacheKey) {
+    const client = await redis.clients.getOpenapiImportSpecsClient()
+    cachedType = await client.get(importerTypeCacheKey)
+  }
+  const importer = await RestImporter.init(data, cachedType)
 
-  const result = await RestImporter.init(data, cachedType)
-  if (!cachedType) {
-    await cache.store(
+  if (!cachedType && importerTypeCacheKey) {
+    const client = await redis.clients.getOpenapiImportSpecsClient()
+    await client.store(
       importerTypeCacheKey,
-      result.getSource().getImportSource(),
-      cache.TTL.ONE_DAY * 200
+      importer.getSource().getImportSource(),
+      cache.TTL.ONE_DAY * OPENAPI_SPEC_CACHE_TTL_DAYS
     )
   }
 
-  return result
+  return importer
 }
 
 export class RestImporter {

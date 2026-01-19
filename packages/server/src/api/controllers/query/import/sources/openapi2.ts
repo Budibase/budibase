@@ -18,6 +18,7 @@ import {
   buildKeyValueRequestBody,
   type FormDataParameter,
 } from "./utils/requestBody"
+import { buildEndpointName } from "./utils/endpointName"
 
 const parameterNotRef = (
   param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
@@ -281,7 +282,7 @@ export class OpenAPI2 extends OpenAPISource {
         if (filterIds && !filterIds.has(endpointId)) {
           continue
         }
-        const name = operation.operationId || path
+        const name = buildEndpointName(operation, methodName, path)
         let queryString = ""
         const headers: Record<string, unknown> = {}
         const setHeader = (headerName: string, value: unknown) => {

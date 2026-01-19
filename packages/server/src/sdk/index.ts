@@ -22,6 +22,8 @@ import * as views from "./workspace/views"
 import * as workspaceApps from "./workspace/workspaceApps"
 import { default as workspaces } from "./workspace/workspaces"
 import * as aiConfigs from "./aiConfig"
+import * as ragConfigs from "./ragConfig"
+import * as vectorDbs from "./vectorDb"
 
 const sdk = {
   backups,
@@ -48,6 +50,8 @@ const sdk = {
   dev,
   workspace,
   aiConfigs,
+  ragConfigs,
+  vectorDbs,
 }
 
 // default export for TS

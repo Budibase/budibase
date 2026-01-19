@@ -16,6 +16,7 @@ import {
   generateRequestBodyFromSchema,
   buildKeyValueRequestBody,
 } from "./utils/requestBody"
+import { buildEndpointName } from "./utils/endpointName"
 
 type ServerObject = OpenAPIV3.ServerObject
 type ServerVariableObject = OpenAPIV3.ServerVariableObject
@@ -407,7 +408,7 @@ export class OpenAPI3 extends OpenAPISource {
         if (filterIds && !filterIds.has(endpointId)) {
           continue
         }
-        const name = operation.operationId || path
+        const name = buildEndpointName(operation, methodName, path)
         let queryString = ""
         const headers: { [key: string]: unknown } = {}
         const setHeader = (headerName: string, value: unknown) => {

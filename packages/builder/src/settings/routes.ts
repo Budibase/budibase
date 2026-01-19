@@ -77,6 +77,12 @@ export const orgRoutes = (
           title: "Branding",
           comp: Pages.get("branding"),
         },
+        {
+          path: "translations",
+          access: () => isAdmin,
+          title: "Translations",
+          comp: Pages.get("translations"),
+        },
       ],
     },
     {
@@ -132,7 +138,18 @@ export const orgRoutes = (
       access: () => isAdmin,
       path: "ai",
       icon: "sparkle",
-      comp: Pages.get("ai"),
+      routes: [
+        {
+          path: "aisettings",
+          title: "AI Settings",
+          comp: Pages.get("ai"),
+        },
+        {
+          path: "embedding-settings",
+          title: "Embeddings",
+          comp: Pages.get("embeddings"),
+        },
+      ],
     },
     {
       section: "Auth",
@@ -314,11 +331,6 @@ export const workspaceRoutes = (
         { path: "pwa", comp: Pages.get("pwa"), title: "PWA" },
         { path: "embed", comp: Pages.get("embed"), title: "Embed" },
         { path: "scripts", comp: Pages.get("scripts"), title: "Scripts" },
-        {
-          path: "translations",
-          comp: Pages.get("translations"),
-          title: "Translations",
-        },
       ],
     },
   ].map((entry: Route) => ({
