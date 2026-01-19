@@ -36,6 +36,7 @@
   import NoResults from "../_components/NoResults.svelte"
   import { redirect } from "@roxi/routify"
   import { onMount } from "svelte"
+  import { featureFlags } from "@/stores/portal"
 
   type ShowUI = { show: () => void }
 
