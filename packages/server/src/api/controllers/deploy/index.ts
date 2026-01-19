@@ -105,17 +105,22 @@ async function initDeployedApp(prodAppId: string) {
     )
   ).rows.map(row => row.doc!)
   await clearMetadata()
-  const { count } = await disableAllCrons(prodAppId)
+  let { count } = await disableAllCrons(prodAppId)
   const promises = []
 
   for (let automation of automations) {
     promises.push(
-      enableCronOrEmailTrigger(prodAppId, automation).catch(err => {
-        throw new Error(
-          `Failed to enable CRON or Email trigger for automation "${automation.name}": ${err.message}`,
-          { cause: err }
-        )
-      })
+      enableCronOrEmailTrigger(prodAppId, automation)
+        .then(({ enabled, automation, clearedRepeatableJobs }) => {
+          count += clearedRepeatableJobs
+          return { enabled, automation }
+        })
+        .catch(err => {
+          throw new Error(
+            `Failed to enable CRON or Email trigger for automation "${automation.name}": ${err.message}`,
+            { cause: err }
+          )
+        })
     )
   }
   const results = await Promise.all(promises)
