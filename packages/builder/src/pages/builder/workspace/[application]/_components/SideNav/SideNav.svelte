@@ -5,7 +5,6 @@
     Body,
     Link,
     Modal,
-    PopoverAlignment,
     TooltipPosition,
     TooltipType,
     notifications,
@@ -36,8 +35,9 @@
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
-  import { onDestroy, setContext } from "svelte"
+  import { onDestroy, onMount, setContext } from "svelte"
   import {
+    FeatureFlag,
     type Datasource,
     type Query,
     type Table,
@@ -51,15 +51,11 @@
   } from "@budibase/types"
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
-  import {
-    DISCORD_URL,
-    DOCUMENTATION_URL,
-    SUPPORT_EMAIL,
-  } from "@/constants"
+  import { DISCORD_URL, DOCUMENTATION_URL, SUPPORT_EMAIL } from "@/constants"
+  import { API } from "@/api"
   import { bb } from "@/stores/bb"
   import WorkspaceSelect from "@/components/common/WorkspaceSelect.svelte"
   import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"
-  import HelpMenu from "@/components/common/HelpMenu.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import { type EnrichedApp } from "@/types"
 
@@ -127,6 +123,32 @@
   let workspaceSelect: WorkspaceSelect | undefined
   let createWorkspaceModal: Modal | undefined
   let workspaceMenuOpen = false
+
+  let githubStars: number | null = null
+
+  const formatStars = (stars: number) => {
+    return new Intl.NumberFormat("en", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+      compactDisplay: "short",
+    })
+      .format(stars)
+      .toLowerCase()
+  }
+
+  $: githubStarsText =
+    githubStars != null
+      ? `${formatStars(githubStars)} GitHub stars`
+      : "25k+ GitHub stars"
+
+  onMount(async () => {
+    try {
+      const response = await API.workspaceHome.getGitHubStars()
+      githubStars = response.stars
+    } catch (err) {
+      console.error("Failed to load GitHub stars", err)
+    }
+  })
 
   $: appId = $appStore.appId
   $: !$pinned && unPin()
@@ -413,79 +435,82 @@
       <div class="links core">
         {#if appId}
           <div>
-            <SideNavLink
-              icon="browser"
-              text="Apps"
-              url={$url("./design")}
-              {collapsed}
-              on:click={keepCollapsed}
-            />
-            <span class="root-nav" class:selected={$isActive("./automation")}>
-              {#if collapsed && automationErrorCount}
-                <span class="status-indicator">
-                  <StatusLight
-                    color="var(--spectrum-global-color-static-red-600)"
-                    size="M"
-                  />
-                </span>
-              {/if}
+            {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
               <SideNavLink
-                icon="path"
-                text="Automations"
-                url={$url("./automation")}
+                icon="house"
+                text="Home"
+                url={$url("./home")}
                 {collapsed}
                 on:click={keepCollapsed}
-              >
-                <svelte:fragment slot="right">
-                  {#if automationErrorCount}
+              />
+            {:else}
+              <SideNavLink
+                icon="browser"
+                text="Apps"
+                url={$url("./design")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+              <span class="root-nav" class:selected={$isActive("./automation")}>
+                {#if collapsed && automationErrorCount}
+                  <span class="status-indicator">
                     <StatusLight
                       color="var(--spectrum-global-color-static-red-600)"
                       size="M"
                     />
-                  {/if}
-                </svelte:fragment>
-              </SideNavLink>
-            </span>
-            {#if $featureFlags.AI_AGENTS}
-              <SideNavLink
-                icon="memory"
-                text="Agents"
-                url={$url("./agent")}
-                {collapsed}
-                on:click={keepCollapsed}
-              >
-                <svelte:fragment slot="right">
-                  <div class="beta-tag-wrapper">
-                    <Tag emphasized>Beta</Tag>
-                  </div>
-                </svelte:fragment>
-              </SideNavLink>
-              <SideNavLink
-                icon="chat-circle"
-                text="Chat"
-                url={$url("./chat")}
-                {collapsed}
-                on:click={keepCollapsed}
-              >
-                <svelte:fragment slot="right">
-                  <div class="beta-tag-wrapper">
-                    <Tag emphasized>Alpha</Tag>
-                  </div>
-                </svelte:fragment>
-              </SideNavLink>
+                  </span>
+                {/if}
+                <SideNavLink
+                  icon="path"
+                  text="Automations"
+                  url={$url("./automation")}
+                  {collapsed}
+                  on:click={keepCollapsed}
+                >
+                  <svelte:fragment slot="right">
+                    {#if automationErrorCount}
+                      <StatusLight
+                        color="var(--spectrum-global-color-static-red-600)"
+                        size="M"
+                      />
+                    {/if}
+                  </svelte:fragment>
+                </SideNavLink>
+              </span>
+              {#if $featureFlags.AI_AGENTS}
+                <SideNavLink
+                  icon="memory"
+                  text="Agents"
+                  url={$url("./agent")}
+                  {collapsed}
+                  on:click={keepCollapsed}
+                >
+                  <svelte:fragment slot="right">
+                    <div class="beta-tag-wrapper">
+                      <Tag emphasized>Beta</Tag>
+                    </div>
+                  </svelte:fragment>
+                </SideNavLink>
+                <SideNavLink
+                  icon="chat-circle"
+                  text="Chat"
+                  url={$url("./chat")}
+                  {collapsed}
+                  on:click={keepCollapsed}
+                >
+                  <svelte:fragment slot="right">
+                    <div class="beta-tag-wrapper">
+                      <Tag emphasized>Alpha</Tag>
+                    </div>
+                  </svelte:fragment>
+                </SideNavLink>
+              {/if}
             {/if}
           </div>
           <div class="nav-section-title">
             <hr />
           </div>
           <div>
-            <SideNavLink
-              icon="house"
-              text="Home"
-              url={$url("./design")}
-              {collapsed}
-              on:click={keepCollapsed}
-            />
             <SideNavLink
               icon="sparkle"
               text="AI models"
@@ -658,28 +683,41 @@
         />
         <SideNavLink
           icon="star"
-          text="27.5k Github stars"
+          text={githubStarsText}
           {collapsed}
           on:click={() => {
             window.open("https://github.com/Budibase/budibase", "_blank")
             keepCollapsed()
           }}
         />
-        <SideNavLink
-          icon="paper-plane-tilt"
-          text="Email support"
-          {collapsed}
-          on:click={() => {
-            licensing.goToUpgradePage()
-            keepCollapsed()
-          }}
-        >
-          <svelte:fragment slot="right">
-            <div class="beta-tag-wrapper">
-              <Tag emphasized>Paid</Tag>
-            </div>
-          </svelte:fragment>
-        </SideNavLink>
+
+        {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isEnterpriseTrial}
+          <SideNavLink
+            icon="paper-plane-tilt"
+            text="Email support"
+            {collapsed}
+            on:click={() => {
+              window.open(SUPPORT_EMAIL, "_blank")
+              keepCollapsed()
+            }}
+          />
+        {:else}
+          <SideNavLink
+            icon="paper-plane-tilt"
+            text="Upgrade for support"
+            {collapsed}
+            on:click={() => {
+              licensing.goToUpgradePage()
+              keepCollapsed()
+            }}
+          >
+            <svelte:fragment slot="right">
+              <div class="beta-tag-wrapper">
+                <Tag emphasized>Paid</Tag>
+              </div>
+            </svelte:fragment>
+          </SideNavLink>
+        {/if}
         <SideNavUserSettings {collapsed} />
       </div>
       <div class="popover-container"></div>
