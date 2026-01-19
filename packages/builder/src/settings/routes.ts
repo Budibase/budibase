@@ -212,14 +212,15 @@ export const orgRoutes = (
   }))
 }
 
-export const appRoutes = (
+export const workspaceRoutes = (
   appStore: AppMetaState,
-  appsStore: PortalAppsStore
+  appsStore: PortalAppsStore,
+  user: GetGlobalSelfResponse
 ): Route[] => {
   if (!appStore?.appId) {
     return []
   }
-
+  const isAdmin = user != null && sdk.users.isAdmin(user)
   const getBackupErrors = (apps: StoreApp[], appId: string) => {
     const target = apps.find(app => app.devId === appId)
     return target?.backupErrors || {}
@@ -245,6 +246,52 @@ export const appRoutes = (
           title: "OAuth2",
           path: "oauth2",
           comp: Pages.get("oauth2"),
+        },
+      ],
+    },
+    {
+      section: "Credentials",
+      access: () => isAdmin,
+      path: "credentials",
+      icon: "flying-saucer",
+      new: true,
+      routes: [
+        {
+          title: "Credentials",
+          path: "list",
+          comp: Pages.get("credentials"),
+        },
+        {
+          title: "Create",
+          path: "create",
+          comp: Pages.get("create_credential"),
+          skipNav: true,
+          routes: [
+            {
+              title: "OAuth2",
+              path: "oauth2",
+              comp: Pages.get("create_oauth2"),
+              skipNav: true,
+            },
+            {
+              title: "HTTP Basic",
+              path: "http_basic",
+              comp: Pages.get("create_http"),
+              skipNav: true,
+            },
+            {
+              title: "HTTP Bearer",
+              path: "http_bearer",
+              comp: Pages.get("create_http"),
+              skipNav: true,
+            },
+          ],
+        },
+        {
+          title: "Credential",
+          path: ":id",
+          comp: Pages.get("credential"),
+          skipNav: true,
         },
       ],
     },

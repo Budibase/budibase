@@ -43,6 +43,7 @@ export interface Route {
   keys?: string[] // e.g path/to/:userId > ["userId"]
   group?: string
   color?: string // for highlighting
+  skipNav?: boolean // Exclude from nav tabs but still process as navigable route
 
   nav?: Route[]
   regex?: RegExp
@@ -89,7 +90,8 @@ export const flatten = (
 
     if (entry.routes) {
       // Navigation sibling pages at this level - should have a comp defined
-      const pageSiblings = entry.routes.filter(r => r.comp)
+      // Exclude routes with skipNav: false
+      const pageSiblings = entry.routes.filter(r => r.comp && !r.skipNav)
 
       // Build nav only if there is more than one sibling page
       nav =

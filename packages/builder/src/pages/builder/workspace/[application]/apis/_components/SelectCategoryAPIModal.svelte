@@ -216,7 +216,6 @@
     bind:this={scrollContainer}
     on:scroll={handleScroll}
   >
-    <div class="shadow"></div>
     <div class="contents">
       {#if activeGroup}
         <div class="group-step">
