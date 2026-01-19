@@ -7,7 +7,7 @@
   import ChatApp from "./_components/ChatApp.svelte"
   import ChatSettingsPanel from "./_components/ChatSettingsPanel.svelte"
 
-  type EnabledAgent = { agentId: string }
+  type EnabledAgent = { agentId: string; default?: boolean }
 
   $: namedAgents = agents.filter(agent => Boolean(agent?.name))
   $: chatApp = $currentChatApp
@@ -64,6 +64,31 @@
 
     await chatAppsStore.updateEnabledAgents(nextEnabledAgents)
   }
+
+  const handleDefaultToggle = async (agentId: string) => {
+    const workspaceId = $params.application
+    if (!workspaceId) {
+      return
+    }
+
+    if (!agentId || !isAgentAvailable(agentId)) {
+      return
+    }
+
+    // Ensure we have a chat app loaded before updating enabled agents
+    await chatAppsStore.ensureChatApp(undefined, workspaceId)
+
+    const current = enabledAgents
+    const hasAgent = current.some(agent => agent.agentId === agentId)
+    const baseAgents = hasAgent ? current : [...current, { agentId }]
+
+    const nextEnabledAgents = baseAgents.map(agent => ({
+      agentId: agent.agentId,
+      default: agent.agentId === agentId,
+    }))
+
+    await chatAppsStore.updateEnabledAgents(nextEnabledAgents)
+  }
 </script>
 
 <div class="wrapper">
@@ -74,6 +99,7 @@
       {enabledAgents}
       {isAgentAvailable}
       {handleAvailabilityToggle}
+      {handleDefaultToggle}
     />
 
     {#if $params.application}
