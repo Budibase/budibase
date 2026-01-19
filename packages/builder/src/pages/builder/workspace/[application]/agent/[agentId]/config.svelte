@@ -90,6 +90,7 @@
   let saving = $state(false)
   let togglingLive = $state(false)
   let getCaretPosition: CaretPositionFn | undefined = $state.raw()
+  let chatPanelKey = $state(0)
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let completionConfigs = $derived(
@@ -862,10 +863,22 @@
       </div>
     </div>
     <div class="config-pane config-preview">
-      <AgentChatPanel
-        agentId={currentAgent?._id}
-        workspaceId={$params.application || ""}
-      />
+      <div class="chat-preview-header">
+        <span class="chat-preview-pill">Chat preview</span>
+        <button
+          class="chat-preview-refresh"
+          type="button"
+          on:click={() => (chatPanelKey += 1)}
+        >
+          Refresh chat
+        </button>
+      </div>
+      {#key chatPanelKey}
+        <AgentChatPanel
+          agentId={currentAgent?._id}
+          workspaceId={$params.application || ""}
+        />
+      {/key}
     </div>
   </div>
 </div>
@@ -919,11 +932,45 @@
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
+    padding: 0;
+    height: 100%;
+  }
+
+  .chat-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-m) var(--spacing-l);
+    background: var(--spectrum-global-color-gray-900);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-800);
+    flex-shrink: 0;
+  }
+
+  .chat-preview-pill {
+    background: var(--spectrum-global-color-gray-800);
+    color: var(--spectrum-global-color-gray-50);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .chat-preview-refresh {
+    background: transparent;
+    border: none;
+    color: var(--spectrum-global-color-gray-400);
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .chat-preview-refresh:hover {
+    color: var(--spectrum-global-color-gray-200);
   }
 
   .config-preview :global(.agent-chat-panel) {
     flex: 1 1 auto;
     min-height: 0;
+    padding: var(--spacing-l);
   }
 
   .config-preview :global(.chat-area) {

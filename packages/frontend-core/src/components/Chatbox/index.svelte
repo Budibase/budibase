@@ -419,8 +419,6 @@
     position: sticky;
     bottom: 0;
     width: 100%;
-    background: var(--background-alt);
-    padding-bottom: 32px;
     display: flex;
     flex-direction: column;
   }
