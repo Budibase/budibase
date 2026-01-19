@@ -33,7 +33,7 @@
   let lastConnectorCount = 0
   let searchValue = ""
   let lastSearchValue = ""
-  const itemsPerPage = 15
+  const itemsPerPage = 24
 
   $: normalizedSearchValue = searchValue.trim().toLowerCase()
   $: if (normalizedSearchValue !== lastSearchValue) {
@@ -106,13 +106,13 @@
         description: template.description,
       }))
     : []
-  $: selectedGroupTemplate =
+  $: selectedTemplateGroupItem =
     activeGroup && activeGroupTemplateName
       ? activeGroup.templates.find(
           template => template.name === activeGroupTemplateName
         ) || null
       : null
-  $: selectedGroupTemplateDescription = activeGroupOptions.find(
+  $: selectedTemplateGroupItemDescription = activeGroupOptions.find(
     option => option.value === activeGroupTemplateName
   )?.description
 
@@ -134,16 +134,17 @@
   const resetGroupSelection = () => {
     activeGroup = null
     activeGroupTemplateName = null
+    searchValue = ""
   }
 
   const confirmGroupTemplateSelection = () => {
-    if (!activeGroup || !selectedGroupTemplate) {
+    if (!activeGroup || !selectedTemplateGroupItem) {
       return
     }
     dispatch("selectTemplate", {
       kind: "group",
       groupName: activeGroup.name,
-      template: selectedGroupTemplate,
+      template: selectedTemplateGroupItem,
     })
   }
 
@@ -169,16 +170,23 @@
     loadingMore = false
   }
 
-  onMount(() => {
+  const ensureObserver = () => {
     if (!scrollContainer || !loadTrigger) {
       return
     }
-    observer = new IntersectionObserver(handleIntersect, {
-      root: scrollContainer,
-      rootMargin: "80px",
-      threshold: 0.1,
-    })
+    observer?.disconnect()
+    if (!observer) {
+      observer = new IntersectionObserver(handleIntersect, {
+        root: scrollContainer,
+        rootMargin: "80px",
+        threshold: 0.1,
+      })
+    }
     observer.observe(loadTrigger)
+  }
+
+  onMount(() => {
+    ensureObserver()
   })
 
   onDestroy(() => {
@@ -187,6 +195,12 @@
       observer = null
     }
   })
+
+  $: if (activeGroup) {
+    observer?.disconnect()
+  } else if (loadTrigger) {
+    ensureObserver()
+  }
 </script>
 
 <div class="api-main" class:scrolling>
@@ -238,9 +252,9 @@
               bind:value={activeGroupTemplateName}
               disabled={loading}
             />
-            {#if selectedGroupTemplateDescription}
+            {#if selectedTemplateGroupItemDescription}
               <DescriptionViewer
-                description={selectedGroupTemplateDescription}
+                description={selectedTemplateGroupItemDescription}
                 label={undefined}
               />
             {/if}
@@ -252,7 +266,7 @@
             <Button
               cta
               on:click={confirmGroupTemplateSelection}
-              disabled={!selectedGroupTemplate || loading}
+              disabled={!selectedTemplateGroupItem || loading}
             >
               Use template
             </Button>
@@ -278,7 +292,13 @@
                 <img src={card.icon} alt={card.name} />
               </div>
 
-              {card.name}
+              <div class="api-name">{card.name}</div>
+              {#if card.type === "group" ? card.group.verified : card.template.verified}
+                <i
+                  class="ph ph-seal-check verified-icon"
+                  aria-label="Verified template"
+                ></i>
+              {/if}
             </div>
           {/each}
         </div>
@@ -291,14 +311,15 @@
 <style>
   .grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, 190px);
+    justify-content: space-between;
     gap: 12px;
   }
 
   .api {
     display: flex;
     height: 38px;
-    padding: 6px 12px;
+    padding: 6px 32px 6px 12px;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
@@ -326,13 +347,21 @@
   }
 
   .api img {
-    width: 20px;
-    height: 20px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .api-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .api-icon {
     border-radius: 4px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
     display: flex;
     width: 36px;
     height: 36px;
@@ -345,6 +374,14 @@
   .api-icon.group-icon {
     width: 48px;
     height: 48px;
+  }
+
+  .verified-icon {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 16px;
+    flex-shrink: 0;
+    position: absolute;
+    right: 12px;
   }
 
   .api-header {
@@ -382,7 +419,7 @@
     min-height: 0;
     position: relative;
     height: calc(
-      (5 * 51px) + (4 * 12px) + var(--spacing-xl) + var(--spacing-l)
+      (6 * 51px) + (5 * 12px) + var(--spacing-xl) + var(--spacing-l)
     );
   }
 

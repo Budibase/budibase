@@ -6,6 +6,7 @@ const chat: ChatConversationRequest = {
   title: "Test chat",
   messages: [],
   chatAppId: "chatapp-123",
+  agentId: "agent-123",
 }
 
 const createStreamResponse = (sse: string) =>

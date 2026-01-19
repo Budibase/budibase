@@ -115,6 +115,7 @@
     "openai": "5.12.1",
     "openapi-types": "9.3.1",
     "oracledb": "6.5.1",
+    "pdf-parse": "^2.4.5",
     "pg": "8.10.0",
     "pouchdb": "9.0.0",
     "pouchdb-all-dbs": "1.1.1",
@@ -133,6 +134,7 @@
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xml2js": "0.6.2",
+    "yaml": "^2.8.2",
     "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
@@ -171,7 +173,7 @@
     "jest-openapi": "0.14.2",
     "nock": "13.5.4",
     "nodemon": "2.0.15",
-    "openapi-typescript": "5.2.0",
+    "openapi-typescript": "7.10.1",
     "rimraf": "3.0.2",
     "supertest": "6.3.3",
     "swagger-jsdoc": "6.1.0",

@@ -16,7 +16,6 @@
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
   import {
     AbsTooltip,
     ActionButton,
@@ -61,8 +60,6 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-
-  $: canDuplicate = $featureFlags.DUPLICATE_APP
 
   const filters: {
     label: string
@@ -190,7 +187,7 @@
       {
         icon: "copy",
         name: "Duplicate",
-        visible: canDuplicate,
+        visible: true,
         disabled: isDuplicating,
         callback: () =>
           !isDuplicating && duplicateWorkspaceApp(workspaceApp._id as string),

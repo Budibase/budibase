@@ -12,32 +12,44 @@ import {
   JwtClaims,
   SaveSSOUserFunction,
 } from "@budibase/types"
+import {
+  Strategy as OIDCStrategy,
+  VerifyFunction,
+} from "@govtechsg/passport-openidconnect"
+import type OpenIDConnectStrategy from "@govtechsg/passport-openidconnect"
 
-const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
+type OIDCUserInfoProfile = OpenIDConnectStrategy.MergedProfile & {
+  _json?: {
+    email?: string
+  }
+  provider?: string
+}
 
-export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
+export function buildVerifyFn(saveUserFn: SaveSSOUserFunction): VerifyFunction {
   /**
    * @param issuer The identity provider base URL
-   * @param sub The user ID
-   * @param profile The user profile information. Created by passport from the /userinfo response
-   * @param jwtClaims The parsed id_token claims
+   * @param uiProfile The user profile information created by passport from the /userinfo response
+   * @param idProfile The user profile information created from the id_token claims
+   * @param context The auth context derived from id_token claims
+   * @param idToken The id_token - always a JWT
    * @param accessToken The access_token for contacting the identity provider - may or may not be a JWT
    * @param refreshToken The refresh_token for obtaining a new access_token - usually not a JWT
-   * @param idToken The id_token - always a JWT
    * @param params The response body from requesting an access_token
    * @param done The passport callback: err, user, info
    */
   return async (
     issuer: string,
-    sub: string,
-    profile: SSOProfile,
-    jwtClaims: JwtClaims,
+    uiProfile: OIDCUserInfoProfile | undefined,
+    idProfile: OpenIDConnectStrategy.Profile,
+    _context: OpenIDConnectStrategy.AuthContext,
+    _idToken: string,
     accessToken: string,
     refreshToken: string,
-    idToken: string,
-    params: any,
-    done: Function
+    _params: Record<string, unknown>,
+    done: OpenIDConnectStrategy.VerifyCallback
   ) => {
+    const profile = normalizeProfile(uiProfile, idProfile)
+    const jwtClaims = buildJwtClaims(uiProfile, idProfile)
     const details: SSOAuthDetails = {
       // store the issuer info to enable sync in future
       provider: issuer,
@@ -57,6 +69,40 @@ export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
       done,
       saveUserFn
     )
+  }
+}
+
+function normalizeProfile(
+  uiProfile: OIDCUserInfoProfile | undefined,
+  idProfile: OpenIDConnectStrategy.Profile
+): SSOProfile {
+  const profileJson = { ...(uiProfile?._json || {}) }
+
+  if (!profileJson.email && idProfile.emails?.length) {
+    profileJson.email = idProfile.emails[0].value
+  }
+
+  const displayName = uiProfile?.displayName || idProfile.displayName
+
+  return {
+    id: uiProfile?.id || idProfile.id,
+    name:
+      uiProfile?.name ||
+      idProfile.name ||
+      (!!displayName && { givenName: displayName, familyName: "" }) ||
+      undefined,
+    _json: profileJson,
+    provider: uiProfile?.provider,
+  }
+}
+
+function buildJwtClaims(
+  uiProfile: OIDCUserInfoProfile | undefined,
+  idProfile: OpenIDConnectStrategy.Profile
+): JwtClaims {
+  return {
+    email: uiProfile?._json?.email || idProfile.emails?.[0]?.value,
+    preferred_username: idProfile.username,
   }
 }
 

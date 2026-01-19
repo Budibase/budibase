@@ -5,7 +5,12 @@
 
   export let intro: string = "Ask our assistant anything about this app."
 
-  let chat: ChatConversationRequest = { title: "", messages: [], chatAppId: "" }
+  let chat: ChatConversationRequest = {
+    title: "",
+    messages: [],
+    chatAppId: "",
+    agentId: "",
+  }
   $: workspaceId = $appStore?.appId ?? null
 </script>
 

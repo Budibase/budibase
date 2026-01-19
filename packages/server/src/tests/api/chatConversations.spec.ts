@@ -1,7 +1,16 @@
 import { context, docIds, roles } from "@budibase/backend-core"
-import type { ChatApp, ChatConversation, User } from "@budibase/types"
+import type {
+  ChatApp,
+  ChatConversation,
+  ChatConversationRequest,
+  User,
+} from "@budibase/types"
 import TestConfiguration from "../utilities/TestConfiguration"
-import { prepareChatConversationForSave } from "../../api/controllers/ai/chatConversations"
+import {
+  findLatestUserQuestion,
+  prepareChatConversationForSave,
+  truncateTitle,
+} from "../../api/controllers/ai/chatConversations"
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
@@ -31,12 +40,13 @@ describe("chat conversations authorization", () => {
         const now = new Date().toISOString()
         chatApp = {
           _id: docIds.generateChatAppID(),
-          agentId: "agent-1",
+          enabledAgents: [{ agentId: "agent-1" }],
           createdAt: now,
         }
         convoA = {
           _id: docIds.generateChatConversationID(),
           chatAppId: chatApp._id!,
+          agentId: "agent-1",
           userId: userA._id!,
           messages: [],
           title: "user A conversation",
@@ -45,6 +55,7 @@ describe("chat conversations authorization", () => {
         convoB = {
           _id: docIds.generateChatConversationID(),
           chatAppId: chatApp._id!,
+          agentId: "agent-1",
           userId: userB._id!,
           messages: [],
           title: "user B conversation",
@@ -52,12 +63,13 @@ describe("chat conversations authorization", () => {
         }
         otherChatApp = {
           _id: docIds.generateChatAppID(),
-          agentId: "agent-2",
+          enabledAgents: [{ agentId: "agent-2" }],
           createdAt: now,
         }
         otherAppConvo = {
           _id: docIds.generateChatConversationID(),
           chatAppId: otherChatApp._id!,
+          agentId: "agent-2",
           userId: userA._id!,
           messages: [],
           title: "other app conversation",
@@ -145,6 +157,7 @@ describe("prepareChatConversationForSave", () => {
       _id: "chat-1",
       _rev: "1",
       chatAppId: "chat-app-1",
+      agentId: "agent-1",
       userId: "user-1",
       title: "old title",
       messages: [],
@@ -171,6 +184,7 @@ describe("prepareChatConversationForSave", () => {
     const chat: ChatConversation = {
       _id: "chat-2",
       chatAppId: "chat-app-2",
+      agentId: "agent-2",
       userId: "user-2",
       title: "new chat",
       messages: [],
@@ -187,6 +201,46 @@ describe("prepareChatConversationForSave", () => {
 
     expect(result.createdAt).toEqual(now.toISOString())
     expect(result.updatedAt).toEqual(now.toISOString())
+  })
+})
+
+describe("chat conversation title helpers", () => {
+  const baseChat: ChatConversationRequest = {
+    _id: "chat-1",
+    chatAppId: "chat-app-1",
+    agentId: "agent-1",
+    messages: [],
+  }
+
+  it("finds the latest user message", () => {
+    const chat: ChatConversationRequest = {
+      ...baseChat,
+      messages: [
+        {
+          id: "message-1",
+          role: "user",
+          parts: [{ type: "text", text: "first question" }],
+        },
+        {
+          id: "message-2",
+          role: "assistant",
+          parts: [{ type: "text", text: "assistant reply" }],
+        },
+        {
+          id: "message-3",
+          role: "user",
+          parts: [{ type: "text", text: "latest question" }],
+        },
+      ],
+    }
+
+    expect(findLatestUserQuestion(chat)).toBe("latest question")
+  })
+
+  it("truncates titles with an ellipsis", () => {
+    const longMessage = "a".repeat(130)
+
+    expect(truncateTitle(longMessage)).toBe(`${"a".repeat(117)}...`)
   })
 })
 
@@ -210,6 +264,7 @@ describe("chat conversation path validation", () => {
       .set(headers)
       .send({
         chatAppId: "chatapp-body",
+        agentId: "agent-1",
         messages: [],
         title: "hello",
       })
@@ -226,6 +281,7 @@ describe("chat conversation path validation", () => {
       .set(headers)
       .send({
         chatAppId: "chatapp-path",
+        agentId: "agent-1",
         _id: "convo-body",
         messages: [],
         title: "hello",

@@ -2,6 +2,8 @@
   import { MarkdownViewer, notifications } from "@budibase/bbui"
   import type {
     ChatConversation,
+    DraftChatConversation,
+    AgentMessageMetadata,
     ChatConversationRequest,
   } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
@@ -11,8 +13,8 @@
   import { onMount } from "svelte"
   import { createEventDispatcher } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
-  import type { UIMessage } from "ai"
   import { v4 as uuidv4 } from "uuid"
+  import type { UIMessage } from "ai"
 
   export let workspaceId: string
   export let API = createAPIClient({
@@ -22,7 +24,7 @@
       }
     },
   })
-  type ChatConversationLike = ChatConversation | ChatConversationRequest
+  type ChatConversationLike = ChatConversation | DraftChatConversation
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
@@ -49,10 +51,19 @@
     try {
       const chatApp = await API.fetchChatApp(workspaceId)
       if (chatApp?._id) {
-        const baseChat = chat || { title: "", messages: [], chatAppId: "" }
+        const baseChat = chat || {
+          title: "",
+          messages: [],
+          chatAppId: "",
+          agentId: "",
+        }
+        const fallbackAgentId = chatApp.enabledAgents?.[0]?.agentId
         chat = {
           ...baseChat,
           chatAppId: chatApp._id,
+          ...(fallbackAgentId && !baseChat.agentId
+            ? { agentId: fallbackAgentId }
+            : {}),
         }
         return chatApp._id
       }
@@ -80,13 +91,19 @@
     const resolvedChatAppId = await ensureChatApp()
 
     if (!chat) {
-      chat = { title: "", messages: [], chatAppId: "" }
+      chat = { title: "", messages: [], chatAppId: "", agentId: "" }
     }
 
     const chatAppId = chat.chatAppId || resolvedChatAppId
+    const agentId = chat.agentId
 
     if (!chatAppId) {
       notifications.error("Chat app could not be created")
+      return
+    }
+
+    if (!agentId) {
+      notifications.error("Agent is required to start a chat")
       return
     }
 
@@ -95,6 +112,7 @@
         const newChat = await API.createChatConversation(
           {
             chatAppId,
+            agentId,
             title: chat.title,
           },
           workspaceId
@@ -114,7 +132,7 @@
       }
     }
 
-    const userMessage: UIMessage = {
+    const userMessage: UIMessage<AgentMessageMetadata> = {
       id: uuidv4(),
       role: "user",
       parts: [{ type: "text", text: inputValue }],
@@ -134,14 +152,39 @@
 
     try {
       const messageStream = await API.streamChatConversation(
-        updatedChat,
+        updatedChat as ChatConversationRequest,
         workspaceId
       )
 
-      let streamedMessages: UIMessage[] = [...updatedChat.messages]
+      let streamedMessages = [...updatedChat.messages]
 
       for await (const message of messageStream) {
-        streamedMessages = [...streamedMessages, message]
+        if (message?.id) {
+          const existingIndex = streamedMessages.findIndex(
+            existing => existing.id === message.id
+          )
+          if (existingIndex !== -1) {
+            streamedMessages = streamedMessages.map((existing, index) =>
+              index === existingIndex ? message : existing
+            )
+          } else {
+            streamedMessages = [...streamedMessages, message]
+          }
+        } else if (message?.role === "assistant") {
+          const lastIndex = [...streamedMessages]
+            .reverse()
+            .findIndex(existing => existing.role === "assistant")
+          if (lastIndex !== -1) {
+            const targetIndex = streamedMessages.length - 1 - lastIndex
+            streamedMessages = streamedMessages.map((existing, index) =>
+              index === targetIndex ? message : existing
+            )
+          } else {
+            streamedMessages = [...streamedMessages, message]
+          }
+        } else {
+          streamedMessages = [...streamedMessages, message]
+        }
         chat = {
           ...updatedChat,
           messages: streamedMessages,
@@ -285,6 +328,27 @@
               </div>
             {/if}
           {/each}
+          {#if message.metadata?.ragSources?.length}
+            <div class="sources">
+              <div class="sources-title">Sources</div>
+              <ul>
+                {#each message.metadata.ragSources as source (source.sourceId)}
+                  <li class="source-item">
+                    <span class="source-name"
+                      >{source.filename || source.sourceId}</span
+                    >
+                    {#if source.chunkCount > 0}
+                      <span class="source-count"
+                        >({source.chunkCount} chunk{source.chunkCount === 1
+                          ? ""
+                          : "s"})</span
+                      >
+                    {/if}
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
         </div>
       {/if}
     {/each}
@@ -319,8 +383,7 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-    width: 600px;
-    margin: 0 auto;
+    width: 100%;
     flex: 1 1 auto;
     padding: 48px 0 24px 0;
   }
@@ -355,8 +418,7 @@
   .input-wrapper {
     position: sticky;
     bottom: 0;
-    width: 600px;
-    margin: 0 auto;
+    width: 100%;
     background: var(--background-alt);
     padding-bottom: 32px;
     display: flex;
@@ -479,5 +541,43 @@
     font-size: 13px;
     color: var(--spectrum-global-color-gray-800);
     font-style: italic;
+  }
+
+  .sources {
+    margin-top: var(--spacing-m);
+    padding-top: var(--spacing-s);
+    border-top: 1px solid var(--grey-3);
+  }
+
+  .sources-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--spectrum-global-color-gray-600);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .sources ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .source-item {
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .source-name {
+    font-weight: 500;
+  }
+
+  .source-count {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

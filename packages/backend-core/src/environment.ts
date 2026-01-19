@@ -266,6 +266,12 @@ const environment = {
     process.env.MIN_VERSION_WITHOUT_POWER_ROLE || "3.0.0",
   DISABLE_CONTENT_SECURITY_POLICY: process.env.DISABLE_CONTENT_SECURITY_POLICY,
   BSON_BUFFER_SIZE: parseIntSafe(process.env.BSON_BUFFER_SIZE),
+  CUSTOM_CSP_MEDIA_SRC: process.env.CUSTOM_CSP_MEDIA_SRC,
+  CUSTOM_CSP_SCRIPT_SRC: process.env.CUSTOM_CSP_SCRIPT_SRC,
+  CUSTOM_CSP_CONNECT_SRC: process.env.CUSTOM_CSP_CONNECT_SRC,
+  CUSTOM_CSP_IMG_SRC: process.env.CUSTOM_CSP_IMG_SRC,
+  CUSTOM_CSP_FONT_SRC: process.env.CUSTOM_CSP_FONT_SRC,
+  CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
