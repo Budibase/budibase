@@ -26,6 +26,21 @@ if (automationsEnabled()) {
   Runner = new Thread(ThreadType.AUTOMATION)
 }
 
+function isWorkspaceDatabaseMissing(err: unknown) {
+  if (!err || typeof err !== "object") {
+    return false
+  }
+  const error = err as {
+    reason?: string
+    message?: string
+  }
+  const DATABASE_NOT_FOUND_REASON = "Database does not exist."
+  return (
+    error.reason === DATABASE_NOT_FOUND_REASON ||
+    error.message?.includes(DATABASE_NOT_FOUND_REASON) === true
+  )
+}
+
 function isLegacyRepeatableJobId(jobId?: string) {
   return !!jobId?.startsWith("repeat:")
 }
@@ -143,6 +158,9 @@ export async function processEvent(job: AutomationJob) {
       } catch (err) {
         span.addTags({ error: true })
         console.error(`automation was unable to run`, err, ...loggingArgs(job))
+        if (job.opts.repeat && job.id && isWorkspaceDatabaseMissing(err)) {
+          await disableCronById(job.id)
+        }
         return { err }
       }
     }
