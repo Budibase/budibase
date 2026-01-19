@@ -103,7 +103,9 @@
     />
 
     {#if $params.application}
-      <ChatApp workspaceId={$params.application} />
+      <div class="chat-app-container">
+        <ChatApp workspaceId={$params.application} />
+      </div>
     {/if}
   </div>
 </div>
@@ -126,5 +128,16 @@
     height: 0;
     width: 100%;
     align-items: stretch;
+  }
+
+  .chat-app-container {
+    flex: 1 1 auto;
+    display: flex;
+    margin: var(--spacing-xl);
+    border-radius: 24px;
+    border: var(--border-light);
+    background: var(--background);
+    overflow: hidden;
+    min-width: 0;
   }
 </style>

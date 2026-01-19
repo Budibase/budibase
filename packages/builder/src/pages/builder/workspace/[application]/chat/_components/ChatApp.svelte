@@ -222,22 +222,35 @@
   })
 </script>
 
-<ChatNavigationPanel
-  {enabledAgentList}
-  {conversationHistory}
-  selectedConversationId={$chatAppsStore.currentConversationId}
-  on:agentSelected={handleAgentSelected}
-  on:conversationSelected={handleConversationSelected}
-/>
+<div class="chat-app">
+  <ChatNavigationPanel
+    {enabledAgentList}
+    {conversationHistory}
+    selectedConversationId={$chatAppsStore.currentConversationId}
+    on:agentSelected={handleAgentSelected}
+    on:conversationSelected={handleConversationSelected}
+  />
 
-<ChatConversationPanel
-  bind:chat
-  {deletingChat}
-  {enabledAgentList}
-  {selectedAgentId}
-  {selectedAgentName}
-  {workspaceId}
-  on:deleteChat={deleteCurrentChat}
-  on:chatSaved={handleChatSaved}
-  on:agentSelected={handleAgentSelected}
-/>
+  <ChatConversationPanel
+    bind:chat
+    {deletingChat}
+    {enabledAgentList}
+    {selectedAgentId}
+    {selectedAgentName}
+    {workspaceId}
+    on:deleteChat={deleteCurrentChat}
+    on:chatSaved={handleChatSaved}
+    on:agentSelected={handleAgentSelected}
+  />
+</div>
+
+<style>
+  .chat-app {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: stretch;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+  }
+</style>
