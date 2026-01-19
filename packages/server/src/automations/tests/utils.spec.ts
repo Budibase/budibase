@@ -140,7 +140,7 @@ describe("enableCronOrEmailTrigger", () => {
         { key: "repeat:legacy2:123:::0 0 * * *" },
       ])
     mockGetBullQueue.mockReturnValue({
-      ...automationQueue.getBullQueue(),
+      ...(automationQueue.getBullQueue() ?? {}),
       removeRepeatableByKey: mockRemoveRepeatableByKey,
       getRepeatableJobs: mockGetRepeatableJobs,
     } as ReturnType<typeof automationQueue.getBullQueue>)
