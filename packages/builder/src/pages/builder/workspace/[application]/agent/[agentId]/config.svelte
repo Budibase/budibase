@@ -46,6 +46,7 @@
   import type { AgentTool } from "./toolTypes"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
   import FilesPanel from "./FilesPanel.svelte"
+  import AgentChatPanel from "./AgentChatPanel.svelte"
   import {
     EditorModes,
     hbAutocomplete,
@@ -59,7 +60,7 @@
     REST_TAG_ICON_URL,
     WEB_SEARCH_TAG_ICON_URL,
   } from "../logos/tagIconUrls"
-  import { goto } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
 
   $goto
@@ -860,7 +861,12 @@
         </Layout>
       </div>
     </div>
-    <div class="config-pane config-preview"></div>
+    <div class="config-pane config-preview">
+      <AgentChatPanel
+        agentId={currentAgent?._id}
+        workspaceId={$params.application || ""}
+      />
+    </div>
   </div>
 </div>
 
@@ -909,6 +915,19 @@
 
   .config-preview {
     flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .config-preview :global(.agent-chat-panel) {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .config-preview :global(.chat-area) {
+    height: 100%;
   }
 
   .config-form {
