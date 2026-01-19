@@ -1,7 +1,7 @@
 <script lang="ts">
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { contextMenuStore, workspaceFavouriteStore } from "@/stores/builder"
-  import { agentsStore } from "@/stores/portal"
+  import { agentsStore, featureFlags } from "@/stores/portal"
   import {
     ActionButton,
     Body,
@@ -20,6 +20,7 @@
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
   import AgentCard from "./AgentCard.svelte"
   import { onMount } from "svelte"
+  import { redirect } from "@roxi/routify"
 
   let showHighlight = false
   let upsertModal: AgentModal
@@ -108,7 +109,14 @@
       return b.updatedAt!.localeCompare(a.updatedAt!)
     })
 
+  $redirect
+
   onMount(async () => {
+    if ($featureFlags.WORKSPACE_HOME) {
+      $redirect($featureFlags.AI_AGENTS ? "../home?type=agent" : "../home")
+      return
+    }
+
     await agentsStore.fetchAgents()
   })
 </script>
