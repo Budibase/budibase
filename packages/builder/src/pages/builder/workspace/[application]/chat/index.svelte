@@ -136,7 +136,7 @@
     margin: var(--spacing-xl);
     border-radius: 24px;
     border: var(--border-light);
-    background: var(--background);
+    background: transparent;
     overflow: hidden;
     min-width: 0;
   }

@@ -35,62 +35,72 @@
   }
 </script>
 
-<Panel customWidth={260} borderRight noHeaderBorder>
-  {#if defaultAgent?.agentId}
-    <div class="list-section">
-      <button
-        class="new-chat"
-        on:click={() => selectAgent(defaultAgent.agentId)}
-      >
-        <span class="new-chat-icon">
-          <Icon name="plus" size="S" />
-        </span>
-        <span class="new-chat-label">New chat</span>
-      </button>
-    </div>
-  {/if}
-
-  <div class="list-section">
-    <div class="list-title">Agents</div>
-    {#if enabledAgentList.length}
-      {#each enabledAgentList as agent (agent.agentId)}
+<div class="chat-nav-panel">
+  <Panel customWidth={260} borderRight noHeaderBorder>
+    {#if defaultAgent?.agentId}
+      <div class="list-section">
         <button
-          class="list-item list-item-button"
-          on:click={() => selectAgent(agent.agentId)}
+          class="new-chat"
+          on:click={() => selectAgent(defaultAgent.agentId)}
         >
-          {agent.name}
+          <span class="new-chat-icon">
+            <Icon name="plus" size="S" />
+          </span>
+          <span class="new-chat-label">New chat</span>
         </button>
-      {/each}
-    {:else}
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        No agents
-      </Body>
+      </div>
     {/if}
-  </div>
 
-  <div class="list-section">
-    <div class="list-title">Recent Chats</div>
-    {#if conversationHistory.length}
-      {#each conversationHistory as conversation}
-        {#if conversation._id}
+    <div class="list-section">
+      <div class="list-title">Agents</div>
+      {#if enabledAgentList.length}
+        {#each enabledAgentList as agent (agent.agentId)}
           <button
             class="list-item list-item-button"
-            class:selected={selectedConversationId === conversation._id}
-            on:click={() => selectConversation(conversation._id!)}
+            on:click={() => selectAgent(agent.agentId)}
           >
-            {conversation.title || "Untitled Chat"}
+            {agent.name}
           </button>
-        {/if}
-      {/each}
-    {:else}
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        No recent chats
-      </Body>
-    {/if}
-  </div>
-</Panel>
+        {/each}
+      {:else}
+        <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+          No agents
+        </Body>
+      {/if}
+    </div>
+
+    <div class="list-section">
+      <div class="list-title">Recent Chats</div>
+      {#if conversationHistory.length}
+        {#each conversationHistory as conversation}
+          {#if conversation._id}
+            <button
+              class="list-item list-item-button"
+              class:selected={selectedConversationId === conversation._id}
+              on:click={() => selectConversation(conversation._id!)}
+            >
+              {conversation.title || "Untitled Chat"}
+            </button>
+          {/if}
+        {/each}
+      {:else}
+        <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+          No recent chats
+        </Body>
+      {/if}
+    </div>
+  </Panel>
+</div>
 
 <style>
+  .chat-nav-panel {
+    display: flex;
+  }
+
+  :global(.chat-nav-panel .panel) {
+    background: transparent;
+  }
+
   .list-section {
     padding: var(--spacing-m);
     display: flex;
