@@ -8,7 +8,10 @@ import type {
 import TestConfiguration from "../utilities/TestConfiguration"
 import {
   findLatestUserQuestion,
+  getUserMessageTexts,
   prepareChatConversationForSave,
+  shouldRegenerateTitle,
+  stripThoughtTags,
   truncateTitle,
 } from "../../api/controllers/ai/chatConversations"
 
@@ -235,6 +238,46 @@ describe("chat conversation title helpers", () => {
     }
 
     expect(findLatestUserQuestion(chat)).toBe("latest question")
+  })
+
+  it("collects user message text", () => {
+    const chat: ChatConversationRequest = {
+      ...baseChat,
+      messages: [
+        {
+          id: "message-1",
+          role: "assistant",
+          parts: [{ type: "text", text: "assistant reply" }],
+        },
+        {
+          id: "message-2",
+          role: "user",
+          parts: [{ type: "text", text: "first question" }],
+        },
+        {
+          id: "message-3",
+          role: "user",
+          parts: [{ type: "text", text: "second question" }],
+        },
+      ],
+    }
+
+    expect(getUserMessageTexts(chat.messages)).toEqual([
+      "first question",
+      "second question",
+    ])
+  })
+
+  it("regenerates titles at the interval", () => {
+    expect(shouldRegenerateTitle(2)).toBe(false)
+    expect(shouldRegenerateTitle(3)).toBe(true)
+    expect(shouldRegenerateTitle(6)).toBe(false)
+  })
+
+  it("strips thought tags", () => {
+    expect(stripThoughtTags("<think>draft</think>Hello Chat")).toBe(
+      "Hello Chat"
+    )
   })
 
   it("truncates titles with an ellipsis", () => {
