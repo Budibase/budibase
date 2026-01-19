@@ -28,6 +28,7 @@
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
+  export let persistConversation: boolean = true
 
   const dispatch = createEventDispatcher<{
     chatSaved: { chatId?: string; chat: ChatConversationLike }
@@ -107,7 +108,11 @@
       return
     }
 
-    if (!chat._id && (!chat.messages || chat.messages.length === 0)) {
+    if (
+      persistConversation &&
+      !chat._id &&
+      (!chat.messages || chat.messages.length === 0)
+    ) {
       try {
         const newChat = await API.createChatConversation(
           {
@@ -141,6 +146,7 @@
     const updatedChat: ChatConversationLike = {
       ...chat,
       chatAppId: chat.chatAppId,
+      transient: !persistConversation,
       messages: [...chat.messages, userMessage],
     }
 
@@ -195,7 +201,7 @@
       // When a chat is created for the first time the server generates the ID.
       // If we don't have it locally yet, retrieve the saved conversation so
       // subsequent prompts append to the same document instead of creating a new one.
-      if (!chat._id && chat.chatAppId) {
+      if (persistConversation && !chat._id && chat.chatAppId) {
         try {
           const history = await API.fetchChatHistory(chat.chatAppId)
           const lastMessageId = chat.messages[chat.messages.length - 1]?.id

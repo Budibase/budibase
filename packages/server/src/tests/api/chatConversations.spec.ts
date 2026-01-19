@@ -1,16 +1,54 @@
 import { context, docIds, roles } from "@budibase/backend-core"
 import type {
+  Agent,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
   User,
 } from "@budibase/types"
+import sdk from "../../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 import {
+  agentChatStream,
   findLatestUserQuestion,
   prepareChatConversationForSave,
   truncateTitle,
 } from "../../api/controllers/ai/chatConversations"
+
+jest.mock("@budibase/pro", () => ({
+  ai: {
+    createLiteLLMOpenAI: jest.fn(() => ({
+      chat: () => ({}),
+    })),
+  },
+}))
+
+jest.mock("ai", () => ({
+  convertToModelMessages: jest.fn(async () => []),
+  extractReasoningMiddleware: jest.fn(() => ({})),
+  streamText: jest.fn(() => ({
+    pipeUIMessageStreamToResponse: (_res: any, options: any) => {
+      options.onFinish({ messages: [] })
+    },
+  })),
+  wrapLanguageModel: jest.fn((model: any) => model),
+}))
+
+jest.mock("../../../sdk", () => ({
+  __esModule: true,
+  default: {
+    ai: {
+      agents: {
+        getOrThrow: jest.fn(),
+        listAgentFiles: jest.fn(),
+        buildPromptAndTools: jest.fn(),
+      },
+    },
+    aiConfigs: {
+      getLiteLLMModelConfigOrThrow: jest.fn(),
+    },
+  },
+}))
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()

@@ -868,7 +868,7 @@
         <button
           class="chat-preview-refresh"
           type="button"
-          on:click={() => (chatPanelKey += 1)}
+          onclick={() => (chatPanelKey += 1)}
         >
           Refresh chat
         </button>
@@ -941,14 +941,12 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--spacing-m) var(--spacing-l);
-    background: var(--spectrum-global-color-gray-900);
-    border-bottom: 1px solid var(--spectrum-global-color-gray-800);
     flex-shrink: 0;
   }
 
   .chat-preview-pill {
-    background: var(--spectrum-global-color-gray-800);
-    color: var(--spectrum-global-color-gray-50);
+    background: var(--spectrum-global-color-gray-200);
+    color: white;
     padding: 6px 12px;
     border-radius: 10px;
     font-size: 14px;
@@ -958,13 +956,9 @@
   .chat-preview-refresh {
     background: transparent;
     border: none;
-    color: var(--spectrum-global-color-gray-400);
+    color: white;
     font-size: 14px;
     cursor: pointer;
-  }
-
-  .chat-preview-refresh:hover {
-    color: var(--spectrum-global-color-gray-200);
   }
 
   .config-preview :global(.agent-chat-panel) {

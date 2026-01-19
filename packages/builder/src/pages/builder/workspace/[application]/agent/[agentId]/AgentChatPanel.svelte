@@ -47,7 +47,12 @@
 </script>
 
 <div class="agent-chat-panel">
-  <Chatbox bind:chat loading={false} {workspaceId} />
+  <Chatbox
+    bind:chat
+    loading={false}
+    persistConversation={false}
+    {workspaceId}
+  />
 </div>
 
 <style>
