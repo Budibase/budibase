@@ -1,4 +1,7 @@
-import { type GetWorkspaceHomeMetricsResponse, type UserCtx } from "@budibase/types"
+import {
+  type GetWorkspaceHomeMetricsResponse,
+  type UserCtx,
+} from "@budibase/types"
 
 const getUtcMonthWindow = () => {
   const now = new Date()
