@@ -103,12 +103,12 @@
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
+    padding: 0 32px;
+    box-sizing: border-box;
   }
 
   .chat-header {
-    width: 600px;
-    max-width: 100%;
-    margin: 0 auto;
+    width: 100%;
     padding: var(--spacing-l) 0 var(--spacing-s);
     display: flex;
     align-items: center;
