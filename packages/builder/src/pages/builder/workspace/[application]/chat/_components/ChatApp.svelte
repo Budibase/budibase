@@ -36,6 +36,11 @@
   let selectedAgentId: string | null = null
   let syncingAgentSelection = false
   let lastObservedAgentId: string | null = null
+  let enabledAgentList: {
+    agentId: string
+    name?: string
+    default?: boolean
+  }[] = []
 
   $: agents = $agentsStore.agents || []
   $: chatApp = $currentChatApp
@@ -49,13 +54,24 @@
     ? getAgentName(selectedAgentId) || "Unknown agent"
     : ""
 
-  $: enabledAgentList = enabledAgents
-    .map(agent => ({
-      agentId: agent.agentId,
-      name: getAgentName(agent.agentId),
-      default: agent.default,
-    }))
-    .filter(agent => Boolean(agent.name))
+  $: {
+    const baseAgentList = enabledAgents
+      .map(agent => ({
+        agentId: agent.agentId,
+        name: getAgentName(agent.agentId),
+        default: agent.default,
+      }))
+      .filter(agent => Boolean(agent.name))
+
+    const defaultAgent = baseAgentList.find(agent => agent.default)
+    const sortedAgents = baseAgentList
+      .filter(agent => !agent.default)
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+
+    enabledAgentList = defaultAgent
+      ? [defaultAgent, ...sortedAgents]
+      : sortedAgents
+  }
 
   $: storeAgentId = $agentsStore.currentAgentId || null
   $: if (storeAgentId !== lastObservedAgentId) {
