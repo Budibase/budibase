@@ -1,7 +1,16 @@
 import { context, docIds, roles } from "@budibase/backend-core"
-import type { ChatApp, ChatConversation, User } from "@budibase/types"
+import type {
+  ChatApp,
+  ChatConversation,
+  ChatConversationRequest,
+  User,
+} from "@budibase/types"
 import TestConfiguration from "../utilities/TestConfiguration"
-import { prepareChatConversationForSave } from "../../api/controllers/ai/chatConversations"
+import {
+  findLatestUserQuestion,
+  prepareChatConversationForSave,
+  truncateTitle,
+} from "../../api/controllers/ai/chatConversations"
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
@@ -192,6 +201,46 @@ describe("prepareChatConversationForSave", () => {
 
     expect(result.createdAt).toEqual(now.toISOString())
     expect(result.updatedAt).toEqual(now.toISOString())
+  })
+})
+
+describe("chat conversation title helpers", () => {
+  const baseChat: ChatConversationRequest = {
+    _id: "chat-1",
+    chatAppId: "chat-app-1",
+    agentId: "agent-1",
+    messages: [],
+  }
+
+  it("finds the latest user message", () => {
+    const chat: ChatConversationRequest = {
+      ...baseChat,
+      messages: [
+        {
+          id: "message-1",
+          role: "user",
+          parts: [{ type: "text", text: "first question" }],
+        },
+        {
+          id: "message-2",
+          role: "assistant",
+          parts: [{ type: "text", text: "assistant reply" }],
+        },
+        {
+          id: "message-3",
+          role: "user",
+          parts: [{ type: "text", text: "latest question" }],
+        },
+      ],
+    }
+
+    expect(findLatestUserQuestion(chat)).toBe("latest question")
+  })
+
+  it("truncates titles with an ellipsis", () => {
+    const longMessage = "a".repeat(130)
+
+    expect(truncateTitle(longMessage)).toBe(`${"a".repeat(117)}...`)
   })
 })
 
