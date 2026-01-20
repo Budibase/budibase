@@ -9,7 +9,7 @@
     "@swc/core": "1.13.5",
     "@swc/jest": "0.2.39",
     "@types/jest": "^30.0.0",
-    "@types/node": "22.18.0",
+    "@types/node": "24.10.9",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/parser": "8.41.0",
     "@vitest/eslint-plugin": "^1.1.14",
