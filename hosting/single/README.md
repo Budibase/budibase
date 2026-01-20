@@ -51,7 +51,7 @@ apt install -y docker.io
 Check the versions of each installed version. This process was tested with the version numbers below so YMMV using anything else:
 
 - Docker: 22.11.0
-- node: 16.15.1
+- node: 24.13.0
 - yarn: 1.22.19
 - lerna: 5.1.4
 
