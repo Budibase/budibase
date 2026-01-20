@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 import { readFile, unlink } from "node:fs/promises"
 import sdk from "../../../sdk"
-import { ingestAgentFile } from "../../../sdk/workspace/ai/rag"
+import { ingestAgentFile } from "../../../sdk/workspace/ai/rag/files"
 
 const normalizeUpload = (fileInput: any) => {
   if (!fileInput) {

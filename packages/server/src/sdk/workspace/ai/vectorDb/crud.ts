@@ -2,7 +2,7 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { DocumentType, PASSWORD_REPLACEMENT, VectorDb } from "@budibase/types"
 
 export async function fetch(): Promise<VectorDb[]> {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const result = await db.allDocs<VectorDb>(
     docIds.getDocParams(DocumentType.VECTOR_STORE, undefined, {
       include_docs: true,
@@ -13,7 +13,7 @@ export async function fetch(): Promise<VectorDb[]> {
 }
 
 export async function find(id: string): Promise<VectorDb | undefined> {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const result = await db.tryGet<VectorDb>(id)
   if (!result || result._deleted) {
     return undefined
@@ -22,7 +22,7 @@ export async function find(id: string): Promise<VectorDb | undefined> {
 }
 
 export async function create(config: VectorDb): Promise<VectorDb> {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
 
   const newConfig: VectorDb = {
     _id: docIds.generateVectorDbID(),
@@ -46,7 +46,7 @@ export async function update(config: VectorDb): Promise<VectorDb> {
     throw new HTTPError("id and rev required", 400)
   }
 
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const existing = await db.tryGet<VectorDb>(config._id)
   if (!existing) {
     throw new HTTPError("Vector store config not found", 404)
@@ -70,7 +70,7 @@ export async function update(config: VectorDb): Promise<VectorDb> {
 }
 
 export async function remove(id: string) {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
 
   const existing = await db.get<VectorDb>(id)
   await db.remove(existing)

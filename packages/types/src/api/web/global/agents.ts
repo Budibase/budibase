@@ -1,3 +1,4 @@
+import { Optional } from "../../../shared"
 import {
   Agent,
   AgentFile,
@@ -23,9 +24,9 @@ export interface FetchAgentsResponse {
   agents: Agent[]
 }
 
-export type CreateAgentRequest = Omit<
-  Agent,
-  "_id" | "_rev" | "createdAt" | "updatedAt"
+export type CreateAgentRequest = Optional<
+  Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt">,
+  "aiconfig"
 >
 export type CreateAgentResponse = Agent
 

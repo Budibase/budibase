@@ -4,7 +4,6 @@
     ModalContent,
     Label,
     Input,
-    Toggle,
     Heading,
     notifications,
     keepOpen,
@@ -22,7 +21,6 @@
     : {
         provider: "",
         name: "",
-        isDefault: false,
         baseUrl: "",
         model: "",
         apiKey: "",
@@ -128,11 +126,6 @@
   <div class="row">
     <Label size="M">Model</Label>
     <Input placeholder="gpt-4o-mini" bind:value={draft.model} />
-  </div>
-
-  <div class="row">
-    <Label size="M">Use as default configuration</Label>
-    <Toggle bind:value={draft.isDefault} />
   </div>
 </ModalContent>
 
