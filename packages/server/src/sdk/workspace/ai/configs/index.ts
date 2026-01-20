@@ -1,5 +1,4 @@
 import { configs, context, docIds, HTTPError } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
 import {
   AIConfigType,
   ConfigType,
@@ -39,33 +38,6 @@ export async function find(
   return result ? withDefaults(result) : result
 }
 
-async function ensureSingleDefault(
-  configType: AIConfigType,
-  currentId?: string
-) {
-  const configs = await fetch()
-  const db = context.getWorkspaceDB()
-  const updates: CustomAIProviderConfig[] = []
-
-  for (const config of configs) {
-    if (
-      config.configType !== configType ||
-      !config.isDefault ||
-      config._id === currentId
-    ) {
-      continue
-    }
-    updates.push({
-      ...config,
-      isDefault: false,
-    })
-  }
-
-  if (updates.length) {
-    await db.bulkDocs(updates)
-  }
-}
-
 async function ensureLiteLLMConfigured() {
   let storedConfig = await configs.getSettingsConfigDoc()
   if (!storedConfig?.config.liteLLM?.keyId) {
@@ -97,7 +69,6 @@ export async function create(
 
   const newConfig: CustomAIProviderConfig = {
     _id: docIds.generateAIConfigID(),
-    isDefault: config.isDefault ?? false,
     name: config.name,
     baseUrl: config.baseUrl,
     provider: config.provider,
@@ -110,10 +81,6 @@ export async function create(
 
   const { rev } = await db.put(newConfig)
   newConfig._rev = rev
-
-  if (newConfig.isDefault) {
-    await ensureSingleDefault(config.configType, newConfig._id)
-  }
 
   await liteLLM.syncKeyModels()
 
@@ -149,13 +116,8 @@ export async function update(
   const { rev } = await db.put(updatedConfig)
   updatedConfig._rev = rev
 
-  if (updatedConfig.isDefault) {
-    await ensureSingleDefault(updatedConfig.configType, updatedConfig._id)
-  }
-
   const isWebSearchOnlyUpdate =
     existing.name === updatedConfig.name &&
-    existing.isDefault === updatedConfig.isDefault &&
     existing.provider === updatedConfig.provider &&
     existing.model === updatedConfig.model &&
     existing.baseUrl === updatedConfig.baseUrl &&
@@ -186,38 +148,9 @@ export async function remove(id: string) {
   await liteLLM.syncKeyModels()
 }
 
-async function getDefault(
-  type: AIConfigType
-): Promise<CustomAIProviderConfig | undefined> {
-  const allConfigs = await fetch()
-  return allConfigs.find(c => c.configType === type && c.isDefault)
-}
-
 async function getLiteLLMSecretKey() {
   const liteLLMConfig = await configs.getSettingsConfigDoc()
   return liteLLMConfig.config.liteLLM?.secretKey
-}
-
-export async function getLLMOrThrow() {
-  const aiConfig = await getDefault(AIConfigType.COMPLETIONS)
-  if (!aiConfig) {
-    throw new HTTPError("Chat config not found", 422)
-  }
-
-  const secretKey = await getLiteLLMSecretKey()
-  if (!secretKey) {
-    throw new HTTPError(
-      "LiteLLM should be configured. Contact support if the issue persists.",
-      422
-    )
-  }
-
-  const llm = await ai.getChatLLM({
-    model: aiConfig.liteLLMModelId,
-    baseUrl: environment.LITELLM_URL,
-    apiKey: secretKey,
-  })
-  return llm
 }
 
 export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
