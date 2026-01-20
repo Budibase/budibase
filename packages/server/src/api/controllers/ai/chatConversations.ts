@@ -25,7 +25,7 @@ import sdk from "../../../sdk"
 import {
   retrieveContextForSources,
   RetrievedContextChunk,
-} from "../../../sdk/workspace/ai/rag"
+} from "../../../sdk/workspace/ai/rag/files"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
