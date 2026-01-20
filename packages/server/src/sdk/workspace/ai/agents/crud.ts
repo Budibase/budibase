@@ -52,7 +52,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     _id: docIds.generateAgentID(),
     name: request.name,
     description: request.description,
-    aiconfig: request.aiconfig,
+    aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
     promptInstructions: request.promptInstructions,
     live: request.live ?? false,
     icon: request.icon,
