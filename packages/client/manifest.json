@@ -9180,36 +9180,48 @@
         "key": "disabled"
       },
       {
-        "type": "phosphorIcon",
-        "label": "Left icon",
-        "key": "iconLeft"
-      },
-      {
-        "type": "select",
-        "label": "Left icon size",
-        "key": "iconLeftSize",
-        "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
-        "defaultValue": "M",
-        "dependsOn": "iconLeft"
-      },
-      {
-        "type": "phosphorIcon",
-        "label": "Right icon",
-        "key": "iconRight"
-      },
-      {
-        "type": "select",
-        "label": "Right icon size",
-        "key": "iconRightSize",
-        "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
-        "defaultValue": "M",
-        "dependsOn": "iconRight"
-      },
-      {
         "type": "boolean",
-        "label": "Clickable icons",
-        "key": "iconIncDec",
-        "defaultValue": true
+        "label": "Show Icons",
+        "key": "showIcons"
+      },
+      {
+        "section": true,
+        "name": "Icons",
+        "dependsOn": "showIcons",
+        "settings": [
+          {
+            "type": "phosphorIcon",
+            "label": "Left icon",
+            "key": "iconLeft"
+          },
+          {
+            "type": "select",
+            "label": "Left icon size",
+            "key": "iconLeftSize",
+            "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+            "defaultValue": "M",
+            "dependsOn": "iconLeft"
+          },
+          {
+            "type": "phosphorIcon",
+            "label": "Right icon",
+            "key": "iconRight"
+          },
+          {
+            "type": "select",
+            "label": "Right icon size",
+            "key": "iconRightSize",
+            "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+            "defaultValue": "M",
+            "dependsOn": "iconRight"
+          },
+          {
+            "type": "boolean",
+            "label": "Clickable icons",
+            "key": "iconIncDec",
+            "defaultValue": true
+          }
+        ]
       }
     ],
     "context": {
