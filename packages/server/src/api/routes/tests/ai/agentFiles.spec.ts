@@ -4,14 +4,6 @@ import environment from "../../../../environment"
 import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
-jest.mock("../../../../sdk/workspace/ai/rag", () => {
-  const originalModule = jest.requireActual("../../../../sdk/workspace/ai/rag")
-  return {
-    __esModule: true,
-    ...originalModule,
-  }
-})
-
 jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
   const originalModule = jest.requireActual(
     "../../../../sdk/workspace/ai/rag/files"
