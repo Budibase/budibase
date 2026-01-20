@@ -1,13 +1,13 @@
 import { configs, context, docIds, HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
+  AIConfigType,
   ConfigType,
   CustomAIProviderConfig,
   DocumentType,
   PASSWORD_REPLACEMENT,
-  AIConfigType,
 } from "@budibase/types"
-import environment from "../../environment"
+import environment from "../../../../environment"
 import * as liteLLM from "./litellm"
 
 const withDefaults = (
@@ -18,7 +18,7 @@ const withDefaults = (
 })
 
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const result = await db.allDocs<CustomAIProviderConfig>(
     docIds.getDocParams(DocumentType.AI_CONFIG, undefined, {
       include_docs: true,
@@ -34,7 +34,7 @@ export async function fetch(): Promise<CustomAIProviderConfig[]> {
 export async function find(
   id: string
 ): Promise<CustomAIProviderConfig | undefined> {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const result = await db.tryGet<CustomAIProviderConfig>(id)
   return result ? withDefaults(result) : result
 }
@@ -44,7 +44,7 @@ async function ensureSingleDefault(
   currentId?: string
 ) {
   const configs = await fetch()
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const updates: CustomAIProviderConfig[] = []
 
   for (const config of configs) {
@@ -75,7 +75,7 @@ async function ensureLiteLLMConfigured() {
       keyId: key.id,
       secretKey: key.secret,
     }
-    await context.getGlobalDB().put(storedConfig)
+    await configs.save(storedConfig)
   }
   return storedConfig.config.liteLLM
 }
@@ -85,7 +85,7 @@ export async function create(
 ): Promise<CustomAIProviderConfig> {
   await ensureLiteLLMConfigured()
 
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
 
   const modelId = await liteLLM.addModel({
     provider: config.provider,
@@ -145,7 +145,7 @@ export async function update(
     ...config,
   }
 
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const { rev } = await db.put(updatedConfig)
   updatedConfig._rev = rev
 
@@ -178,7 +178,7 @@ export async function update(
 }
 
 export async function remove(id: string) {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
 
   const existing = await db.get<CustomAIProviderConfig>(id)
   await db.remove(existing)

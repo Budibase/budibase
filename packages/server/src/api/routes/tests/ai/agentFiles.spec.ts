@@ -2,13 +2,25 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { AgentFileStatus, AIConfigType } from "@budibase/types"
 import nock from "nock"
 import environment from "../../../../environment"
-import * as ragSdk from "../../../../sdk/workspace/ai/rag"
+import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
 
 jest.mock("../../../../sdk/workspace/ai/rag", () => {
   const originalModule = jest.requireActual("../../../../sdk/workspace/ai/rag")
   return {
     __esModule: true,
     ...originalModule,
+  }
+})
+
+jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
+  const originalModule = jest.requireActual(
+    "../../../../sdk/workspace/ai/rag/files"
+  )
+  return {
+    __esModule: true,
+    ...originalModule,
+    ingestAgentFile: jest.fn(),
+    deleteAgentFileChunks: jest.fn(),
   }
 })
 
@@ -85,9 +97,10 @@ describe("agent files", () => {
   })
 
   it("uploads and lists agent files", async () => {
-    const ingestSpy = jest
-      .spyOn(ragSdk, "ingestAgentFile")
-      .mockResolvedValue({ inserted: 1, total: 2 })
+    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+      typeof ragSdk.ingestAgentFile
+    >
+    ingestSpy.mockResolvedValue({ inserted: 1, total: 2 })
 
     const { agent } = await createAgentWithRag()
 
@@ -107,12 +120,14 @@ describe("agent files", () => {
   })
 
   it("deletes agent files and clears chunks", async () => {
-    jest
-      .spyOn(ragSdk, "ingestAgentFile")
-      .mockResolvedValue({ inserted: 1, total: 1 })
-    const deleteSpy = jest
-      .spyOn(ragSdk, "deleteAgentFileChunks")
-      .mockResolvedValue()
+    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+      typeof ragSdk.ingestAgentFile
+    >
+    ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
+    const deleteSpy = ragSdk.deleteAgentFileChunks as jest.MockedFunction<
+      typeof ragSdk.deleteAgentFileChunks
+    >
+    deleteSpy.mockResolvedValue()
 
     const { agent } = await createAgentWithRag()
 

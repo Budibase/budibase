@@ -2,7 +2,7 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { DocumentType, RagConfig } from "@budibase/types"
 
 export async function fetch(): Promise<RagConfig[]> {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const result = await db.allDocs<RagConfig>(
     docIds.getDocParams(DocumentType.RAG_CONFIG, undefined, {
       include_docs: true,
@@ -15,7 +15,7 @@ export async function fetch(): Promise<RagConfig[]> {
 }
 
 export async function find(id: string): Promise<RagConfig | undefined> {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const result = await db.tryGet<RagConfig>(id)
   if (!result || result._deleted) {
     return undefined
@@ -24,7 +24,7 @@ export async function find(id: string): Promise<RagConfig | undefined> {
 }
 
 export async function create(config: RagConfig): Promise<RagConfig> {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
 
   const newConfig: RagConfig = {
     _id: docIds.generateRagConfigID(),
@@ -46,7 +46,7 @@ export async function update(config: RagConfig): Promise<RagConfig> {
     throw new HTTPError("id and rev required", 400)
   }
 
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
   const existing = await db.tryGet<RagConfig>(config._id)
   if (!existing) {
     throw new HTTPError("RAG config not found", 404)
@@ -64,7 +64,7 @@ export async function update(config: RagConfig): Promise<RagConfig> {
 }
 
 export async function remove(id: string) {
-  const db = context.getGlobalDB()
+  const db = context.getWorkspaceDB()
 
   const existing = await db.get<RagConfig>(id)
   await db.remove(existing)
