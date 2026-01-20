@@ -210,6 +210,16 @@ async function processSettingsConfig(
     config.faviconUrl = existingConfig.faviconUrl
     config.faviconUrlEtag = existingConfig.faviconUrlEtag
   }
+  if (existingConfig && config.loginBackgroundImageUrl !== "") {
+    config.loginBackgroundImageUrl = existingConfig.loginBackgroundImageUrl
+    config.loginBackgroundImageUrlEtag =
+      existingConfig.loginBackgroundImageUrlEtag
+  }
+  if (existingConfig && config.portalBackgroundImageUrl !== "") {
+    config.portalBackgroundImageUrl = existingConfig.portalBackgroundImageUrl
+    config.portalBackgroundImageUrlEtag =
+      existingConfig.portalBackgroundImageUrlEtag
+  }
 }
 
 async function verifySSOConfig(type: SSOConfigType, config: SSOConfig) {
@@ -423,36 +433,6 @@ export async function save(
     ctx.throw(400, err)
   }
 
-  // Ignore branding changes if the license does not permit it
-  // Favicon and Logo Url are excluded.
-  try {
-    const brandingEnabled = await pro.features.isBrandingEnabled()
-    if (existingConfig?.config && !brandingEnabled) {
-      const {
-        emailBrandingEnabled,
-        platformTitle,
-        metaDescription,
-        loginHeading,
-        loginButton,
-        metaImageUrl,
-        metaTitle,
-      } = existingConfig.config
-
-      body.config = {
-        ...body.config,
-        emailBrandingEnabled,
-        platformTitle,
-        metaDescription,
-        loginHeading,
-        loginButton,
-        metaImageUrl,
-        metaTitle,
-      }
-    }
-  } catch (e) {
-    console.error("There was an issue retrieving the license", e)
-  }
-
   try {
     body._id = configs.generateConfigID(type)
     const response = await configs.save(body)
@@ -587,8 +567,6 @@ export async function publicSettings(
     ])
     const config = configDoc.config
 
-    const brandingPromise = pro.branding.getBrandingConfig(config)
-
     const getLogoUrl = () => {
       // enrich the logo url - empty url means deleted
       if (config.logoUrl && config.logoUrl !== "") {
@@ -616,7 +594,6 @@ export async function publicSettings(
     // performance all async work at same time, there is no need for all of these
     // operations to occur in sync, slowing the endpoint down significantly
     const [
-      branding,
       googleDatasource,
       googleCallbackUrl,
       oidcConfig,
@@ -624,7 +601,6 @@ export async function publicSettings(
       isSSOEnforced,
       logoUrl,
     ] = await Promise.all([
-      brandingPromise,
       googleDatasourcePromise,
       googleCallbackUrlPromise,
       oidcConfigPromise,
@@ -633,6 +609,8 @@ export async function publicSettings(
       getLogoUrl(),
     ])
 
+    const branding = config as SettingsBrandingConfig
+
     // enrich the favicon url - empty url means deleted
     const faviconUrl =
       branding.faviconUrl && branding.faviconUrl !== ""
@@ -640,6 +618,23 @@ export async function publicSettings(
             "settings",
             "faviconUrl",
             branding.faviconUrlEtag
+          )
+        : undefined
+    const loginBackgroundImageUrl =
+      branding.loginBackgroundImageUrl && branding.loginBackgroundImageUrl !== ""
+        ? await objectStore.getGlobalFileUrl(
+            "settings",
+            "loginBackgroundImageUrl",
+            branding.loginBackgroundImageUrlEtag
+          )
+        : undefined
+    const portalBackgroundImageUrl =
+      branding.portalBackgroundImageUrl &&
+      branding.portalBackgroundImageUrl !== ""
+        ? await objectStore.getGlobalFileUrl(
+            "settings",
+            "portalBackgroundImageUrl",
+            branding.portalBackgroundImageUrlEtag
           )
         : undefined
 
@@ -656,7 +651,13 @@ export async function publicSettings(
       config: {
         ...config,
         ...branding,
-        ...{ faviconUrl },
+        ...{
+          faviconUrl,
+          loginBackgroundImageUrl:
+            loginBackgroundImageUrl ?? branding.loginBackgroundImageUrl,
+          portalBackgroundImageUrl:
+            portalBackgroundImageUrl ?? branding.portalBackgroundImageUrl,
+        },
         google,
         googleDatasourceConfigured,
         oidc,

@@ -22,6 +22,7 @@ import {
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
+  SettingsBrandingConfig,
   UserCtx,
   Workspace,
 } from "@budibase/types"
@@ -210,7 +211,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     configs.getSettingsConfigDoc(),
     configs.getRecaptchaConfig(),
   ])
-  const branding = await pro.branding.getBrandingConfig(settingsConfig.config)
+  const branding = settingsConfig.config as SettingsBrandingConfig
   // incase running direct from TS
   let appHbsPath = join(__dirname, "app.hbs")
   if (!fs.existsSync(appHbsPath)) {
