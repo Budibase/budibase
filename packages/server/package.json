@@ -180,7 +180,7 @@
     "timekeeper": "2.2.0",
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
-    "undici": "^5.28.4",
+    "undici": "^6.23.0",
     "yargs": "^17.7.2",
     "zod": "^4.2.1"
   },
