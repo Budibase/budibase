@@ -21,7 +21,8 @@ import { default as tables } from "./workspace/tables"
 import * as views from "./workspace/views"
 import * as workspaceApps from "./workspace/workspaceApps"
 import { default as workspaces } from "./workspace/workspaces"
-import * as aiConfigs from "./aiConfig"
+
+import * as aiConfigs from "./workspace/ai/models"
 import * as ragConfigs from "./workspace/ai/rag/configCrud"
 import * as vectorDbs from "./workspace/ai/vectorDb"
 

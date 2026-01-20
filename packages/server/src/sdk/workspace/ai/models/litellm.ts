@@ -1,7 +1,7 @@
 import { configs, context, HTTPError } from "@budibase/backend-core"
 import fetch from "node-fetch"
-import sdk from ".."
-import env from "../../environment"
+import sdk from "../../.."
+import env from "../../../../environment"
 import { AIConfigType } from "@budibase/types"
 
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
