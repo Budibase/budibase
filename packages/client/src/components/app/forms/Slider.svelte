@@ -178,5 +178,9 @@
 
   .value-text {
     padding: 10px;
+    margin: 0;
+    font-size: var(--spectrum-global-dimension-font-size-100, 14px);
+    line-height: var(--spectrum-alias-component-text-line-height, 1.3);
+    font-weight: var(--spectrum-alias-body-text-font-weight, 400);
   }
 </style>
