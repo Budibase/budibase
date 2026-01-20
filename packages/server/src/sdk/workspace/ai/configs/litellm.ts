@@ -1,6 +1,6 @@
 import { configs, context, HTTPError } from "@budibase/backend-core"
 import fetch from "node-fetch"
-import sdk from "../../.."
+import * as configSdk from "../configs"
 import env from "../../../../environment"
 import { AIConfigType } from "@budibase/types"
 
@@ -201,7 +201,7 @@ export async function syncKeyModels() {
     throw new Error("LiteLLM key not configured")
   }
 
-  const aiConfigs = await sdk.ai.configs.fetch()
+  const aiConfigs = await configSdk.fetch()
   const modelIds = aiConfigs
     .map(c => c.liteLLMModelId)
     .filter((id): id is string => !!id)
