@@ -1,16 +1,8 @@
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { AgentFileStatus, AIConfigType } from "@budibase/types"
 import nock from "nock"
 import environment from "../../../../environment"
 import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
-
-jest.mock("../../../../sdk/workspace/ai/rag", () => {
-  const originalModule = jest.requireActual("../../../../sdk/workspace/ai/rag")
-  return {
-    __esModule: true,
-    ...originalModule,
-  }
-})
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
   const originalModule = jest.requireActual(
@@ -53,7 +45,6 @@ describe("agent files", () => {
       model: "text-embedding-3-small",
       apiKey: "test",
       liteLLMModelId: "test",
-      isDefault: false,
       configType: AIConfigType.EMBEDDINGS,
     })
     const vectorDb = await config.api.vectorDb.create({

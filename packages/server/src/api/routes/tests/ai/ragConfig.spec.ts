@@ -38,7 +38,6 @@ describe("RAG configs", () => {
       model: "text-embedding-3-small",
       apiKey: "test",
       liteLLMModelId: "test",
-      isDefault: false,
       configType: AIConfigType.EMBEDDINGS,
     })
     const vectorDb = await config.api.vectorDb.create({

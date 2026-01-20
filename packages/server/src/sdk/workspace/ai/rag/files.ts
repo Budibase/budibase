@@ -1,12 +1,14 @@
+import { HTTPError } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
 import type { Agent, AgentFile, RagConfig, VectorDb } from "@budibase/types"
+import { embedMany } from "ai"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
-import sdk from "../../.."
+import { getLiteLLMModelConfigOrThrow } from "../configs"
+import { find as findVectorDb } from "../vectorDb/crud"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
-import { HTTPError } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
-import { embedMany } from "ai"
+import { find as findRagConfig } from "./configCrud"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
@@ -42,8 +44,9 @@ const buildRagConfig = async (
 ): Promise<ResolvedRagConfig> => {
   const databaseUrl = await resolveVectorDatabaseConfig(ragConfig.vectorDb)
 
-  const { apiKey, baseUrl, modelId } =
-    await sdk.ai.configs.getLiteLLMModelConfigOrThrow(ragConfig.embeddingModel)
+  const { apiKey, baseUrl, modelId } = await getLiteLLMModelConfigOrThrow(
+    ragConfig.embeddingModel
+  )
   return {
     databaseUrl,
     embeddingModel: modelId,
@@ -55,7 +58,7 @@ const buildRagConfig = async (
 const resolveVectorDatabaseConfig = async (
   vectorDbId: string
 ): Promise<string> => {
-  const vectorDb = await sdk.ai.vectorDb.find(vectorDbId)
+  const vectorDb = await findVectorDb(vectorDbId)
   if (!vectorDb) {
     throw new Error("Vector db not found")
   }
@@ -308,7 +311,7 @@ export const getAgentRagConfig = async (agent: Agent): Promise<RagConfig> => {
     throw new HTTPError("RAG config not set", 422)
   }
 
-  const config = await sdk.ai.rag.config.find(agent.ragConfigId)
+  const config = await findRagConfig(agent.ragConfigId)
   if (!config) {
     throw new HTTPError("RAG config not found", 422)
   }

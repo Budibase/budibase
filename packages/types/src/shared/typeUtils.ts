@@ -35,6 +35,8 @@ export type RequiredKeys<T> = {
 
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>
 
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
 export type WithoutDocMetadata<T extends Document> = Omit<
   T,
   "_id" | "_rev" | "createdAt" | "updatedAt"
