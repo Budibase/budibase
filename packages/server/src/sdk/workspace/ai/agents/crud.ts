@@ -6,7 +6,7 @@ import {
   UpdateAgentRequest,
 } from "@budibase/types"
 import { listAgentFiles, removeAgentFile } from "./files"
-import { deleteAgentFileChunks } from "../rag"
+import { deleteAgentFileChunks } from "../rag/files"
 import sdk from "../../.."
 
 const withAgentDefaults = (agent: Agent): Agent => ({

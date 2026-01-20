@@ -156,4 +156,46 @@ module.exports = {
       }
     },
   },
+  "no-context-getglobaldb": {
+    meta: {
+      type: "problem",
+      docs: {
+        description: "Disallow context.getGlobalDB() usage in workspace SDK",
+        category: "Best Practices",
+        recommended: false,
+      },
+      fixable: "code",
+      schema: [],
+      messages: {
+        noGetGlobalDB:
+          "Use context.getWorkspaceDB() instead of context.getGlobalDB() in workspace SDK code.",
+      },
+    },
+    create(context) {
+      return {
+        CallExpression(node) {
+          const callee =
+            node.callee.type === "ChainExpression"
+              ? node.callee.expression
+              : node.callee
+
+          if (
+            callee.type === "MemberExpression" &&
+            callee.object.type === "Identifier" &&
+            callee.object.name === "context" &&
+            callee.property.type === "Identifier" &&
+            callee.property.name === "getGlobalDB"
+          ) {
+            context.report({
+              node,
+              messageId: "noGetGlobalDB",
+              fix: fixer => {
+                return fixer.replaceText(callee.property, "getWorkspaceDB")
+              },
+            })
+          }
+        },
+      }
+    },
+  },
 }

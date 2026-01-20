@@ -22,7 +22,7 @@ const sanitize = (config: VectorDb): VectorDb => {
 export const fetchVectorDbConfigs = async (
   ctx: UserCtx<void, VectorDbListResponse>
 ) => {
-  const configs = await sdk.vectorDbs.fetch()
+  const configs = await sdk.ai.vectorDb.fetch()
   ctx.body = configs.map(sanitize)
 }
 
@@ -40,7 +40,7 @@ export const createVectorDbConfig = async (
     throw new HTTPError("Only pgvector is supported currently", 400)
   }
 
-  const created = await sdk.vectorDbs.create(body)
+  const created = await sdk.ai.vectorDb.create(body)
   ctx.body = sanitize(created)
   ctx.status = 201
 }
@@ -58,7 +58,7 @@ export const updateVectorDbConfig = async (
   if (body.provider && body.provider !== "pgvector") {
     throw new HTTPError("Only pgvector is supported currently", 400)
   }
-  const updated = await sdk.vectorDbs.update(body)
+  const updated = await sdk.ai.vectorDb.update(body)
   ctx.body = sanitize(updated)
 }
 
@@ -69,6 +69,6 @@ export const deleteVectorDbConfig = async (
   if (!id) {
     throw new HTTPError("Config ID is required", 400)
   }
-  await sdk.vectorDbs.remove(id)
+  await sdk.ai.vectorDb.remove(id)
   ctx.body = { deleted: true }
 }
