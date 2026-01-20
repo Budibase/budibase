@@ -11,8 +11,9 @@
   let modal: Modal
   let modalBody: HTMLDivElement | undefined
 
-  const hideModal = () => {
+  const handleSave = (event: CustomEvent<{ queryId?: string }>) => {
     modal?.hide()
+    dispatch("save", event.detail)
   }
 
   $: if (datasourceId && modal) {
@@ -42,7 +43,7 @@
         {datasourceId}
         redirectOnSave={false}
         embedded
-        on:save={hideModal}
+        on:save={handleSave}
       />
     {/if}
   </div>

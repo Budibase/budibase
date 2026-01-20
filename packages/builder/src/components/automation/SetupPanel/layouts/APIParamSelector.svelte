@@ -143,6 +143,15 @@
 
 <APIEndpointModal
   datasourceId={modalDatasourceId}
+  on:save={event => {
+    const queryId = event.detail?.queryId
+    if (!queryId) {
+      return
+    }
+    if (!value) value = {}
+    value.queryId = queryId
+    dispatch("change", value)
+  }}
   on:close={() => {
     modalDatasourceId = undefined
   }}
