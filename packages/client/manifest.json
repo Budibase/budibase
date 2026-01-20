@@ -9122,7 +9122,7 @@
     ]
   },
   "slider": {
-    "name": "Slider field",
+    "name": "Slider Field",
     "icon": "sliders-horizontal",
     "styles": ["size"],
     "editable": true,
