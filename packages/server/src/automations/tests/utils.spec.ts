@@ -45,6 +45,9 @@ jest.mock("@budibase/backend-core", () => {
 const mockAdd = automationQueue.add as MockedFunction<
   typeof automationQueue.add
 >
+const mockGetBullQueue = automationQueue.getBullQueue as MockedFunction<
+  typeof automationQueue.getBullQueue
+>
 const mockDoWithDB = dbCore.doWithDB as MockedFunction<typeof dbCore.doWithDB>
 const mockNewId = coreUtils.newid as MockedFunction<typeof coreUtils.newid>
 
@@ -124,6 +127,43 @@ describe("enableCronOrEmailTrigger", () => {
       expect.objectContaining({ jobId: "app_dev_123_cron_existing" })
     )
     expect(mockDoWithDB).not.toHaveBeenCalled()
+  })
+
+  it("migrates legacy cron repeatable job ids", async () => {
+    const automation = buildCronAutomation("repeat:legacy:123")
+    const mockRemoveRepeatableByKey = jest.fn()
+    const mockGetRepeatableJobs = jest
+      .fn()
+      .mockResolvedValue([
+        { key: "repeat:legacy:123:::* * * * 0" },
+        { key: "repeat:legacy:123:::* * * * 1" },
+        { key: "repeat:legacy2:123:::0 0 * * *" },
+      ])
+    mockGetBullQueue.mockReturnValue({
+      ...(automationQueue.getBullQueue() ?? {}),
+      removeRepeatableByKey: mockRemoveRepeatableByKey,
+      getRepeatableJobs: mockGetRepeatableJobs,
+    } as ReturnType<typeof automationQueue.getBullQueue>)
+
+    await enableCronOrEmailTrigger("app_dev_123", automation)
+
+    expect(mockGetRepeatableJobs).toHaveBeenCalledTimes(1)
+
+    expect(mockRemoveRepeatableByKey).toHaveBeenCalledWith(
+      "repeat:legacy:123:::* * * * 0"
+    )
+    expect(mockRemoveRepeatableByKey).toHaveBeenCalledWith(
+      "repeat:legacy:123:::* * * * 1"
+    )
+    expect(mockRemoveRepeatableByKey).toHaveBeenCalledTimes(2)
+
+    expect(mockAdd).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ jobId: "app_dev_123_cron_mockid" })
+    )
+    expect(mockAdd).toHaveBeenCalledTimes(1)
+
+    expect(mockDoWithDB).toHaveBeenCalledTimes(1)
   })
 
   it("persists when a cron job id needs generated", async () => {
