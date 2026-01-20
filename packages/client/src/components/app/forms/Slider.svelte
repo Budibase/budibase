@@ -11,7 +11,7 @@
   export let max = 100
   export let step: number = 1
   export let defValue: number
-  export let value: number = defValue || (max + min) / 2
+  export let value: number = defValue || Math.floor((max + min) / 2)
   export let disabled = false
   export let readonly = false
   export let validation: UIFieldValidationRule[] | undefined
