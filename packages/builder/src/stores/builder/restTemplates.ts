@@ -28,7 +28,6 @@ import BillsbyLogo from "assets/rest-template-icons/billsby.svg"
 import BreezyHRLogo from "assets/rest-template-icons/breezy-hr.svg"
 import BrevoLogo from "assets/rest-template-icons/brevo.svg"
 import BulksmsComLogo from "assets/rest-template-icons/bulksms-com.svg"
-import ButtondownLogo from "assets/rest-template-icons/buttondown.svg"
 import CleverLogo from "assets/rest-template-icons/clever.svg"
 import ClickupLogo from "assets/rest-template-icons/clickup.svg"
 import DeelLogo from "assets/rest-template-icons/deel.svg"
@@ -83,7 +82,6 @@ import TilledLogo from "assets/rest-template-icons/tilled.svg"
 import TrelloLogo from "assets/rest-template-icons/trello.svg"
 import TremendousLogo from "assets/rest-template-icons/tremendous.svg"
 import VerifiableLogo from "assets/rest-template-icons/verifiable.svg"
-import VoltIOLogo from "assets/rest-template-icons/volt-io.svg"
 import WorkableLogo from "assets/rest-template-icons/workable.svg"
 import XLogo from "assets/rest-template-icons/x.svg"
 import ZendeskLogo from "assets/rest-template-icons/zendesk.svg"
@@ -2083,18 +2081,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BulksmsComLogo,
     },
     {
-      name: "Buttondown",
-      description: "The last email platform you'll switch to.",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/buttondown/openapi.yaml",
-        },
-      ],
-      operationsCount: 28,
-      icon: ButtondownLogo,
-    },
-    {
       name: "Clever",
       description:
         "Offers one secure place for teachers and students to access the applications they love and depend on.",
@@ -2731,18 +2717,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 168,
       icon: VerifiableLogo,
-    },
-    {
-      name: "Volt IO",
-      description: "One integration to a world of real-time payments",
-      specs: [
-        {
-          version: "2024.04.11",
-          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/volt-io/openapi.yaml",
-        },
-      ],
-      operationsCount: 20,
-      icon: VoltIOLogo,
     },
     {
       name: "Workable",

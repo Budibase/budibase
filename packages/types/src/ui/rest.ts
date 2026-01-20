@@ -27,7 +27,6 @@ export type RestTemplateName =
   | "Breezy HR"
   | "Brevo"
   | "BulkSMS"
-  | "Buttondown"
   | "Clever"
   | "Clickup"
   | "Deel"
@@ -80,7 +79,6 @@ export type RestTemplateName =
   | "Trello"
   | "Tremendous"
   | "Verifiable"
-  | "Volt IO"
   | "Workable"
   | "X"
   | HubSpotRestTemplateName
