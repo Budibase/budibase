@@ -10,3 +10,4 @@ Contributors
 * Peter Clement - [@PClmnt](https://github.com/PClmnt)
 * Rory Powell - [@Rory-Powell](https://github.com/Rory-Powell)
 * Michaël St-Georges [@CSLTech](https://github.com/CSLTech)
+* Maxime Baker - [@Maximebaker](https://github.com/Maximebaker)
