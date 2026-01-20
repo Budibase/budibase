@@ -17,7 +17,6 @@ import {
 import {
   convertToModelMessages,
   extractReasoningMiddleware,
-  generateText,
   ModelMessage,
   streamText,
   wrapLanguageModel,
@@ -101,7 +100,9 @@ const toSourceMetadata = (
   return Array.from(summary.values())
 }
 
-const extractUserText = (message?: ChatConversation["messages"][number]) => {
+export const extractUserText = (
+  message?: ChatConversation["messages"][number]
+) => {
   if (!message || !Array.isArray(message.parts)) {
     return ""
   }
@@ -112,7 +113,7 @@ const extractUserText = (message?: ChatConversation["messages"][number]) => {
     .trim()
 }
 
-const findLatestUserQuestion = (chat: ChatConversationRequest) => {
+export const findLatestUserQuestion = (chat: ChatConversationRequest) => {
   const messages = chat.messages || []
   for (let i = messages.length - 1; i >= 0; i -= 1) {
     const current = messages[i]
@@ -124,6 +125,14 @@ const findLatestUserQuestion = (chat: ChatConversationRequest) => {
     }
   }
   return ""
+}
+
+export const truncateTitle = (value: string, maxLength = 120) => {
+  const trimmed = value.trim()
+  if (trimmed.length <= maxLength) {
+    return trimmed
+  }
+  return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
@@ -271,16 +280,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools,
     })
 
-    const titleMessages = modelMessages.length > 0 ? [modelMessages[0]] : []
-    const title =
-      chat.title ||
-      (
-        await generateText({
-          model,
-          messages: titleMessages,
-          system: ai.agentHistoryTitleSystemPrompt(),
-        })
-      ).text
+    const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
 
     ctx.respond = false
     const messageMetadata =

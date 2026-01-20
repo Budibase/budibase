@@ -42,7 +42,7 @@
   {#if selectedAgentId}
     <div class="chat-header">
       <div class="chat-header-agent">
-        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+        <Body size="S">
           {selectedAgentName || "Unknown agent"}
         </Body>
       </div>
@@ -103,22 +103,31 @@
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
+    padding: 0 32px;
+    box-sizing: border-box;
   }
 
   .chat-header {
-    width: 600px;
-    max-width: 100%;
-    margin: 0 auto;
-    padding: var(--spacing-l) 0 var(--spacing-s);
+    width: 100%;
+    padding: var(--spacing-l) 0 var(--spacing-l);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-m);
+    border-bottom: var(--border-light);
   }
 
   .chat-header-agent {
     display: flex;
     align-items: center;
+  }
+
+  .chat-header-agent :global(p) {
+    font-size: 14px;
+    line-height: 17px;
+    letter-spacing: 0;
+    font-weight: 400;
+    color: white;
   }
 
   .delete-button-content {
