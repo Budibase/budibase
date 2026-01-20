@@ -9206,7 +9206,7 @@
       },
       {
         "type": "boolean",
-        "label": "displayValue",
+        "label": "Display Value",
         "key": "displayValue"
       }
     ],
