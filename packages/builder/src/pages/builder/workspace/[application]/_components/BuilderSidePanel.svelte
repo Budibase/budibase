@@ -534,7 +534,7 @@
     <div class="search" class:focused={searchFocus}>
       <span class="search-input">
         <Input
-          placeholder={"Add users and groups to your app"}
+          placeholder={"Add users and groups to your workspace"}
           autocomplete="off"
           disabled={inviting}
           bind:value={query}
