@@ -27,10 +27,7 @@
   import { EditorModes } from "@/components/common/CodeEditor"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import APIModal from "@/pages/builder/workspace/[application]/apis/_components/APIModal.svelte"
-  import { goto, params } from "@roxi/routify"
-
-  $goto
-  $params
+  import APIEndpointModal from "./APIEndpointModal.svelte"
 
   export let bindings: EnrichedBinding[] | undefined = undefined
   export let block: AutomationStep | undefined = undefined
@@ -40,6 +37,7 @@
   let authBindings: any[] = getAuthBindings()
   let selectedDatasourceId: string | undefined
   let apiModal: APIModal
+  let modalDatasourceId: string | undefined
 
   // Include any custom bindings from the REST API data section UI to ensure completeness
   // when parsing to readable
@@ -182,10 +180,7 @@
               icon={"Add"}
               secondary
               on:click={() => {
-                $goto(`/builder/workspace/:application/apis/query/new/:id`, {
-                  application: $params.application,
-                  id: dataSource._id,
-                })
+                modalDatasourceId = dataSource._id
               }}
             >
               Create
@@ -195,6 +190,20 @@
       </div>
     {/if}
   {/if}
+
+  <APIEndpointModal
+    datasourceId={modalDatasourceId}
+    on:save={event => {
+      const queryId = event.detail?.queryId
+      if (!queryId) {
+        return
+      }
+      defaultChange({ [fieldKey]: { ...(value || {}), queryId } }, block)
+    }}
+    on:close={() => {
+      modalDatasourceId = undefined
+    }}
+  />
 
   {#if query}
     <Divider noMargin />
