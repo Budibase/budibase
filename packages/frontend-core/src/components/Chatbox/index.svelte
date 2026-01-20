@@ -442,7 +442,6 @@
     border: none;
     outline: none;
     min-height: 100px;
-    margin-bottom: 8px;
   }
 
   .input::placeholder {
