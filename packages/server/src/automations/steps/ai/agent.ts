@@ -20,8 +20,6 @@ import { isProdWorkspaceID } from "../../../db/utils"
 import tracer from "dd-trace"
 import env from "../../../environment"
 
-const llmobs = tracer.llmobs
-
 export async function run({
   inputs,
   appId,
@@ -46,13 +44,13 @@ export async function run({
 
   const sessionId = v4()
 
-  return llmobs.trace(
+  return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
     async agentSpan => {
       try {
         const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
-        llmobs.annotate(agentSpan, {
+        tracer.llmobs.annotate(agentSpan, {
           inputData: prompt,
           metadata: {
             agentId,
@@ -64,7 +62,7 @@ export async function run({
         })
 
         if (appId && isProdWorkspaceID(appId) && agentConfig.live !== true) {
-          llmobs.annotate(agentSpan, {
+          tracer.llmobs.annotate(agentSpan, {
             outputData: "Agent is paused",
             tags: { error: "agent_paused" },
           })
@@ -81,7 +79,7 @@ export async function run({
         const { modelId, apiKey, baseUrl, modelName } =
           await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agentConfig.aiconfig)
 
-        llmobs.annotate(agentSpan, {
+        tracer.llmobs.annotate(agentSpan, {
           metadata: {
             modelId,
             modelName,
@@ -137,7 +135,7 @@ export async function run({
           ? ((await streamResult.output) as Record<string, any>)
           : undefined
 
-        llmobs.annotate(agentSpan, {
+        tracer.llmobs.annotate(agentSpan, {
           outputData: responseText,
           metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
@@ -152,7 +150,7 @@ export async function run({
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
 
-        llmobs.annotate(agentSpan, {
+        tracer.llmobs.annotate(agentSpan, {
           outputData: errorMessage,
           tags: {
             error: "1",
