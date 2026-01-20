@@ -19,12 +19,9 @@
     customQueryIconText,
   } from "@/helpers/data/utils"
   import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
-  import { goto, params } from "@roxi/routify"
   import { type AutomationContext } from "@/stores/builder/automations"
   import { runtimeToReadableBinding } from "@/dataBinding"
-
-  $goto
-  $params
+  import APIEndpointModal from "./APIEndpointModal.svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -41,6 +38,8 @@
   export let context: AutomationContext | undefined = undefined
   export let dataSource: Datasource | UIInternalDatasource | undefined =
     undefined
+
+  let modalDatasourceId: string | undefined
 
   const onChangeQuery = (e: CustomEvent) => {
     if (!value) value = {}
@@ -108,10 +107,10 @@
       icon="Add"
       disabled={!queryDataSource?._id}
       on:click={() => {
-        $goto(`/builder/workspace/:application/apis/query/new/:id`, {
-          application: $params.application,
-          id: queryDataSource?._id,
-        })
+        if (!queryDataSource?._id) {
+          return
+        }
+        modalDatasourceId = queryDataSource._id
       }}
     />
   </div>
@@ -141,6 +140,13 @@
     </DetailSummary>
   {/if}
 </div>
+
+<APIEndpointModal
+  datasourceId={modalDatasourceId}
+  on:close={() => {
+    modalDatasourceId = undefined
+  }}
+/>
 
 <style>
   .picker {

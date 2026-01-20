@@ -6,6 +6,7 @@
   import { integrations } from "@/stores/builder/integrations"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { isEqual } from "lodash"
+  import { createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
   import { fade } from "svelte/transition"
   import Portal from "svelte-portal"
@@ -63,8 +64,13 @@
   import AuthPicker from "./rest/AuthPicker.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
 
-  export let queryId
+  export let queryId = undefined
   export let datasourceId
+  export let redirectOnSave = true
+  export let embedded = false
+  export let compact = false
+
+  const dispatch = createEventDispatcher()
 
   $: goto = $gotoStore
 
@@ -542,6 +548,7 @@
       originalBuiltQuery = undefined
       localDynamicVariables = undefined
 
+      dispatch("save", { queryId: _id, isNew })
       return { ok: true }
     } catch (err) {
       notifications.error(`Error saving query`)
@@ -714,258 +721,265 @@
   }
 </script>
 
-<div class="request-heading">
-  <div class="heading">
-    <div class="api-details">
-      <img src={template?.icon} alt={`${template?.name} logo`} width="24" />
-      <Heading>{template?.name}</Heading>{spec?.version}
-    </div>
-    <div class="actions">
-      <div class="grouped">
-        {#if query}
-          <div class="access">
-            <AccessLevelSelect {query} label="Access" />
-          </div>
-        {/if}
-        {#if query && selectedEndpointOption}
-          <AuthPicker
-            bind:authConfigId={query.fields.authConfigId}
-            bind:authConfigType={query.fields.authConfigType}
-            {authConfigs}
-            {datasourceId}
-          />
-        {/if}
-        {#if endpointDocs}
-          <ActionButton
-            quiet
-            icon="arrow-square-up-right"
-            on:click={() => {
-              window.open(endpointDocs, "_blank")
-            }}
-          >
-            Docs
-          </ActionButton>
-        {/if}
-        {#if query?._id}
-          <ConnectedQueryScreens
-            icon={"link-simple-horizontal-break"}
-            sourceId={query._id}
-            buttonText="Usage"
-          />
-        {/if}
+<div class="api-endpoint-viewer" class:embedded class:compact>
+  <div class="request-heading">
+    <div class="heading">
+      <div class="api-details">
+        <img src={template?.icon} alt={`${template?.name} logo`} width="24" />
+        <Heading>{template?.name}</Heading>{spec?.version}
       </div>
-      <div class="save-btn">
+      <div class="actions">
+        <div class="grouped">
+          {#if query}
+            <div class="access">
+              <AccessLevelSelect {query} label="Access" />
+            </div>
+          {/if}
+          {#if query && selectedEndpointOption}
+            <AuthPicker
+              bind:authConfigId={query.fields.authConfigId}
+              bind:authConfigType={query.fields.authConfigType}
+              {authConfigs}
+              {datasourceId}
+            />
+          {/if}
+          {#if endpointDocs}
+            <ActionButton
+              quiet
+              icon="arrow-square-up-right"
+              on:click={() => {
+                window.open(endpointDocs, "_blank")
+              }}
+            >
+              Docs
+            </ActionButton>
+          {/if}
+          {#if query?._id}
+            <ConnectedQueryScreens
+              icon={"link-simple-horizontal-break"}
+              sourceId={query._id}
+              buttonText="Usage"
+            />
+          {/if}
+        </div>
+        <div class="save-btn">
+          <Button
+            cta
+            disabled={!queryDirty || savingQuery}
+            on:click={() => saveQuery(redirectOnSave)}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+    <div class="request" style:--verb-color={endpointVerbColor}>
+      <div class="picker">
+        <Select
+          on:change={e => {
+            selectedEndpointOption = e.detail
+          }}
+          value={selectedEndpointOption}
+          options={endpointOptions}
+          getOptionValue={endpoint => endpoint}
+          getOptionLabel={endpoint => endpoint.name}
+          compare={compareEndpoints}
+          disabled={endpointsLoading}
+          readonly={!!query?._id}
+          hideChevron={!!query?._id}
+          loading={endpointsLoading}
+          autocomplete={true}
+        />
+      </div>
+      <div class="endpoint">
+        <CodeEditor
+          value={requestURL}
+          mode={EditorModes.Handlebars}
+          aiEnabled={false}
+          readonly
+          lineWrapping={false}
+        />
+      </div>
+      <div class="send" class:loaded={selectedEndpointOption}>
         <Button
-          cta
-          disabled={!queryDirty || savingQuery}
-          on:click={() => saveQuery()}
+          primary
+          disabled={!selectedEndpointOption || runningQuery}
+          icon="paper-plane-right"
+          on:click={previewQuery}
         >
-          Save
+          Send
         </Button>
       </div>
     </div>
   </div>
-  <div class="request" style:--verb-color={endpointVerbColor}>
-    <div class="picker">
-      <Select
-        on:change={e => {
-          selectedEndpointOption = e.detail
-        }}
-        value={selectedEndpointOption}
-        options={endpointOptions}
-        getOptionValue={endpoint => endpoint}
-        getOptionLabel={endpoint => endpoint.name}
-        compare={compareEndpoints}
-        disabled={endpointsLoading}
-        readonly={!!query?._id}
-        hideChevron={!!query?._id}
-        loading={endpointsLoading}
-        autocomplete={true}
-      />
+  <div class="bottom">
+    <div class="wrap-divider">
+      <Divider noMargin />
     </div>
-    <div class="endpoint">
-      <CodeEditor
-        value={requestURL}
-        mode={EditorModes.Handlebars}
-        aiEnabled={false}
-        readonly
-        lineWrapping={false}
-      />
-    </div>
-    <div class="send" class:loaded={selectedEndpointOption}>
-      <Button
-        primary
-        disabled={!selectedEndpointOption || runningQuery}
-        icon="paper-plane-right"
-        on:click={previewQuery}
-      >
-        Send
-      </Button>
-    </div>
-  </div>
-</div>
-<div class="bottom">
-  <div class="wrap-divider">
-    <Divider noMargin />
-  </div>
-  <div class="wrap">
-    <div class="main">
-      <Layout noPadding>
-        <div class="details">
-          <Layout noPadding gap="XS">
-            <Heading size="XS">{selectedEndpointOption?.name || ""}</Heading>
-            <DescriptionViewer
-              description={selectedEndpointOption?.description}
-              label={""}
-              baseUrl={endpointDocs}
-            />
-          </Layout>
-        </div>
-        <div class="config">
-          <Layout noPadding gap="S">
-            {#key selectedEndpointOption?.id}
-              <Tabs
-                selected="Bindings"
-                quiet
-                noPadding
-                noHorizPadding
-                onTop
-                disabled={!selectedEndpointOption}
-              >
-                <Tab title="Bindings">
-                  <KeyValueBuilder
-                    defaults={requestBindings}
-                    tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
-                    name="binding"
-                    headings
-                    keyPlaceholder="Binding name"
-                    valuePlaceholder="Default"
-                    bindings={[
-                      ...dataSourceStaticBindings,
-                      ...restBindings,
-                      ...globalDynamicRequestBindings,
-                    ]}
-                    context={bindingPreviewContext}
-                    on:change={onUpdateBindings}
-                    actionButtonDisabled={!selectedEndpointOption}
-                  />
-                </Tab>
-                <Tab title="Params">
-                  {#key queryParams}
+    <div class="wrap">
+      <div class="main">
+        <Layout noPadding>
+          <div class="details">
+            <Layout noPadding gap="XS">
+              <Heading size="XS">{selectedEndpointOption?.name || ""}</Heading>
+              <DescriptionViewer
+                description={selectedEndpointOption?.description}
+                label={""}
+                baseUrl={endpointDocs}
+              />
+            </Layout>
+          </div>
+          <div class="config">
+            <Layout noPadding gap="S">
+              {#key selectedEndpointOption?.id}
+                <Tabs
+                  selected="Bindings"
+                  quiet
+                  noPadding
+                  noHorizPadding
+                  onTop
+                  disabled={!selectedEndpointOption}
+                >
+                  <Tab title="Bindings">
                     <KeyValueBuilder
-                      name="param"
-                      defaults={queryParams}
+                      defaults={requestBindings}
+                      tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
+                      name="binding"
+                      headings
+                      keyPlaceholder="Binding name"
+                      valuePlaceholder="Default"
+                      bindings={[
+                        ...dataSourceStaticBindings,
+                        ...restBindings,
+                        ...globalDynamicRequestBindings,
+                      ]}
+                      context={bindingPreviewContext}
+                      on:change={onUpdateBindings}
+                      actionButtonDisabled={!selectedEndpointOption}
+                    />
+                  </Tab>
+                  <Tab title="Params">
+                    {#key queryParams}
+                      <KeyValueBuilder
+                        name="param"
+                        defaults={queryParams}
+                        headings
+                        bindings={mergedBindings}
+                        context={bindingPreviewContext}
+                        on:change={onUpdateParams}
+                      />
+                    {/key}
+                  </Tab>
+                  <Tab title="Headers">
+                    <KeyValueBuilder
+                      defaults={query?.fields.headers}
+                      toggle
+                      name="header"
                       headings
                       bindings={mergedBindings}
                       context={bindingPreviewContext}
-                      on:change={onUpdateParams}
+                      on:change={onUpdateHeaders}
                     />
-                  {/key}
-                </Tab>
-                <Tab title="Headers">
-                  <KeyValueBuilder
-                    defaults={query?.fields.headers}
-                    toggle
-                    name="header"
-                    headings
-                    bindings={mergedBindings}
-                    context={bindingPreviewContext}
-                    on:change={onUpdateHeaders}
-                  />
-                </Tab>
-                <Tab title="Body">
-                  <span class="bodyType-radio-group">
-                    <RadioGroup
-                      value={query?.fields?.bodyType}
-                      options={isGet ? [RestBodyTypes[0]] : RestBodyTypes}
-                      direction="horizontal"
-                      getOptionLabel={option => option.name}
-                      getOptionValue={option => option.value}
-                      on:change={onUpdateBodyType}
-                    />
-                  </span>
-                  <RestBodyInput
-                    bodyType={query?.fields.bodyType}
-                    requestBody={prettyBody}
-                    on:change={onUpdateBody}
-                  />
-                </Tab>
-                <Tab title="Transformer">
-                  <Layout noPadding>
-                    {#if !$flags.queryTransformerBanner}
-                      <Banner
-                        extraButtonText="Learn more"
-                        extraButtonAction={() =>
-                          window.open(
-                            "https://docs.budibase.com/docs/transformers"
-                          )}
-                        on:change={() =>
-                          updateFlag("queryTransformerBanner", true)}
-                      >
-                        Add a JavaScript function to transform the query result.
-                      </Banner>
-                    {/if}
-                    <div class="embed">
-                      <CodeEditor
-                        value={query?.transformer}
-                        mode={EditorModes.JS}
-                        aiEnabled={false}
-                        on:change={e => {
-                          if (!query) return
-                          query.transformer = e.detail
-                        }}
+                  </Tab>
+                  <Tab title="Body">
+                    <span class="bodyType-radio-group">
+                      <RadioGroup
+                        value={query?.fields?.bodyType}
+                        options={isGet ? [RestBodyTypes[0]] : RestBodyTypes}
+                        direction="horizontal"
+                        getOptionLabel={option => option.name}
+                        getOptionValue={option => option.value}
+                        on:change={onUpdateBodyType}
                       />
-                    </div>
-                  </Layout>
-                </Tab>
-              </Tabs>
-            {/key}
-          </Layout>
-        </div>
-      </Layout>
-    </div>
-    <div class="side-bar-wrapper">
-      <div
-        class="side-bar main"
-        class:hidden={$sidebarExpanded || isTransitioning}
-        bind:this={sidebarElement}
-      >
-        <div class="side-bar-header">
-          <div class="side-bar-title">Response</div>
-          <ActionButton
-            size="M"
-            quiet
-            selected={$sidebarExpanded}
-            on:click={() => sidebarExpanded.set(!$sidebarExpanded)}
-          >
-            <Icon
-              name={$sidebarExpanded ? "arrows-in-simple" : "arrows-out-simple"}
-              size="S"
-            />
-          </ActionButton>
-        </div>
-        <Divider size="S" noMargin />
-        <div class="side-bar-content">
-          <div use:moveToExpanded>
-            <ResponsePanel
-              {datasource}
-              {response}
-              {schema}
-              {dynamicVariables}
-              fullscreen={$sidebarExpanded}
-              on:change={e => {
-                const {
-                  dynamicVariables: updatedDynamicVariables,
-                  schema: updatedSchema,
-                } = e.detail || {}
-                if (updatedDynamicVariables) {
-                  localDynamicVariables = updatedDynamicVariables
-                }
-                if (updatedSchema) {
-                  schema = updatedSchema
-                }
-              }}
-            />
+                    </span>
+                    <RestBodyInput
+                      bodyType={query?.fields.bodyType}
+                      requestBody={prettyBody}
+                      on:change={onUpdateBody}
+                    />
+                  </Tab>
+                  <Tab title="Transformer">
+                    <Layout noPadding>
+                      {#if !$flags.queryTransformerBanner}
+                        <Banner
+                          extraButtonText="Learn more"
+                          extraButtonAction={() =>
+                            window.open(
+                              "https://docs.budibase.com/docs/transformers"
+                            )}
+                          on:change={() =>
+                            updateFlag("queryTransformerBanner", true)}
+                        >
+                          Add a JavaScript function to transform the query
+                          result.
+                        </Banner>
+                      {/if}
+                      <div class="embed">
+                        <CodeEditor
+                          value={query?.transformer}
+                          mode={EditorModes.JS}
+                          aiEnabled={false}
+                          on:change={e => {
+                            if (!query) return
+                            query.transformer = e.detail
+                          }}
+                        />
+                      </div>
+                    </Layout>
+                  </Tab>
+                </Tabs>
+              {/key}
+            </Layout>
+          </div>
+        </Layout>
+      </div>
+      <div class="side-bar-wrapper">
+        <div
+          class="side-bar main"
+          class:hidden={$sidebarExpanded || isTransitioning}
+          class:embedded
+          class:compact
+          bind:this={sidebarElement}
+        >
+          <div class="side-bar-header">
+            <div class="side-bar-title">Response</div>
+            <ActionButton
+              size="M"
+              quiet
+              selected={$sidebarExpanded}
+              on:click={() => sidebarExpanded.set(!$sidebarExpanded)}
+            >
+              <Icon
+                name={$sidebarExpanded
+                  ? "arrows-in-simple"
+                  : "arrows-out-simple"}
+                size="S"
+              />
+            </ActionButton>
+          </div>
+          <Divider size="S" noMargin />
+          <div class="side-bar-content">
+            <div use:moveToExpanded>
+              <ResponsePanel
+                {datasource}
+                {response}
+                {schema}
+                {dynamicVariables}
+                fullscreen={$sidebarExpanded}
+                on:change={e => {
+                  const {
+                    dynamicVariables: updatedDynamicVariables,
+                    schema: updatedSchema,
+                  } = e.detail || {}
+                  if (updatedDynamicVariables) {
+                    localDynamicVariables = updatedDynamicVariables
+                  }
+                  if (updatedSchema) {
+                    schema = updatedSchema
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -979,6 +993,8 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="underlay"
+      class:embedded
+      class:compact
       transition:fade={{ duration: 260 }}
       on:click={() => sidebarExpanded.set(false)}
     ></div>
@@ -986,6 +1002,8 @@
   {#if $sidebarExpanded}
     <div
       class="side-bar expanded"
+      class:embedded
+      class:compact
       in:sidebarTransition={{ direction: "in" }}
       out:sidebarTransition={{ direction: "out" }}
     >
@@ -1019,6 +1037,82 @@
     display: flex;
     flex-direction: column;
   }
+  .api-endpoint-viewer.embedded {
+    --sidebar-width: clamp(200px, 26vw, 280px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .api-endpoint-viewer.embedded .wrap-divider {
+    margin: 0;
+  }
+  .api-endpoint-viewer.embedded .wrap,
+  .api-endpoint-viewer.embedded .request-heading,
+  .api-endpoint-viewer.embedded .request {
+    min-width: 0;
+  }
+  .api-endpoint-viewer.embedded .heading {
+    flex-wrap: wrap;
+    gap: var(--spacing-s);
+  }
+  .api-endpoint-viewer.embedded .api-details {
+    flex: 1 1 260px;
+    min-width: 0;
+  }
+  .api-endpoint-viewer.embedded .main {
+    padding-bottom: var(--spacing-xl);
+  }
+  .api-endpoint-viewer.embedded .bottom {
+    flex: 1;
+    min-height: 0;
+  }
+  .api-endpoint-viewer.embedded .wrap {
+    flex: 1;
+    min-height: 0;
+  }
+  .api-endpoint-viewer.embedded .actions {
+    flex-wrap: wrap;
+    gap: var(--spacing-s);
+    min-width: 0;
+    align-items: center;
+    flex: 1 1 320px;
+    justify-content: flex-end;
+  }
+  .api-endpoint-viewer.embedded .actions .grouped {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .api-endpoint-viewer.embedded .actions :global(.spectrum-Picker),
+  .api-endpoint-viewer.embedded .actions :global(.spectrum-Button),
+  .api-endpoint-viewer.embedded .actions :global(.spectrum-ActionButton) {
+    max-width: 100%;
+  }
+  .api-endpoint-viewer.compact .heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-s);
+  }
+  .api-endpoint-viewer.compact .actions {
+    justify-content: flex-start;
+  }
+  .api-endpoint-viewer.compact .actions .grouped {
+    width: 100%;
+  }
+  .api-endpoint-viewer.compact .actions .grouped > * {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+  .api-endpoint-viewer.compact .actions .save-btn {
+    margin-left: auto;
+  }
+  .api-endpoint-viewer.compact .request {
+    flex-wrap: wrap;
+  }
+  .api-endpoint-viewer.compact .request .picker {
+    width: auto;
+    flex: 1 1 260px;
+  }
   .request-heading {
     display: flex;
     flex-direction: column;
@@ -1042,6 +1136,9 @@
     width: var(--sidebar-width);
     flex-shrink: 0;
     position: relative;
+  }
+  .api-endpoint-viewer.embedded .side-bar-wrapper {
+    height: 100%;
   }
   .side-bar {
     position: absolute;
@@ -1067,6 +1164,12 @@
     visibility: hidden;
     pointer-events: none;
   }
+  .side-bar.main.embedded {
+    right: 0;
+    bottom: 0;
+    top: 0;
+    height: 100%;
+  }
   .side-bar.expanded {
     position: fixed;
     top: 15vh;
@@ -1077,7 +1180,7 @@
     border: var(--border-light);
     border-radius: 8px;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
-    z-index: 10;
+    z-index: 1100;
   }
   .underlay {
     position: fixed;
@@ -1086,7 +1189,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 5;
+    z-index: 1090;
     transition: opacity 260ms ease-out;
   }
   .side-bar-header {

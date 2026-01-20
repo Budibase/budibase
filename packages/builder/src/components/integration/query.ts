@@ -379,7 +379,10 @@ export async function runQuery(
   }
 }
 
-export function getSelectedQuery(queryId: string, datasourceId: string) {
+export function getSelectedQuery(
+  queryId: string | undefined,
+  datasourceId: string
+) {
   const queryStore = get(queries)
 
   const defaultQuery: Query = {
