@@ -383,8 +383,7 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-    width: 600px;
-    margin: 0 auto;
+    width: 100%;
     flex: 1 1 auto;
     padding: 48px 0 24px 0;
   }
@@ -419,8 +418,7 @@
   .input-wrapper {
     position: sticky;
     bottom: 0;
-    width: 600px;
-    margin: 0 auto;
+    width: 100%;
     background: var(--background-alt);
     padding-bottom: 32px;
     display: flex;
