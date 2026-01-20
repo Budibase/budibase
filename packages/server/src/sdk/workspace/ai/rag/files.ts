@@ -43,7 +43,7 @@ const buildRagConfig = async (
   const databaseUrl = await resolveVectorDatabaseConfig(ragConfig.vectorDb)
 
   const { apiKey, baseUrl, modelId } =
-    await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(ragConfig.embeddingModel)
+    await sdk.ai.models.getLiteLLMModelConfigOrThrow(ragConfig.embeddingModel)
   return {
     databaseUrl,
     embeddingModel: modelId,
@@ -55,7 +55,7 @@ const buildRagConfig = async (
 const resolveVectorDatabaseConfig = async (
   vectorDbId: string
 ): Promise<string> => {
-  const vectorDb = await sdk.vectorDbs.find(vectorDbId)
+  const vectorDb = await sdk.ai.vectorDb.find(vectorDbId)
   if (!vectorDb) {
     throw new Error("Vector db not found")
   }
@@ -308,7 +308,7 @@ export const getAgentRagConfig = async (agent: Agent): Promise<RagConfig> => {
     throw new HTTPError("RAG config not set", 422)
   }
 
-  const config = await sdk.ragConfigs.find(agent.ragConfigId)
+  const config = await sdk.ai.rag.config.find(agent.ragConfigId)
   if (!config) {
     throw new HTTPError("RAG config not found", 422)
   }

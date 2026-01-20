@@ -75,7 +75,7 @@ async function ensureLiteLLMConfigured() {
       keyId: key.id,
       secretKey: key.secret,
     }
-    await context.getWorkspaceDB().put(storedConfig)
+    await configs.save(storedConfig)
   }
   return storedConfig.config.liteLLM
 }
