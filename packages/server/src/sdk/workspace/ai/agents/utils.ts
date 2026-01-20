@@ -30,7 +30,7 @@ export async function getAvailableTools(
   const [queries, datasources, aiConfig] = await Promise.all([
     sdk.queries.fetch(),
     sdk.datasources.fetch(),
-    aiconfigId ? sdk.ai.models.find(aiconfigId) : Promise.resolve(undefined),
+    aiconfigId ? sdk.ai.configs.find(aiconfigId) : Promise.resolve(undefined),
   ])
   const webSearchConfig = aiConfig?.webSearchConfig
 

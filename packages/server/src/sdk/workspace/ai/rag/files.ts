@@ -43,7 +43,7 @@ const buildRagConfig = async (
   const databaseUrl = await resolveVectorDatabaseConfig(ragConfig.vectorDb)
 
   const { apiKey, baseUrl, modelId } =
-    await sdk.ai.models.getLiteLLMModelConfigOrThrow(ragConfig.embeddingModel)
+    await sdk.ai.configs.getLiteLLMModelConfigOrThrow(ragConfig.embeddingModel)
   return {
     databaseUrl,
     embeddingModel: modelId,

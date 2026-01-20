@@ -34,7 +34,7 @@ const sanitizeConfig = (
 export const fetchAIConfigs = async (
   ctx: UserCtx<void, AIConfigListResponse>
 ) => {
-  const configs = await sdk.ai.models.fetch()
+  const configs = await sdk.ai.configs.fetch()
   ctx.body = configs.map(sanitizeConfig)
 }
 
@@ -62,7 +62,7 @@ export const createAIConfig = async (
       configType,
     }
 
-  const newConfig = await sdk.ai.models.create(createRequest)
+  const newConfig = await sdk.ai.configs.create(createRequest)
 
   ctx.body = sanitizeConfig(newConfig)
 }
@@ -102,7 +102,7 @@ export const updateAIConfig = async (
     configType,
   }
 
-  const updatedConfig = await sdk.ai.models.update(updateRequest)
+  const updatedConfig = await sdk.ai.configs.update(updateRequest)
 
   ctx.body = sanitizeConfig(updatedConfig)
 }
@@ -115,7 +115,7 @@ export const deleteAIConfig = async (
     throw new HTTPError("Config ID is required", 400)
   }
 
-  await sdk.ai.models.remove(id)
+  await sdk.ai.configs.remove(id)
 
   ctx.body = { deleted: true }
 }

@@ -201,7 +201,7 @@ export async function syncKeyModels() {
     throw new Error("LiteLLM key not configured")
   }
 
-  const aiConfigs = await sdk.ai.models.fetch()
+  const aiConfigs = await sdk.ai.configs.fetch()
   const modelIds = aiConfigs
     .map(c => c.liteLLMModelId)
     .filter((id): id is string => !!id)

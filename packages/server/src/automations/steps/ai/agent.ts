@@ -77,7 +77,9 @@ export async function run({
           await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
         const { modelId, apiKey, baseUrl, modelName } =
-          await sdk.ai.models.getLiteLLMModelConfigOrThrow(agentConfig.aiconfig)
+          await sdk.ai.configs.getLiteLLMModelConfigOrThrow(
+            agentConfig.aiconfig
+          )
 
         tracer.llmobs.annotate(agentSpan, {
           metadata: {
