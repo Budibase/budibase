@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Modal, notifications } from "@budibase/bbui"
-  import { beforeUrlChange } from "@roxi/routify"
+  import { beforeUrlChange, params } from "@roxi/routify"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { queries } from "@/stores/builder"
@@ -36,12 +36,20 @@
   })
 
   $: goto = $gotoStore
+  $params
 
   $: templatesValue = $restTemplates?.templates || []
   $: templateGroupsValue = $restTemplates?.templateGroups || []
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === IntegrationTypes.REST
   )
+
+  const buildApiRoute = (path: string) => {
+    const applicationId = $params.application
+    return applicationId
+      ? `/builder/workspace/${applicationId}/apis/${path}`
+      : `./${path}`
+  }
 
   // CUSTOM REST
   const handleCustom = async (integration?: UIIntegration) => {
@@ -56,7 +64,7 @@
         await datasources.fetch()
 
         // Go to the new query page.
-        goto(`./query/new/${ds._id}`)
+        goto(buildApiRoute(`query/new/${ds._id}`))
       }
     } catch {
       notifications.error("There was a problem creating your new api")
@@ -171,7 +179,7 @@
       await datasources.fetch()
 
       // Go to the newly created datasource page.
-      goto(`./datasource/${ds._id}`)
+      goto(buildApiRoute(`datasource/${ds._id}`))
 
       notifications.success(`${selectedTemplate.name} API created`)
     } catch (error: any) {

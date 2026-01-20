@@ -13,15 +13,11 @@
     Body,
     Button,
     Layout,
-    notifications,
     Select,
     DetailSummary,
     Icon,
   } from "@budibase/bbui"
-  import {
-    automationStore,
-    sortedIntegrations as integrations,
-  } from "@/stores/builder"
+  import { automationStore } from "@/stores/builder"
   import { type FormUpdate } from "@/types/automations"
   import { getInputValue } from "../layouts"
   import { queries, datasources } from "@/stores/builder"
@@ -30,7 +26,7 @@
   import { runtimeToReadableBinding, getAuthBindings } from "@/dataBinding"
   import { EditorModes } from "@/components/common/CodeEditor"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
-  import { configFromIntegration } from "@/stores/selectors"
+  import APIModal from "@/pages/builder/workspace/[application]/apis/_components/APIModal.svelte"
   import { goto, params } from "@roxi/routify"
 
   $goto
@@ -43,6 +39,7 @@
   let value: any
   let authBindings: any[] = getAuthBindings()
   let selectedDatasourceId: string | undefined
+  let apiModal: APIModal
 
   // Include any custom bindings from the REST API data section UI to ensure completeness
   // when parsing to readable
@@ -125,6 +122,7 @@
 </script>
 
 <div class="step">
+  <APIModal bind:this={apiModal} />
   {#if !restSources?.length}
     <div class="empty-rest">
       <Layout alignContent="center" gap="S">
@@ -137,28 +135,7 @@
             icon={"Add"}
             secondary
             on:click={() => {
-              const REST = $integrations.find(i => i.name === SourceName.REST)
-              if (!REST) {
-                notifications.error("Could not create REST API!")
-                return
-              }
-
-              datasources
-                .create({
-                  integration: REST,
-                  config: configFromIntegration(REST),
-                })
-                .then(datasource => {
-                  notifications.success("REST API created successfully")
-                  $goto(`/builder/workspace/:application/apis/query/new/:id`, {
-                    application: $params.application,
-                    id: datasource._id,
-                  })
-                })
-                .catch(err => {
-                  notifications.error("")
-                  console.error("REST API create failed", err)
-                })
+              apiModal?.show()
             }}
           >
             Create
