@@ -14,13 +14,27 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-const sanitizeConfig = (
+const sanitizeConfig = async (
   config: CustomAIProviderConfig
-): CustomAIProviderConfig => {
+): Promise<CustomAIProviderConfig> => {
+  const providers = await sdk.ai.configs.fetchLiteLLMProviders()
+  const provider = providers.find(p => p.id === config.provider)
+
+  if (!provider) {
+    throw new Error(`Provider ${config.provider} not found`)
+  }
+
+  const secretFields = provider.credentialFields
+    .filter(f => f.field_type === "password")
+    .map(f => f.key)
+  const credentialsFields = secretFields.reduce((updatedFields, field) => {
+    updatedFields[field] = PASSWORD_REPLACEMENT
+    return updatedFields
+  }, config.credentialsFields)
+
   const sanitized: CustomAIProviderConfig = {
     ...config,
-    // TODO
-    // ...(config.apiKey ? { apiKey: PASSWORD_REPLACEMENT } : {}),
+    credentialsFields,
   }
 
   if (sanitized.webSearchConfig?.apiKey) {
@@ -37,7 +51,11 @@ export const fetchAIConfigs = async (
   ctx: UserCtx<void, AIConfigListResponse>
 ) => {
   const configs = await sdk.ai.configs.fetch()
-  ctx.body = configs.map(sanitizeConfig)
+  const result: AIConfigListResponse = []
+  for (const config of configs) {
+    result.push(await sanitizeConfig(config))
+  }
+  ctx.body = result
 }
 
 export const fetchAIProviders = async (
@@ -70,7 +88,7 @@ export const createAIConfig = async (
 
   const newConfig = await sdk.ai.configs.create(createRequest)
 
-  ctx.body = sanitizeConfig(newConfig)
+  ctx.body = await sanitizeConfig(newConfig)
 }
 
 export const updateAIConfig = async (
@@ -108,7 +126,7 @@ export const updateAIConfig = async (
 
   const updatedConfig = await sdk.ai.configs.update(updateRequest)
 
-  ctx.body = sanitizeConfig(updatedConfig)
+  ctx.body = await sanitizeConfig(updatedConfig)
 }
 
 export const deleteAIConfig = async (

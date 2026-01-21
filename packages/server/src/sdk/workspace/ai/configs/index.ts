@@ -101,6 +101,21 @@ export async function update(
     throw new HTTPError("Config to edit not found", 404)
   }
 
+  if (config.credentialsFields) {
+    const mergedCredentials = {
+      ...(existing.credentialsFields || {}),
+      ...config.credentialsFields,
+    }
+
+    Object.entries(mergedCredentials).forEach(([key, value]) => {
+      if (value === PASSWORD_REPLACEMENT) {
+        mergedCredentials[key] = existing.credentialsFields?.[key] || ""
+      }
+    })
+
+    config.credentialsFields = mergedCredentials
+  }
+
   if (config.webSearchConfig?.apiKey === PASSWORD_REPLACEMENT) {
     config.webSearchConfig.apiKey = existing.webSearchConfig?.apiKey || ""
   }
