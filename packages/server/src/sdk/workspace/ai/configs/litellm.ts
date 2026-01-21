@@ -4,6 +4,10 @@ import * as configSdk from "../configs"
 import env from "../../../../environment"
 import { AIConfigType } from "@budibase/types"
 
+const liteLLMUrl = env.LITELLM_URL
+if (!liteLLMUrl) {
+  throw new Error("LITELLM_URL is not set")
+}
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
 export async function generateKey(
@@ -23,7 +27,7 @@ export async function generateKey(
   }
 
   const response = await fetch(
-    `${env.LITELLM_URL}/key/generate`,
+    `${liteLLMUrl}/key/generate`,
     requestOptions
   )
 
@@ -72,7 +76,7 @@ export async function addModel({
     }),
   }
 
-  const res = await fetch(`${env.LITELLM_URL}/model/new`, requestOptions)
+  const res = await fetch(`${liteLLMUrl}/model/new`, requestOptions)
   const json = await res.json()
   return json.model_id
 }
@@ -120,7 +124,7 @@ export async function updateModel({
   }
 
   const res = await fetch(
-    `${env.LITELLM_URL}/model/${llmModelId}/update`,
+    `${liteLLMUrl}/model/${llmModelId}/update`,
     requestOptions
   )
   const json = await res.json()
@@ -143,7 +147,7 @@ export async function validateConfig(model: {
     let modelId: string | undefined
 
     try {
-      const createModelResponse = await fetch(`${env.LITELLM_URL}/model/new`, {
+      const createModelResponse = await fetch(`${liteLLMUrl}/model/new`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -183,7 +187,7 @@ export async function validateConfig(model: {
 
       modelId = createModelJson.model_id
 
-      const response = await fetch(`${env.LITELLM_URL}/v1/embeddings`, {
+      const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -205,7 +209,7 @@ export async function validateConfig(model: {
     } finally {
       if (modelId) {
         try {
-          await fetch(`${env.LITELLM_URL}/model/delete`, {
+          await fetch(`${liteLLMUrl}/model/delete`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -241,7 +245,7 @@ export async function validateConfig(model: {
   }
 
   const res = await fetch(
-    `${env.LITELLM_URL}/health/test_connection`,
+    `${liteLLMUrl}/health/test_connection`,
     requestOptions
   )
   if (res.status !== 200) {
@@ -279,7 +283,7 @@ export async function syncKeyModels() {
     }),
   }
 
-  const res = await fetch(`${env.LITELLM_URL}/key/update`, requestOptions)
+  const res = await fetch(`${liteLLMUrl}/key/update`, requestOptions)
   const json = await res.json()
   if (json.status === "error") {
     const trimmedError = json.result.error.split("\n")[0] || json.result.error
@@ -306,7 +310,7 @@ type LiteLLMPublicProvider = {
 }
 
 export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
-  const res = await fetch(`${env.LITELLM_URL}/public/providers/fields`)
+  const res = await fetch(`${liteLLMUrl}/public/providers/fields`)
   if (!res.ok) {
     const text = await res.text()
     throw new HTTPError(
