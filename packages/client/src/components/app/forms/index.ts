@@ -22,3 +22,4 @@ export const bbreferencefield = () => import("./BBReferenceField.svelte")
 export const bbreferencesinglefield = () =>
   import("./BBReferenceSingleField.svelte")
 export const ratingfield = () => import("./RatingField.svelte")
+export const slider = () => import("./Slider.svelte")
