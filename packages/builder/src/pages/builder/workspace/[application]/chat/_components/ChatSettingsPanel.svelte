@@ -23,6 +23,7 @@
     _enabled: boolean
   ) => void
   export let handleDefaultToggle: (_agentId: string) => void
+  export let workspaceId: string | undefined
 
   let selectedAgentId: string | undefined
   let selectedAgent: AgentListItem | undefined
@@ -82,6 +83,7 @@
   {selectedAgent}
   defaultAgentId={resolvedDefaultAgent?.agentId}
   {isAgentAvailable}
+  {workspaceId}
   onSetDefault={handleDefaultToggle}
   onClose={() => {
     isModalOpen = false

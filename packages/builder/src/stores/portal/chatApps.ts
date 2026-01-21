@@ -93,7 +93,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return chatApp
   }
 
-  updateEnabledAgents = async (enabledAgents: ChatApp["enabledAgents"]) => {
+  updateChatApp = async (updates: Partial<ChatApp>) => {
     const { chatAppId, chatAppsById } = get(this.store)
     const chatApp = chatAppId ? chatAppsById[chatAppId] : undefined
     if (!chatAppId || !chatApp) {
@@ -102,7 +102,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 
     const updated = await API.updateChatApp({
       ...chatApp,
-      enabledAgents,
+      ...updates,
     })
 
     this.update(state => {
@@ -111,6 +111,10 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     })
 
     return updated
+  }
+
+  updateEnabledAgents = async (enabledAgents: ChatApp["enabledAgents"]) => {
+    return await this.updateChatApp({ enabledAgents })
   }
 
   fetchConversations = async (chatAppId?: string) => {

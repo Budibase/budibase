@@ -100,6 +100,7 @@
       {isAgentAvailable}
       {handleAvailabilityToggle}
       {handleDefaultToggle}
+      workspaceId={$params.application}
     />
 
     {#if $params.application}
