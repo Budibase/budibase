@@ -26,6 +26,7 @@
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
+  import DateAddedRenderer from "./_components/DateAddedRenderer.svelte"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
   import InvitedModal from "./_components/InvitedModal.svelte"
@@ -96,10 +97,15 @@
 
   $: customRenderers = [
     { column: "email", component: EmailTableRenderer },
-    { column: "userGroups", component: GroupsTableRenderer },
-    { column: "workspaces", component: AppsTableRenderer },
     { column: "role", component: RoleTableRenderer },
-  ]
+    !workspaceOnly &&
+      $licensing.groupsEnabled && {
+        column: "userGroups",
+        component: GroupsTableRenderer,
+      },
+    !workspaceOnly && { column: "workspaces", component: AppsTableRenderer },
+    workspaceOnly && { column: "createdAt", component: DateAddedRenderer },
+  ].filter(Boolean)
   let userData: UserData = { users: [], groups: [] }
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
@@ -107,6 +113,7 @@
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
+      displayName: workspaceOnly ? "User" : "Email",
       sortable: false,
       width: "2fr",
       minWidth: "200px",
@@ -116,13 +123,25 @@
       sortable: false,
       width: "1fr",
     },
-    ...($licensing.groupsEnabled && {
-      userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
-    }),
-    workspaces: {
-      sortable: false,
-      width: "1fr",
-    },
+    ...(!workspaceOnly &&
+      $licensing.groupsEnabled && {
+        userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
+      }),
+    ...(workspaceOnly
+      ? {
+          createdAt: {
+            displayName: "Date added",
+            sortable: false,
+            width: "1fr",
+            minWidth: "160px",
+          },
+        }
+      : {
+          workspaces: {
+            sortable: false,
+            width: "1fr",
+          },
+        }),
   }
   let inviteUsersResponse: InviteUsersResponse = {
     successful: [],
@@ -201,7 +220,10 @@
   }
   const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
 
-  const showOnboardingTypeModal = async (addUsersData: UserData) => {
+  const showOnboardingTypeModal = async (
+    addUsersData: UserData,
+    onboardingType?: string
+  ) => {
     // no-op if users already exist
     userData = await removingDuplicities(addUsersData)
     if (!userData?.users?.length) {
@@ -211,6 +233,8 @@
     if ($organisation.isSSOEnforced) {
       // bypass the onboarding type selection of sso is enforced
       await chooseCreationType(OnboardingType.EMAIL)
+    } else if (onboardingType) {
+      await chooseCreationType(onboardingType)
     } else {
       onboardingTypeModal.show()
     }
@@ -408,7 +432,7 @@
               : createUserModal.show}
             cta
           >
-            Add users
+            {workspaceOnly ? "Invite to workspace" : "Add users"}
           </Button>
         {/if}
       </div>
@@ -441,7 +465,7 @@
 </Layout>
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal {showOnboardingTypeModal} />
+  <AddUserModal {showOnboardingTypeModal} {workspaceOnly} />
 </Modal>
 
 <Modal bind:this={inviteConfirmationModal}>

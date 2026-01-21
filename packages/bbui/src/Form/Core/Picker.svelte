@@ -27,6 +27,7 @@
   export let fieldText: string = ""
   export let fieldIcon: PickerIconInput = undefined
   export let fieldColour: string = ""
+  export let fieldSubtitle: string | null = null
   export let isPlaceholder: boolean = false
   export let placeholderOption: string | undefined | boolean = undefined
   export let options: O[] = []
@@ -250,8 +251,12 @@
     class="spectrum-Picker-label"
     class:is-placeholder={isPlaceholder}
     class:auto-width={autoWidth}
+    class:has-subtitle={!!fieldSubtitle}
   >
-    {fieldText}
+    <span class="picker-label-text">{fieldText}</span>
+    {#if fieldSubtitle}
+      <span class="picker-label-subtitle">{fieldSubtitle}</span>
+    {/if}
   </span>
   {#if !hideChevron}
     <Icon name="caret-down" size="S" />
@@ -533,6 +538,22 @@
     color: var(--spectrum-global-color-gray-600);
     display: block;
     margin-top: var(--spacing-s);
+  }
+  .spectrum-Picker-label.has-subtitle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    white-space: normal;
+    overflow: visible;
+    height: auto;
+    line-height: normal;
+  }
+  .picker-label-subtitle {
+    font-size: 12px;
+    line-height: 15px;
+    color: var(--spectrum-global-color-gray-600);
+    font-weight: 500;
   }
 
   .select-all-item {

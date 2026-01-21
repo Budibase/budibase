@@ -22,6 +22,7 @@
     option?.colour ?? undefined
   export let getOptionSubtitle = (option: O, _index?: number) =>
     option?.subtitle ?? undefined
+  export let showSelectedSubtitle: boolean = false
   export let compare = (option: O, value: V) => option === value
   export let useOptionIconImage = false
   export let isOptionEnabled = (option: O, _index?: number) =>
@@ -49,6 +50,9 @@
   const dispatch = createEventDispatcher()
 
   $: fieldText = getFieldText(value, options, placeholder)
+  $: fieldSubtitle = showSelectedSubtitle
+    ? getFieldAttribute(getOptionSubtitle, value, options)
+    : null
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
@@ -94,7 +98,7 @@
   }
 </script>
 
-<Picker
+  <Picker
   on:click
   bind:open
   bind:searchTerm
@@ -104,7 +108,8 @@
   {id}
   {disabled}
   {readonly}
-  {fieldText}
+    {fieldText}
+    {fieldSubtitle}
   {fieldIcon}
   {fieldColour}
   {options}
