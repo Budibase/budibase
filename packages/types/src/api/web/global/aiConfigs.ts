@@ -7,7 +7,7 @@ export type CreateAIConfigRequest = Omit<
 >
 export type UpdateAIConfigRequest = CustomAIProviderConfig
 
-export interface AIProviderField {
+export interface LLMProviderField {
   key: string
   label: string
   placeholder?: string | null
@@ -18,12 +18,12 @@ export interface AIProviderField {
   default_value?: string | null
 }
 
-export interface AIProvider {
+export interface LLMProvider {
   id: string
   displayName: string
   externalProvider: string
-  default_model_placeholder?: string | null
-  credentialFields: AIProviderField[]
+  defaultModelPlaceholder?: string
+  credentialFields: LLMProviderField[]
 }
 
-export type AIProvidersResponse = AIProvider[]
+export type LLMProvidersResponse = LLMProvider[]

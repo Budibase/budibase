@@ -10,8 +10,8 @@
     Select,
   } from "@budibase/bbui"
   import type {
-    AIProvider,
     CustomAIProviderConfig,
+    LLMProvider,
     RequiredKeys,
     ToDocCreateMetadata,
     ToDocUpdateMetadata,
@@ -62,14 +62,14 @@
       ? "Choose a provider"
       : "No providers available"
 
-  $: providersMap = providers?.reduce<Record<string, AIProvider>>((acc, p) => {
+  $: providersMap = providers?.reduce<Record<string, LLMProvider>>((acc, p) => {
     acc[p.id] = p
     return acc
   }, {})
   $: selectedProvider = providersMap?.[draft.provider]
 
   $: modelPlaceholder =
-    selectedProvider?.default_model_placeholder || "gpt-4o-mini"
+    selectedProvider?.defaultModelPlaceholder || "gpt-4o-mini"
 
   onMount(async () => {
     try {

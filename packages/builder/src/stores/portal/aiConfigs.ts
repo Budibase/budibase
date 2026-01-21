@@ -1,15 +1,15 @@
 import { API } from "@/api"
 import {
-  AIProvider,
   CreateAIConfigRequest,
   CustomAIProviderConfig,
+  LLMProvider,
   UpdateAIConfigRequest,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 interface AIConfigState {
   customConfigs: CustomAIProviderConfig[]
-  providers?: AIProvider[]
+  providers?: LLMProvider[]
 }
 
 export class AIConfigStore extends BudiStore<AIConfigState> {

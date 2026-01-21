@@ -1,11 +1,11 @@
 import { configs, context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   AIConfigType,
-  AIProvider,
-  AIProviderField,
+  LLMProviderField,
   ConfigType,
   CustomAIProviderConfig,
   DocumentType,
+  LLMProvider,
   PASSWORD_REPLACEMENT,
   RequiredKeys,
 } from "@budibase/types"
@@ -206,19 +206,20 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
   }
 }
 
-let liteLLMProviders: AIProvider[]
+let liteLLMProviders: LLMProvider[]
 
-export async function fetchLiteLLMProviders(): Promise<AIProvider[]> {
+export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
   if (!liteLLMProviders?.length) {
     const providers = await liteLLM.fetchPublicProviders()
     liteLLMProviders = providers.map(provider => {
-      const mapProvider: RequiredKeys<AIProvider> = {
+      const mapProvider: RequiredKeys<LLMProvider> = {
         id: provider.provider,
         displayName: provider.provider_display_name,
         externalProvider: provider.litellm_provider,
-        default_model_placeholder: provider.default_model_placeholder,
+        defaultModelPlaceholder:
+          provider.default_model_placeholder ?? undefined,
         credentialFields: provider.credential_fields.map(f => {
-          const field: RequiredKeys<AIProviderField> = {
+          const field: RequiredKeys<LLMProviderField> = {
             key: f.key,
             label: f.label,
             placeholder: f.placeholder,

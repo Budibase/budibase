@@ -1,16 +1,16 @@
 import {
   AIConfigListResponse,
-  AIProvidersResponse,
   CustomAIProviderConfig,
   CreateAIConfigRequest,
   UpdateAIConfigRequest,
+  LLMProvidersResponse,
 } from "@budibase/types"
 
 import { BaseAPIClient } from "./types"
 
 export interface AIConfigEndpoints {
   fetch: () => Promise<AIConfigListResponse>
-  providers: () => Promise<AIProvidersResponse>
+  providers: () => Promise<LLMProvidersResponse>
   create: (config: CreateAIConfigRequest) => Promise<CustomAIProviderConfig>
   update: (config: UpdateAIConfigRequest) => Promise<CustomAIProviderConfig>
   delete: (id: string) => Promise<{ deleted: true }>

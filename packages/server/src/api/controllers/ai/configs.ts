@@ -10,7 +10,7 @@ import {
   RequiredKeys,
   WithoutDocMetadata,
   ToDocUpdateMetadata,
-  AIProvidersResponse,
+  LLMProvidersResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -59,7 +59,7 @@ export const fetchAIConfigs = async (
 }
 
 export const fetchAIProviders = async (
-  ctx: UserCtx<void, AIProvidersResponse>
+  ctx: UserCtx<void, LLMProvidersResponse>
 ) => {
   ctx.body = await sdk.ai.configs.fetchLiteLLMProviders()
 }
