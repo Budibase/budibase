@@ -140,33 +140,87 @@ export async function validateConfig(model: {
   const { name, provider, credentialFields, configType } = model
 
   if (configType === AIConfigType.EMBEDDINGS) {
-    // TODO
-    // const headers: Record<string, string> = {
-    //   "Content-Type": "application/json",
-    // }
-    // if (apiKey) {
-    //   headers.Authorization = `Bearer ${apiKey}`
-    // }
-    // const normalizedBase = baseUrl?.replace(/\/+$/, "") || baseUrl
-    // const response = await fetch(
-    //   `${normalizedBase}/v1/embeddings`,
-    //   {
-    //     method: "POST",
-    //     headers,
-    //     body: JSON.stringify({
-    //       model: name,
-    //       input: "Budibase embedding validation",
-    //     }),
-    //   }
-    // )
+    let modelId: string | undefined
 
-    // if (!response.ok) {
-    //   const text = await response.text()
-    //   throw new HTTPError(
-    //     `Error validating configuration: ${text || response.statusText}`,
-    //     400
-    //   )
-    // }
+    try {
+      const createModelResponse = await fetch(`${env.LITELLM_URL}/model/new`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: liteLLMAuthorizationHeader,
+        },
+        body: JSON.stringify({
+          model_name: name,
+          litellm_params: {
+            custom_llm_provider: provider,
+            model: `${provider}/${name}`,
+            use_in_pass_through: false,
+            use_litellm_proxy: false,
+            merge_reasoning_content_in_choices: false,
+            input_cost_per_token: 0,
+            output_cost_per_token: 0,
+            guardrails: [],
+            ...credentialFields,
+          },
+          model_info: {
+            created_at: new Date().toISOString(),
+            created_by: (context.getIdentity() as any)?.email,
+          },
+        }),
+      })
+
+      const createModelJson = await createModelResponse.json()
+      if (!createModelResponse.ok || createModelJson.status === "error") {
+        const errorMessage =
+          createModelJson?.result?.error ||
+          createModelJson?.error ||
+          createModelResponse.statusText
+        throw new HTTPError(
+          `Error validating configuration: ${errorMessage}`,
+          400
+        )
+      }
+
+      modelId = createModelJson.model_id
+
+      const response = await fetch(`${env.LITELLM_URL}/v1/embeddings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: liteLLMAuthorizationHeader,
+        },
+        body: JSON.stringify({
+          model: name,
+          input: "Budibase embedding validation",
+        }),
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        throw new HTTPError(
+          `Error validating configuration: ${text || response.statusText}`,
+          400
+        )
+      }
+    } finally {
+      if (modelId) {
+        try {
+          await fetch(`${env.LITELLM_URL}/model/delete`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: liteLLMAuthorizationHeader,
+            },
+            body: JSON.stringify({ id: modelId }),
+          })
+        } catch (e) {
+          console.error(
+            "Error deleting the temporary model for validating embeddings",
+            { e }
+          )
+        }
+      }
+    }
     return
   }
 

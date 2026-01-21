@@ -101,9 +101,6 @@ export async function update(
     throw new HTTPError("Config to edit not found", 404)
   }
 
-  // config.apiKey =
-  //   config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
-
   if (config.webSearchConfig?.apiKey === PASSWORD_REPLACEMENT) {
     config.webSearchConfig.apiKey = existing.webSearchConfig?.apiKey || ""
   }
