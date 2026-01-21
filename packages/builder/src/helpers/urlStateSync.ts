@@ -5,9 +5,8 @@ import * as routify from "@roxi/routify"
 interface SyncURLToStateOptions<State extends Record<string, any>> {
   urlParam: string
   stateKey: keyof State & string
-  validate?: (value: string | undefined) => boolean
-  update?: (value: string | undefined) => void
-  baseUrl?: string
+  validate?: (value: string) => boolean
+  update?: (value: string) => void
   fallbackUrl?: string | (() => string)
   store: Writable<State>
   routify: typeof routify
@@ -18,7 +17,7 @@ interface SyncURLToStateOptions<State extends Record<string, any>> {
     url?: string
     params?: Record<string, unknown>
   } | void
-  decode?: (value: string | undefined) => string | undefined
+  decode?: (value: string) => string
 }
 
 export const syncURLToState = <State extends Record<string, any>>(
@@ -29,7 +28,6 @@ export const syncURLToState = <State extends Record<string, any>>(
     stateKey,
     validate,
     update,
-    baseUrl = "..",
     fallbackUrl,
     store,
     routify,
@@ -39,7 +37,6 @@ export const syncURLToState = <State extends Record<string, any>>(
   if (
     !urlParam ||
     !stateKey ||
-    !baseUrl ||
     !urlParam ||
     !store?.subscribe ||
     !routify ||
@@ -62,7 +59,7 @@ export const syncURLToState = <State extends Record<string, any>>(
     const decoded: typeof urlParams = {}
     if (urlParams) {
       Object.keys(urlParams).forEach(key => {
-        decoded[key] = decode(urlParams[key])
+        decoded[key] = urlParams[key] && decode(urlParams[key])
       })
     }
     return decoded
