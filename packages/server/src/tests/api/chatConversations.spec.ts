@@ -24,19 +24,46 @@ import {
 } from "../../api/controllers/ai/chatConversations"
 import sdk from "../../sdk"
 
-jest.mock("@budibase/pro", () => ({
-  ai: {
-    agentSystemPrompt: jest.fn(() => "system"),
-    createLiteLLMOpenAI: jest.fn(),
-  },
-}))
+jest.mock("@budibase/pro", () => {
+  const actual = jest.requireActual("@budibase/pro")
+  return {
+    ...actual,
+    ai: {
+      ...actual.ai,
+      agentSystemPrompt: jest.fn(() => "system"),
+      createLiteLLMOpenAI: jest.fn(),
+    },
+  }
+})
 
-jest.mock("ai", () => ({
-  convertToModelMessages: jest.fn(),
-  extractReasoningMiddleware: jest.fn(),
-  streamText: jest.fn(),
-  wrapLanguageModel: jest.fn(),
-}))
+jest.mock("ai", () => {
+  const actual = jest.requireActual("ai")
+  return {
+    ...actual,
+    convertToModelMessages: jest.fn(),
+    extractReasoningMiddleware: jest.fn(),
+    streamText: jest.fn(),
+    wrapLanguageModel: jest.fn(),
+  }
+})
+
+jest.mock("../../sdk/aiConfig", () => {
+  const actual = jest.requireActual("../../sdk/aiConfig")
+  return {
+    ...actual,
+    getLiteLLMModelConfigOrThrow: jest.fn(),
+  }
+})
+
+jest.mock("../../sdk/workspace/ai/agents", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/agents")
+  return {
+    ...actual,
+    getOrThrow: jest.fn(),
+    listAgentFiles: jest.fn(),
+    buildPromptAndTools: jest.fn(),
+  }
+})
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
@@ -304,19 +331,31 @@ describe("chat conversation transient behavior", () => {
     >
     const tools: ToolSet = {}
 
-    jest.spyOn(sdk.ai.agents, "getOrThrow").mockResolvedValue(mockAgent)
-    jest.spyOn(sdk.ai.agents, "listAgentFiles").mockResolvedValue([])
-    jest
-      .spyOn(sdk.ai.agents, "buildPromptAndTools")
-      .mockResolvedValue({ systemPrompt: "system", tools })
-    jest
-      .spyOn(sdk.aiConfigs, "getLiteLLMModelConfigOrThrow")
-      .mockResolvedValue({
-        modelName: "model-1",
-        modelId: "model-1",
-        apiKey: "api-key",
-        baseUrl: "http://localhost",
-      })
+    ;(
+      sdk.ai.agents.getOrThrow as jest.MockedFunction<
+        typeof sdk.ai.agents.getOrThrow
+      >
+    ).mockResolvedValue(mockAgent)
+    ;(
+      sdk.ai.agents.listAgentFiles as jest.MockedFunction<
+        typeof sdk.ai.agents.listAgentFiles
+      >
+    ).mockResolvedValue([])
+    ;(
+      sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
+        typeof sdk.ai.agents.buildPromptAndTools
+      >
+    ).mockResolvedValue({ systemPrompt: "system", tools })
+    ;(
+      sdk.aiConfigs.getLiteLLMModelConfigOrThrow as jest.MockedFunction<
+        typeof sdk.aiConfigs.getLiteLLMModelConfigOrThrow
+      >
+    ).mockResolvedValue({
+      modelName: "model-1",
+      modelId: "model-1",
+      apiKey: "api-key",
+      baseUrl: "http://localhost",
+    })
 
     const openAiMock = {
       chat: () => mockModel,
