@@ -1,5 +1,6 @@
 import {
   AIConfigListResponse,
+  AIProvidersResponse,
   CustomAIProviderConfig,
   CreateAIConfigRequest,
   UpdateAIConfigRequest,
@@ -9,6 +10,7 @@ import { BaseAPIClient } from "./types"
 
 export interface AIConfigEndpoints {
   fetch: () => Promise<AIConfigListResponse>
+  providers: () => Promise<AIProvidersResponse>
   create: (config: CreateAIConfigRequest) => Promise<CustomAIProviderConfig>
   update: (config: UpdateAIConfigRequest) => Promise<CustomAIProviderConfig>
   delete: (id: string) => Promise<{ deleted: true }>
@@ -20,6 +22,12 @@ export const buildAIConfigEndpoints = (
   fetch: async () => {
     return await API.get({
       url: `/api/configs`,
+    })
+  },
+
+  providers: async () => {
+    return await API.get({
+      url: `/api/configs/providers`,
     })
   },
 

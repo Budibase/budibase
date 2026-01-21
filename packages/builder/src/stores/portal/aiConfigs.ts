@@ -8,12 +8,14 @@ import {
 
 interface AIConfigState {
   customConfigs: CustomAIProviderConfig[]
+  providers: string[]
 }
 
 export class AIConfigStore extends BudiStore<AIConfigState> {
   constructor() {
     super({
       customConfigs: [],
+      providers: [],
     })
   }
 
@@ -28,6 +30,15 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
       return state
     })
     return configs
+  }
+
+  fetchProviders = async () => {
+    const providers = await API.aiConfig.providers()
+    this.update(state => {
+      state.providers = providers
+      return state
+    })
+    return providers
   }
 
   createConfig = async (

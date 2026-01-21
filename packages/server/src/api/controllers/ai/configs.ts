@@ -10,6 +10,7 @@ import {
   RequiredKeys,
   WithoutDocMetadata,
   ToDocUpdateMetadata,
+  AIProvidersResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -36,6 +37,12 @@ export const fetchAIConfigs = async (
 ) => {
   const configs = await sdk.ai.configs.fetch()
   ctx.body = configs.map(sanitizeConfig)
+}
+
+export const fetchAIProviders = async (
+  ctx: UserCtx<void, AIProvidersResponse>
+) => {
+  ctx.body = await sdk.ai.configs.fetchLiteLLMProviders()
 }
 
 export const createAIConfig = async (

@@ -226,3 +226,20 @@ export async function syncKeyModels() {
     throw new HTTPError(`Error syncing keys: ${trimmedError}`, 400)
   }
 }
+
+export async function fetchPublicProviders(): Promise<string[]> {
+  const res = await fetch(`${env.LITELLM_URL}/public/providers`)
+  if (!res.ok) {
+    const text = await res.text()
+    throw new HTTPError(
+      `Error fetching LiteLLM providers: ${text || res.statusText}`,
+      res.status
+    )
+  }
+
+  const json = await res.json()
+
+  return json.filter(
+    (provider: any): provider is string => typeof provider === "string"
+  )
+}

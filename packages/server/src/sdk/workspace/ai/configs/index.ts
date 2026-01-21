@@ -180,3 +180,7 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
     baseUrl: environment.LITELLM_URL,
   }
 }
+
+export async function fetchLiteLLMProviders(): Promise<string[]> {
+  return await liteLLM.fetchPublicProviders()
+}

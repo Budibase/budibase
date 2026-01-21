@@ -4,12 +4,13 @@
     ModalContent,
     Label,
     Input,
+    Select,
     Heading,
     notifications,
     keepOpen,
   } from "@budibase/bbui"
   import { AIConfigType, type CustomAIProviderConfig } from "@budibase/types"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
   export let config: CustomAIProviderConfig | null
   export let type: AIConfigType
@@ -34,6 +35,28 @@
   $: canSave = !!trimmedName && !!trimmedProvider
   $: typeLabel =
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
+
+  let loadingProviders = true
+  let providers: string[] = []
+
+  $: providerOptions = Array.from(
+    new Set([...(providers || []), trimmedProvider].filter(Boolean))
+  )
+  $: providerPlaceholder = loadingProviders
+    ? "Loading providers..."
+    : providerOptions.length
+      ? "Choose a provider"
+      : "No providers available"
+
+  onMount(async () => {
+    try {
+      providers = await aiConfigsStore.fetchProviders()
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to load providers")
+    } finally {
+      loadingProviders = false
+    }
+  })
 
   async function confirm() {
     try {
@@ -110,7 +133,12 @@
 
   <div class="row">
     <Label size="M">Provider</Label>
-    <Input bind:value={draft.provider} />
+    <Select
+      bind:value={draft.provider}
+      options={providerOptions}
+      placeholder={providerPlaceholder}
+      loading={loadingProviders}
+    />
   </div>
 
   <div class="row">

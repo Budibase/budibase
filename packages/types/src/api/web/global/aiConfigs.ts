@@ -6,3 +6,5 @@ export type CreateAIConfigRequest = Omit<
   "_id" | "_rev" | "_deleted"
 >
 export type UpdateAIConfigRequest = CustomAIProviderConfig
+
+export type AIProvidersResponse = string[]
