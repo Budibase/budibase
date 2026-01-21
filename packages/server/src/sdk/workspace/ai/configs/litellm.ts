@@ -5,9 +5,6 @@ import env from "../../../../environment"
 import { AIConfigType } from "@budibase/types"
 
 const liteLLMUrl = env.LITELLM_URL
-if (!liteLLMUrl) {
-  throw new Error("LITELLM_URL is not set")
-}
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
 export async function generateKey(
@@ -26,10 +23,7 @@ export async function generateKey(
     body,
   }
 
-  const response = await fetch(
-    `${liteLLMUrl}/key/generate`,
-    requestOptions
-  )
+  const response = await fetch(`${liteLLMUrl}/key/generate`, requestOptions)
 
   const json = await response.json()
   return { id: json.token_id, secret: json.key }
