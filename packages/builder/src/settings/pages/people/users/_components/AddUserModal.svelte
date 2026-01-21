@@ -26,8 +26,9 @@
   let userGroups = []
   let emailsInput = []
   let emailError = null
+  const maxItems = 20
   let selectedRole = Constants.BudibaseRoles.AppUser
-  let onboardingType = OnboardingType.PASSWORD
+  let onboardingType = OnboardingType.EMAIL
 
   $: userData = [
     {
@@ -87,7 +88,12 @@
   function validateWorkspaceEmails() {
     const emails = emailsInput
     if (!emails.length) {
-      emailError = "Please enter at least one email address"
+      emailError = null
+      return false
+    }
+
+    if (emails.length > maxItems) {
+      emailError = `Max ${maxItems} users can be invited at once`
       return false
     }
 
@@ -96,13 +102,17 @@
     if (invalidEmails.length) {
       emailError =
         invalidEmails.length === 1
-          ? "Invalid email address"
+          ? `Invalid email address: ${invalidEmails[0]}`
           : `Invalid email addresses: ${invalidEmails.join(", ")}`
       return false
     }
 
     emailError = null
     return true
+  }
+
+  const handleEmailsChange = () => {
+    validateWorkspaceEmails()
   }
 
   function buildWorkspaceUsers() {
@@ -173,10 +183,8 @@
         bind:value={emailsInput}
         error={emailError}
         splitOnSpace={true}
-        on:change={() => {
-          emailError = null
-        }}
-        on:blur={validateWorkspaceEmails}
+        maxItems={maxItems + 1}
+        on:change={handleEmailsChange}
       />
 
       <div class="role-select">

@@ -17,6 +17,7 @@
   export let delimiter = ","
   export let splitOnSpace = false
   export let allowDuplicates = false
+  export let maxItems: number | undefined = undefined
 
   let inputValue = ""
   let focused = false
@@ -29,13 +30,31 @@
     dispatch("change", next)
   }
 
+  const notifyMax = () => {
+    if (maxItems != null) {
+      dispatch("max", maxItems)
+    }
+  }
+
   const addTokens = (tokens: string[]) => {
     const cleaned = tokens.map(token => token.trim()).filter(Boolean)
     if (!cleaned.length) {
       return
     }
 
-    const next = cleaned.reduce(
+    if (maxItems != null && value.length >= maxItems) {
+      notifyMax()
+      return
+    }
+
+    const available =
+      maxItems != null ? Math.max(maxItems - value.length, 0) : cleaned.length
+    if (available === 0) {
+      notifyMax()
+      return
+    }
+
+    const next = cleaned.slice(0, available).reduce(
       (acc, token) => {
         if (allowDuplicates || !acc.includes(token)) {
           acc.push(token)
@@ -46,6 +65,10 @@
     )
 
     updateValue(next)
+
+    if (maxItems != null && cleaned.length > available) {
+      notifyMax()
+    }
   }
 
   const removeToken = (index: number) => {
@@ -93,6 +116,10 @@
   }
 
   const handleBlur = () => {
+    if (inputValue.trim()) {
+      addTokens([inputValue])
+      inputValue = ""
+    }
     dispatch("blur", value)
   }
 
