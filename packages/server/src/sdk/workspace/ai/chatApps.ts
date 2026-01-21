@@ -1,5 +1,5 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { ChatApp, DocumentType } from "@budibase/types"
+import { ChatApp, ConversationStarter, DocumentType } from "@budibase/types"
 
 const withDefaults = (chatApp: ChatApp): ChatApp => ({
   ...chatApp,
@@ -43,6 +43,83 @@ const normalizeEnabledAgents = (enabledAgents?: ChatApp["enabledAgents"]) => {
   }))
 }
 
+const normalizeConversationStarters = (
+  starters: ChatApp["conversationStartersByAgent"],
+  enabledAgents: ChatApp["enabledAgents"] = []
+) => {
+  if (starters === undefined) {
+    if (!enabledAgents.length) {
+      return undefined
+    }
+    return enabledAgents.reduce<Record<string, ConversationStarter[]>>(
+      (acc, agent) => {
+        acc[agent.agentId] = []
+        return acc
+      },
+      {}
+    )
+  }
+
+  if (
+    typeof starters !== "object" ||
+    starters === null ||
+    Array.isArray(starters)
+  ) {
+    throw new HTTPError(
+      "conversationStartersByAgent must map agentId to starter lists",
+      400
+    )
+  }
+
+  const normalizedEntries = Object.entries(starters).map(
+    ([agentId, agentStarters]) => {
+      if (!Array.isArray(agentStarters)) {
+        throw new HTTPError(
+          "conversationStartersByAgent must map agentId to starter lists",
+          400
+        )
+      }
+      if (agentStarters.length > 3) {
+        throw new HTTPError(
+          "conversationStartersByAgent may contain at most 3 starters per agent",
+          400
+        )
+      }
+
+      const normalizedStarters = agentStarters.map(starter => {
+        if (!starter || typeof starter !== "object") {
+          throw new HTTPError(
+            "conversationStartersByAgent entries must include string prompts",
+            400
+          )
+        }
+        if (typeof starter.prompt !== "string") {
+          throw new HTTPError(
+            "conversationStartersByAgent entries must include string prompts",
+            400
+          )
+        }
+        return { prompt: starter.prompt }
+      })
+
+      return [agentId, normalizedStarters] as const
+    }
+  )
+
+  const normalized = Object.fromEntries(normalizedEntries) as Record<
+    string,
+    ConversationStarter[]
+  >
+
+  for (const agent of enabledAgents) {
+    if (!normalized[agent.agentId]) {
+      normalized[agent.agentId] = []
+    }
+  }
+
+  return normalized
+}
+
 export async function getSingle(): Promise<ChatApp | undefined> {
   const db = context.getWorkspaceDB()
   const result = await db.allDocs<ChatApp>(
@@ -76,6 +153,10 @@ export async function create(chatApp: Omit<ChatApp, "_id" | "_rev">) {
   const normalizedEnabledAgents = normalizeEnabledAgents(
     chatApp.enabledAgents === undefined ? undefined : chatApp.enabledAgents
   )
+  const normalizedConversationStarters = normalizeConversationStarters(
+    chatApp.conversationStartersByAgent,
+    normalizedEnabledAgents ?? []
+  )
 
   const now = new Date().toISOString()
   const doc: ChatApp = {
@@ -84,6 +165,7 @@ export async function create(chatApp: Omit<ChatApp, "_id" | "_rev">) {
     updatedAt: now,
     ...chatApp,
     enabledAgents: normalizedEnabledAgents ?? [],
+    conversationStartersByAgent: normalizedConversationStarters,
   }
 
   const { rev } = await db.put(doc)
@@ -104,12 +186,19 @@ export async function update(chatApp: ChatApp) {
       ? (existing.enabledAgents ?? [])
       : chatApp.enabledAgents
   )
+  const normalizedConversationStarters = normalizeConversationStarters(
+    chatApp.conversationStartersByAgent === undefined
+      ? existing.conversationStartersByAgent
+      : chatApp.conversationStartersByAgent,
+    normalizedEnabledAgents ?? []
+  )
 
   const now = new Date().toISOString()
   const updated: ChatApp = {
     ...existing,
     ...chatApp,
     enabledAgents: normalizedEnabledAgents ?? [],
+    conversationStartersByAgent: normalizedConversationStarters,
     updatedAt: now,
   }
   const { rev } = await db.put(updated)

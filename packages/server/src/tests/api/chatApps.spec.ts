@@ -115,6 +115,49 @@ describe("chat apps validation", () => {
 
     expect(res.status).toBe(400)
   })
+
+  it("rejects non-string conversation starters", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      conversationStartersByAgent: {
+        "agent-1": [{ prompt: 123 }],
+      },
+    })
+
+    expect(res.status).toBe(400)
+  })
+
+  it("rejects more than three starters per agent", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      conversationStartersByAgent: {
+        "agent-1": [
+          { prompt: "One" },
+          { prompt: "Two" },
+          { prompt: "Three" },
+          { prompt: "Four" },
+        ],
+      },
+    })
+
+    expect(res.status).toBe(400)
+  })
+
+  it("initializes starters for enabled agents", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      enabledAgents: [{ agentId: "agent-1" }],
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.conversationStartersByAgent).toEqual({
+      "agent-1": [],
+      "agent-2": [],
+    })
+  })
 })
 
 describe("chat apps create validation", () => {
@@ -139,6 +182,53 @@ describe("chat apps create validation", () => {
         await expect(sdk.ai.chatApps.create(payload)).rejects.toThrow(
           "enabledAgents must contain valid agentId entries"
         )
+      }
+    )
+  })
+
+  it("rejects invalid conversation starter prompts", async () => {
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const payload = {
+          enabledAgents: [{ agentId: "agent-1" }],
+          conversationStartersByAgent: {
+            "agent-1": [{ prompt: 42 }],
+          },
+        } as unknown as Omit<ChatApp, "_id" | "_rev">
+
+        await expect(sdk.ai.chatApps.create(payload)).rejects.toThrow(
+          "conversationStartersByAgent entries must include string prompts"
+        )
+      }
+    )
+  })
+})
+
+describe("chat apps create defaults", () => {
+  const config = new TestConfiguration()
+
+  beforeAll(async () => {
+    await config.init("chat-app-create-defaults")
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("initializes starters for enabled agents", async () => {
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const payload = {
+          enabledAgents: [{ agentId: "agent-1" }],
+        } as unknown as Omit<ChatApp, "_id" | "_rev">
+
+        const created = await sdk.ai.chatApps.create(payload)
+
+        expect(created.conversationStartersByAgent).toEqual({
+          "agent-1": [],
+        })
       }
     )
   })
