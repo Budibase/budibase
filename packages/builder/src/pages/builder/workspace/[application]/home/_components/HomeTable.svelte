@@ -160,6 +160,7 @@
 
         <div class="cell">
           {#if row.type === "app" || row.type === "automation"}
+            // todo: sort out for agents and chat
             <PublishStatusBadge status={row.status} />
           {:else}
             <Body
@@ -184,7 +185,8 @@
         </div>
 
         <div class="cell actions">
-          <div class="ctx-btn" title="Coming soon">
+          <div class="ctx-btn">
+            // todo: implement actions
             <Icon name="dots-three" size="M" hoverable on:click={stop} />
           </div>
           <span class="favourite-btn">
