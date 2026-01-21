@@ -59,7 +59,7 @@ vi.mock("@/api", () => {
 
 import { API } from "@/api"
 import { appStore } from "@/stores/builder"
-import { chatAppsStore } from "./chatApps"
+import { chatAppsStore, currentChatApp } from "./chatApps"
 
 const fetchChatApp = vi.mocked(API.fetchChatApp)
 const updateChatApp = vi.mocked(API.updateChatApp)
@@ -78,12 +78,12 @@ describe("chatAppsStore", () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
-      agentId: "agent-1",
+      enabledAgents: [{ agentId: "agent-1" }],
     }
     const updated: ChatApp = {
       ...chatApp,
       _rev: "2",
-      agentId: "agent-2",
+      enabledAgents: [{ agentId: "agent-2" }],
     }
     fetchChatApp.mockResolvedValue(chatApp)
     setChatAppAgent.mockResolvedValue(updated)
@@ -93,7 +93,29 @@ describe("chatAppsStore", () => {
     expect(fetchChatApp).toHaveBeenCalledWith("workspace-123")
     expect(setChatAppAgent).toHaveBeenCalledWith("chatapp-1", "agent-2")
     expect(get(chatAppsStore.store).chatAppId).toEqual("chatapp-1")
+    expect(get(currentChatApp)).toEqual(updated)
     expect(result).toEqual(updated)
+  })
+
+  it("tracks the chat app for the current id", async () => {
+    const first: ChatApp = {
+      _id: "chatapp-1",
+      _rev: "1",
+      enabledAgents: [],
+    }
+    const second: ChatApp = {
+      _id: "chatapp-2",
+      _rev: "2",
+      enabledAgents: [],
+    }
+    fetchChatApp.mockResolvedValueOnce(first)
+    fetchChatApp.mockResolvedValueOnce(second)
+
+    await chatAppsStore.ensureChatApp()
+    expect(get(currentChatApp)).toEqual(first)
+
+    await chatAppsStore.ensureChatApp()
+    expect(get(currentChatApp)).toEqual(second)
   })
 
   it("returns null when chat app cannot be fetched", async () => {

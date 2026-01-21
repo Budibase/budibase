@@ -595,7 +595,7 @@
         {#if $appStore.appId}
           <SideNavLink
             icon="user-plus"
-            text="Invite member"
+            text="Invite user"
             on:click={() => {
               builderStore.showBuilderSidePanel()
               keepCollapsed()

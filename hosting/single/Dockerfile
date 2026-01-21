@@ -69,7 +69,7 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends postgresql-client-15; \
     rm -rf /var/lib/apt/lists/*; \
-    apt-get purge -y --auto-remove curl gnupg lsb-release; \
+    apt-get purge -y --auto-remove gnupg lsb-release; \
     rm -f /etc/apt/sources.list.d/postgresql.list
 
 # We use pm2 in order to run multiple node processes in a single container
