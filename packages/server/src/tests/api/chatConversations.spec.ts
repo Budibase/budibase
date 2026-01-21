@@ -1,16 +1,69 @@
 import { context, docIds, roles } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
+import { DocumentType } from "@budibase/types"
 import type {
+  Agent,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
   User,
 } from "@budibase/types"
+import type { ToolSet } from "ai"
+import type { ServerResponse } from "http"
+import {
+  convertToModelMessages,
+  extractReasoningMiddleware,
+  streamText,
+  wrapLanguageModel,
+} from "ai"
 import TestConfiguration from "../utilities/TestConfiguration"
 import {
   findLatestUserQuestion,
   prepareChatConversationForSave,
   truncateTitle,
 } from "../../api/controllers/ai/chatConversations"
+import sdk from "../../sdk"
+
+jest.mock("@budibase/pro", () => {
+  const actual = jest.requireActual("@budibase/pro")
+  return {
+    ...actual,
+    ai: {
+      ...actual.ai,
+      agentSystemPrompt: jest.fn(() => "system"),
+      createLiteLLMOpenAI: jest.fn(),
+    },
+  }
+})
+
+jest.mock("ai", () => {
+  const actual = jest.requireActual("ai")
+  return {
+    ...actual,
+    convertToModelMessages: jest.fn(),
+    extractReasoningMiddleware: jest.fn(),
+    streamText: jest.fn(),
+    wrapLanguageModel: jest.fn(),
+  }
+})
+
+jest.mock("../../sdk/workspace/ai/configs", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/configs")
+  return {
+    ...actual,
+    getLiteLLMModelConfigOrThrow: jest.fn(),
+  }
+})
+
+jest.mock("../../sdk/workspace/ai/agents", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/agents")
+  return {
+    ...actual,
+    getOrThrow: jest.fn(),
+    listAgentFiles: jest.fn(),
+    buildPromptAndTools: jest.fn(),
+  }
+})
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
@@ -201,6 +254,227 @@ describe("prepareChatConversationForSave", () => {
 
     expect(result.createdAt).toEqual(now.toISOString())
     expect(result.updatedAt).toEqual(now.toISOString())
+  })
+})
+
+describe("chat conversation transient behavior", () => {
+  const config = new TestConfiguration()
+  const agentId = "agent-1"
+  let chatApp: ChatApp
+
+  const mockMessages: ChatConversationRequest["messages"] = [
+    {
+      id: "message-1",
+      role: "assistant",
+      parts: [{ type: "text", text: "hello" }],
+    },
+  ]
+
+  beforeAll(async () => {
+    await config.init("chat-conversation-transient")
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        chatApp = {
+          _id: docIds.generateChatAppID(),
+          enabledAgents: [{ agentId }],
+          createdAt: now,
+        }
+        await db.put(chatApp)
+      }
+    )
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  beforeEach(async () => {
+    jest.clearAllMocks()
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const docs = await db.allDocs<ChatConversation>(
+          docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
+            include_docs: true,
+          })
+        )
+        const deletes = docs.rows
+          .map(row => row.doc)
+          .filter(Boolean)
+          .map(doc => db.remove(doc!))
+        await Promise.all(deletes)
+      }
+    )
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  const setupMocks = () => {
+    type ChatModel = ReturnType<
+      ReturnType<typeof ai.createLiteLLMOpenAI>["chat"]
+    >
+
+    const mockAgent: Agent = {
+      _id: agentId,
+      name: "Mock Agent",
+      aiconfig: "config-1",
+    }
+    const mockModel = {} as ChatModel
+    const mockMiddleware = {} as unknown as ReturnType<
+      typeof extractReasoningMiddleware
+    >
+    const tools: ToolSet = {}
+
+    ;(
+      sdk.ai.agents.getOrThrow as jest.MockedFunction<
+        typeof sdk.ai.agents.getOrThrow
+      >
+    ).mockResolvedValue(mockAgent)
+    ;(
+      sdk.ai.agents.listAgentFiles as jest.MockedFunction<
+        typeof sdk.ai.agents.listAgentFiles
+      >
+    ).mockResolvedValue([])
+    ;(
+      sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
+        typeof sdk.ai.agents.buildPromptAndTools
+      >
+    ).mockResolvedValue({ systemPrompt: "system", tools })
+    ;(
+      sdk.ai.configs.getLiteLLMModelConfigOrThrow as jest.MockedFunction<
+        typeof sdk.ai.configs.getLiteLLMModelConfigOrThrow
+      >
+    ).mockResolvedValue({
+      modelName: "model-1",
+      modelId: "model-1",
+      apiKey: "api-key",
+      baseUrl: "http://localhost",
+    })
+
+    const openAiMock = {
+      chat: () => mockModel,
+    } as unknown as ReturnType<typeof ai.createLiteLLMOpenAI>
+
+    ;(
+      ai.createLiteLLMOpenAI as jest.MockedFunction<
+        typeof ai.createLiteLLMOpenAI
+      >
+    ).mockReturnValue(openAiMock)
+    ;(
+      convertToModelMessages as jest.MockedFunction<
+        typeof convertToModelMessages
+      >
+    ).mockResolvedValue([])
+    ;(streamText as jest.MockedFunction<typeof streamText>).mockImplementation(
+      () =>
+        ({
+          pipeUIMessageStreamToResponse: async (
+            res: ServerResponse,
+            options?: unknown
+          ) => {
+            const finish = (
+              options as {
+                onFinish?: ({
+                  messages,
+                }: {
+                  messages: ChatConversationRequest["messages"]
+                }) => Promise<void> | void
+              }
+            )?.onFinish
+            if (finish) {
+              await finish({ messages: mockMessages })
+            }
+            res.end()
+          },
+        }) as unknown as ReturnType<typeof streamText>
+    )
+    ;(
+      extractReasoningMiddleware as jest.MockedFunction<
+        typeof extractReasoningMiddleware
+      >
+    ).mockReturnValue(mockMiddleware)
+    ;(
+      wrapLanguageModel as jest.MockedFunction<typeof wrapLanguageModel>
+    ).mockImplementation(({ model }) => model)
+  }
+
+  it("does not persist transient conversations", async () => {
+    setupMocks()
+    const headers = await config.defaultHeaders({}, true)
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        agentId,
+        messages: [
+          {
+            id: "message-0",
+            role: "user",
+            parts: [{ type: "text", text: "hi" }],
+          },
+        ],
+        transient: true,
+      })
+
+    expect(res.status).toBe(200)
+
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const docs = await db.allDocs<ChatConversation>(
+          docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
+            include_docs: true,
+          })
+        )
+        expect(docs.rows.length).toBe(0)
+      }
+    )
+  })
+
+  it("persists conversations by default", async () => {
+    setupMocks()
+    const headers = await config.defaultHeaders({}, true)
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        agentId,
+        messages: [
+          {
+            id: "message-0",
+            role: "user",
+            parts: [{ type: "text", text: "hi" }],
+          },
+        ],
+      })
+
+    expect(res.status).toBe(200)
+
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const docs = await db.allDocs<ChatConversation>(
+          docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
+            include_docs: true,
+          })
+        )
+        expect(docs.rows.length).toBe(1)
+        expect(docs.rows[0].doc?.chatAppId).toBe(chatApp._id)
+        expect(docs.rows[0].doc?.messages).toEqual(mockMessages)
+      }
+    )
   })
 })
 

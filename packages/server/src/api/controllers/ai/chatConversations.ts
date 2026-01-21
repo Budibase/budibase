@@ -294,6 +294,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         messageMetadata: () => messageMetadata,
       }),
       onFinish: async ({ messages }) => {
+        if (chat.transient) {
+          return
+        }
+
         const chatId = chat._id ?? docIds.generateChatConversationID()
         const existingChat = chat._id
           ? await db.tryGet<ChatConversation>(chat._id)

@@ -178,9 +178,10 @@
               <OIDCButton
                 oidcIcon={$oidc.logo}
                 oidcName={$oidc.name}
+                loginWith={loginLabels.loginWith}
                 samePage
               />
-              <GoogleButton samePage />
+              <GoogleButton loginWith={loginLabels.loginWith} samePage />
             </FancyForm>
           {/if}
           {#if !$organisation.isSSOEnforced}

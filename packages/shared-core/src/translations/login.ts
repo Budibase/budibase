@@ -38,4 +38,9 @@ export const loginTranslations = createTranslationDefinitions(category, [
     name: "Forgot password link",
     defaultValue: "Forgot password?",
   },
+  {
+    key: "loginWith",
+    name: "Login with label",
+    defaultValue: "Log in with",
+  },
 ])
