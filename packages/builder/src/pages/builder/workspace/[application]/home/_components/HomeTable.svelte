@@ -273,13 +273,14 @@
   .table-body {
     display: flex;
     flex-direction: column;
+    background: var(--background-alt);
   }
 
   .row {
     padding: 9px 12px;
     text-align: left;
     border: none;
-    background: var(--background);
+    background: var(--background-alt);
     transition: background 130ms ease-out;
     cursor: pointer;
 

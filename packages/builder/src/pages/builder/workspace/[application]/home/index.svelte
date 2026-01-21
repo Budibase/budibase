@@ -329,7 +329,7 @@
 
 <style>
   .workspace-home {
-    background: var(--background);
+    background: var(--background-alt);
     flex: 1 1 auto;
     display: flex;
     justify-content: center;
