@@ -1,6 +1,13 @@
 <script lang="ts">
   import { chatAppsStore, currentChatApp } from "@/stores/portal/chatApps"
-  import { Body, Button, Icon, Modal, ModalContent } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Icon,
+    Input,
+    Modal,
+    ModalContent,
+  } from "@budibase/bbui"
   import { Utils } from "@budibase/frontend-core"
   import type { Agent, ChatApp } from "@budibase/types"
 
@@ -152,14 +159,6 @@
     newStarter = ""
     debouncedSave()
   }
-
-  const handleNewStarterKeydown = (event: KeyboardEvent) => {
-    if (event.key !== "Enter") {
-      return
-    }
-    event.preventDefault()
-    addStarter()
-  }
 </script>
 
 <Modal
@@ -188,14 +187,13 @@
       <div class="starter-list">
         {#each conversationStarters as starter, index (index)}
           <div class="starter-row">
-            <input
-              class="starter-input"
-              type="text"
-              value={starter.prompt}
-              on:input={event =>
-                updateStarter(index, (event.target as HTMLInputElement).value)}
-              on:blur={() => debouncedSave()}
-            />
+            <div class="starter-input">
+              <Input
+                value={starter.prompt}
+                on:change={event => updateStarter(index, event.detail)}
+                on:blur={debouncedSave}
+              />
+            </div>
             <button
               class="starter-remove"
               type="button"
@@ -207,14 +205,14 @@
           </div>
         {/each}
         {#if conversationStarters.length < 3}
-          <input
-            class="starter-input starter-input--new"
-            type="text"
-            placeholder="Example for users to start a conversation"
-            bind:value={newStarter}
-            on:blur={addStarter}
-            on:keydown={handleNewStarterKeydown}
-          />
+          <div class="starter-input starter-input--new">
+            <Input
+              placeholder="Example for users to start a conversation"
+              bind:value={newStarter}
+              on:blur={addStarter}
+              on:enterkey={addStarter}
+            />
+          </div>
         {/if}
       </div>
     </div>
@@ -249,6 +247,13 @@
 
   .starter-input {
     flex: 1 1 auto;
+  }
+
+  .starter-input :global(.spectrum-Textfield) {
+    width: 100%;
+  }
+
+  /* .starter-input :global(.spectrum-Textfield-input) {
     padding: var(--spacing-s);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 12px;
@@ -257,13 +262,13 @@
     font: inherit;
   }
 
-  .starter-input::placeholder {
+  .starter-input :global(.spectrum-Textfield-input::placeholder) {
     color: var(--spectrum-global-color-gray-500);
   }
 
-  .starter-input--new {
+  .starter-input--new :global(.spectrum-Textfield-input) {
     border-style: dashed;
-  }
+  } */
 
   .starter-remove {
     border: 1px solid var(--spectrum-global-color-gray-200);
