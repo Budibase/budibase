@@ -117,15 +117,20 @@ export async function update(
   const { rev } = await db.put(updatedConfig)
   updatedConfig._rev = rev
 
-  const isWebSearchOnlyUpdate =
-    existing.name === updatedConfig.name &&
-    existing.provider === updatedConfig.provider &&
-    existing.model === updatedConfig.model &&
-    JSON.stringify(existing.credentialsFields) ===
-      JSON.stringify(updatedConfig.credentialsFields)
+  function getLiteLLMAwareFields(config: CustomAIProviderConfig) {
+    return {
+      provider: config.provider,
+      name: config.model,
+      credentialFields: config.credentialsFields,
+      configType: config.configType,
+    }
+  }
 
-  // Web Search is stored under configs, but we don't want to update LiteLLM when only that changes.
-  if (!isWebSearchOnlyUpdate) {
+  const shouldUpdateLiteLLM =
+    JSON.stringify(getLiteLLMAwareFields(updatedConfig)) !==
+    JSON.stringify(getLiteLLMAwareFields(existing))
+
+  if (shouldUpdateLiteLLM) {
     try {
       await liteLLM.updateModel({
         llmModelId: updatedConfig.liteLLMModelId,
