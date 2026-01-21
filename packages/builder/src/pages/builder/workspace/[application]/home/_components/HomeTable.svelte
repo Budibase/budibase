@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { Body, Helpers, Icon, TooltipPosition } from "@budibase/bbui"
+  import { Body, Helpers, Icon } from "@budibase/bbui"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import type {
@@ -190,8 +190,6 @@
           <span class="favourite-btn">
             <FavouriteResourceButton
               favourite={row.favourite}
-              position={TooltipPosition.Left}
-              noWrap
             />
           </span>
         </div>

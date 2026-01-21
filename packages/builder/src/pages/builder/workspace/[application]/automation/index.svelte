@@ -26,7 +26,6 @@
     Modal,
     type ModalAPI,
     notifications,
-    TooltipPosition,
     StatusLight,
   } from "@budibase/bbui"
   import type { UIAutomation } from "@budibase/types"
@@ -289,8 +288,6 @@
             <span class="favourite-btn">
               <FavouriteResourceButton
                 favourite={automation.favourite}
-                position={TooltipPosition.Left}
-                noWrap
               />
             </span>
           </div>

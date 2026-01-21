@@ -57,8 +57,25 @@
 
   let hasMounted = false
 
-  $: favourites = workspaceFavouriteStore.lookup
+  const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
+
+  let getFavourite: (
+    resourceType: WorkspaceResource,
+    resourceId: string
+  ) => WorkspaceFavourite
+
+  $: getFavourite = (resourceType, resourceId) => {
+    const existing = $favourites?.[resourceId]
+    if (existing) {
+      return existing
+    }
+    return {
+      resourceType,
+      resourceId,
+      createdBy: currentUserId,
+    }
+  }
 
   const normalizeType = (value: string | null): HomeType | null => {
     if (!value) {
@@ -161,21 +178,6 @@
     }
     sortColumn = column
     sortOrder = column === "created" ? "desc" : "asc"
-  }
-
-  const getFavourite = (
-    resourceType: WorkspaceResource,
-    resourceId: string
-  ): WorkspaceFavourite => {
-    const existing = $favourites?.[resourceId]
-    if (existing) {
-      return existing
-    }
-    return {
-      resourceType,
-      resourceId,
-      createdBy: currentUserId,
-    }
   }
 
   const createApp = () => {

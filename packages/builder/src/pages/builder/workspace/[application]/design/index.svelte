@@ -25,7 +25,6 @@
     Icon,
     notifications,
     StatusLight,
-    TooltipPosition,
   } from "@budibase/bbui"
   import {
     PublishResourceState,
@@ -360,8 +359,6 @@
             <span class="favourite-btn">
               <FavouriteResourceButton
                 favourite={app.favourite}
-                position={TooltipPosition.Left}
-                noWrap
               />
             </span>
           </div>
