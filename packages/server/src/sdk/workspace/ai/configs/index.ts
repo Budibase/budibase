@@ -181,6 +181,11 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
   }
 }
 
+let liteLLMProviders: string[]
+
 export async function fetchLiteLLMProviders(): Promise<string[]> {
-  return await liteLLM.fetchPublicProviders()
+  if (!liteLLMProviders?.length) {
+    liteLLMProviders = await liteLLM.fetchPublicProviders()
+  }
+  return liteLLMProviders
 }
