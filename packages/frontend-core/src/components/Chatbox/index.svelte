@@ -29,6 +29,7 @@
   export let chat: ChatConversationLike
   export let loading: boolean = false
   export let persistConversation: boolean = true
+  export let conversationStarters: { prompt: string }[] = []
 
   const dispatch = createEventDispatcher<{
     chatSaved: { chatId?: string; chat: ChatConversationLike }
@@ -40,6 +41,10 @@
   let textareaElement: HTMLTextAreaElement
   let lastFocusedChatId: string | undefined
   let lastFocusedNewChat: ChatConversationLike | undefined
+
+  $: hasMessages = Boolean(chat?.messages?.length)
+  $: showConversationStarters =
+    !loading && !hasMessages && conversationStarters.length > 0
 
   $: if (chat?.messages?.length) {
     scrollToBottom()
@@ -86,6 +91,15 @@
       event.preventDefault()
       await prompt()
     }
+  }
+
+  const applyConversationStarter = async (starterPrompt: string) => {
+    if (loading) {
+      return
+    }
+    inputValue = starterPrompt
+    await prompt()
+    tick().then(() => textareaElement?.focus())
   }
 
   async function prompt() {
@@ -279,6 +293,22 @@
 
 <div class="chat-area" bind:this={chatAreaElement}>
   <div class="chatbox">
+    {#if showConversationStarters}
+      <div class="starter-section">
+        <div class="starter-title">Conversation starters</div>
+        <div class="starter-grid">
+          {#each conversationStarters as starter, index (index)}
+            <button
+              type="button"
+              class="starter-card"
+              on:click={() => applyConversationStarter(starter.prompt)}
+            >
+              {starter.prompt}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
     {#each chat.messages as message}
       {#if message.role === "user"}
         <div class="message user">
@@ -392,6 +422,41 @@
     width: 100%;
     flex: 1 1 auto;
     padding: 48px 0 24px 0;
+  }
+
+  .starter-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .starter-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .starter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-s);
+  }
+
+  .starter-card {
+    border: 1px solid var(--grey-3);
+    border-radius: 12px;
+    padding: var(--spacing-m);
+    background: var(--grey-2);
+    color: var(--spectrum-global-color-gray-900);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .starter-card:hover {
+    border-color: var(--grey-4);
+    background: var(--grey-1);
   }
 
   .message {
