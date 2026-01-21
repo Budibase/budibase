@@ -357,9 +357,7 @@
             </div>
 
             <span class="favourite-btn">
-              <FavouriteResourceButton
-                favourite={app.favourite}
-              />
+              <FavouriteResourceButton favourite={app.favourite} />
             </span>
           </div>
         </a>

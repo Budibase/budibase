@@ -188,9 +188,7 @@
             <Icon name="dots-three" size="M" hoverable on:click={stop} />
           </div>
           <span class="favourite-btn">
-            <FavouriteResourceButton
-              favourite={row.favourite}
-            />
+            <FavouriteResourceButton favourite={row.favourite} />
           </span>
         </div>
       </button>

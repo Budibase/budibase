@@ -61,8 +61,8 @@
   $: currentUserId = $auth.user?._id || ""
 
   let getFavourite: (
-    resourceType: WorkspaceResource,
-    resourceId: string
+    _resourceType: WorkspaceResource,
+    _resourceId: string
   ) => WorkspaceFavourite
 
   $: getFavourite = (resourceType, resourceId) => {

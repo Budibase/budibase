@@ -286,9 +286,7 @@
             </div>
 
             <span class="favourite-btn">
-              <FavouriteResourceButton
-                favourite={automation.favourite}
-              />
+              <FavouriteResourceButton favourite={automation.favourite} />
             </span>
           </div>
         </a>
