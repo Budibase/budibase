@@ -31,15 +31,22 @@ export async function generateKey(
   return { id: json.token_id, secret: json.key }
 }
 
-export async function addModel(model: {
+export async function addModel({
+  provider,
+  name,
+  baseUrl,
+  apiKey,
+  configType,
+}: {
   provider: string
   name: string
   baseUrl: string
   apiKey: string | undefined
   configType: AIConfigType
 }): Promise<string> {
-  const { name, baseUrl, provider, apiKey } = model
-  await validateConfig(model)
+  provider = await mapToLiteLLMProvider(provider)
+
+  await validateConfig({ provider, name, baseUrl, apiKey, configType })
 
   const requestOptions = {
     method: "POST",
@@ -73,7 +80,14 @@ export async function addModel(model: {
   return json.model_id
 }
 
-export async function updateModel(model: {
+export async function updateModel({
+  llmModelId,
+  provider,
+  name,
+  baseUrl,
+  apiKey,
+  configType,
+}: {
   llmModelId: string
   provider: string
   name: string
@@ -81,8 +95,8 @@ export async function updateModel(model: {
   apiKey: string | undefined
   configType: AIConfigType
 }) {
-  const { llmModelId, name, baseUrl, provider, apiKey } = model
-  await validateConfig(model)
+  provider = await mapToLiteLLMProvider(provider)
+  await validateConfig({ provider, name, baseUrl, apiKey, configType })
 
   const requestOptions = {
     method: "PATCH",
@@ -245,4 +259,13 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
 
   const json = await res.json()
   return json as LiteLLMPublicProvider[]
+}
+
+async function mapToLiteLLMProvider(provider: string) {
+  const providers = await fetchPublicProviders()
+  const result = providers.find(p => p.provider === provider)?.litellm_provider
+  if (!result) {
+    throw new Error(`Provider ${provider} not found in LiteLLM`)
+  }
+  return result
 }
