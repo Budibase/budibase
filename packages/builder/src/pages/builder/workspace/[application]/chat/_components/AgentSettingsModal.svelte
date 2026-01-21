@@ -3,6 +3,7 @@
   import {
     Body,
     Button,
+    Helpers,
     Icon,
     Input,
     Modal,
@@ -17,6 +18,7 @@
   }
 
   type ConversationStarter = {
+    id: string
     prompt: string
   }
 
@@ -88,7 +90,8 @@
 
   const getStartersForAgent = (agentId: string, app: ChatAppWithStarters) => {
     const starters = app.conversationStartersByAgent?.[agentId] || []
-    return starters.map((starter: ConversationStarter) => ({
+    return starters.map(starter => ({
+      id: Helpers.uuid(),
       prompt: starter.prompt,
     }))
   }
@@ -137,7 +140,7 @@
 
   const updateStarter = (index: number, value: string) => {
     conversationStarters = conversationStarters.map((starter, idx) =>
-      idx === index ? { prompt: value } : starter
+      idx === index ? { ...starter, prompt: value } : starter
     )
   }
 
@@ -145,6 +148,7 @@
     conversationStarters = conversationStarters.filter(
       (_, idx) => idx !== index
     )
+    newStarter = ""
     debouncedSave()
   }
 
@@ -155,7 +159,10 @@
       return
     }
 
-    conversationStarters = [...conversationStarters, { prompt: trimmed }]
+    conversationStarters = [
+      ...conversationStarters,
+      { id: Helpers.uuid(), prompt: trimmed },
+    ]
     newStarter = ""
     debouncedSave()
   }
@@ -185,7 +192,7 @@
         Conversation starters
       </Body>
       <div class="starter-list">
-        {#each conversationStarters as starter, index (index)}
+        {#each conversationStarters as starter, index (starter.id)}
           <div class="starter-row">
             <div class="starter-input">
               <Input
@@ -208,7 +215,8 @@
           <div class="starter-input starter-input--new">
             <Input
               placeholder="Example for users to start a conversation"
-              bind:value={newStarter}
+              value={newStarter}
+              on:change={event => (newStarter = event.detail)}
               on:blur={addStarter}
               on:enterkey={addStarter}
             />
@@ -252,23 +260,6 @@
   .starter-input :global(.spectrum-Textfield) {
     width: 100%;
   }
-
-  /* .starter-input :global(.spectrum-Textfield-input) {
-    padding: var(--spacing-s);
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
-    background: var(--spectrum-global-color-gray-50);
-    color: var(--spectrum-global-color-gray-800);
-    font: inherit;
-  }
-
-  .starter-input :global(.spectrum-Textfield-input::placeholder) {
-    color: var(--spectrum-global-color-gray-500);
-  }
-
-  .starter-input--new :global(.spectrum-Textfield-input) {
-    border-style: dashed;
-  } */
 
   .starter-remove {
     border: 1px solid var(--spectrum-global-color-gray-200);
