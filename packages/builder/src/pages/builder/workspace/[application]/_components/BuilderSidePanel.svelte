@@ -689,7 +689,7 @@
                 <div class="auth-entity-title">Users</div>
                 <div class="auth-entity-access-title">Access</div>
               </div>
-              {#each filteredUsers as user}
+              {#each filteredUsers as user (user._id)}
                 {@const userGroups = sdk.users.getUserAppGroups(
                   $appStore.appId,
                   user._id,
