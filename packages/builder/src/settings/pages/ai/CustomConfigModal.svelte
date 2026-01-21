@@ -101,6 +101,13 @@
       notifications.error(
         err.message || `Failed to save ${typeLabel} configuration`
       )
+      if (draft._id) {
+        // Update rev if the llm validation failed (as the doc might be persisted)
+        await aiConfigsStore.fetch()
+        draft._rev = $aiConfigsStore.customConfigs.find(
+          c => c._id === draft._id
+        )?._rev
+      }
       return keepOpen
     }
   }
