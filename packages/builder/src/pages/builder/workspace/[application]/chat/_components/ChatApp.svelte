@@ -7,6 +7,7 @@
   } from "@/stores/portal"
   import { notifications } from "@budibase/bbui"
   import type {
+    ChatApp,
     ChatConversation,
     DraftChatConversation,
     WithoutDocMetadata,
@@ -17,6 +18,14 @@
   import ChatNavigationPanel from "./ChatNavigationPanel.svelte"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
+
+  type ConversationStarter = {
+    prompt: string
+  }
+
+  type ChatAppWithStarters = ChatApp & {
+    conversationStartersByAgent?: Record<string, ConversationStarter[]>
+  }
 
   const INITIAL_CHAT: WithoutDocMetadata<DraftChatConversation> = {
     title: "",
@@ -43,9 +52,14 @@
   }[] = []
 
   $: agents = $agentsStore.agents || []
-  $: chatApp = $currentChatApp
+  $: chatApp = $currentChatApp as ChatAppWithStarters | undefined
   $: enabledAgents = chatApp?.enabledAgents || []
   $: conversationHistory = $currentConversations
+  $: conversationStarters = selectedAgentId
+    ? (chatApp?.conversationStartersByAgent?.[selectedAgentId] as
+        | ConversationStarter[]
+        | undefined) || []
+    : []
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
@@ -254,6 +268,7 @@
     {selectedAgentId}
     {selectedAgentName}
     {workspaceId}
+    {conversationStarters}
     on:deleteChat={deleteCurrentChat}
     on:chatSaved={handleChatSaved}
     on:agentSelected={handleAgentSelected}

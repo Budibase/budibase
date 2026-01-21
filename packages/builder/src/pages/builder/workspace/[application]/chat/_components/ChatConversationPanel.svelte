@@ -11,9 +11,14 @@
     name?: string
   }
 
+  type ConversationStarter = {
+    prompt: string
+  }
+
   export let selectedAgentId: string | null = null
   export let selectedAgentName: string = ""
   export let enabledAgentList: EnabledAgentListItem[] = []
+  export let conversationStarters: ConversationStarter[] = []
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
@@ -71,6 +76,7 @@
       bind:chat
       {loading}
       {workspaceId}
+      {conversationStarters}
       on:chatSaved={event => dispatch("chatSaved", event.detail)}
     />
   {:else}
