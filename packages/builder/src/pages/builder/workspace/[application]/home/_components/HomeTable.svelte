@@ -1,6 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
   import { Body, Helpers, Icon } from "@budibase/bbui"
+  import dayjs from "dayjs"
+  import relativeTime from "dayjs/plugin/relativeTime"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import type {
@@ -11,6 +13,8 @@
   } from "./types"
   import HomeEmptyState from "./HomeEmptyState.svelte"
   import { getTypeLabel } from "./rows"
+
+  dayjs.extend(relativeTime)
 
   export let rows: HomeRow[] = []
   export let loading = false
@@ -69,11 +73,6 @@
       class="header-cell header-cell--with-icon"
       on:click={() => headerClick("type")}
     >
-      <Icon
-        name="circle-half-tilt"
-        size="S"
-        color="var(--spectrum-global-color-gray-600)"
-      />
       <span>Type</span>
       <span
         class="sort-indicator"
@@ -93,11 +92,6 @@
       class="header-cell header-cell--with-icon"
       on:click={() => headerClick("status")}
     >
-      <Icon
-        name="circle-half-tilt"
-        size="S"
-        color="var(--spectrum-global-color-gray-600)"
-      />
       <span>Status</span>
       <span
         class="sort-indicator"
@@ -117,11 +111,6 @@
       class="header-cell header-cell--with-icon"
       on:click={() => headerClick("created")}
     >
-      <Icon
-        name="calendar"
-        size="S"
-        color="var(--spectrum-global-color-gray-600)"
-      />
       <span>Created</span>
       <span
         class="sort-indicator"
@@ -176,8 +165,8 @@
 
         <div class="cell">
           <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-            {#if row.createdAt || row.updatedAt}
-              {Helpers.getDateDisplayValue(row.createdAt || row.updatedAt)}
+            {#if row.createdAt}
+              {dayjs(row.createdAt).fromNow()}
             {:else}
               -
             {/if}
