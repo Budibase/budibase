@@ -91,7 +91,6 @@
     }
   }
 
-  // TODO: Make icons change colour when hovered (like a button does), and clickable to increment/decrement (and make this functionality optional in settings)
   const handleChange = (event: CustomEvent<string | number>) => {
     const $nextValue = parseValue(event.detail)
     updateValue($nextValue)
@@ -106,8 +105,6 @@
 
   const handleDecrease = () => iconClick(-step)
   const handleIncrease = () => iconClick(step)
-
-  $: readonlyIcon = isDisabled || !fieldApi
 </script>
 
 <Field
