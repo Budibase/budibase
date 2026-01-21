@@ -9505,5 +9505,25 @@
         "defaultValue": true
       }
     ]
+  },
+  "calendar": {
+    "name": "Calendar",
+    "description": "Calendar",
+    "icon": "calendar",
+    "size": {
+      "width": 600,
+      "height": 420
+    },
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
+    },
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      }
+    ]
   }
 }
