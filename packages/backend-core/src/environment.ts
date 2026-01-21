@@ -153,7 +153,6 @@ const environment = {
     return !isDev()
   },
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
-  JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET
     ? createSecretKey(process.env.JWT_SECRET, "utf8")
     : undefined,

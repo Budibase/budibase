@@ -12,8 +12,9 @@
   import { deploymentStore } from "@/stores/builder"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
+  import AgentChatPanel from "./AgentChatPanel.svelte"
 
-  const { goto, isActive } = routify
+  const { goto, isActive, params } = routify
 
   $goto
 
@@ -127,7 +128,12 @@
         </Layout>
       </div>
     </div>
-    <div class="config-preview"></div>
+    <div class="config-preview">
+      <AgentChatPanel
+        agentId={currentAgent?._id}
+        workspaceId={$params.application || ""}
+      />
+    </div>
   </div>
 </div>
 

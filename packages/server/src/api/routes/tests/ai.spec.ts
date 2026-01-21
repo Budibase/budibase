@@ -506,7 +506,6 @@ describe("BudibaseAI", () => {
       baseUrl: "https://api.openai.com",
       model: "gpt-4o-mini",
       apiKey: "sk-test-key",
-      isDefault: true,
       liteLLMModelId: "",
       configType: AIConfigType.COMPLETIONS,
     }
@@ -536,7 +535,6 @@ describe("BudibaseAI", () => {
       expect(created._id).toBeDefined()
       expect(created.liteLLMModelId).toBe("model-1")
       expect(created.apiKey).toBe(PASSWORD_REPLACEMENT)
-      expect(created.isDefault).toBe(true)
       expect(liteLLMScope.isDone()).toBe(true)
 
       const configsResponse = await config.api.ai.fetchConfigs()
@@ -570,13 +568,11 @@ describe("BudibaseAI", () => {
       const updated = await config.api.ai.updateConfig({
         ...created,
         name: "Updated Chat",
-        isDefault: false,
         apiKey: PASSWORD_REPLACEMENT,
       })
 
       expect(updateScope.isDone()).toBe(true)
       expect(updated.name).toBe("Updated Chat")
-      expect(updated.isDefault).toBe(false)
       expect(updated.apiKey).toBe(PASSWORD_REPLACEMENT)
 
       const storedConfig = await config.doInContext(
