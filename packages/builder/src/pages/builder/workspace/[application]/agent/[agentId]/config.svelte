@@ -90,7 +90,6 @@
   let saving = $state(false)
   let togglingLive = $state(false)
   let getCaretPosition: CaretPositionFn | undefined = $state.raw()
-  let chatPanelKey = $state(0)
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let completionConfigs = $derived(
@@ -863,22 +862,10 @@
       </div>
     </div>
     <div class="config-pane config-preview">
-      <div class="chat-preview-header">
-        <span class="chat-preview-pill">Chat preview</span>
-        <button
-          class="chat-preview-refresh"
-          type="button"
-          onclick={() => (chatPanelKey += 1)}
-        >
-          Refresh chat
-        </button>
-      </div>
-      {#key chatPanelKey}
-        <AgentChatPanel
-          agentId={currentAgent?._id}
-          workspaceId={$params.application || ""}
-        />
-      {/key}
+      <AgentChatPanel
+        agentId={currentAgent?._id}
+        workspaceId={$params.application || ""}
+      />
     </div>
   </div>
 </div>
@@ -933,41 +920,6 @@
     min-height: 0;
     overflow: hidden;
     padding: 0;
-    height: 100%;
-  }
-
-  .chat-preview-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--spacing-m) var(--spacing-l);
-    flex-shrink: 0;
-  }
-
-  .chat-preview-pill {
-    background: var(--spectrum-global-color-gray-200);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  .chat-preview-refresh {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  .config-preview :global(.agent-chat-panel) {
-    flex: 1 1 auto;
-    min-height: 0;
-    padding: var(--spacing-l);
-  }
-
-  .config-preview :global(.chat-area) {
     height: 100%;
   }
 
