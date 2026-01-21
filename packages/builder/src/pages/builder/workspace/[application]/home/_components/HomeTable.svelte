@@ -186,7 +186,7 @@
 
         <div class="cell actions">
           <div class="ctx-btn">
-            // todo: implement actions
+            <!-- todo: implement actions -->
             <Icon name="dots-three" size="M" hoverable on:click={stop} />
           </div>
           <span class="favourite-btn">
