@@ -2,7 +2,6 @@
   import {
     AbsTooltip,
     ActionButton,
-    Heading,
     Select,
     notifications,
   } from "@budibase/bbui"

@@ -1,7 +1,29 @@
-import { get } from "svelte/store"
+import { get, type Writable } from "svelte/store"
 import { isChangingPage } from "@roxi/routify"
+import * as routify from "@roxi/routify"
 
-export const syncURLToState = options => {
+interface SyncURLToStateOptions<State extends Record<string, any>> {
+  urlParam: string
+  stateKey: keyof State & string
+  validate?: (value: string | undefined) => boolean
+  update?: (value: string | undefined) => void
+  baseUrl?: string
+  fallbackUrl?: string | (() => string)
+  store: Writable<State>
+  routify: typeof routify
+  beforeNavigate?: (
+    url: string,
+    params: Record<string, unknown>
+  ) => {
+    url?: string
+    params?: Record<string, unknown>
+  } | void
+  decode?: (value: string | undefined) => string | undefined
+}
+
+export const syncURLToState = <State extends Record<string, any>>(
+  options: SyncURLToStateOptions<State>
+) => {
   const {
     urlParam,
     stateKey,
@@ -31,14 +53,18 @@ export const syncURLToState = options => {
   }
 
   // Decodes encoded URL params if required
-  const decodeParams = urlParams => {
+  const decodeParams = (
+    urlParams?: Record<string, string | undefined>
+  ): Record<string, string | undefined> => {
     if (!decode) {
-      return urlParams
+      return urlParams || {}
     }
-    let decoded = {}
-    Object.keys(urlParams || {}).forEach(key => {
-      decoded[key] = decode(urlParams[key])
-    })
+    const decoded: typeof urlParams = {}
+    if (urlParams) {
+      Object.keys(urlParams).forEach(key => {
+        decoded[key] = decode(urlParams[key])
+      })
+    }
     return decoded
   }
 
@@ -50,12 +76,13 @@ export const syncURLToState = options => {
   let cachedGoto = get(routify.goto)
   let cachedRedirect = get(routify.redirect)
   let cachedPage = get(routify.page)
-  let previousParamsHash = null
+  let previousParamsHash: string | null = null
   let debug = false
-  const log = (...params) => debug && console.debug(`[${urlParam}]`, ...params)
+  const log = (...params: unknown[]) =>
+    debug && console.debug(`[${urlParam}]`, ...params)
 
   // Navigate to a certain URL
-  const gotoUrl = (url, params) => {
+  const gotoUrl = (url: string, params: Record<string, unknown>) => {
     // Clean URL
     if (url?.endsWith("/index")) {
       url = url.replace("/index", "")
@@ -75,14 +102,14 @@ export const syncURLToState = options => {
   }
 
   // Redirect to a certain URL
-  const redirectUrl = url => {
+  const redirectUrl = (url: string | (() => string)) => {
     const urlString = typeof url === "function" ? url() : url
     log("Redirecting to", urlString)
     cachedRedirect(urlString)
   }
 
   // Updates state with new URL params
-  const mapUrlToState = params => {
+  const mapUrlToState = (params: Record<string, any>) => {
     // Check if we have new URL params
     const paramsHash = JSON.stringify(params)
     const newParams = paramsHash !== previousParamsHash
@@ -119,7 +146,7 @@ export const syncURLToState = options => {
   }
 
   // Updates the URL with new state values
-  const mapStateToUrl = state => {
+  const mapStateToUrl = (state: State) => {
     const urlValue = cachedParams?.[urlParam]
     const stateValue = state?.[stateKey]
 
@@ -154,9 +181,9 @@ export const syncURLToState = options => {
 
   // Subscribe to URL changes and cache them
   const unsubscribeParams = routify.params.subscribe($urlParams => {
-    $urlParams = decodeParams($urlParams)
-    cachedParams = $urlParams
-    mapUrlToState($urlParams)
+    const decodedParams = decodeParams($urlParams)
+    cachedParams = decodedParams
+    mapUrlToState(decodedParams)
   })
 
   // Subscribe to routify store changes and cache them
