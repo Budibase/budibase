@@ -7,4 +7,9 @@ export type CreateAIConfigRequest = Omit<
 >
 export type UpdateAIConfigRequest = CustomAIProviderConfig
 
-export type AIProvidersResponse = string[]
+export interface AIProviderField {
+  id: string
+  displayName: string
+  externalProvider: string
+}
+export type AIProvidersResponse = AIProviderField[]

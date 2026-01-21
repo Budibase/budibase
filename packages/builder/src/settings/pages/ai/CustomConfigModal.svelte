@@ -36,25 +36,19 @@
   $: typeLabel =
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
 
-  let loadingProviders = true
-  let providers: string[] = []
+  $: providers = $aiConfigsStore.providers
 
-  $: providerOptions = Array.from(
-    new Set([...(providers || []), trimmedProvider].filter(Boolean))
-  )
-  $: providerPlaceholder = loadingProviders
+  $: providerPlaceholder = !providers
     ? "Loading providers..."
-    : providerOptions.length
+    : providers.length
       ? "Choose a provider"
       : "No providers available"
 
   onMount(async () => {
     try {
-      providers = await aiConfigsStore.fetchProviders()
+      await aiConfigsStore.fetchProviders()
     } catch (err: any) {
       notifications.error(err.message || "Failed to load providers")
-    } finally {
-      loadingProviders = false
     }
   })
 
@@ -135,9 +129,11 @@
     <Label size="M">Provider</Label>
     <Select
       bind:value={draft.provider}
-      options={providerOptions}
+      options={providers}
+      getOptionValue={o => o.id}
+      getOptionLabel={o => o.displayName}
       placeholder={providerPlaceholder}
-      loading={loadingProviders}
+      loading={!providers}
     />
   </div>
 

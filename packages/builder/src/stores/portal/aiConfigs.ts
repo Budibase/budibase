@@ -1,21 +1,22 @@
 import { API } from "@/api"
-import { BudiStore } from "../BudiStore"
 import {
-  CustomAIProviderConfig,
+  AIProviderField,
   CreateAIConfigRequest,
+  CustomAIProviderConfig,
   UpdateAIConfigRequest,
 } from "@budibase/types"
+import { BudiStore } from "../BudiStore"
 
 interface AIConfigState {
   customConfigs: CustomAIProviderConfig[]
-  providers: string[]
+  providers?: AIProviderField[]
 }
 
 export class AIConfigStore extends BudiStore<AIConfigState> {
   constructor() {
     super({
       customConfigs: [],
-      providers: [],
+      providers: undefined,
     })
   }
 

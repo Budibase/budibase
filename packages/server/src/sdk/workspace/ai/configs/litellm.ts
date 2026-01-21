@@ -227,8 +227,14 @@ export async function syncKeyModels() {
   }
 }
 
-export async function fetchPublicProviders(): Promise<string[]> {
-  const res = await fetch(`${env.LITELLM_URL}/public/providers`)
+type LiteLLMPublicProvider = {
+  provider: string
+  provider_display_name: string
+  litellm_provider: string
+}
+
+export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
+  const res = await fetch(`${env.LITELLM_URL}/public/providers/fields`)
   if (!res.ok) {
     const text = await res.text()
     throw new HTTPError(
@@ -238,8 +244,5 @@ export async function fetchPublicProviders(): Promise<string[]> {
   }
 
   const json = await res.json()
-
-  return json.filter(
-    (provider: any): provider is string => typeof provider === "string"
-  )
+  return json as LiteLLMPublicProvider[]
 }
