@@ -11,7 +11,7 @@ import { HTTPError } from "@budibase/backend-core"
 export const fetchRagConfigs = async (
   ctx: UserCtx<void, RagConfigListResponse>
 ) => {
-  const configs = await sdk.ragConfigs.fetch()
+  const configs = await sdk.ai.rag.config.fetch()
   ctx.body = configs
 }
 
@@ -20,7 +20,7 @@ export const createRagConfig = async (
 ) => {
   const body = ctx.request.body
 
-  const created = await sdk.ragConfigs.create(body)
+  const created = await sdk.ai.rag.config.create(body)
   ctx.body = created
   ctx.status = 201
 }
@@ -30,7 +30,7 @@ export const updateRagConfig = async (
 ) => {
   const body = ctx.request.body
 
-  const updated = await sdk.ragConfigs.update(body)
+  const updated = await sdk.ai.rag.config.update(body)
   ctx.body = updated
 }
 
@@ -41,6 +41,6 @@ export const deleteRagConfig = async (
   if (!id) {
     throw new HTTPError("Config ID is required", 400)
   }
-  await sdk.ragConfigs.remove(id)
+  await sdk.ai.rag.config.remove(id)
   ctx.body = { deleted: true }
 }
