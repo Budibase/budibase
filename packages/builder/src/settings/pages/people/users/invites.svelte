@@ -137,6 +137,7 @@
     {customRenderers}
     loading={!invitesLoaded}
     allowClickRows={false}
+    stickyHeader={false}
   />
 </Layout>
 
