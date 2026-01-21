@@ -25,7 +25,7 @@ import sdk from "../../../sdk"
 import {
   retrieveContextForSources,
   RetrievedContextChunk,
-} from "../../../sdk/workspace/ai/rag"
+} from "../../../sdk/workspace/ai/rag/files"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -248,7 +248,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   try {
     const { modelId, apiKey, baseUrl } =
-      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
+      await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
     const openai = ai.createLiteLLMOpenAI({
       apiKey,
@@ -294,6 +294,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         messageMetadata: () => messageMetadata,
       }),
       onFinish: async ({ messages }) => {
+        if (chat.transient) {
+          return
+        }
+
         const chatId = chat._id ?? docIds.generateChatConversationID()
         const existingChat = chat._id
           ? await db.tryGet<ChatConversation>(chat._id)

@@ -6,8 +6,7 @@ import {
   UpdateAgentRequest,
 } from "@budibase/types"
 import { listAgentFiles, removeAgentFile } from "./files"
-import { deleteAgentFileChunks } from "../rag"
-import sdk from "../../.."
+import { deleteAgentFileChunks, getAgentRagConfig } from "../rag/files"
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
@@ -52,7 +51,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     _id: docIds.generateAgentID(),
     name: request.name,
     description: request.description,
-    aiconfig: request.aiconfig,
+    aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
     promptInstructions: request.promptInstructions,
     live: request.live ?? false,
     icon: request.icon,
@@ -97,7 +96,7 @@ export async function remove(agentId: string) {
   await db.remove(agent)
 
   if (agent.ragConfigId) {
-    const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
+    const ragConfig = await getAgentRagConfig(agent)
 
     const files = await listAgentFiles(agentId)
     if (files.length > 0 && ragConfig) {

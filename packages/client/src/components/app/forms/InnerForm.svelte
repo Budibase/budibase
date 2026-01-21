@@ -12,6 +12,7 @@
     type UIFieldValidationRule,
     FieldType,
   } from "@budibase/types"
+  import type { FieldDefaultValue } from "@/types"
 
   type FieldInfo<T = unknown> = {
     name: string
@@ -198,7 +199,7 @@
     registerField: (
       field: string,
       type: FieldType,
-      defaultValue: string | null = null,
+      defaultValue: FieldDefaultValue = null,
       fieldDisabled: boolean = false,
       fieldReadOnly: boolean = false,
       validationRules: UIFieldValidationRule[],
