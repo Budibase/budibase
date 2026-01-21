@@ -22,6 +22,7 @@ import {
   RelationshipType,
   WebSearchProvider,
   AIConfigType,
+  CreateAIConfigRequest,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
@@ -499,13 +500,12 @@ describe("BudibaseAI", () => {
   })
 
   describe("custom provider configs", () => {
-    const defaultRequest = {
+    const defaultRequest: CreateAIConfigRequest = {
       name: "Support Chat",
       provider: "OpenAI",
       baseUrl: "https://api.openai.com",
       model: "gpt-4o-mini",
       apiKey: "sk-test-key",
-      isDefault: true,
       liteLLMModelId: "",
       configType: AIConfigType.COMPLETIONS,
     }
@@ -535,7 +535,6 @@ describe("BudibaseAI", () => {
       expect(created._id).toBeDefined()
       expect(created.liteLLMModelId).toBe("model-1")
       expect(created.apiKey).toBe(PASSWORD_REPLACEMENT)
-      expect(created.isDefault).toBe(true)
       expect(liteLLMScope.isDone()).toBe(true)
 
       const configsResponse = await config.api.ai.fetchConfigs()
@@ -569,20 +568,21 @@ describe("BudibaseAI", () => {
       const updated = await config.api.ai.updateConfig({
         ...created,
         name: "Updated Chat",
-        isDefault: false,
         apiKey: PASSWORD_REPLACEMENT,
       })
 
       expect(updateScope.isDone()).toBe(true)
       expect(updated.name).toBe("Updated Chat")
-      expect(updated.isDefault).toBe(false)
       expect(updated.apiKey).toBe(PASSWORD_REPLACEMENT)
 
-      const storedConfig = await config.doInTenant(async () => {
-        return await context
-          .getGlobalDB()
-          .get<CustomAIProviderConfig>(created._id!)
-      })
+      const storedConfig = await config.doInContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          return await context
+            .getWorkspaceDB()
+            .get<CustomAIProviderConfig>(created._id!)
+        }
+      )
       expect(storedConfig.apiKey).toBe(defaultRequest.apiKey)
 
       const configsResponse = await config.api.ai.fetchConfigs()
@@ -628,11 +628,14 @@ describe("BudibaseAI", () => {
 
       expect(updated.webSearchConfig?.apiKey).toBe(PASSWORD_REPLACEMENT)
 
-      const storedConfig = await config.doInTenant(async () => {
-        return await context
-          .getGlobalDB()
-          .tryGet<CustomAIProviderConfig>(created._id!)
-      })
+      const storedConfig = await config.doInContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          return await context
+            .getWorkspaceDB()
+            .tryGet<CustomAIProviderConfig>(created._id!)
+        }
+      )
       expect(storedConfig?.webSearchConfig?.apiKey).toBe(newWebSearchApiKey)
     })
 
@@ -729,11 +732,14 @@ describe("BudibaseAI", () => {
         PASSWORD_REPLACEMENT
       )
 
-      const storedConfig = await config.doInTenant(async () => {
-        return await context
-          .getGlobalDB()
-          .tryGet<CustomAIProviderConfig>(created._id!)
-      })
+      const storedConfig = await config.doInContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          return await context
+            .getWorkspaceDB()
+            .tryGet<CustomAIProviderConfig>(created._id!)
+        }
+      )
       expect(storedConfig?.webSearchConfig?.apiKey).toBe(webSearchApiKey)
     })
   })
