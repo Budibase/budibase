@@ -10,15 +10,31 @@ import {
   RequiredKeys,
   WithoutDocMetadata,
   ToDocUpdateMetadata,
+  LLMProvidersResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-const sanitizeConfig = (
+const sanitizeConfig = async (
   config: CustomAIProviderConfig
-): CustomAIProviderConfig => {
+): Promise<CustomAIProviderConfig> => {
+  const providers = await sdk.ai.configs.fetchLiteLLMProviders()
+  const provider = providers.find(p => p.id === config.provider)
+
+  if (!provider) {
+    throw new Error(`Provider ${config.provider} not found`)
+  }
+
+  const secretFields = provider.credentialFields
+    .filter(f => f.field_type === "password")
+    .map(f => f.key)
+  const credentialsFields = secretFields.reduce((updatedFields, field) => {
+    updatedFields[field] = PASSWORD_REPLACEMENT
+    return updatedFields
+  }, config.credentialsFields)
+
   const sanitized: CustomAIProviderConfig = {
     ...config,
-    ...(config.apiKey ? { apiKey: PASSWORD_REPLACEMENT } : {}),
+    credentialsFields,
   }
 
   if (sanitized.webSearchConfig?.apiKey) {
@@ -35,7 +51,17 @@ export const fetchAIConfigs = async (
   ctx: UserCtx<void, AIConfigListResponse>
 ) => {
   const configs = await sdk.ai.configs.fetch()
-  ctx.body = configs.map(sanitizeConfig)
+  const result: AIConfigListResponse = []
+  for (const config of configs) {
+    result.push(await sanitizeConfig(config))
+  }
+  ctx.body = result
+}
+
+export const fetchAIProviders = async (
+  ctx: UserCtx<void, LLMProvidersResponse>
+) => {
+  ctx.body = await sdk.ai.configs.fetchLiteLLMProviders()
 }
 
 export const createAIConfig = async (
@@ -53,9 +79,8 @@ export const createAIConfig = async (
     {
       name: body.name,
       provider: body.provider,
-      baseUrl: body.baseUrl,
+      credentialsFields: body.credentialsFields,
       model: body.model,
-      apiKey: body.apiKey,
       liteLLMModelId: body.liteLLMModelId,
       webSearchConfig: body.webSearchConfig,
       configType,
@@ -63,7 +88,7 @@ export const createAIConfig = async (
 
   const newConfig = await sdk.ai.configs.create(createRequest)
 
-  ctx.body = sanitizeConfig(newConfig)
+  ctx.body = await sanitizeConfig(newConfig)
 }
 
 export const updateAIConfig = async (
@@ -92,9 +117,8 @@ export const updateAIConfig = async (
     _rev: body._rev,
     name: body.name,
     provider: body.provider,
-    baseUrl: body.baseUrl,
+    credentialsFields: body.credentialsFields,
     model: body.model,
-    apiKey: body.apiKey,
     liteLLMModelId: body.liteLLMModelId,
     webSearchConfig: body.webSearchConfig,
     configType,
@@ -102,7 +126,7 @@ export const updateAIConfig = async (
 
   const updatedConfig = await sdk.ai.configs.update(updateRequest)
 
-  ctx.body = sanitizeConfig(updatedConfig)
+  ctx.body = await sanitizeConfig(updatedConfig)
 }
 
 export const deleteAIConfig = async (
