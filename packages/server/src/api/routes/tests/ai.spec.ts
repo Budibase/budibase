@@ -113,6 +113,22 @@ function customAIConfig(providerConfig: Partial<ProviderConfig>): SetupFn {
   }
 }
 
+const mockLiteLLMProviders = () =>
+  nock(environment.LITELLM_URL)
+    .persist()
+    .get("/public/providers/fields")
+    .reply(200, [
+      {
+        provider: "OpenAI",
+        provider_display_name: "OpenAI",
+        litellm_provider: "openai",
+        credential_fields: [
+          { key: "api_key", label: "API Key", field_type: "password" },
+          { key: "api_base", label: "Base URL", field_type: "text" },
+        ],
+      },
+    ])
+
 const allProviders: TestSetup[] = [
   {
     name: "OpenAI API key",
@@ -503,9 +519,11 @@ describe("BudibaseAI", () => {
     const defaultRequest: CreateAIConfigRequest = {
       name: "Support Chat",
       provider: "OpenAI",
-      baseUrl: "https://api.openai.com",
       model: "gpt-4o-mini",
-      apiKey: "sk-test-key",
+      credentialsFields: {
+        api_key: "sk-test-key",
+        api_base: "https://api.openai.com",
+      },
       liteLLMModelId: "",
       configType: AIConfigType.COMPLETIONS,
     }
@@ -513,6 +531,8 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
+
+      mockLiteLLMProviders()
     })
 
     it("creates a custom config and sanitizes the API key", async () => {
@@ -534,13 +554,17 @@ describe("BudibaseAI", () => {
       const created = await config.api.ai.createConfig({ ...defaultRequest })
       expect(created._id).toBeDefined()
       expect(created.liteLLMModelId).toBe("model-1")
-      expect(created.apiKey).toBe(PASSWORD_REPLACEMENT)
+      expect(created.credentialsFields.api_key).toBe(
+        defaultRequest.credentialsFields?.api_key
+      )
       expect(liteLLMScope.isDone()).toBe(true)
 
       const configsResponse = await config.api.ai.fetchConfigs()
       expect(configsResponse).toHaveLength(1)
       expect(configsResponse[0]._id).toBe(created._id)
-      expect(configsResponse[0].apiKey).toBe(PASSWORD_REPLACEMENT)
+      expect(configsResponse[0].credentialsFields.api_key).toBe(
+        defaultRequest.credentialsFields?.api_key
+      )
     })
 
     it("updates a custom config while preserving the stored API key", async () => {
@@ -568,12 +592,18 @@ describe("BudibaseAI", () => {
       const updated = await config.api.ai.updateConfig({
         ...created,
         name: "Updated Chat",
-        apiKey: PASSWORD_REPLACEMENT,
+        model: "gpt-4o",
+        credentialsFields: {
+          ...created.credentialsFields,
+          api_key: PASSWORD_REPLACEMENT,
+        },
       })
 
       expect(updateScope.isDone()).toBe(true)
       expect(updated.name).toBe("Updated Chat")
-      expect(updated.apiKey).toBe(PASSWORD_REPLACEMENT)
+      expect(updated.credentialsFields.api_key).toBe(
+        defaultRequest.credentialsFields?.api_key
+      )
 
       const storedConfig = await config.doInContext(
         config.getDevWorkspaceId(),
@@ -583,12 +613,16 @@ describe("BudibaseAI", () => {
             .get<CustomAIProviderConfig>(created._id!)
         }
       )
-      expect(storedConfig.apiKey).toBe(defaultRequest.apiKey)
+      expect(storedConfig.credentialsFields.api_key).toBe(
+        defaultRequest.credentialsFields?.api_key
+      )
 
       const configsResponse = await config.api.ai.fetchConfigs()
       expect(configsResponse).toHaveLength(1)
       expect(configsResponse[0].name).toBe("Updated Chat")
-      expect(configsResponse[0].apiKey).toBe(PASSWORD_REPLACEMENT)
+      expect(configsResponse[0].credentialsFields.api_key).toBe(
+        defaultRequest.credentialsFields?.api_key
+      )
     })
 
     it("updates web search config without calling LiteLLM", async () => {
@@ -619,7 +653,10 @@ describe("BudibaseAI", () => {
       const newWebSearchApiKey = "new-ws-key"
       const updated = await config.api.ai.updateConfig({
         ...created,
-        apiKey: PASSWORD_REPLACEMENT,
+        credentialsFields: {
+          ...created.credentialsFields,
+          api_key: PASSWORD_REPLACEMENT,
+        },
         webSearchConfig: {
           provider: WebSearchProvider.EXA,
           apiKey: newWebSearchApiKey,
@@ -748,10 +785,11 @@ describe("BudibaseAI", () => {
     const defaultEmbeddingRequest = {
       name: "Embeddings Config",
       provider: "OpenAI",
-      baseUrl: "https://api.openai.com",
       model: "text-embedding-3-large",
-      apiKey: "sk-test-key",
-      isDefault: true,
+      credentialsFields: {
+        api_key: "sk-test-key",
+        api_base: "https://api.openai.com",
+      },
       liteLLMModelId: "",
       configType: AIConfigType.EMBEDDINGS,
     }
@@ -759,16 +797,22 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
+
+      mockLiteLLMProviders()
     })
 
     it("creates an embedding config", async () => {
-      const embeddingValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+      const embeddingValidationScope = nock(environment.LITELLM_URL)
         .post("/v1/embeddings")
         .reply(200, { data: [] })
 
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "embed-key-1", key: "embed-secret-1" })
+        .post("/model/new")
+        .reply(200, { model_id: "embed-validation-1" })
+        .post("/model/delete")
+        .reply(200, { status: "success" })
         .post("/model/new")
         .reply(200, { model_id: "embed-model-1" })
         .post("/key/update")
@@ -779,7 +823,9 @@ describe("BudibaseAI", () => {
       })
       expect(created._id).toBeDefined()
       expect(created.liteLLMModelId).toBe("embed-model-1")
-      expect(created.apiKey).toBe(PASSWORD_REPLACEMENT)
+      expect(created.credentialsFields.api_key).toBe(
+        defaultEmbeddingRequest.credentialsFields.api_key
+      )
       expect(creationScope.isDone()).toBe(true)
       expect(embeddingValidationScope.isDone()).toBe(true)
 
@@ -790,13 +836,17 @@ describe("BudibaseAI", () => {
     })
 
     it("updates an embedding config", async () => {
-      const creationValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+      const creationValidationScope = nock(environment.LITELLM_URL)
         .post("/v1/embeddings")
         .reply(200, { data: [] })
 
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
+        .post("/model/new")
+        .reply(200, { model_id: "embed-validation-2" })
+        .post("/model/delete")
+        .reply(200, { status: "success" })
         .post("/model/new")
         .reply(200, { model_id: "embed-model-2" })
         .post("/key/update")
@@ -809,11 +859,15 @@ describe("BudibaseAI", () => {
       expect(creationScope.isDone()).toBe(true)
       expect(creationValidationScope.isDone()).toBe(true)
 
-      const updateValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+      const updateValidationScope = nock(environment.LITELLM_URL)
         .post("/v1/embeddings")
         .reply(200, { data: [] })
 
       const updateScope = nock(environment.LITELLM_URL)
+        .post("/model/new")
+        .reply(200, { model_id: "embed-validation-3" })
+        .post("/model/delete")
+        .reply(200, { status: "success" })
         .patch(`/model/${created.liteLLMModelId}/update`)
         .reply(200, { status: "success" })
         .post("/key/update")
@@ -822,6 +876,7 @@ describe("BudibaseAI", () => {
       const updated = await config.api.ai.updateConfig({
         ...created,
         name: "Updated Embeddings",
+        model: "text-embedding-3-small",
       })
       expect(updateScope.isDone()).toBe(true)
       expect(updateValidationScope.isDone()).toBe(true)
@@ -829,13 +884,17 @@ describe("BudibaseAI", () => {
     })
 
     it("deletes an embedding config and syncs LiteLLM models", async () => {
-      const creationValidationScope = nock(defaultEmbeddingRequest.baseUrl)
+      const creationValidationScope = nock(environment.LITELLM_URL)
         .post("/v1/embeddings")
         .reply(200, { data: [] })
 
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
         .reply(200, { token_id: "embed-key-3", key: "embed-secret-3" })
+        .post("/model/new")
+        .reply(200, { model_id: "embed-validation-4" })
+        .post("/model/delete")
+        .reply(200, { status: "success" })
         .post("/model/new")
         .reply(200, { model_id: "embed-model-3" })
         .post("/key/update")

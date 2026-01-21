@@ -5,6 +5,21 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("RAG configs", () => {
   const config = new TestConfiguration()
+  const mockLiteLLMProviders = () =>
+    nock(environment.LITELLM_URL)
+      .persist()
+      .get("/public/providers/fields")
+      .reply(200, [
+        {
+          provider: "OpenAI",
+          provider_display_name: "OpenAI",
+          litellm_provider: "openai",
+          credential_fields: [
+            { key: "api_key", label: "API Key", field_type: "password" },
+            { key: "api_base", label: "Base URL", field_type: "text" },
+          ],
+        },
+      ])
 
   afterAll(() => {
     config.end()
@@ -19,7 +34,8 @@ describe("RAG configs", () => {
   }
 
   const createRagDependencies = async () => {
-    const embeddingValidationScope = nock("https://example.com")
+    mockLiteLLMProviders()
+    const embeddingValidationScope = nock(environment.LITELLM_URL)
       .post("/v1/embeddings")
       .reply(200, { data: [] })
 
@@ -27,16 +43,22 @@ describe("RAG configs", () => {
       .post("/key/generate")
       .reply(200, { token_id: "embed-key-1", key: "embed-secret-1" })
       .post("/model/new")
+      .reply(200, { model_id: "embed-validation-1" })
+      .post("/model/delete")
+      .reply(200, { status: "success" })
+      .post("/model/new")
       .reply(200, { model_id: "embed-model-1" })
       .post("/key/update")
       .reply(200, { status: "success" })
 
     const embeddings = await config.api.ai.createConfig({
       name: "Embeddings",
-      provider: "openai",
-      baseUrl: "https://example.com",
+      provider: "OpenAI",
       model: "text-embedding-3-small",
-      apiKey: "test",
+      credentialsFields: {
+        api_key: "test",
+        api_base: "https://example.com",
+      },
       liteLLMModelId: "test",
       configType: AIConfigType.EMBEDDINGS,
     })
