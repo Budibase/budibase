@@ -160,7 +160,7 @@
 
         <div class="cell">
           {#if row.type === "app" || row.type === "automation"}
-            // todo: sort out for agents and chat
+            <!-- todo: sort out for agents and chat -->
             <PublishStatusBadge status={row.status} />
           {:else}
             <Body
