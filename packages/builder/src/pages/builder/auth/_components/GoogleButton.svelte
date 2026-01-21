@@ -4,6 +4,7 @@
   import { auth, organisation } from "@/stores/portal"
 
   export let samePage
+  export let loginWith = "Log in with"
   let show
 
   $: tenantId = $auth.tenantId
@@ -22,6 +23,6 @@
       }
     }}
   >
-    Log in with Google
+    {`${loginWith} Google`}
   </FancyButton>
 {/if}
