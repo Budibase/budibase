@@ -6,12 +6,17 @@ export interface ChatAppEnabledAgent {
   default?: boolean
 }
 
+export interface ConversationStarter {
+  prompt: string
+}
+
 export interface ChatApp extends Document {
   title?: string
   greeting?: string
   description?: string
   theme?: string
   enabledAgents: ChatAppEnabledAgent[]
+  conversationStartersByAgent?: Record<string, ConversationStarter[]>
   live?: boolean
   settings?: Record<string, any>
 }
