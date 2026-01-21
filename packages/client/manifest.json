@@ -9523,6 +9523,21 @@
         "type": "text",
         "label": "Title",
         "key": "title"
+      },
+      {
+        "type": "dataProvider",
+        "label": "Data provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Event start",
+        "key": "eventStart"
+      },
+      {
+        "type": "field",
+        "label": "Event end",
+        "key": "eventEnd"
       }
     ]
   }
