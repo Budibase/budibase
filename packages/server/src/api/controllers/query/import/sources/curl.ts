@@ -51,7 +51,7 @@ const parseCookie = (curl: any) => {
 export class Curl extends ImportSource {
   curl: any
 
-  isSupported = async (data: string): Promise<boolean> => {
+  tryLoad = async (data: string): Promise<boolean> => {
     try {
       this.curl = parseCurl(data)
     } catch (err) {
@@ -60,11 +60,17 @@ export class Curl extends ImportSource {
     return true
   }
 
+  load = async (data: string): Promise<void> => {
+    if (!(await this.tryLoad(data))) {
+      throw new Error("Failed to load CURL document")
+    }
+  }
+
   getUrl = (): URL => {
     return new URL(this.curl.raw_url)
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
+  getInfo = (): ImportInfo => {
     const url = this.getUrl()
     const method = this.curl.method
     const path = url.pathname
@@ -89,10 +95,7 @@ export class Curl extends ImportSource {
     return "curl"
   }
 
-  getQueries = async (
-    datasourceId: string,
-    options?: GetQueriesOptions
-  ): Promise<Query[]> => {
+  getQueries = (datasourceId: string, options?: GetQueriesOptions): Query[] => {
     const url = this.getUrl()
     const name = url.pathname
     const path = url.origin + url.pathname

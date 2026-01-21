@@ -17,7 +17,6 @@ import {
 import {
   convertToModelMessages,
   extractReasoningMiddleware,
-  generateText,
   ModelMessage,
   streamText,
   wrapLanguageModel,
@@ -26,7 +25,7 @@ import sdk from "../../../sdk"
 import {
   retrieveContextForSources,
   RetrievedContextChunk,
-} from "../../../sdk/workspace/ai/rag"
+} from "../../../sdk/workspace/ai/rag/files"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -51,11 +50,17 @@ export const prepareChatConversationForSave = ({
   const createdAt = existingChat?.createdAt || chat.createdAt || now
   const updatedAt = now
   const rev = existingChat?._rev || chat._rev
+  const agentId = existingChat?.agentId || chat.agentId
+
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
 
   return {
     _id: chatId,
     ...(rev && { _rev: rev }),
     chatAppId,
+    agentId,
     userId,
     title: title ?? chat.title,
     messages,
@@ -95,7 +100,9 @@ const toSourceMetadata = (
   return Array.from(summary.values())
 }
 
-const extractUserText = (message?: ChatConversation["messages"][number]) => {
+export const extractUserText = (
+  message?: ChatConversation["messages"][number]
+) => {
   if (!message || !Array.isArray(message.parts)) {
     return ""
   }
@@ -106,7 +113,7 @@ const extractUserText = (message?: ChatConversation["messages"][number]) => {
     .trim()
 }
 
-const findLatestUserQuestion = (chat: ChatConversationRequest) => {
+export const findLatestUserQuestion = (chat: ChatConversationRequest) => {
   const messages = chat.messages || []
   for (let i = messages.length - 1; i >= 0; i -= 1) {
     const current = messages[i]
@@ -118,6 +125,14 @@ const findLatestUserQuestion = (chat: ChatConversationRequest) => {
     }
   }
   return ""
+}
+
+export const truncateTitle = (value: string, maxLength = 120) => {
+  const trimmed = value.trim()
+  if (trimmed.length <= maxLength) {
+    return trimmed
+  }
+  return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
@@ -158,8 +173,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     throw new HTTPError("Chat app not found", 404)
   }
 
+  let existingChat: ChatConversation | undefined
   if (chat._id) {
-    const existingChat = await db.tryGet<ChatConversation>(chat._id)
+    existingChat = await db.tryGet<ChatConversation>(chat._id)
     if (!existingChat) {
       throw new HTTPError("chat not found", 404)
     }
@@ -169,12 +185,23 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     if (existingChat.userId && existingChat.userId !== userId) {
       throw new HTTPError("Forbidden", 403)
     }
+    if (chat.agentId && chat.agentId !== existingChat.agentId) {
+      throw new HTTPError("agentId cannot be changed", 400)
+    }
   }
 
-  const agentId = chatApp.agentId
+  const agentId = existingChat?.agentId || chat.agentId
 
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
+  }
+
+  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+    throw new HTTPError("agentId is not enabled for this chat app", 400)
+  }
+
+  if (!chat.agentId) {
+    chat.agentId = agentId
   }
 
   ctx.status = 200
@@ -221,7 +248,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   try {
     const { modelId, apiKey, baseUrl } =
-      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
+      await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
     const openai = ai.createLiteLLMOpenAI({
       apiKey,
@@ -253,16 +280,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools,
     })
 
-    const titleMessages = modelMessages.length > 0 ? [modelMessages[0]] : []
-    const title =
-      chat.title ||
-      (
-        await generateText({
-          model,
-          messages: titleMessages,
-          system: ai.agentHistoryTitleSystemPrompt(),
-        })
-      ).text
+    const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
 
     ctx.respond = false
     const messageMetadata =
@@ -296,8 +314,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
     return
   } catch (error: any) {
+    const message = error?.message || "Agent action failed"
     ctx.res.write(
-      `data: ${JSON.stringify({ type: "error", content: error.message })}\n\n`
+      `data: ${JSON.stringify({ type: "error", errorText: message, content: message })}\n\n`
     )
     ctx.res.end()
   }
@@ -306,7 +325,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 export async function createChatConversation(
   ctx: UserCtx<CreateChatConversationRequest, ChatConversation>
 ) {
-  const { title } = ctx.request.body
+  const { title, agentId } = ctx.request.body
   const chatAppId = ctx.request.body.chatAppId || ctx.params.chatAppId
   const userId = getGlobalUserId(ctx)
 
@@ -314,7 +333,14 @@ export async function createChatConversation(
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+    throw new HTTPError("agentId is not enabled for this chat app", 400)
+  }
 
   const db = context.getWorkspaceDB()
   const chatId = docIds.generateChatConversationID()
@@ -328,6 +354,7 @@ export async function createChatConversation(
     chat: {
       _id: chatId,
       chatAppId,
+      agentId,
       title,
       messages: [],
     },
