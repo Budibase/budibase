@@ -14,19 +14,13 @@
   export let eventEnd: string // can haz type?
   export let eventTitle: string
   export let eventDesc: string
-
-  console.log({ dataProvider, eventStart, eventEnd })
+  export let onClick: any // Also can has type?
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
 
   const getEvents = () => {
     return dataProvider.rows.map((row: any) => {
-      console.log({
-        title: row[eventTitle],
-        start: row[eventStart],
-        end: row[eventEnd],
-      })
       return {
         title: row[eventTitle],
         start: row[eventStart],
@@ -35,8 +29,15 @@
     })
   }
 
-  console.log(getEvents())
-  let options = {
+  function handleEventClick(info: any) {
+    const title = info.event.title
+    const start = info.event.start
+    const end = info.event.end
+    console.log("CLICKED!")
+    onClick?.({ title, start, end })
+  }
+
+  $: options = {
     headerToolbar: {
       start: "title",
       center: "",
@@ -45,6 +46,9 @@
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: "dayGridMonth",
     events: getEvents(),
+    eventClick: function (info) {
+      handleEventClick(info)
+    },
   }
 </script>
 

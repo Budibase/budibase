@@ -9548,7 +9548,26 @@
       {
         "type": "field",
         "label": "Event Description",
-        "key": "eventDescription"
+        "key": "eventDesc"
+      },
+      {
+        "type": "event",
+        "label": "On click event",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "Event title",
+            "key": "title"
+          },
+          {
+            "label": "Event Start",
+            "key": "start"
+          },
+          {
+            "label": "Event End",
+            "key": "end"
+          }
+        ]
       }
     ]
   }
