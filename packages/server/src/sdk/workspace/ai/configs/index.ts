@@ -126,14 +126,22 @@ export async function update(
 
   // Web Search is stored under configs, but we don't want to update LiteLLM when only that changes.
   if (!isWebSearchOnlyUpdate) {
-    await liteLLM.updateModel({
-      llmModelId: updatedConfig.liteLLMModelId,
-      provider: updatedConfig.provider,
-      name: updatedConfig.model,
-      credentialFields: updatedConfig.credentialsFields,
-      configType: updatedConfig.configType,
-    })
-    await liteLLM.syncKeyModels()
+    try {
+      await liteLLM.updateModel({
+        llmModelId: updatedConfig.liteLLMModelId,
+        provider: updatedConfig.provider,
+        name: updatedConfig.model,
+        credentialFields: updatedConfig.credentialsFields,
+        configType: updatedConfig.configType,
+      })
+      await liteLLM.syncKeyModels()
+    } catch (err) {
+      await db.put({
+        ...existing,
+        _rev: updatedConfig._rev,
+      })
+      throw err
+    }
   }
 
   return updatedConfig
