@@ -9514,6 +9514,7 @@
       "width": 600,
       "height": 420
     },
+    "styles": ["size"],
     "grid": {
       "hAlign": "stretch",
       "vAlign": "center"
@@ -9538,6 +9539,16 @@
         "type": "field",
         "label": "Event end",
         "key": "eventEnd"
+      },
+      {
+        "type": "field",
+        "label": "Event title",
+        "key": "eventTitle"
+      },
+      {
+        "type": "field",
+        "label": "Event Description",
+        "key": "eventDescription"
       }
     ]
   }
