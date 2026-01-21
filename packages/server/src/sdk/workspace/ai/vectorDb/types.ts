@@ -1,5 +1,3 @@
-import type { Client } from "pg"
-
 export interface VectorDbConfig {
   databaseUrl: string
   embeddingDimensions: number
@@ -32,5 +30,3 @@ export interface VectorDb {
     topK: number
   ): Promise<QueryResultRow[]>
 }
-
-export type ClientHandler<T> = (client: Client) => Promise<T>
