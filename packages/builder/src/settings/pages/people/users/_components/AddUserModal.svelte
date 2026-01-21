@@ -6,9 +6,9 @@
     ModalContent,
     Multiselect,
     InputDropdown,
-    Input,
     Select,
     RadioGroup,
+    PillInput,
     Layout,
     Icon,
   } from "@budibase/bbui"
@@ -24,7 +24,7 @@
 
   const password = generatePassword(12)
   let userGroups = []
-  let emailsInput = ""
+  let emailsInput = []
   let emailError = null
   let selectedRole = Constants.BudibaseRoles.AppUser
   let onboardingType = OnboardingType.PASSWORD
@@ -38,7 +38,7 @@
     },
   ]
   $: hasError = userData.find(x => x.error != null)
-  $: parsedEmails = workspaceOnly ? parseEmails(emailsInput) : []
+  $: parsedEmails = workspaceOnly ? emailsInput : []
   $: userCount =
     $licensing.userCount +
     (workspaceOnly ? parsedEmails.length : userData.length)
@@ -84,18 +84,8 @@
     return userData[index].error == null
   }
 
-  function parseEmails(value) {
-    if (!value) {
-      return []
-    }
-    return value
-      .split(/[,\n]/)
-      .map(email => email.trim())
-      .filter(Boolean)
-  }
-
   function validateWorkspaceEmails() {
-    const emails = parseEmails(emailsInput)
+    const emails = emailsInput
     if (!emails.length) {
       emailError = "Please enter at least one email address"
       return false
@@ -116,7 +106,7 @@
   }
 
   function buildWorkspaceUsers() {
-    return parseEmails(emailsInput).map(email => ({
+    return emailsInput.map(email => ({
       email,
       role: selectedRole,
       password: generatePassword(12),
@@ -178,12 +168,12 @@
   </svelte:fragment>
   {#if workspaceOnly}
     <Layout noPadding gap="S">
-      <Input
+      <PillInput
         label="Type or paste emails below, separated by commas"
-        placeholder="name@company.com"
         bind:value={emailsInput}
         error={emailError}
-        on:input={() => {
+        splitOnSpace={true}
+        on:change={() => {
           emailError = null
         }}
         on:blur={validateWorkspaceEmails}
