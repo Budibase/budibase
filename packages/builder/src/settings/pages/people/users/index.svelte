@@ -18,6 +18,7 @@
   import { licensing } from "@/stores/portal/licensing"
   import { organisation } from "@/stores/portal/organisation"
   import { admin } from "@/stores/portal/admin"
+  import { appStore } from "@/stores/builder/app"
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
@@ -57,6 +58,8 @@
     access: number
   }
 
+  export let workspaceOnly = false
+
   const fetch = fetchData({
     API,
     datasource: {
@@ -86,6 +89,10 @@
   let searchEmail: string | undefined = undefined
   let selectedRows: User[] = []
   let bulkSaveResponse: BulkUserCreated
+
+  $: currentWorkspaceId = $appStore.appId
+    ? sdk.applications.getProdAppID($appStore.appId)
+    : ""
 
   $: customRenderers = [
     { column: "email", component: EmailTableRenderer },
@@ -121,15 +128,36 @@
     successful: [],
     unsuccessful: [],
   }
-  $: setEnrichedUsers($fetch.rows as User[], tenantOwner)
+  $: setEnrichedUsers(
+    $fetch.rows as User[],
+    tenantOwner,
+    currentWorkspaceId,
+    workspaceOnly,
+    $groups
+  )
 
   const setEnrichedUsers = async (
     rows: User[],
-    owner: AccountMetadata | null
+    owner: AccountMetadata | null,
+    workspaceId: string,
+    isWorkspaceOnly: boolean,
+    allGroups: UserGroup[]
   ) => {
-    enrichedUsers = rows?.map<EnrichedUser>(user => {
+    const filteredRows = rows?.filter(user => {
+      if (!isWorkspaceOnly || !workspaceId) {
+        return true
+      }
+
+      const hasWorkspaceAccess =
+        sdk.users.isAdminOrBuilder(user, $appStore.appId) ||
+        sdk.users.userAppAccessList(user, allGroups).includes(workspaceId)
+
+      return hasWorkspaceAccess
+    })
+
+    enrichedUsers = filteredRows?.map<EnrichedUser>(user => {
       const userGroups: UserGroup[] = []
-      $groups.forEach(group => {
+      allGroups.forEach(group => {
         if (group.users) {
           group.users?.forEach(y => {
             if (y._id === user._id) {
@@ -153,7 +181,7 @@
           $auth.user?.email === user.email
             ? false
             : true,
-        apps: sdk.users.userAppAccessList(user, $groups),
+        apps: sdk.users.userAppAccessList(user, allGroups),
         access: role.sortOrder,
       }
     })
