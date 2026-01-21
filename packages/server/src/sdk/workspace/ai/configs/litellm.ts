@@ -34,19 +34,17 @@ export async function generateKey(
 export async function addModel({
   provider,
   name,
-  baseUrl,
-  apiKey,
+  credentialFields,
   configType,
 }: {
   provider: string
   name: string
-  baseUrl: string
-  apiKey: string | undefined
+  credentialFields: Record<string, string>
   configType: AIConfigType
 }): Promise<string> {
   provider = await mapToLiteLLMProvider(provider)
 
-  await validateConfig({ provider, name, baseUrl, apiKey, configType })
+  await validateConfig({ provider, name, credentialFields, configType })
 
   const requestOptions = {
     method: "POST",
@@ -57,8 +55,6 @@ export async function addModel({
     body: JSON.stringify({
       model_name: name,
       litellm_params: {
-        api_base: baseUrl,
-        api_key: apiKey,
         custom_llm_provider: provider,
         model: `${provider}/${name}`,
         use_in_pass_through: false,
@@ -67,6 +63,7 @@ export async function addModel({
         input_cost_per_token: 0,
         output_cost_per_token: 0,
         guardrails: [],
+        ...credentialFields,
       },
       model_info: {
         created_at: new Date().toISOString(),
@@ -84,19 +81,17 @@ export async function updateModel({
   llmModelId,
   provider,
   name,
-  baseUrl,
-  apiKey,
+  credentialFields,
   configType,
 }: {
   llmModelId: string
   provider: string
   name: string
-  baseUrl: string
-  apiKey: string | undefined
+  credentialFields: Record<string, string>
   configType: AIConfigType
 }) {
   provider = await mapToLiteLLMProvider(provider)
-  await validateConfig({ provider, name, baseUrl, apiKey, configType })
+  await validateConfig({ provider, name, credentialFields, configType })
 
   const requestOptions = {
     method: "PATCH",
@@ -107,8 +102,6 @@ export async function updateModel({
     body: JSON.stringify({
       model_name: name,
       litellm_params: {
-        api_base: baseUrl,
-        api_key: apiKey,
         custom_llm_provider: provider,
         model: `${provider}/${name}`,
         use_in_pass_through: false,
@@ -117,6 +110,7 @@ export async function updateModel({
         input_cost_per_token: 0,
         output_cost_per_token: 0,
         guardrails: [],
+        ...credentialFields,
       },
       model_info: {
         updated_at: new Date().toISOString(),
@@ -140,39 +134,39 @@ export async function updateModel({
 export async function validateConfig(model: {
   provider: string
   name: string
-  baseUrl: string
-  apiKey: string | undefined
+  credentialFields: Record<string, string>
   configType: AIConfigType
 }) {
-  const { name, baseUrl, provider, apiKey, configType } = model
+  const { name, provider, credentialFields, configType } = model
 
   if (configType === AIConfigType.EMBEDDINGS) {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    }
-    if (apiKey) {
-      headers.Authorization = `Bearer ${apiKey}`
-    }
-    const normalizedBase = baseUrl?.replace(/\/+$/, "") || baseUrl
-    const response = await fetch(
-      `${normalizedBase || "https://api.openai.com"}/v1/embeddings`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model: name,
-          input: "Budibase embedding validation",
-        }),
-      }
-    )
+    // TODO
+    // const headers: Record<string, string> = {
+    //   "Content-Type": "application/json",
+    // }
+    // if (apiKey) {
+    //   headers.Authorization = `Bearer ${apiKey}`
+    // }
+    // const normalizedBase = baseUrl?.replace(/\/+$/, "") || baseUrl
+    // const response = await fetch(
+    //   `${normalizedBase}/v1/embeddings`,
+    //   {
+    //     method: "POST",
+    //     headers,
+    //     body: JSON.stringify({
+    //       model: name,
+    //       input: "Budibase embedding validation",
+    //     }),
+    //   }
+    // )
 
-    if (!response.ok) {
-      const text = await response.text()
-      throw new HTTPError(
-        `Error validating configuration: ${text || response.statusText}`,
-        400
-      )
-    }
+    // if (!response.ok) {
+    //   const text = await response.text()
+    //   throw new HTTPError(
+    //     `Error validating configuration: ${text || response.statusText}`,
+    //     400
+    //   )
+    // }
     return
   }
 
@@ -187,8 +181,7 @@ export async function validateConfig(model: {
       litellm_params: {
         model: `${provider}/${name}`,
         custom_llm_provider: provider,
-        api_key: apiKey,
-        api_base: baseUrl,
+        ...credentialFields,
       },
     }),
   }
@@ -245,6 +238,17 @@ type LiteLLMPublicProvider = {
   provider: string
   provider_display_name: string
   litellm_provider: string
+  default_model_placeholder?: string | null
+  credential_fields: {
+    key: string
+    label: string
+    placeholder?: string | null
+    tooltip?: string | null
+    required?: boolean
+    field_type?: string
+    options?: string[] | null
+    default_value?: string | null
+  }[]
 }
 
 export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {

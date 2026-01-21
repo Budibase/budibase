@@ -1,6 +1,7 @@
 import { configs, context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   AIConfigType,
+  AIProvider,
   AIProviderField,
   ConfigType,
   CustomAIProviderConfig,
@@ -64,18 +65,16 @@ export async function create(
   const modelId = await liteLLM.addModel({
     provider: config.provider,
     name: config.model,
-    baseUrl: config.baseUrl,
-    apiKey: config.apiKey,
+    credentialFields: config.credentialsFields,
     configType: config.configType,
   })
 
   const newConfig: CustomAIProviderConfig = {
     _id: docIds.generateAIConfigID(),
     name: config.name,
-    baseUrl: config.baseUrl,
     provider: config.provider,
+    credentialsFields: config.credentialsFields,
     model: config.model,
-    apiKey: config.apiKey,
     liteLLMModelId: modelId,
     ...(config.webSearchConfig && { webSearchConfig: config.webSearchConfig }),
     configType: config.configType,
@@ -102,8 +101,8 @@ export async function update(
     throw new HTTPError("Config to edit not found", 404)
   }
 
-  config.apiKey =
-    config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
+  // config.apiKey =
+  //   config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
 
   if (config.webSearchConfig?.apiKey === PASSWORD_REPLACEMENT) {
     config.webSearchConfig.apiKey = existing.webSearchConfig?.apiKey || ""
@@ -122,8 +121,8 @@ export async function update(
     existing.name === updatedConfig.name &&
     existing.provider === updatedConfig.provider &&
     existing.model === updatedConfig.model &&
-    existing.baseUrl === updatedConfig.baseUrl &&
-    existing.apiKey === updatedConfig.apiKey
+    JSON.stringify(existing.credentialsFields) ===
+      JSON.stringify(updatedConfig.credentialsFields)
 
   // Web Search is stored under configs, but we don't want to update LiteLLM when only that changes.
   if (!isWebSearchOnlyUpdate) {
@@ -131,8 +130,7 @@ export async function update(
       llmModelId: updatedConfig.liteLLMModelId,
       provider: updatedConfig.provider,
       name: updatedConfig.model,
-      baseUrl: updatedConfig.baseUrl,
-      apiKey: updatedConfig.apiKey,
+      credentialFields: updatedConfig.credentialsFields,
       configType: updatedConfig.configType,
     })
     await liteLLM.syncKeyModels()
@@ -183,16 +181,30 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
   }
 }
 
-let liteLLMProviders: AIProviderField[]
+let liteLLMProviders: AIProvider[]
 
-export async function fetchLiteLLMProviders(): Promise<AIProviderField[]> {
+export async function fetchLiteLLMProviders(): Promise<AIProvider[]> {
   if (!liteLLMProviders?.length) {
     const providers = await liteLLM.fetchPublicProviders()
-    liteLLMProviders = providers.map(p => {
-      const mapProvider: RequiredKeys<AIProviderField> = {
-        id: p.provider,
-        displayName: p.provider_display_name,
-        externalProvider: p.litellm_provider,
+    liteLLMProviders = providers.map(provider => {
+      const mapProvider: RequiredKeys<AIProvider> = {
+        id: provider.provider,
+        displayName: provider.provider_display_name,
+        externalProvider: provider.litellm_provider,
+        default_model_placeholder: provider.default_model_placeholder,
+        credentialFields: provider.credential_fields.map(f => {
+          const field: RequiredKeys<AIProviderField> = {
+            key: f.key,
+            label: f.label,
+            placeholder: f.placeholder,
+            tooltip: f.tooltip,
+            required: f.required,
+            field_type: f.field_type,
+            options: f.options,
+            default_value: f.default_value,
+          }
+          return field
+        }),
       }
       return mapProvider
     })

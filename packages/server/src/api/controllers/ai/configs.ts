@@ -19,7 +19,8 @@ const sanitizeConfig = (
 ): CustomAIProviderConfig => {
   const sanitized: CustomAIProviderConfig = {
     ...config,
-    ...(config.apiKey ? { apiKey: PASSWORD_REPLACEMENT } : {}),
+    // TODO
+    // ...(config.apiKey ? { apiKey: PASSWORD_REPLACEMENT } : {}),
   }
 
   if (sanitized.webSearchConfig?.apiKey) {
@@ -60,9 +61,8 @@ export const createAIConfig = async (
     {
       name: body.name,
       provider: body.provider,
-      baseUrl: body.baseUrl,
+      credentialsFields: body.credentialsFields,
       model: body.model,
-      apiKey: body.apiKey,
       liteLLMModelId: body.liteLLMModelId,
       webSearchConfig: body.webSearchConfig,
       configType,
@@ -99,9 +99,8 @@ export const updateAIConfig = async (
     _rev: body._rev,
     name: body.name,
     provider: body.provider,
-    baseUrl: body.baseUrl,
+    credentialsFields: body.credentialsFields,
     model: body.model,
-    apiKey: body.apiKey,
     liteLLMModelId: body.liteLLMModelId,
     webSearchConfig: body.webSearchConfig,
     configType,

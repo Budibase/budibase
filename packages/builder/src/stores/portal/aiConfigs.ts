@@ -1,6 +1,6 @@
 import { API } from "@/api"
 import {
-  AIProviderField,
+  AIProvider,
   CreateAIConfigRequest,
   CustomAIProviderConfig,
   UpdateAIConfigRequest,
@@ -9,7 +9,7 @@ import { BudiStore } from "../BudiStore"
 
 interface AIConfigState {
   customConfigs: CustomAIProviderConfig[]
-  providers?: AIProviderField[]
+  providers?: AIProvider[]
 }
 
 export class AIConfigStore extends BudiStore<AIConfigState> {

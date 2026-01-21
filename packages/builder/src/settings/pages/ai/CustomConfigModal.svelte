@@ -1,15 +1,22 @@
 <script lang="ts">
   import { aiConfigsStore } from "@/stores/portal"
   import {
-    ModalContent,
-    Label,
-    Input,
-    Select,
     Heading,
-    notifications,
+    Input,
     keepOpen,
+    Label,
+    ModalContent,
+    notifications,
+    Select,
   } from "@budibase/bbui"
-  import { AIConfigType, type CustomAIProviderConfig } from "@budibase/types"
+  import type {
+    AIProvider,
+    CustomAIProviderConfig,
+    RequiredKeys,
+    ToDocCreateMetadata,
+    ToDocUpdateMetadata,
+  } from "@budibase/types"
+  import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
   export let config: CustomAIProviderConfig | null
@@ -18,21 +25,32 @@
   const dispatch = createEventDispatcher<{ hide: void }>()
 
   let draft: CustomAIProviderConfig = config
-    ? { ...config }
-    : {
+    ? ({
+        _id: config._id!,
+        _rev: config._rev!,
+
+        name: config.name,
+        provider: config.provider,
+        credentialsFields: config.credentialsFields ?? {},
+
+        model: config.model,
+        liteLLMModelId: config.liteLLMModelId,
+        webSearchConfig: config.webSearchConfig,
+        configType: config.configType,
+      } satisfies RequiredKeys<ToDocUpdateMetadata<CustomAIProviderConfig>>)
+    : ({
+        _id: "",
         provider: "",
         name: "",
-        baseUrl: "",
         model: "",
-        apiKey: "",
         liteLLMModelId: "",
         configType: type,
-      }
+        credentialsFields: {},
+        webSearchConfig: undefined,
+      } satisfies RequiredKeys<ToDocCreateMetadata<CustomAIProviderConfig>>)
 
   $: isEdit = !!config
-  $: trimmedName = (draft.name || "").trim()
-  $: trimmedProvider = (draft.provider || "").trim()
-  $: canSave = !!trimmedName && !!trimmedProvider
+  $: canSave = !!draft.name.trim() && !!draft.provider
   $: typeLabel =
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
 
@@ -43,6 +61,15 @@
     : providers.length
       ? "Choose a provider"
       : "No providers available"
+
+  $: providersMap = providers?.reduce<Record<string, AIProvider>>((acc, p) => {
+    acc[p.id] = p
+    return acc
+  }, {})
+  $: selectedProvider = providersMap?.[draft.provider]
+
+  $: modelPlaceholder =
+    selectedProvider?.default_model_placeholder || "gpt-4o-mini"
 
   onMount(async () => {
     try {
@@ -62,7 +89,7 @@
           )} configuration updated`
         )
       } else {
-        const { _id, _rev, ...rest } = draft
+        const { _id, ...rest } = draft
         await aiConfigsStore.createConfig(rest)
         notifications.success(
           `${typeLabel[0].toUpperCase()}${typeLabel.slice(
@@ -138,19 +165,32 @@
   </div>
 
   <div class="row">
-    <Label size="M">API Key</Label>
-    <Input type="password" bind:value={draft.apiKey} />
-  </div>
-
-  <div class="row">
-    <Label size="M">Base URL</Label>
-    <Input placeholder="https://api.openai.com" bind:value={draft.baseUrl} />
-  </div>
-
-  <div class="row">
     <Label size="M">Model</Label>
-    <Input placeholder="gpt-4o-mini" bind:value={draft.model} />
+    <Input placeholder={modelPlaceholder} bind:value={draft.model} />
   </div>
+
+  {#each selectedProvider?.credentialFields as field (field.key)}
+    <div class="row">
+      <Label size="M">{field.label || field.key}</Label>
+      {#if field.options?.length || field.field_type === "select"}
+        <Select
+          bind:value={draft.credentialsFields[field.key]}
+          options={field.options || []}
+          placeholder={field.placeholder ?? undefined}
+          helpText={field.tooltip ?? undefined}
+        />
+      {:else}
+        <Input
+          bind:value={draft.credentialsFields[field.key]}
+          type={field.field_type === "password" || field.key.includes("key")
+            ? "password"
+            : "text"}
+          placeholder={field.placeholder ?? undefined}
+          helpText={field.tooltip ?? undefined}
+        />
+      {/if}
+    </div>
+  {/each}
 </ModalContent>
 
 <style>
