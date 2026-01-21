@@ -241,13 +241,20 @@
   }
 
   async function createUserFlow() {
-    const payload = userData?.users?.map(user => ({
-      email: user.email,
-      builder: user.role === Constants.BudibaseRoles.Developer,
-      creator: user.role === Constants.BudibaseRoles.Creator,
-      admin: user.role === Constants.BudibaseRoles.Admin,
-      groups: userData.groups,
-    }))
+    const payload = userData?.users?.map(user => {
+      const workspaceRole = getWorkspaceRole(user.role)
+      return {
+        email: user.email,
+        builder: user.role === Constants.BudibaseRoles.Developer,
+        creator: user.role === Constants.BudibaseRoles.Creator,
+        admin: user.role === Constants.BudibaseRoles.Admin,
+        groups: userData.groups,
+        apps:
+          workspaceOnly && currentWorkspaceId && workspaceRole
+            ? { [currentWorkspaceId]: workspaceRole }
+            : undefined,
+      }
+    })
     try {
       inviteUsersResponse = await users.invite(payload)
       inviteConfirmationModal.show()
@@ -311,6 +318,23 @@
         successful: [],
         unsuccessful: [],
       }
+      if (workspaceOnly && currentWorkspaceId && bulkSaveResponse.successful) {
+        await Promise.all(
+          bulkSaveResponse.successful.map(async user => {
+            const matchingUser = userData.users.find(
+              created => created.email === user.email
+            )
+            const role = getWorkspaceRole(matchingUser?.role)
+            if (!role) {
+              return
+            }
+            const fullUser = await users.get(user._id)
+            if (fullUser?._rev) {
+              await users.addUserToWorkspace(fullUser._id, role, fullUser._rev)
+            }
+          })
+        )
+      }
       notifications.success("Successfully created user")
       await groups.init()
       passwordModal.show()
@@ -365,6 +389,19 @@
     return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
       .join("")
       .slice(0, length)
+  }
+
+  const getWorkspaceRole = (role?: string) => {
+    if (!workspaceOnly || !currentWorkspaceId || !role) {
+      return undefined
+    }
+    if (role === Constants.BudibaseRoles.Creator) {
+      return Constants.Roles.CREATOR
+    }
+    if (role === Constants.BudibaseRoles.Admin) {
+      return Constants.Roles.CREATOR
+    }
+    return Constants.Roles.BASIC
   }
 
   onMount(async () => {
@@ -464,7 +501,7 @@
   </div>
 </Layout>
 
-<Modal bind:this={createUserModal}>
+<Modal bind:this={createUserModal} closeOnOutsideClick={false}>
   <AddUserModal {showOnboardingTypeModal} {workspaceOnly} />
 </Modal>
 

@@ -139,11 +139,10 @@
         return keepOpen
       }
 
-      showOnboardingTypeModal(
+      return showOnboardingTypeModal(
         { users: buildWorkspaceUsers(), groups: userGroups },
         onboardingType
       )
-      return
     }
 
     let valid = true
@@ -163,6 +162,7 @@
   title={workspaceOnly ? undefined : "Add new users"}
   confirmText={workspaceOnly ? "Invite users" : "Add users"}
   cancelText="Cancel"
+  disableCancelOnConfirm={true}
   showCloseIcon={false}
   disabled={workspaceOnly
     ? !parsedEmails.length || exceeded || !onboardingType || !!emailError
