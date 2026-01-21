@@ -440,7 +440,7 @@ describe("chat conversation transient behavior", () => {
     )
   })
 
-  it("persists conversations when transient is false", async () => {
+  it("persists conversations by default", async () => {
     setupMocks()
     const headers = await config.defaultHeaders({}, true)
 
