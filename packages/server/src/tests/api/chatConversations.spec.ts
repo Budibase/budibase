@@ -47,8 +47,8 @@ jest.mock("ai", () => {
   }
 })
 
-jest.mock("../../sdk/aiConfig", () => {
-  const actual = jest.requireActual("../../sdk/aiConfig")
+jest.mock("../../sdk/workspace/ai/configs", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/configs")
   return {
     ...actual,
     getLiteLLMModelConfigOrThrow: jest.fn(),
@@ -347,8 +347,8 @@ describe("chat conversation transient behavior", () => {
       >
     ).mockResolvedValue({ systemPrompt: "system", tools })
     ;(
-      sdk.aiConfigs.getLiteLLMModelConfigOrThrow as jest.MockedFunction<
-        typeof sdk.aiConfigs.getLiteLLMModelConfigOrThrow
+      sdk.ai.configs.getLiteLLMModelConfigOrThrow as jest.MockedFunction<
+        typeof sdk.ai.configs.getLiteLLMModelConfigOrThrow
       >
     ).mockResolvedValue({
       modelName: "model-1",
