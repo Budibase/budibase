@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chatAppsStore, currentChatApp } from "@/stores/portal"
+  import { chatAppsStore, currentChatApp } from "@/stores/portal/chatApps"
   import { Body, Button, Icon, Modal, ModalContent } from "@budibase/bbui"
   import { Utils } from "@budibase/frontend-core"
   import type { Agent, ChatApp } from "@budibase/types"
@@ -119,7 +119,7 @@
   }
 
   const debouncedSave = Utils.debounce(() => {
-    void saveConversationStarters()
+    saveConversationStarters()
   }, 400)
 
   const handleSetDefault = () => {
@@ -162,7 +162,11 @@
   }
 </script>
 
-<Modal bind:this={modal} on:hide={() => (open ? onClose() : undefined)}>
+<Modal
+  bind:this={modal}
+  autoFocus={false}
+  on:hide={() => (open ? onClose() : undefined)}
+>
   <ModalContent
     size="M"
     title={`${selectedAgent?.name || "Agent"} settings`}
