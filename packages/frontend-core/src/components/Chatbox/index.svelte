@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { MarkdownViewer, notifications } from "@budibase/bbui"
+  import {
+    MarkdownViewer,
+    notifications,
+    Icon,
+    ProgressCircle,
+  } from "@budibase/bbui"
   import type {
     ChatConversation,
     DraftChatConversation,
@@ -7,7 +12,7 @@
   } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import BBAI from "../../icons/BBAI.svelte"
-  import { tick, onMount, onDestroy, createEventDispatcher } from "svelte"
+  import { tick } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
   import {
@@ -19,33 +24,41 @@
     type UIMessage,
   } from "ai"
 
-  export let workspaceId: string
-  export let API = createAPIClient({
-    attachHeaders: headers => {
-      if (workspaceId) {
-        headers[Header.APP_ID] = workspaceId
-      }
-    },
-  })
-
   type ChatConversationLike = ChatConversation | DraftChatConversation
 
-  export let chat: ChatConversationLike
-  export let loading: boolean = false
-  export let persistConversation: boolean = true
+  interface Props {
+    workspaceId: string
+    chat: ChatConversationLike
+    persistConversation?: boolean
+    onchatSaved?: (_event: {
+      detail: { chatId?: string; chat: ChatConversationLike }
+    }) => void
+  }
 
-  const dispatch = createEventDispatcher<{
-    chatSaved: { chatId?: string; chat: ChatConversationLike }
-  }>()
+  let {
+    workspaceId,
+    chat = $bindable(),
+    persistConversation = true,
+    onchatSaved,
+  }: Props = $props()
 
-  let chatAreaElement: HTMLDivElement
-  let observer: MutationObserver
-  let textareaElement: HTMLTextAreaElement
-  let expandedTools: Record<string, boolean> = {}
-  let inputValue = ""
+  let API = $state(
+    createAPIClient({
+      attachHeaders: headers => {
+        if (workspaceId) {
+          headers[Header.APP_ID] = workspaceId
+        }
+      },
+    })
+  )
 
-  let resolvedChatAppId: string | undefined
-  let resolvedConversationId: string | undefined
+  let chatAreaElement = $state<HTMLDivElement>()
+  let textareaElement = $state<HTMLTextAreaElement>()
+  let expandedTools = $state<Record<string, boolean>>({})
+  let inputValue = $state("")
+
+  let resolvedChatAppId = $state<string | undefined>()
+  let resolvedConversationId = $state<string | undefined>()
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
@@ -68,23 +81,18 @@
     }),
     messages: chat?.messages || [],
     onFinish: async () => {
-      loading = false
-
       if (persistConversation && !chat._id && chat.chatAppId) {
         try {
           const history = await API.fetchChatHistory(chat.chatAppId)
-          const messages = chatInstance.messages
-          const lastMessageId = messages[messages.length - 1]?.id
+          const msgs = chatInstance.messages
+          const lastMessageId = msgs[msgs.length - 1]?.id
           const savedConversation =
             history?.find(convo =>
               convo.messages.some(message => message.id === lastMessageId)
             ) || history?.[0]
 
           if (savedConversation) {
-            chat = {
-              ...chat,
-              ...savedConversation,
-            }
+            chat = { ...chat, ...savedConversation }
             resolvedConversationId = savedConversation._id
           }
         } catch (historyError) {
@@ -92,12 +100,8 @@
         }
       }
 
-      chat = {
-        ...chat,
-        messages: chatInstance.messages,
-      }
-
-      dispatch("chatSaved", { chatId: chat._id, chat })
+      chat = { ...chat, messages: chatInstance.messages }
+      onchatSaved?.({ detail: { chatId: chat._id, chat } })
 
       await tick()
       textareaElement?.focus()
@@ -105,8 +109,34 @@
     onError: error => {
       console.error(error)
       notifications.error(error.message || "Failed to send message")
-      loading = false
     },
+  })
+
+  let messages = $derived(chatInstance.messages)
+  let isBusy = $derived(
+    chatInstance.status === "streaming" || chatInstance.status === "submitted"
+  )
+
+  let lastChatId = $state<string | undefined>(chat?._id)
+  $effect(() => {
+    if (chat?._id !== lastChatId) {
+      lastChatId = chat?._id
+      chatInstance.messages = chat?.messages || []
+      expandedTools = {}
+    }
+  })
+
+  const scrollToBottom = async () => {
+    await tick()
+    if (chatAreaElement) {
+      chatAreaElement.scrollTop = chatAreaElement.scrollHeight
+    }
+  }
+
+  $effect(() => {
+    if (messages?.length) {
+      scrollToBottom()
+    }
   })
 
   const ensureChatApp = async (): Promise<string | undefined> => {
@@ -140,37 +170,14 @@
     return undefined
   }
 
-  // Sync chatInstance messages when chat prop changes
-  let lastChatId: string | undefined = chat?._id
-  $: if (chat?._id !== lastChatId) {
-    lastChatId = chat?._id
-    chatInstance.messages = chat?.messages || []
-    expandedTools = {}
-  }
-
-  $: messages = chatInstance.messages
-  $: isStreaming = chatInstance.status === "streaming"
-  $: showLoading = loading || isStreaming
-
-  async function scrollToBottom() {
-    await tick()
-    if (chatAreaElement) {
-      chatAreaElement.scrollTop = chatAreaElement.scrollHeight
-    }
-  }
-
-  $: if (messages?.length) {
-    scrollToBottom()
-  }
-
-  async function handleKeyDown(event: KeyboardEvent) {
+  const handleKeyDown = async (event: KeyboardEvent) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
       await sendMessage()
     }
   }
 
-  async function sendMessage() {
+  const sendMessage = async () => {
     const chatAppIdFromEnsure = await ensureChatApp()
 
     if (!chat) {
@@ -199,25 +206,18 @@
     ) {
       try {
         const newChat = await API.createChatConversation(
-          {
-            chatAppId,
-            agentId,
-            title: chat.title,
-          },
+          { chatAppId, agentId, title: chat.title },
           workspaceId
         )
-
-        chat = {
-          ...chat,
-          ...newChat,
-          chatAppId,
-        }
+        chat = { ...chat, ...newChat, chatAppId }
         resolvedConversationId = newChat._id
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Could not start a new chat conversation"
         console.error(err)
-        notifications.error(
-          err?.message || "Could not start a new chat conversation"
-        )
+        notifications.error(errorMessage)
         return
       }
     } else if (chat._id) {
@@ -228,39 +228,56 @@
     if (!text) return
 
     inputValue = ""
-    loading = true
-
     chatInstance.sendMessage({ text })
   }
 
-  onMount(async () => {
-    if (chat?._id) {
-      resolvedConversationId = chat._id
+  const toggleTool = (toolId: string) => {
+    expandedTools = { ...expandedTools, [toolId]: !expandedTools[toolId] }
+  }
+
+  const formatToolOutput = (output: unknown): string =>
+    typeof output === "string" ? output : JSON.stringify(output, null, 2)
+
+  const getUserMessageText = (
+    message: UIMessage<AgentMessageMetadata>
+  ): string =>
+    message.parts
+      ?.filter(isTextUIPart)
+      .map(p => p.text)
+      .join("") || "[Empty message]"
+
+  let mounted = $state(false)
+
+  $effect(() => {
+    const currentChatId = chat?._id
+    if (currentChatId) {
+      resolvedConversationId = currentChatId
     }
-    await ensureChatApp()
-
-    // Ensure we always autoscroll to reveal new messages
-    observer = new MutationObserver(async () => {
-      await tick()
-      if (chatAreaElement) {
-        chatAreaElement.scrollTop = chatAreaElement.scrollHeight
-      }
-    })
-
-    if (chatAreaElement) {
-      observer.observe(chatAreaElement, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-      })
-    }
-
-    await tick()
-    textareaElement?.focus()
   })
 
-  onDestroy(() => {
-    observer?.disconnect()
+  $effect(() => {
+    if (!mounted) {
+      mounted = true
+      ensureChatApp()
+      tick().then(() => {
+        textareaElement?.focus()
+      })
+    }
+  })
+
+  $effect(() => {
+    if (!chatAreaElement) return
+
+    const obs = new MutationObserver(scrollToBottom)
+    obs.observe(chatAreaElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    })
+
+    return () => {
+      obs.disconnect()
+    }
   })
 </script>
 
@@ -269,12 +286,7 @@
     {#each messages as message (message.id)}
       {#if message.role === "user"}
         <div class="message user">
-          <MarkdownViewer
-            value={message.parts
-              ?.filter(isTextUIPart)
-              .map(p => p.text)
-              .join("") || "[Empty message]"}
-          />
+          <MarkdownViewer value={getUserMessageText(message)} />
         </div>
       {:else if message.role === "assistant"}
         <div class="message assistant">
@@ -288,38 +300,69 @@
               </div>
             {:else if isToolUIPart(part)}
               {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
-              <div class="tool-part">
+              {@const isRunning =
+                part.state === "input-streaming" ||
+                part.state === "input-available"}
+              {@const isSuccess = part.state === "output-available"}
+              {@const isError = part.state === "output-error"}
+              <div class="tool-part" class:tool-running={isRunning}>
                 <button
                   class="tool-header"
                   type="button"
-                  on:click={() => {
-                    expandedTools = {
-                      ...expandedTools,
-                      [toolId]: !expandedTools[toolId],
-                    }
-                  }}
+                  onclick={() => toggleTool(toolId)}
                 >
                   <span
                     class="tool-chevron"
-                    class:expanded={expandedTools[toolId]}>▶</span
+                    class:expanded={expandedTools[toolId]}
                   >
-                  <span class="tool-icon">🔧</span>
+                    <Icon name="caret-right" size="XS" />
+                  </span>
+                  <span class="tool-icon">
+                    <Icon name="wrench" size="S" />
+                  </span>
                   <span class="tool-name">{getToolName(part)}</span>
-                  {#if part.state === "output-available"}
-                    <span class="tool-status success">✓</span>
-                  {:else if part.state === "output-error"}
-                    <span class="tool-status error">✗</span>
-                  {:else if part.state === "input-streaming" || part.state === "input-available"}
-                    <span class="tool-status pending">...</span>
-                  {/if}
+                  <span class="tool-status">
+                    {#if isRunning}
+                      <ProgressCircle size="S" />
+                    {:else if isSuccess}
+                      <Icon
+                        name="check"
+                        size="S"
+                        color="var(--spectrum-global-color-green-600)"
+                      />
+                    {:else if isError}
+                      <Icon
+                        name="x"
+                        size="S"
+                        color="var(--spectrum-global-color-red-600)"
+                      />
+                    {/if}
+                  </span>
                 </button>
-                {#if expandedTools[toolId] && part.state === "output-available" && part.output}
-                  <div class="tool-output">
-                    <div class="tool-output-label">Output:</div>
-                    <pre class="tool-output-content">{typeof part.output ===
-                      "string"
-                        ? part.output
-                        : JSON.stringify(part.output, null, 2)}</pre>
+                {#if expandedTools[toolId]}
+                  <div class="tool-details">
+                    {#if part.input}
+                      <div class="tool-section">
+                        <div class="tool-section-label">Input</div>
+                        <pre class="tool-section-content">{formatToolOutput(
+                            part.input
+                          )}</pre>
+                      </div>
+                    {/if}
+                    {#if isSuccess && part.output}
+                      <div class="tool-section">
+                        <div class="tool-section-label">Output</div>
+                        <pre class="tool-section-content">{formatToolOutput(
+                            part.output
+                          )}</pre>
+                      </div>
+                    {:else if isError && part.errorText}
+                      <div class="tool-section tool-error">
+                        <div class="tool-section-label">Error</div>
+                        <pre
+                          class="tool-section-content error-content">{part.errorText}</pre>
+                      </div>
+                    {/if}
                   </div>
                 {/if}
               </div>
@@ -349,7 +392,7 @@
         </div>
       {/if}
     {/each}
-    {#if showLoading}
+    {#if isBusy}
       <div class="message system">
         <BBAI size="48px" animate />
       </div>
@@ -361,9 +404,9 @@
       bind:value={inputValue}
       bind:this={textareaElement}
       class="input spectrum-Textfield-input"
-      on:keydown={handleKeyDown}
+      onkeydown={handleKeyDown}
       placeholder="Ask anything"
-      disabled={showLoading}
+      disabled={isBusy}
     ></textarea>
   </div>
 </div>
@@ -462,6 +505,11 @@
     background-color: var(--grey-2);
     border: 1px solid var(--grey-3);
     border-radius: 8px;
+    transition: border-color 0.2s ease;
+  }
+
+  .tool-part.tool-running {
+    border-color: var(--spectrum-global-color-static-seafoam-600);
   }
 
   .tool-header {
@@ -484,7 +532,9 @@
   }
 
   .tool-chevron {
-    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: transform 0.15s ease;
     color: var(--spectrum-global-color-gray-600);
   }
@@ -494,7 +544,10 @@
   }
 
   .tool-icon {
-    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--spectrum-global-color-static-seafoam-700);
   }
 
   .tool-name {
@@ -504,34 +557,33 @@
 
   .tool-status {
     margin-left: auto;
-    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .tool-status.success {
-    color: var(--spectrum-global-color-green-600);
+  .tool-details {
+    margin-top: var(--spacing-m);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
   }
 
-  .tool-status.error {
-    color: var(--spectrum-global-color-red-600);
+  .tool-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
   }
 
-  .tool-status.pending {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .tool-output {
-    margin-top: var(--spacing-s);
-  }
-
-  .tool-output-label {
+  .tool-section-label {
     font-size: 11px;
     font-weight: 600;
     color: var(--spectrum-global-color-gray-600);
-    margin-bottom: var(--spacing-xs);
     text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  .tool-output-content {
+  .tool-section-content {
     background-color: var(--background);
     border: 1px solid var(--grey-3);
     border-radius: 4px;
@@ -542,6 +594,17 @@
     white-space: pre-wrap;
     word-break: break-word;
     margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .tool-error .tool-section-label {
+    color: var(--spectrum-global-color-red-600);
+  }
+
+  .error-content {
+    border-color: var(--spectrum-global-color-red-400);
+    color: var(--spectrum-global-color-red-700);
   }
 
   /* Reasoning parts styling */
