@@ -14,13 +14,8 @@ export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
     return
   }
 
-  const fallbackAgentId = (await sdk.ai.agents.fetch())[0]?._id
-  const agents = fallbackAgentId
-    ? [{ agentId: fallbackAgentId, isEnabled: true, isDefault: true }]
-    : []
-
   const created = await sdk.ai.chatApps.create({
-    agents,
+    agents: [],
   })
   ctx.body = created
 }

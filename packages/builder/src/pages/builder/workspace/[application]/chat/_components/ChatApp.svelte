@@ -5,14 +5,16 @@
     currentChatApp,
     currentConversations,
   } from "@/stores/portal"
-  import { notifications } from "@budibase/bbui"
+  import { Body, notifications } from "@budibase/bbui"
   import type {
     ChatConversation,
     DraftChatConversation,
     WithoutDocMetadata,
   } from "@budibase/types"
+  import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
 
+  import NoResults from "../../_components/NoResults.svelte"
   import ChatConversationPanel from "./ChatConversationPanel.svelte"
   import ChatNavigationPanel from "./ChatNavigationPanel.svelte"
 
@@ -51,9 +53,20 @@
   let chatAgents: ChatAgentConfig[] = []
 
   $: agents = $agentsStore.agents || []
+  $: agentsLoaded = $agentsStore.agentsLoaded
   $: chatApp = $currentChatApp
   $: chatAgents = (chatApp?.agents || []) as ChatAgentConfig[]
   $: conversationHistory = $currentConversations
+  $: hasAnyAgents = agents.length > 0
+  $: hasEnabledAgents = enabledAgentList.length > 0
+  $: showEmptyState = agentsLoaded && !hasEnabledAgents
+  $: emptyStateMessage = hasAnyAgents
+    ? "No agents enabled for this chat app. Add one in Settings to start chatting."
+    : "No agents yet. Create your first agent to start chatting."
+
+  const openAgentsPage = () => {
+    $goto(`/builder/workspace/${workspaceId}/agent`)
+  }
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
@@ -248,25 +261,29 @@
 </script>
 
 <div class="chat-app">
-  <ChatNavigationPanel
-    {enabledAgentList}
-    {conversationHistory}
-    selectedConversationId={$chatAppsStore.currentConversationId}
-    on:agentSelected={handleAgentSelected}
-    on:conversationSelected={handleConversationSelected}
-  />
+  {#if showEmptyState}
+    <div class="chat-empty-state"></div>
+  {:else}
+    <ChatNavigationPanel
+      {enabledAgentList}
+      {conversationHistory}
+      selectedConversationId={$chatAppsStore.currentConversationId}
+      on:agentSelected={handleAgentSelected}
+      on:conversationSelected={handleConversationSelected}
+    />
 
-  <ChatConversationPanel
-    bind:chat
-    {deletingChat}
-    {enabledAgentList}
-    {selectedAgentId}
-    {selectedAgentName}
-    {workspaceId}
-    on:deleteChat={deleteCurrentChat}
-    on:chatSaved={handleChatSaved}
-    on:agentSelected={handleAgentSelected}
-  />
+    <ChatConversationPanel
+      bind:chat
+      {deletingChat}
+      {enabledAgentList}
+      {selectedAgentId}
+      {selectedAgentName}
+      {workspaceId}
+      on:deleteChat={deleteCurrentChat}
+      on:chatSaved={handleChatSaved}
+      on:agentSelected={handleAgentSelected}
+    />
+  {/if}
 </div>
 
 <style>
@@ -277,5 +294,14 @@
     height: 100%;
     width: 100%;
     min-width: 0;
+  }
+
+  .chat-empty-state {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    text-align: center;
   }
 </style>
