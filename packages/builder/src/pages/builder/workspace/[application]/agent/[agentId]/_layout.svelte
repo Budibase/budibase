@@ -167,6 +167,7 @@
   .config-preview {
     flex: 1 1 auto;
     border-left: 1px solid var(--spectrum-global-color-gray-200);
+    overflow-y: scroll;
   }
 
   .config-form {
