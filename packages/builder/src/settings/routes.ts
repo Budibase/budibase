@@ -8,6 +8,7 @@ import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
+import { featureFlag } from "@/helpers"
 
 export const globalRoutes = (user: GetGlobalSelfResponse) => {
   return [
@@ -143,18 +144,7 @@ export const orgRoutes = (
       access: () => isAdmin,
       path: "ai",
       icon: "sparkle",
-      routes: [
-        {
-          path: "aisettings",
-          title: "AI Settings",
-          comp: Pages.get("ai"),
-        },
-        {
-          path: "embedding-settings",
-          title: "Embeddings",
-          comp: Pages.get("embeddings"),
-        },
-      ],
+      comp: Pages.get("ai"),
     },
     {
       section: "Auth",
@@ -289,6 +279,24 @@ export const appRoutes = (
         { path: "pwa", comp: Pages.get("pwa"), title: "PWA" },
         { path: "embed", comp: Pages.get("embed"), title: "Embed" },
         { path: "scripts", comp: Pages.get("scripts"), title: "Scripts" },
+      ],
+    },
+    {
+      section: "AI config",
+      path: "ai-config",
+      icon: "sparkle",
+      access: () => featureFlag.isEnabled("AI_AGENTS"),
+      routes: [
+        {
+          path: "configs",
+          title: "AI Configs",
+          comp: Pages.get("ai_configs"),
+        },
+        {
+          path: "embedding-settings",
+          title: "Embeddings",
+          comp: Pages.get("embeddings"),
+        },
       ],
     },
   ].map((entry: Route) => ({

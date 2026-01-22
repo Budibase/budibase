@@ -1,9 +1,7 @@
 <script lang="ts">
   import {
-    Button,
     Heading,
     Input,
-    Layout,
     notifications,
     Select,
     ActionButton,
@@ -22,16 +20,9 @@
     type InsertAtPositionFn,
     type CaretPositionFn,
   } from "@budibase/types"
-  import TopBar from "@/components/common/TopBar.svelte"
-  import {
-    agentsStore,
-    aiConfigsStore,
-    selectedAgent,
-    ragConfigStore,
-  } from "@/stores/portal"
+  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import {
     datasources,
-    deploymentStore,
     restTemplates,
     automationStore,
     queries,
@@ -45,8 +36,6 @@
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
-  import FilesPanel from "./FilesPanel.svelte"
-  import AgentChatPanel from "./AgentChatPanel.svelte"
   import {
     EditorModes,
     hbAutocomplete,
@@ -60,7 +49,7 @@
     REST_TAG_ICON_URL,
     WEB_SEARCH_TAG_ICON_URL,
   } from "../logos/tagIconUrls"
-  import { goto, params } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
 
   $goto
@@ -82,13 +71,11 @@
     iconColor: "",
     ragConfigId: undefined as string | undefined,
   })
-  let ragConfigError: string | undefined = $state()
 
   let insertAtPos: InsertAtPositionFn | undefined = $state()
   let toolSearch = $state("")
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
-  let togglingLive = $state(false)
   let getCaretPosition: CaretPositionFn | undefined = $state.raw()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
@@ -103,7 +90,6 @@
       value: config._id || "",
     }))
   )
-  let ragConfigs = $derived($ragConfigStore.configs || [])
 
   // Web search Config
   let webSearchConfigModal = $state<WebSearchConfigModal>()
@@ -563,37 +549,6 @@
       autoSaveTimeout = undefined
     }, AUTO_SAVE_DEBOUNCE_MS)
   }
-
-  async function toggleAgentLive() {
-    if (!currentAgent || togglingLive) return
-
-    const nextLive = !currentAgent.live
-
-    try {
-      togglingLive = true
-
-      await agentsStore.updateAgent({
-        ...currentAgent,
-        ...draft,
-        enabledTools: includedToolRuntimeBindings,
-        live: nextLive,
-      })
-      await deploymentStore.publishApp()
-      await agentsStore.fetchAgents()
-
-      notifications.success(
-        nextLive ? "Agent is now live" : "Agent has been paused"
-      )
-    } catch (error) {
-      console.error(error)
-      notifications.error(
-        nextLive ? "Error setting agent live" : "Error pausing agent"
-      )
-    } finally {
-      togglingLive = false
-    }
-  }
-
   const clearAutoSave = () => {
     if (autoSaveTimeout) {
       clearTimeout(autoSaveTimeout)
@@ -605,7 +560,7 @@
     if (!$agentsStore.agentsLoaded) {
       await agentsStore.init()
     }
-    await Promise.all([aiConfigsStore.fetch(), ragConfigStore.fetch()])
+    await aiConfigsStore.fetch()
 
     if (draft.aiconfig) {
       agentsStore.fetchTools(draft.aiconfig)
@@ -617,258 +572,157 @@
   })
 </script>
 
-<div class="config-wrapper">
-  <TopBar
-    breadcrumbs={[
-      { text: "Agents", url: "../" },
-      { text: currentAgent?.name || "Agent" },
-    ]}
-    icon="Effect"
-  ></TopBar>
-  <div class="config-page">
-    <div class="config-pane config-content">
-      <div class="config-form">
-        <Layout paddingY="XL" gap="L">
-          <div class="start-pause-row">
-            <div class="status-icons">
-              <Icon
-                tooltip="Documentation"
-                on:click={() =>
-                  window.open(
-                    "https://docs.budibase.com/docs/agents",
-                    "_blank"
-                  )}
-                name="info"
-                size="M"
-                color="var(--spectrum-global-color-gray-600)"
-              />
-              <Icon
-                name="check-circle"
-                size="M"
-                color="var(--spectrum-semantic-positive-color-default, var(--spectrum-global-color-green-500))"
-              />
-            </div>
-            <Button
-              primary={!currentAgent?.live}
-              secondary={currentAgent?.live}
-              icon={currentAgent?.live ? "pause" : "play"}
-              iconColor={currentAgent?.live ? "" : "var(--bb-blue)"}
-              on:click={toggleAgentLive}
-              disabled={togglingLive}
-              >{currentAgent?.live ? "Pause agent" : "Set agent live"}</Button
-            >
-          </div>
-          <div class="form-row">
-            <div class="form-field">
-              <Input
-                label="Name"
-                labelPosition="left"
-                bind:value={draft.name}
-                placeholder="Give your agent a name"
-                on:blur={() => scheduleSave(true)}
-              />
-            </div>
-            <div class="form-icon">
-              <EditableIcon
-                name={draft.icon || ""}
-                color={draft.iconColor || ""}
-                size="L"
-                on:change={e => {
-                  draft.icon = e.detail.name
-                  draft.iconColor = e.detail.color
-                  scheduleSave(true)
-                }}
-              />
-            </div>
-          </div>
+<div class="form-row">
+  <div class="form-field">
+    <Input
+      label="Name"
+      labelPosition="left"
+      bind:value={draft.name}
+      placeholder="Give your agent a name"
+      on:blur={() => scheduleSave(true)}
+    />
+  </div>
+  <div class="form-icon">
+    <EditableIcon
+      name={draft.icon || ""}
+      color={draft.iconColor || ""}
+      size="L"
+      on:change={e => {
+        draft.icon = e.detail.name
+        draft.iconColor = e.detail.color
+        scheduleSave(true)
+      }}
+    />
+  </div>
+</div>
 
-          <div class="form-row">
-            <div class="form-field">
-              <Select
-                label="Model"
-                labelPosition="left"
-                bind:value={draft.aiconfig}
-                options={modelOptions}
-                placeholder="Select a model"
-                on:change={() => scheduleSave(true)}
-              />
-            </div>
-            <div class="form-icon">
-              <AbsTooltip text="Manage AI configurations">
-                <ActionButton
-                  size="M"
-                  icon="sliders-horizontal"
-                  on:click={() => bb.settings("/ai/aisettings")}
-                />
-              </AbsTooltip>
-            </div>
-          </div>
-
-          <div class="section">
-            <Heading size="XS">Instructions</Heading>
-            <div class="prompt-editor-wrapper">
-              <div class="prompt-editor">
-                {#if toolsLoaded}
-                  {#key resolvedIconCount}
-                    <CodeEditor
-                      value={draft.promptInstructions || ""}
-                      bindings={promptBindings}
-                      bindingIcons={readableToIcon}
-                      completions={promptCompletions}
-                      mode={EditorModes.Handlebars}
-                      bind:insertAtPos
-                      renderBindingsAsTags={true}
-                      renderMarkdownDecorations={true}
-                      placeholder=""
-                      on:change={event => {
-                        draft.promptInstructions = event.detail || ""
-                        scheduleSave()
-                      }}
-                      bind:getCaretPosition
-                    />
-                  {/key}
-                {/if}
-              </div>
-              <div class="bindings-bar">
-                <span class="bindings-bar-text"
-                  >Use <code>{`{{`}</code> to add to tools & knowledge sources</span
-                >
-                <span class="bindings-pill">
-                  <Icon
-                    name="brackets-curly"
-                    size="S"
-                    color="#BDB0F5"
-                    weight="bold"
-                  />
-                  <span class="bindings-pill-text">
-                    {includedToolsWithDetails.length} Binding{includedToolsWithDetails.length !==
-                    1
-                      ? "s"
-                      : ""}
-                  </span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="section tools-section">
-            <div class="title-tools-bar">
-              <Heading size="XS">Tools this agent can use:</Heading>
-              <div class="tools-popover-container"></div>
-              <ToolsDropdown
-                {filteredTools}
-                {toolSections}
-                bind:toolSearch
-                onToolClick={handleToolClick}
-                onAddApiConnection={() => $goto(`./apis`)}
-                webSearchEnabled={webSearchConfigured}
-                onConfigureWebSearch={configureWebSearch}
-              />
-            </div>
-          </div>
-          {#if includedToolsWithDetails.length > 0}
-            <div class="tools-list">
-              {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
-                <div class="tool-card">
-                  <div class="tool-main">
-                    <div class="tool-item-icon">
-                      <ToolIcon
-                        icon={tool.icon}
-                        size="M"
-                        fallbackIcon="Wrench"
-                      />
-                    </div>
-                    <div class="tool-label">
-                      <span>
-                        {tool.sourceLabel || "Tool"}:
-                      </span>
-                      <span>{formatToolLabel(tool)}</span>
-                    </div>
-                  </div>
-                  <div class="tool-actions">
-                    <ActionMenu align="right" roundedPopover>
-                      <div slot="control" class="tool-menu-trigger">
-                        <Icon
-                          name="MoreVertical"
-                          size="M"
-                          hoverable
-                          tooltip="Tool actions"
-                        />
-                      </div>
-                      {#if tool.sourceType === ToolType.SEARCH}
-                        <MenuItem on:click={configureWebSearch}>
-                          Configure web search
-                        </MenuItem>
-                      {:else if getToolResourcePath(tool)}
-                        <MenuItem on:click={() => navigateToTool(tool)}>
-                          Navigate to resource
-                        </MenuItem>
-                      {/if}
-                      <MenuItem
-                        on:click={() => {
-                          removeToolBindingFromPrompt(tool)
-                          scheduleSave(true)
-                        }}
-                      >
-                        Remove from instructions
-                      </MenuItem>
-                    </ActionMenu>
-                  </div>
-                </div>
-              {/each}
-            </div>
-          {/if}
-
-          <div class="section rag-settings">
-            <div class="rag-header">
-              <Heading size="XS">File ingestion:</Heading>
-            </div>
-            <div class="form-row">
-              <div class="form-field">
-                <Select
-                  label="RAG configuration"
-                  labelPosition="left"
-                  bind:value={draft.ragConfigId}
-                  getOptionLabel={o => o.name}
-                  getOptionValue={o => o._id}
-                  options={ragConfigs}
-                  placeholder="Select a RAG configuration"
-                  disabled={!ragConfigs.length}
-                  on:change={() => {
-                    ragConfigError = undefined
-                    scheduleSave(true)
-                  }}
-                  error={ragConfigError}
-                />
-              </div>
-              <div class="form-icon">
-                <AbsTooltip text="Manage model configurations">
-                  <ActionButton
-                    size="M"
-                    icon="sliders-horizontal"
-                    on:click={() => bb.settings("/ai/embedding-settings")}
-                  />
-                </AbsTooltip>
-              </div>
-            </div>
-          </div>
-
-          {#if draft.ragConfigId}
-            <div class="section files-section">
-              <FilesPanel currentAgentId={currentAgent?._id} />
-            </div>
-          {/if}
-        </Layout>
-      </div>
-    </div>
-    <div class="config-pane config-preview">
-      <AgentChatPanel
-        agentId={currentAgent?._id}
-        workspaceId={$params.application || ""}
+<div class="form-row">
+  <div class="form-field">
+    <Select
+      label="Model"
+      labelPosition="left"
+      bind:value={draft.aiconfig}
+      options={modelOptions}
+      placeholder="Select a model"
+      on:change={() => scheduleSave(true)}
+    />
+  </div>
+  <div class="form-icon">
+    <AbsTooltip text="Manage AI configurations">
+      <ActionButton
+        size="M"
+        icon="sliders-horizontal"
+        on:click={() => bb.settings("/ai-config/configs")}
       />
+    </AbsTooltip>
+  </div>
+</div>
+
+<div class="section">
+  <Heading size="XS">Instructions</Heading>
+  <div class="prompt-editor-wrapper">
+    <div class="prompt-editor">
+      {#if toolsLoaded}
+        {#key resolvedIconCount}
+          <CodeEditor
+            value={draft.promptInstructions || ""}
+            bindings={promptBindings}
+            bindingIcons={readableToIcon}
+            completions={promptCompletions}
+            mode={EditorModes.Handlebars}
+            bind:insertAtPos
+            renderBindingsAsTags={true}
+            renderMarkdownDecorations={true}
+            placeholder=""
+            on:change={event => {
+              draft.promptInstructions = event.detail || ""
+              scheduleSave()
+            }}
+            bind:getCaretPosition
+          />
+        {/key}
+      {/if}
+    </div>
+    <div class="bindings-bar">
+      <span class="bindings-bar-text"
+        >Use <code>{`{{`}</code> to add to tools & knowledge sources</span
+      >
+      <span class="bindings-pill">
+        <Icon name="brackets-curly" size="S" color="#BDB0F5" weight="bold" />
+        <span class="bindings-pill-text">
+          {includedToolsWithDetails.length} Binding{includedToolsWithDetails.length !==
+          1
+            ? "s"
+            : ""}
+        </span>
+      </span>
     </div>
   </div>
 </div>
+
+<div class="section tools-section">
+  <div class="title-tools-bar">
+    <Heading size="XS">Tools this agent can use:</Heading>
+    <div class="tools-popover-container"></div>
+    <ToolsDropdown
+      {filteredTools}
+      {toolSections}
+      bind:toolSearch
+      onToolClick={handleToolClick}
+      onAddApiConnection={() => $goto(`./apis`)}
+      webSearchEnabled={webSearchConfigured}
+      onConfigureWebSearch={configureWebSearch}
+    />
+  </div>
+</div>
+{#if includedToolsWithDetails.length > 0}
+  <div class="tools-list">
+    {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
+      <div class="tool-card">
+        <div class="tool-main">
+          <div class="tool-item-icon">
+            <ToolIcon icon={tool.icon} size="M" fallbackIcon="Wrench" />
+          </div>
+          <div class="tool-label">
+            <span>
+              {tool.sourceLabel || "Tool"}:
+            </span>
+            <span>{formatToolLabel(tool)}</span>
+          </div>
+        </div>
+        <div class="tool-actions">
+          <ActionMenu align="right" roundedPopover>
+            <div slot="control" class="tool-menu-trigger">
+              <Icon
+                name="MoreVertical"
+                size="M"
+                hoverable
+                tooltip="Tool actions"
+              />
+            </div>
+            {#if tool.sourceType === ToolType.SEARCH}
+              <MenuItem on:click={configureWebSearch}>
+                Configure web search
+              </MenuItem>
+            {:else if getToolResourcePath(tool)}
+              <MenuItem on:click={() => navigateToTool(tool)}>
+                Navigate to resource
+              </MenuItem>
+            {/if}
+            <MenuItem
+              on:click={() => {
+                removeToolBindingFromPrompt(tool)
+                scheduleSave(true)
+              }}
+            >
+              Remove from instructions
+            </MenuItem>
+          </ActionMenu>
+        </div>
+      </div>
+    {/each}
+  </div>
+{/if}
 
 <WebSearchConfigModal
   bind:this={webSearchConfigModal}
@@ -876,122 +730,6 @@
 />
 
 <style>
-  .config-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    flex: 1 1 auto;
-    background: var(--background);
-  }
-
-  .config-page {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-    height: 0;
-    overflow: hidden;
-    padding: var(--spacing-xl) var(--spacing-l) var(--spacing-xl);
-    gap: var(--spacing-l);
-  }
-
-  .config-pane {
-    min-width: 0;
-    height: calc(100% - var(--spacing-xl) * 2);
-    padding: var(--spacing-xl);
-    border-radius: 16px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-alias-background-color-primary);
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-
-  .config-content {
-    flex: 0 0 auto;
-    width: 50%;
-    max-width: 800px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .config-preview {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-    padding: 0;
-    height: 100%;
-  }
-
-  .config-form {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: var(--spacing-m);
-  }
-
-  .form-field {
-    min-width: 0;
-  }
-
-  .form-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--spectrum-alias-item-height-m);
-    height: var(--spectrum-alias-item-height-m);
-    flex-shrink: 0;
-  }
-
-  .start-pause-row {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .status-icons {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    margin-right: var(--spacing-m);
-  }
-
-  /* Override input backgrounds to match design */
-  :global(
-    .config-form .spectrum-Textfield-input,
-    .config-form .spectrum-Picker
-  ) {
-    background-color: var(--background) !important;
-  }
-
-  /* Align left-position labels into a clean column */
-  :global(.config-form .spectrum-Form-item:not(.above)) {
-    display: grid;
-    grid-template-columns: 120px 1fr 20px;
-    column-gap: var(--spacing-m);
-  }
-
-  :global(.config-form .container) {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    gap: var(--spectrum-alias-grid-gutter-medium);
-  }
-
-  .section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-    flex-shrink: 0;
-  }
-
   .section:first-of-type {
     flex: 1;
     min-height: 0;
@@ -1142,22 +880,5 @@
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
-  }
-
-  .rag-settings {
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-  }
-
-  .files-section,
-  .rag-settings {
-    padding-top: var(--spacing-m);
-    gap: var(--spacing-s);
-  }
-
-  .rag-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
   }
 </style>
