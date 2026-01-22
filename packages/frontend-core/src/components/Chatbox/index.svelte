@@ -4,17 +4,19 @@
     ChatConversation,
     DraftChatConversation,
     AgentMessageMetadata,
-    ChatConversationRequest,
   } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import BBAI from "../../icons/BBAI.svelte"
-  import { tick } from "svelte"
-  import { onDestroy } from "svelte"
-  import { onMount } from "svelte"
-  import { createEventDispatcher } from "svelte"
+  import { tick, onMount, onDestroy, createEventDispatcher } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
-  import { v4 as uuidv4 } from "uuid"
-  import type { UIMessage } from "ai"
+  import { Chat } from "@ai-sdk/svelte"
+  import {
+    DefaultChatTransport,
+    isToolUIPart,
+    isReasoningUIPart,
+    getToolName,
+    type UIMessage,
+  } from "ai"
 
   export let workspaceId: string
   export let API = createAPIClient({
@@ -24,6 +26,7 @@
       }
     },
   })
+
   type ChatConversationLike = ChatConversation | DraftChatConversation
 
   export let chat: ChatConversationLike
@@ -34,19 +37,94 @@
     chatSaved: { chatId?: string; chat: ChatConversationLike }
   }>()
 
-  let inputValue = ""
   let chatAreaElement: HTMLDivElement
   let observer: MutationObserver
   let textareaElement: HTMLTextAreaElement
-  let lastFocusedChatId: string | undefined
-  let lastFocusedNewChat: ChatConversationLike | undefined
+  let expandedTools: Record<string, boolean> = {}
+  let inputValue = ""
 
-  $: if (chat?.messages?.length) {
-    scrollToBottom()
+  let resolvedChatAppId: string | undefined
+  let resolvedConversationId: string | undefined
+
+  const getApiUrl = () => {
+    const chatAppId = resolvedChatAppId || chat?.chatAppId
+    const conversationId = resolvedConversationId || chat?._id || "new"
+    return `/api/chatapps/${chatAppId}/conversations/${conversationId}/stream`
   }
+
+  const getBody = () => ({
+    _id: resolvedConversationId || chat?._id,
+    chatAppId: resolvedChatAppId || chat?.chatAppId,
+    agentId: chat?.agentId,
+    transient: !persistConversation,
+    title: chat?.title,
+  })
+
+  // Create the Chat instance with transport
+  const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
+    transport: new DefaultChatTransport({
+      api: "/api/chat", // Default, will be overridden by prepareSendMessagesRequest
+      headers: () => ({
+        [Header.APP_ID]: workspaceId,
+      }),
+      body: () => getBody(),
+      prepareSendMessagesRequest: ({ messages, body: existingBody }) => {
+        return {
+          api: getApiUrl(),
+          body: {
+            ...existingBody,
+            ...getBody(),
+            messages,
+          },
+        }
+      },
+    }),
+    messages: chat?.messages || [],
+    onFinish: async () => {
+      loading = false
+
+      if (persistConversation && !chat._id && chat.chatAppId) {
+        try {
+          const history = await API.fetchChatHistory(chat.chatAppId)
+          const messages = chatInstance.messages
+          const lastMessageId = messages[messages.length - 1]?.id
+          const savedConversation =
+            history?.find(convo =>
+              convo.messages.some(message => message.id === lastMessageId)
+            ) || history?.[0]
+
+          if (savedConversation) {
+            chat = {
+              ...chat,
+              ...savedConversation,
+            }
+            resolvedConversationId = savedConversation._id
+          }
+        } catch (historyError) {
+          console.error(historyError)
+        }
+      }
+
+      chat = {
+        ...chat,
+        messages: chatInstance.messages,
+      }
+
+      dispatch("chatSaved", { chatId: chat._id, chat })
+
+      await tick()
+      textareaElement?.focus()
+    },
+    onError: error => {
+      console.error(error)
+      notifications.error(error.message || "Failed to send message")
+      loading = false
+    },
+  })
 
   const ensureChatApp = async (): Promise<string | undefined> => {
     if (chat?.chatAppId) {
+      resolvedChatAppId = chat.chatAppId
       return chat.chatAppId
     }
     try {
@@ -66,6 +144,7 @@
             ? { agentId: fallbackAgentId }
             : {}),
         }
+        resolvedChatAppId = chatApp._id
         return chatApp._id
       }
     } catch (err) {
@@ -74,6 +153,10 @@
     return undefined
   }
 
+  $: messages = chatInstance.messages
+  $: isStreaming = chatInstance.status === "streaming"
+  $: showLoading = loading || isStreaming
+
   async function scrollToBottom() {
     await tick()
     if (chatAreaElement) {
@@ -81,21 +164,25 @@
     }
   }
 
-  async function handleKeyDown(event: any) {
+  $: if (messages?.length) {
+    scrollToBottom()
+  }
+
+  async function handleKeyDown(event: KeyboardEvent) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
-      await prompt()
+      await sendMessage()
     }
   }
 
-  async function prompt() {
-    const resolvedChatAppId = await ensureChatApp()
+  async function sendMessage() {
+    const chatAppIdFromEnsure = await ensureChatApp()
 
     if (!chat) {
       chat = { title: "", messages: [], chatAppId: "", agentId: "" }
     }
 
-    const chatAppId = chat.chatAppId || resolvedChatAppId
+    const chatAppId = chat.chatAppId || chatAppIdFromEnsure
     const agentId = chat.agentId
 
     if (!chatAppId) {
@@ -107,6 +194,8 @@
       notifications.error("Agent is required to start a chat")
       return
     }
+
+    resolvedChatAppId = chatAppId
 
     if (
       persistConversation &&
@@ -128,6 +217,7 @@
           ...newChat,
           chatAppId,
         }
+        resolvedConversationId = newChat._id
       } catch (err: any) {
         console.error(err)
         notifications.error(
@@ -135,112 +225,23 @@
         )
         return
       }
+    } else if (chat._id) {
+      resolvedConversationId = chat._id
     }
 
-    const userMessage: UIMessage<AgentMessageMetadata> = {
-      id: uuidv4(),
-      role: "user",
-      parts: [{ type: "text", text: inputValue }],
-    }
-
-    const updatedChat: ChatConversationLike = {
-      ...chat,
-      chatAppId: chat.chatAppId,
-      transient: !persistConversation,
-      messages: [...chat.messages, userMessage],
-    }
-
-    chat = updatedChat
-    await scrollToBottom()
+    const text = inputValue.trim()
+    if (!text) return
 
     inputValue = ""
     loading = true
 
-    try {
-      const messageStream = await API.streamChatConversation(
-        updatedChat as ChatConversationRequest,
-        workspaceId
-      )
-
-      let streamedMessages = [...updatedChat.messages]
-      let transientAssistantId = uuidv4()
-
-      for await (const message of messageStream) {
-        const normalizedMessage =
-          !persistConversation && message?.role === "assistant" && !message?.id
-            ? {
-                ...message,
-                id: transientAssistantId,
-              }
-            : message
-
-        if (normalizedMessage?.id) {
-          const existingIndex = streamedMessages.findIndex(
-            existing => existing.id === normalizedMessage.id
-          )
-          if (existingIndex !== -1) {
-            streamedMessages = streamedMessages.map((existing, index) =>
-              index === existingIndex ? normalizedMessage : existing
-            )
-          } else {
-            streamedMessages = [...streamedMessages, normalizedMessage]
-          }
-        } else if (normalizedMessage?.role === "assistant") {
-          const lastIndex = [...streamedMessages]
-            .reverse()
-            .findIndex(existing => existing.role === "assistant")
-          if (lastIndex !== -1) {
-            const targetIndex = streamedMessages.length - 1 - lastIndex
-            streamedMessages = streamedMessages.map((existing, index) =>
-              index === targetIndex ? normalizedMessage : existing
-            )
-          } else {
-            streamedMessages = [...streamedMessages, normalizedMessage]
-          }
-        } else {
-          streamedMessages = [...streamedMessages, normalizedMessage]
-        }
-        chat = {
-          ...updatedChat,
-          messages: streamedMessages,
-        }
-        scrollToBottom()
-      }
-
-      // When a chat is created for the first time the server generates the ID.
-      // If we don't have it locally yet, retrieve the saved conversation so
-      // subsequent prompts append to the same document instead of creating a new one.
-      if (persistConversation && !chat._id && chat.chatAppId) {
-        try {
-          const history = await API.fetchChatHistory(chat.chatAppId)
-          const lastMessageId = chat.messages[chat.messages.length - 1]?.id
-          const savedConversation =
-            history?.find(convo =>
-              convo.messages.some(message => message.id === lastMessageId)
-            ) || history?.[0]
-          if (savedConversation) {
-            chat = savedConversation
-          }
-        } catch (historyError) {
-          console.error(historyError)
-        }
-      }
-
-      loading = false
-      dispatch("chatSaved", { chatId: chat._id, chat })
-    } catch (err: any) {
-      console.error(err)
-      notifications.error(err.message)
-      loading = false
-    }
-
-    await tick()
-    if (textareaElement) {
-      textareaElement.focus()
-    }
+    chatInstance.sendMessage({ text })
   }
 
   onMount(async () => {
+    if (chat?._id) {
+      resolvedConversationId = chat._id
+    }
     await ensureChatApp()
 
     // Ensure we always autoscroll to reveal new messages
@@ -260,35 +261,17 @@
     }
 
     await tick()
-    if (textareaElement) {
-      textareaElement.focus()
-    }
+    textareaElement?.focus()
   })
 
-  $: {
-    const currentId = chat?._id
-    const isNewChat =
-      !currentId && (!chat?.messages || chat.messages.length === 0)
-    const shouldFocus =
-      textareaElement &&
-      ((currentId && currentId !== lastFocusedChatId) ||
-        (isNewChat && chat && chat !== lastFocusedNewChat))
-
-    if (shouldFocus) {
-      tick().then(() => textareaElement?.focus())
-      lastFocusedChatId = currentId
-      lastFocusedNewChat = isNewChat ? chat : undefined
-    }
-  }
-
   onDestroy(() => {
-    observer.disconnect()
+    observer?.disconnect()
   })
 </script>
 
 <div class="chat-area" bind:this={chatAreaElement}>
   <div class="chatbox">
-    {#each chat.messages as message}
+    {#each messages as message (message.id)}
       {#if message.role === "user"}
         <div class="message user">
           <MarkdownViewer
@@ -302,42 +285,45 @@
         </div>
       {:else if message.role === "assistant"}
         <div class="message assistant">
-          {#each message.parts || [] as part}
+          {#each message.parts || [] as part, partIndex (partIndex)}
             {#if part.type === "text"}
               <MarkdownViewer value={part.text || ""} />
-            {:else if part.type === "reasoning"}
+            {:else if isReasoningUIPart(part)}
               <div class="reasoning-part">
                 <div class="reasoning-label">Reasoning</div>
                 <div class="reasoning-content">{part.text || ""}</div>
               </div>
-            {:else if part.type?.startsWith("tool-") || part.type === "dynamic-tool"}
-              {@const toolPart = part}
+            {:else if isToolUIPart(part)}
+              {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
               <div class="tool-part">
-                <div class="tool-header">
-                  <span class="tool-icon">🔧</span>
-                  <span class="tool-name"
-                    >{("toolName" in toolPart && toolPart.toolName) ||
-                      "Tool"}</span
+                <button
+                  class="tool-header"
+                  type="button"
+                  on:click={() => {
+                    expandedTools[toolId] = !expandedTools[toolId]
+                  }}
+                >
+                  <span
+                    class="tool-chevron"
+                    class:expanded={expandedTools[toolId]}>▶</span
                   >
-                  {#if "state" in toolPart}
-                    {#if toolPart.state === "output-available"}
-                      <span class="tool-status success">✓</span>
-                    {:else if toolPart.state === "output-error"}
-                      <span class="tool-status error">✗</span>
-                    {:else if toolPart.state === "input-streaming"}
-                      <span class="tool-status pending">...</span>
-                    {:else if toolPart.state === "input-available"}
-                      <span class="tool-status pending">...</span>
-                    {/if}
+                  <span class="tool-icon">🔧</span>
+                  <span class="tool-name">{getToolName(part)}</span>
+                  {#if part.state === "output-available"}
+                    <span class="tool-status success">✓</span>
+                  {:else if part.state === "output-error"}
+                    <span class="tool-status error">✗</span>
+                  {:else if part.state === "input-streaming" || part.state === "input-available"}
+                    <span class="tool-status pending">...</span>
                   {/if}
-                </div>
-                {#if "state" in toolPart && toolPart.state === "output-available" && "output" in toolPart && toolPart.output}
+                </button>
+                {#if expandedTools[toolId] && part.state === "output-available" && part.output}
                   <div class="tool-output">
                     <div class="tool-output-label">Output:</div>
-                    <pre class="tool-output-content">{typeof toolPart.output ===
+                    <pre class="tool-output-content">{typeof part.output ===
                       "string"
-                        ? toolPart.output
-                        : JSON.stringify(toolPart.output, null, 2)}</pre>
+                        ? part.output
+                        : JSON.stringify(part.output, null, 2)}</pre>
                   </div>
                 {/if}
               </div>
@@ -367,7 +353,7 @@
         </div>
       {/if}
     {/each}
-    {#if loading}
+    {#if showLoading}
       <div class="message system">
         <BBAI size="48px" animate />
       </div>
@@ -381,7 +367,7 @@
       class="input spectrum-Textfield-input"
       on:keydown={handleKeyDown}
       placeholder="Ask anything"
-      disabled={loading}
+      disabled={showLoading}
     ></textarea>
   </div>
 </div>
@@ -486,9 +472,29 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-    margin-bottom: var(--spacing-s);
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
     font-weight: 600;
     font-size: 14px;
+    text-align: left;
+  }
+
+  .tool-header:hover {
+    opacity: 0.8;
+  }
+
+  .tool-chevron {
+    font-size: 10px;
+    transition: transform 0.15s ease;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .tool-chevron.expanded {
+    transform: rotate(90deg);
   }
 
   .tool-icon {
@@ -517,8 +523,18 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .tool-output,
-  .tool-output-label,
+  .tool-output {
+    margin-top: var(--spacing-s);
+  }
+
+  .tool-output-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-600);
+    margin-bottom: var(--spacing-xs);
+    text-transform: uppercase;
+  }
+
   .tool-output-content {
     background-color: var(--background);
     border: 1px solid var(--grey-3);
@@ -529,6 +545,7 @@
     overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-word;
+    margin: 0;
   }
 
   /* Reasoning parts styling */
