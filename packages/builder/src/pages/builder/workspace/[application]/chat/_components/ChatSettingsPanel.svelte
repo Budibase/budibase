@@ -85,7 +85,7 @@
         {#if liveAgents.length}
           {#each liveAgents as agent (agent._id)}
             <MenuItem
-              icon="user"
+              icon="robot"
               disabled={isAgentEnabled(agent._id!)}
               on:click={() => handleAddAgent(agent._id!)}
             >
