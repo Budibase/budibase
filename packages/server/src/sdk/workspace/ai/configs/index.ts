@@ -4,7 +4,6 @@ import {
   LLMProviderField,
   CustomAIProviderConfig,
   DocumentType,
-  LiteLLMKeyConfig,
   LLMProvider,
   PASSWORD_REPLACEMENT,
   RequiredKeys,
@@ -41,33 +40,9 @@ export async function find(
   return result ? withDefaults(result) : result
 }
 
-async function ensureLiteLLMConfigured(): Promise<LiteLLMKeyConfig> {
-  const db = context.getWorkspaceDB()
-  const keyDocId = docIds.getLiteLLMKeyID()
-
-  let keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
-  if (!keyConfig?.keyId) {
-    const workspaceId = context.getProdWorkspaceId()
-    if (!workspaceId) {
-      throw new HTTPError("Workspace ID is required to configure LiteLLM", 400)
-    }
-    const key = await liteLLM.generateKey(workspaceId)
-    keyConfig = {
-      _id: keyDocId,
-      keyId: key.id,
-      secretKey: key.secret,
-    }
-    const { rev } = await db.put(keyConfig)
-    keyConfig._rev = rev
-  }
-  return keyConfig
-}
-
 export async function create(
   config: CustomAIProviderConfig
 ): Promise<CustomAIProviderConfig> {
-  await ensureLiteLLMConfigured()
-
   const db = context.getWorkspaceDB()
 
   const modelId = await liteLLM.addModel({
@@ -181,13 +156,6 @@ export async function remove(id: string) {
   await liteLLM.syncKeyModels()
 }
 
-async function getLiteLLMSecretKey(): Promise<string | undefined> {
-  const db = context.getWorkspaceDB()
-  const keyDocId = docIds.getLiteLLMKeyID()
-  const keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
-  return keyConfig?.secretKey
-}
-
 export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
   modelName: string
   modelId: string
@@ -200,7 +168,7 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
     throw new HTTPError("Config not found", 400)
   }
 
-  const secretKey = await getLiteLLMSecretKey()
+  const secretKey = await liteLLM.getSecretKey()
   if (!secretKey) {
     throw new HTTPError(
       "LiteLLM should be configured. Contact support if the issue persists.",
