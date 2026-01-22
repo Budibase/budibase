@@ -117,6 +117,33 @@
                 selectedTab = e.detail
               }}
             >
+              <Tab title="Input">
+                <div class="tab-content">
+                  {#if selectedStep}
+                    {#if selectedStep.input !== undefined}
+                      <JSONViewer value={selectedStep.input} />
+                    {:else}
+                      <div class="empty-state">
+                        <Icon
+                          name="Export"
+                          size="L"
+                          color="var(--spectrum-global-color-gray-500)"
+                        />
+                        <Body size="S">No input data</Body>
+                      </div>
+                    {/if}
+                  {:else}
+                    <div class="empty-state">
+                      <Icon
+                        name="Preview"
+                        size="L"
+                        color="var(--spectrum-global-color-gray-500)"
+                      />
+                      <Body size="S">Select a tool to view input</Body>
+                    </div>
+                  {/if}
+                </div>
+              </Tab>
               <Tab title="Output">
                 <div class="tab-content">
                   {#if selectedStep}
