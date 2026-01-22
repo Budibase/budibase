@@ -18,6 +18,12 @@
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
 
+  type ChatAgentConfig = {
+    agentId: string
+    isEnabled: boolean
+    isDefault: boolean
+  }
+
   const INITIAL_CHAT: WithoutDocMetadata<DraftChatConversation> = {
     title: "",
     messages: [],
@@ -39,12 +45,14 @@
   let enabledAgentList: {
     agentId: string
     name?: string
-    default?: boolean
+    isDefault?: boolean
   }[] = []
+
+  let chatAgents: ChatAgentConfig[] = []
 
   $: agents = $agentsStore.agents || []
   $: chatApp = $currentChatApp
-  $: enabledAgents = chatApp?.enabledAgents || []
+  $: chatAgents = (chatApp?.agents || []) as ChatAgentConfig[]
   $: conversationHistory = $currentConversations
 
   const getAgentName = (agentId: string) =>
@@ -55,17 +63,18 @@
     : ""
 
   $: {
-    const baseAgentList = enabledAgents
+    const baseAgentList = chatAgents
+      .filter(agent => agent.isEnabled)
       .map(agent => ({
         agentId: agent.agentId,
         name: getAgentName(agent.agentId),
-        default: agent.default,
+        isDefault: agent.isDefault,
       }))
       .filter(agent => Boolean(agent.name))
 
-    const defaultAgent = baseAgentList.find(agent => agent.default)
+    const defaultAgent = baseAgentList.find(agent => agent.isDefault)
     const sortedAgents = baseAgentList
-      .filter(agent => !agent.default)
+      .filter(agent => !agent.isDefault)
       .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
 
     enabledAgentList = defaultAgent

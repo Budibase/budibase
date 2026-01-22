@@ -1,10 +1,9 @@
 <script lang="ts">
   import { Body, Icon, Toggle } from "@budibase/bbui"
-  import type { Agent } from "@budibase/types"
-
-  type AgentListItem = Agent & {
+  type AgentListItem = {
     agentId: string
-    default?: boolean
+    name?: string
+    isDefault?: boolean
   }
 
   export let resolvedDefaultAgent: AgentListItem | undefined
@@ -51,7 +50,7 @@
     {#each otherAgents as agent (agent.agentId)}
       <div class="settings-agent">
         <div class="settings-agent-info">
-          <Body size="S">{agent.name}</Body>
+          <Body size="S">{agent.name || "Unknown agent"}</Body>
         </div>
         <div class="settings-agent-actions">
           <Toggle

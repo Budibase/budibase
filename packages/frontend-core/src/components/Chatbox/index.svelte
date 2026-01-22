@@ -58,7 +58,9 @@
           chatAppId: "",
           agentId: "",
         }
-        const fallbackAgentId = chatApp.enabledAgents?.[0]?.agentId
+        const fallbackAgentId =
+          chatApp.agents?.find(agent => agent.isEnabled && agent.isDefault)
+            ?.agentId || chatApp.agents?.find(agent => agent.isEnabled)?.agentId
         chat = {
           ...baseChat,
           chatAppId: chatApp._id,

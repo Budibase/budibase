@@ -5,24 +5,27 @@
   import AgentList from "./AgentList.svelte"
   import AgentSettingsModal from "./AgentSettingsModal.svelte"
 
-  type EnabledAgent = {
+  type ChatAgentConfig = {
     agentId: string
-    default?: boolean
+    isEnabled: boolean
+    isDefault: boolean
   }
 
-  type AgentListItem = Agent & {
+  type AgentListItem = {
     agentId: string
-    default?: boolean
+    name?: string
+    isDefault?: boolean
   }
 
   export let namedAgents: Agent[] = []
-  export let enabledAgents: EnabledAgent[] = []
+  export let agents: ChatAgentConfig[] = []
   export let isAgentAvailable: (_agentId: string) => boolean
   export let handleAvailabilityToggle: (
     _agentId: string,
     _enabled: boolean
   ) => void
   export let handleDefaultToggle: (_agentId: string) => void
+  export let handleAddAgent: (_agentId: string) => void
 
   let selectedAgentId: string | undefined
   let selectedAgent: AgentListItem | undefined
@@ -30,20 +33,20 @@
 
   $: selectedAgent = agentList.find(agent => agent.agentId === selectedAgentId)
 
-  $: agentList = namedAgents
-    .filter(agent => agent._id)
-    .map(agent => ({
-      ...agent,
-      agentId: agent._id!,
-      default: enabledAgents.find(enabled => enabled.agentId === agent._id)
-        ?.default,
-    }))
+  $: agentList = agents.map(agentConfig => {
+    const details = namedAgents.find(agent => agent._id === agentConfig.agentId)
+    return {
+      agentId: agentConfig.agentId,
+      name: details?.name,
+      isDefault: agentConfig.isDefault,
+    }
+  })
 
   $: enabledAgentList = agentList.filter(agent =>
     isAgentAvailable(agent.agentId)
   )
   $: resolvedDefaultAgent =
-    enabledAgentList.find(agent => agent.default) || enabledAgentList[0]
+    enabledAgentList.find(agent => agent.isDefault) || enabledAgentList[0]
   $: otherAgents = agentList.filter(
     agent => agent.agentId !== resolvedDefaultAgent?.agentId
   )
@@ -55,7 +58,9 @@
   }
 
   const isAgentEnabled = (agentId: string) => {
-    return enabledAgents.some(enabled => enabled.agentId === agentId)
+    return agents.some(
+      enabled => enabled.agentId === agentId && enabled.isEnabled
+    )
   }
 </script>
 
@@ -79,7 +84,11 @@
         </div>
         {#if liveAgents.length}
           {#each liveAgents as agent (agent._id)}
-            <MenuItem icon="user" disabled={isAgentEnabled(agent._id!)}>
+            <MenuItem
+              icon="user"
+              disabled={isAgentEnabled(agent._id!)}
+              on:click={() => handleAddAgent(agent._id!)}
+            >
               {agent.name || "Unnamed agent"}
             </MenuItem>
           {/each}

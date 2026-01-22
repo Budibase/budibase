@@ -1,10 +1,9 @@
 <script lang="ts">
   import { Button, Modal, ModalContent } from "@budibase/bbui"
-  import type { Agent } from "@budibase/types"
-
-  type AgentListItem = Agent & {
+  type AgentListItem = {
     agentId: string
-    default?: boolean
+    name?: string
+    isDefault?: boolean
   }
 
   export let open = false

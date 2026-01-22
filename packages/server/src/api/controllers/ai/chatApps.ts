@@ -1,5 +1,10 @@
 import { HTTPError } from "@budibase/backend-core"
-import { ChatApp, UpdateChatAppRequest, UserCtx } from "@budibase/types"
+import {
+  ChatApp,
+  ChatAppAgent,
+  UpdateChatAppRequest,
+  UserCtx,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 
 export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
@@ -10,10 +15,12 @@ export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
   }
 
   const fallbackAgentId = (await sdk.ai.agents.fetch())[0]?._id
-  const enabledAgents = fallbackAgentId ? [{ agentId: fallbackAgentId }] : []
+  const agents = fallbackAgentId
+    ? [{ agentId: fallbackAgentId, isEnabled: true, isDefault: true }]
+    : []
 
   const created = await sdk.ai.chatApps.create({
-    enabledAgents,
+    agents,
   })
   ctx.body = created
 }
@@ -44,7 +51,7 @@ export async function fetchChatAppById(
 }
 
 export async function setChatAppAgent(
-  ctx: UserCtx<{ agentId: string }, ChatApp, { chatAppId: string }>
+  ctx: UserCtx<{ agentId: string }, ChatAppAgent, { chatAppId: string }>
 ) {
   const chatAppId = ctx.params?.chatAppId
   const { agentId } = ctx.request.body || {}
@@ -58,15 +65,26 @@ export async function setChatAppAgent(
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   await sdk.ai.agents.getOrThrow(agentId)
 
-  const existingAgents = chatApp.enabledAgents || []
-  const matched = existingAgents.some(agent => agent.agentId === agentId)
-  const enabledAgents = matched
-    ? existingAgents
-    : [...existingAgents, { agentId }]
+  const existingAgents = chatApp.agents || []
+  const matched = existingAgents.find(agent => agent.agentId === agentId)
+  const nextAgent: ChatAppAgent = matched
+    ? { ...matched, isEnabled: true }
+    : {
+        agentId,
+        isEnabled: true,
+        isDefault: false,
+      }
 
-  const updated = await sdk.ai.chatApps.update({
+  const agents = matched
+    ? existingAgents.map(agent =>
+        agent.agentId === agentId ? nextAgent : agent
+      )
+    : [...existingAgents, nextAgent]
+
+  await sdk.ai.chatApps.update({
     ...chatApp,
-    enabledAgents,
+    agents,
   })
-  ctx.body = updated
+
+  ctx.body = nextAgent
 }

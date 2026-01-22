@@ -6,7 +6,7 @@
   type EnabledAgentListItem = {
     agentId: string
     name?: string
-    default?: boolean
+    isDefault?: boolean
   }
 
   type ConversationListItem = {
@@ -19,7 +19,7 @@
   export let selectedConversationId: string | undefined
 
   $: defaultAgent =
-    enabledAgentList.find(agent => agent.default) || enabledAgentList[0]
+    enabledAgentList.find(agent => agent.isDefault) || enabledAgentList[0]
 
   const dispatch = createEventDispatcher<{
     agentSelected: { agentId: string }
