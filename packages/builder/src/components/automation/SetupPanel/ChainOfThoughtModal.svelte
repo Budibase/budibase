@@ -392,10 +392,17 @@
     flex-direction: column;
   }
 
+  .tabs-container :global(.spectrum-Tabs-content) {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+
   .tab-content {
     padding: var(--spacing-m) 0;
     overflow: auto;
     flex: 1;
+    min-height: 0;
   }
 
   .empty-state {
