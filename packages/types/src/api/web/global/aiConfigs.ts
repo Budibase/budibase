@@ -22,7 +22,6 @@ export interface LLMProvider {
   id: string
   displayName: string
   externalProvider: string
-  defaultModelPlaceholder?: string
   credentialFields: LLMProviderField[]
 }
 

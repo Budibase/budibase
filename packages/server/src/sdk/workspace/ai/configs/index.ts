@@ -194,8 +194,6 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
         id: provider.provider,
         displayName: provider.provider_display_name,
         externalProvider: provider.litellm_provider,
-        defaultModelPlaceholder:
-          provider.default_model_placeholder ?? undefined,
         credentialFields: provider.credential_fields.map(f => {
           const field: RequiredKeys<LLMProviderField> = {
             key: f.key,
