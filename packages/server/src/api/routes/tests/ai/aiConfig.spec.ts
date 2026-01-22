@@ -1,12 +1,13 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { db } from "@budibase/backend-core"
+import { db, docIds } from "@budibase/backend-core"
 import {
   CustomAIProviderConfig,
   PASSWORD_REPLACEMENT,
   WebSearchProvider,
   AIConfigType,
   CreateAIConfigRequest,
+  LiteLLMKeyConfig,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import environment from "../../../../environment"
@@ -467,6 +468,123 @@ describe("BudibaseAI", () => {
       expect(
         configsResponse.filter(c => c.configType === AIConfigType.EMBEDDINGS)
       ).toHaveLength(0)
+    })
+  })
+
+  describe("workspace-specific LiteLLM key", () => {
+    const defaultRequest: CreateAIConfigRequest = {
+      name: "Test Config",
+      provider: "OpenAI",
+      model: "gpt-4o-mini",
+      credentialsFields: {
+        api_key: "sk-test-key",
+        api_base: "https://api.openai.com",
+      },
+      liteLLMModelId: "",
+      configType: AIConfigType.COMPLETIONS,
+    }
+
+    beforeEach(async () => {
+      await config.newTenant()
+      nock.cleanAll()
+      mockLiteLLMProviders()
+    })
+
+    async function getLiteLLMKeyDoc(): Promise<LiteLLMKeyConfig | undefined> {
+      return await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const keyDocId = docIds.getLiteLLMKeyID()
+        return await context.getWorkspaceDB().tryGet<LiteLLMKeyConfig>(keyDocId)
+      })
+    }
+
+    it("creates a LiteLLM key document in the workspace DB", async () => {
+      nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "workspace-key-1", key: "workspace-secret-1" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-1" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      await config.api.ai.createConfig({ ...defaultRequest })
+
+      const keyDoc = await getLiteLLMKeyDoc()
+      expect(keyDoc).toBeDefined()
+      expect(keyDoc?.keyId).toBe("workspace-key-1")
+      expect(keyDoc?.secretKey).toBe("workspace-secret-1")
+    })
+
+    it("reuses the same key when creating multiple configs", async () => {
+      const keyGenerateScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .once()
+        .reply(200, { token_id: "reused-key", key: "reused-secret" })
+
+      nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .twice()
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .twice()
+        .reply(200, { model_id: "model-reuse" })
+        .post("/key/update")
+        .twice()
+        .reply(200, { status: "success" })
+
+      await config.api.ai.createConfig({ ...defaultRequest, name: "Config 1" })
+      await config.api.ai.createConfig({ ...defaultRequest, name: "Config 2" })
+
+      expect(keyGenerateScope.isDone()).toBe(true)
+
+      const keyDoc = await getLiteLLMKeyDoc()
+      expect(keyDoc?.keyId).toBe("reused-key")
+    })
+
+    it("uses the prod workspace ID as the key alias", async () => {
+      const expectedAlias = config.getProdWorkspaceId()
+
+      const keyGenerateScope = nock(environment.LITELLM_URL)
+        .post("/key/generate", body => {
+          expect(body.key_alias).toBe(expectedAlias)
+          return true
+        })
+        .reply(200, { token_id: "alias-key", key: "alias-secret" })
+
+      nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-alias" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      await config.api.ai.createConfig({ ...defaultRequest })
+
+      expect(keyGenerateScope.isDone()).toBe(true)
+    })
+
+    it("syncs the key with model IDs from the workspace", async () => {
+      nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "sync-key", key: "sync-secret" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "sync-model-1" })
+
+      const keyUpdateScope = nock(environment.LITELLM_URL)
+        .post("/key/update", body => {
+          expect(body.key).toBe("sync-key")
+          expect(body.models).toContain("sync-model-1")
+          return true
+        })
+        .reply(200, { status: "success" })
+
+      await config.api.ai.createConfig({ ...defaultRequest })
+
+      expect(keyUpdateScope.isDone()).toBe(true)
     })
   })
 })
