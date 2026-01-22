@@ -163,33 +163,42 @@
       )
 
       let streamedMessages = [...updatedChat.messages]
+      let transientAssistantId = uuidv4()
 
       for await (const message of messageStream) {
-        if (message?.id) {
+        const normalizedMessage =
+          !persistConversation && message?.role === "assistant" && !message?.id
+            ? {
+                ...message,
+                id: transientAssistantId,
+              }
+            : message
+
+        if (normalizedMessage?.id) {
           const existingIndex = streamedMessages.findIndex(
-            existing => existing.id === message.id
+            existing => existing.id === normalizedMessage.id
           )
           if (existingIndex !== -1) {
             streamedMessages = streamedMessages.map((existing, index) =>
-              index === existingIndex ? message : existing
+              index === existingIndex ? normalizedMessage : existing
             )
           } else {
-            streamedMessages = [...streamedMessages, message]
+            streamedMessages = [...streamedMessages, normalizedMessage]
           }
-        } else if (message?.role === "assistant") {
+        } else if (normalizedMessage?.role === "assistant") {
           const lastIndex = [...streamedMessages]
             .reverse()
             .findIndex(existing => existing.role === "assistant")
           if (lastIndex !== -1) {
             const targetIndex = streamedMessages.length - 1 - lastIndex
             streamedMessages = streamedMessages.map((existing, index) =>
-              index === targetIndex ? message : existing
+              index === targetIndex ? normalizedMessage : existing
             )
           } else {
-            streamedMessages = [...streamedMessages, message]
+            streamedMessages = [...streamedMessages, normalizedMessage]
           }
         } else {
-          streamedMessages = [...streamedMessages, message]
+          streamedMessages = [...streamedMessages, normalizedMessage]
         }
         chat = {
           ...updatedChat,

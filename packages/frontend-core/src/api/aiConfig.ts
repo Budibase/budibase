@@ -3,12 +3,14 @@ import {
   CustomAIProviderConfig,
   CreateAIConfigRequest,
   UpdateAIConfigRequest,
+  LLMProvidersResponse,
 } from "@budibase/types"
 
 import { BaseAPIClient } from "./types"
 
 export interface AIConfigEndpoints {
   fetch: () => Promise<AIConfigListResponse>
+  providers: () => Promise<LLMProvidersResponse>
   create: (config: CreateAIConfigRequest) => Promise<CustomAIProviderConfig>
   update: (config: UpdateAIConfigRequest) => Promise<CustomAIProviderConfig>
   delete: (id: string) => Promise<{ deleted: true }>
@@ -20,6 +22,12 @@ export const buildAIConfigEndpoints = (
   fetch: async () => {
     return await API.get({
       url: `/api/configs`,
+    })
+  },
+
+  providers: async () => {
+    return await API.get({
+      url: `/api/configs/providers`,
     })
   },
 

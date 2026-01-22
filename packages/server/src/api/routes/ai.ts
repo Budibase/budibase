@@ -57,6 +57,8 @@ builderAdminRoutes
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 
+builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
+
 // these are Budibase AI routes
 licensedRoutes
   .post("/api/ai/chat", ai.chatCompletion)
