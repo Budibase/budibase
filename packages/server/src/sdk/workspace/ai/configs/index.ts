@@ -42,14 +42,15 @@ export async function find(
 }
 
 async function ensureLiteLLMConfigured(): Promise<LiteLLMKeyConfig> {
-  // Always use the dev workspace DB for the LiteLLM key so that
-  // the same key is used for both dev and published apps
-  const db = context.getDevWorkspaceDB()
+  const db = context.getWorkspaceDB()
   const keyDocId = docIds.getLiteLLMKeyID()
 
   let keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
   if (!keyConfig?.keyId) {
-    const workspaceId = context.getDevWorkspaceId()
+    const workspaceId = context.getWorkspaceId()
+    if (!workspaceId) {
+      throw new HTTPError("Workspace ID is required to configure LiteLLM", 400)
+    }
     const key = await liteLLM.generateKey(workspaceId)
     keyConfig = {
       _id: keyDocId,
@@ -181,9 +182,7 @@ export async function remove(id: string) {
 }
 
 async function getLiteLLMSecretKey(): Promise<string | undefined> {
-  // Always use the dev workspace DB for the LiteLLM key so that
-  // the same key is used for both dev and published apps
-  const db = context.getDevWorkspaceDB()
+  const db = context.getWorkspaceDB()
   const keyDocId = docIds.getLiteLLMKeyID()
   const keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
   return keyConfig?.secretKey

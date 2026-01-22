@@ -255,9 +255,7 @@ export async function validateConfig(model: {
 }
 
 export async function syncKeyModels() {
-  // Always use the dev workspace DB for the LiteLLM key so that
-  // the same key is used for both dev and published apps
-  const db = context.getDevWorkspaceDB()
+  const db = context.getWorkspaceDB()
   const keyDocId = docIds.getLiteLLMKeyID()
   const keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
 
