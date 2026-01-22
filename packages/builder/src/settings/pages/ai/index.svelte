@@ -10,30 +10,21 @@
     Icon,
   } from "@budibase/bbui"
   import BBAI from "assets/bb-ai.svg"
-  import {
-    admin,
-    aiConfigsStore,
-    featureFlags,
-    licensing,
-  } from "@/stores/portal"
+  import { admin, licensing } from "@/stores/portal"
   import { auth } from "@/stores/portal"
   import { BudiStore, PersistenceType } from "@/stores/BudiStore"
 
   import { API } from "@/api"
   import AIConfigTile from "./AIConfigTile.svelte"
   import ConfigModal from "./ConfigModal.svelte"
-  import CustomConfigModal from "./CustomConfigModal.svelte"
   import PortalModal from "./PortalModal.svelte"
   import {
-    type CustomAIProviderConfig,
     type AIProvider,
     ConfigType,
     type AIConfig,
     type ProviderConfig,
-    AIConfigType,
   } from "@budibase/types"
   import { ProviderDetails } from "./constants"
-  import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
 
   const bannerKey = `bb-ai-configuration-banner`
   const bannerStore = new BudiStore<boolean>(false, {
@@ -46,17 +37,13 @@
   let aiConfig: AIConfig
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
-  let customConfigModal: { show: () => void; hide: () => void }
   let modalProvider: AIProvider
   let modalConfig: ProviderConfig
   let providerNames: AIProvider[]
 
   let providers: { provider: AIProvider; config: ProviderConfig }[]
   let hasLicenseKey: boolean
-  let customModalConfig: CustomAIProviderConfig | null = null
-
   $: isCloud = $admin.cloud
-  $: privateLLMSEnabled = $featureFlags.AI_AGENTS
   $: providerNames = isCloud
     ? ["BudibaseAI"]
     : ["BudibaseAI", "OpenAI", "AzureOpenAI"]
@@ -66,10 +53,6 @@
         config: getProviderConfig(provider).config,
       }))
     : []
-
-  $: chatConfigs = $aiConfigsStore.customConfigs.filter(
-    config => config.configType === AIConfigType.COMPLETIONS
-  )
 
   $: activeProvider = providers.find(p => p.config.active)?.provider
   $: disabledProviders = providers.filter(p => p.provider !== activeProvider)
@@ -144,15 +127,6 @@
     await saveConfig(aiConfig)
   }
 
-  function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
-    customModalConfig = config
-      ? {
-          ...config,
-        }
-      : null
-    customConfigModal?.show()
-  }
-
   async function handleEnable(provider: AIProvider) {
     modalProvider = provider
     if (provider === "BudibaseAI" && !isCloud && !hasLicenseKey) {
@@ -185,8 +159,6 @@
         const licenseKeyResponse = await API.getLicenseKey()
         hasLicenseKey = !!licenseKeyResponse?.licenseKey
       }
-
-      await aiConfigsStore.fetch()
     } catch {
       notifications.error("Error fetching AI settings")
     }
@@ -260,31 +232,6 @@
       {/if}
     </div>
 
-    {#if privateLLMSEnabled}
-      <div class="section">
-        <div class="section-header">
-          <div class="section-title">Chat configuration</div>
-          <Button size="S" cta on:click={() => openCustomAIConfigModal()}>
-            Add configuration
-          </Button>
-        </div>
-
-        {#if chatConfigs.length}
-          <div class="ai-list">
-            {#each chatConfigs as config (config._id)}
-              <CustomAIConfigTile
-                {config}
-                editHandler={() => openCustomAIConfigModal(config)}
-              />
-            {/each}
-          </div>
-        {:else}
-          <div class="no-enabled">
-            <Body size="S">No chat configurations yet</Body>
-          </div>
-        {/if}
-      </div>
-    {/if}
   </Layout>
 {/if}
 
@@ -305,15 +252,6 @@
     enableHandler={updatedConfig =>
       enableProvider(modalProvider, updatedConfig)}
     disableHandler={() => disableProvider(modalProvider)}
-  />
-</Modal>
-<Modal bind:this={customConfigModal}>
-  <CustomConfigModal
-    config={customModalConfig}
-    type={AIConfigType.COMPLETIONS}
-    on:hide={() => {
-      customConfigModal.hide()
-    }}
   />
 </Modal>
 

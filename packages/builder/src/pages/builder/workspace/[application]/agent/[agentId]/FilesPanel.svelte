@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { bb } from "@/stores/bb"
   import { agentsStore, aiConfigsStore } from "@/stores/portal"
   import {
     AbsTooltip,
@@ -77,7 +76,6 @@
   function handleUploadClick() {
     if (!hasEmbeddingConfig) {
       notifications.info("Add an embeddings configuration to enable uploads")
-      bb.settings("/ai#EmbeddingsConfig")
       return
     }
     fileInput?.click()
