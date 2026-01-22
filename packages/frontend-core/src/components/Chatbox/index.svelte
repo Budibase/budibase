@@ -28,6 +28,7 @@
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
+  export let persistConversation: boolean = true
 
   const dispatch = createEventDispatcher<{
     chatSaved: { chatId?: string; chat: ChatConversationLike }
@@ -107,7 +108,11 @@
       return
     }
 
-    if (!chat._id && (!chat.messages || chat.messages.length === 0)) {
+    if (
+      persistConversation &&
+      !chat._id &&
+      (!chat.messages || chat.messages.length === 0)
+    ) {
       try {
         const newChat = await API.createChatConversation(
           {
@@ -141,6 +146,7 @@
     const updatedChat: ChatConversationLike = {
       ...chat,
       chatAppId: chat.chatAppId,
+      transient: !persistConversation,
       messages: [...chat.messages, userMessage],
     }
 
@@ -157,33 +163,42 @@
       )
 
       let streamedMessages = [...updatedChat.messages]
+      let transientAssistantId = uuidv4()
 
       for await (const message of messageStream) {
-        if (message?.id) {
+        const normalizedMessage =
+          !persistConversation && message?.role === "assistant" && !message?.id
+            ? {
+                ...message,
+                id: transientAssistantId,
+              }
+            : message
+
+        if (normalizedMessage?.id) {
           const existingIndex = streamedMessages.findIndex(
-            existing => existing.id === message.id
+            existing => existing.id === normalizedMessage.id
           )
           if (existingIndex !== -1) {
             streamedMessages = streamedMessages.map((existing, index) =>
-              index === existingIndex ? message : existing
+              index === existingIndex ? normalizedMessage : existing
             )
           } else {
-            streamedMessages = [...streamedMessages, message]
+            streamedMessages = [...streamedMessages, normalizedMessage]
           }
-        } else if (message?.role === "assistant") {
+        } else if (normalizedMessage?.role === "assistant") {
           const lastIndex = [...streamedMessages]
             .reverse()
             .findIndex(existing => existing.role === "assistant")
           if (lastIndex !== -1) {
             const targetIndex = streamedMessages.length - 1 - lastIndex
             streamedMessages = streamedMessages.map((existing, index) =>
-              index === targetIndex ? message : existing
+              index === targetIndex ? normalizedMessage : existing
             )
           } else {
-            streamedMessages = [...streamedMessages, message]
+            streamedMessages = [...streamedMessages, normalizedMessage]
           }
         } else {
-          streamedMessages = [...streamedMessages, message]
+          streamedMessages = [...streamedMessages, normalizedMessage]
         }
         chat = {
           ...updatedChat,
@@ -195,7 +210,7 @@
       // When a chat is created for the first time the server generates the ID.
       // If we don't have it locally yet, retrieve the saved conversation so
       // subsequent prompts append to the same document instead of creating a new one.
-      if (!chat._id && chat.chatAppId) {
+      if (persistConversation && !chat._id && chat.chatAppId) {
         try {
           const history = await API.fetchChatHistory(chat.chatAppId)
           const lastMessageId = chat.messages[chat.messages.length - 1]?.id
@@ -419,8 +434,6 @@
     position: sticky;
     bottom: 0;
     width: 100%;
-    background: var(--background-alt);
-    padding-bottom: 32px;
     display: flex;
     flex-direction: column;
   }
@@ -438,7 +451,6 @@
     border: none;
     outline: none;
     min-height: 100px;
-    margin-bottom: 8px;
   }
 
   .input::placeholder {

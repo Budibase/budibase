@@ -25,7 +25,7 @@
     "@budibase/types": "*",
     "chalk": "^4.1.2",
     "commander": "^11.0.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "ora": "^5.4.1",
     "semver": "^7.5.4",
     "uuid": "^9.0.1"
