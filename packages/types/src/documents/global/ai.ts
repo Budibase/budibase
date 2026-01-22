@@ -15,3 +15,8 @@ export interface CustomAIProviderConfig extends Document {
   webSearchConfig?: WebSearchConfig
   configType: AIConfigType
 }
+
+export interface LiteLLMKeyConfig extends Document {
+  keyId: string
+  secretKey: string
+}

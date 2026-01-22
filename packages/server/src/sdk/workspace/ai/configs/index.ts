@@ -1,10 +1,10 @@
-import { configs, context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   AIConfigType,
   LLMProviderField,
-  ConfigType,
   CustomAIProviderConfig,
   DocumentType,
+  LiteLLMKeyConfig,
   LLMProvider,
   PASSWORD_REPLACEMENT,
   RequiredKeys,
@@ -41,18 +41,25 @@ export async function find(
   return result ? withDefaults(result) : result
 }
 
-async function ensureLiteLLMConfigured() {
-  let storedConfig = await configs.getSettingsConfigDoc()
-  if (!storedConfig?.config.liteLLM?.keyId) {
-    storedConfig ??= { type: ConfigType.SETTINGS, config: {} }
-    const key = await liteLLM.generateKey(context.getTenantId())
-    storedConfig.config.liteLLM = {
+async function ensureLiteLLMConfigured(): Promise<LiteLLMKeyConfig> {
+  // Always use the dev workspace DB for the LiteLLM key so that
+  // the same key is used for both dev and published apps
+  const db = context.getDevWorkspaceDB()
+  const keyDocId = docIds.getLiteLLMKeyID()
+
+  let keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
+  if (!keyConfig?.keyId) {
+    const workspaceId = context.getDevWorkspaceId()
+    const key = await liteLLM.generateKey(workspaceId)
+    keyConfig = {
+      _id: keyDocId,
       keyId: key.id,
       secretKey: key.secret,
     }
-    await configs.save(storedConfig)
+    const { rev } = await db.put(keyConfig)
+    keyConfig._rev = rev
   }
-  return storedConfig.config.liteLLM
+  return keyConfig
 }
 
 export async function create(
@@ -173,9 +180,13 @@ export async function remove(id: string) {
   await liteLLM.syncKeyModels()
 }
 
-async function getLiteLLMSecretKey() {
-  const liteLLMConfig = await configs.getSettingsConfigDoc()
-  return liteLLMConfig.config.liteLLM?.secretKey
+async function getLiteLLMSecretKey(): Promise<string | undefined> {
+  // Always use the dev workspace DB for the LiteLLM key so that
+  // the same key is used for both dev and published apps
+  const db = context.getDevWorkspaceDB()
+  const keyDocId = docIds.getLiteLLMKeyID()
+  const keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
+  return keyConfig?.secretKey
 }
 
 export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{

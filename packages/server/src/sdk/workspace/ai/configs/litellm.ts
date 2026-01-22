@@ -1,8 +1,8 @@
-import { configs, context, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import fetch from "node-fetch"
 import * as configSdk from "../configs"
 import env from "../../../../environment"
-import { AIConfigType } from "@budibase/types"
+import { AIConfigType, LiteLLMKeyConfig } from "@budibase/types"
 
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
@@ -255,8 +255,13 @@ export async function validateConfig(model: {
 }
 
 export async function syncKeyModels() {
-  const { liteLLM } = await configs.getSettingsConfig()
-  if (!liteLLM) {
+  // Always use the dev workspace DB for the LiteLLM key so that
+  // the same key is used for both dev and published apps
+  const db = context.getDevWorkspaceDB()
+  const keyDocId = docIds.getLiteLLMKeyID()
+  const keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
+
+  if (!keyConfig?.keyId) {
     throw new Error("LiteLLM key not configured")
   }
 
@@ -272,7 +277,7 @@ export async function syncKeyModels() {
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      key: liteLLM.keyId,
+      key: keyConfig.keyId,
       models: modelIds,
     }),
   }
