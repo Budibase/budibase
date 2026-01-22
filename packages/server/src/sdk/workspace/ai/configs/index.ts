@@ -47,7 +47,7 @@ async function ensureLiteLLMConfigured(): Promise<LiteLLMKeyConfig> {
 
   let keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
   if (!keyConfig?.keyId) {
-    const workspaceId = context.getWorkspaceId()
+    const workspaceId = context.getProdWorkspaceId()
     if (!workspaceId) {
       throw new HTTPError("Workspace ID is required to configure LiteLLM", 400)
     }
