@@ -612,7 +612,7 @@
       <ActionButton
         size="M"
         icon="sliders-horizontal"
-        on:click={() => bb.settings("/ai/aisettings")}
+        on:click={() => bb.settings("/ai-config/configs")}
       />
     </AbsTooltip>
   </div>
