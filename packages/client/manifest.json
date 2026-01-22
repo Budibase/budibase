@@ -9556,6 +9556,10 @@
         "key": "onClick",
         "context": [
           {
+            "label": "row_id",
+            "key": "row_id"
+          },
+          {
             "label": "Event title",
             "key": "title"
           },

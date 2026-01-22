@@ -7,6 +7,7 @@
   import timeGridPlugin from "@fullcalendar/timegrid"
   import listPlugin from "@fullcalendar/list"
   import DataProvider from "./DataProvider.svelte"
+  import { Row } from "@budibase/types"
 
   export let title: string
   export let dataProvider: DataProvider
@@ -20,11 +21,14 @@
   const component = getContext("component")
 
   const getEvents = () => {
-    return dataProvider.rows.map((row: any) => {
+    return dataProvider.rows.map((row: Row) => {
+      console.log({ row })
+      console.log(row["_id"])
       return {
         title: row[eventTitle],
         start: row[eventStart],
         end: row[eventEnd],
+        row_id: row["_id"],
       }
     })
   }
