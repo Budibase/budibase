@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { agentsStore } from "@/stores/portal"
   import type {
     DraftChatConversation,
     WithoutDocMetadata,
@@ -24,6 +25,9 @@
   let chat: DraftChatConversation = $state({ ...INITIAL_CHAT })
   let lastKey = $state("")
   let refreshKey = $state(0)
+
+  let hasAgents = $derived($agentsStore.agents.length > 0)
+  let showEmptyState = $derived($agentsStore.agentsLoaded && !hasAgents)
 
   const resetChat = (nextAgentId?: string) => {
     chat = {
@@ -60,14 +64,20 @@
     </button>
   </div>
   <div class="chat-preview-body">
-    {#key refreshKey}
-      <Chatbox
-        bind:chat
-        loading={false}
-        persistConversation={false}
-        {workspaceId}
-      />
-    {/key}
+    {#if showEmptyState}
+      <div class="chat-preview-empty">
+        No agents yet. Add one from the settings panel to start chatting.
+      </div>
+    {:else}
+      {#key refreshKey}
+        <Chatbox
+          bind:chat
+          loading={false}
+          persistConversation={false}
+          {workspaceId}
+        />
+      {/key}
+    {/if}
   </div>
 </div>
 
@@ -110,6 +120,19 @@
     min-height: 0;
     padding: var(--spacing-l);
     display: flex;
+  }
+
+  .chat-preview-empty {
+    width: 100%;
+    border: 1px dashed var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
+    padding: var(--spacing-l);
+    text-align: center;
+    color: var(--spectrum-global-color-gray-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
   }
 
   .chat-preview-body :global(.chat-area) {

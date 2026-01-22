@@ -7,6 +7,7 @@
   } from "@/stores/portal"
   import { Body, notifications } from "@budibase/bbui"
   import type {
+    Agent,
     ChatConversation,
     DraftChatConversation,
     WithoutDocMetadata,
@@ -51,6 +52,7 @@
   }[] = []
 
   let chatAgents: ChatAgentConfig[] = []
+  let agents: Agent[] = []
 
   $: agents = $agentsStore.agents || []
   $: agentsLoaded = $agentsStore.agentsLoaded
@@ -62,7 +64,7 @@
   $: showEmptyState = agentsLoaded && !hasEnabledAgents
   $: emptyStateMessage = hasAnyAgents
     ? "No agents enabled for this chat app. Add one in Settings to start chatting."
-    : "No agents yet. Create your first agent to start chatting."
+    : "No agents yet. Add one from the settings panel to start chatting."
 
   const openAgentsPage = () => {
     $goto(`/builder/workspace/${workspaceId}/agent`)
@@ -262,7 +264,9 @@
 
 <div class="chat-app">
   {#if showEmptyState}
-    <div class="chat-empty-state"></div>
+    <div class="chat-empty-state">
+      <Body size="M">{emptyStateMessage}</Body>
+    </div>
   {:else}
     <ChatNavigationPanel
       {enabledAgentList}
