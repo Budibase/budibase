@@ -14,6 +14,7 @@
   } from "@budibase/bbui"
   import { groups } from "@/stores/portal/groups"
   import { licensing } from "@/stores/portal/licensing"
+  import { admin } from "@/stores/portal/admin"
   import { organisation } from "@/stores/portal/organisation"
   import { Constants, emailValidator } from "@budibase/frontend-core"
   import { capitalise } from "@/helpers"
@@ -45,7 +46,17 @@
     (workspaceOnly ? parsedEmails.length : userData.length)
   $: reached = licensing.usersLimitReached(userCount)
   $: exceeded = licensing.usersLimitExceeded(userCount)
-  $: if ($organisation.isSSOEnforced) {
+  $: smtpConfigured =
+    $admin.loaded && ($admin.cloud || !!$admin.checklist?.smtp?.checked)
+  $: emailInviteDisabled = $admin.loaded ? !smtpConfigured : false
+  $: passwordInviteDisabled = $organisation.isSSOEnforced
+  $: if (emailInviteDisabled && passwordInviteDisabled) {
+    onboardingType = null
+  } else if (emailInviteDisabled) {
+    onboardingType = OnboardingType.PASSWORD
+  } else if (passwordInviteDisabled) {
+    onboardingType = OnboardingType.EMAIL
+  } else if (!onboardingType) {
     onboardingType = OnboardingType.EMAIL
   }
 
@@ -206,13 +217,14 @@
           options={[
             {
               label: "Send email invites",
-              subtitle: "Requires SMTP setup",
+              subtitle: emailInviteDisabled ? "Requires SMTP setup" : undefined,
               value: OnboardingType.EMAIL,
+              disabled: emailInviteDisabled,
             },
             {
               label: "Generate passwords for each user",
               value: OnboardingType.PASSWORD,
-              disabled: $organisation.isSSOEnforced,
+              disabled: passwordInviteDisabled,
             },
           ]}
           getOptionLabel={option => option.label}
