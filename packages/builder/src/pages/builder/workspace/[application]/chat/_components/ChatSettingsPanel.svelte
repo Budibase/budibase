@@ -1,6 +1,6 @@
 <script lang="ts">
   import Panel from "@/components/design/Panel.svelte"
-  import { Body } from "@budibase/bbui"
+  import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
   import type { Agent } from "@budibase/types"
   import AgentList from "./AgentList.svelte"
   import AgentSettingsModal from "./AgentSettingsModal.svelte"
@@ -47,10 +47,15 @@
   $: otherAgents = agentList.filter(
     agent => agent.agentId !== resolvedDefaultAgent?.agentId
   )
+  $: liveAgents = namedAgents.filter(agent => agent._id && agent.live)
 
   const openAgentSettings = (agent: AgentListItem) => {
     selectedAgentId = agent.agentId
     isModalOpen = true
+  }
+
+  const isAgentEnabled = (agentId: string) => {
+    return enabledAgents.some(enabled => enabled.agentId === agentId)
   }
 </script>
 
@@ -66,6 +71,23 @@
       the chat side panel. The New chat button opens a new conversation with the
       default agent.
     </Body>
+
+    <div class="settings-options">
+      <ActionMenu align="left" roundedPopover>
+        <div slot="control">
+          <Button secondary size="M" icon="plus">Add agent</Button>
+        </div>
+        {#if liveAgents.length}
+          {#each liveAgents as agent (agent._id)}
+            <MenuItem icon="user" disabled={isAgentEnabled(agent._id!)}>
+              {agent.name || "Unnamed agent"}
+            </MenuItem>
+          {/each}
+        {:else}
+          <MenuItem disabled>No live agents</MenuItem>
+        {/if}
+      </ActionMenu>
+    </div>
 
     <AgentList
       {resolvedDefaultAgent}
@@ -100,5 +122,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+  }
+
+  .settings-options {
+    display: flex;
+    justify-content: flex-start;
   }
 </style>
