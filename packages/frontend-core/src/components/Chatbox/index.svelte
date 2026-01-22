@@ -140,6 +140,14 @@
     return undefined
   }
 
+  // Sync chatInstance messages when chat prop changes
+  let lastChatId: string | undefined = chat?._id
+  $: if (chat?._id !== lastChatId) {
+    lastChatId = chat?._id
+    chatInstance.messages = chat?.messages || []
+    expandedTools = {}
+  }
+
   $: messages = chatInstance.messages
   $: isStreaming = chatInstance.status === "streaming"
   $: showLoading = loading || isStreaming
@@ -285,7 +293,10 @@
                   class="tool-header"
                   type="button"
                   on:click={() => {
-                    expandedTools[toolId] = !expandedTools[toolId]
+                    expandedTools = {
+                      ...expandedTools,
+                      [toolId]: !expandedTools[toolId],
+                    }
                   }}
                 >
                   <span
