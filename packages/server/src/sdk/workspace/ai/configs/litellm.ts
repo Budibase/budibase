@@ -1,13 +1,18 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
+import {
+  AIConfigType,
+  LiteLLMKeyConfig,
+  LockName,
+  LockType,
+} from "@budibase/types"
 import fetch from "node-fetch"
-import * as configSdk from "../configs"
 import env from "../../../../environment"
-import { AIConfigType, LiteLLMKeyConfig } from "@budibase/types"
+import * as configSdk from "../configs"
 
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
-export async function generateKey(
+async function generateKey(
   name: string
 ): Promise<{ id: string; secret: string }> {
   const body = JSON.stringify({
@@ -267,14 +272,29 @@ export async function getKeySettings(): Promise<{
     if (!workspaceId) {
       throw new HTTPError("Workspace ID is required to configure LiteLLM", 400)
     }
-    const key = await generateKey(workspaceId)
-    keyConfig = {
-      _id: keyDocId,
-      keyId: key.id,
-      secretKey: key.secret,
-    }
-    const { rev } = await db.put(keyConfig)
-    keyConfig._rev = rev
+    const { result } = await locks.doWithLock(
+      {
+        name: LockName.LITELLM_KEY,
+        type: LockType.AUTO_EXTEND,
+        resource: workspaceId,
+      },
+      async () => {
+        let existingKeyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
+        if (existingKeyConfig) {
+          return existingKeyConfig
+        }
+
+        const key = await generateKey(workspaceId)
+        const config: LiteLLMKeyConfig = {
+          _id: keyDocId,
+          keyId: key.id,
+          secretKey: key.secret,
+        }
+        const { rev } = await db.put(config)
+        return { ...config, _rev: rev }
+      }
+    )
+    keyConfig = result
   }
   return {
     keyId: keyConfig.keyId,
