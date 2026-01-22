@@ -69,7 +69,6 @@
     promptInstructions: "",
     icon: "",
     iconColor: "",
-    ragConfigId: undefined as string | undefined,
   })
 
   let insertAtPos: InsertAtPositionFn | undefined = $state()
@@ -244,7 +243,6 @@
         promptInstructions: agent.promptInstructions || "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
-        ragConfigId: agent.ragConfigId,
       }
       draftAgentId = agent._id
     }
