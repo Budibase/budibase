@@ -15,7 +15,6 @@
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
 
-  import NoResults from "../../_components/NoResults.svelte"
   import ChatConversationPanel from "./ChatConversationPanel.svelte"
   import ChatNavigationPanel from "./ChatNavigationPanel.svelte"
 
@@ -65,10 +64,6 @@
   $: emptyStateMessage = hasAnyAgents
     ? "No agents enabled for this chat app. Add one in Settings to start chatting."
     : "No agents yet. Add one from the settings panel to start chatting."
-
-  const openAgentsPage = () => {
-    $goto(`/builder/workspace/${workspaceId}/agent`)
-  }
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
