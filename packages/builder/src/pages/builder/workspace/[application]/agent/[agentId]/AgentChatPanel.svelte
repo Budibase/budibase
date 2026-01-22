@@ -63,7 +63,6 @@
     {#key refreshKey}
       <Chatbox
         bind:chat
-        loading={false}
         persistConversation={false}
         {workspaceId}
       />
