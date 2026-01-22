@@ -12,6 +12,7 @@
   import { Chat } from "@ai-sdk/svelte"
   import {
     DefaultChatTransport,
+    isTextUIPart,
     isToolUIPart,
     isReasoningUIPart,
     getToolName,
@@ -261,23 +262,21 @@
       {#if message.role === "user"}
         <div class="message user">
           <MarkdownViewer
-            value={message.parts && message.parts.length > 0
-              ? message.parts
-                  .filter(part => part.type === "text")
-                  .map(part => (part.type === "text" ? part.text : ""))
-                  .join("")
-              : "[Empty message]"}
+            value={message.parts
+              ?.filter(isTextUIPart)
+              .map(p => p.text)
+              .join("") || "[Empty message]"}
           />
         </div>
       {:else if message.role === "assistant"}
         <div class="message assistant">
           {#each message.parts || [] as part, partIndex (partIndex)}
-            {#if part.type === "text"}
-              <MarkdownViewer value={part.text || ""} />
+            {#if isTextUIPart(part)}
+              <MarkdownViewer value={part.text} />
             {:else if isReasoningUIPart(part)}
               <div class="reasoning-part">
                 <div class="reasoning-label">Reasoning</div>
-                <div class="reasoning-content">{part.text || ""}</div>
+                <div class="reasoning-content">{part.text}</div>
               </div>
             {:else if isToolUIPart(part)}
               {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
