@@ -31,7 +31,7 @@
   {#if $featureFlags.AI_AGENTS}
     <div class="section">
       <div class="section-header">
-        <div class="section-title">Chat configuration</div>
+        <div></div>
         <Button size="S" cta on:click={() => openCustomAIConfigModal()}>
           Add configuration
         </Button>
@@ -81,22 +81,11 @@
     border-radius: var(--border-radius-m);
   }
 
-  .section-title {
-    margin-bottom: var(--spacing-m);
-    font-weight: 600;
-    font-size: 16px;
-    color: var(--ink);
-  }
-
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
     margin-bottom: var(--spacing-m);
-  }
-
-  .section-header .section-title {
-    margin-bottom: 0;
   }
 </style>

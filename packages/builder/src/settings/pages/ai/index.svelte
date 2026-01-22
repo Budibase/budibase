@@ -307,18 +307,6 @@
     color: var(--ink);
   }
 
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--spacing-m);
-    margin-bottom: var(--spacing-m);
-  }
-
-  .section-header .section-title {
-    margin-bottom: 0;
-  }
-
   .disabled-title {
     font-weight: 600;
     font-size: 16px;
