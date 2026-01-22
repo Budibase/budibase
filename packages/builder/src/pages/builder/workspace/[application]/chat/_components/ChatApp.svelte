@@ -12,7 +12,6 @@
     DraftChatConversation,
     WithoutDocMetadata,
   } from "@budibase/types"
-  import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
 
   import ChatConversationPanel from "./ChatConversationPanel.svelte"
