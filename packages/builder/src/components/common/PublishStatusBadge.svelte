@@ -24,7 +24,7 @@
   .status {
     display: inline;
     font-family: var(--font-sans);
-    font-size: 13px;
+    font-size: 14px;
     line-height: 17px;
     font-weight: 400;
     color: var(--color);

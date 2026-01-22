@@ -9,7 +9,7 @@
 <div class="metrics">
   <div class="metric-card">
     <Body size="XL" weight="600">{metrics ? metrics.totalUsers : "-"}</Body>
-    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+    <Body size="S" color="var(--spectrum-global-color-gray-600)">
       Total users
     </Body>
   </div>
@@ -18,7 +18,7 @@
     <Body size="XL" weight="600">
       {metrics ? metrics.automationRunsThisMonth : "-"}
     </Body>
-    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+    <Body size="S" color="var(--spectrum-global-color-gray-600)">
       Automation runs this month
     </Body>
   </div>
@@ -27,14 +27,14 @@
     <Body size="XL" weight="600">
       {metrics ? metrics.agentActionsThisMonth : "-"}
     </Body>
-    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+    <Body size="S" color="var(--spectrum-global-color-gray-600)">
       Agent actions this month
     </Body>
   </div>
 
   <div class="metric-card">
     <Body size="XL" weight="600">0</Body>
-    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+    <Body size="S" color="var(--spectrum-global-color-gray-600)">
       Chat conversations this month
     </Body>
   </div>

@@ -71,7 +71,7 @@
       on:click={() => dispatch("createAutomation")}
     >
       <Icon name="path" size="S" color="#89B5E2" />
-      <Body size="XS">Automation</Body>
+      <Body size="S">Automation</Body>
     </button>
 
     <button
@@ -80,7 +80,7 @@
       on:click={() => dispatch("createApp")}
     >
       <Icon name="browsers" size="S" color="#D4A27F" />
-      <Body size="XS">App</Body>
+      <Body size="S">App</Body>
     </button>
 
     {#if agentsEnabled}
@@ -90,7 +90,7 @@
         on:click={() => dispatch("createAgent")}
       >
         <Icon name="sparkle" size="S" color="#BDB0F5" />
-        <Body size="XS">Agent</Body>
+        <Body size="S">Agent</Body>
         <span class="badge">Beta</span>
       </button>
 
@@ -102,7 +102,7 @@
         on:click={() => dispatch("createChat")}
       >
         <Icon name="chat-circle" size="S" color="#8CA171" />
-        <Body size="XS">Chat</Body>
+        <Body size="S">Chat</Body>
         <span class="badge">Alpha</span>
       </button>
     {/if}

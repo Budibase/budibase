@@ -277,7 +277,7 @@
 
       <div class="header-actions">
         <a href={"/builder/apps"} class="header-link">
-          <Body size="XS">Portal</Body>
+          <Body size="S">Portal</Body>
         </a>
       </div>
     </div>

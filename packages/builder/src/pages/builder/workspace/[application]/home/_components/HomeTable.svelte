@@ -138,11 +138,11 @@
       >
         <div class="cell name-cell">
           <Icon name={row.icon} size="S" color={row.iconColor} />
-          <Body size="XS">{row.name}</Body>
+          <Body size="S">{row.name}</Body>
         </div>
 
         <div class="cell">
-          <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+          <Body size="S" color="var(--spectrum-global-color-gray-700)">
             {getTypeLabel(row.type)}
           </Body>
         </div>
@@ -153,7 +153,7 @@
             <PublishStatusBadge status={row.status} />
           {:else}
             <Body
-              size="XS"
+              size="S"
               color={row.live
                 ? "#8CA171"
                 : "var(--spectrum-global-color-gray-700)"}
@@ -164,7 +164,7 @@
         </div>
 
         <div class="cell">
-          <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+          <Body size="S" color="var(--spectrum-global-color-gray-700)">
             {#if row.createdAt}
               {dayjs(row.createdAt).fromNow()}
             {:else}
@@ -233,7 +233,6 @@
     background: transparent;
     color: inherit;
     font-family: var(--font-sans);
-    font-size: 12px;
     text-align: left;
     cursor: pointer;
   }
