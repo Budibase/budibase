@@ -138,7 +138,7 @@
       >
         <div class="cell name-cell">
           <div class="icon-wrapper">
-            <Icon name={row.icon} size="S" color={row.iconColor} />
+            <Icon name={row.icon} size="S" color={row.iconColor} weight="fill" />
           </div>
           <Body size="S" color="var(--spectrum-global-color-gray-900)">{row.name}</Body>
         </div>
@@ -285,7 +285,7 @@
         pointer-events: all;
       }
 
-      & .favourite-btn :global(.icon) {
+      & .favourite-btn :global(i[aria-label="star"]) {
         --color: var(--spectrum-global-color-gray-600);
       }
     }

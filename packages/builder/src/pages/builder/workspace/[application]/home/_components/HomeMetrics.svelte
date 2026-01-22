@@ -59,10 +59,10 @@
   .metric-card {
     background: var(--spectrum-global-color-gray-100);
     border-radius: 4px;
-    padding: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-l);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    gap: calc(var(--spacing-s) - var(--spacing-xs));
   }
 
   .metrics-error {

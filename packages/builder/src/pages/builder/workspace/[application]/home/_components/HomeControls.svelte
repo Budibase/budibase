@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { Body, Icon, Select } from "@budibase/bbui"
+  import { Body, Icon, Select, Tag } from "@budibase/bbui"
   import type { HomeType } from "./types"
 
   export let typeFilter: HomeType = "all"
@@ -91,7 +91,7 @@
       >
         <Icon name="sparkle" size="S" color="#BDB0F5" weight="fill" />
         <Body size="S">Agent</Body>
-        <span class="badge">Beta</span>
+        <Tag emphasized>Beta</Tag>
       </button>
 
       <button
@@ -103,7 +103,7 @@
       >
         <Icon name="chat-circle" size="S" color="#8CA171" weight="fill" />
         <Body size="S">Chat</Body>
-        <span class="badge">Alpha</span>
+        <Tag emphasized>Alpha</Tag>
       </button>
     {/if}
   </div>
@@ -204,15 +204,6 @@
   .create-button--disabled {
     cursor: not-allowed;
     opacity: 0.6;
-  }
-
-  .badge {
-    background: var(--spectrum-global-color-gray-300);
-    padding: 2px 4px;
-    border-radius: 2px;
-    font-size: 14px;
-    line-height: 10px;
-    color: var(--spectrum-global-color-gray-700);
   }
 
   @media (max-width: 900px) {
