@@ -46,34 +46,20 @@
   let resolvedChatAppId: string | undefined
   let resolvedConversationId: string | undefined
 
-  const getApiUrl = () => {
-    const chatAppId = resolvedChatAppId || chat?.chatAppId
-    const conversationId = resolvedConversationId || chat?._id || "new"
-    return `/api/chatapps/${chatAppId}/conversations/${conversationId}/stream`
-  }
-
-  const getBody = () => ({
-    _id: resolvedConversationId || chat?._id,
-    chatAppId: resolvedChatAppId || chat?.chatAppId,
-    agentId: chat?.agentId,
-    transient: !persistConversation,
-    title: chat?.title,
-  })
-
-  // Create the Chat instance with transport
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
-      api: "/api/chat", // Default, will be overridden by prepareSendMessagesRequest
-      headers: () => ({
-        [Header.APP_ID]: workspaceId,
-      }),
-      body: () => getBody(),
-      prepareSendMessagesRequest: ({ messages, body: existingBody }) => {
+      headers: () => ({ [Header.APP_ID]: workspaceId }),
+      prepareSendMessagesRequest: ({ messages }) => {
+        const chatAppId = resolvedChatAppId || chat?.chatAppId
+        const conversationId = resolvedConversationId || chat?._id || "new"
         return {
-          api: getApiUrl(),
+          api: `/api/chatapps/${chatAppId}/conversations/${conversationId}/stream`,
           body: {
-            ...existingBody,
-            ...getBody(),
+            _id: resolvedConversationId || chat?._id,
+            chatAppId,
+            agentId: chat?.agentId,
+            transient: !persistConversation,
+            title: chat?.title,
             messages,
           },
         }
