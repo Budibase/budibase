@@ -338,11 +338,10 @@
     border-color: var(--spectrum-global-color-gray-600);
   }
   .onboarding
-    :global(
-      .spectrum-Radio-input:checked + .spectrum-Radio-button:before
-    ) {
+    :global(.spectrum-Radio-input:checked + .spectrum-Radio-button:before) {
     border-color: var(--spectrum-global-color-blue-700);
-    background: radial-gradient(
+    background:
+      radial-gradient(
         circle,
         var(--spectrum-global-color-black) 0 3px,
         transparent 4px

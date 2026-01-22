@@ -121,7 +121,11 @@
         {/if}
 
         {#if showCancelButton}
-          <Button secondary on:click={close} disabled={loading && disableCancelOnConfirm}>
+          <Button
+            secondary
+            on:click={close}
+            disabled={loading && disableCancelOnConfirm}
+          >
             {cancelText}
           </Button>
         {/if}

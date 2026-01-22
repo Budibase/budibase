@@ -98,7 +98,7 @@
   }
 </script>
 
-  <Picker
+<Picker
   on:click
   bind:open
   bind:searchTerm
@@ -108,8 +108,8 @@
   {id}
   {disabled}
   {readonly}
-    {fieldText}
-    {fieldSubtitle}
+  {fieldText}
+  {fieldSubtitle}
   {fieldIcon}
   {fieldColour}
   {options}
