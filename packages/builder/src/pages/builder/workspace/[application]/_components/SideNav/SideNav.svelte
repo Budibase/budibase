@@ -507,9 +507,6 @@
               {/if}
             {/if}
           </div>
-          <div class="nav-section-title">
-            <hr />
-          </div>
           <div>
             <SideNavLink
               icon="sparkle"
