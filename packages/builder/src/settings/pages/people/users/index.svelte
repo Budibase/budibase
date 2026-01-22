@@ -76,6 +76,7 @@
   interface UserData {
     users: UserInfo[]
     groups: any[]
+    assignToWorkspace?: boolean
   }
 
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
@@ -147,6 +148,9 @@
     successful: [],
     unsuccessful: [],
   }
+  $: inviteTitle = workspaceOnly
+    ? "Invite users to workspace"
+    : "Invite users to organisation"
   $: setEnrichedUsers(
     $fetch.rows as User[],
     tenantOwner,
@@ -241,6 +245,7 @@
   }
 
   async function createUserFlow() {
+    const assignToWorkspace = userData.assignToWorkspace ?? workspaceOnly
     const payload = userData?.users?.map(user => {
       const workspaceRole = getWorkspaceRole(user.role)
       return {
@@ -250,7 +255,7 @@
         admin: user.role === Constants.BudibaseRoles.Admin,
         groups: userData.groups,
         apps:
-          workspaceOnly && currentWorkspaceId && workspaceRole
+          assignToWorkspace && currentWorkspaceId && workspaceRole
             ? { [currentWorkspaceId]: workspaceRole }
             : undefined,
       }
@@ -318,7 +323,12 @@
         successful: [],
         unsuccessful: [],
       }
-      if (workspaceOnly && currentWorkspaceId && bulkSaveResponse.successful) {
+      const assignToWorkspace = userData.assignToWorkspace ?? workspaceOnly
+      if (
+        assignToWorkspace &&
+        currentWorkspaceId &&
+        bulkSaveResponse.successful
+      ) {
         await Promise.all(
           bulkSaveResponse.successful.map(async user => {
             const matchingUser = userData.users.find(
@@ -469,7 +479,7 @@
               : createUserModal.show}
             cta
           >
-            {workspaceOnly ? "Invite to workspace" : "Add users"}
+            {workspaceOnly ? "Invite to workspace" : "Invite users"}
           </Button>
         {/if}
       </div>
@@ -502,7 +512,13 @@
 </Layout>
 
 <Modal bind:this={createUserModal} closeOnOutsideClick={false}>
-  <AddUserModal {showOnboardingTypeModal} {workspaceOnly} />
+  <AddUserModal
+    {showOnboardingTypeModal}
+    {workspaceOnly}
+    useWorkspaceInviteModal={true}
+    assignToWorkspace={workspaceOnly}
+    {inviteTitle}
+  />
 </Modal>
 
 <Modal bind:this={inviteConfirmationModal}>

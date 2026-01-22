@@ -22,6 +22,9 @@
 
   export let showOnboardingTypeModal
   export let workspaceOnly = false
+  export let useWorkspaceInviteModal = workspaceOnly
+  export let assignToWorkspace = workspaceOnly
+  export let inviteTitle = "Invite users to workspace"
 
   const password = generatePassword(12)
   let userGroups = []
@@ -40,10 +43,10 @@
     },
   ]
   $: hasError = userData.find(x => x.error != null)
-  $: parsedEmails = workspaceOnly ? emailsInput : []
+  $: parsedEmails = useWorkspaceInviteModal ? emailsInput : []
   $: userCount =
     $licensing.userCount +
-    (workspaceOnly ? parsedEmails.length : userData.length)
+    (useWorkspaceInviteModal ? parsedEmails.length : userData.length)
   $: reached = licensing.usersLimitReached(userCount)
   $: exceeded = licensing.usersLimitExceeded(userCount)
   $: smtpConfigured =
@@ -144,14 +147,18 @@
   }
 
   const onConfirm = () => {
-    if (workspaceOnly) {
+    if (useWorkspaceInviteModal) {
       const isValid = validateWorkspaceEmails()
       if (!isValid || exceeded || !onboardingType) {
         return keepOpen
       }
 
       return showOnboardingTypeModal(
-        { users: buildWorkspaceUsers(), groups: userGroups },
+        {
+          users: buildWorkspaceUsers(),
+          groups: userGroups,
+          assignToWorkspace,
+        },
         onboardingType
       )
     }
@@ -163,31 +170,35 @@
     if (!valid) {
       return keepOpen
     }
-    showOnboardingTypeModal({ users: userData, groups: userGroups })
+    showOnboardingTypeModal({
+      users: userData,
+      groups: userGroups,
+      assignToWorkspace,
+    })
   }
 </script>
 
 <ModalContent
   {onConfirm}
   size="M"
-  title={workspaceOnly ? undefined : "Add new users"}
-  confirmText={workspaceOnly ? "Invite users" : "Add users"}
+  title={useWorkspaceInviteModal ? undefined : "Add new users"}
+  confirmText={useWorkspaceInviteModal ? "Invite users" : "Add users"}
   cancelText="Cancel"
   disableCancelOnConfirm={true}
   showCloseIcon={false}
-  disabled={workspaceOnly
+  disabled={useWorkspaceInviteModal
     ? !parsedEmails.length || exceeded || !onboardingType || !!emailError
     : hasError || !userData.length || exceeded}
 >
   <svelte:fragment slot="header">
-    {#if workspaceOnly}
+    {#if useWorkspaceInviteModal}
       <span class="modal-title">
         <Icon name="user-plus" size="XL" />
-        <span>Invite users to workspace</span>
+        <span>{inviteTitle}</span>
       </span>
     {/if}
   </svelte:fragment>
-  {#if workspaceOnly}
+  {#if useWorkspaceInviteModal}
     <Layout noPadding gap="S">
       <PillInput
         label="Type or paste emails below, separated by commas"
@@ -292,7 +303,7 @@
     </Layout>
   {/if}
 
-  {#if !workspaceOnly && $licensing.groupsEnabled && internalGroups?.length}
+  {#if !useWorkspaceInviteModal && $licensing.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"
