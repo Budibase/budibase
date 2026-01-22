@@ -251,15 +251,14 @@ describe("BudibaseAI", () => {
       expect(configsResponse).toHaveLength(0)
     })
 
-    it("validates configuration", async () => {
+    it("validates wrong configuration", async () => {
       const failingScope = nock(environment.LITELLM_URL)
-        .post("/key/generate")
-        .reply(200, { token_id: "key-4", key: "secret-4" })
         .post("/health/test_connection")
         .reply(200, {
           status: "error",
           result: {
-            error: "Connection refused\nTraceback...",
+            error:
+              'OpenrouterException - {"error":{"message":"qwen/qwen3-3 is not a valid model ID","code":400},"user_id":"org_37yduZHaFSi1UlK66P4A04N0jd2"}',
           },
         })
 
@@ -274,7 +273,9 @@ describe("BudibaseAI", () => {
       )
 
       expect(failingScope.isDone()).toBe(true)
-      expect(errorResponse.message).toContain("Error validating configuration")
+      expect(errorResponse.message).toEqual(
+        'Error validating configuration: OpenrouterException - {"error":{"message":"qwen/qwen3-3 is not a valid model ID","code":400},"user_id":"org_37yduZHaFSi1UlK66P4A04N0jd2"}'
+      )
 
       const configsResponse = await config.api.ai.fetchConfigs()
       expect(configsResponse).toHaveLength(0)
