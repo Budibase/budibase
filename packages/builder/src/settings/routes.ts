@@ -267,21 +267,18 @@ export const workspaceRoutes = (
       ],
     },
     {
-      section: "Credentials",
+      section: "Connections",
+      title: "Connections",
       access: () => isAdmin,
-      path: "credentials",
-      icon: "flying-saucer",
+      path: "connections",
+      icon: "cube",
       new: true,
+      comp: Pages.get("connections"),
       routes: [
-        {
-          title: "Credentials",
-          path: "list",
-          comp: Pages.get("credentials"),
-        },
         {
           title: "Create",
           path: "create",
-          comp: Pages.get("create_credential"),
+          comp: Pages.get("create_connection"),
           skipNav: true,
           routes: [
             {
@@ -295,19 +292,21 @@ export const workspaceRoutes = (
               path: "http_basic",
               comp: Pages.get("create_http"),
               skipNav: true,
+              props: { type: "basic" },
             },
             {
               title: "HTTP Bearer",
               path: "http_bearer",
               comp: Pages.get("create_http"),
               skipNav: true,
+              props: { type: "bearer" },
             },
           ],
         },
         {
-          title: "Credential",
+          title: "Connection",
           path: ":id",
-          comp: Pages.get("credential"),
+          comp: Pages.get("connection"),
           skipNav: true,
         },
       ],
