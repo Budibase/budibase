@@ -148,9 +148,6 @@
     customModalConfig = config
       ? {
           ...config,
-          apiKey: config.apiKey ?? "",
-          baseUrl: config.baseUrl ?? "",
-          model: config.model ?? "",
         }
       : null
     customConfigModal?.show()
