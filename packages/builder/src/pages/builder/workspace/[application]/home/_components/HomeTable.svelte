@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { Body, Helpers, Icon } from "@budibase/bbui"
+  import { Body, Icon } from "@budibase/bbui"
   import dayjs from "dayjs"
   import relativeTime from "dayjs/plugin/relativeTime"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
