@@ -78,13 +78,6 @@ describe("agent files", () => {
       user: "bb_user",
       password: "secret",
     })
-    const ragConfig = await config.api.ragConfig.create({
-      name: "Agent RAG",
-      embeddingModel: embeddings._id!,
-      vectorDb: vectorDb._id!,
-      ragMinDistance: 0.6,
-      ragTopK: 3,
-    })
     expect(liteLLMScope.isDone()).toBe(true)
     expect(embeddingValidationScope.isDone()).toBe(true)
 
@@ -93,14 +86,12 @@ describe("agent files", () => {
       aiconfig: "default",
       description: "Support",
       promptInstructions: "Be helpful",
+      embeddingModel: embeddings._id!,
+      vectorDb: vectorDb._id!,
+      ragMinDistance: 0.6,
+      ragTopK: 3,
     })
-
-    const updatedAgent = await config.api.agent.update({
-      ...agent,
-      ragConfigId: ragConfig._id!,
-    })
-
-    return { agent: updatedAgent, vectorDb, ragConfig }
+    return { agent, vectorDb }
   }
 
   beforeEach(async () => {
@@ -158,7 +149,10 @@ describe("agent files", () => {
     const { files } = await config.api.agentFiles.fetch(agent._id!)
     expect(files).toHaveLength(0)
     expect(deleteSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ _id: expect.any(String) }),
+      expect.objectContaining({
+        embeddingModel: expect.any(String),
+        vectorDb: expect.any(String),
+      }),
       [upload.file.ragSourceId]
     )
   })
