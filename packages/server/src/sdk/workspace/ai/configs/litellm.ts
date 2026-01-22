@@ -254,12 +254,15 @@ export async function validateConfig(model: {
   }
 }
 
-export async function getSecretKey(): Promise<string> {
+export async function getKeySettings(): Promise<{
+  keyId: string
+  secretKey: string
+}> {
   const db = context.getWorkspaceDB()
   const keyDocId = docIds.getLiteLLMKeyID()
 
   let keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
-  if (!keyConfig?.keyId) {
+  if (!keyConfig) {
     const workspaceId = context.getProdWorkspaceId()
     if (!workspaceId) {
       throw new HTTPError("Workspace ID is required to configure LiteLLM", 400)
@@ -273,11 +276,14 @@ export async function getSecretKey(): Promise<string> {
     const { rev } = await db.put(keyConfig)
     keyConfig._rev = rev
   }
-  return keyConfig.keyId
+  return {
+    keyId: keyConfig.keyId,
+    secretKey: keyConfig.secretKey,
+  }
 }
 
 export async function syncKeyModels() {
-  const keyId = await getSecretKey()
+  const { keyId } = await getKeySettings()
 
   const aiConfigs = await configSdk.fetch()
   const modelIds = aiConfigs

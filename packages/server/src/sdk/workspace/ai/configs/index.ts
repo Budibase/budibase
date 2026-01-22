@@ -168,7 +168,7 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
     throw new HTTPError("Config not found", 400)
   }
 
-  const secretKey = await liteLLM.getSecretKey()
+  const { secretKey } = await liteLLM.getKeySettings()
   if (!secretKey) {
     throw new HTTPError(
       "LiteLLM should be configured. Contact support if the issue persists.",
