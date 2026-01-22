@@ -231,7 +231,6 @@
         </div>
       {/if}
     </div>
-
   </Layout>
 {/if}
 

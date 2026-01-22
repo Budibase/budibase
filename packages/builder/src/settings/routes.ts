@@ -8,6 +8,7 @@ import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
+import { featureFlag } from "@/helpers"
 
 export const globalRoutes = (user: GetGlobalSelfResponse) => {
   return [
@@ -279,6 +280,7 @@ export const appRoutes = (
       section: "AI config",
       path: "ai-config",
       icon: "sparkle",
+      access: () => featureFlag.isEnabled("AI_AGENTS"),
       routes: [
         {
           path: "configs",
