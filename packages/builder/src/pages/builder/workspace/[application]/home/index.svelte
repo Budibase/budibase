@@ -13,6 +13,7 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
+  import { bb } from "@/stores/bb"
   import { agentsStore, auth, featureFlags } from "@/stores/portal"
   import { Body, Modal, type ModalAPI } from "@budibase/bbui"
   import {
@@ -272,10 +273,13 @@
   <div class="content">
     <div class="header">
       <div class="title">
-        <Body size="M">{$appStore.name || "Workspace"}</Body>
+        <Body size="M" weight="500" color="var(--spectrum-global-color-gray-900)">{$appStore.name || "Workspace"} workspace</Body>
       </div>
 
       <div class="header-actions">
+        <button type="button" class="header-link" on:click={() => bb.settings()}>
+          <Body size="S">Add connection</Body>
+        </button>
         <a href={"/builder/apps"} class="header-link">
           <Body size="S">Portal</Body>
         </a>
@@ -344,7 +348,7 @@
     padding: var(--spacing-xl) 0;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-m);
+    gap: var(--spacing-xl);
   }
 
   .header {
@@ -364,6 +368,15 @@
     text-decoration: none;
     color: var(--spectrum-global-color-gray-800);
     transition: color 130ms ease-out;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .header-link:first-child {
+    margin-right: 12px;
   }
 
   .header-link:hover {

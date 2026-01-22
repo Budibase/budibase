@@ -44,7 +44,7 @@
       <Select
         size="S"
         quiet
-        placeholder="Type"
+        placeholder="All"
         value={selectValue}
         options={getOptions(agentsEnabled)}
         isOptionEnabled={option => !option.disabled}
@@ -70,7 +70,7 @@
       type="button"
       on:click={() => dispatch("createAutomation")}
     >
-      <Icon name="path" size="S" color="#89B5E2" />
+      <Icon name="path" size="S" color="#89B5E2" weight="fill" />
       <Body size="S">Automation</Body>
     </button>
 
@@ -79,7 +79,7 @@
       type="button"
       on:click={() => dispatch("createApp")}
     >
-      <Icon name="browsers" size="S" color="#D4A27F" />
+      <Icon name="browsers" size="S" color="#D4A27F" weight="fill" />
       <Body size="S">App</Body>
     </button>
 
@@ -89,7 +89,7 @@
         type="button"
         on:click={() => dispatch("createAgent")}
       >
-        <Icon name="sparkle" size="S" color="#BDB0F5" />
+        <Icon name="sparkle" size="S" color="#BDB0F5" weight="fill" />
         <Body size="S">Agent</Body>
         <span class="badge">Beta</span>
       </button>
@@ -101,7 +101,7 @@
         title="Coming soon"
         on:click={() => dispatch("createChat")}
       >
-        <Icon name="chat-circle" size="S" color="#8CA171" />
+        <Icon name="chat-circle" size="S" color="#8CA171" weight="fill" />
         <Body size="S">Chat</Body>
         <span class="badge">Alpha</span>
       </button>
@@ -129,14 +129,19 @@
   }
 
   .filter-wrapper :global(.spectrum-Picker) {
-    height: 28px;
+    height: 32px;
     border-radius: 6px;
-    width: 140px;
+    width: 200px;
     padding-right: 8px;
   }
 
   .filter-wrapper :global(.spectrum-Picker-label) {
     padding-left: 8px;
+    font-size: 14px;
+  }
+
+  .filter-wrapper :global(.spectrum-Menu-itemLabel) {
+    font-size: 14px;
   }
 
   .search-wrapper {
@@ -147,6 +152,8 @@
     border-radius: 6px;
     padding: 3px 8px;
     min-width: 200px;
+    height: 32px;
+    box-sizing: border-box;
   }
 
   .search-input {
@@ -155,7 +162,7 @@
     outline: none;
     flex: 1;
     font-family: var(--font-sans);
-    font-size: 13px;
+    font-size: 14px;
     color: var(--spectrum-global-color-gray-900);
   }
 
@@ -176,9 +183,17 @@
     padding: 7px 15px 8px;
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: calc(var(--spacing-xs) + 4px);
     cursor: pointer;
     transition: background 130ms ease-out;
+    color: var(--spectrum-global-color-gray-900);
+    font-size: 14px;
+    height: 32px;
+    box-sizing: border-box;
+  }
+
+  .create-button :global(.spectrum-Body) {
+    font-size: 14px;
     color: var(--spectrum-global-color-gray-900);
   }
 
@@ -195,7 +210,7 @@
     background: var(--spectrum-global-color-gray-300);
     padding: 2px 4px;
     border-radius: 2px;
-    font-size: 11px;
+    font-size: 14px;
     line-height: 10px;
     color: var(--spectrum-global-color-gray-700);
   }

@@ -16,10 +16,10 @@
     hoverable
     weight={favourite._id ? "fill" : "regular"}
     color={favourite._id
-      ? "var(--spectrum-global-color-yellow-1000)"
+      ? "var(--spectrum-global-color-gray-600)"
       : undefined}
     hoverColor={favourite._id
-      ? "var(--spectrum-global-color-yellow-700)"
+      ? "var(--spectrum-global-color-gray-600)"
       : undefined}
     {size}
     on:click={async e => {

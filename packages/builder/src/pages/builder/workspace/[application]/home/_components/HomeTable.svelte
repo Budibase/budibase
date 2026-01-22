@@ -137,8 +137,10 @@
         on:click={() => handleRowClick(row)}
       >
         <div class="cell name-cell">
-          <Icon name={row.icon} size="S" color={row.iconColor} />
-          <Body size="S">{row.name}</Body>
+          <div class="icon-wrapper">
+            <Icon name={row.icon} size="S" color={row.iconColor} />
+          </div>
+          <Body size="S" color="var(--spectrum-global-color-gray-900)">{row.name}</Body>
         </div>
 
         <div class="cell">
@@ -156,7 +158,7 @@
               size="S"
               color={row.live
                 ? "#8CA171"
-                : "var(--spectrum-global-color-gray-700)"}
+                : "var(--spectrum-global-color-gray-600)"}
             >
               {row.live ? "Live" : "Draft"}
             </Body>
@@ -176,7 +178,7 @@
         <div class="cell actions">
           <div class="ctx-btn">
             <!-- todo: implement actions -->
-            <Icon name="dots-three" size="M" hoverable on:click={stop} />
+            <Icon name="dots-three" size="M" hoverable color="var(--spectrum-global-color-gray-600)" on:click={stop} />
           </div>
           <span class="favourite-btn">
             <FavouriteResourceButton favourite={row.favourite} />
@@ -203,10 +205,9 @@
 <style>
   .table {
     --border: 1px solid var(--spectrum-global-color-gray-200);
-    border: var(--border);
     border-radius: 6px;
     overflow: hidden;
-    background: var(--background);
+    background: transparent;
   }
 
   .table-header,
@@ -218,9 +219,10 @@
   }
 
   .table-header {
-    padding: 5px 12px;
+    padding: 12px 12px;
+    font-size: 14px;
     color: var(--spectrum-global-color-gray-700);
-    background: var(--background);
+    background: transparent;
   }
 
   .header-cell {
@@ -270,16 +272,21 @@
     padding: 9px 12px;
     text-align: left;
     border: none;
+    border-bottom: 0.5px solid var(--spectrum-global-color-gray-200);
     background: var(--background-alt);
     transition: background 130ms ease-out;
     cursor: pointer;
 
     &:hover {
-      background: var(--spectrum-global-color-gray-200);
+      background: var(--spectrum-global-color-gray-100);
 
       & .actions > * {
         opacity: 1;
         pointer-events: all;
+      }
+
+      & .favourite-btn :global(.icon) {
+        --color: var(--spectrum-global-color-gray-600);
       }
     }
 
@@ -298,7 +305,17 @@
   }
 
   .name-cell {
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
+  }
+
+  .icon-wrapper {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--spectrum-global-color-gray-200);
   }
 
   .actions {
@@ -306,7 +323,7 @@
     display: flex;
     align-items: center;
     pointer-events: none;
-    gap: var(--spacing-xs);
+    gap: calc(var(--spacing-xs) + 12px);
   }
 
   .actions > * {
@@ -316,6 +333,10 @@
 
   .actions .favourite-btn {
     pointer-events: all;
+  }
+
+  .actions .ctx-btn {
+    opacity: 1;
   }
 
   .ctx-btn {

@@ -34,7 +34,7 @@
     }
 
     &.disabled {
-      --color: var(--spectrum-global-color-gray-700);
+      --color: var(--spectrum-global-color-gray-600);
     }
   }
   .loading {
