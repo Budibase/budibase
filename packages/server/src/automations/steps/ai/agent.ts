@@ -114,11 +114,8 @@ export async function run({
           model: litellm.chat(modelId),
           instructions: systemPrompt || undefined,
           tools,
-
           stopWhen: stepCountIs(30),
-          providerOptions: {
-            litellm: ai.getLiteLLMProviderOptions(modelName),
-          },
+          providerOptions: ai.getLiteLLMProviderOptions(),
           output: outputOption,
         })
 
