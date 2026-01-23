@@ -138,6 +138,7 @@
     loading={!invitesLoaded}
     allowClickRows={false}
     stickyHeader={false}
+    rowCount={8}
   />
 </Layout>
 

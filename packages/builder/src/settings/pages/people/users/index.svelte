@@ -69,7 +69,7 @@
     },
     options: {
       paginate: true,
-      limit: 10,
+      limit: 8,
     },
   })
 
@@ -498,6 +498,7 @@
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
     defaultSortColumn={"access"}
+    stickyHeader={false}
   />
 
   <div class="pagination">
