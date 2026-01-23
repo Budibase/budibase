@@ -14,6 +14,7 @@ import {
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
+import tracer from "dd-trace"
 
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
@@ -101,20 +102,50 @@ export async function buildPromptAndTools(
 }
 
 export function createLiteLLMFetch(sessionId: string): typeof fetch {
-  const liteFetch = ((
+  const liteFetch = (async (
     input: Parameters<typeof fetch>[0],
     init?: Parameters<typeof fetch>[1]
   ) => {
+    const span = tracer.scope().active()
+    const headers = new Headers(init?.headers)
+
+    // Inject Datadog trace context for correlation
+    if (span) {
+      const traceId = span.context().toTraceId()
+      const spanId = span.context().toSpanId()
+      headers.set("traceparent", `00-${traceId}-${spanId}-01`)
+      headers.set("x-datadog-trace-id", traceId)
+      headers.set("x-datadog-parent-id", spanId)
+    }
+
+    let modifiedInit: RequestInit = { ...init, headers }
+
     if (typeof init?.body === "string") {
       try {
         const body = JSON.parse(init.body)
         body.litellm_session_id = sessionId
-        return fetch(input, { ...init, body: JSON.stringify(body) })
+        if (span) {
+          body.metadata = {
+            ...body.metadata,
+            dd_trace_id: span.context().toTraceId(),
+            dd_span_id: span.context().toSpanId(),
+            session_id: sessionId,
+          }
+        }
+        modifiedInit = { ...modifiedInit, body: JSON.stringify(body) }
       } catch {
         // Not JSON, pass through
       }
     }
-    return fetch(input, init)
+
+    const response = await fetch(input, modifiedInit)
+
+    const litellmCallId = response.headers.get("x-litellm-call-id")
+    if (litellmCallId && span) {
+      span.setTag("litellm.call_id", litellmCallId)
+    }
+
+    return response
   }) as typeof fetch
 
   // Preserve the preconnect helper required by the OpenAI client typings.
