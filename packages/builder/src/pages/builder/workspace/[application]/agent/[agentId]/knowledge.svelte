@@ -140,7 +140,7 @@
       <ActionButton
         size="M"
         icon="sliders-horizontal"
-        on:click={() => bb.settings("/ai/embedding-settings")}
+        on:click={() => bb.settings("/ai-config/embedding-settings")}
       />
     </AbsTooltip>
   </div>

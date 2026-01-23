@@ -45,6 +45,7 @@ export enum DocumentType {
   AGENT_TOOL_SOURCE = "agenttoolsource",
   AGENT_FILE = "agentfile",
   AI_CONFIG = "aiconfig",
+  LITELLM_KEY = "litellmkey",
   VECTOR_STORE = "vectordb",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",

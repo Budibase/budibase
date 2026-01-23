@@ -1,4 +1,5 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { v4 } from "uuid"
 import { ai } from "@budibase/pro"
 import {
   AgentFile,
@@ -18,6 +19,7 @@ import {
   convertToModelMessages,
   extractReasoningMiddleware,
   ModelMessage,
+  stepCountIs,
   streamText,
   wrapLanguageModel,
 } from "ai"
@@ -251,9 +253,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const { modelId, apiKey, baseUrl } =
       await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
+    const sessionId = chat._id || v4()
     const openai = ai.createLiteLLMOpenAI({
       apiKey,
       baseUrl,
+      fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
     })
     const model = openai.chat(modelId)
 
@@ -279,6 +283,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       messages: messagesWithContext,
       system,
       tools,
+      stopWhen: stepCountIs(30),
+      providerOptions: ai.getLiteLLMProviderOptions(),
     })
 
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
@@ -316,6 +322,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
         await db.put(chatToSave)
       },
+      sendReasoning: true,
     })
     return
   } catch (error: any) {
