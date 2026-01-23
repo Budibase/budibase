@@ -103,17 +103,13 @@
           size="M"
           color="var(--spectrum-global-color-gray-600)"
         />
-        <Icon
-          name="check-circle"
-          size="M"
-          color="var(--spectrum-semantic-positive-color-default, var(--spectrum-global-color-green-500))"
-        />
       </div>
       <Button
         primary={!currentAgent?.live}
         secondary={currentAgent?.live}
-        icon={currentAgent?.live ? "pause" : "play"}
+        icon={currentAgent?.live ? undefined : "play"}
         iconColor={currentAgent?.live ? "" : "var(--bb-blue)"}
+        iconWeight="fill"
         on:click={toggleAgentLive}
         disabled={togglingLive}
         >{currentAgent?.live ? "Pause agent" : "Set agent live"}</Button
@@ -148,26 +144,31 @@
 
   .config-page {
     flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
     height: 0;
     overflow: hidden;
     gap: var(--spacing-l);
   }
 
   .config-content {
-    flex: 0 0 auto;
-    width: 50%;
-    max-width: 800px;
+    grid-column: span 7;
     display: flex;
     flex-direction: column;
     padding: var(--spacing-xl) var(--spacing-l) var(--spacing-xl);
+    min-width: 0;
   }
 
   .config-preview {
-    flex: 1 1 auto;
-    border-left: 1px solid var(--spectrum-global-color-gray-200);
-    overflow-y: scroll;
+    grid-column: span 5;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px;
+    background: var(--background-alt);
+    min-width: 0;
   }
 
   .config-form {

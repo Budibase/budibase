@@ -4,6 +4,7 @@
     notifications,
     Icon,
     ProgressCircle,
+    Body,
   } from "@budibase/bbui"
   import type {
     ChatConversation,
@@ -283,6 +284,21 @@
 
 <div class="chat-area" bind:this={chatAreaElement}>
   <div class="chatbox">
+    {#if messages.length === 0 && !isBusy}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <Icon
+            name="chat-circle"
+            size="L"
+            weight="fill"
+            color="var(--spectrum-global-color-gray-500)"
+          />
+        </div>
+        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          Your conversation will appear here.
+        </Body>
+      </div>
+    {/if}
     {#each messages as message (message.id)}
       {#if message.role === "user"}
         <div class="message user">
@@ -317,19 +333,20 @@
                   >
                     <Icon name="caret-right" size="XS" />
                   </span>
-                  <span class="tool-icon">
-                    <Icon name="wrench" size="S" />
-                  </span>
-                  <span class="tool-name">{getToolName(part)}</span>
+                  <div class="tool-name-wrapper">
+                    <span class="tool-icon">
+                      <Icon
+                        name="nut"
+                        size="M"
+                        weight="fill"
+                        color="var(--spectrum-global-color-gray-600)"
+                      />
+                    </span>
+                    <span class="tool-name">{getToolName(part)}</span>
+                  </div>
                   <span class="tool-status">
                     {#if isRunning}
                       <ProgressCircle size="S" />
-                    {:else if isSuccess}
-                      <Icon
-                        name="check"
-                        size="S"
-                        color="var(--spectrum-global-color-green-600)"
-                      />
                     {:else if isError}
                       <Icon
                         name="x"
@@ -413,11 +430,11 @@
 
 <style>
   .chat-area {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    height: 0;
+    min-height: 0;
   }
   .chatbox {
     display: flex;
@@ -426,6 +443,22 @@
     width: 100%;
     flex: 1 1 auto;
     padding: 48px 0 24px 0;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-width: 700px;
+    width: 100%;
+  }
+
+  .empty-state-icon {
+    --size: 24px;
   }
 
   .message {
@@ -439,14 +472,22 @@
   }
 
   .message.user {
+    border-radius: 8px;
     align-self: flex-end;
-    background-color: var(--grey-3);
+    background-color: #215f9e33;
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-800);
   }
 
   .message.assistant {
     align-self: flex-start;
-    background-color: var(--grey-1);
-    border: 1px solid var(--grey-3);
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-800);
+    line-height: 1.4;
+    max-width: 100%;
   }
 
   .message.system {
@@ -461,6 +502,8 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
+    line-height: 1.4;
   }
 
   .input {
@@ -470,12 +513,16 @@
     resize: none;
     padding: 20px;
     font-size: 16px;
-    background-color: var(--grey-3);
+    background-color: var(--spectrum-global-color-gray-200);
     color: var(--grey-9);
-    border-radius: 16px;
-    border: none;
+    border-radius: 10px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
     outline: none;
     min-height: 100px;
+  }
+
+  .input:focus {
+    border-color: #215f9e33;
   }
 
   .input::placeholder {
@@ -484,7 +531,21 @@
 
   /* Style the markdown tool sections in assistant messages */
   :global(.assistant strong) {
-    color: var(--spectrum-global-color-static-seafoam-700);
+    color: var(--spectrum-global-color-gray-900);
+    font-weight: 500;
+  }
+
+  :global(.assistant .markdown-viewer p) {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  :global(.assistant .markdown-viewer p:first-child) {
+    margin-top: 0;
+  }
+
+  :global(.assistant .markdown-viewer p:last-child) {
+    margin-bottom: 0;
   }
 
   :global(.assistant h3) {
@@ -498,31 +559,25 @@
     border-radius: 4px;
   }
 
-  /* Tool parts styling */
-  .tool-part {
-    margin: var(--spacing-m) 0;
-    padding: var(--spacing-m);
-    background-color: var(--grey-2);
-    border: 1px solid var(--grey-3);
-    border-radius: 8px;
-    transition: border-color 0.2s ease;
+  :global(.assistant ul) {
+    padding-inline-start: 20px;
   }
 
-  .tool-part.tool-running {
-    border-color: var(--spectrum-global-color-static-seafoam-600);
+  /* Tool parts styling */
+  .tool-part {
+    margin-top: var(--spacing-l);
+    margin-bottom: var(--spacing-xl);
   }
 
   .tool-header {
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-    width: 100%;
     padding: 0;
     margin: 0;
     background: none;
     border: none;
     cursor: pointer;
-    font-weight: 600;
     font-size: 14px;
     text-align: left;
   }
@@ -550,9 +605,24 @@
     color: var(--spectrum-global-color-static-seafoam-700);
   }
 
+  .tool-icon :global(i) {
+    --size: 18px;
+  }
+
+  .tool-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: 4px;
+    background-color: #215f9e33;
+    border-radius: 4px;
+  }
+
   .tool-name {
-    color: var(--spectrum-global-color-gray-900);
     font-family: var(--font-mono), monospace;
+    font-size: 13px;
+    color: var(--spectrum-global-color-gray-800);
+    font-weight: 400;
   }
 
   .tool-status {
