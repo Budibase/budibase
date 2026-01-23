@@ -4,9 +4,8 @@ import { z } from "zod"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
 
-const ROW_TOOLS: BudibaseToolDefinition[] = [
-  {
-    name: "list_rows",
+const ROW_TOOLS = {
+  list_rows: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description: "List rows in a given table",
@@ -27,9 +26,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-
-  {
-    name: "get_row",
+  get_row: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description: "Get a specific row by ID",
@@ -49,9 +46,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-
-  {
-    name: "create_row",
+  create_row: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description:
@@ -84,9 +79,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-
-  {
-    name: "update_row",
+  update_row: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description:
@@ -103,6 +96,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       inputSchema: z.object({
         tableId: z.string().describe("The ID of the table"),
         rowId: z.string().describe("The ID of the row to update"),
+        rowRev: z.string().describe("The current _rev of the row (if known)"),
         data: z
           .record(z.string(), z.any())
           .describe(
@@ -112,16 +106,20 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
           ),
       }),
       execute: async input => {
-        const { tableId, rowId, data } = input
-        const rowData = { ...data, _id: rowId }
-        const row = await sdk.rows.save(tableId, rowData, undefined)
+        const { tableId, rowId, rowRev, data } = input
+        const existingRow = await sdk.rows.find(tableId, rowId)
+        const rowData = {
+          ...existingRow,
+          ...data,
+          _id: rowId,
+          _rev: rowRev,
+        }
+        const { row } = await sdk.rows.save(tableId, rowData, undefined)
         return { row }
       },
     }),
   },
-
-  {
-    name: "search_rows",
+  search_rows: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description:
@@ -178,6 +176,6 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-]
+} satisfies Record<string, Omit<BudibaseToolDefinition, "name">>
 
 export default ROW_TOOLS
