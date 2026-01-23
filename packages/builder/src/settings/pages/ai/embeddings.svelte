@@ -105,7 +105,6 @@
         </div>
       {/if}
     </div>
-
   {/if}
 </Layout>
 
