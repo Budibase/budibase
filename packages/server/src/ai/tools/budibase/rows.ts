@@ -4,9 +4,8 @@ import { z } from "zod"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
 
-const ROW_TOOLS: BudibaseToolDefinition[] = [
-  {
-    name: "list_rows",
+const ROW_TOOLS = {
+  list_rows: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description: "List rows in a given table",
@@ -27,9 +26,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-
-  {
-    name: "get_row",
+  get_row: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description: "Get a specific row by ID",
@@ -49,9 +46,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-
-  {
-    name: "create_row",
+  create_row: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description:
@@ -84,9 +79,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-
-  {
-    name: "update_row",
+  update_row: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description:
@@ -126,9 +119,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-
-  {
-    name: "search_rows",
+  search_rows: {
     sourceType: ToolType.BUDIBASE,
     sourceLabel: "Budibase",
     description:
@@ -185,6 +176,6 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-]
+} satisfies Record<string, Omit<BudibaseToolDefinition, "name">>
 
 export default ROW_TOOLS
