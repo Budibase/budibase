@@ -16,7 +16,7 @@ export interface BudibaseToolDefinition {
 const BUDIBASE_TOOLS: BudibaseToolDefinition[] = [
   ...AUTOMATION_TOOLS,
   ...TABLE_TOOLS,
-  ...ROW_TOOLS,
+  ...Object.entries(ROW_TOOLS).map(([key, value]) => ({ name: key, ...value })),
 ]
 
 export default BUDIBASE_TOOLS
