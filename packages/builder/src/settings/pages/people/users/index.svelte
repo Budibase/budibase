@@ -2,7 +2,6 @@
   import {
     Button,
     Table,
-    Layout,
     Modal,
     Search,
     notifications,
@@ -64,6 +63,7 @@
   const isWorkspaceOnly = workspaceOnly === true
 
   const PAGE_SIZE = 8
+  const TABLE_MIN_HEIGHT = 36 + 55 * PAGE_SIZE
   const initialWorkspaceId = (() => {
     const appId = get(appStore).appId
     return appId ? sdk.applications.getProdAppID(appId) : ""
@@ -443,7 +443,7 @@
   })
 </script>
 
-<Layout noPadding gap="L">
+<div class="people-page">
   {#if $licensing.errUserLimit}
     <InlineAlert
       type="error"
@@ -497,24 +497,26 @@
       </div>
     {/if}
   </div>
-  <Table
-    on:click={({ detail }) => {
-      bb.settings(`/people/users/${detail._id}`)
-    }}
-    {schema}
-    bind:selectedRows
-    data={tableLoading ? [] : enrichedUsers}
-    allowEditColumns={false}
-    allowEditRows={false}
-    allowSelectRows={!readonly}
-    {customRenderers}
-    loading={false}
-    customPlaceholder={tableLoading}
-    defaultSortColumn={"access"}
-    stickyHeader={false}
-  >
-    <div slot="placeholder" />
-  </Table>
+  <div class="table-wrap" style={`min-height: ${TABLE_MIN_HEIGHT}px;`}>
+    <Table
+      on:click={({ detail }) => {
+        bb.settings(`/people/users/${detail._id}`)
+      }}
+      {schema}
+      bind:selectedRows
+      data={tableLoading ? [] : enrichedUsers}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={!readonly}
+      {customRenderers}
+      loading={false}
+      customPlaceholder={tableLoading}
+      defaultSortColumn={"access"}
+      stickyHeader={false}
+    >
+      <div slot="placeholder" />
+    </Table>
+  </div>
 
   <div class="pagination">
     <Pagination
@@ -525,7 +527,7 @@
       goToNextPage={fetch.nextPage}
     />
   </div>
-</Layout>
+</div>
 
 <Modal bind:this={createUserModal} closeOnOutsideClick={false}>
   <AddUserModal
@@ -571,6 +573,16 @@
     flex-direction: row;
     justify-content: flex-end;
     margin-left: auto;
+  }
+  .people-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+    min-height: calc(100% - (var(--spacing-l) * 2)) - 36;
+  }
+  .table-wrap {
+    display: flex;
+    flex-direction: column;
   }
   .controls {
     display: flex;
