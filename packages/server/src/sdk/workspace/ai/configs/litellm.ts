@@ -1,13 +1,18 @@
-import { configs, context, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
+import {
+  AIConfigType,
+  LiteLLMKeyConfig,
+  LockName,
+  LockType,
+} from "@budibase/types"
 import fetch from "node-fetch"
-import * as configSdk from "../configs"
 import env from "../../../../environment"
-import { AIConfigType } from "@budibase/types"
+import * as configSdk from "../configs"
 
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
-export async function generateKey(
+async function generateKey(
   name: string
 ): Promise<{ id: string; secret: string }> {
   const body = JSON.stringify({
@@ -254,11 +259,51 @@ export async function validateConfig(model: {
   }
 }
 
-export async function syncKeyModels() {
-  const { liteLLM } = await configs.getSettingsConfig()
-  if (!liteLLM) {
-    throw new Error("LiteLLM key not configured")
+export async function getKeySettings(): Promise<{
+  keyId: string
+  secretKey: string
+}> {
+  const db = context.getWorkspaceDB()
+  const keyDocId = docIds.getLiteLLMKeyID()
+
+  let keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
+  if (!keyConfig) {
+    const workspaceId = context.getProdWorkspaceId()
+    if (!workspaceId) {
+      throw new HTTPError("Workspace ID is required to configure LiteLLM", 400)
+    }
+    const { result } = await locks.doWithLock(
+      {
+        name: LockName.LITELLM_KEY,
+        type: LockType.AUTO_EXTEND,
+        resource: workspaceId,
+      },
+      async () => {
+        let existingKeyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
+        if (existingKeyConfig) {
+          return existingKeyConfig
+        }
+
+        const key = await generateKey(workspaceId)
+        const config: LiteLLMKeyConfig = {
+          _id: keyDocId,
+          keyId: key.id,
+          secretKey: key.secret,
+        }
+        const { rev } = await db.put(config)
+        return { ...config, _rev: rev }
+      }
+    )
+    keyConfig = result
   }
+  return {
+    keyId: keyConfig.keyId,
+    secretKey: keyConfig.secretKey,
+  }
+}
+
+export async function syncKeyModels() {
+  const { keyId } = await getKeySettings()
 
   const aiConfigs = await configSdk.fetch()
   const modelIds = aiConfigs
@@ -272,7 +317,7 @@ export async function syncKeyModels() {
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      key: liteLLM.keyId,
+      key: keyId,
       models: modelIds,
     }),
   }

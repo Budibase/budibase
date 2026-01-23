@@ -23,6 +23,7 @@ export enum LockName {
   WORKSPACE_MIGRATION = "app_migrations",
   PROCESS_USER_INVITE = "process_user_invite",
   SQS_SYNC_DEFINITIONS = "sys_sync_definitions",
+  LITELLM_KEY = "litellm_key",
 }
 
 export type LockOptions = {
