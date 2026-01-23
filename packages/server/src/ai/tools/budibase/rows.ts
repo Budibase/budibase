@@ -121,7 +121,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
           _id: rowId,
           _rev: rowRev,
         }
-        const row = await sdk.rows.save(tableId, rowData, undefined)
+        const { row } = await sdk.rows.save(tableId, rowData, undefined)
         return { row }
       },
     }),
