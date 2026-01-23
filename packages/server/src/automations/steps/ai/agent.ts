@@ -122,10 +122,31 @@ export async function run({
         const streamResult = await agent.stream({ prompt })
 
         let assistantMessage: UIMessage | undefined
+        let streamingError: string | undefined
+
         for await (const uiMessage of readUIMessageStream({
-          stream: streamResult.toUIMessageStream({ sendReasoning: true }),
+          stream: streamResult.toUIMessageStream({
+            sendReasoning: true,
+            onError: error => {
+              const errorMessage =
+                error instanceof Error ? error.message : String(error)
+              streamingError = errorMessage
+              return errorMessage
+            },
+          }),
         })) {
           assistantMessage = uiMessage
+        }
+
+        if (streamingError) {
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: streamingError,
+            tags: { error: "1", "error.type": "StreamingError" },
+          })
+          return {
+            success: false,
+            response: streamingError,
+          }
         }
 
         const responseText = await streamResult.text
