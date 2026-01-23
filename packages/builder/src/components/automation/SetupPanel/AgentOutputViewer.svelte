@@ -61,6 +61,13 @@
         status = "failed"
       }
 
+      let output: unknown
+      if (part.state === "output-available") {
+        output = part.output
+      } else if (part.state === "output-error") {
+        output = part.errorText
+      }
+
       return {
         id: part.toolCallId,
         name: toolName,
@@ -68,7 +75,7 @@
         status,
         reasoning: getReasoning(),
         input: part.input,
-        output: part.state === "output-available" ? part.output : undefined,
+        output,
         usage,
       }
     })
