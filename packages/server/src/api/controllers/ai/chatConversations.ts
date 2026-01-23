@@ -1,4 +1,5 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { v4 } from "uuid"
 import { ai } from "@budibase/pro"
 import {
   AgentFile,
@@ -253,9 +254,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const { modelId, apiKey, baseUrl } =
       await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
+    const sessionId = chat._id || v4()
     const openai = ai.createLiteLLMOpenAI({
       apiKey,
       baseUrl,
+      fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
     })
     const model = openai.chat(modelId)
 
