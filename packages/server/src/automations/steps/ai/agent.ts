@@ -138,7 +138,9 @@ export async function run({
           assistantMessage = uiMessage
         }
 
-        if (streamingError) {
+        const responseText = await streamResult.text
+
+        if (streamingError && !responseText) {
           tracer.llmobs.annotate(agentSpan, {
             outputData: streamingError,
             tags: { error: "1", "error.type": "StreamingError" },
@@ -148,8 +150,6 @@ export async function run({
             response: streamingError,
           }
         }
-
-        const responseText = await streamResult.text
         const usage = await streamResult.usage
         const output = outputOption
           ? ((await streamResult.output) as Record<string, any>)
