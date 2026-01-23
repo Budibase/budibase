@@ -31,6 +31,7 @@ spec:
 {{- toYaml .Values.services.proxy.templateLabels | indent 8 -}}
 {{ end }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.services.proxy.terminationGracePeriodSeconds }}
       containers:
       - image: {{ .Values.globals.dockerRegistry }}budibase/proxy:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
@@ -82,6 +83,10 @@ spec:
         resources:
         {{- toYaml . | nindent 10 }}
         {{ end }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ .Values.services.proxy.preStopDelaySeconds }}"]
         {{ if .Values.services.proxy.extraVolumeMounts }}
         volumeMounts:
         {{- toYaml .Values.services.proxy.extraVolumeMounts | nindent 8 }}
