@@ -107,19 +107,6 @@
     display: flex;
   }
 
-  .chat-preview-empty {
-    width: 100%;
-    border: 1px dashed var(--spectrum-global-color-gray-300);
-    border-radius: 8px;
-    padding: var(--spacing-l);
-    text-align: center;
-    color: var(--spectrum-global-color-gray-600);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-  }
-
   .chat-preview-body :global(.chat-area) {
     height: 100%;
   }
