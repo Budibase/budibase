@@ -69,9 +69,8 @@
 
     <Chatbox
       bind:chat
-      {loading}
       {workspaceId}
-      on:chatSaved={event => dispatch("chatSaved", event.detail)}
+      onchatsaved={event => dispatch("chatSaved", event.detail)}
     />
   {:else}
     <div class="chat-empty">
