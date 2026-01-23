@@ -30,7 +30,7 @@
   let userGroups = []
   let emailsInput = []
   let emailError = null
-  const maxItems = 20
+  const maxItems = 15
   let selectedRole = Constants.BudibaseRoles.AppUser
   let onboardingType = OnboardingType.EMAIL
 
