@@ -26,9 +26,6 @@
   let lastKey = $state("")
   let refreshKey = $state(0)
 
-  let hasAgents = $derived($agentsStore.agents.length > 0)
-  let showEmptyState = $derived($agentsStore.agentsLoaded && !hasAgents)
-
   const resetChat = (nextAgentId?: string) => {
     chat = {
       ...INITIAL_CHAT,
