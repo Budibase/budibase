@@ -6,6 +6,10 @@ metadata:
   labels:
     app.kubernetes.io/name: litellm
     io.kompose.service: litellm-service
+  {{- if .Values.services.litellm.tailscale.expose }}
+  annotations:
+    tailscale.com/expose: "true"
+  {{- end }}
 spec:
   type: ClusterIP
   selector:
