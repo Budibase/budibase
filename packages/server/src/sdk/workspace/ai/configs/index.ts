@@ -45,12 +45,15 @@ export async function create(
 ): Promise<CustomAIProviderConfig> {
   const db = context.getWorkspaceDB()
 
-  const modelId = await liteLLM.addModel({
+  const configToSave = {
     provider: config.provider,
     name: config.model,
     credentialFields: config.credentialsFields,
     configType: config.configType,
-  })
+  }
+
+  await liteLLM.validateConfig(configToSave)
+  const modelId = await liteLLM.addModel(configToSave)
 
   const newConfig: CustomAIProviderConfig = {
     _id: docIds.generateAIConfigID(),

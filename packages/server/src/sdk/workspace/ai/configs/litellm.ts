@@ -4,10 +4,12 @@ import {
   LiteLLMKeyConfig,
   LockName,
   LockType,
+  UserContext,
 } from "@budibase/types"
 import fetch from "node-fetch"
 import env from "../../../../environment"
 import * as configSdk from "../configs"
+import { utils } from "@budibase/shared-core"
 
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
@@ -37,17 +39,15 @@ async function generateKey(
 export async function addModel({
   provider,
   name,
+  displayName,
   credentialFields,
-  configType,
 }: {
   provider: string
   name: string
+  displayName?: string
   credentialFields: Record<string, string>
-  configType: AIConfigType
 }): Promise<string> {
   provider = await mapToLiteLLMProvider(provider)
-
-  await validateConfig({ provider, name, credentialFields, configType })
 
   const requestOptions = {
     method: "POST",
@@ -56,7 +56,7 @@ export async function addModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: name,
+      model_name: displayName ?? name,
       litellm_params: {
         custom_llm_provider: provider,
         model: `${provider}/${name}`,
@@ -70,7 +70,7 @@ export async function addModel({
       },
       model_info: {
         created_at: new Date().toISOString(),
-        created_by: (context.getIdentity() as any)?.email,
+        created_by: (context.getIdentity() as UserContext)?.email,
       },
     }),
   }
@@ -117,7 +117,7 @@ export async function updateModel({
       },
       model_info: {
         updated_at: new Date().toISOString(),
-        updated_by: (context.getIdentity() as any)?.email,
+        updated_by: (context.getIdentity() as UserContext)?.email,
       },
     }),
   }
@@ -134,98 +134,63 @@ export async function updateModel({
   }
 }
 
-export async function validateConfig(model: {
+async function validateEmbeddingConfig(model: {
   provider: string
   name: string
   credentialFields: Record<string, string>
-  configType: AIConfigType
 }) {
-  const { name, provider, credentialFields, configType } = model
+  let modelId: string | undefined
 
-  if (configType === AIConfigType.EMBEDDINGS) {
-    let modelId: string | undefined
+  try {
+    modelId = await addModel({ ...model, name: `tmp-${model.name}` })
 
-    try {
-      const createModelResponse = await fetch(`${liteLLMUrl}/model/new`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: liteLLMAuthorizationHeader,
-        },
-        body: JSON.stringify({
-          model_name: name,
-          litellm_params: {
-            custom_llm_provider: provider,
-            model: `${provider}/${name}`,
-            use_in_pass_through: false,
-            use_litellm_proxy: false,
-            merge_reasoning_content_in_choices: true,
-            input_cost_per_token: 0,
-            output_cost_per_token: 0,
-            guardrails: [],
-            ...credentialFields,
+    const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: liteLLMAuthorizationHeader,
+      },
+      body: JSON.stringify({
+        model: modelId,
+        input: "Budibase embedding validation",
+      }),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new HTTPError(
+        `Error validating configuration: ${text || response.statusText}`,
+        400
+      )
+    }
+  } finally {
+    if (modelId) {
+      try {
+        await fetch(`${liteLLMUrl}/model/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: liteLLMAuthorizationHeader,
           },
-          model_info: {
-            created_at: new Date().toISOString(),
-            created_by: (context.getIdentity() as any)?.email,
-          },
-        }),
-      })
-
-      const createModelJson = await createModelResponse.json()
-      if (!createModelResponse.ok || createModelJson.status === "error") {
-        const errorMessage =
-          createModelJson?.result?.error ||
-          createModelJson?.error ||
-          createModelResponse.statusText
-        throw new HTTPError(
-          `Error validating configuration: ${errorMessage}`,
-          400
+          body: JSON.stringify({ id: modelId }),
+        })
+      } catch (e) {
+        console.error(
+          "Error deleting the temporary model for validating embeddings",
+          { e }
         )
-      }
-
-      modelId = createModelJson.model_id
-
-      const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: liteLLMAuthorizationHeader,
-        },
-        body: JSON.stringify({
-          model: name,
-          input: "Budibase embedding validation",
-        }),
-      })
-
-      if (!response.ok) {
-        const text = await response.text()
-        throw new HTTPError(
-          `Error validating configuration: ${text || response.statusText}`,
-          400
-        )
-      }
-    } finally {
-      if (modelId) {
-        try {
-          await fetch(`${liteLLMUrl}/model/delete`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: liteLLMAuthorizationHeader,
-            },
-            body: JSON.stringify({ id: modelId }),
-          })
-        } catch (e) {
-          console.error(
-            "Error deleting the temporary model for validating embeddings",
-            { e }
-          )
-        }
       }
     }
-    return
   }
+  return
+}
+
+async function validateCompletionsModel(model: {
+  provider: string
+  name: string
+  credentialFields: Record<string, string>
+}) {
+  const { name, provider, credentialFields } = model
 
   const requestOptions = {
     method: "POST",
@@ -256,6 +221,22 @@ export async function validateConfig(model: {
     const trimmedError = json.result.error.split("\n")[0] || json.result.error
 
     throw new HTTPError(`Error validating configuration: ${trimmedError}`, 400)
+  }
+}
+
+export async function validateConfig(model: {
+  provider: string
+  name: string
+  credentialFields: Record<string, string>
+  configType: AIConfigType
+}) {
+  switch (model.configType) {
+    case AIConfigType.EMBEDDINGS:
+      return validateEmbeddingConfig(model)
+    case AIConfigType.COMPLETIONS:
+      return validateCompletionsModel(model)
+    default:
+      throw utils.unreachable(model.configType)
   }
 }
 
