@@ -9,6 +9,7 @@
     "check:types": "yarn svelte-check"
   },
   "dependencies": {
+    "@ai-sdk/svelte": "^4.0.48",
     "@budibase/bbui": "*",
     "@budibase/shared-core": "*",
     "@budibase/types": "*",
