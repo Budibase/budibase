@@ -1,4 +1,9 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  getErrorMessage,
+  HTTPError,
+} from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { ai } from "@budibase/pro"
 import {
@@ -284,6 +289,14 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools,
       stopWhen: stepCountIs(30),
       providerOptions: ai.getLiteLLMProviderOptions(),
+      onError({ error }) {
+        console.error("Agent streaming error", {
+          agentId,
+          chatAppId,
+          sessionId,
+          error,
+        })
+      },
     })
 
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
@@ -299,6 +312,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       ...(messageMetadata && {
         messageMetadata: () => messageMetadata,
       }),
+      onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
         if (chat.transient) {
           return
