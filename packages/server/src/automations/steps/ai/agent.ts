@@ -1,4 +1,5 @@
 import * as automationUtils from "../../automationUtils"
+import { getErrorMessage } from "@budibase/backend-core"
 import {
   AgentStepInputs,
   AgentStepOutputs,
@@ -128,8 +129,9 @@ export async function run({
           stream: streamResult.toUIMessageStream({
             sendReasoning: true,
             onError: error => {
-              streamingError = automationUtils.getErrorMessage(error)
-              return streamingError
+              const errorMessage = getErrorMessage(error)
+              streamingError = errorMessage
+              return errorMessage
             },
           }),
         })) {
@@ -137,20 +139,22 @@ export async function run({
         }
 
         let responseText: string | undefined
+        let textExtractionError: string | undefined
         try {
           responseText = await streamResult.text
-        } catch {
-          // Ignore - go to check streamingError below
+        } catch (err) {
+          textExtractionError = getErrorMessage(err)
         }
 
-        if (streamingError && !responseText) {
+        const error = streamingError || textExtractionError
+        if (error && !responseText) {
           tracer.llmobs.annotate(agentSpan, {
-            outputData: streamingError,
+            outputData: error,
             tags: { error: "1", "error.type": "StreamingError" },
           })
           return {
             success: false,
-            response: streamingError,
+            response: error,
           }
         }
         const usage = await streamResult.usage

@@ -1,4 +1,9 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  getErrorMessage,
+  HTTPError,
+} from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { ai } from "@budibase/pro"
 import {
@@ -307,18 +312,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       ...(messageMetadata && {
         messageMetadata: () => messageMetadata,
       }),
-      onError: error => {
-        if (error == null) {
-          return "An unknown error occurred"
-        }
-        if (typeof error === "string") {
-          return error
-        }
-        if (error instanceof Error) {
-          return error.message
-        }
-        return JSON.stringify(error)
-      },
+      onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
         if (chat.transient) {
           return
