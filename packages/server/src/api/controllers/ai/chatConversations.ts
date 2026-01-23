@@ -18,6 +18,7 @@ import {
   convertToModelMessages,
   extractReasoningMiddleware,
   ModelMessage,
+  stepCountIs,
   streamText,
   wrapLanguageModel,
 } from "ai"
@@ -280,6 +281,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       messages: messagesWithContext,
       system,
       tools,
+      stopWhen: stepCountIs(30),
     })
 
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
