@@ -32,6 +32,20 @@
   let selectedStep: ChainStep | null = $state(null)
   let selectedTab = $state("Output")
 
+  const isObjectValue = (value: unknown) => {
+    return typeof value === "object" && value !== null
+  }
+
+  const formatPrimitiveValue = (value: unknown) => {
+    if (value === undefined) {
+      return ""
+    }
+    if (typeof value === "string") {
+      return value
+    }
+    return JSON.stringify(value, null, 2)
+  }
+
   export function show() {
     modal?.show()
     selectedStep = steps[0] || null
@@ -160,7 +174,12 @@
                     {#key selectedStep.id}
                       <div class="output-content" in:fade={{ duration: 150 }}>
                         {#if selectedStep.output !== undefined}
-                          <JSONViewer value={selectedStep.output} />
+                          {#if isObjectValue(selectedStep.output)}
+                            <JSONViewer value={selectedStep.output} />
+                          {:else}
+                            <pre class="primitive-value">
+{formatPrimitiveValue(selectedStep.output)}</pre>
+                          {/if}
                         {:else}
                           <div class="empty-state">
                             <Icon
@@ -423,6 +442,19 @@
     padding: var(--spacing-m) 0;
     overflow: auto;
     flex: 1;
+  }
+
+  .primitive-value {
+    background-color: var(--spectrum-global-color-gray-75);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--border-radius-s);
+    padding: var(--spacing-m);
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: monospace;
+    font-size: 12px;
+    margin: 0;
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .empty-state {
