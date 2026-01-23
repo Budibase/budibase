@@ -68,9 +68,6 @@
   }, {})
   $: selectedProvider = providersMap?.[draft.provider]
 
-  $: modelPlaceholder =
-    selectedProvider?.defaultModelPlaceholder || "gpt-4o-mini"
-
   onMount(async () => {
     try {
       await aiConfigsStore.fetchProviders()
@@ -80,6 +77,9 @@
   })
 
   async function confirm() {
+    draft.name = draft.name.trim()
+    draft.model = draft.model.trim()
+
     try {
       if (draft._id) {
         await aiConfigsStore.updateConfig(draft)
@@ -173,7 +173,7 @@
 
   <div class="row">
     <Label size="M">Model</Label>
-    <Input placeholder={modelPlaceholder} bind:value={draft.model} />
+    <Input bind:value={draft.model} />
   </div>
 
   {#each selectedProvider?.credentialFields as field (field.key)}

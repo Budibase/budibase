@@ -619,6 +619,9 @@ services:
       general_settings:
         store_model_in_db: true
         store_prompts_in_spend_logs: true
+    tailscale:
+      # -- Whether to expose the litellm service to a Tailscale tailnet via annotation.
+      expose: false
 
   objectStore:
     # -- Set to false if using another object store, such as S3. You will need
