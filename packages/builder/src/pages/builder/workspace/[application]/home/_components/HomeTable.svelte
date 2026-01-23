@@ -176,13 +176,13 @@
         </div>
 
         <div class="cell actions">
+          <span class="favourite-btn">
+            <FavouriteResourceButton favourite={row.favourite} />
+          </span>
           <div class="ctx-btn">
             <!-- todo: implement actions -->
             <Icon name="dots-three" size="M" hoverable color="var(--spectrum-global-color-gray-600)" on:click={stop} />
           </div>
-          <span class="favourite-btn">
-            <FavouriteResourceButton favourite={row.favourite} />
-          </span>
         </div>
       </button>
     {/each}
