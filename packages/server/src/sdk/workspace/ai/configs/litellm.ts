@@ -41,13 +41,17 @@ export async function addModel({
   name,
   displayName,
   credentialFields,
+  configType,
 }: {
   provider: string
   name: string
   displayName?: string
   credentialFields: Record<string, string>
+  configType: AIConfigType
 }): Promise<string> {
   provider = await mapToLiteLLMProvider(provider)
+
+  await validateConfig({ provider, name, credentialFields, configType })
 
   const requestOptions = {
     method: "POST",
@@ -142,7 +146,11 @@ async function validateEmbeddingConfig(model: {
   let modelId: string | undefined
 
   try {
-    modelId = await addModel({ ...model, name: `tmp-${model.name}` })
+    modelId = await addModel({
+      ...model,
+      name: `tmp-${model.name}`,
+      configType: AIConfigType.EMBEDDINGS,
+    })
 
     const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
       method: "POST",
@@ -224,7 +232,7 @@ async function validateCompletionsModel(model: {
   }
 }
 
-export async function validateConfig(model: {
+async function validateConfig(model: {
   provider: string
   name: string
   credentialFields: Record<string, string>
