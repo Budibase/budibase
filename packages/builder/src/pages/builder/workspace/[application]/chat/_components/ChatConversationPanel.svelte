@@ -70,7 +70,7 @@
     <Chatbox
       bind:chat
       {workspaceId}
-      onchatSaved={event => dispatch("chatSaved", event.detail)}
+      onChatSaved={event => dispatch("chatSaved", event.detail)}
     />
   {:else}
     <div class="chat-empty">
