@@ -1,10 +1,6 @@
 <script lang="ts">
   import { Body, Icon, Toggle } from "@budibase/bbui"
-  type AgentListItem = {
-    agentId: string
-    name?: string
-    isDefault?: boolean
-  }
+  import type { AgentListItem } from "./types"
 
   export let resolvedDefaultAgent: AgentListItem | undefined
   export let otherAgents: AgentListItem[] = []

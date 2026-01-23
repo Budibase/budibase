@@ -1,10 +1,6 @@
 <script lang="ts">
   import { Button, Modal, ModalContent } from "@budibase/bbui"
-  type AgentListItem = {
-    agentId: string
-    name?: string
-    isDefault?: boolean
-  }
+  import type { AgentListItem } from "./types"
 
   export let open = false
   export let selectedAgent: AgentListItem | undefined

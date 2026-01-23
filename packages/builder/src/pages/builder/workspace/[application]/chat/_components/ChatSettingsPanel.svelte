@@ -4,17 +4,12 @@
   import type { Agent } from "@budibase/types"
   import AgentList from "./AgentList.svelte"
   import AgentSettingsModal from "./AgentSettingsModal.svelte"
+  import type { AgentListItem } from "./types"
 
   type ChatAgentConfig = {
     agentId: string
     isEnabled: boolean
     isDefault: boolean
-  }
-
-  type AgentListItem = {
-    agentId: string
-    name?: string
-    isDefault?: boolean
   }
 
   export let namedAgents: Agent[] = []
