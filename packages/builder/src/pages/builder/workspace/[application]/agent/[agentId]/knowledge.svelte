@@ -158,6 +158,15 @@
       on:change={() => scheduleSave(true)}
     />
   </div>
+  <div class="form-icon">
+    <AbsTooltip text="Manage vector databases">
+      <ActionButton
+        size="M"
+        icon="sliders-horizontal"
+        on:click={() => bb.settings("/ai-config/embedding-settings")}
+      />
+    </AbsTooltip>
+  </div>
 </div>
 
 {#if hasRagConfig}
