@@ -32,7 +32,7 @@
     const details = namedAgents.find(agent => agent._id === agentConfig.agentId)
     return {
       agentId: agentConfig.agentId,
-      name: details?.name,
+      name: details?.name!,
       isDefault: agentConfig.isDefault,
     }
   })

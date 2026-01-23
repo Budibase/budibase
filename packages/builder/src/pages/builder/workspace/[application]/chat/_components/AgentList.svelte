@@ -17,7 +17,7 @@
     <div class="settings-agent">
       <div class="settings-agent-info">
         <Body size="S">
-          {resolvedDefaultAgent.name || "Unknown agent"}
+          {resolvedDefaultAgent.name}
         </Body>
       </div>
       <div class="settings-agent-actions">

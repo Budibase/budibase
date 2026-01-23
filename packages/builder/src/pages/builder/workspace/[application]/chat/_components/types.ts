@@ -1,5 +1,5 @@
 export type AgentListItem = {
   agentId: string
-  name?: string
+  name: string
   isDefault?: boolean
 }
