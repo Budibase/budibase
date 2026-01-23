@@ -107,18 +107,7 @@ export function createLiteLLMFetch(sessionId: string): typeof fetch {
     init?: Parameters<typeof fetch>[1]
   ) => {
     const span = tracer.scope().active()
-    const headers = new Headers(init?.headers)
-
-    // Inject Datadog trace context for correlation
-    if (span) {
-      const traceId = span.context().toTraceId()
-      const spanId = span.context().toSpanId()
-      headers.set("traceparent", `00-${traceId}-${spanId}-01`)
-      headers.set("x-datadog-trace-id", traceId)
-      headers.set("x-datadog-parent-id", spanId)
-    }
-
-    let modifiedInit: RequestInit = { ...init, headers }
+    let modifiedInit = init
 
     if (typeof init?.body === "string") {
       try {
@@ -132,7 +121,7 @@ export function createLiteLLMFetch(sessionId: string): typeof fetch {
             session_id: sessionId,
           }
         }
-        modifiedInit = { ...modifiedInit, body: JSON.stringify(body) }
+        modifiedInit = { ...init, body: JSON.stringify(body) }
       } catch {
         // Not JSON, pass through
       }
