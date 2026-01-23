@@ -128,17 +128,20 @@ export async function run({
           stream: streamResult.toUIMessageStream({
             sendReasoning: true,
             onError: error => {
-              const errorMessage =
-                error instanceof Error ? error.message : String(error)
-              streamingError = errorMessage
-              return errorMessage
+              streamingError = automationUtils.getErrorMessage(error)
+              return streamingError
             },
           }),
         })) {
           assistantMessage = uiMessage
         }
 
-        const responseText = await streamResult.text
+        let responseText: string | undefined
+        try {
+          responseText = await streamResult.text
+        } catch {
+          // Ignore - go to check streamingError below
+        }
 
         if (streamingError && !responseText) {
           tracer.llmobs.annotate(agentSpan, {

@@ -121,6 +121,31 @@ export function getError(err: any) {
   return typeof err !== "string" ? err.toString() : err
 }
 
+export function getErrorMessage(err: unknown): string {
+  if (err == null) {
+    return "No error provided."
+  }
+  if (err instanceof Error) {
+    return err.message
+  }
+  if (typeof err === "string") {
+    return err
+  }
+  if (typeof err === "object" && "message" in err) {
+    return String((err as { message: unknown }).message)
+  }
+  try {
+    const serialized = JSON.stringify(err)
+    if (serialized !== "{}") {
+      return serialized
+    }
+  } catch {
+    // Fall through
+  }
+  const str = String(err)
+  return str !== "[object Object]" ? str : "An unknown error occurred"
+}
+
 export function guardAttachment(
   attachmentObject?: object
 ): attachmentObject is AutomationAttachment {
