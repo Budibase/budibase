@@ -103,6 +103,7 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
       inputSchema: z.object({
         tableId: z.string().describe("The ID of the table"),
         rowId: z.string().describe("The ID of the row to update"),
+        rowRev: z.string().describe("The current _rev of the row (if known)"),
         data: z
           .record(z.string(), z.any())
           .describe(
@@ -112,8 +113,14 @@ const ROW_TOOLS: BudibaseToolDefinition[] = [
           ),
       }),
       execute: async input => {
-        const { tableId, rowId, data } = input
-        const rowData = { ...data, _id: rowId }
+        const { tableId, rowId, rowRev, data } = input
+        const existingRow = await sdk.rows.find(tableId, rowId)
+        const rowData = {
+          ...existingRow,
+          ...data,
+          _id: rowId,
+          _rev: rowRev,
+        }
         const row = await sdk.rows.save(tableId, rowData, undefined)
         return { row }
       },
