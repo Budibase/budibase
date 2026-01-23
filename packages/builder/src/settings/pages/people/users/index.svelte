@@ -59,7 +59,15 @@
     access: number
   }
 
-  export let workspaceOnly = false
+  export let workspaceOnly: boolean
+
+  const isWorkspaceOnly = workspaceOnly === true
+
+  const PAGE_SIZE = 8
+  const initialWorkspaceId = (() => {
+    const appId = get(appStore).appId
+    return appId ? sdk.applications.getProdAppID(appId) : ""
+  })()
 
   const fetch = fetchData({
     API,
@@ -69,7 +77,8 @@
     },
     options: {
       paginate: true,
-      limit: 8,
+      limit: PAGE_SIZE,
+      query: isWorkspaceOnly ? { workspaceId: initialWorkspaceId } : {},
     },
   })
 
@@ -92,29 +101,41 @@
   let selectedRows: User[] = []
   let bulkSaveResponse: BulkUserCreated
 
+  let currentWorkspaceId = ""
+  let workspaceReady = false
+  let isWorkspaceQueryReady = false
+  let tableLoading = false
+
   $: currentWorkspaceId = $appStore.appId
     ? sdk.applications.getProdAppID($appStore.appId)
     : ""
+  $: workspaceReady = !isWorkspaceOnly || !!currentWorkspaceId
+  $: isWorkspaceQueryReady =
+    !isWorkspaceOnly ||
+    ($fetch.query as { workspaceId?: string })?.workspaceId ===
+      currentWorkspaceId
+  $: tableLoading =
+    !workspaceReady || !isWorkspaceQueryReady || !$fetch.loaded || !groupsLoaded
 
   $: customRenderers = [
     { column: "email", component: EmailTableRenderer },
     { column: "role", component: RoleTableRenderer },
-    !workspaceOnly &&
+    !isWorkspaceOnly &&
       $licensing.groupsEnabled && {
         column: "userGroups",
         component: GroupsTableRenderer,
       },
-    !workspaceOnly && { column: "workspaces", component: AppsTableRenderer },
-    workspaceOnly && { column: "createdAt", component: DateAddedRenderer },
+    !isWorkspaceOnly && { column: "workspaces", component: AppsTableRenderer },
+    isWorkspaceOnly && { column: "createdAt", component: DateAddedRenderer },
   ].filter(Boolean)
   let userData: UserData = { users: [], groups: [] }
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !sdk.users.isAdmin($auth.user)
-  $: debouncedUpdateFetch(searchEmail)
+  $: debouncedUpdateFetch(searchEmail, currentWorkspaceId)
   $: schema = {
     email: {
-      displayName: workspaceOnly ? "User" : "Email",
+      displayName: isWorkspaceOnly ? "User" : "Email",
       sortable: false,
       width: "2fr",
       minWidth: "200px",
@@ -124,11 +145,11 @@
       sortable: false,
       width: "1fr",
     },
-    ...(!workspaceOnly &&
+    ...(!isWorkspaceOnly &&
       $licensing.groupsEnabled && {
         userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
       }),
-    ...(workspaceOnly
+    ...(isWorkspaceOnly
       ? {
           createdAt: {
             displayName: "Date added",
@@ -148,79 +169,70 @@
     successful: [],
     unsuccessful: [],
   }
-  $: inviteTitle = workspaceOnly
+  $: inviteTitle = isWorkspaceOnly
     ? "Invite users to workspace"
     : "Invite users to organisation"
-  $: setEnrichedUsers(
+  $: enrichedUsers = buildEnrichedUsers(
     $fetch.rows as User[],
     tenantOwner,
-    currentWorkspaceId,
-    workspaceOnly,
     $groups
   )
 
-  const setEnrichedUsers = async (
+  const buildEnrichedUsers = (
     rows: User[],
     owner: AccountMetadata | null,
-    workspaceId: string,
-    isWorkspaceOnly: boolean,
     allGroups: UserGroup[]
-  ) => {
-    const filteredRows = rows?.filter(user => {
-      if (!isWorkspaceOnly || !workspaceId) {
-        return true
-      }
-
-      const hasWorkspaceAccess =
-        sdk.users.isAdminOrBuilder(user, $appStore.appId) ||
-        sdk.users.userAppAccessList(user, allGroups).includes(workspaceId)
-
-      return hasWorkspaceAccess
-    })
-
-    enrichedUsers = filteredRows?.map<EnrichedUser>(user => {
-      const userGroups: UserGroup[] = []
-      allGroups.forEach(group => {
-        if (group.users) {
-          group.users?.forEach(y => {
-            if (y._id === user._id) {
-              userGroups.push(group)
-            }
-          })
+  ): EnrichedUser[] => {
+    return (
+      rows?.map<EnrichedUser>(user => {
+        const userGroups: UserGroup[] = []
+        allGroups.forEach(group => {
+          if (group.users) {
+            group.users?.forEach(y => {
+              if (y._id === user._id) {
+                userGroups.push(group)
+              }
+            })
+          }
+        })
+        if (owner) {
+          user.tenantOwnerEmail = owner.email
         }
-      })
-      if (owner) {
-        user.tenantOwnerEmail = owner.email
-      }
-      const role = Constants.ExtendedBudibaseRoleOptions.find(
-        x => x.value === users.getUserRole(user)
-      )!
-      return {
-        ...user,
-        name: user.firstName ? user.firstName + " " + user.lastName : "",
-        userGroups,
-        __selectable:
-          role.value === Constants.BudibaseRoles.Owner ||
-          $auth.user?.email === user.email
-            ? false
-            : true,
-        apps: sdk.users.userAppAccessList(user, allGroups),
-        access: role.sortOrder,
-      }
-    })
+        const role = Constants.ExtendedBudibaseRoleOptions.find(
+          x => x.value === users.getUserRole(user)
+        )!
+        return {
+          ...user,
+          name: user.firstName ? user.firstName + " " + user.lastName : "",
+          userGroups,
+          __selectable:
+            role.value === Constants.BudibaseRoles.Owner ||
+            $auth.user?.email === user.email
+              ? false
+              : true,
+          apps: sdk.users.userAppAccessList(user, allGroups),
+          access: role.sortOrder,
+        }
+      }) || []
+    )
   }
 
-  const updateFetch = (email: string | undefined) => {
-    if (!email) {
-      return fetch.update({ query: {} })
+  const refreshUserList = async () => {
+    await fetch.refresh()
+  }
+
+  const updateFetch = (email: string | undefined, workspaceId: string) => {
+    if (isWorkspaceOnly && !workspaceId) {
+      return
     }
-    fetch.update({
-      query: {
-        fuzzy: {
-          email,
-        },
-      },
-    })
+    const query: Record<string, any> = {}
+    if (isWorkspaceOnly) {
+      query.workspaceId = workspaceId
+    }
+    if (email) {
+      query.fuzzy = { email }
+    }
+    fetch.update({ query })
   }
   const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
 
@@ -245,7 +257,7 @@
   }
 
   async function createUserFlow() {
-    const assignToWorkspace = userData.assignToWorkspace ?? workspaceOnly
+    const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
     const payload = userData?.users?.map(user => {
       const workspaceRole = getWorkspaceRole(user.role)
       return {
@@ -323,7 +335,7 @@
         successful: [],
         unsuccessful: [],
       }
-      const assignToWorkspace = userData.assignToWorkspace ?? workspaceOnly
+      const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
       if (
         assignToWorkspace &&
         currentWorkspaceId &&
@@ -348,7 +360,7 @@
       notifications.success("Successfully created user")
       await groups.init()
       passwordModal.show()
-      await fetch.refresh()
+      await refreshUserList()
     } catch (error) {
       console.error(error)
       notifications.error("Error creating user")
@@ -387,7 +399,7 @@
 
       notifications.success(`Successfully deleted ${selectedRows.length} users`)
       selectedRows = []
-      await fetch.refresh()
+      await refreshUserList()
     } catch (error) {
       notifications.error("Error deleting users")
     }
@@ -402,7 +414,7 @@
   }
 
   const getWorkspaceRole = (role?: string) => {
-    if (!workspaceOnly || !currentWorkspaceId || !role) {
+    if (!isWorkspaceOnly || !currentWorkspaceId || !role) {
       return undefined
     }
     if (role === Constants.BudibaseRoles.Creator) {
@@ -479,7 +491,7 @@
               : createUserModal.show}
             cta
           >
-            {workspaceOnly ? "Invite to workspace" : "Invite users"}
+            {isWorkspaceOnly ? "Invite to workspace" : "Invite users"}
           </Button>
         {/if}
       </div>
@@ -491,21 +503,24 @@
     }}
     {schema}
     bind:selectedRows
-    data={enrichedUsers}
+    data={tableLoading ? [] : enrichedUsers}
     allowEditColumns={false}
     allowEditRows={false}
     allowSelectRows={!readonly}
     {customRenderers}
-    loading={!$fetch.loaded || !groupsLoaded}
+    loading={false}
+    customPlaceholder={tableLoading}
     defaultSortColumn={"access"}
     stickyHeader={false}
-  />
+  >
+    <div slot="placeholder" />
+  </Table>
 
   <div class="pagination">
     <Pagination
       page={$fetch.pageNumber + 1}
-      hasPrevPage={$fetch.loading ? false : $fetch.hasPrevPage}
-      hasNextPage={$fetch.loading ? false : $fetch.hasNextPage}
+      hasPrevPage={tableLoading ? false : $fetch.hasPrevPage}
+      hasNextPage={tableLoading ? false : $fetch.hasNextPage}
       goToPrevPage={fetch.prevPage}
       goToNextPage={fetch.nextPage}
     />
@@ -515,9 +530,9 @@
 <Modal bind:this={createUserModal} closeOnOutsideClick={false}>
   <AddUserModal
     {showOnboardingTypeModal}
-    {workspaceOnly}
+    workspaceOnly={isWorkspaceOnly}
     useWorkspaceInviteModal={true}
-    assignToWorkspace={workspaceOnly}
+    assignToWorkspace={isWorkspaceOnly}
     {inviteTitle}
   />
 </Modal>
