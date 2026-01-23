@@ -282,6 +282,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       system,
       tools,
       stopWhen: stepCountIs(30),
+      providerOptions: ai.getLiteLLMProviderOptions(),
     })
 
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
@@ -319,6 +320,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
         await db.put(chatToSave)
       },
+      sendReasoning: true,
     })
     return
   } catch (error: any) {

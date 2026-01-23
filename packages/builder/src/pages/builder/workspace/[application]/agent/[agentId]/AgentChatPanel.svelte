@@ -64,20 +64,9 @@
     </button>
   </div>
   <div class="chat-preview-body">
-    {#if showEmptyState}
-      <div class="chat-preview-empty">
-        No agents yet. Add one from the settings panel to start chatting.
-      </div>
-    {:else}
-      {#key refreshKey}
-        <Chatbox
-          bind:chat
-          loading={false}
-          persistConversation={false}
-          {workspaceId}
-        />
-      {/key}
-    {/if}
+    {#key refreshKey}
+      <Chatbox bind:chat persistConversation={false} {workspaceId} />
+    {/key}
   </div>
 </div>
 
