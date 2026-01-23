@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { agentsStore } from "@/stores/portal"
   import type {
     DraftChatConversation,
     WithoutDocMetadata,
