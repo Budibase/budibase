@@ -30,7 +30,7 @@
     workspaceId: string
     chat: ChatConversationLike
     persistConversation?: boolean
-    onchatSaved?: (_event: {
+    onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
   }
@@ -39,7 +39,7 @@
     workspaceId,
     chat = $bindable(),
     persistConversation = true,
-    onchatSaved,
+    onchatsaved,
   }: Props = $props()
 
   let API = $state(
@@ -101,7 +101,7 @@
       }
 
       chat = { ...chat, messages: chatInstance.messages }
-      onchatSaved?.({ detail: { chatId: chat._id, chat } })
+      onchatsaved?.({ detail: { chatId: chat._id, chat } })
 
       await tick()
       textareaElement?.focus()
