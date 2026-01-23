@@ -38,20 +38,29 @@ async function generateKey(
 
 export async function addModel({
   provider,
-  name,
+  model,
   displayName,
   credentialFields,
   configType,
+  validate = true,
 }: {
   provider: string
-  name: string
+  model: string
   displayName?: string
   credentialFields: Record<string, string>
   configType: AIConfigType
+  validate?: boolean
 }): Promise<string> {
-  provider = await mapToLiteLLMProvider(provider)
+  if (validate) {
+    await validateConfig({
+      provider,
+      name: model,
+      credentialFields,
+      configType,
+    })
+  }
 
-  await validateConfig({ provider, name, credentialFields, configType })
+  provider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "POST",
@@ -60,10 +69,10 @@ export async function addModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: displayName ?? name,
+      model_name: displayName ?? model,
       litellm_params: {
         custom_llm_provider: provider,
-        model: `${provider}/${name}`,
+        model: `${provider}/${model}`,
         use_in_pass_through: false,
         use_litellm_proxy: false,
         merge_reasoning_content_in_choices: true,
@@ -97,8 +106,9 @@ export async function updateModel({
   credentialFields: Record<string, string>
   configType: AIConfigType
 }) {
-  provider = await mapToLiteLLMProvider(provider)
   await validateConfig({ provider, name, credentialFields, configType })
+
+  provider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "PATCH",
@@ -147,9 +157,12 @@ async function validateEmbeddingConfig(model: {
 
   try {
     modelId = await addModel({
-      ...model,
-      name: `tmp-${model.name}`,
+      provider: model.provider,
+      model: model.name,
+      displayName: `tmp-${model.name}`,
+      credentialFields: model.credentialFields,
       configType: AIConfigType.EMBEDDINGS,
+      validate: false,
     })
 
     const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
