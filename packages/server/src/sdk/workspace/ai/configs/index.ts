@@ -1,8 +1,7 @@
-import { configs, context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   AIConfigType,
   LLMProviderField,
-  ConfigType,
   CustomAIProviderConfig,
   DocumentType,
   LLMProvider,
@@ -41,25 +40,9 @@ export async function find(
   return result ? withDefaults(result) : result
 }
 
-async function ensureLiteLLMConfigured() {
-  let storedConfig = await configs.getSettingsConfigDoc()
-  if (!storedConfig?.config.liteLLM?.keyId) {
-    storedConfig ??= { type: ConfigType.SETTINGS, config: {} }
-    const key = await liteLLM.generateKey(context.getTenantId())
-    storedConfig.config.liteLLM = {
-      keyId: key.id,
-      secretKey: key.secret,
-    }
-    await configs.save(storedConfig)
-  }
-  return storedConfig.config.liteLLM
-}
-
 export async function create(
   config: CustomAIProviderConfig
 ): Promise<CustomAIProviderConfig> {
-  await ensureLiteLLMConfigured()
-
   const db = context.getWorkspaceDB()
 
   const modelId = await liteLLM.addModel({
@@ -173,11 +156,6 @@ export async function remove(id: string) {
   await liteLLM.syncKeyModels()
 }
 
-async function getLiteLLMSecretKey() {
-  const liteLLMConfig = await configs.getSettingsConfigDoc()
-  return liteLLMConfig.config.liteLLM?.secretKey
-}
-
 export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
   modelName: string
   modelId: string
@@ -190,7 +168,7 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
     throw new HTTPError("Config not found", 400)
   }
 
-  const secretKey = await getLiteLLMSecretKey()
+  const { secretKey } = await liteLLM.getKeySettings()
   if (!secretKey) {
     throw new HTTPError(
       "LiteLLM should be configured. Contact support if the issue persists.",
@@ -216,8 +194,6 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
         id: provider.provider,
         displayName: provider.provider_display_name,
         externalProvider: provider.litellm_provider,
-        defaultModelPlaceholder:
-          provider.default_model_placeholder ?? undefined,
         credentialFields: provider.credential_fields.map(f => {
           const field: RequiredKeys<LLMProviderField> = {
             key: f.key,
