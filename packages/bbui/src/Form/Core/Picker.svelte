@@ -549,6 +549,10 @@
     height: auto;
     line-height: normal;
   }
+  .spectrum-Picker-label.has-subtitle .picker-label-text {
+    font-size: 12px;
+    line-height: 15px;
+  }
   .picker-label-subtitle {
     font-size: 12px;
     line-height: 15px;
