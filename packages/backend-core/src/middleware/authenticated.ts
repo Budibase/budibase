@@ -238,7 +238,7 @@ export function authenticated(
         return next()
       }
     } catch (err: any) {
-      console.error(`Auth Error: ${err.message}`)
+      console.warn(`Auth Error: ${err.message}`)
       // invalid token, clear the cookie
       if (err?.name === "JsonWebTokenError") {
         clearCookie(ctx, Cookie.Auth)
