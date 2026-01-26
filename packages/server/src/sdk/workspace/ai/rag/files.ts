@@ -14,25 +14,11 @@ const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
 
-interface AgentRagConfig {
-  agentId: string
-  embeddingModel: string
-  vectorDb: string
-  ragMinDistance: number
-  ragTopK: number
-}
-
 interface ResolvedRagConfig {
-  agentId: string
   embeddingModel: string
   baseUrl: string
   apiKey: string
   vectorDb: VectorDb
-}
-
-interface ChunkResult {
-  inserted: number
-  total: number
 }
 
 const textFileExtensions = new Set([
@@ -48,23 +34,29 @@ const textFileExtensions = new Set([
 
 const yamlExtensions = new Set([".yaml", ".yml"])
 
-const buildRagConfig = async (
-  ragConfig: AgentRagConfig
-): Promise<ResolvedRagConfig> => {
-  const vectorDb = await findVectorDb(ragConfig.vectorDb)
-  if (!vectorDb) {
+const buildRagConfig = async ({
+  embeddingModel,
+  vectorDb,
+}: {
+  embeddingModel?: string
+  vectorDb?: string
+}): Promise<ResolvedRagConfig> => {
+  if (!embeddingModel || !vectorDb) {
+    throw new HTTPError("RAG config not set", 422)
+  }
+
+  const vectorDbObj = await findVectorDb(vectorDb)
+  if (!vectorDbObj) {
     throw new Error("Vector db not found")
   }
 
-  const { apiKey, baseUrl, modelId } = await getLiteLLMModelConfigOrThrow(
-    ragConfig.embeddingModel
-  )
+  const { apiKey, baseUrl, modelId } =
+    await getLiteLLMModelConfigOrThrow(embeddingModel)
   return {
-    agentId: ragConfig.agentId,
     embeddingModel: modelId,
     baseUrl,
     apiKey,
-    vectorDb,
+    vectorDb: vectorDbObj,
   }
 }
 
@@ -275,40 +267,25 @@ const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
   return buffer.toString("utf-8")
 }
 
-export const getAgentRagConfig = async (
-  agent: Agent
-): Promise<AgentRagConfig> => {
-  if (
-    !agent._id ||
-    !agent.embeddingModel ||
-    !agent.vectorDb ||
-    agent.ragMinDistance == null ||
-    agent.ragTopK == null
-  ) {
-    throw new HTTPError("RAG config not set", 422)
-  }
-
-  return {
-    agentId: agent._id,
-    embeddingModel: agent.embeddingModel,
-    vectorDb: agent.vectorDb,
-    ragMinDistance: agent.ragMinDistance,
-    ragTopK: agent.ragTopK,
-  }
-}
-
 export const ingestAgentFile = async (
   agent: Agent,
   agentFile: AgentFile,
   fileBuffer: Buffer
-): Promise<ChunkResult> => {
-  const ragConfig = await getAgentRagConfig(agent)
-  const config = await buildRagConfig(ragConfig)
+): Promise<{
+  inserted: number
+  total: number
+}> => {
+  const { _id: agentId } = agent
+  if (!agentId) {
+    throw new Error("Agent id not set")
+  }
+
+  const config = await buildRagConfig(agent)
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
 
   const vectorDb = createVectorDb(config.vectorDb, {
-    agentId: config.agentId,
+    agentId,
   })
 
   if (chunks.length === 0) {
@@ -367,7 +344,7 @@ interface RetrievedContextResult {
 }
 
 export const retrieveContextForSources = async (
-  ragConfig: AgentRagConfig,
+  agent: Agent,
   question: string,
   sourceIds: string[]
 ): Promise<RetrievedContextResult> => {
@@ -375,23 +352,31 @@ export const retrieveContextForSources = async (
     return { text: "", chunks: [] }
   }
 
-  const config = await buildRagConfig(ragConfig)
+  const agentId = agent._id
+  if (!agentId) {
+    throw new Error("Agent id not set")
+  }
+
+  if (!agent.ragTopK || !agent.ragMinDistance) {
+    throw new Error("RAG settings not properly configured")
+  }
+
+  const config = await buildRagConfig(agent)
   const [queryEmbedding] = await embedChunks(config, [question], 1)
 
   const vectorDb = createVectorDb(config.vectorDb, {
-    agentId: config.agentId,
+    agentId,
   })
   const rows = await vectorDb.queryNearest(
     queryEmbedding,
     sourceIds,
-    ragConfig.ragTopK
+    agent.ragTopK
   )
   if (rows.length === 0) {
     return { text: "", chunks: [] }
   }
 
-  const maxDistance =
-    ragConfig.ragMinDistance === 0 ? 1 : 1 - ragConfig.ragMinDistance
+  const maxDistance = agent.ragMinDistance === 0 ? 1 : 1 - agent.ragMinDistance
   const filtered = rows.filter(row => row.distance <= maxDistance)
   if (filtered.length === 0) {
     return { text: "", chunks: [] }
