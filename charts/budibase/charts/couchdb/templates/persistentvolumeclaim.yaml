@@ -1,0 +1,12 @@
+{{- if and .Values.persistentVolume.enabled .Values.persistentVolume.existingClaims -}}
+{{- $context := . }}
+{{- range $claim := .Values.persistentVolume.existingClaims }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  {{- include "persistentVolume.metadata" (dict "context" $context "claim" $claim) | nindent 2 }}
+spec:
+  {{- include "persistentVolume.spec" (dict "context" $context "claim" $claim) | nindent 2 }}
+---
+{{- end }}
+{{- end }}
