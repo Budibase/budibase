@@ -8,6 +8,7 @@ import { parse as parseYaml } from "yaml"
 import { getLiteLLMModelConfigOrThrow } from "../configs"
 import { find as findVectorDb } from "../vectorDb/crud"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
+import { agents } from ".."
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
@@ -66,11 +67,6 @@ const buildRagConfig = async (
     vectorDb,
   }
 }
-
-const getVectorDb = (config: ResolvedRagConfig) =>
-  createVectorDb(config.vectorDb, {
-    agentId: config.agentId,
-  })
 
 const hashChunk = (chunk: string) => {
   return crypto.createHash("sha256").update(chunk).digest("hex")
@@ -311,8 +307,11 @@ export const ingestAgentFile = async (
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
 
+  const vectorDb = createVectorDb(config.vectorDb, {
+    agentId: config.agentId,
+  })
+
   if (chunks.length === 0) {
-    const vectorDb = getVectorDb(config)
     // This will ensure any existing chunks for the source are removed
     await vectorDb.upsertSourceChunks(agentFile.ragSourceId, [])
     return { inserted: 0, total: 0 }
@@ -323,7 +322,6 @@ export const ingestAgentFile = async (
     throw new Error("Embedding response size mismatch")
   }
 
-  const vectorDb = getVectorDb(config)
   const payloads: ChunkInput[] = chunks.map((chunk, index) => ({
     hash: hashChunk(chunk),
     text: chunk,
@@ -334,14 +332,26 @@ export const ingestAgentFile = async (
 }
 
 export const deleteAgentFileChunks = async (
-  ragConfig: AgentRagConfig,
+  agentId: string,
   sourceIds: string[]
 ) => {
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
-  const config = await buildRagConfig(ragConfig)
-  const vectorDb = getVectorDb(config)
+
+  const agent = await agents.getOrThrow(agentId)
+  if (!agent.vectorDb) {
+    throw new Error("Agent does not have a vectordb configured")
+  }
+
+  const vectorDbDoc = await findVectorDb(agent.vectorDb)
+  if (!vectorDbDoc) {
+    throw new Error(`Vector db ${agent.vectorDb} not found`)
+  }
+
+  const vectorDb = createVectorDb(vectorDbDoc, {
+    agentId: agentId,
+  })
   await vectorDb.deleteBySourceIds(sourceIds)
 }
 
@@ -368,7 +378,9 @@ export const retrieveContextForSources = async (
   const config = await buildRagConfig(ragConfig)
   const [queryEmbedding] = await embedChunks(config, [question], 1)
 
-  const vectorDb = getVectorDb(config)
+  const vectorDb = createVectorDb(config.vectorDb, {
+    agentId: config.agentId,
+  })
   const rows = await vectorDb.queryNearest(
     queryEmbedding,
     sourceIds,
