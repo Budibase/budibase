@@ -174,7 +174,7 @@ export function authenticated(
           authenticated = true
         } catch (err: any) {
           authenticated = false
-          console.error(`Auth Error: ${err.message}`)
+          console.warn(`Auth Error: ${err.message}`)
           // remove the cookie as the user does not exist anymore
           clearCookie(ctx, Cookie.Auth)
         }
@@ -238,7 +238,7 @@ export function authenticated(
         return next()
       }
     } catch (err: any) {
-      console.error(`Auth Error: ${err.message}`)
+      console.warn(`Auth Error: ${err.message}`)
       // invalid token, clear the cookie
       if (err?.name === "JsonWebTokenError") {
         clearCookie(ctx, Cookie.Auth)
