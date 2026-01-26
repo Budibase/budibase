@@ -116,7 +116,7 @@ export async function run({
           instructions: systemPrompt || undefined,
           tools,
           stopWhen: stepCountIs(30),
-          providerOptions: ai.getLiteLLMProviderOptions(),
+          providerOptions: ai.getLiteLLMProviderOptions(modelId),
           output: outputOption,
         })
 
