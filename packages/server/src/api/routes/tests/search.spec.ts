@@ -2798,6 +2798,27 @@ if (descriptions.length) {
                   }).toContainExactly([{ name: "baz", productCat: undefined }])
                 })
 
+                it("should include rows with no relationships when filtering empty", async () => {
+                  await expectQuery({
+                    empty: { ["productCat.name"]: null },
+                  }).toContainExactly([{ name: "baz", productCat: undefined }])
+                })
+
+                it("should exclude rows with no relationships when filtering notEmpty", async () => {
+                  await expectQuery({
+                    notEmpty: { ["productCat.name"]: null },
+                  }).toContainExactly([
+                    {
+                      name: "foo",
+                      productCat: [{ _id: productCatRows[0]._id }],
+                    },
+                    {
+                      name: "bar",
+                      productCat: [{ _id: productCatRows[1]._id }],
+                    },
+                  ])
+                })
+
                 describe("logical filters", () => {
                   const logicalOperators = [
                     LogicalOperator.AND,
