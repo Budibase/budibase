@@ -5,12 +5,7 @@ import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
-  const originalModule = jest.requireActual(
-    "../../../../sdk/workspace/ai/rag/files"
-  )
   return {
-    __esModule: true,
-    ...originalModule,
     ingestAgentFile: jest.fn(),
     deleteAgentFileChunks: jest.fn(),
   }
@@ -148,12 +143,6 @@ describe("agent files", () => {
 
     const { files } = await config.api.agentFiles.fetch(agent._id!)
     expect(files).toHaveLength(0)
-    expect(deleteSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        embeddingModel: expect.any(String),
-        vectorDb: expect.any(String),
-      }),
-      [upload.file.ragSourceId]
-    )
+    expect(deleteSpy).toHaveBeenCalledWith(agent._id, [upload.file.ragSourceId])
   })
 })
