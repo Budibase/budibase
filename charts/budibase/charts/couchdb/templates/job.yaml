@@ -1,0 +1,56 @@
+{{- if .Values.autoSetup -}}
+{{- if and .Values.autoSetup.enabled .Values.service.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-post-install"
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+  annotations:
+    "helm.sh/hook": post-install
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}-post-install"
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    spec:
+      restartPolicy: OnFailure
+      {{- if .Values.podSecurityContext }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: cluster-setup
+          image: {{ .Values.autoSetup.image.repository }}:{{ .Values.autoSetup.image.tag }}
+          imagePullPolicy: {{ .Values.autoSetup.image.pullPolicy }}
+          command:
+            - 'sh'
+            - '-c'
+            - 'curl -s http://$COUCHDB_ADDRESS/_cluster_setup -X POST -H "Content-Type: application/json" -d "{\"action\": \"finish_cluster\"}" -u $COUCHDB_ADMIN:$COUCHDB_PASS && export IFS=","; for db_name in $DEFAULT_DBS; do curl -X PUT http://$COUCHDB_ADDRESS/$db_name -u $COUCHDB_ADMIN:$COUCHDB_PASS; done'
+          env:
+            - name: DEFAULT_DBS
+              value: {{ join "," .Values.autoSetup.defaultDatabases }}
+            - name: COUCHDB_ADDRESS
+              value: "{{ template "couchdb.svcname" . }}.{{ .Release.Namespace }}.svc.{{ default "cluster.local" .Values.dns.clusterDomainSuffix }}:{{ .Values.service.externalPort}}"
+            - name: COUCHDB_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "couchdb.fullname" . }}
+                  key: adminUsername
+            - name: COUCHDB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "couchdb.fullname" . }}
+                  key: adminPassword
+          {{- if .Values.containerSecurityContext }}
+          securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 12 }}
+          {{- end }}
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 600
+{{- end -}}
+{{- end -}}

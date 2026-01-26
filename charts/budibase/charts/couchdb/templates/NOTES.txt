@@ -1,0 +1,32 @@
+Apache CouchDB is starting. Check the status of the Pods using:
+
+  kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ template "couchdb.name" . }},release={{ .Release.Name }}"
+
+Skip this step if autoSetup is enabled - Once all of the Pods are fully Ready, execute the following command to create
+some required system databases:
+
+  kubectl exec --namespace {{ .Release.Namespace }} {{ if not .Values.allowAdminParty }}-it {{ end }}{{ template "couchdb.fullname" . }}-0 -c couchdb -- \
+    curl -s \
+    http://127.0.0.1:5984/_cluster_setup \
+    -X POST \
+    -H "Content-Type: application/json" \
+{{- if .Values.allowAdminParty }}
+    -d '{"action": "finish_cluster"}'
+{{- else }}
+    -d '{"action": "finish_cluster"}' \
+    -u <adminUsername>
+{{- end }}
+
+Then it's time to relax.
+
+{{- $erlangCookie := .Values.erlangFlags.setcookie }}
+{{- if (empty $erlangCookie) }}
+
+NOTE: You are using an auto-generated value for the Erlang Cookie
+  - We recommend making this value persistent by setting it in: `erlangFlags.setcookie`
+  - Changing this value can cause problems for the Couch DB installation (particularly upgrades / config changes)
+  - You can get the current value with:
+```
+kubectl -n {{ $.Release.Namespace }} get secret {{ include "couchdb.fullname" . }} --template='{{print "{{" }}index .data "erlangCookie" | base64decode{{ print "}}" }}'
+```
+{{- end }}

@@ -60,6 +60,7 @@ import MicrosoftSharepointLogo from "assets/rest-template-icons/microsoft-sharep
 import MicrosoftTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
 import NanonetsLogo from "assets/rest-template-icons/nanonets.svg"
 import NotionLogo from "assets/rest-template-icons/notion.svg"
+import OpenRouterLogo from "assets/rest-template-icons/openrouter.svg"
 import OysterLogo from "assets/rest-template-icons/oyster.svg"
 import PeachPaymentsLogo from "assets/rest-template-icons/peach-payments.svg"
 import PinpointLogo from "assets/rest-template-icons/pinpoint.svg"
@@ -2635,6 +2636,20 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 20,
       icon: NotionLogo,
+    },
+    {
+      id: "openrouter",
+      name: "OpenRouter",
+      description: "OpenAI-compatible API with additional OpenRouter features",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://openrouter.ai/openapi.yaml",
+        },
+      ],
+      operationsCount: 57,
+      icon: OpenRouterLogo,
+      verified: true,
     },
     {
       id: "oyster-hr",

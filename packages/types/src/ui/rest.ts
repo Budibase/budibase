@@ -296,6 +296,7 @@ export type RestTemplateName =
   | "Microsoft Teams"
   | "Nanonets"
   | "Notion"
+  | "OpenRouter"
   | "Oyster HR"
   | "Peach Payments"
   | "Pinpoint"
