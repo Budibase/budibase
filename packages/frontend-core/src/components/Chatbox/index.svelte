@@ -352,9 +352,7 @@
         </div>
       {:else if message.role === "assistant"}
         <div class="message assistant">
-          <svelte:fragment>
-            {@const groupedParts = groupConsecutiveToolParts(message.parts)}
-            {#each groupedParts as group}
+          {#each groupConsecutiveToolParts(message.parts) as group}
             {#if group.type === "text"}
               <MarkdownViewer value={group.part.text} />
             {:else if group.type === "reasoning"}
@@ -469,7 +467,6 @@
               </ul>
             </div>
           {/if}
-          </svelte:fragment>
         </div>
       {/if}
     {/each}
