@@ -1,8 +1,3 @@
-export interface VectorDbRuntimeOptions {
-  embeddingDimensions: number
-  agentId: string
-}
-
 interface BaseVectorDbConfig {
   provider: string
 }
@@ -10,7 +5,6 @@ interface BaseVectorDbConfig {
 export interface PgVectorDbConfig extends BaseVectorDbConfig {
   provider: "pgvector"
   databaseUrl: string
-  embeddingDimensions: number
   tableName: string
 }
 

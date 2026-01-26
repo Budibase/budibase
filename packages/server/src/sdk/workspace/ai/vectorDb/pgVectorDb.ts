@@ -6,7 +6,6 @@ import type {
   PgVectorDbConfig,
   QueryResultRow,
   VectorDb,
-  VectorDbRuntimeOptions,
 } from "./types"
 import { context } from "@budibase/backend-core"
 
@@ -42,12 +41,11 @@ const buildPgConnectionString = (config: VectorDbDoc) => {
 
 export const buildPgVectorDbConfig = (
   config: VectorDbDoc,
-  options: VectorDbRuntimeOptions
+  options: { agentId: string }
 ): PgVectorDbConfig => {
   return {
     provider: "pgvector",
     databaseUrl: buildPgConnectionString(config),
-    embeddingDimensions: options.embeddingDimensions,
     tableName: buildAgentTableName(options.agentId),
   }
 }
@@ -74,7 +72,7 @@ export class PgVectorDb implements VectorDb {
     }
   }
 
-  private async ensureSchema(client: Client) {
+  private async ensureSchema(client: Client, embeddingDimensions: number) {
     await client.query("CREATE EXTENSION IF NOT EXISTS vector")
     await client.query(`
       CREATE TABLE IF NOT EXISTS ${this.tableName} (
@@ -82,7 +80,7 @@ export class PgVectorDb implements VectorDb {
         source TEXT NOT NULL,
         chunk_hash TEXT UNIQUE NOT NULL,
         chunk_text TEXT NOT NULL,
-        embedding vector(${Number(this.config.embeddingDimensions)}) NOT NULL,
+        embedding vector(${embeddingDimensions}) NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `)
@@ -101,8 +99,12 @@ export class PgVectorDb implements VectorDb {
     sourceId: string,
     chunks: ChunkInput[]
   ): Promise<{ inserted: number; total: number }> {
+    if (!chunks.length) {
+      return { inserted: 0, total: 0 }
+    }
+    const embeddingDimensions = chunks[0].embedding.length
     return await this.withClient(async client => {
-      await this.ensureSchema(client)
+      await this.ensureSchema(client, embeddingDimensions)
       await client.query("BEGIN")
       try {
         if (chunks.length === 0) {
@@ -160,7 +162,6 @@ export class PgVectorDb implements VectorDb {
       return
     }
     await this.withClient(async client => {
-      await this.ensureSchema(client)
       await client.query(
         `DELETE FROM ${this.tableName} WHERE source = ANY($1::text[])`,
         [sourceIds]
@@ -178,7 +179,6 @@ export class PgVectorDb implements VectorDb {
     }
 
     return await this.withClient(async client => {
-      await this.ensureSchema(client)
       const { rows } = await client.query(
         `
           SELECT source, chunk_text, chunk_hash, (embedding <=> $1::vector) AS distance

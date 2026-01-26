@@ -98,7 +98,7 @@ export async function remove(agentId: string) {
 
   await db.remove(agent)
 
-  if (agent.embeddingModel && agent.vectorDb) {
+  if (agent.vectorDb) {
     const ragConfig = await getAgentRagConfig(agent)
 
     const files = await listAgentFiles(agentId)

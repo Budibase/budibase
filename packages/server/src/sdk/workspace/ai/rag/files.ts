@@ -67,13 +67,10 @@ const buildRagConfig = async (
   }
 }
 
-const getVectorDb = (config: ResolvedRagConfig, embeddingDimensions: number) =>
+const getVectorDb = (config: ResolvedRagConfig) =>
   createVectorDb(config.vectorDb, {
-    embeddingDimensions,
     agentId: config.agentId,
   })
-
-const embeddingDimensionsCache = new Map<string, number>()
 
 const hashChunk = (chunk: string) => {
   return crypto.createHash("sha256").update(chunk).digest("hex")
@@ -253,20 +250,6 @@ const embedChunks = async (
   return embeddings
 }
 
-const getEmbeddingDimensions = async (config: ResolvedRagConfig) => {
-  const cached = embeddingDimensionsCache.get(config.embeddingModel)
-  if (cached) {
-    return cached
-  }
-  const [embedding] = await embedChunks(config, ["dimension-check"], 1)
-  const dimensions = embedding?.length || 0
-  if (!dimensions) {
-    throw new Error("Failed to resolve embedding dimensions")
-  }
-  embeddingDimensionsCache.set(config.embeddingModel, dimensions)
-  return dimensions
-}
-
 const isPdfFile = (file?: AgentFile) => {
   if (!file) {
     return false
@@ -329,8 +312,7 @@ export const ingestAgentFile = async (
   const chunks = createChunksFromContent(content, agentFile.filename)
 
   if (chunks.length === 0) {
-    const embeddingDimensions = await getEmbeddingDimensions(config)
-    const vectorDb = getVectorDb(config, embeddingDimensions)
+    const vectorDb = getVectorDb(config)
     // This will ensure any existing chunks for the source are removed
     await vectorDb.upsertSourceChunks(agentFile.ragSourceId, [])
     return { inserted: 0, total: 0 }
@@ -340,14 +322,8 @@ export const ingestAgentFile = async (
   if (embeddings.length !== chunks.length) {
     throw new Error("Embedding response size mismatch")
   }
-  const embeddingDimensions = embeddings[0]?.length || 0
-  if (!embeddingDimensions) {
-    throw new Error("Embedding response missing dimensions")
-  }
 
-  embeddingDimensionsCache.set(config.embeddingModel, embeddingDimensions)
-  const vectorDb = getVectorDb(config, embeddingDimensions)
-
+  const vectorDb = getVectorDb(config)
   const payloads: ChunkInput[] = chunks.map((chunk, index) => ({
     hash: hashChunk(chunk),
     text: chunk,
@@ -365,8 +341,7 @@ export const deleteAgentFileChunks = async (
     return
   }
   const config = await buildRagConfig(ragConfig)
-  const embeddingDimensions = await getEmbeddingDimensions(config)
-  const vectorDb = getVectorDb(config, embeddingDimensions)
+  const vectorDb = getVectorDb(config)
   await vectorDb.deleteBySourceIds(sourceIds)
 }
 
@@ -392,14 +367,8 @@ export const retrieveContextForSources = async (
 
   const config = await buildRagConfig(ragConfig)
   const [queryEmbedding] = await embedChunks(config, [question], 1)
-  const embeddingDimensions = queryEmbedding?.length || 0
-  if (!embeddingDimensions) {
-    throw new Error("Embedding response missing dimensions")
-  }
 
-  embeddingDimensionsCache.set(config.embeddingModel, embeddingDimensions)
-
-  const vectorDb = getVectorDb(config, embeddingDimensions)
+  const vectorDb = getVectorDb(config)
   const rows = await vectorDb.queryNearest(
     queryEmbedding,
     sourceIds,

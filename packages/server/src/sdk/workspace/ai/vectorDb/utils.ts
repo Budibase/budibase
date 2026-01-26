@@ -1,13 +1,12 @@
 import type { VectorDb as VectorDbDoc } from "@budibase/types"
 import { buildPgVectorDbConfig, PgVectorDb } from "./pgVectorDb"
-import type {
-  VectorDb as VectorDbClient,
-  VectorDbRuntimeOptions,
-} from "./types"
+import type { VectorDb as VectorDbClient } from "./types"
 
 export const createVectorDb = (
   config: VectorDbDoc,
-  options: VectorDbRuntimeOptions
+  options: {
+    agentId: string
+  }
 ): VectorDbClient => {
   switch (config.provider) {
     case "pgvector":
