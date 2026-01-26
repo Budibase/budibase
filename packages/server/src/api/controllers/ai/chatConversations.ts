@@ -291,7 +291,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       system,
       tools,
       stopWhen: stepCountIs(30),
-      providerOptions: ai.getLiteLLMProviderOptions(modelId),
+      providerOptions: ai.getLiteLLMProviderOptions(),
       onError({ error }) {
         console.error("Agent streaming error", {
           agentId,
