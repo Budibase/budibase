@@ -102,7 +102,7 @@ export async function remove(agentId: string) {
     const files = await listAgentFiles(agentId)
     if (files.length > 0) {
       await deleteAgentFileChunks(
-        agentId,
+        agent,
         files.map(file => file.ragSourceId).filter(Boolean)
       )
 

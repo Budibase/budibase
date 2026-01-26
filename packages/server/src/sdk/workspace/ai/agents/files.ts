@@ -83,7 +83,7 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
 }
 
 export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
-  await deleteAgentFileChunks(agent._id!, [file.ragSourceId])
+  await deleteAgentFileChunks(agent, [file.ragSourceId])
   const db = context.getWorkspaceDB()
   await db.remove(file)
 }

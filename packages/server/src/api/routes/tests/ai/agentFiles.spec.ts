@@ -143,6 +143,6 @@ describe("agent files", () => {
 
     const { files } = await config.api.agentFiles.fetch(agent._id!)
     expect(files).toHaveLength(0)
-    expect(deleteSpy).toHaveBeenCalledWith(agent._id, [upload.file.ragSourceId])
+    expect(deleteSpy).toHaveBeenCalledWith(agent, [upload.file.ragSourceId])
   })
 })

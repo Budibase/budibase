@@ -8,7 +8,6 @@ import { parse as parseYaml } from "yaml"
 import { getLiteLLMModelConfigOrThrow } from "../configs"
 import { find as findVectorDb } from "../vectorDb/crud"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
-import { agents } from ".."
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
@@ -309,14 +308,13 @@ export const ingestAgentFile = async (
 }
 
 export const deleteAgentFileChunks = async (
-  agentId: string,
+  agent: Agent,
   sourceIds: string[]
 ) => {
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
 
-  const agent = await agents.getOrThrow(agentId)
   if (!agent.vectorDb) {
     throw new Error("Agent does not have a vectordb configured")
   }
@@ -327,7 +325,7 @@ export const deleteAgentFileChunks = async (
   }
 
   const vectorDb = createVectorDb(vectorDbDoc, {
-    agentId: agentId,
+    agentId: agent._id!,
   })
   await vectorDb.deleteBySourceIds(sourceIds)
 }
