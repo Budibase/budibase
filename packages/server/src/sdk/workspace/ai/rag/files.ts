@@ -290,7 +290,7 @@ export const ingestAgentFile = async (
 
   if (chunks.length === 0) {
     // This will ensure any existing chunks for the source are removed
-    await vectorDb.upsertSourceChunks(agentFile.ragSourceId, [])
+    await vectorDb.deleteBySourceIds([agentFile.ragSourceId])
     return { inserted: 0, total: 0 }
   }
 
@@ -299,7 +299,7 @@ export const ingestAgentFile = async (
     throw new Error("Embedding response size mismatch")
   }
 
-  const payloads: ChunkInput[] = chunks.map((chunk, index) => ({
+  const payloads = chunks.map<ChunkInput>((chunk, index) => ({
     hash: hashChunk(chunk),
     text: chunk,
     embedding: embeddings[index],

@@ -99,11 +99,13 @@ export class PgVectorDb implements VectorDb {
     sourceId: string,
     chunks: ChunkInput[]
   ): Promise<{ inserted: number; total: number }> {
+    if (!chunks.length) {
+      throw new Error("Chunks cannot be empty")
+    }
+
     return await this.withClient(async client => {
-      if (chunks.length) {
-        const embeddingDimensions = chunks[0].embedding.length
-        await this.ensureSchema(client, embeddingDimensions)
-      }
+      const embeddingDimensions = chunks[0].embedding.length
+      await this.ensureSchema(client, embeddingDimensions)
       await client.query("BEGIN")
       try {
         const hashes = chunks.map(chunk => chunk.hash)
