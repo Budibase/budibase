@@ -145,8 +145,8 @@ function isJsonColumn(
 const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
   [BasicOperator.EQUAL]: false,
   [BasicOperator.NOT_EQUAL]: true,
-  [BasicOperator.EMPTY]: false,
-  [BasicOperator.NOT_EMPTY]: true,
+  [BasicOperator.EMPTY]: true,
+  [BasicOperator.NOT_EMPTY]: false,
   [BasicOperator.FUZZY]: false,
   [BasicOperator.STRING]: false,
   [RangeOperator.RANGE]: false,
