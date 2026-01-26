@@ -18,11 +18,14 @@
   import FilesPanel from "./FilesPanel.svelte"
   const AUTO_SAVE_DEBOUNCE_MS = 800
 
+  const DEFAULT_MIN_DISTANCE = 0.7
+  const DEFAULT_TOP_K = 4
+
   let draftAgentId: string | undefined = $state()
   let embeddingModel = $state<string | undefined>()
   let vectorDb = $state<string | undefined>()
-  let ragMinDistance = $state(0.7)
-  let ragTopK = $state(4)
+  let ragMinDistance = $state(DEFAULT_MIN_DISTANCE)
+  let ragTopK = $state(DEFAULT_TOP_K)
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
   let currentAgent: Agent | undefined = $derived($selectedAgent)
@@ -49,8 +52,8 @@
     if (agent && agent._id !== draftAgentId) {
       embeddingModel = agent.embeddingModel
       vectorDb = agent.vectorDb
-      ragMinDistance = agent.ragMinDistance ?? 0.7
-      ragTopK = agent.ragTopK ?? 4
+      ragMinDistance = agent.ragMinDistance ?? DEFAULT_MIN_DISTANCE
+      ragTopK = agent.ragTopK ?? DEFAULT_TOP_K
       draftAgentId = agent._id
     }
   })
