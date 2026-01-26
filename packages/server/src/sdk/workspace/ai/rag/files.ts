@@ -23,10 +23,10 @@ interface AgentRagConfig {
 
 interface ResolvedRagConfig {
   agentId: string
-  databaseUrl: string
   embeddingModel: string
   baseUrl: string
   apiKey: string
+  vectorDb: VectorDb
 }
 
 interface ChunkResult {
@@ -50,66 +50,28 @@ const yamlExtensions = new Set([".yaml", ".yml"])
 const buildRagConfig = async (
   ragConfig: AgentRagConfig
 ): Promise<ResolvedRagConfig> => {
-  const databaseUrl = await resolveVectorDatabaseConfig(ragConfig.vectorDb)
+  const vectorDb = await findVectorDb(ragConfig.vectorDb)
+  if (!vectorDb) {
+    throw new Error("Vector db not found")
+  }
 
   const { apiKey, baseUrl, modelId } = await getLiteLLMModelConfigOrThrow(
     ragConfig.embeddingModel
   )
   return {
     agentId: ragConfig.agentId,
-    databaseUrl,
     embeddingModel: modelId,
     baseUrl,
     apiKey,
+    vectorDb,
   }
-}
-
-const resolveVectorDatabaseConfig = async (
-  vectorDbId: string
-): Promise<string> => {
-  const vectorDb = await findVectorDb(vectorDbId)
-  if (!vectorDb) {
-    throw new Error("Vector db not found")
-  }
-
-  // TODO: support other vector db types
-  const connectionString = buildPgConnectionString(vectorDb)
-  return connectionString
-}
-
-const TABLE_PREFIX = "bb_agent_chunks_"
-const TABLE_HASH_LENGTH = 8
-
-const buildAgentTableName = (agentId: string) => {
-  const normalized = agentId
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-  const hash = crypto
-    .createHash("sha256")
-    .update(agentId)
-    .digest("hex")
-    .slice(0, TABLE_HASH_LENGTH)
-  const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH
-  const base = (normalized || "agent").slice(0, Math.max(0, maxBaseLength))
-  return `${TABLE_PREFIX}${base}_${hash}`
 }
 
 const getVectorDb = (config: ResolvedRagConfig, embeddingDimensions: number) =>
-  createVectorDb({
-    databaseUrl: config.databaseUrl,
+  createVectorDb(config.vectorDb, {
     embeddingDimensions,
-    tableName: buildAgentTableName(config.agentId),
+    agentId: config.agentId,
   })
-
-const buildPgConnectionString = (config: VectorDb) => {
-  const userPart = config.user ? encodeURIComponent(config.user) : ""
-  const passwordPart = config.password
-    ? `:${encodeURIComponent(config.password)}`
-    : ""
-  const auth = userPart || passwordPart ? `${userPart}${passwordPart}@` : ""
-  return `postgresql://${auth}${config.host}:${config.port}/${config.database}`
-}
 
 const embeddingDimensionsCache = new Map<string, number>()
 

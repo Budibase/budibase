@@ -1,18 +1,60 @@
+import type { VectorDb as VectorDbDoc } from "@budibase/types"
+import * as crypto from "crypto"
 import { Client } from "pg"
 import type {
   ChunkInput,
+  PgVectorDbConfig,
   QueryResultRow,
   VectorDb,
-  VectorDbConfig,
+  VectorDbRuntimeOptions,
 } from "./types"
 
 const vectorLiteral = (values: number[]) =>
   `[${values.map(value => Number(value) || 0).join(",")}]`
 
+const TABLE_PREFIX = "bb_agent_chunks_"
+const TABLE_HASH_LENGTH = 10
+
+const buildAgentTableName = (agentId: string) => {
+  const normalized = agentId
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+  const hash = crypto
+    .createHash("sha256")
+    .update(agentId)
+    .digest("hex")
+    .slice(0, TABLE_HASH_LENGTH)
+  const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH
+  const base = (normalized || "agent").slice(0, Math.max(0, maxBaseLength))
+  return `${TABLE_PREFIX}${base}_${hash}`
+}
+
+const buildPgConnectionString = (config: VectorDbDoc) => {
+  const userPart = config.user ? encodeURIComponent(config.user) : ""
+  const passwordPart = config.password
+    ? `:${encodeURIComponent(config.password)}`
+    : ""
+  const auth = userPart || passwordPart ? `${userPart}${passwordPart}@` : ""
+  return `postgresql://${auth}${config.host}:${config.port}/${config.database}`
+}
+
+export const buildPgVectorDbConfig = (
+  config: VectorDbDoc,
+  options: VectorDbRuntimeOptions
+): PgVectorDbConfig => {
+  return {
+    provider: "pgvector",
+    databaseUrl: buildPgConnectionString(config),
+    embeddingDimensions: options.embeddingDimensions,
+    tableName: buildAgentTableName(options.agentId),
+  }
+}
+
 export class PgVectorDb implements VectorDb {
   private readonly tableName: string
 
-  constructor(private readonly config: VectorDbConfig) {
+  constructor(private readonly config: PgVectorDbConfig) {
     if (!/^[a-z0-9_]+$/.test(config.tableName)) {
       throw new Error("Invalid vector table name")
     }
@@ -63,9 +105,10 @@ export class PgVectorDb implements VectorDb {
       await client.query("BEGIN")
       try {
         if (chunks.length === 0) {
-          await client.query(`DELETE FROM ${this.tableName} WHERE source = $1`, [
-            sourceId,
-          ])
+          await client.query(
+            `DELETE FROM ${this.tableName} WHERE source = $1`,
+            [sourceId]
+          )
           await client.query("COMMIT")
           return { inserted: 0, total: 0 }
         }
