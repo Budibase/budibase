@@ -1,6 +1,6 @@
 <script lang="ts">
   import {
-    Heading,
+    Body,
     Input,
     notifications,
     Select,
@@ -574,30 +574,6 @@
 
 <div class="form-row">
   <div class="form-field">
-    <Input
-      label="Name"
-      labelPosition="left"
-      bind:value={draft.name}
-      placeholder="Give your agent a name"
-      on:blur={() => scheduleSave(true)}
-    />
-  </div>
-  <div class="form-icon">
-    <EditableIcon
-      name={draft.icon || ""}
-      color={draft.iconColor || ""}
-      size="L"
-      on:change={e => {
-        draft.icon = e.detail.name
-        draft.iconColor = e.detail.color
-        scheduleSave(true)
-      }}
-    />
-  </div>
-</div>
-
-<div class="form-row">
-  <div class="form-field">
     <Select
       label="Model"
       labelPosition="left"
@@ -619,7 +595,7 @@
 </div>
 
 <div class="section">
-  <Heading size="XS">Instructions</Heading>
+  <Body size="S" color="var(--spectrum-global-color-gray-900)">Instructions</Body>
   <div class="prompt-editor-wrapper">
     <div class="prompt-editor">
       {#if toolsLoaded}
@@ -647,22 +623,13 @@
       <span class="bindings-bar-text"
         >Use <code>{`{{`}</code> to add to tools & knowledge sources</span
       >
-      <span class="bindings-pill">
-        <Icon name="brackets-curly" size="S" color="#BDB0F5" weight="bold" />
-        <span class="bindings-pill-text">
-          {includedToolsWithDetails.length} Binding{includedToolsWithDetails.length !==
-          1
-            ? "s"
-            : ""}
-        </span>
-      </span>
     </div>
   </div>
 </div>
 
 <div class="section tools-section">
   <div class="title-tools-bar">
-    <Heading size="XS">Tools this agent can use:</Heading>
+    <Body size="S" color="var(--spectrum-global-color-gray-900)">Tools this agent can use:</Body>
     <div class="tools-popover-container"></div>
     <ToolsDropdown
       {filteredTools}
@@ -759,7 +726,7 @@
 
   .prompt-editor {
     flex: 1;
-    min-height: 0;
+    min-height: 400px;
     overflow-y: auto;
   }
 
@@ -784,6 +751,9 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
+    font-size: 13px;
+    color: var(--spectrum-global-color-gray-700);
+    line-height: 1.4;
   }
 
   .bindings-bar code {
@@ -792,24 +762,6 @@
     border-radius: 4px;
     font-family: monospace;
     font-size: 11px;
-  }
-
-  .bindings-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: 6px 10px;
-    border-radius: 10px;
-    background: var(--background-alt);
-    border: 1px solid var(--spectrum-global-color-gray-400);
-    color: var(--spectrum-global-color-gray-50);
-    font-weight: 500;
-    line-height: 1;
-  }
-
-  .bindings-pill-text {
-    color: var(--spectrum-global-color-gray-900);
-    font-size: 13px;
   }
 
   .tools-list {

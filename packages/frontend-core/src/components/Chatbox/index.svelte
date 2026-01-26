@@ -324,6 +324,7 @@
               <div class="tool-part" class:tool-running={isRunning}>
                 <button
                   class="tool-header"
+                  class:tool-header-expanded={expandedTools[toolId]}
                   type="button"
                   onclick={() => toggleTool(toolId)}
                 >
@@ -331,30 +332,40 @@
                     class="tool-chevron"
                     class:expanded={expandedTools[toolId]}
                   >
-                    <Icon name="caret-right" size="XS" />
-                  </span>
-                  <div class="tool-name-wrapper">
-                    <span class="tool-icon">
+                    <span class="tool-chevron-icon tool-chevron-icon-default">
                       <Icon
-                        name="nut"
+                        name="globe-simple"
                         size="M"
-                        weight="fill"
+                        weight="regular"
                         color="var(--spectrum-global-color-gray-600)"
                       />
                     </span>
+                    <span class="tool-chevron-icon tool-chevron-icon-expanded">
+                      <Icon
+                        name="minus"
+                        size="M"
+                        weight="regular"
+                        color="var(--spectrum-global-color-gray-600)"
+                      />
+                    </span>
+                  </span>
+                  <span class="tool-call-label">Tool call</span>
+                  <div class="tool-name-wrapper">
                     <span class="tool-name">{getToolName(part)}</span>
                   </div>
-                  <span class="tool-status">
-                    {#if isRunning}
-                      <ProgressCircle size="S" />
-                    {:else if isError}
-                      <Icon
-                        name="x"
-                        size="S"
-                        color="var(--spectrum-global-color-red-600)"
-                      />
-                    {/if}
-                  </span>
+                  {#if isRunning || isError}
+                    <span class="tool-status">
+                      {#if isRunning}
+                        <ProgressCircle size="S" />
+                      {:else if isError}
+                        <Icon
+                          name="x"
+                          size="S"
+                          color="var(--spectrum-global-color-red-600)"
+                        />
+                      {/if}
+                    </span>
+                  {/if}
                 </button>
                 {#if expandedTools[toolId]}
                   <div class="tool-details">
@@ -565,6 +576,7 @@
 
   /* Tool parts styling */
   .tool-part {
+    position: relative;
     margin-top: var(--spacing-l);
     margin-bottom: var(--spacing-xl);
   }
@@ -572,18 +584,19 @@
   .tool-header {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: 8px;
     padding: 0;
     margin: 0;
     background: none;
     border: none;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
     text-align: left;
   }
 
   .tool-header:hover {
-    opacity: 0.8;
+    background-color: var(--spectrum-global-color-gray-100);
   }
 
   .tool-chevron {
@@ -594,27 +607,51 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
+  .tool-chevron :global(i) {
+    --size: 16px !important;
+  }
+
+  .tool-chevron-icon-expanded :global(i) {
+    --size: 16px !important;
+  }
+
+  .tool-chevron-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tool-chevron-icon-expanded {
+    display: none;
+  }
+
+  .tool-header-expanded .tool-chevron-icon-default {
+    display: none !important;
+  }
+
+  .tool-header-expanded .tool-chevron-icon-expanded {
+    display: flex !important;
+  }
+
   .tool-chevron.expanded {
     transform: rotate(90deg);
   }
 
-  .tool-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--spectrum-global-color-static-seafoam-700);
+  .tool-header-expanded .tool-chevron {
+    transform: none;
   }
 
-  .tool-icon :global(i) {
-    --size: 18px;
+  .tool-call-label {
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .tool-name-wrapper {
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-    padding: 4px;
-    background-color: #215f9e33;
+    padding: 3px 6px;
+    background-color: var(--spectrum-global-color-gray-200);
     border-radius: 4px;
   }
 
@@ -633,10 +670,24 @@
   }
 
   .tool-details {
+    position: absolute;
+    top: 100%;
+    left: 0;
     margin-top: var(--spacing-m);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+    background: var(--background);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
+    padding: var(--spacing-m);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    z-index: 1;
+    overflow-x: hidden;
+    min-width: 0;
   }
 
   .tool-section {
@@ -660,12 +711,14 @@
     padding: var(--spacing-s);
     font-size: 12px;
     font-family: var(--font-mono), monospace;
-    overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-word;
+    overflow-wrap: break-word;
     margin: 0;
     max-height: 200px;
     overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 0;
   }
 
   .tool-error .tool-section-label {
