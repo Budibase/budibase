@@ -124,6 +124,10 @@
 </ActionMenu>
 
 <style>
+  :global([slot="control"] .spectrum-Button.new-styles .spectrum-Button-label) {
+    font-weight: 500;
+  }
+
   .tools-menu-header {
     display: flex;
     padding: var(--spectrum-listitem-padding-y)

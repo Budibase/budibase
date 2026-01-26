@@ -5,6 +5,7 @@
     notifications,
     Select,
     ActionButton,
+    Button,
     Icon,
     ActionMenu,
     MenuItem,
@@ -255,6 +256,18 @@
     if (nextAiConfigId !== lastWebSearchConfigId) {
       lastWebSearchConfigId = nextAiConfigId
       agentsStore.fetchTools(nextAiConfigId)
+    }
+  })
+
+  $effect(() => {
+    if (modelOptions.length > 0 && currentAgent) {
+      // Only auto-select if agent doesn't have an aiconfig set (undefined/null/empty)
+      const agentHasAiconfig = currentAgent.aiconfig != null && currentAgent.aiconfig !== ""
+      const currentValue = draft.aiconfig || ""
+      // Only set default if agent never had a value and current draft is empty
+      if (!agentHasAiconfig && !currentValue) {
+        draft.aiconfig = modelOptions[0].value
+      }
     }
   })
 
@@ -572,30 +585,53 @@
   })
 </script>
 
-<div class="form-row">
-  <div class="form-field">
-    <Select
-      label="Model"
-      labelPosition="left"
-      bind:value={draft.aiconfig}
-      options={modelOptions}
-      placeholder="Select a model"
-      on:change={() => scheduleSave(true)}
-    />
-  </div>
-  <div class="form-icon">
-    <AbsTooltip text="Manage AI configurations">
-      <ActionButton
-        size="M"
-        icon="sliders-horizontal"
+<div class="llm-section-container">
+  <div class="llm-header">
+    <Body size="S" color="var(--spectrum-global-color-gray-900)">AI Model*</Body>
+    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+      Select which provider and model to use for the LLM.{" "}
+      <button
+        class="link-button"
         on:click={() => bb.settings("/ai-config/configs")}
-      />
-    </AbsTooltip>
+      >
+        View AI Connectors.
+      </button>
+    </Body>
+  </div>
+  <div class="form-row">
+    <div class="form-field">
+      {#if modelOptions.length === 0}
+        <Button
+          secondary
+          size="M"
+          icon="sparkle"
+          iconWeight="fill"
+          iconColor="#8777D1"
+          on:click={() => bb.settings("/ai-config/configs")}
+        >
+          Connect AI Model
+        </Button>
+      {:else}
+        <Select
+          bind:value={draft.aiconfig}
+          options={modelOptions}
+          placeholder="Select a model"
+          on:change={() => scheduleSave(true)}
+        />
+      {/if}
+    </div>
   </div>
 </div>
 
 <div class="section">
-  <Body size="S" color="var(--spectrum-global-color-gray-900)">Instructions</Body>
+  <div class="section-header">
+    <Body size="S" color="var(--spectrum-global-color-gray-900)"
+      >Instructions</Body
+    >
+    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+      Set the rules for how the AI responds, uses tools, and structures output.
+    </Body>
+  </div>
   <div class="prompt-editor-wrapper">
     <div class="prompt-editor">
       {#if toolsLoaded}
@@ -629,7 +665,9 @@
 
 <div class="section tools-section">
   <div class="title-tools-bar">
-    <Body size="S" color="var(--spectrum-global-color-gray-900)">Tools this agent can use:</Body>
+    <Body size="S" color="var(--spectrum-global-color-gray-900)"
+      >Tools this agent can use:</Body
+    >
     <div class="tools-popover-container"></div>
     <ToolsDropdown
       {filteredTools}
@@ -718,7 +756,6 @@
   .prompt-editor-wrapper {
     display: flex;
     flex-direction: column;
-    max-height: 500px;
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 8px;
     overflow: hidden;
@@ -726,8 +763,6 @@
 
   .prompt-editor {
     flex: 1;
-    min-height: 400px;
-    overflow-y: auto;
   }
 
   .prompt-editor :global(.cm-editor) {
@@ -768,7 +803,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-    margin-top: var(--spacing-s);
+    margin-top: calc(var(--spacing-s) - 12px);
   }
 
   .tool-card {
@@ -826,5 +861,67 @@
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+
+  .llm-section-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-l);
+    flex-wrap: wrap;
+  }
+
+  .llm-header {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 200px;
+    width: 260px;
+    max-width: 500px;
+    gap: 2px;
+  }
+
+  .llm-section-container .form-row {
+    flex-shrink: 0;
+  }
+
+  .llm-section-container .form-row :global(.spectrum-Picker) {
+    width: 240px;
+  }
+
+  .llm-section-container .form-row :global(.spectrum-Picker-label) {
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .llm-section-container .form-row :global(.spectrum-Button) {
+    gap: calc(var(--spacing-s) - 2px);
+  }
+
+  .link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--spectrum-global-color-gray-800);
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .link-button:hover {
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 500px;
+  }
+
+  .llm-header > :global(.spectrum-Body):first-child,
+  .section-header > :global(.spectrum-Body):first-child,
+  .title-tools-bar > :global(.spectrum-Body) {
+    font-weight: 500;
   }
 </style>

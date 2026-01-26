@@ -247,6 +247,52 @@
       .map(p => p.text)
       .join("") || "[Empty message]"
 
+  const groupConsecutiveToolParts = (
+    parts: UIMessage<AgentMessageMetadata>["parts"]
+  ) => {
+    if (!parts) return []
+    type GroupedPart =
+      | { type: "text"; part: Parameters<typeof isTextUIPart>[0] }
+      | { type: "reasoning"; part: Parameters<typeof isReasoningUIPart>[0] }
+      | {
+          type: "tools"
+          parts: Array<{
+            part: Parameters<typeof isToolUIPart>[0]
+            index: number
+          }>
+        }
+    const grouped: GroupedPart[] = []
+    let currentToolGroup: Array<{
+      part: Parameters<typeof isToolUIPart>[0]
+      index: number
+    }> | null = null
+
+    parts.forEach((part, index) => {
+      if (isToolUIPart(part)) {
+        if (!currentToolGroup) {
+          currentToolGroup = []
+        }
+        currentToolGroup.push({ part, index })
+      } else {
+        if (currentToolGroup) {
+          grouped.push({ type: "tools", parts: currentToolGroup })
+          currentToolGroup = null
+        }
+        if (isTextUIPart(part)) {
+          grouped.push({ type: "text", part })
+        } else if (isReasoningUIPart(part)) {
+          grouped.push({ type: "reasoning", part })
+        }
+      }
+    })
+
+    if (currentToolGroup) {
+      grouped.push({ type: "tools", parts: currentToolGroup })
+    }
+
+    return grouped
+  }
+
   let mounted = $state(false)
 
   $effect(() => {
@@ -306,22 +352,26 @@
         </div>
       {:else if message.role === "assistant"}
         <div class="message assistant">
-          {#each message.parts || [] as part, partIndex (partIndex)}
-            {#if isTextUIPart(part)}
-              <MarkdownViewer value={part.text} />
-            {:else if isReasoningUIPart(part)}
+          <svelte:fragment>
+            {@const groupedParts = groupConsecutiveToolParts(message.parts)}
+            {#each groupedParts as group}
+            {#if group.type === "text"}
+              <MarkdownViewer value={group.part.text} />
+            {:else if group.type === "reasoning"}
               <div class="reasoning-part">
                 <div class="reasoning-label">Reasoning</div>
-                <div class="reasoning-content">{part.text}</div>
+                <div class="reasoning-content">{group.part.text}</div>
               </div>
-            {:else if isToolUIPart(part)}
-              {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
-              {@const isRunning =
-                part.state === "input-streaming" ||
-                part.state === "input-available"}
-              {@const isSuccess = part.state === "output-available"}
-              {@const isError = part.state === "output-error"}
-              <div class="tool-part" class:tool-running={isRunning}>
+            {:else if group.type === "tools"}
+              <div class="tool-part-wrapper">
+                {#each group.parts as { part, index: partIndex }}
+                  {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
+                  {@const isRunning =
+                    part.state === "input-streaming" ||
+                    part.state === "input-available"}
+                  {@const isSuccess = part.state === "output-available"}
+                  {@const isError = part.state === "output-error"}
+                  <div class="tool-part" class:tool-running={isRunning}>
                 <button
                   class="tool-header"
                   class:tool-header-expanded={expandedTools[toolId]}
@@ -393,6 +443,8 @@
                     {/if}
                   </div>
                 {/if}
+                  </div>
+                {/each}
               </div>
             {/if}
           {/each}
@@ -417,6 +469,7 @@
               </ul>
             </div>
           {/if}
+          </svelte:fragment>
         </div>
       {/if}
     {/each}
@@ -464,7 +517,6 @@
     gap: 8px;
     flex: 1 1 auto;
     min-height: 0;
-    max-width: 700px;
     width: 100%;
   }
 
@@ -527,13 +579,13 @@
     background-color: var(--spectrum-global-color-gray-200);
     color: var(--grey-9);
     border-radius: 10px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
+    border: 1px solid var(--spectrum-global-color-gray-300) !important;
     outline: none;
     min-height: 100px;
   }
 
   .input:focus {
-    border-color: #215f9e33;
+    border: 1px solid #215f9e33 !important;
   }
 
   .input::placeholder {
@@ -575,10 +627,16 @@
   }
 
   /* Tool parts styling */
+  .tool-part-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
   .tool-part {
     position: relative;
     margin-top: var(--spacing-l);
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: 0;
   }
 
   .tool-header {

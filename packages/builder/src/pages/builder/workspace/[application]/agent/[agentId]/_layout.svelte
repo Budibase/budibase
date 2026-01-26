@@ -119,7 +119,7 @@
   <div class="config-page">
     <div class=" config-content">
       <div class="config-form">
-        <Layout paddingY="XL" gap="L">
+        <Layout gap="L">
           <slot />
         </Layout>
       </div>
@@ -145,28 +145,48 @@
   .config-page {
     flex: 1 1 auto;
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
+    grid-template-columns: repeat(24, 1fr);
+    grid-template-rows: 1fr;
     height: 0;
     overflow: hidden;
     gap: var(--spacing-l);
   }
 
   .config-content {
-    grid-column: span 7;
+    grid-column: span 13;
     display: flex;
     flex-direction: column;
-    padding: var(--spacing-xl) var(--spacing-l) var(--spacing-xl);
+    padding: var(--spacing-xl) var(--spacing-l) 20px;
     min-width: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .config-content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .config-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .config-content::-webkit-scrollbar-thumb {
+    background: var(--spectrum-global-color-gray-300);
+    border-radius: 3px;
+  }
+
+  .config-content::-webkit-scrollbar-thumb:hover {
+    background: var(--spectrum-global-color-gray-400);
   }
 
   .config-preview {
-    grid-column: span 5;
+    grid-column: span 11;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     min-height: 0;
     overflow: hidden;
-    padding: 12px;
+    padding: var(--spacing-xl) var(--spacing-l) var(--spacing-xl);
     background: var(--background-alt);
     min-width: 0;
   }
@@ -232,6 +252,10 @@
     align-items: center;
     gap: var(--spacing-s);
     margin-right: var(--spacing-m);
+  }
+
+  .start-pause-row :global(.spectrum-Button.new-styles .spectrum-Button-label) {
+    font-weight: 400;
   }
 
   :global(
