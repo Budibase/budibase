@@ -364,6 +364,9 @@ export const retrieveContextForSources = async (
     vectorDb: agent.vectorDb,
   })
   const [queryEmbedding] = await embedChunks(config, [question], 1)
+  if (!queryEmbedding?.length) {
+    throw new Error("Embedding response missing dimensions")
+  }
 
   const vectorDb = createVectorDb(config.vectorDb, {
     agentId,
