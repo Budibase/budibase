@@ -8,6 +8,7 @@ import type {
   VectorDb,
   VectorDbRuntimeOptions,
 } from "./types"
+import { context } from "@budibase/backend-core"
 
 const vectorLiteral = (values: number[]) =>
   `[${values.map(value => Number(value) || 0).join(",")}]`
@@ -22,7 +23,7 @@ const buildAgentTableName = (agentId: string) => {
     .replace(/^_+|_+$/g, "")
   const hash = crypto
     .createHash("sha256")
-    .update(agentId)
+    .update(context.getOrThrowWorkspaceId())
     .digest("hex")
     .slice(0, TABLE_HASH_LENGTH)
   const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH

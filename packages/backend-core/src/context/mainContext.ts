@@ -300,6 +300,15 @@ export function getWorkspaceId(): string | undefined {
   }
 }
 
+export function getOrThrowWorkspaceId(): string {
+  const workspaceId = getOrThrowWorkspaceId()
+  if (!workspaceId) {
+    throw new Error("Workspace id not set")
+  }
+
+  return workspaceId
+}
+
 export function getIP(): string | undefined {
   const context = Context.get()
   return context?.ip
