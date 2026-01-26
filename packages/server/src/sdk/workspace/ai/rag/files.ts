@@ -14,6 +14,7 @@ const DEFAULT_CHUNK_OVERLAP = 200
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
 
 interface AgentRagConfig {
+  agentId: string
   embeddingModel: string
   vectorDb: string
   ragMinDistance: number
@@ -21,6 +22,7 @@ interface AgentRagConfig {
 }
 
 interface ResolvedRagConfig {
+  agentId: string
   databaseUrl: string
   embeddingModel: string
   baseUrl: string
@@ -54,6 +56,7 @@ const buildRagConfig = async (
     ragConfig.embeddingModel
   )
   return {
+    agentId: ragConfig.agentId,
     databaseUrl,
     embeddingModel: modelId,
     baseUrl,
@@ -74,10 +77,29 @@ const resolveVectorDatabaseConfig = async (
   return connectionString
 }
 
+const TABLE_PREFIX = "bb_agent_chunks_"
+const TABLE_HASH_LENGTH = 8
+
+const buildAgentTableName = (agentId: string) => {
+  const normalized = agentId
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+  const hash = crypto
+    .createHash("sha256")
+    .update(agentId)
+    .digest("hex")
+    .slice(0, TABLE_HASH_LENGTH)
+  const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH
+  const base = (normalized || "agent").slice(0, Math.max(0, maxBaseLength))
+  return `${TABLE_PREFIX}${base}_${hash}`
+}
+
 const getVectorDb = (config: ResolvedRagConfig, embeddingDimensions: number) =>
   createVectorDb({
     databaseUrl: config.databaseUrl,
     embeddingDimensions,
+    tableName: buildAgentTableName(config.agentId),
   })
 
 const buildPgConnectionString = (config: VectorDb) => {
@@ -316,6 +338,7 @@ export const getAgentRagConfig = async (
   agent: Agent
 ): Promise<AgentRagConfig> => {
   if (
+    !agent._id ||
     !agent.embeddingModel ||
     !agent.vectorDb ||
     agent.ragMinDistance == null ||
@@ -325,6 +348,7 @@ export const getAgentRagConfig = async (
   }
 
   return {
+    agentId: agent._id,
     embeddingModel: agent.embeddingModel,
     vectorDb: agent.vectorDb,
     ragMinDistance: agent.ragMinDistance,
@@ -358,6 +382,7 @@ export const ingestAgentFile = async (
   if (!embeddingDimensions) {
     throw new Error("Embedding response missing dimensions")
   }
+
   embeddingDimensionsCache.set(config.embeddingModel, embeddingDimensions)
   const vectorDb = getVectorDb(config, embeddingDimensions)
 
@@ -409,7 +434,9 @@ export const retrieveContextForSources = async (
   if (!embeddingDimensions) {
     throw new Error("Embedding response missing dimensions")
   }
+
   embeddingDimensionsCache.set(config.embeddingModel, embeddingDimensions)
+
   const vectorDb = getVectorDb(config, embeddingDimensions)
   const rows = await vectorDb.queryNearest(
     queryEmbedding,

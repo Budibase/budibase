@@ -6,13 +6,18 @@ import type {
   VectorDbConfig,
 } from "./types"
 
-const TABLE_NAME = "bb_agent_chunks"
-
 const vectorLiteral = (values: number[]) =>
   `[${values.map(value => Number(value) || 0).join(",")}]`
 
 export class PgVectorDb implements VectorDb {
-  constructor(private readonly config: VectorDbConfig) {}
+  private readonly tableName: string
+
+  constructor(private readonly config: VectorDbConfig) {
+    if (!/^[a-z0-9_]+$/.test(config.tableName)) {
+      throw new Error("Invalid vector table name")
+    }
+    this.tableName = config.tableName
+  }
 
   private async withClient<T>(handler: (client: Client) => Promise<T>) {
     const client = new Client({
@@ -29,7 +34,7 @@ export class PgVectorDb implements VectorDb {
   private async ensureSchema(client: Client) {
     await client.query("CREATE EXTENSION IF NOT EXISTS vector")
     await client.query(`
-      CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
+      CREATE TABLE IF NOT EXISTS ${this.tableName} (
         id SERIAL PRIMARY KEY,
         source TEXT NOT NULL,
         chunk_hash TEXT UNIQUE NOT NULL,
@@ -39,11 +44,11 @@ export class PgVectorDb implements VectorDb {
       )
     `)
     await client.query(
-      `CREATE INDEX IF NOT EXISTS ${TABLE_NAME}_source_idx ON ${TABLE_NAME} (source)`
+      `CREATE INDEX IF NOT EXISTS ${this.tableName}_source_idx ON ${this.tableName} (source)`
     )
     await client.query(`
-      CREATE INDEX IF NOT EXISTS ${TABLE_NAME}_embedding_idx
-      ON ${TABLE_NAME}
+      CREATE INDEX IF NOT EXISTS ${this.tableName}_embedding_idx
+      ON ${this.tableName}
       USING ivfflat (embedding vector_cosine_ops)
       WITH (lists = 100)
     `)
@@ -58,7 +63,7 @@ export class PgVectorDb implements VectorDb {
       await client.query("BEGIN")
       try {
         if (chunks.length === 0) {
-          await client.query(`DELETE FROM ${TABLE_NAME} WHERE source = $1`, [
+          await client.query(`DELETE FROM ${this.tableName} WHERE source = $1`, [
             sourceId,
           ])
           await client.query("COMMIT")
@@ -68,12 +73,12 @@ export class PgVectorDb implements VectorDb {
         const hashes = chunks.map(chunk => chunk.hash)
 
         await client.query(
-          `DELETE FROM ${TABLE_NAME} WHERE source = $1 AND NOT (chunk_hash = ANY($2::text[]))`,
+          `DELETE FROM ${this.tableName} WHERE source = $1 AND NOT (chunk_hash = ANY($2::text[]))`,
           [sourceId, hashes]
         )
 
         const existing = await client.query(
-          `SELECT chunk_hash FROM ${TABLE_NAME} WHERE source = $1 AND chunk_hash = ANY($2::text[])`,
+          `SELECT chunk_hash FROM ${this.tableName} WHERE source = $1 AND chunk_hash = ANY($2::text[])`,
           [sourceId, hashes]
         )
         const existingHashes = new Set(existing.rows.map(row => row.chunk_hash))
@@ -85,7 +90,7 @@ export class PgVectorDb implements VectorDb {
           }
           await client.query(
             `
-              INSERT INTO ${TABLE_NAME} (source, chunk_hash, chunk_text, embedding)
+              INSERT INTO ${this.tableName} (source, chunk_hash, chunk_text, embedding)
               VALUES ($1, $2, $3, $4::vector)
               ON CONFLICT (chunk_hash) DO UPDATE
                 SET chunk_text = EXCLUDED.chunk_text,
@@ -113,7 +118,7 @@ export class PgVectorDb implements VectorDb {
     await this.withClient(async client => {
       await this.ensureSchema(client)
       await client.query(
-        `DELETE FROM ${TABLE_NAME} WHERE source = ANY($1::text[])`,
+        `DELETE FROM ${this.tableName} WHERE source = ANY($1::text[])`,
         [sourceIds]
       )
     })
@@ -133,7 +138,7 @@ export class PgVectorDb implements VectorDb {
       const { rows } = await client.query(
         `
           SELECT source, chunk_text, chunk_hash, (embedding <=> $1::vector) AS distance
-          FROM ${TABLE_NAME}
+          FROM ${this.tableName}
           WHERE source = ANY($2::text[])
           ORDER BY embedding <=> $1::vector
           LIMIT $3

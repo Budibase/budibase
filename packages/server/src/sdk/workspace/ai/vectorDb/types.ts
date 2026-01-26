@@ -1,6 +1,7 @@
 export interface VectorDbConfig {
   databaseUrl: string
   embeddingDimensions: number
+  tableName: string
 }
 
 export interface ChunkInput {
