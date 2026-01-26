@@ -2819,6 +2819,21 @@ if (descriptions.length) {
                   ])
                 })
 
+                it("should return non matching and empty relationships on notEqual filtering on relationships", async () => {
+                  await expectQuery({
+                    notEqual: { ["productCat.name"]: "foo" },
+                  }).toContainExactly([
+                    {
+                      name: "bar",
+                      productCat: [{ _id: productCatRows[1]._id }],
+                    },
+                    {
+                      name: "baz",
+                      productCat: undefined,
+                    },
+                  ])
+                })
+
                 describe("logical filters", () => {
                   const logicalOperators = [
                     LogicalOperator.AND,
