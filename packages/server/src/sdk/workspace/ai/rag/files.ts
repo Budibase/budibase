@@ -361,7 +361,10 @@ export const retrieveContextForSources = async (
     throw new Error("RAG settings not properly configured")
   }
 
-  const config = await buildRagConfig(agent)
+  const config = await buildRagConfig({
+    embeddingModel: agent.embeddingModel,
+    vectorDb: agent.vectorDb,
+  })
   const [queryEmbedding] = await embedChunks(config, [question], 1)
 
   const vectorDb = createVectorDb(config.vectorDb, {
@@ -376,7 +379,7 @@ export const retrieveContextForSources = async (
     return { text: "", chunks: [] }
   }
 
-  const maxDistance = agent.ragMinDistance === 0 ? 1 : 1 - agent.ragMinDistance
+  const maxDistance = 1 - agent.ragMinDistance
   const filtered = rows.filter(row => row.distance <= maxDistance)
   if (filtered.length === 0) {
     return { text: "", chunks: [] }
