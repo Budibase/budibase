@@ -1,5 +1,4 @@
 import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
 import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
@@ -8,7 +7,6 @@ import {
   LockType,
   UserContext,
 } from "@budibase/types"
-import { embed } from "ai"
 import fetch from "node-fetch"
 import env from "../../../../environment"
 import * as configSdk from "../configs"
@@ -167,15 +165,22 @@ async function validateEmbeddingConfig(model: {
       validate: false,
     })
 
-    const openai = ai.createLiteLLMOpenAI({
-      apiKey: env.LITELLM_MASTER_KEY!,
-      baseUrl: liteLLMUrl,
+    const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: liteLLMAuthorizationHeader,
+      },
+      body: JSON.stringify({
+        model: modelId,
+        input: "Budibase embedding validation",
+      }),
     })
-    const embeddingModel = openai.embedding(modelId)
-    await embed({
-      model: embeddingModel,
-      value: "Budibase embedding validation",
-    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new HTTPError(text || "Embedding validation failed", 500)
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     throw new HTTPError(`Error validating configuration: ${message}`, 400)
@@ -215,7 +220,6 @@ async function validateCompletionsModel(model: {
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      // mode: "chat",
       litellm_params: {
         model: `${provider}/${name}`,
         custom_llm_provider: provider,
