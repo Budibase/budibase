@@ -211,7 +211,9 @@ async function validateCompletionsModel(model: {
   name: string
   credentialFields: Record<string, string>
 }) {
-  const { name, provider, credentialFields } = model
+  let { name, provider, credentialFields } = model
+
+  provider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "POST",
