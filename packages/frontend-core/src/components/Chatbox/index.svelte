@@ -30,6 +30,7 @@
     workspaceId: string
     chat: ChatConversationLike
     persistConversation?: boolean
+    preview?: boolean
     onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
@@ -39,6 +40,7 @@
     workspaceId,
     chat = $bindable(),
     persistConversation = true,
+    preview = false,
     onchatsaved,
   }: Props = $props()
 
@@ -73,6 +75,7 @@
             chatAppId,
             agentId: chat?.agentId,
             transient: !persistConversation,
+            preview: preview && !persistConversation,
             title: chat?.title,
             messages,
           },
