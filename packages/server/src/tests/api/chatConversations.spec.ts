@@ -355,6 +355,7 @@ describe("chat conversation transient behavior", () => {
       modelId: "model-1",
       apiKey: "api-key",
       baseUrl: "http://localhost",
+      provider: "groq",
     })
 
     const openAiMock = {

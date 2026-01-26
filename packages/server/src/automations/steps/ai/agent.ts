@@ -77,7 +77,7 @@ export async function run({
         const { systemPrompt, tools } =
           await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
-        const { modelId, apiKey, baseUrl, modelName } =
+        const { modelId, apiKey, baseUrl, modelName, provider } =
           await sdk.ai.configs.getLiteLLMModelConfigOrThrow(
             agentConfig.aiconfig
           )
@@ -116,7 +116,7 @@ export async function run({
           instructions: systemPrompt || undefined,
           tools,
           stopWhen: stepCountIs(30),
-          providerOptions: ai.getLiteLLMProviderOptions(),
+          providerOptions: ai.getLiteLLMProviderOptions(modelId, provider),
           output: outputOption,
         })
 

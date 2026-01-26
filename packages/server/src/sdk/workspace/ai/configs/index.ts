@@ -161,6 +161,7 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
   modelId: string
   apiKey: string
   baseUrl: string
+  provider: string
 }> {
   const aiConfig = await find(configId)
 
@@ -181,6 +182,7 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
     modelId: aiConfig.liteLLMModelId,
     apiKey: secretKey,
     baseUrl: environment.LITELLM_URL,
+    provider: aiConfig.provider,
   }
 }
 

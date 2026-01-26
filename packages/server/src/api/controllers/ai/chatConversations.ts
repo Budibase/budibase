@@ -256,7 +256,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
   try {
-    const { modelId, apiKey, baseUrl } =
+    const { modelId, apiKey, baseUrl, provider } =
       await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
     const sessionId = chat._id || v4()
@@ -290,7 +290,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       system,
       tools,
       stopWhen: stepCountIs(30),
-      providerOptions: ai.getLiteLLMProviderOptions(),
+      providerOptions: ai.getLiteLLMProviderOptions(modelId, provider),
       onError({ error }) {
         console.error("Agent streaming error", {
           agentId,
