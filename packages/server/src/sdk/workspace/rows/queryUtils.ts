@@ -68,6 +68,8 @@ export const getQueryableFields = async (
         continue
       }
       if (isRelationship) {
+        // Add the bare relationship field itself (for empty/notEmpty filters)
+        result.push(field)
         try {
           const relatedTable = await sdk.tables.getTable(subSchema.tableId)
           const relatedFields = await extractTableFields(

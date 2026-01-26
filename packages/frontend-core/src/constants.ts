@@ -11,7 +11,7 @@ import { BpmCorrelationKey } from "@budibase/shared-core"
 import { BBReferenceFieldSubType, FieldType } from "@budibase/types"
 
 export const BannedSearchTypes = [
-  FieldType.LINK,
+  // FieldType.LINK,
   FieldType.ATTACHMENT_SINGLE,
   FieldType.ATTACHMENTS,
   FieldType.FORMULA,

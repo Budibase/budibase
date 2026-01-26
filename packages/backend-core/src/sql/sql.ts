@@ -560,8 +560,26 @@ class InternalBuilder {
   ): Knex.QueryBuilder {
     const { relationships, schema, tableAliases: aliases, table } = this.query
     const fromAlias = aliases?.[table.name] || table.name
-    const matches = (value: string) =>
-      filterKey.match(new RegExp(`^${value}\\.`))
+
+    // For bare fields like "data_myField", we need to strip the prefix to match against relationships
+    // For nested fields like "myField.data_OtherText", use the old behavior
+    const isBareFilterKey = !filterKey.includes(".")
+    const keyToMatch = isBareFilterKey
+      ? this.splitter.run(filterKey).column // Strip prefix for bare fields
+      : filterKey // Use as-is for nested fields
+
+    const escapeRegex = (str: string) =>
+      str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const matches = (value: string) => {
+      const escapedValue = escapeRegex(value)
+      if (isBareFilterKey) {
+        // For bare fields, match exactly
+        return keyToMatch.match(new RegExp(`^${escapedValue}$`))
+      } else {
+        // For nested fields, require a dot after the relationship name
+        return keyToMatch.match(new RegExp(`^${escapedValue}\\.`))
+      }
+    }
     if (!relationships) {
       return query
     }
@@ -587,7 +605,7 @@ class InternalBuilder {
 
         if (!matchesTableName) {
           updatedKey = filterKey.replace(
-            new RegExp(`^${relationship.column}.`),
+            new RegExp(`^${escapeRegex(relationship.column)}\\.`),
             `${aliases?.[relationship.tableName] || relationship.tableName}.`
           )
         } else {
@@ -601,57 +619,98 @@ class InternalBuilder {
             alias: throughAlias,
             schema,
           })
-          subQuery = subQuery
-            // add a join through the junction table
-            .innerJoin(throughTable, function () {
-              this.on(
-                `${toAlias}.${manyToMany.toPrimary}`,
-                "=",
-                `${throughAlias}.${manyToMany.to}`
-              )
-            })
-            // check the document in the junction table points to the main table
-            .where(
-              `${throughAlias}.${manyToMany.from}`,
-              "=",
-              this.rawQuotedIdentifier(`${fromAlias}.${manyToMany.fromPrimary}`)
-            )
-          // in SQS the same junction table is used for different many-to-many relationships between the
-          // two same tables, this is needed to avoid rows ending up in all columns
-          if (this.client === SqlClient.SQL_LITE) {
-            subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
-          }
 
-          query = query.where(q => {
-            q.whereExists(whereCb(updatedKey, subQuery))
-            if (allowEmptyRelationships) {
-              q.orWhereNotExists(
-                joinTable.clone().innerJoin(throughTable, function () {
-                  this.on(
-                    `${fromAlias}.${manyToMany.fromPrimary}`,
-                    "=",
-                    `${throughAlias}.${manyToMany.from}`
-                  )
-                })
+          // Handling for bare LINK fields (empty/notEmpty)
+          const isBareField = !updatedKey.includes(".")
+          if (isBareField) {
+            const junctionCheckQuery = this.knex
+              .select(this.knex.raw(1))
+              .from(throughTable)
+              .where(
+                `${throughAlias}.${manyToMany.from}`,
+                "=",
+                this.rawQuotedIdentifier(
+                  `${fromAlias}.${manyToMany.fromPrimary}`
+                )
               )
+            if (this.client === SqlClient.SQL_LITE) {
+              this.addJoinFieldCheck(junctionCheckQuery, manyToMany)
             }
-          })
+
+            // For bare LINK fields, check relationship existence directly
+            if (allowEmptyRelationships) {
+              // NOT_EMPTY operation: row must have related records
+              query = query.whereExists(junctionCheckQuery)
+            } else {
+              // EMPTY operation: row must have no related records
+              query = query.whereNotExists(junctionCheckQuery)
+            }
+          } else {
+            // Nested property handling - add a join through the junction table
+            subQuery = subQuery
+              .innerJoin(throughTable, function () {
+                this.on(
+                  `${toAlias}.${manyToMany.toPrimary}`,
+                  "=",
+                  `${throughAlias}.${manyToMany.to}`
+                )
+              })
+              // check the document in the junction table points to the main table
+              .where(
+                `${throughAlias}.${manyToMany.from}`,
+                "=",
+                this.rawQuotedIdentifier(
+                  `${fromAlias}.${manyToMany.fromPrimary}`
+                )
+              )
+            if (this.client === SqlClient.SQL_LITE) {
+              subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
+            }
+
+            query = query.where(q => {
+              q.whereExists(whereCb(updatedKey, subQuery))
+              if (allowEmptyRelationships) {
+                q.orWhereNotExists(
+                  joinTable.clone().innerJoin(throughTable, function () {
+                    this.on(
+                      `${fromAlias}.${manyToMany.fromPrimary}`,
+                      "=",
+                      `${throughAlias}.${manyToMany.from}`
+                    )
+                  })
+                )
+              }
+            })
+          }
         } else {
           const toKey = `${toAlias}.${relationship.to}`
           const foreignKey = `${fromAlias}.${relationship.from}`
-          // "join" to the main table, making sure the ID matches that of the main
           subQuery = subQuery.where(
             toKey,
             "=",
             this.rawQuotedIdentifier(foreignKey)
           )
 
-          query = query.where(q => {
-            q.whereExists(whereCb(updatedKey, subQuery.clone()))
+          // Handling for bare LINK fields (one-to-many/many-to-one)
+          const isBareField = !updatedKey.includes(".")
+          if (isBareField) {
+            // For bare LINK fields, check relationship existence directly
             if (allowEmptyRelationships) {
-              q.orWhereNotExists(subQuery)
+              // NOT_EMPTY operation: row must have related records
+              query = query.whereExists(subQuery)
+            } else {
+              // EMPTY operation: row must have no related records
+              query = query.whereNotExists(subQuery)
             }
-          })
+          } else {
+            // Nested property handling
+            query = query.where(q => {
+              q.whereExists(whereCb(updatedKey, subQuery.clone()))
+              if (allowEmptyRelationships) {
+                q.orWhereNotExists(subQuery)
+              }
+            })
+          }
         }
       }
     }
@@ -711,7 +770,15 @@ class InternalBuilder {
       for (const key in structure) {
         const value = structure[key]
         const updatedKey = dbCore.removeKeyNumbering(key)
-        const isRelationshipField = updatedKey.includes(".")
+        const fieldSchema = builder.getFieldSchema(updatedKey)
+        // NEW: Detect bare LINK fields as relationship fields for empty/notEmpty
+        const isRelationshipField =
+          updatedKey.includes(".") ||
+          (fieldSchema?.type === FieldType.LINK &&
+            (operation === BasicOperator.EMPTY ||
+              operation === BasicOperator.NOT_EMPTY))
+        // OLD CODE:
+        // const isRelationshipField = updatedKey.includes(".")
         const shouldProcessRelationship =
           opts?.relationship && isRelationshipField
 
@@ -1126,6 +1193,12 @@ class InternalBuilder {
     }
     if (filters.empty) {
       iterate(filters.empty, BasicOperator.EMPTY, (q, key) => {
+        // Skip LINK fields in first pass, process in second pass with relationship handling
+        const schema = this.getFieldSchema(key)
+        if (schema?.type === FieldType.LINK && !opts?.relationship) {
+          return q
+        }
+        // Just whereNull without checking field type
         if (shouldOr) {
           q = q.or
         }
@@ -1134,6 +1207,12 @@ class InternalBuilder {
     }
     if (filters.notEmpty) {
       iterate(filters.notEmpty, BasicOperator.NOT_EMPTY, (q, key) => {
+        // Skip LINK fields in first pass, process in second pass with relationship handling
+        const schema = this.getFieldSchema(key)
+        if (schema?.type === FieldType.LINK && !opts?.relationship) {
+          return q
+        }
+        // Just whereNotNull without checking field type
         if (shouldOr) {
           q = q.or
         }
