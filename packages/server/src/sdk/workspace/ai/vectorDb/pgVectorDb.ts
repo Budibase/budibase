@@ -105,6 +105,9 @@ export class PgVectorDb implements VectorDb {
 
     return await this.withClient(async client => {
       const embeddingDimensions = chunks[0].embedding.length
+      if (embeddingDimensions === 0) {
+        throw new Error("Embedding dimensions must be greater than 0")
+      }
       await this.ensureSchema(client, embeddingDimensions)
       await client.query("BEGIN")
       try {
