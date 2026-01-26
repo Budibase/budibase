@@ -1,6 +1,6 @@
 import { HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
-import type { Agent, AgentFile, RagConfig, VectorDb } from "@budibase/types"
+import type { Agent, AgentFile, VectorDb } from "@budibase/types"
 import { embedMany } from "ai"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
@@ -8,11 +8,17 @@ import { parse as parseYaml } from "yaml"
 import { getLiteLLMModelConfigOrThrow } from "../configs"
 import { find as findVectorDb } from "../vectorDb/crud"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
-import { find as findRagConfig } from "./configCrud"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
+
+interface AgentRagConfig {
+  embeddingModel: string
+  vectorDb: string
+  ragMinDistance: number
+  ragTopK: number
+}
 
 interface ResolvedRagConfig {
   databaseUrl: string
@@ -40,7 +46,7 @@ const textFileExtensions = new Set([
 const yamlExtensions = new Set([".yaml", ".yml"])
 
 const buildRagConfig = async (
-  ragConfig: RagConfig
+  ragConfig: AgentRagConfig
 ): Promise<ResolvedRagConfig> => {
   const databaseUrl = await resolveVectorDatabaseConfig(ragConfig.vectorDb)
 
@@ -306,16 +312,24 @@ const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
   return buffer.toString("utf-8")
 }
 
-export const getAgentRagConfig = async (agent: Agent): Promise<RagConfig> => {
-  if (!agent.ragConfigId) {
+export const getAgentRagConfig = async (
+  agent: Agent
+): Promise<AgentRagConfig> => {
+  if (
+    !agent.embeddingModel ||
+    !agent.vectorDb ||
+    agent.ragMinDistance == null ||
+    agent.ragTopK == null
+  ) {
     throw new HTTPError("RAG config not set", 422)
   }
 
-  const config = await findRagConfig(agent.ragConfigId)
-  if (!config) {
-    throw new HTTPError("RAG config not found", 422)
+  return {
+    embeddingModel: agent.embeddingModel,
+    vectorDb: agent.vectorDb,
+    ragMinDistance: agent.ragMinDistance,
+    ragTopK: agent.ragTopK,
   }
-  return config
 }
 
 export const ingestAgentFile = async (
@@ -357,7 +371,7 @@ export const ingestAgentFile = async (
 }
 
 export const deleteAgentFileChunks = async (
-  ragConfig: RagConfig,
+  ragConfig: AgentRagConfig,
   sourceIds: string[]
 ) => {
   if (!sourceIds || sourceIds.length === 0) {
@@ -381,7 +395,7 @@ interface RetrievedContextResult {
 }
 
 export const retrieveContextForSources = async (
-  ragConfig: RagConfig,
+  ragConfig: AgentRagConfig,
   question: string,
   sourceIds: string[]
 ): Promise<RetrievedContextResult> => {
