@@ -5,10 +5,11 @@
     currentChatApp,
     currentConversations,
   } from "@/stores/portal"
-  import { notifications } from "@budibase/bbui"
+  import { Body, notifications } from "@budibase/bbui"
   import type {
-    ChatApp,
+    Agent,
     ChatConversation,
+    ConversationStarter,
     DraftChatConversation,
     WithoutDocMetadata,
   } from "@budibase/types"
@@ -19,12 +20,11 @@
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
 
-  type ConversationStarter = {
-    prompt: string
-  }
-
-  type ChatAppWithStarters = ChatApp & {
-    conversationStartersByAgent?: Record<string, ConversationStarter[]>
+  type ChatAgentConfig = {
+    agentId: string
+    isEnabled: boolean
+    isDefault: boolean
+    conversationStarters?: ConversationStarter[]
   }
 
   const INITIAL_CHAT: WithoutDocMetadata<DraftChatConversation> = {
@@ -48,17 +48,26 @@
   let enabledAgentList: {
     agentId: string
     name?: string
-    default?: boolean
+    isDefault?: boolean
   }[] = []
 
+  let chatAgents: ChatAgentConfig[] = []
+  let agents: Agent[] = []
+
   $: agents = $agentsStore.agents || []
-  $: chatApp = $currentChatApp as ChatAppWithStarters | undefined
-  $: enabledAgents = chatApp?.enabledAgents || []
+  $: agentsLoaded = $agentsStore.agentsLoaded
+  $: chatApp = $currentChatApp
+  $: chatAgents = (chatApp?.agents || []) as ChatAgentConfig[]
   $: conversationHistory = $currentConversations
+  $: hasAnyAgents = agents.length > 0
+  $: hasEnabledAgents = enabledAgentList.length > 0
+  $: showEmptyState = agentsLoaded && !hasEnabledAgents
+  $: emptyStateMessage = hasAnyAgents
+    ? "No agents enabled for this chat app. Add one in Settings to start chatting."
+    : "No agents yet. Add one from the settings panel to start chatting."
   $: conversationStarters = selectedAgentId
-    ? (chatApp?.conversationStartersByAgent?.[selectedAgentId] as
-        | ConversationStarter[]
-        | undefined) || []
+    ? chatAgents.find(agent => agent.agentId === selectedAgentId)
+        ?.conversationStarters || []
     : []
 
   const getAgentName = (agentId: string) =>
@@ -69,17 +78,18 @@
     : ""
 
   $: {
-    const baseAgentList = enabledAgents
+    const baseAgentList = chatAgents
+      .filter(agent => agent.isEnabled)
       .map(agent => ({
         agentId: agent.agentId,
         name: getAgentName(agent.agentId),
-        default: agent.default,
+        isDefault: agent.isDefault,
       }))
       .filter(agent => Boolean(agent.name))
 
-    const defaultAgent = baseAgentList.find(agent => agent.default)
+    const defaultAgent = baseAgentList.find(agent => agent.isDefault)
     const sortedAgents = baseAgentList
-      .filter(agent => !agent.default)
+      .filter(agent => !agent.isDefault)
       .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
 
     enabledAgentList = defaultAgent
@@ -253,26 +263,32 @@
 </script>
 
 <div class="chat-app">
-  <ChatNavigationPanel
-    {enabledAgentList}
-    {conversationHistory}
-    selectedConversationId={$chatAppsStore.currentConversationId}
-    on:agentSelected={handleAgentSelected}
-    on:conversationSelected={handleConversationSelected}
-  />
+  {#if showEmptyState}
+    <div class="chat-empty-state">
+      <Body size="M">{emptyStateMessage}</Body>
+    </div>
+  {:else}
+    <ChatNavigationPanel
+      {enabledAgentList}
+      {conversationHistory}
+      selectedConversationId={$chatAppsStore.currentConversationId}
+      on:agentSelected={handleAgentSelected}
+      on:conversationSelected={handleConversationSelected}
+    />
 
-  <ChatConversationPanel
-    bind:chat
-    {deletingChat}
-    {enabledAgentList}
-    {selectedAgentId}
-    {selectedAgentName}
-    {workspaceId}
-    {conversationStarters}
-    on:deleteChat={deleteCurrentChat}
-    on:chatSaved={handleChatSaved}
-    on:agentSelected={handleAgentSelected}
-  />
+    <ChatConversationPanel
+      bind:chat
+      {deletingChat}
+      {enabledAgentList}
+      {selectedAgentId}
+      {selectedAgentName}
+      {workspaceId}
+      {conversationStarters}
+      on:deleteChat={deleteCurrentChat}
+      on:chatSaved={handleChatSaved}
+      on:agentSelected={handleAgentSelected}
+    />
+  {/if}
 </div>
 
 <style>
@@ -283,5 +299,14 @@
     height: 100%;
     width: 100%;
     min-width: 0;
+  }
+
+  .chat-empty-state {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    text-align: center;
   }
 </style>

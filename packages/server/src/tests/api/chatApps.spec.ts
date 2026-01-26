@@ -18,7 +18,7 @@ describe("chat apps validation", () => {
 
         const doc: ChatApp = {
           _id: docIds.generateChatAppID(),
-          enabledAgents: [{ agentId: "agent-1" }],
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
           createdAt: now,
           updatedAt: now,
         }
@@ -48,115 +48,84 @@ describe("chat apps validation", () => {
     return res
   }
 
-  it("rejects enabledAgents entries without agentId", async () => {
+  it("rejects agents entries without agentId", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      enabledAgents: [{}],
+      agents: [{}],
     })
 
     expect(res.status).toBe(400)
   })
 
-  it("rejects enabledAgents entries with empty agentId", async () => {
+  it("rejects agents entries with empty agentId", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      enabledAgents: [{ agentId: "" }],
+      agents: [{ agentId: "" }],
     })
 
     expect(res.status).toBe(400)
   })
 
-  it("rejects null enabledAgents", async () => {
+  it("rejects null agents", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      enabledAgents: null,
+      agents: null,
     })
 
     expect(res.status).toBe(400)
   })
 
-  it("allows empty enabledAgents", async () => {
+  it("allows empty agents", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      enabledAgents: [],
+      agents: [],
     })
 
     expect(res.status).toBe(200)
-    expect(res.body.enabledAgents).toEqual([])
+    expect(res.body.agents).toEqual([])
   })
 
-  it("assigns default when missing", async () => {
+  it("rejects invalid conversation starters", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      enabledAgents: [{ agentId: "agent-1" }, { agentId: "agent-2" }],
-    })
-
-    expect(res.status).toBe(200)
-    expect(res.body.enabledAgents).toEqual([
-      { agentId: "agent-1", default: true },
-      { agentId: "agent-2", default: false },
-    ])
-  })
-
-  it("rejects multiple default agents", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      enabledAgents: [
-        { agentId: "agent-1", default: true },
-        { agentId: "agent-2", default: true },
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          conversationStarters: [{ prompt: 123 }],
+        },
       ],
     })
 
     expect(res.status).toBe(400)
   })
 
-  it("rejects non-string conversation starters", async () => {
+  it("rejects more than three starters", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      conversationStartersByAgent: {
-        "agent-1": [{ prompt: 123 }],
-      },
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          conversationStarters: [
+            { prompt: "One" },
+            { prompt: "Two" },
+            { prompt: "Three" },
+            { prompt: "Four" },
+          ],
+        },
+      ],
     })
 
     expect(res.status).toBe(400)
-  })
-
-  it("rejects more than three starters per agent", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      conversationStartersByAgent: {
-        "agent-1": [
-          { prompt: "One" },
-          { prompt: "Two" },
-          { prompt: "Three" },
-          { prompt: "Four" },
-        ],
-      },
-    })
-
-    expect(res.status).toBe(400)
-  })
-
-  it("initializes starters for enabled agents", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      enabledAgents: [{ agentId: "agent-1" }],
-    })
-
-    expect(res.status).toBe(200)
-    expect(res.body.conversationStartersByAgent).toEqual({
-      "agent-1": [],
-      "agent-2": [],
-    })
   })
 })
 
@@ -171,64 +140,17 @@ describe("chat apps create validation", () => {
     config.end()
   })
 
-  it("rejects null enabledAgents", async () => {
+  it("rejects null agents", async () => {
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
         const payload = {
-          enabledAgents: null,
+          agents: null,
         } as unknown as Omit<ChatApp, "_id" | "_rev">
 
         await expect(sdk.ai.chatApps.create(payload)).rejects.toThrow(
-          "enabledAgents must contain valid agentId entries"
+          "agents must contain valid agentId entries"
         )
-      }
-    )
-  })
-
-  it("rejects invalid conversation starter prompts", async () => {
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const payload = {
-          enabledAgents: [{ agentId: "agent-1" }],
-          conversationStartersByAgent: {
-            "agent-1": [{ prompt: 42 }],
-          },
-        } as unknown as Omit<ChatApp, "_id" | "_rev">
-
-        await expect(sdk.ai.chatApps.create(payload)).rejects.toThrow(
-          "conversationStartersByAgent entries must include string prompts"
-        )
-      }
-    )
-  })
-})
-
-describe("chat apps create defaults", () => {
-  const config = new TestConfiguration()
-
-  beforeAll(async () => {
-    await config.init("chat-app-create-defaults")
-  })
-
-  afterAll(() => {
-    config.end()
-  })
-
-  it("initializes starters for enabled agents", async () => {
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const payload = {
-          enabledAgents: [{ agentId: "agent-1" }],
-        } as unknown as Omit<ChatApp, "_id" | "_rev">
-
-        const created = await sdk.ai.chatApps.create(payload)
-
-        expect(created.conversationStartersByAgent).toEqual({
-          "agent-1": [],
-        })
       }
     )
   })

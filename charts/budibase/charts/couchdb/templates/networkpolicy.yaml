@@ -1,0 +1,39 @@
+
+{{- if .Values.networkPolicy.enabled }}
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ template "couchdb.fullname" . }}
+  labels:
+    app: {{ template "couchdb.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  podSelector:
+    matchLabels:
+{{ include "couchdb.ss.selector" . | indent 6 }}
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 5984
+{{- if .Values.prometheusPort.enabled }}
+        - protocol: TCP
+          port: {{ .Values.prometheusPort.port }}
+{{- end }}
+{{ range .Values.extraPorts }}
+        - protocol: TCP
+          port: {{ .containerPort }} 
+{{ end }}
+    - ports:
+        - protocol: TCP
+          port: 9100
+        - protocol: TCP
+          port: 4369
+      from:
+        - podSelector:
+            matchLabels:
+{{ include "couchdb.ss.selector" . | indent 14 }}
+  policyTypes:
+    - Ingress
+{{- end }}

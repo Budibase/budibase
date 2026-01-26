@@ -72,11 +72,18 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     }
 
     if (agentId) {
-      const isEnabled = chatApp.enabledAgents?.some(
-        agent => agent.agentId === agentId
-      )
-      if (!isEnabled) {
-        chatApp = await API.setChatAppAgent(chatAppId, agentId)
+      const matched = chatApp.agents?.find(agent => agent.agentId === agentId)
+      if (!matched || !matched.isEnabled) {
+        const createdAgent = await API.setChatAppAgent(chatAppId, agentId)
+        const nextAgents = matched
+          ? (chatApp.agents || []).map(agent =>
+              agent.agentId === agentId ? createdAgent : agent
+            )
+          : [...(chatApp.agents || []), createdAgent]
+        chatApp = {
+          ...chatApp,
+          agents: nextAgents,
+        }
       }
     }
 
@@ -113,8 +120,8 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return updated
   }
 
-  updateEnabledAgents = async (enabledAgents: ChatApp["enabledAgents"]) => {
-    return await this.updateChatApp({ enabledAgents })
+  updateAgents = async (agents: ChatApp["agents"]) => {
+    return await this.updateChatApp({ agents })
   }
 
   fetchConversations = async (chatAppId?: string) => {

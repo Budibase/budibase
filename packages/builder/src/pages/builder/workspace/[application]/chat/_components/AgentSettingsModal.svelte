@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { chatAppsStore, currentChatApp } from "@/stores/portal/chatApps"
   import {
     Body,
     Button,
@@ -10,38 +9,29 @@
     ModalContent,
   } from "@budibase/bbui"
   import { Utils } from "@budibase/frontend-core"
-  import type { Agent, ChatApp } from "@budibase/types"
+  import type { ChatAppAgent, ConversationStarter } from "@budibase/types"
+  import type { AgentListItem } from "./types"
 
-  type AgentListItem = Agent & {
-    agentId: string
-    default?: boolean
-  }
-
-  type ConversationStarter = {
+  type ConversationStarterItem = ConversationStarter & {
     id: string
-    prompt: string
-  }
-
-  type ChatAppWithStarters = ChatApp & {
-    conversationStartersByAgent?: Record<string, ConversationStarter[]>
   }
 
   export let open = false
   export let selectedAgent: AgentListItem | undefined
+  export let selectedAgentConfig: ChatAppAgent | undefined
   export let defaultAgentId: string | undefined
   export let isAgentAvailable: (_agentId: string) => boolean
   export let onSetDefault: (_agentId: string) => void
+  export let onUpdateConversationStarters: (
+    _agentId: string,
+    _starters: ConversationStarter[]
+  ) => void
   export let onClose: () => void
-  export let workspaceId: string | undefined
 
   let modal: Modal | undefined
-  let conversationStarters: ConversationStarter[] = []
+  let conversationStarters: ConversationStarterItem[] = []
   let newStarter = ""
   let lastAgentId: string | undefined
-  let lastChatAppId: string | undefined
-  let ensuringChatApp = false
-
-  $: chatApp = $currentChatApp as ChatAppWithStarters | undefined
 
   $: if (modal) {
     if (open) {
@@ -51,20 +41,15 @@
     }
   }
 
-  $: if (open && selectedAgent && workspaceId) {
-    ensureChatApp()
-  }
-
-  $: if (open && selectedAgent?.agentId && chatApp?._id) {
-    if (
-      selectedAgent.agentId !== lastAgentId ||
-      chatApp._id !== lastChatAppId
-    ) {
-      lastAgentId = selectedAgent.agentId
-      lastChatAppId = chatApp._id
-      conversationStarters = getStartersForAgent(selectedAgent.agentId, chatApp)
-      newStarter = ""
-    }
+  $: if (selectedAgentConfig?.agentId !== lastAgentId) {
+    lastAgentId = selectedAgentConfig?.agentId
+    conversationStarters = (
+      selectedAgentConfig?.conversationStarters || []
+    ).map(starter => ({
+      id: Helpers.uuid(),
+      prompt: starter.prompt,
+    }))
+    newStarter = ""
   }
 
   $: isDefault = selectedAgent?.agentId === defaultAgentId
@@ -76,56 +61,17 @@
       : ""
   $: isDisabled = !selectedAgent || !isAvailable || isDefault
 
-  const ensureChatApp = async () => {
-    if (ensuringChatApp) {
-      return
-    }
-    ensuringChatApp = true
-    try {
-      await chatAppsStore.ensureChatApp(undefined, workspaceId)
-    } finally {
-      ensuringChatApp = false
-    }
-  }
-
-  const getStartersForAgent = (agentId: string, app: ChatAppWithStarters) => {
-    const starters = app.conversationStartersByAgent?.[agentId] || []
-    return starters.map(starter => ({
-      id: Helpers.uuid(),
-      prompt: starter.prompt,
-    }))
-  }
-
-  const saveConversationStarters = async () => {
-    if (!selectedAgent?.agentId) {
-      return
-    }
-
-    const resolvedChatApp = (chatApp ||
-      (await chatAppsStore.ensureChatApp(
-        undefined,
-        workspaceId
-      ))) as ChatAppWithStarters | null
-
-    if (!resolvedChatApp?._id) {
+  const saveConversationStarters = () => {
+    if (!selectedAgentConfig?.agentId) {
       return
     }
 
     const trimmedStarters = conversationStarters
-      .map((starter: ConversationStarter) => ({
-        prompt: starter.prompt.trim(),
-      }))
+      .map(starter => ({ prompt: starter.prompt.trim() }))
       .filter(starter => starter.prompt.length)
       .slice(0, 3)
 
-    const nextStarters = {
-      ...(resolvedChatApp.conversationStartersByAgent || {}),
-      [selectedAgent.agentId]: trimmedStarters,
-    }
-
-    await chatAppsStore.updateChatApp({
-      conversationStartersByAgent: nextStarters,
-    })
+    onUpdateConversationStarters(selectedAgentConfig.agentId, trimmedStarters)
   }
 
   const debouncedSave = Utils.debounce(() => {

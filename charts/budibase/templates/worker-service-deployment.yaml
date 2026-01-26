@@ -13,11 +13,15 @@ metadata:
   name: worker-service
 spec:
   replicas: {{ .Values.services.worker.replicaCount }}
+  minReadySeconds: {{ .Values.services.worker.minReadySeconds }}
   selector:
     matchLabels:
       io.kompose.service: worker-service
   strategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       annotations:
@@ -253,6 +257,10 @@ spec:
         args:
         {{- toYaml .Values.services.worker.args | nindent 10 }}
         {{ end }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ .Values.services.worker.preStopDelaySeconds }}"]
         {{ if .Values.services.worker.extraVolumeMounts }}
         volumeMounts:
         {{- toYaml .Values.services.worker.extraVolumeMounts | nindent 10 }}
