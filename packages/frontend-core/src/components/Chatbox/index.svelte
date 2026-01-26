@@ -524,6 +524,7 @@
   .message {
     display: flex;
     flex-direction: column;
+    gap: 16px;
     max-width: 80%;
     padding: var(--spacing-l);
     border-radius: 20px;
@@ -627,7 +628,7 @@
   .tool-part-wrapper {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 2px;
   }
 
   .tool-part {

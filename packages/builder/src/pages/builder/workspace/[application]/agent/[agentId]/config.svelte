@@ -7,8 +7,6 @@
     ActionButton,
     Button,
     Icon,
-    ActionMenu,
-    MenuItem,
     AbsTooltip,
   } from "@budibase/bbui"
   import {
@@ -59,6 +57,23 @@
   const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
   const RestIconSvg = REST_TAG_ICON_URL
   const AUTO_SAVE_DEBOUNCE_MS = 800
+  const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
+What is this agent responsible for?
+
+**Inputs**
+What information does the agent receive?
+
+**Actions**
+- What should the agent do?
+- When should it use tools or APIs?
+
+**Output**
+- What should the response look like?
+- Include any structure, formatting, or fields required.
+
+**Rules**
+Any constraints the agent must follow.
+`
 
   // Agent state
   let draftAgentId: string | undefined = $state()
@@ -67,7 +82,7 @@
     description: "",
     aiconfig: "",
     goal: "",
-    promptInstructions: "",
+    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
     icon: "",
     iconColor: "",
     ragConfigId: undefined as string | undefined,
@@ -242,7 +257,8 @@
         description: agent.description || "",
         aiconfig: agent.aiconfig || "",
         goal: agent.goal || "",
-        promptInstructions: agent.promptInstructions || "",
+        promptInstructions:
+          agent.promptInstructions || DEFAULT_PROMPT_INSTRUCTIONS,
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
         ragConfigId: agent.ragConfigId,
@@ -262,7 +278,8 @@
   $effect(() => {
     if (modelOptions.length > 0 && currentAgent) {
       // Only auto-select if agent doesn't have an aiconfig set (undefined/null/empty)
-      const agentHasAiconfig = currentAgent.aiconfig != null && currentAgent.aiconfig !== ""
+      const agentHasAiconfig =
+        currentAgent.aiconfig != null && currentAgent.aiconfig !== ""
       const currentValue = draft.aiconfig || ""
       // Only set default if agent never had a value and current draft is empty
       if (!agentHasAiconfig && !currentValue) {
@@ -420,6 +437,24 @@
       $goto(path)
     } else {
       notifications.error("Unable to locate resource for this tool")
+    }
+  }
+
+  const openToolResourceInNewTab = (tool: AgentTool) => {
+    const path = getToolResourcePath(tool)
+    if (path) {
+      // Convert relative path to absolute URL
+      // Current path is like: /builder/workspace/[application]/agent/[agentId]
+      // Relative path is like: ../../automation/[id] or ../../apis/query/[id]
+      const currentPath = window.location.pathname
+      const pathParts = currentPath.split("/").filter(Boolean)
+      // Remove last 2 parts (agent/[agentId]) to get base path
+      const basePath = pathParts.slice(0, -2).join("/")
+      // Remove ../.. from the path and construct full URL
+      const cleanPath = path.replace(/^\.\.\/\.\./, "")
+      const fullPath = `/${basePath}${cleanPath}`
+      const url = `${window.location.origin}${fullPath}${window.location.hash}`
+      window.open(url, "_blank")
     }
   }
 
@@ -587,9 +622,10 @@
 
 <div class="llm-section-container">
   <div class="llm-header">
-    <Body size="S" color="var(--spectrum-global-color-gray-900)">AI Model*</Body>
+    <Body size="S" color="var(--spectrum-global-color-gray-900)">AI Model*</Body
+    >
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Select which provider and model to use for the LLM.{" "}
+      Select which provider and model to use for the agent.{" "}
       <button
         class="link-button"
         on:click={() => bb.settings("/ai-config/configs")}
@@ -623,13 +659,77 @@
   </div>
 </div>
 
+<div class="tools-section">
+  <div class="llm-section-container">
+    <div class="llm-header">
+      <Body size="S" color="var(--spectrum-global-color-gray-900)">Tools</Body>
+      <Body size="S" color="var(--spectrum-global-color-gray-700)">
+        Select which tools the agent can use.
+      </Body>
+    </div>
+    <div>
+      <div class="form-row">
+        <div class="form-field">
+          <div class="tools-popover-container"></div>
+          <ToolsDropdown
+            {filteredTools}
+            {toolSections}
+            bind:toolSearch
+            onToolClick={handleToolClick}
+            onAddApiConnection={() => $goto(`./apis`)}
+            webSearchEnabled={webSearchConfigured}
+            onConfigureWebSearch={configureWebSearch}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+  {#if includedToolsWithDetails.length > 0}
+    <div class="tools-list">
+      {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
+        <div class="tool-card" on:click={() => openToolResourceInNewTab(tool)}>
+          <div class="tool-main">
+            <div class="tool-item-icon">
+              <ToolIcon icon={tool.icon} size="M" fallbackIcon="Wrench" />
+            </div>
+            <div class="tool-label">
+              <span>
+                {tool.sourceLabel || "Tool"}:
+              </span>
+              <span>{formatToolLabel(tool)}</span>
+            </div>
+          </div>
+          <div class="tool-actions">
+            <button
+              class="tool-close-button"
+              type="button"
+              on:click|stopPropagation={() => {
+                removeToolBindingFromPrompt(tool)
+                scheduleSave(true)
+              }}
+            >
+              <Icon
+                name="x"
+                size="XS"
+                color="var(--spectrum-global-color-gray-600)"
+                hoverable
+              />
+            </button>
+          </div>
+        </div>
+      {/each}
+    </div>
+  {/if}
+</div>
+
 <div class="section">
   <div class="section-header">
     <Body size="S" color="var(--spectrum-global-color-gray-900)"
       >Instructions</Body
     >
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Set the rules for how the AI responds, uses tools, and structures output.
+      Set the rules for how the AI agent responds, uses tools, and structures
+      output.
     </Body>
   </div>
   <div class="prompt-editor-wrapper">
@@ -637,7 +737,7 @@
       {#if toolsLoaded}
         {#key resolvedIconCount}
           <CodeEditor
-            value={draft.promptInstructions || ""}
+            value={draft.promptInstructions || DEFAULT_PROMPT_INSTRUCTIONS}
             bindings={promptBindings}
             bindingIcons={readableToIcon}
             completions={promptCompletions}
@@ -663,81 +763,17 @@
   </div>
 </div>
 
-<div class="section tools-section">
-  <div class="title-tools-bar">
-    <Body size="S" color="var(--spectrum-global-color-gray-900)"
-      >Tools this agent can use:</Body
-    >
-    <div class="tools-popover-container"></div>
-    <ToolsDropdown
-      {filteredTools}
-      {toolSections}
-      bind:toolSearch
-      onToolClick={handleToolClick}
-      onAddApiConnection={() => $goto(`./apis`)}
-      webSearchEnabled={webSearchConfigured}
-      onConfigureWebSearch={configureWebSearch}
-    />
-  </div>
-</div>
-{#if includedToolsWithDetails.length > 0}
-  <div class="tools-list">
-    {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
-      <div class="tool-card">
-        <div class="tool-main">
-          <div class="tool-item-icon">
-            <ToolIcon icon={tool.icon} size="M" fallbackIcon="Wrench" />
-          </div>
-          <div class="tool-label">
-            <span>
-              {tool.sourceLabel || "Tool"}:
-            </span>
-            <span>{formatToolLabel(tool)}</span>
-          </div>
-        </div>
-        <div class="tool-actions">
-          <ActionMenu align="right" roundedPopover>
-            <div slot="control" class="tool-menu-trigger">
-              <Icon
-                name="MoreVertical"
-                size="M"
-                hoverable
-                tooltip="Tool actions"
-              />
-            </div>
-            {#if tool.sourceType === ToolType.SEARCH}
-              <MenuItem on:click={configureWebSearch}>
-                Configure web search
-              </MenuItem>
-            {:else if getToolResourcePath(tool)}
-              <MenuItem on:click={() => navigateToTool(tool)}>
-                Navigate to resource
-              </MenuItem>
-            {/if}
-            <MenuItem
-              on:click={() => {
-                removeToolBindingFromPrompt(tool)
-                scheduleSave(true)
-              }}
-            >
-              Remove from instructions
-            </MenuItem>
-          </ActionMenu>
-        </div>
-      </div>
-    {/each}
-  </div>
-{/if}
-
 <WebSearchConfigModal
   bind:this={webSearchConfigModal}
   aiconfigId={draft.aiconfig}
 />
 
 <style>
-  .tools-section {
-    flex-shrink: 0;
-    margin-bottom: calc(-1 * var(--spacing-l));
+  .tools-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: fit-content;
   }
 
   :global(.tools-popover-container .spectrum-Popover) {
@@ -801,20 +837,32 @@
 
   .tools-list {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: var(--spacing-s);
-    margin-top: calc(var(--spacing-s) - 12px);
+    margin-top: 8px;
   }
 
   .tool-card {
     display: flex;
-    height: 25px;
+    width: fit-content;
+    height: fit-content;
     align-items: center;
     justify-content: space-between;
-    border-radius: 4px;
-    padding: var(--spacing-xs) var(--spacing-l) var(--spacing-xs)
-      var(--spacing-l);
-    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 8px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    padding-right: 6px;
+    background: #215f9e33;
+    border: none;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 130ms ease-out;
+  }
+
+  .tool-card:hover {
+    background: var(--spectrum-global-color-gray-200);
   }
 
   .tool-main {
@@ -831,6 +879,12 @@
     place-items: center;
     flex-shrink: 0;
     margin-bottom: var(--spacing-xs);
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .tool-item-icon :global(svg),
+  .tool-item-icon :global(img) {
+    color: var(--spectrum-global-color-gray-700);
   }
 
   .tool-label {
@@ -840,6 +894,17 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .tool-label > span:first-child {
+    color: var(--spectrum-global-color-gray-800);
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  }
+
+  .tool-label > span:last-child {
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-800);
   }
 
   .tool-actions {
@@ -852,8 +917,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: fit-content;
+    height: fit-content;
     border-radius: 8px;
     transition: background 130ms ease-out;
   }
@@ -861,6 +926,29 @@
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+
+  .tool-close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    height: fit-content;
+    padding: 4px;
+    border: none;
+    background: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 130ms ease-out;
+  }
+
+  .tool-close-button:hover {
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .tools-section {
+    display: flex;
+    flex-direction: column;
   }
 
   .llm-section-container {
@@ -877,7 +965,7 @@
     flex: 1;
     min-width: 200px;
     width: 260px;
-    max-width: 500px;
+    max-width: 600px;
     gap: 2px;
   }
 
@@ -916,7 +1004,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    max-width: 500px;
+    max-width: 600px;
   }
 
   .llm-header > :global(.spectrum-Body):first-child,

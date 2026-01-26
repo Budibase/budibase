@@ -219,6 +219,10 @@
     height: auto;
   }
 
+  .filter :global(.spectrum-ActionButton-label) {
+    font-weight: 500;
+  }
+
   :global(.form-row) {
     display: grid;
     grid-template-columns: 1fr auto;
