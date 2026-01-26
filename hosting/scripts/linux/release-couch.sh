@@ -9,7 +9,7 @@ fi
 
 echo "Tagging images with tag: $tag"
 
-docker tag budibase-couchdb budibase/couchdb:$tag
+docker tag budibase-couchdb budibase/database:$tag
 
-docker push --all-tags budibase/couchdb
+docker push --all-tags budibase/database
 
