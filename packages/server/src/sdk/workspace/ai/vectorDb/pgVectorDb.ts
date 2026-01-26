@@ -99,23 +99,13 @@ export class PgVectorDb implements VectorDb {
     sourceId: string,
     chunks: ChunkInput[]
   ): Promise<{ inserted: number; total: number }> {
-    if (!chunks.length) {
-      return { inserted: 0, total: 0 }
-    }
-    const embeddingDimensions = chunks[0].embedding.length
     return await this.withClient(async client => {
-      await this.ensureSchema(client, embeddingDimensions)
+      if (chunks.length) {
+        const embeddingDimensions = chunks[0].embedding.length
+        await this.ensureSchema(client, embeddingDimensions)
+      }
       await client.query("BEGIN")
       try {
-        if (chunks.length === 0) {
-          await client.query(
-            `DELETE FROM ${this.tableName} WHERE source = $1`,
-            [sourceId]
-          )
-          await client.query("COMMIT")
-          return { inserted: 0, total: 0 }
-        }
-
         const hashes = chunks.map(chunk => chunk.hash)
 
         await client.query(
