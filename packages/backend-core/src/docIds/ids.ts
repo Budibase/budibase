@@ -149,10 +149,6 @@ export const getLiteLLMKeyID = () => {
   return `${DocumentType.LITELLM_KEY}${SEPARATOR}config`
 }
 
-export const generateRagConfigID = () => {
-  return `${DocumentType.RAG_CONFIG}${SEPARATOR}${newid()}`
-}
-
 export const generateWorkspaceAppID = () => {
   return `${DocumentType.WORKSPACE_APP}${SEPARATOR}${newid()}`
 }

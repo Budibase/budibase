@@ -27,7 +27,6 @@ export { bannerStore } from "./banners"
 export { appCreationStore } from "./appCreation"
 export { aiConfigsStore } from "./aiConfigs"
 export { translations } from "./translations"
-export { ragConfigStore } from "./ragConfigs"
 export { vectorDbStore } from "./vectorDbs"
 
 export const sideBarCollapsed = writable(false)

@@ -724,11 +724,23 @@ couchdb:
   # can't guarantee that Budibase will work.
   image:
     # @ignore
-    repository: budibase/couchdb
+    repository: budibase/database
     # @ignore
-    tag: v3.3.3-sqs-v2.1.1
+    tag: "2.0.0"
     # @ignore
     pullPolicy: Always
+
+  # -- Environment variables to pass to the CouchDB container
+  extraEnvs:
+    - name: DATA_DIR
+      value: "/data"
+
+  # -- Persistent volume configuration for CouchDB data
+  persistentVolume:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
 
   extraPorts:
     # -- Extra ports to expose on the CouchDB service. We expose the SQS port
@@ -747,7 +759,7 @@ couchdb:
 
   # @ignore
   # This should remain false. We ship Clouseau ourselves as part of the
-  # budibase/couchdb image, and it's not possible to disable it because it's a
+  # budibase/database image, and it's not possible to disable it because it's a
   # core part of the Budibase experience.
   enableSearch: false
 
