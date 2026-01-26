@@ -154,8 +154,6 @@
 
   .config-content {
     grid-column: span 13;
-    display: flex;
-    flex-direction: column;
     padding: var(--spacing-xl) var(--spacing-l) 20px;
     min-width: 0;
     overflow-y: auto;
