@@ -23,7 +23,7 @@ const buildAgentTableName = (agentId: string) => {
     .replace(/^_+|_+$/g, "")
   const hash = crypto
     .createHash("sha256")
-    .update(context.getOrThrowWorkspaceId())
+    .update(`${context.getOrThrowWorkspaceId()}:${agentId}`)
     .digest("hex")
     .slice(0, TABLE_HASH_LENGTH)
   const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH
