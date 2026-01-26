@@ -301,7 +301,7 @@ export function getWorkspaceId(): string | undefined {
 }
 
 export function getOrThrowWorkspaceId(): string {
-  const workspaceId = getOrThrowWorkspaceId()
+  const workspaceId = getWorkspaceId()
   if (!workspaceId) {
     throw new Error("Workspace id not set")
   }
