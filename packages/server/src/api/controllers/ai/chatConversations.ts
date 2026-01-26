@@ -203,7 +203,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     throw new HTTPError("agentId is required", 400)
   }
 
-  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+  if (
+    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
+  ) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
 
@@ -364,7 +366,9 @@ export async function createChatConversation(
   }
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+  if (
+    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
+  ) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
 

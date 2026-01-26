@@ -76,12 +76,13 @@ export default async function setup() {
   await killContainers(containers)
 
   try {
-    const couchdb = new GenericContainer("budibase/couchdb:v3.3.3-sqs-v2.1.1")
+    const couchdb = new GenericContainer("budibase/database:2.0.0")
       .withName("couchdb_testcontainer")
       .withExposedPorts(5984, 4984)
       .withEnvironment({
         COUCHDB_PASSWORD: "budibase",
         COUCHDB_USER: "budibase",
+        DATA_DIR: "/data",
       })
       .withCopyContentToContainer([
         {

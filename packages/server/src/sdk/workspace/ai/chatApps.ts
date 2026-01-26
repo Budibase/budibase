@@ -4,42 +4,32 @@ import { ChatApp, DocumentType } from "@budibase/types"
 const withDefaults = (chatApp: ChatApp): ChatApp => ({
   ...chatApp,
   live: chatApp.live ?? false,
+  agents: chatApp.agents ?? [],
 })
 
-const normalizeEnabledAgents = (enabledAgents?: ChatApp["enabledAgents"]) => {
-  if (enabledAgents === undefined) {
+const normalizeAgents = (agents?: ChatApp["agents"]) => {
+  if (agents === undefined) {
     return undefined
   }
-  if (!Array.isArray(enabledAgents)) {
-    throw new HTTPError("enabledAgents must contain valid agentId entries", 400)
+  if (!Array.isArray(agents)) {
+    throw new HTTPError("agents must contain valid agentId entries", 400)
   }
-  if (enabledAgents.length === 0) {
+  if (agents.length === 0) {
     return []
   }
 
-  const allValid = enabledAgents.every(
+  const allValid = agents.every(
     agent => typeof agent?.agentId === "string" && agent.agentId.trim().length
   )
 
   if (!allValid) {
-    throw new HTTPError("enabledAgents must contain valid agentId entries", 400)
+    throw new HTTPError("agents must contain valid agentId entries", 400)
   }
 
-  const defaultCount = enabledAgents.filter(agent => agent.default).length
-  if (defaultCount > 1) {
-    throw new HTTPError("enabledAgents must contain at most one default", 400)
-  }
-
-  if (defaultCount === 0) {
-    return enabledAgents.map((agent, index) => ({
-      ...agent,
-      default: index === 0,
-    }))
-  }
-
-  return enabledAgents.map(agent => ({
-    ...agent,
-    default: agent.default === true,
+  return agents.map(agent => ({
+    agentId: agent.agentId,
+    isEnabled: agent.isEnabled === true,
+    isDefault: agent.isDefault === true,
   }))
 }
 
@@ -73,8 +63,8 @@ export async function create(chatApp: Omit<ChatApp, "_id" | "_rev">) {
   if (existing) {
     throw new HTTPError("Chat App already exists for this workspace", 400)
   }
-  const normalizedEnabledAgents = normalizeEnabledAgents(
-    chatApp.enabledAgents === undefined ? undefined : chatApp.enabledAgents
+  const normalizedAgents = normalizeAgents(
+    chatApp.agents === undefined ? undefined : chatApp.agents
   )
 
   const now = new Date().toISOString()
@@ -83,7 +73,7 @@ export async function create(chatApp: Omit<ChatApp, "_id" | "_rev">) {
     createdAt: now,
     updatedAt: now,
     ...chatApp,
-    enabledAgents: normalizedEnabledAgents ?? [],
+    agents: normalizedAgents ?? [],
   }
 
   const { rev } = await db.put(doc)
@@ -99,17 +89,15 @@ export async function update(chatApp: ChatApp) {
   if (!existing) {
     throw new HTTPError("Chat App not found", 404)
   }
-  const normalizedEnabledAgents = normalizeEnabledAgents(
-    chatApp.enabledAgents === undefined
-      ? (existing.enabledAgents ?? [])
-      : chatApp.enabledAgents
+  const normalizedAgents = normalizeAgents(
+    chatApp.agents === undefined ? (existing.agents ?? []) : chatApp.agents
   )
 
   const now = new Date().toISOString()
   const updated: ChatApp = {
     ...existing,
     ...chatApp,
-    enabledAgents: normalizedEnabledAgents ?? [],
+    agents: normalizedAgents ?? [],
     updatedAt: now,
   }
   const { rev } = await db.put(updated)
