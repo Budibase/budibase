@@ -1,35 +1,36 @@
 <script lang="ts">
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, chatAppsStore, currentChatApp } from "@/stores/portal"
-  import { notifications } from "@budibase/bbui"
   import { params } from "@roxi/routify"
 
   import ChatApp from "./_components/ChatApp.svelte"
   import ChatSettingsPanel from "./_components/ChatSettingsPanel.svelte"
 
-  type EnabledAgent = { agentId: string; default?: boolean }
+  type ChatAgentConfig = {
+    agentId: string
+    isEnabled: boolean
+    isDefault: boolean
+  }
+
+  let chatAgents: ChatAgentConfig[] = []
 
   $: namedAgents = agents.filter(agent => Boolean(agent?.name))
   $: chatApp = $currentChatApp
-  $: enabledAgents = chatApp?.enabledAgents || []
+  $: chatAgents = (chatApp?.agents || []) as ChatAgentConfig[]
 
   $: agents = [...$agentsStore.agents].sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   )
 
   const isAgentAvailable = (agentId: string) =>
-    enabledAgents.some((agent: EnabledAgent) => agent.agentId === agentId)
+    chatAgents.some(agent => agent.agentId === agentId && agent.isEnabled)
 
   const handleAvailabilityToggle = async (
     agentId: string,
     enabled: boolean
   ) => {
     const workspaceId = $params.application
-    if (!workspaceId) {
-      return
-    }
-
-    if (!agentId) {
+    if (!workspaceId || !agentId) {
       return
     }
 
@@ -41,53 +42,63 @@
       return
     }
 
-    // Ensure we have a chat app loaded before updating enabled agents
     await chatAppsStore.ensureChatApp(undefined, workspaceId)
 
-    const current = enabledAgents
-    let nextEnabledAgents: EnabledAgent[] = []
+    const current = chatAgents
+    const existing = current.find(agent => agent.agentId === agentId)
+    const nextAgents: ChatAgentConfig[] = enabled
+      ? [
+          ...current.filter(agent => agent.agentId !== agentId),
+          {
+            agentId,
+            isEnabled: true,
+            isDefault: existing?.isDefault ?? false,
+          },
+        ]
+      : current.map(agent =>
+          agent.agentId === agentId
+            ? { ...agent, isEnabled: false, isDefault: false }
+            : agent
+        )
 
-    if (enabled) {
-      nextEnabledAgents = [...current, { agentId }]
-    } else {
-      nextEnabledAgents = current.filter(agent => agent.agentId !== agentId)
-      if (!nextEnabledAgents.length) {
-        notifications.error("At least one agent must remain enabled")
-        return
-      }
-
-      if ($agentsStore.currentAgentId === agentId) {
-        const fallbackAgentId = nextEnabledAgents[0]?.agentId
-        await agentsStore.selectAgent(fallbackAgentId)
-      }
+    if (!enabled && $agentsStore.currentAgentId === agentId) {
+      const fallbackAgentId = nextAgents.find(agent => agent.isEnabled)?.agentId
+      await agentsStore.selectAgent(fallbackAgentId)
     }
 
-    await chatAppsStore.updateEnabledAgents(nextEnabledAgents)
+    await chatAppsStore.updateAgents(nextAgents)
   }
 
   const handleDefaultToggle = async (agentId: string) => {
     const workspaceId = $params.application
-    if (!workspaceId) {
+    if (!workspaceId || !agentId) {
       return
     }
 
-    if (!agentId || !isAgentAvailable(agentId)) {
-      return
-    }
-
-    // Ensure we have a chat app loaded before updating enabled agents
     await chatAppsStore.ensureChatApp(undefined, workspaceId)
 
-    const current = enabledAgents
+    const current = chatAgents
     const hasAgent = current.some(agent => agent.agentId === agentId)
-    const baseAgents = hasAgent ? current : [...current, { agentId }]
+    const baseAgents = hasAgent
+      ? current
+      : [...current, { agentId, isEnabled: true, isDefault: false }]
 
-    const nextEnabledAgents = baseAgents.map(agent => ({
-      agentId: agent.agentId,
-      default: agent.agentId === agentId,
+    const nextAgents: ChatAgentConfig[] = baseAgents.map(agent => ({
+      ...agent,
+      isDefault: agent.agentId === agentId,
+      isEnabled: agent.agentId === agentId ? true : agent.isEnabled,
     }))
 
-    await chatAppsStore.updateEnabledAgents(nextEnabledAgents)
+    await chatAppsStore.updateAgents(nextAgents)
+  }
+
+  const handleAddAgent = async (agentId: string) => {
+    const workspaceId = $params.application
+    if (!workspaceId || !agentId) {
+      return
+    }
+
+    await chatAppsStore.ensureChatApp(agentId, workspaceId)
   }
 </script>
 
@@ -96,10 +107,11 @@
   <div class="page">
     <ChatSettingsPanel
       {namedAgents}
-      {enabledAgents}
+      agents={chatAgents}
       {isAgentAvailable}
       {handleAvailabilityToggle}
       {handleDefaultToggle}
+      {handleAddAgent}
     />
 
     {#if $params.application}
