@@ -1,139 +1,147 @@
 <script lang="ts">
   import Panel from "@/components/design/Panel.svelte"
-  import { Body, Toggle } from "@budibase/bbui"
+  import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
+  import type { Agent } from "@budibase/types"
+  import AgentList from "./AgentList.svelte"
+  import AgentSettingsModal from "./AgentSettingsModal.svelte"
+  import type { AgentListItem } from "./types"
 
-  type NamedAgent = {
-    _id?: string
-    name?: string
-  }
-
-  type EnabledAgent = {
+  type ChatAgentConfig = {
     agentId: string
-    default?: boolean
+    isEnabled: boolean
+    isDefault: boolean
   }
 
-  export let namedAgents: NamedAgent[] = []
-  export let enabledAgents: EnabledAgent[] = []
+  export let namedAgents: Agent[] = []
+  export let agents: ChatAgentConfig[] = []
   export let isAgentAvailable: (_agentId: string) => boolean
   export let handleAvailabilityToggle: (
     _agentId: string,
     _enabled: boolean
   ) => void
+  export let handleDefaultToggle: (_agentId: string) => void
+  export let handleAddAgent: (_agentId: string) => void
 
-  $: agentList = namedAgents
-    .filter(agent => agent._id)
-    .map(agent => ({
-      agentId: agent._id!,
-      name: agent.name,
-      default: enabledAgents.find(enabled => enabled.agentId === agent._id)
-        ?.default,
-    }))
+  let selectedAgentId: string | undefined
+  let selectedAgent: AgentListItem | undefined
+  let isModalOpen = false
+
+  $: selectedAgent = agentList.find(agent => agent.agentId === selectedAgentId)
+
+  $: agentList = agents.map(agentConfig => {
+    const details = namedAgents.find(agent => agent._id === agentConfig.agentId)
+    return {
+      agentId: agentConfig.agentId,
+      name: details?.name!,
+      isDefault: agentConfig.isDefault,
+    }
+  })
 
   $: enabledAgentList = agentList.filter(agent =>
     isAgentAvailable(agent.agentId)
   )
   $: resolvedDefaultAgent =
-    enabledAgentList.find(agent => agent.default) || enabledAgentList[0]
+    enabledAgentList.find(agent => agent.isDefault) || enabledAgentList[0]
   $: otherAgents = agentList.filter(
     agent => agent.agentId !== resolvedDefaultAgent?.agentId
   )
+  $: liveAgents = namedAgents.filter(agent => agent._id && agent.live)
+
+  const openAgentSettings = (agent: AgentListItem) => {
+    selectedAgentId = agent.agentId
+    isModalOpen = true
+  }
+
+  const isAgentEnabled = (agentId: string) => {
+    return agents.some(
+      enabled => enabled.agentId === agentId && enabled.isEnabled
+    )
+  }
 </script>
 
 <Panel customWidth={260} borderRight noHeaderBorder>
-  <div class="settings-header">
-    <Body size="S" color="var(--spectrum-global-color-gray-800)">Settings</Body>
-  </div>
-
-  <div class="settings-section">
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">Agents</Body>
-    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-      Use the button below to add agents. After adding them, they’ll appear in
-      the chat side panel. The New chat button opens a new conversation with the
-      default agent.
-    </Body>
-
-    <div class="settings-group">
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        Default agent
-      </Body>
-      {#if resolvedDefaultAgent?.agentId}
-        <div class="settings-agent">
-          <div class="settings-agent-info">
-            <Body size="S">
-              {resolvedDefaultAgent.name || "Unknown agent"}
-            </Body>
-          </div>
-          <Toggle
-            value={isAgentAvailable(resolvedDefaultAgent.agentId)}
-            on:change={event =>
-              handleAvailabilityToggle(
-                resolvedDefaultAgent.agentId,
-                event.detail
-              )}
-          />
-        </div>
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-500)">
-          No default agent
-        </Body>
-      {/if}
+  <div class="settings-container">
+    <div class="settings-header">
+      <Body size="S" color="var(--spectrum-global-color-gray-800)"
+        >Settings</Body
+      >
     </div>
 
-    <div class="settings-group">
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        Other agents
+    <div class="settings-section">
+      <Body size="S" color="var(--spectrum-global-color-gray-700)">Agents</Body>
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        Use the button below to add agents. After adding them, they’ll appear in
+        the chat side panel. The New chat button opens a new conversation with
+        the default agent.
       </Body>
-      {#if otherAgents.length}
-        {#each otherAgents as agent (agent.agentId)}
-          <div class="settings-agent">
-            <div class="settings-agent-info">
-              <Body size="S">{agent.name}</Body>
-            </div>
-            <Toggle
-              value={isAgentAvailable(agent.agentId)}
-              on:change={event =>
-                handleAvailabilityToggle(agent.agentId, event.detail)}
-            />
+
+      <div class="settings-options">
+        <ActionMenu align="left" roundedPopover>
+          <div slot="control">
+            <Button secondary size="M" icon="plus">Add agent</Button>
           </div>
-        {/each}
-      {:else}
-        <Body size="S" color="var(--spectrum-global-color-gray-500)">
-          No other agents
-        </Body>
-      {/if}
+          {#if liveAgents.length}
+            {#each liveAgents as agent (agent._id)}
+              <MenuItem
+                icon="robot"
+                disabled={isAgentEnabled(agent._id!)}
+                on:click={() => handleAddAgent(agent._id!)}
+              >
+                {agent.name || "Unnamed agent"}
+              </MenuItem>
+            {/each}
+          {:else}
+            <MenuItem disabled>No live agents</MenuItem>
+          {/if}
+        </ActionMenu>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <AgentList
+        {resolvedDefaultAgent}
+        {otherAgents}
+        {isAgentAvailable}
+        onToggleEnabled={handleAvailabilityToggle}
+        onOpenSettings={openAgentSettings}
+      />
     </div>
   </div>
 </Panel>
 
+<AgentSettingsModal
+  open={isModalOpen}
+  {selectedAgent}
+  defaultAgentId={resolvedDefaultAgent?.agentId}
+  {isAgentAvailable}
+  onSetDefault={handleDefaultToggle}
+  onClose={() => {
+    isModalOpen = false
+    selectedAgentId = undefined
+  }}
+/>
+
 <style>
+  .settings-container {
+    padding: var(--spacing-m);
+    gap: 32px;
+    display: flex;
+    flex-direction: column;
+  }
+
   .settings-header {
     padding: var(--spacing-m);
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .settings-section {
-    padding: var(--spacing-m);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
   }
 
-  .settings-group {
+  .settings-options {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .settings-agent {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
-  }
-
-  .settings-agent-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xxs);
+    justify-content: flex-start;
   }
 </style>

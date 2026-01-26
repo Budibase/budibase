@@ -1,19 +1,38 @@
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { AgentFileStatus, AIConfigType } from "@budibase/types"
 import nock from "nock"
 import environment from "../../../../environment"
-import * as ragSdk from "../../../../sdk/workspace/ai/rag"
+import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
-jest.mock("../../../../sdk/workspace/ai/rag", () => {
-  const originalModule = jest.requireActual("../../../../sdk/workspace/ai/rag")
+jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
+  const originalModule = jest.requireActual(
+    "../../../../sdk/workspace/ai/rag/files"
+  )
   return {
     __esModule: true,
     ...originalModule,
+    ingestAgentFile: jest.fn(),
+    deleteAgentFileChunks: jest.fn(),
   }
 })
 
 describe("agent files", () => {
   const config = new TestConfiguration()
+  const mockLiteLLMProviders = () =>
+    nock(environment.LITELLM_URL)
+      .persist()
+      .get("/public/providers/fields")
+      .reply(200, [
+        {
+          provider: "OpenAI",
+          provider_display_name: "OpenAI",
+          litellm_provider: "openai",
+          credential_fields: [
+            { key: "api_key", label: "API Key", field_type: "password" },
+            { key: "api_base", label: "Base URL", field_type: "text" },
+          ],
+        },
+      ])
 
   afterAll(() => {
     config.end()
@@ -22,7 +41,8 @@ describe("agent files", () => {
   const fileBuffer = Buffer.from("Hello from Budibase")
 
   const createAgentWithRag = async () => {
-    const embeddingValidationScope = nock("https://example.com")
+    mockLiteLLMProviders()
+    const embeddingValidationScope = nock(environment.LITELLM_URL)
       .post("/v1/embeddings")
       .reply(200, { data: [] })
 
@@ -30,18 +50,23 @@ describe("agent files", () => {
       .post("/key/generate")
       .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
       .post("/model/new")
+      .reply(200, { model_id: "embed-validation-2" })
+      .post("/model/delete")
+      .reply(200, { status: "success" })
+      .post("/model/new")
       .reply(200, { model_id: "embed-model-2" })
       .post("/key/update")
       .reply(200, { status: "success" })
 
     const embeddings = await config.api.ai.createConfig({
       name: "Embeddings",
-      provider: "openai",
-      baseUrl: "https://example.com",
+      provider: "OpenAI",
       model: "text-embedding-3-small",
-      apiKey: "test",
+      credentialsFields: {
+        api_key: "test",
+        api_base: "https://example.com",
+      },
       liteLLMModelId: "test",
-      isDefault: false,
       configType: AIConfigType.EMBEDDINGS,
     })
     const vectorDb = await config.api.vectorDb.create({
@@ -85,9 +110,10 @@ describe("agent files", () => {
   })
 
   it("uploads and lists agent files", async () => {
-    const ingestSpy = jest
-      .spyOn(ragSdk, "ingestAgentFile")
-      .mockResolvedValue({ inserted: 1, total: 2 })
+    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+      typeof ragSdk.ingestAgentFile
+    >
+    ingestSpy.mockResolvedValue({ inserted: 1, total: 2 })
 
     const { agent } = await createAgentWithRag()
 
@@ -107,12 +133,14 @@ describe("agent files", () => {
   })
 
   it("deletes agent files and clears chunks", async () => {
-    jest
-      .spyOn(ragSdk, "ingestAgentFile")
-      .mockResolvedValue({ inserted: 1, total: 1 })
-    const deleteSpy = jest
-      .spyOn(ragSdk, "deleteAgentFileChunks")
-      .mockResolvedValue()
+    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+      typeof ragSdk.ingestAgentFile
+    >
+    ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
+    const deleteSpy = ragSdk.deleteAgentFileChunks as jest.MockedFunction<
+      typeof ragSdk.deleteAgentFileChunks
+    >
+    deleteSpy.mockResolvedValue()
 
     const { agent } = await createAgentWithRag()
 

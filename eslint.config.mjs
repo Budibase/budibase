@@ -204,6 +204,13 @@ export default [
     },
   },
   {
+    files: ["packages/server/src/sdk/workspace/**/*.{ts,js}"],
+
+    rules: {
+      "local-rules/no-context-getglobaldb": "error",
+    },
+  },
+  {
     files: [
       "packages/builder/**/*",
       "packages/client/**/*",

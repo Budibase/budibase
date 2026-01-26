@@ -6,7 +6,7 @@
   type EnabledAgentListItem = {
     agentId: string
     name?: string
-    default?: boolean
+    isDefault?: boolean
   }
 
   type ConversationListItem = {
@@ -19,7 +19,7 @@
   export let selectedConversationId: string | undefined
 
   $: defaultAgent =
-    enabledAgentList.find(agent => agent.default) || enabledAgentList[0]
+    enabledAgentList.find(agent => agent.isDefault) || enabledAgentList[0]
 
   const dispatch = createEventDispatcher<{
     agentSelected: { agentId: string }
@@ -35,62 +35,80 @@
   }
 </script>
 
-<Panel customWidth={260} borderRight noHeaderBorder>
-  {#if defaultAgent?.agentId}
-    <div class="list-section">
-      <button
-        class="new-chat"
-        on:click={() => selectAgent(defaultAgent.agentId)}
-      >
-        <span class="new-chat-icon">
-          <Icon name="plus" size="S" />
-        </span>
-        <span class="new-chat-label">New chat</span>
-      </button>
-    </div>
-  {/if}
-
-  <div class="list-section">
-    <div class="list-title">Agents</div>
-    {#if enabledAgentList.length}
-      {#each enabledAgentList as agent (agent.agentId)}
-        <button
-          class="list-item list-item-button"
-          on:click={() => selectAgent(agent.agentId)}
-        >
-          {agent.name}
-        </button>
-      {/each}
-    {:else}
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        No agents
-      </Body>
-    {/if}
-  </div>
-
-  <div class="list-section">
-    <div class="list-title">Recent Chats</div>
-    {#if conversationHistory.length}
-      {#each conversationHistory as conversation}
-        {#if conversation._id}
+<div class="chat-nav-panel">
+  <Panel customWidth={260} borderRight noHeaderBorder>
+    <div class="chat-nav-content">
+      {#if defaultAgent?.agentId}
+        <div class="list-section">
           <button
-            class="list-item list-item-button"
-            class:selected={selectedConversationId === conversation._id}
-            on:click={() => selectConversation(conversation._id!)}
+            class="new-chat"
+            on:click={() => selectAgent(defaultAgent.agentId)}
           >
-            {conversation.title || "Untitled Chat"}
+            <span class="new-chat-icon">
+              <Icon name="plus" size="S" />
+            </span>
+            <span class="new-chat-label">New chat</span>
           </button>
+        </div>
+      {/if}
+
+      <div class="list-section">
+        <div class="list-title">Agents</div>
+        {#if enabledAgentList.length}
+          {#each enabledAgentList as agent (agent.agentId)}
+            <button
+              class="list-item list-item-button"
+              on:click={() => selectAgent(agent.agentId)}
+            >
+              {agent.name}
+            </button>
+          {/each}
+        {:else}
+          <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+            No agents
+          </Body>
         {/if}
-      {/each}
-    {:else}
-      <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-        No recent chats
-      </Body>
-    {/if}
-  </div>
-</Panel>
+      </div>
+
+      <div class="list-section">
+        <div class="list-title">Recent Chats</div>
+        {#if conversationHistory.length}
+          {#each conversationHistory as conversation}
+            {#if conversation._id}
+              <button
+                class="list-item list-item-button"
+                class:selected={selectedConversationId === conversation._id}
+                on:click={() => selectConversation(conversation._id!)}
+              >
+                {conversation.title || "Untitled Chat"}
+              </button>
+            {/if}
+          {/each}
+        {:else}
+          <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+            No recent chats
+          </Body>
+        {/if}
+      </div>
+    </div>
+  </Panel>
+</div>
 
 <style>
+  .chat-nav-panel {
+    display: flex;
+  }
+
+  .chat-nav-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+
+  :global(.chat-nav-panel .panel) {
+    background: transparent;
+  }
+
   .list-section {
     padding: var(--spacing-m);
     display: flex;
@@ -166,11 +184,11 @@
   }
 
   .list-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--spectrum-global-color-gray-500);
-    font-weight: 600;
+    font-size: 14px;
+    line-height: 17px;
+    letter-spacing: 0;
+    color: var(--spectrum-global-color-gray-600);
+    font-weight: 400;
     margin-bottom: var(--spacing-xs);
   }
 </style>

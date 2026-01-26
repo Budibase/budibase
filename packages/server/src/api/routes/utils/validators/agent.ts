@@ -8,7 +8,7 @@ export function createAgentValidator() {
     Joi.object({
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      aiconfig: Joi.string().required(),
+      aiconfig: Joi.string().optional(),
       promptInstructions: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
       goal: OPTIONAL_STRING,
@@ -26,7 +26,7 @@ export function updateAgentValidator() {
       _rev: Joi.string().required(),
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      aiconfig: Joi.string().required(),
+      aiconfig: Joi.string().optional(),
       promptInstructions: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
       goal: OPTIONAL_STRING,

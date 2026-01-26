@@ -7,7 +7,7 @@ import {
   RequiredKeys,
   ToDocCreateMetadata,
 } from "@budibase/types"
-import { deleteAgentFileChunks, getAgentRagConfig } from "../rag"
+import { deleteAgentFileChunks, getAgentRagConfig } from "../rag/files"
 
 interface CreateAgentFileOptions {
   agentId: string
