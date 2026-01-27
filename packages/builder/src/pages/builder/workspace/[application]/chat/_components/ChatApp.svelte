@@ -186,9 +186,15 @@
         const [nextChat] = remainingConversations
         await selectChat(nextChat)
       } else {
-        // Return to blank state (agent still selected)
-        chat = { ...INITIAL_CHAT, chatAppId: $chatAppsStore.chatAppId || "" }
-        chatAppsStore.clearCurrentConversationId()
+        syncingAgentSelection = true
+        try {
+          await agentsStore.selectAgent(undefined)
+          selectedAgentId = null
+          chat = { ...INITIAL_CHAT, chatAppId: $chatAppsStore.chatAppId || "" }
+          chatAppsStore.clearCurrentConversationId()
+        } finally {
+          syncingAgentSelection = false
+        }
       }
     } catch (err) {
       const message =
