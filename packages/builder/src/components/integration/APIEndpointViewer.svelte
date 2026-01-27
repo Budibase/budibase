@@ -62,6 +62,7 @@
   import ResponsePanel from "./ResponsePanel.svelte"
   import AuthPicker from "./rest/AuthPicker.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
+  import { getErrorMessage } from "@/helpers/errors"
 
   export let queryId
   export let datasourceId
@@ -101,6 +102,7 @@
   let template: RestTemplate | undefined
   let datasource: Datasource | UIInternalDatasource | undefined
   let authConfigs: AuthConfigOption[] = []
+
   const ensureQueryDefaults = (target: Query) => {
     if (!target.fields?.disabledHeaders) {
       target.fields.disabledHeaders = {}
@@ -576,7 +578,7 @@
         notifications.success("Request sent successfully")
       }
     } catch (error) {
-      notifications.error(`Query Error: ${error}`)
+      notifications.error(`Query Error: ${getErrorMessage(error)}`)
     }
     runningQuery = false
   }

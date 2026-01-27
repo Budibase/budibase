@@ -1,5 +1,7 @@
 import { BulkUserCreated, User, UserStatus } from "@budibase/types"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
+import * as accounts from "../../accounts"
+import { withEnv } from "../../environment"
 import { UserDB } from "../db"
 import { searchExistingEmails } from "../lookup"
 
@@ -186,6 +188,29 @@ describe("UserDB", () => {
             [previousEmail, newEmail]
           )
         })
+      })
+
+      it("does not check account portal when email is unchanged", async () => {
+        const getAccountSpy = jest
+          .spyOn(accounts, "getAccount")
+          .mockResolvedValue(undefined)
+
+        await withEnv(
+          {
+            SELF_HOSTED: false,
+            DISABLE_ACCOUNT_PORTAL: "",
+            MULTI_TENANCY: "",
+          },
+          async () => {
+            await config.doInTenant(async () => {
+              const updatedName = generator.first()
+              await db.save({ ...user, firstName: updatedName })
+              expect(getAccountSpy).not.toHaveBeenCalled()
+            })
+          }
+        )
+
+        getAccountSpy.mockRestore()
       })
     })
   })
