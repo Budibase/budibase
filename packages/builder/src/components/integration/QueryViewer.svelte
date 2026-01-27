@@ -25,6 +25,7 @@
   import QueryViewerSavePromptModal from "./QueryViewerSavePromptModal.svelte"
   import { Utils } from "@budibase/frontend-core"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
+  import { getErrorMessage } from "@/helpers/errors"
 
   $: goto = $gotoStore
 
@@ -97,14 +98,7 @@
 
       notifications.success("Query executed successfully")
     } catch (error) {
-      const message =
-        error?.message === "[object Object]"
-          ? (error?.message?.message ??
-            error?.message?.code ??
-            error?.message?.error ??
-            JSON.stringify(error))
-          : (error?.message ?? error)
-      notifications.error(`Query Error: ${message}`)
+      notifications.error(`Query Error: ${getErrorMessage(error)}`)
 
       if (!suppressErrors) {
         throw error

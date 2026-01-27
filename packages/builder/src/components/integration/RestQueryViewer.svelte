@@ -38,6 +38,7 @@
   } from "@/constants/backend"
   import JSONPreview from "@/components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
+  import { getErrorMessage } from "@/helpers/errors"
   import DynamicVariableModal from "./DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
@@ -309,14 +310,7 @@
         notifications.success("Request sent successfully")
       }
     } catch (error) {
-      const message =
-        error?.message === "[object Object]"
-          ? (error?.message?.message ??
-            error?.message?.code ??
-            error?.message?.error ??
-            JSON.stringify(error))
-          : (error?.message ?? error)
-      notifications.error(`Query Error: ${message}`)
+      notifications.error(`Query Error: ${getErrorMessage(error)}`)
     }
   }
 
