@@ -1,14 +1,5 @@
 <script lang="ts">
-  import {
-    Body,
-    Input,
-    notifications,
-    Select,
-    ActionButton,
-    Button,
-    Icon,
-    AbsTooltip,
-  } from "@budibase/bbui"
+  import { Body, notifications, Select, Button, Icon } from "@budibase/bbui"
   import {
     AIConfigType,
     ToolType,
@@ -26,7 +17,6 @@
     automationStore,
     queries,
   } from "@/stores/builder"
-  import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { onDestroy, onMount, untrack } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
@@ -257,7 +247,7 @@ Any constraints the agent must follow.
         aiconfig: agent.aiconfig || "",
         goal: agent.goal || "",
         promptInstructions:
-          agent.promptInstructions || DEFAULT_PROMPT_INSTRUCTIONS,
+          agent.promptInstructions ?? DEFAULT_PROMPT_INSTRUCTIONS,
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
       }
@@ -429,26 +419,12 @@ Any constraints the agent must follow.
     return null
   }
 
-  const navigateToTool = (tool: AgentTool) => {
-    const path = getToolResourcePath(tool)
-    if (path) {
-      $goto(path)
-    } else {
-      notifications.error("Unable to locate resource for this tool")
-    }
-  }
-
   const openToolResourceInNewTab = (tool: AgentTool) => {
     const path = getToolResourcePath(tool)
     if (path) {
-      // Convert relative path to absolute URL
-      // Current path is like: /builder/workspace/[application]/agent/[agentId]
-      // Relative path is like: ../../automation/[id] or ../../apis/query/[id]
       const currentPath = window.location.pathname
       const pathParts = currentPath.split("/").filter(Boolean)
-      // Remove last 2 parts (agent/[agentId]) to get base path
-      const basePath = pathParts.slice(0, -2).join("/")
-      // Remove ../.. from the path and construct full URL
+      const basePath = pathParts.slice(0, -3).join("/")
       const cleanPath = path.replace(/^\.\.\/\.\./, "")
       const fullPath = `/${basePath}${cleanPath}`
       const url = `${window.location.origin}${fullPath}${window.location.hash}`
@@ -735,7 +711,7 @@ Any constraints the agent must follow.
       {#if toolsLoaded}
         {#key resolvedIconCount}
           <CodeEditor
-            value={draft.promptInstructions || DEFAULT_PROMPT_INSTRUCTIONS}
+            value={draft.promptInstructions ?? DEFAULT_PROMPT_INSTRUCTIONS}
             bindings={promptBindings}
             bindingIcons={readableToIcon}
             completions={promptCompletions}
