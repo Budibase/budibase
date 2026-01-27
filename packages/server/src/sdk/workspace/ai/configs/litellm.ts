@@ -2,9 +2,11 @@ import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
 import {
   AIConfigType,
   LiteLLMKeyConfig,
+  ReasoningEffort,
   LockName,
   LockType,
 } from "@budibase/types"
+import { buildLiteLLMParams } from "../helpers"
 import fetch from "node-fetch"
 import env from "../../../../environment"
 import * as configSdk from "../configs"
@@ -39,15 +41,25 @@ export async function addModel({
   name,
   credentialFields,
   configType,
+  reasoningEffort,
 }: {
   provider: string
   name: string
   credentialFields: Record<string, string>
   configType: AIConfigType
+  reasoningEffort?: ReasoningEffort
 }): Promise<string> {
   provider = await mapToLiteLLMProvider(provider)
 
   await validateConfig({ provider, name, credentialFields, configType })
+
+  const litellmParams = buildLiteLLMParams({
+    provider,
+    name,
+    credentialFields,
+    configType,
+    reasoningEffort,
+  })
 
   const requestOptions = {
     method: "POST",
@@ -57,17 +69,7 @@ export async function addModel({
     },
     body: JSON.stringify({
       model_name: name,
-      litellm_params: {
-        custom_llm_provider: provider,
-        model: `${provider}/${name}`,
-        use_in_pass_through: false,
-        use_litellm_proxy: false,
-        merge_reasoning_content_in_choices: true,
-        input_cost_per_token: 0,
-        output_cost_per_token: 0,
-        guardrails: [],
-        ...credentialFields,
-      },
+      litellm_params: litellmParams,
       model_info: {
         created_at: new Date().toISOString(),
         created_by: (context.getIdentity() as any)?.email,
@@ -86,15 +88,25 @@ export async function updateModel({
   name,
   credentialFields,
   configType,
+  reasoningEffort,
 }: {
   llmModelId: string
   provider: string
   name: string
   credentialFields: Record<string, string>
   configType: AIConfigType
+  reasoningEffort?: ReasoningEffort
 }) {
   provider = await mapToLiteLLMProvider(provider)
   await validateConfig({ provider, name, credentialFields, configType })
+
+  const litellmParams = buildLiteLLMParams({
+    provider,
+    name,
+    credentialFields,
+    configType,
+    reasoningEffort,
+  })
 
   const requestOptions = {
     method: "PATCH",
@@ -104,17 +116,7 @@ export async function updateModel({
     },
     body: JSON.stringify({
       model_name: name,
-      litellm_params: {
-        custom_llm_provider: provider,
-        model: `${provider}/${name}`,
-        use_in_pass_through: false,
-        use_litellm_proxy: false,
-        merge_reasoning_content_in_choices: true,
-        input_cost_per_token: 0,
-        output_cost_per_token: 0,
-        guardrails: [],
-        ...credentialFields,
-      },
+      litellm_params: litellmParams,
       model_info: {
         updated_at: new Date().toISOString(),
         updated_by: (context.getIdentity() as any)?.email,
@@ -139,8 +141,18 @@ export async function validateConfig(model: {
   name: string
   credentialFields: Record<string, string>
   configType: AIConfigType
+  reasoningEffort?: ReasoningEffort
 }) {
-  const { name, provider, credentialFields, configType } = model
+  const { name, provider, credentialFields, configType, reasoningEffort } =
+    model
+
+  const litellmParams = buildLiteLLMParams({
+    provider,
+    name,
+    credentialFields,
+    configType,
+    reasoningEffort,
+  })
 
   if (configType === AIConfigType.EMBEDDINGS) {
     let modelId: string | undefined
@@ -154,17 +166,7 @@ export async function validateConfig(model: {
         },
         body: JSON.stringify({
           model_name: name,
-          litellm_params: {
-            custom_llm_provider: provider,
-            model: `${provider}/${name}`,
-            use_in_pass_through: false,
-            use_litellm_proxy: false,
-            merge_reasoning_content_in_choices: true,
-            input_cost_per_token: 0,
-            output_cost_per_token: 0,
-            guardrails: [],
-            ...credentialFields,
-          },
+          litellm_params: litellmParams,
           model_info: {
             created_at: new Date().toISOString(),
             created_by: (context.getIdentity() as any)?.email,
