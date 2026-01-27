@@ -15,9 +15,7 @@
     name="star"
     hoverable
     weight={favourite._id ? "fill" : "regular"}
-    color={favourite._id
-      ? "var(--spectrum-global-color-gray-600)"
-      : undefined}
+    color={favourite._id ? "var(--spectrum-global-color-gray-600)" : undefined}
     hoverColor={favourite._id
       ? "var(--spectrum-global-color-gray-600)"
       : undefined}

@@ -138,9 +138,16 @@
       >
         <div class="cell name-cell">
           <div class="icon-wrapper">
-            <Icon name={row.icon} size="S" color={row.iconColor} weight="fill" />
+            <Icon
+              name={row.icon}
+              size="S"
+              color={row.iconColor}
+              weight="fill"
+            />
           </div>
-          <Body size="S" color="var(--spectrum-global-color-gray-900)">{row.name}</Body>
+          <Body size="S" color="var(--spectrum-global-color-gray-900)"
+            >{row.name}</Body
+          >
         </div>
 
         <div class="cell">
@@ -181,7 +188,13 @@
           </span>
           <div class="ctx-btn">
             <!-- todo: implement actions -->
-            <Icon name="dots-three" size="M" hoverable color="var(--spectrum-global-color-gray-600)" on:click={stop} />
+            <Icon
+              name="dots-three"
+              size="M"
+              hoverable
+              color="var(--spectrum-global-color-gray-600)"
+              on:click={stop}
+            />
           </div>
         </div>
       </button>

@@ -273,11 +273,20 @@
   <div class="content">
     <div class="header">
       <div class="title">
-        <Body size="M" weight="500" color="var(--spectrum-global-color-gray-900)">{$appStore.name || "Workspace"} workspace</Body>
+        <Body
+          size="M"
+          weight="500"
+          color="var(--spectrum-global-color-gray-900)"
+          >{$appStore.name || "Workspace"} workspace</Body
+        >
       </div>
 
       <div class="header-actions">
-        <button type="button" class="header-link" on:click={() => bb.settings()}>
+        <button
+          type="button"
+          class="header-link"
+          on:click={() => bb.settings()}
+        >
           <Body size="S">Add connection</Body>
         </button>
         <a href={"/builder/apps"} class="header-link">
