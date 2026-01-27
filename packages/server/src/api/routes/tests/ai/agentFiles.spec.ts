@@ -18,6 +18,21 @@ jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
 
 describe("agent files", () => {
   const config = new TestConfiguration()
+  const mockLiteLLMProviders = () =>
+    nock(environment.LITELLM_URL)
+      .persist()
+      .get("/public/providers/fields")
+      .reply(200, [
+        {
+          provider: "OpenAI",
+          provider_display_name: "OpenAI",
+          litellm_provider: "openai",
+          credential_fields: [
+            { key: "api_key", label: "API Key", field_type: "password" },
+            { key: "api_base", label: "Base URL", field_type: "text" },
+          ],
+        },
+      ])
 
   afterAll(() => {
     config.end()
@@ -26,7 +41,8 @@ describe("agent files", () => {
   const fileBuffer = Buffer.from("Hello from Budibase")
 
   const createAgentWithRag = async () => {
-    const embeddingValidationScope = nock("https://example.com")
+    mockLiteLLMProviders()
+    const embeddingValidationScope = nock(environment.LITELLM_URL)
       .post("/v1/embeddings")
       .reply(200, { data: [] })
 
@@ -34,16 +50,22 @@ describe("agent files", () => {
       .post("/key/generate")
       .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
       .post("/model/new")
+      .reply(200, { model_id: "embed-validation-2" })
+      .post("/model/delete")
+      .reply(200, { status: "success" })
+      .post("/model/new")
       .reply(200, { model_id: "embed-model-2" })
       .post("/key/update")
       .reply(200, { status: "success" })
 
     const embeddings = await config.api.ai.createConfig({
       name: "Embeddings",
-      provider: "openai",
-      baseUrl: "https://example.com",
+      provider: "OpenAI",
       model: "text-embedding-3-small",
-      apiKey: "test",
+      credentialsFields: {
+        api_key: "test",
+        api_base: "https://example.com",
+      },
       liteLLMModelId: "test",
       configType: AIConfigType.EMBEDDINGS,
     })
@@ -56,13 +78,6 @@ describe("agent files", () => {
       user: "bb_user",
       password: "secret",
     })
-    const ragConfig = await config.api.ragConfig.create({
-      name: "Agent RAG",
-      embeddingModel: embeddings._id!,
-      vectorDb: vectorDb._id!,
-      ragMinDistance: 0.6,
-      ragTopK: 3,
-    })
     expect(liteLLMScope.isDone()).toBe(true)
     expect(embeddingValidationScope.isDone()).toBe(true)
 
@@ -71,14 +86,12 @@ describe("agent files", () => {
       aiconfig: "default",
       description: "Support",
       promptInstructions: "Be helpful",
+      embeddingModel: embeddings._id!,
+      vectorDb: vectorDb._id!,
+      ragMinDistance: 0.6,
+      ragTopK: 3,
     })
-
-    const updatedAgent = await config.api.agent.update({
-      ...agent,
-      ragConfigId: ragConfig._id!,
-    })
-
-    return { agent: updatedAgent, vectorDb, ragConfig }
+    return { agent, vectorDb }
   }
 
   beforeEach(async () => {
@@ -136,7 +149,10 @@ describe("agent files", () => {
     const { files } = await config.api.agentFiles.fetch(agent._id!)
     expect(files).toHaveLength(0)
     expect(deleteSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ _id: expect.any(String) }),
+      expect.objectContaining({
+        embeddingModel: expect.any(String),
+        vectorDb: expect.any(String),
+      }),
       [upload.file.ragSourceId]
     )
   })

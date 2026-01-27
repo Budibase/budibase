@@ -1,0 +1,50 @@
+{{- if .Values.placementConfig.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "couchdb.fullname" . }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}"
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    spec:
+      restartPolicy: OnFailure
+      {{- if .Values.podSecurityContext }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: placement-tagging-job
+        image: {{ .Values.placementConfig.image.repository }}:{{ .Values.placementConfig.image.tag }}
+        imagePullPolicy: Always
+        args: ["--placement-manager"]
+        envFrom:
+          - secretRef:
+              name: couchdb-couchdb
+          - configMapRef:
+              name: {{ template "couchdb.fullname" . }}
+        env:
+          - name: NAMESPACE
+            value: {{ .Release.Namespace }}
+          - name: COUCHDB_SVC
+            value: {{ template "couchdb.svcname" . }}
+          - name: COUCHDB_PORT
+            value: {{ .Values.service.externalPort | quote }}
+        {{- if .Values.containerSecurityContext }}
+        securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 10 }}
+        {{- end }}
+{{- end -}}

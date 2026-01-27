@@ -69,9 +69,8 @@
 
     <Chatbox
       bind:chat
-      {loading}
       {workspaceId}
-      on:chatSaved={event => dispatch("chatSaved", event.detail)}
+      onchatsaved={event => dispatch("chatSaved", event.detail)}
     />
   {:else}
     <div class="chat-empty">
@@ -103,7 +102,7 @@
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    padding: 0 32px;
+    padding: 0 32px 32px 32px;
     box-sizing: border-box;
   }
 
