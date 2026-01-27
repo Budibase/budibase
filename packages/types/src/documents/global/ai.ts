@@ -11,7 +11,6 @@ export interface CustomAIProviderConfig extends Document {
   name: string
   provider: string
   credentialsFields: Record<string, string>
-
   model: string
   liteLLMModelId: string
   webSearchConfig?: WebSearchConfig

@@ -19,17 +19,12 @@
   import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
-  type ReasoningEffort = "low" | "medium" | "high"
-  type CustomAIProviderConfigDraft = CustomAIProviderConfig & {
-    reasoningEffort?: ReasoningEffort
-  }
-
-  export let config: CustomAIProviderConfigDraft | null
+  export let config: CustomAIProviderConfig | null
   export let type: AIConfigType
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
-  let draft: CustomAIProviderConfigDraft = config
+  let draft: CustomAIProviderConfig = config
     ? ({
         _id: config._id!,
         _rev: config._rev!,
@@ -43,9 +38,7 @@
         webSearchConfig: config.webSearchConfig,
         configType: config.configType,
         reasoningEffort: config.reasoningEffort,
-      } satisfies RequiredKeys<
-        ToDocUpdateMetadata<CustomAIProviderConfigDraft>
-      >)
+      } satisfies RequiredKeys<ToDocUpdateMetadata<CustomAIProviderConfig>>)
     : ({
         _id: "",
         provider: "",
@@ -56,9 +49,7 @@
         credentialsFields: {},
         webSearchConfig: undefined,
         reasoningEffort: undefined,
-      } satisfies RequiredKeys<
-        ToDocCreateMetadata<CustomAIProviderConfigDraft>
-      >)
+      } satisfies RequiredKeys<ToDocCreateMetadata<CustomAIProviderConfig>>)
 
   $: isEdit = !!config
   $: canSave = !!draft.name.trim() && !!draft.provider
