@@ -1,0 +1,24 @@
+{{- if and .Values.persistentVolume.enabled .Values.persistentVolume.existingClaims -}}
+{{- range $claim := .Values.persistentVolume.existingClaims }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $claim.persistentVolumeName }}
+spec:
+{{- if $.Values.persistentVolume.storageClass }}
+{{- if (eq "-" $.Values.persistentVolume.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ $.Values.persistentVolume.storageClass }}"
+{{- end }}
+{{- end }}
+  accessModes:
+  {{- range $.Values.persistentVolume.accessModes }}
+    - {{ . | quote }}
+  {{- end }}
+  capacity:
+    storage: {{ $.Values.persistentVolume.size }}
+{{ toYaml $claim.volumeSource | indent 2 }}
+---
+{{- end }}
+{{- end }}
