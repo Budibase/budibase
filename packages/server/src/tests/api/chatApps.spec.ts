@@ -18,7 +18,7 @@ describe("chat apps validation", () => {
 
         const doc: ChatApp = {
           _id: docIds.generateChatAppID(),
-          enabledAgents: [{ agentId: "agent-1" }],
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
           createdAt: now,
           updatedAt: now,
         }
@@ -48,72 +48,45 @@ describe("chat apps validation", () => {
     return res
   }
 
-  it("rejects enabledAgents entries without agentId", async () => {
+  it("rejects agents entries without agentId", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      enabledAgents: [{}],
+      agents: [{}],
     })
 
     expect(res.status).toBe(400)
   })
 
-  it("rejects enabledAgents entries with empty agentId", async () => {
+  it("rejects agents entries with empty agentId", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      enabledAgents: [{ agentId: "" }],
+      agents: [{ agentId: "" }],
     })
 
     expect(res.status).toBe(400)
   })
 
-  it("rejects null enabledAgents", async () => {
+  it("rejects null agents", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      enabledAgents: null,
+      agents: null,
     })
 
     expect(res.status).toBe(400)
   })
 
-  it("allows empty enabledAgents", async () => {
+  it("allows empty agents", async () => {
     const res = await updateChatApp({
       _id: chatApp._id,
       _rev: chatApp._rev,
-      enabledAgents: [],
+      agents: [],
     })
 
     expect(res.status).toBe(200)
-    expect(res.body.enabledAgents).toEqual([])
-  })
-
-  it("assigns default when missing", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      enabledAgents: [{ agentId: "agent-1" }, { agentId: "agent-2" }],
-    })
-
-    expect(res.status).toBe(200)
-    expect(res.body.enabledAgents).toEqual([
-      { agentId: "agent-1", default: true },
-      { agentId: "agent-2", default: false },
-    ])
-  })
-
-  it("rejects multiple default agents", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      enabledAgents: [
-        { agentId: "agent-1", default: true },
-        { agentId: "agent-2", default: true },
-      ],
-    })
-
-    expect(res.status).toBe(400)
+    expect(res.body.agents).toEqual([])
   })
 })
 
@@ -128,16 +101,16 @@ describe("chat apps create validation", () => {
     config.end()
   })
 
-  it("rejects null enabledAgents", async () => {
+  it("rejects null agents", async () => {
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
         const payload = {
-          enabledAgents: null,
+          agents: null,
         } as unknown as Omit<ChatApp, "_id" | "_rev">
 
         await expect(sdk.ai.chatApps.create(payload)).rejects.toThrow(
-          "enabledAgents must contain valid agentId entries"
+          "agents must contain valid agentId entries"
         )
       }
     )

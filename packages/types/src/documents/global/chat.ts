@@ -1,9 +1,10 @@
 import { AgentMessageMetadata, Document } from "../../"
 import type { UIMessage } from "ai"
 
-export interface ChatAppEnabledAgent {
+export interface ChatAppAgent {
   agentId: string
-  default?: boolean
+  isEnabled: boolean
+  isDefault: boolean
 }
 
 export interface ChatApp extends Document {
@@ -11,7 +12,7 @@ export interface ChatApp extends Document {
   greeting?: string
   description?: string
   theme?: string
-  enabledAgents: ChatAppEnabledAgent[]
+  agents: ChatAppAgent[]
   live?: boolean
   settings?: Record<string, any>
 }

@@ -1,4 +1,9 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  getErrorMessage,
+  HTTPError,
+} from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { ai } from "@budibase/pro"
 import {
@@ -198,7 +203,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     throw new HTTPError("agentId is required", 400)
   }
 
-  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+  if (
+    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
+  ) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
 
@@ -224,7 +231,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
 
-  if (agent.ragConfigId && latestQuestion && readyFileSources.length > 0) {
+  const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
+  if (hasRagConfig && latestQuestion && readyFileSources.length > 0) {
     try {
       const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
       const result = await retrieveContextForSources(
@@ -284,6 +292,14 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools,
       stopWhen: stepCountIs(30),
       providerOptions: ai.getLiteLLMProviderOptions(),
+      onError({ error }) {
+        console.error("Agent streaming error", {
+          agentId,
+          chatAppId,
+          sessionId,
+          error,
+        })
+      },
     })
 
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
@@ -299,6 +315,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       ...(messageMetadata && {
         messageMetadata: () => messageMetadata,
       }),
+      onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
         if (chat.transient) {
           return
@@ -349,7 +366,9 @@ export async function createChatConversation(
   }
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+  if (
+    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
+  ) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
 

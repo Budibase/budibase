@@ -78,15 +78,19 @@ describe("chatAppsStore", () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
-      enabledAgents: [{ agentId: "agent-1" }],
+      agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
+    }
+    const createdAgent = {
+      agentId: "agent-2",
+      isEnabled: true,
+      isDefault: false,
     }
     const updated: ChatApp = {
       ...chatApp,
-      _rev: "2",
-      enabledAgents: [{ agentId: "agent-2" }],
+      agents: [...(chatApp.agents || []), createdAgent],
     }
     fetchChatApp.mockResolvedValue(chatApp)
-    setChatAppAgent.mockResolvedValue(updated)
+    setChatAppAgent.mockResolvedValue(createdAgent)
 
     const result = await chatAppsStore.ensureChatApp("agent-2")
 
@@ -101,12 +105,12 @@ describe("chatAppsStore", () => {
     const first: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
-      enabledAgents: [],
+      agents: [],
     }
     const second: ChatApp = {
       _id: "chatapp-2",
       _rev: "2",
-      enabledAgents: [],
+      agents: [],
     }
     fetchChatApp.mockResolvedValueOnce(first)
     fetchChatApp.mockResolvedValueOnce(second)

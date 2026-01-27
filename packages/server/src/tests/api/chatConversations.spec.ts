@@ -93,7 +93,7 @@ describe("chat conversations authorization", () => {
         const now = new Date().toISOString()
         chatApp = {
           _id: docIds.generateChatAppID(),
-          enabledAgents: [{ agentId: "agent-1" }],
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
           createdAt: now,
         }
         convoA = {
@@ -116,7 +116,7 @@ describe("chat conversations authorization", () => {
         }
         otherChatApp = {
           _id: docIds.generateChatAppID(),
-          enabledAgents: [{ agentId: "agent-2" }],
+          agents: [{ agentId: "agent-2", isEnabled: true, isDefault: false }],
           createdAt: now,
         }
         otherAppConvo = {
@@ -279,7 +279,7 @@ describe("chat conversation transient behavior", () => {
         const now = new Date().toISOString()
         chatApp = {
           _id: docIds.generateChatAppID(),
-          enabledAgents: [{ agentId }],
+          agents: [{ agentId, isEnabled: true, isDefault: false }],
           createdAt: now,
         }
         await db.put(chatApp)

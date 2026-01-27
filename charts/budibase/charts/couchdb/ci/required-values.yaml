@@ -1,0 +1,5 @@
+couchdbConfig:
+  couchdb:
+    uuid: "decafbaddecafbaddecafbaddecafbad"
+annotations:
+  foo: bar
