@@ -215,6 +215,24 @@
   let lastSyncedQueryId: string | undefined
   let lastSyncedQueryName: string | undefined
   let isNewQuery = false
+
+  const syncQueryFromStore = (localQuery: Query, storeQuery: Query) => {
+    let updatedQuery = localQuery
+
+    if (
+      lastSyncedQueryName !== undefined &&
+      storeQuery.name !== lastSyncedQueryName &&
+      localQuery.name === lastSyncedQueryName
+    ) {
+      updatedQuery = { ...updatedQuery, name: storeQuery.name }
+    }
+
+    if (updatedQuery !== localQuery) {
+      query = updatedQuery
+    }
+
+    lastSyncedQueryName = storeQuery.name
+  }
   $: storeQuery = getSelectedQuery(queryId, datasourceId)
   $: isNewQuery = !storeQuery?._id
   $: {
@@ -234,17 +252,7 @@
     lastSyncedQueryName = query.name
   }
   $: if (query && storeQuery && query._id && query._id === storeQuery._id) {
-    if (storeQuery._rev && storeQuery._rev !== query._rev) {
-      query = { ...query, _rev: storeQuery._rev }
-    }
-    if (
-      lastSyncedQueryName !== undefined &&
-      storeQuery.name !== lastSyncedQueryName &&
-      query.name === lastSyncedQueryName
-    ) {
-      query = { ...query, name: storeQuery.name }
-    }
-    lastSyncedQueryName = storeQuery.name
+    syncQueryFromStore(query, storeQuery)
   }
   $: datasourceLookupId = datasourceId || storeQuery?.datasourceId
   $: datasource = structuredClone(
@@ -555,12 +563,16 @@
     }
     savingQuery = true
     try {
-      const isNew = !builtQuery._rev
+      const queryToSave =
+        builtQuery._id && storeQuery?._rev && storeQuery._rev !== builtQuery._rev
+          ? { ...builtQuery, _rev: storeQuery._rev }
+          : builtQuery
+      const isNew = !queryToSave._rev
 
       const datasourceType = datasource?.source
       const integrationInfo = $integrations[datasourceType]
 
-      const { _id } = await queries.save(builtQuery.datasourceId, builtQuery)
+      const { _id } = await queries.save(queryToSave.datasourceId, queryToSave)
 
       const existingVariables = datasource?.config?.dynamicVariables || []
       const updatedVariables = rebuildVariables(

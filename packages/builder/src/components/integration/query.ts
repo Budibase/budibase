@@ -16,10 +16,10 @@ import type {
   Query,
   QuerySchema,
   RestAuthConfig,
-  RestAuthType,
   UIInternalDatasource,
 } from "@budibase/types"
 import { get } from "svelte/store"
+import { RestAuthType } from "@budibase/types"
 
 /**
  * Converts path variables from OpenAPI format {var} to Handlebars format {{var}}
@@ -310,6 +310,25 @@ export function buildAuthConfigs(
   return []
 }
 
+const restAuthTypes = new Set<string>(Object.values(RestAuthType))
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null
+}
+
+const isRestAuthType = (value: unknown): value is RestAuthType => {
+  return typeof value === "string" && restAuthTypes.has(value)
+}
+
+const isRestAuthConfig = (value: unknown): value is RestAuthConfig => {
+  if (!isRecord(value)) {
+    return false
+  }
+  return (
+    typeof value._id === "string" && isRestAuthType(value.type)
+  )
+}
+
 export function getDefaultRestAuthConfig(
   datasource: Datasource | UIInternalDatasource | undefined
 ):
@@ -318,10 +337,8 @@ export function getDefaultRestAuthConfig(
       authConfigType: RestAuthType
     }
   | undefined {
-  const config = datasource?.config?.authConfigs?.[0] as
-    | RestAuthConfig
-    | undefined
-  if (!config) {
+  const config = datasource?.config?.authConfigs?.[0]
+  if (!isRestAuthConfig(config)) {
     return undefined
   }
   return {

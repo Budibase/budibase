@@ -1,21 +1,23 @@
+<svelte:options runes />
+
 <script>
   import { cloneDeep } from "lodash/fp"
   import { queries } from "@/stores/builder"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
 
-  export let query
+  const { query } = $props()
+
+  let editorModal
+  let editQueryNameModal
+  let error = $state("")
+  let originalName = $state("")
+  let updatedName = $state("")
 
   export const show = () => {
-    editorModal.show()
+    editorModal?.show()
   }
 
-  let editorModal, editQueryNameModal
-  let error = ""
-
-  let originalName
-  let updatedName
-
-  async function save() {
+  const save = async () => {
     try {
       const updatedQuery = cloneDeep(query)
       updatedQuery.name = updatedName
@@ -26,7 +28,7 @@
     }
   }
 
-  function checkValid(evt) {
+  const checkValid = evt => {
     const queryName = evt.target.value || ""
     error = queryName.trim() ? "" : "Query name is required."
   }
@@ -36,6 +38,7 @@
     updatedName = query.name + ""
     error = ""
   }
+
 </script>
 
 <Modal bind:this={editorModal} on:show={initForm}>
