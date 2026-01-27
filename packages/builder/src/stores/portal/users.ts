@@ -56,8 +56,8 @@ class UserStore extends BudiStore<UserState> {
       builder?: boolean
       creator?: boolean
       email: string
-      apps?: any[]
-      groups?: any[]
+      apps?: Record<string, string>
+      groups?: string[]
     }[]
   ) {
     const users: InviteUsersRequest = payload.map(user => {
