@@ -38,7 +38,6 @@
     updatedName = query.name + ""
     error = ""
   }
-
 </script>
 
 <Modal bind:this={editorModal} on:show={initForm}>

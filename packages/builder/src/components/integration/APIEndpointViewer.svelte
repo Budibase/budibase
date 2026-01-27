@@ -564,7 +564,9 @@
     savingQuery = true
     try {
       const queryToSave =
-        builtQuery._id && storeQuery?._rev && storeQuery._rev !== builtQuery._rev
+        builtQuery._id &&
+        storeQuery?._rev &&
+        storeQuery._rev !== builtQuery._rev
           ? { ...builtQuery, _rev: storeQuery._rev }
           : builtQuery
       const isNew = !queryToSave._rev

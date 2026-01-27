@@ -324,9 +324,7 @@ const isRestAuthConfig = (value: unknown): value is RestAuthConfig => {
   if (!isRecord(value)) {
     return false
   }
-  return (
-    typeof value._id === "string" && isRestAuthType(value.type)
-  )
+  return typeof value._id === "string" && isRestAuthType(value.type)
 }
 
 export function getDefaultRestAuthConfig(
