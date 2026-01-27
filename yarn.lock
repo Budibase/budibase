@@ -12,6 +12,15 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
   integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==
 
+"@ai-sdk/gateway@3.0.22":
+  version "3.0.22"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-3.0.22.tgz#96836072096ead43f046192c29be188109a5bec6"
+  integrity sha512-NgnlY73JNuooACHqUIz5uMOEWvqR1MMVbb2soGLMozLY1fgwEIF5iJFDAGa5/YArlzw2ATVU7zQu7HkR/FUjgA==
+  dependencies:
+    "@ai-sdk/provider" "3.0.5"
+    "@ai-sdk/provider-utils" "4.0.9"
+    "@vercel/oidc" "3.1.0"
+
 "@ai-sdk/gateway@3.0.4":
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-3.0.4.tgz#623d3581c659457ba32f85d96ae5039a5c0ca856"
@@ -38,12 +47,36 @@
     "@standard-schema/spec" "^1.1.0"
     eventsource-parser "^3.0.6"
 
+"@ai-sdk/provider-utils@4.0.9":
+  version "4.0.9"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-4.0.9.tgz#f15d6ed31fca8aeca402fa56278659a20581057e"
+  integrity sha512-bB4r6nfhBOpmoS9mePxjRoCy+LnzP3AfhyMGCkGL4Mn9clVNlqEeKj26zEKEtB6yoSVcT1IQ0Zh9fytwMCDnow==
+  dependencies:
+    "@ai-sdk/provider" "3.0.5"
+    "@standard-schema/spec" "^1.1.0"
+    eventsource-parser "^3.0.6"
+
 "@ai-sdk/provider@3.0.1":
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@ai-sdk/provider/-/provider-3.0.1.tgz#5bd8809910fc401f024c7784a77eb116171d0296"
   integrity sha512-2lR4w7mr9XrydzxBSjir4N6YMGdXD+Np1Sh0RXABh7tWdNFFwIeRI1Q+SaYZMbfL8Pg8RRLcrxQm51yxTLhokg==
   dependencies:
     json-schema "^0.4.0"
+
+"@ai-sdk/provider@3.0.5":
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/provider/-/provider-3.0.5.tgz#730c5acdc4f074c877a547c1492fafc81bdc4f53"
+  integrity sha512-2Xmoq6DBJqmSl80U6V9z5jJSJP7ehaJJQMy2iFUqTay06wdCqTnPVBBQbtEL8RCChenL+q5DC5H5WzU3vV3v8w==
+  dependencies:
+    json-schema "^0.4.0"
+
+"@ai-sdk/svelte@^4.0.48":
+  version "4.0.48"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/svelte/-/svelte-4.0.48.tgz#efcd7f0787b7881453988bc1d0a7181d90b7b83e"
+  integrity sha512-669EcXhiRkw+dtLe1hRgv5MjjezR87u7wmRyU+azcnUnAl0w6NXRX47jxQVZlV6NJFMPukuKP29munU0sxF8zw==
+  dependencies:
+    "@ai-sdk/provider-utils" "4.0.9"
+    ai "6.0.48"
 
 "@ampproject/remapping@^2.2.0", "@ampproject/remapping@^2.2.1":
   version "2.3.0"
@@ -8665,6 +8698,11 @@
   resolved "https://registry.yarnpkg.com/@vercel/oidc/-/oidc-3.0.5.tgz#bd8db7ee777255c686443413492db4d98ef49657"
   integrity sha512-fnYhv671l+eTTp48gB4zEsTW/YtRgRPnkI2nT7x6qw5rkI1Lq2hTmQIpHPgyThI0znLK+vX2n9XxKdXZ7BUbbw==
 
+"@vercel/oidc@3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@vercel/oidc/-/oidc-3.1.0.tgz#066caee449b84079f33c7445fc862464fe10ec32"
+  integrity sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==
+
 "@vitest/eslint-plugin@^1.1.14":
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/@vitest/eslint-plugin/-/eslint-plugin-1.3.5.tgz#51a46d1b9a5654399a7f3e6b0b67713dea6f07f6"
@@ -9025,6 +9063,16 @@ aggregate-error@^3.0.0:
   dependencies:
     clean-stack "^2.0.0"
     indent-string "^4.0.0"
+
+ai@6.0.48:
+  version "6.0.48"
+  resolved "https://registry.yarnpkg.com/ai/-/ai-6.0.48.tgz#999ef339f9045cca031824c1a8d52651434dc701"
+  integrity sha512-nON0rHNTEQgzT1HahGl7AeszJh7es5ibZ6LWqm3IiN+bUAQtXkdArXD9vDlVAPBiCd7ERclZ6lUpOE6ltgJb3w==
+  dependencies:
+    "@ai-sdk/gateway" "3.0.22"
+    "@ai-sdk/provider" "3.0.5"
+    "@ai-sdk/provider-utils" "4.0.9"
+    "@opentelemetry/api" "1.9.0"
 
 ai@^6.0.3:
   version "6.0.5"
@@ -22644,6 +22692,17 @@ tar@6.2.1:
     minizlib "^2.1.1"
     mkdirp "^1.0.3"
     yallist "^4.0.0"
+
+tar@7.5.3:
+  version "7.5.3"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.3.tgz#e1a41236e32446f75e63b720222112c4ffe5b3a1"
+  integrity sha512-ENg5JUHUm2rDD7IvKNFGzyElLXNjachNLp6RaGf4+JOgxXHkqA+gq81ZAMCUmtMtqBsoU62lcp6S27g1LCYGGQ==
+  dependencies:
+    "@isaacs/fs-minipass" "^4.0.0"
+    chownr "^3.0.0"
+    minipass "^7.1.2"
+    minizlib "^3.1.0"
+    yallist "^5.0.0"
 
 tar@^7.4.3, tar@^7.5.2:
   version "7.5.2"

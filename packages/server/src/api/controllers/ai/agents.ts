@@ -44,7 +44,10 @@ export async function createAgent(
     _deleted: false,
     createdBy: globalId,
     enabledTools: body.enabledTools,
-    ragConfigId: body.ragConfigId,
+    embeddingModel: body.embeddingModel,
+    vectorDb: body.vectorDb,
+    ragMinDistance: body.ragMinDistance,
+    ragTopK: body.ragTopK,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -72,7 +75,10 @@ export async function updateAgent(
     live: body.live,
     createdBy: body.createdBy,
     enabledTools: body.enabledTools,
-    ragConfigId: body.ragConfigId,
+    embeddingModel: body.embeddingModel,
+    vectorDb: body.vectorDb,
+    ragMinDistance: body.ragMinDistance,
+    ragTopK: body.ragTopK,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

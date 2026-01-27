@@ -69,7 +69,6 @@
     promptInstructions: "",
     icon: "",
     iconColor: "",
-    ragConfigId: undefined as string | undefined,
   })
 
   let insertAtPos: InsertAtPositionFn | undefined = $state()
@@ -244,7 +243,6 @@
         promptInstructions: agent.promptInstructions || "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
-        ragConfigId: agent.ragConfigId,
       }
       draftAgentId = agent._id
     }
@@ -612,7 +610,7 @@
       <ActionButton
         size="M"
         icon="sliders-horizontal"
-        on:click={() => bb.settings("/ai/aisettings")}
+        on:click={() => bb.settings("/ai-config/configs")}
       />
     </AbsTooltip>
   </div>
@@ -730,11 +728,6 @@
 />
 
 <style>
-  .section:first-of-type {
-    flex: 1;
-    min-height: 0;
-  }
-
   .tools-section {
     flex-shrink: 0;
     margin-bottom: calc(-1 * var(--spacing-l));
@@ -754,10 +747,9 @@
   }
 
   .prompt-editor-wrapper {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0;
+    max-height: 500px;
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 8px;
     overflow: hidden;
@@ -766,7 +758,7 @@
   .prompt-editor {
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
   }
 
   .prompt-editor :global(.cm-editor) {
