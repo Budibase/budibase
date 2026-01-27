@@ -97,13 +97,14 @@
 
       notifications.success("Query executed successfully")
     } catch (error) {
-      if (typeof error.message === "string") {
-        notifications.error(`Query Error: ${error.message}`)
-      } else if (typeof error.message?.code === "string") {
-        notifications.error(`Query Error: ${error.message.code}`)
-      } else {
-        notifications.error(`Query Error: ${JSON.stringify(error.message)}`)
-      }
+      const message =
+        error?.message === "[object Object]"
+          ? error?.message?.message ??
+            error?.message?.code ??
+            error?.message?.error ??
+            JSON.stringify(error)
+          : error?.message ?? error
+      notifications.error(`Query Error: ${message}`)
 
       if (!suppressErrors) {
         throw error

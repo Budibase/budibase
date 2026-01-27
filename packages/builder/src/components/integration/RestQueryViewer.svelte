@@ -309,7 +309,14 @@
         notifications.success("Request sent successfully")
       }
     } catch (error) {
-      notifications.error(`Query Error: ${error.message}`)
+      const message =
+        error?.message === "[object Object]"
+          ? error?.message?.message ??
+            error?.message?.code ??
+            error?.message?.error ??
+            JSON.stringify(error)
+          : error?.message ?? error
+      notifications.error(`Query Error: ${message}`)
     }
   }
 
