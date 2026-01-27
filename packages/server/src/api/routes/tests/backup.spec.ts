@@ -4,7 +4,7 @@ import { DocumentType, Workspace } from "@budibase/types"
 import path from "path"
 import { Readable, Writable } from "stream"
 import { pipeline } from "stream/promises"
-import tar from "tar"
+import * as tar from "tar"
 import tk from "timekeeper"
 import { withEnv } from "../../../environment"
 import sdk from "../../../sdk"
@@ -35,7 +35,7 @@ describe("/backups", () => {
     ) {
       const exportedFiles: string[] = []
       const parser = tar.list({
-        onentry: entry => {
+        onReadEntry: entry => {
           if (entry.type !== "Directory") {
             exportedFiles.push(entry.path)
           }
