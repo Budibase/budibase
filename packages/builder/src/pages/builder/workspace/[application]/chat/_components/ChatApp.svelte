@@ -4,6 +4,7 @@
     chatAppsStore,
     currentChatApp,
     currentConversations,
+    selectedChatAgent,
   } from "@/stores/portal"
   import { Body, notifications } from "@budibase/bbui"
   import type {
@@ -65,10 +66,7 @@
   $: emptyStateMessage = hasAnyAgents
     ? "No agents enabled for this chat app. Add one in Settings to start chatting."
     : "No agents yet. Add one from the settings panel to start chatting."
-  $: conversationStarters = selectedAgentId
-    ? chatAgents.find(agent => agent.agentId === selectedAgentId)
-        ?.conversationStarters || []
-    : []
+  $: conversationStarters = $selectedChatAgent?.conversationStarters || []
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name

@@ -1,4 +1,5 @@
 import { API } from "@/api"
+import { agentsStore } from "./agents"
 import { BudiStore } from "../BudiStore"
 import { ChatApp, ChatConversation } from "@budibase/types"
 import { derived, get } from "svelte/store"
@@ -189,4 +190,20 @@ export const currentChatApp = derived(chatAppsStore, state =>
 
 export const currentConversations = derived(chatAppsStore, state =>
   state.chatAppId ? state.conversationsByAppId[state.chatAppId] || [] : []
+)
+
+type ChatAppAgent = NonNullable<ChatApp["agents"]>[number]
+
+const getSelectedChatAgent = (
+  chatApp: ChatApp | undefined,
+  agentId?: string
+): ChatAppAgent | undefined =>
+  agentId
+    ? chatApp?.agents?.find(agent => agent.agentId === agentId)
+    : undefined
+
+export const selectedChatAgent = derived(
+  [currentChatApp, agentsStore],
+  ([$currentChatApp, $agentsStore]) =>
+    getSelectedChatAgent($currentChatApp, $agentsStore.currentAgentId)
 )
