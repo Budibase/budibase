@@ -578,7 +578,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
-    min-height: calc(100% - (var(--spacing-l) * 2)) - 36;
+    min-height: calc(100% - (var(--spacing-l) * 2) - 36px);
   }
   .table-wrap {
     display: flex;
