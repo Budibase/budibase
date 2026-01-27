@@ -282,8 +282,13 @@ export class UserDB {
       creatorsChange = isDbUserCreator !== isUserCreator ? 1 : 0
     }
 
+    const isNewUser = !dbUser
+    const isEmailChanging = !!dbUser && !!email && dbUser.email !== email
+    const shouldValidateUniqueUser =
+      !opts.isAccountHolder && !!email && (isNewUser || isEmailChanging)
+
     return UserDB.quotas.addUsers(change, creatorsChange, async () => {
-      if (!opts.isAccountHolder) {
+      if (shouldValidateUniqueUser) {
         await validateUniqueUser(email, tenantId)
       }
 
