@@ -85,10 +85,33 @@
   let isTemplateDatasource = false
   let defaultAuthApplied = false
   let defaultAuthKey
+  let lastSyncedQueryId
+  let lastSyncedQueryName
 
   $: staticVariables = datasource?.config?.staticVariables || {}
   $: if (queryId) {
     lastViewedQueryId = queryId
+  }
+  $: if (query && query._id && query._id !== lastSyncedQueryId) {
+    lastSyncedQueryId = query._id
+    lastSyncedQueryName = query.name
+  }
+  $: if (mounted && queryId && $queries.list && query) {
+    const updatedQuery = $queries.list.find(q => q._id === queryId)
+    if (updatedQuery && updatedQuery._rev && updatedQuery._rev !== query._rev) {
+      query._rev = updatedQuery._rev
+    }
+    if (
+      updatedQuery &&
+      lastSyncedQueryName !== undefined &&
+      updatedQuery.name !== lastSyncedQueryName &&
+      query.name === lastSyncedQueryName
+    ) {
+      query.name = updatedQuery.name
+    }
+    if (updatedQuery) {
+      lastSyncedQueryName = updatedQuery.name
+    }
   }
 
   $: customRequestBindings = toBindingsArray(

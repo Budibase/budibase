@@ -212,6 +212,8 @@
 
   let queryKey: string | undefined
   let appliedEndpointKey: string | undefined
+  let lastSyncedQueryId: string | undefined
+  let lastSyncedQueryName: string | undefined
   let isNewQuery = false
   $: storeQuery = getSelectedQuery(queryId, datasourceId)
   $: isNewQuery = !storeQuery?._id
@@ -226,6 +228,23 @@
         appliedEndpointKey = undefined
       }
     }
+  }
+  $: if (query && query._id && query._id !== lastSyncedQueryId) {
+    lastSyncedQueryId = query._id
+    lastSyncedQueryName = query.name
+  }
+  $: if (query && storeQuery && query._id && query._id === storeQuery._id) {
+    if (storeQuery._rev && storeQuery._rev !== query._rev) {
+      query = { ...query, _rev: storeQuery._rev }
+    }
+    if (
+      lastSyncedQueryName !== undefined &&
+      storeQuery.name !== lastSyncedQueryName &&
+      query.name === lastSyncedQueryName
+    ) {
+      query = { ...query, name: storeQuery.name }
+    }
+    lastSyncedQueryName = storeQuery.name
   }
   $: datasourceLookupId = datasourceId || storeQuery?.datasourceId
   $: datasource = structuredClone(
