@@ -6,7 +6,7 @@ import {
   LockName,
   LockType,
 } from "@budibase/types"
-import { buildLiteLLMParams } from "../helpers"
+import { buildLiteLLMParams } from "../helpers/litellm"
 import fetch from "node-fetch"
 import env from "../../../../environment"
 import * as configSdk from "../configs"
