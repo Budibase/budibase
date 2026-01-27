@@ -84,7 +84,7 @@
 
   interface UserData {
     users: UserInfo[]
-    groups: any[]
+    groups: string[]
     assignToWorkspace?: boolean
   }
 
@@ -258,7 +258,7 @@
 
   async function createUserFlow() {
     const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
-    const payload = userData?.users?.map(user => {
+    const payload = (userData?.users ?? []).map(user => {
       const workspaceRole = getWorkspaceRole(user.role)
       return {
         email: user.email,
@@ -352,7 +352,7 @@
             }
             const fullUser = await users.get(user._id)
             if (fullUser?._rev) {
-              await users.addUserToWorkspace(fullUser._id, role, fullUser._rev)
+              await users.addUserToWorkspace(user._id, role, fullUser._rev)
             }
           })
         )
