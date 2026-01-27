@@ -321,6 +321,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         }
         if (part.type === "finish") {
           return {
+            ...baseMetadata,
+            createdAt: streamStartTime,
             completedAt: Date.now(),
           }
         }
