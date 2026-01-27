@@ -19,6 +19,7 @@
     extractProperty(option, "value")
   export let getOptionSubtitle = (option: O, _index?: number) =>
     (option as any)?.subtitle
+  export let showSelectedSubtitle = false
   export let getOptionIcon = (option: O, _index?: number) =>
     (option as any)?.icon
   export let getOptionColour = (option: O, _index?: number) =>
@@ -81,6 +82,7 @@
     {getOptionIcon}
     {getOptionColour}
     {getOptionSubtitle}
+    {showSelectedSubtitle}
     {useOptionIconImage}
     {isOptionEnabled}
     {autocomplete}
