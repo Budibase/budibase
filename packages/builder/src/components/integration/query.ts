@@ -16,6 +16,7 @@ import type {
   Query,
   QuerySchema,
   RestAuthConfig,
+  RestAuthType,
   UIInternalDatasource,
 } from "@budibase/types"
 import { get } from "svelte/store"
@@ -307,6 +308,26 @@ export function buildAuthConfigs(
     }))
   }
   return []
+}
+
+export function getDefaultRestAuthConfig(
+  datasource: Datasource | UIInternalDatasource | undefined
+):
+  | {
+      authConfigId: string
+      authConfigType: RestAuthType
+    }
+  | undefined {
+  const config = datasource?.config?.authConfigs?.[0] as
+    | RestAuthConfig
+    | undefined
+  if (!config) {
+    return undefined
+  }
+  return {
+    authConfigId: config._id,
+    authConfigType: config.type,
+  }
 }
 
 export function validateQuery(

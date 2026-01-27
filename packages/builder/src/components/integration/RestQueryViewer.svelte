@@ -53,6 +53,7 @@
   import AuthPicker from "./rest/AuthPicker.svelte"
   import {
     getBindingContext,
+    getDefaultRestAuthConfig,
     prettifyQueryRequestBody,
     keyValueArrayToRecord,
   } from "./query"
@@ -81,6 +82,8 @@
   let queryNameLabel
   let mounted = false
   let isTemplateDatasource = false
+  let defaultAuthApplied = false
+  let defaultAuthKey
 
   $: staticVariables = datasource?.config?.staticVariables || {}
   $: if (queryId) {
@@ -149,6 +152,30 @@
   $: prettyBody = query?.fields?.requestBody
     ? prettifyQueryRequestBody(query, mergedBindings)
     : undefined
+  $: {
+    const key = query?._id || queryId || "new"
+    if (key !== defaultAuthKey) {
+      defaultAuthKey = key
+      defaultAuthApplied = false
+    }
+  }
+  $: if (!defaultAuthApplied && query && datasource && !queryId && !query._id) {
+    const defaultAuth = getDefaultRestAuthConfig(datasource)
+    if (
+      defaultAuth &&
+      !query.fields?.authConfigId &&
+      !query.fields?.authConfigType
+    ) {
+      query.fields.authConfigId = defaultAuth.authConfigId
+      query.fields.authConfigType = defaultAuth.authConfigType
+      defaultAuthApplied = true
+    } else if (
+      defaultAuth &&
+      (query.fields?.authConfigId || query.fields?.authConfigType)
+    ) {
+      defaultAuthApplied = true
+    }
+  }
 
   function getSelectedQuery() {
     return cloneDeep(

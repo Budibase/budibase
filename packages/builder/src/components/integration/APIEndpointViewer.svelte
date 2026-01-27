@@ -51,6 +51,7 @@
     runQuery,
     keyValueArrayToRecord,
     buildAuthConfigs,
+    getDefaultRestAuthConfig,
   } from "./query"
   import restUtils from "@/helpers/data/utils"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
@@ -101,6 +102,8 @@
   let template: RestTemplate | undefined
   let datasource: Datasource | UIInternalDatasource | undefined
   let authConfigs: AuthConfigOption[] = []
+  let defaultAuthApplied = false
+  let defaultAuthKey: string | undefined = undefined
   const ensureQueryDefaults = (target: Query) => {
     if (!target.fields?.disabledHeaders) {
       target.fields.disabledHeaders = {}
@@ -222,12 +225,41 @@
       }
     }
   }
+  $: datasourceLookupId = datasourceId || storeQuery?.datasourceId
   $: datasource = structuredClone(
-    $datasources.list.find(
-      d => d._id === datasourceId || query?.datasourceId === d._id
-    )
+    $datasources.list.find(d => d._id === datasourceLookupId)
   )
   $: authConfigs = buildAuthConfigs(datasource)
+  $: {
+    const key = query?._id || `new::${datasourceId || ""}`
+    if (key !== defaultAuthKey) {
+      defaultAuthKey = key
+      defaultAuthApplied = false
+    }
+  }
+  $: if (!defaultAuthApplied && query && datasource && isNewQuery) {
+    const defaultAuth = getDefaultRestAuthConfig(datasource)
+    if (
+      defaultAuth &&
+      !query.fields?.authConfigId &&
+      !query.fields?.authConfigType
+    ) {
+      query = {
+        ...query,
+        fields: {
+          ...query.fields,
+          authConfigId: defaultAuth.authConfigId,
+          authConfigType: defaultAuth.authConfigType,
+        },
+      }
+      defaultAuthApplied = true
+    } else if (
+      defaultAuth &&
+      (query.fields?.authConfigId || query.fields?.authConfigType)
+    ) {
+      defaultAuthApplied = true
+    }
+  }
 
   // QUERY DATA
   $: queryString = query?.fields.queryString
