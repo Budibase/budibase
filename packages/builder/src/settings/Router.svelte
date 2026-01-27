@@ -31,5 +31,7 @@
 </script>
 
 {#if page}
-  <svelte:component this={page} />
+  {#key path}
+    <svelte:component this={page} />
+  {/key}
 {/if}
