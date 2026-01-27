@@ -19,6 +19,35 @@ export abstract class BudibaseError extends Error {
  * For the given error, build the public representation that is safe
  * to be exposed over an api.
  */
+/**
+ * Extract a human-readable error message from any error type.
+ * Handles Error instances, objects with message property, strings, and unknown types.
+ */
+export function getErrorMessage(err: unknown): string {
+  if (err == null) {
+    return "No error provided."
+  }
+  if (err instanceof Error) {
+    return err.message
+  }
+  if (typeof err === "string") {
+    return err
+  }
+  if (typeof err === "object" && "message" in err) {
+    return String((err as { message: unknown }).message)
+  }
+  try {
+    const serialized = JSON.stringify(err)
+    if (serialized !== "{}") {
+      return serialized
+    }
+  } catch {
+    // Fall through
+  }
+  const str = String(err)
+  return str !== "[object Object]" ? str : "An unknown error occurred"
+}
+
 export const getPublicError = (err: any) => {
   let error
   if (err.code) {

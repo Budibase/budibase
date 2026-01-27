@@ -102,7 +102,7 @@ export function setupEnv(...envs: any[]) {
 
   // We start couchdb in globalSetup.ts, in the root of the monorepo, so it
   // should be relatively safe to look for it by its image name.
-  const couch = getContainerByImage("budibase/couchdb")
+  const couch = getContainerByImage("budibase/database")
   if (!couch) {
     throw new Error("CouchDB container not found")
   }

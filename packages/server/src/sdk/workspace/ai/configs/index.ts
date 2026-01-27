@@ -1,10 +1,12 @@
-import { configs, context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   AIConfigType,
-  ConfigType,
+  LLMProviderField,
   CustomAIProviderConfig,
   DocumentType,
+  LLMProvider,
   PASSWORD_REPLACEMENT,
+  RequiredKeys,
 } from "@budibase/types"
 import environment from "../../../../environment"
 import * as liteLLM from "./litellm"
@@ -38,42 +40,24 @@ export async function find(
   return result ? withDefaults(result) : result
 }
 
-async function ensureLiteLLMConfigured() {
-  let storedConfig = await configs.getSettingsConfigDoc()
-  if (!storedConfig?.config.liteLLM?.keyId) {
-    storedConfig ??= { type: ConfigType.SETTINGS, config: {} }
-    const key = await liteLLM.generateKey(context.getTenantId())
-    storedConfig.config.liteLLM = {
-      keyId: key.id,
-      secretKey: key.secret,
-    }
-    await configs.save(storedConfig)
-  }
-  return storedConfig.config.liteLLM
-}
-
 export async function create(
   config: CustomAIProviderConfig
 ): Promise<CustomAIProviderConfig> {
-  await ensureLiteLLMConfigured()
-
   const db = context.getWorkspaceDB()
 
   const modelId = await liteLLM.addModel({
     provider: config.provider,
     name: config.model,
-    baseUrl: config.baseUrl,
-    apiKey: config.apiKey,
+    credentialFields: config.credentialsFields,
     configType: config.configType,
   })
 
   const newConfig: CustomAIProviderConfig = {
     _id: docIds.generateAIConfigID(),
     name: config.name,
-    baseUrl: config.baseUrl,
     provider: config.provider,
+    credentialsFields: config.credentialsFields,
     model: config.model,
-    apiKey: config.apiKey,
     liteLLMModelId: modelId,
     ...(config.webSearchConfig && { webSearchConfig: config.webSearchConfig }),
     configType: config.configType,
@@ -100,8 +84,20 @@ export async function update(
     throw new HTTPError("Config to edit not found", 404)
   }
 
-  config.apiKey =
-    config.apiKey === PASSWORD_REPLACEMENT ? existing.apiKey : config.apiKey
+  if (config.credentialsFields) {
+    const mergedCredentials = {
+      ...(existing.credentialsFields || {}),
+      ...config.credentialsFields,
+    }
+
+    Object.entries(mergedCredentials).forEach(([key, value]) => {
+      if (value === PASSWORD_REPLACEMENT) {
+        mergedCredentials[key] = existing.credentialsFields?.[key] || ""
+      }
+    })
+
+    config.credentialsFields = mergedCredentials
+  }
 
   if (config.webSearchConfig?.apiKey === PASSWORD_REPLACEMENT) {
     config.webSearchConfig.apiKey = existing.webSearchConfig?.apiKey || ""
@@ -116,24 +112,36 @@ export async function update(
   const { rev } = await db.put(updatedConfig)
   updatedConfig._rev = rev
 
-  const isWebSearchOnlyUpdate =
-    existing.name === updatedConfig.name &&
-    existing.provider === updatedConfig.provider &&
-    existing.model === updatedConfig.model &&
-    existing.baseUrl === updatedConfig.baseUrl &&
-    existing.apiKey === updatedConfig.apiKey
+  function getLiteLLMAwareFields(config: CustomAIProviderConfig) {
+    return {
+      provider: config.provider,
+      name: config.model,
+      credentialFields: config.credentialsFields,
+      configType: config.configType,
+    }
+  }
 
-  // Web Search is stored under configs, but we don't want to update LiteLLM when only that changes.
-  if (!isWebSearchOnlyUpdate) {
-    await liteLLM.updateModel({
-      llmModelId: updatedConfig.liteLLMModelId,
-      provider: updatedConfig.provider,
-      name: updatedConfig.model,
-      baseUrl: updatedConfig.baseUrl,
-      apiKey: updatedConfig.apiKey,
-      configType: updatedConfig.configType,
-    })
-    await liteLLM.syncKeyModels()
+  const shouldUpdateLiteLLM =
+    JSON.stringify(getLiteLLMAwareFields(updatedConfig)) !==
+    JSON.stringify(getLiteLLMAwareFields(existing))
+
+  if (shouldUpdateLiteLLM) {
+    try {
+      await liteLLM.updateModel({
+        llmModelId: updatedConfig.liteLLMModelId,
+        provider: updatedConfig.provider,
+        name: updatedConfig.model,
+        credentialFields: updatedConfig.credentialsFields,
+        configType: updatedConfig.configType,
+      })
+      await liteLLM.syncKeyModels()
+    } catch (err) {
+      await db.put({
+        ...existing,
+        _rev: updatedConfig._rev,
+      })
+      throw err
+    }
   }
 
   return updatedConfig
@@ -148,11 +156,6 @@ export async function remove(id: string) {
   await liteLLM.syncKeyModels()
 }
 
-async function getLiteLLMSecretKey() {
-  const liteLLMConfig = await configs.getSettingsConfigDoc()
-  return liteLLMConfig.config.liteLLM?.secretKey
-}
-
 export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
   modelName: string
   modelId: string
@@ -165,7 +168,7 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
     throw new HTTPError("Config not found", 400)
   }
 
-  const secretKey = await getLiteLLMSecretKey()
+  const { secretKey } = await liteLLM.getKeySettings()
   if (!secretKey) {
     throw new HTTPError(
       "LiteLLM should be configured. Contact support if the issue persists.",
@@ -179,4 +182,34 @@ export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
     apiKey: secretKey,
     baseUrl: environment.LITELLM_URL,
   }
+}
+
+let liteLLMProviders: LLMProvider[]
+
+export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
+  if (!liteLLMProviders?.length) {
+    const providers = await liteLLM.fetchPublicProviders()
+    liteLLMProviders = providers.map(provider => {
+      const mapProvider: RequiredKeys<LLMProvider> = {
+        id: provider.provider,
+        displayName: provider.provider_display_name,
+        externalProvider: provider.litellm_provider,
+        credentialFields: provider.credential_fields.map(f => {
+          const field: RequiredKeys<LLMProviderField> = {
+            key: f.key,
+            label: f.label,
+            placeholder: f.placeholder,
+            tooltip: f.tooltip,
+            required: f.required,
+            field_type: f.field_type,
+            options: f.options,
+            default_value: f.default_value,
+          }
+          return field
+        }),
+      }
+      return mapProvider
+    })
+  }
+  return liteLLMProviders
 }

@@ -1,0 +1,255 @@
+apiVersion:  apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "couchdb.fullname" . }}
+  labels:
+    app: {{ template "couchdb.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.clusterSize }}
+  serviceName: {{ template "couchdb.fullname" . }}
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
+  selector:
+    matchLabels:
+{{ include "couchdb.ss.selector" . | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ include "couchdb.ss.selector" . | indent 8 }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 8 }}
+{{- end }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+{{- if .Values.annotations }}
+{{ toYaml .Values.annotations | indent 8 }}
+{{- end }}
+    spec:
+      {{- if .Values.schedulerName }}
+      schedulerName: "{{ .Values.schedulerName }}"
+      {{- end }}
+      {{- if .Values.podSecurityContext }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.serviceAccount.enabled }}
+      serviceAccountName: {{ template "couchdb.serviceAccount" . }}
+      {{- end }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets: {{ .Values.imagePullSecrets | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: init-copy
+          image: "{{ .Values.initImage.repository }}:{{ .Values.initImage.tag }}"
+          imagePullPolicy: {{ .Values.initImage.pullPolicy }}
+          command:
+            - 'sh'
+            - '-c'
+{{- if .Values.prometheusPort.enabled }}
+            - 'cp /tmp/chart.ini /default.d; cp /tmp/seedlist.ini /default.d; cp /tmp/prometheus.ini /default.d; ls -lrt /default.d;'
+{{- else }}
+            - 'cp /tmp/chart.ini /default.d; cp /tmp/seedlist.ini /default.d; ls -lrt /default.d;'
+{{- end }}
+          volumeMounts:
+          - name: config
+            mountPath: /tmp/
+          - name: config-storage
+            mountPath: /default.d
+          {{- if .Values.containerSecurityContext }}
+          securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 12 }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.initResources | indent 12 }}
+{{- if .Values.adminHash }}
+        - name: admin-hash-copy
+          image: "{{ .Values.initImage.repository }}:{{ .Values.initImage.tag }}"
+          imagePullPolicy: {{ .Values.initImage.pullPolicy }}
+          env:
+            - name: "ADMINUSERNAME"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "couchdb.fullname" . }}
+                  key: adminUsername
+            - name: "ADMINHASH"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "couchdb.fullname" . }}
+                  key: adminHash
+          command: ['sh','-c','echo -e "[admins]\n$ADMINUSERNAME = $ADMINHASH" > /local.d/password.ini ;']
+          volumeMounts:
+            - name: local-config-storage
+              mountPath: /local.d
+          {{- if .Values.containerSecurityContext }}
+          securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 12 }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.initResources | indent 12 }}
+{{- end }}
+      containers:
+        - name: couchdb
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: couchdb
+              containerPort: 5984
+            - name: epmd
+              containerPort: 4369
+            - containerPort: 9100
+{{- if .Values.prometheusPort.enabled }}
+            - name: metrics
+              containerPort: {{ .Values.prometheusPort.port }}
+{{- end }}
+{{ with .Values.extraPorts }}
+{{ toYaml . | indent 12 }}
+{{ end }}
+          env:
+{{- if not .Values.allowAdminParty }}
+            - name: COUCHDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "couchdb.fullname" . }}
+                  key: adminUsername
+            - name: COUCHDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "couchdb.fullname" . }}
+                  key: adminPassword
+            - name: COUCHDB_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "couchdb.fullname" . }}
+                  key: cookieAuthSecret
+{{- end }}
+            - name: COUCHDB_ERLANG_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "couchdb.fullname" . }}
+                  key: erlangCookie
+            - name: ERL_FLAGS
+              value: "{{ range $k, $v := .Values.erlangFlags }} -{{ $k }} {{ $v }} {{ end }}"
+{{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+{{- if .Values.couchdbConfig.chttpd.require_valid_user }}
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -G --silent --fail -u ${COUCHDB_USER}:${COUCHDB_PASSWORD} http://localhost:5984/_up
+{{- else }}
+            httpGet:
+              path: /_up
+              port: 5984
+{{- end }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+{{- end }}
+{{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+{{- if .Values.couchdbConfig.chttpd.require_valid_user }}
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -G --silent --fail -u ${COUCHDB_USER}:${COUCHDB_PASSWORD} http://localhost:5984/_up
+{{- else }}
+            httpGet:
+              path: /_up
+              port: 5984
+{{- end }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+{{- end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          volumeMounts:
+          - name: config-storage
+            mountPath: /opt/couchdb/etc/default.d
+{{- if .Values.adminHash }}
+          - name: local-config-storage
+            mountPath: /opt/couchdb/etc/local.d
+{{- end }}
+          - name: database-storage
+            mountPath: /data
+          {{- if .Values.containerSecurityContext }}
+          securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 12 }}
+          {{- end }}
+{{- if .Values.enableSearch }}
+        - name: clouseau
+          image: "{{ .Values.searchImage.repository }}:{{ .Values.searchImage.tag }}"
+          imagePullPolicy: {{ .Values.searchImage.pullPolicy }}
+          volumeMounts:
+          - name: database-storage
+            mountPath: /opt/couchdb-search/data
+          {{- if .Values.containerSecurityContext }}
+          securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 12 }}
+          {{- end }}
+{{- end }}
+{{- if .Values.sidecars }}
+{{ toYaml .Values.sidecars | indent 8}}
+{{- end }}
+{{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
+{{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+{{ toYaml . | indent 8 }}
+{{- end }}
+      volumes:
+        - name: config-storage
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: {{ template "couchdb.fullname" . }}
+            items:
+              - key: inifile
+                path: chart.ini
+              - key: seedlistinifile
+                path: seedlist.ini
+{{- if .Values.prometheusPort.enabled }}
+              - key: prometheusinifile
+                path: prometheus.ini
+{{- end }}
+
+{{- if .Values.adminHash }}
+        - name: local-config-storage
+          emptyDir: {}
+{{- end -}}
+
+{{- if not .Values.persistentVolume.enabled }}
+        - name: database-storage
+          emptyDir: {}
+{{- else if and .Values.persistentVolume.enabled .Values.persistentVolume.existingClaims }}
+        {{- range $claim := .Values.persistentVolume.existingClaims }}
+        - name: {{ $claim.volumeName }}
+          persistentVolumeClaim:
+            claimName: {{ $claim.claimName }}
+        {{- end }}
+{{- else }}
+{{- if .Values.persistentVolumeClaimRetentionPolicy.enabled }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.persistentVolumeClaimRetentionPolicy.whenDeleted }}
+    whenScaled: {{ .Values.persistentVolumeClaimRetentionPolicy.whenScaled }}
+{{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        {{- include "persistentVolume.metadata" (dict "context" .) | nindent 8 }}
+      spec:
+        {{- include "persistentVolume.spec" (dict "context" .) | nindent 8 }}
+{{- end }}

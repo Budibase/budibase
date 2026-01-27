@@ -1,19 +1,22 @@
 import { API } from "@/api"
-import { BudiStore } from "../BudiStore"
 import {
-  CustomAIProviderConfig,
   CreateAIConfigRequest,
+  CustomAIProviderConfig,
+  LLMProvider,
   UpdateAIConfigRequest,
 } from "@budibase/types"
+import { BudiStore } from "../BudiStore"
 
 interface AIConfigState {
   customConfigs: CustomAIProviderConfig[]
+  providers?: LLMProvider[]
 }
 
 export class AIConfigStore extends BudiStore<AIConfigState> {
   constructor() {
     super({
       customConfigs: [],
+      providers: undefined,
     })
   }
 
@@ -28,6 +31,15 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
       return state
     })
     return configs
+  }
+
+  fetchProviders = async () => {
+    const providers = await API.aiConfig.providers()
+    this.update(state => {
+      state.providers = providers
+      return state
+    })
+    return providers
   }
 
   createConfig = async (

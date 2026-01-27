@@ -60,7 +60,10 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
-    ragConfigId: request.ragConfigId,
+    embeddingModel: request.embeddingModel,
+    vectorDb: request.vectorDb,
+    ragMinDistance: request.ragMinDistance,
+    ragTopK: request.ragTopK,
   }
 
   const { rev } = await db.put(agent)
@@ -95,7 +98,7 @@ export async function remove(agentId: string) {
 
   await db.remove(agent)
 
-  if (agent.ragConfigId) {
+  if (agent.embeddingModel && agent.vectorDb) {
     const ragConfig = await getAgentRagConfig(agent)
 
     const files = await listAgentFiles(agentId)

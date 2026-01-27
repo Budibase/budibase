@@ -10,6 +10,7 @@
   import { onMount } from "svelte"
 
   export let samePage
+  export let loginWith = "Log in with"
 
   $: show = $organisation.oidc
 
@@ -45,6 +46,6 @@
       }
     }}
   >
-    {`Log in with ${$oidc.name || "OIDC"}`}
+    {`${loginWith} ${$oidc.name || "OIDC"}`}
   </FancyButton>
 {/if}
