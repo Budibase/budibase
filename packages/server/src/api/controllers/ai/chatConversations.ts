@@ -1,4 +1,10 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  getErrorMessage,
+  HTTPError,
+} from "@budibase/backend-core"
+import { v4 } from "uuid"
 import { ai } from "@budibase/pro"
 import {
   AgentFile,
@@ -18,6 +24,7 @@ import {
   convertToModelMessages,
   extractReasoningMiddleware,
   ModelMessage,
+  stepCountIs,
   streamText,
   wrapLanguageModel,
 } from "ai"
@@ -25,7 +32,7 @@ import sdk from "../../../sdk"
 import {
   retrieveContextForSources,
   RetrievedContextChunk,
-} from "../../../sdk/workspace/ai/rag"
+} from "../../../sdk/workspace/ai/rag/files"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -196,7 +203,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     throw new HTTPError("agentId is required", 400)
   }
 
-  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+  if (
+    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
+  ) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
 
@@ -222,7 +231,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
 
-  if (agent.ragConfigId && latestQuestion && readyFileSources.length > 0) {
+  const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
+  if (hasRagConfig && latestQuestion && readyFileSources.length > 0) {
     try {
       const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
       const result = await retrieveContextForSources(
@@ -248,11 +258,13 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   try {
     const { modelId, apiKey, baseUrl } =
-      await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
+      await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
+    const sessionId = chat._id || v4()
     const openai = ai.createLiteLLMOpenAI({
       apiKey,
       baseUrl,
+      fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
     })
     const model = openai.chat(modelId)
 
@@ -278,6 +290,16 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       messages: messagesWithContext,
       system,
       tools,
+      stopWhen: stepCountIs(30),
+      providerOptions: ai.getLiteLLMProviderOptions(),
+      onError({ error }) {
+        console.error("Agent streaming error", {
+          agentId,
+          chatAppId,
+          sessionId,
+          error,
+        })
+      },
     })
 
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
@@ -293,7 +315,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       ...(messageMetadata && {
         messageMetadata: () => messageMetadata,
       }),
+      onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
+        if (chat.transient) {
+          return
+        }
+
         const chatId = chat._id ?? docIds.generateChatConversationID()
         const existingChat = chat._id
           ? await db.tryGet<ChatConversation>(chat._id)
@@ -311,6 +338,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
         await db.put(chatToSave)
       },
+      sendReasoning: true,
     })
     return
   } catch (error: any) {
@@ -338,7 +366,9 @@ export async function createChatConversation(
   }
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  if (!chatApp.enabledAgents?.some(agent => agent.agentId === agentId)) {
+  if (
+    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
+  ) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
 

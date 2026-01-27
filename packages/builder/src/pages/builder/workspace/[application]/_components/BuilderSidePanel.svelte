@@ -534,7 +534,7 @@
     <div class="search" class:focused={searchFocus}>
       <span class="search-input">
         <Input
-          placeholder={"Add users and groups to your app"}
+          placeholder={"Add users and groups to your workspace"}
           autocomplete="off"
           disabled={inviting}
           bind:value={query}
@@ -689,7 +689,7 @@
                 <div class="auth-entity-title">Users</div>
                 <div class="auth-entity-access-title">Access</div>
               </div>
-              {#each filteredUsers as user}
+              {#each filteredUsers as user (user._id)}
                 {@const userGroups = sdk.users.getUserAppGroups(
                   $appStore.appId,
                   user._id,

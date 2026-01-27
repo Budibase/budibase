@@ -9142,6 +9142,120 @@
       }
     ]
   },
+  "slider": {
+    "name": "Slider Field",
+    "icon": "sliders-horizontal",
+    "styles": ["size"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/number",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "number",
+        "label": "Minimum",
+        "key": "min",
+        "defaultValue": 0
+      },
+      {
+        "type": "number",
+        "label": "Maximum",
+        "key": "max",
+        "defaultValue": 100
+      },
+      {
+        "type": "number",
+        "label": "Step",
+        "key": "step",
+        "defaultValue": 1
+      },
+      {
+        "type": "number",
+        "label": "Default value",
+        "key": "defValue"
+      },
+      {
+        "type": "boolean",
+        "label": "Display Value",
+        "key": "displayValue"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled"
+      },
+      {
+        "type": "boolean",
+        "label": "Show Icons",
+        "key": "showIcons"
+      },
+      {
+        "section": true,
+        "name": "Icons",
+        "dependsOn": "showIcons",
+        "settings": [
+          {
+            "type": "phosphorIcon",
+            "label": "Left icon",
+            "key": "iconLeft"
+          },
+          {
+            "type": "select",
+            "label": "Left icon size",
+            "key": "iconLeftSize",
+            "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+            "defaultValue": "M",
+            "dependsOn": "iconLeft"
+          },
+          {
+            "type": "phosphorIcon",
+            "label": "Right icon",
+            "key": "iconRight"
+          },
+          {
+            "type": "select",
+            "label": "Right icon size",
+            "key": "iconRightSize",
+            "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+            "defaultValue": "M",
+            "dependsOn": "iconRight"
+          },
+          {
+            "type": "boolean",
+            "label": "Clickable icons",
+            "key": "iconIncDec",
+            "defaultValue": true
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "number"
+        }
+      ]
+    }
+  },
   "gauge": {
     "name": "Gauge Chart",
     "description": "Gauge chart",

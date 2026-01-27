@@ -11,12 +11,17 @@
     FieldType,
     UIFieldValidationRule,
   } from "@budibase/types"
-  import type { FieldApi, FieldState, FormField } from "@/types"
+  import type {
+    FieldApi,
+    FieldState,
+    FormField,
+    FieldDefaultValue,
+  } from "@/types"
 
   interface FieldInfo {
     field: string
     type: FieldType
-    defaultValue: string | string[] | undefined
+    defaultValue: FieldDefaultValue
     disabled: boolean
     readonly: boolean
     validation?: UIFieldValidationRule[]
@@ -28,7 +33,7 @@
   export let fieldState: FieldState | undefined
   export let fieldApi: FieldApi | undefined
   export let fieldSchema: FieldSchema | undefined
-  export let defaultValue: string | string[] | undefined = undefined
+  export let defaultValue: FieldDefaultValue = undefined
   export let type: FieldType
   export let disabled = false
   export let readonly = false

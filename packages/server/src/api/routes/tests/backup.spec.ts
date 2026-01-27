@@ -2,7 +2,7 @@ import { context, events } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DocumentType, Workspace } from "@budibase/types"
 import path from "path"
-import { Readable } from "stream"
+import { Readable, Writable } from "stream"
 import { pipeline } from "stream/promises"
 import tar from "tar"
 import tk from "timekeeper"
@@ -34,16 +34,14 @@ describe("/backups", () => {
       opts: { includeRows: boolean; isEncrypted: boolean }
     ) {
       const exportedFiles: string[] = []
-      await pipeline(
-        Readable.from(buffer),
-        tar.list({
-          onentry: entry => {
-            if (entry.type !== "Directory") {
-              exportedFiles.push(entry.path)
-            }
-          },
-        })
-      )
+      const parser = tar.list({
+        onentry: entry => {
+          if (entry.type !== "Directory") {
+            exportedFiles.push(entry.path)
+          }
+        },
+      })
+      await pipeline(Readable.from(buffer), parser as unknown as Writable)
 
       const encodeIfNeeded = (value: string) =>
         opts.isEncrypted ? `${value}.enc` : value
