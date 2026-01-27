@@ -85,7 +85,6 @@ Any constraints the agent must follow.
     promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
     icon: "",
     iconColor: "",
-    ragConfigId: undefined as string | undefined,
   })
 
   let insertAtPos: InsertAtPositionFn | undefined = $state()
@@ -261,7 +260,6 @@ Any constraints the agent must follow.
           agent.promptInstructions || DEFAULT_PROMPT_INSTRUCTIONS,
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
-        ragConfigId: agent.ragConfigId,
       }
       draftAgentId = agent._id
     }
