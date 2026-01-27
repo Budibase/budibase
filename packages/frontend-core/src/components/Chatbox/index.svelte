@@ -12,7 +12,6 @@
     AgentMessageMetadata,
   } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
-  import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
@@ -57,6 +56,46 @@
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
   let inputValue = $state("")
+  let reasoningTimers = $state<Record<string, number>>({})
+
+  $effect(() => {
+    const interval = setInterval(() => {
+      let updated = false
+      const newTimers = { ...reasoningTimers }
+
+      for (const message of messages) {
+        if (message.role !== "assistant") continue
+        const createdAt = message.metadata?.createdAt
+        const completedAt = message.metadata?.completedAt
+
+        for (const [index, part] of (message.parts ?? []).entries()) {
+          if (!isReasoningUIPart(part)) continue
+
+          const id = `${message.id}-reasoning-${index}`
+
+          if (completedAt && createdAt) {
+            const finalElapsed = (completedAt - createdAt) / 1000
+            if (newTimers[id] !== finalElapsed) {
+              newTimers[id] = finalElapsed
+              updated = true
+            }
+          } else if (part.state === "streaming" && createdAt) {
+            const newElapsed = (Date.now() - createdAt) / 1000
+            if (newTimers[id] !== newElapsed) {
+              newTimers[id] = newElapsed
+              updated = true
+            }
+          }
+        }
+      }
+
+      if (updated) {
+        reasoningTimers = newTimers
+      }
+    }, 100)
+
+    return () => clearInterval(interval)
+  })
 
   let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
@@ -249,52 +288,6 @@
       .map(p => p.text)
       .join("") || "[Empty message]"
 
-  const groupConsecutiveToolParts = (
-    parts: UIMessage<AgentMessageMetadata>["parts"]
-  ) => {
-    if (!parts) return []
-    type GroupedPart =
-      | { type: "text"; part: Parameters<typeof isTextUIPart>[0] }
-      | { type: "reasoning"; part: Parameters<typeof isReasoningUIPart>[0] }
-      | {
-          type: "tools"
-          parts: Array<{
-            part: Parameters<typeof isToolUIPart>[0]
-            index: number
-          }>
-        }
-    const grouped: GroupedPart[] = []
-    let currentToolGroup: Array<{
-      part: Parameters<typeof isToolUIPart>[0]
-      index: number
-    }> | null = null
-
-    parts.forEach((part, index) => {
-      if (isToolUIPart(part)) {
-        if (!currentToolGroup) {
-          currentToolGroup = []
-        }
-        currentToolGroup.push({ part, index })
-      } else {
-        if (currentToolGroup) {
-          grouped.push({ type: "tools", parts: currentToolGroup })
-          currentToolGroup = null
-        }
-        if (isTextUIPart(part)) {
-          grouped.push({ type: "text", part })
-        } else if (isReasoningUIPart(part)) {
-          grouped.push({ type: "reasoning", part })
-        }
-      }
-    })
-
-    if (currentToolGroup) {
-      grouped.push({ type: "tools", parts: currentToolGroup })
-    }
-
-    return grouped
-  }
-
   let mounted = $state(false)
 
   $effect(() => {
@@ -354,24 +347,55 @@
         </div>
       {:else if message.role === "assistant"}
         <div class="message assistant">
-          {#each groupConsecutiveToolParts(message.parts) as group}
-            {#if group.type === "text"}
-              <MarkdownViewer value={group.part.text} />
-            {:else if group.type === "reasoning"}
+          {#each message.parts ?? [] as part, partIndex}
+            {#if isTextUIPart(part)}
+              <MarkdownViewer value={part.text} />
+            {:else if isReasoningUIPart(part)}
+              {@const reasoningId = `${message.id}-reasoning-${partIndex}`}
               <div class="reasoning-part">
-                <div class="reasoning-label">Reasoning</div>
-                <div class="reasoning-content">{group.part.text}</div>
+                <button
+                  class="reasoning-toggle"
+                  type="button"
+                  onclick={() =>
+                    (expandedTools = {
+                      ...expandedTools,
+                      [reasoningId]: !expandedTools[reasoningId],
+                    })}
+                >
+                  <span
+                    class="reasoning-icon"
+                    class:shimmer={part.state === "streaming"}
+                  >
+                    <Icon
+                      name="brain"
+                      size="M"
+                      color="var(--spectrum-global-color-gray-600)"
+                    />
+                  </span>
+                  <span
+                    class="reasoning-label"
+                    class:shimmer={part.state === "streaming"}
+                  >
+                    {part.state === "streaming" ? "Thinking" : "Thought for"}
+                    {#if reasoningTimers[reasoningId]}
+                      <span class="reasoning-timer"
+                        >{reasoningTimers[reasoningId].toFixed(1)}s</span
+                      >
+                    {/if}
+                  </span>
+                </button>
+                {#if expandedTools[reasoningId]}
+                  <div class="reasoning-content">{part.text}</div>
+                {/if}
               </div>
-            {:else if group.type === "tools"}
-              <div class="tool-part-wrapper">
-                {#each group.parts as { part, index: partIndex }}
-                  {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
-                  {@const isRunning =
-                    part.state === "input-streaming" ||
-                    part.state === "input-available"}
-                  {@const isSuccess = part.state === "output-available"}
-                  {@const isError = part.state === "output-error"}
-                  <div class="tool-part" class:tool-running={isRunning}>
+            {:else if isToolUIPart(part)}
+              {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
+              {@const isRunning =
+                part.state === "input-streaming" ||
+                part.state === "input-available"}
+              {@const isSuccess = part.state === "output-available"}
+              {@const isError = part.state === "output-error"}
+              <div class="tool-part" class:tool-running={isRunning}>
                 <button
                   class="tool-header"
                   class:tool-header-expanded={expandedTools[toolId]}
@@ -443,8 +467,6 @@
                     {/if}
                   </div>
                 {/if}
-                  </div>
-                {/each}
               </div>
             {/if}
           {/each}
@@ -472,11 +494,6 @@
         </div>
       {/if}
     {/each}
-    {#if isBusy}
-      <div class="message system">
-        <BBAI size="48px" animate />
-      </div>
-    {/if}
   </div>
 
   <div class="input-wrapper">
@@ -627,10 +644,8 @@
   }
 
   /* Tool parts styling */
-  .tool-part-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  .tool-part + .tool-part {
+    margin-top: 2px;
   }
 
   .tool-part {
@@ -790,26 +805,61 @@
 
   /* Reasoning parts styling */
   .reasoning-part {
-    margin: var(--spacing-m) 0;
-    padding: var(--spacing-m);
-    background-color: var(--grey-1);
-    border-left: 3px solid var(--spectrum-global-color-static-seafoam-700);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .reasoning-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
     border-radius: 4px;
   }
 
+  .reasoning-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
   .reasoning-label {
+    font-size: 13px;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .reasoning-timer {
     font-size: 12px;
-    font-weight: 600;
-    color: var(--spectrum-global-color-static-seafoam-700);
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: var(--spectrum-global-color-gray-600);
+    font-weight: 400;
+  }
+
+  .reasoning-label.shimmer,
+  .reasoning-icon.shimmer {
+    animation: shimmer 2s ease-in-out infinite;
   }
 
   .reasoning-content {
     font-size: 13px;
-    color: var(--spectrum-global-color-gray-800);
+    color: var(--spectrum-global-color-gray-600);
     font-style: italic;
+    line-height: 1.4;
+  }
+
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 
   .sources {
