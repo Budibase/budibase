@@ -500,6 +500,7 @@ describe("Rest Importer", () => {
     ])
 
     expect(createQuery?.restTemplateMetadata).toMatchObject({
+      originalName: "createUser",
       operationId: "createUser",
       docsUrl: "https://docs.example.com/users#create",
       description: "Creates a user",
