@@ -1,4 +1,4 @@
-ARG BASEIMG=budibase/couchdb:v3.3.3-sqs-v2.1.1
+ARG BASEIMG=budibase/database:2.0.0
 FROM node:24-slim AS build
 
 # Install node-gyp dependencies

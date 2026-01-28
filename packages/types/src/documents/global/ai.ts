@@ -8,11 +8,15 @@ export enum AIConfigType {
 export interface CustomAIProviderConfig extends Document {
   name: string
   provider: string
-  isDefault: boolean
-  baseUrl: string
+  credentialsFields: Record<string, string>
+
   model: string
-  apiKey?: string
   liteLLMModelId: string
   webSearchConfig?: WebSearchConfig
   configType: AIConfigType
+}
+
+export interface LiteLLMKeyConfig extends Document {
+  keyId: string
+  secretKey: string
 }

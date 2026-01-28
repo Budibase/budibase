@@ -1,4 +1,5 @@
 import * as automationUtils from "../../automationUtils"
+import { getErrorMessage } from "@budibase/backend-core"
 import {
   AgentStepInputs,
   AgentStepOutputs,
@@ -19,8 +20,6 @@ import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
 import tracer from "dd-trace"
 import env from "../../../environment"
-
-const llmobs = tracer.llmobs
 
 export async function run({
   inputs,
@@ -46,13 +45,13 @@ export async function run({
 
   const sessionId = v4()
 
-  return llmobs.trace(
+  return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
     async agentSpan => {
       try {
         const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
-        llmobs.annotate(agentSpan, {
+        tracer.llmobs.annotate(agentSpan, {
           inputData: prompt,
           metadata: {
             agentId,
@@ -64,7 +63,7 @@ export async function run({
         })
 
         if (appId && isProdWorkspaceID(appId) && agentConfig.live !== true) {
-          llmobs.annotate(agentSpan, {
+          tracer.llmobs.annotate(agentSpan, {
             outputData: "Agent is paused",
             tags: { error: "agent_paused" },
           })
@@ -79,9 +78,11 @@ export async function run({
           await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
         const { modelId, apiKey, baseUrl, modelName } =
-          await sdk.aiConfigs.getLiteLLMModelConfigOrThrow(agentConfig.aiconfig)
+          await sdk.ai.configs.getLiteLLMModelConfigOrThrow(
+            agentConfig.aiconfig
+          )
 
-        llmobs.annotate(agentSpan, {
+        tracer.llmobs.annotate(agentSpan, {
           metadata: {
             modelId,
             modelName,
@@ -114,30 +115,54 @@ export async function run({
           model: litellm.chat(modelId),
           instructions: systemPrompt || undefined,
           tools,
-
           stopWhen: stepCountIs(30),
-          providerOptions: {
-            litellm: ai.getLiteLLMProviderOptions(modelName),
-          },
+          providerOptions: ai.getLiteLLMProviderOptions(),
           output: outputOption,
         })
 
         const streamResult = await agent.stream({ prompt })
 
         let assistantMessage: UIMessage | undefined
+        let streamingError: string | undefined
+
         for await (const uiMessage of readUIMessageStream({
-          stream: streamResult.toUIMessageStream({ sendReasoning: true }),
+          stream: streamResult.toUIMessageStream({
+            sendReasoning: true,
+            onError: error => {
+              const errorMessage = getErrorMessage(error)
+              streamingError = errorMessage
+              return errorMessage
+            },
+          }),
         })) {
           assistantMessage = uiMessage
         }
 
-        const responseText = await streamResult.text
+        let responseText: string | undefined
+        let textExtractionError: string | undefined
+        try {
+          responseText = await streamResult.text
+        } catch (err) {
+          textExtractionError = getErrorMessage(err)
+        }
+
+        const error = streamingError || textExtractionError
+        if (error && !responseText) {
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: error,
+            tags: { error: "1", "error.type": "StreamingError" },
+          })
+          return {
+            success: false,
+            response: error,
+          }
+        }
         const usage = await streamResult.usage
         const output = outputOption
           ? ((await streamResult.output) as Record<string, any>)
           : undefined
 
-        llmobs.annotate(agentSpan, {
+        tracer.llmobs.annotate(agentSpan, {
           outputData: responseText,
           metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
@@ -152,7 +177,7 @@ export async function run({
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
 
-        llmobs.annotate(agentSpan, {
+        tracer.llmobs.annotate(agentSpan, {
           outputData: errorMessage,
           tags: {
             error: "1",

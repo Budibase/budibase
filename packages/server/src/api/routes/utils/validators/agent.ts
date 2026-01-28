@@ -2,19 +2,23 @@ import { auth } from "@budibase/backend-core"
 import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
+const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 
 export function createAgentValidator() {
   return auth.joiValidator.body(
     Joi.object({
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      aiconfig: Joi.string().required(),
+      aiconfig: Joi.string().optional(),
       promptInstructions: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      ragConfigId: OPTIONAL_STRING,
+      embeddingModel: OPTIONAL_STRING,
+      vectorDb: OPTIONAL_STRING,
+      ragMinDistance: OPTIONAL_NUMBER.min(0).max(1),
+      ragTopK: OPTIONAL_NUMBER.integer().min(1).max(10),
     })
   )
 }
@@ -26,13 +30,16 @@ export function updateAgentValidator() {
       _rev: Joi.string().required(),
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      aiconfig: Joi.string().required(),
+      aiconfig: Joi.string().optional(),
       promptInstructions: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      ragConfigId: OPTIONAL_STRING,
+      embeddingModel: OPTIONAL_STRING,
+      vectorDb: OPTIONAL_STRING,
+      ragMinDistance: OPTIONAL_NUMBER.min(0).max(1),
+      ragTopK: OPTIONAL_NUMBER.integer().min(1).max(10),
     }).unknown(true)
   )
 }

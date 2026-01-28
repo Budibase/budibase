@@ -7,7 +7,7 @@ import {
   RequiredKeys,
   ToDocCreateMetadata,
 } from "@budibase/types"
-import { deleteAgentFileChunks, getAgentRagConfig } from "../rag"
+import { deleteAgentFileChunks } from "../rag/files"
 
 interface CreateAgentFileOptions {
   agentId: string
@@ -83,8 +83,7 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
 }
 
 export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
-  const ragConfig = await getAgentRagConfig(agent)
-  await deleteAgentFileChunks(ragConfig, [file.ragSourceId])
+  await deleteAgentFileChunks(agent, [file.ragSourceId])
   const db = context.getWorkspaceDB()
   await db.remove(file)
 }

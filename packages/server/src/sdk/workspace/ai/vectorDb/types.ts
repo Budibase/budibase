@@ -1,9 +1,14 @@
-import type { Client } from "pg"
-
-export interface VectorDbConfig {
-  databaseUrl: string
-  embeddingDimensions: number
+interface BaseVectorDbConfig {
+  provider: string
 }
+
+export interface PgVectorDbConfig extends BaseVectorDbConfig {
+  provider: "pgvector"
+  databaseUrl: string
+  tableName: string
+}
+
+export type VectorDbConfig = PgVectorDbConfig
 
 export interface ChunkInput {
   hash: string
@@ -32,5 +37,3 @@ export interface VectorDb {
     topK: number
   ): Promise<QueryResultRow[]>
 }
-
-export type ClientHandler<T> = (client: Client) => Promise<T>

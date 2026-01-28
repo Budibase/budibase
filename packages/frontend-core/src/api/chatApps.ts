@@ -4,6 +4,7 @@ import {
   ChatConversationRequest,
   CreateChatConversationRequest,
   ChatApp,
+  ChatAppAgent,
   FetchAgentHistoryResponse,
   UpdateChatAppRequest,
   AgentMessageMetadata,
@@ -28,7 +29,7 @@ export interface ChatAppEndpoints {
   ) => Promise<ChatConversation>
   fetchChatHistory: (chatAppId: string) => Promise<FetchAgentHistoryResponse>
   fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
-  setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatApp>
+  setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatAppAgent>
   createChatConversation: (
     chat: CreateChatConversationRequest,
     workspaceId?: string
