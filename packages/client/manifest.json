@@ -370,9 +370,30 @@
         }
       },
       {
+        "type": "select",
+        "label": "Left click mode",
+        "key": "clickMode",
+        "defaultValue": "onClick",
+        "options": [
+          {
+            "label": "On click",
+            "value": "onClick"
+          },
+          {
+            "label": "On double click",
+            "value": "onDoubleClick"
+          }
+        ]
+      },
+      {
         "type": "event",
         "label": "On click",
         "key": "onClick"
+      },
+      {
+        "type": "event",
+        "label": "On right click",
+        "key": "onContextMenu"
       }
     ]
   },
