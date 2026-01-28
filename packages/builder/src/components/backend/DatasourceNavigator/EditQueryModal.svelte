@@ -1,5 +1,3 @@
-<svelte:options runes />
-
 <script>
   import { cloneDeep } from "lodash/fp"
   import { queries } from "@/stores/builder"
