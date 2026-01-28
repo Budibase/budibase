@@ -285,7 +285,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
             Object.assign(flatHeaders, headers)
           }
 
-          return Object.assign(headers, flatHeaders)
+          return flatHeaders
         }
 
         const auth = {
