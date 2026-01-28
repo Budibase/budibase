@@ -51,6 +51,7 @@
     runQuery,
     keyValueArrayToRecord,
     buildAuthConfigs,
+    getDefaultRestAuthConfig,
   } from "./query"
   import restUtils from "@/helpers/data/utils"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
@@ -62,6 +63,7 @@
   import ResponsePanel from "./ResponsePanel.svelte"
   import AuthPicker from "./rest/AuthPicker.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
+  import { getErrorMessage } from "@/helpers/errors"
 
   export let queryId
   export let datasourceId
@@ -101,6 +103,9 @@
   let template: RestTemplate | undefined
   let datasource: Datasource | UIInternalDatasource | undefined
   let authConfigs: AuthConfigOption[] = []
+  let defaultAuthApplied = false
+  let defaultAuthKey: string | undefined = undefined
+
   const ensureQueryDefaults = (target: Query) => {
     if (!target.fields?.disabledHeaders) {
       target.fields.disabledHeaders = {}
@@ -207,7 +212,27 @@
 
   let queryKey: string | undefined
   let appliedEndpointKey: string | undefined
+  let lastSyncedQueryId: string | undefined
+  let lastSyncedQueryName: string | undefined
   let isNewQuery = false
+
+  const syncQueryFromStore = (localQuery: Query, storeQuery: Query) => {
+    let updatedQuery = localQuery
+
+    if (
+      lastSyncedQueryName !== undefined &&
+      storeQuery.name !== lastSyncedQueryName &&
+      localQuery.name === lastSyncedQueryName
+    ) {
+      updatedQuery = { ...updatedQuery, name: storeQuery.name }
+    }
+
+    if (updatedQuery !== localQuery) {
+      query = updatedQuery
+    }
+
+    lastSyncedQueryName = storeQuery.name
+  }
   $: storeQuery = getSelectedQuery(queryId, datasourceId)
   $: isNewQuery = !storeQuery?._id
   $: {
@@ -222,12 +247,48 @@
       }
     }
   }
+  $: if (query && query._id && query._id !== lastSyncedQueryId) {
+    lastSyncedQueryId = query._id
+    lastSyncedQueryName = query.name
+  }
+  $: if (query && storeQuery && query._id && query._id === storeQuery._id) {
+    syncQueryFromStore(query, storeQuery)
+  }
+  $: datasourceLookupId = datasourceId || storeQuery?.datasourceId
   $: datasource = structuredClone(
-    $datasources.list.find(
-      d => d._id === datasourceId || query?.datasourceId === d._id
-    )
+    $datasources.list.find(d => d._id === datasourceLookupId)
   )
   $: authConfigs = buildAuthConfigs(datasource)
+  $: {
+    const key = query?._id || `new::${datasourceId || ""}`
+    if (key !== defaultAuthKey) {
+      defaultAuthKey = key
+      defaultAuthApplied = false
+    }
+  }
+  $: if (!defaultAuthApplied && query && datasource && isNewQuery) {
+    const defaultAuth = getDefaultRestAuthConfig(datasource)
+    if (
+      defaultAuth &&
+      !query.fields?.authConfigId &&
+      !query.fields?.authConfigType
+    ) {
+      query = {
+        ...query,
+        fields: {
+          ...query.fields,
+          authConfigId: defaultAuth.authConfigId,
+          authConfigType: defaultAuth.authConfigType,
+        },
+      }
+      defaultAuthApplied = true
+    } else if (
+      defaultAuth &&
+      (query.fields?.authConfigId || query.fields?.authConfigType)
+    ) {
+      defaultAuthApplied = true
+    }
+  }
 
   // QUERY DATA
   $: queryString = query?.fields.queryString
@@ -502,12 +563,18 @@
     }
     savingQuery = true
     try {
-      const isNew = !builtQuery._rev
+      const queryToSave =
+        builtQuery._id &&
+        storeQuery?._rev &&
+        storeQuery._rev !== builtQuery._rev
+          ? { ...builtQuery, _rev: storeQuery._rev }
+          : builtQuery
+      const isNew = !queryToSave._rev
 
       const datasourceType = datasource?.source
       const integrationInfo = $integrations[datasourceType]
 
-      const { _id } = await queries.save(builtQuery.datasourceId, builtQuery)
+      const { _id } = await queries.save(queryToSave.datasourceId, queryToSave)
 
       const existingVariables = datasource?.config?.dynamicVariables || []
       const updatedVariables = rebuildVariables(
@@ -576,7 +643,7 @@
         notifications.success("Request sent successfully")
       }
     } catch (error) {
-      notifications.error(`Query Error: ${error}`)
+      notifications.error(`Query Error: ${getErrorMessage(error)}`)
     }
     runningQuery = false
   }

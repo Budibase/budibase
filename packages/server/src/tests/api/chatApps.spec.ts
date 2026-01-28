@@ -88,6 +88,45 @@ describe("chat apps validation", () => {
     expect(res.status).toBe(200)
     expect(res.body.agents).toEqual([])
   })
+
+  it("rejects invalid conversation starters", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          conversationStarters: [{ prompt: 123 }],
+        },
+      ],
+    })
+
+    expect(res.status).toBe(400)
+  })
+
+  it("rejects more than three starters", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          conversationStarters: [
+            { prompt: "One" },
+            { prompt: "Two" },
+            { prompt: "Three" },
+            { prompt: "Four" },
+          ],
+        },
+      ],
+    })
+
+    expect(res.status).toBe(400)
+  })
 })
 
 describe("chat apps create validation", () => {
