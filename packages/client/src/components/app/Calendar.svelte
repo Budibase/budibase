@@ -46,7 +46,10 @@
     headerToolbar: {
       start: "title",
       center: "",
-      end: "prevYear,prev,next,nextYear",
+      end: "prevYear,prev,today,next,nextYear",
+    },
+    buttonText: {
+      today: "Today",
     },
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: "dayGridMonth",
@@ -62,7 +65,7 @@
 </div>
 
 <style>
-  .calendar :global(.fc) {
+  .calendar :global(.fc-button-primary) {
     --fc-button-text-color: var(--spectrum-global-color-gray-50, #fff);
     --fc-button-bg-color: var(
       --primaryColor,
@@ -88,19 +91,26 @@
       --primaryColorHover,
       var(--primaryColor, var(--spectrum-global-color-blue-500))
     );
+    box-shadow: none;
   }
 
-  .calendar :global(.fc .fc-button) {
-    /* border-radius: var(--buttonBorderRadius, 16px); */
+  .calendar :global(.fc .fc-button:focus),
+  .calendar :global(.fc .fc-button-primary:focus),
+  .calendar
+    :global(
+      .fc .fc-button-primary:not(:disabled).fc-button-active:focus
+    ),
+  .calendar
+    :global(.fc .fc-button-primary:not(:disabled):active:focus) {
+    box-shadow: none;
   }
 
+  /* Specific radiuses (radii?) for first and last buttons */
   .calendar :global(.fc-prevYear-button) {
-    /* border: 3px solid red; */
     border-top-left-radius: var(--buttonBorderRadius, 16px);
     border-bottom-left-radius: var(--buttonBorderRadius, 16px);
   }
   .calendar :global(.fc-nextYear-button) {
-    /* border: 3px solid red; */
     border-top-right-radius: var(--buttonBorderRadius, 16px);
     border-bottom-right-radius: var(--buttonBorderRadius, 16px);
   }
