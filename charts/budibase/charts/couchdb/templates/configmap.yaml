@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "couchdb.fullname" . }}
+  labels:
+    app: {{ template "couchdb.name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+data:
+  inifile: |
+    {{ $couchdbConfig := dict "couchdb" (dict "uuid" (include "couchdb.uuid" .)) -}}
+    {{- $couchdbConfig := merge $couchdbConfig .Values.couchdbConfig -}}
+    {{- range $section, $settings := $couchdbConfig -}}
+    {{ printf "[%s]" $section }}
+    {{ range $key, $value := $settings -}}
+    {{- if kindIs "float64" $value }}
+    {{ $value = (int $value) }}
+    {{ end -}}
+    {{ printf "%s = %v" $key $value }}
+    {{ end }}
+    {{ end }}
+
+  seedlistinifile: |
+    [cluster]
+    seedlist = {{ template "couchdb.seedlist" . }}
+
+{{- if .Values.prometheusPort.enabled }}
+  prometheusinifile: |
+    [prometheus]
+    additional_port = {{ .Values.prometheusPort.enabled }}
+    bind_address = {{ .Values.prometheusPort.bind_address }}
+    port = {{ .Values.prometheusPort.port }}
+{{- end }}

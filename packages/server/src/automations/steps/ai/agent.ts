@@ -1,4 +1,5 @@
 import * as automationUtils from "../../automationUtils"
+import { getErrorMessage } from "@budibase/backend-core"
 import {
   AgentStepInputs,
   AgentStepOutputs,
@@ -114,24 +115,48 @@ export async function run({
           model: litellm.chat(modelId),
           instructions: systemPrompt || undefined,
           tools,
-
           stopWhen: stepCountIs(30),
-          providerOptions: {
-            litellm: ai.getLiteLLMProviderOptions(modelName),
-          },
+          providerOptions: ai.getLiteLLMProviderOptions(),
           output: outputOption,
         })
 
         const streamResult = await agent.stream({ prompt })
 
         let assistantMessage: UIMessage | undefined
+        let streamingError: string | undefined
+
         for await (const uiMessage of readUIMessageStream({
-          stream: streamResult.toUIMessageStream({ sendReasoning: true }),
+          stream: streamResult.toUIMessageStream({
+            sendReasoning: true,
+            onError: error => {
+              const errorMessage = getErrorMessage(error)
+              streamingError = errorMessage
+              return errorMessage
+            },
+          }),
         })) {
           assistantMessage = uiMessage
         }
 
-        const responseText = await streamResult.text
+        let responseText: string | undefined
+        let textExtractionError: string | undefined
+        try {
+          responseText = await streamResult.text
+        } catch (err) {
+          textExtractionError = getErrorMessage(err)
+        }
+
+        const error = streamingError || textExtractionError
+        if (error && !responseText) {
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: error,
+            tags: { error: "1", "error.type": "StreamingError" },
+          })
+          return {
+            success: false,
+            response: error,
+          }
+        }
         const usage = await streamResult.usage
         const output = outputOption
           ? ((await streamResult.output) as Record<string, any>)

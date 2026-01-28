@@ -5,6 +5,7 @@
   import { EditorModes } from "@/components/common/CodeMirrorEditor.svelte"
   import { createEventDispatcher } from "svelte"
   import CodeEditor from "../common/CodeEditor/CodeEditor.svelte"
+  import { keyValueArrayToRecord } from "./query"
 
   const dispatch = createEventDispatcher()
 
@@ -69,7 +70,16 @@
       <Body size="S" weight="800">THE REQUEST DOES NOT HAVE A BODY</Body>
     </div>
   {:else if objectTypes.includes(bodyType)}
-    <KeyValueBuilder bind:object={json} name="param" headings />
+    {#key requestBody}
+      <KeyValueBuilder
+        defaults={requestBody}
+        name="param"
+        headings
+        on:change={e => {
+          dispatch("change", { requestBody: keyValueArrayToRecord(e.detail) })
+        }}
+      />
+    {/key}
   {:else if textTypes.includes(bodyType)}
     <div class="embed">
       {#key bodyType}

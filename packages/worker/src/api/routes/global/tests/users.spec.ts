@@ -868,6 +868,52 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(email)
     })
 
+    it("should filter by workspace access when workspaceId is provided", async () => {
+      const workspaceId = "app_workspace_filter"
+      const email = structures.users.newEmail()
+      await config.createUser({
+        email,
+        roles: { [workspaceId]: "BASIC" },
+      })
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        query: { string: { email } },
+      })
+
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(email)
+    })
+
+    it("should exclude users without workspace access", async () => {
+      const workspaceId = "app_workspace_filter_exclude"
+      const email = structures.users.newEmail()
+      await config.createUser({
+        email,
+        roles: { app_other: "BASIC" },
+      })
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        query: { string: { email } },
+      })
+
+      expect(response.body.data.length).toBe(0)
+    })
+
+    it("should return no users when workspaceId is empty", async () => {
+      const email = structures.users.newEmail()
+      await config.createUser({ email })
+
+      const response = await config.api.users.searchUsers({
+        workspaceId: "",
+        query: { string: { email } },
+      })
+
+      expect(response.body.data.length).toBe(0)
+      expect(response.body.hasNextPage).toBe(false)
+    })
+
     it("should be able to search by email with numeric prefixing", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
