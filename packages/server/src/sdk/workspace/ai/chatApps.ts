@@ -7,6 +7,39 @@ const withDefaults = (chatApp: ChatApp): ChatApp => ({
   agents: chatApp.agents ?? [],
 })
 
+const normalizeConversationStarters = (
+  starters?: ChatApp["agents"][number]["conversationStarters"]
+) => {
+  if (starters === undefined) {
+    return undefined
+  }
+  if (!Array.isArray(starters)) {
+    throw new HTTPError("conversationStarters must contain prompt entries", 400)
+  }
+  if (starters.length > 3) {
+    throw new HTTPError(
+      "conversationStarters may contain at most 3 starters",
+      400
+    )
+  }
+
+  return starters.map(starter => {
+    if (!starter || typeof starter !== "object") {
+      throw new HTTPError(
+        "conversationStarters must contain prompt entries",
+        400
+      )
+    }
+    if (typeof starter.prompt !== "string") {
+      throw new HTTPError(
+        "conversationStarters must contain prompt entries",
+        400
+      )
+    }
+    return { prompt: starter.prompt }
+  })
+}
+
 const normalizeAgents = (agents?: ChatApp["agents"]) => {
   if (agents === undefined) {
     return undefined
@@ -30,6 +63,9 @@ const normalizeAgents = (agents?: ChatApp["agents"]) => {
     agentId: agent.agentId,
     isEnabled: agent.isEnabled === true,
     isDefault: agent.isDefault === true,
+    conversationStarters: normalizeConversationStarters(
+      agent.conversationStarters
+    ),
   }))
 }
 
@@ -66,7 +102,6 @@ export async function create(chatApp: Omit<ChatApp, "_id" | "_rev">) {
   const normalizedAgents = normalizeAgents(
     chatApp.agents === undefined ? undefined : chatApp.agents
   )
-
   const now = new Date().toISOString()
   const doc: ChatApp = {
     _id: docIds.generateChatAppID(),
@@ -92,7 +127,6 @@ export async function update(chatApp: ChatApp) {
   const normalizedAgents = normalizeAgents(
     chatApp.agents === undefined ? (existing.agents ?? []) : chatApp.agents
   )
-
   const now = new Date().toISOString()
   const updated: ChatApp = {
     ...existing,
