@@ -68,7 +68,7 @@ export async function addModel({
 
   const litellmParams = buildLiteLLMParams({
     provider,
-    name: displayName || model,
+    name: model,
     credentialFields,
     configType,
     reasoningEffort,

@@ -21,7 +21,12 @@ export { temporalStore } from "./temporal"
 export { navigation } from "./navigation"
 export { featureFlags } from "./featureFlags"
 export { agentsStore, selectedAgent } from "./agents"
-export { chatAppsStore, currentChatApp, currentConversations } from "./chatApps"
+export {
+  chatAppsStore,
+  currentChatApp,
+  currentConversations,
+  selectedChatAgent,
+} from "./chatApps"
 export { clientAppsStore } from "./clientApps"
 export { bannerStore } from "./banners"
 export { appCreationStore } from "./appCreation"
