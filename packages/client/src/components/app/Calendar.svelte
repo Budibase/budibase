@@ -57,6 +57,51 @@
   }
 </script>
 
-<div use:styleable={$component.styles}>
+<div class="calendar" use:styleable={$component.styles}>
   <FullCalendar {options} />
 </div>
+
+<style>
+  .calendar :global(.fc) {
+    --fc-button-text-color: var(--spectrum-global-color-gray-50, #fff);
+    --fc-button-bg-color: var(
+      --primaryColor,
+      var(--spectrum-global-color-blue-600)
+    );
+    --fc-button-border-color: var(
+      --primaryColor,
+      var(--spectrum-global-color-blue-600)
+    );
+    --fc-button-hover-bg-color: var(
+      --primaryColorHover,
+      var(--primaryColor, var(--spectrum-global-color-blue-500))
+    );
+    --fc-button-hover-border-color: var(
+      --primaryColorHover,
+      var(--primaryColor, var(--spectrum-global-color-blue-500))
+    );
+    --fc-button-active-bg-color: var(
+      --primaryColorHover,
+      var(--primaryColor, var(--spectrum-global-color-blue-500))
+    );
+    --fc-button-active-border-color: var(
+      --primaryColorHover,
+      var(--primaryColor, var(--spectrum-global-color-blue-500))
+    );
+  }
+
+  .calendar :global(.fc .fc-button) {
+    /* border-radius: var(--buttonBorderRadius, 16px); */
+  }
+
+  .calendar :global(.fc-prevYear-button) {
+    /* border: 3px solid red; */
+    border-top-left-radius: var(--buttonBorderRadius, 16px);
+    border-bottom-left-radius: var(--buttonBorderRadius, 16px);
+  }
+  .calendar :global(.fc-nextYear-button) {
+    /* border: 3px solid red; */
+    border-top-right-radius: var(--buttonBorderRadius, 16px);
+    border-bottom-right-radius: var(--buttonBorderRadius, 16px);
+  }
+</style>
