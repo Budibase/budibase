@@ -148,7 +148,6 @@
     "@types/koa": "2.13.4",
     "@types/koa-send": "^4.1.6",
     "@types/koa__cors": "5.0.0",
-    "@types/koa__router": "12.0.5",
     "@types/lodash": "4.14.200",
     "@types/mailparser": "^3.4.6",
     "@types/mssql": "9.1.5",
