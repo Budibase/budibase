@@ -11240,6 +11240,13 @@ csvtojson@2.0.10:
     lodash "^4.17.3"
     strip-bom "^2.0.0"
 
+csvtojson@2.0.13:
+  version "2.0.13"
+  resolved "https://registry.yarnpkg.com/csvtojson/-/csvtojson-2.0.13.tgz#48f431a9320f04d821770c17b206dfb2093a78ec"
+  integrity sha512-1C7bojbYRmQPLfc6yE5zeMbp+1w8dj3jNrz51S3mLYgQOau2ZtNu/fc67uV8UvyAfuLU+xydDvHG/+APwCJUAA==
+  dependencies:
+    lodash "^4.17.21"
+
 curlconverter@3.21.0:
   version "3.21.0"
   resolved "https://registry.yarnpkg.com/curlconverter/-/curlconverter-3.21.0.tgz#50b9568b8d24967ef55a0fcd872e7a18eea4cbc2"
