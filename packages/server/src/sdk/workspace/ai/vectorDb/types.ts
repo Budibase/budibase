@@ -1,7 +1,14 @@
-export interface VectorDbConfig {
-  databaseUrl: string
-  embeddingDimensions: number
+interface BaseVectorDbConfig {
+  provider: string
 }
+
+export interface PgVectorDbConfig extends BaseVectorDbConfig {
+  provider: "pgvector"
+  databaseUrl: string
+  tableName: string
+}
+
+export type VectorDbConfig = PgVectorDbConfig
 
 export interface ChunkInput {
   hash: string

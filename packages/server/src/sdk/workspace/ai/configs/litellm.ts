@@ -1,10 +1,12 @@
 import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
+import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
   LiteLLMKeyConfig,
   ReasoningEffort,
   LockName,
   LockType,
+  UserContext,
 } from "@budibase/types"
 import { buildLiteLLMParams } from "../helpers/litellm"
 import fetch from "node-fetch"
@@ -38,24 +40,35 @@ async function generateKey(
 
 export async function addModel({
   provider,
-  name,
+  model,
+  displayName,
   credentialFields,
   configType,
   reasoningEffort,
+  validate = true,
 }: {
   provider: string
-  name: string
+  model: string
+  displayName?: string
   credentialFields: Record<string, string>
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
+  validate?: boolean
 }): Promise<string> {
-  provider = await mapToLiteLLMProvider(provider)
+  if (validate) {
+    await validateConfig({
+      provider,
+      name: model,
+      credentialFields,
+      configType,
+    })
+  }
 
-  await validateConfig({ provider, name, credentialFields, configType })
+  provider = await mapToLiteLLMProvider(provider)
 
   const litellmParams = buildLiteLLMParams({
     provider,
-    name,
+    name: displayName || model,
     credentialFields,
     configType,
     reasoningEffort,
@@ -68,11 +81,11 @@ export async function addModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: name,
+      model_name: displayName || model,
       litellm_params: litellmParams,
       model_info: {
         created_at: new Date().toISOString(),
-        created_by: (context.getIdentity() as any)?.email,
+        created_by: (context.getIdentity() as UserContext)?.email,
       },
     }),
   }
@@ -97,7 +110,6 @@ export async function updateModel({
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
 }) {
-  provider = await mapToLiteLLMProvider(provider)
   await validateConfig({ provider, name, credentialFields, configType })
 
   const litellmParams = buildLiteLLMParams({
@@ -107,6 +119,7 @@ export async function updateModel({
     configType,
     reasoningEffort,
   })
+  provider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "PATCH",
@@ -119,7 +132,7 @@ export async function updateModel({
       litellm_params: litellmParams,
       model_info: {
         updated_at: new Date().toISOString(),
-        updated_by: (context.getIdentity() as any)?.email,
+        updated_by: (context.getIdentity() as UserContext)?.email,
       },
     }),
   }
@@ -136,98 +149,72 @@ export async function updateModel({
   }
 }
 
-export async function validateConfig(model: {
+async function validateEmbeddingConfig(model: {
   provider: string
   name: string
   credentialFields: Record<string, string>
-  configType: AIConfigType
-  reasoningEffort?: ReasoningEffort
 }) {
-  const { name, provider, credentialFields, configType, reasoningEffort } =
-    model
+  let modelId: string | undefined
 
-  const litellmParams = buildLiteLLMParams({
-    provider,
-    name,
-    credentialFields,
-    configType,
-    reasoningEffort,
-  })
+  try {
+    modelId = await addModel({
+      provider: model.provider,
+      model: model.name,
+      displayName: `tmp-${model.name}`,
+      credentialFields: model.credentialFields,
+      configType: AIConfigType.EMBEDDINGS,
+      validate: false,
+    })
 
-  if (configType === AIConfigType.EMBEDDINGS) {
-    let modelId: string | undefined
+    const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: liteLLMAuthorizationHeader,
+      },
+      body: JSON.stringify({
+        model: modelId,
+        input: "Budibase embedding validation",
+      }),
+    })
 
-    try {
-      const createModelResponse = await fetch(`${liteLLMUrl}/model/new`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: liteLLMAuthorizationHeader,
-        },
-        body: JSON.stringify({
-          model_name: name,
-          litellm_params: litellmParams,
-          model_info: {
-            created_at: new Date().toISOString(),
-            created_by: (context.getIdentity() as any)?.email,
+    if (!response.ok) {
+      const text = await response.text()
+      throw new HTTPError(text || "Embedding validation failed", 500)
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new HTTPError(`Error validating configuration: ${message}`, 400)
+  } finally {
+    if (modelId) {
+      try {
+        await fetch(`${liteLLMUrl}/model/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: liteLLMAuthorizationHeader,
           },
-        }),
-      })
-
-      const createModelJson = await createModelResponse.json()
-      if (!createModelResponse.ok || createModelJson.status === "error") {
-        const errorMessage =
-          createModelJson?.result?.error ||
-          createModelJson?.error ||
-          createModelResponse.statusText
-        throw new HTTPError(
-          `Error validating configuration: ${errorMessage}`,
-          400
+          body: JSON.stringify({ id: modelId }),
+        })
+      } catch (e) {
+        console.error(
+          "Error deleting the temporary model for validating embeddings",
+          { e }
         )
-      }
-
-      modelId = createModelJson.model_id
-
-      const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: liteLLMAuthorizationHeader,
-        },
-        body: JSON.stringify({
-          model: name,
-          input: "Budibase embedding validation",
-        }),
-      })
-
-      if (!response.ok) {
-        const text = await response.text()
-        throw new HTTPError(
-          `Error validating configuration: ${text || response.statusText}`,
-          400
-        )
-      }
-    } finally {
-      if (modelId) {
-        try {
-          await fetch(`${liteLLMUrl}/model/delete`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: liteLLMAuthorizationHeader,
-            },
-            body: JSON.stringify({ id: modelId }),
-          })
-        } catch (e) {
-          console.error(
-            "Error deleting the temporary model for validating embeddings",
-            { e }
-          )
-        }
       }
     }
-    return
   }
+  return
+}
+
+async function validateCompletionsModel(model: {
+  provider: string
+  name: string
+  credentialFields: Record<string, string>
+}) {
+  let { name, provider, credentialFields } = model
+
+  provider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "POST",
@@ -236,7 +223,6 @@ export async function validateConfig(model: {
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      // mode: "chat",
       litellm_params: {
         model: `${provider}/${name}`,
         custom_llm_provider: provider,
@@ -258,6 +244,22 @@ export async function validateConfig(model: {
     const trimmedError = json.result.error.split("\n")[0] || json.result.error
 
     throw new HTTPError(`Error validating configuration: ${trimmedError}`, 400)
+  }
+}
+
+async function validateConfig(model: {
+  provider: string
+  name: string
+  credentialFields: Record<string, string>
+  configType: AIConfigType
+}) {
+  switch (model.configType) {
+    case AIConfigType.EMBEDDINGS:
+      return validateEmbeddingConfig(model)
+    case AIConfigType.COMPLETIONS:
+      return validateCompletionsModel(model)
+    default:
+      throw utils.unreachable(model.configType)
   }
 }
 

@@ -231,11 +231,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
 
-  if (agent.ragConfigId && latestQuestion && readyFileSources.length > 0) {
+  const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
+  if (hasRagConfig && latestQuestion && readyFileSources.length > 0) {
     try {
-      const ragConfig = await sdk.ai.rag.getAgentRagConfig(agent)
       const result = await retrieveContextForSources(
-        ragConfig,
+        agent,
         latestQuestion,
         readyFileSources
       )
