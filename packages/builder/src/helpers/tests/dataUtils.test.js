@@ -53,6 +53,20 @@ describe("check query string utils", () => {
   })
 
   describe("customQueryText", () => {
+    it("should prefer the query name for rest templates", () => {
+      const datasource = {
+        source: IntegrationTypes.REST,
+        restTemplate: "OpenRouter",
+      }
+      const query = {
+        name: "banana",
+      }
+
+      const queryName = customQueryText(datasource, query)
+
+      expect(queryName).toEqual("banana")
+    })
+
     it("should remove the protocol", () => {
       const datasource = { source: IntegrationTypes.REST }
       const query = { name: "https://www.example.com" }

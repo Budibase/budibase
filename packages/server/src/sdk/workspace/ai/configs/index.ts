@@ -47,7 +47,7 @@ export async function create(
 
   const modelId = await liteLLM.addModel({
     provider: config.provider,
-    name: config.model,
+    model: config.model,
     credentialFields: config.credentialsFields,
     configType: config.configType,
   })

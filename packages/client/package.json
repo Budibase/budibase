@@ -18,7 +18,9 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch --mode=dev",
-    "check:types": "yarn svelte-check"
+    "check:types": "yarn svelte-check",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@budibase/bbui": "*",
@@ -44,7 +46,8 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.1.3",
     "vite": "7.1.11",
-    "vite-plugin-css-injected-by-js": "3.5.2"
+    "vite-plugin-css-injected-by-js": "3.5.2",
+    "vitest": "^3.2.4"
   },
   "resolutions": {
     "loader-utils": "1.4.1"

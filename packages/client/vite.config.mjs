@@ -17,6 +17,10 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
 
   return {
+    test: {
+      globals: true,
+      include: ["src/**/*.test.*", "src/**/*.spec.*"],
+    },
     server: {
       open: false,
     },
