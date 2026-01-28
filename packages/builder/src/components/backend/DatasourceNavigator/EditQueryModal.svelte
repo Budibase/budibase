@@ -48,7 +48,12 @@
     onConfirm={save}
     disabled={updatedName === originalName || !!error}
   >
-    <form on:submit|preventDefault={() => editQueryNameModal.confirm()}>
+    <form
+      onsubmit={event => {
+        event.preventDefault()
+        editQueryNameModal.confirm()
+      }}
+    >
       <Input
         label="Query Name"
         thin
