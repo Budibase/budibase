@@ -186,6 +186,7 @@ describe("query utils", () => {
             relationshipType: RelationshipType.ONE_TO_MANY,
             fieldName: "table",
           },
+          other: { name: "other", type: FieldType.NUMBER },
         },
       })
 
@@ -202,6 +203,7 @@ describe("query utils", () => {
         "auxTable.title",
         "aux.name",
         "auxTable.name",
+        "other",
       ])
     })
 
