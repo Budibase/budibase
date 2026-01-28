@@ -107,8 +107,15 @@
     opacity: 1;
   }
 
-  .calendar :global(p) {
-    border: 1px solid red;
+  .calendar {
+    color: var(--spectrum-alias-text-color, inherit);
+  }
+
+  .calendar :global(.fc-daygrid-day-number),
+  .calendar :global(.fc-col-header-cell-cushion),
+  .calendar :global(.fc-event-title),
+  .calendar :global(.fc-event-time) {
+    color: var(--spectrum-alias-text-color, inherit);
   }
 
   /* Specific radiuses (radii?) for first and last buttons */
