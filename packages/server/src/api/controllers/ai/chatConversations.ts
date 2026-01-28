@@ -23,6 +23,7 @@ import {
 import {
   convertToModelMessages,
   extractReasoningMiddleware,
+  generateText,
   ModelMessage,
   stepCountIs,
   streamText,
@@ -133,6 +134,20 @@ export const findLatestUserQuestion = (chat: ChatConversationRequest) => {
   }
   return ""
 }
+
+export const getUserMessageTexts = (
+  messages: ChatConversation["messages"] = []
+) =>
+  messages
+    .filter(message => message?.role === "user")
+    .map(message => extractUserText(message))
+    .filter(text => Boolean(text))
+
+export const shouldRegenerateTitle = (userMessageCount: number, interval = 3) =>
+  userMessageCount === interval
+
+export const stripThoughtTags = (value: string) =>
+  value.replace(/<think>[\s\S]*?<\/think>/g, "").trim()
 
 export const truncateTitle = (value: string, maxLength = 120) => {
   const trimmed = value.trim()
@@ -279,13 +294,15 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           ]
         : modelMessages
 
-    const result = streamText({
-      model: wrapLanguageModel({
-        model,
-        middleware: extractReasoningMiddleware({
-          tagName: "think",
-        }),
+    const wrappedModel = wrapLanguageModel({
+      model,
+      middleware: extractReasoningMiddleware({
+        tagName: "think",
       }),
+    })
+
+    const result = streamText({
+      model: wrappedModel,
       messages: messagesWithContext,
       system,
       tools,
@@ -300,8 +317,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         })
       },
     })
-
-    const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
 
     ctx.respond = false
     const messageMetadata =
@@ -324,12 +339,42 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         const existingChat = chat._id
           ? await db.tryGet<ChatConversation>(chat._id)
           : null
+        const userMessages = getUserMessageTexts(messages)
+        const previousTitle = existingChat?.title || chat.title
+        const firstUserMessage = userMessages[0]
+        let resolvedTitle = previousTitle
+
+        if (userMessages.length > 0 && userMessages.length < 3) {
+          resolvedTitle = truncateTitle(firstUserMessage)
+        } else if (shouldRegenerateTitle(userMessages.length)) {
+          const recentUserMessages = userMessages.slice(-3)
+          const formattedMessages = recentUserMessages
+            .map(message => `- ${message}`)
+            .join("\n")
+          const titlePrompt = `Previous title: ${previousTitle || "None"}\nRecent user messages:\n${formattedMessages}`
+          const generatedTitle = await generateText({
+            model: wrappedModel,
+            messages: [{ role: "user", content: titlePrompt }],
+            system:
+              "Summarize the conversation in 3-6 words. Use title case. Respond with the title only, no quotes, no markdown, and no reasoning.",
+          })
+          const sanitizedTitle = truncateTitle(
+            stripThoughtTags(generatedTitle.text || "")
+          )
+          if (sanitizedTitle) {
+            resolvedTitle = sanitizedTitle
+          } else if (firstUserMessage) {
+            resolvedTitle = truncateTitle(firstUserMessage)
+          }
+        } else if (!resolvedTitle && firstUserMessage) {
+          resolvedTitle = truncateTitle(firstUserMessage)
+        }
 
         const chatToSave = prepareChatConversationForSave({
           chatId,
           chatAppId,
           userId,
-          title,
+          title: resolvedTitle,
           messages,
           chat,
           existingChat,
