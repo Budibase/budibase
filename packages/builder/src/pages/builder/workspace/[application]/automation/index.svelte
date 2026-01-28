@@ -26,18 +26,25 @@
     Modal,
     type ModalAPI,
     notifications,
-    TooltipPosition,
     StatusLight,
   } from "@budibase/bbui"
   import type { UIAutomation } from "@budibase/types"
   import { PublishResourceState, WorkspaceResource } from "@budibase/types"
-  import { url } from "@roxi/routify"
+  import { redirect, url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import NoResults from "../_components/NoResults.svelte"
-  import { appsStore } from "@/stores/portal"
+  import { appsStore, featureFlags } from "@/stores/portal"
+  import { onMount } from "svelte"
 
   $url
+  $redirect
+
+  onMount(() => {
+    if ($featureFlags.WORKSPACE_HOME) {
+      $redirect("../home?type=automation")
+    }
+  })
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -279,11 +286,7 @@
             </div>
 
             <span class="favourite-btn">
-              <FavouriteResourceButton
-                favourite={automation.favourite}
-                position={TooltipPosition.Left}
-                noWrap
-              />
+              <FavouriteResourceButton favourite={automation.favourite} />
             </span>
           </div>
         </a>

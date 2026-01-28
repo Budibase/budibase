@@ -1,7 +1,7 @@
 <script lang="ts">
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
-  import { Body, Icon, TooltipPosition } from "@budibase/bbui"
+  import { Body, Icon } from "@budibase/bbui"
   import type { Agent, WorkspaceFavourite, User } from "@budibase/types"
   import { PublishResourceState } from "@budibase/types"
   import { url } from "@roxi/routify"
@@ -69,11 +69,7 @@
         on:click={e => onContextMenu(e, agent)}
       />
     </div>
-    <FavouriteResourceButton
-      {favourite}
-      position={TooltipPosition.Left}
-      noWrap
-    />
+    <FavouriteResourceButton {favourite} />
   </div>
   <div class="card-body">
     <div class="card-icon">

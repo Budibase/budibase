@@ -17,6 +17,7 @@ import * as accountSdk from "../accounts"
 import * as cache from "../cache"
 import { getGlobalDB, getIdentity, getTenantId } from "../context"
 import * as dbUtils from "../db"
+import { getUsersByWorkspaceParams } from "../docIds/params"
 import env from "../environment"
 import { EmailUnavailableError, HTTPError } from "../errors"
 import * as platform from "../platform"
@@ -182,9 +183,14 @@ export class UserDB {
   }
 
   static async countUsersByApp(appId: string) {
-    let response: any = await usersCore.searchGlobalUsersByApp(appId, {})
+    const response = await dbUtils.queryGlobalViewRaw<User>(
+      dbUtils.ViewName.USER_BY_WORKSPACE,
+      getUsersByWorkspaceParams(appId, {
+        include_docs: false,
+      })
+    )
     return {
-      userCount: response.length,
+      userCount: response.rows.length,
     }
   }
 

@@ -25,7 +25,6 @@
     Icon,
     notifications,
     StatusLight,
-    TooltipPosition,
   } from "@budibase/bbui"
   import {
     PublishResourceState,
@@ -34,8 +33,19 @@
   } from "@budibase/types"
   import AppsHero from "assets/apps-hero-x1.png"
   import NoResults from "../_components/NoResults.svelte"
+  import { redirect } from "@roxi/routify"
+  import { onMount } from "svelte"
+  import { featureFlags } from "@/stores/portal"
 
   type ShowUI = { show: () => void }
+
+  $redirect
+
+  onMount(() => {
+    if ($featureFlags.WORKSPACE_HOME) {
+      $redirect("../home?type=app")
+    }
+  })
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
@@ -347,11 +357,7 @@
             </div>
 
             <span class="favourite-btn">
-              <FavouriteResourceButton
-                favourite={app.favourite}
-                position={TooltipPosition.Left}
-                noWrap
-              />
+              <FavouriteResourceButton favourite={app.favourite} />
             </span>
           </div>
         </a>
