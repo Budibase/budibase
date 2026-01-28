@@ -332,19 +332,14 @@ export class GoogleSheetsMock {
     nock("https://www.googleapis.com/")
       .post("/oauth2/v4/token")
       .reply(200, {
-        grant_type: "client_credentials",
-        client_id: "your-client-id",
-        client_secret: "your-client-secret",
+        access_token: "test",
+        expires_in: 3600,
+        token_type: "Bearer",
       })
       .persist()
 
     nock("https://oauth2.googleapis.com/")
-      .post("/token", {
-        client_id: "test",
-        client_secret: "test",
-        grant_type: "refresh_token",
-        refresh_token: "refreshToken",
-      })
+      .post("/token")
       .reply(200, {
         access_token: "test",
         expires_in: 3600,
@@ -357,13 +352,13 @@ export class GoogleSheetsMock {
   private mockAPI() {
     const spreadsheetId = this.config.spreadsheetId
 
-    this.get(`/v4/spreadsheets/${spreadsheetId}/`, () =>
+    this.get(new RegExp(`/v4/spreadsheets/${spreadsheetId}/?(\\?.*)?$`), () =>
       this.handleGetSpreadsheet()
     )
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchUpdate
     this.post(
-      `/v4/spreadsheets/${spreadsheetId}/:batchUpdate`,
+      new RegExp(`/v4/spreadsheets/${spreadsheetId}/?:batchUpdate(\\?.*)?$`),
       (_uri, request) => this.handleBatchUpdate(request as BatchUpdateRequest)
     )
 

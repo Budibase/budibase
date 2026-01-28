@@ -30,16 +30,20 @@
     workspaceId: string
     chat: ChatConversationLike
     persistConversation?: boolean
+    conversationStarters?: { prompt: string }[]
     onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
+    isAgentPreviewChat?: boolean
   }
 
   let {
     workspaceId,
     chat = $bindable(),
     persistConversation = true,
+    conversationStarters = [],
     onchatsaved,
+    isAgentPreviewChat = false,
   }: Props = $props()
 
   let API = $state(
@@ -100,6 +104,15 @@
   let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
 
+  const applyConversationStarter = async (starterPrompt: string) => {
+    if (isBusy) {
+      return
+    }
+    inputValue = starterPrompt
+    await sendMessage()
+    tick().then(() => textareaElement?.focus())
+  }
+
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
       headers: () => ({ [Header.APP_ID]: workspaceId }),
@@ -155,6 +168,13 @@
   let messages = $derived(chatInstance.messages)
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
+  )
+  let hasMessages = $derived(Boolean(chat?.messages?.length))
+  let showConversationStarters = $derived(
+    !isBusy &&
+      !hasMessages &&
+      conversationStarters.length > 0 &&
+      !isAgentPreviewChat
   )
 
   let lastChatId = $state<string | undefined>(chat?._id)
@@ -325,7 +345,22 @@
 
 <div class="chat-area" bind:this={chatAreaElement}>
   <div class="chatbox">
-    {#if messages.length === 0 && !isBusy}
+    {#if showConversationStarters}
+      <div class="starter-section">
+        <div class="starter-title">Conversation starters</div>
+        <div class="starter-grid">
+          {#each conversationStarters as starter, index (index)}
+            <button
+              type="button"
+              class="starter-card"
+              onclick={() => applyConversationStarter(starter.prompt)}
+            >
+              {starter.prompt}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {:else}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -538,6 +573,40 @@
 
   .empty-state-icon {
     --size: 24px;
+  }
+  .starter-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .starter-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .starter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-s);
+  }
+
+  .starter-card {
+    border: 1px solid var(--grey-3);
+    border-radius: 12px;
+    padding: var(--spacing-m);
+    background: var(--grey-2);
+    color: var(--spectrum-global-color-gray-900);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .starter-card:hover {
+    border-color: var(--grey-4);
+    background: var(--grey-1);
   }
 
   .message {
