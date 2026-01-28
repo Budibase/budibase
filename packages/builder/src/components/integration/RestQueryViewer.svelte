@@ -38,6 +38,7 @@
   } from "@/constants/backend"
   import JSONPreview from "@/components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
+  import { getErrorMessage } from "@/helpers/errors"
   import DynamicVariableModal from "./DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
@@ -53,6 +54,7 @@
   import AuthPicker from "./rest/AuthPicker.svelte"
   import {
     getBindingContext,
+    getDefaultRestAuthConfig,
     prettifyQueryRequestBody,
     keyValueArrayToRecord,
   } from "./query"
@@ -81,10 +83,35 @@
   let queryNameLabel
   let mounted = false
   let isTemplateDatasource = false
+  let defaultAuthApplied = false
+  let defaultAuthKey
+  let lastSyncedQueryId
+  let lastSyncedQueryName
 
   $: staticVariables = datasource?.config?.staticVariables || {}
   $: if (queryId) {
     lastViewedQueryId = queryId
+  }
+  $: if (query && query._id && query._id !== lastSyncedQueryId) {
+    lastSyncedQueryId = query._id
+    lastSyncedQueryName = query.name
+  }
+  $: if (mounted && queryId && $queries.list && query) {
+    const updatedQuery = $queries.list.find(q => q._id === queryId)
+    if (updatedQuery && updatedQuery._rev && updatedQuery._rev !== query._rev) {
+      query._rev = updatedQuery._rev
+    }
+    if (
+      updatedQuery &&
+      lastSyncedQueryName !== undefined &&
+      updatedQuery.name !== lastSyncedQueryName &&
+      query.name === lastSyncedQueryName
+    ) {
+      query.name = updatedQuery.name
+    }
+    if (updatedQuery) {
+      lastSyncedQueryName = updatedQuery.name
+    }
   }
 
   $: customRequestBindings = toBindingsArray(
@@ -149,6 +176,30 @@
   $: prettyBody = query?.fields?.requestBody
     ? prettifyQueryRequestBody(query, mergedBindings)
     : undefined
+  $: {
+    const key = query?._id || queryId || "new"
+    if (key !== defaultAuthKey) {
+      defaultAuthKey = key
+      defaultAuthApplied = false
+    }
+  }
+  $: if (!defaultAuthApplied && query && datasource && !queryId && !query._id) {
+    const defaultAuth = getDefaultRestAuthConfig(datasource)
+    if (
+      defaultAuth &&
+      !query.fields?.authConfigId &&
+      !query.fields?.authConfigType
+    ) {
+      query.fields.authConfigId = defaultAuth.authConfigId
+      query.fields.authConfigType = defaultAuth.authConfigType
+      defaultAuthApplied = true
+    } else if (
+      defaultAuth &&
+      (query.fields?.authConfigId || query.fields?.authConfigType)
+    ) {
+      defaultAuthApplied = true
+    }
+  }
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -309,7 +360,7 @@
         notifications.success("Request sent successfully")
       }
     } catch (error) {
-      notifications.error(`Query Error: ${error.message}`)
+      notifications.error(`Query Error: ${getErrorMessage(error)}`)
     }
   }
 
