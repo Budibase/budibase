@@ -18,9 +18,9 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch --mode=dev",
+    "check:types": "yarn svelte-check",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "check:types": "yarn svelte-check"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@budibase/bbui": "*",
