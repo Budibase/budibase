@@ -9505,5 +9505,74 @@
         "defaultValue": true
       }
     ]
+  },
+  "calendar": {
+    "name": "Calendar",
+    "description": "Calendar",
+    "icon": "calendar",
+    "size": {
+      "width": 600,
+      "height": 420
+    },
+    "styles": ["size"],
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
+    },
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "dataProvider",
+        "label": "Data provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Event start",
+        "key": "eventStart"
+      },
+      {
+        "type": "field",
+        "label": "Event end",
+        "key": "eventEnd"
+      },
+      {
+        "type": "field",
+        "label": "Event title",
+        "key": "eventTitle"
+      },
+      {
+        "type": "field",
+        "label": "Event Description",
+        "key": "eventDesc"
+      },
+      {
+        "type": "event",
+        "label": "On click event",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "row_id",
+            "key": "row_id"
+          },
+          {
+            "label": "Event title",
+            "key": "title"
+          },
+          {
+            "label": "Event Start",
+            "key": "start"
+          },
+          {
+            "label": "Event End",
+            "key": "end"
+          }
+        ]
+      }
+    ]
   }
 }
