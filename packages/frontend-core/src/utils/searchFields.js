@@ -23,7 +23,9 @@ export function getFields(
 ) {
   const result = []
   let filteredFields = fields.filter(
-    field => !BannedSearchTypes.includes(field.type)
+    field =>
+      !BannedSearchTypes.includes(field.type) &&
+      (allowLinks || field.type !== "link")
   )
   for (const field of filteredFields) {
     result.push(field)
