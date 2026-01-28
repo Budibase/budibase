@@ -1886,7 +1886,7 @@ class InternalBuilder {
     }
     let query = this.qualifiedKnex()
     const parsedBody = this.parseBody(body)
-    query = this.addFilters(query, filters)
+    query = this.addFilters(query, filters, { relationship: true })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.update(parsedBody)
@@ -1898,7 +1898,7 @@ class InternalBuilder {
   delete(opts: QueryOptions): Knex.QueryBuilder {
     const { filters } = this.query
     let query = this.qualifiedKnex()
-    query = this.addFilters(query, filters)
+    query = this.addFilters(query, filters, { relationship: true })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.delete()
