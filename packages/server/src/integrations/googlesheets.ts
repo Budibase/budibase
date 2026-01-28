@@ -269,7 +269,28 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
 
       let client = bbCtx?.googleSheets?.clients[this.spreadsheetId]
       if (!client) {
-        client = new GoogleSpreadsheet(this.spreadsheetId, oauthClient)
+        type OAuthHeaders = Awaited<
+          ReturnType<OAuth2Client["getRequestHeaders"]>
+        >
+
+        const normalizeRequestHeaders = (headers: OAuthHeaders): OAuthHeaders => {
+          const flatHeaders: Record<string, string> = {}
+          if (headers && typeof headers.forEach === "function") {
+            headers.forEach((value, key) => {
+              flatHeaders[key] = value
+            })
+          } else {
+            Object.assign(flatHeaders, headers)
+          }
+
+          return Object.assign(headers, flatHeaders)
+        }
+
+        const auth = {
+          getRequestHeaders: async () =>
+            normalizeRequestHeaders(await oauthClient.getRequestHeaders()),
+        }
+        client = new GoogleSpreadsheet(this.spreadsheetId, auth)
         await client.loadInfo()
 
         if (bbCtx?.googleSheets?.clients) {
