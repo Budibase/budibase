@@ -8,5 +8,6 @@ import send from "koa-send"
 export const serveBuilderAssets = async function (ctx: Ctx<void, void>) {
   let topLevelPath = env.isDev() ? DEV_ASSET_PATH : TOP_LEVEL_PATH
   const builderPath = join(topLevelPath, "builder")
-  await send(ctx, ctx.file, { root: builderPath })
+  const file = ctx.file || "index.html"
+  await send(ctx, file, { root: builderPath })
 }
