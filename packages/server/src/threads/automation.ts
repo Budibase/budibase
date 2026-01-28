@@ -1,3 +1,7 @@
+if (process.env.DD_APM_ENABLED) {
+  require("../ddApm")
+}
+
 import { configs, context, events, logging } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { automations, dataFilters, helpers } from "@budibase/shared-core"

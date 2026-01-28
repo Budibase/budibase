@@ -19,18 +19,18 @@ describe("OpenAPI2 Import", () => {
   })
 
   it("validates unsupported data", async () => {
-    expect(await openapi2.isSupported("curl http://example.com")).toBe(false)
-    expect(await openapi2.isSupported("")).toBe(false)
+    expect(await openapi2.tryLoad("curl http://example.com")).toBe(false)
+    expect(await openapi2.tryLoad("")).toBe(false)
   })
 
   describe.each(["json", "yaml"])("%s", extension => {
     describe("petstore", () => {
       beforeEach(async () => {
-        await openapi2.isSupported(getData("petstore", extension))
+        await openapi2.tryLoad(getData("petstore", extension))
       })
 
       it("returns import info", async () => {
-        const { name } = await openapi2.getInfo()
+        const { name } = openapi2.getInfo()
         expect(name).toBe("Swagger Petstore")
       })
     })
@@ -38,9 +38,9 @@ describe("OpenAPI2 Import", () => {
     describe("crud", () => {
       let queries: Record<string, Query>
       beforeEach(async () => {
-        await openapi2.isSupported(getData("crud", extension))
+        await openapi2.tryLoad(getData("crud", extension))
 
-        const raw = await openapi2.getQueries("fake_datasource_id")
+        const raw = openapi2.getQueries("fake_datasource_id")
         queries = mapValues(groupBy(raw, "name"), group => group[0])
       })
 
@@ -240,10 +240,10 @@ describe("OpenAPI2 Import", () => {
         },
       })
 
-      const supported = await openapi2.isSupported(spec)
+      const supported = await openapi2.tryLoad(spec)
       expect(supported).toBe(true)
 
-      const [query] = await openapi2.getQueries("datasourceId")
+      const [query] = openapi2.getQueries("datasourceId")
       expect(query.fields.bodyType).toBe(BodyType.ENCODED)
       expect(query.fields.headers?.["Content-Type"]).toBe(
         "application/x-www-form-urlencoded"
@@ -318,10 +318,10 @@ describe("OpenAPI2 Import", () => {
         },
       })
 
-      const supported = await openapi2.isSupported(spec)
+      const supported = await openapi2.tryLoad(spec)
       expect(supported).toBe(true)
 
-      const [query] = await openapi2.getQueries("datasourceId")
+      const [query] = openapi2.getQueries("datasourceId")
       expect(query.fields.bodyType).toBe(BodyType.ENCODED)
       expect(query.fields.headers?.["Content-Type"]).toBe(
         "application/x-www-form-urlencoded"
@@ -373,10 +373,10 @@ describe("OpenAPI2 Import", () => {
         },
       })
 
-      const supported = await openapi2.isSupported(spec)
+      const supported = await openapi2.tryLoad(spec)
       expect(supported).toBe(true)
 
-      const [query] = await openapi2.getQueries("datasourceId")
+      const [query] = openapi2.getQueries("datasourceId")
       expect(query.queryVerb).toBe("read")
       expect(query.fields.bodyType).toBe(BodyType.NONE)
       expect(query.fields.requestBody).toBeUndefined()

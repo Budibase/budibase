@@ -5,7 +5,7 @@ import {
   WebSearchProvider,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import type { StepResult, ToolSet } from "ai"
+import type { ToolSet } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
 import {
   createRestQueryTool,
@@ -14,6 +14,7 @@ import {
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
+import tracer from "dd-trace"
 
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
@@ -30,7 +31,7 @@ export async function getAvailableTools(
   const [queries, datasources, aiConfig] = await Promise.all([
     sdk.queries.fetch(),
     sdk.datasources.fetch(),
-    aiconfigId ? sdk.aiConfigs.find(aiconfigId) : Promise.resolve(undefined),
+    aiconfigId ? sdk.ai.configs.find(aiconfigId) : Promise.resolve(undefined),
   ])
   const webSearchConfig = aiConfig?.webSearchConfig
 
@@ -101,20 +102,39 @@ export async function buildPromptAndTools(
 }
 
 export function createLiteLLMFetch(sessionId: string): typeof fetch {
-  const liteFetch = ((
+  const liteFetch = (async (
     input: Parameters<typeof fetch>[0],
     init?: Parameters<typeof fetch>[1]
   ) => {
+    const span = tracer.scope().active()
+    let modifiedInit = init
+
     if (typeof init?.body === "string") {
       try {
         const body = JSON.parse(init.body)
         body.litellm_session_id = sessionId
-        return fetch(input, { ...init, body: JSON.stringify(body) })
+        if (span) {
+          body.metadata = {
+            ...body.metadata,
+            dd_trace_id: span.context().toTraceId(),
+            dd_span_id: span.context().toSpanId(),
+            session_id: sessionId,
+          }
+        }
+        modifiedInit = { ...init, body: JSON.stringify(body) }
       } catch {
         // Not JSON, pass through
       }
     }
-    return fetch(input, init)
+
+    const response = await fetch(input, modifiedInit)
+
+    const litellmCallId = response.headers.get("x-litellm-call-id")
+    if (litellmCallId && span) {
+      span.setTag("litellm.call_id", litellmCallId)
+    }
+
+    return response
   }) as typeof fetch
 
   // Preserve the preconnect helper required by the OpenAI client typings.
@@ -123,59 +143,4 @@ export function createLiteLLMFetch(sessionId: string): typeof fetch {
   }
 
   return liteFetch
-}
-
-/**
- * Extracts reasoning text from an agent step result. First checks if reasoningText
- * is already present on the step, otherwise attempts to extract it from the response
- * body structure (choices[0].message.reasoning). Returns undefined if no reasoning
- * text is found or if extraction fails.
- */
-export const extractReasoningTextFromStep = (
-  step: StepResult<ToolSet>
-): string | undefined => {
-  const existing = step.reasoningText
-  if (existing && existing.trim().length > 0) {
-    return existing
-  }
-
-  const body = step.response?.body
-  if (!body || typeof body !== "object" || !("choices" in body)) {
-    return undefined
-  }
-
-  try {
-    const choices = body.choices
-    if (!Array.isArray(choices) || choices.length === 0) {
-      return undefined
-    }
-    const message = choices[0]?.message
-    const reasoning = message?.reasoning
-    if (typeof reasoning === "string" && reasoning.trim().length > 0) {
-      return reasoning
-    }
-  } catch (error) {
-    console.log("Error extracting reasoning text from step: ", error)
-  }
-
-  return undefined
-}
-
-export const attachReasoningToSteps = (
-  steps?: Array<StepResult<ToolSet>>
-): Array<StepResult<ToolSet>> | undefined => {
-  if (!steps || steps.length === 0) {
-    return steps
-  }
-
-  return steps.map(step => {
-    const reasoningText = extractReasoningTextFromStep(step)
-    if (!reasoningText) {
-      return step
-    }
-    return {
-      ...step,
-      reasoningText,
-    }
-  })
 }

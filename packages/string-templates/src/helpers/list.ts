@@ -1,4 +1,4 @@
-import { date, duration } from "./date"
+import { date, difference, duration, durationFromNow } from "./date"
 
 /* 
 @budibase/handlebars-helpers is not treeshakeable, so we can't use the barrel files. 
@@ -38,11 +38,13 @@ const externalCollections = {
   uuid,
 }
 
-export const helpersToRemoveForJs = ["sortBy"]
+export const helpersToRemoveForJs = ["sortBy", "map"]
 
 const addedHelpers = {
   date: date,
+  difference: difference,
   duration: duration,
+  durationFromNow: durationFromNow,
 }
 
 let helpers: Record<string, any>

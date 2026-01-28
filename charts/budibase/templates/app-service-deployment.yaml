@@ -13,11 +13,15 @@ metadata:
   name: app-service
 spec:
   replicas: {{ .Values.services.apps.replicaCount }}
+  minReadySeconds: {{ .Values.services.apps.minReadySeconds }}
   selector:
     matchLabels:
       io.kompose.service: app-service
   strategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       annotations:
@@ -133,7 +137,11 @@ spec:
         - name: LOG_LEVEL
           value: {{ .Values.services.apps.logLevel | quote }}
         - name: REDIS_PASSWORD
-          value: {{ .Values.services.redis.password }}
+          value: {{ .Values.services.redis.password | quote }}
+        {{- if .Values.services.redis.username }}
+        - name: REDIS_USERNAME
+          value: {{ .Values.services.redis.username | quote }}
+        {{- end }}
         - name: REDIS_URL
           {{ if .Values.services.redis.url }}
           value: {{ .Values.services.redis.url }}
@@ -271,6 +279,10 @@ spec:
         args:
         {{- toYaml .Values.services.apps.args | nindent 10 }}
         {{ end }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ .Values.services.apps.preStopDelaySeconds }}"]
         {{ if .Values.services.apps.extraVolumeMounts }}
         volumeMounts:
         {{- toYaml .Values.services.apps.extraVolumeMounts | nindent 10 }}

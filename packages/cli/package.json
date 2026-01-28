@@ -31,10 +31,10 @@
     "node-fetch": "2.6.7",
     "open": "8.4.2",
     "posthog-node": "4.0.1",
-    "pouchdb": "7.3.0",
+    "pouchdb": "9.0.0",
     "randomstring": "1.1.5",
-    "tar": "6.2.1",
-    "yaml": "^2.1.1"
+    "tar": "7.5.7",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@types/node-fetch": "2.6.4",

@@ -4,8 +4,10 @@ import {
   ChatConversationRequest,
   CreateChatConversationRequest,
   ChatApp,
+  ChatAppAgent,
   FetchAgentHistoryResponse,
   UpdateChatAppRequest,
+  AgentMessageMetadata,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
@@ -16,7 +18,7 @@ export interface ChatAppEndpoints {
   streamChatConversation: (
     chat: ChatConversationRequest,
     workspaceId: string
-  ) => Promise<AsyncIterable<UIMessage>>
+  ) => Promise<AsyncIterable<UIMessage<AgentMessageMetadata>>>
   deleteChatConversation: (
     chatConversationId: string,
     chatAppId: string
@@ -27,7 +29,7 @@ export interface ChatAppEndpoints {
   ) => Promise<ChatConversation>
   fetchChatHistory: (chatAppId: string) => Promise<FetchAgentHistoryResponse>
   fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
-  setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatApp>
+  setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatAppAgent>
   createChatConversation: (
     chat: CreateChatConversationRequest,
     workspaceId?: string

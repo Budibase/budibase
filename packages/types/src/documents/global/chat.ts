@@ -1,26 +1,43 @@
-import { Document } from "../../"
+import { AgentMessageMetadata, Document } from "../../"
 import type { UIMessage } from "ai"
+
+export interface ConversationStarter {
+  prompt: string
+}
+
+export interface ChatAppAgent {
+  agentId: string
+  isEnabled: boolean
+  isDefault: boolean
+  conversationStarters?: ConversationStarter[]
+}
 
 export interface ChatApp extends Document {
   title?: string
   greeting?: string
   description?: string
   theme?: string
-  agentId: string
+  agents: ChatAppAgent[]
   live?: boolean
   settings?: Record<string, any>
 }
 
 export interface ChatConversationRequest extends Document {
   chatAppId: string
+  agentId: string
   title?: string
-  messages: UIMessage[]
+  messages: UIMessage<AgentMessageMetadata>[]
+  transient?: boolean
 }
 
 export type CreateChatConversationRequest = Pick<
   ChatConversationRequest,
-  "chatAppId" | "title"
+  "chatAppId" | "agentId" | "title"
 >
+
+export type DraftChatConversation = Omit<ChatConversationRequest, "agentId"> & {
+  agentId?: string
+}
 
 export interface ChatConversation extends ChatConversationRequest {
   userId: string

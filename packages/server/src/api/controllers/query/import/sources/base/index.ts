@@ -6,6 +6,7 @@ import {
   QueryVerb,
   RestTemplateQueryMetadata,
 } from "@budibase/types"
+import { ValidQueryNameRegex } from "@budibase/shared-core"
 import { URL } from "url"
 import {
   buildKeyValueRequestBody,
@@ -18,6 +19,7 @@ export interface ImportInfo {
   docsUrl?: string
   endpoints: ImportEndpoint[]
   securityHeaders?: string[]
+  staticVariables?: Record<string, string>
 }
 
 enum MethodToVerb {
@@ -33,13 +35,31 @@ export interface GetQueriesOptions {
   staticVariables?: Record<string, string>
 }
 
+const INVALID_QUERY_NAME_CHARS = /[()]/g
+
+const sanitizeQueryName = (name: string, fallback: string): string => {
+  const trimmed = name?.trim()
+  if (trimmed && ValidQueryNameRegex.test(trimmed)) {
+    return trimmed
+  }
+
+  const candidate = trimmed || fallback
+  const sanitized = candidate
+    .replace(INVALID_QUERY_NAME_CHARS, "")
+    .replace(/\s+/g, " ")
+    .trim()
+
+  return sanitized || "Query"
+}
+
 export abstract class ImportSource {
-  abstract isSupported(data: string): Promise<boolean>
-  abstract getInfo(): Promise<ImportInfo>
+  abstract tryLoad(data: string): Promise<boolean>
+  abstract load(data: string): Promise<void>
+  abstract getInfo(): ImportInfo
   abstract getQueries(
     datasourceId: string,
     options?: GetQueriesOptions
-  ): Promise<Query[]>
+  ): Query[]
   abstract getImportSource(): string
 
   protected buildEndpointId = (method: string, path: string): string => {
@@ -135,6 +155,8 @@ export abstract class ImportSource {
     const queryVerb = this.verbFromMethod(method)
     const transformer = "return data"
     const schema = {}
+    const fallbackName = `${method?.toUpperCase?.() || ""} ${path}`.trim()
+    const sanitizedName = sanitizeQueryName(name, fallbackName)
     path = this.processPath(path)
     if (url) {
       if (typeof url === "string") {
@@ -209,7 +231,7 @@ export abstract class ImportSource {
 
     const query: Query = {
       datasourceId,
-      name,
+      name: sanitizedName,
       parameters: combinedParameters,
       fields: {
         headers,

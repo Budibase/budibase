@@ -19,6 +19,7 @@
     extractProperty(option, "value")
   export let getOptionSubtitle = (option: O, _index?: number) =>
     (option as any)?.subtitle
+  export let showSelectedSubtitle = false
   export let getOptionIcon = (option: O, _index?: number) =>
     (option as any)?.icon
   export let getOptionColour = (option: O, _index?: number) =>
@@ -28,6 +29,7 @@
     | ((_option: O, _index?: number) => boolean)
     | undefined = undefined
   export let quiet: boolean = false
+  export let size: "S" | "M" | "L" = "M"
   export let autoWidth: boolean = false
   export let sort: boolean = false
   export let tooltip: string | undefined = undefined
@@ -62,6 +64,7 @@
 
 <Field {helpText} {label} {labelPosition} {error} {tooltip}>
   <Select
+    {size}
     {quiet}
     {loading}
     {disabled}
@@ -79,6 +82,7 @@
     {getOptionIcon}
     {getOptionColour}
     {getOptionSubtitle}
+    {showSelectedSubtitle}
     {useOptionIconImage}
     {isOptionEnabled}
     {autocomplete}

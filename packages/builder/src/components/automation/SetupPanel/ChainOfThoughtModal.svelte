@@ -9,8 +9,7 @@
     Tabs,
     Tab,
   } from "@budibase/bbui"
-  import type { ModalAPI } from "@budibase/bbui"
-  import { type ChainStep } from "./ChainOfThought.svelte"
+  import type { ChainStep } from "./AgentOutputViewer.svelte"
   import { fade } from "svelte/transition"
   import JSONViewer from "@/components/common/JSONViewer.svelte"
   import {
@@ -18,15 +17,34 @@
     getStatusLabel,
     getStatusLightColor,
   } from "./chainOfThoughtStatus"
+  import type { LanguageModelUsage } from "ai"
 
-  export let steps: ChainStep[] = []
-  export let response: string = ""
-  export let title: string = "Agent Execution"
-  export let meta: string = ""
+  interface Props {
+    steps?: ChainStep[]
+    response?: string
+    title?: string
+    usage?: LanguageModelUsage
+  }
 
-  let modal: ModalAPI
-  let selectedStep: ChainStep | null = null
-  let selectedTab = "Output"
+  let { steps = [], response, title, usage }: Props = $props()
+
+  let modal = $state<Modal>()
+  let selectedStep: ChainStep | null = $state(null)
+  let selectedTab = $state("Output")
+
+  const isObjectValue = (value: unknown) => {
+    return typeof value === "object" && value !== null
+  }
+
+  const formatPrimitiveValue = (value: unknown) => {
+    if (value === undefined) {
+      return ""
+    }
+    if (typeof value === "string") {
+      return value
+    }
+    return JSON.stringify(value, null, 2)
+  }
 
   export function show() {
     modal?.show()
@@ -50,126 +68,160 @@
     size="XL"
   >
     <div class="modal-body">
-      {#if meta}
-        <div class="meta-bar">
-          <Body size="XS">{meta}</Body>
+      {#if usage}
+        <div class="usage-bar">
+          <div class="usage-item">
+            <span class="usage-label">Input</span>
+            <span class="usage-value"
+              >{usage.inputTokens?.toLocaleString() ?? 0}</span
+            >
+          </div>
+          <div class="usage-item">
+            <span class="usage-label">Output</span>
+            <span class="usage-value"
+              >{usage.outputTokens?.toLocaleString() ?? 0}</span
+            >
+          </div>
+          <div class="usage-item">
+            <span class="usage-label">Total</span>
+            <span class="usage-value"
+              >{usage.totalTokens?.toLocaleString() ?? 0}</span
+            >
+          </div>
         </div>
       {/if}
       <div class="split-view">
-        <div class="steps-panel">
-          <div class="panel-label">Steps</div>
-          <div class="steps-list">
+        <div class="tools-panel">
+          <div class="panel-label">Tools</div>
+          <div class="tools-list">
             {#each steps as step, index (step.id)}
               {@const isSelected = selectedStep?.id === step.id}
               {@const isLast = index === steps.length - 1}
 
               <button
                 type="button"
-                class="step-row"
+                class="tool-row"
                 class:selected={isSelected}
-                on:click={() => selectStep(step)}
+                onclick={() => selectStep(step)}
               >
-                <div class="step-track">
-                  <div class="step-node">
+                <div class="tool-track">
+                  <div class="tool-node">
                     <StatusLight
                       size="S"
                       color={getStatusLightColor(step.status)}
                     />
                   </div>
                   {#if !isLast}
-                    <div class="step-line"></div>
+                    <div class="tool-line"></div>
                   {/if}
                 </div>
-                <span class="step-name">{step.displayName}</span>
+                <span class="tool-name">{step.displayName}</span>
               </button>
             {/each}
           </div>
         </div>
 
         <div class="detail-panel">
-          {#if selectedStep}
-            {#key selectedStep.id}
-              <div class="detail-content" in:fade={{ duration: 150 }}>
-                <div class="detail-header">
-                  <h3 class="detail-title">{selectedStep.displayName}</h3>
-                  <span
-                    class={`${getStatusActionButtonClass(
-                      selectedStep.status
-                    )} status-pill`}
-                  >
-                    {getStatusLabel(selectedStep.status)}
-                  </span>
-                </div>
-
-                <div class="detail-sections">
-                  {#if selectedStep.reasoning}
-                    <div class="section">
-                      <div class="section-label">
-                        <Icon name="Light" size="S" />
-                        <span>Reasoning</span>
+          <div class="tabs-container">
+            <Tabs
+              quiet
+              noHorizPadding
+              selected={selectedTab}
+              on:select={e => {
+                selectedTab = e.detail
+              }}
+            >
+              <Tab title="Input">
+                <div class="tab-content">
+                  {#if selectedStep}
+                    {#if selectedStep.input !== undefined}
+                      <JSONViewer value={selectedStep.input} />
+                    {:else}
+                      <div class="empty-state">
+                        <Icon
+                          name="Export"
+                          size="L"
+                          color="var(--spectrum-global-color-gray-500)"
+                        />
+                        <Body size="S">No input data</Body>
                       </div>
-                      <div class="reasoning-content">
-                        <Body size="S">{selectedStep.reasoning}</Body>
-                      </div>
+                    {/if}
+                  {:else}
+                    <div class="empty-state">
+                      <Icon
+                        name="Preview"
+                        size="L"
+                        color="var(--spectrum-global-color-gray-500)"
+                      />
+                      <Body size="S">Select a tool to view input</Body>
                     </div>
                   {/if}
-
-                  <div class="tabs-container">
-                    <Tabs
-                      quiet
-                      noHorizPadding
-                      selected={selectedTab}
-                      on:select={e => {
-                        selectedTab = e.detail
-                      }}
-                    >
-                      <Tab title="Output">
-                        <div class="tab-content">
-                          {#if selectedStep.output !== undefined}
+                </div>
+              </Tab>
+              <Tab title="Output">
+                <div class="tab-content">
+                  {#if selectedStep}
+                    <div class="tool-header" in:fade={{ duration: 150 }}>
+                      <h3 class="tool-title">{selectedStep.displayName}</h3>
+                      <span
+                        class={`${getStatusActionButtonClass(
+                          selectedStep.status
+                        )} status-pill`}
+                      >
+                        {getStatusLabel(selectedStep.status)}
+                      </span>
+                    </div>
+                    {#key selectedStep.id}
+                      <div class="output-content" in:fade={{ duration: 150 }}>
+                        {#if selectedStep.output !== undefined}
+                          {#if isObjectValue(selectedStep.output)}
                             <JSONViewer value={selectedStep.output} />
                           {:else}
-                            <div class="empty-state">
-                              <Icon
-                                name="Export"
-                                size="L"
-                                color="var(--spectrum-global-color-gray-500)"
-                              />
-                              <Body size="S">No output data</Body>
-                            </div>
+                            <pre class="primitive-value">
+{formatPrimitiveValue(selectedStep.output)}</pre>
                           {/if}
-                        </div>
-                      </Tab>
-                      <Tab title="Response">
-                        <div class="tab-content">
-                          {#if response}
-                            <MarkdownViewer value={response} />
-                          {:else}
-                            <div class="empty-state">
-                              <Icon
-                                name="Article"
-                                size="L"
-                                color="var(--spectrum-global-color-gray-500)"
-                              />
-                              <Body size="S">No response</Body>
-                            </div>
-                          {/if}
-                        </div>
-                      </Tab>
-                    </Tabs>
-                  </div>
+                        {:else}
+                          <div class="empty-state">
+                            <Icon
+                              name="Export"
+                              size="L"
+                              color="var(--spectrum-global-color-gray-500)"
+                            />
+                            <Body size="S">No output data</Body>
+                          </div>
+                        {/if}
+                      </div>
+                    {/key}
+                  {:else}
+                    <div class="empty-state">
+                      <Icon
+                        name="Preview"
+                        size="L"
+                        color="var(--spectrum-global-color-gray-500)"
+                      />
+                      <Body size="S">Select a tool to view output</Body>
+                    </div>
+                  {/if}
                 </div>
-              </div>
-            {/key}
-          {:else}
-            <div class="detail-empty">
-              <Icon
-                name="Preview"
-                size="L"
-                color="var(--spectrum-global-color-gray-500)"
-              />
-              <Body size="S">Select a step to view details</Body>
-            </div>
-          {/if}
+              </Tab>
+              <Tab title="Response">
+                <div class="tab-content">
+                  {#if response}
+                    <MarkdownViewer value={response} />
+                  {:else}
+                    <div class="empty-state">
+                      <Icon
+                        name="Article"
+                        size="L"
+                        color="var(--spectrum-global-color-gray-500)"
+                      />
+                      <Body size="S">No response</Body>
+                    </div>
+                  {/if}
+                </div>
+              </Tab>
+            </Tabs>
+          </div>
         </div>
       </div>
     </div>
@@ -185,7 +237,9 @@
     min-height: 400px;
   }
 
-  .meta-bar {
+  .usage-bar {
+    display: flex;
+    gap: var(--spacing-l);
     padding: var(--spacing-s) var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 6px;
@@ -194,14 +248,24 @@
       var(--spectrum-global-color-gray-200) 35%,
       transparent
     );
-    color: var(--spectrum-global-color-gray-700);
-    overflow: hidden;
   }
 
-  .meta-bar :global(*) {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .usage-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .usage-label {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .usage-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .split-view {
@@ -221,13 +285,13 @@
     margin-bottom: var(--spacing-s);
   }
 
-  .steps-panel {
+  .tools-panel {
     display: flex;
     flex-direction: column;
     min-height: 0;
   }
 
-  .steps-list {
+  .tools-list {
     flex: 1;
     overflow-y: auto;
     border: 1px solid var(--spectrum-global-color-gray-300);
@@ -235,7 +299,7 @@
     padding: var(--spacing-s);
   }
 
-  .step-row {
+  .tool-row {
     display: grid;
     grid-template-columns: 16px minmax(0, 1fr) auto;
     align-items: stretch;
@@ -251,29 +315,29 @@
     transition: background 0.15s ease;
   }
 
-  .step-row:hover {
+  .tool-row:hover {
     background: var(--spectrum-global-color-gray-200);
   }
 
-  .step-row.selected {
+  .tool-row.selected {
     background: var(--spectrum-global-color-gray-200);
     border-color: var(--spectrum-global-color-gray-400);
   }
 
-  .step-track {
+  .tool-track {
     position: relative;
     width: 16px;
     min-width: 16px;
   }
 
-  .step-node {
+  .tool-node {
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
   }
 
-  .step-line {
+  .tool-line {
     position: absolute;
     left: 50%;
     top: calc(50% + 10px);
@@ -283,7 +347,7 @@
     transform: translateX(-50%);
   }
 
-  .step-name {
+  .tool-name {
     flex: 1;
     min-width: 0;
     font-size: 12px;
@@ -293,6 +357,29 @@
     overflow: hidden;
     text-overflow: ellipsis;
     align-self: center;
+  }
+
+  .tool-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    padding-bottom: var(--spacing-m);
+    margin-bottom: var(--spacing-m);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .tool-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
+    margin: 0;
+  }
+
+  .output-content {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
   }
 
   .status-pill {
@@ -344,65 +431,6 @@
     padding-left: var(--spacing-l);
   }
 
-  .detail-content {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-    min-width: 0;
-  }
-
-  .detail-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-m);
-    padding-bottom: var(--spacing-m);
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-  }
-
-  .detail-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
-    margin: 0;
-  }
-
-  .detail-sections {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-  }
-
-  .section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .section-label {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .reasoning-content {
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--spectrum-global-color-gray-800);
-    white-space: pre-wrap;
-    word-break: break-word;
-    padding: var(--spacing-m);
-    border-radius: 4px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-  }
-
   .tabs-container {
     flex: 1;
     min-height: 0;
@@ -410,10 +438,30 @@
     flex-direction: column;
   }
 
+  .tabs-container :global(.spectrum-Tabs-content) {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+
   .tab-content {
     padding: var(--spacing-m) 0;
     overflow: auto;
-    max-height: 300px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .primitive-value {
+    background-color: var(--spectrum-global-color-gray-75);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--border-radius-s);
+    padding: var(--spacing-m);
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: monospace;
+    font-size: 12px;
+    margin: 0;
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .empty-state {
@@ -423,16 +471,6 @@
     justify-content: center;
     gap: var(--spacing-m);
     padding: var(--spacing-xl);
-    color: var(--spectrum-global-color-gray-500);
-  }
-
-  .detail-empty {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-m);
     color: var(--spectrum-global-color-gray-500);
   }
 </style>

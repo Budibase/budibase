@@ -8,6 +8,7 @@ import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
+import { featureFlag } from "@/helpers"
 
 export const globalRoutes = (user: GetGlobalSelfResponse) => {
   return [
@@ -77,6 +78,12 @@ export const orgRoutes = (
           title: "Branding",
           comp: Pages.get("branding"),
         },
+        {
+          path: "translations",
+          access: () => isAdmin,
+          title: "Translations",
+          comp: Pages.get("translations"),
+        },
       ],
     },
     {
@@ -86,8 +93,13 @@ export const orgRoutes = (
       icon: "users",
       routes: [
         {
+          path: "workspace",
+          title: "Workspace",
+          comp: Pages.get("workspace_users"),
+        },
+        {
           path: "users",
-          title: "Users",
+          title: "Organisation",
           comp: Pages.get("users"),
           routes: [{ path: ":userId", comp: Pages.get("user"), title: "User" }],
         },
@@ -267,10 +279,23 @@ export const appRoutes = (
         { path: "pwa", comp: Pages.get("pwa"), title: "PWA" },
         { path: "embed", comp: Pages.get("embed"), title: "Embed" },
         { path: "scripts", comp: Pages.get("scripts"), title: "Scripts" },
+      ],
+    },
+    {
+      section: "AI config",
+      path: "ai-config",
+      icon: "sparkle",
+      access: () => featureFlag.isEnabled("AI_AGENTS"),
+      routes: [
         {
-          path: "translations",
-          comp: Pages.get("translations"),
-          title: "Translations",
+          path: "configs",
+          title: "AI Configs",
+          comp: Pages.get("ai_configs"),
+        },
+        {
+          path: "embedding-settings",
+          title: "Embeddings",
+          comp: Pages.get("embeddings"),
         },
       ],
     },

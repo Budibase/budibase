@@ -1,19 +1,22 @@
 import { API } from "@/api"
+import { agentsStore } from "./agents"
 import { BudiStore } from "../BudiStore"
 import { ChatApp, ChatConversation } from "@budibase/types"
-import { get } from "svelte/store"
+import { derived, get } from "svelte/store"
 
 interface ChatAppsStoreState {
-  conversations: ChatConversation[]
   chatAppId?: string
+  chatAppsById: Record<string, ChatApp>
+  conversationsByAppId: Record<string, ChatConversation[]>
   currentConversationId?: string
 }
 
 export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
   constructor() {
     super({
-      conversations: [],
       chatAppId: undefined,
+      chatAppsById: {},
+      conversationsByAppId: {},
       currentConversationId: undefined,
     })
   }
@@ -41,57 +44,109 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 
   reset = () => {
     this.update(state => {
-      state.conversations = []
       state.chatAppId = undefined
+      state.chatAppsById = {}
+      state.conversationsByAppId = {}
       state.currentConversationId = undefined
       return state
     })
   }
 
-  ensureChatApp = async (agentId?: string): Promise<ChatApp | null> => {
-    const workspaceId = await this.getWorkspaceId()
+  ensureChatApp = async (
+    agentId?: string,
+    workspaceIdOverride?: string
+  ): Promise<ChatApp | null> => {
+    const workspaceId = workspaceIdOverride || (await this.getWorkspaceId())
     if (!workspaceId) {
       return null
     }
 
     let chatApp = await API.fetchChatApp(workspaceId)
 
-    if (!chatApp?._id) {
+    if (!chatApp) {
       return null
     }
 
-    if (agentId && chatApp.agentId !== agentId) {
-      chatApp = await API.setChatAppAgent(chatApp._id, agentId)
+    const chatAppId = chatApp._id
+    if (!chatAppId) {
+      return null
+    }
+
+    if (agentId) {
+      const matched = chatApp.agents?.find(agent => agent.agentId === agentId)
+      if (!matched || !matched.isEnabled) {
+        const createdAgent = await API.setChatAppAgent(chatAppId, agentId)
+        const nextAgents = matched
+          ? (chatApp.agents || []).map(agent =>
+              agent.agentId === agentId ? createdAgent : agent
+            )
+          : [...(chatApp.agents || []), createdAgent]
+        chatApp = {
+          ...chatApp,
+          agents: nextAgents,
+        }
+      }
+    }
+
+    if (!chatApp) {
+      return null
     }
 
     this.update(state => {
-      state.chatAppId = chatApp._id
+      state.chatAppId = chatAppId
+      state.chatAppsById[chatAppId] = chatApp
       return state
     })
 
     return chatApp
   }
 
+  updateChatApp = async (updates: Partial<ChatApp>) => {
+    const { chatAppId, chatAppsById } = get(this.store)
+    const chatApp = chatAppId ? chatAppsById[chatAppId] : undefined
+    if (!chatAppId || !chatApp) {
+      return null
+    }
+
+    const updated = await API.updateChatApp({
+      ...chatApp,
+      ...updates,
+    })
+
+    this.update(state => {
+      state.chatAppsById[chatAppId] = updated
+      return state
+    })
+
+    return updated
+  }
+
+  updateAgents = async (agents: ChatApp["agents"]) => {
+    return await this.updateChatApp({ agents })
+  }
+
   fetchConversations = async (chatAppId?: string) => {
     const targetChatAppId = chatAppId || get(this.store).chatAppId
     if (!targetChatAppId) {
-      this.update(state => {
-        state.conversations = []
-        return state
-      })
       return []
     }
 
     const conversations = await API.fetchChatHistory(targetChatAppId)
     this.update(state => {
-      state.conversations = conversations
+      state.conversationsByAppId[targetChatAppId] = conversations
       return state
     })
     return conversations
   }
 
-  initConversations = async (agentId?: string) => {
-    const chatApp = await this.ensureChatApp(agentId)
+  initConversations = async ({
+    agentId,
+    workspaceId,
+  }: {
+    agentId?: string
+    workspaceId?: string
+  } = {}) => {
+    const chatApp = await this.ensureChatApp(agentId, workspaceId)
     if (chatApp?._id) {
       await this.fetchConversations(chatApp._id)
     }
@@ -128,3 +183,27 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 }
 
 export const chatAppsStore = new ChatAppsStore()
+
+export const currentChatApp = derived(chatAppsStore, state =>
+  state.chatAppId ? state.chatAppsById[state.chatAppId] : undefined
+)
+
+export const currentConversations = derived(chatAppsStore, state =>
+  state.chatAppId ? state.conversationsByAppId[state.chatAppId] || [] : []
+)
+
+type ChatAppAgent = NonNullable<ChatApp["agents"]>[number]
+
+const getSelectedChatAgent = (
+  chatApp: ChatApp | undefined,
+  agentId?: string
+): ChatAppAgent | undefined =>
+  agentId
+    ? chatApp?.agents?.find(agent => agent.agentId === agentId)
+    : undefined
+
+export const selectedChatAgent = derived(
+  [currentChatApp, agentsStore],
+  ([$currentChatApp, $agentsStore]) =>
+    getSelectedChatAgent($currentChatApp, $agentsStore.currentAgentId)
+)

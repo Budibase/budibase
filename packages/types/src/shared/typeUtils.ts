@@ -35,6 +35,8 @@ export type RequiredKeys<T> = {
 
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>
 
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
 export type WithoutDocMetadata<T extends Document> = Omit<
   T,
   "_id" | "_rev" | "createdAt" | "updatedAt"
@@ -43,6 +45,16 @@ export type WithoutDocMetadata<T extends Document> = Omit<
 export type WithDocMetadata<T extends Document> = WithRequired<
   T,
   "_id" | "_rev" | "createdAt" | "updatedAt"
+>
+
+export type ToDocCreateMetadata<T extends Document> = Omit<
+  WithRequired<T, "_id">,
+  "_rev" | "_deleted" | "createdAt" | "updatedAt"
+>
+
+export type ToDocUpdateMetadata<T extends Document> = Omit<
+  WithRequired<T, "_id" | "_rev">,
+  "_deleted" | "createdAt" | "updatedAt"
 >
 
 export type Primitive = string | number | boolean | object

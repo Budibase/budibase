@@ -1,21 +1,17 @@
 export interface RestTemplateSpec {
-  version:
-    | `${number}-${number}-${number}`
-    | `${number}.${number}`
-    | `${number}.${number}.${number}`
-    | `v${number}`
+  version: string
   url?: string
-  data?: string
 }
 
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
 
 export type RestTemplateName =
-  | "Attio"
   | "Ansible AWX"
+  | "Attio"
   | "BambooHR"
   | "Confluence"
   | "Discord"
+  | "Figma"
   | "GitHub"
   | "Jira Cloud"
   | "Okta Management"
@@ -24,13 +20,193 @@ export type RestTemplateName =
   | "Slack Web API"
   | "Stripe"
   | "VirusTotal"
+  | "Ashby"
+  | "Banksapi"
+  | "Baremetrics"
+  | "Billsby"
+  | "Breezy HR"
+  | "Brevo"
+  | "BulkSMS"
+  | "Buttondown"
+  | "Clever"
+  | "Clickup"
+  | "Deel"
+  | "Dixa"
+  | "Dots"
+  | "Factorial"
+  | "Fastspring"
+  | "Fountain"
+  | "Gitlab"
+  | "Goody"
+  | "Helcim"
+  | "Hibob"
+  | "Homerun"
+  | "Hypatos"
+  | "Intercom"
+  | "Ironclad"
+  | "Jina AI"
+  | "Jobsoid"
+  | "Keatext AI"
+  | "Kenjo"
+  | "Lambda"
+  | "Lob"
+  | "Localizely"
+  | "LogisticsOS"
+  | "Mastercard"
+  | "Measureone"
+  | "Microsoft Teams"
+  | "Nanonets"
+  | "Notion"
+  | "OpenRouter"
+  | "Oyster HR"
+  | "Peach Payments"
+  | "Pinpoint"
+  | "Podium"
+  | "Remote"
+  | "Resend"
+  | "Rivery"
+  | "Sage"
+  | "Secoda"
+  | "Shipengine"
+  | "Shippo"
+  | "Shortcut"
+  | "Smartrecruiters"
+  | "SoftLedger"
+  | "SpotDraft"
+  | "Sumsub"
+  | "SuprSend"
+  | "Terminal"
+  | "Theirstack"
+  | "Tilled"
+  | "Trello"
+  | "Tremendous"
+  | "Verifiable"
+  | "Volt IO"
+  | "Workable"
+  | "X"
+  | HubSpotRestTemplateName
+  | MicrosoftSharepointRestTemplateName
+  | SplunkRestTemplateName
   | TwilioRestTemplateName
+  | ZendeskRestTemplateName
 
-export type RestTemplateGroupName = "Twilio"
+export type RestTemplateGroupName =
+  | "HubSpot"
+  | "Microsoft SharePoint"
+  | "Splunk"
+  | "Twilio"
+  | "Zendesk"
 
 export type RestTemplateGroups = {
+  HubSpot: HubSpotRestTemplateName
+  "Microsoft SharePoint": MicrosoftSharepointRestTemplateName
+  Splunk: SplunkRestTemplateName
   Twilio: TwilioRestTemplateName
+  Zendesk: ZendeskRestTemplateName
 }
+
+export type HubSpotRestTemplateName =
+  | "HubSpot Account Info"
+  | "HubSpot Actions V4"
+  | "HubSpot App Uninstalls"
+  | "HubSpot Appointments"
+  | "HubSpot Associations"
+  | "HubSpot Associations Schema"
+  | "HubSpot Audit Logs"
+  | "HubSpot Authors"
+  | "HubSpot Automation V4"
+  | "HubSpot Blog Settings"
+  | "HubSpot Bucket_Test111"
+  | "HubSpot Business Units"
+  | "HubSpot Calling Extensions"
+  | "HubSpot Calls"
+  | "HubSpot Campaigns Public Api"
+  | "HubSpot Carts"
+  | "HubSpot Cms Content Audit"
+  | "HubSpot Commerce Payments"
+  | "HubSpot Commerce Subscriptions"
+  | "HubSpot Communications"
+  | "HubSpot Companies"
+  | "HubSpot Contacts"
+  | "HubSpot Contracts"
+  | "HubSpot Conversations"
+  | "HubSpot Conversations Inbox & Messages"
+  | "HubSpot Courses"
+  | "HubSpot CRM Meetings"
+  | "HubSpot Crm Owners"
+  | "HubSpot Custom Channels"
+  | "HubSpot Custom Objects"
+  | "HubSpot Deal Splits"
+  | "HubSpot Deals"
+  | "HubSpot Discounts"
+  | "HubSpot Domains"
+  | "HubSpot Emails"
+  | "HubSpot Events"
+  | "HubSpot Exports"
+  | "HubSpot Feedback Submissions"
+  | "HubSpot Fees"
+  | "HubSpot Files"
+  | "HubSpot Forms"
+  | "HubSpot Goal Targets"
+  | "HubSpot Hubdb"
+  | "HubSpot Imports"
+  | "HubSpot Invoices"
+  | "HubSpot Leads"
+  | "HubSpot Limits Tracking"
+  | "HubSpot Line Items"
+  | "HubSpot Listings"
+  | "HubSpot Lists"
+  | "HubSpot Manage Event Definitions"
+  | "HubSpot Marketing Emails"
+  | "HubSpot Marketing Emails V3"
+  | "HubSpot Marketing Events"
+  | "HubSpot Media Bridge"
+  | "HubSpot Multicurrency"
+  | "HubSpot Notes"
+  | "HubSpot Oauth"
+  | "HubSpot Object Library"
+  | "HubSpot Objects"
+  | "HubSpot Orders"
+  | "HubSpot Origins"
+  | "HubSpot Pages"
+  | "HubSpot Partner Clients"
+  | "HubSpot Partner Services"
+  | "HubSpot Payments"
+  | "HubSpot Pipelines"
+  | "HubSpot Postal Mail"
+  | "HubSpot Posts"
+  | "HubSpot Products"
+  | "HubSpot Projects"
+  | "HubSpot Properties"
+  | "HubSpot Property Validations"
+  | "HubSpot Public App Crm Cards"
+  | "HubSpot Public App Feature Flags V3"
+  | "HubSpot Quotes"
+  | "HubSpot Scheduler Meetings"
+  | "HubSpot Schemas"
+  | "HubSpot Send Event Completions"
+  | "HubSpot Sequences"
+  | "HubSpot Services"
+  | "HubSpot Single-send"
+  | "HubSpot Site Search"
+  | "HubSpot Source Code"
+  | "HubSpot Subscription Lifecycle"
+  | "HubSpot Subscriptions"
+  | "HubSpot Tags"
+  | "HubSpot Tasks"
+  | "HubSpot Tax Rates"
+  | "HubSpot Taxes"
+  | "HubSpot Test Child Api"
+  | "HubSpot Tickets"
+  | "HubSpot Timeline"
+  | "HubSpot Transactional Single Send"
+  | "HubSpot Transcriptions"
+  | "HubSpot Url Redirects"
+  | "HubSpot User Provisioning"
+  | "HubSpot Users"
+  | "HubSpot Video Conferencing Extension"
+  | "HubSpot Visitor Identification"
+  | "HubSpot Webhooks"
 
 export type TwilioRestTemplateName =
   | "Twilio Accounts"
@@ -72,17 +248,32 @@ export type TwilioRestTemplateName =
   | "Twilio Voice"
   | "Twilio Wireless"
 
+export type SplunkRestTemplateName =
+  | "Splunk Admin Config Service"
+  | "Splunk Enterprise Security"
+  | "Splunk Mission Control Automation"
+
+export type ZendeskRestTemplateName = "Sunshine Conversations"
+
+export type MicrosoftSharepointRestTemplateName =
+  | "SharePoint Drives"
+  | "SharePoint Shares"
+  | "SharePoint Sites"
+
 export interface RestTemplate {
   name: RestTemplateName
   description: string
   specs: RestTemplateSpec[]
   icon: string
+  operationsCount: number
+  verified?: true
 }
 
 export interface RestTemplateWithoutIcon<Name> {
   name: Name
   description: string
   specs: RestTemplateSpec[]
+  operationsCount: number
 }
 
 export interface RestTemplateGroup<
@@ -91,6 +282,8 @@ export interface RestTemplateGroup<
   name: TemplateGroupName
   description: string
   icon: string
+  operationsCount: number
+  verified?: true
   templates: RestTemplateWithoutIcon<RestTemplateGroups[TemplateGroupName]>[]
 }
 

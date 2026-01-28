@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { agentsStore, aiConfigsStore } from "@/stores/portal"
-  import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
+  import { agentsStore, aiConfigsStore, vectorDbStore } from "@/stores/portal"
+  import { Input, Modal, ModalContent } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
   import { onMount } from "svelte"
 
@@ -20,14 +20,8 @@
   let modal: Modal
 
   async function createAgent() {
-    const aiConfig = $aiConfigsStore.customConfigs.find(c => c.isDefault)?._id
-    if (!aiConfig) {
-      notifications.error("Default aiconfig not found")
-      return
-    }
     const newAgent = await agentsStore.createAgent({
       name: draft.name,
-      aiconfig: aiConfig,
       live: false,
     })
     modal.hide()
@@ -36,6 +30,7 @@
 
   onMount(() => {
     aiConfigsStore.fetch()
+    vectorDbStore.fetch()
   })
 </script>
 

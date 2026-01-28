@@ -22,6 +22,7 @@
     option?.colour ?? undefined
   export let getOptionSubtitle = (option: O, _index?: number) =>
     option?.subtitle ?? undefined
+  export let showSelectedSubtitle: boolean = false
   export let compare = (option: O, value: V) => option === value
   export let useOptionIconImage = false
   export let isOptionEnabled = (option: O, _index?: number) =>
@@ -30,6 +31,7 @@
     | ((_option: O, _index?: number) => string)
     | undefined = undefined
   export let readonly: boolean = false
+  export let size: "S" | "M" | "L" = "M"
   export let quiet: boolean = false
   export let autoWidth: boolean = false
   export let autocomplete: boolean = false
@@ -48,6 +50,9 @@
   const dispatch = createEventDispatcher()
 
   $: fieldText = getFieldText(value, options, placeholder)
+  $: fieldSubtitle = showSelectedSubtitle
+    ? getFieldAttribute(getOptionSubtitle, value, options)
+    : null
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
@@ -98,11 +103,13 @@
   bind:open
   bind:searchTerm
   on:loadMore
+  {size}
   {quiet}
   {id}
   {disabled}
   {readonly}
   {fieldText}
+  {fieldSubtitle}
   {fieldIcon}
   {fieldColour}
   {options}

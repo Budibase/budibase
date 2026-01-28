@@ -57,41 +57,39 @@
   onClose={() => goto("./table")}
   heading="Add new data source"
 >
-  <div class="subHeading">
-    <Body>Get started with our Budibase DB</Body>
-    <AbsTooltip text="Budibase DB is built with CouchDB">
-      <Icon name="info" size="S" />
-    </AbsTooltip>
-  </div>
-
-  <div class="options bb-options">
+  <div class="bb-section">
     <div class="ai-generation">
       <AiTableGeneration />
     </div>
-    <DatasourceOption
-      on:click={() => internalTableModal.show()}
-      title="Create new table"
-      description="Non-relational"
-      {disabled}
-    >
-      <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
-    </DatasourceOption>
-    <DatasourceOption
-      on:click={createSampleData}
-      title="Use sample data"
-      description="Non-relational"
-      disabled={disabled || $datasources.hasDefaultData}
-    >
-      <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
-    </DatasourceOption>
-    <DatasourceOption
-      on:click={() => internalTableModal.show({ promptUpload: true })}
-      title="Upload CSV / JSON"
-      description="Non-relational"
-      {disabled}
-    >
-      <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
-    </DatasourceOption>
+    <div class="subHeading bb-subheading">
+      <Body>Get started with our Budibase DB</Body>
+      <AbsTooltip text="Budibase DB is built with CouchDB">
+        <Icon name="info" size="S" />
+      </AbsTooltip>
+    </div>
+    <div class="options bb-options">
+      <DatasourceOption
+        on:click={() => internalTableModal.show()}
+        title="Create new table"
+        {disabled}
+      >
+        <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+      </DatasourceOption>
+      <DatasourceOption
+        on:click={createSampleData}
+        title="Use sample data"
+        disabled={disabled || $datasources.hasDefaultData}
+      >
+        <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+      </DatasourceOption>
+      <DatasourceOption
+        on:click={() => internalTableModal.show({ promptUpload: true })}
+        title="Upload CSV / JSON"
+        {disabled}
+      >
+        <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+      </DatasourceOption>
+    </div>
   </div>
 
   <div class="subHeading">
@@ -103,7 +101,6 @@
       <DatasourceOption
         on:click={() => externalDatasourceModal.show(integration)}
         title={integration.friendlyName}
-        description={integration.type}
         {disabled}
       >
         <IntegrationIcon
@@ -136,10 +133,15 @@
     margin-bottom: 48px;
     max-width: 1050px;
   }
+  .bb-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
   .bb-options {
     max-width: calc(3 * 235px + 2 * 24px); /* 3 columns + 2 gaps */
   }
-  .options .ai-generation {
-    grid-column: 1 / -1;
+  .bb-subheading {
+    justify-content: flex-start;
   }
 </style>

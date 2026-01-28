@@ -239,7 +239,7 @@
 </script>
 
 <div class="settings-wrap">
-  <Modal bind:this={modal}>
+  <Modal bind:this={modal} autoFocus={false}>
     <div
       class="spectrum-Dialog--large"
       role="dialog"
@@ -260,7 +260,8 @@
 
 <style>
   .spectrum-Dialog--large {
-    width: 720px;
+    width: 920px;
+    max-width: 94vw;
     min-height: 360px;
     max-height: 540px;
     height: auto;

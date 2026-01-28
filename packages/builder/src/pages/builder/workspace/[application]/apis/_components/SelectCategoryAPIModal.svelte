@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Button, Divider, Pagination, Select } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { Button, CollapsibleSearch, Divider, Select } from "@budibase/bbui"
+  import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
   import type {
     ConnectorCard,
     GroupTemplateName,
@@ -23,12 +23,30 @@
   }>()
 
   let scrolling = false
-  let page: HTMLDivElement | undefined
+  let scrollContainer: HTMLDivElement | undefined
+  let loadTrigger: HTMLDivElement | undefined
+  let observer: IntersectionObserver | null = null
+  let loadingMore = false
   let activeGroup: RestTemplateGroup<RestTemplateGroupName> | null = null
   let activeGroupTemplateName: GroupTemplateName | null = null
   let currentPage = 1
   let lastConnectorCount = 0
-  const itemsPerPage = 12
+  let searchValue = ""
+  let lastSearchValue = ""
+  const itemsPerPage = 24
+
+  $: normalizedSearchValue = searchValue.trim().toLowerCase()
+  $: if (normalizedSearchValue !== lastSearchValue) {
+    lastSearchValue = normalizedSearchValue
+    currentPage = 1
+    if (scrollContainer) {
+      scrollContainer.scrollTop = 0
+    }
+    if (observer && loadTrigger) {
+      observer.disconnect()
+      observer.observe(loadTrigger)
+    }
+  }
 
   $: groupedTemplateNames = new Set<RestTemplateName>(
     templateGroups.flatMap(group =>
@@ -38,15 +56,29 @@
   $: visibleTemplates = (templates || []).filter(
     template => !groupedTemplateNames.has(template.name)
   )
+  $: filteredTemplateGroups = normalizedSearchValue
+    ? templateGroups.filter(
+        group =>
+          group.name.toLowerCase().includes(normalizedSearchValue) ||
+          group.templates.some(template =>
+            template.name.toLowerCase().includes(normalizedSearchValue)
+          )
+      )
+    : templateGroups
+  $: filteredTemplates = normalizedSearchValue
+    ? visibleTemplates.filter(template =>
+        template.name.toLowerCase().includes(normalizedSearchValue)
+      )
+    : visibleTemplates
   $: connectorCards = [
-    ...templateGroups.map<ConnectorCard>(group => ({
+    ...filteredTemplateGroups.map<ConnectorCard>(group => ({
       type: "group",
       name: group.name,
       icon: group.icon,
       key: `group-${group.name}`,
       group,
     })),
-    ...visibleTemplates.map<ConnectorCard>(template => ({
+    ...filteredTemplates.map<ConnectorCard>(template => ({
       type: "template",
       name: template.name,
       icon: template.icon,
@@ -65,11 +97,7 @@
   $: if (currentPage > totalPages) {
     currentPage = totalPages
   }
-  $: pagedConnectorCards = connectorCards.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
-  $: hasPrevPage = currentPage > 1
+  $: pagedConnectorCards = connectorCards.slice(0, currentPage * itemsPerPage)
   $: hasNextPage = currentPage < totalPages
   $: activeGroupOptions = activeGroup
     ? activeGroup.templates.map(template => ({
@@ -78,13 +106,13 @@
         description: template.description,
       }))
     : []
-  $: selectedGroupTemplate =
+  $: selectedTemplateGroupItem =
     activeGroup && activeGroupTemplateName
       ? activeGroup.templates.find(
           template => template.name === activeGroupTemplateName
         ) || null
       : null
-  $: selectedGroupTemplateDescription = activeGroupOptions.find(
+  $: selectedTemplateGroupItemDescription = activeGroupOptions.find(
     option => option.value === activeGroupTemplateName
   )?.description
 
@@ -106,16 +134,17 @@
   const resetGroupSelection = () => {
     activeGroup = null
     activeGroupTemplateName = null
+    searchValue = ""
   }
 
   const confirmGroupTemplateSelection = () => {
-    if (!activeGroup || !selectedGroupTemplate) {
+    if (!activeGroup || !selectedTemplateGroupItem) {
       return
     }
     dispatch("selectTemplate", {
       kind: "group",
       groupName: activeGroup.name,
-      template: selectedGroupTemplate,
+      template: selectedTemplateGroupItem,
     })
   }
 
@@ -127,16 +156,50 @@
     dispatch("custom")
   }
 
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      currentPage -= 1
+  const handleIntersect = async (entries: IntersectionObserverEntry[]) => {
+    if (loadingMore || !hasNextPage) {
+      return
     }
+    const isVisible = entries.some(entry => entry.isIntersecting)
+    if (!isVisible) {
+      return
+    }
+    loadingMore = true
+    currentPage += 1
+    await tick()
+    loadingMore = false
   }
 
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      currentPage += 1
+  const ensureObserver = () => {
+    if (!scrollContainer || !loadTrigger) {
+      return
     }
+    observer?.disconnect()
+    if (!observer) {
+      observer = new IntersectionObserver(handleIntersect, {
+        root: scrollContainer,
+        rootMargin: "80px",
+        threshold: 0.1,
+      })
+    }
+    observer.observe(loadTrigger)
+  }
+
+  onMount(() => {
+    ensureObserver()
+  })
+
+  onDestroy(() => {
+    if (observer) {
+      observer.disconnect()
+      observer = null
+    }
+  })
+
+  $: if (activeGroup) {
+    observer?.disconnect()
+  } else if (loadTrigger) {
+    ensureObserver()
   }
 </script>
 
@@ -144,7 +207,12 @@
   <div class="api-header">
     <div>API connectors</div>
     {#if !activeGroup}
-      <div>
+      <div class="api-header-actions">
+        <CollapsibleSearch
+          placeholder="Search templates"
+          value={searchValue}
+          on:change={event => (searchValue = event.detail)}
+        />
         <Button
           secondary
           icon="plus"
@@ -157,9 +225,13 @@
     {/if}
   </div>
   <Divider size={"S"} noMargin />
-  <div class="contents-wrap" on:scroll={handleScroll}>
+  <div
+    class="contents-wrap"
+    bind:this={scrollContainer}
+    on:scroll={handleScroll}
+  >
     <div class="shadow"></div>
-    <div bind:this={page} class="contents">
+    <div class="contents">
       {#if activeGroup}
         <div class="group-step">
           <div class="group-step-summary">
@@ -175,14 +247,14 @@
           </div>
           <div class="group-step-body">
             <Select
-              label={`Select category`}
+              label="Select category"
               options={activeGroupOptions}
               bind:value={activeGroupTemplateName}
               disabled={loading}
             />
-            {#if selectedGroupTemplateDescription}
+            {#if selectedTemplateGroupItemDescription}
               <DescriptionViewer
-                description={selectedGroupTemplateDescription}
+                description={selectedTemplateGroupItemDescription}
                 label={undefined}
               />
             {/if}
@@ -194,7 +266,7 @@
             <Button
               cta
               on:click={confirmGroupTemplateSelection}
-              disabled={!selectedGroupTemplate || loading}
+              disabled={!selectedTemplateGroupItem || loading}
             >
               Use template
             </Button>
@@ -220,21 +292,17 @@
                 <img src={card.icon} alt={card.name} />
               </div>
 
-              {card.name}
+              <div class="api-name">{card.name}</div>
+              {#if card.type === "group" ? card.group.verified : card.template.verified}
+                <i
+                  class="ph ph-seal-check verified-icon"
+                  aria-label="Verified template"
+                ></i>
+              {/if}
             </div>
           {/each}
         </div>
-        {#if totalPages > 1}
-          <div class="pagination">
-            <Pagination
-              page={currentPage}
-              {hasPrevPage}
-              {hasNextPage}
-              {goToPrevPage}
-              {goToNextPage}
-            />
-          </div>
-        {/if}
+        <div class="load-trigger" bind:this={loadTrigger}></div>
       {/if}
     </div>
   </div>
@@ -243,14 +311,15 @@
 <style>
   .grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, 190px);
+    justify-content: space-between;
     gap: 12px;
   }
 
   .api {
     display: flex;
     height: 38px;
-    padding: 6px 12px;
+    padding: 6px 32px 6px 12px;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
@@ -278,13 +347,21 @@
   }
 
   .api img {
-    width: 20px;
-    height: 20px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .api-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .api-icon {
     border-radius: 4px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
     display: flex;
     width: 36px;
     height: 36px;
@@ -299,6 +376,14 @@
     height: 48px;
   }
 
+  .verified-icon {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 16px;
+    flex-shrink: 0;
+    position: absolute;
+    right: 12px;
+  }
+
   .api-header {
     padding: var(--spacing-l) var(--spectrum-dialog-confirm-padding);
     width: 100%;
@@ -311,10 +396,17 @@
     font-weight: 600;
   }
 
+  .api-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
   .api-main .contents {
     padding-top: var(--spacing-xl);
     padding-left: var(--spectrum-dialog-confirm-padding);
     padding-right: var(--spectrum-dialog-confirm-padding);
+    padding-bottom: var(--spacing-l);
   }
 
   .api-main :global(hr) {
@@ -326,13 +418,9 @@
     overflow-y: auto;
     min-height: 0;
     position: relative;
-  }
-
-  .pagination {
-    margin-top: var(--spacing-l);
-    display: flex;
-    justify-content: center;
-    padding-bottom: var(--spacing-l);
+    height: calc(
+      (6 * 51px) + (5 * 12px) + var(--spacing-xl) + var(--spacing-l)
+    );
   }
 
   .group-step {
@@ -384,5 +472,9 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-l);
+  }
+
+  .load-trigger {
+    height: 1px;
   }
 </style>
