@@ -9526,8 +9526,15 @@
         "key": "showButtons"
       },
       {
+        "type": "select",
+        "label": "Button location",
+        "key": "buttonLocation",
+        "options": ["Top", "Bottom"],
+        "defaultValue": "Top"
+      },
+      {
         "type": "text",
-        "label": "Today button",
+        "label": "Today button text",
         "key": "todayText",
         "defaultValuee": "Today",
         "dependsOn": "showButtons"

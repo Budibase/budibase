@@ -17,6 +17,7 @@
   export let eventTitle: string
   export let eventDesc: string
   export let onClick: any // Also can has type?
+  export let showNavButtons: boolean
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -52,12 +53,18 @@
     buttonText: {
       today: todayText,
     },
+    footerToolbar: {
+      start: "",
+      center: "",
+      end: "",
+    },
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: "dayGridMonth",
     events: getEvents(),
     eventClick: function (info) {
       handleEventClick(info)
     },
+    // eventTimeFormat to override default meridiem to "short"
   }
 </script>
 
@@ -116,6 +123,11 @@
   .calendar :global(.fc-event-title),
   .calendar :global(.fc-event-time) {
     color: var(--spectrum-alias-text-color, inherit);
+  }
+
+  .calendar :global(.fc-button) {
+    color: var(--spectrum-alias-heading-text-color);
+    font-weight: 700;
   }
 
   /* Specific radiuses (radii?) for first and last buttons */
