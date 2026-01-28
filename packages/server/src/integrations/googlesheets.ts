@@ -273,7 +273,9 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
           ReturnType<OAuth2Client["getRequestHeaders"]>
         >
 
-        const normalizeRequestHeaders = (headers: OAuthHeaders): OAuthHeaders => {
+        const normalizeRequestHeaders = (
+          headers: OAuthHeaders
+        ): OAuthHeaders => {
           const flatHeaders: Record<string, string> = {}
           if (headers && typeof headers.forEach === "function") {
             headers.forEach((value, key) => {
