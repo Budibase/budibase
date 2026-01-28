@@ -35,7 +35,7 @@ const buildPgConnectionString = (config: VectorDbDoc) => {
   const passwordPart = config.password
     ? `:${encodeURIComponent(config.password)}`
     : ""
-  const auth = userPart || passwordPart ? `${userPart}${passwordPart}@` : ""
+  const auth = userPart ? `${userPart}${passwordPart}@` : ""
   return `postgresql://${auth}${config.host}:${config.port}/${config.database}`
 }
 

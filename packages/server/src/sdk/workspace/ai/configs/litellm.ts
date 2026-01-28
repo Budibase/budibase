@@ -69,7 +69,7 @@ export async function addModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: displayName ?? model,
+      model_name: displayName || model,
       litellm_params: {
         custom_llm_provider: provider,
         model: `${provider}/${model}`,
