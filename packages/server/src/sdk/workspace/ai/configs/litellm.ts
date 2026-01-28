@@ -112,6 +112,8 @@ export async function updateModel({
 }) {
   await validateConfig({ provider, name, credentialFields, configType })
 
+  provider = await mapToLiteLLMProvider(provider)
+
   const litellmParams = buildLiteLLMParams({
     provider,
     name,
@@ -119,7 +121,6 @@ export async function updateModel({
     configType,
     reasoningEffort,
   })
-  provider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "PATCH",
