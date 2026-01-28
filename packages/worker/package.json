@@ -34,7 +34,7 @@
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
     "@budibase/types": "*",
-    "@koa/router": "13.1.0",
+    "@koa/router": "13.1.1",
     "@govtechsg/passport-openidconnect": "1.0.3",
     "@types/global-agent": "2.1.1",
     "aws-sdk": "2.1692.0",
