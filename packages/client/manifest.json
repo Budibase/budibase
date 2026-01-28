@@ -9521,11 +9521,6 @@
     },
     "settings": [
       {
-        "type": "text",
-        "label": "Title",
-        "key": "title"
-      },
-      {
         "type": "boolean",
         "label": "Show buttons",
         "key": "showButtons"
