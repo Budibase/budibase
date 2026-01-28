@@ -4,11 +4,13 @@
     chatAppsStore,
     currentChatApp,
     currentConversations,
+    selectedChatAgent,
   } from "@/stores/portal"
   import { Body, notifications } from "@budibase/bbui"
   import type {
     Agent,
     ChatConversation,
+    ConversationStarter,
     DraftChatConversation,
     WithoutDocMetadata,
   } from "@budibase/types"
@@ -23,6 +25,7 @@
     agentId: string
     isEnabled: boolean
     isDefault: boolean
+    conversationStarters?: ConversationStarter[]
   }
 
   const INITIAL_CHAT: WithoutDocMetadata<DraftChatConversation> = {
@@ -63,6 +66,7 @@
   $: emptyStateMessage = hasAnyAgents
     ? "No agents enabled for this chat app. Add one in Settings to start chatting."
     : "No agents yet. Add one from the settings panel to start chatting."
+  $: conversationStarters = $selectedChatAgent?.conversationStarters || []
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
@@ -283,6 +287,7 @@
       {selectedAgentId}
       {selectedAgentName}
       {workspaceId}
+      {conversationStarters}
       on:deleteChat={deleteCurrentChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}

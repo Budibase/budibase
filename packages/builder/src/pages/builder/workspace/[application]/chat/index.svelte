@@ -10,6 +10,7 @@
     agentId: string
     isEnabled: boolean
     isDefault: boolean
+    conversationStarters?: { prompt: string }[]
   }
 
   let chatAgents: ChatAgentConfig[] = []
@@ -100,6 +101,32 @@
 
     await chatAppsStore.ensureChatApp(agentId, workspaceId)
   }
+
+  const handleUpdateConversationStarters = async (
+    agentId: string,
+    starters: { prompt: string }[]
+  ) => {
+    const workspaceId = $params.application
+    if (!workspaceId || !agentId) {
+      return
+    }
+
+    await chatAppsStore.ensureChatApp(undefined, workspaceId)
+
+    const current = chatAgents
+    const hasAgent = current.some(agent => agent.agentId === agentId)
+    if (!hasAgent) {
+      return
+    }
+
+    const nextAgents: ChatAgentConfig[] = current.map(agent =>
+      agent.agentId === agentId
+        ? { ...agent, conversationStarters: starters }
+        : agent
+    )
+
+    await chatAppsStore.updateAgents(nextAgents)
+  }
 </script>
 
 <div class="wrapper">
@@ -112,6 +139,7 @@
       {handleAvailabilityToggle}
       {handleDefaultToggle}
       {handleAddAgent}
+      {handleUpdateConversationStarters}
     />
 
     {#if $params.application}
