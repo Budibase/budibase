@@ -28,6 +28,7 @@ export interface ChatConversationRequest extends Document {
   title?: string
   messages: UIMessage<AgentMessageMetadata>[]
   transient?: boolean
+  preview?: boolean
 }
 
 export type CreateChatConversationRequest = Pick<

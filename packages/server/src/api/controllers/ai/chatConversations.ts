@@ -3,6 +3,8 @@ import {
   docIds,
   getErrorMessage,
   HTTPError,
+  users,
+  utils,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { ai } from "@budibase/pro"
@@ -203,7 +205,16 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     throw new HTTPError("agentId is required", 400)
   }
 
+  const workspaceId = context.getWorkspaceId()
+  const allowPreview =
+    !!chat.preview &&
+    !!chat.transient &&
+    !!workspaceId &&
+    users.isBuilder(ctx.user, workspaceId) &&
+    !utils.isClient(ctx)
+
   if (
+    !allowPreview &&
     !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
   ) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)

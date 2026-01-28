@@ -30,6 +30,7 @@
     workspaceId: string
     chat: ChatConversationLike
     persistConversation?: boolean
+    preview?: boolean
     conversationStarters?: { prompt: string }[]
     onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
@@ -40,6 +41,7 @@
     workspaceId,
     chat = $bindable(),
     persistConversation = true,
+    preview = false,
     conversationStarters = [],
     onchatsaved,
   }: Props = $props()
@@ -84,6 +86,7 @@
             chatAppId,
             agentId: chat?.agentId,
             transient: !persistConversation,
+            preview: preview && !persistConversation,
             title: chat?.title,
             messages,
           },

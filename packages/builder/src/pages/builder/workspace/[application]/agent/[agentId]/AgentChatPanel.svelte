@@ -61,7 +61,7 @@
   </div>
   <div class="chat-preview-body">
     {#key refreshKey}
-      <Chatbox bind:chat persistConversation={false} {workspaceId} />
+      <Chatbox bind:chat persistConversation={false} preview {workspaceId} />
     {/key}
   </div>
 </div>
