@@ -59,6 +59,10 @@ const applyCredentialParams: LiteLLMParamBuilder = (params, args) => ({
 })
 
 const applyReasoningParams: LiteLLMParamBuilder = (params, args) => {
+  if (args.configType === AIConfigType.EMBEDDINGS) {
+    return params
+  }
+
   const normalizedReasoningEffort = normalizeReasoningEffort(args)
   if (!normalizedReasoningEffort) {
     return params
