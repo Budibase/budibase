@@ -9526,6 +9526,18 @@
         "key": "title"
       },
       {
+        "type": "boolean",
+        "label": "Show buttons",
+        "key": "showButtons"
+      },
+      {
+        "type": "text",
+        "label": "Today button",
+        "key": "todayText",
+        "defaultValuee": "Today",
+        "dependsOn": "showButtons"
+      },
+      {
         "type": "dataProvider",
         "label": "Data provider",
         "key": "dataProvider"

@@ -10,6 +10,7 @@
   import { Row } from "@budibase/types"
 
   export let title: string
+  export let todayText: string | "today"
   export let dataProvider: DataProvider
   export let eventStart: string // can haz type?
   export let eventEnd: string // can haz type?
@@ -44,12 +45,12 @@
 
   $: options = {
     headerToolbar: {
-      start: "title",
+      start: "",
       center: "",
       end: "prevYear,prev,today,next,nextYear",
     },
     buttonText: {
-      today: "Today",
+      today: todayText,
     },
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: "dayGridMonth",
@@ -97,12 +98,17 @@
   .calendar :global(.fc .fc-button:focus),
   .calendar :global(.fc .fc-button-primary:focus),
   .calendar
-    :global(
-      .fc .fc-button-primary:not(:disabled).fc-button-active:focus
-    ),
-  .calendar
-    :global(.fc .fc-button-primary:not(:disabled):active:focus) {
+    :global(.fc .fc-button-primary:not(:disabled).fc-button-active:focus),
+  .calendar :global(.fc .fc-button-primary:not(:disabled):active:focus) {
     box-shadow: none;
+  }
+
+  .calendar :global(.fc-button-primary:disabled) {
+    opacity: 1;
+  }
+
+  .calendar :global(p) {
+    border: 1px solid red;
   }
 
   /* Specific radiuses (radii?) for first and last buttons */
