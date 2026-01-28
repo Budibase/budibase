@@ -37,8 +37,9 @@
     const title = info.event.title
     const start = info.event.start
     const end = info.event.end
+    const row_id = info.event.extendedProps?.row_id || info.event.id
     console.log("CLICKED!")
-    onClick?.({ title, start, end })
+    onClick?.({ title, start, end, row_id })
   }
 
   $: options = {
