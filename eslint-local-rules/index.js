@@ -24,7 +24,7 @@ const extractStyleBlocks = text => {
 const buildLineOffsets = text => {
   const offsets = [0]
   for (let i = 0; i < text.length; i += 1) {
-    if (text[i] === "\\n") {
+    if (text[i] === "\n") {
       offsets.push(i + 1)
     }
   }
