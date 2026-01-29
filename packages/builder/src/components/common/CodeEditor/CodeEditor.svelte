@@ -568,11 +568,11 @@
   /* Editor */
   .code-editor {
     font-size: 12px;
-    height: 100%;
+    height: auto;
     cursor: text;
   }
   .code-editor :global(.cm-editor) {
-    height: 100%;
+    height: auto;
     background: var(--spectrum-global-color-gray-50) !important;
     outline: none;
     border: none;
@@ -582,7 +582,7 @@
     padding: 10px 0;
   }
   .code-editor > div {
-    height: 100%;
+    height: auto;
   }
 
   /* HBS tags */
