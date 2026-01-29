@@ -61,12 +61,7 @@
   </div>
   <div class="chat-preview-body">
     {#key refreshKey}
-      <Chatbox
-        bind:chat
-        persistConversation={false}
-        {workspaceId}
-        isAgentPreviewChat={true}
-      />
+      <Chatbox bind:chat persistConversation={false} {workspaceId} />
     {/key}
   </div>
 </div>
@@ -78,20 +73,20 @@
     min-width: 0;
     min-height: 0;
     flex-direction: column;
-    height: 100%;
-    width: 100%;
   }
 
   .chat-preview-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: var(--spacing-m) var(--spacing-l);
     flex-shrink: 0;
-    padding: 12px;
   }
 
   .chat-preview-pill {
+    background: var(--spectrum-global-color-gray-200);
     color: white;
+    padding: 6px 12px;
     border-radius: 10px;
     font-size: 14px;
     font-weight: 500;
@@ -100,21 +95,19 @@
   .chat-preview-refresh {
     background: transparent;
     border: none;
-    color: var(--spectrum-global-color-gray-700);
+    color: white;
     font-size: 14px;
     cursor: pointer;
   }
 
   .chat-preview-body {
-    flex: 1 1 0;
+    flex: 1 1 auto;
     min-height: 0;
+    padding: var(--spacing-l);
     display: flex;
-    padding: 12px;
   }
 
   .chat-preview-body :global(.chat-area) {
-    flex: 1 1 0;
-    min-height: 0;
-    width: 100%;
+    height: 100%;
   }
 </style>
