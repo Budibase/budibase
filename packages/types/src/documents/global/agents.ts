@@ -40,6 +40,8 @@ export interface AgentMessageRagSource {
 
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
+  createdAt?: number
+  completedAt?: number
 }
 
 export interface AgentChat extends Document {
