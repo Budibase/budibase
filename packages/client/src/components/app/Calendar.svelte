@@ -17,16 +17,8 @@
 
   export let onClick: any // Also can has type?
   export let showNavButtons: boolean
-  export let buttonLocation:
-    | string
-    | [
-        "Top left",
-        "Top centre",
-        "Top right",
-        "Bottom left",
-        "Bottom centre",
-        "Bottom right",
-      ]
+  export let showViewButtons: boolean
+  export let allowedViews: ["Month, Week, Day, List Day"]
   export let calendarType:
     | string
     | ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"]
@@ -34,6 +26,7 @@
   const { styleable } = getContext("sdk")
   const component = getContext("component")
   let calendarRef: FullCalendar | null = null
+  $: isTimeGridDay = calendarType === "timeGridDay"
 
   const getEvents = () => {
     return dataProvider.rows.map((row: Row) => {
@@ -57,53 +50,18 @@
     onClick?.({ title, start, end, row_id })
   }
 
-  const createEmptyToolbar = () => ({
-    start: "",
-    center: "",
-    end: "",
-  })
-
-  let headerToolbar = createEmptyToolbar()
-  let footerToolbar = createEmptyToolbar()
-
-  $: {
-    const buttons =
-      showNavButtons === false ? "" : "prevYear,prev,today,next,nextYear"
-
-    headerToolbar = createEmptyToolbar()
-    footerToolbar = createEmptyToolbar()
-
-    switch (buttonLocation) {
-      case "Top left":
-        headerToolbar.start = buttons
-        break
-      case "Top centre":
-        headerToolbar.center = buttons
-        break
-      case "Top right":
-        headerToolbar.end = buttons
-        break
-      case "Bottom left":
-        footerToolbar.start = buttons
-        break
-      case "Bottom centre":
-        footerToolbar.center = buttons
-        break
-      case "Bottom right":
-        footerToolbar.end = buttons
-        break
-      default:
-        footerToolbar.end = buttons
-        break
-    }
-  }
-
   $: options = {
-    headerToolbar,
+    headerToolbar: {
+      left: showViewButtons
+        ? "dayGridMonth,dayGridWeek,timeGridDay,listWeek"
+        : "",
+      center: "",
+      right: showNavButtons ? "prevYear,prev,today,next,nextYear" : "",
+    },
     buttonText: {
       today: todayText,
     },
-    footerToolbar,
+    footerToolbar: "",
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: calendarType || "dayGridMonth",
     events: getEvents(),
@@ -126,7 +84,12 @@
   }
 </script>
 
-<div class="calendar" use:styleable={$component.styles} style="height: 400px">
+<div
+  class="calendar"
+  class:timeGridDay={isTimeGridDay}
+  use:styleable={$component.styles}
+  style="height: 400px"
+>
   <FullCalendar bind:this={calendarRef} {options} />
 </div>
 
@@ -179,8 +142,15 @@
   .calendar :global(.fc-daygrid-day-number),
   .calendar :global(.fc-col-header-cell-cushion),
   .calendar :global(.fc-event-title),
-  .calendar :global(.fc-event-time) {
+  .calendar :global(.fc-event-time),
+  .calendar :global(.fc-timegrid-axis-cushion),
+  .calendar :global(.fc-timegrid-slot-label-cushion) {
     color: var(--spectrum-alias-text-color, inherit);
+  }
+
+  .calendar.timeGridDay :global(.fc-event-time),
+  .calendar.timeGridDay :global(.fc-event-title) {
+    color: var(--spectrum-global-color-static-white, #fff);
   }
 
   .calendar :global(.fc-button) {
@@ -189,11 +159,13 @@
   }
 
   /* Specific radiuses (radii?) for first and last buttons */
-  .calendar :global(.fc-prevYear-button) {
+  .calendar :global(.fc-prevYear-button),
+  .calendar :global(.fc-dayGridMonth-button) {
     border-top-left-radius: var(--buttonBorderRadius, 16px);
     border-bottom-left-radius: var(--buttonBorderRadius, 16px);
   }
-  .calendar :global(.fc-nextYear-button) {
+  .calendar :global(.fc-nextYear-button),
+  .calendar :global(.fc-listWeek-button) {
     border-top-right-radius: var(--buttonBorderRadius, 16px);
     border-bottom-right-radius: var(--buttonBorderRadius, 16px);
   }

@@ -9572,22 +9572,8 @@
       },
       {
         "type": "boolean",
-        "label": "Show navigation buttons",
+        "label": "Show navigation",
         "key": "showNavButtons"
-      },
-      {
-        "type": "select",
-        "label": "Button location",
-        "key": "buttonLocation",
-        "options": [
-          "Top left",
-          "Top centre",
-          "Top right",
-          "Bottom left",
-          "Bottom centre",
-          "Bottom right"
-        ],
-        "defaultValue": "Top right"
       },
       {
         "type": "text",
@@ -9595,6 +9581,11 @@
         "key": "todayText",
         "defaultValuee": "Today",
         "dependsOn": "showNavButtons"
+      },
+      {
+        "type": "boolean",
+        "label": "Show views",
+        "key": "showViewButtons"
       }
     ]
   }
