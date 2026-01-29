@@ -18,7 +18,10 @@
   export let onClick: any // Also can has type?
   export let showNavButtons: boolean
   export let showViewButtons: boolean
-  export let allowedViews: ["Month, Week, Day, List Day"]
+  export let monthText: string
+  export let weekText: string
+  export let dayText: string
+  export let agendaText: string
   export let calendarType:
     | string
     | ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"]
@@ -60,6 +63,10 @@
     },
     buttonText: {
       today: todayText,
+      dayGridMonth: monthText,
+      dayGridWeek: weekText,
+      timeGridDay: dayText,
+      listWeek: agendaText,
     },
     footerToolbar: "",
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
@@ -121,6 +128,7 @@
       var(--primaryColor, var(--spectrum-global-color-blue-500))
     );
     box-shadow: none;
+    font-size: 13px;
   }
 
   .calendar :global(.fc .fc-button:focus),
@@ -163,10 +171,12 @@
   .calendar :global(.fc-dayGridMonth-button) {
     border-top-left-radius: var(--buttonBorderRadius, 16px);
     border-bottom-left-radius: var(--buttonBorderRadius, 16px);
+    padding-left: 14px;
   }
   .calendar :global(.fc-nextYear-button),
   .calendar :global(.fc-listWeek-button) {
     border-top-right-radius: var(--buttonBorderRadius, 16px);
     border-bottom-right-radius: var(--buttonBorderRadius, 16px);
+    padding-right: 14px;
   }
 </style>
