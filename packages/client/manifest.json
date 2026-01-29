@@ -9584,6 +9584,23 @@
       },
       {
         "type": "boolean",
+        "label": "Show title date",
+        "key": "showTitleDate",
+        "defaultValue": true
+      },
+      {
+        "type": "select",
+        "label": "Title date format",
+        "key": "titleDateFormat",
+        "dependsOn": "showTitleDate",
+        "options": [
+          { "label": "DD MM YYYY", "value": "en-gb" },
+          { "label": "MM DD YYYY", "value": "en-us" }
+        ],
+        "defaultValue": "en-gb"
+      },
+      {
+        "type": "boolean",
         "label": "Show views",
         "key": "showViewButtons"
       },

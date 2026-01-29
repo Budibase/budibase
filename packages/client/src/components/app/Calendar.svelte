@@ -22,6 +22,8 @@
   export let weekText: string | "Week"
   export let dayText: string | "Day"
   export let agendaText: string | "Agenda"
+  export let showTitleDate: boolean | true
+  export let titleDateFormat: string | ["en-gb", "en-us"]
   export let calendarType:
     | string
     | ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"]
@@ -49,7 +51,7 @@
     const start = info.event.start
     const end = info.event.end
     const row_id = info.event.extendedProps?.row_id || info.event.id
-    console.log("CLICKED!")
+    console.log({ titleDateFormat })
     onClick?.({ title, start, end, row_id })
   }
 
@@ -58,9 +60,28 @@
       left: showViewButtons
         ? "dayGridMonth,dayGridWeek,timeGridDay,listWeek"
         : "",
-      center: "",
+      center: showTitleDate ? "title" : "",
       right: showNavButtons ? "prevYear,prev,today,next,nextYear" : "",
     },
+    titleFormat: {
+      dayGridMonth: { year: "numeric", month: "2-digit" },
+      timeGridWeek: {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      },
+      timeGridDay: {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      },
+      listWeek: {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      },
+    },
+    locale: titleDateFormat,
     buttonText: {
       today: todayText,
       dayGridMonth: monthText,
@@ -200,7 +221,9 @@
   }
 
   .calendar :global(.fc-list-day-text),
-  .calendar :global(.fc-list-day-side-text) {
+  .calendar :global(.fc-list-day-side-text),
+  .calendar :global(.fc-event-time),
+  .calendar :global(.fc-event-title) {
     color: var(--spectrum-global-color-static-white, #fff);
     opacity: 1;
   }
