@@ -163,7 +163,11 @@
   .calendar :global(.fc-event-title),
   .calendar :global(.fc-event-time),
   .calendar :global(.fc-timegrid-axis-cushion),
-  .calendar :global(.fc-timegrid-slot-label-cushion) {
+  .calendar :global(.fc-timegrid-slot-label-cushion),
+  .calendar :global(.fc-list-day-text),
+  .calendar :global(.fc-list-event-time),
+  .calendar :global(.fc-list-event-title),
+  .calendar :global(.fc-list-day-side-text) {
     color: var(--spectrum-alias-text-color, inherit);
   }
 
@@ -189,5 +193,19 @@
     border-top-right-radius: var(--buttonBorderRadius, 16px);
     border-bottom-right-radius: var(--buttonBorderRadius, 16px);
     padding-right: 14px;
+  }
+
+  .calendar :global(.fc-list-day-cushion) {
+    background: var(--primaryColorHover, var(--spectrum-global-color-blue-500));
+  }
+
+  .calendar :global(.fc-list-day-text),
+  .calendar :global(.fc-list-day-side-text) {
+    color: var(--spectrum-global-color-static-white, #fff);
+    opacity: 1;
+  }
+
+  .calendar :global(.fc-list-event:hover td) {
+    background-color: var(--spectrum-alias-background-color-primary);
   }
 </style>
