@@ -533,6 +533,8 @@
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: var(--spectrum-global-dimension-size-250);
     overflow: auto;
+  }
+  .wrapper {
     display: contents;
   }
   .wrapper--quiet {
