@@ -123,6 +123,20 @@ export const buildConfigEndpoints = (API: BaseAPIClient): ConfigEndpoints => ({
       json: false,
     })
   },
+  uploadLoginBackgroundImage: async data => {
+    return await API.post({
+      url: "/api/global/configs/upload/settings/loginBackgroundImageUrl",
+      body: data,
+      json: false,
+    })
+  },
+  uploadPortalBackgroundImage: async data => {
+    return await API.post({
+      url: "/api/global/configs/upload/settings/portalBackgroundImageUrl",
+      body: data,
+      json: false,
+    })
+  },
 
   /**
    * Uploads a logo for an OIDC provider.
