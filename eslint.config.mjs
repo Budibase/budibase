@@ -70,6 +70,7 @@ export default [
       "no-useless-rename": "error",
       "no-var": "error",
       "no-void": "error",
+      "local-rules/no-display-contents-custom-props": "error",
 
       "no-unused-vars": [
         "error",

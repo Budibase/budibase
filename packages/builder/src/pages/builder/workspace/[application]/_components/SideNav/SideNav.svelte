@@ -644,15 +644,15 @@
 
   /* Split into two rules to prevent CSS tree-shaking in production builds */
   .nav_wrapper {
-    display: contents;
-  }
-  .nav_wrapper {
     --nav-padding: 12px;
     --nav-collapsed-width: calc(
       var(--nav-logo-width) + var(--nav-padding) * 2 + 2px
     );
     --nav-width: 240px;
     --nav-border: 1px solid var(--spectrum-global-color-gray-200);
+  }
+  .nav_wrapper {
+    display: contents;
   }
   /* Spacer to allow nav to always be absolutely positioned */
   .nav_spacer {
