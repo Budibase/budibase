@@ -9521,32 +9521,6 @@
     },
     "settings": [
       {
-        "type": "boolean",
-        "label": "Show navigation buttons",
-        "key": "showNavButtons"
-      },
-      {
-        "type": "select",
-        "label": "Button location",
-        "key": "buttonLocation",
-        "options": [
-          "Top left",
-          "Top centre",
-          "Top right",
-          "Bottom left",
-          "Bottom centre",
-          "Bottom right"
-        ],
-        "defaultValue": "Top right"
-      },
-      {
-        "type": "text",
-        "label": "Today button text",
-        "key": "todayText",
-        "defaultValuee": "Today",
-        "dependsOn": "showButtons"
-      },
-      {
         "type": "dataProvider",
         "label": "Data provider",
         "key": "dataProvider"
@@ -9567,9 +9541,11 @@
         "key": "eventTitle"
       },
       {
-        "type": "field",
-        "label": "Event Description",
-        "key": "eventDesc"
+        "type": "select",
+        "label": "Type",
+        "key": "calendarType",
+        "options": ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"],
+        "defaultValue": "dayGridMonth"
       },
       {
         "type": "event",
@@ -9593,6 +9569,32 @@
             "key": "end"
           }
         ]
+      },
+      {
+        "type": "boolean",
+        "label": "Show navigation buttons",
+        "key": "showNavButtons"
+      },
+      {
+        "type": "select",
+        "label": "Button location",
+        "key": "buttonLocation",
+        "options": [
+          "Top left",
+          "Top centre",
+          "Top right",
+          "Bottom left",
+          "Bottom centre",
+          "Bottom right"
+        ],
+        "defaultValue": "Top right"
+      },
+      {
+        "type": "text",
+        "label": "Today button text",
+        "key": "todayText",
+        "defaultValuee": "Today",
+        "dependsOn": "showNavButtons"
       }
     ]
   }

@@ -7,15 +7,14 @@
   import timeGridPlugin from "@fullcalendar/timegrid"
   import listPlugin from "@fullcalendar/list"
   import DataProvider from "./DataProvider.svelte"
-  import { NumericTypes, Row } from "@budibase/types"
+  import { Row } from "@budibase/types"
 
-  export let title: string
   export let todayText: string | "today"
   export let dataProvider: DataProvider
   export let eventStart: string // can haz type?
   export let eventEnd: string // can haz type?
   export let eventTitle: string
-  export let eventDesc: string
+
   export let onClick: any // Also can has type?
   export let showNavButtons: boolean
   export let buttonLocation:
@@ -28,9 +27,13 @@
         "Bottom centre",
         "Bottom right",
       ]
+  export let calendarType:
+    | string
+    | ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"]
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
+  let calendarRef: FullCalendar | null = null
 
   const getEvents = () => {
     return dataProvider.rows.map((row: Row) => {
@@ -102,7 +105,7 @@
     },
     footerToolbar,
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
-    initialView: "dayGridMonth",
+    initialView: calendarType || "dayGridMonth",
     events: getEvents(),
     eventClick: function (info) {
       handleEventClick(info)
@@ -114,10 +117,17 @@
       meridiem: "short",
     },
   }
+
+  $: if (calendarRef && calendarType) {
+    const api = calendarRef.getAPI?.()
+    if (api && api.view.type !== calendarType) {
+      api.changeView(calendarType)
+    }
+  }
 </script>
 
 <div class="calendar" use:styleable={$component.styles} style="height: 400px">
-  <FullCalendar {options} />
+  <FullCalendar bind:this={calendarRef} {options} />
 </div>
 
 <style>
