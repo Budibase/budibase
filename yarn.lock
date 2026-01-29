@@ -2885,30 +2885,6 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@*":
-  version "3.26.3"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-3.26.3.tgz#97422aff7bf21eeaedaed7b8389cf849a068e6f8"
-  integrity sha512-M4jsJf6trBORHZtiRE6wy1D3Nmjrs0/+xLdouXe0UwXNo6VfHXIL9z4qBJhtenDROJ2jgA1xMu102LkuP8VynQ==
-  dependencies:
-    "@ai-sdk/openai" "^3.0.1"
-    "@anthropic-ai/sdk" "^0.27.3"
-    "@budibase/backend-core" "*"
-    "@budibase/shared-core" "*"
-    "@budibase/string-templates" "*"
-    "@budibase/types" "*"
-    "@koa/router" "13.1.1"
-    bull "4.10.1"
-    dd-trace "5.56.0"
-    joi "17.6.0"
-    jsonwebtoken "9.0.2"
-    lru-cache "^7.14.1"
-    memorystream "^0.3.1"
-    node-fetch "2.6.7"
-    openai "5.12.1"
-    scim-patch "^0.8.1"
-    scim2-parse-filter "^0.2.8"
-    zod "^4.2.1"
-
 "@budibase/vm-browserify@^1.1.4":
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/@budibase/vm-browserify/-/vm-browserify-1.1.4.tgz#eecb001bd9521cb7647e26fb4d2d29d0a4dce262"
@@ -4615,16 +4591,6 @@
   integrity sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw==
   dependencies:
     vary "^1.1.2"
-
-"@koa/router@13.1.1":
-  version "13.1.1"
-  resolved "https://registry.yarnpkg.com/@koa/router/-/router-13.1.1.tgz#1291b8adca7f61a31a7f8974d28654654211469d"
-  integrity sha512-JQEuMANYRVHs7lm7KY9PCIjkgJk73h4m4J+g2mkw2Vo1ugPZ17UJVqEH8F+HeAdjKz5do1OaLe7ArDz+z308gw==
-  dependencies:
-    debug "^4.4.1"
-    http-errors "^2.0.0"
-    koa-compose "^4.1.0"
-    path-to-regexp "^6.3.0"
 
 "@koa/router@15.3.0":
   version "15.3.0"
@@ -7820,6 +7786,13 @@
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@types/koa__cors/-/koa__cors-5.0.0.tgz#74567a045b599266e2cd3940cef96cedecc2ef1f"
   integrity sha512-LCk/n25Obq5qlernGOK/2LUwa/2YJb2lxHUkkvYFDOpLXlVI6tKcdfCHRBQnOY4LwH6el5WOLs6PD/a8Uzau6g==
+  dependencies:
+    "@types/koa" "*"
+
+"@types/koa__router@12.0.5":
+  version "12.0.5"
+  resolved "https://registry.yarnpkg.com/@types/koa__router/-/koa__router-12.0.5.tgz#4eaab7cf650bea292ae02787d9e1e6b77a31f191"
+  integrity sha512-1HeLxuDn4n5it1yZYCSyOYXo++73zT0ffoviXnPxbwbxLbvDFEvWD9ZzpRiIpK4oKR0pi+K+Mk/ZjyROjW3HSw==
   dependencies:
     "@types/koa" "*"
 
@@ -19650,7 +19623,7 @@ path-to-regexp@0.1.12, path-to-regexp@^0.1.12:
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-0.1.12.tgz#d5e1a12e478a976d432ef3c58d534b9923164bb7"
   integrity sha512-RA1GjUVMnvYFxuqovrEqZoxxW5NUZqbwKtYz/Tt7nXerk0LbLblQmrsgdeOxV5SFHf0UDggjS/bSeOZwt1pmEQ==
 
-path-to-regexp@^6.1.0, path-to-regexp@^6.3.0:
+path-to-regexp@^6.1.0:
   version "6.3.0"
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-6.3.0.tgz#2b6a26a337737a8e1416f9272ed0766b1c0389f4"
   integrity sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==
@@ -23125,6 +23098,11 @@ timekeeper@2.2.0:
   resolved "https://registry.yarnpkg.com/timekeeper/-/timekeeper-2.2.0.tgz#9645731fce9e3280a18614a57a9d1b72af3ca368"
   integrity sha512-W3AmPTJWZkRwu+iSNxPIsLZ2ByADsOLbbLxe46UJyWj3mlYLlwucKiq+/dPm0l9wTzqoF3/2PH0AGFCebjq23A==
 
+timekeeper@^2.2.0:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/timekeeper/-/timekeeper-2.3.1.tgz#2deb6e0b95d93625fda84c18d47f84a99e4eba01"
+  integrity sha512-LeQRS7/4JcC0PgdSFnfUiStQEdiuySlCj/5SJ18D+T1n9BoY7PxKFfCwLulpHXoLUFr67HxBddQdEX47lDGx1g==
+
 tiny-queue@^0.2.0:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/tiny-queue/-/tiny-queue-0.2.1.tgz#25a67f2c6e253b2ca941977b5ef7442ef97a6046"
@@ -23390,7 +23368,7 @@ tsconfig-paths@^3.10.1, tsconfig-paths@^3.15.0:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tsconfig-paths@^4.1.2:
+tsconfig-paths@^4.1.2, tsconfig-paths@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-4.2.0.tgz#ef78e19039133446d244beac0fd6a1632e2d107c"
   integrity sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg==
