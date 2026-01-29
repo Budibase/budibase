@@ -37,6 +37,7 @@
         liteLLMModelId: config.liteLLMModelId,
         webSearchConfig: config.webSearchConfig,
         configType: config.configType,
+        reasoningEffort: config.reasoningEffort,
       } satisfies RequiredKeys<ToDocUpdateMetadata<CustomAIProviderConfig>>)
     : ({
         _id: "",
@@ -47,12 +48,19 @@
         configType: type,
         credentialsFields: {},
         webSearchConfig: undefined,
+        reasoningEffort: undefined,
       } satisfies RequiredKeys<ToDocCreateMetadata<CustomAIProviderConfig>>)
 
   $: isEdit = !!config
   $: canSave = !!draft.name.trim() && !!draft.provider
   $: typeLabel =
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
+
+  const reasoningEffortOptions = [
+    { label: "Low", value: "low" },
+    { label: "Medium", value: "medium" },
+    { label: "High", value: "high" },
+  ]
 
   $: providers = $aiConfigsStore.providers
 
@@ -79,6 +87,9 @@
   async function confirm() {
     draft.name = draft.name.trim()
     draft.model = draft.model.trim()
+    if (!draft.reasoningEffort) {
+      draft.reasoningEffort = undefined
+    }
 
     try {
       if (draft._id) {
@@ -175,6 +186,19 @@
     <Label size="M">Model</Label>
     <Input bind:value={draft.model} />
   </div>
+
+  {#if draft.configType === AIConfigType.COMPLETIONS}
+    <div class="row">
+      <Label size="M">Reasoning effort</Label>
+      <Select
+        placeholder="Use provider default"
+        options={reasoningEffortOptions}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        bind:value={draft.reasoningEffort}
+      />
+    </div>
+  {/if}
 
   {#each selectedProvider?.credentialFields as field (field.key)}
     <div class="row">

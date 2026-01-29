@@ -50,6 +50,7 @@ export async function create(
     model: config.model,
     credentialFields: config.credentialsFields,
     configType: config.configType,
+    reasoningEffort: config.reasoningEffort,
   })
 
   const newConfig: CustomAIProviderConfig = {
@@ -61,6 +62,7 @@ export async function create(
     liteLLMModelId: modelId,
     ...(config.webSearchConfig && { webSearchConfig: config.webSearchConfig }),
     configType: config.configType,
+    reasoningEffort: config.reasoningEffort,
   }
 
   const { rev } = await db.put(newConfig)
@@ -118,6 +120,7 @@ export async function update(
       name: config.model,
       credentialFields: config.credentialsFields,
       configType: config.configType,
+      reasoningEffort: config.reasoningEffort,
     }
   }
 
@@ -133,6 +136,7 @@ export async function update(
         name: updatedConfig.model,
         credentialFields: updatedConfig.credentialsFields,
         configType: updatedConfig.configType,
+        reasoningEffort: updatedConfig.reasoningEffort,
       })
       await liteLLM.syncKeyModels()
     } catch (err) {
