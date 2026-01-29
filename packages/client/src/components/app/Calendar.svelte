@@ -7,7 +7,7 @@
   import timeGridPlugin from "@fullcalendar/timegrid"
   import listPlugin from "@fullcalendar/list"
   import DataProvider from "./DataProvider.svelte"
-  import { Row } from "@budibase/types"
+  import { NumericTypes, Row } from "@budibase/types"
 
   export let title: string
   export let todayText: string | "today"
@@ -64,9 +64,8 @@
   let footerToolbar = createEmptyToolbar()
 
   $: {
-    const buttons = showNavButtons === false
-      ? ""
-      : "prevYear,prev,today,next,nextYear"
+    const buttons =
+      showNavButtons === false ? "" : "prevYear,prev,today,next,nextYear"
 
     headerToolbar = createEmptyToolbar()
     footerToolbar = createEmptyToolbar()
@@ -109,6 +108,11 @@
       handleEventClick(info)
     },
     // eventTimeFormat to override default meridiem to "short"
+    eventTimeFormat: {
+      hour: "numeric",
+      minute: "2-digit",
+      meridiem: "short",
+    },
   }
 </script>
 
