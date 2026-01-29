@@ -38,7 +38,8 @@ export const createActions = (context: StoreContext): CacheActionStore => {
 
   const getPrimaryDisplayForTableId = async (tableId: string) => {
     const table = await fetchTable(tableId)
-    const display = table?.primaryDisplay || table?.schema?.[0]?.name
+    const firstSchemaKey = Object.keys(table?.schema || {})[0]
+    const display = table?.primaryDisplay || firstSchemaKey
     return display
   }
 

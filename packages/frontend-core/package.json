@@ -6,7 +6,9 @@
   "license": "MPL-2.0",
   "svelte": "./src/index.ts",
   "scripts": {
-    "check:types": "yarn svelte-check"
+    "check:types": "yarn svelte-check",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@ai-sdk/svelte": "^4.0.48",
@@ -18,5 +20,8 @@
     "lodash": "4.17.23",
     "shortid": "2.2.15",
     "socket.io-client": "^4.7.5"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
   }
 }
