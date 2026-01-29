@@ -85,7 +85,8 @@
     navTextColor,
     logoHeight,
     $context.device.width,
-    $context.device.height
+    $context.device.height,
+    collapsible
   )
   $: autoCloseSidePanel =
     !$builderStore.inBuilder &&
@@ -204,7 +205,8 @@
     textColor,
     logoHeight,
     width,
-    height
+    height,
+    isCollapsible = false
   ) => {
     let style = `--width:${width}px; --height:${height}px;`
     if (backgroundColor) {
@@ -213,7 +215,9 @@
     if (textColor) {
       style += `--navTextColor:${textColor};`
     }
-    style += `--logoHeight:${logoHeight || 24}px;`
+    // Reduce logo height when collapsible to prevent navbar scrolling
+    const adjustedLogoHeight = isCollapsible ? Math.min(logoHeight || 24, 32) : (logoHeight || 24)
+    style += `--logoHeight:${adjustedLogoHeight}px;`
     return style
   }
 
