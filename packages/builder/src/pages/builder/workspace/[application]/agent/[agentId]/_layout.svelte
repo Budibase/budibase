@@ -109,7 +109,6 @@
         secondary={currentAgent?.live}
         icon={currentAgent?.live ? undefined : "play"}
         iconColor={currentAgent?.live ? "" : "var(--bb-blue)"}
-        iconWeight="fill"
         on:click={toggleAgentLive}
         disabled={togglingLive}
         >{currentAgent?.live ? "Pause agent" : "Set agent live"}</Button

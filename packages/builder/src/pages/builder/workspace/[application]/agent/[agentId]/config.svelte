@@ -615,7 +615,6 @@ Any constraints the agent must follow.
           secondary
           size="M"
           icon="sparkle"
-          iconWeight="fill"
           iconColor="#8777D1"
           on:click={() => bb.settings("/ai-config/configs")}
         >
