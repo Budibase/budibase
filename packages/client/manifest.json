@@ -9522,15 +9522,22 @@
     "settings": [
       {
         "type": "boolean",
-        "label": "Show buttons",
-        "key": "showButtons"
+        "label": "Show navigation buttons",
+        "key": "showNavButtons"
       },
       {
         "type": "select",
         "label": "Button location",
         "key": "buttonLocation",
-        "options": ["Top", "Bottom"],
-        "defaultValue": "Top"
+        "options": [
+          "Top left",
+          "Top centre",
+          "Top right",
+          "Bottom left",
+          "Bottom centre",
+          "Bottom right"
+        ],
+        "defaultValue": "Top right"
       },
       {
         "type": "text",

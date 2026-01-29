@@ -18,6 +18,16 @@
   export let eventDesc: string
   export let onClick: any // Also can has type?
   export let showNavButtons: boolean
+  export let buttonLocation:
+    | string
+    | [
+        "Top left",
+        "Top centre",
+        "Top right",
+        "Bottom left",
+        "Bottom centre",
+        "Bottom right",
+      ]
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -44,20 +54,54 @@
     onClick?.({ title, start, end, row_id })
   }
 
+  const createEmptyToolbar = () => ({
+    start: "",
+    center: "",
+    end: "",
+  })
+
+  let headerToolbar = createEmptyToolbar()
+  let footerToolbar = createEmptyToolbar()
+
+  $: {
+    const buttons = showNavButtons === false
+      ? ""
+      : "prevYear,prev,today,next,nextYear"
+
+    headerToolbar = createEmptyToolbar()
+    footerToolbar = createEmptyToolbar()
+
+    switch (buttonLocation) {
+      case "Top left":
+        headerToolbar.start = buttons
+        break
+      case "Top centre":
+        headerToolbar.center = buttons
+        break
+      case "Top right":
+        headerToolbar.end = buttons
+        break
+      case "Bottom left":
+        footerToolbar.start = buttons
+        break
+      case "Bottom centre":
+        footerToolbar.center = buttons
+        break
+      case "Bottom right":
+        footerToolbar.end = buttons
+        break
+      default:
+        footerToolbar.end = buttons
+        break
+    }
+  }
+
   $: options = {
-    headerToolbar: {
-      start: "",
-      center: "",
-      end: "prevYear,prev,today,next,nextYear",
-    },
+    headerToolbar,
     buttonText: {
       today: todayText,
     },
-    footerToolbar: {
-      start: "",
-      center: "",
-      end: "",
-    },
+    footerToolbar,
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: "dayGridMonth",
     events: getEvents(),
@@ -68,13 +112,13 @@
   }
 </script>
 
-<div class="calendar" use:styleable={$component.styles}>
+<div class="calendar" use:styleable={$component.styles} style="height: 400px">
   <FullCalendar {options} />
 </div>
 
 <style>
   .calendar :global(.fc-button-primary) {
-    --fc-button-text-color: var(--spectrum-global-color-gray-50, #fff);
+    --fc-button-text-color: var(--spectrum-global-color-static-white, #fff);
     --fc-button-bg-color: var(
       --primaryColor,
       var(--spectrum-global-color-blue-600)
