@@ -981,8 +981,14 @@ Any constraints the agent must follow.
     max-width: 600px;
   }
 
-  .llm-header > :global(.spectrum-Body):first-child,
-  .section-header > :global(.spectrum-Body):first-child,
+  .llm-header > :global(.spectrum-Body):first-child {
+    font-weight: 500;
+  }
+
+  .section-header > :global(.spectrum-Body):first-child {
+    font-weight: 500;
+  }
+
   .title-tools-bar > :global(.spectrum-Body) {
     font-weight: 500;
   }
