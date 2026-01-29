@@ -1,5 +1,15 @@
 <script lang="ts">
-  import { Body, notifications, Select, Button, Icon } from "@budibase/bbui"
+  import {
+    Heading,
+    Input,
+    notifications,
+    Select,
+    ActionButton,
+    Icon,
+    ActionMenu,
+    MenuItem,
+    AbsTooltip,
+  } from "@budibase/bbui"
   import {
     AIConfigType,
     ToolType,
@@ -17,6 +27,7 @@
     automationStore,
     queries,
   } from "@/stores/builder"
+  import EditableIcon from "@/components/common/EditableIcon.svelte"
   import { onDestroy, onMount, untrack } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
@@ -47,23 +58,6 @@
   const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
   const RestIconSvg = REST_TAG_ICON_URL
   const AUTO_SAVE_DEBOUNCE_MS = 800
-  const DEFAULT_PROMPT_INSTRUCTIONS = `**Agent role**
-What is this agent responsible for?
-
-**Inputs**
-What information does the agent receive?
-
-**Actions**
-- What should the agent do?
-- When should it use tools or APIs?
-
-**Output**
-- What should the response look like?
-- Include any structure, formatting, or fields required.
-
-**Rules**
-Any constraints the agent must follow.
-`
 
   // Agent state
   let draftAgentId: string | undefined = $state()
@@ -72,7 +66,7 @@ Any constraints the agent must follow.
     description: "",
     aiconfig: "",
     goal: "",
-    promptInstructions: DEFAULT_PROMPT_INSTRUCTIONS,
+    promptInstructions: "",
     icon: "",
     iconColor: "",
   })
@@ -246,8 +240,7 @@ Any constraints the agent must follow.
         description: agent.description || "",
         aiconfig: agent.aiconfig || "",
         goal: agent.goal || "",
-        promptInstructions:
-          agent.promptInstructions ?? DEFAULT_PROMPT_INSTRUCTIONS,
+        promptInstructions: agent.promptInstructions || "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
       }
@@ -260,19 +253,6 @@ Any constraints the agent must follow.
     if (nextAiConfigId !== lastWebSearchConfigId) {
       lastWebSearchConfigId = nextAiConfigId
       agentsStore.fetchTools(nextAiConfigId)
-    }
-  })
-
-  $effect(() => {
-    if (modelOptions.length > 0 && currentAgent) {
-      // Only auto-select if agent doesn't have an aiconfig set (undefined/null/empty)
-      const agentHasAiconfig =
-        currentAgent.aiconfig != null && currentAgent.aiconfig !== ""
-      const currentValue = draft.aiconfig || ""
-      // Only set default if agent never had a value and current draft is empty
-      if (!agentHasAiconfig && !currentValue) {
-        draft.aiconfig = modelOptions[0].value
-      }
     }
   })
 
@@ -419,16 +399,12 @@ Any constraints the agent must follow.
     return null
   }
 
-  const openToolResourceInNewTab = (tool: AgentTool) => {
+  const navigateToTool = (tool: AgentTool) => {
     const path = getToolResourcePath(tool)
     if (path) {
-      const currentPath = window.location.pathname
-      const pathParts = currentPath.split("/").filter(Boolean)
-      const basePath = pathParts.slice(0, -3).join("/")
-      const cleanPath = path.replace(/^\.\.\/\.\./, "")
-      const fullPath = `/${basePath}${cleanPath}`
-      const url = `${window.location.origin}${fullPath}${window.location.hash}`
-      window.open(url, "_blank")
+      $goto(path)
+    } else {
+      notifications.error("Unable to locate resource for this tool")
     }
   }
 
@@ -594,123 +570,60 @@ Any constraints the agent must follow.
   })
 </script>
 
-<div class="llm-section-container">
-  <div class="llm-header">
-    <Body size="S" color="var(--spectrum-global-color-gray-900)">AI Model*</Body
-    >
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Select which provider and model to use for the agent.{" "}
-      <button
-        class="link-button"
-        on:click={() => bb.settings("/ai-config/configs")}
-      >
-        View AI Connectors.
-      </button>
-    </Body>
+<div class="form-row">
+  <div class="form-field">
+    <Input
+      label="Name"
+      labelPosition="left"
+      bind:value={draft.name}
+      placeholder="Give your agent a name"
+      on:blur={() => scheduleSave(true)}
+    />
   </div>
-  <div class="form-row">
-    <div class="form-field">
-      {#if modelOptions.length === 0}
-        <Button
-          secondary
-          size="M"
-          icon="sparkle"
-          iconColor="#8777D1"
-          on:click={() => bb.settings("/ai-config/configs")}
-        >
-          Connect AI Model
-        </Button>
-      {:else}
-        <Select
-          bind:value={draft.aiconfig}
-          options={modelOptions}
-          placeholder="Select a model"
-          on:change={() => scheduleSave(true)}
-        />
-      {/if}
-    </div>
+  <div class="form-icon">
+    <EditableIcon
+      name={draft.icon || ""}
+      color={draft.iconColor || ""}
+      size="L"
+      on:change={e => {
+        draft.icon = e.detail.name
+        draft.iconColor = e.detail.color
+        scheduleSave(true)
+      }}
+    />
   </div>
 </div>
 
-<div class="tools-section">
-  <div class="llm-section-container">
-    <div class="llm-header">
-      <Body size="S" color="var(--spectrum-global-color-gray-900)">Tools</Body>
-      <Body size="S" color="var(--spectrum-global-color-gray-700)">
-        Select which tools the agent can use.
-      </Body>
-    </div>
-    <div>
-      <div class="form-row">
-        <div class="form-field">
-          <div class="tools-popover-container"></div>
-          <ToolsDropdown
-            {filteredTools}
-            {toolSections}
-            bind:toolSearch
-            onToolClick={handleToolClick}
-            onAddApiConnection={() => $goto(`./apis`)}
-            webSearchEnabled={webSearchConfigured}
-            onConfigureWebSearch={configureWebSearch}
-          />
-        </div>
-      </div>
-    </div>
+<div class="form-row">
+  <div class="form-field">
+    <Select
+      label="Model"
+      labelPosition="left"
+      bind:value={draft.aiconfig}
+      options={modelOptions}
+      placeholder="Select a model"
+      on:change={() => scheduleSave(true)}
+    />
   </div>
-  {#if includedToolsWithDetails.length > 0}
-    <div class="tools-list">
-      {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
-        <div class="tool-card" on:click={() => openToolResourceInNewTab(tool)}>
-          <div class="tool-main">
-            <div class="tool-item-icon">
-              <ToolIcon icon={tool.icon} size="M" fallbackIcon="Wrench" />
-            </div>
-            <div class="tool-label">
-              <span>
-                {tool.sourceLabel || "Tool"}:
-              </span>
-              <span>{formatToolLabel(tool)}</span>
-            </div>
-          </div>
-          <div class="tool-actions">
-            <button
-              class="tool-close-button"
-              type="button"
-              on:click|stopPropagation={() => {
-                removeToolBindingFromPrompt(tool)
-                scheduleSave(true)
-              }}
-            >
-              <Icon
-                name="x"
-                size="XS"
-                color="var(--spectrum-global-color-gray-600)"
-                hoverable
-              />
-            </button>
-          </div>
-        </div>
-      {/each}
-    </div>
-  {/if}
+  <div class="form-icon">
+    <AbsTooltip text="Manage AI configurations">
+      <ActionButton
+        size="M"
+        icon="sliders-horizontal"
+        on:click={() => bb.settings("/ai-config/configs")}
+      />
+    </AbsTooltip>
+  </div>
 </div>
 
 <div class="section">
-  <div class="section-header">
-    <Body size="S" color="var(--spectrum-global-color-gray-900)"
-      >Instructions</Body
-    >
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Set the rules for how the AI agent responds, uses tools, and structures
-      output.
-    </Body>
-  </div>
+  <Heading size="XS">Instructions</Heading>
   <div class="prompt-editor-wrapper">
     <div class="prompt-editor">
       {#if toolsLoaded}
         {#key resolvedIconCount}
           <CodeEditor
-            value={draft.promptInstructions ?? DEFAULT_PROMPT_INSTRUCTIONS}
+            value={draft.promptInstructions || ""}
             bindings={promptBindings}
             bindingIcons={readableToIcon}
             completions={promptCompletions}
@@ -732,9 +645,82 @@ Any constraints the agent must follow.
       <span class="bindings-bar-text"
         >Use <code>{`{{`}</code> to add to tools & knowledge sources</span
       >
+      <span class="bindings-pill">
+        <Icon name="brackets-curly" size="S" color="#BDB0F5" weight="bold" />
+        <span class="bindings-pill-text">
+          {includedToolsWithDetails.length} Binding{includedToolsWithDetails.length !==
+          1
+            ? "s"
+            : ""}
+        </span>
+      </span>
     </div>
   </div>
 </div>
+
+<div class="section tools-section">
+  <div class="title-tools-bar">
+    <Heading size="XS">Tools this agent can use:</Heading>
+    <div class="tools-popover-container"></div>
+    <ToolsDropdown
+      {filteredTools}
+      {toolSections}
+      bind:toolSearch
+      onToolClick={handleToolClick}
+      onAddApiConnection={() => $goto(`./apis`)}
+      webSearchEnabled={webSearchConfigured}
+      onConfigureWebSearch={configureWebSearch}
+    />
+  </div>
+</div>
+{#if includedToolsWithDetails.length > 0}
+  <div class="tools-list">
+    {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
+      <div class="tool-card">
+        <div class="tool-main">
+          <div class="tool-item-icon">
+            <ToolIcon icon={tool.icon} size="M" fallbackIcon="Wrench" />
+          </div>
+          <div class="tool-label">
+            <span>
+              {tool.sourceLabel || "Tool"}:
+            </span>
+            <span>{formatToolLabel(tool)}</span>
+          </div>
+        </div>
+        <div class="tool-actions">
+          <ActionMenu align="right" roundedPopover>
+            <div slot="control" class="tool-menu-trigger">
+              <Icon
+                name="MoreVertical"
+                size="M"
+                hoverable
+                tooltip="Tool actions"
+              />
+            </div>
+            {#if tool.sourceType === ToolType.SEARCH}
+              <MenuItem on:click={configureWebSearch}>
+                Configure web search
+              </MenuItem>
+            {:else if getToolResourcePath(tool)}
+              <MenuItem on:click={() => navigateToTool(tool)}>
+                Navigate to resource
+              </MenuItem>
+            {/if}
+            <MenuItem
+              on:click={() => {
+                removeToolBindingFromPrompt(tool)
+                scheduleSave(true)
+              }}
+            >
+              Remove from instructions
+            </MenuItem>
+          </ActionMenu>
+        </div>
+      </div>
+    {/each}
+  </div>
+{/if}
 
 <WebSearchConfigModal
   bind:this={webSearchConfigModal}
@@ -742,11 +728,9 @@ Any constraints the agent must follow.
 />
 
 <style>
-  .tools-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    height: fit-content;
+  .tools-section {
+    flex-shrink: 0;
+    margin-bottom: calc(-1 * var(--spacing-l));
   }
 
   :global(.tools-popover-container .spectrum-Popover) {
@@ -765,6 +749,7 @@ Any constraints the agent must follow.
   .prompt-editor-wrapper {
     display: flex;
     flex-direction: column;
+    max-height: 500px;
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 8px;
     overflow: hidden;
@@ -772,6 +757,8 @@ Any constraints the agent must follow.
 
   .prompt-editor {
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .prompt-editor :global(.cm-editor) {
@@ -795,9 +782,6 @@ Any constraints the agent must follow.
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-700);
-    line-height: 1.4;
   }
 
   .bindings-bar code {
@@ -808,34 +792,40 @@ Any constraints the agent must follow.
     font-size: 11px;
   }
 
+  .bindings-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: var(--background-alt);
+    border: 1px solid var(--spectrum-global-color-gray-400);
+    color: var(--spectrum-global-color-gray-50);
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .bindings-pill-text {
+    color: var(--spectrum-global-color-gray-900);
+    font-size: 13px;
+  }
+
   .tools-list {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: var(--spacing-s);
-    margin-top: 8px;
+    margin-top: var(--spacing-s);
   }
 
   .tool-card {
     display: flex;
-    width: fit-content;
-    height: fit-content;
+    height: 25px;
     align-items: center;
     justify-content: space-between;
-    border-radius: 8px;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    padding-left: 6px;
-    padding-right: 6px;
-    background: #215f9e33;
-    border: none;
-    gap: 6px;
-    cursor: pointer;
-    transition: background 130ms ease-out;
-  }
-
-  .tool-card:hover {
-    background: var(--spectrum-global-color-gray-200);
+    border-radius: 4px;
+    padding: var(--spacing-xs) var(--spacing-l) var(--spacing-xs)
+      var(--spacing-l);
+    border: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .tool-main {
@@ -852,12 +842,6 @@ Any constraints the agent must follow.
     place-items: center;
     flex-shrink: 0;
     margin-bottom: var(--spacing-xs);
-    color: var(--spectrum-global-color-gray-700);
-  }
-
-  .tool-item-icon :global(svg),
-  .tool-item-icon :global(img) {
-    color: var(--spectrum-global-color-gray-700);
   }
 
   .tool-label {
@@ -867,17 +851,6 @@ Any constraints the agent must follow.
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .tool-label > span:first-child {
-    color: var(--spectrum-global-color-gray-800);
-    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
-  }
-
-  .tool-label > span:last-child {
-    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
-    font-weight: 400;
-    color: var(--spectrum-global-color-gray-800);
   }
 
   .tool-actions {
@@ -890,8 +863,8 @@ Any constraints the agent must follow.
     display: flex;
     align-items: center;
     justify-content: center;
-    width: fit-content;
-    height: fit-content;
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
     transition: background 130ms ease-out;
   }
@@ -899,90 +872,5 @@ Any constraints the agent must follow.
   .tool-menu-trigger:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
-  }
-
-  .tool-close-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: fit-content;
-    height: fit-content;
-    padding: 4px;
-    border: none;
-    background: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 130ms ease-out;
-  }
-
-  .tool-close-button:hover {
-    background: var(--spectrum-global-color-gray-200);
-  }
-
-  .tools-section {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .llm-section-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-l);
-    flex-wrap: wrap;
-  }
-
-  .llm-header {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-width: 200px;
-    width: 260px;
-    max-width: 600px;
-    gap: 2px;
-  }
-
-  .llm-section-container .form-row {
-    flex-shrink: 0;
-  }
-
-  .llm-section-container .form-row :global(.spectrum-Picker) {
-    width: 240px;
-  }
-
-  .llm-section-container .form-row :global(.spectrum-Picker-label) {
-    color: var(--spectrum-global-color-gray-900);
-  }
-
-  .llm-section-container .form-row :global(.spectrum-Button) {
-    gap: calc(var(--spacing-s) - 2px);
-  }
-
-  .link-button {
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    color: var(--spectrum-global-color-gray-800);
-    font-size: inherit;
-    font-family: inherit;
-    cursor: pointer;
-  }
-
-  .link-button:hover {
-    color: var(--spectrum-global-color-gray-900);
-  }
-
-  .section-header {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    max-width: 600px;
-  }
-
-  .llm-header > :global(.spectrum-Body):first-child,
-  .section-header > :global(.spectrum-Body):first-child,
-  .title-tools-bar > :global(.spectrum-Body) {
-    font-weight: 500;
   }
 </style>

@@ -505,11 +505,6 @@
     height: 0;
     position: relative;
   }
-  .editor :global(.code-editor),
-  .editor :global(.code-editor > div),
-  .editor :global(.cm-editor) {
-    height: 100%;
-  }
 
   /* Overlay */
   .mode-overlay {

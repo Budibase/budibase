@@ -304,28 +304,16 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
 
     ctx.respond = false
-    const streamStartTime = Date.now()
-    const baseMetadata = ragSourcesMetadata?.length
-      ? { ragSources: ragSourcesMetadata }
-      : {}
+    const messageMetadata =
+      ragSourcesMetadata && ragSourcesMetadata.length > 0
+        ? { ragSources: ragSourcesMetadata }
+        : undefined
 
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
-      messageMetadata: ({ part }) => {
-        if (part.type === "start") {
-          return {
-            ...baseMetadata,
-            createdAt: streamStartTime,
-          }
-        }
-        if (part.type === "finish") {
-          return {
-            ...baseMetadata,
-            createdAt: streamStartTime,
-            completedAt: Date.now(),
-          }
-        }
-      },
+      ...(messageMetadata && {
+        messageMetadata: () => messageMetadata,
+      }),
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
         if (chat.transient) {
