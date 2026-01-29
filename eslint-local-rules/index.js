@@ -39,6 +39,72 @@ const lineColToIndex = (offsets, line, column) => {
   return lineIndex + Math.max(column - 1, 0)
 }
 
+const splitSelectorList = selector => {
+  const parts = []
+  let current = ""
+  let parenDepth = 0
+  let bracketDepth = 0
+  let inString = null
+
+  for (let i = 0; i < selector.length; i += 1) {
+    const char = selector[i]
+
+    if (inString) {
+      current += char
+      if (char === inString && selector[i - 1] !== "\\") {
+        inString = null
+      }
+      continue
+    }
+
+    if (char === "\"" || char === "'") {
+      inString = char
+      current += char
+      continue
+    }
+
+    if (char === "(") {
+      parenDepth += 1
+      current += char
+      continue
+    }
+
+    if (char === ")") {
+      parenDepth = Math.max(parenDepth - 1, 0)
+      current += char
+      continue
+    }
+
+    if (char === "[") {
+      bracketDepth += 1
+      current += char
+      continue
+    }
+
+    if (char === "]") {
+      bracketDepth = Math.max(bracketDepth - 1, 0)
+      current += char
+      continue
+    }
+
+    if (char === "," && parenDepth === 0 && bracketDepth === 0) {
+      if (current.trim()) {
+        parts.push(current.trim())
+      }
+      current = ""
+      continue
+    }
+
+    current += char
+  }
+
+  if (current.trim()) {
+    parts.push(current.trim())
+  }
+
+  return parts
+}
+
 const makeBarrelPath = finalPath => {
   return path.resolve(__dirname, "..", finalPath)
 }
@@ -329,6 +395,99 @@ module.exports = {
                 node: sourceCode.ast,
                 messageId: "splitRule",
                 data: { selector: rule.selector || "selector" },
+              })
+            })
+          }
+        },
+      }
+    },
+  },
+  "no-multiple-child-global-selectors": {
+    meta: {
+      type: "problem",
+      docs: {
+        description:
+          "Disallow multiple child combinator :global selectors in a comma-separated selector list",
+      },
+      schema: [],
+      messages: {
+        splitRule:
+          "Selector list contains multiple child combinator :global selectors. Split into separate rules to avoid minification issues.",
+      },
+    },
+    create(context) {
+      const filename = context.getFilename()
+      const svelteIndex = filename.lastIndexOf(".svelte")
+      if (svelteIndex === -1) {
+        return {}
+      }
+
+      const sourceCode = context.getSourceCode()
+      const resolvedFilename = filename.slice(0, svelteIndex + ".svelte".length)
+      const text =
+        resolvedFilename !== "<input>" && fs.existsSync(resolvedFilename)
+          ? fs.readFileSync(resolvedFilename, "utf8")
+          : sourceCode.getText()
+      const styleBlocks = extractStyleBlocks(text)
+
+      return {
+        Program() {
+          for (const block of styleBlocks) {
+            let root
+            try {
+              root = postcss.parse(block.css)
+            } catch (error) {
+              continue
+            }
+
+            const offsets = buildLineOffsets(block.css)
+
+            root.walkRules(rule => {
+              if (!rule.selector || !rule.selector.includes(",")) {
+                return
+              }
+
+              const selectors = splitSelectorList(rule.selector)
+              let childGlobalCount = 0
+
+              for (const selector of selectors) {
+                if (/>\s*:global\(/.test(selector)) {
+                  childGlobalCount += 1
+                  if (childGlobalCount > 1) {
+                    break
+                  }
+                }
+              }
+
+              if (childGlobalCount <= 1) {
+                return
+              }
+
+              const start = rule.source?.start
+              const end = rule.source?.end || start
+
+              if (start && end) {
+                const startIndex =
+                  block.startIndex +
+                  lineColToIndex(offsets, start.line, start.column)
+                const endIndex =
+                  block.startIndex +
+                  lineColToIndex(offsets, end.line, end.column)
+
+                context.report({
+                  node: sourceCode.ast,
+                  loc: {
+                    start: sourceCode.getLocFromIndex(startIndex),
+                    end: sourceCode.getLocFromIndex(endIndex),
+                  },
+                  messageId: "splitRule",
+                })
+                return
+              }
+
+              context.report({
+                node: sourceCode.ast,
+                messageId: "splitRule",
               })
             })
           }
