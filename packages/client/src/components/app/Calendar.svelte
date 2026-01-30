@@ -148,7 +148,7 @@
     );
     --fc-button-active-bg-color: var(
       --primaryColorHover,
-      var(--primaryColor, var(--spectrum-global-color-blue-500))
+      var(--primaryColor, var(--spectrum-global-color-red-500))
     );
     --fc-button-active-border-color: var(
       --primaryColorHover,
@@ -159,10 +159,10 @@
   }
 
   .calendar :global(.fc-button-group .fc-button-primary) {
-    /* font-weight: var(--spectrum-button-primary-text-font-weight); */
-    font-weight: 600;
-    border: 2px solid var(--primaryColor, var(--spectrum-global-color-blue-600));
+    font-weight: var(--spectrum-button-primary-text-font-weight);
+    /* font-weight: 600; */
     padding: 4 14 6 14;
+    color: var(--spectrum-global-color-static-white, #fff);
   }
 
   .calendar :global(.fc .fc-button:focus),
