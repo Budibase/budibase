@@ -159,10 +159,12 @@
   }
 
   .calendar :global(.fc-button-group .fc-button-primary) {
-    font-weight: var(--spectrum-button-primary-text-font-weight);
-    /* font-weight: 600; */
-    padding: 4 14 6 14;
-    color: var(--spectrum-global-color-static-white, #fff);
+    font-weight: 600;
+    padding: 4 17 4 17;
+    color: var(
+      --spectrum-global-color-static-white,
+      #fff
+    ); /* Check if this is required */
   }
 
   .calendar :global(.fc .fc-button:focus),
@@ -171,10 +173,6 @@
     :global(.fc .fc-button-primary:not(:disabled).fc-button-active:focus),
   .calendar :global(.fc .fc-button-primary:not(:disabled):active:focus) {
     box-shadow: none;
-    border-color: var(
-      --primaryColorHover,
-      var(--spectrum-global-color-blue-500)
-    );
   }
 
   .calendar :global(.fc-button-primary:disabled) {
@@ -200,13 +198,14 @@
 
   .calendar.timeGridDay :global(.fc-event-time),
   .calendar.timeGridDay :global(.fc-event-title) {
-    color: var(--spectrum-global-color-static-white, #fff);
-  }
+    /* color: var(--spectrum-global-color-static-white, #fff);
+    border: 3px solid red; */
+  } /* Check if any of this is relevant */
 
   .calendar :global(.fc-button) {
     color: var(--spectrum-alias-heading-text-color);
     font-weight: 700;
-  }
+  } /* Still want to look at font-spacing to better match the original button */
 
   /* Specific radiuses (radii?) for first and last buttons */
   .calendar :global(.fc-prevYear-button),
@@ -227,11 +226,20 @@
   }
 
   .calendar :global(.fc-list-day-text),
-  .calendar :global(.fc-list-day-side-text),
+  .calendar :global(.fc-list-day-side-text) {
+    color: var(--spectrum-global-color-static-white, #fff);
+    opacity: 1;
+  }
+
   .calendar :global(.fc-event-time),
   .calendar :global(.fc-event-title) {
     color: var(--spectrum-global-color-static-white, #fff);
     opacity: 1;
+  }
+  /* Override White text on Month(dayGridMonth) and Week(dayGridWeek) for light mode */
+  .calendar :global(.fc-daygrid-event-harness a .fc-event-time),
+  .calendar :global(.fc-daygrid-event-harness a .fc-event-title) {
+    color: var(--spectrum-alias-heading-text-color);
   }
 
   .calendar :global(.fc-list-event:hover td) {
