@@ -28,7 +28,15 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   WorkspaceAppStoreState,
   DerivedWorkspaceAppStoreState
 > {
+  private readonly initialState: WorkspaceAppStoreState
+
   constructor() {
+    const initialState: WorkspaceAppStoreState = {
+      workspaceApps: [],
+      loading: true,
+      selectedWorkspaceAppId: undefined,
+    }
+
     const makeDerivedStore = (store: Readable<WorkspaceAppStoreState>) => {
       return derived(
         [store, sortedScreens, workspaceDeploymentStore],
@@ -59,14 +67,13 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       )
     }
 
-    super(
-      {
-        workspaceApps: [],
-        loading: true,
-        selectedWorkspaceAppId: undefined,
-      },
-      makeDerivedStore
-    )
+    super(initialState, makeDerivedStore)
+
+    this.initialState = initialState
+  }
+
+  reset() {
+    this.set({ ...this.initialState })
   }
 
   async fetch() {
