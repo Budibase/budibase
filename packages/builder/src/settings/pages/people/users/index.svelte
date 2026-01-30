@@ -346,7 +346,10 @@
             const matchingUser = userData.users.find(
               created => created.email === user.email
             )
-            const role = getWorkspaceRole(matchingUser?.role, matchingUser?.appRole)
+            const role = getWorkspaceRole(
+              matchingUser?.role,
+              matchingUser?.appRole
+            )
             if (!role) {
               return
             }
