@@ -32,6 +32,11 @@
   let emailError = null
   const maxItems = 15
   let selectedRole = Constants.BudibaseRoles.AppUser
+  const endUserRoleOptions = [
+    { label: "End user: Basic", value: Constants.Roles.BASIC },
+    { label: "End user: Admin", value: Constants.Roles.ADMIN },
+  ]
+  let endUserRole = Constants.Roles.BASIC
   let onboardingType = OnboardingType.EMAIL
 
   $: userData = [
@@ -133,6 +138,10 @@
     return emailsInput.map(email => ({
       email,
       role: selectedRole,
+      appRole:
+        workspaceOnly && selectedRole === Constants.BudibaseRoles.AppUser
+          ? endUserRole
+          : undefined,
       password: generatePassword(12),
       forceResetPassword: true,
     }))
@@ -220,6 +229,19 @@
           showSelectedSubtitle={true}
         />
       </div>
+
+      {#if workspaceOnly && selectedRole === Constants.BudibaseRoles.AppUser}
+        <div class="role-select-compact">
+          <Select
+            label="Select end user role"
+            bind:value={endUserRole}
+            options={endUserRoleOptions}
+            getOptionLabel={option => option.label}
+            getOptionValue={option => option.value}
+            placeholder={false}
+          />
+        </div>
+      {/if}
 
       <div class="onboarding">
         <Label>Select onboarding</Label>
