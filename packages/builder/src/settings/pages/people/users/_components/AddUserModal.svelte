@@ -202,7 +202,11 @@
   <svelte:fragment slot="header">
     {#if useWorkspaceInviteModal}
       <span class="modal-title">
-        <Icon name="user-plus" size="XL" />
+        <Icon
+          name="user-plus"
+          size="XL"
+          color="var(--spectrum-global-color-gray-600)"
+        />
         <span>{inviteTitle}</span>
       </span>
     {/if}
