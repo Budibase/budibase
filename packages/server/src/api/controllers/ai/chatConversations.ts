@@ -23,6 +23,7 @@ import {
 import {
   convertToModelMessages,
   extractReasoningMiddleware,
+  isTextUIPart,
   ModelMessage,
   stepCountIs,
   streamText,
@@ -114,9 +115,9 @@ export const extractUserText = (
     return ""
   }
   return message.parts
-    .filter(part => part && typeof part === "object" && part["type"] === "text")
-    .map(part => (typeof part["text"] === "string" ? part["text"] : ""))
-    .join(" ")
+    .filter(isTextUIPart)
+    .map(part => part.text)
+    .join("")
     .trim()
 }
 
