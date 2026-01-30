@@ -9631,6 +9631,12 @@
         "key": "agendaText",
         "defaultValue": "Agenda",
         "dependsOn": "showViewButtons"
+      },
+      {
+        "type": "text",
+        "label": "Empty agenda text",
+        "key": "emtpyAgendaText",
+        "defaultValue": "No events found"
       }
     ]
   }

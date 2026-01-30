@@ -24,6 +24,7 @@
   export let agendaText: string | "Agenda"
   export let showTitleDate: boolean | true
   export let titleDateFormat: string | ["en-gb", "en-us"]
+  export let emptyAgendaText: string | "No events found"
   export let calendarType:
     | string
     | ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"]
@@ -63,6 +64,7 @@
       center: showTitleDate ? "title" : "",
       right: showNavButtons ? "prevYear,prev,today,next,nextYear" : "",
     },
+    footerToolbar: "",
     titleFormat: {
       dayGridMonth: { year: "numeric", month: "2-digit" },
       timeGridWeek: {
@@ -89,9 +91,13 @@
       timeGridDay: dayText,
       listWeek: agendaText,
     },
-    footerToolbar: "",
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: calendarType || "dayGridMonth",
+    views: {
+      listWeek: {
+        noEventsContent: emptyAgendaText,
+      },
+    },
     events: getEvents(),
     eventClick: function (info) {
       handleEventClick(info)
@@ -230,5 +236,9 @@
 
   .calendar :global(.fc-list-event:hover td) {
     background-color: var(--spectrum-alias-background-color-primary);
+  }
+
+  .calendar :global(.fc-list-empty) {
+    background-color: transparent;
   }
 </style>
