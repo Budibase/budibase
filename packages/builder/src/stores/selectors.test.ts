@@ -48,14 +48,18 @@ describe("selectors", () => {
     describe("when the user has default data", () => {
       it("returns true", () => {
         expect(
-          hasDefaultData({ list: [{ _id: DEFAULT_BB_DATASOURCE_ID }] })
+          hasDefaultData({
+            list: [{ _id: DEFAULT_BB_DATASOURCE_ID } as Datasource],
+          })
         ).toBe(true)
       })
     })
 
     describe("when the user doesn't have default data", () => {
       it("returns false", () => {
-        expect(hasDefaultData({ list: [{ _id: "some other id" }] })).toBe(false)
+        expect(
+          hasDefaultData({ list: [{ _id: "some other id" } as Datasource] })
+        ).toBe(false)
       })
     })
   })
