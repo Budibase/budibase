@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import GoogleLogo from "assets/google-logo.png"
   import { auth } from "@/stores/portal"
   import { appStore } from "@/stores/builder"
 
-  export let disabled
-  export let samePage
+  export let samePage: boolean
+  export let disabled: boolean = false
 
   $: tenantId = $auth.tenantId
 </script>
@@ -16,7 +16,7 @@
     let appId = $appStore.appId
     const url = `/api/global/auth/${tenantId}/datasource/google?appId=${appId}`
     if (samePage) {
-      window.location = url
+      window.location.href = url
     } else {
       window.open(url, "_blank")
     }

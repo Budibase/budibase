@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import { ModalContent, Body, Layout, Link } from "@budibase/bbui"
   import { organisation } from "@/stores/portal"
   import GoogleButton from "./GoogleButton.svelte"
   import { bb } from "@/stores/bb"
   import { createEventDispatcher } from "svelte"
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ close: void }>()
 
   $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured
 </script>
