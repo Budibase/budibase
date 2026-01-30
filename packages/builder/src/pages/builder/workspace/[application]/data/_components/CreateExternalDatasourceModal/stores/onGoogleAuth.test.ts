@@ -1,18 +1,48 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
+import { get } from "svelte/store"
 import { createOnGoogleAuthStore } from "./onGoogleAuth"
-import { writable, get } from "svelte/store"
-// eslint-disable-next-line
-import { params } from "@roxi/routify"
-// eslint-disable-next-line
-import { integrations } from "@/stores/builder"
 import { IntegrationTypes } from "@/constants/backend"
 
+declare module "vitest" {
+  export interface TestContext {
+    callback: ReturnType<typeof vi.fn>
+  }
+}
+
+const { paramsStore, integrationsStore } = vi.hoisted(() => {
+  const createWritable = <T>(initial: T) => {
+    let value = initial
+    const subscribers = new Set<(next: T) => void>()
+    return {
+      set: (next: T) => {
+        value = next
+        subscribers.forEach(fn => fn(value))
+      },
+      update: (fn: (current: T) => T) => {
+        const next = fn(value)
+        value = next
+        subscribers.forEach(cb => cb(value))
+      },
+      subscribe: (fn: (next: T) => void) => {
+        fn(value)
+        subscribers.add(fn)
+        return () => subscribers.delete(fn)
+      },
+    }
+  }
+
+  return {
+    paramsStore: createWritable<Record<string, string | undefined>>({}),
+    integrationsStore: createWritable<Record<string, unknown>>({}),
+  }
+})
+
 vi.mock("@roxi/routify", () => ({
-  params: vi.fn(),
+  params: paramsStore,
 }))
 
 vi.mock("@/stores/builder", () => ({
-  integrations: vi.fn(),
+  integrations: integrationsStore,
 }))
 
 vi.stubGlobal("history", { replaceState: vi.fn() })
@@ -21,8 +51,7 @@ vi.stubGlobal("window", { location: { pathname: "/current-path" } })
 describe("google auth store", () => {
   beforeEach(ctx => {
     vi.clearAllMocks()
-    // eslint-disable-next-line no-import-assign
-    integrations = writable({
+    integrationsStore.set({
       [IntegrationTypes.GOOGLE_SHEETS]: { data: "integration" },
     })
     ctx.callback = vi.fn()
@@ -30,8 +59,7 @@ describe("google auth store", () => {
 
   describe("with id present", () => {
     beforeEach(ctx => {
-      // eslint-disable-next-line no-import-assign
-      params = writable({ "?continue_google_setup": "googleId" })
+      paramsStore.set({ "?continue_google_setup": "googleId" })
       get(createOnGoogleAuthStore())(ctx.callback)
     })
 
@@ -48,18 +76,13 @@ describe("google auth store", () => {
 
     it("clears the query param", () => {
       expect(history.replaceState).toHaveBeenCalledTimes(1)
-      expect(history.replaceState).toHaveBeenCalledWith(
-        {},
-        null,
-        `/current-path`
-      )
+      expect(history.replaceState).toHaveBeenCalledWith({}, "", `/current-path`)
     })
   })
 
   describe("without id present", () => {
     beforeEach(ctx => {
-      // eslint-disable-next-line no-import-assign
-      params = writable({})
+      paramsStore.set({})
       get(createOnGoogleAuthStore())(ctx.callback)
     })
 

@@ -1,7 +1,29 @@
-import { get, writable } from "svelte/store"
+import { get, writable, type Writable } from "svelte/store"
 import { shouldIntegrationFetchTableNames } from "@/stores/selectors"
+import type { Datasource, UIIntegration } from "@budibase/types"
 
-export const defaultStore = {
+type CreationStage = "googleAuth" | "editConfig" | "selectTables" | null
+
+type DatasourceCreationState = {
+  finished: boolean
+  stage: CreationStage
+  integration: UIIntegration | null
+  config: Record<string, unknown> | null
+  datasource: Datasource | null
+}
+
+interface DatasourceCreationStore extends Writable<DatasourceCreationState> {
+  cancel: () => void
+  googleAuthStage: () => void
+  setIntegration: (integration: UIIntegration) => void
+  setConfig: (config: Record<string, unknown>) => void
+  editConfigStage: () => void
+  setDatasource: (datasource: Datasource) => void
+  selectTablesStage: () => void
+  markAsFinished: () => void
+}
+
+export const defaultStore: DatasourceCreationState = {
   finished: false,
   stage: null,
   integration: null,
@@ -9,8 +31,11 @@ export const defaultStore = {
   datasource: null,
 }
 
-export const createDatasourceCreationStore = () => {
-  const store = writable(defaultStore)
+export const createDatasourceCreationStore = (): Omit<
+  DatasourceCreationStore,
+  "set" | "update"
+> => {
+  const store = writable(defaultStore) as DatasourceCreationStore
 
   store.cancel = () => {
     const $store = get(store)
@@ -56,7 +81,14 @@ export const createDatasourceCreationStore = () => {
     const $store = get(store)
     store.set({ ...$store, datasource })
 
-    if (shouldIntegrationFetchTableNames($store.integration)) {
+    const { integration } = $store
+
+    if (!integration) {
+      const error = "Integration must be set"
+      throw new Error(error)
+    }
+
+    if (shouldIntegrationFetchTableNames(integration)) {
       store.selectTablesStage()
     } else {
       store.markAsFinished()

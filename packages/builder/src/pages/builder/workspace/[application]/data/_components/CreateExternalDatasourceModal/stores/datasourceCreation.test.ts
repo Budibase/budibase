@@ -4,19 +4,25 @@ import {
   createDatasourceCreationStore,
 } from "./datasourceCreation"
 import { get } from "svelte/store"
+import type { Datasource, UIIntegration } from "@budibase/types"
 
-vi.mock("@/stores/selectors", () => ({
-  shouldIntegrationFetchTableNames: vi.fn(),
-}))
+declare module "vitest" {
+  export interface TestContext {
+    store: ReturnType<typeof createDatasourceCreationStore>
+    integration: UIIntegration
+    config: Record<string, unknown>
+    datasource: Partial<Datasource>
+  }
+}
 
 describe("datasource creation store", () => {
   beforeEach(ctx => {
     vi.clearAllMocks()
     ctx.store = createDatasourceCreationStore()
 
-    ctx.integration = { data: "integration" }
+    ctx.integration = { type: "integration" } as UIIntegration
     ctx.config = { data: "config" }
-    ctx.datasource = { data: "datasource" }
+    ctx.datasource = { name: "datasource" }
   })
 
   describe("store creation", () => {
