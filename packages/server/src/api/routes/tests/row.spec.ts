@@ -164,7 +164,6 @@ if (descriptions.length) {
       dsProvider,
       isInternal,
       isMySQL,
-      isPostgres,
       isMariaDB,
       isMSSQL,
       isOracle,
