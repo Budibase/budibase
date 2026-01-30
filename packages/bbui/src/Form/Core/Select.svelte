@@ -33,6 +33,7 @@
   export let readonly: boolean = false
   export let size: "S" | "M" | "L" = "M"
   export let quiet: boolean = false
+  export let bordered: boolean = true
   export let autoWidth: boolean = false
   export let autocomplete: boolean = false
   export let sort: boolean = false
@@ -104,6 +105,7 @@
   bind:searchTerm
   on:loadMore
   {size}
+  {bordered}
   {quiet}
   {id}
   {disabled}

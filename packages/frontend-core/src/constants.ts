@@ -60,13 +60,14 @@ export const BudibaseRoleOptions = [
   {
     label: "Creator",
     value: BudibaseRoles.Creator,
-    subtitle: "Can create and edit apps they have access to",
+    subtitle:
+      "Builder access. Can create/edit everything within assigned workspace.",
     sortOrder: 2,
   },
   {
-    label: "App user",
+    label: "End user",
     value: BudibaseRoles.AppUser,
-    subtitle: "Can only use published apps they have access to",
+    subtitle: "No builder access. Can only access published apps and agents.",
     sortOrder: 3,
   },
 ]
