@@ -36,14 +36,8 @@
   }>()
   let visible: boolean = fixed || inline
   let modal: HTMLElement | undefined
-  let previousVisible: boolean = visible
 
-  $: {
-    if (previousVisible !== visible) {
-      dispatch(visible ? "show" : "hide")
-      previousVisible = visible
-    }
-  }
+  $: dispatch(visible ? "show" : "hide")
 
   export function show(): void {
     if (visible) {
