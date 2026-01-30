@@ -4,12 +4,12 @@ import {
   createDatasourceCreationStore,
 } from "./datasourceCreation"
 import { get } from "svelte/store"
-import type { Integration, Datasource } from "@budibase/types"
+import type { Datasource, UIIntegration } from "@budibase/types"
 
 declare module "vitest" {
   export interface TestContext {
     store: ReturnType<typeof createDatasourceCreationStore>
-    integration: Integration
+    integration: UIIntegration
     config: Record<string, unknown>
     datasource: Partial<Datasource>
   }
@@ -20,7 +20,7 @@ describe("datasource creation store", () => {
     vi.clearAllMocks()
     ctx.store = createDatasourceCreationStore()
 
-    ctx.integration = { type: "integration" } as Integration
+    ctx.integration = { type: "integration" } as UIIntegration
     ctx.config = { data: "config" }
     ctx.datasource = { name: "datasource" }
   })
