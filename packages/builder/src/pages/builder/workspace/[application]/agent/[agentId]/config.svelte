@@ -551,8 +551,7 @@ Any constraints the agent must follow.
       }
       await agentsStore.fetchAgents()
     } catch (error) {
-      console.error(error)
-      notifications.error("Error saving agent")
+      notifications.error(`Error saving agent: ${JSON.stringify(error)}`)
     } finally {
       saving = false
     }

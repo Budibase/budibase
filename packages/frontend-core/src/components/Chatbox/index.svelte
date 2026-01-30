@@ -62,6 +62,22 @@
   let inputValue = $state("")
   let reasoningTimers = $state<Record<string, number>>({})
 
+  const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
+    (message.parts ?? [])
+      .filter(isReasoningUIPart)
+      .map(p => p.text)
+      .join("")
+
+  const isReasoningStreaming = (message: UIMessage<AgentMessageMetadata>) =>
+    (message.parts ?? []).some(
+      part => isReasoningUIPart(part) && part.state === "streaming"
+    )
+
+  const hasToolError = (message: UIMessage<AgentMessageMetadata>) =>
+    (message.parts ?? []).some(
+      part => isToolUIPart(part) && part.state === "output-error"
+    )
+
   $effect(() => {
     const interval = setInterval(() => {
       let updated = false
@@ -71,24 +87,33 @@
         if (message.role !== "assistant") continue
         const createdAt = message.metadata?.createdAt
         const completedAt = message.metadata?.completedAt
+        const id = `${message.id}-reasoning`
 
-        for (const [index, part] of (message.parts ?? []).entries()) {
-          if (!isReasoningUIPart(part)) continue
+        if (!createdAt) continue
 
-          const id = `${message.id}-reasoning-${index}`
+        if (completedAt) {
+          const finalElapsed = (completedAt - createdAt) / 1000
+          if (newTimers[id] !== finalElapsed) {
+            newTimers[id] = finalElapsed
+            updated = true
+          }
+          continue
+        }
 
-          if (completedAt && createdAt) {
-            const finalElapsed = (completedAt - createdAt) / 1000
-            if (newTimers[id] !== finalElapsed) {
-              newTimers[id] = finalElapsed
-              updated = true
-            }
-          } else if (part.state === "streaming" && createdAt) {
-            const newElapsed = (Date.now() - createdAt) / 1000
-            if (newTimers[id] !== newElapsed) {
-              newTimers[id] = newElapsed
-              updated = true
-            }
+        const toolError = hasToolError(message)
+        if (toolError) {
+          if (newTimers[id] == null) {
+            newTimers[id] = (Date.now() - createdAt) / 1000
+            updated = true
+          }
+          continue
+        }
+
+        if (isReasoningStreaming(message)) {
+          const newElapsed = (Date.now() - createdAt) / 1000
+          if (newTimers[id] !== newElapsed) {
+            newTimers[id] = newElapsed
+            updated = true
           }
         }
       }
@@ -381,48 +406,48 @@
           <MarkdownViewer value={getUserMessageText(message)} />
         </div>
       {:else if message.role === "assistant"}
+        {@const reasoningText = getReasoningText(message)}
+        {@const reasoningId = `${message.id}-reasoning`}
+        {@const toolError = hasToolError(message)}
+        {@const reasoningStreaming = isReasoningStreaming(message)}
+        {@const isThinking =
+          reasoningStreaming && !toolError && !message.metadata?.completedAt}
         <div class="message assistant">
+          {#if reasoningText}
+            <div class="reasoning-part">
+              <button
+                class="reasoning-toggle"
+                type="button"
+                onclick={() =>
+                  (expandedTools = {
+                    ...expandedTools,
+                    [reasoningId]: !expandedTools[reasoningId],
+                  })}
+              >
+                <span class="reasoning-icon" class:shimmer={isThinking}>
+                  <Icon
+                    name="brain"
+                    size="M"
+                    color="var(--spectrum-global-color-gray-600)"
+                  />
+                </span>
+                <span class="reasoning-label" class:shimmer={isThinking}>
+                  {isThinking ? "Thinking" : "Thought for"}
+                  {#if reasoningTimers[reasoningId]}
+                    <span class="reasoning-timer"
+                      >{reasoningTimers[reasoningId].toFixed(1)}s</span
+                    >
+                  {/if}
+                </span>
+              </button>
+              {#if expandedTools[reasoningId]}
+                <div class="reasoning-content">{reasoningText}</div>
+              {/if}
+            </div>
+          {/if}
           {#each message.parts ?? [] as part, partIndex}
             {#if isTextUIPart(part)}
               <MarkdownViewer value={part.text} />
-            {:else if isReasoningUIPart(part)}
-              {@const reasoningId = `${message.id}-reasoning-${partIndex}`}
-              <div class="reasoning-part">
-                <button
-                  class="reasoning-toggle"
-                  type="button"
-                  onclick={() =>
-                    (expandedTools = {
-                      ...expandedTools,
-                      [reasoningId]: !expandedTools[reasoningId],
-                    })}
-                >
-                  <span
-                    class="reasoning-icon"
-                    class:shimmer={part.state === "streaming"}
-                  >
-                    <Icon
-                      name="brain"
-                      size="M"
-                      color="var(--spectrum-global-color-gray-600)"
-                    />
-                  </span>
-                  <span
-                    class="reasoning-label"
-                    class:shimmer={part.state === "streaming"}
-                  >
-                    {part.state === "streaming" ? "Thinking" : "Thought for"}
-                    {#if reasoningTimers[reasoningId]}
-                      <span class="reasoning-timer"
-                        >{reasoningTimers[reasoningId].toFixed(1)}s</span
-                      >
-                    {/if}
-                  </span>
-                </button>
-                {#if expandedTools[reasoningId]}
-                  <div class="reasoning-content">{part.text}</div>
-                {/if}
-              </div>
             {:else if isToolUIPart(part)}
               {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
               {@const isRunning =
@@ -637,12 +662,6 @@
     color: var(--spectrum-global-color-gray-800);
     line-height: 1.4;
     max-width: 100%;
-  }
-
-  .message.system {
-    align-self: flex-start;
-    background: none;
-    padding-left: 0;
   }
 
   .input-wrapper {
