@@ -28,30 +28,26 @@
     | string
     | ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"]
 
-  const { styleable } = getContext("sdk")
+  const { styleable, componentStore } = getContext("sdk")
   const component = getContext("component")
   let calendarRef: FullCalendar | null = null
   $: isTimeGridDay = calendarType === "timeGridDay"
+  $: definition = componentStore.actions.getComponentDefinition($component.type)
+  $: calendarHeight = definition?.size?.height ?? 600
 
-  const getEvents = () => {
-    return dataProvider.rows.map((row: Row) => {
-      console.log({ row })
-      console.log(row["_id"])
-      return {
-        title: row[eventTitle],
-        start: row[eventStart],
-        end: row[eventEnd],
-        row_id: row["_id"],
-      }
-    })
-  }
+  $: events =
+    dataProvider?.rows?.map((row: Row) => ({
+      title: row[eventTitle],
+      start: row[eventStart],
+      end: row[eventEnd],
+      row_id: row["_id"],
+    })) ?? []
 
   function handleEventClick(info: any) {
     const title = info.event.title
     const start = info.event.start
     const end = info.event.end
     const row_id = info.event.extendedProps?.row_id || info.event.id
-    console.log({ titleDateFormat })
     onClick?.({ title, start, end, row_id })
   }
 
@@ -95,7 +91,7 @@
         noEventsContent: emptyAgendaText,
       },
     },
-    events: getEvents(),
+    events,
     eventClick: function (info) {
       handleEventClick(info)
     },
@@ -105,7 +101,7 @@
       minute: "2-digit",
       meridiem: "short",
     },
-    height: 600,
+    height: calendarHeight,
   }
 
   $: if (calendarRef && calendarType) {
