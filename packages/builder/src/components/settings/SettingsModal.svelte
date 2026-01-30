@@ -424,7 +424,7 @@
     margin-right: 2px;
   }
 
-  .spectrum-Dialog-content :global(.nav_wrapper .nav) {
+  .spectrum-Dialog-content :global(.modal_sidebar_wrapper .nav) {
     border-top-left-radius: var(--spectrum-global-dimension-size-100);
     border-bottom-left-radius: var(--spectrum-global-dimension-size-100);
   }
