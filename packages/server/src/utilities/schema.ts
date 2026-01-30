@@ -204,6 +204,7 @@ export function parse(rows: Rows, table: Table): Rows {
               400
             )
           }
+          columnData = sql.utils.normalizeTimeString(columnData)
         }
         parsedRow[columnName] = columnData
       } else if (
