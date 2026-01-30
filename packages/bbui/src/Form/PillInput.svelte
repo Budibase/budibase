@@ -147,6 +147,7 @@
     class:is-disabled={disabled}
     class:is-focused={focused}
     class:is-invalid={!!error}
+    role="presentation"
     on:click={() => {
       if (!disabled && !readonly) {
         inputEl?.focus()
