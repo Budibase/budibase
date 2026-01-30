@@ -42,7 +42,7 @@
   $: favourites = filtered.filter(app => app.favourite)
   $: nonFavourites = filtered.filter(app => !app.favourite)
   $: displayApps = [...favourites, ...nonFavourites]
-  $: activeIndex = displayApps.length ? 0 : -1
+  $: activeIndex = displayApps.findIndex(a => a.devId === appId)
 
   $: if (open && activeIndex >= 0) {
     itemEls[activeIndex]?.scrollIntoView({ block: "nearest" })
