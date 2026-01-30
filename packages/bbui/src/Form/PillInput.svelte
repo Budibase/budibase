@@ -245,6 +245,15 @@
     line-height: 1;
     display: inline-flex;
     align-items: center;
+    padding-left: 4px;
+    padding-right: 2px;
+  }
+  .pill-input :global(.spectrum-ClearButton) {
+    width: 16px;
+    height: 16px;
+  }
+  .pill-input :global(.spectrum-ClearButton i) {
+    font-size: 12px;
   }
   .pill-list {
     display: contents;
