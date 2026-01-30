@@ -300,8 +300,7 @@ function validateTimeOnlyField(
   if (value && !sql.utils.isValidTime(value)) {
     res = [`"${fieldName}" is not a valid time`]
   } else if (constraints) {
-    let castedValue =
-      typeof value === "string" ? sql.utils.normalizeTimeString(value) : value
+    let castedValue = value
     const stringTimeToDate = (value: string) => {
       const [hour, minute, second] = value.split(":").map((x: string) => +x)
       let date = dayjs("2000-01-01T00:00:00.000Z").hour(hour).minute(minute)

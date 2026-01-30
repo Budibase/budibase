@@ -177,10 +177,6 @@ export function isValidTime(value: string) {
   return TIME_REGEX.test(value)
 }
 
-export function normalizeTimeString(value: string) {
-  return value.split(".")[0]
-}
-
 export function sqlLog(client: string, query: string, values?: any[]) {
   if (!environment.SQL_LOGGING_ENABLE) {
     return

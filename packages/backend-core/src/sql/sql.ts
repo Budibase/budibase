@@ -8,7 +8,6 @@ import {
   isValidISODateString,
   isValidISODateStringWithoutTimezone,
   isValidTime,
-  normalizeTimeString,
   sqlLog,
   validateManyToMany,
 } from "./utils"
@@ -451,7 +450,6 @@ class InternalBuilder {
         if (!isValidTime(input)) {
           return null
         }
-        return normalizeTimeString(input)
       } else if (schema.dateOnly) {
         const date = extractDate(input)
         if (!date) {

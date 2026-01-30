@@ -130,7 +130,7 @@ export const TYPE_TRANSFORM_MAP: Record<
       if (input instanceof Date) {
         return input.toISOString()
       } else if (typeof input === "string" && sql.utils.isValidTime(input)) {
-        return sql.utils.normalizeTimeString(input)
+        return input
       } else {
         // Date strings can come in without timezone info. In this case we want
         // to make sure we're parsing them in as UTC because the rest of the
