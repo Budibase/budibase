@@ -193,12 +193,6 @@
     color: var(--spectrum-alias-text-color, inherit);
   }
 
-  .calendar.timeGridDay :global(.fc-event-time),
-  .calendar.timeGridDay :global(.fc-event-title) {
-    /* color: var(--spectrum-global-color-static-white, #fff);
-    border: 3px solid red; */
-  } /* Check if any of this is relevant */
-
   .calendar :global(.fc-button) {
     color: var(--spectrum-alias-heading-text-color);
     font-weight: 700;
