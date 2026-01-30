@@ -97,7 +97,7 @@
     }
 
     // Reset state if this search is invalid
-    if (!schema?.tableId || !isOpen) {
+    if (!schema?.tableId || !isOpen || !primaryDisplay) {
       lastSearchString = null
       candidateIndex = null
       searchResults = []
@@ -159,6 +159,7 @@
       primaryDisplay = await cache.actions.getPrimaryDisplayForTableId(
         schema.tableId
       )
+      searching = false
     }
 
     // Show initial list of results
