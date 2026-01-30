@@ -9544,7 +9544,12 @@
         "type": "select",
         "label": "Type",
         "key": "calendarType",
-        "options": ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"],
+        "options": [
+          { "label": "Month", "value": "dayGridMonth" },
+          { "label": "Week", "value": "dayGridWeek" },
+          { "label": "Day", "value": "timeGridDay" },
+          { "label": "Agenda", "value": "listWeek" }
+        ],
         "defaultValue": "dayGridMonth"
       },
       {
@@ -9570,18 +9575,7 @@
           }
         ]
       },
-      {
-        "type": "boolean",
-        "label": "Show navigation",
-        "key": "showNavButtons"
-      },
-      {
-        "type": "text",
-        "label": "Today button text",
-        "key": "todayText",
-        "defaultValuee": "Today",
-        "dependsOn": "showNavButtons"
-      },
+
       {
         "type": "boolean",
         "label": "Show title date",
@@ -9600,43 +9594,56 @@
         "defaultValue": "en-gb"
       },
       {
-        "type": "boolean",
-        "label": "Show views",
-        "key": "showViewButtons"
-      },
-      {
-        "type": "text",
-        "label": "Month button Text",
-        "key": "monthText",
-        "defaultValue": "Month",
-        "dependsOn": "showViewButtons"
-      },
-      {
-        "type": "text",
-        "label": "Week button Text",
-        "key": "weekText",
-        "defaultValue": "Week",
-        "dependsOn": "showViewButtons"
-      },
-      {
-        "type": "text",
-        "label": "Day button Text",
-        "key": "dayText",
-        "defaultValue": "Day",
-        "dependsOn": "showViewButtons"
-      },
-      {
-        "type": "text",
-        "label": "Agenda button Text",
-        "key": "agendaText",
-        "defaultValue": "Agenda",
-        "dependsOn": "showViewButtons"
-      },
-      {
         "type": "text",
         "label": "Empty agenda text",
         "key": "emtpyAgendaText",
         "defaultValue": "No events found"
+      },
+      {
+        "type": "boolean",
+        "label": "Show controls",
+        "key": "showButtons"
+      },
+      {
+        "section": true,
+        "name": "Controls",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Month button Text",
+            "key": "monthText",
+            "defaultValue": "Month",
+            "dependsOn": "showButtons"
+          },
+          {
+            "type": "text",
+            "label": "Week button Text",
+            "key": "weekText",
+            "defaultValue": "Week",
+            "dependsOn": "showButtons"
+          },
+          {
+            "type": "text",
+            "label": "Day button Text",
+            "key": "dayText",
+            "defaultValue": "Day",
+            "dependsOn": "showButtons"
+          },
+          {
+            "type": "text",
+            "label": "Agenda button Text",
+            "key": "agendaText",
+            "defaultValue": "Agenda",
+            "dependsOn": "showButtons"
+          },
+          {
+            "type": "text",
+            "label": "Today button text",
+            "key": "todayText",
+            "defaultValuee": "Today",
+            "dependsOn": "showButtons"
+          }
+        ]
       }
     ]
   }

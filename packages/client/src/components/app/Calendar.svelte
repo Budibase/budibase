@@ -16,8 +16,7 @@
   export let eventTitle: string
 
   export let onClick: any // Also can has type?
-  export let showNavButtons: boolean
-  export let showViewButtons: boolean
+  export let showButtons: boolean
   export let monthText: string | "Month"
   export let weekText: string | "Week"
   export let dayText: string | "Day"
@@ -58,11 +57,9 @@
 
   $: options = {
     headerToolbar: {
-      left: showViewButtons
-        ? "dayGridMonth,dayGridWeek,timeGridDay,listWeek"
-        : "",
+      left: showButtons ? "dayGridMonth,dayGridWeek,timeGridDay,listWeek" : "",
       center: showTitleDate ? "title" : "",
-      right: showNavButtons ? "prevYear,prev,today,next,nextYear" : "",
+      right: showButtons ? "prevYear,prev,today,next,nextYear" : "",
     },
     footerToolbar: "",
     titleFormat: {
