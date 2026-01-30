@@ -1,11 +1,12 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
-import type { TestContext } from "vitest"
 import { get } from "svelte/store"
 import { createOnGoogleAuthStore } from "./onGoogleAuth"
 import { IntegrationTypes } from "@/constants/backend"
 
-type GoogleAuthTestContext = TestContext & {
-  callback: ReturnType<typeof vi.fn>
+declare module "vitest" {
+  export interface TestContext {
+    callback: ReturnType<typeof vi.fn>
+  }
 }
 
 const { paramsStore, integrationsStore } = vi.hoisted(() => {
@@ -48,7 +49,7 @@ vi.stubGlobal("history", { replaceState: vi.fn() })
 vi.stubGlobal("window", { location: { pathname: "/current-path" } })
 
 describe("google auth store", () => {
-  beforeEach((ctx: GoogleAuthTestContext) => {
+  beforeEach(ctx => {
     vi.clearAllMocks()
     integrationsStore.set({
       [IntegrationTypes.GOOGLE_SHEETS]: { data: "integration" },
@@ -57,12 +58,12 @@ describe("google auth store", () => {
   })
 
   describe("with id present", () => {
-    beforeEach((ctx: GoogleAuthTestContext) => {
+    beforeEach(ctx => {
       paramsStore.set({ "?continue_google_setup": "googleId" })
       get(createOnGoogleAuthStore())(ctx.callback)
     })
 
-    it("invokes the provided callback with an integration and fields", (ctx: GoogleAuthTestContext) => {
+    it("invokes the provided callback with an integration and fields", ctx => {
       expect(ctx.callback).toHaveBeenCalledTimes(1)
       expect(ctx.callback).toHaveBeenCalledWith(
         {
@@ -80,12 +81,12 @@ describe("google auth store", () => {
   })
 
   describe("without id present", () => {
-    beforeEach((ctx: GoogleAuthTestContext) => {
+    beforeEach(ctx => {
       paramsStore.set({})
       get(createOnGoogleAuthStore())(ctx.callback)
     })
 
-    it("doesn't invoke the provided callback", (ctx: GoogleAuthTestContext) => {
+    it("doesn't invoke the provided callback", ctx => {
       expect(ctx.callback).toHaveBeenCalledTimes(0)
     })
   })
