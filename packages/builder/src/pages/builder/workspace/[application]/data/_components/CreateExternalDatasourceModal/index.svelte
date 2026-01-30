@@ -1,39 +1,46 @@
-<script>
+<script lang="ts">
+  import DatasourceConfigEditor from "@/components/backend/Datasources/ConfigEditor/index.svelte"
+  import TableImportSelection from "@/components/backend/Datasources/TableImportSelection/index.svelte"
+  import { IntegrationTypes } from "@/constants/backend"
+  import { datasources } from "@/stores/builder"
+  import { configFromIntegration } from "@/stores/selectors"
   import { Modal, keepOpen, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { IntegrationTypes } from "@/constants/backend"
-  import GoogleAuthPrompt from "./GoogleAuthPrompt.svelte"
-
   import { get } from "svelte/store"
-  import TableImportSelection from "@/components/backend/Datasources/TableImportSelection/index.svelte"
-  import DatasourceConfigEditor from "@/components/backend/Datasources/ConfigEditor/index.svelte"
-  import { datasources } from "@/stores/builder"
-  import { createOnGoogleAuthStore } from "./stores/onGoogleAuth.js"
-  import { createDatasourceCreationStore } from "./stores/datasourceCreation.js"
-  import { configFromIntegration } from "@/stores/selectors"
+  import GoogleAuthPrompt from "./GoogleAuthPrompt.svelte"
+  import { createDatasourceCreationStore } from "./stores/datasourceCreation"
+  import { createOnGoogleAuthStore } from "./stores/onGoogleAuth"
+  import type { UIIntegration } from "@budibase/types"
 
   $goto
 
   export let loading = false
   const store = createDatasourceCreationStore()
   const onGoogleAuth = createOnGoogleAuthStore()
-  let modal
+  let modal: Modal
 
-  const handleStoreChanges = (store, modal, goto) => {
+  type DatasourceConfig = Record<string, unknown>
+
+  const handleStoreChanges = (
+    store: typeof $store,
+    modal: Modal,
+    goto: typeof $goto
+  ) => {
     store.stage === null ? modal?.hide() : modal?.show()
 
-    if (store.finished) {
+    if (store.finished && store.datasource) {
+      const datasource = store.datasource
       const queryString =
-        store.datasource.plus || store.datasource.source === "REST"
+        datasource.plus || datasource.source === "REST"
           ? ""
           : "?promptQuery=true"
-      goto(`./datasource/${store.datasource._id}${queryString}`)
+      goto(`./datasource/${datasource._id}${queryString}`)
     }
   }
 
   $: handleStoreChanges($store, modal, $goto)
 
-  export function show(integration) {
+  export function show(integration: UIIntegration) {
     if (integration.name === IntegrationTypes.REST) {
       // A REST integration is created immediately, we don't need to display a config modal.
       loading = true
@@ -63,20 +70,32 @@
     store.editConfigStage()
   })
 
-  const createDatasource = async config => {
+  const createDatasource = async (config: DatasourceConfig) => {
     try {
       const datasource = await datasources.create({
-        integration: get(store).integration,
+        integration: get(store).integration!,
         config,
       })
       store.setDatasource(datasource)
 
       notifications.success("Datasource created successfully")
-    } catch (e) {
+    } catch (e: any) {
       notifications.error(`Error creating datasource: ${e.message}`)
     }
 
     return keepOpen
+  }
+
+  function ensure<K extends keyof typeof $store>(
+    key: K,
+    config: typeof $store
+  ) {
+    if (!config[key]) {
+      const error = `${key} is not set`
+      notifications.error(error)
+      throw new Error(error)
+    }
+    return config[key]
   }
 </script>
 
@@ -89,14 +108,16 @@
     />
   {:else if $store.stage === "editConfig"}
     <DatasourceConfigEditor
-      integration={$store.integration}
-      config={$store.config}
-      onSubmit={({ config }) => createDatasource(config)}
+      integration={$store.integration!}
+      config={ensure("config", $store)}
+      onSubmit={({ config }) => {
+        createDatasource(config)
+      }}
     />
   {:else if $store.stage === "selectTables"}
     <TableImportSelection
-      integration={$store.integration}
-      datasource={$store.datasource}
+      integration={ensure("integration", $store)}
+      datasource={ensure("datasource", $store)}
       onComplete={store.markAsFinished}
     />
   {/if}

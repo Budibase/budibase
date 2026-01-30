@@ -1,13 +1,13 @@
 import { get, writable, type Writable } from "svelte/store"
 import { shouldIntegrationFetchTableNames } from "@/stores/selectors"
-import type { Datasource, Integration } from "@budibase/types"
+import type { Datasource, UIIntegration } from "@budibase/types"
 
 type CreationStage = "googleAuth" | "editConfig" | "selectTables" | null
 
-interface DatasourceCreationState {
+type DatasourceCreationState = {
   finished: boolean
   stage: CreationStage
-  integration: Integration | null
+  integration: UIIntegration | null
   config: Record<string, unknown> | null
   datasource: Datasource | null
 }
@@ -15,7 +15,7 @@ interface DatasourceCreationState {
 interface DatasourceCreationStore extends Writable<DatasourceCreationState> {
   cancel: () => void
   googleAuthStage: () => void
-  setIntegration: (integration: Integration) => void
+  setIntegration: (integration: UIIntegration) => void
   setConfig: (config: Record<string, unknown>) => void
   editConfigStage: () => void
   setDatasource: (datasource: Datasource) => void

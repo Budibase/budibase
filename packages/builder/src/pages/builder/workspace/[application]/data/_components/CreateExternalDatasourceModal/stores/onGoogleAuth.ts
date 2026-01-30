@@ -1,9 +1,8 @@
 import { derived } from "svelte/store"
 import { params } from "@roxi/routify"
 import { integrations } from "@/stores/builder"
-import { IntegrationTypes } from "@/constants/backend"
 import { notifications } from "@budibase/bbui"
-import type { Integration } from "@budibase/types"
+import { SourceName, type UIIntegration } from "@budibase/types"
 
 export const createOnGoogleAuthStore = () => {
   return derived([params, integrations], ([$params, $integrations]) => {
@@ -18,7 +17,7 @@ export const createOnGoogleAuthStore = () => {
 
     return (
       callback: (
-        integration: Integration,
+        integration: UIIntegration,
         {
           continueSetupId,
           sheetId,
@@ -28,7 +27,7 @@ export const createOnGoogleAuthStore = () => {
       if ($integrations && id) {
         history.replaceState({}, "", window.location.pathname)
         const integration = {
-          name: IntegrationTypes.GOOGLE_SHEETS,
+          name: SourceName.GOOGLE_SHEETS,
           ...googleSheetsIntegration,
         }
 
