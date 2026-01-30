@@ -12,7 +12,7 @@
   export let onSubmit: (_value: {
     config: Record<string, any>
     name: string
-  }) => Promise<void> | void = () => {}
+  }) => Promise<typeof keepOpen | void> = () => Promise.resolve(undefined)
   export let showNameField: boolean = false
   export let nameFieldValue: string = ""
 

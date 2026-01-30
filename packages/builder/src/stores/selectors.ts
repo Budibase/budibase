@@ -3,6 +3,7 @@ import {
   DatasourceFeature,
   DatasourceFieldType,
   SourceName,
+  UIIntegration,
   type Datasource,
   type Integration,
 } from "@budibase/types"
@@ -15,10 +16,16 @@ interface ListStore<T> {
 export const integrationForDatasource = (
   integrations: Partial<Record<SourceName, Integration>>,
   datasource: Datasource
-): Partial<Integration> & { name: SourceName } => ({
-  name: datasource.source,
-  ...integrations[datasource.source],
-})
+): UIIntegration => {
+  const integration = integrations[datasource.source]
+  if (!integration) {
+    throw new Error(`Integration for ${datasource.source} not found`)
+  }
+  return {
+    name: datasource.source,
+    ...integration,
+  }
+}
 
 export const hasData = <T, U>(
   datasources: ListStore<T>,

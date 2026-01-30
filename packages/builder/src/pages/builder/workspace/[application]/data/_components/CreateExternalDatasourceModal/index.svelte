@@ -70,7 +70,9 @@
     store.editConfigStage()
   })
 
-  const createDatasource = async (config: DatasourceConfig) => {
+  const createDatasource = async (
+    config: DatasourceConfig
+  ): Promise<typeof keepOpen> => {
     try {
       const datasource = await datasources.create({
         integration: get(store).integration!,
@@ -110,9 +112,7 @@
     <DatasourceConfigEditor
       integration={$store.integration!}
       config={ensure("config", $store)}
-      onSubmit={({ config }) => {
-        createDatasource(config)
-      }}
+      onSubmit={async ({ config }) => await createDatasource(config)}
     />
   {:else if $store.stage === "selectTables"}
     <TableImportSelection
