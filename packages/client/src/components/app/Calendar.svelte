@@ -108,6 +108,7 @@
       minute: "2-digit",
       meridiem: "short",
     },
+    height: 600,
   }
 
   $: if (calendarRef && calendarType) {
@@ -122,7 +123,6 @@
   class="calendar"
   class:timeGridDay={isTimeGridDay}
   use:styleable={$component.styles}
-  style="height: 400px"
 >
   <FullCalendar bind:this={calendarRef} {options} />
 </div>
