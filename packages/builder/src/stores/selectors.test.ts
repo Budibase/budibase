@@ -1,6 +1,7 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { DEFAULT_BB_DATASOURCE_ID } from "@/constants/backend"
 import { integrationForDatasource, hasData, hasDefaultData } from "./selectors"
+import type { Datasource, Integration, SourceName } from "@budibase/types"
 
 describe("selectors", () => {
   beforeEach(() => {
@@ -9,12 +10,17 @@ describe("selectors", () => {
 
   describe("integrationForDatasource", () => {
     it("returns the integration corresponding to the given datasource", () => {
-      expect(
-        integrationForDatasource(
-          { integrationOne: { some: "data" } },
-          { source: "integrationOne" }
-        )
-      ).toEqual({ some: "data", name: "integrationOne" })
+      const integrations: Partial<Record<SourceName, Integration>> = {
+        ["integrationOne" as SourceName]: {
+          some: "data",
+        } as any as Integration,
+      }
+      const datasource = { source: "integrationOne" } as any as Datasource
+
+      expect(integrationForDatasource(integrations, datasource)).toEqual({
+        some: "data",
+        name: "integrationOne",
+      })
     })
   })
 
