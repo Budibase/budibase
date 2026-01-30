@@ -24,11 +24,11 @@ interface DerivedWorkspaceAppStoreState extends WorkspaceAppStoreState {
   selectedWorkspaceApp: UIWorkspaceApp | undefined
 }
 
-const initialState: WorkspaceAppStoreState = {
+const createInitialState = (): WorkspaceAppStoreState => ({
   workspaceApps: [],
   loading: true,
   selectedWorkspaceAppId: undefined,
-}
+})
 
 export class WorkspaceAppStore extends DerivedBudiStore<
   WorkspaceAppStoreState,
@@ -65,11 +65,11 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       )
     }
 
-    super({ ...initialState }, makeDerivedStore)
+    super(createInitialState(), makeDerivedStore)
   }
 
   reset() {
-    this.set({ ...initialState })
+    this.set(createInitialState())
   }
 
   async fetch() {
