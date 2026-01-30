@@ -4287,7 +4287,7 @@ if (descriptions.length) {
           expect(fetchedRow.date).toEqual("2023-01-01T00:00:00.000")
         })
 
-        if (isMySQL || isPostgres) {
+        if (isSql) {
           it("should accept time-only values without seconds for SQL datasources", async () => {
             const table = await config.api.table.save(
               saveTableRequest({
@@ -4304,10 +4304,10 @@ if (descriptions.length) {
             const row = await config.api.row.save(table._id!, {
               time: "09:30",
             })
-            expect(row.time).toMatch(/^09:30(:00)?$/)
+            expect(row.time).toEqual("09:30:00")
 
             const fetchedRow = await config.api.row.get(table._id!, row._id!)
-            expect(fetchedRow.time).toMatch(/^09:30(:00)?$/)
+            expect(fetchedRow.time).toEqual("09:30:00")
           })
         }
       })
