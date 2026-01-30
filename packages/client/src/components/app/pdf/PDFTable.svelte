@@ -113,8 +113,10 @@
 
 <style>
   .vars {
-    display: contents;
     --border-color: var(--spectrum-global-color-gray-300);
+  }
+  .vars {
+    display: contents;
   }
   .table {
     display: grid;

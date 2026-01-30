@@ -98,7 +98,6 @@
 
 <style>
   .modal_sidebar_wrapper {
-    display: contents;
     --nav-logo-width: 20px;
     --nav-padding: 12px;
     --nav-collapsed-width: calc(
@@ -106,6 +105,9 @@
     );
     --nav-width: 240px;
     --nav-border: 1px solid var(--spectrum-global-color-gray-200);
+  }
+  .modal_sidebar_wrapper {
+    display: contents;
   }
   /* Spacer to allow nav to always be absolutely positioned */
   .nav_spacer {
