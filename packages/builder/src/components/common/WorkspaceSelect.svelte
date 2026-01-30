@@ -24,7 +24,7 @@
     workspaceMenu?.hide()
   }
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ create: void }>()
 
   export let open = false
   let sortOpen = false
