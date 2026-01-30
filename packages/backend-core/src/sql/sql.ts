@@ -558,6 +558,7 @@ class InternalBuilder {
     query: Knex.QueryBuilder,
     allowEmptyRelationships: boolean,
     filterKey: string,
+    operation: SearchFilterKey,
     whereCb: (filterKey: string, query: Knex.QueryBuilder) => Knex.QueryBuilder
   ): Knex.QueryBuilder {
     const { relationships, schema, tableAliases: aliases, table } = this.query
@@ -573,10 +574,13 @@ class InternalBuilder {
 
       const matchesTableName = matches(relatedTableName) || matches(toAlias)
       const matchesRelationName = matches(relationship.column)
+      const isBareRelationshipFilter =
+        relationship.column === this.splitter.run(filterKey).column &&
+        !this.splitter.run(filterKey).tableName
 
       // this is the relationship which is being filtered
       if (
-        (matchesTableName || matchesRelationName) &&
+        (matchesTableName || matchesRelationName || isBareRelationshipFilter) &&
         relationship.to &&
         relationship.tableName
       ) {
@@ -624,20 +628,29 @@ class InternalBuilder {
             subQuery = this.addJoinFieldCheck(subQuery, manyToMany)
           }
 
-          query = query.where(q => {
-            q.whereExists(whereCb(updatedKey, subQuery))
-            if (allowEmptyRelationships) {
-              q.orWhereNotExists(
-                joinTable.clone().innerJoin(throughTable, function () {
-                  this.on(
-                    `${fromAlias}.${manyToMany.fromPrimary}`,
-                    "=",
-                    `${throughAlias}.${manyToMany.from}`
-                  )
-                })
-              )
-            }
-          })
+          if (isBareRelationshipFilter && operation === BasicOperator.EMPTY) {
+            query = query.whereNotExists(subQuery)
+          } else if (
+            isBareRelationshipFilter &&
+            operation === BasicOperator.NOT_EMPTY
+          ) {
+            query = query.whereExists(subQuery)
+          } else {
+            query = query.where(q => {
+              q.whereExists(whereCb(updatedKey, subQuery))
+              if (allowEmptyRelationships) {
+                q.orWhereNotExists(
+                  joinTable.clone().innerJoin(throughTable, function () {
+                    this.on(
+                      `${fromAlias}.${manyToMany.fromPrimary}`,
+                      "=",
+                      `${throughAlias}.${manyToMany.from}`
+                    )
+                  })
+                )
+              }
+            })
+          }
         } else {
           const toKey = `${toAlias}.${relationship.to}`
           const foreignKey = `${fromAlias}.${relationship.from}`
@@ -648,12 +661,21 @@ class InternalBuilder {
             this.rawQuotedIdentifier(foreignKey)
           )
 
-          query = query.where(q => {
-            q.whereExists(whereCb(updatedKey, subQuery.clone()))
-            if (allowEmptyRelationships) {
-              q.orWhereNotExists(subQuery)
-            }
-          })
+          if (isBareRelationshipFilter && operation === BasicOperator.EMPTY) {
+            query = query.whereNotExists(subQuery)
+          } else if (
+            isBareRelationshipFilter &&
+            operation === BasicOperator.NOT_EMPTY
+          ) {
+            query = query.whereExists(subQuery)
+          } else {
+            query = query.where(q => {
+              q.whereExists(whereCb(updatedKey, subQuery.clone()))
+              if (allowEmptyRelationships) {
+                q.orWhereNotExists(subQuery)
+              }
+            })
+          }
         }
       }
     }
@@ -713,7 +735,9 @@ class InternalBuilder {
       for (const key in structure) {
         const value = structure[key]
         const updatedKey = dbCore.removeKeyNumbering(key)
-        const isRelationshipField = updatedKey.includes(".")
+        const isRelationshipField =
+          updatedKey.includes(".") ||
+          builder.getFieldSchema(updatedKey)?.type === FieldType.LINK
         const shouldProcessRelationship =
           opts?.relationship && isRelationshipField
 
@@ -746,9 +770,8 @@ class InternalBuilder {
             query,
             allowEmptyRelationships[operation],
             updatedKey,
-            (updatedKey, q) => {
-              return handleRelationship(q, updatedKey, value)
-            }
+            operation,
+            (updatedKey, q) => handleRelationship(q, updatedKey, value)
           )
         }
       }
@@ -1809,7 +1832,7 @@ class InternalBuilder {
     }
     let query = this.qualifiedKnex()
     const parsedBody = this.parseBody(body)
-    query = this.addFilters(query, filters)
+    query = this.addFilters(query, filters, { relationship: true })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.update(parsedBody)
@@ -1821,7 +1844,7 @@ class InternalBuilder {
   delete(opts: QueryOptions): Knex.QueryBuilder {
     const { filters } = this.query
     let query = this.qualifiedKnex()
-    query = this.addFilters(query, filters)
+    query = this.addFilters(query, filters, { relationship: true })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.delete()

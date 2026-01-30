@@ -186,6 +186,7 @@ describe("query utils", () => {
             relationshipType: RelationshipType.ONE_TO_MANY,
             fieldName: "table",
           },
+          other: { name: "other", type: FieldType.NUMBER },
         },
       })
 
@@ -195,12 +196,14 @@ describe("query utils", () => {
       expect(result).toEqual([
         "_id",
         "name",
+        "aux",
         "aux._id",
         "auxTable._id",
         "aux.title",
         "auxTable.title",
         "aux.name",
         "auxTable.name",
+        "other",
       ])
     })
 
@@ -234,6 +237,7 @@ describe("query utils", () => {
       expect(result).toEqual([
         "_id",
         "name",
+        "aux",
         "aux._id",
         "auxTable._id",
         "aux.name",
@@ -340,13 +344,15 @@ describe("query utils", () => {
           expect(result).toEqual([
             "_id",
             "name",
-            // aux1 primitive props
+            // aux1 + primitive props
+            "aux1",
             "aux1._id",
             "aux1Table._id",
             "aux1.name",
             "aux1Table.name",
 
-            // aux2 primitive props
+            // aux2 + primitive props
+            "aux2",
             "aux2._id",
             "aux2Table._id",
             "aux2.title",
@@ -362,17 +368,20 @@ describe("query utils", () => {
             "_id",
             "name",
 
-            // aux2_1 primitive props
+            // aux2_1 + primitive props
+            "aux2_1",
             "aux2_1._id",
             "aux2Table._id",
             "aux2_1.title",
             "aux2Table.title",
 
-            // aux2_2 primitive props
+            // aux2_2 + primitive props
+            "aux2_2",
             "aux2_2._id",
             "aux2_2.title",
 
-            // table primitive props
+            // table + primitive props
+            "table",
             "table._id",
             "TestTable._id",
             "table.name",
@@ -388,17 +397,20 @@ describe("query utils", () => {
             "_id",
             "title",
 
-            // aux1_1 primitive props
+            // aux1_1 + primitive props
+            "aux1_1",
             "aux1_1._id",
             "aux1Table._id",
             "aux1_1.name",
             "aux1Table.name",
 
-            // aux1_2 primitive props
+            // aux1_2 + primitive props
+            "aux1_2",
             "aux1_2._id",
             "aux1_2.name",
 
-            // table primitive props
+            // table + primitive props
+            "table",
             "table._id",
             "TestTable._id",
             "table.name",
@@ -446,7 +458,8 @@ describe("query utils", () => {
             "_id",
             "name",
 
-            // deep 1 aux primitive props
+            // deep 1 aux + primitive props
+            "aux",
             "aux._id",
             "auxTable._id",
             "aux.title",
@@ -462,7 +475,8 @@ describe("query utils", () => {
             "_id",
             "title",
 
-            // deep 1 dependency primitive props
+            // deep 1 + dependency primitive props
+            "table",
             "table._id",
             "TestTable._id",
             "table.name",
