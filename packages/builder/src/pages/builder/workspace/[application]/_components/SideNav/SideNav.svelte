@@ -4,13 +4,12 @@
     Icon,
     Body,
     Link,
-    Divider,
     Modal,
-    PopoverAlignment,
     TooltipPosition,
     TooltipType,
     notifications,
     StatusLight,
+    Tag,
   } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
   import { url, goto, isActive } from "@roxi/routify"
@@ -36,8 +35,9 @@
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
-  import { onDestroy, setContext } from "svelte"
+  import { onDestroy, onMount, setContext } from "svelte"
   import {
+    FeatureFlag,
     type Datasource,
     type Query,
     type Table,
@@ -51,10 +51,11 @@
   } from "@budibase/types"
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
+  import { DISCORD_URL, DOCUMENTATION_URL, SUPPORT_EMAIL } from "@/constants"
+  import { API } from "@/api"
   import { bb } from "@/stores/bb"
   import WorkspaceSelect from "@/components/common/WorkspaceSelect.svelte"
   import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"
-  import HelpMenu from "@/components/common/HelpMenu.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import { type EnrichedApp } from "@/types"
 
@@ -112,7 +113,7 @@
   const datasourceLookup = datasources.lookup
   const favouriteLookup = workspaceFavouriteStore.lookup
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
-  const navLogoSize = 20
+  const navLogoSize = 18
 
   let ignoreFocus = false
   let focused = false
@@ -122,6 +123,32 @@
   let workspaceSelect: WorkspaceSelect | undefined
   let createWorkspaceModal: Modal | undefined
   let workspaceMenuOpen = false
+
+  let githubStars: number | null = null
+
+  const formatStars = (stars: number) => {
+    return new Intl.NumberFormat("en", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+      compactDisplay: "short",
+    })
+      .format(stars)
+      .toLowerCase()
+  }
+
+  $: githubStarsText =
+    githubStars != null
+      ? `${formatStars(githubStars)} GitHub stars`
+      : "25k+ GitHub stars"
+
+  onMount(async () => {
+    try {
+      const response = await API.workspaceHome.getGitHubStars()
+      githubStars = response.stars
+    } catch (err) {
+      console.error("Failed to load GitHub stars", err)
+    }
+  })
 
   $: appId = $appStore.appId
   $: !$pinned && unPin()
@@ -408,42 +435,90 @@
       <div class="links core">
         {#if appId}
           <div>
-            <SideNavLink
-              icon="browser"
-              text="Apps"
-              url={$url("./design")}
-              {collapsed}
-              on:click={keepCollapsed}
-            />
-            <span class="root-nav" class:selected={$isActive("./automation")}>
-              {#if collapsed && automationErrorCount}
-                <span class="status-indicator">
-                  <StatusLight
-                    color="var(--spectrum-global-color-static-red-600)"
-                    size="M"
-                  />
-                </span>
-              {/if}
+            {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
               <SideNavLink
-                icon="path"
-                text="Automations"
-                url={$url("./automation")}
+                icon="house"
+                text="Home"
+                url={$url("./home")}
                 {collapsed}
                 on:click={keepCollapsed}
-              >
-                <svelte:fragment slot="right">
-                  {#if automationErrorCount}
+              />
+            {:else}
+              <SideNavLink
+                icon="browser"
+                text="Apps"
+                url={$url("./design")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+              <span class="root-nav" class:selected={$isActive("./automation")}>
+                {#if collapsed && automationErrorCount}
+                  <span class="status-indicator">
                     <StatusLight
                       color="var(--spectrum-global-color-static-red-600)"
                       size="M"
                     />
-                  {/if}
-                </svelte:fragment>
-              </SideNavLink>
-            </span>
-
+                  </span>
+                {/if}
+                <SideNavLink
+                  icon="path"
+                  text="Automations"
+                  url={$url("./automation")}
+                  {collapsed}
+                  on:click={keepCollapsed}
+                >
+                  <svelte:fragment slot="right">
+                    {#if automationErrorCount}
+                      <StatusLight
+                        color="var(--spectrum-global-color-static-red-600)"
+                        size="M"
+                      />
+                    {/if}
+                  </svelte:fragment>
+                </SideNavLink>
+              </span>
+              {#if $featureFlags.AI_AGENTS}
+                <SideNavLink
+                  icon="memory"
+                  text="Agents"
+                  url={$url("./agent")}
+                  {collapsed}
+                  on:click={keepCollapsed}
+                >
+                  <svelte:fragment slot="right">
+                    <div class="beta-tag-wrapper">
+                      <Tag emphasized>Beta</Tag>
+                    </div>
+                  </svelte:fragment>
+                </SideNavLink>
+                <SideNavLink
+                  icon="chat-circle"
+                  text="Chat"
+                  url={$url("./chat")}
+                  {collapsed}
+                  on:click={keepCollapsed}
+                >
+                  <svelte:fragment slot="right">
+                    <div class="beta-tag-wrapper">
+                      <Tag emphasized>Alpha</Tag>
+                    </div>
+                  </svelte:fragment>
+                </SideNavLink>
+              {/if}
+            {/if}
+          </div>
+          <div>
             <SideNavLink
-              icon="webhooks-logo"
+              icon="sparkle"
+              text="AI models"
+              {collapsed}
+              on:click={() => {
+                bb.settings("/ai")
+                keepCollapsed()
+              }}
+            />
+            <SideNavLink
+              icon="cube"
               text="APIs"
               url={$url("./apis")}
               {collapsed}
@@ -456,39 +531,60 @@
               {collapsed}
               on:click={keepCollapsed}
             />
-            {#if $featureFlags.AI_AGENTS}
+            <SideNavLink
+              icon="user-plus"
+              text="Invite user"
+              on:click={() => {
+                builderStore.showBuilderSidePanel()
+                keepCollapsed()
+              }}
+              {collapsed}
+            />
+            <span class="root-nav" class:error={backupErrorCount}>
+              {#if collapsed && backupErrorCount}
+                <span class="status-indicator">
+                  <StatusLight
+                    color="var(--spectrum-global-color-static-red-600)"
+                    size="M"
+                  />
+                </span>
+              {/if}
               <SideNavLink
-                icon="cpu"
-                text="Agents"
-                url={$url("./agent")}
+                icon="gear"
+                text="Settings"
                 {collapsed}
-                on:click={keepCollapsed}
-              />
-              <SideNavLink
-                icon="chat"
-                text="Chat"
-                url={$url("./chat")}
-                {collapsed}
-                on:click={keepCollapsed}
-              />
-            {/if}
+                on:click={() => {
+                  bb.settings()
+                  keepCollapsed()
+                }}
+              >
+                <svelte:fragment slot="right">
+                  {#if backupErrorCount}
+                    <StatusLight
+                      color="var(--spectrum-global-color-static-red-600)"
+                      size="M"
+                    />
+                  {/if}
+                </svelte:fragment>
+              </SideNavLink>
+            </span>
           </div>
-          <Divider size="S" />
           <div class="favourite-wrapper">
-            <div class="favourite-title">
-              <Body color="var(--spectrum-global-color-gray-700)" size="XS">
-                FAVOURITES
-              </Body>
-            </div>
+            <hr />
             {#if !favourites?.length || !resourceLookup}
               <div class="favourite-empty-state">
                 <div>
-                  <Icon name="star" size="L" color="#6A9BCC" weight="fill" />
+                  <Icon
+                    name="star"
+                    size="M"
+                    color="var(--spectrum-global-color-gray-600)"
+                    weight="regular"
+                  />
                 </div>
                 <Body
                   color="var(--spectrum-global-color-gray-700)"
                   size="XS"
-                  textAlign="center"
+                  textAlign="left"
                 >
                   You have no favourites yet! Favourite an automation, app,
                   table or API for quicker access.
@@ -564,53 +660,61 @@
       </div>
 
       <div class="links">
-        <span class="root-nav" class:error={backupErrorCount}>
-          {#if collapsed && backupErrorCount}
-            <span class="status-indicator">
-              <StatusLight
-                color="var(--spectrum-global-color-static-red-600)"
-                size="M"
-              />
-            </span>
-          {/if}
+        <SideNavLink
+          icon="book"
+          text="Docs"
+          {collapsed}
+          on:click={() => {
+            window.open(DOCUMENTATION_URL, "_blank")
+            keepCollapsed()
+          }}
+        />
+        <SideNavLink
+          icon="discord-logo"
+          text="Community"
+          {collapsed}
+          on:click={() => {
+            window.open(DISCORD_URL, "_blank")
+            keepCollapsed()
+          }}
+        />
+        <SideNavLink
+          icon="star"
+          text={githubStarsText}
+          {collapsed}
+          on:click={() => {
+            window.open("https://github.com/Budibase/budibase", "_blank")
+            keepCollapsed()
+          }}
+        />
+
+        {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isEnterpriseTrial}
           <SideNavLink
-            icon="gear"
-            text="Settings"
+            icon="paper-plane-tilt"
+            text="Email support"
             {collapsed}
             on:click={() => {
-              bb.settings()
+              window.open(SUPPORT_EMAIL, "_blank")
+              keepCollapsed()
+            }}
+          />
+        {:else}
+          <SideNavLink
+            icon="paper-plane-tilt"
+            text="Upgrade for support"
+            {collapsed}
+            on:click={() => {
+              licensing.goToUpgradePage()
               keepCollapsed()
             }}
           >
             <svelte:fragment slot="right">
-              {#if backupErrorCount}
-                <StatusLight
-                  color="var(--spectrum-global-color-static-red-600)"
-                  size="M"
-                />
-              {/if}
+              <div class="beta-tag-wrapper">
+                <Tag emphasized>Paid</Tag>
+              </div>
             </svelte:fragment>
           </SideNavLink>
-        </span>
-        {#if $appStore.appId}
-          <SideNavLink
-            icon="user-plus"
-            text="Invite user"
-            on:click={() => {
-              builderStore.showBuilderSidePanel()
-              keepCollapsed()
-            }}
-            {collapsed}
-          />
         {/if}
-        <HelpMenu align={PopoverAlignment.RightOutside} let:open>
-          <SideNavLink
-            icon={"question"}
-            text={"Help"}
-            {collapsed}
-            forceActive={open}
-          />
-        </HelpMenu>
         <SideNavUserSettings {collapsed} />
       </div>
       <div class="popover-container"></div>
@@ -648,9 +752,7 @@
   }
   .nav_wrapper {
     --nav-padding: 12px;
-    --nav-collapsed-width: calc(
-      var(--nav-logo-width) + var(--nav-padding) * 2 + 2px
-    );
+    --nav-collapsed-width: 42px;
     --nav-width: 240px;
     --nav-border: 1px solid var(--spectrum-global-color-gray-200);
   }
@@ -698,7 +800,6 @@
     flex: 0 0 50px;
     padding: 0 var(--nav-padding);
     gap: var(--spacing-m);
-    border-bottom: var(--nav-border);
     color: var(--spectrum-global-color-gray-800);
   }
   .nav_header > div :global(> svg) {
@@ -783,18 +884,27 @@
     flex: 1;
     overflow: hidden;
     flex: 1 1 auto;
+    margin-top: 10px;
+  }
+  .favourite-wrapper hr {
+    border: none;
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    margin: 0 0 10px 0;
   }
 
-  .favourite-title {
-    padding: 0 calc(var(--nav-padding) / 2);
-    margin-bottom: 8px;
+  .nav-section-title {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .nav-section-title hr {
+    border: none;
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    margin: 0;
   }
   .favourite-empty-state {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    border: 1px dashed var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
+    align-items: flex-start;
     padding: 12px;
     gap: 8px;
     transition: all 130ms ease-out;
@@ -816,15 +926,19 @@
   }
 
   @container (max-width: 239px) {
+    .nav-section-title {
+      transition: all 130ms ease-in-out;
+    }
     .favourite-wrapper {
       display: none;
       transition: all 130ms ease-in-out;
     }
-    .favourite-title {
-      display: all 130ms ease-in-out;
-    }
     .favourite-empty-state {
       display: all 130ms ease-in-out;
     }
+  }
+
+  .beta-tag-wrapper :global(.spectrum-Tags-itemLabel) {
+    font-size: 12px;
   }
 </style>
