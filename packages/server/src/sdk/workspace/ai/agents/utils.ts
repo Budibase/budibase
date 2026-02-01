@@ -5,7 +5,8 @@ import {
   WebSearchProvider,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import type { ToolSet } from "ai"
+import type { ToolSet, UIMessage, StepResult } from "ai"
+import { isToolUIPart, getToolName } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
 import {
   createRestQueryTool,
@@ -139,4 +140,50 @@ export function createLiteLLMFetch(sessionId: string): typeof fetch {
   }
 
   return liteFetch
+}
+
+export interface IncompleteToolCall {
+  toolName: string
+  toolCallId: string
+  state: string
+}
+
+const COMPLETED_TOOL_STATES = new Set([
+  "output-available",
+  "output-error",
+  "output-denied",
+])
+
+export function findIncompleteToolCalls(
+  messages: UIMessage[]
+): IncompleteToolCall[] {
+  const incomplete: IncompleteToolCall[] = []
+  for (const message of messages) {
+    if (message.role !== "assistant" || !message.parts) {
+      continue
+    }
+    for (const part of message.parts) {
+      if (isToolUIPart(part) && !COMPLETED_TOOL_STATES.has(part.state)) {
+        incomplete.push({
+          toolName: getToolName(part),
+          toolCallId: part.toolCallId,
+          state: part.state,
+        })
+      }
+    }
+  }
+  return incomplete
+}
+
+export function checkStepForIncompleteToolCalls(
+  stepResult: StepResult<ToolSet>
+): boolean {
+  return stepResult.toolCalls.length > 0 && stepResult.toolResults.length === 0
+}
+
+export function formatIncompleteToolCallError(
+  incompleteTools: IncompleteToolCall[]
+): string {
+  const toolNames = incompleteTools.map(t => t.toolName).join(", ")
+  return `The AI model failed to complete tool execution${toolNames ? ` for: ${toolNames}` : ""}. This may be due to a compatibility issue with the selected model. Please try a different model or try again.`
 }

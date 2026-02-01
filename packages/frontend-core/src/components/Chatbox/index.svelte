@@ -78,6 +78,9 @@
       part => isToolUIPart(part) && part.state === "output-error"
     )
 
+  const getMessageError = (message: UIMessage<AgentMessageMetadata>) =>
+    message.metadata?.error
+
   $effect(() => {
     const interval = setInterval(() => {
       let updated = false
@@ -151,6 +154,7 @@
             chatAppId,
             agentId: chat?.agentId,
             transient: !persistConversation,
+            isPreview: isAgentPreviewChat,
             title: chat?.title,
             messages,
           },
@@ -409,9 +413,13 @@
         {@const reasoningText = getReasoningText(message)}
         {@const reasoningId = `${message.id}-reasoning`}
         {@const toolError = hasToolError(message)}
+        {@const messageError = getMessageError(message)}
         {@const reasoningStreaming = isReasoningStreaming(message)}
         {@const isThinking =
-          reasoningStreaming && !toolError && !message.metadata?.completedAt}
+          reasoningStreaming &&
+          !toolError &&
+          !messageError &&
+          !message.metadata?.completedAt}
         <div class="message assistant">
           {#if reasoningText}
             <div class="reasoning-part">
@@ -530,6 +538,16 @@
               </div>
             {/if}
           {/each}
+          {#if messageError}
+            <div class="message-error">
+              <Icon
+                name="warning-circle"
+                size="S"
+                color="var(--spectrum-global-color-orange-600)"
+              />
+              <span>{messageError}</span>
+            </div>
+          {/if}
           {#if message.metadata?.ragSources?.length}
             <div class="sources">
               <div class="sources-title">Sources</div>
@@ -948,6 +966,20 @@
     50% {
       opacity: 1;
     }
+  }
+
+  .message-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: var(--spacing-m);
+    background-color: var(--spectrum-global-color-orange-100);
+    border: 1px solid var(--spectrum-global-color-orange-300);
+    border-radius: 6px;
+    margin-top: var(--spacing-m);
+    font-size: 13px;
+    color: var(--spectrum-global-color-orange-900);
+    line-height: 1.4;
   }
 
   .sources {
