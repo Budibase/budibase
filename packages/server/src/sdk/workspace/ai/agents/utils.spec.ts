@@ -11,7 +11,6 @@ type MessagePart = NonNullable<UIMessage["parts"]>[number]
 const toolPart = (part: Record<string, unknown>): MessagePart =>
   part as MessagePart
 
-
 describe("incomplete tool call detection", () => {
   describe("findIncompleteToolCalls", () => {
     it("returns empty array for messages with no tool parts", () => {

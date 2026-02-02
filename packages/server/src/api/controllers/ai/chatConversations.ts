@@ -307,7 +307,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools,
       stopWhen: stepCountIs(30),
       providerOptions: ai.getLiteLLMProviderOptions(),
-      onStepFinish({toolCalls, toolResults}) {
+      onStepFinish({ toolCalls, toolResults }) {
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
       },
       onError({ error }) {
