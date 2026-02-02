@@ -29,6 +29,11 @@
     clearSearch: void
     resetFilters: void
     sortChange: HomeSortColumn
+    openContextMenu: {
+      row: HomeRow
+      x: number
+      y: number
+    }
   }>()
 
   const isSorted = (column: HomeSortColumn) => sortColumn === column
@@ -42,8 +47,12 @@
     dispatch("openRow", row)
   }
 
-  const stop = (event: Event) => {
+  export let highlightedRowId: string | null = null
+
+  const openContextMenu = (event: MouseEvent, row: HomeRow) => {
+    event.preventDefault()
     event.stopPropagation()
+    dispatch("openContextMenu", { row, x: event.clientX, y: event.clientY })
   }
 </script>
 
@@ -133,8 +142,10 @@
       <button
         class="row"
         class:favourite={row.favourite?._id}
+        class:active={highlightedRowId === row._id}
         type="button"
         on:click={() => handleRowClick(row)}
+        on:contextmenu={e => openContextMenu(e, row)}
       >
         <div class="cell name-cell">
           <div class="icon-wrapper">
@@ -187,13 +198,12 @@
             <FavouriteResourceButton favourite={row.favourite} />
           </span>
           <div class="ctx-btn">
-            <!-- todo: implement actions -->
             <Icon
               name="dots-three"
               size="M"
               hoverable
               color="var(--spectrum-global-color-gray-600)"
-              on:click={stop}
+              on:click={e => openContextMenu(e, row)}
             />
           </div>
         </div>
@@ -290,7 +300,8 @@
     transition: background 130ms ease-out;
     cursor: pointer;
 
-    &:hover {
+    &:hover,
+    &.active {
       background: var(--spectrum-global-color-gray-100);
 
       & .actions > * {
