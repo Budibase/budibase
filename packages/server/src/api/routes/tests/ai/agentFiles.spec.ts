@@ -146,6 +146,37 @@ describe("agent files", () => {
     expect(updated?.ragVersion).toBe(1)
   })
 
+  it("uses prod rag version + 1 for uploads", async () => {
+    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+      typeof ragSdk.ingestAgentFile
+    >
+    ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
+
+    const { agent } = await createAgentWithRag()
+
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const prodDoc = {
+          ...agent,
+          ragVersion: 5,
+        }
+        delete prodDoc._rev
+        await db.put(prodDoc as any)
+      }
+    )
+
+    await config.api.agentFiles.upload(agent._id!, {
+      file: fileBuffer,
+      name: "prod-aware.txt",
+    })
+
+    const { agents } = await config.api.agent.fetch()
+    const updated = agents.find(row => row._id === agent._id)
+    expect(updated?.ragVersion).toBe(6)
+  })
+
   it("soft deletes agent files until publish", async () => {
     const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
       typeof ragSdk.ingestAgentFile
