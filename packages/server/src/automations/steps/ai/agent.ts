@@ -15,6 +15,8 @@ import {
   UIMessage,
   Output,
   jsonSchema,
+  wrapLanguageModel,
+  extractReasoningMiddleware,
 } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
@@ -112,7 +114,12 @@ export async function run({
         }
 
         const agent = new ToolLoopAgent({
-          model: litellm.chat(modelId),
+          model: wrapLanguageModel({
+            model: litellm.chat(modelId),
+            middleware: extractReasoningMiddleware({
+              tagName: "think",
+            }),
+          }),
           instructions: systemPrompt || undefined,
           tools,
           stopWhen: stepCountIs(30),

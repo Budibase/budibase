@@ -843,8 +843,11 @@
     right: -5px;
   }
 
+  /* Split into two rules to prevent CSS tree-shaking in production builds */
   .nav_wrapper {
     display: contents;
+  }
+  .nav_wrapper {
     --nav-padding: 12px;
     --nav-collapsed-width: 42px;
     --nav-width: 240px;

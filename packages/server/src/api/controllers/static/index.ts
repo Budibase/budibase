@@ -406,7 +406,9 @@ export const serveClientLibrary = async function (
 }
 
 export const serve3rdPartyFile = async function (ctx: Ctx) {
-  const { file } = ctx.params
+  const file = Array.isArray(ctx.params.file)
+    ? ctx.params.file.join("/")
+    : ctx.params.file
 
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {

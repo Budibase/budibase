@@ -1,18 +1,12 @@
-<script>
+<script lang="ts">
   import WorkspaceLayout from "./_layout.workspace.svelte"
 
-  export let application
-
-  let currentAppId = application
-
-  $: if (application !== currentAppId) {
-    currentAppId = application
-  }
+  export let application: string
 </script>
 
 <!-- Needs to agressively re-render if the appId has changed -->
-{#key currentAppId}
-  <WorkspaceLayout application={currentAppId}>
+{#key application}
+  <WorkspaceLayout {application}>
     <slot />
   </WorkspaceLayout>
 {/key}

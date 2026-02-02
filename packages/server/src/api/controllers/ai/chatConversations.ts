@@ -23,6 +23,7 @@ import {
 import {
   convertToModelMessages,
   extractReasoningMiddleware,
+  isTextUIPart,
   ModelMessage,
   stepCountIs,
   streamText,
@@ -114,9 +115,9 @@ export const extractUserText = (
     return ""
   }
   return message.parts
-    .filter(part => part && typeof part === "object" && part["type"] === "text")
-    .map(part => (typeof part["text"] === "string" ? part["text"] : ""))
-    .join(" ")
+    .filter(isTextUIPart)
+    .map(part => part.text)
+    .join("")
     .trim()
 }
 
@@ -304,16 +305,28 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
 
     ctx.respond = false
-    const messageMetadata =
-      ragSourcesMetadata && ragSourcesMetadata.length > 0
-        ? { ragSources: ragSourcesMetadata }
-        : undefined
+    const streamStartTime = Date.now()
+    const baseMetadata = ragSourcesMetadata?.length
+      ? { ragSources: ragSourcesMetadata }
+      : {}
 
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
-      ...(messageMetadata && {
-        messageMetadata: () => messageMetadata,
-      }),
+      messageMetadata: ({ part }) => {
+        if (part.type === "start") {
+          return {
+            ...baseMetadata,
+            createdAt: streamStartTime,
+          }
+        }
+        if (part.type === "finish") {
+          return {
+            ...baseMetadata,
+            createdAt: streamStartTime,
+            completedAt: Date.now(),
+          }
+        }
+      },
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
         if (chat.transient) {
