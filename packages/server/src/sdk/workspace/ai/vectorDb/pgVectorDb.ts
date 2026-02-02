@@ -75,6 +75,15 @@ class PgVectorDb implements VectorDb {
   }
 
   private async ensureSchema(client: Client, embeddingDimensions: number) {
+    const buildIndexName = (tableName: string, suffix: string) => {
+      const hash = crypto
+        .createHash("sha256")
+        .update(`${tableName}:${suffix}`)
+        .digest("hex")
+        .slice(0, 20)
+      return `bb_sc_idx_${hash}`
+    }
+
     await client.query("CREATE EXTENSION IF NOT EXISTS vector")
     await client.query(`
         CREATE TABLE IF NOT EXISTS ${this.tableName} (
@@ -88,13 +97,19 @@ class PgVectorDb implements VectorDb {
         )
       `)
     await client.query(
-      `CREATE UNIQUE INDEX IF NOT EXISTS ${this.tableName}_source_chunk_hash_uq ON ${this.tableName} (source, chunk_hash)`
+      `CREATE UNIQUE INDEX IF NOT EXISTS ${buildIndexName(this.tableName, "source_chunk_hash_uq")} ON ${this.tableName} (source, chunk_hash)`
     )
     await client.query(
-      `CREATE INDEX IF NOT EXISTS ${this.tableName}_source_rag_version_idx ON ${this.tableName} (source, created_rag_version)`
+      `CREATE INDEX IF NOT EXISTS ${buildIndexName(
+        this.tableName,
+        "source_rag_version"
+      )} ON ${this.tableName} (source, created_rag_version)`
     )
     await client.query(`
-        CREATE INDEX IF NOT EXISTS ${this.tableName}_embedding_idx
+        CREATE INDEX IF NOT EXISTS ${buildIndexName(
+          this.tableName,
+          "embedding"
+        )}
         ON ${this.tableName}
         USING ivfflat (embedding vector_cosine_ops)
         WITH (lists = 100)
