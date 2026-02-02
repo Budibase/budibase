@@ -1,9 +1,11 @@
 import { HTTPError, context, db as dbCore } from "@budibase/backend-core"
 import {
+  Agent,
   AgentFileStatus,
   AgentFileUploadResponse,
   FetchAgentFilesResponse,
   UserCtx,
+  WithRequired,
 } from "@budibase/types"
 import { readFile, unlink } from "node:fs/promises"
 import sdk from "../../../sdk"
@@ -40,7 +42,9 @@ export async function fetchAgentFiles(
   ctx.status = 200
 }
 
-async function getDevRagVersion(agentId: string) {
+async function ensureIncreaseRagVersion(
+  agentId: string
+): Promise<WithRequired<Agent, "ragVersion">> {
   let prodVersion = 0
   try {
     const prodWorkspaceId = dbCore.getProdWorkspaceID(
@@ -54,16 +58,9 @@ async function getDevRagVersion(agentId: string) {
     // ignore if prod workspace/agent does not exist yet
   }
 
-  return prodVersion + 1
-}
+  const ragVersion = prodVersion + 1
 
-export async function uploadAgentFile(
-  ctx: UserCtx<void, AgentFileUploadResponse>
-) {
-  const agentId = ctx.params.agentId
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-
-  const ragVersion = await getDevRagVersion(agentId)
   const updatedAgent =
     agent.ragVersion === ragVersion
       ? agent
@@ -71,6 +68,16 @@ export async function uploadAgentFile(
           ...agent,
           ragVersion: ragVersion,
         })
+
+  return { ...updatedAgent, ragVersion }
+}
+
+export async function uploadAgentFile(
+  ctx: UserCtx<void, AgentFileUploadResponse>
+) {
+  const agentId = ctx.params.agentId
+  const agent = await ensureIncreaseRagVersion(agentId)
+
   const upload = normalizeUpload(
     ctx.request.files?.file ||
       ctx.request.files?.agentFile ||
@@ -100,11 +107,11 @@ export async function uploadAgentFile(
     mimetype,
     size: fileSize ?? buffer.byteLength,
     uploadedBy: ctx.user?._id!,
-    createdRagVersion: ragVersion,
+    createdRagVersion: agent.ragVersion,
   })
 
   try {
-    const result = await ingestAgentFile(updatedAgent, agentFile, buffer)
+    const result = await ingestAgentFile(agent, agentFile, buffer)
     agentFile.status = AgentFileStatus.READY
     agentFile.chunkCount = result.total
     agentFile.processedAt = new Date().toISOString()
@@ -128,7 +135,7 @@ export async function deleteAgentFile(
   ctx: UserCtx<void, { deleted: true }, { agentId: string; fileId: string }>
 ) {
   const { agentId, fileId } = ctx.params
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const agent = await ensureIncreaseRagVersion(agentId)
   const file = await sdk.ai.agents.getAgentFileOrThrow(fileId)
   if (file.agentId !== agentId) {
     throw new HTTPError("File does not belong to this agent", 404)

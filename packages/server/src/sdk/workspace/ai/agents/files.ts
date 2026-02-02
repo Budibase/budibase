@@ -6,6 +6,7 @@ import {
   DocumentType,
   RequiredKeys,
   ToDocCreateMetadata,
+  WithRequired,
 } from "@budibase/types"
 
 interface CreateAgentFileOptions {
@@ -36,6 +37,7 @@ export const createAgentFile = async (
     uploadedBy,
     chunkCount: 0,
     createdRagVersion,
+    deletedRagVersion: undefined,
 
     errorMessage: undefined,
     processedAt: undefined,
@@ -85,11 +87,31 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
     })
 }
 
-export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
+export const listDeletedAgentFiles = async (
+  agentId: string
+): Promise<AgentFile[]> => {
+  const db = context.getWorkspaceDB()
+  const response = await db.allDocs<AgentFile>(
+    docIds.getDocParams(DocumentType.AGENT_FILE, agentId, {
+      include_docs: true,
+    })
+  )
+  return response.rows
+    .map(row => row.doc)
+    .filter(file => !!file)
+    .filter(file => !file._deleted)
+    .filter(file => file.status === AgentFileStatus.DELETED)
+}
+
+export const removeAgentFile = async (
+  agent: WithRequired<Agent, "ragVersion">,
+  file: AgentFile
+) => {
   const db = context.getWorkspaceDB()
   const updated: AgentFile = {
     ...file,
     status: AgentFileStatus.DELETED,
+    deletedRagVersion: agent.ragVersion,
   }
   await db.put(updated)
 }

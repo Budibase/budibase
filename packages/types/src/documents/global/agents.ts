@@ -68,6 +68,7 @@ export interface AgentFile extends Document {
   chunkCount: number
   uploadedBy: string
   createdRagVersion: number
+  deletedRagVersion?: number
   errorMessage?: string
   processedAt?: string
 }
