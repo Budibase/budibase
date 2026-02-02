@@ -4,6 +4,7 @@
     notifications,
     Icon,
     ProgressCircle,
+    Body,
   } from "@budibase/bbui"
   import type {
     ChatConversation,
@@ -11,7 +12,6 @@
     AgentMessageMetadata,
   } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
-  import BBAI from "../../icons/BBAI.svelte"
   import { tick } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
@@ -30,16 +30,20 @@
     workspaceId: string
     chat: ChatConversationLike
     persistConversation?: boolean
+    conversationStarters?: { prompt: string }[]
     onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
+    isAgentPreviewChat?: boolean
   }
 
   let {
     workspaceId,
     chat = $bindable(),
     persistConversation = true,
+    conversationStarters = [],
     onchatsaved,
+    isAgentPreviewChat = false,
   }: Props = $props()
 
   let API = $state(
@@ -56,9 +60,83 @@
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
   let inputValue = $state("")
+  let reasoningTimers = $state<Record<string, number>>({})
+
+  const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
+    (message.parts ?? [])
+      .filter(isReasoningUIPart)
+      .map(p => p.text)
+      .join("")
+
+  const isReasoningStreaming = (message: UIMessage<AgentMessageMetadata>) =>
+    (message.parts ?? []).some(
+      part => isReasoningUIPart(part) && part.state === "streaming"
+    )
+
+  const hasToolError = (message: UIMessage<AgentMessageMetadata>) =>
+    (message.parts ?? []).some(
+      part => isToolUIPart(part) && part.state === "output-error"
+    )
+
+  $effect(() => {
+    const interval = setInterval(() => {
+      let updated = false
+      const newTimers = { ...reasoningTimers }
+
+      for (const message of messages) {
+        if (message.role !== "assistant") continue
+        const createdAt = message.metadata?.createdAt
+        const completedAt = message.metadata?.completedAt
+        const id = `${message.id}-reasoning`
+
+        if (!createdAt) continue
+
+        if (completedAt) {
+          const finalElapsed = (completedAt - createdAt) / 1000
+          if (newTimers[id] !== finalElapsed) {
+            newTimers[id] = finalElapsed
+            updated = true
+          }
+          continue
+        }
+
+        const toolError = hasToolError(message)
+        if (toolError) {
+          if (newTimers[id] == null) {
+            newTimers[id] = (Date.now() - createdAt) / 1000
+            updated = true
+          }
+          continue
+        }
+
+        if (isReasoningStreaming(message)) {
+          const newElapsed = (Date.now() - createdAt) / 1000
+          if (newTimers[id] !== newElapsed) {
+            newTimers[id] = newElapsed
+            updated = true
+          }
+        }
+      }
+
+      if (updated) {
+        reasoningTimers = newTimers
+      }
+    }, 100)
+
+    return () => clearInterval(interval)
+  })
 
   let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
+
+  const applyConversationStarter = async (starterPrompt: string) => {
+    if (isBusy) {
+      return
+    }
+    inputValue = starterPrompt
+    await sendMessage()
+    tick().then(() => textareaElement?.focus())
+  }
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
@@ -115,6 +193,13 @@
   let messages = $derived(chatInstance.messages)
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
+  )
+  let hasMessages = $derived(Boolean(chat?.messages?.length))
+  let showConversationStarters = $derived(
+    !isBusy &&
+      !hasMessages &&
+      conversationStarters.length > 0 &&
+      !isAgentPreviewChat
   )
 
   let lastChatId = $state<string | undefined>(chat?._id)
@@ -285,21 +370,84 @@
 
 <div class="chat-area" bind:this={chatAreaElement}>
   <div class="chatbox">
+    {#if showConversationStarters}
+      <div class="starter-section">
+        <div class="starter-title">Conversation starters</div>
+        <div class="starter-grid">
+          {#each conversationStarters as starter, index (index)}
+            <button
+              type="button"
+              class="starter-card"
+              onclick={() => applyConversationStarter(starter.prompt)}
+            >
+              {starter.prompt}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {:else}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <Icon
+            name="chat-circle"
+            size="L"
+            weight="fill"
+            color="var(--spectrum-global-color-gray-500)"
+          />
+        </div>
+        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          Your conversation will appear here.
+        </Body>
+      </div>
+    {/if}
     {#each messages as message (message.id)}
       {#if message.role === "user"}
         <div class="message user">
           <MarkdownViewer value={getUserMessageText(message)} />
         </div>
       {:else if message.role === "assistant"}
+        {@const reasoningText = getReasoningText(message)}
+        {@const reasoningId = `${message.id}-reasoning`}
+        {@const toolError = hasToolError(message)}
+        {@const reasoningStreaming = isReasoningStreaming(message)}
+        {@const isThinking =
+          reasoningStreaming && !toolError && !message.metadata?.completedAt}
         <div class="message assistant">
-          {#each message.parts || [] as part, partIndex (partIndex)}
+          {#if reasoningText}
+            <div class="reasoning-part">
+              <button
+                class="reasoning-toggle"
+                type="button"
+                onclick={() =>
+                  (expandedTools = {
+                    ...expandedTools,
+                    [reasoningId]: !expandedTools[reasoningId],
+                  })}
+              >
+                <span class="reasoning-icon" class:shimmer={isThinking}>
+                  <Icon
+                    name="brain"
+                    size="M"
+                    color="var(--spectrum-global-color-gray-600)"
+                  />
+                </span>
+                <span class="reasoning-label" class:shimmer={isThinking}>
+                  {isThinking ? "Thinking" : "Thought for"}
+                  {#if reasoningTimers[reasoningId]}
+                    <span class="reasoning-timer"
+                      >{reasoningTimers[reasoningId].toFixed(1)}s</span
+                    >
+                  {/if}
+                </span>
+              </button>
+              {#if expandedTools[reasoningId]}
+                <div class="reasoning-content">{reasoningText}</div>
+              {/if}
+            </div>
+          {/if}
+          {#each message.parts ?? [] as part, partIndex}
             {#if isTextUIPart(part)}
               <MarkdownViewer value={part.text} />
-            {:else if isReasoningUIPart(part)}
-              <div class="reasoning-part">
-                <div class="reasoning-label">Reasoning</div>
-                <div class="reasoning-content">{part.text}</div>
-              </div>
             {:else if isToolUIPart(part)}
               {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
               {@const isRunning =
@@ -310,6 +458,7 @@
               <div class="tool-part" class:tool-running={isRunning}>
                 <button
                   class="tool-header"
+                  class:tool-header-expanded={expandedTools[toolId]}
                   type="button"
                   onclick={() => toggleTool(toolId)}
                 >
@@ -317,29 +466,40 @@
                     class="tool-chevron"
                     class:expanded={expandedTools[toolId]}
                   >
-                    <Icon name="caret-right" size="XS" />
-                  </span>
-                  <span class="tool-icon">
-                    <Icon name="wrench" size="S" />
-                  </span>
-                  <span class="tool-name">{getToolName(part)}</span>
-                  <span class="tool-status">
-                    {#if isRunning}
-                      <ProgressCircle size="S" />
-                    {:else if isSuccess}
+                    <span class="tool-chevron-icon tool-chevron-icon-default">
                       <Icon
-                        name="check"
-                        size="S"
-                        color="var(--spectrum-global-color-green-600)"
+                        name="globe-simple"
+                        size="M"
+                        weight="regular"
+                        color="var(--spectrum-global-color-gray-600)"
                       />
-                    {:else if isError}
+                    </span>
+                    <span class="tool-chevron-icon tool-chevron-icon-expanded">
                       <Icon
-                        name="x"
-                        size="S"
-                        color="var(--spectrum-global-color-red-600)"
+                        name="minus"
+                        size="M"
+                        weight="regular"
+                        color="var(--spectrum-global-color-gray-600)"
                       />
-                    {/if}
+                    </span>
                   </span>
+                  <span class="tool-call-label">Tool call</span>
+                  <div class="tool-name-wrapper">
+                    <span class="tool-name">{getToolName(part)}</span>
+                  </div>
+                  {#if isRunning || isError}
+                    <span class="tool-status">
+                      {#if isRunning}
+                        <ProgressCircle size="S" />
+                      {:else if isError}
+                        <Icon
+                          name="x"
+                          size="S"
+                          color="var(--spectrum-global-color-red-600)"
+                        />
+                      {/if}
+                    </span>
+                  {/if}
                 </button>
                 {#if expandedTools[toolId]}
                   <div class="tool-details">
@@ -394,11 +554,6 @@
         </div>
       {/if}
     {/each}
-    {#if isBusy}
-      <div class="message system">
-        <BBAI size="48px" animate />
-      </div>
-    {/if}
   </div>
 
   <div class="input-wrapper">
@@ -415,11 +570,11 @@
 
 <style>
   .chat-area {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    height: 0;
+    min-height: 0;
   }
   .chatbox {
     display: flex;
@@ -430,9 +585,59 @@
     padding: 48px 0 24px 0;
   }
 
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .empty-state-icon {
+    --size: 24px;
+  }
+  .starter-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .starter-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .starter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-s);
+  }
+
+  .starter-card {
+    border: 1px solid var(--grey-3);
+    border-radius: 12px;
+    padding: var(--spacing-m);
+    background: var(--grey-2);
+    color: var(--spectrum-global-color-gray-900);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .starter-card:hover {
+    border-color: var(--grey-4);
+    background: var(--grey-1);
+  }
+
   .message {
     display: flex;
     flex-direction: column;
+    gap: 16px;
     max-width: 80%;
     padding: var(--spacing-l);
     border-radius: 20px;
@@ -441,20 +646,22 @@
   }
 
   .message.user {
+    border-radius: 8px;
     align-self: flex-end;
-    background-color: var(--grey-3);
+    background-color: #215f9e33;
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-800);
   }
 
   .message.assistant {
     align-self: flex-start;
-    background-color: var(--grey-1);
-    border: 1px solid var(--grey-3);
-  }
-
-  .message.system {
-    align-self: flex-start;
-    background: none;
-    padding-left: 0;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-800);
+    line-height: 1.4;
+    max-width: 100%;
   }
 
   .input-wrapper {
@@ -463,6 +670,8 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
+    line-height: 1.4;
   }
 
   .input {
@@ -472,12 +681,16 @@
     resize: none;
     padding: 20px;
     font-size: 16px;
-    background-color: var(--grey-3);
+    background-color: var(--spectrum-global-color-gray-200);
     color: var(--grey-9);
-    border-radius: 16px;
-    border: none;
+    border-radius: 10px;
+    border: 1px solid var(--spectrum-global-color-gray-300) !important;
     outline: none;
     min-height: 100px;
+  }
+
+  .input:focus {
+    border: 1px solid #215f9e33 !important;
   }
 
   .input::placeholder {
@@ -486,7 +699,21 @@
 
   /* Style the markdown tool sections in assistant messages */
   :global(.assistant strong) {
-    color: var(--spectrum-global-color-static-seafoam-700);
+    color: var(--spectrum-global-color-gray-900);
+    font-weight: 500;
+  }
+
+  :global(.assistant .markdown-viewer p) {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  :global(.assistant .markdown-viewer p:first-child) {
+    margin-top: 0;
+  }
+
+  :global(.assistant .markdown-viewer p:last-child) {
+    margin-bottom: 0;
   }
 
   :global(.assistant h3) {
@@ -500,37 +727,37 @@
     border-radius: 4px;
   }
 
-  /* Tool parts styling */
-  .tool-part {
-    margin: var(--spacing-m) 0;
-    padding: var(--spacing-m);
-    background-color: var(--grey-2);
-    border: 1px solid var(--grey-3);
-    border-radius: 8px;
-    transition: border-color 0.2s ease;
+  :global(.assistant ul) {
+    padding-inline-start: 20px;
   }
 
-  .tool-part.tool-running {
-    border-color: var(--spectrum-global-color-static-seafoam-600);
+  /* Tool parts styling */
+  .tool-part + .tool-part {
+    margin-top: 2px;
+  }
+
+  .tool-part {
+    position: relative;
+    margin-top: var(--spacing-l);
+    margin-bottom: 0;
   }
 
   .tool-header {
     display: flex;
     align-items: center;
-    gap: var(--spacing-s);
-    width: 100%;
+    gap: 8px;
     padding: 0;
     margin: 0;
     background: none;
     border: none;
+    border-radius: 4px;
     cursor: pointer;
-    font-weight: 600;
     font-size: 14px;
     text-align: left;
   }
 
   .tool-header:hover {
-    opacity: 0.8;
+    background-color: var(--spectrum-global-color-gray-100);
   }
 
   .tool-chevron {
@@ -541,20 +768,59 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
+  .tool-chevron :global(i) {
+    --size: 16px !important;
+  }
+
+  .tool-chevron-icon-expanded :global(i) {
+    --size: 16px !important;
+  }
+
+  .tool-chevron-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tool-chevron-icon-expanded {
+    display: none;
+  }
+
+  .tool-header-expanded .tool-chevron-icon-default {
+    display: none !important;
+  }
+
+  .tool-header-expanded .tool-chevron-icon-expanded {
+    display: flex !important;
+  }
+
   .tool-chevron.expanded {
     transform: rotate(90deg);
   }
 
-  .tool-icon {
+  .tool-header-expanded .tool-chevron {
+    transform: none;
+  }
+
+  .tool-call-label {
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .tool-name-wrapper {
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: var(--spectrum-global-color-static-seafoam-700);
+    gap: var(--spacing-s);
+    padding: 3px 6px;
+    background-color: var(--spectrum-global-color-gray-200);
+    border-radius: 4px;
   }
 
   .tool-name {
-    color: var(--spectrum-global-color-gray-900);
     font-family: var(--font-mono), monospace;
+    font-size: 13px;
+    color: var(--spectrum-global-color-gray-800);
+    font-weight: 400;
   }
 
   .tool-status {
@@ -565,10 +831,24 @@
   }
 
   .tool-details {
+    position: absolute;
+    top: 100%;
+    left: 0;
     margin-top: var(--spacing-m);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+    background: var(--background);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
+    padding: var(--spacing-m);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    z-index: 1;
+    overflow-x: hidden;
+    min-width: 0;
   }
 
   .tool-section {
@@ -592,12 +872,14 @@
     padding: var(--spacing-s);
     font-size: 12px;
     font-family: var(--font-mono), monospace;
-    overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-word;
+    overflow-wrap: break-word;
     margin: 0;
     max-height: 200px;
     overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 0;
   }
 
   .tool-error .tool-section-label {
@@ -611,26 +893,61 @@
 
   /* Reasoning parts styling */
   .reasoning-part {
-    margin: var(--spacing-m) 0;
-    padding: var(--spacing-m);
-    background-color: var(--grey-1);
-    border-left: 3px solid var(--spectrum-global-color-static-seafoam-700);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .reasoning-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
     border-radius: 4px;
   }
 
+  .reasoning-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
   .reasoning-label {
+    font-size: 13px;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .reasoning-timer {
     font-size: 12px;
-    font-weight: 600;
-    color: var(--spectrum-global-color-static-seafoam-700);
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: var(--spectrum-global-color-gray-600);
+    font-weight: 400;
+  }
+
+  .reasoning-label.shimmer,
+  .reasoning-icon.shimmer {
+    animation: shimmer 2s ease-in-out infinite;
   }
 
   .reasoning-content {
     font-size: 13px;
-    color: var(--spectrum-global-color-gray-800);
+    color: var(--spectrum-global-color-gray-600);
     font-style: italic;
+    line-height: 1.4;
+  }
+
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 
   .sources {

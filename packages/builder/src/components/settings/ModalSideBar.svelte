@@ -61,7 +61,7 @@
   })
 </script>
 
-<div class="nav_wrapper">
+<div class="modal_sidebar_wrapper">
   <div class="nav_spacer" class:pinned={$pinned}></div>
   <div
     class="nav"
@@ -97,7 +97,7 @@
 </div>
 
 <style>
-  .nav_wrapper {
+  .modal_sidebar_wrapper {
     display: contents;
     --nav-logo-width: 20px;
     --nav-padding: 12px;

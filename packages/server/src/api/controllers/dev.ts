@@ -17,7 +17,9 @@ async function redirect(
   method: "GET" | "POST" | "DELETE",
   path = "global"
 ) {
-  const { devPath } = ctx.params
+  const devPath = Array.isArray(ctx.params.devPath)
+    ? ctx.params.devPath.join("/")
+    : ctx.params.devPath
   const queryString = ctx.originalUrl.split("?")[1] || ""
   const response = await fetch(
     checkSlashesInUrl(

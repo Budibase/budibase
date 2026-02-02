@@ -3,10 +3,12 @@ import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
   LiteLLMKeyConfig,
+  ReasoningEffort,
   LockName,
   LockType,
   UserContext,
 } from "@budibase/types"
+import { buildLiteLLMParams } from "../helpers/litellm"
 import fetch from "node-fetch"
 import env from "../../../../environment"
 import * as configSdk from "../configs"
@@ -42,6 +44,7 @@ export async function addModel({
   displayName,
   credentialFields,
   configType,
+  reasoningEffort,
   validate = true,
 }: {
   provider: string
@@ -49,6 +52,7 @@ export async function addModel({
   displayName?: string
   credentialFields: Record<string, string>
   configType: AIConfigType
+  reasoningEffort?: ReasoningEffort
   validate?: boolean
 }): Promise<string> {
   if (validate) {
@@ -62,6 +66,14 @@ export async function addModel({
 
   provider = await mapToLiteLLMProvider(provider)
 
+  const litellmParams = buildLiteLLMParams({
+    provider,
+    name: model,
+    credentialFields,
+    configType,
+    reasoningEffort,
+  })
+
   const requestOptions = {
     method: "POST",
     headers: {
@@ -70,15 +82,7 @@ export async function addModel({
     },
     body: JSON.stringify({
       model_name: displayName || model,
-      litellm_params: {
-        custom_llm_provider: provider,
-        model: `${provider}/${model}`,
-        use_in_pass_through: false,
-        use_litellm_proxy: false,
-        merge_reasoning_content_in_choices: true,
-        guardrails: [],
-        ...credentialFields,
-      },
+      litellm_params: litellmParams,
       model_info: {
         created_at: new Date().toISOString(),
         created_by: (context.getIdentity() as UserContext)?.email,
@@ -97,16 +101,26 @@ export async function updateModel({
   name,
   credentialFields,
   configType,
+  reasoningEffort,
 }: {
   llmModelId: string
   provider: string
   name: string
   credentialFields: Record<string, string>
   configType: AIConfigType
+  reasoningEffort?: ReasoningEffort
 }) {
   await validateConfig({ provider, name, credentialFields, configType })
 
   provider = await mapToLiteLLMProvider(provider)
+
+  const litellmParams = buildLiteLLMParams({
+    provider,
+    name,
+    credentialFields,
+    configType,
+    reasoningEffort,
+  })
 
   const requestOptions = {
     method: "PATCH",
@@ -116,15 +130,7 @@ export async function updateModel({
     },
     body: JSON.stringify({
       model_name: name,
-      litellm_params: {
-        custom_llm_provider: provider,
-        model: `${provider}/${name}`,
-        use_in_pass_through: false,
-        use_litellm_proxy: false,
-        merge_reasoning_content_in_choices: true,
-        guardrails: [],
-        ...credentialFields,
-      },
+      litellm_params: litellmParams,
       model_info: {
         updated_at: new Date().toISOString(),
         updated_by: (context.getIdentity() as UserContext)?.email,
