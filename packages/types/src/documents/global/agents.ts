@@ -29,6 +29,7 @@ export interface Agent extends Document {
   vectorDb?: string
   ragMinDistance?: number
   ragTopK?: number
+  ragVersion?: number
 }
 
 export interface AgentMessageRagSource {
@@ -65,6 +66,7 @@ export interface AgentFile extends Document {
   status: AgentFileStatus
   chunkCount: number
   uploadedBy: string
+  createdRagVersion: number
   errorMessage?: string
   processedAt?: string
 }

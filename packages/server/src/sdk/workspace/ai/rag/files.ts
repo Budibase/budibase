@@ -1,10 +1,10 @@
-import { HTTPError } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
-import type { Agent, AgentFile, VectorDb } from "@budibase/types"
 import { embedMany } from "ai"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
+import { HTTPError } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
+import type { Agent, AgentFile, VectorDb } from "@budibase/types"
 import { getLiteLLMModelConfigOrThrow } from "../configs"
 import { find as findVectorDb } from "../vectorDb/crud"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
@@ -298,10 +298,13 @@ export const ingestAgentFile = async (
     throw new Error("Embedding response size mismatch")
   }
 
+  const createdRagVersion = agentFile.createdRagVersion ?? agent.ragVersion ?? 0
+
   const payloads = chunks.map<ChunkInput>((chunk, index) => ({
     hash: hashChunk(chunk),
     text: chunk,
     embedding: embeddings[index],
+    createdRagVersion,
   }))
 
   return await vectorDb.upsertSourceChunks(agentFile.ragSourceId, payloads)
@@ -374,7 +377,8 @@ export const retrieveContextForSources = async (
   const rows = await vectorDb.queryNearest(
     queryEmbedding,
     sourceIds,
-    agent.ragTopK
+    agent.ragTopK,
+    agent.ragVersion || 0
   )
   if (rows.length === 0) {
     return { text: "", chunks: [] }

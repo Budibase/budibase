@@ -1,13 +1,13 @@
 import type { VectorDb as VectorDbDoc } from "@budibase/types"
 import * as crypto from "crypto"
 import { Client } from "pg"
+import { context, db as dbCore } from "@budibase/backend-core"
 import type {
   ChunkInput,
   PgVectorDbConfig,
   QueryResultRow,
   VectorDb,
 } from "./types"
-import { context } from "@budibase/backend-core"
 
 const vectorLiteral = (values: number[]) =>
   `[${values.map(value => Number(value) || 0).join(",")}]`
@@ -77,24 +77,28 @@ export class PgVectorDb implements VectorDb {
   private async ensureSchema(client: Client, embeddingDimensions: number) {
     await client.query("CREATE EXTENSION IF NOT EXISTS vector")
     await client.query(`
-      CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        id SERIAL PRIMARY KEY,
-        source TEXT NOT NULL,
-        chunk_hash TEXT UNIQUE NOT NULL,
-        chunk_text TEXT NOT NULL,
-        embedding vector(${embeddingDimensions}) NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      )
-    `)
+        CREATE TABLE IF NOT EXISTS ${this.tableName} (
+          id SERIAL PRIMARY KEY,
+          source TEXT NOT NULL,
+          chunk_hash TEXT NOT NULL,
+          chunk_text TEXT NOT NULL,
+          embedding vector(${embeddingDimensions}) NOT NULL,
+          created_rag_version INTEGER NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `)
     await client.query(
-      `CREATE INDEX IF NOT EXISTS ${this.tableName}_source_idx ON ${this.tableName} (source)`
+      `CREATE UNIQUE INDEX IF NOT EXISTS ${this.tableName}_chunk_hash_uq ON ${this.tableName} (chunk_hash)`
+    )
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS ${this.tableName}_source_rag_version_idx ON ${this.tableName} (source, created_rag_version)`
     )
     await client.query(`
-      CREATE INDEX IF NOT EXISTS ${this.tableName}_embedding_idx
-      ON ${this.tableName}
-      USING ivfflat (embedding vector_cosine_ops)
-      WITH (lists = 100)
-    `)
+        CREATE INDEX IF NOT EXISTS ${this.tableName}_embedding_idx
+        ON ${this.tableName}
+        USING ivfflat (embedding vector_cosine_ops)
+        WITH (lists = 100)
+      `)
   }
 
   async upsertSourceChunks(
@@ -133,14 +137,16 @@ export class PgVectorDb implements VectorDb {
           }
           await client.query(
             `
-              INSERT INTO ${this.tableName} (source, chunk_hash, chunk_text, embedding)
-              VALUES ($1, $2, $3, $4::vector)
-              ON CONFLICT (chunk_hash) DO UPDATE
-                SET chunk_text = EXCLUDED.chunk_text,
-                    embedding = EXCLUDED.embedding,
-                    source = EXCLUDED.source
+              INSERT INTO ${this.tableName} (source, chunk_hash, chunk_text, embedding, created_rag_version)
+              VALUES ($1, $2, $3, $4::vector, $5)
             `,
-            [sourceId, chunk.hash, chunk.text, vectorLiteral(chunk.embedding)]
+            [
+              sourceId,
+              chunk.hash,
+              chunk.text,
+              vectorLiteral(chunk.embedding),
+              chunk.createdRagVersion ?? 0,
+            ]
           )
           inserted += 1
         }
@@ -169,7 +175,8 @@ export class PgVectorDb implements VectorDb {
   async queryNearest(
     embedding: number[],
     sourceIds: string[],
-    topK: number
+    topK: number,
+    maxVersion: number
   ): Promise<QueryResultRow[]> {
     if (!sourceIds || sourceIds.length === 0) {
       return []
@@ -181,10 +188,11 @@ export class PgVectorDb implements VectorDb {
           SELECT source, chunk_text, chunk_hash, (embedding <=> $1::vector) AS distance
           FROM ${this.tableName}
           WHERE source = ANY($2::text[])
+          AND created_rag_version <= $4
           ORDER BY embedding <=> $1::vector
           LIMIT $3
         `,
-        [vectorLiteral(embedding), sourceIds, topK]
+        [vectorLiteral(embedding), sourceIds, topK, maxVersion]
       )
 
       return rows.map(row => ({

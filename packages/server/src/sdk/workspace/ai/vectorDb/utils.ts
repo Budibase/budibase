@@ -10,7 +10,11 @@ export const createVectorDb = (
 ): VectorDbClient => {
   switch (config.provider) {
     case "pgvector":
-      return new PgVectorDb(buildPgVectorDbConfig(config, options))
+      return new PgVectorDb(
+        buildPgVectorDbConfig(config, {
+          agentId: options.agentId,
+        })
+      )
     default:
       throw new Error(`Unsupported vector db provider: ${config.provider}`)
   }

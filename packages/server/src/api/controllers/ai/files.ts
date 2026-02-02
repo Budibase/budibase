@@ -1,4 +1,4 @@
-import { HTTPError } from "@budibase/backend-core"
+import { HTTPError, context, db as dbCore } from "@budibase/backend-core"
 import {
   AgentFileStatus,
   AgentFileUploadResponse,
@@ -40,11 +40,37 @@ export async function fetchAgentFiles(
   ctx.status = 200
 }
 
+async function getDevRagVersion(agentId: string) {
+  let prodVersion = 0
+  try {
+    const prodWorkspaceId = dbCore.getProdWorkspaceID(
+      context.getOrThrowWorkspaceId()
+    )
+    await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+      const prodAgent = await sdk.ai.agents.getOrThrow(agentId)
+      prodVersion = prodAgent.ragVersion ?? 0
+    })
+  } catch (error) {
+    // ignore if prod workspace/agent does not exist yet
+  }
+
+  return prodVersion + 1
+}
+
 export async function uploadAgentFile(
   ctx: UserCtx<void, AgentFileUploadResponse>
 ) {
   const agentId = ctx.params.agentId
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+
+  const ragVersion = await getDevRagVersion(agentId)
+  const updatedAgent =
+    agent.ragVersion === ragVersion
+      ? agent
+      : await sdk.ai.agents.update({
+          ...agent,
+          ragVersion: ragVersion,
+        })
   const upload = normalizeUpload(
     ctx.request.files?.file ||
       ctx.request.files?.agentFile ||
@@ -74,10 +100,11 @@ export async function uploadAgentFile(
     mimetype,
     size: fileSize ?? buffer.byteLength,
     uploadedBy: ctx.user?._id!,
+    createdRagVersion: ragVersion,
   })
 
   try {
-    const result = await ingestAgentFile(agent, agentFile, buffer)
+    const result = await ingestAgentFile(updatedAgent, agentFile, buffer)
     agentFile.status = AgentFileStatus.READY
     agentFile.chunkCount = result.total
     agentFile.processedAt = new Date().toISOString()

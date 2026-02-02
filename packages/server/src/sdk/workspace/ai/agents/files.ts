@@ -15,13 +15,15 @@ interface CreateAgentFileOptions {
   mimetype?: string
   size?: number
   uploadedBy: string
+  createdRagVersion: number
 }
 
 export const createAgentFile = async (
   options: CreateAgentFileOptions
 ): Promise<AgentFile> => {
   const db = context.getWorkspaceDB()
-  const { agentId, filename, mimetype, size, uploadedBy } = options
+  const { agentId, filename, mimetype, size, uploadedBy, createdRagVersion } =
+    options
   const _id = docIds.generateAgentFileID(agentId)
 
   const doc: RequiredKeys<ToDocCreateMetadata<AgentFile>> = {
@@ -34,6 +36,7 @@ export const createAgentFile = async (
     status: AgentFileStatus.PROCESSING,
     uploadedBy,
     chunkCount: 0,
+    createdRagVersion,
 
     errorMessage: undefined,
     processedAt: undefined,
