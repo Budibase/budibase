@@ -1,10 +1,14 @@
 <script lang="ts">
   import {
     Context,
+    ActionMenu,
     Icon,
     Body,
     Link,
+    MenuItem,
+    MenuSeparator,
     Modal,
+    PopoverAlignment,
     TooltipPosition,
     TooltipType,
     notifications,
@@ -123,6 +127,7 @@
   let workspaceSelect: WorkspaceSelect | undefined
   let createWorkspaceModal: Modal | undefined
   let workspaceMenuOpen = false
+  let createMenuOpen = false
 
   let githubStars: number | null = null
 
@@ -154,9 +159,28 @@
   $: !$pinned && unPin()
 
   // keep sidebar expanded when workspace selector is open
-  $: collapsed = !focused && !$pinned && !workspaceMenuOpen
+  $: collapsed = !focused && !$pinned && !workspaceMenuOpen && !createMenuOpen
   // keep sidebar expanded when selector is open, even if mouse leaves
-  $: navFocused = focused || workspaceMenuOpen
+  $: navFocused = focused || workspaceMenuOpen || createMenuOpen
+
+  const goToCreate = (target: string) => {
+    if (!appId) {
+      return
+    }
+
+    const prefix = `/builder/workspace/${appId}`
+    const normalizedTarget = target.startsWith("/")
+      ? target
+      : `${prefix}/${target.replace(/^\.\//, "")}`
+
+    $goto(normalizedTarget)
+    keepCollapsed()
+  }
+
+  const openInviteUser = () => {
+    builderStore.showBuilderSidePanel()
+    keepCollapsed()
+  }
 
   // Ensure the workspaceSelect closes if the sidebar is hidden
   $: if (collapsed && workspaceSelect) {
@@ -443,6 +467,78 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
+
+              <ActionMenu
+                align={PopoverAlignment.RightContextMenu}
+                portalTarget={".nav .create-popover-container"}
+                animate={false}
+                on:open={() => (createMenuOpen = true)}
+                on:close={() => (createMenuOpen = false)}
+              >
+                <svelte:fragment slot="control" let:open>
+                  <SideNavLink
+                    icon="plus"
+                    text="Create"
+                    {collapsed}
+                    forceActive={open}
+                    on:click={keepCollapsed}
+                  />
+                </svelte:fragment>
+
+                <MenuItem
+                  icon="path"
+                  on:click={() => goToCreate("home?create=automation")}
+                >
+                  Automation
+                </MenuItem>
+                <MenuItem
+                  icon="browsers"
+                  on:click={() => goToCreate("home?create=app")}
+                >
+                  App
+                </MenuItem>
+
+                {#if $featureFlags.AI_AGENTS}
+                  <MenuItem
+                    icon="sparkle"
+                    on:click={() => goToCreate("home?create=agent")}
+                  >
+                    Agent
+                    <div slot="right">
+                      <Tag emphasized>Beta</Tag>
+                    </div>
+                  </MenuItem>
+                  <MenuItem
+                    icon="chat-circle"
+                    on:click={() => goToCreate("chat")}
+                  >
+                    Chat
+                    <div slot="right">
+                      <Tag emphasized>Alpha</Tag>
+                    </div>
+                  </MenuItem>
+                {/if}
+
+                <MenuItem
+                  icon="grid-nine"
+                  on:click={() => goToCreate("data/new?create=table")}
+                >
+                  Table
+                </MenuItem>
+                <MenuItem
+                  icon="webhooks-logo"
+                  on:click={() => goToCreate("apis/new")}
+                >
+                  API request
+                </MenuItem>
+                <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+                  Connection
+                </MenuItem>
+                <MenuSeparator />
+                <MenuItem icon="user-circle-plus" on:click={openInviteUser}>
+                  User
+                </MenuItem>
+              </ActionMenu>
             {:else}
               <SideNavLink
                 icon="browser"
@@ -718,6 +814,7 @@
         <SideNavUserSettings {collapsed} />
       </div>
       <div class="popover-container"></div>
+      <div class="create-popover-container"></div>
     </div>
   </div>
 </div>
@@ -851,6 +948,47 @@
 
   .popover-container {
     position: absolute;
+  }
+
+  .create-popover-container {
+    position: absolute;
+  }
+
+  .create-popover-container :global(.spectrum-Popover) {
+    min-width: 245px;
+    border-radius: 6px !important;
+    background: var(--background) !important;
+    border: 1px solid var(--spectrum-global-color-gray-200) !important;
+    padding: 4px !important;
+    margin-top: 4px;
+    margin-left: 2px;
+  }
+
+  .create-popover-container :global(.spectrum-Menu) {
+    background: transparent;
+    padding: 0;
+  }
+
+  .create-popover-container :global(.spectrum-Menu-item) {
+    border-radius: 4px;
+    margin: 0;
+  }
+
+  .create-popover-container :global(.spectrum-Menu-item:hover) {
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .create-popover-container
+    :global(.spectrum-Menu-item)
+    :global(.spectrum-Menu-itemLabel) {
+    font-size: 13px;
+    line-height: 17px;
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .create-popover-container :global(.spectrum-Menu-divider) {
+    margin: 4px 0;
+    background: var(--spectrum-global-color-gray-200);
   }
 
   .links {

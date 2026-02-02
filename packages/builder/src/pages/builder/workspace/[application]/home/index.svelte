@@ -1,4 +1,7 @@
 <script lang="ts">
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import DuplicateAutomationModal from "@/components/automation/AutomationPanel/DuplicateAutomationModal.svelte"
+  import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import AgentModal from "@/pages/builder/workspace/[application]/agent/AgentModal.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
@@ -9,21 +12,26 @@
   import {
     appStore,
     automationStore,
+    contextMenuStore,
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
   import { bb } from "@/stores/bb"
   import { agentsStore, auth, featureFlags } from "@/stores/portal"
-  import { Body, Modal, type ModalAPI } from "@budibase/bbui"
+  import { buildLiveUrl } from "@/helpers/urls"
+  import { Body, Modal, type ModalAPI, notifications } from "@budibase/bbui"
   import {
     FeatureFlag,
     type GetWorkspaceHomeMetricsResponse,
+    type UIAutomation,
     type UIWorkspaceApp,
+    PublishResourceState,
+    type Agent,
     type WorkspaceFavourite,
     type WorkspaceResource,
   } from "@budibase/types"
-  import { goto, url } from "@roxi/routify"
+  import { beforeUrlChange, goto, url } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
     buildHomeRows,
@@ -37,16 +45,33 @@
     HomeType,
   } from "./_components/types"
 
+  import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
+
+  type HomeCreate = "app" | "automation" | "agent"
+
   $goto
   $url
+  $beforeUrlChange
 
   let workspaceAppModal: WorkspaceAppModal
   let selectedWorkspaceApp: UIWorkspaceApp | undefined
 
+  let confirmDeleteWorkspaceAppDialog: Pick<ModalAPI, "show" | "hide">
+  let isDuplicatingWorkspaceApp = false
+
   let createAutomationModal: ModalAPI
   let webhookModal: ModalAPI
 
+  let selectedAutomation: UIAutomation | undefined
+  let updateAutomationModal: Pick<ModalAPI, "show" | "hide">
+  let duplicateAutomationModal: ModalAPI
+  let confirmDeleteAutomationDialog: Pick<ModalAPI, "show" | "hide">
+
   let agentModal: AgentModal
+
+  let selectedAgent: Agent | undefined
+  let updateAgentModal: Pick<ModalAPI, "show" | "hide">
+  let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
 
   let typeFilter: HomeType = "all"
   let searchTerm = ""
@@ -55,6 +80,8 @@
 
   let sortColumn: HomeSortColumn = "created"
   let sortOrder: HomeSortOrder = "desc"
+
+  let highlightedRowId: string | null = null
 
   let hasMounted = false
 
@@ -91,6 +118,47 @@
     return null
   }
 
+  const normalizeCreate = (value: string | null): HomeCreate | null => {
+    if (!value) {
+      return null
+    }
+    if (value === "app" || value === "automation") {
+      return value
+    }
+    if (value === "agent" && $featureFlags.AI_AGENTS) {
+      return value
+    }
+    return null
+  }
+
+  const consumeCreateParam = (urlString?: string) => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const parsed = new URL(urlString ?? window.location.href)
+    const create = normalizeCreate(parsed.searchParams.get("create"))
+    if (!create) {
+      return
+    }
+
+    if (create === "automation") {
+      createAutomation()
+    } else if (create === "app") {
+      createApp()
+    } else if (create === "agent") {
+      createAgent()
+    }
+
+    parsed.searchParams.delete("create")
+    const query = parsed.searchParams.toString()
+    history.replaceState(
+      {},
+      "",
+      `${parsed.pathname}${query ? `?${query}` : ""}`
+    )
+  }
+
   const normalizeSortColumn = (value: string | null): HomeSortColumn | null => {
     if (!value) {
       return null
@@ -115,14 +183,19 @@
 
   const readUrlState = () => {
     if (typeof window === "undefined") {
-      return { type: null as HomeType | null, q: "" }
+      return {
+        type: null as HomeType | null,
+        q: "",
+        create: null as HomeCreate | null,
+      }
     }
     const params = new URLSearchParams(window.location.search)
     const type = normalizeType(params.get("type"))
     const q = params.get("q") ?? ""
     const sort = normalizeSortColumn(params.get("sort"))
     const order = normalizeSortOrder(params.get("order"))
-    return { type, q, sort, order }
+    const create = normalizeCreate(params.get("create"))
+    return { type, q, sort, order, create }
   }
 
   const writeUrlState = () => {
@@ -131,6 +204,8 @@
     }
 
     const params = new URLSearchParams(window.location.search)
+
+    params.delete("create")
 
     if (typeFilter === "all") {
       params.delete("type")
@@ -164,6 +239,33 @@
     history.replaceState({}, "", next)
   }
 
+  $beforeUrlChange((event: { url?: string } | undefined) => {
+    if (typeof window === "undefined") {
+      return true
+    }
+
+    const nextUrl = typeof event?.url === "string" ? event.url : ""
+    if (!nextUrl) {
+      return true
+    }
+
+    const parsed = new URL(nextUrl, window.location.origin)
+    if (!parsed.pathname.endsWith("/home")) {
+      return true
+    }
+
+    if (!parsed.searchParams.get("create")) {
+      return true
+    }
+
+    // If we are already on this page, Routify won't remount the component.
+    // Defer until the URL has updated, then open the relevant modal.
+    setTimeout(() => {
+      consumeCreateParam(parsed.toString())
+    }, 0)
+    return true
+  })
+
   const setTypeFilter = (value: string) => {
     const normalized = normalizeType(value)
     if (!normalized) {
@@ -192,6 +294,245 @@
 
   const createAgent = () => {
     agentModal?.show()
+  }
+
+  const buildLiveWorkspaceAppUrl = (workspaceApp?: UIWorkspaceApp | null) => {
+    if (
+      !workspaceApp ||
+      workspaceApp.publishStatus?.state !== PublishResourceState.PUBLISHED ||
+      workspaceApp.disabled
+    ) {
+      return null
+    }
+
+    const liveUrl = buildLiveUrl($appStore, workspaceApp.url ?? "", true)
+
+    return liveUrl || null
+  }
+
+  const openLiveWorkspaceApp = (liveUrl: string | null) => {
+    if (!liveUrl || typeof window === "undefined") {
+      return
+    }
+    window.open(liveUrl, "_blank")
+  }
+
+  const duplicateWorkspaceApp = async (workspaceAppId: string) => {
+    isDuplicatingWorkspaceApp = true
+    try {
+      await workspaceAppStore.duplicate(workspaceAppId)
+    } catch (e) {
+      notifications.error("Failed to duplicate app")
+    } finally {
+      isDuplicatingWorkspaceApp = false
+    }
+    await appStore.refresh()
+  }
+
+  const deleteWorkspaceApp = async () => {
+    if (!selectedWorkspaceApp?._id || !selectedWorkspaceApp._rev) {
+      return
+    }
+
+    try {
+      await workspaceAppStore.delete(
+        selectedWorkspaceApp._id,
+        selectedWorkspaceApp._rev
+      )
+      notifications.success(
+        `App '${selectedWorkspaceApp.name}' deleted successfully`
+      )
+    } catch (e: any) {
+      let message = "Error deleting app"
+      if (e.message) {
+        message += ` - ${e.message}`
+      }
+      notifications.error(message)
+    }
+  }
+
+  async function deleteAutomation() {
+    if (!selectedAutomation) {
+      return
+    }
+    try {
+      await automationStore.actions.delete(selectedAutomation)
+      notifications.success("Automation deleted successfully")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error deleting automation")
+    }
+  }
+
+  async function deleteAgent() {
+    const selectedId = selectedAgent?._id
+    if (!selectedId) {
+      return
+    }
+    try {
+      await agentsStore.deleteAgent(selectedId)
+      notifications.success("Agent deleted successfully")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error deleting agent")
+    }
+  }
+
+  const getContextMenuItemsForRow = (row: HomeRow) => {
+    if (row.type === "app") {
+      const workspaceApp = row.resource
+      const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
+
+      const pause = {
+        icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
+        name: workspaceApp.disabled ? "Switch on" : "Switch off",
+        visible: true,
+        callback: async () => {
+          await workspaceAppStore.toggleDisabled(
+            workspaceApp._id!,
+            !workspaceApp.disabled
+          )
+        },
+      }
+
+      return [
+        {
+          icon: "pencil",
+          name: "Edit",
+          visible: true,
+          callback: () => {
+            selectedWorkspaceApp = workspaceApp
+            workspaceAppModal.show()
+          },
+        },
+        {
+          icon: "globe-simple",
+          name: "View live app",
+          visible: !!liveUrl,
+          callback: () => openLiveWorkspaceApp(liveUrl),
+        },
+        pause,
+        {
+          icon: "trash",
+          name: "Delete",
+          visible: true,
+          callback: () => confirmDeleteWorkspaceAppDialog.show(),
+        },
+        {
+          icon: "copy",
+          name: "Duplicate",
+          visible: true,
+          disabled: isDuplicatingWorkspaceApp,
+          callback: () =>
+            !isDuplicatingWorkspaceApp &&
+            duplicateWorkspaceApp(workspaceApp._id as string),
+        },
+      ]
+    }
+
+    if (row.type === "automation") {
+      const automation = row.resource
+      const edit = {
+        icon: "pencil",
+        name: "Edit",
+        visible: true,
+        disabled: !automation.definition.trigger,
+        callback: () => updateAutomationModal.show(),
+      }
+
+      const pause = {
+        icon: automation.disabled ? "play-circle" : "pause-circle",
+        name: automation.disabled ? "Switch on" : "Switch off",
+        keyBind: null,
+        visible: true,
+        disabled: !automation.definition.trigger,
+        callback: async () => {
+          await automationStore.actions.toggleDisabled(automation._id!)
+        },
+      }
+
+      return [
+        edit,
+        {
+          icon: "copy",
+          name: "Duplicate",
+          visible: true,
+          callback: () => duplicateAutomationModal?.show(),
+          tooltip:
+            automation.definition.trigger?.name === "Webhook"
+              ? "Webhooks automations cannot be duplicated"
+              : undefined,
+        },
+        pause,
+        {
+          icon: "trash",
+          name: "Delete",
+          visible: true,
+          disabled: false,
+          callback: () => confirmDeleteAutomationDialog.show(),
+        },
+      ]
+    }
+
+    if (row.type === "agent") {
+      if (!$featureFlags.AI_AGENTS) {
+        return []
+      }
+      return [
+        {
+          icon: "pencil",
+          name: "Edit",
+          visible: true,
+          callback: () => updateAgentModal.show(),
+        },
+        {
+          icon: "trash",
+          name: "Delete",
+          visible: true,
+          disabled: false,
+          callback: () => confirmDeleteAgentDialog.show(),
+        },
+      ]
+    }
+
+    return []
+  }
+
+  const openHomeContextMenu = ({
+    row,
+    x,
+    y,
+  }: {
+    row: HomeRow
+    x: number
+    y: number
+  }) => {
+    selectedWorkspaceApp = undefined
+    selectedAutomation = undefined
+    selectedAgent = undefined
+
+    highlightedRowId = row._id
+
+    if (row.type === "app") {
+      selectedWorkspaceApp = row.resource
+    } else if (row.type === "automation") {
+      selectedAutomation = row.resource
+    } else if (row.type === "agent") {
+      if (!$featureFlags.AI_AGENTS) {
+        highlightedRowId = null
+        return
+      }
+      selectedAgent = row.resource
+    }
+
+    contextMenuStore.open(
+      "workspace-home",
+      getContextMenuItemsForRow(row),
+      { x, y },
+      () => {
+        highlightedRowId = null
+      }
+    )
   }
 
   const openRow = (row: HomeRow) => {
@@ -260,6 +601,7 @@
     }
 
     hasMounted = true
+    consumeCreateParam()
     writeUrlState()
 
     await Promise.all([
@@ -315,7 +657,9 @@
       {searchTerm}
       {sortColumn}
       {sortOrder}
+      {highlightedRowId}
       on:openRow={({ detail }) => openRow(detail)}
+      on:openContextMenu={({ detail }) => openHomeContextMenu(detail)}
       on:clearSearch={() => (searchTerm = "")}
       on:resetFilters={() => (typeFilter = "all")}
       on:sortChange={({ detail }) => setSort(detail)}
@@ -338,6 +682,58 @@
 
 {#if $featureFlags.AI_AGENTS}
   <AgentModal bind:this={agentModal} />
+{/if}
+
+<Modal bind:this={duplicateAutomationModal}>
+  {#if selectedAutomation}
+    <DuplicateAutomationModal
+      automation={selectedAutomation}
+      onDuplicateSuccess={() => duplicateAutomationModal.hide()}
+    />
+  {/if}
+</Modal>
+
+{#if selectedAutomation}
+  <UpdateAutomationModal
+    automation={selectedAutomation}
+    bind:this={updateAutomationModal}
+  />
+
+  <ConfirmDialog
+    bind:this={confirmDeleteAutomationDialog}
+    okText="Delete Automation"
+    onOk={deleteAutomation}
+    title="Confirm Deletion"
+  >
+    Are you sure you wish to delete the automation
+    <b>{selectedAutomation.name}?</b>
+    This action cannot be undone.
+  </ConfirmDialog>
+{/if}
+
+{#if selectedWorkspaceApp}
+  <ConfirmDialog
+    bind:this={confirmDeleteWorkspaceAppDialog}
+    okText="Delete App"
+    onOk={deleteWorkspaceApp}
+    title="Confirm Deletion"
+  >
+    Deleting <b>{selectedWorkspaceApp.name}</b> cannot be undone. Are you sure?
+  </ConfirmDialog>
+{/if}
+
+{#if $featureFlags.AI_AGENTS && selectedAgent}
+  <UpdateAgentModal agent={selectedAgent} bind:this={updateAgentModal} />
+  <ConfirmDialog
+    bind:this={confirmDeleteAgentDialog}
+    okText="Delete Agent"
+    onOk={deleteAgent}
+    title="Confirm Deletion"
+  >
+    Are you sure you wish to delete the agent
+    <b>{selectedAgent.name}?</b>
+    This action cannot be undone.
+  </ConfirmDialog>
 {/if}
 
 <style>
