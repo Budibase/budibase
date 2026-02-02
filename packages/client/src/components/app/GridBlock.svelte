@@ -215,7 +215,7 @@
         type: settings.type,
         icon: settings.icon,
         getRowConditions: row =>
-          enrichConditions(settings.conditions, { [id]: row }),
+          enrichConditions(settings.conditions, { ...$context, [id]: row }),
         conditions: settings.conditions,
         onClick: async row => {
           // Create a fake, ephemeral context to run the buttons actions/conditions with
