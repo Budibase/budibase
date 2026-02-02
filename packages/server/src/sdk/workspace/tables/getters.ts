@@ -179,6 +179,10 @@ async function getAllExternalTables(): Promise<Table[]> {
         final = final.concat(Object.values(entities))
       }
     }
+    
+    // filter out sample data here. i.e the sample ta_bb_employees gets included otherweise
+    final = final.filter(table => table._id && isExternalTableID(table._id))
+    
     span.addTags({ numTables: final.length })
     return await processTables(final)
   })

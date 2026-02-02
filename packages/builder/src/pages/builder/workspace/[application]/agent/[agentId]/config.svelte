@@ -17,10 +17,14 @@
     automationStore,
     queries,
   } from "@/stores/builder"
-  import { onDestroy, onMount, untrack } from "svelte"
+  import {
+    onDestroy,
+    onMount,
+    untrack,
+  } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
-  import type { IconInfo } from "@/helpers/integrationIcons"
+  import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
@@ -38,6 +42,7 @@
     REST_TAG_ICON_URL,
     WEB_SEARCH_TAG_ICON_URL,
   } from "../logos/tagIconUrls"
+  import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
 
@@ -120,11 +125,13 @@ Any constraints the agent must follow.
         sourceLabel,
       })
 
+      const displayName = tool.readableName || tool.name
+
       return {
         ...tool,
         sourceLabel,
         sourceType,
-        readableBinding: `${prefix}.${tool.name}`,
+        readableBinding: `${prefix}.${displayName}`,
         runtimeBinding: tool.name,
         icon,
         tagIconUrl,
@@ -189,7 +196,7 @@ Any constraints the agent must follow.
       .map(tool => ({
         runtimeBinding: tool.runtimeBinding,
         readableBinding: tool.readableBinding,
-        category: getSectionName(tool.sourceType),
+        category: getSectionName(tool.sourceType, tool.sourceLabel),
         display: {
           name:
             tool.sourceType === ToolType.SEARCH
@@ -231,7 +238,7 @@ Any constraints the agent must follow.
   })
   let toolSections = $derived(
     filteredTools.reduce<Record<string, AgentTool[]>>((acc, tool) => {
-      const key = getSectionName(tool.sourceType)
+      const key = getSectionName(tool.sourceType, tool.sourceLabel)
       acc[key] = acc[key] || []
       acc[key].push(tool)
       return acc
@@ -297,7 +304,31 @@ Any constraints the agent must follow.
       sourceLabel,
     }: { sourceType: ToolType | undefined; sourceLabel: string | undefined }
   ): { icon?: IconInfo; tagIconUrl?: string } {
-    if (sourceType === ToolType.BUDIBASE) {
+    if (
+      sourceType === ToolType.INTERNAL ||
+      sourceType === ToolType.EXTERNAL ||
+      sourceType === ToolType.AUTOMATION
+    ) {
+      if (sourceType === ToolType.EXTERNAL && tool.sourceIconType) {
+        const integrationIcon = getIntegrationIcon(tool.sourceIconType)
+        if (integrationIcon) {
+          if (integrationIcon.url) {
+            return {
+              icon: integrationIcon,
+              tagIconUrl: integrationIcon.url,
+            }
+          }
+          if (integrationIcon.icon) {
+            const iconKey = tool.sourceIconType?.toUpperCase()
+            const tagIconUrl = iconKey
+              ? DATASOURCE_TAG_ICON_URLS[iconKey] ||
+                DATASOURCE_TAG_ICON_URLS.CUSTOM ||
+                BudibaseLogoSvg
+              : BudibaseLogoSvg
+            return { icon: integrationIcon, tagIconUrl }
+          }
+        }
+      }
       return {
         icon: { icon: BudibaseLogo },
         tagIconUrl: BudibaseLogoSvg,
@@ -352,12 +383,21 @@ Any constraints the agent must follow.
       .replace(/[^a-z0-9]+/g, "_")
       .replace(/^_|_$/g, "")
   }
+  function normaliseBindingPrefix(str: string) {
+    return str.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
+  }
   function getBindingPrefix(
     sourceType: ToolType | undefined,
     sourceLabel: string | undefined
   ): string {
-    if (sourceType === ToolType.BUDIBASE) {
+    if (
+      sourceType === ToolType.INTERNAL ||
+      sourceType === ToolType.AUTOMATION
+    ) {
       return "budibase"
+    }
+    if (sourceType === ToolType.EXTERNAL) {
+      return sourceLabel ? normaliseBindingPrefix(sourceLabel) : "external"
     }
     if (sourceType === ToolType.SEARCH) {
       return "search"
@@ -368,9 +408,18 @@ Any constraints the agent must follow.
     return "tool"
   }
 
-  function getSectionName(sourceType: ToolType | undefined): string {
-    if (sourceType === ToolType.BUDIBASE) {
+  function getSectionName(
+    sourceType: ToolType | undefined,
+    sourceLabel?: string
+  ): string {
+    if (sourceType === ToolType.INTERNAL) {
       return "Budibase"
+    }
+    if (sourceType === ToolType.AUTOMATION) {
+      return "Automations"
+    }
+    if (sourceType === ToolType.EXTERNAL) {
+      return sourceLabel || "External"
     }
     if (sourceType === ToolType.SEARCH) {
       return "Knowledge sources"
@@ -403,7 +452,7 @@ Any constraints the agent must follow.
   }
 
   const getToolResourcePath = (tool: AgentTool): string | null => {
-    if (tool.sourceType === ToolType.BUDIBASE) {
+    if (tool.sourceType === ToolType.AUTOMATION) {
       const automation = findResourceByName($automationStore.automations, tool)
       if (automation?._id) {
         return `../../automation/${automation._id}`
@@ -434,10 +483,15 @@ Any constraints the agent must follow.
 
   // list_tables -> List tables
   const formatToolLabel = (tool: AgentTool) =>
-    tool.name
-      .split("_")
-      .join(" ")
-      .replace(/\b\w/g, l => l.toUpperCase())
+    (tool.readableName || tool.name)
+      .split(".")
+      .map(part =>
+        part
+          .split("_")
+          .join(" ")
+          .replace(/\b\w/g, l => l.toUpperCase())
+      )
+      .join(".")
 
   const insertToolBinding = (readableBinding: string) => {
     const currentValue = draft.promptInstructions || ""

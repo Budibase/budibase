@@ -13,7 +13,7 @@
   export let onConfigureWebSearch: () => void
 
   let toolsMenu: ActionMenu | undefined
-
+  $: console.log(filteredTools)
   const openWebSearchConfig = () => {
     toolsMenu?.hide()
     onConfigureWebSearch()
@@ -93,7 +93,7 @@
                       Web search
                     {:else}
                       {#if tool.sourceLabel}{tool.sourceLabel}:
-                      {/if}{tool.name}
+                      {/if}{tool.readableName || tool.name}
                     {/if}
                   </span>
                   {#if tool.sourceType === ToolType.SEARCH}

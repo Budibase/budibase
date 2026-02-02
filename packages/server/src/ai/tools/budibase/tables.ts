@@ -7,7 +7,7 @@ import type { BudibaseToolDefinition } from "."
 const TABLE_TOOLS: BudibaseToolDefinition[] = [
   {
     name: "list_tables",
-    sourceType: ToolType.BUDIBASE,
+    sourceType: ToolType.INTERNAL,
     sourceLabel: "Budibase",
     description: "List all tables in the current app",
     tool: tool({
@@ -39,7 +39,7 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
 
   {
     name: "get_table",
-    sourceType: ToolType.BUDIBASE,
+    sourceType: ToolType.INTERNAL,
     sourceLabel: "Budibase",
     description: "Get details about a specific table by ID",
     tool: tool({

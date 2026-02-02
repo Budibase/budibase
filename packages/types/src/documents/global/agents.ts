@@ -2,16 +2,20 @@ import { Document } from "../../"
 import type { UIMessage } from "ai"
 
 export enum ToolType {
-  BUDIBASE = "BUDIBASE",
+  INTERNAL = "INTERNAL",
+  EXTERNAL = "EXTERNAL",
+  AUTOMATION = "AUTOMATION",
   REST_QUERY = "REST_QUERY",
   SEARCH = "SEARCH",
 }
 
 export interface ToolMetadata {
   name: string
+  readableName?: string
   description?: string
   sourceType: ToolType
   sourceLabel?: string
+  sourceIconType?: string
 }
 
 export interface Agent extends Document {
