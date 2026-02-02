@@ -58,31 +58,27 @@ describe("/workspace/home/metrics", () => {
   })
 
   it("returns automation runs from quotas for the current quota month", async () => {
-    tk.freeze(new Date(2026, 0, 20, 12, 0, 0, 0))
+    await tk.withFreeze(new Date(2026, 0, 20, 12, 0, 0, 0), async () => {
+      await config.withProdApp(async () => {
+        await quotas.addAutomation(async () => undefined, {
+          automationId: "au_test",
+        })
+        await quotas.addAutomation(async () => undefined, {
+          automationId: "au_test",
+        })
+      })
 
-    await config.withProdApp(async () => {
-      await quotas.addAutomation(async () => undefined, {
-        automationId: "au_test",
-      })
-      await quotas.addAutomation(async () => undefined, {
-        automationId: "au_test",
-      })
+      const res = await request
+        .get("/api/workspace/home/metrics")
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      expect(res.body.automationRunsThisMonth).toEqual(2)
+      expect(res.body.agentActionsThisMonth).toEqual(0)
+
+      expect(new Date(res.body.periodStart)).toEqual(new Date(2026, 0, 1))
+      expect(new Date(res.body.periodEnd)).toEqual(new Date(2026, 1, 1))
     })
-
-    const res = await request
-      .get("/api/workspace/home/metrics")
-      .set(config.defaultHeaders())
-      .expect(200)
-
-    expect(res.body.automationRunsThisMonth).toEqual(2)
-    expect(res.body.agentActionsThisMonth).toEqual(0)
-
-    expect(res.body.periodStart).toEqual(
-      new Date(2026, 0, 1, 0, 0, 0, 0).toISOString()
-    )
-    expect(res.body.periodEnd).toEqual(
-      new Date(2026, 1, 1, 0, 0, 0, 0).toISOString()
-    )
   })
 
   it("returns 400 if workspace context is missing", async () => {
