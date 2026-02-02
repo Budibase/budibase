@@ -1,8 +1,10 @@
 import {
+  AgentFile,
   AgentFileStatus,
   AIConfigType,
   VectorDbProvider,
 } from "@budibase/types"
+import { context } from "@budibase/backend-core"
 import nock from "nock"
 import environment from "../../../../environment"
 import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
@@ -11,7 +13,6 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
   return {
     ingestAgentFile: jest.fn(),
-    deleteAgentFileChunks: jest.fn(),
   }
 })
 
@@ -122,15 +123,34 @@ describe("agent files", () => {
     expect(files[0]._id).toBe(upload.file._id)
   })
 
-  it("deletes agent files and clears chunks", async () => {
+  it("keeps rag version stable across multiple uploads", async () => {
     const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
       typeof ragSdk.ingestAgentFile
     >
     ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
-    const deleteSpy = ragSdk.deleteAgentFileChunks as jest.MockedFunction<
-      typeof ragSdk.deleteAgentFileChunks
+
+    const { agent } = await createAgentWithRag()
+
+    await config.api.agentFiles.upload(agent._id!, {
+      file: fileBuffer,
+      name: "docs.txt",
+    })
+
+    await config.api.agentFiles.upload(agent._id!, {
+      file: fileBuffer,
+      name: "docs-2.txt",
+    })
+
+    const { agents } = await config.api.agent.fetch()
+    const updated = agents.find(row => row._id === agent._id)
+    expect(updated?.ragVersion).toBe(1)
+  })
+
+  it("soft deletes agent files until publish", async () => {
+    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+      typeof ragSdk.ingestAgentFile
     >
-    deleteSpy.mockResolvedValue()
+    ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
 
     const { agent } = await createAgentWithRag()
 
@@ -147,6 +167,15 @@ describe("agent files", () => {
 
     const { files } = await config.api.agentFiles.fetch(agent._id!)
     expect(files).toHaveLength(0)
-    expect(deleteSpy).toHaveBeenCalledWith(agent, [upload.file.ragSourceId])
+
+    const stored = await context.doInWorkspaceContext(
+      config.getDevWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        return await db.tryGet<AgentFile>(upload.file._id!)
+      }
+    )
+    expect(stored?.status).toBe(AgentFileStatus.DELETED)
+    expect(stored?.deletedRagVersion).toBe(1)
   })
 })
