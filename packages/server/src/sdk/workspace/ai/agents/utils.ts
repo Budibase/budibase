@@ -79,8 +79,10 @@ export async function buildPromptAndTools(
   tools: ToolSet
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
+
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
+  const enabledTools = allTools.filter(tool => enabledToolNames.has(tool.name))
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
@@ -89,15 +91,9 @@ export async function buildPromptAndTools(
     includeGoal,
   })
 
-  // This is key. We only include tools that are actually enabled on the agent.
-  const tools =
-    enabledToolNames.size > 0
-      ? allTools.filter(tool => enabledToolNames.has(tool.name))
-      : allTools
-
   return {
     systemPrompt,
-    tools: toToolSet(tools),
+    tools: toToolSet(enabledTools),
   }
 }
 

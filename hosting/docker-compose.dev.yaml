@@ -63,7 +63,7 @@ services:
 
   litellm-service:
     container_name: budi-litellm-dev
-    image: docker.litellm.ai/berriai/litellm:main-stable
+    image: docker.litellm.ai/berriai/litellm:1.80.15-stable.1
     ports:
       - "${LITELLM_PORT:-4000}:4000"
     volumes:
@@ -71,6 +71,7 @@ services:
     environment:
       DATABASE_URL: "postgresql://llmproxy:dbpassword9090@litellm-db:5432/litellm"
       STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
+      LITELLM_REASONING_AUTO_SUMMARY: "true" # enables reasoning summaries for Responses API models
     command: ["--config", "/app/config.yaml"]
     env_file:
       - .env

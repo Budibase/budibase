@@ -44,7 +44,6 @@ import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { WorkspaceConnectionEndpoints } from "./workspaceConnections"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
-import { RagConfigEndpoints } from "./ragConfigs"
 import { VectorDbEndpoints } from "./vectorDbs"
 
 export enum HTTPMethod {
@@ -161,6 +160,5 @@ export type APIClient = BaseAPIClient &
     deployment: DeploymentEndpoints
     recaptcha: RecaptchaEndpoints
     aiConfig: AIConfigEndpoints
-    ragConfig: RagConfigEndpoints
     vectorDb: VectorDbEndpoints
   }

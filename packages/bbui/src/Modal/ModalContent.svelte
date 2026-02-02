@@ -30,6 +30,7 @@
     undefined
   export let secondaryButtonWarning: boolean = false
   export let custom: boolean = false
+  export let disableCancelOnConfirm: boolean = false
 
   const { hide, cancel } = getContext(Context.Modal)
 
@@ -120,7 +121,11 @@
         {/if}
 
         {#if showCancelButton}
-          <Button secondary on:click={close}>
+          <Button
+            secondary
+            on:click={close}
+            disabled={loading && disableCancelOnConfirm}
+          >
             {cancelText}
           </Button>
         {/if}

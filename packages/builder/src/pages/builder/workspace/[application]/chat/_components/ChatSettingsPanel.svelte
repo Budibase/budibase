@@ -1,7 +1,7 @@
 <script lang="ts">
   import Panel from "@/components/design/Panel.svelte"
   import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
-  import type { Agent } from "@budibase/types"
+  import type { Agent, ConversationStarter } from "@budibase/types"
   import AgentList from "./AgentList.svelte"
   import AgentSettingsModal from "./AgentSettingsModal.svelte"
   import type { AgentListItem } from "./types"
@@ -10,6 +10,7 @@
     agentId: string
     isEnabled: boolean
     isDefault: boolean
+    conversationStarters?: ConversationStarter[]
   }
 
   export let namedAgents: Agent[] = []
@@ -21,12 +22,20 @@
   ) => void
   export let handleDefaultToggle: (_agentId: string) => void
   export let handleAddAgent: (_agentId: string) => void
+  export let handleUpdateConversationStarters: (
+    _agentId: string,
+    _starters: ConversationStarter[]
+  ) => void
 
   let selectedAgentId: string | undefined
   let selectedAgent: AgentListItem | undefined
+  let selectedAgentConfig: ChatAgentConfig | undefined
   let isModalOpen = false
 
   $: selectedAgent = agentList.find(agent => agent.agentId === selectedAgentId)
+  $: selectedAgentConfig = agents.find(
+    agent => agent.agentId === selectedAgentId
+  )
 
   $: agentList = agents.map(agentConfig => {
     const details = namedAgents.find(agent => agent._id === agentConfig.agentId)
@@ -112,9 +121,11 @@
 <AgentSettingsModal
   open={isModalOpen}
   {selectedAgent}
+  {selectedAgentConfig}
   defaultAgentId={resolvedDefaultAgent?.agentId}
   {isAgentAvailable}
   onSetDefault={handleDefaultToggle}
+  onUpdateConversationStarters={handleUpdateConversationStarters}
   onClose={() => {
     isModalOpen = false
     selectedAgentId = undefined

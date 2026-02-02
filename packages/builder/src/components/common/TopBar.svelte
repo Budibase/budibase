@@ -34,11 +34,6 @@
 </script>
 
 <div class="top-bar">
-  {#if icon}
-    <div class="icon-container">
-      <Icon name={icon} size="M" weight="regular" />
-    </div>
-  {/if}
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}
       {#if breadcrumb.text}
@@ -94,21 +89,22 @@
     align-items: center;
     gap: 6px;
   }
-  .breadcrumbs a,
+  .breadcrumbs a {
+    font-size: 14px;
+    font-weight: 500 !important;
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .breadcrumbs a:first-child {
+    color: var(--spectrum-global-color-gray-600);
+  }
   .breadcrumbs .divider {
     font-size: 14px;
-    font-weight: 500;
-    color: var(--spectrum-global-color-gray-900);
+    font-weight: 500 !important;
+    color: var(--spectrum-global-color-gray-600);
   }
   .popover-content {
     display: flex;
     gap: var(--spacing-s);
     padding: var(--spacing-m);
-  }
-  .icon-container {
-    padding: 3px;
-    border-radius: 6px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    background-color: var(--spectrum-global-color-gray-200);
   }
 </style>

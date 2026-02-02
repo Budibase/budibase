@@ -2,7 +2,8 @@ import type { Component } from "svelte"
 
 // General
 import ProfilePage from "@/settings/pages/profile.svelte"
-import UsersPage from "@/settings/pages/people/users/index.svelte"
+import OrganisationUsersPage from "@/settings/pages/people/users/organisation.svelte"
+import WorkspaceUsersPage from "@/settings/pages/people/users/workspace.svelte"
 import UserPage from "@/settings/pages/people/users/user.svelte"
 import UserInvitesPage from "@/settings/pages/people/users/invites.svelte"
 import GroupPage from "@/settings/pages/people/groups/group.svelte"
@@ -41,7 +42,8 @@ import Recaptcha from "@/settings/pages/recaptcha.svelte"
 
 const componentMap = {
   profile: ProfilePage,
-  users: UsersPage,
+  users: OrganisationUsersPage,
+  workspace_users: WorkspaceUsersPage,
   user: UserPage,
   user_invites: UserInvitesPage,
   group: GroupPage,

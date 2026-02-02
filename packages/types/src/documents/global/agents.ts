@@ -25,7 +25,10 @@ export interface Agent extends Document {
   iconColor?: string
   createdBy?: string
   enabledTools?: string[]
-  ragConfigId?: string
+  embeddingModel?: string
+  vectorDb?: string
+  ragMinDistance?: number
+  ragTopK?: number
 }
 
 export interface AgentMessageRagSource {
@@ -37,6 +40,8 @@ export interface AgentMessageRagSource {
 
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
+  createdAt?: number
+  completedAt?: number
 }
 
 export interface AgentChat extends Document {

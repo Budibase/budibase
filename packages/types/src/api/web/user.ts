@@ -107,6 +107,7 @@ export interface SearchUsersRequest {
   bookmark?: string
   query?: SearchFilters
   appId?: string
+  workspaceId?: string
   limit?: number
   paginate?: boolean
 }

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     initialise,
     reset,
@@ -14,12 +14,12 @@
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
 
-  export let application
+  export let application: string
 
   let promise = getPackage(application)
-  let sideNav = null
+  let sideNav: SideNav
 
-  async function getPackage(appId) {
+  async function getPackage(appId: string) {
     try {
       if ($admin.maintenance.length) {
         return
@@ -35,7 +35,7 @@
         await initialise(pkg)
       }
       await deploymentStore.load()
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error initialising app: ${error?.message}`)
       sideNav.show()
 
