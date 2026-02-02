@@ -7,7 +7,6 @@ import {
   RequiredKeys,
   ToDocCreateMetadata,
 } from "@budibase/types"
-import { deleteAgentFileChunks } from "../rag/files"
 
 interface CreateAgentFileOptions {
   agentId: string
@@ -78,6 +77,7 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
     .map(row => row.doc)
     .filter(file => !!file)
     .filter(file => !file._deleted)
+    .filter(file => file.status !== AgentFileStatus.DELETED)
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
@@ -86,7 +86,10 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
 }
 
 export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
-  await deleteAgentFileChunks(agent, [file.ragSourceId])
   const db = context.getWorkspaceDB()
-  await db.remove(file)
+  const updated: AgentFile = {
+    ...file,
+    status: AgentFileStatus.DELETED,
+  }
+  await db.put(updated)
 }

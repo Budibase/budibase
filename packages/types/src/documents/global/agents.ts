@@ -55,6 +55,7 @@ export enum AgentFileStatus {
   PROCESSING = "processing",
   READY = "ready",
   FAILED = "failed",
+  DELETED = "deleted",
 }
 
 export interface AgentFile extends Document {
