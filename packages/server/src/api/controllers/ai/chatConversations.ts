@@ -38,6 +38,7 @@ import {
   formatIncompleteToolCallError,
   updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents/utils"
+import { sdk as usersSdk } from "@budibase/shared-core"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -175,14 +176,15 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   }
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
-  const isPreview = chat.isPreview === true
+  const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(ctx.user)
+  const canUsePreview = chat.isPreview === true && isBuilderOrAdmin
 
-  if (!isPreview && !chatAppId) {
+  if (!canUsePreview && !chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
   }
 
   let chatApp: ChatApp | undefined
-  if (!isPreview) {
+  if (!canUsePreview) {
     chatApp = await db.tryGet<ChatApp>(chatAppId)
     if (!chatApp) {
       throw new HTTPError("Chat app not found", 404)
@@ -195,7 +197,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     if (!existingChat) {
       throw new HTTPError("chat not found", 404)
     }
-    if (!isPreview && existingChat.chatAppId !== chatAppId) {
+    if (!canUsePreview && existingChat.chatAppId !== chatAppId) {
       throw new HTTPError("chat does not belong to this chat app", 400)
     }
     if (existingChat.userId && existingChat.userId !== userId) {
@@ -213,7 +215,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   }
 
   if (
-    !isPreview &&
+    !canUsePreview &&
     !chatApp?.agents?.some(
       agent => agent.agentId === agentId && agent.isEnabled
     )

@@ -297,12 +297,8 @@ describe("incomplete tool call detection", () => {
     it("handles mixed tool calls and results", () => {
       const pending = new Set<string>(["call-1"])
       const stepResult = {
-        toolCalls: [
-          { toolCallId: "call-2", toolName: "tool_b", args: {} },
-        ],
-        toolResults: [
-          { toolCallId: "call-1", toolName: "tool_a", result: {} },
-        ],
+        toolCalls: [{ toolCallId: "call-2", toolName: "tool_b", args: {} }],
+        toolResults: [{ toolCallId: "call-1", toolName: "tool_a", result: {} }],
       } as StepResult<ToolSet>
 
       updatePendingToolCalls(pending, stepResult)
