@@ -637,7 +637,11 @@
       </div>
     </div>
 
-    <HomeMetrics {metrics} {metricsError} />
+    <HomeMetrics
+      {metrics}
+      {metricsError}
+      agentsEnabled={$featureFlags.AI_AGENTS}
+    />
 
     <HomeControls
       {typeFilter}
