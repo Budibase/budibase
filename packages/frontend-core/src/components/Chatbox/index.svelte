@@ -495,7 +495,7 @@
                   <div class="tool-name-wrapper">
                     <span class="tool-name">{getToolName(part)}</span>
                   </div>
-                  {#if isRunning || isError}
+                  {#if isRunning || isError || isSuccess}
                     <span class="tool-status">
                       {#if isRunning}
                         <ProgressCircle size="S" />
@@ -504,6 +504,12 @@
                           name="x"
                           size="S"
                           color="var(--spectrum-global-color-red-600)"
+                        />
+                      {:else if isSuccess}
+                        <Icon
+                          name="check"
+                          size="S"
+                          color="var(--spectrum-global-color-green-600)"
                         />
                       {/if}
                     </span>
