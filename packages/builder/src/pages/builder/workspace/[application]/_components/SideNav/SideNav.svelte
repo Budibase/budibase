@@ -163,6 +163,11 @@
   // keep sidebar expanded when selector is open, even if mouse leaves
   $: navFocused = focused || workspaceMenuOpen || createMenuOpen
 
+  // if sidebar pinned open, initialise without requiring a mouse hover.
+  $: if (!collapsed && !resourceLookup) {
+    initFavourites()
+  }
+
   const goToCreate = (target: string) => {
     if (!appId) {
       return
