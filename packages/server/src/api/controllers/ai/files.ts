@@ -54,8 +54,12 @@ async function ensureIncreaseRagVersion(
       const prodAgent = await sdk.ai.agents.getOrThrow(agentId)
       prodVersion = prodAgent.ragVersion ?? 0
     })
-  } catch (error) {
-    // ignore if prod workspace/agent does not exist yet
+  } catch (error: any) {
+    if (error?.status === 404) {
+      // ignore if prod workspace/agent does not exist yet
+    } else {
+      throw error
+    }
   }
 
   const ragVersion = prodVersion + 1
