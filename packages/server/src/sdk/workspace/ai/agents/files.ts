@@ -87,22 +87,6 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
     })
 }
 
-export const listDeletedAgentFiles = async (
-  agentId: string
-): Promise<AgentFile[]> => {
-  const db = context.getWorkspaceDB()
-  const response = await db.allDocs<AgentFile>(
-    docIds.getDocParams(DocumentType.AGENT_FILE, agentId, {
-      include_docs: true,
-    })
-  )
-  return response.rows
-    .map(row => row.doc)
-    .filter(file => !!file)
-    .filter(file => !file._deleted)
-    .filter(file => file.status === AgentFileStatus.DELETED)
-}
-
 export const removeAgentFile = async (
   agent: WithRequired<Agent, "ragVersion">,
   file: AgentFile
