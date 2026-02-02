@@ -10,7 +10,7 @@
     type InviteWithCode,
   } from "@budibase/types"
   import { onMount } from "svelte"
-  import { routeActions } from "../.."
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
@@ -118,14 +118,14 @@
 
 <Layout noPadding>
   {#if selectedInvites.length > 0}
-    <div use:routeActions class="delete-btn">
+    <RouteActions>
       <DeleteRowsButton
         item="user"
         on:updaterows
         selectedRows={[...selectedInvites]}
         deleteRows={deleteUsers}
       />
-    </div>
+    </RouteActions>
   {/if}
   <Table
     bind:selectedRows={selectedInvites}

@@ -43,10 +43,12 @@
   export let compact: boolean = false
   export let customPlaceholder: boolean = false
   export let showHeaderBorder: boolean = true
+  export let showHeader: boolean = true
   export let placeholderText: string = "No rows found"
   export let snippets: any[] = []
   export let defaultSortColumn: string | undefined = undefined
   export let defaultSortOrder: "Ascending" | "Descending" = "Ascending"
+  export let rounded: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -378,9 +380,11 @@
       <div
         class="spectrum-Table"
         class:no-scroll={!rowCount}
+        class:rounded
         style={`${heightStyle}${gridStyle}`}
+        class:show-header={showHeader}
       >
-        {#if fields.length}
+        {#if fields.length && showHeader}
           <div class="spectrum-Table-head">
             {#if showEditColumn}
               <div
@@ -699,12 +703,19 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    /* border-top: none; */
     border: var(--table-border);
-    border-top: none;
     grid-column: 1 / -1;
     background-color: var(--table-bg);
     padding: 40px;
   }
+  .spectrum-Table.show-header .placeholder {
+    border-top: none;
+  }
+  .spectrum-Table:not(.show-header) {
+    border-top: var(--table-border);
+  }
+
   .placeholder--no-fields {
     border-top: var(--table-border);
   }
@@ -732,5 +743,24 @@
       var(--spectrum-alias-font-size-default)
     );
     text-align: center;
+  }
+
+  /* Rounded corners */
+  .spectrum-Table.rounded {
+    border-radius: 6px;
+  }
+  .rounded.show-header .spectrum-Table-head > :first-child,
+  .rounded:not(.show-header) .spectrum-Table-row:first-child > :first-child {
+    border-top-left-radius: 6px;
+  }
+  .rounded.show-header .spectrum-Table-head > :last-child,
+  .rounded:not(.show-header) .spectrum-Table-row:first-child > :last-child {
+    border-top-right-radius: 6px;
+  }
+  .rounded .spectrum-Table-row:last-child > :first-child {
+    border-bottom-left-radius: 6px;
+  }
+  .rounded .spectrum-Table-row:last-child > :last-child {
+    border-bottom-right-radius: 6px;
   }
 </style>

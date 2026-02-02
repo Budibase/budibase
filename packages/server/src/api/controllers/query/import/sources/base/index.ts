@@ -5,6 +5,7 @@ import {
   QueryParameter,
   QueryVerb,
   RestTemplateQueryMetadata,
+  SecurityScheme,
 } from "@budibase/types"
 import { URL } from "url"
 import {
@@ -19,6 +20,7 @@ export interface ImportInfo {
   endpoints: ImportEndpoint[]
   securityHeaders?: string[]
   staticVariables?: Record<string, string>
+  securitySchemes?: Record<string, SecurityScheme>
 }
 
 enum MethodToVerb {

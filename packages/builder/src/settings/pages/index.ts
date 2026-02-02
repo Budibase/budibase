@@ -26,6 +26,7 @@ import UpgradePage from "@/settings/pages/upgrade.svelte"
 import UsagePage from "@/settings/pages/usage.svelte"
 import Connections from "@/settings/pages/connections/Connections.svelte"
 import Connection from "@/settings/pages/connections/Connection.svelte"
+import CreateConnection from "./connections/CreateConnection.svelte"
 
 // App pages
 import GeneralInfoPage from "@/settings/pages/general.svelte"
@@ -37,9 +38,6 @@ import EmbedPage from "@/settings/pages/embed.svelte"
 import ScriptsPage from "@/settings/pages/scripts.svelte"
 import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
 import Recaptcha from "@/settings/pages/recaptcha.svelte"
-import CreateConnection from "./connections/CreateConnection.svelte"
-import OAuth2Editor from "./connections/OAuth2Editor.svelte"
-import HTTPAuthEditor from "./connections/HTTPAuthEditor.svelte"
 
 const componentMap = {
   profile: ProfilePage,
@@ -77,8 +75,6 @@ const componentMap = {
   connections: Connections,
   connection: Connection,
   create_connection: CreateConnection,
-  create_oauth2: OAuth2Editor,
-  create_http: HTTPAuthEditor,
 } satisfies Record<string, Component<any>>
 
 export const Pages = {

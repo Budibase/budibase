@@ -507,7 +507,11 @@
       const datasourceType = datasource?.source
       const integrationInfo = $integrations[datasourceType]
 
-      const { _id } = await queries.save(builtQuery.datasourceId, builtQuery)
+      const { _id } = await queries.save(
+        builtQuery.datasourceId,
+        builtQuery,
+        datasourceType
+      )
 
       const existingVariables = datasource?.config?.dynamicVariables || []
       const updatedVariables = rebuildVariables(

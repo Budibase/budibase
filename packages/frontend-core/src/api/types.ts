@@ -41,6 +41,7 @@ import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
 import { DeploymentEndpoints } from "./deploy"
 import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
+import { WorkspaceConnectionEndpoints } from "./workspaceConnections"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
 import { RagConfigEndpoints } from "./ragConfigs"
@@ -156,6 +157,7 @@ export type APIClient = BaseAPIClient &
     navigation: NavigationEndpoints
     workspaceApp: WorkspaceAppEndpoints
     workspace: WorkspaceFavouriteEndpoints
+    workspaceConnections: WorkspaceConnectionEndpoints
     deployment: DeploymentEndpoints
     recaptcha: RecaptchaEndpoints
     aiConfig: AIConfigEndpoints

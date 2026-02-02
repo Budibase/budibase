@@ -111,7 +111,7 @@
   }
 
   const navItemClick = (route: Route) => {
-    const { routes } = route
+    const { routes, comp } = route
     let path
 
     // Handle urls
@@ -125,7 +125,10 @@
       return
     }
 
-    if (routes?.length) {
+    if (comp) {
+      // If there's a component at the section level, render it
+      path = route.path
+    } else if (routes?.length) {
       // Default to first route
       const landing = routes?.[0]
       // NOTE - route.path can be optional
@@ -263,7 +266,7 @@
     border: 0.5px solid #5645a1;
   }
 
-  .root-nav .status-indicator :global(.spectrum-StatusLight::before) {
+  .groups.full .root-nav .status-indicator :global(.spectrum-StatusLight::before) {
     border: unset;
   }
 

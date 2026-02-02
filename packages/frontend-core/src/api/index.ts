@@ -58,6 +58,7 @@ import { buildRecaptchaEndpoints } from "./recaptcha"
 import { buildAIConfigEndpoints } from "./aiConfig"
 import { buildRagConfigEndpoints } from "./ragConfigs"
 import { buildVectorDbEndpoints } from "./vectorDbs"
+import { buildWorkspaceConnectionEndpoints } from "./workspaceConnections"
 
 export type { APIClient } from "./types"
 
@@ -325,6 +326,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     navigation: buildNavigationEndpoints(API),
     workspaceApp: buildWorkspaceAppEndpoints(API),
     workspace: buildWorkspaceFavouriteEndpoints(API),
+    workspaceConnections: buildWorkspaceConnectionEndpoints(API),
     resource: buildResourceEndpoints(API),
     recaptcha: buildRecaptchaEndpoints(API),
     aiConfig: buildAIConfigEndpoints(API),

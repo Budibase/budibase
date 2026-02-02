@@ -149,3 +149,51 @@ export interface RestTemplateQueryMetadata {
   originalRequestBody?: unknown
   defaultBindings?: Record<string, string>
 }
+
+// OpenAPI Security Scheme types
+export type SecuritySchemeType = "apiKey" | "http" | "oauth2"
+export type SecuritySchemeLocation = "query" | "header" | "cookie"
+
+export interface ApiKeySecurityScheme {
+  type: "apiKey"
+  name: string
+  in: SecuritySchemeLocation
+  description?: string
+}
+
+export interface HttpSecurityScheme {
+  type: "http"
+  scheme: string
+  bearerFormat?: string
+  description?: string
+}
+
+export interface OAuth2SecurityScheme {
+  type: "oauth2"
+  flows: {
+    implicit?: {
+      authorizationUrl: string
+      scopes: Record<string, string>
+    }
+    password?: {
+      tokenUrl: string
+      scopes: Record<string, string>
+    }
+    clientCredentials?: {
+      tokenUrl: string
+      scopes: Record<string, string>
+    }
+    authorizationCode?: {
+      authorizationUrl: string
+      tokenUrl: string
+      scopes: Record<string, string>
+    }
+  }
+  description?: string
+}
+
+export type SecurityScheme =
+  | ApiKeySecurityScheme
+  | HttpSecurityScheme
+  | OAuth2SecurityScheme
+// There is an openIdConnect option but none of our users use it

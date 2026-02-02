@@ -4,6 +4,8 @@ import {
   Query,
   QueryParameter,
   RestTemplateQueryMetadata,
+  SecurityScheme,
+  OAuth2SecurityScheme,
 } from "@budibase/types"
 import { QueryVerbToHttpMethod } from "../../../../../constants"
 import { OpenAPI, OpenAPIV3 } from "openapi-types"
@@ -302,6 +304,74 @@ export class OpenAPI3 extends OpenAPISource {
     return Array.from(new Set(this.securityHeaders.values()))
   }
 
+  getSecuritySchemes(): Record<string, SecurityScheme> | undefined {
+    const schemes = this.document.components?.securitySchemes
+    if (!schemes) {
+      return undefined
+    }
+
+    const result: Record<string, SecurityScheme> = {}
+    for (const [name, scheme] of Object.entries(schemes)) {
+      const resolved =
+        this.resolveMaybeRef<OpenAPIV3.SecuritySchemeObject>(scheme)
+      if (!resolved) {
+        continue
+      }
+
+      if (resolved.type === "apiKey") {
+        result[name] = {
+          type: "apiKey",
+          name: resolved.name,
+          in: resolved.in as "query" | "header" | "cookie",
+          description: resolved.description,
+        }
+      } else if (resolved.type === "http") {
+        result[name] = {
+          type: "http",
+          scheme: resolved.scheme,
+          bearerFormat: resolved.bearerFormat,
+          description: resolved.description,
+        }
+      } else if (resolved.type === "oauth2") {
+        const flows: OAuth2SecurityScheme = {
+          type: "oauth2",
+          flows: {},
+          description: resolved.description,
+        }
+
+        if (resolved.flows.implicit) {
+          flows.flows.implicit = {
+            authorizationUrl: resolved.flows.implicit.authorizationUrl,
+            scopes: resolved.flows.implicit.scopes || {},
+          }
+        }
+        if (resolved.flows.password) {
+          flows.flows.password = {
+            tokenUrl: resolved.flows.password.tokenUrl,
+            scopes: resolved.flows.password.scopes || {},
+          }
+        }
+        if (resolved.flows.clientCredentials) {
+          flows.flows.clientCredentials = {
+            tokenUrl: resolved.flows.clientCredentials.tokenUrl,
+            scopes: resolved.flows.clientCredentials.scopes || {},
+          }
+        }
+        if (resolved.flows.authorizationCode) {
+          flows.flows.authorizationCode = {
+            authorizationUrl: resolved.flows.authorizationCode.authorizationUrl,
+            tokenUrl: resolved.flows.authorizationCode.tokenUrl,
+            scopes: resolved.flows.authorizationCode.scopes || {},
+          }
+        }
+
+        result[name] = flows
+      }
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined
+  }
+
   private getEndpoints = (): ImportInfo["endpoints"] => {
     const queries = this.getQueries("")
     const endpoints: ImportInfo["endpoints"] = []
@@ -360,6 +430,7 @@ export class OpenAPI3 extends OpenAPISource {
       docsUrl,
       endpoints: this.getEndpoints(),
       securityHeaders: this.getSecurityHeaders(),
+      securitySchemes: this.getSecuritySchemes(),
       staticVariables: this.getServerVariableBindings(),
     }
   }

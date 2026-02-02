@@ -117,11 +117,15 @@
     try {
       showSidePanel = true
       loading = true
-      const response = await queries.save(newQuery.datasourceId, {
-        ...newQuery,
-        schema,
-        nestedSchemaFields,
-      })
+      const response = await queries.save(
+        newQuery.datasourceId,
+        {
+          ...newQuery,
+          schema,
+          nestedSchemaFields,
+        },
+        datasource.source
+      )
 
       notifications.success("Query saved successfully")
       return response

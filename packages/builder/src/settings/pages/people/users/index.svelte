@@ -44,7 +44,7 @@
   } from "@budibase/types"
   import { InternalTable } from "@budibase/types"
   import type { UserInfo } from "@/types"
-  import { routeActions } from "@/settings/pages"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
 
   interface User extends UserDoc {
     tenantOwnerEmail?: string
@@ -350,42 +350,44 @@
       Upgrade your plan to re-activate your account."
     />
   {/if}
-  <div use:routeActions class="controls">
-    {#if !readonly}
-      <div class="buttons">
-        {#if selectedRows.length > 0}
-          <DeleteRowsButton
-            item="user"
-            on:updaterows
-            selectedRows={[...selectedRows]}
-            deleteRows={deleteUsers}
-          />
-        {:else}
-          <Search bind:value={searchEmail} placeholder="Search" />
-          <ActionButton
-            size="M"
-            quiet
-            on:click={$licensing.userLimitReached
-              ? userLimitReachedModal.show
-              : importUsersModal.show}
-            disabled={readonly}
-          >
-            <Icon name={"upload-simple"} size="M" />
-          </ActionButton>
-          <Button
-            size="M"
-            disabled={readonly}
-            on:click={$licensing.userLimitReached
-              ? userLimitReachedModal.show
-              : createUserModal.show}
-            cta
-          >
-            Add users
-          </Button>
-        {/if}
-      </div>
-    {/if}
-  </div>
+  <RouteActions>
+    <div class="controls">
+      {#if !readonly}
+        <div class="buttons">
+          {#if selectedRows.length > 0}
+            <DeleteRowsButton
+              item="user"
+              on:updaterows
+              selectedRows={[...selectedRows]}
+              deleteRows={deleteUsers}
+            />
+          {:else}
+            <Search bind:value={searchEmail} placeholder="Search" />
+            <ActionButton
+              size="M"
+              quiet
+              on:click={$licensing.userLimitReached
+                ? userLimitReachedModal.show
+                : importUsersModal.show}
+              disabled={readonly}
+            >
+              <Icon name={"upload-simple"} size="M" />
+            </ActionButton>
+            <Button
+              size="M"
+              disabled={readonly}
+              on:click={$licensing.userLimitReached
+                ? userLimitReachedModal.show
+                : createUserModal.show}
+              cta
+            >
+              Add users
+            </Button>
+          {/if}
+        </div>
+      {/if}
+    </div>
+  </RouteActions>
   <Table
     on:click={({ detail }) => {
       bb.settings(`/people/users/${detail._id}`)

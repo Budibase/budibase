@@ -228,7 +228,7 @@
     saving = true
     try {
       const isNew = !query._rev
-      const { _id } = await queries.save(toSave.datasourceId, toSave)
+      const { _id } = await queries.save(toSave.datasourceId, toSave, datasourceType)
       saveId = _id
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)

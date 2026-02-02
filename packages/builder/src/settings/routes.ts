@@ -270,28 +270,6 @@ export const workspaceRoutes = (
           path: "create",
           comp: Pages.get("create_connection"),
           skipNav: true,
-          routes: [
-            {
-              title: "OAuth2",
-              path: "oauth2",
-              comp: Pages.get("create_oauth2"),
-              skipNav: true,
-            },
-            {
-              title: "HTTP Basic",
-              path: "http_basic",
-              comp: Pages.get("create_http"),
-              skipNav: true,
-              props: { type: "basic" },
-            },
-            {
-              title: "HTTP Bearer",
-              path: "http_bearer",
-              comp: Pages.get("create_http"),
-              skipNav: true,
-              props: { type: "bearer" },
-            },
-          ],
         },
         {
           title: "Connection",
