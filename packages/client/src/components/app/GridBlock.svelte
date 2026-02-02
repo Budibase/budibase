@@ -6,6 +6,7 @@
   import { featuresStore } from "@/stores"
   import { Grid } from "@budibase/frontend-core"
   import { processStringSync } from "@budibase/string-templates"
+  import { enrichGridConditions } from "@/utils/conditions"
   import { UILogicalOperator, EmptyFilterOption } from "@budibase/types"
 
   // table is actually any datasource, but called table for legacy compatibility
@@ -169,7 +170,7 @@
         displayName: column.label,
         order: idx,
         visible: !!column.active,
-        conditions: enrichConditions(column.conditions, context),
+        conditions: enrichGridConditions(column.conditions, context),
         format: createFormatter(column),
 
         // Small hack to ensure we react to all changes, as our
@@ -181,19 +182,6 @@
       }
     })
     return overrides
-  }
-
-  const enrichConditions = (conditions, context) => {
-    return conditions?.map(condition => {
-      return {
-        ...condition,
-        referenceValue: processStringSync(
-          condition.referenceValue || "",
-          context
-        ),
-        newValue: processStringSync(condition.newValue || "", context),
-      }
-    })
   }
 
   const createFormatter = column => {
@@ -215,7 +203,7 @@
         type: settings.type,
         icon: settings.icon,
         getRowConditions: row =>
-          enrichConditions(settings.conditions, { ...$context, [id]: row }),
+          enrichGridConditions(settings.conditions, { ...$context, [id]: row }),
         conditions: settings.conditions,
         onClick: async row => {
           // Create a fake, ephemeral context to run the buttons actions/conditions with
