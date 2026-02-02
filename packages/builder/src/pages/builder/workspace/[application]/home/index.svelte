@@ -105,7 +105,7 @@
     }
   }
 
-  const normalizeType = (value: string | null): HomeType | null => {
+  const normaliseType = (value: string | null): HomeType | null => {
     if (!value) {
       return null
     }
@@ -118,7 +118,7 @@
     return null
   }
 
-  const normalizeCreate = (value: string | null): HomeCreate | null => {
+  const normaliseCreate = (value: string | null): HomeCreate | null => {
     if (!value) {
       return null
     }
@@ -137,7 +137,7 @@
     }
 
     const parsed = new URL(urlString ?? window.location.href)
-    const create = normalizeCreate(parsed.searchParams.get("create"))
+    const create = normaliseCreate(parsed.searchParams.get("create"))
     if (!create) {
       return
     }
@@ -159,7 +159,7 @@
     )
   }
 
-  const normalizeSortColumn = (value: string | null): HomeSortColumn | null => {
+  const normaliseSortColumn = (value: string | null): HomeSortColumn | null => {
     if (!value) {
       return null
     }
@@ -174,7 +174,7 @@
     return null
   }
 
-  const normalizeSortOrder = (value: string | null): HomeSortOrder | null => {
+  const normaliseSortOrder = (value: string | null): HomeSortOrder | null => {
     if (value === "asc" || value === "desc") {
       return value
     }
@@ -184,18 +184,18 @@
   const readUrlState = () => {
     if (typeof window === "undefined") {
       return {
-        type: null as HomeType | null,
         q: "",
         create: null as HomeCreate | null,
+        sort: null as HomeSortColumn | null,
+        order: null as HomeSortOrder | null,
       }
     }
     const params = new URLSearchParams(window.location.search)
-    const type = normalizeType(params.get("type"))
     const q = params.get("q") ?? ""
-    const sort = normalizeSortColumn(params.get("sort"))
-    const order = normalizeSortOrder(params.get("order"))
-    const create = normalizeCreate(params.get("create"))
-    return { type, q, sort, order, create }
+    const sort = normaliseSortColumn(params.get("sort"))
+    const order = normaliseSortOrder(params.get("order"))
+    const create = normaliseCreate(params.get("create"))
+    return { q, sort, order, create }
   }
 
   const writeUrlState = () => {
@@ -206,14 +206,7 @@
     const params = new URLSearchParams(window.location.search)
 
     params.delete("create")
-
-    if (typeFilter === "all") {
-      params.delete("type")
-    } else if (typeFilter === "chat") {
-      params.delete("type")
-    } else {
-      params.set("type", typeFilter)
-    }
+    params.delete("type")
 
     const q = searchTerm.trim()
     if (!q) {
@@ -258,8 +251,6 @@
       return true
     }
 
-    // If we are already on this page, Routify won't remount the component.
-    // Defer until the URL has updated, then open the relevant modal.
     setTimeout(() => {
       consumeCreateParam(parsed.toString())
     }, 0)
@@ -267,11 +258,11 @@
   })
 
   const setTypeFilter = (value: string) => {
-    const normalized = normalizeType(value)
-    if (!normalized) {
+    const normalised = normaliseType(value)
+    if (!normalised) {
       return
     }
-    typeFilter = normalized
+    typeFilter = normalised
   }
 
   const setSort = (column: HomeSortColumn) => {
@@ -586,10 +577,7 @@
       return
     }
 
-    const { type, q, sort, order } = readUrlState()
-    if (type) {
-      typeFilter = type
-    }
+    const { q, sort, order } = readUrlState()
     if (q) {
       searchTerm = q
     }

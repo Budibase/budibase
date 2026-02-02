@@ -42,7 +42,7 @@
 
   onMount(() => {
     if ($featureFlags.WORKSPACE_HOME) {
-      $redirect("../home?type=automation")
+      $redirect("../home")
     }
   })
 

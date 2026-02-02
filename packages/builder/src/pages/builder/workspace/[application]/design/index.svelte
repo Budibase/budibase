@@ -43,7 +43,7 @@
 
   onMount(() => {
     if ($featureFlags.WORKSPACE_HOME) {
-      $redirect("../home?type=app")
+      $redirect("../home")
     }
   })
 

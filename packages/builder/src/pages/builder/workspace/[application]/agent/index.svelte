@@ -113,7 +113,7 @@
 
   onMount(async () => {
     if ($featureFlags.WORKSPACE_HOME) {
-      $redirect($featureFlags.AI_AGENTS ? "../home?type=agent" : "../home")
+      $redirect("../home")
       return
     }
 
