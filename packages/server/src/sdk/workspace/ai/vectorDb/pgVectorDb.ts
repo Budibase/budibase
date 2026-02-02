@@ -20,9 +20,11 @@ const buildAgentTableName = (agentId: string) => {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
+  const currentWorkspaceId = context.getOrThrowWorkspaceId()
+  const hashWorkspaceId = dbCore.getProdWorkspaceID(currentWorkspaceId)
   const hash = crypto
     .createHash("sha256")
-    .update(`${context.getOrThrowWorkspaceId()}:${agentId}`)
+    .update(`${hashWorkspaceId}:${agentId}`)
     .digest("hex")
     .slice(0, TABLE_HASH_LENGTH)
   const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH
