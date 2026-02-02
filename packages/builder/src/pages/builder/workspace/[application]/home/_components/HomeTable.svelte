@@ -67,7 +67,7 @@
         <span
           class="sort-indicator"
           class:sort-indicator--active={isSorted("name")}
-          class:sort-indicator--asc={isSorted("name") && sortOrder === "desc"}
+          class:sort-indicator--up={isSorted("name") && sortOrder === "desc"}
         >
           <Icon
             name="caret-down"
@@ -86,7 +86,7 @@
         <span
           class="sort-indicator"
           class:sort-indicator--active={isSorted("type")}
-          class:sort-indicator--asc={isSorted("type") && sortOrder === "desc"}
+          class:sort-indicator--up={isSorted("type") && sortOrder === "desc"}
         >
           <Icon
             name="caret-down"
@@ -105,7 +105,7 @@
         <span
           class="sort-indicator"
           class:sort-indicator--active={isSorted("status")}
-          class:sort-indicator--asc={isSorted("status") && sortOrder === "desc"}
+          class:sort-indicator--up={isSorted("status") && sortOrder === "desc"}
         >
           <Icon
             name="caret-down"
@@ -124,8 +124,7 @@
         <span
           class="sort-indicator"
           class:sort-indicator--active={isSorted("created")}
-          class:sort-indicator--asc={isSorted("created") &&
-            sortOrder === "desc"}
+          class:sort-indicator--up={isSorted("created") && sortOrder === "desc"}
         >
           <Icon
             name="caret-down"
@@ -292,7 +291,7 @@
     opacity: 1;
   }
 
-  .sort-indicator--active.sort-indicator--asc {
+  .sort-indicator--active.sort-indicator--up {
     transform: rotate(180deg);
   }
 
