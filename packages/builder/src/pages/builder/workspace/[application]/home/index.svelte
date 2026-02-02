@@ -305,7 +305,7 @@
     if (!liveUrl || typeof window === "undefined") {
       return
     }
-    window.open(liveUrl, "_blank")
+    window.open(liveUrl, "_blank", "noopener,noreferrer")
   }
 
   const duplicateWorkspaceApp = async (workspaceAppId: string) => {

@@ -383,7 +383,7 @@
       notifications.error("Could not resolve live workspace app URL")
       return
     }
-    window.open(liveUrl, "_blank")
+    window.open(liveUrl, "_blank", "noopener,noreferrer")
   }
 
   const unPin = () => {
@@ -775,7 +775,7 @@
           text="Docs"
           {collapsed}
           on:click={() => {
-            window.open(DOCUMENTATION_URL, "_blank")
+            window.open(DOCUMENTATION_URL, "_blank", "noopener,noreferrer")
             keepCollapsed()
           }}
         />
@@ -784,7 +784,7 @@
           text="Community"
           {collapsed}
           on:click={() => {
-            window.open(DISCORD_URL, "_blank")
+            window.open(DISCORD_URL, "_blank", "noopener,noreferrer")
             keepCollapsed()
           }}
         />
@@ -793,7 +793,11 @@
           text={githubStarsText}
           {collapsed}
           on:click={() => {
-            window.open("https://github.com/Budibase/budibase", "_blank")
+            window.open(
+              "https://github.com/Budibase/budibase",
+              "_blank",
+              "noopener,noreferrer"
+            )
             keepCollapsed()
           }}
         />
@@ -804,7 +808,7 @@
             text="Email support"
             {collapsed}
             on:click={() => {
-              window.open(SUPPORT_EMAIL, "_blank")
+              window.open(SUPPORT_EMAIL, "_blank", "noopener,noreferrer")
               keepCollapsed()
             }}
           />
