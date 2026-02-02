@@ -42,6 +42,7 @@
     [AgentFileStatus.PROCESSING]: "Processing",
     [AgentFileStatus.READY]: "Ready",
     [AgentFileStatus.FAILED]: "Failed",
+    [AgentFileStatus.DELETED]: "Deleted",
   }
 
   const formatFileStatus = (file: AgentFile) =>

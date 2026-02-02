@@ -1,4 +1,8 @@
-import { AgentFileStatus, AIConfigType } from "@budibase/types"
+import {
+  AgentFileStatus,
+  AIConfigType,
+  VectorDbProvider,
+} from "@budibase/types"
 import nock from "nock"
 import environment from "../../../../environment"
 import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
@@ -66,7 +70,7 @@ describe("agent files", () => {
     })
     const vectorDb = await config.api.vectorDb.create({
       name: "Agent Vector DB",
-      provider: "pgvector",
+      provider: VectorDbProvider.PGVECTOR,
       host: "localhost",
       port: 5432,
       database: "budibase",

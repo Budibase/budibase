@@ -101,7 +101,14 @@ export async function remove(agentId: string) {
   if (agent.vectorDb) {
     const files = await listAgentFiles(agentId)
     if (files.length > 0) {
-      await Promise.all(files.map(file => removeAgentFile(agent, file)))
+      await Promise.all(
+        files.map(file =>
+          removeAgentFile(
+            { ...agent, ragVersion: (agent.ragVersion || 0) + 1 },
+            file
+          )
+        )
+      )
     }
   }
 }

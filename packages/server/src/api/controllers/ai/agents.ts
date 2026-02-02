@@ -48,6 +48,7 @@ export async function createAgent(
     vectorDb: body.vectorDb,
     ragMinDistance: body.ragMinDistance,
     ragTopK: body.ragTopK,
+    ragVersion: 0,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -79,6 +80,7 @@ export async function updateAgent(
     vectorDb: body.vectorDb,
     ragMinDistance: body.ragMinDistance,
     ragTopK: body.ragTopK,
+    ragVersion: body.ragVersion,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)
