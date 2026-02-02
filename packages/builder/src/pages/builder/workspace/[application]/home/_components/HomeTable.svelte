@@ -37,7 +37,6 @@
   }>()
 
   const isSorted = (column: HomeSortColumn) => sortColumn === column
-  const isAscending = sortOrder === "asc"
 
   const headerClick = (column: HomeSortColumn) => {
     dispatch("sortChange", column)
@@ -67,7 +66,7 @@
       <span
         class="sort-indicator"
         class:sort-indicator--active={isSorted("name")}
-        class:sort-indicator--asc={isSorted("name") && isAscending}
+        class:sort-indicator--asc={isSorted("name") && sortOrder === "desc"}
       >
         <Icon
           name="caret-down"
@@ -86,7 +85,7 @@
       <span
         class="sort-indicator"
         class:sort-indicator--active={isSorted("type")}
-        class:sort-indicator--asc={isSorted("type") && isAscending}
+        class:sort-indicator--asc={isSorted("type") && sortOrder === "desc"}
       >
         <Icon
           name="caret-down"
@@ -105,7 +104,7 @@
       <span
         class="sort-indicator"
         class:sort-indicator--active={isSorted("status")}
-        class:sort-indicator--asc={isSorted("status") && isAscending}
+        class:sort-indicator--asc={isSorted("status") && sortOrder === "desc"}
       >
         <Icon
           name="caret-down"
@@ -124,7 +123,7 @@
       <span
         class="sort-indicator"
         class:sort-indicator--active={isSorted("created")}
-        class:sort-indicator--asc={isSorted("created") && isAscending}
+        class:sort-indicator--asc={isSorted("created") && sortOrder === "desc"}
       >
         <Icon
           name="caret-down"
