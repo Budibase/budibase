@@ -88,7 +88,7 @@ class PgVectorDb implements VectorDb {
         )
       `)
     await client.query(
-      `CREATE UNIQUE INDEX IF NOT EXISTS ${this.tableName}_chunk_hash_uq ON ${this.tableName} (chunk_hash)`
+      `CREATE UNIQUE INDEX IF NOT EXISTS ${this.tableName}_source_chunk_hash_uq ON ${this.tableName} (source, chunk_hash)`
     )
     await client.query(
       `CREATE INDEX IF NOT EXISTS ${this.tableName}_source_rag_version_idx ON ${this.tableName} (source, created_rag_version)`
@@ -139,6 +139,10 @@ class PgVectorDb implements VectorDb {
             `
               INSERT INTO ${this.tableName} (source, chunk_hash, chunk_text, embedding, created_rag_version)
               VALUES ($1, $2, $3, $4::vector, $5)
+              ON CONFLICT (source, chunk_hash) DO UPDATE
+                SET chunk_text = EXCLUDED.chunk_text,
+                    embedding = EXCLUDED.embedding,
+                    created_rag_version = EXCLUDED.created_rag_version
             `,
             [
               sourceId,
