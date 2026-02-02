@@ -8,10 +8,12 @@ export function getTableFields(tables, linkField) {
   const linkFields = getFields(tables, Object.values(table.schema), {
     allowLinks: false,
   })
-  return linkFields.map(field => ({
-    ...field,
-    name: `${linkField.name}.${field.name}`,
-  }))
+  return linkFields
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(field => ({
+      ...field,
+      name: `${linkField.name}.${field.name}`,
+    }))
 }
 
 export function getFields(
@@ -19,18 +21,22 @@ export function getFields(
   fields,
   { allowLinks } = { allowLinks: true }
 ) {
+  const result = []
   let filteredFields = fields.filter(
-    field => !BannedSearchTypes.includes(field.type)
+    field =>
+      !BannedSearchTypes.includes(field.type) &&
+      (allowLinks || field.type !== "link")
   )
-  if (allowLinks) {
-    const linkFields = fields.filter(field => field.type === "link")
-    for (let linkField of linkFields) {
+  for (const field of filteredFields) {
+    result.push(field)
+
+    if (allowLinks && field.type === "link") {
       // only allow one depth of SQL relationship filtering
-      filteredFields = filteredFields.concat(getTableFields(tables, linkField))
+      result.push(...getTableFields(tables, field))
     }
   }
   const staticFormulaFields = fields.filter(
     field => field.type === "formula" && field.formulaType === "static"
   )
-  return filteredFields.concat(staticFormulaFields)
+  return result.concat(staticFormulaFields)
 }

@@ -114,11 +114,11 @@ jobs:
       - name: Test
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
-            yarn test -- --scope=@budibase/builder --scope=@budibase/client --since=${{ env.NX_BASE_BRANCH }}
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --ignore=@budibase/frontend-core --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --scope=@budibase/builder --scope=@budibase/client --scope=@budibase/frontend-core --since=${{ env.NX_BASE_BRANCH }}
           else
-            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --no-prefix -- --verbose --reporters=default --reporters=github-actions
-            yarn test -- --scope=@budibase/builder --scope=@budibase/client --no-prefix
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --ignore=@budibase/frontend-core --no-prefix -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --scope=@budibase/builder --scope=@budibase/client --scope=@budibase/frontend-core --no-prefix
           fi
 
   test-worker:
