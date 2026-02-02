@@ -463,97 +463,194 @@
     <div class="nav_body">
       <div class="links core">
         {#if appId}
-          <div>
-            {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
-              <SideNavLink
-                icon="house"
-                text="Home"
-                url={$url("./home")}
-                {collapsed}
-                on:click={keepCollapsed}
-              />
+          <div
+            class="core-sections"
+            class:workspace_home={$featureFlags[FeatureFlag.WORKSPACE_HOME]}
+          >
+            <div>
+              {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+                <SideNavLink
+                  icon="house"
+                  text="Home"
+                  url={$url("./home")}
+                  {collapsed}
+                  on:click={keepCollapsed}
+                />
 
-              <ActionMenu
-                align={PopoverAlignment.RightContextMenu}
-                portalTarget={".nav .create-popover-container"}
-                animate={false}
-                on:open={() => (createMenuOpen = true)}
-                on:close={() => (createMenuOpen = false)}
-              >
-                <svelte:fragment slot="control" let:open>
+                <ActionMenu
+                  align={PopoverAlignment.RightContextMenu}
+                  portalTarget={".nav .create-popover-container"}
+                  animate={false}
+                  on:open={() => (createMenuOpen = true)}
+                  on:close={() => (createMenuOpen = false)}
+                >
+                  <svelte:fragment slot="control" let:open>
+                    <SideNavLink
+                      icon="plus"
+                      text="Create"
+                      {collapsed}
+                      forceActive={open}
+                      on:click={keepCollapsed}
+                    />
+                  </svelte:fragment>
+
+                  <MenuItem
+                    icon="path"
+                    on:click={() => goToCreate("home?create=automation")}
+                  >
+                    Automation
+                  </MenuItem>
+                  <MenuItem
+                    icon="browsers"
+                    on:click={() => goToCreate("home?create=app")}
+                  >
+                    App
+                  </MenuItem>
+
+                  {#if $featureFlags.AI_AGENTS}
+                    <MenuItem
+                      icon="sparkle"
+                      on:click={() => goToCreate("home?create=agent")}
+                    >
+                      Agent
+                      <div slot="right">
+                        <Tag emphasized>Beta</Tag>
+                      </div>
+                    </MenuItem>
+                    <MenuItem
+                      icon="chat-circle"
+                      on:click={() => goToCreate("chat")}
+                    >
+                      Chat
+                      <div slot="right">
+                        <Tag emphasized>Alpha</Tag>
+                      </div>
+                    </MenuItem>
+                  {/if}
+
+                  <MenuItem
+                    icon="grid-nine"
+                    on:click={() => goToCreate("data/new?create=table")}
+                  >
+                    Table
+                  </MenuItem>
+                  <MenuItem
+                    icon="webhooks-logo"
+                    on:click={() => goToCreate("apis/new")}
+                  >
+                    API request
+                  </MenuItem>
+                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+                    Connection
+                  </MenuItem>
+                  <MenuSeparator />
+                  <MenuItem icon="user-circle-plus" on:click={openInviteUser}>
+                    User
+                  </MenuItem>
+                </ActionMenu>
+              {:else}
+                <SideNavLink
+                  icon="browser"
+                  text="Apps"
+                  url={$url("./design")}
+                  {collapsed}
+                  on:click={keepCollapsed}
+                />
+                <span
+                  class="root-nav"
+                  class:selected={$isActive("./automation")}
+                >
+                  {#if collapsed && automationErrorCount}
+                    <span class="status-indicator">
+                      <StatusLight
+                        color="var(--spectrum-global-color-static-red-600)"
+                        size="M"
+                      />
+                    </span>
+                  {/if}
                   <SideNavLink
-                    icon="plus"
-                    text="Create"
+                    icon="path"
+                    text="Automations"
+                    url={$url("./automation")}
                     {collapsed}
-                    forceActive={open}
                     on:click={keepCollapsed}
-                  />
-                </svelte:fragment>
-
-                <MenuItem
-                  icon="path"
-                  on:click={() => goToCreate("home?create=automation")}
-                >
-                  Automation
-                </MenuItem>
-                <MenuItem
-                  icon="browsers"
-                  on:click={() => goToCreate("home?create=app")}
-                >
-                  App
-                </MenuItem>
-
+                  >
+                    <svelte:fragment slot="right">
+                      {#if automationErrorCount}
+                        <StatusLight
+                          color="var(--spectrum-global-color-static-red-600)"
+                          size="M"
+                        />
+                      {/if}
+                    </svelte:fragment>
+                  </SideNavLink>
+                </span>
                 {#if $featureFlags.AI_AGENTS}
-                  <MenuItem
-                    icon="sparkle"
-                    on:click={() => goToCreate("home?create=agent")}
+                  <SideNavLink
+                    icon="memory"
+                    text="Agents"
+                    url={$url("./agent")}
+                    {collapsed}
+                    on:click={keepCollapsed}
                   >
-                    Agent
-                    <div slot="right">
-                      <Tag emphasized>Beta</Tag>
-                    </div>
-                  </MenuItem>
-                  <MenuItem
+                    <svelte:fragment slot="right">
+                      <div class="beta-tag-wrapper">
+                        <Tag emphasized>Beta</Tag>
+                      </div>
+                    </svelte:fragment>
+                  </SideNavLink>
+                  <SideNavLink
                     icon="chat-circle"
-                    on:click={() => goToCreate("chat")}
+                    text="Chat"
+                    url={$url("./chat")}
+                    {collapsed}
+                    on:click={keepCollapsed}
                   >
-                    Chat
-                    <div slot="right">
-                      <Tag emphasized>Alpha</Tag>
-                    </div>
-                  </MenuItem>
+                    <svelte:fragment slot="right">
+                      <div class="beta-tag-wrapper">
+                        <Tag emphasized>Alpha</Tag>
+                      </div>
+                    </svelte:fragment>
+                  </SideNavLink>
                 {/if}
+              {/if}
+            </div>
 
-                <MenuItem
-                  icon="grid-nine"
-                  on:click={() => goToCreate("data/new?create=table")}
-                >
-                  Table
-                </MenuItem>
-                <MenuItem
-                  icon="webhooks-logo"
-                  on:click={() => goToCreate("apis/new")}
-                >
-                  API request
-                </MenuItem>
-                <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-                  Connection
-                </MenuItem>
-                <MenuSeparator />
-                <MenuItem icon="user-circle-plus" on:click={openInviteUser}>
-                  User
-                </MenuItem>
-              </ActionMenu>
-            {:else}
+            <div class="core-secondary">
               <SideNavLink
-                icon="browser"
-                text="Apps"
-                url={$url("./design")}
+                icon="sparkle"
+                text="AI models"
+                {collapsed}
+                on:click={() => {
+                  bb.settings("/ai")
+                  keepCollapsed()
+                }}
+              />
+              <SideNavLink
+                icon="cube"
+                text="APIs"
+                url={$url("./apis")}
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              <span class="root-nav" class:selected={$isActive("./automation")}>
-                {#if collapsed && automationErrorCount}
+              <SideNavLink
+                icon="database"
+                text="Data"
+                url={$url("./data")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+              <SideNavLink
+                icon="user-plus"
+                text="Invite user"
+                on:click={() => {
+                  builderStore.showBuilderSidePanel()
+                  keepCollapsed()
+                }}
+                {collapsed}
+              />
+              <span class="root-nav" class:error={backupErrorCount}>
+                {#if collapsed && backupErrorCount}
                   <span class="status-indicator">
                     <StatusLight
                       color="var(--spectrum-global-color-static-red-600)"
@@ -562,14 +659,16 @@
                   </span>
                 {/if}
                 <SideNavLink
-                  icon="path"
-                  text="Automations"
-                  url={$url("./automation")}
+                  icon="gear"
+                  text="Settings"
                   {collapsed}
-                  on:click={keepCollapsed}
+                  on:click={() => {
+                    bb.settings()
+                    keepCollapsed()
+                  }}
                 >
                   <svelte:fragment slot="right">
-                    {#if automationErrorCount}
+                    {#if backupErrorCount}
                       <StatusLight
                         color="var(--spectrum-global-color-static-red-600)"
                         size="M"
@@ -578,97 +677,7 @@
                   </svelte:fragment>
                 </SideNavLink>
               </span>
-              {#if $featureFlags.AI_AGENTS}
-                <SideNavLink
-                  icon="memory"
-                  text="Agents"
-                  url={$url("./agent")}
-                  {collapsed}
-                  on:click={keepCollapsed}
-                >
-                  <svelte:fragment slot="right">
-                    <div class="beta-tag-wrapper">
-                      <Tag emphasized>Beta</Tag>
-                    </div>
-                  </svelte:fragment>
-                </SideNavLink>
-                <SideNavLink
-                  icon="chat-circle"
-                  text="Chat"
-                  url={$url("./chat")}
-                  {collapsed}
-                  on:click={keepCollapsed}
-                >
-                  <svelte:fragment slot="right">
-                    <div class="beta-tag-wrapper">
-                      <Tag emphasized>Alpha</Tag>
-                    </div>
-                  </svelte:fragment>
-                </SideNavLink>
-              {/if}
-            {/if}
-          </div>
-          <div>
-            <SideNavLink
-              icon="sparkle"
-              text="AI models"
-              {collapsed}
-              on:click={() => {
-                bb.settings("/ai")
-                keepCollapsed()
-              }}
-            />
-            <SideNavLink
-              icon="cube"
-              text="APIs"
-              url={$url("./apis")}
-              {collapsed}
-              on:click={keepCollapsed}
-            />
-            <SideNavLink
-              icon="database"
-              text="Data"
-              url={$url("./data")}
-              {collapsed}
-              on:click={keepCollapsed}
-            />
-            <SideNavLink
-              icon="user-plus"
-              text="Invite user"
-              on:click={() => {
-                builderStore.showBuilderSidePanel()
-                keepCollapsed()
-              }}
-              {collapsed}
-            />
-            <span class="root-nav" class:error={backupErrorCount}>
-              {#if collapsed && backupErrorCount}
-                <span class="status-indicator">
-                  <StatusLight
-                    color="var(--spectrum-global-color-static-red-600)"
-                    size="M"
-                  />
-                </span>
-              {/if}
-              <SideNavLink
-                icon="gear"
-                text="Settings"
-                {collapsed}
-                on:click={() => {
-                  bb.settings()
-                  keepCollapsed()
-                }}
-              >
-                <svelte:fragment slot="right">
-                  {#if backupErrorCount}
-                    <StatusLight
-                      color="var(--spectrum-global-color-static-red-600)"
-                      size="M"
-                    />
-                  {/if}
-                </svelte:fragment>
-              </SideNavLink>
-            </span>
+            </div>
           </div>
           <div class="favourite-wrapper">
             <hr />
@@ -1012,6 +1021,16 @@
     min-height: 0;
     overflow: hidden;
     flex: 1 1 auto;
+  }
+
+  .core-sections {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .core-sections:not(.workspace_home) .core-secondary {
+    margin-top: 4px;
   }
 
   .favourite-links {
