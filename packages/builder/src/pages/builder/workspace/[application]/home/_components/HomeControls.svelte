@@ -131,7 +131,7 @@
   .filter-wrapper :global(.spectrum-Picker) {
     height: 32px;
     border-radius: 6px;
-    width: 200px;
+    width: 150px;
     padding-right: 8px;
   }
 
@@ -206,18 +206,19 @@
     opacity: 0.6;
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 1140px) {
     .controls {
       flex-direction: column;
       align-items: stretch;
+      gap: var(--spacing-m);
     }
 
     .controls-left {
-      justify-content: space-between;
+      justify-content: flex-start;
     }
 
     .controls-right {
-      justify-content: flex-start;
+      justify-content: flex-end;
       flex-wrap: wrap;
     }
   }

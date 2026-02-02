@@ -55,181 +55,190 @@
   }
 </script>
 
-<div class="table" class:table--loading={loading}>
-  <div class="table-header" role="row">
-    <button
-      type="button"
-      class="header-cell"
-      on:click={() => headerClick("name")}
-    >
-      <span>Name</span>
-      <span
-        class="sort-indicator"
-        class:sort-indicator--active={isSorted("name")}
-        class:sort-indicator--asc={isSorted("name") && sortOrder === "desc"}
-      >
-        <Icon
-          name="caret-down"
-          size="S"
-          color="var(--spectrum-global-color-gray-700)"
-        />
-      </span>
-    </button>
-
-    <button
-      type="button"
-      class="header-cell header-cell--with-icon"
-      on:click={() => headerClick("type")}
-    >
-      <span>Type</span>
-      <span
-        class="sort-indicator"
-        class:sort-indicator--active={isSorted("type")}
-        class:sort-indicator--asc={isSorted("type") && sortOrder === "desc"}
-      >
-        <Icon
-          name="caret-down"
-          size="S"
-          color="var(--spectrum-global-color-gray-700)"
-        />
-      </span>
-    </button>
-
-    <button
-      type="button"
-      class="header-cell header-cell--with-icon"
-      on:click={() => headerClick("status")}
-    >
-      <span>Status</span>
-      <span
-        class="sort-indicator"
-        class:sort-indicator--active={isSorted("status")}
-        class:sort-indicator--asc={isSorted("status") && sortOrder === "desc"}
-      >
-        <Icon
-          name="caret-down"
-          size="S"
-          color="var(--spectrum-global-color-gray-700)"
-        />
-      </span>
-    </button>
-
-    <button
-      type="button"
-      class="header-cell header-cell--with-icon"
-      on:click={() => headerClick("created")}
-    >
-      <span>Created</span>
-      <span
-        class="sort-indicator"
-        class:sort-indicator--active={isSorted("created")}
-        class:sort-indicator--asc={isSorted("created") && sortOrder === "desc"}
-      >
-        <Icon
-          name="caret-down"
-          size="S"
-          color="var(--spectrum-global-color-gray-700)"
-        />
-      </span>
-    </button>
-
-    <div class="header-cell header-cell--actions" aria-hidden="true"></div>
-  </div>
-
-  <div class="table-body" class:table-body--empty={!rows.length}>
-    {#each rows as row (row._id)}
+<div class="table-wrapper">
+  <div class="table" class:table--loading={loading}>
+    <div class="table-header" role="row">
       <button
-        class="row"
-        class:favourite={row.favourite?._id}
-        class:active={highlightedRowId === row._id}
         type="button"
-        on:click={() => handleRowClick(row)}
-        on:contextmenu={e => openContextMenu(e, row)}
+        class="header-cell"
+        on:click={() => headerClick("name")}
       >
-        <div class="cell name-cell">
-          <div class="icon-wrapper">
-            <Icon
-              name={row.icon}
-              size="S"
-              color={row.iconColor}
-              weight="fill"
-            />
-          </div>
-          <Body size="S" color="var(--spectrum-global-color-gray-900)"
-            >{row.name}</Body
-          >
-        </div>
-
-        <div class="cell">
-          <Body size="S" color="var(--spectrum-global-color-gray-700)">
-            {getTypeLabel(row.type)}
-          </Body>
-        </div>
-
-        <div class="cell">
-          {#if row.type === "app" || row.type === "automation"}
-            <!-- todo: sort out for agents and chat -->
-            <PublishStatusBadge status={row.status} />
-          {:else}
-            <Body
-              size="S"
-              color={row.live
-                ? "#8CA171"
-                : "var(--spectrum-global-color-gray-600)"}
-            >
-              {row.live ? "Live" : "Draft"}
-            </Body>
-          {/if}
-        </div>
-
-        <div class="cell">
-          <Body size="S" color="var(--spectrum-global-color-gray-700)">
-            {#if row.createdAt}
-              {dayjs(row.createdAt).fromNow()}
-            {:else}
-              -
-            {/if}
-          </Body>
-        </div>
-
-        <div class="cell actions">
-          <span class="favourite-btn">
-            <FavouriteResourceButton favourite={row.favourite} />
-          </span>
-          <div class="ctx-btn">
-            <Icon
-              name="dots-three"
-              size="M"
-              hoverable
-              color="var(--spectrum-global-color-gray-600)"
-              on:click={e => openContextMenu(e, row)}
-            />
-          </div>
-        </div>
+        <span>Name</span>
+        <span
+          class="sort-indicator"
+          class:sort-indicator--active={isSorted("name")}
+          class:sort-indicator--asc={isSorted("name") && sortOrder === "desc"}
+        >
+          <Icon
+            name="caret-down"
+            size="S"
+            color="var(--spectrum-global-color-gray-700)"
+          />
+        </span>
       </button>
-    {/each}
 
-    {#if !rows.length}
-      <div class="empty">
-        <HomeEmptyState
-          {typeFilter}
-          {searchTerm}
-          {allRowsCount}
-          filteredRowsCount={rows.length}
-          on:clearSearch={() => dispatch("clearSearch")}
-          on:resetFilters={() => dispatch("resetFilters")}
-        />
-      </div>
-    {/if}
+      <button
+        type="button"
+        class="header-cell header-cell--with-icon"
+        on:click={() => headerClick("type")}
+      >
+        <span>Type</span>
+        <span
+          class="sort-indicator"
+          class:sort-indicator--active={isSorted("type")}
+          class:sort-indicator--asc={isSorted("type") && sortOrder === "desc"}
+        >
+          <Icon
+            name="caret-down"
+            size="S"
+            color="var(--spectrum-global-color-gray-700)"
+          />
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="header-cell header-cell--with-icon"
+        on:click={() => headerClick("status")}
+      >
+        <span>Status</span>
+        <span
+          class="sort-indicator"
+          class:sort-indicator--active={isSorted("status")}
+          class:sort-indicator--asc={isSorted("status") && sortOrder === "desc"}
+        >
+          <Icon
+            name="caret-down"
+            size="S"
+            color="var(--spectrum-global-color-gray-700)"
+          />
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="header-cell header-cell--with-icon"
+        on:click={() => headerClick("created")}
+      >
+        <span>Created</span>
+        <span
+          class="sort-indicator"
+          class:sort-indicator--active={isSorted("created")}
+          class:sort-indicator--asc={isSorted("created") &&
+            sortOrder === "desc"}
+        >
+          <Icon
+            name="caret-down"
+            size="S"
+            color="var(--spectrum-global-color-gray-700)"
+          />
+        </span>
+      </button>
+
+      <div class="header-cell header-cell--actions" aria-hidden="true"></div>
+    </div>
+
+    <div class="table-body" class:table-body--empty={!rows.length}>
+      {#each rows as row (row._id)}
+        <button
+          class="row"
+          class:favourite={row.favourite?._id}
+          class:active={highlightedRowId === row._id}
+          type="button"
+          on:click={() => handleRowClick(row)}
+          on:contextmenu={e => openContextMenu(e, row)}
+        >
+          <div class="cell name-cell">
+            <div class="icon-wrapper">
+              <Icon
+                name={row.icon}
+                size="S"
+                color={row.iconColor}
+                weight="fill"
+              />
+            </div>
+            <Body size="S" color="var(--spectrum-global-color-gray-900)"
+              >{row.name}</Body
+            >
+          </div>
+
+          <div class="cell">
+            <Body size="S" color="var(--spectrum-global-color-gray-700)">
+              {getTypeLabel(row.type)}
+            </Body>
+          </div>
+
+          <div class="cell">
+            {#if row.type === "app" || row.type === "automation"}
+              <!-- todo: sort out for agents and chat -->
+              <PublishStatusBadge status={row.status} />
+            {:else}
+              <Body
+                size="S"
+                color={row.live
+                  ? "#8CA171"
+                  : "var(--spectrum-global-color-gray-600)"}
+              >
+                {row.live ? "Live" : "Draft"}
+              </Body>
+            {/if}
+          </div>
+
+          <div class="cell">
+            <Body size="S" color="var(--spectrum-global-color-gray-700)">
+              {#if row.createdAt}
+                {dayjs(row.createdAt).fromNow()}
+              {:else}
+                -
+              {/if}
+            </Body>
+          </div>
+
+          <div class="cell actions">
+            <span class="favourite-btn">
+              <FavouriteResourceButton favourite={row.favourite} />
+            </span>
+            <div class="ctx-btn">
+              <Icon
+                name="dots-three"
+                size="M"
+                hoverable
+                color="var(--spectrum-global-color-gray-600)"
+                on:click={e => openContextMenu(e, row)}
+              />
+            </div>
+          </div>
+        </button>
+      {/each}
+
+      {#if !rows.length}
+        <div class="empty">
+          <HomeEmptyState
+            {typeFilter}
+            {searchTerm}
+            {allRowsCount}
+            filteredRowsCount={rows.length}
+            on:clearSearch={() => dispatch("clearSearch")}
+            on:resetFilters={() => dispatch("resetFilters")}
+          />
+        </div>
+      {/if}
+    </div>
   </div>
 </div>
 
 <style>
+  .table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+  }
+
   .table {
     --border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
     overflow: hidden;
     background: transparent;
+    min-width: 700px;
   }
 
   .table-header,
@@ -238,6 +247,13 @@
     grid-template-columns: 1fr 200px 200px 200px 50px;
     border-bottom: var(--border);
     align-items: center;
+  }
+
+  @media (max-width: 1200px) {
+    .table-header,
+    .row {
+      grid-template-columns: 1fr 140px 140px 160px 45px;
+    }
   }
 
   .table-header {
