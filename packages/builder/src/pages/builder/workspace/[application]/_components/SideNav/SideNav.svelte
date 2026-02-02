@@ -174,11 +174,11 @@
     }
 
     const prefix = `/builder/workspace/${appId}`
-    const normalizedTarget = target.startsWith("/")
+    const normalisedTarget = target.startsWith("/")
       ? target
       : `${prefix}/${target.replace(/^\.\//, "")}`
 
-    $goto(normalizedTarget)
+    $goto(normalisedTarget)
     keepCollapsed()
   }
 
