@@ -307,8 +307,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools,
       stopWhen: stepCountIs(30),
       providerOptions: ai.getLiteLLMProviderOptions(),
-      onStepFinish(stepResult) {
-        updatePendingToolCalls(pendingToolCalls, stepResult)
+      onStepFinish({toolCalls, toolResults}) {
+        updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
       },
       onError({ error }) {
         console.error("Agent streaming error", {
@@ -355,7 +355,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
-        if (chat.transient) {
+        if (chat.transient || !chatAppId) {
           return
         }
 

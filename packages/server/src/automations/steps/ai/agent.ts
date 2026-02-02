@@ -132,8 +132,8 @@ export async function run({
           stopWhen: stepCountIs(30),
           providerOptions: ai.getLiteLLMProviderOptions(),
           output: outputOption,
-          onStepFinish(stepResult) {
-            updatePendingToolCalls(pendingToolCalls, stepResult)
+          onStepFinish({toolCalls, toolResults}) {
+            updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
           },
         })
 

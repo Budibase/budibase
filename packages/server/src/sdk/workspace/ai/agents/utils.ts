@@ -5,8 +5,8 @@ import {
   WebSearchProvider,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import type { ToolSet, UIMessage, StepResult } from "ai"
-import { isToolUIPart, getToolName } from "ai"
+import type { ToolSet, UIMessage, StepResult, TypedToolCall, TypedToolResult } from "ai"
+import { isToolUIPart, getToolName, tool } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
 import {
   createRestQueryTool,
@@ -177,15 +177,16 @@ export function findIncompleteToolCalls(
 
 export function updatePendingToolCalls(
   pendingToolCalls: Set<string>,
-  stepResult: StepResult<ToolSet>
+  toolCalls: TypedToolCall<ToolSet>[],
+  toolResults: TypedToolResult<ToolSet>[],
 ): void {
-  for (const toolCall of stepResult.toolCalls) {
+  for (const toolCall of toolCalls) {
     if (toolCall.toolCallId) {
       pendingToolCalls.add(toolCall.toolCallId)
     }
   }
 
-  for (const toolResult of stepResult.toolResults) {
+  for (const toolResult of toolResults) {
     if (toolResult.toolCallId) {
       pendingToolCalls.delete(toolResult.toolCallId)
     }
