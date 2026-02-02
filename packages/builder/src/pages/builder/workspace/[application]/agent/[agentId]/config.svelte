@@ -109,64 +109,63 @@ Any constraints the agent must follow.
     !!webSearchConfig?.apiKey && !!webSearchConfig.provider
   )
   let toolsLoaded = $derived(!!$agentsStore.tools)
-  let availableTools: AgentTool[] = $derived.by(() => {
-    const tools = $agentsStore.tools || []
-    const mappedTools = tools.map(tool => {
-      const sourceType = tool.sourceType
-      const sourceLabel = tool.sourceLabel
 
-      const prefix = getBindingPrefix(sourceType, sourceLabel)
-      const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
-        sourceType,
-        sourceLabel,
-      })
-
-      const displayName = tool.readableName || tool.name
-
-      return {
-        ...tool,
-        sourceLabel,
-        sourceType,
-        readableBinding: `${prefix}.${displayName}`,
-        runtimeBinding: tool.name,
-        icon,
-        tagIconUrl,
-      }
+  function enrichToolMetadata(tool: ToolMetadata): AgentTool {
+    const { sourceType, sourceLabel } = tool
+    const prefix = getBindingPrefix(sourceType, sourceLabel)
+    const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
+      sourceType,
+      sourceLabel,
     })
+    const displayName = tool.readableName || tool.name
+    return {
+      ...tool,
+      sourceLabel,
+      sourceType,
+      readableBinding: `${prefix}.${displayName}`,
+      runtimeBinding: tool.name,
+      icon,
+      tagIconUrl,
+    }
+  }
 
-    // Add a synthetic web search tool as we want it to always appear
+  function createWebSearchTool(): AgentTool {
     const webSearchTool: ToolMetadata = {
       name: "web_search",
       description: "Configure web search",
       sourceType: ToolType.SEARCH,
       sourceLabel: "Search",
     }
-    const prefix = getBindingPrefix(
-      webSearchTool.sourceType,
-      webSearchTool.sourceLabel
-    )
-    const { icon, tagIconUrl } = resolveAgentToolIcons(webSearchTool, {
-      sourceType: webSearchTool.sourceType,
-      sourceLabel: webSearchTool.sourceLabel,
-    })
+    const enriched = enrichToolMetadata(webSearchTool)
+    return {
+      ...enriched,
+      runtimeBinding:
+        getWebSearchRuntimeBinding(webSearchConfigured, webSearchConfig) || "",
+    }
+  }
 
-    return [
-      {
-        ...webSearchTool,
-        readableBinding: `${prefix}.web_search`,
-        runtimeBinding:
-          getWebSearchRuntimeBinding(webSearchConfigured, webSearchConfig) ||
-          "",
-        icon,
-        tagIconUrl,
-      },
-      ...mappedTools.filter(tool => tool.sourceType !== ToolType.SEARCH),
-    ]
+  let availableTools: AgentTool[] = $derived.by(() => {
+    const tools = $agentsStore.tools || []
+    const mappedTools = tools
+      .filter(tool => tool.sourceType !== ToolType.SEARCH)
+      .map(enrichToolMetadata)
+    return [createWebSearchTool(), ...mappedTools]
   })
 
-  let toolMaps = $derived(buildToolMaps(availableTools))
-  let readableToRuntimeBinding = $derived(toolMaps.readableToRuntimeBinding)
-  let readableToIcon = $derived(toolMaps.readableToIcon)
+  // Build lookup maps from readable binding to runtime binding and icon URL
+  let { readableToRuntimeBinding, readableToIcon } = $derived.by(() => {
+    const runtimeMap: Record<string, string> = {}
+    const iconMap: Record<string, string | undefined> = {}
+    for (const tool of availableTools) {
+      if (tool.readableBinding) {
+        iconMap[tool.readableBinding] = tool.tagIconUrl
+        if (tool.runtimeBinding) {
+          runtimeMap[tool.readableBinding] = tool.runtimeBinding
+        }
+      }
+    }
+    return { readableToRuntimeBinding: runtimeMap, readableToIcon: iconMap }
+  })
 
   /**
    * Doing this and key'ing the CodeEditor triggers a re-mount of the editor.
@@ -354,33 +353,10 @@ Any constraints the agent must follow.
     return {}
   }
 
-  function buildToolMaps(tools: AgentTool[]) {
-    return tools.reduce(
-      (acc, tool) => {
-        if (tool.readableBinding) {
-          acc.readableToIcon[tool.readableBinding] = tool.tagIconUrl
-        }
-        if (tool.readableBinding && tool.runtimeBinding) {
-          acc.readableToRuntimeBinding[tool.readableBinding] =
-            tool.runtimeBinding
-        }
-        return acc
-      },
-      {
-        readableToRuntimeBinding: {} as Record<string, string>,
-        readableToIcon: {} as Record<string, string | undefined>,
-      }
-    )
-  }
-
-  function slugify(str: string) {
-    return str
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_|_$/g, "")
-  }
-  function normaliseBindingPrefix(str: string) {
-    return str.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
+  function sanitizeString(str: string, lowercase = false) {
+    const base = lowercase ? str.toLowerCase() : str
+    const pattern = lowercase ? /[^a-z0-9]+/g : /[^a-zA-Z0-9]+/g
+    return base.replace(pattern, "_").replace(/^_|_$/g, "")
   }
   function getBindingPrefix(
     sourceType: ToolType | undefined,
@@ -393,13 +369,13 @@ Any constraints the agent must follow.
       return "budibase"
     }
     if (sourceType === ToolType.EXTERNAL) {
-      return sourceLabel ? normaliseBindingPrefix(sourceLabel) : "external"
+      return sourceLabel ? sanitizeString(sourceLabel) : "external"
     }
     if (sourceType === ToolType.SEARCH) {
       return "search"
     }
     if (sourceType === ToolType.REST_QUERY && sourceLabel) {
-      return `api.${slugify(sourceLabel)}`
+      return `api.${sanitizeString(sourceLabel, true)}`
     }
     return "tool"
   }
