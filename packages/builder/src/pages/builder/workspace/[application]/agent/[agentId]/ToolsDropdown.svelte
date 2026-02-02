@@ -13,7 +13,7 @@
   export let onConfigureWebSearch: () => void
 
   let toolsMenu: ActionMenu | undefined
-  $: console.log(filteredTools)
+
   const openWebSearchConfig = () => {
     toolsMenu?.hide()
     onConfigureWebSearch()

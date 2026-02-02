@@ -14,7 +14,7 @@
 
   $url
 
-  export let icon: string
+  export const icon: string | undefined = undefined
   export let breadcrumbs: Breadcrumb[]
   export let showPublish = true
 

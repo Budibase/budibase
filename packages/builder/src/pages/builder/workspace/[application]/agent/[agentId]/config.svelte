@@ -17,11 +17,7 @@
     automationStore,
     queries,
   } from "@/stores/builder"
-  import {
-    onDestroy,
-    onMount,
-    untrack,
-  } from "svelte"
+  import { onDestroy, onMount, untrack } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
@@ -655,7 +651,7 @@ Any constraints the agent must follow.
       Select which provider and model to use for the agent.{" "}
       <button
         class="link-button"
-        on:click={() => bb.settings("/ai-config/configs")}
+        onclick={() => bb.settings("/ai-config/configs")}
       >
         View AI Connectors.
       </button>
@@ -714,7 +710,18 @@ Any constraints the agent must follow.
   {#if includedToolsWithDetails.length > 0}
     <div class="tools-list">
       {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
-        <div class="tool-card" on:click={() => openToolResourceInNewTab(tool)}>
+        <div
+          class="tool-card"
+          role="button"
+          tabindex="0"
+          onclick={() => openToolResourceInNewTab(tool)}
+          onkeydown={e => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              openToolResourceInNewTab(tool)
+            }
+          }}
+        >
           <div class="tool-main">
             <div class="tool-item-icon">
               <ToolIcon icon={tool.icon} size="M" fallbackIcon="Wrench" />
@@ -730,7 +737,8 @@ Any constraints the agent must follow.
             <button
               class="tool-close-button"
               type="button"
-              on:click|stopPropagation={() => {
+              onclick={e => {
+                e.stopPropagation()
                 removeToolBindingFromPrompt(tool)
                 scheduleSave(true)
               }}
@@ -796,24 +804,8 @@ Any constraints the agent must follow.
 />
 
 <style>
-  .tools-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    height: fit-content;
-  }
-
   :global(.tools-popover-container .spectrum-Popover) {
     background-color: var(--background-alt);
-  }
-
-  .title-tools-bar {
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-xxs);
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
   }
 
   .prompt-editor-wrapper {
@@ -886,6 +878,12 @@ Any constraints the agent must follow.
     gap: 6px;
     cursor: pointer;
     transition: background 130ms ease-out;
+    outline: none;
+  }
+
+  .tool-card:focus-visible {
+    outline: 2px solid var(--spectrum-global-color-blue-500);
+    outline-offset: 2px;
   }
 
   .tool-card:hover {
@@ -938,21 +936,6 @@ Any constraints the agent must follow.
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-  }
-
-  .tool-menu-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: fit-content;
-    height: fit-content;
-    border-radius: 8px;
-    transition: background 130ms ease-out;
-  }
-
-  .tool-menu-trigger:hover {
-    background: var(--spectrum-global-color-gray-200);
-    cursor: pointer;
   }
 
   .tool-close-button {
@@ -1039,10 +1022,6 @@ Any constraints the agent must follow.
   }
 
   .section-header > :global(.spectrum-Body):first-child {
-    font-weight: 500;
-  }
-
-  .title-tools-bar > :global(.spectrum-Body) {
     font-weight: 500;
   }
 </style>

@@ -119,6 +119,7 @@
   <div class="config-page">
     <div class=" config-content">
       <div class="config-form">
+        <!-- svelte-ignore slot_element_deprecated -->
         <Layout gap="L">
           <slot />
         </Layout>
