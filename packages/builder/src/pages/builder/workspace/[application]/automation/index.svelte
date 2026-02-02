@@ -388,37 +388,42 @@
     padding: 9px 12px;
     color: var(--text-color);
     transition: background 130ms ease-out;
+  }
 
-    &:hover,
-    &.active {
-      background: var(--spectrum-global-color-gray-200);
+  .automation:hover,
+  .automation.active {
+    background: var(--spectrum-global-color-gray-200);
+  }
 
-      & .actions > * {
-        opacity: 1;
-        pointer-events: all;
-      }
-    }
-    &.favourite {
-      & .actions .favourite-btn {
-        opacity: 1;
-      }
-    }
+  .automation:hover .actions > *,
+  .automation.active .actions > *,
+  .automation:focus-within .actions > * {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .automation.favourite .actions .favourite-btn {
+    opacity: 1;
+    pointer-events: auto;
   }
   .actions {
     justify-content: flex-end;
     display: flex;
     align-items: center;
-    pointer-events: none;
     gap: var(--spacing-xs);
   }
 
   .actions > * {
     opacity: 0;
+    pointer-events: none;
     transition: opacity 130ms ease-out;
   }
 
-  .actions .favourite-btn {
-    pointer-events: all;
+  @media (hover: none), (pointer: coarse) {
+    .automation .actions > * {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 
   .table-wrapper {

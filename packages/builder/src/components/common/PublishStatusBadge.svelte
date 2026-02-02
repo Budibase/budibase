@@ -28,14 +28,14 @@
     line-height: 17px;
     font-weight: 400;
     color: var(--color);
+  }
 
-    &.published {
-      --color: #8ca171;
-    }
+  .status.published {
+    --color: #8ca171;
+  }
 
-    &.disabled {
-      --color: var(--spectrum-global-color-gray-600);
-    }
+  .status.disabled {
+    --color: var(--spectrum-global-color-gray-600);
   }
   .loading {
     opacity: 0.5;

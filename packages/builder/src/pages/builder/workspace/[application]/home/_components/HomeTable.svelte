@@ -299,26 +299,33 @@
     background: var(--background-alt);
     transition: background 130ms ease-out;
     cursor: pointer;
+  }
 
-    &:hover,
-    &.active {
-      background: var(--spectrum-global-color-gray-100);
+  .row:hover,
+  .row.active {
+    background: var(--spectrum-global-color-gray-100);
+  }
 
-      & .actions > * {
-        opacity: 1;
-        pointer-events: all;
-      }
+  .row:hover .actions > *,
+  .row.active .actions > *,
+  .row:focus-within .actions > * {
+    opacity: 1;
+    pointer-events: auto;
+  }
 
-      & .favourite-btn :global(i[aria-label="star"]) {
-        --color: var(--spectrum-global-color-gray-600);
-      }
-    }
+  .row:hover .favourite-btn :global(i[aria-label="star"]),
+  .row.active .favourite-btn :global(i[aria-label="star"]),
+  .row:focus-within .favourite-btn :global(i[aria-label="star"]) {
+    --color: var(--spectrum-global-color-gray-600);
+  }
 
-    &.favourite {
-      & .actions .favourite-btn {
-        opacity: 1;
-      }
-    }
+  .row.favourite .actions .favourite-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .row.favourite .favourite-btn :global(i[aria-label="star"]) {
+    --hover-color: var(--spectrum-global-color-gray-500) !important;
   }
 
   .cell {
@@ -346,21 +353,18 @@
     justify-content: flex-end;
     display: flex;
     align-items: center;
-    pointer-events: none;
     gap: calc(var(--spacing-xs) + 12px);
   }
 
   .actions > * {
     opacity: 0;
+    pointer-events: none;
     transition: opacity 130ms ease-out;
-  }
-
-  .actions .favourite-btn {
-    pointer-events: all;
   }
 
   .actions .ctx-btn {
     opacity: 1;
+    pointer-events: auto;
   }
 
   .ctx-btn {
@@ -381,6 +385,17 @@
     .table-header,
     .row {
       grid-template-columns: 1fr 120px 120px 140px 40px;
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .row .actions > * {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .row .favourite-btn :global(i[aria-label="star"]) {
+      --color: var(--spectrum-global-color-gray-600);
     }
   }
 </style>
