@@ -70,17 +70,14 @@ export async function updateAgent(
     aiconfig: body.aiconfig,
     promptInstructions: body.promptInstructions,
     goal: body.goal,
-    _deleted: false,
     icon: body.icon,
     iconColor: body.iconColor,
     live: body.live,
-    createdBy: body.createdBy,
     enabledTools: body.enabledTools,
     embeddingModel: body.embeddingModel,
     vectorDb: body.vectorDb,
     ragMinDistance: body.ragMinDistance,
     ragTopK: body.ragTopK,
-    ragVersion: body.ragVersion,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)

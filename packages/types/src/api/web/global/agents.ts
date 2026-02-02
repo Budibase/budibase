@@ -30,7 +30,10 @@ export type CreateAgentRequest = Optional<
 >
 export type CreateAgentResponse = Agent
 
-export type UpdateAgentRequest = Omit<Agent, "createdAt" | "updatedAt">
+export type UpdateAgentRequest = Omit<
+  Agent,
+  "createdAt" | "updatedAt" | "ragVersion" | "_deleted" | "createdBy"
+>
 export type UpdateAgentResponse = Agent
 
 export interface FetchAgentFilesResponse {
