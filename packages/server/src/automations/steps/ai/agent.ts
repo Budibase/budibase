@@ -9,9 +9,9 @@ import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import {
-  checkStepForIncompleteToolCalls,
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
+  updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents/utils"
 import {
   ToolLoopAgent,
@@ -118,7 +118,7 @@ export async function run({
           outputOption = Output.object({ schema: jsonSchema(normalizedSchema) })
         }
 
-        let hasIncompleteToolCalls = false
+        const pendingToolCalls = new Set<string>()
 
         const agent = new ToolLoopAgent({
           model: wrapLanguageModel({
@@ -133,9 +133,7 @@ export async function run({
           providerOptions: ai.getLiteLLMProviderOptions(),
           output: outputOption,
           onStepFinish(stepResult) {
-            if (checkStepForIncompleteToolCalls(stepResult)) {
-              hasIncompleteToolCalls = true
-            }
+            updatePendingToolCalls(pendingToolCalls, stepResult)
           },
         })
 
@@ -160,7 +158,7 @@ export async function run({
         const incompleteTools = assistantMessage
           ? findIncompleteToolCalls([assistantMessage])
           : []
-        if (hasIncompleteToolCalls || incompleteTools.length > 0) {
+        if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
           const errorMessage = formatIncompleteToolCallError(incompleteTools)
           tracer.llmobs.annotate(agentSpan, {
             outputData: errorMessage,

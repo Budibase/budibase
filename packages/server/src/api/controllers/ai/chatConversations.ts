@@ -35,8 +35,8 @@ import {
   RetrievedContextChunk,
 } from "../../../sdk/workspace/ai/rag/files"
 import {
-  checkStepForIncompleteToolCalls,
   formatIncompleteToolCallError,
+  updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents/utils"
 
 interface PrepareChatConversationForSaveParams {
@@ -291,7 +291,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           ]
         : modelMessages
 
-    let hasIncompleteToolCalls = false
+    const pendingToolCalls = new Set<string>()
 
     const result = streamText({
       model: wrapLanguageModel({
@@ -306,9 +306,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       stopWhen: stepCountIs(30),
       providerOptions: ai.getLiteLLMProviderOptions(),
       onStepFinish(stepResult) {
-        if (checkStepForIncompleteToolCalls(stepResult)) {
-          hasIncompleteToolCalls = true
-        }
+        updatePendingToolCalls(pendingToolCalls, stepResult)
       },
       onError({ error }) {
         console.error("Agent streaming error", {
@@ -341,7 +339,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           // Check if model ended in a tool-call state or steps were incomplete
           const finishReason = (part as { finishReason?: string }).finishReason
           const toolCallsIncomplete =
-            hasIncompleteToolCalls || finishReason === "tool-calls"
+            pendingToolCalls.size > 0 || finishReason === "tool-calls"
 
           return {
             ...baseMetadata,

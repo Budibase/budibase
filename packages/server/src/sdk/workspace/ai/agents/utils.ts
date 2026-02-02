@@ -175,10 +175,21 @@ export function findIncompleteToolCalls(
   return incomplete
 }
 
-export function checkStepForIncompleteToolCalls(
+export function updatePendingToolCalls(
+  pendingToolCalls: Set<string>,
   stepResult: StepResult<ToolSet>
-): boolean {
-  return stepResult.toolCalls.length > 0 && stepResult.toolResults.length === 0
+): void {
+  for (const toolCall of stepResult.toolCalls) {
+    if (toolCall.toolCallId) {
+      pendingToolCalls.add(toolCall.toolCallId)
+    }
+  }
+
+  for (const toolResult of stepResult.toolResults) {
+    if (toolResult.toolCallId) {
+      pendingToolCalls.delete(toolResult.toolCallId)
+    }
+  }
 }
 
 export function formatIncompleteToolCallError(

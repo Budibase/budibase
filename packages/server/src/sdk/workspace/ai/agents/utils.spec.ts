@@ -1,9 +1,9 @@
 import type { UIMessage, StepResult, ToolSet } from "ai"
 import {
   findIncompleteToolCalls,
-  checkStepForIncompleteToolCalls,
   formatIncompleteToolCallError,
   IncompleteToolCall,
+  updatePendingToolCalls,
 } from "./utils"
 
 type MessagePart = NonNullable<UIMessage["parts"]>[number]
@@ -263,44 +263,51 @@ describe("incomplete tool call detection", () => {
     })
   })
 
-  describe("checkStepForIncompleteToolCalls", () => {
-    it("returns false when no tool calls", () => {
-      const stepResult = {
-        toolCalls: [],
-        toolResults: [],
-      } as unknown as StepResult<ToolSet>
-
-      expect(checkStepForIncompleteToolCalls(stepResult)).toBe(false)
-    })
-
-    it("returns false when tool calls have results", () => {
-      const stepResult = {
-        toolCalls: [{ toolName: "list_automations", args: {} }],
-        toolResults: [{ toolName: "list_automations", result: {} }],
-      } as unknown as StepResult<ToolSet>
-
-      expect(checkStepForIncompleteToolCalls(stepResult)).toBe(false)
-    })
-
-    it("returns true when tool calls exist but no results", () => {
-      const stepResult = {
-        toolCalls: [{ toolName: "list_automations", args: {} }],
-        toolResults: [],
-      } as unknown as StepResult<ToolSet>
-
-      expect(checkStepForIncompleteToolCalls(stepResult)).toBe(true)
-    })
-
-    it("returns true when multiple tool calls but no results", () => {
+  describe("updatePendingToolCalls", () => {
+    it("adds tool calls to pending set", () => {
+      const pending = new Set<string>()
       const stepResult = {
         toolCalls: [
-          { toolName: "tool_a", args: {} },
-          { toolName: "tool_b", args: {} },
+          { toolCallId: "call-1", toolName: "list_automations", args: {} },
         ],
         toolResults: [],
-      } as unknown as StepResult<ToolSet>
+      } as StepResult<ToolSet>
 
-      expect(checkStepForIncompleteToolCalls(stepResult)).toBe(true)
+      updatePendingToolCalls(pending, stepResult)
+      expect(pending.has("call-1")).toBe(true)
+    })
+
+    it("removes tool calls when results arrive", () => {
+      const pending = new Set<string>(["call-1"])
+      const stepResult = {
+        toolCalls: [],
+        toolResults: [
+          {
+            toolCallId: "call-1",
+            toolName: "list_automations",
+            result: {},
+          },
+        ],
+      } as StepResult<ToolSet>
+
+      updatePendingToolCalls(pending, stepResult)
+      expect(pending.has("call-1")).toBe(false)
+    })
+
+    it("handles mixed tool calls and results", () => {
+      const pending = new Set<string>(["call-1"])
+      const stepResult = {
+        toolCalls: [
+          { toolCallId: "call-2", toolName: "tool_b", args: {} },
+        ],
+        toolResults: [
+          { toolCallId: "call-1", toolName: "tool_a", result: {} },
+        ],
+      } as StepResult<ToolSet>
+
+      updatePendingToolCalls(pending, stepResult)
+      expect(pending.has("call-1")).toBe(false)
+      expect(pending.has("call-2")).toBe(true)
     })
   })
 
