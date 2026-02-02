@@ -6,6 +6,7 @@ import {
   UserCtx,
   VectorDb,
   VectorDbListResponse,
+  VectorDbProvider,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -36,8 +37,8 @@ export const createVectorDbConfig = async (
   if (!body.provider) {
     throw new HTTPError("Provider is required", 400)
   }
-  if (body.provider !== "pgvector") {
-    throw new HTTPError("Only pgvector is supported currently", 400)
+  if (!Object.values(VectorDbProvider).includes(body.provider)) {
+    throw new HTTPError(`${body.provider} is not supported`, 400)
   }
 
   const created = await sdk.ai.vectorDb.create(body)
@@ -55,8 +56,8 @@ export const updateVectorDbConfig = async (
   if (!body._rev) {
     throw new HTTPError("Revision is required", 400)
   }
-  if (body.provider && body.provider !== "pgvector") {
-    throw new HTTPError("Only pgvector is supported currently", 400)
+  if (!Object.values(VectorDbProvider).includes(body.provider)) {
+    throw new HTTPError(`${body.provider} is not supported`, 400)
   }
   const updated = await sdk.ai.vectorDb.update(body)
   ctx.body = sanitize(updated)

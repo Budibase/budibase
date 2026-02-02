@@ -1,6 +1,7 @@
-import type { VectorDb as VectorDbDoc } from "@budibase/types"
-import { buildPgVectorDbConfig, PgVectorDb } from "./pgVectorDb"
+import { VectorDbProvider, type VectorDb as VectorDbDoc } from "@budibase/types"
+import { buildPgVectorDbConfig } from "./pgVectorDb"
 import type { VectorDb as VectorDbClient } from "./types"
+import { utils } from "@budibase/shared-core"
 
 export const createVectorDb = (
   config: VectorDbDoc,
@@ -9,14 +10,15 @@ export const createVectorDb = (
   }
 ): VectorDbClient => {
   switch (config.provider) {
-    case "pgvector":
-      return new PgVectorDb(
-        buildPgVectorDbConfig(config, {
-          agentId: options.agentId,
-        })
-      )
+    case VectorDbProvider.PGVECTOR:
+      return buildPgVectorDbConfig(config, {
+        agentId: options.agentId,
+      })
+
     default:
-      throw new Error(`Unsupported vector db provider: ${config.provider}`)
+      throw utils.unreachable(config.provider, {
+        message: `Unsupported vector db provider: ${config.provider}`,
+      })
   }
 }
 

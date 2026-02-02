@@ -1,4 +1,4 @@
-import type { VectorDb as VectorDbDoc } from "@budibase/types"
+import { VectorDbProvider, type VectorDb as VectorDbDoc } from "@budibase/types"
 import * as crypto from "crypto"
 import { Client } from "pg"
 import { context, db as dbCore } from "@budibase/backend-core"
@@ -44,15 +44,15 @@ const buildPgConnectionString = (config: VectorDbDoc) => {
 export const buildPgVectorDbConfig = (
   config: VectorDbDoc,
   options: { agentId: string }
-): PgVectorDbConfig => {
-  return {
-    provider: "pgvector",
+) => {
+  return new PgVectorDb({
+    provider: VectorDbProvider.PGVECTOR,
     databaseUrl: buildPgConnectionString(config),
     tableName: buildAgentTableName(options.agentId),
-  }
+  })
 }
 
-export class PgVectorDb implements VectorDb {
+class PgVectorDb implements VectorDb {
   private readonly tableName: string
 
   constructor(private readonly config: PgVectorDbConfig) {

@@ -1,9 +1,11 @@
+import { VectorDbProvider } from "@budibase/types"
+
 interface BaseVectorDbConfig {
-  provider: string
+  provider: VectorDbProvider
 }
 
 export interface PgVectorDbConfig extends BaseVectorDbConfig {
-  provider: "pgvector"
+  provider: VectorDbProvider.PGVECTOR
   databaseUrl: string
   tableName: string
 }

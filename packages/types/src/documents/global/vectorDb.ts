@@ -1,6 +1,6 @@
 import { Document } from "../.."
 
-export const enum VectorDbProvider {
+export enum VectorDbProvider {
   PGVECTOR = "pgvector",
 }
 
