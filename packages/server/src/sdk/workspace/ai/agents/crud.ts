@@ -1,5 +1,10 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { Agent, CreateAgentRequest, DocumentType } from "@budibase/types"
+import {
+  Agent,
+  CreateAgentRequest,
+  DocumentType,
+  UpdateAgentRequest,
+} from "@budibase/types"
 import { listAgentFiles, removeAgentFile } from "./files"
 
 const withAgentDefaults = (agent: Agent): Agent => ({
@@ -65,7 +70,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
   return withAgentDefaults(agent)
 }
 
-export async function update(agent: Agent): Promise<Agent> {
+export async function update(agent: UpdateAgentRequest): Promise<Agent> {
   const { _id, _rev } = agent
   if (!_id || !_rev) {
     throw new HTTPError("_id and _rev are required", 400)
