@@ -1,4 +1,4 @@
-import { PASSWORD_REPLACEMENT } from "@budibase/types"
+import { PASSWORD_REPLACEMENT, VectorDbProvider } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("vector db configs", () => {
@@ -10,7 +10,7 @@ describe("vector db configs", () => {
 
   const vectorDbRequest = {
     name: "Primary Vector DB",
-    provider: "pgvector",
+    provider: VectorDbProvider.PGVECTOR,
     host: "localhost",
     port: 5432,
     database: "budibase",
@@ -55,7 +55,7 @@ describe("vector db configs", () => {
     await config.api.vectorDb.create(
       {
         ...vectorDbRequest,
-        provider: "pinecone",
+        provider: "pinecone" as VectorDbProvider,
       },
       { status: 400 }
     )
