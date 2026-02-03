@@ -6,6 +6,7 @@
   import dayGridPlugin from "@fullcalendar/daygrid"
   import timeGridPlugin from "@fullcalendar/timegrid"
   import listPlugin from "@fullcalendar/list"
+  import type { EventClickArg } from "@fullcalendar/core"
   import type { Row, UIFieldDataProviderContext } from "@budibase/types"
 
   type CalendarView = "dayGridMonth" | "dayGridWeek" | "timeGridDay" | "listWeek"
@@ -50,7 +51,7 @@
       row_id: row["_id"],
     })) ?? []
 
-  function handleEventClick(info: any) {
+  function handleEventClick(info: EventClickArg) {
     const title = info.event.title
     const start = info.event.start
     const end = info.event.end
@@ -100,9 +101,7 @@
     },
     initialDate: openOnDate,
     events,
-    eventClick: function (info) {
-      handleEventClick(info)
-    },
+    eventClick: handleEventClick,
     // eventTimeFormat to override default meridiem to "short"
     eventTimeFormat: {
       hour: "numeric",
