@@ -7,10 +7,7 @@ import {
 import { v4 } from "uuid"
 import { ai } from "@budibase/pro"
 import {
-  AgentFile,
-  AgentFileStatus,
   AgentMessageMetadata,
-  AgentMessageRagSource,
   ChatAgentRequest,
   ChatApp,
   ChatConversation,
@@ -30,10 +27,7 @@ import {
   wrapLanguageModel,
 } from "ai"
 import sdk from "../../../sdk"
-import {
-  retrieveContextForSources,
-  RetrievedContextChunk,
-} from "../../../sdk/workspace/ai/rag/files"
+import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag/files"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -83,29 +77,6 @@ const getGlobalUserId = (ctx: UserCtx) => {
     throw new HTTPError("userId is required", 400)
   }
   return userId as string
-}
-
-const toSourceMetadata = (
-  chunks: RetrievedContextChunk[],
-  files: AgentFile[]
-): AgentMessageRagSource[] => {
-  const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
-  const summary = new Map<string, AgentMessageRagSource>()
-
-  for (const chunk of chunks) {
-    const file = fileBySourceId.get(chunk.sourceId)
-    if (!summary.has(chunk.sourceId)) {
-      summary.set(chunk.sourceId, {
-        sourceId: chunk.sourceId,
-        fileId: file?._id,
-        filename: file?.filename ?? chunk.sourceId,
-        chunkCount: 0,
-      })
-    }
-    const entry = summary.get(chunk.sourceId)!
-    entry.chunkCount += 1
-  }
-  return Array.from(summary.values())
 }
 
 export const extractUserText = (
@@ -223,27 +194,17 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const agentFiles = await sdk.ai.agents.listAgentFiles(agent._id!)
-  const readyFileSources = agentFiles
-    .filter(file => file.status === AgentFileStatus.READY && file.ragSourceId)
-    .map(file => file.ragSourceId)
 
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
 
   const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
-  if (hasRagConfig && latestQuestion && readyFileSources.length > 0) {
+  if (hasRagConfig && latestQuestion) {
     try {
-      const result = await retrieveContextForSources(
-        agent,
-        latestQuestion,
-        readyFileSources
-      )
+      const result = await retrieveContextForAgent(agent, latestQuestion)
       retrievedContext = result.text
-      if (result.chunks.length > 0) {
-        ragSourcesMetadata = toSourceMetadata(result.chunks, agentFiles)
-      }
+      ragSourcesMetadata = result.sources
     } catch (error) {
       // TODO: implement logging and fallbacks
       console.error("Failed to retrieve agent context", error)
