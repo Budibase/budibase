@@ -206,7 +206,9 @@ export function generateColumnDefinition(config: {
   }
   if (schema.type === FieldType.DATETIME) {
     schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lowerCaseType)
-    schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lowerCaseType)
+    schema.timeOnly =
+      SQL_TIME_ONLY_TYPES.includes(lowerCaseType) ||
+      lowerCaseType.startsWith("time(")
   }
 
   // Set subtype for Postgres array types
