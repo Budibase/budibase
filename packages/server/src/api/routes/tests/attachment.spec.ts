@@ -74,6 +74,7 @@ describe("/api/applications/:appId/sync", () => {
         resourceId: tableId,
         level: PermissionLevel.WRITE,
       })
+      await config.publish()
     })
 
     it("should reject active content for public users", async () => {
