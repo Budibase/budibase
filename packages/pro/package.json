@@ -1,0 +1,74 @@
+{
+  "name": "@budibase/pro",
+  "files": [
+    "dist"
+  ],
+  "license": "UNLICENSED",
+  "version": "0.0.0",
+  "description": "Budibase Pro (Backend)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Budibase/budibase-pro.git"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.1",
+    "@anthropic-ai/sdk": "^0.27.3",
+    "@budibase/backend-core": "*",
+    "@budibase/shared-core": "*",
+    "@budibase/string-templates": "*",
+    "@budibase/types": "*",
+    "@koa/router": "15.3.0",
+    "bull": "4.10.1",
+    "dd-trace": "5.56.0",
+    "joi": "17.6.0",
+    "jsonwebtoken": "9.0.2",
+    "lru-cache": "^7.14.1",
+    "memorystream": "^0.3.1",
+    "node-fetch": "2.6.7",
+    "openai": "5.12.1",
+    "scim-patch": "^0.8.1",
+    "scim2-parse-filter": "^0.2.8",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "9.0.3",
+    "@types/koa": "2.13.4",
+    "@types/koa__router": "12.0.5",
+    "@types/lodash": "4.14.200",
+    "@types/node-fetch": "2.6.4",
+    "rimraf": "3.0.2",
+    "timekeeper": "^2.2.0",
+    "ts-node": "10.8.1",
+    "tsconfig-paths": "^4.2.0"
+  },
+  "scripts": {
+    "setup": "yarn && yarn build",
+    "prebuild": "rimraf dist",
+    "build": "node ../../scripts/build.js && yarn build:types",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
+    "check:types": "tsc -p tsconfig.build.json --noEmit --paths null",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch --runInBand",
+    "license:update": "node scripts/licenses/updateLicense.js",
+    "license:generate": "yarn run license:update && ts-node -r tsconfig-paths/register ./scripts/licenses/generate.ts",
+    "ai:js:test": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" ts-node --transpileOnly -r tsconfig-paths/register ./scripts/test-ai-js-gen.ts"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/backend-core",
+              "@budibase/string-templates",
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
+  }
+}

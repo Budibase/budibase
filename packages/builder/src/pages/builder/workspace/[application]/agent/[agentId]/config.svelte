@@ -537,6 +537,12 @@ Any constraints the agent must follow.
   }) {
     if (!currentAgent) return
     if (saving) return
+    if (!draft.aiconfig) {
+      if (showNotifications) {
+        notifications.error("Please select an AI model")
+      }
+      return
+    }
 
     saving = true
     try {
@@ -593,6 +599,8 @@ Any constraints the agent must follow.
   })
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div class="llm-section-container">
   <div class="llm-header">
     <Body size="S" color="var(--spectrum-global-color-gray-900)">AI Model*</Body
@@ -624,7 +632,6 @@ Any constraints the agent must follow.
         <Select
           bind:value={draft.aiconfig}
           options={modelOptions}
-          placeholder="Select a model"
           on:change={() => scheduleSave(true)}
         />
       {/if}
@@ -660,6 +667,8 @@ Any constraints the agent must follow.
   {#if includedToolsWithDetails.length > 0}
     <div class="tools-list">
       {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div class="tool-card" on:click={() => openToolResourceInNewTab(tool)}>
           <div class="tool-main">
             <div class="tool-item-icon">
