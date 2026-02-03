@@ -5,6 +5,7 @@ import {
   configs,
   context,
   objectStore,
+  roles,
   utils,
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
@@ -114,31 +115,43 @@ export const uploadFile = async function (
       }
 
       const extensionLower = extension.toLowerCase()
-      if (InvalidFileExtensions.includes(extensionLower)) {
+      const isPublicUser =
+        ctx.roleId === roles.BUILTIN_ROLE_IDS.PUBLIC ||
+        ctx.user?.roleId === roles.BUILTIN_ROLE_IDS.PUBLIC
+      const enforceInvalidExtension = isPublicUser || !env.SELF_HOSTED
+      if (
+        enforceInvalidExtension &&
+        InvalidFileExtensions.includes(extensionLower)
+      ) {
         throw new BadRequestError(
           `File "${file.name}" has an invalid extension: "${extension}"`
         )
       }
 
-      if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
-        throw new BadRequestError(
-          `File "${file.name}" may contain active content which is not permitted`
-        )
-      }
-
-      const rawMimeType = Array.isArray(file.type) ? file.type[0] : file.type
-      const mimeType =
-        typeof rawMimeType === "string" ? rawMimeType.toLowerCase() : undefined
-      if (
-        mimeType &&
-        ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
-      ) {
+      if (isPublicUser && ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
         throw new BadRequestError(
           `File "${file.name}" contains active content which is not permitted`
         )
       }
 
+      if (isPublicUser) {
+        const rawMimeType = Array.isArray(file.type) ? file.type[0] : file.type
+        const mimeType =
+          typeof rawMimeType === "string"
+            ? rawMimeType.toLowerCase()
+            : undefined
+        if (
+          mimeType &&
+          ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
+        ) {
+          throw new BadRequestError(
+            `File "${file.name}" contains active content which is not permitted`
+          )
+        }
+      }
+
       if (
+        isPublicUser &&
         file.path &&
         (typeof file.path === "string" || Buffer.isBuffer(file.path)) &&
         (await detectActiveContent(file.path))
