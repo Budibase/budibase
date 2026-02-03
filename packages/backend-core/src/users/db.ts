@@ -183,6 +183,9 @@ export class UserDB {
   }
 
   static async countUsersByApp(appId: string) {
+    if (typeof appId !== "string" || !appId) {
+      throw new Error("Must provide a string based workspace ID")
+    }
     const response = await dbUtils.queryGlobalViewRaw<User>(
       dbUtils.ViewName.USER_BY_WORKSPACE,
       getUsersByWorkspaceParams(appId, {

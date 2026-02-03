@@ -425,4 +425,23 @@ describe("UserDB", () => {
       expect(preventSpy).toHaveBeenCalled()
     })
   })
+
+  describe("countUsersByApp", () => {
+    it("throws when appId is missing or not a string", async () => {
+      await config.doInTenant(async () => {
+        await expect(db.countUsersByApp(undefined as any)).rejects.toThrow(
+          "Must provide a string based workspace ID"
+        )
+        await expect(db.countUsersByApp(null as any)).rejects.toThrow(
+          "Must provide a string based workspace ID"
+        )
+        await expect(db.countUsersByApp(123 as any)).rejects.toThrow(
+          "Must provide a string based workspace ID"
+        )
+        await expect(db.countUsersByApp("" as any)).rejects.toThrow(
+          "Must provide a string based workspace ID"
+        )
+      })
+    })
+  })
 })
