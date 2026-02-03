@@ -112,3 +112,20 @@ export async function withTimeout<T>(
   cancel()
   return result
 }
+
+/**
+ * Escapes HTML special characters in a string to prevent XSS attacks.
+ * @param str the string to escape
+ * @return the escaped string safe for use in HTML
+ */
+export const escapeHtml = (str: string | undefined | null): string => {
+  if (str == null) {
+    return ""
+  }
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
