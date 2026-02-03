@@ -19,6 +19,7 @@ jobs:
       - name: Update eligible PRs
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const run = require("./scripts/autoupdate-automerge")
             await run({ github, context, core })
