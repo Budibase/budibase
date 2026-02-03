@@ -1,5 +1,6 @@
 <script lang="ts">
   import { marked } from "marked"
+  import sanitizeHtml from "sanitize-html"
 
   export let value: string | undefined = undefined
   export let height: string | undefined = undefined
@@ -7,6 +8,61 @@
   let ref: HTMLDivElement | undefined
 
   $: updateValue(ref, value)
+
+  const sanitizeOptions: sanitizeHtml.IOptions = {
+    allowedTags: [
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "p",
+      "br",
+      "hr",
+      "strong",
+      "em",
+      "b",
+      "i",
+      "u",
+      "s",
+      "del",
+      "sup",
+      "sub",
+      "mark",
+      "ul",
+      "ol",
+      "li",
+      "a",
+      "img",
+      "pre",
+      "code",
+      "blockquote",
+      "table",
+      "thead",
+      "tbody",
+      "tfoot",
+      "tr",
+      "th",
+      "td",
+      "dl",
+      "dt",
+      "dd",
+      "div",
+      "span",
+    ],
+    allowedAttributes: {
+      a: ["href", "title", "target", "rel"],
+      img: ["src", "alt", "title", "width", "height"],
+      th: ["align", "valign"],
+      td: ["align", "valign"],
+      code: ["class"],
+      pre: ["class"],
+      span: ["class"],
+      div: ["class"],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+  }
 
   const updateValue = async (
     ref: HTMLDivElement | undefined,
@@ -19,7 +75,8 @@
       ref.innerHTML = ""
       return
     }
-    ref.innerHTML = marked.parse(markdown, { async: false })
+    const rawHtml = marked.parse(markdown, { async: false }) as string
+    ref.innerHTML = sanitizeHtml(rawHtml, sanitizeOptions)
   }
 </script>
 
