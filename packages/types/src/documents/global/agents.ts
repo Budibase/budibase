@@ -55,7 +55,6 @@ export enum AgentFileStatus {
   PROCESSING = "processing",
   READY = "ready",
   FAILED = "failed",
-  DELETED = "deleted",
 }
 
 export interface AgentFile extends Document {
@@ -68,7 +67,6 @@ export interface AgentFile extends Document {
   chunkCount: number
   uploadedBy: string
   createdRagVersion: number
-  deletedRagVersion?: number
   errorMessage?: string
   processedAt?: string
 }

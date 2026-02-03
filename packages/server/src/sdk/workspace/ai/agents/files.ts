@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import {
   Agent,
   AgentFile,
@@ -6,8 +6,9 @@ import {
   DocumentType,
   RequiredKeys,
   ToDocCreateMetadata,
-  WithRequired,
 } from "@budibase/types"
+import { deleteAgentFileChunks } from "../rag/files"
+import { agents } from ".."
 
 interface CreateAgentFileOptions {
   agentId: string
@@ -15,16 +16,16 @@ interface CreateAgentFileOptions {
   mimetype?: string
   size?: number
   uploadedBy: string
-  createdRagVersion: number
 }
 
 export const createAgentFile = async (
   options: CreateAgentFileOptions
 ): Promise<AgentFile> => {
   const db = context.getWorkspaceDB()
-  const { agentId, filename, mimetype, size, uploadedBy, createdRagVersion } =
-    options
+  const { agentId, filename, mimetype, size, uploadedBy } = options
   const _id = docIds.generateAgentFileID(agentId)
+
+  const currentRagVersion = await ensureIncreaseRagVersion(agentId)
 
   const doc: RequiredKeys<ToDocCreateMetadata<AgentFile>> = {
     _id,
@@ -36,8 +37,7 @@ export const createAgentFile = async (
     status: AgentFileStatus.PROCESSING,
     uploadedBy,
     chunkCount: 0,
-    createdRagVersion,
-    deletedRagVersion: undefined,
+    createdRagVersion: currentRagVersion,
 
     errorMessage: undefined,
     processedAt: undefined,
@@ -79,7 +79,6 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
     .map(row => row.doc)
     .filter(file => !!file)
     .filter(file => !file._deleted)
-    .filter(file => file.status !== AgentFileStatus.DELETED)
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
@@ -87,15 +86,43 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
     })
 }
 
-export const removeAgentFile = async (
-  agent: WithRequired<Agent, "ragVersion">,
-  file: AgentFile
-) => {
-  const db = context.getWorkspaceDB()
-  const updated: AgentFile = {
-    ...file,
-    status: AgentFileStatus.DELETED,
-    deletedRagVersion: agent.ragVersion,
+export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
+  const currentRagVersion = await ensureIncreaseRagVersion(agent._id!)
+  if ((file.createdRagVersion ?? 0) === currentRagVersion) {
+    await deleteAgentFileChunks(agent, [file.ragSourceId])
   }
-  await db.put(updated)
+
+  const db = context.getWorkspaceDB()
+  await db.remove(file)
+}
+
+async function ensureIncreaseRagVersion(agentId: string): Promise<number> {
+  let prodVersion = 0
+  try {
+    const prodWorkspaceId = db.getProdWorkspaceID(
+      context.getOrThrowWorkspaceId()
+    )
+    await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+      const prodAgent = await agents.getOrThrow(agentId)
+      prodVersion = prodAgent.ragVersion ?? 0
+    })
+  } catch (error: any) {
+    if (error?.status === 404) {
+      // ignore if prod workspace/agent does not exist yet
+    } else {
+      throw error
+    }
+  }
+
+  const ragVersion = prodVersion + 1
+
+  const agent = await agents.getOrThrow(agentId)
+  if (agent.ragVersion !== ragVersion) {
+    await agents.update({
+      ...agent,
+      ragVersion: ragVersion,
+    })
+  }
+
+  return ragVersion
 }

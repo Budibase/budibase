@@ -1,5 +1,4 @@
 import {
-  AgentFile,
   AgentFileStatus,
   AIConfigType,
   VectorDbProvider,
@@ -13,6 +12,7 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
   return {
     ingestAgentFile: jest.fn(),
+    deleteAgentFileChunks: jest.fn(),
   }
 })
 
@@ -177,7 +177,49 @@ describe("agent files", () => {
     expect(updated?.ragVersion).toBe(6)
   })
 
-  it("soft deletes agent files until publish", async () => {
+  it("deletes agent files (but not the embeddings)", async () => {
+    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+      typeof ragSdk.ingestAgentFile
+    >
+    ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
+
+    const { agent } = await createAgentWithRag()
+
+    const upload = await config.api.agentFiles.upload(agent._id!, {
+      file: fileBuffer,
+      name: "docs.txt",
+    })
+
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const prodDoc = {
+          ...agent,
+          ragVersion: 1,
+        }
+        delete prodDoc._rev
+        await db.put(prodDoc as any)
+      }
+    )
+
+    const response = await config.api.agentFiles.remove(
+      agent._id!,
+      upload.file._id!
+    )
+    expect(response.deleted).toBe(true)
+
+    const { files } = await config.api.agentFiles.fetch(agent._id!)
+    expect(files).toHaveLength(0)
+
+    const deleteAgentFileChunksSpy =
+      ragSdk.deleteAgentFileChunks as jest.MockedFunction<
+        typeof ragSdk.deleteAgentFileChunks
+      >
+    expect(deleteAgentFileChunksSpy).not.toHaveBeenCalled()
+  })
+
+  it("hard deletes agent files that were never in prod", async () => {
     const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
       typeof ragSdk.ingestAgentFile
     >
@@ -199,14 +241,14 @@ describe("agent files", () => {
     const { files } = await config.api.agentFiles.fetch(agent._id!)
     expect(files).toHaveLength(0)
 
-    const stored = await context.doInWorkspaceContext(
-      config.getDevWorkspaceId(),
-      async () => {
-        const db = context.getWorkspaceDB()
-        return await db.tryGet<AgentFile>(upload.file._id!)
-      }
+    const deleteAgentFileChunksSpy =
+      ragSdk.deleteAgentFileChunks as jest.MockedFunction<
+        typeof ragSdk.deleteAgentFileChunks
+      >
+    expect(deleteAgentFileChunksSpy).toHaveBeenCalledTimes(1)
+    expect(deleteAgentFileChunksSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: agent._id }),
+      [upload.file._id]
     )
-    expect(stored?.status).toBe(AgentFileStatus.DELETED)
-    expect(stored?.deletedRagVersion).toBe(1)
   })
 })

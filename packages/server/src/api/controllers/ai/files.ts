@@ -1,11 +1,9 @@
-import { HTTPError, context, db as dbCore } from "@budibase/backend-core"
+import { HTTPError } from "@budibase/backend-core"
 import {
-  Agent,
   AgentFileStatus,
   AgentFileUploadResponse,
   FetchAgentFilesResponse,
   UserCtx,
-  WithRequired,
 } from "@budibase/types"
 import { readFile, unlink } from "node:fs/promises"
 import sdk from "../../../sdk"
@@ -42,45 +40,11 @@ export async function fetchAgentFiles(
   ctx.status = 200
 }
 
-async function ensureIncreaseRagVersion(
-  agentId: string
-): Promise<WithRequired<Agent, "ragVersion">> {
-  let prodVersion = 0
-  try {
-    const prodWorkspaceId = dbCore.getProdWorkspaceID(
-      context.getOrThrowWorkspaceId()
-    )
-    await context.doInWorkspaceContext(prodWorkspaceId, async () => {
-      const prodAgent = await sdk.ai.agents.getOrThrow(agentId)
-      prodVersion = prodAgent.ragVersion ?? 0
-    })
-  } catch (error: any) {
-    if (error?.status === 404) {
-      // ignore if prod workspace/agent does not exist yet
-    } else {
-      throw error
-    }
-  }
-
-  const ragVersion = prodVersion + 1
-
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const updatedAgent =
-    agent.ragVersion === ragVersion
-      ? agent
-      : await sdk.ai.agents.update({
-          ...agent,
-          ragVersion: ragVersion,
-        })
-
-  return { ...updatedAgent, ragVersion }
-}
-
 export async function uploadAgentFile(
-  ctx: UserCtx<void, AgentFileUploadResponse>
+  ctx: UserCtx<void, AgentFileUploadResponse, { agentId: string }>
 ) {
   const agentId = ctx.params.agentId
-  const agent = await ensureIncreaseRagVersion(agentId)
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   const upload = normalizeUpload(
     ctx.request.files?.file ||
@@ -106,12 +70,11 @@ export async function uploadAgentFile(
 
   const buffer = await readFile(filePath)
   const agentFile = await sdk.ai.agents.createAgentFile({
-    agentId: agent._id!,
+    agentId: agentId,
     filename,
     mimetype,
     size: fileSize ?? buffer.byteLength,
     uploadedBy: ctx.user?._id!,
-    createdRagVersion: agent.ragVersion,
   })
 
   try {
@@ -139,11 +102,11 @@ export async function deleteAgentFile(
   ctx: UserCtx<void, { deleted: true }, { agentId: string; fileId: string }>
 ) {
   const { agentId, fileId } = ctx.params
-  const agent = await ensureIncreaseRagVersion(agentId)
   const file = await sdk.ai.agents.getAgentFileOrThrow(fileId)
   if (file.agentId !== agentId) {
     throw new HTTPError("File does not belong to this agent", 404)
   }
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
   await sdk.ai.agents.removeAgentFile(agent, file)
   ctx.body = { deleted: true }
   ctx.status = 200
