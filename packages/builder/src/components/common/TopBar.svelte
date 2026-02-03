@@ -14,7 +14,6 @@
 
   $url
 
-  export let icon: string
   export let breadcrumbs: Breadcrumb[]
   export let showPublish = true
 
