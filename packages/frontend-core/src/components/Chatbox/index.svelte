@@ -75,7 +75,7 @@
 
   const hasToolError = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? []).some(
-      part => isToolUIPart(part) && part.state === "output-error"
+                  {#if isRunning || isError || isSuccess}
     )
 
   const getMessageError = (message: UIMessage<AgentMessageMetadata>) =>
