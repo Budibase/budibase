@@ -2,7 +2,7 @@ module.exports = async ({ github, context, core }) => {
   const owner = context.repo.owner
   const repo = context.repo.repo
 
-  const getReviewDecision = async prNumber => {
+  const isApproved = async prNumber => {
     const { data: reviews } = await github.rest.pulls.listReviews({
       owner,
       repo,
@@ -16,7 +16,10 @@ module.exports = async ({ github, context, core }) => {
         continue
       }
       const existing = latestByUser.get(review.user.login)
-      if (!existing || new Date(review.submitted_at) > new Date(existing.submitted_at)) {
+      if (
+        !existing ||
+        new Date(review.submitted_at) > new Date(existing.submitted_at)
+      ) {
         latestByUser.set(review.user.login, review)
       }
     }
@@ -49,7 +52,7 @@ module.exports = async ({ github, context, core }) => {
       return false
     }
 
-    const approved = await getReviewDecision(pr.number)
+    const approved = await isApproved(pr.number)
     if (!approved) {
       return false
     }
