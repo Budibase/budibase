@@ -6,6 +6,7 @@ export interface UserInfo {
   password: string
   forceResetPassword?: boolean
   role: keyof typeof Constants.BudibaseRoles
+  appRole?: (typeof Constants.Roles)[keyof typeof Constants.Roles]
 }
 
 export interface User extends UserDoc {
