@@ -29,22 +29,21 @@
     StatusLight,
   } from "@budibase/bbui"
   import type { UIAutomation } from "@budibase/types"
-  import { PublishResourceState, WorkspaceResource } from "@budibase/types"
+  import {
+    FeatureFlag,
+    PublishResourceState,
+    WorkspaceResource,
+  } from "@budibase/types"
   import { redirect, url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import NoResults from "../_components/NoResults.svelte"
   import { appsStore, featureFlags } from "@/stores/portal"
-  import { onMount } from "svelte"
 
   $url
   $redirect
 
-  onMount(() => {
-    if ($featureFlags.WORKSPACE_HOME) {
-      $redirect("../home")
-    }
-  })
+  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] && $redirect("../home")
 
   let showHighlight = true
   let createModal: ModalAPI

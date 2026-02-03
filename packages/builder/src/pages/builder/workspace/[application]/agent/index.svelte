@@ -13,8 +13,7 @@
     Tabs,
     Tab,
   } from "@budibase/bbui"
-  import type { Agent } from "@budibase/types"
-  import { WorkspaceResource } from "@budibase/types"
+  import { FeatureFlag, WorkspaceResource, type Agent } from "@budibase/types"
   import NoResults from "../_components/NoResults.svelte"
   import AgentModal from "./AgentModal.svelte"
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
@@ -111,9 +110,10 @@
 
   $redirect
 
+  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] && $redirect("../home")
+
   onMount(async () => {
-    if ($featureFlags.WORKSPACE_HOME) {
-      $redirect("../home")
+    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
       return
     }
 
