@@ -47,7 +47,8 @@ export async function getAvailableTools(
   const datasourceNamesById = Object.fromEntries(
     datasources
       .filter(ds => !!ds._id)
-      .map(ds => [ds._id, ds.name || "Datasource"]))
+      .map(ds => [ds._id, ds.name || "Datasource"])
+  )
 
   const datasourceIconTypesById = Object.fromEntries(
     datasources
@@ -152,7 +153,7 @@ export function createLiteLLMFetch(sessionId: string): typeof fetch {
 
   // Preserve the preconnect helper required by the OpenAI client typings.
   if (typeof (fetch as any).preconnect === "function") {
-    ; (liteFetch as any).preconnect = (fetch as any).preconnect.bind(fetch)
+    ;(liteFetch as any).preconnect = (fetch as any).preconnect.bind(fetch)
   }
 
   return liteFetch

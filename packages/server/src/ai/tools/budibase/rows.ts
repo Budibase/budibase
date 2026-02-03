@@ -145,7 +145,8 @@ export const createRowTools = ({
 }): BudibaseToolDefinition[] => {
   const isExternal = tableSourceType === TableSourceType.EXTERNAL
   const resolvedSourceType = isExternal ? ToolType.EXTERNAL : ToolType.INTERNAL
-  const resolvedSourceLabel = sourceLabel || (isExternal ? "External" : "Budibase")
+  const resolvedSourceLabel =
+    sourceLabel || (isExternal ? "External" : "Budibase")
 
   return Object.entries(ROW_ACTIONS).map(([action, def]) => {
     const description = `${formatActionLabel(action)} in "${tableName}". ${def.description}`

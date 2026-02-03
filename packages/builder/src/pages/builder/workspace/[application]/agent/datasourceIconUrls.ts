@@ -38,4 +38,3 @@ export const DATASOURCE_TAG_ICON_URLS: Record<string, string> = {
   SQL_SERVER: SqlServerIconUrl,
   REST: REST_TAG_ICON_URL,
 }
-
