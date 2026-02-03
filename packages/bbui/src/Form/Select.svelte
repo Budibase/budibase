@@ -30,6 +30,7 @@
     | undefined = undefined
   export let quiet: boolean = false
   export let size: "S" | "M" | "L" = "M"
+  export let bordered: boolean = true
   export let autoWidth: boolean = false
   export let sort: boolean = false
   export let tooltip: string | undefined = undefined
@@ -66,6 +67,7 @@
 <Field {helpText} {label} {labelPosition} {error} {tooltip} {required}>
   <Select
     {size}
+    {bordered}
     {quiet}
     {loading}
     {disabled}
