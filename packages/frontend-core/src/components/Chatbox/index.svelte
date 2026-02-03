@@ -78,6 +78,9 @@
       part => isToolUIPart(part) && part.state === "output-error"
     )
 
+  const getMessageError = (message: UIMessage<AgentMessageMetadata>) =>
+    message.metadata?.error
+
   $effect(() => {
     const interval = setInterval(() => {
       let updated = false
@@ -151,6 +154,7 @@
             chatAppId,
             agentId: chat?.agentId,
             transient: !persistConversation,
+            isPreview: isAgentPreviewChat,
             title: chat?.title,
             messages,
           },
@@ -409,9 +413,13 @@
         {@const reasoningText = getReasoningText(message)}
         {@const reasoningId = `${message.id}-reasoning`}
         {@const toolError = hasToolError(message)}
+        {@const messageError = getMessageError(message)}
         {@const reasoningStreaming = isReasoningStreaming(message)}
         {@const isThinking =
-          reasoningStreaming && !toolError && !message.metadata?.completedAt}
+          reasoningStreaming &&
+          !toolError &&
+          !messageError &&
+          !message.metadata?.completedAt}
         <div class="message assistant">
           {#if reasoningText}
             <div class="reasoning-part">
@@ -487,7 +495,7 @@
                   <div class="tool-name-wrapper">
                     <span class="tool-name">{getToolName(part)}</span>
                   </div>
-                  {#if isRunning || isError}
+                  {#if isRunning || isError || isSuccess}
                     <span class="tool-status">
                       {#if isRunning}
                         <ProgressCircle size="S" />
@@ -496,6 +504,12 @@
                           name="x"
                           size="S"
                           color="var(--spectrum-global-color-red-600)"
+                        />
+                      {:else if isSuccess}
+                        <Icon
+                          name="check"
+                          size="S"
+                          color="var(--spectrum-global-color-green-600)"
                         />
                       {/if}
                     </span>
