@@ -98,12 +98,6 @@ class PgVectorDb implements VectorDb {
     await client.query(
       `CREATE UNIQUE INDEX IF NOT EXISTS ${buildIndexName(this.tableName, "source_chunk_hash_uq")} ON ${this.tableName} (source, chunk_hash)`
     )
-    await client.query(
-      `CREATE INDEX IF NOT EXISTS ${buildIndexName(
-        this.tableName,
-        "source"
-      )} ON ${this.tableName} (source)`
-    )
     await client.query(`
         CREATE INDEX IF NOT EXISTS ${buildIndexName(
           this.tableName,
