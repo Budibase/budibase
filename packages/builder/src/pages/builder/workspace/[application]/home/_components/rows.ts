@@ -144,7 +144,7 @@ export const filterHomeRows = ({
   typeFilter: HomeType
   searchTerm: string
 }) => {
-  const normalizedSearchTerm = searchTerm.trim().toLowerCase()
+  const normalisedSearchTerm = searchTerm.trim().toLowerCase()
 
   return rows.filter(row => {
     if (typeFilter !== "all") {
@@ -156,8 +156,8 @@ export const filterHomeRows = ({
       }
     }
 
-    if (normalizedSearchTerm) {
-      return row.name.toLowerCase().includes(normalizedSearchTerm)
+    if (normalisedSearchTerm) {
+      return row.name.toLowerCase().includes(normalisedSearchTerm)
     }
 
     return true
