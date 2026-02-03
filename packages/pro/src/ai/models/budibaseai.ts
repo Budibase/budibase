@@ -172,9 +172,6 @@ export class BudibaseAI extends LLM {
           throw new Error("No license key found")
         }
         this._apiKey = licenseKey
-        span.addTags({
-          licenseKey: this._apiKey,
-        })
       }
 
       const body: ChatCompletionRequest = {
