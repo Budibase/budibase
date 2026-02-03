@@ -24,6 +24,7 @@
   export let showTitleDate: boolean | true
   export let titleDateFormat: string | ["en-gb", "en-us"]
   export let emptyAgendaText: string | "No events found"
+  export let openOnDate: string // SHould be date?
   export let calendarType:
     | string
     | ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"]
@@ -91,6 +92,7 @@
         noEventsContent: emptyAgendaText,
       },
     },
+    initialDate: openOnDate,
     events,
     eventClick: function (info) {
       handleEventClick(info)

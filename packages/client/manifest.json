@@ -9605,6 +9605,11 @@
         "key": "showButtons"
       },
       {
+        "type": "text",
+        "label": "Open on date",
+        "key": "openOnDate"
+      },
+      {
         "section": true,
         "name": "Controls",
         "settings": [
