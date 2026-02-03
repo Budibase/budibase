@@ -27,14 +27,27 @@ interface RowAction {
 
 const ROW_ACTIONS: Record<string, RowAction> = {
   list_rows: {
-    description: "List rows in a given table",
+    description: "List rows in a given table with optional pagination",
     inputSchema: z.object({
       limit: z.number().nullish().describe("Maximum number of rows to return"),
-      startKey: z.string().nullish().describe("Start key for pagination"),
+      bookmark: z
+        .union([z.string(), z.number()])
+        .nullish()
+        .describe("Bookmark for pagination (returned from previous request)"),
     }),
-    execute: async tableId => {
-      const rows = await sdk.rows.fetch(tableId)
-      return { rows }
+    execute: async (tableId, { limit, bookmark }) => {
+      const searchParams: RowSearchParams = {
+        tableId,
+        query: {},
+        limit: limit ?? undefined,
+        bookmark: bookmark ?? undefined,
+      }
+      const result = await sdk.rows.search(searchParams)
+      return {
+        rows: result.rows,
+        hasNextPage: result.hasNextPage,
+        bookmark: result.bookmark,
+      }
     },
   },
   get_row: {
