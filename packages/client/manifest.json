@@ -9645,7 +9645,7 @@
             "type": "text",
             "label": "Today button text",
             "key": "todayText",
-            "defaultValuee": "Today",
+            "defaultValue": "Today",
             "dependsOn": "showButtons"
           }
         ]
