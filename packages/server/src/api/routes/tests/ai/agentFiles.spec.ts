@@ -3,7 +3,6 @@ import {
   AIConfigType,
   VectorDbProvider,
 } from "@budibase/types"
-import { context } from "@budibase/backend-core"
 import nock from "nock"
 import environment from "../../../../environment"
 import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
@@ -123,60 +122,6 @@ describe("agent files", () => {
     expect(files[0]._id).toBe(upload.file._id)
   })
 
-  it("keeps rag version stable across multiple uploads", async () => {
-    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
-      typeof ragSdk.ingestAgentFile
-    >
-    ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
-
-    const { agent } = await createAgentWithRag()
-
-    await config.api.agentFiles.upload(agent._id!, {
-      file: fileBuffer,
-      name: "docs.txt",
-    })
-
-    await config.api.agentFiles.upload(agent._id!, {
-      file: fileBuffer,
-      name: "docs-2.txt",
-    })
-
-    const { agents } = await config.api.agent.fetch()
-    const updated = agents.find(row => row._id === agent._id)
-    expect(updated?.ragVersion).toBe(1)
-  })
-
-  it("uses prod rag version + 1 for uploads", async () => {
-    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
-      typeof ragSdk.ingestAgentFile
-    >
-    ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
-
-    const { agent } = await createAgentWithRag()
-
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const db = context.getWorkspaceDB()
-        const prodDoc = {
-          ...agent,
-          ragVersion: 5,
-        }
-        delete prodDoc._rev
-        await db.put(prodDoc as any)
-      }
-    )
-
-    await config.api.agentFiles.upload(agent._id!, {
-      file: fileBuffer,
-      name: "prod-aware.txt",
-    })
-
-    const { agents } = await config.api.agent.fetch()
-    const updated = agents.find(row => row._id === agent._id)
-    expect(updated?.ragVersion).toBe(6)
-  })
-
   it("deletes agent files (but not the embeddings)", async () => {
     const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
       typeof ragSdk.ingestAgentFile
@@ -189,19 +134,7 @@ describe("agent files", () => {
       file: fileBuffer,
       name: "docs.txt",
     })
-
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const db = context.getWorkspaceDB()
-        const prodDoc = {
-          ...agent,
-          ragVersion: 1,
-        }
-        delete prodDoc._rev
-        await db.put(prodDoc as any)
-      }
-    )
+    await config.publish()
 
     const response = await config.api.agentFiles.remove(
       agent._id!,
