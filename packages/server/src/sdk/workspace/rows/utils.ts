@@ -297,7 +297,7 @@ function validateTimeOnlyField(
   constraints: FieldConstraints | undefined
 ) {
   let res
-  if (value && !value.match(/^(\d+)(:[0-5]\d){1,2}$/)) {
+  if (value && !sql.utils.isValidTime(value)) {
     res = [`"${fieldName}" is not a valid time`]
   } else if (constraints) {
     let castedValue = value
