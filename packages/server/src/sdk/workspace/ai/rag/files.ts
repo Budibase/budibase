@@ -4,10 +4,17 @@ import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
 import { HTTPError } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
-import type { Agent, AgentFile, VectorDb } from "@budibase/types"
+import {
+  AgentFileStatus,
+  AgentMessageRagSource,
+  type Agent,
+  type AgentFile,
+  type VectorDb,
+} from "@budibase/types"
 import { getLiteLLMModelConfigOrThrow } from "../configs"
 import { find as findVectorDb } from "../vectorDb/crud"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
+import { agents } from ".."
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
@@ -342,15 +349,15 @@ export interface RetrievedContextChunk {
 interface RetrievedContextResult {
   text: string
   chunks: RetrievedContextChunk[]
+  sources: AgentMessageRagSource[]
 }
 
-export const retrieveContextForSources = async (
+export const retrieveContextForAgent = async (
   agent: Agent,
-  question: string,
-  sourceIds: string[]
+  question: string
 ): Promise<RetrievedContextResult> => {
-  if (!question || question.trim().length === 0 || sourceIds.length === 0) {
-    return { text: "", chunks: [] }
+  if (!question || question.trim().length === 0) {
+    return { text: "", chunks: [], sources: [] }
   }
 
   const agentId = agent._id
@@ -360,6 +367,15 @@ export const retrieveContextForSources = async (
 
   if (!agent.ragTopK || !agent.ragMinDistance) {
     throw new Error("RAG settings not properly configured")
+  }
+
+  const agentFiles = await agents.listAgentFiles(agent._id!)
+  const readyFileSources = agentFiles
+    .filter(file => file.status === AgentFileStatus.READY && file.ragSourceId)
+    .map(file => file.ragSourceId)
+
+  if (readyFileSources.length === 0) {
+    return { text: "", chunks: [], sources: [] }
   }
 
   const config = await buildRagConfig({
@@ -376,18 +392,18 @@ export const retrieveContextForSources = async (
   })
   const rows = await vectorDb.queryNearest(
     queryEmbedding,
-    sourceIds,
+    readyFileSources,
     agent.ragTopK,
     agent.ragVersion || 0
   )
   if (rows.length === 0) {
-    return { text: "", chunks: [] }
+    return { text: "", chunks: [], sources: [] }
   }
 
   const maxDistance = 1 - agent.ragMinDistance
   const filtered = rows.filter(row => row.distance <= maxDistance)
   if (filtered.length === 0) {
-    return { text: "", chunks: [] }
+    return { text: "", chunks: [], sources: [] }
   }
 
   const chunks: RetrievedContextChunk[] = filtered.map(row => ({
@@ -399,5 +415,29 @@ export const retrieveContextForSources = async (
   return {
     text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
     chunks,
+    sources: toSourceMetadata(chunks, agentFiles),
   }
+}
+
+const toSourceMetadata = (
+  chunks: RetrievedContextChunk[],
+  files: AgentFile[]
+): AgentMessageRagSource[] => {
+  const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
+  const summary = new Map<string, AgentMessageRagSource>()
+
+  for (const chunk of chunks) {
+    const file = fileBySourceId.get(chunk.sourceId)
+    if (!summary.has(chunk.sourceId)) {
+      summary.set(chunk.sourceId, {
+        sourceId: chunk.sourceId,
+        fileId: file?._id,
+        filename: file?.filename ?? chunk.sourceId,
+        chunkCount: 0,
+      })
+    }
+    const entry = summary.get(chunk.sourceId)!
+    entry.chunkCount += 1
+  }
+  return Array.from(summary.values())
 }
