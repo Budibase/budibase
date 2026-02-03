@@ -205,7 +205,7 @@ async function handleViewEvents(existingView: ViewV2, view: ViewV2) {
     for (const column in view.schema[key]?.columns ?? []) {
       // if the new column is visible and it wasn't before
       if (
-        !existingView?.schema?.[key].columns?.[column].visible &&
+        !existingView?.schema?.[key].columns?.[column]?.visible &&
         view.schema?.[key].columns?.[column].visible
       ) {
         // new view join exposing a column

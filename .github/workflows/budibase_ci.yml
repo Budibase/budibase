@@ -114,11 +114,11 @@ jobs:
       - name: Test
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
-            yarn test -- --scope=@budibase/builder --since=${{ env.NX_BASE_BRANCH }}
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --ignore=@budibase/frontend-core --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --scope=@budibase/builder --scope=@budibase/client --scope=@budibase/frontend-core --since=${{ env.NX_BASE_BRANCH }}
           else
-            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --no-prefix -- --verbose --reporters=default --reporters=github-actions
-            yarn test -- --scope=@budibase/builder --no-prefix
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --ignore=@budibase/frontend-core --no-prefix -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --scope=@budibase/builder --scope=@budibase/client --scope=@budibase/frontend-core --no-prefix
           fi
 
   test-worker:
@@ -257,65 +257,6 @@ jobs:
           cd packages/server
           yarn test --filter $FILTER --verbose --reporters=default --reporters=github-actions
 
-  check-pro-submodule:
-    runs-on: ubuntu-24.04
-    if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
-    steps:
-      - name: Checkout repo and submodules
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
-
-      - name: Check pro commit
-        id: get_pro_commits
-        run: |
-          cd packages/pro
-          pro_commit=$(git rev-parse HEAD)
-
-          branch="${{ github.base_ref || github.ref_name  }}"
-          echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
-
-          base_commit=$(git rev-parse origin/master)
-
-          if [[ ! -z $base_commit ]]; then
-            echo "target_branch=$branch"
-            echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
-            echo "pro_commit=$pro_commit"
-            echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
-            echo "base_commit=$base_commit"
-            echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
-
-            base_commit_excluding_merges=$(git log --no-merges -n 1 --format=format:%H $base_commit)
-            echo "base_commit_excluding_merges=$base_commit_excluding_merges"
-            echo "base_commit_excluding_merges=$base_commit_excluding_merges" >> "$GITHUB_OUTPUT"
-          else
-            echo "Nothing to do - branch to branch merge."
-          fi
-
-      - name: Check submodule merged and latest on base branch
-        if: ${{ steps.get_pro_commits.outputs.base_commit_excluding_merges != '' }}
-        run: |
-          cd packages/pro
-          base_commit='${{ steps.get_pro_commits.outputs.base_commit }}'
-          base_commit_excluding_merges='${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
-          pro_commit='${{ steps.get_pro_commits.outputs.pro_commit }}'
-
-          any_commit=$(git log --no-merges $base_commit_excluding_merges...$pro_commit)
-
-          if [ -n "$any_commit" ] && [ "$base_commit" != "$pro_commit" ]; then
-            echo $any_commit
-
-            echo "An error occurred: <error_message>"
-            echo 'Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}" branch.'
-            echo 'Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/master/docs/getting_started.md'
-
-            exit 1
-          else
-            echo 'All good, the submodule had been merged and setup correctly!'
-          fi
-
   check-lockfile:
     runs-on: ubuntu-24.04
     if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
@@ -397,14 +338,14 @@ jobs:
             echo "Error: Client build file not found at $CLIENT_FILE"
             exit 1
           fi
-          
+
           SIZE_BYTES=$(stat -c%s "$CLIENT_FILE")
           SIZE_MB=$(awk "BEGIN {printf \"%.2f\", $SIZE_BYTES / 1024 / 1024}")
           MAX_SIZE_BYTES=$((8 * 1024 * 1024))
-          
+
           echo "Client build size: ${SIZE_MB}MB"
           echo "Maximum allowed size: 8MB"
-          
+
           if [ $SIZE_BYTES -gt $MAX_SIZE_BYTES ]; then
             echo "Client build size (${SIZE_MB}MB) exceeds maximum allowed size (8MB)"
             exit 1

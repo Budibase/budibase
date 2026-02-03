@@ -9,12 +9,19 @@ import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import {
+  findIncompleteToolCalls,
+  formatIncompleteToolCallError,
+  updatePendingToolCalls,
+} from "../../../sdk/workspace/ai/agents/utils"
+import {
   ToolLoopAgent,
   stepCountIs,
   readUIMessageStream,
   UIMessage,
   Output,
   jsonSchema,
+  wrapLanguageModel,
+  extractReasoningMiddleware,
 } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
@@ -111,13 +118,23 @@ export async function run({
           outputOption = Output.object({ schema: jsonSchema(normalizedSchema) })
         }
 
+        const pendingToolCalls = new Set<string>()
+
         const agent = new ToolLoopAgent({
-          model: litellm.chat(modelId),
+          model: wrapLanguageModel({
+            model: litellm.chat(modelId),
+            middleware: extractReasoningMiddleware({
+              tagName: "think",
+            }),
+          }),
           instructions: systemPrompt || undefined,
           tools,
           stopWhen: stepCountIs(30),
           providerOptions: ai.getLiteLLMProviderOptions(),
           output: outputOption,
+          onStepFinish({ toolCalls, toolResults }) {
+            updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+          },
         })
 
         const streamResult = await agent.stream({ prompt })
@@ -136,6 +153,21 @@ export async function run({
           }),
         })) {
           assistantMessage = uiMessage
+        }
+
+        const incompleteTools = assistantMessage
+          ? findIncompleteToolCalls([assistantMessage])
+          : []
+        if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
+          const errorMessage = formatIncompleteToolCallError(incompleteTools)
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: errorMessage,
+            tags: { error: "1", "error.type": "IncompleteToolCall" },
+          })
+          return {
+            success: false,
+            response: errorMessage,
+          }
         }
 
         let responseText: string | undefined

@@ -33,7 +33,11 @@
     type PreviewQueryResponse,
     type UIInternalDatasource,
   } from "@budibase/types"
-  import { customQueryIconColor, QUERY_VERB_MAP } from "@/helpers/data/utils"
+  import {
+    customQueryIconColor,
+    getRestTemplateQueryDisplayName,
+    QUERY_VERB_MAP,
+  } from "@/helpers/data/utils"
   import { RestBodyTypes } from "@/constants/backend"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
@@ -51,6 +55,7 @@
     runQuery,
     keyValueArrayToRecord,
     buildAuthConfigs,
+    getDefaultRestAuthConfig,
   } from "./query"
   import restUtils from "@/helpers/data/utils"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
@@ -102,6 +107,8 @@
   let template: RestTemplate | undefined
   let datasource: Datasource | UIInternalDatasource | undefined
   let authConfigs: AuthConfigOption[] = []
+  let defaultAuthApplied = false
+  let defaultAuthKey: string | undefined = undefined
 
   const ensureQueryDefaults = (target: Query) => {
     if (!target.fields?.disabledHeaders) {
@@ -181,6 +188,7 @@
     updated.readable = true
     updated.restTemplateMetadata = endpoint
       ? {
+          originalName: endpoint.name,
           operationId: endpoint.operationId,
           docsUrl: endpoint.docsUrl,
           description: endpoint.description,
@@ -209,7 +217,27 @@
 
   let queryKey: string | undefined
   let appliedEndpointKey: string | undefined
+  let lastSyncedQueryId: string | undefined
+  let lastSyncedQueryName: string | undefined
   let isNewQuery = false
+
+  const syncQueryFromStore = (localQuery: Query, storeQuery: Query) => {
+    let updatedQuery = localQuery
+
+    if (
+      lastSyncedQueryName !== undefined &&
+      storeQuery.name !== lastSyncedQueryName &&
+      localQuery.name === lastSyncedQueryName
+    ) {
+      updatedQuery = { ...updatedQuery, name: storeQuery.name }
+    }
+
+    if (updatedQuery !== localQuery) {
+      query = updatedQuery
+    }
+
+    lastSyncedQueryName = storeQuery.name
+  }
   $: storeQuery = getSelectedQuery(queryId, datasourceId)
   $: isNewQuery = !storeQuery?._id
   $: {
@@ -224,12 +252,48 @@
       }
     }
   }
+  $: if (query && query._id && query._id !== lastSyncedQueryId) {
+    lastSyncedQueryId = query._id
+    lastSyncedQueryName = query.name
+  }
+  $: if (query && storeQuery && query._id && query._id === storeQuery._id) {
+    syncQueryFromStore(query, storeQuery)
+  }
+  $: datasourceLookupId = datasourceId || storeQuery?.datasourceId
   $: datasource = structuredClone(
-    $datasources.list.find(
-      d => d._id === datasourceId || query?.datasourceId === d._id
-    )
+    $datasources.list.find(d => d._id === datasourceLookupId)
   )
   $: authConfigs = buildAuthConfigs(datasource)
+  $: {
+    const key = query?._id || `new::${datasourceId || ""}`
+    if (key !== defaultAuthKey) {
+      defaultAuthKey = key
+      defaultAuthApplied = false
+    }
+  }
+  $: if (!defaultAuthApplied && query && datasource && isNewQuery) {
+    const defaultAuth = getDefaultRestAuthConfig(datasource)
+    if (
+      defaultAuth &&
+      !query.fields?.authConfigId &&
+      !query.fields?.authConfigType
+    ) {
+      query = {
+        ...query,
+        fields: {
+          ...query.fields,
+          authConfigId: defaultAuth.authConfigId,
+          authConfigType: defaultAuth.authConfigType,
+        },
+      }
+      defaultAuthApplied = true
+    } else if (
+      defaultAuth &&
+      (query.fields?.authConfigId || query.fields?.authConfigType)
+    ) {
+      defaultAuthApplied = true
+    }
+  }
 
   // QUERY DATA
   $: queryString = query?.fields.queryString
@@ -425,12 +489,13 @@
     if (query._id && query.restTemplateMetadata) {
       const metadata = query.restTemplateMetadata
       const method = QUERY_VERB_MAP[query.queryVerb]
+      const endpointName = getRestTemplateQueryDisplayName(query)
 
       const endpoint = {
         id:
           metadata.operationId ||
           `${method.toLowerCase()}::${metadata.originalPath}`,
-        name: query.name || metadata.operationId || "",
+        name: endpointName,
         method,
         path: metadata.originalPath || "",
         description: metadata.description || "",
@@ -504,12 +569,18 @@
     }
     savingQuery = true
     try {
-      const isNew = !builtQuery._rev
+      const queryToSave =
+        builtQuery._id &&
+        storeQuery?._rev &&
+        storeQuery._rev !== builtQuery._rev
+          ? { ...builtQuery, _rev: storeQuery._rev }
+          : builtQuery
+      const isNew = !queryToSave._rev
 
       const datasourceType = datasource?.source
       const integrationInfo = $integrations[datasourceType]
 
-      const { _id } = await queries.save(builtQuery.datasourceId, builtQuery)
+      const { _id } = await queries.save(queryToSave.datasourceId, queryToSave)
 
       const existingVariables = datasource?.config?.dynamicVariables || []
       const updatedVariables = rebuildVariables(

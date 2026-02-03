@@ -5,7 +5,8 @@ import {
   WebSearchProvider,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import type { ToolSet } from "ai"
+import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
+import { isToolUIPart, getToolName } from "ai"
 import budibaseTools from "../../../../ai/tools/budibase"
 import {
   createRestQueryTool,
@@ -79,8 +80,10 @@ export async function buildPromptAndTools(
   tools: ToolSet
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
+
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
+  const enabledTools = allTools.filter(tool => enabledToolNames.has(tool.name))
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
@@ -89,15 +92,9 @@ export async function buildPromptAndTools(
     includeGoal,
   })
 
-  // This is key. We only include tools that are actually enabled on the agent.
-  const tools =
-    enabledToolNames.size > 0
-      ? allTools.filter(tool => enabledToolNames.has(tool.name))
-      : allTools
-
   return {
     systemPrompt,
-    tools: toToolSet(tools),
+    tools: toToolSet(enabledTools),
   }
 }
 
@@ -143,4 +140,62 @@ export function createLiteLLMFetch(sessionId: string): typeof fetch {
   }
 
   return liteFetch
+}
+
+export interface IncompleteToolCall {
+  toolName: string
+  toolCallId: string
+  state: string
+}
+
+const COMPLETED_TOOL_STATES = new Set([
+  "output-available",
+  "output-error",
+  "output-denied",
+])
+
+export function findIncompleteToolCalls(
+  messages: UIMessage[]
+): IncompleteToolCall[] {
+  const incomplete: IncompleteToolCall[] = []
+  for (const message of messages) {
+    if (message.role !== "assistant" || !message.parts) {
+      continue
+    }
+    for (const part of message.parts) {
+      if (isToolUIPart(part) && !COMPLETED_TOOL_STATES.has(part.state)) {
+        incomplete.push({
+          toolName: getToolName(part),
+          toolCallId: part.toolCallId,
+          state: part.state,
+        })
+      }
+    }
+  }
+  return incomplete
+}
+
+export function updatePendingToolCalls(
+  pendingToolCalls: Set<string>,
+  toolCalls: TypedToolCall<ToolSet>[],
+  toolResults: TypedToolResult<ToolSet>[]
+): void {
+  for (const toolCall of toolCalls) {
+    if (toolCall.toolCallId) {
+      pendingToolCalls.add(toolCall.toolCallId)
+    }
+  }
+
+  for (const toolResult of toolResults) {
+    if (toolResult.toolCallId) {
+      pendingToolCalls.delete(toolResult.toolCallId)
+    }
+  }
+}
+
+export function formatIncompleteToolCallError(
+  incompleteTools: IncompleteToolCall[]
+): string {
+  const toolNames = incompleteTools.map(t => t.toolName).join(", ")
+  return `The AI model failed to complete tool execution${toolNames ? ` for: ${toolNames}` : ""}. This may be due to a compatibility issue with the selected model. Please try a different model or try again.`
 }

@@ -74,6 +74,10 @@
 - The product is split up by app, so to find things like data sources and
   automations you must first make sure to select an app.
 
+## LiteLLM 
+- The LiteLLM API is available when in local development at localhost:4000 
+- The auth token is `sk-1234`
+
 ## Misc
 
 - When creating or switching branches, make sure the branch is up to date with

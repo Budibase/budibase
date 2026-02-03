@@ -123,7 +123,7 @@ export function customQueryIconColor(source: QueryVerbSource) {
 }
 
 export function customQueryText(
-  datasource: { source: string },
+  datasource: { source: string; restTemplate?: string },
   query: { name: string }
 ) {
   if (!query.name || datasource.source !== IntegrationTypes.REST) {
@@ -158,6 +158,23 @@ export function customQueryText(
   } else {
     return split[0]
   }
+}
+
+export function getRestTemplateQueryDisplayName(
+  query?: Pick<Query, "name" | "restTemplateMetadata">
+) {
+  if (!query) {
+    return ""
+  }
+  const metadata = query.restTemplateMetadata
+  return (
+    metadata?.originalName ||
+    metadata?.operationId ||
+    metadata?.description ||
+    metadata?.originalPath ||
+    query.name ||
+    ""
+  )
 }
 
 export function flipHeaderState(headersActivity: Record<string, any>) {
