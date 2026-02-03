@@ -17,7 +17,7 @@ import { bindings } from "@/helpers"
 import { getBindableProperties } from "@/dataBinding"
 import { componentStore } from "./components"
 import { getSettingsDefinition } from "@budibase/frontend-core"
-import { utils, escapeHtml } from "@budibase/shared-core"
+import { utils, helpers } from "@budibase/shared-core"
 
 const reduceBy = utils.toMap
 
@@ -137,7 +137,7 @@ function getInvalidDatasources(
           componentId: component._id!,
           key: setting.key,
           label: setting.label || setting.key,
-          message: `The ${friendlyTypeName} named "${escapeHtml(label)}" could not be found`,
+          message: `The ${friendlyTypeName} named "${helpers.escapeHtml(label)}" could not be found`,
 
           errorType: "setting",
           cause: "invalid",
@@ -215,7 +215,7 @@ function getMissingRequiredSettings(
         componentId: component._id!,
         key: s.key,
         label: s.label || s.key,
-        message: `Add the <mark>${escapeHtml(s.label)}</mark> setting to start using your component`,
+        message: `Add the <mark>${helpers.escapeHtml(s.label)}</mark> setting to start using your component`,
         errorType: "setting",
         cause: "missing",
       }))
@@ -255,8 +255,8 @@ function getMissingAncestors(
         const ancestorDefinition = definitions[`${BudibasePrefix}${ancestor}`]
         return {
           componentId: component._id!,
-          message: `${escapeHtml(pluralise(definition.name))} need to be inside a
-<mark>${escapeHtml(ancestorDefinition.name)}</mark>`,
+          message: `${helpers.escapeHtml(pluralise(definition.name))} need to be inside a
+<mark>${helpers.escapeHtml(ancestorDefinition.name)}</mark>`,
           errorType: "ancestor-setting",
           ancestor: {
             name: ancestorDefinition.name,
