@@ -9,7 +9,10 @@
   import DataProvider from "./DataProvider.svelte"
   import { Row } from "@budibase/types"
 
-  export let todayText: string | "today"
+  type CalendarView = "dayGridMonth" | "dayGridWeek" | "timeGridDay" | "listWeek"
+  type TitleDateLocale = "en-gb" | "en-us"
+
+  export let todayText: string = "Today"
   export let dataProvider: DataProvider
   export let eventStart: string // can haz type?
   export let eventEnd: string // can haz type?
@@ -17,17 +20,15 @@
 
   export let onClick: any // Also can has type?
   export let showButtons: boolean
-  export let monthText: string | "Month"
-  export let weekText: string | "Week"
-  export let dayText: string | "Day"
-  export let agendaText: string | "Agenda"
-  export let showTitleDate: boolean | true
-  export let titleDateFormat: string | ["en-gb", "en-us"]
-  export let emptyAgendaText: string | "No events found"
+  export let monthText: string = "Month"
+  export let weekText: string = "Week"
+  export let dayText: string = "Day"
+  export let agendaText: string = "Agenda"
+  export let showTitleDate: boolean = true
+  export let titleDateFormat: TitleDateLocale = "en-gb"
+  export let emptyAgendaText: string = "No events found"
   export let openOnDate: string // SHould be date?
-  export let calendarType:
-    | string
-    | ["dayGridMonth", "dayGridWeek", "timeGridDay", "listWeek"]
+  export let calendarType: CalendarView = "dayGridMonth"
 
   const { styleable, componentStore } = getContext("sdk")
   const component = getContext("component")
