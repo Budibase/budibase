@@ -31,7 +31,11 @@
     type WorkspaceFavourite,
     type WorkspaceResource,
   } from "@budibase/types"
-  import { beforeUrlChange, goto, url } from "@roxi/routify"
+  import {
+    beforeUrlChange,
+    goto as gotoStore,
+    url as urlStore,
+  } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
     buildHomeRows,
@@ -49,9 +53,10 @@
 
   type HomeCreate = "app" | "automation" | "agent"
 
-  $goto
-  $url
   $beforeUrlChange
+
+  $: goto = $gotoStore
+  $: url = $urlStore
 
   let workspaceAppModal: WorkspaceAppModal
   let selectedWorkspaceApp: UIWorkspaceApp | undefined
@@ -528,15 +533,15 @@
 
   const openRow = (row: HomeRow) => {
     if (row.type === "app") {
-      $goto($url(`../design/${row.id}`))
+      goto(url(`../design/${row.id}`))
       return
     }
     if (row.type === "automation") {
-      $goto($url(`../automation/${row.id}`))
+      goto(url(`../automation/${row.id}`))
       return
     }
     if (row.type === "agent") {
-      $goto($url(`../agent/${row.id}/config`))
+      goto(url(`../agent/${row.id}/config`))
       return
     }
   }
@@ -573,7 +578,7 @@
     }
 
     if (!$featureFlags[FeatureFlag.WORKSPACE_HOME]) {
-      $goto($url("../design"))
+      goto(url("../design"))
       return
     }
 
