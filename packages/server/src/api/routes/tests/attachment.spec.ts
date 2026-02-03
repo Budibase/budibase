@@ -29,18 +29,25 @@ describe("/api/applications/:appId/sync", () => {
     })
 
     it("should reject an upload with a malicious file extension", async () => {
-      await withEnv({ SELF_HOSTED: undefined }, async () => {
-        let resp = (await config.api.attachment.process(
-          "ohno.exe",
-          Buffer.from([0]),
-          { status: 400 }
-        )) as unknown as APIError
-        expect(resp.message).toContain("invalid extension")
-      })
+      let resp = (await config.api.attachment.process(
+        "ohno.exe",
+        Buffer.from([0]),
+        { status: 400 }
+      )) as unknown as APIError
+      expect(resp.message).toContain("invalid extension")
     })
 
     it("should reject an upload with a malicious uppercase file extension", async () => {
-      await withEnv({ SELF_HOSTED: undefined }, async () => {
+      let resp = (await config.api.attachment.process(
+        "OHNO.EXE",
+        Buffer.from([0]),
+        { status: 400 }
+      )) as unknown as APIError
+      expect(resp.message).toContain("invalid extension")
+    })
+
+    it("should reject a malicious extension when self hosted", async () => {
+      await withEnv({ SELF_HOSTED: "1" }, async () => {
         let resp = (await config.api.attachment.process(
           "OHNO.EXE",
           Buffer.from([0]),
@@ -48,6 +55,24 @@ describe("/api/applications/:appId/sync", () => {
         )) as unknown as APIError
         expect(resp.message).toContain("invalid extension")
       })
+    })
+
+    it("should reject svg content disguised as png", async () => {
+      let resp = (await config.api.attachment.process(
+        "image.png",
+        Buffer.from("<svg><script>alert(1)</script></svg>"),
+        { status: 400 }
+      )) as unknown as APIError
+      expect(resp.message).toContain("active content")
+    })
+
+    it("should reject html content disguised as png", async () => {
+      let resp = (await config.api.attachment.process(
+        "image.png",
+        Buffer.from("<!doctype html><html><body>test</body></html>"),
+        { status: 400 }
+      )) as unknown as APIError
+      expect(resp.message).toContain("active content")
     })
 
     it("should reject an upload with no file", async () => {

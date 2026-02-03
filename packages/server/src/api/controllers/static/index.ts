@@ -46,6 +46,48 @@ import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
 import AppComponent from "./templates/BudibaseApp.svelte"
 import { render } from "svelte/server"
 
+const ACTIVE_CONTENT_EXTENSIONS = new Set([
+  "html",
+  "htm",
+  "svg",
+  "svgz",
+  "xhtml",
+  "mhtml",
+  "shtml",
+])
+
+const ACTIVE_CONTENT_MIME_TYPES = [
+  "text/html",
+  "image/svg+xml",
+  "application/xhtml+xml",
+]
+
+const MAX_SNIFF_BYTES = 4096
+
+const detectActiveContent = async (filePath: fs.PathLike) => {
+  const handle = await fsp.open(filePath, "r")
+  try {
+    const buffer = new Uint8Array(MAX_SNIFF_BYTES)
+    const { bytesRead } = await handle.read(buffer, 0, MAX_SNIFF_BYTES, 0)
+    if (!bytesRead) {
+      return false
+    }
+    const sample = Buffer.from(buffer)
+      .toString("utf8", 0, bytesRead)
+      .trimStart()
+      .toLowerCase()
+    return (
+      sample.startsWith("<!doctype html") ||
+      sample.startsWith("<html") ||
+      sample.startsWith("<svg") ||
+      /<svg[\s>]/i.test(sample) ||
+      /<script[\s>]/i.test(sample)
+    )
+  } finally {
+    await handle.close()
+  }
+}
+
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
 ) {
@@ -71,12 +113,38 @@ export const uploadFile = async function (
         )
       }
 
-      if (
-        !env.SELF_HOSTED &&
-        InvalidFileExtensions.includes(extension.toLowerCase())
-      ) {
+      const extensionLower = extension.toLowerCase()
+      if (InvalidFileExtensions.includes(extensionLower)) {
         throw new BadRequestError(
           `File "${file.name}" has an invalid extension: "${extension}"`
+        )
+      }
+
+      if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
+        throw new BadRequestError(
+          `File "${file.name}" may contain active content which is not permitted`
+        )
+      }
+
+      const rawMimeType = Array.isArray(file.type) ? file.type[0] : file.type
+      const mimeType =
+        typeof rawMimeType === "string" ? rawMimeType.toLowerCase() : undefined
+      if (
+        mimeType &&
+        ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
+      ) {
+        throw new BadRequestError(
+          `File "${file.name}" contains active content which is not permitted`
+        )
+      }
+
+      if (
+        file.path &&
+        (typeof file.path === "string" || Buffer.isBuffer(file.path)) &&
+        (await detectActiveContent(file.path))
+      ) {
+        throw new BadRequestError(
+          `File "${file.name}" contains active content which is not permitted`
         )
       }
 
