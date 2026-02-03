@@ -3,6 +3,7 @@ import { type GetGitHubStarsResponse, type UserCtx } from "@budibase/types"
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000
 const FAILURE_TTL_MS = 5 * 60 * 1000
+const GITHUB_TIMEOUT_MS = 5000
 const GITHUB_REPO_URL = "https://api.github.com/repos/budibase/budibase"
 const USER_AGENT = "Budibase"
 
@@ -26,6 +27,7 @@ export async function getStars(ctx: UserCtx<void, GetGitHubStarsResponse>) {
         Accept: "application/vnd.github+json",
         "User-Agent": USER_AGENT,
       },
+      timeout: GITHUB_TIMEOUT_MS,
     })
 
     if (!response.ok) {
