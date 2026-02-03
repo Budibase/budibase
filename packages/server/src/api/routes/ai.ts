@@ -3,6 +3,10 @@ import {
   createAgentValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
+import {
+  createVectorDbValidator,
+  updateVectorDbValidator,
+} from "./utils/validators/vectorDb"
 import { middleware } from "@budibase/pro"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 
@@ -43,8 +47,8 @@ builderAdminRoutes
   .put("/api/configs", ai.updateAIConfig)
   .delete("/api/configs/:id", ai.deleteAIConfig)
   .get("/api/vectordb", ai.fetchVectorDbConfigs)
-  .post("/api/vectordb", ai.createVectorDbConfig)
-  .put("/api/vectordb", ai.updateVectorDbConfig)
+  .post("/api/vectordb", createVectorDbValidator(), ai.createVectorDbConfig)
+  .put("/api/vectordb", updateVectorDbValidator(), ai.updateVectorDbConfig)
   .delete("/api/vectordb/:id", ai.deleteVectorDbConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
