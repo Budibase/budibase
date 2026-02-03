@@ -24,6 +24,7 @@
   export let id: string | undefined = undefined
   export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = false
+  export let bordered: boolean = true
   export let fieldText: string = ""
   export let fieldIcon: PickerIconInput = undefined
   export let fieldColour: string = ""
@@ -226,6 +227,7 @@
 <button
   {id}
   class="spectrum-Picker spectrum-Picker--size{size}"
+  class:has-border={bordered}
   class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-open={open}
@@ -425,6 +427,8 @@
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
+  }
+  .spectrum-Picker.has-border {
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
   }
