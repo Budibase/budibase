@@ -27,6 +27,11 @@ import {
   wrapLanguageModel,
 } from "ai"
 import sdk from "../../../sdk"
+import {
+  formatIncompleteToolCallError,
+  updatePendingToolCalls,
+} from "../../../sdk/workspace/ai/agents/utils"
+import { sdk as usersSdk } from "@budibase/shared-core"
 import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag/files"
 
 interface PrepareChatConversationForSaveParams {
@@ -142,14 +147,19 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   }
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
+  const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(ctx.user)
+  const canUsePreview = chat.isPreview === true && isBuilderOrAdmin
 
-  if (!chatAppId) {
+  if (!canUsePreview && !chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  const chatApp = await db.tryGet<ChatApp>(chatAppId)
-  if (!chatApp) {
-    throw new HTTPError("Chat app not found", 404)
+  let chatApp: ChatApp | undefined
+  if (!canUsePreview) {
+    chatApp = await db.tryGet<ChatApp>(chatAppId)
+    if (!chatApp) {
+      throw new HTTPError("Chat app not found", 404)
+    }
   }
 
   let existingChat: ChatConversation | undefined
@@ -158,7 +168,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     if (!existingChat) {
       throw new HTTPError("chat not found", 404)
     }
-    if (existingChat.chatAppId !== chatAppId) {
+    if (!canUsePreview && existingChat.chatAppId !== chatAppId) {
       throw new HTTPError("chat does not belong to this chat app", 400)
     }
     if (existingChat.userId && existingChat.userId !== userId) {
@@ -176,7 +186,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   }
 
   if (
-    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
+    !canUsePreview &&
+    !chatApp?.agents?.some(
+      agent => agent.agentId === agentId && agent.isEnabled
+    )
   ) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
@@ -241,6 +254,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           ]
         : modelMessages
 
+    const pendingToolCalls = new Set<string>()
+
     const result = streamText({
       model: wrapLanguageModel({
         model,
@@ -253,6 +268,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools,
       stopWhen: stepCountIs(30),
       providerOptions: ai.getLiteLLMProviderOptions(),
+      onStepFinish({ toolCalls, toolResults }) {
+        updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+      },
       onError({ error }) {
         console.error("Agent streaming error", {
           agentId,
@@ -281,16 +299,24 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           }
         }
         if (part.type === "finish") {
+          // Check if model ended in a tool-call state or steps were incomplete
+          const finishReason = (part as { finishReason?: string }).finishReason
+          const toolCallsIncomplete =
+            pendingToolCalls.size > 0 || finishReason === "tool-calls"
+
           return {
             ...baseMetadata,
             createdAt: streamStartTime,
             completedAt: Date.now(),
+            ...(toolCallsIncomplete && {
+              error: formatIncompleteToolCallError([]),
+            }),
           }
         }
       },
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
-        if (chat.transient) {
+        if (chat.transient || !chatAppId) {
           return
         }
 
