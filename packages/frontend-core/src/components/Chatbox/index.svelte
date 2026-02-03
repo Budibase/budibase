@@ -495,7 +495,7 @@
                   <div class="tool-name-wrapper">
                     <span class="tool-name">{getToolName(part)}</span>
                   </div>
-                  {#if isRunning || isError || isSuccess}
+                  {#if isRunning || isError}
                     <span class="tool-status">
                       {#if isRunning}
                         <ProgressCircle size="S" />
