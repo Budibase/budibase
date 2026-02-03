@@ -305,13 +305,10 @@ export const ingestAgentFile = async (
     throw new Error("Embedding response size mismatch")
   }
 
-  const createdRagVersion = agentFile.createdRagVersion ?? agent.ragVersion ?? 0
-
   const payloads = chunks.map<ChunkInput>((chunk, index) => ({
     hash: hashChunk(chunk),
     text: chunk,
     embedding: embeddings[index],
-    createdRagVersion,
   }))
 
   return await vectorDb.upsertSourceChunks(agentFile.ragSourceId, payloads)
@@ -393,8 +390,7 @@ export const retrieveContextForAgent = async (
   const rows = await vectorDb.queryNearest(
     queryEmbedding,
     readyFileSources,
-    agent.ragTopK,
-    agent.ragVersion || 0
+    agent.ragTopK
   )
   if (rows.length === 0) {
     return { text: "", chunks: [], sources: [] }

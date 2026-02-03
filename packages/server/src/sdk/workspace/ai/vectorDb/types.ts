@@ -16,7 +16,6 @@ export interface ChunkInput {
   hash: string
   text: string
   embedding: number[]
-  createdRagVersion: number
 }
 
 export interface QueryResultRow {
@@ -37,7 +36,6 @@ export interface VectorDb {
   queryNearest(
     embedding: number[],
     sourceIds: string[],
-    topK: number,
-    maxVersion: number
+    topK: number
   ): Promise<QueryResultRow[]>
 }

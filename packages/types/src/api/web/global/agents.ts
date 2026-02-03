@@ -32,7 +32,7 @@ export type CreateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
   Agent,
-  "createdAt" | "updatedAt" | "ragVersion" | "_deleted" | "createdBy"
+  "createdAt" | "updatedAt" | "_deleted" | "createdBy"
 >
 export type UpdateAgentResponse = Agent
 

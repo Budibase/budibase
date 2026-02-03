@@ -92,7 +92,6 @@ class PgVectorDb implements VectorDb {
           chunk_hash TEXT NOT NULL,
           chunk_text TEXT NOT NULL,
           embedding vector(${embeddingDimensions}) NOT NULL,
-          created_rag_version INTEGER NOT NULL,
           created_at TIMESTAMPTZ DEFAULT NOW()
         )
       `)
@@ -102,8 +101,8 @@ class PgVectorDb implements VectorDb {
     await client.query(
       `CREATE INDEX IF NOT EXISTS ${buildIndexName(
         this.tableName,
-        "source_rag_version"
-      )} ON ${this.tableName} (source, created_rag_version)`
+        "source"
+      )} ON ${this.tableName} (source)`
     )
     await client.query(`
         CREATE INDEX IF NOT EXISTS ${buildIndexName(
@@ -152,20 +151,13 @@ class PgVectorDb implements VectorDb {
           }
           await client.query(
             `
-              INSERT INTO ${this.tableName} (source, chunk_hash, chunk_text, embedding, created_rag_version)
-              VALUES ($1, $2, $3, $4::vector, $5)
+              INSERT INTO ${this.tableName} (source, chunk_hash, chunk_text, embedding)
+              VALUES ($1, $2, $3, $4::vector)
               ON CONFLICT (source, chunk_hash) DO UPDATE
                 SET chunk_text = EXCLUDED.chunk_text,
-                    embedding = EXCLUDED.embedding,
-                    created_rag_version = EXCLUDED.created_rag_version
+                    embedding = EXCLUDED.embedding
             `,
-            [
-              sourceId,
-              chunk.hash,
-              chunk.text,
-              vectorLiteral(chunk.embedding),
-              chunk.createdRagVersion ?? 0,
-            ]
+            [sourceId, chunk.hash, chunk.text, vectorLiteral(chunk.embedding)]
           )
           inserted += 1
         }
@@ -194,8 +186,7 @@ class PgVectorDb implements VectorDb {
   async queryNearest(
     embedding: number[],
     sourceIds: string[],
-    topK: number,
-    maxVersion: number
+    topK: number
   ): Promise<QueryResultRow[]> {
     if (!sourceIds || sourceIds.length === 0) {
       return []
@@ -207,11 +198,10 @@ class PgVectorDb implements VectorDb {
           SELECT source, chunk_text, chunk_hash, (embedding <=> $1::vector) AS distance
           FROM ${this.tableName}
           WHERE source = ANY($2::text[])
-          AND created_rag_version <= $4
           ORDER BY embedding <=> $1::vector
           LIMIT $3
         `,
-        [vectorLiteral(embedding), sourceIds, topK, maxVersion]
+        [vectorLiteral(embedding), sourceIds, topK]
       )
 
       return rows.map(row => ({

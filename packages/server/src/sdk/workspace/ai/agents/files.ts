@@ -8,7 +8,6 @@ import {
   ToDocCreateMetadata,
 } from "@budibase/types"
 import { deleteAgentFileChunks } from "../rag/files"
-import { agents } from ".."
 
 interface CreateAgentFileOptions {
   agentId: string
@@ -25,8 +24,6 @@ export const createAgentFile = async (
   const { agentId, filename, mimetype, size, uploadedBy } = options
   const _id = docIds.generateAgentFileID(agentId)
 
-  const currentRagVersion = await ensureIncreaseRagVersion(agentId)
-
   const doc: RequiredKeys<ToDocCreateMetadata<AgentFile>> = {
     _id,
     agentId,
@@ -37,8 +34,6 @@ export const createAgentFile = async (
     status: AgentFileStatus.PROCESSING,
     uploadedBy,
     chunkCount: 0,
-    createdRagVersion: currentRagVersion,
-
     errorMessage: undefined,
     processedAt: undefined,
   }
@@ -87,42 +82,27 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
 }
 
 export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
-  const currentRagVersion = await ensureIncreaseRagVersion(agent._id!)
-  if ((file.createdRagVersion ?? 0) === currentRagVersion) {
-    await deleteAgentFileChunks(agent, [file.ragSourceId])
-  }
+  let isFileInProduction = false
 
-  const db = context.getWorkspaceDB()
-  await db.remove(file)
-}
-
-async function ensureIncreaseRagVersion(agentId: string): Promise<number> {
-  let prodVersion = 0
   try {
     const prodWorkspaceId = db.getProdWorkspaceID(
       context.getOrThrowWorkspaceId()
     )
     await context.doInWorkspaceContext(prodWorkspaceId, async () => {
-      const prodAgent = await agents.getOrThrow(agentId)
-      prodVersion = prodAgent.ragVersion ?? 0
+      await getAgentFileOrThrow(file._id!)
+
+      isFileInProduction = true
     })
   } catch (error: any) {
     if (error?.status === 404) {
-      // ignore if prod workspace/agent does not exist yet
+      // ignore if prod version does not exist yet
     } else {
       throw error
     }
   }
-
-  const ragVersion = prodVersion + 1
-
-  const agent = await agents.getOrThrow(agentId)
-  if (agent.ragVersion !== ragVersion) {
-    await agents.update({
-      ...agent,
-      ragVersion: ragVersion,
-    })
+  if (!isFileInProduction) {
+    await deleteAgentFileChunks(agent, [file.ragSourceId])
   }
 
-  return ragVersion
+  await context.getWorkspaceDB().remove(file)
 }
