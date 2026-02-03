@@ -130,4 +130,129 @@ describe("AI Tools - Rows", () => {
     expect(updated.row.name).toBe("Alias row updated")
     expect(updated.row.description).toBe("Alias description")
   })
+
+  it("should list rows with pagination", async () => {
+    const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, basicRow(table._id!))
+    await config.api.row.save(table._id!, {
+      ...basicRow(table._id!),
+      name: "Second row",
+    })
+    await config.api.row.save(table._id!, {
+      ...basicRow(table._id!),
+      name: "Third row",
+    })
+
+    const tools = getBudibaseTools([table])
+    const listTool = tools.find(tool => tool.name === `${table._id}.list_rows`)
+
+    if (!listTool) {
+      throw new Error("list_rows tool not found")
+    }
+
+    const firstPage = await executeTool(listTool, { limit: 2 })
+
+    expect(firstPage.rows).toHaveLength(2)
+    expect(firstPage.hasNextPage).toBe(true)
+    expect(firstPage.bookmark).toBeDefined()
+
+    const secondPage = await executeTool(listTool, {
+      limit: 2,
+      bookmark: firstPage.bookmark,
+    })
+
+    expect(secondPage.rows).toHaveLength(1)
+    expect(secondPage.hasNextPage).toBe(false)
+  })
+
+  it("should get a specific row by ID", async () => {
+    const table = await config.api.table.save(basicTable())
+    const createdRow = await config.api.row.save(table._id!, {
+      ...basicRow(table._id!),
+      name: "Test row",
+      description: "Test description",
+    })
+
+    const tools = getBudibaseTools([table])
+    const getTool = tools.find(tool => tool.name === `${table._id}.get_row`)
+
+    if (!getTool) {
+      throw new Error("get_row tool not found")
+    }
+
+    const result = await executeTool(getTool, { rowId: createdRow._id! })
+
+    expect(result.row._id).toBe(createdRow._id)
+    expect(result.row.name).toBe("Test row")
+    expect(result.row.description).toBe("Test description")
+  })
+
+  it("should search rows with query filters", async () => {
+    const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, {
+      ...basicRow(table._id!),
+      name: "Alice",
+      description: "First person",
+    })
+    await config.api.row.save(table._id!, {
+      ...basicRow(table._id!),
+      name: "Bob",
+      description: "Second person",
+    })
+    await config.api.row.save(table._id!, {
+      ...basicRow(table._id!),
+      name: "Alice",
+      description: "Another Alice",
+    })
+
+    const tools = getBudibaseTools([table])
+    const searchTool = tools.find(
+      tool => tool.name === `${table._id}.search_rows`
+    )
+
+    if (!searchTool) {
+      throw new Error("search_rows tool not found")
+    }
+
+    const result = await executeTool(searchTool, {
+      query: { equal: { name: "Alice" } },
+    })
+
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows.every((row: any) => row.name === "Alice")).toBe(true)
+  })
+
+  it("should search rows with sort and limit", async () => {
+    const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, {
+      ...basicRow(table._id!),
+      name: "Charlie",
+    })
+    await config.api.row.save(table._id!, {
+      ...basicRow(table._id!),
+      name: "Alice",
+    })
+    await config.api.row.save(table._id!, {
+      ...basicRow(table._id!),
+      name: "Bob",
+    })
+
+    const tools = getBudibaseTools([table])
+    const searchTool = tools.find(
+      tool => tool.name === `${table._id}.search_rows`
+    )
+
+    if (!searchTool) {
+      throw new Error("search_rows tool not found")
+    }
+
+    const result = await executeTool(searchTool, {
+      sort: { column: "name", order: "ascending" },
+      limit: 2,
+    })
+
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows[0].name).toBe("Alice")
+    expect(result.rows[1].name).toBe("Bob")
+  })
 })

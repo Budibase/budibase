@@ -66,7 +66,7 @@ const ROW_ACTIONS: Record<string, RowAction> = {
       data: z.record(z.string(), z.any()).describe(DATA_FIELD_DESCRIPTION),
     }),
     execute: async (tableId, { data }) => {
-      const row = await sdk.rows.save(tableId, data, undefined)
+      const { row } = await sdk.rows.save(tableId, data, undefined)
       return { row }
     },
   },
