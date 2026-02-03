@@ -141,7 +141,7 @@ write.push(
  *   post:
  *     operationId: workspaceImport
  *     summary: Import a workspace to an existing workspace 🔒
- *     description: This endpoint is only available on a business or enterprise license.
+ *     description: This endpoint is only available on an enterprise license.
  *     tags:
  *       - workspaces
  *     parameters:
@@ -175,7 +175,7 @@ write.push(
  *   post:
  *     operationId: workspaceExport
  *     summary: Export a workspace 🔒
- *     description: This endpoint is only available on a business or enterprise license.
+ *     description: This endpoint is only available on an enterprise license.
  *     tags:
  *       - workspaces
  *     parameters:
