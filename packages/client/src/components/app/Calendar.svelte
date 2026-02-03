@@ -6,19 +6,24 @@
   import dayGridPlugin from "@fullcalendar/daygrid"
   import timeGridPlugin from "@fullcalendar/timegrid"
   import listPlugin from "@fullcalendar/list"
-  import DataProvider from "./DataProvider.svelte"
-  import { Row } from "@budibase/types"
+  import type { Row, UIFieldDataProviderContext } from "@budibase/types"
 
   type CalendarView = "dayGridMonth" | "dayGridWeek" | "timeGridDay" | "listWeek"
   type TitleDateLocale = "en-gb" | "en-us"
+  interface CalendarEventPayload {
+    row_id?: string
+    title: string
+    start: Date | string | null
+    end: Date | string | null
+  }
 
   export let todayText: string = "Today"
-  export let dataProvider: DataProvider
+  export let dataProvider: UIFieldDataProviderContext | undefined
   export let eventStart: string // can haz type?
   export let eventEnd: string // can haz type?
   export let eventTitle: string
 
-  export let onClick: any // Also can has type?
+  export let onClick: ((payload: CalendarEventPayload) => void) | undefined
   export let showButtons: boolean
   export let monthText: string = "Month"
   export let weekText: string = "Week"
