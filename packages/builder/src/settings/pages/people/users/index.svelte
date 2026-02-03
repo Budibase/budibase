@@ -520,7 +520,7 @@
       defaultSortColumn={"access"}
       stickyHeader={false}
     >
-      <div slot="placeholder" />
+      <div slot="placeholder"></div>
     </Table>
   </div>
 
