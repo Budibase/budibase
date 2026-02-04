@@ -11,34 +11,39 @@
 </script>
 
 {#if favourite}
-  <Icon
-    name="star"
-    hoverable
-    weight={favourite._id ? "fill" : "regular"}
-    color={favourite._id ? "var(--spectrum-global-color-gray-600)" : undefined}
-    hoverColor={favourite._id
-      ? "var(--spectrum-global-color-gray-600)"
-      : undefined}
-    {size}
-    on:click={async e => {
-      e.stopPropagation()
-      e.preventDefault()
-      waiting = true
-      try {
-        if (favourite._id && favourite._rev) {
-          await API.workspace.delete(favourite._id, favourite._rev)
-        } else {
-          await API.workspace.create({
-            resourceId: favourite.resourceId,
-            resourceType: favourite.resourceType,
-          })
+  <span class="favouriteStar" class:favourite={!!favourite._id}>
+    <Icon
+      name="star"
+      hoverable
+      weight={favourite._id ? "fill" : "regular"}
+      {size}
+      on:click={async e => {
+        e.stopPropagation()
+        e.preventDefault()
+        waiting = true
+        try {
+          if (favourite._id && favourite._rev) {
+            await API.workspace.delete(favourite._id, favourite._rev)
+          } else {
+            await API.workspace.create({
+              resourceId: favourite.resourceId,
+              resourceType: favourite.resourceType,
+            })
+          }
+          await workspaceFavouriteStore.sync()
+        } catch (e) {
+          console.error("Workspace favourite update failed", e)
         }
-        await workspaceFavouriteStore.sync()
-      } catch (e) {
-        console.error("Workspace favourite update failed", e)
-      }
-      waiting = false
-    }}
-    disabled={waiting}
-  />
+        waiting = false
+      }}
+      disabled={waiting}
+    />
+  </span>
 {/if}
+
+<style>
+  .favouriteStar.favourite {
+    --color: var(--spectrum-global-color-gray-600);
+    --hover-color: var(--spectrum-global-color-gray-600);
+  }
+</style>
