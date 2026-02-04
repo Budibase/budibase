@@ -29,7 +29,7 @@
 
   async function createAutomation() {
     try {
-      const appId = $appStore.appId
+      const workspaceId = $appStore.appId
       const trigger = automationStore.actions.constructBlock(
         "TRIGGER",
         triggerVal.stepId,
@@ -40,11 +40,7 @@
         webhookModal.show()
       }
       notifications.success(`Automation ${name} created`)
-      if (appId) {
-        goto(`/builder/workspace/${appId}/automation/${automation._id}`)
-      } else {
-        goto(`../automation/${automation._id}`)
-      }
+      goto(`/builder/workspace/${workspaceId}/automation/${automation._id}`)
     } catch (error) {
       notifications.error("Error creating automation")
     }

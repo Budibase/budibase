@@ -110,7 +110,7 @@
 
     try {
       if (isNew) {
-        const appId = $appStore.appId
+        const workspaceId = $appStore.appId
         const workspaceApp = await workspaceAppStore.add({
           ...workspaceAppData,
           disabled: true,
@@ -125,13 +125,9 @@
           workspaceAppId: workspaceApp._id,
         })
         notifications.success("App created successfully")
-        if (appId) {
-          goto(
-            `/builder/workspace/${appId}/design/${workspaceApp._id}/${newScreen._id}`
-          )
-        } else {
-          goto(`./${newScreen._id}`)
-        }
+        goto(
+          `/builder/workspace/${workspaceId}/design/${workspaceApp._id}/${newScreen._id}`
+        )
       } else {
         await workspaceAppStore.edit({
           ...workspaceAppData,

@@ -21,17 +21,13 @@
   let modal: Modal
 
   async function createAgent() {
-    const appId = $appStore.appId
+    const workspaceId = $appStore.appId
     const newAgent = await agentsStore.createAgent({
       name: draft.name,
       live: false,
     })
     modal.hide()
-    if (appId) {
-      goto(`/builder/workspace/${appId}/agent/${newAgent._id}/config`)
-    } else {
-      goto(`./${newAgent._id}/config`)
-    }
+    goto(`/builder/workspace/${workspaceId}/agent/${newAgent._id}/config`)
   }
 
   onMount(() => {
