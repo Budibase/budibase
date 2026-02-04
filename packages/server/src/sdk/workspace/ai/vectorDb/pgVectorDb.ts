@@ -1,13 +1,13 @@
-import type { VectorDb as VectorDbDoc } from "@budibase/types"
+import { VectorDbProvider, type VectorDb as VectorDbDoc } from "@budibase/types"
 import * as crypto from "crypto"
 import { Client } from "pg"
+import { context, db as dbCore } from "@budibase/backend-core"
 import type {
   ChunkInput,
   PgVectorDbConfig,
   QueryResultRow,
   VectorDb,
 } from "./types"
-import { context } from "@budibase/backend-core"
 
 const vectorLiteral = (values: number[]) =>
   `[${values.map(value => Number(value) || 0).join(",")}]`
@@ -20,9 +20,11 @@ const buildAgentTableName = (agentId: string) => {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
+  const currentWorkspaceId = context.getOrThrowWorkspaceId()
+  const hashWorkspaceId = dbCore.getProdWorkspaceID(currentWorkspaceId)
   const hash = crypto
     .createHash("sha256")
-    .update(`${context.getOrThrowWorkspaceId()}:${agentId}`)
+    .update(`${hashWorkspaceId}:${agentId}`)
     .digest("hex")
     .slice(0, TABLE_HASH_LENGTH)
   const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH
@@ -42,15 +44,15 @@ const buildPgConnectionString = (config: VectorDbDoc) => {
 export const buildPgVectorDbConfig = (
   config: VectorDbDoc,
   options: { agentId: string }
-): PgVectorDbConfig => {
-  return {
-    provider: "pgvector",
+) => {
+  return new PgVectorDb({
+    provider: VectorDbProvider.PGVECTOR,
     databaseUrl: buildPgConnectionString(config),
     tableName: buildAgentTableName(options.agentId),
-  }
+  })
 }
 
-export class PgVectorDb implements VectorDb {
+class PgVectorDb implements VectorDb {
   private readonly tableName: string
 
   constructor(private readonly config: PgVectorDbConfig) {
@@ -73,26 +75,38 @@ export class PgVectorDb implements VectorDb {
   }
 
   private async ensureSchema(client: Client, embeddingDimensions: number) {
+    const buildIndexName = (tableName: string, suffix: string) => {
+      const hash = crypto
+        .createHash("sha256")
+        .update(`${tableName}:${suffix}`)
+        .digest("hex")
+        .slice(0, 20)
+      return `bb_sc_idx_${hash}`
+    }
+
     await client.query("CREATE EXTENSION IF NOT EXISTS vector")
     await client.query(`
-      CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        id SERIAL PRIMARY KEY,
-        source TEXT NOT NULL,
-        chunk_hash TEXT UNIQUE NOT NULL,
-        chunk_text TEXT NOT NULL,
-        embedding vector(${embeddingDimensions}) NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      )
-    `)
+        CREATE TABLE IF NOT EXISTS ${this.tableName} (
+          id SERIAL PRIMARY KEY,
+          source TEXT NOT NULL,
+          chunk_hash TEXT NOT NULL,
+          chunk_text TEXT NOT NULL,
+          embedding vector(${embeddingDimensions}) NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `)
     await client.query(
-      `CREATE INDEX IF NOT EXISTS ${this.tableName}_source_idx ON ${this.tableName} (source)`
+      `CREATE UNIQUE INDEX IF NOT EXISTS ${buildIndexName(this.tableName, "source_chunk_hash_uq")} ON ${this.tableName} (source, chunk_hash)`
     )
     await client.query(`
-      CREATE INDEX IF NOT EXISTS ${this.tableName}_embedding_idx
-      ON ${this.tableName}
-      USING ivfflat (embedding vector_cosine_ops)
-      WITH (lists = 100)
-    `)
+        CREATE INDEX IF NOT EXISTS ${buildIndexName(
+          this.tableName,
+          "embedding"
+        )}
+        ON ${this.tableName}
+        USING ivfflat (embedding vector_cosine_ops)
+        WITH (lists = 100)
+      `)
   }
 
   async upsertSourceChunks(
@@ -133,10 +147,9 @@ export class PgVectorDb implements VectorDb {
             `
               INSERT INTO ${this.tableName} (source, chunk_hash, chunk_text, embedding)
               VALUES ($1, $2, $3, $4::vector)
-              ON CONFLICT (chunk_hash) DO UPDATE
+              ON CONFLICT (source, chunk_hash) DO UPDATE
                 SET chunk_text = EXCLUDED.chunk_text,
-                    embedding = EXCLUDED.embedding,
-                    source = EXCLUDED.source
+                    embedding = EXCLUDED.embedding
             `,
             [sourceId, chunk.hash, chunk.text, vectorLiteral(chunk.embedding)]
           )
