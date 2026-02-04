@@ -2,6 +2,18 @@ import { BudibaseToolDefinition, getBudibaseTools } from ".."
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { basicRow, basicTable } from "../../../../tests/utilities/structures"
 
+type ToolLike<T extends BudibaseToolDefinition> = T
+type ToolInput<T extends BudibaseToolDefinition> = Parameters<
+  NonNullable<T["tool"]["execute"]>
+>[0]
+type ToolOutput<T extends BudibaseToolDefinition> = ReturnType<
+  NonNullable<T["tool"]["execute"]>
+>
+type ToolWithExecute<T extends BudibaseToolDefinition> = ToolLike<T> & {
+  tool: T["tool"] & { execute: NonNullable<T["tool"]["execute"]> }
+}
+type NonIterable<T> = T extends AsyncIterable<any> ? never : T
+
 describe("AI Tools - Rows", () => {
   const config = new TestConfiguration()
 
@@ -18,24 +30,12 @@ describe("AI Tools - Rows", () => {
   })
 
   async function executeTool<T extends BudibaseToolDefinition>(
-    tool: T | Omit<T, "name">,
-    input: Parameters<NonNullable<T["tool"]["execute"]>>[0]
+    tool: ToolLike<T>,
+    input: ToolInput<T>
   ) {
     function isAsyncIterable<T>(v: unknown): v is AsyncIterable<T> {
       return v != null && typeof (v as any)[Symbol.asyncIterator] === "function"
     }
-
-    type ToolWithExecute<T extends BudibaseToolDefinition> =
-      | (T & {
-          tool: T["tool"] & {
-            execute: NonNullable<T["tool"]["execute"]>
-          }
-        })
-      | (Omit<T, "name"> & {
-          tool: T["tool"] & {
-            execute: NonNullable<T["tool"]["execute"]>
-          }
-        })
 
     const ensureExecute = <T extends BudibaseToolDefinition>(
       tool: T | Omit<T, "name">
@@ -51,16 +51,13 @@ describe("AI Tools - Rows", () => {
       const result = (await executableTool.tool.execute(input, {
         toolCallId: "test-tool-call",
         messages: [],
-      })) as ReturnType<NonNullable<T["tool"]["execute"]>>
+      })) as ToolOutput<T>
 
       if (isAsyncIterable(result)) {
         throw new Error("Not expected")
       }
 
-      type NonIterable<T> = T extends AsyncIterable<any> ? never : T
-      return result as NonIterable<
-        ReturnType<NonNullable<T["tool"]["execute"]>>
-      >
+      return result as NonIterable<ToolOutput<T>>
     })
   }
 
