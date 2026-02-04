@@ -164,7 +164,7 @@
 
   .calendar :global(.fc-button-group .fc-button-primary) {
     font-weight: 600;
-    padding: 4 17 4 17;
+    padding: 4px 17px 4px 17px;
     color: var(--spectrum-global-color-static-white, #fff);
   }
 

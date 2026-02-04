@@ -9596,7 +9596,7 @@
       {
         "type": "text",
         "label": "Empty agenda text",
-        "key": "emtpyAgendaText",
+        "key": "emptyAgendaText",
         "defaultValue": "No events found"
       },
       {
