@@ -161,6 +161,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+    padding: 0 var(--spacing-m);
   }
 
   .settings-options {
