@@ -9,7 +9,11 @@
   import type { EventClickArg } from "@fullcalendar/core"
   import type { Row, UIFieldDataProviderContext } from "@budibase/types"
 
-  type CalendarView = "dayGridMonth" | "dayGridWeek" | "timeGridDay" | "listWeek"
+  type CalendarView =
+    | "dayGridMonth"
+    | "dayGridWeek"
+    | "timeGridDay"
+    | "listWeek"
   type TitleDateLocale = "en-gb" | "en-us"
   interface CalendarEventPayload {
     row_id?: string
@@ -20,11 +24,11 @@
 
   export let todayText: string = "Today"
   export let dataProvider: UIFieldDataProviderContext | undefined
-  export let eventStart: string // can haz type?
-  export let eventEnd: string // can haz type?
+  export let eventStart: string
+  export let eventEnd: string
   export let eventTitle: string
 
-  export let onClick: ((payload: CalendarEventPayload) => void) | undefined
+  export let onClick: ((_payload: CalendarEventPayload) => void) | undefined
   export let showButtons: boolean
   export let monthText: string = "Month"
   export let weekText: string = "Week"
@@ -33,7 +37,7 @@
   export let showTitleDate: boolean = true
   export let titleDateFormat: TitleDateLocale = "en-gb"
   export let emptyAgendaText: string = "No events found"
-  export let openOnDate: string // SHould be date?
+  export let openOnDate: string
   export let calendarType: CalendarView = "dayGridMonth"
 
   const { styleable, componentStore } = getContext("sdk")
