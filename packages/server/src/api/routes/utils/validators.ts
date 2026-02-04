@@ -27,6 +27,18 @@ const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_BOOLEAN = Joi.boolean().optional().allow(null)
 const APP_NAME_REGEX = /^[\w\s]+$/
 
+const sortJsonValidator = Joi.object().pattern(
+  Joi.string(),
+  Joi.object({
+    direction: Joi.string()
+      .valid(...Object.values(SortOrder))
+      .required(),
+    type: Joi.string()
+      .valid(...Object.values(SortType))
+      .optional(),
+  })
+)
+
 const validateViewSchemas: CustomValidator<Table> = (table, joiHelpers) => {
   if (!table.views || Object.keys(table.views).length === 0) {
     return table
@@ -200,7 +212,7 @@ export function internalSearchValidator() {
       tableId: OPTIONAL_STRING,
       query: filterObject(),
       limit: OPTIONAL_NUMBER,
-      sort: OPTIONAL_STRING,
+      sort: Joi.alternatives().try(OPTIONAL_STRING, sortJsonValidator).optional(),
       sortOrder: OPTIONAL_STRING,
       sortType: OPTIONAL_STRING,
       paginate: Joi.boolean(),

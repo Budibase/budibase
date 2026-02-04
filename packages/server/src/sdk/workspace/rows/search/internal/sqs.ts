@@ -29,6 +29,7 @@ import {
   RowSearchParams,
   SearchFilters,
   SearchResponse,
+  SortJson,
   SortOrder,
   SortType,
   SqlClient,
@@ -419,30 +420,70 @@ export async function search(
   }
 
   if (params.sort) {
-    const sortField = table.schema[params.sort]
-    const isAggregateField = aggregations.some(agg => agg.name === params.sort)
-
-    if (isAggregateField) {
-      request.sort = {
-        [params.sort]: {
-          direction: params.sortOrder || SortOrder.ASCENDING,
-          type: SortType.NUMBER,
-        },
+    const resolveSortEntry = (
+      field: string,
+      direction?: SortOrder,
+      type?: SortType
+    ) => {
+      const isAggregateField = aggregations.some(agg => agg.name === field)
+      if (isAggregateField) {
+        return {
+          key: field,
+          direction: direction || SortOrder.ASCENDING,
+          type: type || SortType.NUMBER,
+        }
       }
-    } else if (sortField) {
+
+      const sortField = table.schema[field]
+      if (!sortField) {
+        throw new Error(`Unable to sort by ${field}`)
+      }
+
       const responseType = isStaticFormula(sortField)
         ? sortField.responseType
         : sortField.type
       const sortType =
-        responseType === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
+        type ||
+        (responseType === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING)
+
+      return {
+        key: mapToUserColumn(sortField.name),
+        direction: direction || SortOrder.ASCENDING,
+        type: sortType as SortType,
+      }
+    }
+
+    if (typeof params.sort === "string") {
+      const entry = resolveSortEntry(
+        params.sort,
+        params.sortOrder,
+        params.sortType
+      )
       request.sort = {
-        [mapToUserColumn(sortField.name)]: {
-          direction: params.sortOrder || SortOrder.ASCENDING,
-          type: sortType as SortType,
+        [entry.key]: {
+          direction: entry.direction,
+          type: entry.type,
         },
       }
     } else {
-      throw new Error(`Unable to sort by ${params.sort}`)
+      const sort: SortJson = {}
+      for (const [field, sortInfo] of Object.entries(params.sort)) {
+        if (!sortInfo) {
+          continue
+        }
+        const entry = resolveSortEntry(
+          field,
+          sortInfo.direction,
+          sortInfo.type
+        )
+        sort[entry.key] = {
+          direction: entry.direction,
+          type: entry.type,
+        }
+      }
+      if (Object.keys(sort).length) {
+        request.sort = sort
+      }
     }
   }
 

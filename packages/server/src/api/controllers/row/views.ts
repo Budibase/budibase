@@ -5,6 +5,8 @@ import {
   RequiredKeys,
   RowSearchParams,
   PaginatedSearchRowResponse,
+  SortOrder,
+  SortType,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { context } from "@budibase/backend-core"
@@ -60,17 +62,37 @@ export async function searchView(
 
 function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
   if (request.sort) {
+    if (typeof request.sort === "string") {
+      return {
+        sort: request.sort,
+        sortOrder: request.sortOrder,
+        sortType: request.sortType ?? undefined,
+      }
+    }
     return {
       sort: request.sort,
-      sortOrder: request.sortOrder,
-      sortType: request.sortType ?? undefined,
+      sortOrder: undefined,
+      sortType: undefined,
     }
   }
   if (view.sort) {
-    return {
-      sort: view.sort.field,
-      sortOrder: view.sort.order,
-      sortType: view.sort.type,
+    const viewSort = Array.isArray(view.sort) ? view.sort : [view.sort]
+    const sort = viewSort.reduce((acc, sortEntry) => {
+      if (!sortEntry?.field) {
+        return acc
+      }
+      acc[sortEntry.field] = {
+        direction: sortEntry.order || SortOrder.ASCENDING,
+        ...(sortEntry.type ? { type: sortEntry.type as SortType } : {}),
+      }
+      return acc
+    }, {} as Record<string, { direction: SortOrder; type?: SortType }>)
+    if (Object.keys(sort).length) {
+      return {
+        sort,
+        sortOrder: undefined,
+        sortType: undefined,
+      }
     }
   }
 

@@ -80,12 +80,16 @@ export async function search(
 
   let sort: SortJson | undefined
   if (params.sort) {
-    const direction =
-      params.sortOrder === "descending"
-        ? SortOrder.DESCENDING
-        : SortOrder.ASCENDING
-    sort = {
-      [params.sort]: { direction },
+    if (typeof params.sort === "string") {
+      const direction =
+        params.sortOrder === "descending"
+          ? SortOrder.DESCENDING
+          : SortOrder.ASCENDING
+      sort = {
+        [params.sort]: { direction },
+      }
+    } else {
+      sort = params.sort
     }
   }
 

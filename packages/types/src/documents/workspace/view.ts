@@ -1,7 +1,8 @@
-import { LegacyFilter, UISearchFilter, SortOrder, SortType } from "../../api"
+import { LegacyFilter, UISearchFilter } from "../../api"
 import { UIFieldMetadata } from "./table"
 import { Document } from "../document"
 import { DBView, SearchFilters } from "../../sdk"
+import { SortField } from "../../shared"
 
 export type ViewTemplateOpts = {
   field: string
@@ -95,11 +96,7 @@ export interface ViewV2 {
   query?: LegacyFilter[] | SearchFilters
   // duplicate to store UI information about filters
   queryUI?: UISearchFilter
-  sort?: {
-    field: string
-    order?: SortOrder
-    type?: SortType
-  }
+  sort?: SortField | SortField[]
   schema?: ViewV2Schema
   rowHeight?: number
 }

@@ -3,6 +3,7 @@ import {
   Row,
   SaveRowRequest,
   SortOrder,
+  SortField,
   UIDatasource,
   UpdateViewRequest,
 } from "@budibase/types"
@@ -11,6 +12,44 @@ import { DatasourceViewActions } from "."
 import ViewV2Fetch from "../../../../fetch/ViewV2Fetch"
 
 const SuppressErrors = true
+
+type GridSortEntry = {
+  column: string
+  order: SortOrder
+}
+
+const normalizeViewSort = (sort?: SortField | SortField[]) => {
+  if (!sort) {
+    return []
+  }
+  const sortEntries = Array.isArray(sort) ? sort : [sort]
+  return sortEntries
+    .filter(sortEntry => sortEntry?.field)
+    .map(sortEntry => ({
+      column: sortEntry.field,
+      order: sortEntry.order || SortOrder.ASCENDING,
+    }))
+}
+
+const toViewSort = (sorts: GridSortEntry[]) => {
+  const entries = sorts
+    .filter(sortEntry => sortEntry.column)
+    .map(sortEntry => ({
+      field: sortEntry.column,
+      order: sortEntry.order || SortOrder.ASCENDING,
+    }))
+  return entries.length ? entries : undefined
+}
+
+const sortArraysEqual = (a: GridSortEntry[], b: GridSortEntry[]) => {
+  if (a.length !== b.length) {
+    return false
+  }
+  return a.every(
+    (entry, index) =>
+      entry.column === b[index]?.column && entry.order === b[index]?.order
+  )
+}
 
 interface ViewActions {
   viewV2: {
@@ -123,10 +162,16 @@ export const initialise = (context: StoreContext) => {
     // Reset state for new view
     filter.set(get(initialFilter) ?? undefined)
     inlineFilters.set([])
-    sort.set({
-      column: get(initialSortColumn),
-      order: get(initialSortOrder) || SortOrder.ASCENDING,
-    })
+    sort.set(
+      get(initialSortColumn)
+        ? [
+            {
+              column: get(initialSortColumn),
+              order: get(initialSortOrder) || SortOrder.ASCENDING,
+            },
+          ]
+        : []
+    )
 
     // Keep sort and filter state in line with the view definition when in builder
     unsubscribers.push(
@@ -142,10 +187,7 @@ export const initialise = (context: StoreContext) => {
         }
         // Only override sorting if we don't have an initial sort column
         if (!get(initialSortColumn)) {
-          sort.set({
-            column: $definition.sort?.field,
-            order: $definition.sort?.order || SortOrder.ASCENDING,
-          })
+          sort.set(normalizeViewSort($definition.sort))
         }
         // Only override filter state if we don't have an initial filter
         if (!get(initialFilter)) {
@@ -153,35 +195,6 @@ export const initialise = (context: StoreContext) => {
         }
       })
     )
-
-    function sortHasChanged(
-      newSort: {
-        column: string | null | undefined
-        order: SortOrder
-      },
-      existingSort?: {
-        field: string
-        order?: SortOrder
-      }
-    ) {
-      const newColumn = newSort.column ?? null
-      const existingColumn = existingSort?.field ?? null
-      if (newColumn !== existingColumn) {
-        return true
-      }
-
-      if (!newColumn) {
-        return false
-      }
-
-      const newOrder = newSort.order ?? null
-      const existingOrder = existingSort?.order ?? null
-      if (newOrder !== existingOrder) {
-        return true
-      }
-
-      return false
-    }
 
     // When sorting changes, ensure view definition is kept up to date
     unsubscribers.push(
@@ -196,7 +209,8 @@ export const initialise = (context: StoreContext) => {
         }
 
         // Skip if nothing actually changed
-        if (!sortHasChanged($sort, $view.sort)) {
+        const existingSorts = normalizeViewSort($view.sort)
+        if (sortArraysEqual($sort, existingSorts)) {
           return
         }
 
@@ -204,10 +218,7 @@ export const initialise = (context: StoreContext) => {
         if (get(config).canSaveSchema) {
           await datasource.actions.saveDefinition({
             ...$view,
-            sort: {
-              field: $sort.column!,
-              order: $sort.order || SortOrder.ASCENDING,
-            },
+            sort: toViewSort($sort),
           })
         }
 
@@ -217,9 +228,12 @@ export const initialise = (context: StoreContext) => {
         if ($fetch?.options?.datasource?.id !== $datasource.id) {
           return
         }
+        const sorts = $sort.map(sortEntry => ({
+          field: sortEntry.column,
+          order: sortEntry.order,
+        }))
         $fetch.update({
-          sortOrder: $sort.order,
-          sortColumn: $sort.column ?? undefined,
+          sorts,
         })
       })
     )

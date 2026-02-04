@@ -16,7 +16,11 @@
       value: col.name,
       type: col.schema?.type,
     }))
-  $: orderOptions = getOrderOptions($sort.column, columnOptions)
+  $: sortRows =
+    $sort.length > 0 ? $sort : [{ column: null, order: "ascending" }]
+  $: canAddSort =
+    columnOptions.filter(option => !$sort.some(s => s.column === option.value))
+      .length > 0
 
   const getOrderOptions = (column, columnOptions) => {
     const type = columnOptions.find(col => col.value === column)?.type
@@ -47,18 +51,66 @@
     ]
   }
 
-  const updateSortColumn = e => {
-    sort.update(state => ({
-      column: e.detail,
-      order: e.detail ? state.order : "ascending",
-    }))
+  const getColumnOptions = currentColumn => {
+    const used = new Set($sort.map(sortEntry => sortEntry.column))
+    if (currentColumn) {
+      used.delete(currentColumn)
+    }
+    return columnOptions.filter(option => !used.has(option.value))
   }
 
-  const updateSortOrder = e => {
-    sort.update(state => ({
+  const updateSortColumn = (index, column) => {
+    sort.update(state => {
+      const next = [...state]
+      if (!column) {
+        if (next[index]) {
+          next.splice(index, 1)
+        }
+        return next
+      }
+      if (next[index]) {
+        next[index] = {
+          ...next[index],
+          column,
+        }
+      } else {
+        next.push({ column, order: "ascending" })
+      }
+      return next
+    })
+  }
+
+  const updateSortOrder = (index, order) => {
+    sort.update(state => {
+      if (!state[index]) {
+        return state
+      }
+      const next = [...state]
+      next[index] = {
+        ...next[index],
+        order,
+      }
+      return next
+    })
+  }
+
+  const removeSort = index => {
+    sort.update(state => state.filter((_, idx) => idx !== index))
+  }
+
+  const addSort = () => {
+    const used = new Set($sort.map(sortEntry => sortEntry.column))
+    const nextOption = columnOptions.find(option => !used.has(option.value))
+    if (!nextOption) {
+      return
+    }
+    sort.update(state => [
       ...state,
-      order: e.detail,
-    }))
+      {
+        column: nextOption.value,
+        order: "ascending",
+      },
+    ])
   }
 </script>
 
@@ -75,22 +127,57 @@
       Sort
     </ActionButton>
   </svelte:fragment>
-  <Select
-    placeholder="Default"
-    value={$sort.column}
-    options={columnOptions}
-    autoWidth
-    on:change={updateSortColumn}
-    label="Column"
-  />
-  {#if $sort.column}
-    <Select
-      placeholder={null}
-      value={$sort.order || "ascending"}
-      options={orderOptions}
-      autoWidth
-      on:change={updateSortOrder}
-      label="Order"
-    />
-  {/if}
+  {#each sortRows as sortRow, index (index)}
+    <div class="sort-row">
+      <Select
+        placeholder="Default"
+        value={sortRow.column}
+        options={getColumnOptions(sortRow.column)}
+        autoWidth
+        on:change={e => updateSortColumn(index, e.detail)}
+        label="Column"
+      />
+      {#if sortRow.column}
+        <Select
+          placeholder={null}
+          value={sortRow.order || "ascending"}
+          options={getOrderOptions(sortRow.column, columnOptions)}
+          autoWidth
+          on:change={e => updateSortOrder(index, e.detail)}
+          label="Order"
+        />
+        <ActionButton
+          class="remove-sort"
+          icon="x"
+          quiet
+          size="S"
+          on:click={() => removeSort(index)}
+          aria-label="Remove sort"
+        />
+      {/if}
+    </div>
+  {/each}
+  <ActionButton
+    icon="plus"
+    quiet
+    size="S"
+    on:click={addSort}
+    disabled={!canAddSort}
+  >
+    Add sort
+  </ActionButton>
 </DetailPopover>
+
+<style>
+  .sort-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: var(--spacing-s);
+    align-items: end;
+  }
+
+  .remove-sort {
+    align-self: center;
+    margin-top: 18px;
+  }
+</style>
