@@ -168,7 +168,7 @@
     color: var(
       --spectrum-global-color-static-white,
       #fff
-    ); /* Check if this is required  */
+    ); /* Check if this is required */
   }
 
   .calendar :global(.fc .fc-button:focus),
