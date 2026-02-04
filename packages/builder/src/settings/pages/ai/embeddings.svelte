@@ -15,7 +15,7 @@
   let customConfigModal: { show: () => void; hide: () => void }
 
   let customModalConfig: CustomAIProviderConfig | null = null
-  let modalConfigType: AIConfigType = AIConfigType.COMPLETIONS
+  let modalConfigType: AIConfigType = AIConfigType.GENERATION
   let vectorModal: { show: () => void; hide: () => void }
   let vectorModalConfig: VectorDb | null = null
 
@@ -25,9 +25,9 @@
   )
   $: vectorDbs = $vectorDbStore.configs || []
 
-  function openCustomAIConfigModal(
+  function openAIConfigModal(
     config?: CustomAIProviderConfig,
-    type: AIConfigType = AIConfigType.COMPLETIONS
+    type: AIConfigType = AIConfigType.GENERATION
   ) {
     modalConfigType = type
     customModalConfig = config
@@ -62,8 +62,7 @@
         <Button
           size="S"
           cta
-          on:click={() =>
-            openCustomAIConfigModal(undefined, AIConfigType.EMBEDDINGS)}
+          on:click={() => openAIConfigModal(undefined, AIConfigType.EMBEDDINGS)}
         >
           Add configuration
         </Button>
@@ -75,7 +74,7 @@
             <CustomAIConfigTile
               {config}
               editHandler={() =>
-                openCustomAIConfigModal(config, AIConfigType.EMBEDDINGS)}
+                openAIConfigModal(config, AIConfigType.EMBEDDINGS)}
             />
           {/each}
         </div>

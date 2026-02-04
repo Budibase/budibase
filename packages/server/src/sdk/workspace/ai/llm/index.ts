@@ -6,9 +6,7 @@ import { features } from "@budibase/backend-core"
 async function getWorkspaceCompletionsLLM() {
   const configs = await sdk.ai.configs.fetch()
   const completionsConfig = configs.find(
-    config =>
-      (config.configType ?? AIConfigType.COMPLETIONS) ===
-      AIConfigType.COMPLETIONS
+    config => config.configType === AIConfigType.GENERATION
   )
 
   if (!completionsConfig) {

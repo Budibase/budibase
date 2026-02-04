@@ -9,8 +9,8 @@
   let customConfigModal: { show: () => void; hide: () => void }
   let customModalConfig: CustomAIProviderConfig | null = null
 
-  $: chatConfigs = ($aiConfigsStore.customConfigs || []).filter(
-    config => config.configType === AIConfigType.COMPLETIONS
+  $: aiGenerationConfigs = ($aiConfigsStore.customConfigs || []).filter(
+    config => config.configType === AIConfigType.GENERATION
   )
 
   function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
@@ -37,9 +37,9 @@
         </Button>
       </div>
 
-      {#if chatConfigs.length}
+      {#if aiGenerationConfigs.length}
         <div class="ai-list">
-          {#each chatConfigs as config (config._id)}
+          {#each aiGenerationConfigs as config (config._id)}
             <CustomAIConfigTile
               {config}
               editHandler={() => openCustomAIConfigModal(config)}
@@ -48,7 +48,7 @@
         </div>
       {:else}
         <div class="no-enabled">
-          <Body size="S">No chat configurations yet</Body>
+          <Body size="S">No generation configurations yet</Body>
         </div>
       {/if}
     </div>
@@ -58,7 +58,7 @@
 <Modal bind:this={customConfigModal}>
   <CustomConfigModal
     config={customModalConfig}
-    type={AIConfigType.COMPLETIONS}
+    type={AIConfigType.GENERATION}
     on:hide={() => {
       customConfigModal.hide()
     }}

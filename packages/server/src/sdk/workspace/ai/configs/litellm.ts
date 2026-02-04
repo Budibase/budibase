@@ -208,7 +208,7 @@ async function validateEmbeddingConfig(model: {
   return
 }
 
-async function validateCompletionsModel(model: {
+async function validateGenerationModel(model: {
   provider: string
   name: string
   credentialFields: Record<string, string>
@@ -257,8 +257,8 @@ async function validateConfig(model: {
   switch (model.configType) {
     case AIConfigType.EMBEDDINGS:
       return validateEmbeddingConfig(model)
-    case AIConfigType.COMPLETIONS:
-      return validateCompletionsModel(model)
+    case AIConfigType.GENERATION:
+      return validateGenerationModel(model)
     default:
       throw utils.unreachable(model.configType)
   }

@@ -187,7 +187,7 @@
     <Input bind:value={draft.model} />
   </div>
 
-  {#if draft.configType === AIConfigType.COMPLETIONS}
+  {#if draft.configType === AIConfigType.GENERATION}
     <div class="row">
       <Label size="M">Reasoning effort</Label>
       <Select

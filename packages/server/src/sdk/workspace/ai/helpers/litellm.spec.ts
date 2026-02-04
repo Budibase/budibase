@@ -6,7 +6,7 @@ describe("buildLiteLLMParams", () => {
     provider: "openai",
     name: "gpt-5-mini",
     credentialFields: { api_key: "secret" },
-    configType: AIConfigType.COMPLETIONS,
+    configType: AIConfigType.GENERATION,
   }
 
   it("includes base params and credentials", () => {
@@ -51,7 +51,7 @@ describe("buildLiteLLMParams", () => {
       provider: "groq",
       name: "qwen3-32b",
       credentialFields: {},
-      configType: AIConfigType.COMPLETIONS,
+      configType: AIConfigType.GENERATION,
       reasoningEffort: "high",
     })
 
@@ -63,7 +63,7 @@ describe("buildLiteLLMParams", () => {
       provider: "openrouter",
       name: "some-model",
       credentialFields: {},
-      configType: AIConfigType.COMPLETIONS,
+      configType: AIConfigType.GENERATION,
       reasoningEffort: "medium",
     })
 

@@ -6,7 +6,6 @@ import {
   UpdateAIConfigRequest,
   PASSWORD_REPLACEMENT,
   UserCtx,
-  AIConfigType,
   RequiredKeys,
   WithoutDocMetadata,
   ToDocUpdateMetadata,
@@ -73,8 +72,6 @@ export const createAIConfig = async (
     throw new HTTPError("Config name is required", 400)
   }
 
-  const configType = body.configType ?? AIConfigType.COMPLETIONS
-
   const createRequest: RequiredKeys<WithoutDocMetadata<CreateAIConfigRequest>> =
     {
       name: body.name,
@@ -83,7 +80,7 @@ export const createAIConfig = async (
       model: body.model,
       liteLLMModelId: body.liteLLMModelId,
       webSearchConfig: body.webSearchConfig,
-      configType,
+      configType: body.configType,
       reasoningEffort: body.reasoningEffort,
     }
 
@@ -109,8 +106,6 @@ export const updateAIConfig = async (
     throw new HTTPError("Config name is required", 400)
   }
 
-  const configType = body.configType ?? AIConfigType.COMPLETIONS
-
   const updateRequest: RequiredKeys<
     ToDocUpdateMetadata<UpdateAIConfigRequest>
   > = {
@@ -122,7 +117,7 @@ export const updateAIConfig = async (
     model: body.model,
     liteLLMModelId: body.liteLLMModelId,
     webSearchConfig: body.webSearchConfig,
-    configType,
+    configType: body.configType,
     reasoningEffort: body.reasoningEffort,
   }
 

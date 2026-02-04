@@ -58,7 +58,7 @@ describe("BudibaseAI", () => {
         api_base: "https://api.openai.com",
       },
       liteLLMModelId: "",
-      configType: AIConfigType.COMPLETIONS,
+      configType: AIConfigType.GENERATION,
     }
 
     beforeEach(async () => {
@@ -482,7 +482,7 @@ describe("BudibaseAI", () => {
         api_base: "https://api.openai.com",
       },
       liteLLMModelId: "",
-      configType: AIConfigType.COMPLETIONS,
+      configType: AIConfigType.GENERATION,
     }
 
     beforeEach(async () => {
