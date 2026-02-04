@@ -1,6 +1,6 @@
 <script lang="ts">
   import { aiConfigsStore } from "@/stores/portal"
-  import { Button, Icon, Layout, Modal, notifications } from "@budibase/bbui"
+  import { Button, Layout, Modal, notifications } from "@budibase/bbui"
   import { AIConfigType, type CustomAIProviderConfig } from "@budibase/types"
   import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
