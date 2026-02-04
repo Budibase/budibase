@@ -26,6 +26,10 @@
     type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
+    type HomeRow,
+    type HomeSortColumn,
+    type HomeSortOrder,
+    type HomeType,
     PublishResourceState,
     type Agent,
     type WorkspaceFavourite,
@@ -42,12 +46,6 @@
     filterHomeRows,
     sortHomeRows,
   } from "./_components/rows"
-  import type {
-    HomeRow,
-    HomeSortColumn,
-    HomeSortOrder,
-    HomeType,
-  } from "./_components/types"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 

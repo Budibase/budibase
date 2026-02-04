@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
   import { Body } from "@budibase/bbui"
-  import type { HomeType } from "./types"
+  import type { HomeType } from "@budibase/types"
 
   export let allRowsCount = 0
   export let filteredRowsCount = 0

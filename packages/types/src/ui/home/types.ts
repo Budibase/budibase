@@ -1,10 +1,7 @@
-import type {
-  Agent,
-  PublishResourceState,
-  UIAutomation,
-  UIWorkspaceApp,
-  WorkspaceFavourite,
-} from "@budibase/types"
+import type { PublishResourceState } from "../../api"
+import type { Agent, WorkspaceFavourite } from "../../documents"
+import type { UIAutomation } from "../stores/automations"
+import type { UIWorkspaceApp } from "../workspaceApps"
 
 export type HomeType = "all" | "app" | "automation" | "agent" | "chat"
 export type HomeRowType = "app" | "automation" | "agent"

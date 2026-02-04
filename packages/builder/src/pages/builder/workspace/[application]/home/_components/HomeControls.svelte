@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
   import { Body, Icon, Select, Tag } from "@budibase/bbui"
-  import type { HomeType } from "./types"
+  import type { HomeType } from "@budibase/types"
 
   export let typeFilter: HomeType = "all"
   export let searchTerm = ""

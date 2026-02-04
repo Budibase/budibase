@@ -1,17 +1,15 @@
 import {
   WorkspaceResource,
   type Agent,
+  type HomeRow,
+  type HomeRowType,
+  type HomeSortColumn,
+  type HomeSortOrder,
+  type HomeType,
   type UIAutomation,
   type UIWorkspaceApp,
   type WorkspaceFavourite,
 } from "@budibase/types"
-import type {
-  HomeRow,
-  HomeRowType,
-  HomeSortColumn,
-  HomeSortOrder,
-  HomeType,
-} from "./types"
 
 interface BuildHomeRowsParams {
   apps: UIWorkspaceApp[]

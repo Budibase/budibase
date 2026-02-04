@@ -10,7 +10,7 @@
     HomeSortColumn,
     HomeSortOrder,
     HomeType,
-  } from "./types"
+  } from "@budibase/types"
   import HomeEmptyState from "./HomeEmptyState.svelte"
   import { getTypeLabel } from "./rows"
 
