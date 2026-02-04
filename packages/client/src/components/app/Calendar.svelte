@@ -106,7 +106,7 @@
     initialDate: openOnDate,
     events,
     eventClick: handleEventClick,
-    // eventTimeFormat to override default meridiem to "short"
+    // eventTimeFormat to override default meridiem to "short" (AM/PM)
     eventTimeFormat: {
       hour: "numeric",
       minute: "2-digit",
@@ -165,10 +165,7 @@
   .calendar :global(.fc-button-group .fc-button-primary) {
     font-weight: 600;
     padding: 4 17 4 17;
-    color: var(
-      --spectrum-global-color-static-white,
-      #fff
-    ); /* Check if this is required */
+    color: var(--spectrum-global-color-static-white, #fff);
   }
 
   .calendar :global(.fc .fc-button:focus),
@@ -203,7 +200,7 @@
   .calendar :global(.fc-button) {
     color: var(--spectrum-alias-heading-text-color);
     font-weight: 700;
-  } /* Still want to look at font-spacing to better match the original button */
+  }
 
   /* Specific radiuses (radii?) for first and last buttons */
   .calendar :global(.fc-prevYear-button),
