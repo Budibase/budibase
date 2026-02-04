@@ -8976,6 +8976,12 @@
         "key": "rowId",
         "required": true,
         "resetOn": "datasource"
+      },
+      {
+        "type": "text",
+        "label": "No row message",
+        "key": "noRowMessage",
+        "defaultValue": "No row found"
       }
     ],
     "context": {

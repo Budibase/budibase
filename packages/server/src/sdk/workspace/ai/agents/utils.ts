@@ -5,9 +5,9 @@ import {
   WebSearchProvider,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
+import { getBudibaseTools } from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
-import budibaseTools from "../../../../ai/tools/budibase"
 import {
   createRestQueryTool,
   toToolSet,
@@ -20,19 +20,22 @@ import tracer from "dd-trace"
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
     name: tool.name,
+    readableName: tool.readableName,
     description: tool.description,
     sourceType: tool.sourceType,
     sourceLabel: tool.sourceLabel,
+    sourceIconType: tool.sourceIconType,
   }
 }
 
 export async function getAvailableTools(
   aiconfigId?: string
 ): Promise<AiToolDefinition[]> {
-  const [queries, datasources, aiConfig] = await Promise.all([
+  const [queries, datasources, aiConfig, tables] = await Promise.all([
     sdk.queries.fetch(),
     sdk.datasources.fetch(),
     aiconfigId ? sdk.ai.configs.find(aiconfigId) : Promise.resolve(undefined),
+    sdk.tables.getAllTables(),
   ])
   const webSearchConfig = aiConfig?.webSearchConfig
 
@@ -42,13 +45,28 @@ export async function getAvailableTools(
       .map(ds => [ds._id, ds.name || "API"])
   )
 
+  const datasourceNamesById = Object.fromEntries(
+    datasources
+      .filter(ds => !!ds._id)
+      .map(ds => [ds._id, ds.name || "Datasource"])
+  )
+
+  const datasourceIconTypesById = Object.fromEntries(
+    datasources
+      .filter(ds => !!ds._id)
+      .map(ds => [ds._id!, ds.source || "CUSTOM"])
+  )
+
   const restQueryTools = queries
     .filter(query => restDatasourceNames.has(query.datasourceId))
     .map(query =>
       createRestQueryTool(query, restDatasourceNames.get(query.datasourceId))
     )
 
-  const tools: AiToolDefinition[] = [...budibaseTools, ...restQueryTools]
+  const tools: AiToolDefinition[] = [
+    ...getBudibaseTools(tables, datasourceNamesById, datasourceIconTypesById),
+    ...restQueryTools,
+  ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
       tools.push(createExaTool(webSearchConfig.apiKey))
