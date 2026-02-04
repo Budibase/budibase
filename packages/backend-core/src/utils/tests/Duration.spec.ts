@@ -16,4 +16,8 @@ describe("duration", () => {
   it("should convert minutes to days", () => {
     expect(Duration.fromMinutes(1440).to(DurationType.DAYS)).toBe(1)
   })
+
+  it("should convert days to seconds", () => {
+    expect(Duration.fromDays(7).toSeconds()).toBe(604800)
+  })
 })
