@@ -1,10 +1,10 @@
 import { Ctx, GenerateCronRequest, GenerateCronResponse } from "@budibase/types"
-import { ai } from "@budibase/pro"
+import { getPreferredLLMOrThrow } from "../../../sdk/workspace/ai/llm"
 
 export async function generateCronExpression(
   ctx: Ctx<GenerateCronRequest, GenerateCronResponse>
 ) {
-  const llm = await ai.getLLMOrThrow()
+  const llm = await getPreferredLLMOrThrow()
 
   const { prompt } = ctx.request.body
   const { message } = await llm.generateCronExpression(prompt)
