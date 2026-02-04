@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { onMount } from "svelte"
-  import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
-  import { aiConfigsStore, featureFlags } from "@/stores/portal"
+  import { aiConfigsStore } from "@/stores/portal"
+  import { Button, Layout, Modal, notifications } from "@budibase/bbui"
   import { AIConfigType, type CustomAIProviderConfig } from "@budibase/types"
+  import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
 
@@ -12,6 +12,33 @@
   $: aiGenerationConfigs = ($aiConfigsStore.customConfigs || []).filter(
     config => config.configType === AIConfigType.GENERATION
   )
+
+  const modelProviders = [
+    {
+      name: "Anthropic",
+      description: "Connect to Claude models directly from Anthropic",
+    },
+    {
+      name: "Google",
+      description: "Connect to Gemini models directly from Google",
+    },
+    {
+      name: "Mistral",
+      description: "Connect to Mistral models directly from Mistral",
+    },
+    {
+      name: "OpenAI",
+      description: "Connect to ChatGPT models directly from OpenAI",
+    },
+    {
+      name: "OpenRouter",
+      description: "Connect to 100s of text, image, embedding models",
+    },
+    {
+      name: "Groq",
+      description: "Connect to 100s of text, image, embedding models",
+    },
+  ]
 
   function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
     customModalConfig = config ? { ...config } : null
@@ -27,32 +54,39 @@
   })
 </script>
 
-<Layout noPadding gap="S">
-  {#if $featureFlags.AI_AGENTS}
-    <div class="section">
-      <div class="section-header">
-        <div></div>
-        <Button size="S" cta on:click={() => openCustomAIConfigModal()}>
-          Add configuration
-        </Button>
-      </div>
-
-      {#if aiGenerationConfigs.length}
-        <div class="ai-list">
-          {#each aiGenerationConfigs as config (config._id)}
-            <CustomAIConfigTile
-              {config}
-              editHandler={() => openCustomAIConfigModal(config)}
-            />
-          {/each}
-        </div>
-      {:else}
-        <div class="no-enabled">
-          <Body size="S">No generation configurations yet</Body>
-        </div>
-      {/if}
+<Layout noPadding gap="XS">
+  <div class="section-header">
+    <div class="section-title">Connected models</div>
+  </div>
+  <div class="model-list">
+    {#each aiGenerationConfigs as config (config._id)}
+      <CustomAIConfigTile
+        displayName={config.name}
+        provider={config.provider}
+        description={config.model}
+        isEdition
+        editHandler={() => openCustomAIConfigModal(config)}
+      ></CustomAIConfigTile>
+    {/each}
+  </div>
+  <div class="section-header new-provider-section">
+    <div class="section-title">Model providers</div>
+    <div class="provider-controls">
+      <Button icon="plus" size="S" on:click={() => openCustomAIConfigModal()}
+        >Connect to a custom provider</Button
+      >
     </div>
-  {/if}
+  </div>
+  <div class="model-list">
+    {#each modelProviders as provider (provider.name)}
+      <CustomAIConfigTile
+        displayName={provider.name}
+        provider={provider.name}
+        description={provider.description}
+        editHandler={() => openCustomAIConfigModal()}
+      ></CustomAIConfigTile>
+    {/each}
+  </div>
 </Layout>
 
 <Modal bind:this={customConfigModal}>
@@ -66,26 +100,32 @@
 </Modal>
 
 <style>
-  .ai-list {
-    margin-top: var(--spacing-l);
-    margin-bottom: var(--spacing-l);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .no-enabled {
-    padding: 16px;
-    background-color: var(--grey-1);
-    border: 1px solid var(--grey-4);
-    border-radius: var(--border-radius-m);
-  }
-
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
-    margin-bottom: var(--spacing-m);
+  }
+  .new-provider-section {
+    margin-top: var(--spacing-l);
+  }
+
+  .section-title {
+    font-size: 13px;
+    color: var(--grey-7, #a2a2a2);
+  }
+
+  .provider-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .model-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: var(--grey-1, #1d1d1d);
+    border-radius: 6px;
   }
 </style>
