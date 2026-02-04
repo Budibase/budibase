@@ -433,10 +433,18 @@
   >
     <div class="nav_header">
       <div>
-        <BBLogo
-          color={"var(--spectrum-global-color-gray-900)"}
-          size={navLogoSize}
-        />
+        <a
+          class="logo_link"
+          href={$url("./")}
+          aria-label="Workspace home"
+          title="Workspace home"
+          on:click={keepCollapsed}
+        >
+          <BBLogo
+            color={"var(--spectrum-global-color-gray-900)"}
+            size={navLogoSize}
+          />
+        </a>
       </div>
 
       <div class="nav-title">
@@ -917,7 +925,24 @@
     gap: var(--spacing-m);
     color: var(--spectrum-global-color-gray-800);
   }
-  .nav_header > div :global(> svg) {
+  .logo_link {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .logo_link:hover {
+    background: var(--spectrum-global-color-gray-200);
+    cursor: pointer;
+  }
+  .logo_link:focus-visible {
+    outline: 2px solid var(--spectrum-global-color-gray-400);
+    outline-offset: 2px;
+  }
+  .logo_link :global(svg) {
     display: grid;
     place-items: center;
     transition: filter 130ms ease-out;
