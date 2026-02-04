@@ -680,7 +680,7 @@ Any constraints the agent must follow.
           <ToolsDropdown
             {filteredTools}
             {toolSections}
-            bind:toolSearch
+            {toolSearch}
             onToolClick={handleToolClick}
             onAddApiConnection={() => $goto(`./apis`)}
             webSearchEnabled={webSearchConfigured}

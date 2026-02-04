@@ -5,7 +5,7 @@
   import type { AgentTool } from "./toolTypes"
   import ToolIcon from "./ToolIcon.svelte"
 
-  interface Props {
+  export interface Props {
     filteredTools: AgentTool[]
     toolSections: Record<string, AgentTool[]>
     toolSearch: string
