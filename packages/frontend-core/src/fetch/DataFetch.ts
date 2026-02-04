@@ -283,7 +283,9 @@ export default abstract class BaseDataFetch<
         ?.filter(sortEntry => sortEntry?.field && schema?.[sortEntry.field])
         .map(sortEntry => ({
           ...sortEntry,
-          order: (sortEntry.order || SortOrder.ASCENDING).toLowerCase() as SortOrder,
+          order: (
+            sortEntry.order || SortOrder.ASCENDING
+          ).toLowerCase() as SortOrder,
           type: sortEntry.type || getSortType(sortEntry.field),
         })) || []
 
@@ -292,7 +294,9 @@ export default abstract class BaseDataFetch<
         normalizedSorts = [
           {
             field: this.options.sortColumn,
-            order: (this.options.sortOrder || SortOrder.ASCENDING).toLowerCase() as SortOrder,
+            order: (
+              this.options.sortOrder || SortOrder.ASCENDING
+            ).toLowerCase() as SortOrder,
             type: this.options.sortType || getSortType(this.options.sortColumn),
           },
         ]
@@ -320,8 +324,7 @@ export default abstract class BaseDataFetch<
     } else {
       this.options.sorts = normalizedSorts
       this.options.sortColumn = normalizedSorts[0]?.field ?? null
-      this.options.sortOrder =
-        normalizedSorts[0]?.order || SortOrder.ASCENDING
+      this.options.sortOrder = normalizedSorts[0]?.order || SortOrder.ASCENDING
       this.options.sortType = normalizedSorts[0]?.type || null
     }
 

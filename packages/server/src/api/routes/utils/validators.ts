@@ -212,7 +212,9 @@ export function internalSearchValidator() {
       tableId: OPTIONAL_STRING,
       query: filterObject(),
       limit: OPTIONAL_NUMBER,
-      sort: Joi.alternatives().try(OPTIONAL_STRING, sortJsonValidator).optional(),
+      sort: Joi.alternatives()
+        .try(OPTIONAL_STRING, sortJsonValidator)
+        .optional(),
       sortOrder: OPTIONAL_STRING,
       sortType: OPTIONAL_STRING,
       paginate: Joi.boolean(),

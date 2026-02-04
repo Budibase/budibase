@@ -60,8 +60,15 @@ export default class ViewV2Fetch extends BaseDataFetch<
   }
 
   async getData() {
-    const { datasource, limit, sortColumn, sortOrder, sortType, sorts, paginate } =
-      this.options
+    const {
+      datasource,
+      limit,
+      sortColumn,
+      sortOrder,
+      sortType,
+      sorts,
+      paginate,
+    } = this.options
     const { cursor, query, definition } = get(this.store)
 
     // If this is a calculation view and we have no calculations, return nothing
@@ -83,9 +90,8 @@ export default class ViewV2Fetch extends BaseDataFetch<
     // params built in to this view. This ensures that we can accurately
     // compare old and new params and skip a redundant API call.
     if (!sortColumn && definition?.sort && !sorts?.length) {
-      this.options.sorts = (Array.isArray(definition.sort)
-        ? definition.sort
-        : [definition.sort]
+      this.options.sorts = (
+        Array.isArray(definition.sort) ? definition.sort : [definition.sort]
       ).filter(sortEntry => sortEntry?.field)
     }
 

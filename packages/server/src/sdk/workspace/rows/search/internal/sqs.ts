@@ -471,11 +471,7 @@ export async function search(
         if (!sortInfo) {
           continue
         }
-        const entry = resolveSortEntry(
-          field,
-          sortInfo.direction,
-          sortInfo.type
-        )
+        const entry = resolveSortEntry(field, sortInfo.direction, sortInfo.type)
         sort[entry.key] = {
           direction: entry.direction,
           type: entry.type,

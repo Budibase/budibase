@@ -77,16 +77,19 @@ function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
   }
   if (view.sort) {
     const viewSort = Array.isArray(view.sort) ? view.sort : [view.sort]
-    const sort = viewSort.reduce((acc, sortEntry) => {
-      if (!sortEntry?.field) {
+    const sort = viewSort.reduce(
+      (acc, sortEntry) => {
+        if (!sortEntry?.field) {
+          return acc
+        }
+        acc[sortEntry.field] = {
+          direction: sortEntry.order || SortOrder.ASCENDING,
+          ...(sortEntry.type ? { type: sortEntry.type as SortType } : {}),
+        }
         return acc
-      }
-      acc[sortEntry.field] = {
-        direction: sortEntry.order || SortOrder.ASCENDING,
-        ...(sortEntry.type ? { type: sortEntry.type as SortType } : {}),
-      }
-      return acc
-    }, {} as Record<string, { direction: SortOrder; type?: SortType }>)
+      },
+      {} as Record<string, { direction: SortOrder; type?: SortType }>
+    )
     if (Object.keys(sort).length) {
       return {
         sort,
