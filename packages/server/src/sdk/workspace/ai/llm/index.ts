@@ -1,6 +1,7 @@
 import { ai } from "@budibase/pro"
-import { AIConfigType } from "@budibase/types"
+import { AIConfigType, FeatureFlag } from "@budibase/types"
 import sdk from "../../.."
+import { features } from "@budibase/backend-core"
 
 async function getWorkspaceCompletionsLLM() {
   const configs = await sdk.ai.configs.fetch()
@@ -25,9 +26,16 @@ async function getWorkspaceCompletionsLLM() {
 }
 
 export async function getPreferredLLM(): Promise<ai.LLM | undefined> {
-  return (await getWorkspaceCompletionsLLM()) || (await ai.getLLM())
+  const useNewLLM = await features.isEnabled(FeatureFlag.USE_NEW_LLM)
+  return (
+    (useNewLLM && (await getWorkspaceCompletionsLLM())) || (await ai.getLLM())
+  )
 }
 
 export async function getPreferredLLMOrThrow(): Promise<ai.LLM> {
-  return (await getWorkspaceCompletionsLLM()) || (await ai.getLLMOrThrow())
+  const useNewLLM = await features.isEnabled(FeatureFlag.USE_NEW_LLM)
+  return (
+    (useNewLLM && (await getWorkspaceCompletionsLLM())) ||
+    (await ai.getLLMOrThrow())
+  )
 }

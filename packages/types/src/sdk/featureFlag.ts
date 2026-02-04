@@ -1,6 +1,7 @@
 export enum FeatureFlag {
   USE_ZOD_VALIDATOR = "USE_ZOD_VALIDATOR",
   AI_AGENTS = "AI_AGENTS",
+  USE_NEW_LLM = "USE_NEW_LLM",
 
   // Dev
   DEBUG_UI = "DEBUG_UI",
