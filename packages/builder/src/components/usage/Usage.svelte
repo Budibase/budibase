@@ -3,8 +3,6 @@
   import { helpers } from "@budibase/shared-core"
   import { admin } from "@/stores/portal/admin"
   import { auth } from "@/stores/portal/auth"
-  import { onMount } from "svelte"
-
   export let usage
   export let warnWhenFull = false
 
@@ -15,26 +13,18 @@
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   const { accountPortalUpgradeUrl } = helpers
 
-  const isUnlimited = () => {
-    if (usage.total === -1) {
-      return true
-    }
-    return false
-  }
-
   const getPercentage = () => {
+    if (!usage?.total || usage.total <= 0) {
+      return 0
+    }
     return (usage.used / usage.total) * 100
   }
 
   $: upgradeUrl = accountPortalUpgradeUrl($admin.accountPortalUrl)
 
-  onMount(() => {
-    unlimited = isUnlimited()
-    percentage = getPercentage()
-    if (warnWhenFull && percentage >= 100) {
-      showWarning = true
-    }
-  })
+  $: unlimited = usage?.total === -1
+  $: percentage = unlimited ? 100 : getPercentage()
+  $: showWarning = warnWhenFull && !unlimited && percentage >= 100
 </script>
 
 <div class="usage">

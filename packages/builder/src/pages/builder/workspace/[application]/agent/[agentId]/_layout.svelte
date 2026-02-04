@@ -103,17 +103,13 @@
           size="M"
           color="var(--spectrum-global-color-gray-600)"
         />
-        <Icon
-          name="check-circle"
-          size="M"
-          color="var(--spectrum-semantic-positive-color-default, var(--spectrum-global-color-green-500))"
-        />
       </div>
       <Button
         primary={!currentAgent?.live}
         secondary={currentAgent?.live}
-        icon={currentAgent?.live ? "pause" : "play"}
+        icon={currentAgent?.live ? undefined : "play"}
         iconColor={currentAgent?.live ? "" : "var(--bb-blue)"}
+        iconWeight="fill"
         on:click={toggleAgentLive}
         disabled={togglingLive}
         >{currentAgent?.live ? "Pause agent" : "Set agent live"}</Button
@@ -123,7 +119,7 @@
   <div class="config-page">
     <div class=" config-content">
       <div class="config-form">
-        <Layout paddingY="XL" gap="L">
+        <Layout gap="L">
           <slot />
         </Layout>
       </div>
@@ -148,26 +144,49 @@
 
   .config-page {
     flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    grid-template-rows: 1fr;
     height: 0;
     overflow: hidden;
     gap: var(--spacing-l);
   }
 
   .config-content {
-    flex: 0 0 auto;
-    width: 50%;
-    max-width: 800px;
-    display: flex;
-    flex-direction: column;
-    padding: var(--spacing-xl) var(--spacing-l) var(--spacing-xl);
+    grid-column: span 13;
+    padding: var(--spacing-xl) var(--spacing-l) 20px;
+    min-width: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .config-content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .config-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .config-content::-webkit-scrollbar-thumb {
+    background: var(--spectrum-global-color-gray-300);
+    border-radius: 3px;
+  }
+
+  .config-content::-webkit-scrollbar-thumb:hover {
+    background: var(--spectrum-global-color-gray-400);
   }
 
   .config-preview {
-    flex: 1 1 auto;
-    border-left: 1px solid var(--spectrum-global-color-gray-200);
-    overflow-y: scroll;
+    grid-column: span 11;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    overflow: hidden;
+    padding: var(--spacing-xl) var(--spacing-l) var(--spacing-xl);
+    background: var(--background-alt);
+    min-width: 0;
   }
 
   .config-form {
@@ -198,6 +217,10 @@
     border: 1px solid transparent;
     padding: 3px 10px;
     height: auto;
+  }
+
+  .filter :global(.spectrum-ActionButton-label) {
+    font-weight: 500;
   }
 
   :global(.form-row) {
@@ -231,6 +254,10 @@
     align-items: center;
     gap: var(--spacing-s);
     margin-right: var(--spacing-m);
+  }
+
+  .start-pause-row :global(.spectrum-Button.new-styles .spectrum-Button-label) {
+    font-weight: 400;
   }
 
   :global(

@@ -21,6 +21,7 @@
   export let placeholder: string | boolean = false
   export let autoWidth: boolean = false
   export let quiet: boolean = false
+  export let bordered: boolean = true
   export let allowPublic: boolean = true
   export let allowRemove: boolean = false
   export let disabled: boolean = false
@@ -162,6 +163,7 @@
   <Select
     {autoWidth}
     {quiet}
+    {bordered}
     {disabled}
     {align}
     {footer}

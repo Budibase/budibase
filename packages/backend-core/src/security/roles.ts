@@ -142,7 +142,7 @@ const BUILTIN_ROLES = {
     BUILTIN_IDS.ADMIN,
     BuiltinPermissionID.ADMIN,
     {
-      displayName: "App admin",
+      displayName: "Admin user",
       description: "Can do everything",
       color: RoleColor.ADMIN,
     }
@@ -162,7 +162,7 @@ const BUILTIN_ROLES = {
     BUILTIN_IDS.BASIC,
     BuiltinPermissionID.WRITE,
     {
-      displayName: "App user",
+      displayName: "Basic user",
       description: "Any logged in user",
       color: RoleColor.BASIC,
     }
@@ -528,6 +528,10 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
           ...dbBuiltin,
           name: builtinRole.name,
           _id: getExternalRoleID(builtinRole._id!, builtinRole.version),
+          uiMetadata: {
+            ...dbBuiltin.uiMetadata,
+            ...builtinRole.uiMetadata,
+          },
         })
       }
     }

@@ -84,6 +84,7 @@ export const createAIConfig = async (
       liteLLMModelId: body.liteLLMModelId,
       webSearchConfig: body.webSearchConfig,
       configType,
+      reasoningEffort: body.reasoningEffort,
     }
 
   const newConfig = await sdk.ai.configs.create(createRequest)
@@ -122,6 +123,7 @@ export const updateAIConfig = async (
     liteLLMModelId: body.liteLLMModelId,
     webSearchConfig: body.webSearchConfig,
     configType,
+    reasoningEffort: body.reasoningEffort,
   }
 
   const updatedConfig = await sdk.ai.configs.update(updateRequest)
