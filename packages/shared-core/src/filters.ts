@@ -562,12 +562,13 @@ export function search<T extends Record<string, any>>(
   query: Omit<RowSearchParams, "tableId">
 ): SearchResponse<T> {
   let result = runQuery(docs, query.query)
-  if (query.sort) {
+  const sortDetails = normalizeSort(query.sort, query.sortOrder, query.sortType)
+  if (sortDetails) {
     result = sort(
       result,
-      query.sort,
-      query.sortOrder || SortOrder.ASCENDING,
-      query.sortType
+      sortDetails.field,
+      sortDetails.order,
+      sortDetails.type
     )
   }
   const totalRows = result.length
@@ -579,6 +580,38 @@ export function search<T extends Record<string, any>>(
     response.totalRows = totalRows
   }
   return response
+}
+
+interface SortDetails {
+  field: string
+  order: SortOrder
+  type?: SortType
+}
+
+const normalizeSort = (
+  sortValue: RowSearchParams["sort"],
+  sortOrder?: SortOrder,
+  sortType?: SortType
+): SortDetails | undefined => {
+  if (!sortValue) {
+    return
+  }
+  if (typeof sortValue === "string") {
+    return {
+      field: sortValue,
+      order: sortOrder || SortOrder.ASCENDING,
+      type: sortType,
+    }
+  }
+  const [field, sortInfo] = Object.entries(sortValue)[0] || []
+  if (!field || !sortInfo) {
+    return
+  }
+  return {
+    field,
+    order: sortInfo.direction,
+    type: sortInfo.type,
+  }
 }
 
 /**
