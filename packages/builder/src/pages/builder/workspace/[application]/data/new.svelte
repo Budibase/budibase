@@ -8,11 +8,7 @@
 
   import { hasData } from "@/stores/selectors"
   import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"
-  import {
-    beforeUrlChange,
-    params as paramsStore,
-    goto as gotoStore,
-  } from "@roxi/routify"
+  import { params as paramsStore, goto as gotoStore } from "@roxi/routify"
   import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal/index.svelte"
   import CreateInternalTableModal from "./_components/CreateInternalTableModal.svelte"
   import DatasourceOption from "./_components/DatasourceOption.svelte"
@@ -21,9 +17,6 @@
   import ICONS from "@/components/backend/DatasourceNavigator/icons/index.js"
   import AiTableGeneration from "./_components/AITableGeneration.svelte"
   import { IntegrationTypes } from "@/constants/backend"
-  import { onMount } from "svelte"
-
-  $beforeUrlChange
 
   // Capture store values for use in async callbacks (Svelte 5 compatibility)
   $: goto = $gotoStore
@@ -50,58 +43,6 @@
       notifications.error("Error creating datasource")
     }
   }
-
-  const consumeCreateParam = (urlString?: string) => {
-    if (typeof window === "undefined") {
-      return
-    }
-
-    const parsed = new URL(urlString ?? window.location.href)
-    const create = parsed.searchParams.get("create")
-    if (create !== "table") {
-      return
-    }
-
-    internalTableModal?.show()
-
-    parsed.searchParams.delete("create")
-    const query = parsed.searchParams.toString()
-    history.replaceState(
-      {},
-      "",
-      `${parsed.pathname}${query ? `?${query}` : ""}`
-    )
-  }
-
-  $beforeUrlChange((event: { url?: string } | undefined) => {
-    if (typeof window === "undefined") {
-      return true
-    }
-
-    const nextUrl = typeof event?.url === "string" ? event.url : ""
-    if (!nextUrl) {
-      return true
-    }
-
-    const parsed = new URL(nextUrl, window.location.origin)
-    if (!parsed.pathname.endsWith("/data/new")) {
-      return true
-    }
-
-    if (parsed.searchParams.get("create") !== "table") {
-      return true
-    }
-
-    setTimeout(() => {
-      consumeCreateParam(parsed.toString())
-    }, 0)
-
-    return true
-  })
-
-  onMount(() => {
-    consumeCreateParam()
-  })
 </script>
 
 <CreateInternalTableModal bind:this={internalTableModal} />
