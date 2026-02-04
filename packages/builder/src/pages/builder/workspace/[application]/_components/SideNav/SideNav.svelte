@@ -8,6 +8,7 @@
     MenuItem,
     MenuSeparator,
     Modal,
+    type ModalAPI,
     PopoverAlignment,
     TooltipPosition,
     TooltipType,
@@ -62,6 +63,11 @@
   import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import { type EnrichedApp } from "@/types"
+  import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
+  import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import AgentModal from "@/pages/builder/workspace/[application]/agent/AgentModal.svelte"
+  import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
+  import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
 
   export const show = () => {
     pinned.set(true)
@@ -129,6 +135,13 @@
   let workspaceMenuOpen = false
   let createMenuOpen = false
 
+  let createAutomationModal: ModalAPI
+  let webhookModal: ModalAPI
+  let workspaceAppModal: WorkspaceAppModal
+  let agentModal: AgentModal
+  let createTableModal: ModalAPI
+  let tableName = ""
+
   let githubStars: number | null = null
 
   const formatStars = (stars: number) => {
@@ -184,6 +197,35 @@
 
   const openInviteUser = () => {
     builderStore.showBuilderSidePanel()
+    keepCollapsed()
+  }
+
+  const openCreateAutomation = () => {
+    createAutomationModal?.show()
+    keepCollapsed()
+  }
+
+  const openCreateApp = () => {
+    workspaceAppModal?.show()
+    keepCollapsed()
+  }
+
+  const openCreateAgent = () => {
+    agentModal?.show()
+    keepCollapsed()
+  }
+
+  const handleTableSave = async (table: Table) => {
+    if (!appId) {
+      return
+    }
+    notifications.success("Table created successfully")
+    $goto(`/builder/workspace/${appId}/data/table/${table._id}`)
+  }
+
+  const openCreateTable = () => {
+    tableName = ""
+    createTableModal?.show()
     keepCollapsed()
   }
 
@@ -421,6 +463,25 @@
   <CreateWorkspaceModal />
 </Modal>
 
+{#if appId && $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+  <Modal bind:this={createAutomationModal}>
+    <CreateAutomationModal {webhookModal} />
+  </Modal>
+  <Modal bind:this={webhookModal}>
+    <CreateWebhookModal />
+  </Modal>
+
+  <WorkspaceAppModal bind:this={workspaceAppModal} workspaceApp={null} />
+
+  {#if $featureFlags.AI_AGENTS}
+    <AgentModal bind:this={agentModal} />
+  {/if}
+
+  <Modal bind:this={createTableModal} closeOnOutsideClick={false}>
+    <CreateTableModal bind:name={tableName} afterSave={handleTableSave} />
+  </Modal>
+{/if}
+
 <div class="nav_wrapper" style={`--nav-logo-width: ${navLogoSize}px;`}>
   <div class="nav_spacer" class:pinned={$pinned}></div>
   <div
@@ -502,24 +563,15 @@
                     />
                   </svelte:fragment>
 
-                  <MenuItem
-                    icon="path"
-                    on:click={() => goToCreate("home?create=automation")}
-                  >
+                  <MenuItem icon="path" on:click={openCreateAutomation}>
                     Automation
                   </MenuItem>
-                  <MenuItem
-                    icon="browsers"
-                    on:click={() => goToCreate("home?create=app")}
-                  >
+                  <MenuItem icon="browsers" on:click={openCreateApp}>
                     App
                   </MenuItem>
 
                   {#if $featureFlags.AI_AGENTS}
-                    <MenuItem
-                      icon="sparkle"
-                      on:click={() => goToCreate("home?create=agent")}
-                    >
+                    <MenuItem icon="sparkle" on:click={openCreateAgent}>
                       Agent
                       <div slot="right">
                         <Tag emphasized>Beta</Tag>
@@ -536,10 +588,7 @@
                     </MenuItem>
                   {/if}
 
-                  <MenuItem
-                    icon="grid-nine"
-                    on:click={() => goToCreate("data/new?create=table")}
-                  >
+                  <MenuItem icon="grid-nine" on:click={openCreateTable}>
                     Table
                   </MenuItem>
                   <MenuItem

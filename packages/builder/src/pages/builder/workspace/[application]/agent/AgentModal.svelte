@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { appStore } from "@/stores/builder"
   import { agentsStore, aiConfigsStore, vectorDbStore } from "@/stores/portal"
   import { Input, Modal, ModalContent } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
@@ -20,12 +21,17 @@
   let modal: Modal
 
   async function createAgent() {
+    const appId = $appStore.appId
     const newAgent = await agentsStore.createAgent({
       name: draft.name,
       live: false,
     })
     modal.hide()
-    goto(`./${newAgent._id}/config`)
+    if (appId) {
+      goto(`/builder/workspace/${appId}/agent/${newAgent._id}/config`)
+    } else {
+      goto(`./${newAgent._id}/config`)
+    }
   }
 
   onMount(() => {

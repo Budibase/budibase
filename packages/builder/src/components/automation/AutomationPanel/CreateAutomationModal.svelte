@@ -1,6 +1,6 @@
 <script>
   import { goto as gotoStore } from "@roxi/routify"
-  import { automationStore } from "@/stores/builder"
+  import { appStore, automationStore } from "@/stores/builder"
   import {
     notifications,
     Input,
@@ -29,6 +29,7 @@
 
   async function createAutomation() {
     try {
+      const appId = $appStore.appId
       const trigger = automationStore.actions.constructBlock(
         "TRIGGER",
         triggerVal.stepId,
@@ -39,7 +40,11 @@
         webhookModal.show()
       }
       notifications.success(`Automation ${name} created`)
-      goto(`../automation/${automation._id}`)
+      if (appId) {
+        goto(`/builder/workspace/${appId}/automation/${automation._id}`)
+      } else {
+        goto(`../automation/${automation._id}`)
+      }
     } catch (error) {
       notifications.error("Error creating automation")
     }
