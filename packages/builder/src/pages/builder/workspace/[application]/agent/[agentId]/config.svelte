@@ -300,11 +300,11 @@ Any constraints the agent must follow.
     }: { sourceType: ToolType | undefined; sourceLabel: string | undefined }
   ): { icon?: IconInfo; tagIconUrl?: string } {
     if (
-      sourceType === ToolType.INTERNAL ||
-      sourceType === ToolType.EXTERNAL ||
+      sourceType === ToolType.INTERNAL_TABLE ||
+      sourceType === ToolType.EXTERNAL_TABLE ||
       sourceType === ToolType.AUTOMATION
     ) {
-      if (sourceType === ToolType.EXTERNAL && tool.sourceIconType) {
+      if (sourceType === ToolType.EXTERNAL_TABLE && tool.sourceIconType) {
         const integrationIcon = getIntegrationIcon(tool.sourceIconType)
         if (integrationIcon) {
           if (integrationIcon.url) {
@@ -363,12 +363,12 @@ Any constraints the agent must follow.
     sourceLabel: string | undefined
   ): string {
     if (
-      sourceType === ToolType.INTERNAL ||
+      sourceType === ToolType.INTERNAL_TABLE ||
       sourceType === ToolType.AUTOMATION
     ) {
       return "budibase"
     }
-    if (sourceType === ToolType.EXTERNAL) {
+    if (sourceType === ToolType.EXTERNAL_TABLE) {
       return sourceLabel ? sanitizeString(sourceLabel) : "external"
     }
     if (sourceType === ToolType.SEARCH) {
@@ -384,13 +384,13 @@ Any constraints the agent must follow.
     sourceType: ToolType | undefined,
     sourceLabel?: string
   ): string {
-    if (sourceType === ToolType.INTERNAL) {
+    if (sourceType === ToolType.INTERNAL_TABLE) {
       return "Budibase"
     }
     if (sourceType === ToolType.AUTOMATION) {
       return "Automations"
     }
-    if (sourceType === ToolType.EXTERNAL) {
+    if (sourceType === ToolType.EXTERNAL_TABLE) {
       return sourceLabel || "External"
     }
     if (sourceType === ToolType.SEARCH) {

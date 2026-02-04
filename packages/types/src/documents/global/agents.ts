@@ -2,8 +2,8 @@ import { Document } from "../../"
 import type { UIMessage } from "ai"
 
 export enum ToolType {
-  INTERNAL = "INTERNAL",
-  EXTERNAL = "EXTERNAL",
+  INTERNAL_TABLE = "INTERNAL_TABLE",
+  EXTERNAL_TABLE = "EXTERNAL_TABLE",
   AUTOMATION = "AUTOMATION",
   REST_QUERY = "REST_QUERY",
   SEARCH = "SEARCH",

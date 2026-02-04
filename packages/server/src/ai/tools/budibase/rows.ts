@@ -19,13 +19,13 @@ const DATA_FIELD_DESCRIPTION =
   "Do NOT nest this inside a string; pass the object directly. " +
   "Values must be plain text - no HTML, markdown, or special characters."
 
-interface RowAction {
+interface RowTool {
   description: string
   inputSchema: z.ZodObject<any>
   execute: (tableId: string, input: any) => Promise<any>
 }
 
-const ROW_ACTIONS: Record<string, RowAction> = {
+const ROW_TOOL: Record<string, RowTool> = {
   list_rows: {
     description: "List rows in a given table with optional pagination",
     inputSchema: z.object({
@@ -157,14 +157,19 @@ export const createRowTools = ({
   sourceIconType?: string
 }): BudibaseToolDefinition[] => {
   const isExternal = tableSourceType === TableSourceType.EXTERNAL
-  const resolvedSourceType = isExternal ? ToolType.EXTERNAL : ToolType.INTERNAL
+  const resolvedSourceType = isExternal
+    ? ToolType.EXTERNAL_TABLE
+    : ToolType.INTERNAL_TABLE
   const resolvedSourceLabel =
     sourceLabel || (isExternal ? "External" : "Budibase")
 
-  return Object.entries(ROW_ACTIONS).map(([action, def]) => {
+  return Object.entries(ROW_TOOL).map(([action, def]) => {
     const description = `${formatActionLabel(action)} in "${tableName}". ${def.description}`
+    // OpenAI tool names must match [A-Za-z0-9_-] and be ≤64 chars
+    const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+    const toolName = `${sanitizedTableId}_${action}`.substring(0, 64)
     return {
-      name: `${tableId}.${action}`,
+      name: toolName,
       readableName: `${tableName}.${action}`,
       sourceType: resolvedSourceType,
       sourceLabel: resolvedSourceLabel,

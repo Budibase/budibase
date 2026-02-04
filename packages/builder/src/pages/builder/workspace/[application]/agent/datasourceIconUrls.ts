@@ -1,5 +1,3 @@
-import AirtableIconUrl from "assets/datasource-icons/airtable.svg"
-import ArangoDbIconUrl from "assets/datasource-icons/arangodb.svg"
 import BudibaseIconUrl from "assets/datasource-icons/budibase.svg"
 import CouchDbIconUrl from "assets/datasource-icons/couchdb.svg"
 import CustomIconUrl from "assets/datasource-icons/custom.svg"
@@ -19,8 +17,6 @@ import { REST_TAG_ICON_URL } from "./logos/tagIconUrls"
 
 // Code editor binding tags render icons via <img src="...">, so we need real URLs.
 export const DATASOURCE_TAG_ICON_URLS: Record<string, string> = {
-  AIRTABLE: AirtableIconUrl,
-  ARANGODB: ArangoDbIconUrl,
   BUDIBASE: BudibaseIconUrl,
   COUCHDB: CouchDbIconUrl,
   CUSTOM: CustomIconUrl,

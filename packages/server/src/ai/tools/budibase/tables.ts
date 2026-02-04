@@ -7,7 +7,7 @@ import type { BudibaseToolDefinition } from "."
 const TABLE_TOOLS: BudibaseToolDefinition[] = [
   {
     name: "list_tables",
-    sourceType: ToolType.INTERNAL,
+    sourceType: ToolType.INTERNAL_TABLE,
     sourceLabel: "Budibase",
     description: "List all tables in the current app",
     tool: tool({
@@ -21,8 +21,8 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
           .default(false),
       }),
 
-      execute: async (input: unknown) => {
-        const { showSchema } = input as { showSchema?: boolean }
+      execute: async input => {
+        const { showSchema } = input
         const tables = await sdk.tables.getAllTables()
         if (!showSchema) {
           return {
@@ -39,7 +39,7 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
 
   {
     name: "get_table",
-    sourceType: ToolType.INTERNAL,
+    sourceType: ToolType.INTERNAL_TABLE,
     sourceLabel: "Budibase",
     description: "Get details about a specific table by ID",
     tool: tool({
@@ -47,8 +47,8 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
       inputSchema: z.object({
         tableId: z.string().describe("The ID of the table to retrieve"),
       }),
-      execute: async (input: unknown) => {
-        const { tableId } = input as { tableId: string }
+      execute: async input => {
+        const { tableId } = input
         const table = await sdk.tables.getTable(tableId)
         return { table }
       },
