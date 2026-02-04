@@ -123,6 +123,7 @@
     size="M"
     title={`${selectedAgent?.name || "Agent"} settings`}
     showConfirmButton={false}
+    showCancelButton={false}
   >
     <div class="agent-settings">
       <Button size="S" disabled={isDisabled} on:click={handleSetDefault}>
