@@ -8,7 +8,6 @@ import { ai } from "@budibase/pro"
 import { getBudibaseTools } from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
-import budibaseTools from "../../../../ai/tools/budibase"
 import {
   createRestQueryTool,
   toToolSet,

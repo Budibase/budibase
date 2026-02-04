@@ -69,7 +69,6 @@ describe("AI Tools - Rows", () => {
     )
 
     const tools = getBudibaseTools([table])
-    console.debug(tools)
     const updateAlias = tools.find(
       tool => tool.name === `${table._id}_update_row`
     )
