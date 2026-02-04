@@ -1,5 +1,4 @@
 import { context } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
 import { OperationFields } from "@budibase/shared-core"
 import { processStringSync } from "@budibase/string-templates"
 import {
@@ -16,6 +15,7 @@ import tracer from "dd-trace"
 import { AutoFieldDefaultNames } from "../../constants"
 import { isAIColumn } from "../../db/utils"
 import { coerce } from "./index"
+import sdk from "../../sdk"
 
 interface FormulaOpts {
   dynamic?: boolean
@@ -131,7 +131,7 @@ export async function processAIColumns<T extends Row | Row[]>(
     span?.addTags({ table_id: table._id, numRows })
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
 
-    const llm = await ai.getLLM()
+    const llm = await sdk.ai.getPreferredLLM()
     if (rows && llm) {
       // Ensure we have snippet context
       await context.ensureSnippetContext()
