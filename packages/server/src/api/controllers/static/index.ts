@@ -1,6 +1,7 @@
 import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import {
+  ActiveContentFileError,
   BadRequestError,
   configs,
   context,
@@ -128,13 +129,11 @@ export const uploadFile = async function (
         )
       }
 
-      if (isPublicUser && ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
-        throw new BadRequestError(
-          `File "${file.name}" contains active content which is not permitted`
-        )
-      }
-
       if (isPublicUser) {
+        if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
+          throw new ActiveContentFileError(file.name)
+        }
+
         const rawMimeType = Array.isArray(file.type) ? file.type[0] : file.type
         const mimeType =
           typeof rawMimeType === "string"
@@ -144,21 +143,16 @@ export const uploadFile = async function (
           mimeType &&
           ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
         ) {
-          throw new BadRequestError(
-            `File "${file.name}" contains active content which is not permitted`
-          )
+          throw new ActiveContentFileError(file.name)
         }
-      }
 
-      if (
-        isPublicUser &&
-        file.path &&
-        (typeof file.path === "string" || Buffer.isBuffer(file.path)) &&
-        (await detectActiveContent(file.path))
-      ) {
-        throw new BadRequestError(
-          `File "${file.name}" contains active content which is not permitted`
-        )
+        if (
+          file.path &&
+          (typeof file.path === "string" || Buffer.isBuffer(file.path)) &&
+          (await detectActiveContent(file.path))
+        ) {
+          throw new ActiveContentFileError(file.name)
+        }
       }
 
       // filenames converted to UUIDs so they are unique
