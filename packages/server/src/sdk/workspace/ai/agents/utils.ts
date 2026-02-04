@@ -32,12 +32,14 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
 export async function getAvailableTools(
   aiconfigId?: string
 ): Promise<AiToolDefinition[]> {
-  const [queries, datasources, aiConfig, tables] = await Promise.all([
-    sdk.queries.fetch(),
-    sdk.datasources.fetch(),
-    aiconfigId ? sdk.ai.configs.find(aiconfigId) : Promise.resolve(undefined),
-    sdk.tables.getAllTables(),
-  ])
+  const [queries, datasources, aiConfig, tables, automations] =
+    await Promise.all([
+      sdk.queries.fetch(),
+      sdk.datasources.fetch(),
+      aiconfigId ? sdk.ai.configs.find(aiconfigId) : Promise.resolve(undefined),
+      sdk.tables.getAllTables(),
+      sdk.automations.fetch(),
+    ])
   const webSearchConfig = aiConfig?.webSearchConfig
 
   const restDatasourceNames = new Map(
@@ -65,7 +67,12 @@ export async function getAvailableTools(
     )
 
   const tools: AiToolDefinition[] = [
-    ...getBudibaseTools(tables, datasourceNamesById, datasourceIconTypesById),
+    ...getBudibaseTools(
+      tables,
+      datasourceNamesById,
+      datasourceIconTypesById,
+      automations
+    ),
     ...restQueryTools,
   ]
   if (webSearchConfig?.apiKey) {
