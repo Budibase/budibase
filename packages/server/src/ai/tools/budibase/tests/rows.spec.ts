@@ -70,7 +70,7 @@ describe("AI Tools - Rows", () => {
 
     const tools = getBudibaseTools([table])
     const updateAlias = tools.find(
-      tool => tool.name === `${table._id}.update_row`
+      tool => tool.name === `${table._id}_update_row`
     )
 
     if (!updateAlias) {
@@ -99,10 +99,10 @@ describe("AI Tools - Rows", () => {
     const tools = getBudibaseTools([table])
 
     const createAlias = tools.find(
-      tool => tool.name === `${table._id}.create_row`
+      tool => tool.name === `${table._id}_create_row`
     )
     const updateAlias = tools.find(
-      tool => tool.name === `${table._id}.update_row`
+      tool => tool.name === `${table._id}_update_row`
     )
 
     if (!createAlias || !updateAlias) {
@@ -141,7 +141,7 @@ describe("AI Tools - Rows", () => {
     })
 
     const tools = getBudibaseTools([table])
-    const listTool = tools.find(tool => tool.name === `${table._id}.list_rows`)
+    const listTool = tools.find(tool => tool.name === `${table._id}_list_rows`)
 
     if (!listTool) {
       throw new Error("list_rows tool not found")
@@ -171,7 +171,7 @@ describe("AI Tools - Rows", () => {
     })
 
     const tools = getBudibaseTools([table])
-    const getTool = tools.find(tool => tool.name === `${table._id}.get_row`)
+    const getTool = tools.find(tool => tool.name === `${table._id}_get_row`)
 
     if (!getTool) {
       throw new Error("get_row tool not found")
@@ -204,7 +204,7 @@ describe("AI Tools - Rows", () => {
 
     const tools = getBudibaseTools([table])
     const searchTool = tools.find(
-      tool => tool.name === `${table._id}.search_rows`
+      tool => tool.name === `${table._id}_search_rows`
     )
 
     if (!searchTool) {
@@ -236,7 +236,7 @@ describe("AI Tools - Rows", () => {
 
     const tools = getBudibaseTools([table])
     const searchTool = tools.find(
-      tool => tool.name === `${table._id}.search_rows`
+      tool => tool.name === `${table._id}_search_rows`
     )
 
     if (!searchTool) {
