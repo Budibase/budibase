@@ -72,7 +72,7 @@
     footerToolbar: "",
     titleFormat: {
       dayGridMonth: { year: "numeric", month: "2-digit" },
-      timeGridWeek: {
+      dayGridWeek: {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
