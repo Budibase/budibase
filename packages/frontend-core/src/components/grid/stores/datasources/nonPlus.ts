@@ -93,11 +93,12 @@ export const initialise = (context: StoreContext) => {
     // Wipe state
     filter.set(get(initialFilter) ?? undefined)
     inlineFilters.set([])
+    const initialColumn = get(initialSortColumn)
     sort.set(
-      get(initialSortColumn)
+      initialColumn
         ? [
             {
-              column: get(initialSortColumn),
+              column: initialColumn,
               order: get(initialSortOrder) || SortOrder.ASCENDING,
             },
           ]

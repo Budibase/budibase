@@ -162,11 +162,12 @@ export const initialise = (context: StoreContext) => {
     // Reset state for new view
     filter.set(get(initialFilter) ?? undefined)
     inlineFilters.set([])
+    const initialColumn = get(initialSortColumn)
     sort.set(
-      get(initialSortColumn)
+      initialColumn
         ? [
             {
-              column: get(initialSortColumn),
+              column: initialColumn,
               order: get(initialSortOrder) || SortOrder.ASCENDING,
             },
           ]
