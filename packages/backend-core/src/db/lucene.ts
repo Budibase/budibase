@@ -91,9 +91,22 @@ export class QueryBuilder<T> {
     return this
   }
 
-  setSort(sort?: string) {
-    if (sort != null) {
+  setSort(sort?: SearchParams["sort"]) {
+    if (sort == null) {
+      return this
+    }
+    if (typeof sort === "string") {
       this.#sort = sort
+      return this
+    }
+    const [field, sortInfo] = Object.entries(sort)[0] || []
+    if (!field || !sortInfo) {
+      return this
+    }
+    this.#sort = field
+    this.#sortOrder = sortInfo.direction
+    if (sortInfo.type) {
+      this.#sortType = sortInfo.type
     }
     return this
   }
