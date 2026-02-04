@@ -141,11 +141,11 @@ class RedisWrapper {
       let stream: ScanStream
       if (isCluster(this.client)) {
         let node = this.client.nodes("master")
-        stream = node[0].scanStream({ match: key + "*", count: 1000 })
+        stream = node[0].scanStream({ match: key + "*", count: 100 })
       } else {
         stream = (this.client as Redis).scanStream({
           match: key + "*",
-          count: 1000,
+          count: 100,
         })
       }
 
