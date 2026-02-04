@@ -87,6 +87,14 @@
       set.add(value)
     }
 
+    const parseJsonValue = raw => {
+      try {
+        return { ok: true, value: JSON.parse(raw) }
+      } catch (_error) {
+        return { ok: false }
+      }
+    }
+
     const parseArrayValue = value => {
       if (Array.isArray(value)) {
         return value
@@ -100,12 +108,17 @@
           return []
         }
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-          try {
-            const parsed = JSON.parse(trimmed.replace(/'/g, '"'))
-            return Array.isArray(parsed) ? parsed : [parsed]
-          } catch (_error) {
-            return [value]
+          const parsed = parseJsonValue(trimmed)
+          if (parsed.ok) {
+            return Array.isArray(parsed.value) ? parsed.value : [parsed.value]
           }
+          const fallback = parseJsonValue(trimmed.replace(/'/g, '"'))
+          if (fallback.ok) {
+            return Array.isArray(fallback.value)
+              ? fallback.value
+              : [fallback.value]
+          }
+          return [value]
         }
         return [value]
       }
