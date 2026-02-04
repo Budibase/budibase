@@ -73,18 +73,18 @@
     pinned.set(true)
   }
 
-  $: automationErrors = getAutomationErrors($enrichedApps || [], appId)
+  $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
   $: automationErrorCount = Object.keys(automationErrors).length
-  $: backupErrors = getBackupErrors($enrichedApps || [], appId)
+  $: backupErrors = getBackupErrors($enrichedApps || [], workspaceId)
   $: backupErrorCount = Object.keys(backupErrors).length
 
-  const getAutomationErrors = (apps: EnrichedApp[], appId: string) => {
-    const target = apps.find(app => app.devId === appId)
+  const getAutomationErrors = (apps: EnrichedApp[], workspaceId: string) => {
+    const target = apps.find(app => app.devId === workspaceId)
     return target?.automationErrors || {}
   }
 
-  const getBackupErrors = (apps: EnrichedApp[], appId: string) => {
-    const target = apps.find(app => app.devId === appId)
+  const getBackupErrors = (apps: EnrichedApp[], workspaceId: string) => {
+    const target = apps.find(app => app.devId === workspaceId)
     return target?.backupErrors || {}
   }
 
@@ -168,7 +168,7 @@
     }
   })
 
-  $: appId = $appStore.appId
+  $: workspaceId = $appStore.appId
   $: !$pinned && unPin()
 
   // keep sidebar expanded when workspace selector is open
@@ -182,11 +182,11 @@
   }
 
   const goToCreate = (target: string) => {
-    if (!appId) {
+    if (!workspaceId) {
       return
     }
 
-    const prefix = `/builder/workspace/${appId}`
+    const prefix = `/builder/workspace/${workspaceId}`
     const normalisedTarget = target.startsWith("/")
       ? target
       : `${prefix}/${target.replace(/^\.\//, "")}`
@@ -216,11 +216,11 @@
   }
 
   const handleTableSave = async (table: Table) => {
-    if (!appId) {
+    if (!workspaceId) {
       return
     }
     notifications.success("Table created successfully")
-    $goto(`/builder/workspace/${appId}/data/table/${table._id}`)
+    $goto(`/builder/workspace/${workspaceId}/data/table/${table._id}`)
   }
 
   const openCreateTable = () => {
@@ -352,19 +352,19 @@
   }
 
   const resourceLink = (favourite: WorkspaceFavourite) => {
-    const appPrefix = `/builder/workspace/${appId}`
+    const workspacePrefix = `/builder/workspace/${workspaceId}`
     const link: Record<WorkspaceResource, ResourceLinkFn> = {
       [WorkspaceResource.AUTOMATION]: (id: string) =>
-        `${appPrefix}/automation/${id}`,
+        `${workspacePrefix}/automation/${id}`,
       [WorkspaceResource.DATASOURCE]: (id: string) => {
         const datasourceMap = get(datasourceLookup) || {}
         const datasource = datasourceMap[id]
         const basePath =
           datasource?.source === IntegrationTypes.REST ? "apis" : "data"
-        return `${appPrefix}/${basePath}/datasource/${id}`
+        return `${workspacePrefix}/${basePath}/datasource/${id}`
       },
       [WorkspaceResource.TABLE]: (id: string) =>
-        `${appPrefix}/data/table/${id}`,
+        `${workspacePrefix}/data/table/${id}`,
       [WorkspaceResource.WORKSPACE_APP]: (id: string) => {
         const wsa = $workspaceAppStore.workspaceApps.find(
           (app: UIWorkspaceApp) => app._id === id
@@ -373,7 +373,7 @@
           notifications.error("Could not resolve the workspace app URL")
           return ""
         }
-        return `${appPrefix}/design/${wsa.screens[0]?._id}`
+        return `${workspacePrefix}/design/${wsa.screens[0]?._id}`
       },
       [WorkspaceResource.QUERY]: (id: string) => {
         const queriesStore = get(queries)
@@ -384,14 +384,14 @@
           : undefined
         const basePath =
           datasource?.source === IntegrationTypes.REST ? "apis" : "data"
-        return `${appPrefix}/${basePath}/query/${id}`
+        return `${workspacePrefix}/${basePath}/query/${id}`
       },
       [WorkspaceResource.VIEW]: (id: string) => {
         const view = $viewsV2.list.find(v => v.id === id)
-        return `${appPrefix}/data/table/${view?.tableId}/${id}`
+        return `${workspacePrefix}/data/table/${view?.tableId}/${id}`
       },
       [WorkspaceResource.AGENT]: (id: string) =>
-        `${appPrefix}/agent/${id}/config`,
+        `${workspacePrefix}/agent/${id}/config`,
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)
@@ -463,7 +463,7 @@
   <CreateWorkspaceModal />
 </Modal>
 
-{#if appId && $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+{#if workspaceId && $featureFlags[FeatureFlag.WORKSPACE_HOME]}
   <Modal bind:this={createAutomationModal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -531,7 +531,7 @@
 
     <div class="nav_body">
       <div class="links core">
-        {#if appId}
+        {#if workspaceId}
           <div
             class="core-sections"
             class:workspace_home={$featureFlags[FeatureFlag.WORKSPACE_HOME]}
