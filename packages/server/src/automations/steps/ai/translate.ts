@@ -1,6 +1,7 @@
 import { TranslateStepInputs, TranslateStepOutputs } from "@budibase/types"
 import * as automationUtils from "../../automationUtils"
 import { ai } from "@budibase/pro"
+import { getPreferredLLMOrThrow } from "../../../sdk/workspace/ai/llm"
 
 export async function run({
   inputs,
@@ -15,7 +16,7 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
+    const llm = await getPreferredLLMOrThrow()
     const request = ai.translate(inputs.text, inputs.language)
 
     const response = await llm?.prompt(request)

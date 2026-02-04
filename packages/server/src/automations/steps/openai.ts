@@ -3,7 +3,7 @@ import { OpenAI } from "openai"
 import { OpenAIStepInputs, OpenAIStepOutputs } from "@budibase/types"
 import { env } from "@budibase/backend-core"
 import * as automationUtils from "../automationUtils"
-import { ai } from "@budibase/pro"
+import { getPreferredLLM } from "../../sdk/workspace/ai/llm"
 
 /**
  * Maintains backward compatibility with automation steps created before the introduction
@@ -41,7 +41,7 @@ export async function run({
 
   try {
     let response
-    const llm = await ai.getLLM({ model: inputs.model })
+    const llm = await getPreferredLLM({ model: inputs.model })
     response = llm
       ? (await llm.prompt(inputs.prompt)).message
       : await legacyOpenAIPrompt(inputs)

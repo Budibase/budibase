@@ -1,4 +1,5 @@
 import { ai } from "@budibase/pro"
+import { getPreferredLLMOrThrow } from "../../../sdk/workspace/ai/llm"
 import * as automationUtils from "../../automationUtils"
 import {
   GenerateTextStepInputs,
@@ -21,7 +22,7 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
+    const llm = await getPreferredLLMOrThrow()
 
     const contentTypePrompt = getContentTypePrompt(
       inputs.contentType as ContentType

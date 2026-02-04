@@ -8,6 +8,7 @@ import {
 import fetch from "node-fetch"
 import { Readable } from "stream"
 import * as automationUtils from "../../automationUtils"
+import { getPreferredLLMOrThrow } from "../../../sdk/workspace/ai/llm"
 
 async function processUrlFile(
   fileUrl: string,
@@ -61,7 +62,7 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
+    const llm = await getPreferredLLMOrThrow()
 
     let fileIdOrDataUrl: string
 

@@ -1,6 +1,6 @@
 import { PromptLLMStepInputs, PromptLLMStepOutputs } from "@budibase/types"
 import * as automationUtils from "../../automationUtils"
-import { ai } from "@budibase/pro"
+import { getPreferredLLM } from "../../../sdk/workspace/ai/llm"
 
 export async function run({
   inputs,
@@ -15,7 +15,7 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLM()
+    const llm = await getPreferredLLM()
     const response = await llm?.prompt(inputs.prompt)
     return {
       response: response?.message,

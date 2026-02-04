@@ -1,4 +1,5 @@
 import { ai } from "@budibase/pro"
+import { getPreferredLLMOrThrow } from "../../../sdk/workspace/ai/llm"
 import * as automationUtils from "../../automationUtils"
 import {
   ClassifyContentStepInputs,
@@ -23,7 +24,7 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
+    const llm = await getPreferredLLMOrThrow()
 
     const categories = inputs.categoryItems!.map(item => item.category)
 
