@@ -10,7 +10,7 @@ import type { BudibaseToolDefinition } from "."
 const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
   {
     name: "list_automations",
-    sourceType: ToolType.BUDIBASE,
+    sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
     description: "List all automations in the current app",
     tool: tool({
@@ -25,7 +25,7 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
 
   {
     name: "get_automation",
-    sourceType: ToolType.BUDIBASE,
+    sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
 
     description: "Get details about a specific automation by ID",
@@ -46,7 +46,7 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
 
   {
     name: "trigger_automation",
-    sourceType: ToolType.BUDIBASE,
+    sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
 
     description:
