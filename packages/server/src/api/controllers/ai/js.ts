@@ -1,13 +1,13 @@
 import { GenerateJsRequest, GenerateJsResponse, UserCtx } from "@budibase/types"
 import { context } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
+import sdk from "../../../sdk"
 
 const MARKDOWN_CODE_BLOCK = /```(?:\w+)?\n([\s\S]+?)\n```/
 
 export async function generateJs(
   ctx: UserCtx<GenerateJsRequest, GenerateJsResponse>
 ) {
-  const llm = await ai.getLLMOrThrow()
+  const llm = await sdk.ai.getPreferredLLMOrThrow()
 
   await context.ensureSnippetContext()
   const currentContext = context.getCurrentContext()
