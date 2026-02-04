@@ -4,6 +4,7 @@
 
   export let datasource: TableDatasource | ViewDatasource
   export let rowId: string
+  export let noRowMessage: string | undefined
 
   const component = getContext("component")
   const { styleable, API, Provider, ActionTypes } = getContext("sdk")
@@ -48,7 +49,9 @@
 {#if !loading}
   <div use:styleable={$component.styles}>
     {#if noRowFound}
-      <div class="noRows"><i class="ri-list-check-2"></i>No row found</div>
+      <div class="noRows">
+        <i class="ri-list-check-2"></i>{noRowMessage ?? "No row found"}
+      </div>
     {:else}
       <Provider {actions} data={row ?? null}>
         <slot />
