@@ -39,7 +39,7 @@
         reasoningEffort: undefined,
       } satisfies RequiredKeys<UpdateAIConfigRequest>)
     : ({
-        provider: "Budibase",
+        provider: "budibase",
         name: "Budibase AI",
         model: "",
         configType: type,
@@ -49,7 +49,7 @@
       } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   $: isEdit = !!config
-  $: canSave = !!draft.name.trim() && !!draft.provider
+  $: canSave = !!draft.model
   $: typeLabel =
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
 
