@@ -35,6 +35,7 @@
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     isAgentPreviewChat?: boolean
+    readOnly?: boolean
   }
 
   let {
@@ -44,6 +45,7 @@
     conversationStarters = [],
     onchatsaved,
     isAgentPreviewChat = false,
+    readOnly = false,
   }: Props = $props()
 
   let API = $state(
@@ -203,7 +205,8 @@
     !isBusy &&
       !hasMessages &&
       conversationStarters.length > 0 &&
-      !isAgentPreviewChat
+      !isAgentPreviewChat &&
+      !readOnly
   )
 
   let lastChatId = $state<string | undefined>(chat?._id)
@@ -262,6 +265,10 @@
   }
 
   const handleKeyDown = async (event: KeyboardEvent) => {
+    if (readOnly) {
+      return
+    }
+
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
       await sendMessage()
@@ -269,6 +276,10 @@
   }
 
   const sendMessage = async () => {
+    if (readOnly) {
+      return
+    }
+
     const chatAppIdFromEnsure = await ensureChatApp()
 
     if (!chat) {
@@ -351,7 +362,9 @@
       mounted = true
       ensureChatApp()
       tick().then(() => {
-        textareaElement?.focus()
+        if (!readOnly) {
+          textareaElement?.focus()
+        }
       })
     }
   })
@@ -570,16 +583,26 @@
     {/each}
   </div>
 
-  <div class="input-wrapper">
-    <textarea
-      bind:value={inputValue}
-      bind:this={textareaElement}
-      class="input spectrum-Textfield-input"
-      onkeydown={handleKeyDown}
-      placeholder="Ask anything"
-      disabled={isBusy}
-    ></textarea>
-  </div>
+  {#if readOnly}
+    <div class="input-wrapper">
+      <div class="read-only-notice">
+        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          This agent is disabled. Enable it in Settings to resume chatting.
+        </Body>
+      </div>
+    </div>
+  {:else}
+    <div class="input-wrapper">
+      <textarea
+        bind:value={inputValue}
+        bind:this={textareaElement}
+        class="input spectrum-Textfield-input"
+        onkeydown={handleKeyDown}
+        placeholder="Ask anything"
+        disabled={isBusy}
+      ></textarea>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -695,6 +718,14 @@
     flex-direction: column;
     flex-shrink: 0;
     line-height: 1.4;
+  }
+
+  .read-only-notice {
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 10px;
+    padding: var(--spacing-m);
+    background-color: var(--spectrum-global-color-gray-50);
+    text-align: center;
   }
 
   .input {

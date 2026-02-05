@@ -30,6 +30,10 @@
   const hasChatId = (value: ChatConversationLike) =>
     value && "_id" in value && Boolean(value._id)
 
+  $: isAgentEnabled = selectedAgentId
+    ? enabledAgentList.some(agent => agent.agentId === selectedAgentId)
+    : false
+
   const deleteChat = () => {
     dispatch("deleteChat")
   }
@@ -72,6 +76,7 @@
       bind:chat
       {workspaceId}
       {conversationStarters}
+      readOnly={!isAgentEnabled}
       onchatsaved={event => dispatch("chatSaved", event.detail)}
     />
   {:else}
