@@ -19,36 +19,38 @@
   import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
-  export let config: Omit<AIConfigResponse, "provider"> | undefined
-  export let provider: string | undefined
+  export let config:
+    | { _id: string | undefined; _rev: string | undefined; model: string }
+    | undefined
   export let type: AIConfigType
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
-  let draft: AIConfigResponse =
-    config?._id && provider
-      ? ({
-          _id: config._id,
-          _rev: config._rev,
-          name: config.name,
-          provider: provider,
-          credentialsFields: config.credentialsFields,
-          model: config.model,
-          webSearchConfig: config.webSearchConfig,
-          configType: config.configType,
-          reasoningEffort: config.reasoningEffort,
-        } satisfies RequiredKeys<UpdateAIConfigRequest>)
-      : ({
-          provider: "",
-          name: "",
-          model: "",
-          configType: type,
-          credentialsFields: {},
-          webSearchConfig: undefined,
-          reasoningEffort: undefined,
-        } satisfies RequiredKeys<CreateAIConfigRequest>)
+  alert("aa")
 
-  $: isEdit = !!config?._id
+  let draft: AIConfigResponse = config
+    ? ({
+        _id: config._id!,
+        _rev: config._rev!,
+        name: "Budibase AI",
+        provider: "budibase",
+        credentialsFields: {},
+        model: config.model,
+        webSearchConfig: undefined,
+        configType: AIConfigType.GENERATION,
+        reasoningEffort: undefined,
+      } satisfies RequiredKeys<UpdateAIConfigRequest>)
+    : ({
+        provider: "Budibase",
+        name: "Budibase AI",
+        model: "",
+        configType: type,
+        credentialsFields: {},
+        webSearchConfig: undefined,
+        reasoningEffort: undefined,
+      } satisfies RequiredKeys<CreateAIConfigRequest>)
+
+  $: isEdit = !!config
   $: canSave = !!draft.name.trim() && !!draft.provider
   $: typeLabel =
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
@@ -59,13 +61,15 @@
     { label: "High", value: "high" },
   ]
 
-  $: providers = $aiConfigsStore.providers
+  const models = [
+    { label: "GPT 4o Mini", value: "gpt-4o-mini" },
+    { label: "GPT 4o", value: "gpt-4o" },
+    { label: "GPT 5", value: "gpt-5" },
+    { label: "GPT 5 Mini", value: "gpt-5-mini" },
+    { label: "GPT 5 Nano", value: "gpt-5-nano" },
+  ]
 
-  $: providerPlaceholder = !providers
-    ? "Loading providers..."
-    : providers.length
-      ? "Choose a provider"
-      : "No providers available"
+  $: providers = $aiConfigsStore.providers
 
   $: providersMap = providers?.reduce<Record<string, LLMProvider>>((acc, p) => {
     acc[p.id] = p
@@ -155,33 +159,22 @@
   <div slot="header">
     <Heading size="XS">
       {#if isEdit}
-        Edit {draft.name}
+        Edit Budibase AI
       {:else}
-        Add {typeLabel} configuration
+        Setup Budibase AI
       {/if}
     </Heading>
   </div>
 
   <div class="row">
-    <Label size="M">Name</Label>
-    <Input bind:value={draft.name} placeholder="Support chat" />
-  </div>
-
-  <div class="row">
-    <Label size="M">Provider</Label>
-    <Select
-      bind:value={draft.provider}
-      options={providers}
-      getOptionValue={o => o.id}
-      getOptionLabel={o => o.displayName}
-      placeholder={providerPlaceholder}
-      loading={!providers}
-    />
-  </div>
-
-  <div class="row">
     <Label size="M">Model</Label>
-    <Input bind:value={draft.model} />
+    <Select
+      placeholder="Select a model"
+      options={models}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.value}
+      bind:value={draft.model}
+    />
   </div>
 
   {#if draft.configType === AIConfigType.GENERATION}

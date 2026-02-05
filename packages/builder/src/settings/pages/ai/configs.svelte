@@ -6,9 +6,11 @@
   import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
+  import BBAIConfigModal from "./BBAIConfigModal.svelte"
 
   let customConfigModal: { show: () => void; hide: () => void }
-  let customModalConfig: AIConfigResponse | undefined
+  let selectedModalConfig: AIConfigResponse | undefined
+  let selectedProvider: string | undefined
 
   $: aiGenerationConfigs = ($aiConfigsStore.customConfigs || []).filter(
     config => config.configType === AIConfigType.GENERATION
@@ -52,8 +54,14 @@
     },
   ]
 
-  function openCustomAIConfigModal(config?: AIConfigResponse) {
-    customModalConfig = config ? { ...config } : undefined
+  function createAIConfig(provider?: string) {
+    selectedModalConfig = undefined
+    selectedProvider = provider
+    customConfigModal?.show()
+  }
+  function editAIConfig(config: AIConfigResponse) {
+    selectedModalConfig = config
+    selectedProvider = config.provider
     customConfigModal?.show()
   }
 
@@ -77,14 +85,14 @@
         provider={config.provider}
         description={config.model}
         isEdition
-        editHandler={() => openCustomAIConfigModal(config)}
+        editHandler={() => editAIConfig(config)}
       ></CustomAIConfigTile>
     {/each}
   </div>
   <div class="section-header new-provider-section">
     <div class="section-title">Model providers</div>
     <div class="provider-controls">
-      <Button icon="plus" size="S" on:click={() => openCustomAIConfigModal}
+      <Button icon="plus" size="S" on:click={() => createAIConfig()}
         >Connect to a custom provider</Button
       >
     </div>
@@ -95,20 +103,37 @@
         displayName={config.name}
         provider={config.provider}
         description={config.description}
-        editHandler={() => openCustomAIConfigModal()}
+        editHandler={() => createAIConfig(config.provider)}
       ></CustomAIConfigTile>
     {/each}
   </div>
 </Layout>
 
 <Modal bind:this={customConfigModal}>
-  <CustomConfigModal
-    config={customModalConfig}
-    type={AIConfigType.GENERATION}
-    on:hide={() => {
-      customConfigModal.hide()
-    }}
-  />
+  {#if selectedProvider !== "budibase"}
+    <CustomConfigModal
+      config={selectedModalConfig}
+      provider={selectedProvider}
+      type={AIConfigType.GENERATION}
+      on:hide={() => {
+        customConfigModal.hide()
+      }}
+    />
+  {:else}
+    <BBAIConfigModal
+      config={selectedModalConfig
+        ? {
+            _id: selectedModalConfig._id,
+            _rev: selectedModalConfig._rev,
+            model: selectedModalConfig.model,
+          }
+        : undefined}
+      type={AIConfigType.GENERATION}
+      on:hide={() => {
+        customConfigModal.hide()
+      }}
+    />
+  {/if}
 </Modal>
 
 <style>
