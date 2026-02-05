@@ -28,6 +28,7 @@ interface OpenAIChatCompletionsRequest {
   messages: Message[]
   model?: string
   response_format?: OpenAIFormat
+  stream?: boolean
 }
 
 interface OpenAIChatCompletionsResponse {
@@ -152,6 +153,99 @@ export async function openaiChatCompletions(
   const responseFormat = mapResponseFormat(ctx.request.body.response_format)
   if (responseFormat) {
     request.withFormat(responseFormat)
+  }
+
+  if (ctx.request.body.stream) {
+    ctx.status = 200
+    ctx.set("Content-Type", "text/event-stream")
+    ctx.set("Cache-Control", "no-cache")
+    ctx.set("Connection", "keep-alive")
+
+    ctx.res.setHeader("X-Accel-Buffering", "no")
+    ctx.res.setHeader("Transfer-Encoding", "chunked")
+
+    ctx.respond = false
+
+    const id = buildResponseId("chatcmpl")
+    const created = Math.floor(Date.now() / 1000)
+    const model = ctx.request.body.model || llm.model
+    let roleSent = false
+
+    const writeChunk = (data: Record<string, unknown>) => {
+      ctx.res.write(`data: ${JSON.stringify(data)}\n\n`)
+    }
+
+    try {
+      for await (const chunk of llm.chatStream(request)) {
+        if (chunk.type === "content" && chunk.content) {
+          if (!roleSent) {
+            roleSent = true
+            writeChunk({
+              id,
+              object: "chat.completion.chunk",
+              created,
+              model,
+              choices: [
+                {
+                  index: 0,
+                  delta: { role: "assistant" },
+                  finish_reason: null,
+                },
+              ],
+            })
+          }
+
+          writeChunk({
+            id,
+            object: "chat.completion.chunk",
+            created,
+            model,
+            choices: [
+              {
+                index: 0,
+                delta: { content: chunk.content },
+                finish_reason: null,
+              },
+            ],
+          })
+        } else if (chunk.type === "error") {
+          writeChunk({
+            error: {
+              message: chunk.content || "Streaming error",
+              type: "server_error",
+            },
+          })
+          ctx.res.end()
+          return
+        } else if (chunk.type === "done") {
+          writeChunk({
+            id,
+            object: "chat.completion.chunk",
+            created,
+            model,
+            choices: [
+              {
+                index: 0,
+                delta: {},
+                finish_reason: "stop",
+              },
+            ],
+          })
+          ctx.res.write("data: [DONE]\n\n")
+          ctx.res.end()
+          return
+        }
+      }
+    } catch (error: any) {
+      writeChunk({
+        error: {
+          message: error?.message || "Streaming error",
+          type: "server_error",
+        },
+      })
+      ctx.res.end()
+    }
+    return
   }
 
   const response = await llm.chat(request)
