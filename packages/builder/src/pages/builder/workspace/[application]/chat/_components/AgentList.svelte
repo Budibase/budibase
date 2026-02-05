@@ -76,6 +76,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-l);
+  }
+
+  .settings-group:last-child {
+    margin-bottom: 0;
   }
 
   .settings-agent {
