@@ -50,9 +50,7 @@ describe("invite cache", () => {
       expect(invites.some(inv => inv.code === code)).toBe(true)
 
       const inviteListClient = await redis.getInviteListClient()
-      const list = (await inviteListClient.get(
-        `invitation-list-${tenantId}`
-      )) as any
+      const list = (await inviteListClient.get(tenantId)) as any
       if (list) {
         expect(list.invites[code]).toBeUndefined()
       }
@@ -69,9 +67,7 @@ describe("invite cache", () => {
       await expect(inviteCache.getCode(code)).rejects.toBeDefined()
 
       const inviteListClient = await redis.getInviteListClient()
-      const list = (await inviteListClient.get(
-        `invitation-list-${tenantId}`
-      )) as any
+      const list = (await inviteListClient.get(tenantId)) as any
       expect(list).toBeDefined()
       expect(list.invites[code]).toBeUndefined()
     })

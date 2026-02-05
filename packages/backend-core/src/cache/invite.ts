@@ -6,7 +6,6 @@ import * as redis from "../redis/init"
 import { Invite, InviteWithCode } from "@budibase/types"
 
 const TTL_SECONDS = Duration.fromDays(7).toSeconds()
-const INVITE_LIST_PREFIX = "invitation-list-"
 
 interface InviteListEntry {
   email: string
@@ -70,21 +69,11 @@ function toInviteWithCode(
   }
 }
 
-function getTenantIdFromListKey(key?: string) {
-  if (!key || !key.startsWith(INVITE_LIST_PREFIX)) {
-    return undefined
-  }
-  return key.slice(INVITE_LIST_PREFIX.length)
-}
-
 async function findInviteInLists(code: string) {
   const client = await redis.getInviteListClient()
   const lists = await client.scan()
   for (const entry of lists) {
-    const list = normaliseInviteList(
-      entry.value,
-      entry.value?.tenantId || getTenantIdFromListKey(entry.key)
-    )
+    const list = normaliseInviteList(entry.value, entry.value?.tenantId)
     if (!list) {
       continue
     }
