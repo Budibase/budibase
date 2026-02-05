@@ -1,7 +1,13 @@
-import { match, MatchedRoute } from "@/types/routing"
+import type { MatchedRoute } from "@/types/routing"
 import { BudiStore } from "./BudiStore"
-import { get } from "svelte/store"
-import { flattenedRoutes } from "@/stores/routing"
+
+type SettingsRouteResolver = (path: string) => MatchedRoute | null
+
+let settingsRouteResolver: SettingsRouteResolver | null = null
+
+export const setSettingsRouteResolver = (resolver: SettingsRouteResolver) => {
+  settingsRouteResolver = resolver
+}
 
 export interface Settings {
   open: boolean
@@ -21,7 +27,6 @@ export const INITIAL_GLOBAL_STATE: BBState = {
 export class BBStore extends BudiStore<BBState> {
   constructor() {
     super(INITIAL_GLOBAL_STATE)
-
     this.hideSettings = this.hideSettings.bind(this)
   }
 
@@ -30,7 +35,6 @@ export class BBStore extends BudiStore<BBState> {
   }
 
   settings(path?: string) {
-    // Just open the settings and allow it to defer to its default path
     if (!path) {
       this.update(state => ({
         ...state,
@@ -42,8 +46,7 @@ export class BBStore extends BudiStore<BBState> {
       return
     }
 
-    const matchedRoute = match(path, get(flattenedRoutes))
-
+    const matchedRoute = settingsRouteResolver?.(path)
     if (matchedRoute) {
       this.update(state => ({
         ...state,
