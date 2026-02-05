@@ -30,7 +30,6 @@
 
   const focusSearch = async () => {
     await tick()
-    await tick()
     searchInput?.focus()
   }
 
