@@ -6,6 +6,8 @@ import * as redis from "../redis/init"
 import { Invite, InviteWithCode } from "@budibase/types"
 
 const TTL_SECONDS = Duration.fromDays(7).toSeconds()
+const INVALID_INVITE_MESSAGE =
+  "Invitation is not valid or has expired, please request a new one."
 
 interface InviteListEntry {
   email: string
@@ -69,20 +71,20 @@ function toInviteWithCode(
   }
 }
 
-async function findInviteInLists(code: string) {
+async function findInviteInList(code: string, tenantId: string) {
   const client = await redis.getInviteListClient()
-  const lists = await client.scan()
-  for (const entry of lists) {
-    const list = normaliseInviteList(entry.value, entry.value?.tenantId)
-    if (!list) {
-      continue
-    }
-    const invite = list.invites[code]
-    if (invite) {
-      return { list, invite }
-    }
+  const list = normaliseInviteList(
+    (await client.get(tenantId)) as InviteListPayload | undefined,
+    tenantId
+  )
+  if (!list) {
+    throw new Error(INVALID_INVITE_MESSAGE)
   }
-  return null
+  const inviteCodes = Object.keys(list.invites)
+  if (!inviteCodes.includes(code)) {
+    throw new Error(INVALID_INVITE_MESSAGE)
+  }
+  return { list, invite: list.invites[code] }
 }
 
 /**
@@ -149,23 +151,21 @@ export async function createCode(email: string, info: any): Promise<string> {
  * @param code the invite code that was provided as part of the link.
  * @return If the code is valid then an email address will be returned.
  */
-export async function getCode(code: string): Promise<Invite> {
+export async function getCode(code: string, tenantId?: string): Promise<Invite> {
   const client = await redis.getInviteClient()
   const value = (await client.get(code)) as Invite | undefined
   if (value) {
     return value
   }
 
-  const found = await findInviteInLists(code)
-  if (!found) {
-    throw "Invitation is not valid or has expired, please request a new one."
-  }
+  const resolvedTenantId = tenantId || getTenantId()
+  const found = await findInviteInList(code, resolvedTenantId)
 
   const { list, invite } = found
   if (invite.expiresAt <= Date.now()) {
     delete list.invites[code]
     await saveInviteList(list.tenantId, list)
-    throw "Invitation is not valid or has expired, please request a new one."
+    throw INVALID_INVITE_MESSAGE
   }
 
   return {
@@ -174,16 +174,21 @@ export async function getCode(code: string): Promise<Invite> {
   }
 }
 
-export async function deleteCode(code: string) {
+export async function deleteCode(code: string, tenantId?: string) {
   const client = await redis.getInviteClient()
   await client.delete(code)
 
-  const found = await findInviteInLists(code)
-  if (!found) {
-    return
+  const resolvedTenantId = tenantId || getTenantId()
+  try {
+    const found = await findInviteInList(code, resolvedTenantId)
+    delete found.list.invites[code]
+    await saveInviteList(found.list.tenantId, found.list)
+  } catch (err) {
+    if (err instanceof Error && err.message === INVALID_INVITE_MESSAGE) {
+      return
+    }
+    throw err
   }
-  delete found.list.invites[code]
-  await saveInviteList(found.list.tenantId, found.list)
 }
 
 /**

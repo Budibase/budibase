@@ -43,7 +43,7 @@ export interface UserEndpoints {
   deleteUser: (userId: string) => Promise<DeleteUserResponse>
   deleteUsers: (users: UserIdentifier[]) => Promise<BulkUserDeleted | undefined>
   onboardUsers: (data: InviteUsersRequest) => Promise<InviteUsersResponse>
-  getUserInvite: (code: string) => Promise<CheckInviteResponse>
+  getUserInvite: (code: string, tenantId?: string) => Promise<CheckInviteResponse>
   getUserInvites: () => Promise<GetUserInvitesResponse>
   inviteUsers: (users: InviteUsersRequest) => Promise<InviteUsersResponse>
   removeUserInvites: (
@@ -223,9 +223,10 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
    * Retrieves the invitation associated with a provided code.
    * @param code The unique code for the target invite
    */
-  getUserInvite: async code => {
+  getUserInvite: async (code, tenantId) => {
+    const query = tenantId ? `?tenantId=${encodeURIComponent(tenantId)}` : ""
     return await API.get({
-      url: `/api/global/users/invite/${code}`,
+      url: `/api/global/users/invite/${code}${query}`,
     })
   },
 

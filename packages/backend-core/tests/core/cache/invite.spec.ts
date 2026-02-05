@@ -28,7 +28,7 @@ describe("invite cache", () => {
         tenantId,
       })
 
-      const invite = await inviteCache.getCode(code)
+      const invite = await inviteCache.getCode(code, tenantId)
       expect(invite.email).toBe("alpha@budibase.com")
       expect(invite.info.tenantId).toBe(tenantId)
 
@@ -70,8 +70,8 @@ describe("invite cache", () => {
         tenantId,
       })
 
-      await inviteCache.deleteCode(code)
-      await expect(inviteCache.getCode(code)).rejects.toBeDefined()
+      await inviteCache.deleteCode(code, tenantId)
+      await expect(inviteCache.getCode(code, tenantId)).rejects.toBeDefined()
 
       const inviteListClient = await redis.getInviteListClient()
       const list = (await inviteListClient.get(tenantId)) as any
