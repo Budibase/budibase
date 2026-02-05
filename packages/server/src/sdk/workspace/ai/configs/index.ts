@@ -47,7 +47,10 @@ export async function create(
   const db = context.getWorkspaceDB()
 
   if (config.provider === "budibase") {
-    config.credentialsFields.base_url = env.BUDICLOUD_URL
+    config.credentialsFields.base_url = new URL(
+      "/api/ai",
+      env.BUDICLOUD_URL
+    ).toString()
     config.credentialsFields.api_key = (await licensing.keys.getLicenseKey())!
   }
 
