@@ -28,7 +28,8 @@ export const getLiteLLMProvider = (modelId: string) => {
   return provider || "openai"
 }
 
-export const getLiteLLMProviderOptions = () => {
+export const getLiteLLMProviderOptions = (hasTools: boolean) => {
+  if (!hasTools) return
   return {
     openai: {
       parallelToolCalls: true,
