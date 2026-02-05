@@ -139,6 +139,8 @@
 <style>
   .settings-panel {
     display: flex;
+    flex: 0 0 260px;
+    width: 260px;
     margin: var(--spacing-xl) 0 var(--spacing-xl) var(--spacing-xl);
     border-radius: 24px;
     border: var(--border-light);
