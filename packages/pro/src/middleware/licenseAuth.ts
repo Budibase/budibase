@@ -22,8 +22,6 @@ export default async function (ctx: Ctx, next: Next) {
       licenseKey = licenseKey[0]
     }
 
-    span.addTags({ licenseKey })
-
     if (!licenseKey) {
       ctx.throw(403, "License key not provided")
     }
