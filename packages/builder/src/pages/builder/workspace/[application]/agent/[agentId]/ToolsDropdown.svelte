@@ -18,7 +18,7 @@
   let {
     filteredTools,
     toolSections,
-    toolSearch,
+    toolSearch = $bindable(""),
     webSearchEnabled = false,
     onToolClick,
     onAddApiConnection,
