@@ -16,6 +16,7 @@
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationStarters: { prompt: string }[] = []
   export let isAgentKnown: boolean = true
+  export let isAgentLive: boolean = true
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
@@ -31,15 +32,19 @@
   const hasChatId = (value: ChatConversationLike) =>
     value && "_id" in value && Boolean(value._id)
 
+  let readOnlyReason: "disabled" | "deleted" | "offline" | undefined
+
   $: isAgentEnabled = selectedAgentId
     ? enabledAgentList.some(agent => agent.agentId === selectedAgentId)
     : false
   $: readOnlyReason = selectedAgentId
     ? !isAgentKnown
       ? "deleted"
-      : !isAgentEnabled
-        ? "disabled"
-        : undefined
+      : !isAgentLive
+        ? "offline"
+        : !isAgentEnabled
+          ? "disabled"
+          : undefined
     : undefined
 
   const deleteChat = () => {
