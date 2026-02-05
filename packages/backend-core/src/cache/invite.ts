@@ -15,9 +15,7 @@ interface InviteListEntry {
 }
 
 interface InviteListPayload {
-  version: 1
   tenantId: string
-  legacyComplete?: boolean
   invites: Record<string, InviteListEntry>
 }
 
@@ -36,13 +34,10 @@ function normaliseInviteList(
   if (!resolvedTenantId) {
     return null
   }
-  const normalised: InviteListPayload = {
-    version: 1,
+  return {
     tenantId: resolvedTenantId,
-    legacyComplete: value.legacyComplete,
     invites: value.invites || {},
   }
-  return normalised
 }
 
 function pruneExpiredInvites(list: InviteListPayload) {
@@ -70,20 +65,14 @@ async function saveInviteList(tenantId: string, list: InviteListPayload) {
   await client.store(getInviteListKey(tenantId), list)
 }
 
-function toInviteWithCode(code: string, invite: InviteListEntry): InviteWithCode {
+function toInviteWithCode(
+  code: string,
+  invite: InviteListEntry
+): InviteWithCode {
   return {
     code,
     email: invite.email,
     info: invite.info,
-  }
-}
-
-function buildInviteListPayload(tenantId: string): InviteListPayload {
-  return {
-    version: 1,
-    tenantId,
-    invites: {},
-    legacyComplete: false,
   }
 }
 
@@ -113,42 +102,6 @@ async function findInviteInLists(code: string) {
   return null
 }
 
-async function migrateLegacyInvites(
-  tenantId: string,
-  list: InviteListPayload
-) {
-  const client = await redis.getInviteClient()
-  const legacyInvites: { key: string; value: Invite }[] = await client.scan()
-  let changed = false
-  const now = Date.now()
-
-  for (const invite of legacyInvites) {
-    if (!invite?.value?.info) {
-      continue
-    }
-    if (env.MULTI_TENANCY && invite.value.info.tenantId !== tenantId) {
-      continue
-    }
-    const ttlSeconds = await client.getTTL(invite.key)
-    if (ttlSeconds <= 0) {
-      continue
-    }
-    list.invites[invite.key] = {
-      email: invite.value.email,
-      info: invite.value.info,
-      expiresAt: now + ttlSeconds * 1000,
-    }
-    changed = true
-  }
-
-  if (!list.legacyComplete || changed) {
-    list.legacyComplete = true
-    await saveInviteList(tenantId, list)
-  }
-
-  return list
-}
-
 /**
  * Given an invite code and invite body, allow the update an existing/valid invite in redis
  * @param code The invite code for an invite in redis
@@ -167,8 +120,10 @@ export async function updateCode(code: string, value: Invite) {
   const tenantId = info.tenantId || getTenantId()
   info.tenantId = tenantId
 
-  const list =
-    (await loadInviteList(tenantId)) || buildInviteListPayload(tenantId)
+  const list = (await loadInviteList(tenantId)) || {
+    tenantId,
+    invites: {},
+  }
   list.invites[code] = {
     email: value.email,
     info,
@@ -192,7 +147,11 @@ export async function createCode(email: string, info: any): Promise<string> {
   inviteInfo.tenantId = tenantId
 
   const list =
-    (await loadInviteList(tenantId)) || buildInviteListPayload(tenantId)
+    (await loadInviteList(tenantId)) ||
+    ({
+      tenantId,
+      invites: {},
+    } as InviteListPayload)
   list.invites[code] = {
     email,
     info: inviteInfo,
@@ -249,8 +208,10 @@ export async function deleteCode(code: string) {
  **/
 export async function getInviteCodes(): Promise<InviteWithCode[]> {
   const tenantId = getTenantId()
-  let list =
-    (await loadInviteList(tenantId)) || buildInviteListPayload(tenantId)
+  let list = (await loadInviteList(tenantId)) || {
+    tenantId,
+    invites: {},
+  }
 
   const pruned = pruneExpiredInvites(list)
   list = pruned.list
@@ -258,13 +219,26 @@ export async function getInviteCodes(): Promise<InviteWithCode[]> {
     await saveInviteList(tenantId, list)
   }
 
-  if (!list.legacyComplete) {
-    list = await migrateLegacyInvites(tenantId, list)
+  const results = new Map<string, InviteWithCode>()
+  for (const [code, invite] of Object.entries(list.invites)) {
+    results.set(code, toInviteWithCode(code, invite))
   }
 
-  return Object.entries(list.invites).map(([code, invite]) =>
-    toInviteWithCode(code, invite)
-  )
+  const client = await redis.getInviteClient()
+  const legacyInvites: { key: string; value: Invite }[] = await client.scan()
+  for (const invite of legacyInvites) {
+    if (!invite?.value?.info) {
+      continue
+    }
+    if (env.MULTI_TENANCY && invite.value.info.tenantId !== tenantId) {
+      continue
+    }
+    if (!results.has(invite.key)) {
+      results.set(invite.key, { ...invite.value, code: invite.key })
+    }
+  }
+
+  return Array.from(results.values())
 }
 
 export async function getExistingInvites(

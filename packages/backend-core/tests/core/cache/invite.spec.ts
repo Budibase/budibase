@@ -33,7 +33,7 @@ describe("invite cache", () => {
     })
   })
 
-  it("migrates legacy invites into the list", async () => {
+  it("combines legacy invites with tenant list", async () => {
     await testEnv.withTenant(async tenantId => {
       const inviteClient = await redis.getInviteClient()
       const code = `legacy-${newid()}`
@@ -53,10 +53,9 @@ describe("invite cache", () => {
       const list = (await inviteListClient.get(
         `invitation-list-${tenantId}`
       )) as any
-      expect(list).toBeDefined()
-      expect(list.legacyComplete).toBe(true)
-      expect(list.invites[code].email).toBe("legacy@budibase.com")
-      expect(list.tenantId).toBe(tenantId)
+      if (list) {
+        expect(list.invites[code]).toBeUndefined()
+      }
     })
   })
 
