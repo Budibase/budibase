@@ -56,7 +56,7 @@ export async function openaiChatCompletions(
   }
 
   const llmConfig = await ai.getLLMConfig()
-  const apiKey = llmConfig?.apiKey || env.OPENAI_API_KEY
+  const apiKey = llmConfig?.apiKey
   if (!apiKey) {
     ctx.throw(500, "No OpenAI API key configured")
   }
@@ -68,7 +68,7 @@ export async function openaiChatCompletions(
 
   const requestBody = {
     ...ctx.request.body,
-    model: ctx.request.body.model || llmConfig?.model,
+    model: ctx.request.body.model,
   }
 
   if (ctx.request.body.stream) {
