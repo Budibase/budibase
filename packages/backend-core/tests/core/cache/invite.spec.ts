@@ -8,7 +8,7 @@ describe("invite cache", () => {
   let resetEnv: (() => void) | undefined
 
   beforeAll(() => {
-    resetEnv = setEnv({ MULTI_TENANCY: 1 })
+    resetEnv = setEnv({ MULTI_TENANCY: "1" })
   })
 
   afterAll(() => {
