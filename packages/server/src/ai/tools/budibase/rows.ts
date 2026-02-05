@@ -79,9 +79,9 @@ const formatFieldType = (schema: TableSchema[string]) => {
     case FieldType.JSON:
       return "json"
     case FieldType.BB_REFERENCE:
-      return "reference"
+      return "bb_reference"
     case FieldType.BB_REFERENCE_SINGLE:
-      return "reference"
+      return "bb_reference_single"
     case FieldType.BIGINT:
       return "bigint"
     case FieldType.BARCODEQR:
