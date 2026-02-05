@@ -1,6 +1,5 @@
 import { env } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
-import OpenAIClient from "openai"
 import type OpenAI from "openai"
 import type {
   ChatCompletionRequest,
@@ -55,16 +54,7 @@ export async function openaiChatCompletions(
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
 
-  const llmConfig = await ai.getLLMConfig()
-  const apiKey = llmConfig?.apiKey
-  if (!apiKey) {
-    ctx.throw(500, "No OpenAI API key configured")
-  }
-
-  const client = new OpenAIClient({
-    apiKey,
-    ...(llmConfig?.baseUrl ? { baseURL: llmConfig.baseUrl } : {}),
-  })
+  const llm = await ai.getLLMOrThrow()
 
   const requestBody = {
     ...ctx.request.body,
@@ -83,10 +73,9 @@ export async function openaiChatCompletions(
     ctx.respond = false
 
     try {
-      const stream = await client.chat.completions.create({
-        ...(requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming),
-        stream: true,
-      })
+      const stream = await llm.chatCompletionsStream(
+        requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming
+      )
 
       for await (const chunk of stream) {
         ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
@@ -108,7 +97,7 @@ export async function openaiChatCompletions(
     return
   }
 
-  const response = await client.chat.completions.create(
+  const response = await llm.chatCompletions(
     requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming
   )
   ctx.body = response
