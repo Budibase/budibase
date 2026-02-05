@@ -368,8 +368,13 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
 }
 
 async function mapToLiteLLMProvider(provider: string) {
+  if (provider === "budibase") {
+    return "openai_like"
+  }
+
   const providers = await fetchPublicProviders()
   const result = providers.find(p => p.provider === provider)?.litellm_provider
+
   if (!result) {
     throw new Error(`Provider ${provider} not found in LiteLLM`)
   }
