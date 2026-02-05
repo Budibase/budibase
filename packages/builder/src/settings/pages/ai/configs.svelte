@@ -1,13 +1,15 @@
 <script lang="ts">
   import { aiConfigsStore } from "@/stores/portal"
   import { Button, Layout, Modal, notifications } from "@budibase/bbui"
-  import { AIConfigType, type CustomAIProviderConfig } from "@budibase/types"
+  import type { AIConfigResponse } from "@budibase/types"
+  import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
 
   let customConfigModal: { show: () => void; hide: () => void }
-  let customModalConfig: CustomAIProviderConfig | null = null
+  let customModalConfig: AIConfigResponse | undefined
+  let selectedProvider: string | undefined
 
   $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
     config => config.configType === AIConfigType.COMPLETIONS
@@ -51,8 +53,9 @@
     },
   ]
 
-  function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
-    customModalConfig = config ? { ...config } : null
+  function openCustomAIConfigModal(config?: AIConfigResponse) {
+    customModalConfig = config ? { ...config } : undefined
+    selectedProvider = customModalConfig?.provider ?? selectedProvider
     customConfigModal?.show()
   }
 
@@ -83,8 +86,13 @@
   <div class="section-header new-provider-section">
     <div class="section-title">Model providers</div>
     <div class="provider-controls">
-      <Button icon="plus" size="S" on:click={() => openCustomAIConfigModal()}
-        >Connect to a custom provider</Button
+      <Button
+        icon="plus"
+        size="S"
+        on:click={() => {
+          selectedProvider = undefined
+          openCustomAIConfigModal()
+        }}>Connect to a custom provider</Button
       >
     </div>
   </div>
@@ -94,7 +102,10 @@
         displayName={config.name}
         provider={config.provider}
         description={config.description}
-        editHandler={() => openCustomAIConfigModal()}
+        editHandler={() => {
+          selectedProvider = config.provider
+          openCustomAIConfigModal()
+        }}
       ></CustomAIConfigTile>
     {/each}
   </div>
@@ -103,6 +114,7 @@
 <Modal bind:this={customConfigModal}>
   <CustomConfigModal
     config={customModalConfig}
+    provider={selectedProvider}
     type={AIConfigType.COMPLETIONS}
     on:hide={() => {
       customConfigModal.hide()
