@@ -143,7 +143,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: var(--spacing-m);
+    gap: var(--spacing-xl);
     padding: var(--spacing-xxl);
     text-align: center;
   }
