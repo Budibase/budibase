@@ -9,7 +9,6 @@
 
   let customConfigModal: { show: () => void; hide: () => void }
   let customModalConfig: AIConfigResponse | undefined
-  let selectedProvider: string | undefined
 
   $: aiGenerationConfigs = ($aiConfigsStore.customConfigs || []).filter(
     config => config.configType === AIConfigType.GENERATION
@@ -55,7 +54,6 @@
 
   function openCustomAIConfigModal(config?: AIConfigResponse) {
     customModalConfig = config ? { ...config } : undefined
-    selectedProvider = customModalConfig?.provider ?? selectedProvider
     customConfigModal?.show()
   }
 
@@ -86,13 +84,8 @@
   <div class="section-header new-provider-section">
     <div class="section-title">Model providers</div>
     <div class="provider-controls">
-      <Button
-        icon="plus"
-        size="S"
-        on:click={() => {
-          selectedProvider = undefined
-          openCustomAIConfigModal()
-        }}>Connect to a custom provider</Button
+      <Button icon="plus" size="S" on:click={() => openCustomAIConfigModal}
+        >Connect to a custom provider</Button
       >
     </div>
   </div>
@@ -102,10 +95,7 @@
         displayName={config.name}
         provider={config.provider}
         description={config.description}
-        editHandler={() => {
-          selectedProvider = config.provider
-          openCustomAIConfigModal()
-        }}
+        editHandler={() => openCustomAIConfigModal()}
       ></CustomAIConfigTile>
     {/each}
   </div>
@@ -114,7 +104,6 @@
 <Modal bind:this={customConfigModal}>
   <CustomConfigModal
     config={customModalConfig}
-    provider={selectedProvider}
     type={AIConfigType.GENERATION}
     on:hide={() => {
       customConfigModal.hide()

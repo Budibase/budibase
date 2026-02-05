@@ -19,46 +19,32 @@
   import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
-  interface WithConfig {
-    config: Omit<AIConfigResponse, "provider">
-    provider: string
-  }
-
-  interface WithoutConfig {
-    config: undefined
-    provider: undefined
-  }
-
-  type Props = WithConfig | WithoutConfig
-
-  export let config: Props["config"]
-  export let provider: Props["provider"]
+  export let config: AIConfigResponse | undefined
   export let type: AIConfigType
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
-  let draft: AIConfigResponse =
-    config && provider
-      ? ({
-          _id: config._id!,
-          _rev: config._rev!,
-          name: config.name,
-          provider: provider,
-          credentialsFields: config.credentialsFields ?? {},
-          model: config.model,
-          webSearchConfig: config.webSearchConfig,
-          configType: config.configType,
-          reasoningEffort: config.reasoningEffort,
-        } satisfies RequiredKeys<UpdateAIConfigRequest>)
-      : ({
-          provider: "",
-          name: "",
-          model: "",
-          configType: type,
-          credentialsFields: {},
-          webSearchConfig: undefined,
-          reasoningEffort: undefined,
-        } satisfies RequiredKeys<CreateAIConfigRequest>)
+  let draft: AIConfigResponse = config
+    ? ({
+        _id: config._id!,
+        _rev: config._rev!,
+        name: config.name,
+        provider: config.provider,
+        credentialsFields: config.credentialsFields ?? {},
+        model: config.model,
+        webSearchConfig: config.webSearchConfig,
+        configType: config.configType,
+        reasoningEffort: config.reasoningEffort,
+      } satisfies RequiredKeys<UpdateAIConfigRequest>)
+    : ({
+        provider: "",
+        name: "",
+        model: "",
+        configType: type,
+        credentialsFields: {},
+        webSearchConfig: undefined,
+        reasoningEffort: undefined,
+      } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   $: isEdit = !!config
   $: canSave = !!draft.name.trim() && !!draft.provider
@@ -169,7 +155,7 @@
       {#if isEdit}
         Edit {draft.name}
       {:else}
-        Add {provider || typeLabel} configuration
+        Add {typeLabel} configuration
       {/if}
     </Heading>
   </div>
@@ -179,19 +165,17 @@
     <Input bind:value={draft.name} placeholder="Support chat" />
   </div>
 
-  {#if !provider}
-    <div class="row">
-      <Label size="M">Provider</Label>
-      <Select
-        bind:value={draft.provider}
-        options={providers}
-        getOptionValue={o => o.id}
-        getOptionLabel={o => o.displayName}
-        placeholder={providerPlaceholder}
-        loading={!providers}
-      />
-    </div>
-  {/if}
+  <div class="row">
+    <Label size="M">Provider</Label>
+    <Select
+      bind:value={draft.provider}
+      options={providers}
+      getOptionValue={o => o.id}
+      getOptionLabel={o => o.displayName}
+      placeholder={providerPlaceholder}
+      loading={!providers}
+    />
+  </div>
 
   <div class="row">
     <Label size="M">Model</Label>
