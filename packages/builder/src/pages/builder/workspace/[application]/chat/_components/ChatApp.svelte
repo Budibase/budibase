@@ -67,6 +67,9 @@
     ? "No agents enabled for this chat app. Add one in Settings to start chatting."
     : "No agents yet. Add one from the settings panel to start chatting."
   $: conversationStarters = $selectedChatAgent?.conversationStarters || []
+  $: isAgentKnown = selectedAgentId
+    ? !agentsLoaded || agents.some(agent => agent._id === selectedAgentId)
+    : false
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
@@ -288,6 +291,7 @@
       {selectedAgentName}
       {workspaceId}
       {conversationStarters}
+      {isAgentKnown}
       on:deleteChat={deleteCurrentChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}

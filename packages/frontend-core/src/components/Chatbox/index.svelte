@@ -36,6 +36,7 @@
     }) => void
     isAgentPreviewChat?: boolean
     readOnly?: boolean
+    readOnlyReason?: "disabled" | "deleted"
   }
 
   let {
@@ -46,6 +47,7 @@
     onchatsaved,
     isAgentPreviewChat = false,
     readOnly = false,
+    readOnlyReason,
   }: Props = $props()
 
   let API = $state(
@@ -207,6 +209,11 @@
       conversationStarters.length > 0 &&
       !isAgentPreviewChat &&
       !readOnly
+  )
+  let readOnlyMessage = $derived(
+    readOnlyReason === "deleted"
+      ? "This agent was deleted. Select another agent to resume chatting."
+      : "This agent is disabled. Enable it in Settings to resume chatting."
   )
 
   let lastChatId = $state<string | undefined>(chat?._id)
@@ -587,7 +594,7 @@
     <div class="input-wrapper">
       <div class="read-only-notice">
         <Body size="S" color="var(--spectrum-global-color-gray-700)">
-          This agent is disabled. Enable it in Settings to resume chatting.
+          {readOnlyMessage}
         </Body>
       </div>
     </div>

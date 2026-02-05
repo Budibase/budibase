@@ -15,6 +15,7 @@
   export let selectedAgentName: string = ""
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationStarters: { prompt: string }[] = []
+  export let isAgentKnown: boolean = true
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
@@ -33,6 +34,13 @@
   $: isAgentEnabled = selectedAgentId
     ? enabledAgentList.some(agent => agent.agentId === selectedAgentId)
     : false
+  $: readOnlyReason = selectedAgentId
+    ? !isAgentKnown
+      ? "deleted"
+      : !isAgentEnabled
+        ? "disabled"
+        : undefined
+    : undefined
 
   const deleteChat = () => {
     dispatch("deleteChat")
@@ -76,7 +84,8 @@
       bind:chat
       {workspaceId}
       {conversationStarters}
-      readOnly={!isAgentEnabled}
+      readOnly={Boolean(readOnlyReason)}
+      {readOnlyReason}
       onchatsaved={event => dispatch("chatSaved", event.detail)}
     />
   {:else}
