@@ -26,8 +26,6 @@
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
-  alert("aa")
-
   let draft: AIConfigResponse = config
     ? ({
         _id: config._id!,

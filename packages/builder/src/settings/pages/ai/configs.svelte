@@ -75,20 +75,22 @@
 </script>
 
 <Layout noPadding gap="XS">
-  <div class="section-header">
-    <div class="section-title">Connected models</div>
-  </div>
-  <div class="model-list">
-    {#each aiGenerationConfigs as config (config._id)}
-      <CustomAIConfigTile
-        displayName={config.name}
-        provider={config.provider}
-        description={config.model}
-        isEdition
-        editHandler={() => editAIConfig(config)}
-      ></CustomAIConfigTile>
-    {/each}
-  </div>
+  {#if aiGenerationConfigs.length}
+    <div class="section-header">
+      <div class="section-title">Connected models</div>
+    </div>
+    <div class="model-list">
+      {#each aiGenerationConfigs as config (config._id)}
+        <CustomAIConfigTile
+          displayName={config.name}
+          provider={config.provider}
+          description={config.model}
+          isEdition
+          editHandler={() => editAIConfig(config)}
+        ></CustomAIConfigTile>
+      {/each}
+    </div>
+  {/if}
   <div class="section-header new-provider-section">
     <div class="section-title">Model providers</div>
     <div class="provider-controls">
