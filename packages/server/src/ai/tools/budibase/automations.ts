@@ -8,7 +8,6 @@ import {
   AutomationTriggerStepId,
   ToolType,
 } from "@budibase/types"
-import env from "../../../environment"
 import * as triggers from "../../../automations/triggers"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
@@ -22,9 +21,9 @@ const DEFAULT_FIELDS_DESCRIPTION =
 type AutomationFieldValue = string | number | boolean | unknown[]
 
 const getAutomationFieldsSummary = (automation: Automation) => {
-  const triggerInputs = automation.definition?.trigger?.inputs as
-    | { fields?: Record<string, AutomationIOType> }
-    | undefined
+  const triggerInputs = automation.definition?.trigger?.inputs as {
+    fields?: Record<string, AutomationIOType>
+  } | null
   const fields = triggerInputs?.fields
   if (!fields || Object.keys(fields).length === 0) {
     return ""
@@ -38,11 +37,9 @@ const getAutomationFieldsSummary = (automation: Automation) => {
 const triggerAutomationById = async ({
   automationId,
   fields,
-  timeout,
 }: {
   automationId: string
   fields?: Record<string, AutomationFieldValue> | null
-  timeout?: number | null
 }) => {
   const resolvedFields = fields ?? {}
 
@@ -64,7 +61,6 @@ const triggerAutomationById = async ({
     automation,
     {
       fields: resolvedFields,
-      timeout: timeout ? timeout * 1000 : env.AUTOMATION_THREAD_TIMEOUT,
     },
     { getResponses: true }
   )
@@ -164,17 +160,12 @@ const createAutomationTools = (
               )
               .nullish()
               .describe(fieldsDescription),
-            timeout: z
-              .number()
-              .nullish()
-              .describe("Timeout in seconds (optional)"),
           }),
           execute: async input => {
-            const { fields, timeout } = input
+            const { fields } = input
             return triggerAutomationById({
               automationId: automation._id!,
               fields,
-              timeout,
             })
           },
         }),
