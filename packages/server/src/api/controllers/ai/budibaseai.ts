@@ -50,9 +50,7 @@ interface OpenAIChatCompletionsResponse {
   }
 }
 
-function mapResponseFormat(
-  format?: OpenAIFormat
-): ResponseFormat | undefined {
+function mapResponseFormat(format?: OpenAIFormat): ResponseFormat | undefined {
   if (!format) {
     return
   }
@@ -143,7 +141,7 @@ export async function openaiChatCompletions(
     ctx.throw(400, "Missing required field: messages")
   }
 
-  if (env.SELF_HOSTED) {
+  if (env.SELF_HOSTED && !env.isDev()) {
     ctx.throw(500, "OpenAI-compatible endpoint is not available in self-host")
   }
 
