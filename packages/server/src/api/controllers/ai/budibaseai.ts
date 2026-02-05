@@ -50,7 +50,7 @@ export async function openaiChatCompletions(
     ctx.throw(400, "Missing required field: messages")
   }
 
-  if (env.SELF_HOSTED) {
+  if (env.SELF_HOSTED && !env.isDev()) {
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
 
@@ -86,7 +86,6 @@ export async function openaiChatCompletions(
     } catch (error: any) {
       ctx.throw(error?.status || 500, error?.message || "Streaming error")
     }
-    return
   }
 
   const response = await llm.chatCompletions(
