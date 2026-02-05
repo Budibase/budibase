@@ -3,6 +3,7 @@ import { z } from "zod"
 import { context } from "@budibase/backend-core"
 import {
   Automation,
+  AutomationIOType,
   AutomationStatus,
   AutomationTriggerStepId,
   ToolType,
@@ -13,12 +14,26 @@ import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
 
 const TRIGGER_AUTOMATION_BASE_DESCRIPTION =
-  "Trigger an automation and wait for its completion. Returns all step outputs. Only works for APP trigger type automations."
+  "Trigger this automation (APP triggers only). Returns all step outputs."
 
 const DEFAULT_FIELDS_DESCRIPTION =
-  "Input fields/data to pass to the app action automation trigger as a JSON object (string, number, boolean, array). Ensure the schema for the automation is known before triggering it."
+  "Fields map: key/value pairs. Values must be string, number, boolean, or array (no nested objects)."
 
 type AutomationFieldValue = string | number | boolean | any[]
+
+const getAutomationFieldsSummary = (automation: Automation) => {
+  const triggerInputs = automation.definition?.trigger?.inputs as
+    | { fields?: Record<string, AutomationIOType> }
+    | undefined
+  const fields = triggerInputs?.fields
+  if (!fields || Object.keys(fields).length === 0) {
+    return ""
+  }
+
+  return Object.entries(fields)
+    .map(([name, type]) => `${name} (${type})`)
+    .join(", ")
+}
 
 const triggerAutomationById = async ({
   automationId,
@@ -83,12 +98,10 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
       },
     }),
   },
-
   {
     name: "get_automation",
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
-
     description: "Get details about a specific automation by ID",
     tool: tool({
       description: "Get details about a specific automation by ID",
@@ -97,44 +110,10 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
           .string()
           .describe("The ID of the automation to retrieve"),
       }),
-      execute: async (input: unknown) => {
-        const { automationId } = input as { automationId: string }
+      execute: async input => {
+        const { automationId } = input
         const automation = await sdk.automations.get(automationId)
         return { automation }
-      },
-    }),
-  },
-
-  {
-    name: "trigger_automation",
-    sourceType: ToolType.AUTOMATION,
-    sourceLabel: "Budibase",
-
-    description: `${TRIGGER_AUTOMATION_BASE_DESCRIPTION} IMPORTANT: You must use list_automations first to get the exact _id of the automation you want to trigger.`,
-    tool: tool({
-      description: `${TRIGGER_AUTOMATION_BASE_DESCRIPTION} IMPORTANT: You must use list_automations first to get the exact _id of the automation you want to trigger.`,
-      inputSchema: z.object({
-        automationId: z
-          .string()
-          .describe(
-            "The exact _id of the automation to trigger (obtained from list_automations)"
-          ),
-        fields: z
-          .record(
-            z.string(),
-            z.union([z.string(), z.number(), z.boolean(), z.array(z.any())])
-          )
-          .nullish()
-          .describe(DEFAULT_FIELDS_DESCRIPTION),
-        timeout: z.number().nullish().describe("Timeout in seconds (optional)"),
-      }),
-      execute: async input => {
-        const { automationId, fields, timeout } = input as {
-          automationId: string
-          fields?: Record<string, AutomationFieldValue> | null
-          timeout?: number | null
-        }
-        return triggerAutomationById({ automationId, fields, timeout })
       },
     }),
   },
@@ -144,27 +123,29 @@ const createAutomationTools = (
   automations: Automation[] = []
 ): BudibaseToolDefinition[] => {
   const automationTriggerTools = automations
-    .filter(automation => {
-      return (
+    .filter(
+      automation =>
         automation._id &&
         automation.definition?.trigger?.stepId === AutomationTriggerStepId.APP
-      )
-    })
+    )
     .map(automation => {
       const automationName = automation.name || automation._id!
       const sanitizedAutomationId = automation._id!.replace(
         /[^A-Za-z0-9_-]/g,
         "_"
       )
-      const toolName = `${sanitizedAutomationId}_trigger_automation`.substring(
-        0,
-        64
-      )
-      const description = `Trigger "${automationName}" automation. ${TRIGGER_AUTOMATION_BASE_DESCRIPTION}`
+      const toolName = `${sanitizedAutomationId}_trigger`.substring(0, 64)
+      const fieldsSummary = getAutomationFieldsSummary(automation)
+      const fieldsDescription = fieldsSummary
+        ? `${DEFAULT_FIELDS_DESCRIPTION} Available fields: ${fieldsSummary}.`
+        : DEFAULT_FIELDS_DESCRIPTION
+      const description = fieldsSummary
+        ? `Trigger "${automationName}" automation. ${TRIGGER_AUTOMATION_BASE_DESCRIPTION} Fields: ${fieldsSummary}.`
+        : `Trigger "${automationName}" automation. ${TRIGGER_AUTOMATION_BASE_DESCRIPTION}`
 
       return {
         name: toolName,
-        readableName: `${automationName}.trigger_automation`,
+        readableName: `${automationName}.trigger`,
         sourceType: ToolType.AUTOMATION,
         sourceLabel: "Budibase",
         description,
@@ -177,17 +158,14 @@ const createAutomationTools = (
                 z.union([z.string(), z.number(), z.boolean(), z.array(z.any())])
               )
               .nullish()
-              .describe(DEFAULT_FIELDS_DESCRIPTION),
+              .describe(fieldsDescription),
             timeout: z
               .number()
               .nullish()
               .describe("Timeout in seconds (optional)"),
           }),
           execute: async input => {
-            const { fields, timeout } = input as {
-              fields?: Record<string, AutomationFieldValue> | null
-              timeout?: number | null
-            }
+            const { fields, timeout } = input
             return triggerAutomationById({
               automationId: automation._id!,
               fields,
