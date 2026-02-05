@@ -7,7 +7,7 @@ import {
   AutomationStepResult,
   AutomationTriggerResult,
 } from "@budibase/types"
-import automationTools from "../automations"
+import { createAutomationTools } from "../automations"
 
 interface TriggerAutomationStepsResult {
   success: boolean
@@ -27,10 +27,16 @@ type TriggerAutomationResult =
 describe("AI Tools - Automations", () => {
   const config = new TestConfiguration()
 
-  const getTriggerAutomationTool = () => {
-    const tool = automationTools.find(t => t.name === "trigger_automation")
+  const getTriggerAutomationTool = (
+    automationId: string,
+    automationName: string
+  ) => {
+    const tools = createAutomationTools({ automationId, automationName })
+    const tool =
+      tools.find(t => t.readableName === `${automationName}.trigger`) ||
+      tools[0]
     if (!tool) {
-      throw new Error("trigger_automation tool not found")
+      throw new Error("trigger tool not found")
     }
     return tool
   }
@@ -85,11 +91,13 @@ describe("AI Tools - Automations", () => {
         .serverLog({ text: "Step 2" })
         .save()
 
-      const tool = getTriggerAutomationTool()
+      const tool = getTriggerAutomationTool(
+        targetAutomation._id!,
+        targetAutomation.name || targetAutomation._id!
+      )
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
-          automationId: targetAutomation._id!,
-          fields: "{}",
+          fields: {},
         })
       )) as TriggerAutomationResult
 
@@ -110,13 +118,15 @@ describe("AI Tools - Automations", () => {
         .serverLog({ text: "After delay" })
         .save()
 
-      const tool = getTriggerAutomationTool()
+      const tool = getTriggerAutomationTool(
+        targetAutomation._id!,
+        targetAutomation.name || targetAutomation._id!
+      )
       const startTime = performance.now()
 
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
-          automationId: targetAutomation._id!,
-          fields: "{}",
+          fields: {},
         })
       )) as TriggerAutomationResult
 
@@ -138,11 +148,13 @@ describe("AI Tools - Automations", () => {
         .serverLog({ text: "Row saved" })
         .save()
 
-      const tool = getTriggerAutomationTool()
+      const tool = getTriggerAutomationTool(
+        targetAutomation._id!,
+        targetAutomation.name || targetAutomation._id!
+      )
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
-          automationId: targetAutomation._id!,
-          fields: "{}",
+          fields: {},
         })
       )) as TriggerAutomationResult
 
@@ -153,39 +165,19 @@ describe("AI Tools - Automations", () => {
     })
 
     it("should return error for non-existent automation", async () => {
-      const tool = getTriggerAutomationTool()
+      const tool = getTriggerAutomationTool(
+        "non_existent_id",
+        "Missing Automation"
+      )
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
-          automationId: "non_existent_id",
-          fields: "{}",
+          fields: {},
         })
       )) as TriggerAutomationResult
 
       expect(isErrorResult(result)).toBe(true)
       if (isErrorResult(result)) {
         expect(result.error).toContain("not found")
-      }
-    })
-
-    it("should return error for invalid JSON in fields", async () => {
-      const { automation: targetAutomation } = await createAutomationBuilder(
-        config
-      )
-        .onAppAction()
-        .serverLog({ text: "Test" })
-        .save()
-
-      const tool = getTriggerAutomationTool()
-      const result = (await runInContext(() =>
-        executeTool<TriggerAutomationResult>(tool, {
-          automationId: targetAutomation._id!,
-          fields: "invalid json",
-        })
-      )) as TriggerAutomationResult
-
-      expect(isErrorResult(result)).toBe(true)
-      if (isErrorResult(result)) {
-        expect(result.error).toContain("Invalid JSON")
       }
     })
 
@@ -197,11 +189,13 @@ describe("AI Tools - Automations", () => {
         .serverLog({ text: "{{ trigger.fields.message }}" })
         .save()
 
-      const tool = getTriggerAutomationTool()
+      const tool = getTriggerAutomationTool(
+        targetAutomation._id!,
+        targetAutomation.name || targetAutomation._id!
+      )
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
-          automationId: targetAutomation._id!,
-          fields: JSON.stringify({ message: "Hello from agent" }),
+          fields: { message: "Hello from agent" },
         })
       )) as TriggerAutomationResult
 
@@ -220,11 +214,13 @@ describe("AI Tools - Automations", () => {
         .serverLog({ text: "After long delay" })
         .save()
 
-      const tool = getTriggerAutomationTool()
+      const tool = getTriggerAutomationTool(
+        targetAutomation._id!,
+        targetAutomation.name || targetAutomation._id!
+      )
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
-          automationId: targetAutomation._id!,
-          fields: "{}",
+          fields: {},
           timeout: 0.1,
         })
       )) as TriggerAutomationResult
