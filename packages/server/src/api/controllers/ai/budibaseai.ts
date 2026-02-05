@@ -50,9 +50,7 @@ interface OpenAIChatCompletionsResponse {
   }
 }
 
-function mapResponseFormat(
-  format?: OpenAIFormat
-): ResponseFormat | undefined {
+function mapResponseFormat(format?: OpenAIFormat): ResponseFormat | undefined {
   if (!format) {
     return
   }
@@ -144,7 +142,7 @@ export async function openaiChatCompletions(
   }
 
   if (env.SELF_HOSTED) {
-    ctx.throw(500, "OpenAI-compatible endpoint is not available in self-host")
+    ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
 
   const llm = await ai.getLLMOrThrow()
