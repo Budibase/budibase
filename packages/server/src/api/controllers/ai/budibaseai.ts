@@ -88,7 +88,7 @@ export async function openaiChatCompletions(
         ctx.res.write(
           `data: ${JSON.stringify({
             error: {
-              message: error?.message || "Streaming error",
+              message: env.isProd() ? "Streaming error" : error?.message || "Streaming error",
               type: "server_error",
             },
           })}\n\n`
