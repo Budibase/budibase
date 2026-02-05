@@ -151,7 +151,10 @@ export async function createCode(email: string, info: any): Promise<string> {
  * @param code the invite code that was provided as part of the link.
  * @return If the code is valid then an email address will be returned.
  */
-export async function getCode(code: string, tenantId?: string): Promise<Invite> {
+export async function getCode(
+  code: string,
+  tenantId?: string
+): Promise<Invite> {
   const client = await redis.getInviteClient()
   const value = (await client.get(code)) as Invite | undefined
   if (value) {
