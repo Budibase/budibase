@@ -29,7 +29,6 @@ jobs:
           exit 1
       - uses: actions/checkout@v4
         with:
-          submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - run: cd scripts && yarn

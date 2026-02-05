@@ -3,10 +3,12 @@ import { type Tool, type ToolSet } from "ai"
 
 export interface AiToolDefinition {
   name: string
+  readableName?: string
   description: string
   tool: Tool
   sourceType: ToolType
   sourceLabel?: string
+  sourceIconType?: string
 }
 
 export const toToolSet = (tools: AiToolDefinition[]): ToolSet => {
