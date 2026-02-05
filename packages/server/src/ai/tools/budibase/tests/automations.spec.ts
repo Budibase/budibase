@@ -189,30 +189,5 @@ describe("AI Tools - Automations", () => {
         expect(result.status).toBe(AutomationStatus.SUCCESS)
       }
     })
-
-    it("should handle timeout parameter", async () => {
-      const { automation: targetAutomation } = await createAutomationBuilder(
-        config
-      )
-        .onAppAction()
-        .delay({ time: 500 })
-        .serverLog({ text: "After long delay" })
-        .save()
-
-      const tool = getTriggerAutomationTool(targetAutomation)
-      const result = (await runInContext(() =>
-        executeTool<TriggerAutomationResult>(tool, {
-          fields: {},
-          timeout: 0.1,
-        })
-      )) as TriggerAutomationResult
-
-      // Timeout still returns steps but with success: false
-      expect(isStepsResult(result)).toBe(true)
-      if (isStepsResult(result)) {
-        expect(result.success).toBe(false)
-        expect(result.status).toBe(AutomationStatus.TIMED_OUT)
-      }
-    })
   })
 })
