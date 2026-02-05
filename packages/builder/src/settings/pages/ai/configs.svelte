@@ -15,27 +15,38 @@
 
   const modelProviders = [
     {
+      name: "Budibase AI",
+      provider: "budibase",
+      description: "Budibase managed",
+    },
+    {
       name: "Anthropic",
+      provider: "anthropic",
       description: "Connect to Claude models directly from Anthropic",
     },
     {
       name: "Google",
+      provider: "google",
       description: "Connect to Gemini models directly from Google",
     },
     {
       name: "Mistral",
+      provider: "mistral",
       description: "Connect to Mistral models directly from Mistral",
     },
     {
       name: "OpenAI",
+      provider: "openai",
       description: "Connect to ChatGPT models directly from OpenAI",
     },
     {
       name: "OpenRouter",
+      provider: "openrouter",
       description: "Connect to 100s of text, image, embedding models",
     },
     {
       name: "Groq",
+      provider: "groq",
       description: "Connect to 100s of text, image, embedding models",
     },
   ]
@@ -78,11 +89,11 @@
     </div>
   </div>
   <div class="model-list">
-    {#each modelProviders as provider (provider.name)}
+    {#each modelProviders as config (config.name)}
       <CustomAIConfigTile
-        displayName={provider.name}
-        provider={provider.name}
-        description={provider.description}
+        displayName={config.name}
+        provider={config.provider}
+        description={config.description}
         editHandler={() => openCustomAIConfigModal()}
       ></CustomAIConfigTile>
     {/each}

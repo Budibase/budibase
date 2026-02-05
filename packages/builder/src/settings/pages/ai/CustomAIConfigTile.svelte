@@ -27,11 +27,7 @@
       salesllm: SalesLLMLogo,
     }
 
-    return (
-      providerToLogo[
-        providerName.toLowerCase() as keyof typeof providerToLogo
-      ] || null
-    )
+    return providerToLogo[providerName as keyof typeof providerToLogo] || null
   }
 </script>
 
