@@ -19,10 +19,6 @@ interface InviteListPayload {
   invites: Record<string, InviteListEntry>
 }
 
-function getInviteListKey(tenantId: string) {
-  return `${INVITE_LIST_PREFIX}${tenantId}`
-}
-
 function normaliseInviteList(
   value?: InviteListPayload | null,
   tenantId?: string
@@ -54,15 +50,13 @@ function pruneExpiredInvites(list: InviteListPayload) {
 
 async function loadInviteList(tenantId: string) {
   const client = await redis.getInviteListClient()
-  const list = (await client.get(getInviteListKey(tenantId))) as
-    | InviteListPayload
-    | undefined
+  const list = (await client.get(tenantId)) as InviteListPayload | undefined
   return normaliseInviteList(list, tenantId)
 }
 
 async function saveInviteList(tenantId: string, list: InviteListPayload) {
   const client = await redis.getInviteListClient()
-  await client.store(getInviteListKey(tenantId), list)
+  await client.store(tenantId, list)
 }
 
 function toInviteWithCode(
