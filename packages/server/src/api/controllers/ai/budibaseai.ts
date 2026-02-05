@@ -1,65 +1,14 @@
 import { env } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import OpenAIClient from "openai"
-import type {
-  ChatCompletionMessageToolCall,
-  ChatCompletionTool,
-  ChatCompletionToolChoiceOption,
-} from "openai"
 import type OpenAI from "openai"
 import type {
   ChatCompletionRequest,
   ChatCompletionResponse,
   Ctx,
-  Message,
   UploadFileRequest,
   UploadFileResponse,
 } from "@budibase/types"
-
-interface OpenAIFormatJSONSchema {
-  type: "json_schema"
-  json_schema: {
-    name: string
-    schema: Record<string, unknown>
-    strict?: boolean
-  }
-}
-
-type OpenAIFormat =
-  | { type: "text" }
-  | { type: "json_object" }
-  | OpenAIFormatJSONSchema
-
-interface OpenAIChatCompletionsRequest {
-  messages: Message[]
-  model?: string
-  response_format?: OpenAIFormat
-  stream?: boolean
-  tools?: ChatCompletionTool[]
-  tool_choice?: ChatCompletionToolChoiceOption
-  parallel_tool_calls?: boolean
-}
-
-interface OpenAIChatCompletionsResponse {
-  id: string
-  object: "chat.completion"
-  created: number
-  model: string
-  choices: {
-    index: number
-    message: {
-      role: "assistant"
-      content: string | null
-      tool_calls?: ChatCompletionMessageToolCall[]
-    }
-    finish_reason: "stop" | "tool_calls"
-  }[]
-  usage?: {
-    prompt_tokens: number
-    completion_tokens: number
-    total_tokens: number
-  }
-}
 
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
@@ -93,7 +42,10 @@ export async function chatCompletion(
 }
 
 export async function openaiChatCompletions(
-  ctx: Ctx<OpenAIChatCompletionsRequest, OpenAIChatCompletionsResponse>
+  ctx: Ctx<
+    OpenAI.Chat.Completions.ChatCompletionCreateParams,
+    OpenAI.Chat.Completions.ChatCompletion
+  >
 ) {
   if (!ctx.request.body?.messages?.length) {
     ctx.throw(400, "Missing required field: messages")
