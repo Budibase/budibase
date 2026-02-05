@@ -161,7 +161,7 @@ export class OpenAI extends LLM {
     const parameters: OpenAITypes.ChatCompletionCreateParamsStreaming = {
       model: this.model,
       messages: request.messages,
-      max_tokens: this.maxTokens,
+      max_completion_tokens: this.maxTokens,
       response_format: parseResponseFormat(request.format),
       stream: true,
     }
