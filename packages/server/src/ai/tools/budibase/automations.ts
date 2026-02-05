@@ -19,7 +19,7 @@ const TRIGGER_AUTOMATION_BASE_DESCRIPTION =
 const DEFAULT_FIELDS_DESCRIPTION =
   "Fields map: key/value pairs. Values must be string, number, boolean, or array (no nested objects)."
 
-type AutomationFieldValue = string | number | boolean | any[]
+type AutomationFieldValue = string | number | boolean | unknown[]
 
 const getAutomationFieldsSummary = (automation: Automation) => {
   const triggerInputs = automation.definition?.trigger?.inputs as
@@ -155,7 +155,7 @@ const createAutomationTools = (
             fields: z
               .record(
                 z.string(),
-                z.union([z.string(), z.number(), z.boolean(), z.array(z.any())])
+                z.union([z.string(), z.number(), z.boolean(), z.array(z.unknown())])
               )
               .nullish()
               .describe(fieldsDescription),
