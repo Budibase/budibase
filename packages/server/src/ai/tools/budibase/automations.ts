@@ -155,7 +155,12 @@ const createAutomationTools = (
             fields: z
               .record(
                 z.string(),
-                z.union([z.string(), z.number(), z.boolean(), z.array(z.unknown())])
+                z.union([
+                  z.string(),
+                  z.number(),
+                  z.boolean(),
+                  z.array(z.unknown()),
+                ])
               )
               .nullish()
               .describe(fieldsDescription),

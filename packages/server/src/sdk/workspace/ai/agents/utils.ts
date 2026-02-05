@@ -109,41 +109,10 @@ export async function buildPromptAndTools(
 
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
-  const enabledTools = allTools.filter(tool => enabledToolNames.has(tool.name))
-  const toolByName = new Map(allTools.map(tool => [tool.name, tool]))
-  const resolvedToolNames = new Set(enabledTools.map(tool => tool.name))
-
-  const hasTableTools = enabledTools.some(
-    tool =>
-      tool.sourceType === ToolType.INTERNAL_TABLE ||
-      tool.sourceType === ToolType.EXTERNAL_TABLE
+  const enabledTools = addHelperTools(
+    allTools.filter(tool => enabledToolNames.has(tool.name)),
+    allTools
   )
-  if (hasTableTools) {
-    for (const toolName of ["list_tables", "get_table"]) {
-      if (!resolvedToolNames.has(toolName)) {
-        const tool = toolByName.get(toolName)
-        if (tool) {
-          enabledTools.push(tool)
-          resolvedToolNames.add(toolName)
-        }
-      }
-    }
-  }
-
-  const hasAutomationTools = enabledTools.some(
-    tool => tool.sourceType === ToolType.AUTOMATION
-  )
-  if (hasAutomationTools) {
-    for (const toolName of ["list_automations", "get_automation"]) {
-      if (!resolvedToolNames.has(toolName)) {
-        const tool = toolByName.get(toolName)
-        if (tool) {
-          enabledTools.push(tool)
-          resolvedToolNames.add(toolName)
-        }
-      }
-    }
-  }
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
@@ -156,6 +125,48 @@ export async function buildPromptAndTools(
     systemPrompt,
     tools: toToolSet(enabledTools),
   }
+}
+
+/*
+We want to add these tools for automations / tables if user has added related tools.
+This abstracts the decision of what tools to add away from the user.
+*/
+function addHelperTools(
+  enabledTools: AiToolDefinition[],
+  allTools: AiToolDefinition[]
+) {
+  const seenTools = new Set(enabledTools.map(tool => tool.name))
+  const toolByName = new Map(allTools.map(tool => [tool.name, tool]))
+
+  if (
+    enabledTools.some(
+      tool =>
+        tool.sourceType === ToolType.EXTERNAL_TABLE ||
+        tool.sourceType === ToolType.INTERNAL_TABLE
+    )
+  ) {
+    for (const toolName of ["get_table", "list_tables"]) {
+      if (seenTools.has(toolName)) continue
+      let tool = toolByName.get(toolName)
+      if (tool) {
+        enabledTools.push(tool)
+        seenTools.add(tool.name)
+      }
+    }
+  }
+
+  if (enabledTools.some(tool => tool.sourceType === ToolType.AUTOMATION)) {
+    for (const toolName of ["get_automation", "list_automations"]) {
+      if (seenTools.has(toolName)) continue
+      let tool = toolByName.get(toolName)
+      if (tool) {
+        enabledTools.push(tool)
+        seenTools.add(tool.name)
+      }
+    }
+  }
+
+  return enabledTools
 }
 
 export function createLiteLLMFetch(sessionId: string): typeof fetch {
