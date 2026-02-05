@@ -145,6 +145,11 @@
     border-radius: 24px;
     border: var(--border-light);
     overflow: hidden;
+    background: var(--background-alt);
+  }
+
+  :global(.settings-panel .panel) {
+    background: var(--background-alt);
   }
 
   .settings-container {
