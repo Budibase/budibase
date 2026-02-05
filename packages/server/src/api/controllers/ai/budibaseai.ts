@@ -1,11 +1,17 @@
 import { env } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
+import OpenAIClient from "openai"
+import type {
+  ChatCompletionMessageToolCall,
+  ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
+} from "openai"
+import type OpenAI from "openai"
 import type {
   ChatCompletionRequest,
   ChatCompletionResponse,
   Ctx,
   Message,
-  ResponseFormat,
   UploadFileRequest,
   UploadFileResponse,
 } from "@budibase/types"
@@ -29,6 +35,9 @@ interface OpenAIChatCompletionsRequest {
   model?: string
   response_format?: OpenAIFormat
   stream?: boolean
+  tools?: ChatCompletionTool[]
+  tool_choice?: ChatCompletionToolChoiceOption
+  parallel_tool_calls?: boolean
 }
 
 interface OpenAIChatCompletionsResponse {
@@ -40,68 +49,16 @@ interface OpenAIChatCompletionsResponse {
     index: number
     message: {
       role: "assistant"
-      content: string
+      content: string | null
+      tool_calls?: ChatCompletionMessageToolCall[]
     }
-    finish_reason: "stop"
+    finish_reason: "stop" | "tool_calls"
   }[]
   usage?: {
     prompt_tokens: number
     completion_tokens: number
     total_tokens: number
   }
-}
-
-function mapResponseFormat(format?: OpenAIFormat): ResponseFormat | undefined {
-  if (!format) {
-    return
-  }
-
-  switch (format.type) {
-    case "text":
-      return "text"
-    case "json_object":
-      return "json"
-    case "json_schema":
-      return format
-    default:
-      return
-  }
-}
-
-function extractTextFromContent(content: Message["content"]) {
-  if (typeof content === "string") {
-    return content
-  }
-
-  if (!Array.isArray(content)) {
-    return ""
-  }
-
-  return content
-    .map(part => {
-      if (part && typeof part === "object" && "text" in part) {
-        const text = (part as { text?: unknown }).text
-        return typeof text === "string" ? text : ""
-      }
-      return ""
-    })
-    .join("")
-}
-
-function findAssistantText(messages: Message[]) {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const message = messages[i]
-    if (message.role === "assistant") {
-      return extractTextFromContent(message.content)
-    }
-  }
-  return ""
-}
-
-function buildResponseId(prefix: string) {
-  return `${prefix}_${Date.now().toString(36)}${Math.random()
-    .toString(36)
-    .slice(2, 8)}`
 }
 
 export async function uploadFile(
@@ -146,13 +103,20 @@ export async function openaiChatCompletions(
     ctx.throw(500, "OpenAI-compatible endpoint is not available in self-host")
   }
 
-  const llm = await ai.getLLMOrThrow()
-  const request = new ai.LLMRequest()
+  const llmConfig = await ai.getLLMConfig()
+  const apiKey = llmConfig?.apiKey || env.OPENAI_API_KEY
+  if (!apiKey) {
+    ctx.throw(500, "No OpenAI API key configured")
+  }
 
-  request.addMessages(ctx.request.body.messages)
-  const responseFormat = mapResponseFormat(ctx.request.body.response_format)
-  if (responseFormat) {
-    request.withFormat(responseFormat)
+  const client = new OpenAIClient({
+    apiKey,
+    ...(llmConfig?.baseUrl ? { baseURL: llmConfig.baseUrl } : {}),
+  })
+
+  const requestBody = {
+    ...ctx.request.body,
+    model: ctx.request.body.model || llmConfig?.model,
   }
 
   if (ctx.request.body.stream) {
@@ -166,111 +130,34 @@ export async function openaiChatCompletions(
 
     ctx.respond = false
 
-    const id = buildResponseId("chatcmpl")
-    const created = Math.floor(Date.now() / 1000)
-    const model = ctx.request.body.model || llm.model
-    let roleSent = false
-
-    const writeChunk = (data: Record<string, unknown>) => {
-      ctx.res.write(`data: ${JSON.stringify(data)}\n\n`)
-    }
-
     try {
-      for await (const chunk of llm.chatStream(request)) {
-        if (chunk.type === "content" && chunk.content) {
-          if (!roleSent) {
-            roleSent = true
-            writeChunk({
-              id,
-              object: "chat.completion.chunk",
-              created,
-              model,
-              choices: [
-                {
-                  index: 0,
-                  delta: { role: "assistant" },
-                  finish_reason: null,
-                },
-              ],
-            })
-          }
-
-          writeChunk({
-            id,
-            object: "chat.completion.chunk",
-            created,
-            model,
-            choices: [
-              {
-                index: 0,
-                delta: { content: chunk.content },
-                finish_reason: null,
-              },
-            ],
-          })
-        } else if (chunk.type === "error") {
-          writeChunk({
-            error: {
-              message: chunk.content || "Streaming error",
-              type: "server_error",
-            },
-          })
-          ctx.res.end()
-          return
-        } else if (chunk.type === "done") {
-          writeChunk({
-            id,
-            object: "chat.completion.chunk",
-            created,
-            model,
-            choices: [
-              {
-                index: 0,
-                delta: {},
-                finish_reason: "stop",
-              },
-            ],
-          })
-          ctx.res.write("data: [DONE]\n\n")
-          ctx.res.end()
-          return
-        }
-      }
-    } catch (error: any) {
-      writeChunk({
-        error: {
-          message: error?.message || "Streaming error",
-          type: "server_error",
-        },
+      const stream = await client.chat.completions.create({
+        ...(requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming),
+        stream: true,
       })
+
+      for await (const chunk of stream) {
+        ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
+      }
+      ctx.res.write("data: [DONE]\n\n")
+      ctx.res.end()
+      return
+    } catch (error: any) {
+      ctx.res.write(
+        `data: ${JSON.stringify({
+          error: {
+            message: error?.message || "Streaming error",
+            type: "server_error",
+          },
+        })}\n\n`
+      )
       ctx.res.end()
     }
     return
   }
 
-  const response = await llm.chat(request)
-  const assistantText = findAssistantText(response.messages)
-  const created = Math.floor(Date.now() / 1000)
-
-  ctx.body = {
-    id: buildResponseId("chatcmpl"),
-    object: "chat.completion",
-    created,
-    model: ctx.request.body.model || llm.model,
-    choices: [
-      {
-        index: 0,
-        message: {
-          role: "assistant",
-          content: assistantText,
-        },
-        finish_reason: "stop",
-      },
-    ],
-    usage: {
-      prompt_tokens: 0,
-      completion_tokens: 0,
-      total_tokens: response.tokensUsed || 0,
-    },
-  }
+  const response = await client.chat.completions.create(
+    requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming
+  )
+  ctx.body = response as unknown as OpenAIChatCompletionsResponse
 }
