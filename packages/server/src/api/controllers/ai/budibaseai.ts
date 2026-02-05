@@ -84,6 +84,19 @@ export async function openaiChatCompletions(
       ctx.res.end()
       return
     } catch (error: any) {
+      if (ctx.res.headersSent) {
+        ctx.res.write(
+          `data: ${JSON.stringify({
+            error: {
+              message: error?.message || "Streaming error",
+              type: "server_error",
+            },
+          })}\n\n`
+        )
+        ctx.res.end()
+        return
+      }
+
       ctx.throw(error?.status || 500, error?.message || "Streaming error")
     }
     return
