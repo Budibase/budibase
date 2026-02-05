@@ -6,6 +6,148 @@ import * as redis from "../redis/init"
 import { Invite, InviteWithCode } from "@budibase/types"
 
 const TTL_SECONDS = Duration.fromDays(7).toSeconds()
+const INVITE_LIST_PREFIX = "invitation-list-"
+
+interface InviteListEntry {
+  email: string
+  info: Invite["info"]
+  expiresAt: number
+}
+
+interface InviteListPayload {
+  version: 1
+  tenantId: string
+  legacyComplete?: boolean
+  invites: Record<string, InviteListEntry>
+}
+
+function getInviteListKey(tenantId: string) {
+  return `${INVITE_LIST_PREFIX}${tenantId}`
+}
+
+function normaliseInviteList(
+  value?: InviteListPayload | null,
+  tenantId?: string
+): InviteListPayload | null {
+  if (!value) {
+    return null
+  }
+  const resolvedTenantId = value.tenantId || tenantId
+  if (!resolvedTenantId) {
+    return null
+  }
+  const normalised: InviteListPayload = {
+    version: 1,
+    tenantId: resolvedTenantId,
+    legacyComplete: value.legacyComplete,
+    invites: value.invites || {},
+  }
+  return normalised
+}
+
+function pruneExpiredInvites(list: InviteListPayload) {
+  let changed = false
+  const now = Date.now()
+  for (const [code, invite] of Object.entries(list.invites)) {
+    if (!invite?.expiresAt || invite.expiresAt <= now) {
+      delete list.invites[code]
+      changed = true
+    }
+  }
+  return { list, changed }
+}
+
+async function loadInviteList(tenantId: string) {
+  const client = await redis.getInviteListClient()
+  const list = (await client.get(getInviteListKey(tenantId))) as
+    | InviteListPayload
+    | undefined
+  return normaliseInviteList(list, tenantId)
+}
+
+async function saveInviteList(tenantId: string, list: InviteListPayload) {
+  const client = await redis.getInviteListClient()
+  await client.store(getInviteListKey(tenantId), list)
+}
+
+function toInviteWithCode(code: string, invite: InviteListEntry): InviteWithCode {
+  return {
+    code,
+    email: invite.email,
+    info: invite.info,
+  }
+}
+
+function buildInviteListPayload(tenantId: string): InviteListPayload {
+  return {
+    version: 1,
+    tenantId,
+    invites: {},
+    legacyComplete: false,
+  }
+}
+
+function getTenantIdFromListKey(key?: string) {
+  if (!key || !key.startsWith(INVITE_LIST_PREFIX)) {
+    return undefined
+  }
+  return key.slice(INVITE_LIST_PREFIX.length)
+}
+
+async function findInviteInLists(code: string) {
+  const client = await redis.getInviteListClient()
+  const lists = await client.scan()
+  for (const entry of lists) {
+    const list = normaliseInviteList(
+      entry.value,
+      entry.value?.tenantId || getTenantIdFromListKey(entry.key)
+    )
+    if (!list) {
+      continue
+    }
+    const invite = list.invites[code]
+    if (invite) {
+      return { list, invite }
+    }
+  }
+  return null
+}
+
+async function migrateLegacyInvites(
+  tenantId: string,
+  list: InviteListPayload
+) {
+  const client = await redis.getInviteClient()
+  const legacyInvites: { key: string; value: Invite }[] = await client.scan()
+  let changed = false
+  const now = Date.now()
+
+  for (const invite of legacyInvites) {
+    if (!invite?.value?.info) {
+      continue
+    }
+    if (env.MULTI_TENANCY && invite.value.info.tenantId !== tenantId) {
+      continue
+    }
+    const ttlSeconds = await client.getTTL(invite.key)
+    if (ttlSeconds <= 0) {
+      continue
+    }
+    list.invites[invite.key] = {
+      email: invite.value.email,
+      info: invite.value.info,
+      expiresAt: now + ttlSeconds * 1000,
+    }
+    changed = true
+  }
+
+  if (!list.legacyComplete || changed) {
+    list.legacyComplete = true
+    await saveInviteList(tenantId, list)
+  }
+
+  return list
+}
 
 /**
  * Given an invite code and invite body, allow the update an existing/valid invite in redis
@@ -14,7 +156,25 @@ const TTL_SECONDS = Duration.fromDays(7).toSeconds()
  */
 export async function updateCode(code: string, value: Invite) {
   const client = await redis.getInviteClient()
-  await client.store(code, value, TTL_SECONDS)
+  const legacyExists = await client.exists(code)
+  if (legacyExists) {
+    await client.store(code, value, TTL_SECONDS)
+  }
+
+  const info: Invite["info"] = {
+    ...value.info,
+  }
+  const tenantId = info.tenantId || getTenantId()
+  info.tenantId = tenantId
+
+  const list =
+    (await loadInviteList(tenantId)) || buildInviteListPayload(tenantId)
+  list.invites[code] = {
+    email: value.email,
+    info,
+    expiresAt: Date.now() + TTL_SECONDS * 1000,
+  }
+  await saveInviteList(tenantId, list)
 }
 
 /**
@@ -25,8 +185,20 @@ export async function updateCode(code: string, value: Invite) {
  */
 export async function createCode(email: string, info: any): Promise<string> {
   const code = utils.newid()
-  const client = await redis.getInviteClient()
-  await client.store(code, { email, info }, TTL_SECONDS)
+  const inviteInfo = {
+    ...(info || {}),
+  }
+  const tenantId = inviteInfo.tenantId || getTenantId()
+  inviteInfo.tenantId = tenantId
+
+  const list =
+    (await loadInviteList(tenantId)) || buildInviteListPayload(tenantId)
+  list.invites[code] = {
+    email,
+    info: inviteInfo,
+    expiresAt: Date.now() + TTL_SECONDS * 1000,
+  }
+  await saveInviteList(tenantId, list)
   return code
 }
 
@@ -38,35 +210,61 @@ export async function createCode(email: string, info: any): Promise<string> {
 export async function getCode(code: string): Promise<Invite> {
   const client = await redis.getInviteClient()
   const value = (await client.get(code)) as Invite | undefined
-  if (!value) {
+  if (value) {
+    return value
+  }
+
+  const found = await findInviteInLists(code)
+  if (!found) {
     throw "Invitation is not valid or has expired, please request a new one."
   }
-  return value
+
+  const { list, invite } = found
+  if (invite.expiresAt <= Date.now()) {
+    delete list.invites[code]
+    await saveInviteList(list.tenantId, list)
+    throw "Invitation is not valid or has expired, please request a new one."
+  }
+
+  return {
+    email: invite.email,
+    info: invite.info,
+  }
 }
 
 export async function deleteCode(code: string) {
   const client = await redis.getInviteClient()
   await client.delete(code)
+
+  const found = await findInviteInLists(code)
+  if (!found) {
+    return
+  }
+  delete found.list.invites[code]
+  await saveInviteList(found.list.tenantId, found.list)
 }
 
 /**
  Get all currently available user invitations for the current tenant.
  **/
 export async function getInviteCodes(): Promise<InviteWithCode[]> {
-  const client = await redis.getInviteClient()
-  const invites: { key: string; value: Invite }[] = await client.scan()
-
-  const results: InviteWithCode[] = invites.map(invite => {
-    return {
-      ...invite.value,
-      code: invite.key,
-    }
-  })
-  if (!env.MULTI_TENANCY) {
-    return results
-  }
   const tenantId = getTenantId()
-  return results.filter(invite => tenantId === invite.info.tenantId)
+  let list =
+    (await loadInviteList(tenantId)) || buildInviteListPayload(tenantId)
+
+  const pruned = pruneExpiredInvites(list)
+  list = pruned.list
+  if (pruned.changed) {
+    await saveInviteList(tenantId, list)
+  }
+
+  if (!list.legacyComplete) {
+    list = await migrateLegacyInvites(tenantId, list)
+  }
+
+  return Object.entries(list.invites).map(([code, invite]) =>
+    toInviteWithCode(code, invite)
+  )
 }
 
 export async function getExistingInvites(
