@@ -36,7 +36,7 @@
     }) => void
     isAgentPreviewChat?: boolean
     readOnly?: boolean
-    readOnlyReason?: "disabled" | "deleted"
+    readOnlyReason?: "disabled" | "deleted" | "offline"
   }
 
   let {
@@ -213,7 +213,9 @@
   let readOnlyMessage = $derived(
     readOnlyReason === "deleted"
       ? "This agent was deleted. Select another agent to resume chatting."
-      : "This agent is disabled. Enable it in Settings to resume chatting."
+      : readOnlyReason === "offline"
+        ? "This agent is no longer live. Make it live in Settings to resume chatting."
+        : "This agent is disabled. Enable it in Settings to resume chatting."
   )
 
   let lastChatId = $state<string | undefined>(chat?._id)

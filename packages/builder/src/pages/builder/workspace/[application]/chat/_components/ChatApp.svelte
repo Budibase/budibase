@@ -70,6 +70,10 @@
   $: isAgentKnown = selectedAgentId
     ? !agentsLoaded || agents.some(agent => agent._id === selectedAgentId)
     : false
+  $: isAgentLive = selectedAgentId
+    ? !agentsLoaded ||
+      agents.some(agent => agent._id === selectedAgentId && agent.live)
+    : false
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
@@ -292,6 +296,7 @@
       {workspaceId}
       {conversationStarters}
       {isAgentKnown}
+      {isAgentLive}
       on:deleteChat={deleteCurrentChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}
