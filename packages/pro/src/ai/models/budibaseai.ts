@@ -264,7 +264,6 @@ export class BudibaseAI extends LLM {
       model: this.model,
       max_completion_tokens: this.maxTokens,
     })
-    // @ts-expect-error - we're being cheeky and calling a protected method
     return await llm.chatCompletions(request)
   }
 
@@ -280,7 +279,6 @@ export class BudibaseAI extends LLM {
       model: this.model,
       max_completion_tokens: this.maxTokens,
     })
-    // @ts-expect-error - we're being cheeky and calling a protected method
     return await llm.chatCompletionsStream(request)
   }
 
