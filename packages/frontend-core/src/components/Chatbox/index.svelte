@@ -198,7 +198,7 @@
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
-  let hasMessages = $derived(Boolean(chat?.messages?.length))
+  let hasMessages = $derived(Boolean(messages?.length))
   let showConversationStarters = $derived(
     !isBusy &&
       !hasMessages &&
@@ -389,7 +389,7 @@
           {/each}
         </div>
       </div>
-    {:else}
+    {:else if !hasMessages}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
