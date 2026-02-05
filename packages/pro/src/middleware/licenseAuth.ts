@@ -5,7 +5,7 @@ import { getLicenseFromKey } from "../sdk/licensing"
 import { tracer } from "dd-trace"
 
 function getBearerToken(ctx: Ctx) {
-  const auth = ctx.get("authorization") // or ctx.headers.authorization
+  const auth = ctx.get("authorization")
   if (!auth) {
     return null
   }
