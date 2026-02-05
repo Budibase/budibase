@@ -1,6 +1,7 @@
 import { z } from "zod"
 import {
   mockChatGPTResponse,
+  mockChatGPTStreamFailure,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -1145,6 +1146,7 @@ describe("BudibaseAI", () => {
     let licenseKey = "test-key"
     let internalApiKey = "api-key"
     let envCleanup: () => void
+    let cleanup: () => Promise<void> | void
 
     beforeAll(async () => {
       envCleanup = setEnv({
@@ -1160,6 +1162,11 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
+      cleanup = await customAIConfig({
+        provider: "OpenAI",
+        defaultModel: "gpt-5-mini",
+        apiKey: "test-key",
+      })(config)
       const license: License = {
         plan: {
           type: PlanType.FREE,
@@ -1173,6 +1180,10 @@ describe("BudibaseAI", () => {
       nock(env.ACCOUNT_PORTAL_URL)
         .get(`/api/license/${licenseKey}`)
         .reply(200, license)
+    })
+
+    afterEach(async () => {
+      await cleanup?.()
     })
 
     it("proxies the OpenAI response without reshaping", async () => {
@@ -1201,6 +1212,25 @@ describe("BudibaseAI", () => {
       })
 
       expect(response.choices[0].message.content).toBe(`{"value":"ok"}`)
+    })
+
+    it("returns HTTP errors when stream initialization fails", async () => {
+      mockChatGPTStreamFailure({ status: 401, errorMessage: "Unauthorized" })
+
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "gpt-5-mini",
+          messages: [{ role: "user", content: "hello" }],
+          stream: true,
+          licenseKey,
+        },
+        {
+          status: 401,
+          headers: {
+            "Content-Type": /^application\/json/,
+          },
+        }
+      )
     })
   })
 })
