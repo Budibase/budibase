@@ -616,36 +616,45 @@
   .starter-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    align-items: center;
+    gap: var(--spacing-xl);
+    margin: auto 0;
   }
 
   .starter-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--spectrum-global-color-gray-600);
+    font-size: 14px;
+    letter-spacing: 0;
+    color: var(--spectrum-global-color-gray-700);
+    text-align: center;
   }
 
   .starter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
+    width: min(520px, 100%);
+    margin: 0 auto;
   }
 
   .starter-card {
-    border: 1px solid var(--grey-3);
+    border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 12px;
     padding: var(--spacing-m);
-    background: var(--grey-2);
-    color: var(--spectrum-global-color-gray-900);
+    background: var(--spectrum-global-color-gray-50);
+    color: var(--spectrum-global-color-gray-800);
     font: inherit;
-    text-align: left;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: center;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .starter-card:hover {
-    border-color: var(--grey-4);
-    background: var(--grey-1);
+    border-color: var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-100);
   }
 
   .message {
