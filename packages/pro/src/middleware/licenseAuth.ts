@@ -5,7 +5,7 @@ import { getLicenseFromKey } from "../sdk/licensing"
 import { tracer } from "dd-trace"
 
 function getBearerToken(ctx: Ctx) {
-  const auth = ctx.get("authorization") // or ctx.headers.authorization
+  const auth = ctx.get("authorization")
   if (!auth) {
     return null
   }
@@ -21,8 +21,6 @@ export default async function (ctx: Ctx, next: Next) {
     if (Array.isArray(licenseKey)) {
       licenseKey = licenseKey[0]
     }
-
-    span.addTags({ licenseKey })
 
     if (!licenseKey) {
       ctx.throw(403, "License key not provided")

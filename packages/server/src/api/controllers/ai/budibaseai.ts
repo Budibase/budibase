@@ -1,6 +1,5 @@
 import { env } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
-import OpenAIClient from "openai"
 import type OpenAI from "openai"
 import type {
   ChatCompletionRequest,
@@ -51,20 +50,11 @@ export async function openaiChatCompletions(
     ctx.throw(400, "Missing required field: messages")
   }
 
-  if (env.SELF_HOSTED && !env.isDev()) {
-    ctx.throw(500, "OpenAI-compatible endpoint is not available in self-host")
+  if (env.SELF_HOSTED) {
+    ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
 
-  const llmConfig = await ai.getLLMConfig()
-  const apiKey = llmConfig?.apiKey
-  if (!apiKey) {
-    ctx.throw(500, "No OpenAI API key configured")
-  }
-
-  const client = new OpenAIClient({
-    apiKey,
-    ...(llmConfig?.baseUrl ? { baseURL: llmConfig.baseUrl } : {}),
-  })
+  const llm = await ai.getLLMOrThrow()
 
   const requestBody = {
     ...ctx.request.body,
@@ -72,21 +62,20 @@ export async function openaiChatCompletions(
   }
 
   if (ctx.request.body.stream) {
-    ctx.status = 200
-    ctx.set("Content-Type", "text/event-stream")
-    ctx.set("Cache-Control", "no-cache")
-    ctx.set("Connection", "keep-alive")
-
-    ctx.res.setHeader("X-Accel-Buffering", "no")
-    ctx.res.setHeader("Transfer-Encoding", "chunked")
-
-    ctx.respond = false
-
     try {
-      const stream = await client.chat.completions.create({
-        ...(requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming),
-        stream: true,
-      })
+      const stream = await llm.chatCompletionsStream(
+        requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming
+      )
+
+      ctx.status = 200
+      ctx.set("Content-Type", "text/event-stream")
+      ctx.set("Cache-Control", "no-cache")
+      ctx.set("Connection", "keep-alive")
+
+      ctx.res.setHeader("X-Accel-Buffering", "no")
+      ctx.res.setHeader("Transfer-Encoding", "chunked")
+
+      ctx.respond = false
 
       for await (const chunk of stream) {
         ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
@@ -95,20 +84,12 @@ export async function openaiChatCompletions(
       ctx.res.end()
       return
     } catch (error: any) {
-      ctx.res.write(
-        `data: ${JSON.stringify({
-          error: {
-            message: error?.message || "Streaming error",
-            type: "server_error",
-          },
-        })}\n\n`
-      )
-      ctx.res.end()
+      ctx.throw(error?.status || 500, error?.message || "Streaming error")
     }
     return
   }
 
-  const response = await client.chat.completions.create(
+  const response = await llm.chatCompletions(
     requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming
   )
   ctx.body = response

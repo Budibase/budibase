@@ -214,4 +214,19 @@ export class OpenAI extends LLM {
       }
     }
   }
+
+  async chatCompletions(
+    request: OpenAITypes.ChatCompletionCreateParamsNonStreaming
+  ): Promise<OpenAITypes.ChatCompletion> {
+    return await this.client.chat.completions.create(request)
+  }
+
+  async chatCompletionsStream(
+    request: OpenAITypes.ChatCompletionCreateParamsStreaming
+  ): Promise<AsyncIterable<OpenAITypes.ChatCompletionChunk>> {
+    return await this.client.chat.completions.create({
+      ...request,
+      stream: true,
+    })
+  }
 }
