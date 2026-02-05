@@ -111,5 +111,5 @@ export async function openaiChatCompletions(
   const response = await client.chat.completions.create(
     requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming
   )
-  ctx.body = response as unknown as OpenAIChatCompletionsResponse
+  ctx.body = response
 }
