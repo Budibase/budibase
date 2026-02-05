@@ -60,6 +60,15 @@
   $: chatApp = $currentChatApp
   $: chatAgents = (chatApp?.agents || []) as ChatAgentConfig[]
   $: conversationHistory = $currentConversations
+  $: filteredConversationHistory = !agentsLoaded
+    ? conversationHistory
+    : conversationHistory.filter(conversation => {
+        if (!conversation?.agentId) {
+          return false
+        }
+        const agent = agents.find(item => item._id === conversation.agentId)
+        return Boolean(agent?.live)
+      })
   $: hasAnyAgents = agents.length > 0
   $: hasEnabledAgents = enabledAgentList.length > 0
   $: showEmptyState = agentsLoaded && !hasEnabledAgents
@@ -281,7 +290,7 @@
   {:else}
     <ChatNavigationPanel
       {enabledAgentList}
-      {conversationHistory}
+      conversationHistory={filteredConversationHistory}
       selectedConversationId={$chatAppsStore.currentConversationId}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
