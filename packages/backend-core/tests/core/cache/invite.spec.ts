@@ -1,11 +1,18 @@
 import * as inviteCache from "../../../src/cache/invite"
+import { setEnv } from "../../../src/environment"
 import * as redis from "../../../src/redis/init"
 import { Duration, newid } from "../../../src/utils"
 import { testEnv } from "../../extra"
 
 describe("invite cache", () => {
+  let resetEnv: (() => void) | undefined
+
   beforeAll(() => {
-    testEnv.multiTenant()
+    resetEnv = setEnv({ MULTI_TENANCY: 1 })
+  })
+
+  afterAll(() => {
+    resetEnv?.()
   })
 
   afterEach(async () => {
