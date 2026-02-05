@@ -62,20 +62,20 @@ export async function openaiChatCompletions(
   }
 
   if (ctx.request.body.stream) {
-    ctx.status = 200
-    ctx.set("Content-Type", "text/event-stream")
-    ctx.set("Cache-Control", "no-cache")
-    ctx.set("Connection", "keep-alive")
-
-    ctx.res.setHeader("X-Accel-Buffering", "no")
-    ctx.res.setHeader("Transfer-Encoding", "chunked")
-
-    ctx.respond = false
-
     try {
       const stream = await llm.chatCompletionsStream(
         requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming
       )
+
+      ctx.status = 200
+      ctx.set("Content-Type", "text/event-stream")
+      ctx.set("Cache-Control", "no-cache")
+      ctx.set("Connection", "keep-alive")
+
+      ctx.res.setHeader("X-Accel-Buffering", "no")
+      ctx.res.setHeader("Transfer-Encoding", "chunked")
+
+      ctx.respond = false
 
       for await (const chunk of stream) {
         ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`)
@@ -84,15 +84,7 @@ export async function openaiChatCompletions(
       ctx.res.end()
       return
     } catch (error: any) {
-      ctx.res.write(
-        `data: ${JSON.stringify({
-          error: {
-            message: error?.message || "Streaming error",
-            type: "server_error",
-          },
-        })}\n\n`
-      )
-      ctx.res.end()
+      ctx.throw(error?.status || 500, error?.message || "Streaming error")
     }
     return
   }
