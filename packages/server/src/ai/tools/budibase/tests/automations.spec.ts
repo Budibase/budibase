@@ -7,7 +7,7 @@ import {
   AutomationStepResult,
   AutomationTriggerResult,
 } from "@budibase/types"
-import automationTools from "../automations"
+import createAutomationTools from "../automations"
 
 interface TriggerAutomationStepsResult {
   success: boolean
@@ -28,7 +28,9 @@ describe("AI Tools - Automations", () => {
   const config = new TestConfiguration()
 
   const getTriggerAutomationTool = () => {
-    const tool = automationTools.find(t => t.name === "trigger_automation")
+    const tool = createAutomationTools().find(
+      t => t.name === "trigger_automation"
+    )
     if (!tool) {
       throw new Error("trigger_automation tool not found")
     }
@@ -89,7 +91,7 @@ describe("AI Tools - Automations", () => {
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
-          fields: "{}",
+          fields: {},
         })
       )) as TriggerAutomationResult
 
@@ -116,7 +118,7 @@ describe("AI Tools - Automations", () => {
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
-          fields: "{}",
+          fields: {},
         })
       )) as TriggerAutomationResult
 
@@ -142,7 +144,7 @@ describe("AI Tools - Automations", () => {
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
-          fields: "{}",
+          fields: {},
         })
       )) as TriggerAutomationResult
 
@@ -157,35 +159,13 @@ describe("AI Tools - Automations", () => {
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
           automationId: "non_existent_id",
-          fields: "{}",
+          fields: {},
         })
       )) as TriggerAutomationResult
 
       expect(isErrorResult(result)).toBe(true)
       if (isErrorResult(result)) {
         expect(result.error).toContain("not found")
-      }
-    })
-
-    it("should return error for invalid JSON in fields", async () => {
-      const { automation: targetAutomation } = await createAutomationBuilder(
-        config
-      )
-        .onAppAction()
-        .serverLog({ text: "Test" })
-        .save()
-
-      const tool = getTriggerAutomationTool()
-      const result = (await runInContext(() =>
-        executeTool<TriggerAutomationResult>(tool, {
-          automationId: targetAutomation._id!,
-          fields: "invalid json",
-        })
-      )) as TriggerAutomationResult
-
-      expect(isErrorResult(result)).toBe(true)
-      if (isErrorResult(result)) {
-        expect(result.error).toContain("Invalid JSON")
       }
     })
 
@@ -201,7 +181,7 @@ describe("AI Tools - Automations", () => {
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
-          fields: JSON.stringify({ message: "Hello from agent" }),
+          fields: { message: "Hello from agent" },
         })
       )) as TriggerAutomationResult
 
@@ -224,7 +204,7 @@ describe("AI Tools - Automations", () => {
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
           automationId: targetAutomation._id!,
-          fields: "{}",
+          fields: {},
           timeout: 0.1,
         })
       )) as TriggerAutomationResult
