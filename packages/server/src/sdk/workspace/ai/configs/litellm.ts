@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
+import { context, db, docIds, HTTPError, locks } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
@@ -44,9 +44,13 @@ function buildBudibaseLiteLLMParams(
 ) {
   return {
     model,
-    custom_llm_provider: "openai_like",
+    custom_llm_provider: "custom_openai",
     ...credentialFields,
   }
+}
+
+function prefixName(name: string) {
+  return `${context.getTenantId()}-${db.getProdWorkspaceID(context.getOrThrowWorkspaceId())}-${name}`
 }
 
 export async function addModel({
@@ -80,7 +84,7 @@ export async function addModel({
       ? buildBudibaseLiteLLMParams(model, credentialFields)
       : buildLiteLLMParams({
           provider: await mapToLiteLLMProvider(provider),
-          name: model,
+          name: prefixName(model),
           credentialFields,
           configType,
           reasoningEffort,
@@ -93,7 +97,7 @@ export async function addModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: displayName || model,
+      model_name: prefixName(displayName || model),
       litellm_params: litellmParams,
       model_info: {
         created_at: new Date().toISOString(),
@@ -129,7 +133,7 @@ export async function updateModel({
       ? buildBudibaseLiteLLMParams(name, credentialFields)
       : buildLiteLLMParams({
           provider: await mapToLiteLLMProvider(provider),
-          name,
+          name: prefixName(name),
           credentialFields,
           configType,
           reasoningEffort,
@@ -142,7 +146,7 @@ export async function updateModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: name,
+      model_name: prefixName(name),
       litellm_params: litellmParams,
       model_info: {
         updated_at: new Date().toISOString(),
@@ -271,9 +275,6 @@ async function validateConfig(model: {
   credentialFields: Record<string, string>
   configType: AIConfigType
 }) {
-  if (model.provider === "budibase") {
-    return
-  }
   switch (model.configType) {
     case AIConfigType.EMBEDDINGS:
       return validateEmbeddingConfig(model)
@@ -389,7 +390,7 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
 
 async function mapToLiteLLMProvider(provider: string) {
   if (provider === "budibase") {
-    return "openai_like"
+    return "custom_openai"
   }
 
   const providers = await fetchPublicProviders()
