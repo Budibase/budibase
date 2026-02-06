@@ -15,6 +15,7 @@ import {
   CreateChatConversationRequest,
   DocumentType,
   FetchAgentHistoryResponse,
+  ContextUser,
   UserCtx,
 } from "@budibase/types"
 import {
@@ -58,6 +59,7 @@ export const prepareChatConversationForSave = ({
   const updatedAt = now
   const rev = existingChat?._rev || chat._rev
   const agentId = existingChat?.agentId || chat.agentId
+  const channel = chat.channel || existingChat?.channel
 
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -73,6 +75,7 @@ export const prepareChatConversationForSave = ({
     messages,
     createdAt,
     updatedAt,
+    ...(channel && { channel }),
   }
 }
 
@@ -117,6 +120,123 @@ export const truncateTitle = (value: string, maxLength = 120) => {
     return trimmed
   }
   return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`
+}
+
+interface AgentChatCompleteResult {
+  messages: ChatConversation["messages"]
+  assistantText: string
+  title?: string
+}
+
+export async function agentChatComplete({
+  chat,
+  user,
+}: {
+  chat: ChatConversationRequest
+  user: ContextUser
+}): Promise<AgentChatCompleteResult> {
+  const db = context.getWorkspaceDB()
+  const chatAppId = chat.chatAppId
+
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  const chatApp = await db.tryGet<ChatApp>(chatAppId)
+  if (!chatApp) {
+    throw new HTTPError("Chat app not found", 404)
+  }
+
+  const agentId = chat.agentId
+  if (!agentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+
+  if (
+    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
+  ) {
+    throw new HTTPError("agentId is not enabled for this chat app", 400)
+  }
+
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const latestQuestion = findLatestUserQuestion(chat)
+  let retrievedContext = ""
+
+  const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
+  if (hasRagConfig && latestQuestion) {
+    try {
+      const result = await retrieveContextForAgent(agent, latestQuestion)
+      retrievedContext = result.text
+    } catch (error) {
+      console.error("Failed to retrieve agent context", error)
+    }
+  }
+
+  const { systemPrompt: system, tools } =
+    await sdk.ai.agents.buildPromptAndTools(agent, {
+      baseSystemPrompt: ai.agentSystemPrompt(user),
+      includeGoal: false,
+    })
+
+  const { modelId, apiKey, baseUrl } =
+    await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
+
+  const sessionId = chat._id || v4()
+  const openai = ai.createLiteLLMOpenAI({
+    apiKey,
+    baseUrl,
+    fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
+  })
+  const model = openai.chat(modelId)
+
+  const modelMessages = await convertToModelMessages(chat.messages)
+  const messagesWithContext: ModelMessage[] =
+    retrievedContext.trim().length > 0
+      ? [
+          {
+            role: "system",
+            content: `Relevant knowledge:\n${retrievedContext}\n\nUse this content when answering the user.`,
+          },
+          ...modelMessages,
+        ]
+      : modelMessages
+
+  const result = streamText({
+    model: wrapLanguageModel({
+      model,
+      middleware: extractReasoningMiddleware({
+        tagName: "think",
+      }),
+    }),
+    messages: messagesWithContext,
+    system,
+    tools,
+    stopWhen: stepCountIs(30),
+    providerOptions: ai.getLiteLLMProviderOptions(),
+    onError({ error }) {
+      console.error("Agent streaming error", {
+        agentId,
+        chatAppId,
+        sessionId,
+        error,
+      })
+    },
+  })
+
+  const assistantText = await result.text
+  const assistantMessage: ChatConversation["messages"][number] = {
+    id: v4(),
+    role: "assistant",
+    parts: [{ type: "text", text: assistantText || "" }],
+  }
+
+  const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
+
+  return {
+    messages: [...chat.messages, assistantMessage],
+    assistantText: assistantText || "",
+    title,
+  }
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {

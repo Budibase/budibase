@@ -18,6 +18,17 @@ export interface ToolMetadata {
   sourceIconType?: string
 }
 
+export interface DiscordAgentIntegration {
+  applicationId?: string
+  publicKey?: string
+  botToken?: string
+  guildId?: string
+  askCommandName?: string
+  newCommandName?: string
+  chatAppId?: string
+  idleTimeoutMinutes?: number
+}
+
 export interface Agent extends Document {
   name: string
   description?: string
@@ -33,6 +44,7 @@ export interface Agent extends Document {
   vectorDb?: string
   ragMinDistance?: number
   ragTopK?: number
+  discordIntegration?: DiscordAgentIntegration
 }
 
 export interface AgentMessageRagSource {

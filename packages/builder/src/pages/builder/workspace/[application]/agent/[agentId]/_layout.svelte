@@ -31,9 +31,15 @@
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
 
-  let activeTab = $derived(
-    $isActive("./knowledge") ? "Knowledge" : "Configuration"
-  )
+  let activeTab = $derived.by(() => {
+    if ($isActive("./knowledge")) {
+      return "Knowledge"
+    }
+    if ($isActive("./integrations")) {
+      return "Integrations"
+    }
+    return "Configuration"
+  })
   let currentAgent = $derived($selectedAgent)
 
   async function toggleAgentLive() {
@@ -91,6 +97,13 @@
         on:click={() => $goto("./knowledge")}
       >
         Knowledge
+      </ActionButton>
+      <ActionButton
+        quiet
+        selected={activeTab === "Integrations"}
+        on:click={() => $goto("./integrations")}
+      >
+        Integrations
       </ActionButton>
     </div>
     <div class="start-pause-row">
