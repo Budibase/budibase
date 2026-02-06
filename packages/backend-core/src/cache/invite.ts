@@ -192,7 +192,7 @@ export async function getCode(
     if (invite.expiresAt <= Date.now()) {
       delete list.invites[code]
       await saveInviteList(list.tenantId, list)
-      throw INVALID_INVITE_MESSAGE
+      throw new Error(INVALID_INVITE_MESSAGE)
     }
 
     return {
