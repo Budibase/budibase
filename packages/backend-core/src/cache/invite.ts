@@ -3,9 +3,11 @@ import { Duration } from "../utils"
 import env from "../environment"
 import { getTenantId } from "../context"
 import * as redis from "../redis/init"
-import { Invite, InviteWithCode } from "@budibase/types"
+import * as locks from "../redis/redlockImpl"
+import { Invite, InviteWithCode, LockName, LockType } from "@budibase/types"
 
 const TTL_SECONDS = Duration.fromDays(7).toSeconds()
+const INVITE_LIST_LOCK_TTL_MS = Duration.fromSeconds(10).toMs()
 const INVALID_INVITE_MESSAGE =
   "Invitation is not valid or has expired, please request a new one."
 
@@ -60,6 +62,23 @@ async function saveInviteList(tenantId: string, list: InviteListPayload) {
   await client.store(tenantId, list)
 }
 
+async function withInviteListLock<T>(
+  tenantId: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  const { result } = await locks.doWithLock(
+    {
+      type: LockType.DEFAULT,
+      name: LockName.PROCESS_USER_INVITE,
+      systemLock: true,
+      resource: tenantId,
+      ttl: INVITE_LIST_LOCK_TTL_MS,
+    },
+    fn
+  )
+  return result
+}
+
 function toInviteWithCode(
   code: string,
   invite: InviteListEntry
@@ -105,16 +124,18 @@ export async function updateCode(code: string, value: Invite) {
   const tenantId = info.tenantId || getTenantId()
   info.tenantId = tenantId
 
-  const list = (await loadInviteList(tenantId)) || {
-    tenantId,
-    invites: {},
-  }
-  list.invites[code] = {
-    email: value.email,
-    info,
-    expiresAt: Date.now() + TTL_SECONDS * 1000,
-  }
-  await saveInviteList(tenantId, list)
+  await withInviteListLock(tenantId, async () => {
+    const list = (await loadInviteList(tenantId)) || {
+      tenantId,
+      invites: {},
+    }
+    list.invites[code] = {
+      email: value.email,
+      info,
+      expiresAt: Date.now() + TTL_SECONDS * 1000,
+    }
+    await saveInviteList(tenantId, list)
+  })
 }
 
 /**
@@ -131,18 +152,20 @@ export async function createCode(email: string, info: any): Promise<string> {
   const tenantId = inviteInfo.tenantId || getTenantId()
   inviteInfo.tenantId = tenantId
 
-  const list =
-    (await loadInviteList(tenantId)) ||
-    ({
-      tenantId,
-      invites: {},
-    } as InviteListPayload)
-  list.invites[code] = {
-    email,
-    info: inviteInfo,
-    expiresAt: Date.now() + TTL_SECONDS * 1000,
-  }
-  await saveInviteList(tenantId, list)
+  await withInviteListLock(tenantId, async () => {
+    const list =
+      (await loadInviteList(tenantId)) ||
+      ({
+        tenantId,
+        invites: {},
+      } as InviteListPayload)
+    list.invites[code] = {
+      email,
+      info: inviteInfo,
+      expiresAt: Date.now() + TTL_SECONDS * 1000,
+    }
+    await saveInviteList(tenantId, list)
+  })
   return code
 }
 
@@ -162,19 +185,21 @@ export async function getCode(
   }
 
   const resolvedTenantId = tenantId || getTenantId()
-  const found = await findInviteInList(code, resolvedTenantId)
+  return await withInviteListLock(resolvedTenantId, async () => {
+    const found = await findInviteInList(code, resolvedTenantId)
 
-  const { list, invite } = found
-  if (invite.expiresAt <= Date.now()) {
-    delete list.invites[code]
-    await saveInviteList(list.tenantId, list)
-    throw INVALID_INVITE_MESSAGE
-  }
+    const { list, invite } = found
+    if (invite.expiresAt <= Date.now()) {
+      delete list.invites[code]
+      await saveInviteList(list.tenantId, list)
+      throw INVALID_INVITE_MESSAGE
+    }
 
-  return {
-    email: invite.email,
-    info: invite.info,
-  }
+    return {
+      email: invite.email,
+      info: invite.info,
+    }
+  })
 }
 
 export async function deleteCode(code: string, tenantId?: string) {
@@ -183,9 +208,11 @@ export async function deleteCode(code: string, tenantId?: string) {
 
   const resolvedTenantId = tenantId || getTenantId()
   try {
-    const found = await findInviteInList(code, resolvedTenantId)
-    delete found.list.invites[code]
-    await saveInviteList(found.list.tenantId, found.list)
+    await withInviteListLock(resolvedTenantId, async () => {
+      const found = await findInviteInList(code, resolvedTenantId)
+      delete found.list.invites[code]
+      await saveInviteList(found.list.tenantId, found.list)
+    })
   } catch (err) {
     if (err instanceof Error && err.message === INVALID_INVITE_MESSAGE) {
       return
@@ -199,16 +226,19 @@ export async function deleteCode(code: string, tenantId?: string) {
  **/
 export async function getInviteCodes(): Promise<InviteWithCode[]> {
   const tenantId = getTenantId()
-  let list = (await loadInviteList(tenantId)) || {
-    tenantId,
-    invites: {},
-  }
+  const list = await withInviteListLock(tenantId, async () => {
+    let found = (await loadInviteList(tenantId)) || {
+      tenantId,
+      invites: {},
+    }
 
-  const pruned = pruneExpiredInvites(list)
-  list = pruned.list
-  if (pruned.changed) {
-    await saveInviteList(tenantId, list)
-  }
+    const pruned = pruneExpiredInvites(found)
+    found = pruned.list
+    if (pruned.changed) {
+      await saveInviteList(tenantId, found)
+    }
+    return found
+  })
 
   const results = new Map<string, InviteWithCode>()
   for (const [code, invite] of Object.entries(list.invites)) {
