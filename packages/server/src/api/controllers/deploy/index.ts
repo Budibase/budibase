@@ -20,6 +20,7 @@ import {
   PublishTableResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
+  RowValue,
   Table,
   UserCtx,
   Workspace,
@@ -32,6 +33,7 @@ import {
 import {
   DocumentType,
   getAutomationParams,
+  getRowParams,
   InternalTables,
   SEPARATOR,
 } from "../../../db/utils"
@@ -190,6 +192,168 @@ async function applyPendingColumnRenames(
 const getRevisionNumber = (rev?: string) =>
   parseInt(rev?.split("-")?.[0] || "0", 10)
 
+const getTableIdFromDocId = (_id: string) => {
+  const parts = _id.split(SEPARATOR)
+  const tableIndex = parts.indexOf(DocumentType.TABLE)
+  if (tableIndex === -1 || !parts[tableIndex + 1]) {
+    return
+  }
+  return `${DocumentType.TABLE}${SEPARATOR}${parts[tableIndex + 1]}`
+}
+
+async function listTableIdsWithData(
+  allowedTableIds?: Set<string>
+): Promise<Set<string>> {
+  const db = context.getWorkspaceDB()
+  const tableIds = new Set<string>()
+  const hasLiveRows = async (tableId: string) => {
+    const batchSize = 25
+    let skip = 0
+
+    while (true) {
+      const { rows } = await db.allDocs<RowValue>(
+        getRowParams(tableId, null, {
+          include_docs: false,
+          limit: batchSize,
+          skip,
+        })
+      )
+      if (!rows.length) {
+        return false
+      }
+
+      if (rows.some(row => !row.value?.deleted)) {
+        return true
+      }
+
+      if (rows.length < batchSize) {
+        return false
+      }
+
+      skip += batchSize
+    }
+  }
+
+  if (allowedTableIds?.size) {
+    for (const tableId of allowedTableIds) {
+      if (tableId === InternalTables.USER_METADATA) {
+        continue
+      }
+      if (await hasLiveRows(tableId)) {
+        tableIds.add(tableId)
+      }
+    }
+    return tableIds
+  }
+
+  const batchSize = 1000
+  const rowParams = getRowParams(null, null, {
+    include_docs: false,
+    limit: batchSize,
+  })
+  let startkey = rowParams.startkey
+  const endkey = rowParams.endkey
+  let skip = 0
+
+  while (true) {
+    const { rows } = await db.allDocs<RowValue>({
+      ...rowParams,
+      startkey,
+      endkey,
+      skip,
+    })
+    if (!rows.length) {
+      break
+    }
+
+    for (const row of rows) {
+      if (row.value?.deleted) {
+        continue
+      }
+      const tableId = getTableIdFromDocId(row.id)
+      if (!tableId || tableId === InternalTables.USER_METADATA) {
+        continue
+      }
+      if (allowedTableIds && !allowedTableIds.has(tableId)) {
+        continue
+      }
+      tableIds.add(tableId)
+    }
+
+    if (rows.length < batchSize) {
+      break
+    }
+    startkey = rows[rows.length - 1].id
+    skip = 1
+  }
+
+  return tableIds
+}
+
+async function rescueTombstonedProdTables(
+  devWorkspaceId: string,
+  prodWorkspaceId: string,
+  allowedTableIds?: Set<string>
+) {
+  const rescueTargets = await context.doInWorkspaceContext(
+    prodWorkspaceId,
+    async () => {
+      const db = context.getWorkspaceDB()
+      const tablesWithData = await listTableIdsWithData(allowedTableIds)
+      const targets: { tableId: string; prodRev?: string }[] = []
+
+      for (const tableId of tablesWithData) {
+        const prodTable = await db.tryGet<Table>(tableId)
+        if (!prodTable) {
+          targets.push({ tableId })
+          continue
+        }
+        if (prodTable._deleted) {
+          targets.push({ tableId, prodRev: prodTable._rev })
+        }
+      }
+
+      return targets
+    }
+  )
+
+  if (!rescueTargets.length) {
+    return
+  }
+
+  const devTables = await context.doInWorkspaceContext(
+    devWorkspaceId,
+    async () => {
+      const tables = new Map<string, Table>()
+      for (const target of rescueTargets) {
+        try {
+          const devTable = await sdk.tables.getTable(target.tableId)
+          tables.set(target.tableId, devTable)
+        } catch {
+          continue
+        }
+      }
+      return tables
+    }
+  )
+
+  await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    const db = context.getWorkspaceDB()
+    for (const target of rescueTargets) {
+      const devTable = devTables.get(target.tableId)
+      if (!devTable) {
+        continue
+      }
+      const { _rev: _devRev, ...rest } = devTable
+      const docForPut: Table = {
+        ...rest,
+        ...(target.prodRev ? { _rev: target.prodRev } : {}),
+      }
+      await db.put(docForPut)
+    }
+  })
+}
+
 async function clearPendingColumnRenames(workspaceId: string) {
   await context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
@@ -291,14 +455,6 @@ export const publishWorkspaceInternal = async (
     ? new Set<string>(tablesToSeed)
     : undefined
   tablesToPublish?.add(InternalTables.USER_METADATA)
-  const getTableIdFromDocId = (_id: string) => {
-    const parts = _id.split(SEPARATOR)
-    const tableIndex = parts.indexOf(DocumentType.TABLE)
-    if (tableIndex === -1 || !parts[tableIndex + 1]) {
-      return
-    }
-    return `${DocumentType.TABLE}${SEPARATOR}${parts[tableIndex + 1]}`
-  }
   let deployment = new Deployment()
   deployment.setStatus(DeploymentStatus.PENDING)
   deployment = await storeDeploymentHistory(deployment)
@@ -378,6 +534,8 @@ export const publishWorkspaceInternal = async (
         }
         replication = new dbCore.Replication(config)
         const devDb = context.getDevWorkspaceDB()
+
+        await rescueTombstonedProdTables(devId, prodId, tablesToPublish)
 
         const devTablesIds = tablesToPublish
           ? Array.from(tablesToPublish)

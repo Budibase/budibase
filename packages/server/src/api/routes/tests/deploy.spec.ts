@@ -687,4 +687,35 @@ describe("/api/deploy", () => {
       expect(devRevNum).toBeGreaterThanOrEqual(prodRevNum!)
     })
   })
+
+  it("rescues prod tables with data when the table doc is tombstoned", async () => {
+    const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, { name: "dev-row" })
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    await config.withProdApp(async () => {
+      await config.api.row.save(table._id!, { name: "prod-row" })
+      const prodDb = context.getWorkspaceDB()
+      const prodTable = await prodDb.get<Table>(table._id!)
+      await prodDb.remove(prodTable._id!, prodTable._rev)
+    })
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const prodDb = context.getWorkspaceDB()
+      const prodTable = await prodDb.get<Table>(table._id!)
+      expect(prodTable._deleted).toBeFalsy()
+
+      const rows = await prodDb.allDocs<Row>(
+        getRowParams(table._id!, null, { include_docs: true })
+      )
+      const liveRows = rows.rows
+        .map(row => row.doc!)
+        .filter(row => row && !row._deleted)
+      const rowNames = liveRows.map(row => row.name).sort()
+      expect(rowNames).toEqual(["dev-row", "prod-row"])
+    })
+  })
 })
