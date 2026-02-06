@@ -35,8 +35,8 @@
     if ($isActive("./knowledge")) {
       return "Knowledge"
     }
-    if ($isActive("./integrations")) {
-      return "Integrations"
+    if ($isActive("./deployment")) {
+      return "Deployment"
     }
     return "Configuration"
   })
@@ -100,10 +100,10 @@
       </ActionButton>
       <ActionButton
         quiet
-        selected={activeTab === "Integrations"}
-        on:click={() => $goto("./integrations")}
+        selected={activeTab === "Deployment"}
+        on:click={() => $goto("./deployment")}
       >
-        Integrations
+        Deployment
       </ActionButton>
     </div>
     <div class="start-pause-row">
