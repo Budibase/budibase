@@ -43,9 +43,12 @@ export async function chatCompletion(
 }
 
 const allowedModels = new Set([
-  "bbai-openai-gpt-5",
   "bbai-openai-gpt-4o-mini",
-  "bbai-mistral-mistral-tiny",
+  "bbai-openai-gpt-4o",
+  "bbai-openai-gpt-5",
+  "bbai-openai-gpt-5-mini",
+  "bbai-openai-gpt-5-nano",
+  "bbai-mistral-mistral-small-latest",
 ])
 
 export async function openaiChatCompletions(
