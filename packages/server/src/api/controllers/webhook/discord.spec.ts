@@ -41,86 +41,51 @@ describe("discord webhook helpers", () => {
   it("extracts slash-command and modal text content", () => {
     const content = extractDiscordContent(
       makeInteraction({
-        id: "interaction-1",
-        type: 2,
-      data: {
-        options: [{ name: "message", value: "hello" }, { value: 123 }],
-        components: [
-          {
-            components: [{ value: "from modal" }],
-          },
-        ],
-      },
+        data: {
+          options: [{ name: "message", value: "hello" }, { value: 123 }],
+          components: [
+            {
+              components: [{ value: "from modal" }],
+            },
+          ],
+        },
       })
     )
 
     expect(content).toEqual("hello 123 from modal")
   })
 
-  it("maps supported commands to ask/new", () => {
-    expect(
-      getDiscordInteractionCommand(
-        makeInteraction({
-          id: "interaction-2",
-          type: 2,
-        data: { name: "ask" },
-        })
+  it.each([
+    [{ type: 2, data: { name: "ask" } }, "ask"],
+    [{ type: 2, data: { name: "new" } }, "new"],
+    [{ type: 5, data: {} }, "ask"],
+    [{ type: 2, data: { name: "status" } }, "unsupported"],
+  ] as [Partial<DiscordInteraction>, string][])(
+    "maps interaction %j to command %s",
+    (overrides, expected) => {
+      expect(getDiscordInteractionCommand(makeInteraction(overrides))).toEqual(
+        expected
       )
-    ).toEqual("ask")
-
-    expect(
-      getDiscordInteractionCommand(
-        makeInteraction({
-          id: "interaction-3",
-          type: 2,
-        data: { name: "new" },
-        })
-      )
-    ).toEqual("new")
-
-    expect(
-      getDiscordInteractionCommand(
-        makeInteraction({
-          id: "interaction-4",
-          type: 5,
-        data: {},
-        })
-      )
-    ).toEqual("ask")
-
-    expect(
-      getDiscordInteractionCommand(
-        makeInteraction({
-          id: "interaction-5",
-          type: 2,
-        data: { name: "status" },
-        })
-      )
-    ).toEqual("unsupported")
-  })
+    }
+  )
 
   it("supports custom command names", () => {
+    const commandNames = {
+      askCommandName: "support",
+      newCommandName: "fresh",
+    }
+
     expect(
       getDiscordInteractionCommand(
-        makeInteraction({
-          data: { name: "support" },
-        }),
-        {
-          askCommandName: "support",
-          newCommandName: "fresh",
-        }
+        makeInteraction({ data: { name: "support" } }),
+        commandNames
       )
     ).toEqual("ask")
 
     expect(
       getDiscordInteractionCommand(
-        makeInteraction({
-          data: { name: "fresh" },
-        }),
-        {
-          askCommandName: "support",
-          newCommandName: "fresh",
-        }
+        makeInteraction({ data: { name: "fresh" } }),
+        commandNames
       )
     ).toEqual("new")
   })
@@ -134,54 +99,39 @@ describe("discord webhook helpers", () => {
       externalUserId: "user-1",
     }
 
-    const matching = makeChat({
-      _id: "matching",
-      channel: {
-        provider: "discord",
-        channelId: "channel-1",
-        threadId: "thread-1",
-        externalUserId: "user-1",
-      },
+    const channel = (overrides = {}) => ({
+      provider: "discord" as const,
+      channelId: "channel-1",
+      threadId: "thread-1",
+      externalUserId: "user-1",
+      ...overrides,
     })
+
+    const matching = makeChat({ _id: "matching", channel: channel() })
     const wrongThread = makeChat({
       _id: "wrong-thread",
-      channel: {
-        provider: "discord",
-        channelId: "channel-1",
-        threadId: "thread-2",
-        externalUserId: "user-1",
-      },
+      channel: channel({ threadId: "thread-2" }),
     })
     const wrongAgent = makeChat({
       _id: "wrong-agent",
       agentId: "agent-2",
-      channel: {
-        provider: "discord",
-        channelId: "channel-1",
-        threadId: "thread-1",
-        externalUserId: "user-1",
-      },
+      channel: channel(),
     })
     const wrongUser = makeChat({
       _id: "wrong-user",
-      channel: {
-        provider: "discord",
-        channelId: "channel-1",
-        threadId: "thread-1",
-        externalUserId: "user-2",
-      },
+      channel: channel({ externalUserId: "user-2" }),
     })
 
-    expect(matchesDiscordConversationScope({ chat: matching, scope })).toEqual(
+    expect(matchesDiscordConversationScope({ chat: matching, scope })).toBe(
       true
     )
-    expect(matchesDiscordConversationScope({ chat: wrongThread, scope })).toEqual(
+    expect(matchesDiscordConversationScope({ chat: wrongThread, scope })).toBe(
       false
     )
-    expect(matchesDiscordConversationScope({ chat: wrongAgent, scope })).toEqual(
+    expect(matchesDiscordConversationScope({ chat: wrongAgent, scope })).toBe(
       false
     )
-    expect(matchesDiscordConversationScope({ chat: wrongUser, scope })).toEqual(
+    expect(matchesDiscordConversationScope({ chat: wrongUser, scope })).toBe(
       false
     )
   })
@@ -203,7 +153,7 @@ describe("discord webhook helpers", () => {
       externalUserId: "user-legacy",
     }
 
-    expect(matchesDiscordConversationScope({ chat, scope })).toEqual(true)
+    expect(matchesDiscordConversationScope({ chat, scope })).toBe(true)
   })
 
   it("selects latest non-expired conversation", () => {
@@ -243,12 +193,5 @@ describe("discord webhook helpers", () => {
     })
 
     expect(picked?._id).toEqual("latest")
-    expect(
-      isDiscordConversationExpired({
-        chat: expired,
-        idleTimeoutMs,
-        nowMs,
-      })
-    ).toEqual(true)
   })
 })

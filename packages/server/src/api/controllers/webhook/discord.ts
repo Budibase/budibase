@@ -88,15 +88,6 @@ const getRawBody = (ctx: Ctx<any, any>) => {
   return JSON.stringify(ctx.request.body ?? {})
 }
 
-const createDiscordPublicKey = (publicKey: string) => {
-  const derPrefix = "302a300506032b6570032100"
-  return crypto.createPublicKey({
-    key: Buffer.from(`${derPrefix}${publicKey}`, "hex"),
-    format: "der",
-    type: "spki",
-  })
-}
-
 const verifyDiscordSignature = ({
   publicKey,
   signature,
@@ -108,44 +99,41 @@ const verifyDiscordSignature = ({
   timestamp: string
   rawBody: string
 }) => {
-  const key = createDiscordPublicKey(publicKey)
-  const message = new Uint8Array(Buffer.from(`${timestamp}${rawBody}`))
-  const signatureBuffer = new Uint8Array(Buffer.from(signature, "hex"))
-  return crypto.verify(null, message, key, signatureBuffer)
+  const derPrefix = "302a300506032b6570032100"
+  const key = crypto.createPublicKey({
+    key: Buffer.from(`${derPrefix}${publicKey}`, "hex"),
+    format: "der",
+    type: "spki",
+  })
+  return crypto.verify(
+    null,
+    new Uint8Array(Buffer.from(`${timestamp}${rawBody}`)),
+    key,
+    new Uint8Array(Buffer.from(signature, "hex"))
+  )
 }
 
 const extractModalComponentValues = (
   components: DiscordInteractionComponent[] = []
-): string[] => {
-  return components.flatMap(component => {
-    const directValue =
-      typeof component.value === "string" ? component.value.trim() : ""
-    const nestedValues = extractModalComponentValues(component.components || [])
-    return [...(directValue ? [directValue] : []), ...nestedValues]
-  })
-}
+): string[] =>
+  components.flatMap(c => [
+    ...(typeof c.value === "string" && c.value.trim() ? [c.value.trim()] : []),
+    ...extractModalComponentValues(c.components || []),
+  ])
 
-const normalizeDiscordCommandName = (
+const normalizeCommandName = (
   value: string | undefined,
   fallback: "ask" | "new"
-) => {
-  const candidate = (value || fallback).trim().toLowerCase()
-  return candidate || fallback
-}
+) => (value || fallback).trim().toLowerCase() || fallback
 
 export const extractDiscordContent = (interaction: DiscordInteraction) => {
-  const options = interaction.data?.options || []
-  const optionText = options
-    .map(option => (option.value != null ? String(option.value) : ""))
+  const optionValues = (interaction.data?.options || [])
+    .map(o => (o.value != null ? String(o.value) : ""))
     .filter(Boolean)
-    .join(" ")
-    .trim()
 
-  const modalText = extractModalComponentValues(interaction.data?.components)
-    .join(" ")
-    .trim()
+  const modalValues = extractModalComponentValues(interaction.data?.components)
 
-  return [optionText, modalText].filter(Boolean).join(" ").trim()
+  return [...optionValues, ...modalValues].join(" ").trim()
 }
 
 export const getDiscordInteractionCommand = (
@@ -156,48 +144,31 @@ export const getDiscordInteractionCommand = (
   }
 ): DiscordCommand => {
   const rawName = interaction.data?.name?.trim().toLowerCase() || ""
-  const askCommandName = normalizeDiscordCommandName(
-    options?.askCommandName,
-    "ask"
-  )
-  const newCommandName = normalizeDiscordCommandName(
-    options?.newCommandName,
-    "new"
-  )
-  if (rawName === newCommandName) {
-    return "new"
-  }
-  if (rawName === askCommandName) {
-    return "ask"
-  }
+  const askName = normalizeCommandName(options?.askCommandName, "ask")
+  const newName = normalizeCommandName(options?.newCommandName, "new")
+
+  if (rawName === newName) return "new"
+  if (rawName === askName) return "ask"
   if (interaction.type === DISCORD_INTERACTION_MODAL_SUBMIT || !rawName) {
     return "ask"
   }
   return "unsupported"
 }
 
-const getDiscordUser = (interaction: DiscordInteraction) =>
-  interaction.member?.user || interaction.user
-
 const buildDiscordUserContext = (
   userId: string,
   displayName?: string
-): ContextUser => {
-  const tenantId = context.getTenantId()
-  return {
-    _id: `discord:${userId}`,
-    tenantId,
-    email: `discord+${userId}@example.invalid`,
-    roles: {},
-    userId,
-    firstName: displayName,
-  }
-}
+): ContextUser => ({
+  _id: `discord:${userId}`,
+  tenantId: context.getTenantId(),
+  email: `discord+${userId}@example.invalid`,
+  roles: {},
+  userId,
+  firstName: displayName,
+})
 
-const splitDiscordMessage = (content: string, maxLength = 2000) => {
-  if (content.length <= maxLength) {
-    return [content]
-  }
+const splitDiscordMessage = (content: string, maxLength = 2000): string[] => {
+  if (content.length <= maxLength) return [content]
   const chunks: string[] = []
   for (let i = 0; i < content.length; i += maxLength) {
     chunks.push(content.slice(i, i + maxLength))
@@ -205,35 +176,24 @@ const splitDiscordMessage = (content: string, maxLength = 2000) => {
   return chunks
 }
 
-const sendDiscordFollowup = async ({
-  applicationId,
-  token,
-  content,
-}: {
-  applicationId: string
-  token: string
+const sendDiscordFollowup = async (
+  applicationId: string,
+  token: string,
   content: string
-}) => {
+) => {
   const url = `${DISCORD_API_BASE_URL}/webhooks/${applicationId}/${token}`
-  const chunks = splitDiscordMessage(content)
-  for (const chunk of chunks) {
+  for (const chunk of splitDiscordMessage(content)) {
     await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: chunk }),
     })
   }
 }
 
-const toDiscordConversationUserId = (userId: string) => `discord:${userId}`
-
 const toSortTimestamp = (chat: ChatConversation): number => {
   const latest = chat.updatedAt || chat.createdAt
-  if (!latest) {
-    return 0
-  }
+  if (!latest) return 0
   const parsed = new Date(latest).getTime()
   return Number.isFinite(parsed) ? parsed : 0
 }
@@ -247,15 +207,9 @@ export const isDiscordConversationExpired = ({
   idleTimeoutMs: number
   nowMs?: number
 }) => {
-  if (idleTimeoutMs <= 0) {
-    return false
-  }
-
+  if (idleTimeoutMs <= 0) return false
   const lastActivity = toSortTimestamp(chat)
-  if (!lastActivity) {
-    return false
-  }
-
+  if (!lastActivity) return false
   return nowMs - lastActivity > idleTimeoutMs
 }
 
@@ -277,29 +231,21 @@ export const matchesDiscordConversationScope = ({
   chat: ChatConversation
   scope: DiscordConversationScope
 }) => {
-  if (chat.chatAppId !== scope.chatAppId) {
-    return false
-  }
-  if (chat.agentId !== scope.agentId) {
-    return false
-  }
-  if (chat.channel?.provider !== "discord") {
-    return false
-  }
-  if (chat.channel?.channelId !== scope.channelId) {
-    return false
-  }
-
-  const conversationThreadId = chat.channel?.threadId || undefined
-  if (conversationThreadId !== scope.threadId) {
+  const ch = chat.channel
+  if (
+    chat.chatAppId !== scope.chatAppId ||
+    chat.agentId !== scope.agentId ||
+    ch?.provider !== "discord" ||
+    ch?.channelId !== scope.channelId ||
+    (ch?.threadId || undefined) !== scope.threadId
+  ) {
     return false
   }
 
-  if (chat.channel?.externalUserId) {
-    return chat.channel.externalUserId === scope.externalUserId
+  if (ch?.externalUserId) {
+    return ch.externalUserId === scope.externalUserId
   }
-
-  return chat.userId === toDiscordConversationUserId(scope.externalUserId)
+  return chat.userId === `discord:${scope.externalUserId}`
 }
 
 export const pickDiscordConversation = ({
@@ -312,14 +258,14 @@ export const pickDiscordConversation = ({
   scope: DiscordConversationScope
   idleTimeoutMs: number
   nowMs?: number
-}) => {
-  return chats
-    .filter(chat => matchesDiscordConversationScope({ chat, scope }))
+}) =>
+  chats
     .filter(
-      chat => !isDiscordConversationExpired({ chat, idleTimeoutMs, nowMs })
+      chat =>
+        matchesDiscordConversationScope({ chat, scope }) &&
+        !isDiscordConversationExpired({ chat, idleTimeoutMs, nowMs })
     )
     .sort((a, b) => toSortTimestamp(b) - toSortTimestamp(a))[0]
-}
 
 const findDiscordConversation = async ({
   scope,
@@ -339,11 +285,14 @@ const findDiscordConversation = async ({
     .map(row => row.doc)
     .filter((chat): chat is ChatConversation => !!chat)
 
-  return pickDiscordConversation({
-    chats,
-    scope,
-    idleTimeoutMs,
-  })
+  return pickDiscordConversation({ chats, scope, idleTimeoutMs })
+}
+
+const getIdleTimeoutMs = (configMinutes?: number) => {
+  if (configMinutes && configMinutes > 0) {
+    return configMinutes * 60 * 1000
+  }
+  return getDiscordIdleTimeoutMs()
 }
 
 const handleDiscordInteraction = async ({
@@ -358,16 +307,16 @@ const handleDiscordInteraction = async ({
   agentId: string
 }) => {
   const prodAppId = dbCore.getProdWorkspaceID(instance)
+  const { application_id, token } = interaction
+
+  const reply = (content: string) =>
+    sendDiscordFollowup(application_id, token, content)
+
   await context.doInWorkspaceContext(prodAppId, async () => {
     const db = context.getWorkspaceDB()
     const chatApp = await db.tryGet<ChatApp>(chatAppId)
     if (!chatApp) {
-      await sendDiscordFollowup({
-        applicationId: interaction.application_id,
-        token: interaction.token,
-        content: "Chat app not found.",
-      })
-      return
+      return reply("Chat app not found.")
     }
 
     if (
@@ -375,92 +324,34 @@ const handleDiscordInteraction = async ({
         agent => agent.agentId === agentId && agent.isEnabled
       )
     ) {
-      await sendDiscordFollowup({
-        applicationId: interaction.application_id,
-        token: interaction.token,
-        content: "Agent is not enabled for this chat app.",
-      })
-      return
+      return reply("Agent is not enabled for this chat app.")
     }
 
     const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
-    const askCommandName = normalizeDiscordCommandName(
-      agentConfig.discordIntegration?.askCommandName,
-      "ask"
-    )
-    const newCommandName = normalizeDiscordCommandName(
-      agentConfig.discordIntegration?.newCommandName,
-      "new"
-    )
+    const discord = agentConfig.discordIntegration
+    const askName = normalizeCommandName(discord?.askCommandName, "ask")
+    const newName = normalizeCommandName(discord?.newCommandName, "new")
+
     const command = getDiscordInteractionCommand(interaction, {
-      askCommandName,
-      newCommandName,
+      askCommandName: askName,
+      newCommandName: newName,
     })
     if (command === "unsupported") {
-      await sendDiscordFollowup({
-        applicationId: interaction.application_id,
-        token: interaction.token,
-        content: `Use /${askCommandName} with a message to chat, or /${newCommandName} to start a new conversation.`,
-      })
-      return
+      return reply(
+        `Use /${askName} with a message to chat, or /${newName} to start a new conversation.`
+      )
     }
 
-    const user = getDiscordUser(interaction)
+    const user = interaction.member?.user || interaction.user
     const userId = user?.id || "unknown"
     const displayName = user?.global_name || user?.username
     const channelId = interaction.channel_id
     if (!channelId) {
-      await sendDiscordFollowup({
-        applicationId: interaction.application_id,
-        token: interaction.token,
-        content: "Missing Discord channel information.",
-      })
-      return
+      return reply("Missing Discord channel information.")
     }
 
     const threadId = interaction.thread_id
     const content = extractDiscordContent(interaction)
-    if (command === "new" && !content) {
-      const chatId = docIds.generateChatConversationID()
-      const chatToSave = prepareChatConversationForSave({
-        chatId,
-        chatAppId,
-        userId: toDiscordConversationUserId(userId),
-        title: "New conversation",
-        messages: [],
-        chat: {
-          _id: chatId,
-          chatAppId,
-          agentId,
-          title: "New conversation",
-          messages: [],
-          channel: {
-            provider: "discord",
-            channelId,
-            threadId,
-            guildId: interaction.guild_id,
-            externalUserId: userId,
-            externalUserName: displayName,
-          },
-        },
-      })
-      await db.put(chatToSave)
-      await sendDiscordFollowup({
-        applicationId: interaction.application_id,
-        token: interaction.token,
-        content: `Started a new conversation. Use /${askCommandName} with a message.`,
-      })
-      return
-    }
-
-    if (!content) {
-      await sendDiscordFollowup({
-        applicationId: interaction.application_id,
-        token: interaction.token,
-        content: `Please provide a message after /${askCommandName}.`,
-      })
-      return
-    }
 
     const channel: ChatConversationChannel = {
       provider: "discord",
@@ -471,11 +362,39 @@ const handleDiscordInteraction = async ({
       externalUserName: displayName,
     }
 
+    if (command === "new" && !content) {
+      const chatId = docIds.generateChatConversationID()
+      await db.put(
+        prepareChatConversationForSave({
+          chatId,
+          chatAppId,
+          userId: `discord:${userId}`,
+          title: "New conversation",
+          messages: [],
+          chat: {
+            _id: chatId,
+            chatAppId,
+            agentId,
+            title: "New conversation",
+            messages: [],
+            channel,
+          },
+        })
+      )
+      return reply(
+        `Started a new conversation. Use /${askName} with a message.`
+      )
+    }
+
+    if (!content) {
+      return reply(`Please provide a message after /${askName}.`)
+    }
+
     const scope: DiscordConversationScope = {
       chatAppId,
       agentId,
       channelId,
-      threadId: channel.threadId,
+      threadId,
       externalUserId: userId,
     }
 
@@ -484,11 +403,7 @@ const handleDiscordInteraction = async ({
         ? undefined
         : await findDiscordConversation({
             scope,
-            idleTimeoutMs:
-              agentConfig.discordIntegration?.idleTimeoutMinutes &&
-              agentConfig.discordIntegration.idleTimeoutMinutes > 0
-                ? agentConfig.discordIntegration.idleTimeoutMinutes * 60 * 1000
-                : getDiscordIdleTimeoutMs(),
+            idleTimeoutMs: getIdleTimeoutMs(discord?.idleTimeoutMinutes),
           })
 
     const userMessage: ChatConversationRequest["messages"][number] = {
@@ -497,13 +412,12 @@ const handleDiscordInteraction = async ({
       parts: [{ type: "text", text: content }],
     }
 
-    const baseMessages = existingChat?.messages || []
     const draftChat: ChatConversationRequest = {
       _id: existingChat?._id,
       chatAppId,
       agentId,
       title: existingChat?.title || truncateTitle(content),
-      messages: [...baseMessages, userMessage],
+      messages: [...(existingChat?.messages || []), userMessage],
       channel,
     }
 
@@ -515,35 +429,23 @@ const handleDiscordInteraction = async ({
       })
     } catch (error) {
       const message = error instanceof HTTPError ? error.message : "Agent error"
-      await sendDiscordFollowup({
-        applicationId: interaction.application_id,
-        token: interaction.token,
-        content: message,
-      })
-      return
+      return reply(message)
     }
 
     const chatId = existingChat?._id ?? docIds.generateChatConversationID()
-    const chatToSave = prepareChatConversationForSave({
-      chatId,
-      chatAppId,
-      userId: toDiscordConversationUserId(userId),
-      title: existingChat?.title || result.title,
-      messages: result.messages,
-      chat: {
-        ...draftChat,
-        _id: chatId,
-      },
-      existingChat,
-    })
+    await db.put(
+      prepareChatConversationForSave({
+        chatId,
+        chatAppId,
+        userId: `discord:${userId}`,
+        title: existingChat?.title || result.title,
+        messages: result.messages,
+        chat: { ...draftChat, _id: chatId },
+        existingChat,
+      })
+    )
 
-    await db.put(chatToSave)
-
-    await sendDiscordFollowup({
-      applicationId: interaction.application_id,
-      token: interaction.token,
-      content: result.assistantText || "No response generated.",
-    })
+    await reply(result.assistantText || "No response generated.")
   })
 }
 
@@ -566,13 +468,7 @@ export async function discordWebhook(
   }
 
   const rawBody = getRawBody(ctx)
-  const isValid = verifyDiscordSignature({
-    publicKey,
-    signature,
-    timestamp,
-    rawBody,
-  })
-  if (!isValid) {
+  if (!verifyDiscordSignature({ publicKey, signature, timestamp, rawBody })) {
     ctx.status = 401
     ctx.body = { error: "Invalid Discord signature" }
     return

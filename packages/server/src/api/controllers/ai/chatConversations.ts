@@ -212,7 +212,9 @@ export async function agentChatComplete({
     system,
     tools,
     stopWhen: stepCountIs(30),
-    providerOptions: ai.getLiteLLMProviderOptions(),
+    providerOptions: ai.getLiteLLMProviderOptions(
+      Object.keys(tools).length > 0
+    ),
     onError({ error }) {
       console.error("Agent streaming error", {
         agentId,

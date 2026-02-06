@@ -16,15 +16,11 @@ import fetch from "node-fetch"
 import sdk from "../../../sdk"
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10"
-const DEFAULT_ASK_COMMAND_NAME = "ask"
-const DEFAULT_NEW_COMMAND_NAME = "new"
+const COMMAND_NAME_REGEX = /^[a-z0-9_-]{1,32}$/
 
 const normalizeCommandName = (value: string | undefined, fallback: string) => {
   const candidate = (value || fallback).trim().toLowerCase()
-  if (!candidate) {
-    return fallback
-  }
-  if (!/^[a-z0-9_-]{1,32}$/.test(candidate)) {
+  if (!COMMAND_NAME_REGEX.test(candidate)) {
     throw new HTTPError(
       `Invalid command name "${candidate}". Use lowercase letters, numbers, hyphens, or underscores (max 32 chars).`,
       400
@@ -33,19 +29,13 @@ const normalizeCommandName = (value: string | undefined, fallback: string) => {
   return candidate
 }
 
-const validateDiscordIntegration = (
-  agent: UpdateAgentResponse
-): {
-  applicationId: string
-  botToken: string
-  guildId: string
-  askCommandName: string
-  newCommandName: string
-  chatAppId?: string
-} => {
+const validateDiscordIntegration = (agent: UpdateAgentResponse) => {
   const integration = agent.discordIntegration
   if (!integration) {
-    throw new HTTPError("Discord integration is not configured for this agent", 400)
+    throw new HTTPError(
+      "Discord integration is not configured for this agent",
+      400
+    )
   }
 
   const applicationId = integration.applicationId?.trim()
@@ -63,86 +53,43 @@ const validateDiscordIntegration = (
     applicationId,
     botToken,
     guildId,
-    askCommandName: normalizeCommandName(
-      integration.askCommandName,
-      DEFAULT_ASK_COMMAND_NAME
-    ),
-    newCommandName: normalizeCommandName(
-      integration.newCommandName,
-      DEFAULT_NEW_COMMAND_NAME
-    ),
+    askCommandName: normalizeCommandName(integration.askCommandName, "ask"),
+    newCommandName: normalizeCommandName(integration.newCommandName, "new"),
     chatAppId: integration.chatAppId?.trim() || undefined,
   }
 }
 
-const ensureAgentEnabledOnChatApp = async ({
-  chatApp,
-  agentId,
-}: {
-  chatApp: ChatApp
-  agentId: string
-}) => {
-  const existingAgents = chatApp.agents || []
-  const existing = existingAgents.find(entry => entry.agentId === agentId)
-  if (existing && existing.isEnabled) {
+const enableAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
+  const agents = chatApp.agents || []
+  const existing = agents.find(e => e.agentId === agentId)
+  if (existing?.isEnabled) {
     return chatApp
   }
 
-  const nextAgents = existing
-    ? existingAgents.map(entry =>
-        entry.agentId === agentId ? { ...entry, isEnabled: true } : entry
-      )
-    : [
-        ...existingAgents,
-        {
-          agentId,
-          isEnabled: true,
-          isDefault: false,
-        },
-      ]
+  const updatedAgents = existing
+    ? agents.map(e => (e.agentId === agentId ? { ...e, isEnabled: true } : e))
+    : [...agents, { agentId, isEnabled: true, isDefault: false }]
 
-  return await sdk.ai.chatApps.update({
-    ...chatApp,
-    agents: nextAgents,
-  })
+  return await sdk.ai.chatApps.update({ ...chatApp, agents: updatedAgents })
 }
 
-const resolveChatAppForAgent = async ({
-  agentId,
-  configuredChatAppId,
-}: {
-  agentId: string
-  configuredChatAppId?: string
-}) => {
-  if (configuredChatAppId) {
-    const existing = await sdk.ai.chatApps.getOrThrow(configuredChatAppId)
-    return await ensureAgentEnabledOnChatApp({ chatApp: existing, agentId })
+const resolveChatAppForAgent = async (agentId: string, chatAppId?: string) => {
+  if (chatAppId) {
+    const app = await sdk.ai.chatApps.getOrThrow(chatAppId)
+    return await enableAgentOnChatApp(app, agentId)
   }
 
   const existing = await sdk.ai.chatApps.getSingle()
   if (existing) {
-    return await ensureAgentEnabledOnChatApp({ chatApp: existing, agentId })
+    return await enableAgentOnChatApp(existing, agentId)
   }
 
-  const created = await sdk.ai.chatApps.create({
-    agents: [
-      {
-        agentId,
-        isEnabled: true,
-        isDefault: false,
-      },
-    ],
+  return await sdk.ai.chatApps.create({
+    agents: [{ agentId, isEnabled: true, isDefault: false }],
   })
-  return created
 }
 
-const buildDiscordWebhookUrl = async ({
-  chatAppId,
-  agentId,
-}: {
-  chatAppId: string
-  agentId: string
-}) => {
+const buildDiscordWebhookUrl = async (chatAppId: string, agentId: string) => {
   const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
@@ -151,28 +98,16 @@ const buildDiscordWebhookUrl = async ({
   return `${platformUrl.replace(/\/$/, "")}/api/webhooks/discord/${workspaceId}/${chatAppId}/${agentId}`
 }
 
-const buildDiscordInviteUrl = (applicationId: string) => {
-  const params = new URLSearchParams({
-    client_id: applicationId,
-    scope: "bot applications.commands",
-    permissions: "0",
-  })
-  return `https://discord.com/oauth2/authorize?${params.toString()}`
-}
+const buildDiscordInviteUrl = (applicationId: string) =>
+  `https://discord.com/oauth2/authorize?client_id=${applicationId}&scope=bot+applications.commands&permissions=0`
 
-const syncGuildCommands = async ({
-  applicationId,
-  botToken,
-  guildId,
-  askCommandName,
-  newCommandName,
-}: {
-  applicationId: string
-  botToken: string
-  guildId: string
-  askCommandName: string
+const syncGuildCommands = async (
+  applicationId: string,
+  botToken: string,
+  guildId: string,
+  askCommandName: string,
   newCommandName: string
-}) => {
+) => {
   const url = `${DISCORD_API_BASE_URL}/applications/${applicationId}/guilds/${guildId}/commands`
   const response = await fetch(url, {
     method: "PUT",
@@ -300,35 +235,41 @@ export async function syncAgentDiscordCommands(
     { agentId: string }
   >
 ) {
-  const agentId = ctx.params.agentId
+  const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const integration = validateDiscordIntegration(agent)
+  const {
+    applicationId,
+    botToken,
+    guildId,
+    askCommandName,
+    newCommandName,
+    chatAppId: configuredChatAppId,
+  } = validateDiscordIntegration(agent)
+
   const requestedChatAppId = ctx.request.body?.chatAppId?.trim()
-  const chatApp = await resolveChatAppForAgent({
+  const chatApp = await resolveChatAppForAgent(
     agentId,
-    configuredChatAppId: requestedChatAppId || integration.chatAppId,
-  })
+    requestedChatAppId || configuredChatAppId
+  )
 
-  await syncGuildCommands({
-    applicationId: integration.applicationId,
-    botToken: integration.botToken,
-    guildId: integration.guildId,
-    askCommandName: integration.askCommandName,
-    newCommandName: integration.newCommandName,
-  })
-
-  const interactionsEndpointUrl = await buildDiscordWebhookUrl({
-    chatAppId: chatApp._id!,
-    agentId,
-  })
+  await syncGuildCommands(
+    applicationId,
+    botToken,
+    guildId,
+    askCommandName,
+    newCommandName
+  )
 
   ctx.body = {
     success: true,
     chatAppId: chatApp._id!,
-    interactionsEndpointUrl,
-    inviteUrl: buildDiscordInviteUrl(integration.applicationId),
-    askCommandName: integration.askCommandName,
-    newCommandName: integration.newCommandName,
+    interactionsEndpointUrl: await buildDiscordWebhookUrl(
+      chatApp._id!,
+      agentId
+    ),
+    inviteUrl: buildDiscordInviteUrl(applicationId),
+    askCommandName,
+    newCommandName,
   }
   ctx.status = 200
 }
