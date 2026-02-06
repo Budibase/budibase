@@ -150,6 +150,7 @@ export interface AcceptUserInviteRequest {
   password: string
   firstName: string
   lastName?: string
+  tenantId?: string
 }
 export interface AcceptUserInviteResponse {
   _id: string
