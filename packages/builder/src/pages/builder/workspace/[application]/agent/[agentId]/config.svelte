@@ -20,7 +20,7 @@
   import { onDestroy, onMount, untrack } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
-  import type { IconInfo } from "@/helpers/integrationIcons"
+  import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
@@ -38,6 +38,7 @@
     REST_TAG_ICON_URL,
     WEB_SEARCH_TAG_ICON_URL,
   } from "../logos/tagIconUrls"
+  import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
 
@@ -108,62 +109,63 @@ Any constraints the agent must follow.
     !!webSearchConfig?.apiKey && !!webSearchConfig.provider
   )
   let toolsLoaded = $derived(!!$agentsStore.tools)
-  let availableTools: AgentTool[] = $derived.by(() => {
-    const tools = $agentsStore.tools || []
-    const mappedTools = tools.map(tool => {
-      const sourceType = tool.sourceType
-      const sourceLabel = tool.sourceLabel
 
-      const prefix = getBindingPrefix(sourceType, sourceLabel)
-      const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
-        sourceType,
-        sourceLabel,
-      })
-
-      return {
-        ...tool,
-        sourceLabel,
-        sourceType,
-        readableBinding: `${prefix}.${tool.name}`,
-        runtimeBinding: tool.name,
-        icon,
-        tagIconUrl,
-      }
+  function enrichToolMetadata(tool: ToolMetadata): AgentTool {
+    const { sourceType, sourceLabel } = tool
+    const prefix = getBindingPrefix(sourceType, sourceLabel)
+    const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
+      sourceType,
+      sourceLabel,
     })
+    const displayName = tool.readableName || tool.name
+    return {
+      ...tool,
+      sourceLabel,
+      sourceType,
+      readableBinding: `${prefix}.${displayName}`,
+      runtimeBinding: tool.name,
+      icon,
+      tagIconUrl,
+    }
+  }
 
-    // Add a synthetic web search tool as we want it to always appear
+  function createWebSearchTool(): AgentTool {
     const webSearchTool: ToolMetadata = {
       name: "web_search",
       description: "Configure web search",
       sourceType: ToolType.SEARCH,
       sourceLabel: "Search",
     }
-    const prefix = getBindingPrefix(
-      webSearchTool.sourceType,
-      webSearchTool.sourceLabel
-    )
-    const { icon, tagIconUrl } = resolveAgentToolIcons(webSearchTool, {
-      sourceType: webSearchTool.sourceType,
-      sourceLabel: webSearchTool.sourceLabel,
-    })
+    const enriched = enrichToolMetadata(webSearchTool)
+    return {
+      ...enriched,
+      runtimeBinding:
+        getWebSearchRuntimeBinding(webSearchConfigured, webSearchConfig) || "",
+    }
+  }
 
-    return [
-      {
-        ...webSearchTool,
-        readableBinding: `${prefix}.web_search`,
-        runtimeBinding:
-          getWebSearchRuntimeBinding(webSearchConfigured, webSearchConfig) ||
-          "",
-        icon,
-        tagIconUrl,
-      },
-      ...mappedTools.filter(tool => tool.sourceType !== ToolType.SEARCH),
-    ]
+  let availableTools: AgentTool[] = $derived.by(() => {
+    const tools = $agentsStore.tools || []
+    const mappedTools = tools
+      .filter(tool => tool.sourceType !== ToolType.SEARCH)
+      .map(enrichToolMetadata)
+    return [createWebSearchTool(), ...mappedTools]
   })
 
-  let toolMaps = $derived(buildToolMaps(availableTools))
-  let readableToRuntimeBinding = $derived(toolMaps.readableToRuntimeBinding)
-  let readableToIcon = $derived(toolMaps.readableToIcon)
+  // Build lookup maps from readable binding to runtime binding and icon URL
+  let { readableToRuntimeBinding, readableToIcon } = $derived.by(() => {
+    const runtimeMap: Record<string, string> = {}
+    const iconMap: Record<string, string | undefined> = {}
+    for (const tool of availableTools) {
+      if (tool.readableBinding) {
+        iconMap[tool.readableBinding] = tool.tagIconUrl
+        if (tool.runtimeBinding) {
+          runtimeMap[tool.readableBinding] = tool.runtimeBinding
+        }
+      }
+    }
+    return { readableToRuntimeBinding: runtimeMap, readableToIcon: iconMap }
+  })
 
   /**
    * Doing this and key'ing the CodeEditor triggers a re-mount of the editor.
@@ -189,7 +191,7 @@ Any constraints the agent must follow.
       .map(tool => ({
         runtimeBinding: tool.runtimeBinding,
         readableBinding: tool.readableBinding,
-        category: getSectionName(tool.sourceType),
+        category: getSectionName(tool.sourceType, tool.sourceLabel),
         display: {
           name:
             tool.sourceType === ToolType.SEARCH
@@ -231,7 +233,7 @@ Any constraints the agent must follow.
   })
   let toolSections = $derived(
     filteredTools.reduce<Record<string, AgentTool[]>>((acc, tool) => {
-      const key = getSectionName(tool.sourceType)
+      const key = getSectionName(tool.sourceType, tool.sourceLabel)
       acc[key] = acc[key] || []
       acc[key].push(tool)
       return acc
@@ -297,7 +299,31 @@ Any constraints the agent must follow.
       sourceLabel,
     }: { sourceType: ToolType | undefined; sourceLabel: string | undefined }
   ): { icon?: IconInfo; tagIconUrl?: string } {
-    if (sourceType === ToolType.BUDIBASE) {
+    if (
+      sourceType === ToolType.INTERNAL_TABLE ||
+      sourceType === ToolType.EXTERNAL_TABLE ||
+      sourceType === ToolType.AUTOMATION
+    ) {
+      if (sourceType === ToolType.EXTERNAL_TABLE && tool.sourceIconType) {
+        const integrationIcon = getIntegrationIcon(tool.sourceIconType)
+        if (integrationIcon) {
+          if (integrationIcon.url) {
+            return {
+              icon: integrationIcon,
+              tagIconUrl: integrationIcon.url,
+            }
+          }
+          if (integrationIcon.icon) {
+            const iconKey = tool.sourceIconType?.toUpperCase()
+            const tagIconUrl = iconKey
+              ? DATASOURCE_TAG_ICON_URLS[iconKey] ||
+                DATASOURCE_TAG_ICON_URLS.CUSTOM ||
+                BudibaseLogoSvg
+              : BudibaseLogoSvg
+            return { icon: integrationIcon, tagIconUrl }
+          }
+        }
+      }
       return {
         icon: { icon: BudibaseLogo },
         tagIconUrl: BudibaseLogoSvg,
@@ -327,50 +353,45 @@ Any constraints the agent must follow.
     return {}
   }
 
-  function buildToolMaps(tools: AgentTool[]) {
-    return tools.reduce(
-      (acc, tool) => {
-        if (tool.readableBinding) {
-          acc.readableToIcon[tool.readableBinding] = tool.tagIconUrl
-        }
-        if (tool.readableBinding && tool.runtimeBinding) {
-          acc.readableToRuntimeBinding[tool.readableBinding] =
-            tool.runtimeBinding
-        }
-        return acc
-      },
-      {
-        readableToRuntimeBinding: {} as Record<string, string>,
-        readableToIcon: {} as Record<string, string | undefined>,
-      }
-    )
-  }
-
-  function slugify(str: string) {
-    return str
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_|_$/g, "")
+  function sanitizeString(str: string, lowercase = false) {
+    const base = lowercase ? str.toLowerCase() : str
+    const pattern = lowercase ? /[^a-z0-9]+/g : /[^a-zA-Z0-9]+/g
+    return base.replace(pattern, "_").replace(/^_|_$/g, "")
   }
   function getBindingPrefix(
     sourceType: ToolType | undefined,
     sourceLabel: string | undefined
   ): string {
-    if (sourceType === ToolType.BUDIBASE) {
+    if (
+      sourceType === ToolType.INTERNAL_TABLE ||
+      sourceType === ToolType.AUTOMATION
+    ) {
       return "budibase"
+    }
+    if (sourceType === ToolType.EXTERNAL_TABLE) {
+      return sourceLabel ? sanitizeString(sourceLabel) : "external"
     }
     if (sourceType === ToolType.SEARCH) {
       return "search"
     }
     if (sourceType === ToolType.REST_QUERY && sourceLabel) {
-      return `api.${slugify(sourceLabel)}`
+      return `api.${sanitizeString(sourceLabel, true)}`
     }
     return "tool"
   }
 
-  function getSectionName(sourceType: ToolType | undefined): string {
-    if (sourceType === ToolType.BUDIBASE) {
+  function getSectionName(
+    sourceType: ToolType | undefined,
+    sourceLabel?: string
+  ): string {
+    if (sourceType === ToolType.INTERNAL_TABLE) {
       return "Budibase"
+    }
+    if (sourceType === ToolType.AUTOMATION) {
+      return "Automations"
+    }
+    if (sourceType === ToolType.EXTERNAL_TABLE) {
+      return sourceLabel || "External"
     }
     if (sourceType === ToolType.SEARCH) {
       return "Knowledge sources"
@@ -403,7 +424,7 @@ Any constraints the agent must follow.
   }
 
   const getToolResourcePath = (tool: AgentTool): string | null => {
-    if (tool.sourceType === ToolType.BUDIBASE) {
+    if (tool.sourceType === ToolType.AUTOMATION) {
       const automation = findResourceByName($automationStore.automations, tool)
       if (automation?._id) {
         return `../../automation/${automation._id}`
@@ -434,10 +455,15 @@ Any constraints the agent must follow.
 
   // list_tables -> List tables
   const formatToolLabel = (tool: AgentTool) =>
-    tool.name
-      .split("_")
-      .join(" ")
-      .replace(/\b\w/g, l => l.toUpperCase())
+    (tool.readableName || tool.name)
+      .split(".")
+      .map(part =>
+        part
+          .split("_")
+          .join(" ")
+          .replace(/\b\w/g, l => l.toUpperCase())
+      )
+      .join(".")
 
   const insertToolBinding = (readableBinding: string) => {
     const currentValue = draft.promptInstructions || ""
@@ -537,6 +563,12 @@ Any constraints the agent must follow.
   }) {
     if (!currentAgent) return
     if (saving) return
+    if (!draft.aiconfig) {
+      if (showNotifications) {
+        notifications.error("Please select an AI model")
+      }
+      return
+    }
 
     saving = true
     try {
@@ -593,6 +625,8 @@ Any constraints the agent must follow.
   })
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div class="llm-section-container">
   <div class="llm-header">
     <Body size="S" color="var(--spectrum-global-color-gray-900)">AI Model*</Body
@@ -601,7 +635,7 @@ Any constraints the agent must follow.
       Select which provider and model to use for the agent.{" "}
       <button
         class="link-button"
-        on:click={() => bb.settings("/ai-config/configs")}
+        onclick={() => bb.settings("/ai-config/configs")}
       >
         View AI Connectors.
       </button>
@@ -624,7 +658,6 @@ Any constraints the agent must follow.
         <Select
           bind:value={draft.aiconfig}
           options={modelOptions}
-          placeholder="Select a model"
           on:change={() => scheduleSave(true)}
         />
       {/if}
@@ -660,7 +693,18 @@ Any constraints the agent must follow.
   {#if includedToolsWithDetails.length > 0}
     <div class="tools-list">
       {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
-        <div class="tool-card" on:click={() => openToolResourceInNewTab(tool)}>
+        <div
+          class="tool-card"
+          role="button"
+          tabindex="0"
+          onclick={() => openToolResourceInNewTab(tool)}
+          onkeydown={e => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              openToolResourceInNewTab(tool)
+            }
+          }}
+        >
           <div class="tool-main">
             <div class="tool-item-icon">
               <ToolIcon icon={tool.icon} size="M" fallbackIcon="Wrench" />
@@ -676,7 +720,8 @@ Any constraints the agent must follow.
             <button
               class="tool-close-button"
               type="button"
-              on:click|stopPropagation={() => {
+              onclick={e => {
+                e.stopPropagation()
                 removeToolBindingFromPrompt(tool)
                 scheduleSave(true)
               }}
@@ -742,24 +787,8 @@ Any constraints the agent must follow.
 />
 
 <style>
-  .tools-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    height: fit-content;
-  }
-
   :global(.tools-popover-container .spectrum-Popover) {
     background-color: var(--background-alt);
-  }
-
-  .title-tools-bar {
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-xxs);
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
   }
 
   .prompt-editor-wrapper {
@@ -832,6 +861,12 @@ Any constraints the agent must follow.
     gap: 6px;
     cursor: pointer;
     transition: background 130ms ease-out;
+    outline: none;
+  }
+
+  .tool-card:focus-visible {
+    outline: 2px solid var(--spectrum-global-color-blue-500);
+    outline-offset: 2px;
   }
 
   .tool-card:hover {
@@ -884,21 +919,6 @@ Any constraints the agent must follow.
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-  }
-
-  .tool-menu-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: fit-content;
-    height: fit-content;
-    border-radius: 8px;
-    transition: background 130ms ease-out;
-  }
-
-  .tool-menu-trigger:hover {
-    background: var(--spectrum-global-color-gray-200);
-    cursor: pointer;
   }
 
   .tool-close-button {
@@ -985,10 +1005,6 @@ Any constraints the agent must follow.
   }
 
   .section-header > :global(.spectrum-Body):first-child {
-    font-weight: 500;
-  }
-
-  .title-tools-bar > :global(.spectrum-Body) {
     font-weight: 500;
   }
 </style>

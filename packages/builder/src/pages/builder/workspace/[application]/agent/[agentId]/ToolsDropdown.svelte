@@ -1,18 +1,37 @@
 <script lang="ts">
+  import { tick } from "svelte"
   import { Body, Button, ActionMenu, MenuItem, Icon } from "@budibase/bbui"
   import { ToolType } from "@budibase/types"
   import type { AgentTool } from "./toolTypes"
   import ToolIcon from "./ToolIcon.svelte"
 
-  export let filteredTools: AgentTool[]
-  export let toolSections: Record<string, AgentTool[]>
-  export let toolSearch: string
-  export let onToolClick: (_tool: AgentTool) => void
-  export let onAddApiConnection: () => void
-  export let webSearchEnabled = false
-  export let onConfigureWebSearch: () => void
+  export interface Props {
+    filteredTools: AgentTool[]
+    toolSections: Record<string, AgentTool[]>
+    toolSearch: string
+    webSearchEnabled: boolean
+    onToolClick: (_tool: AgentTool) => void
+    onAddApiConnection: () => void
+    onConfigureWebSearch: () => void
+  }
+
+  let {
+    filteredTools,
+    toolSections,
+    toolSearch = $bindable(""),
+    webSearchEnabled = false,
+    onToolClick,
+    onAddApiConnection,
+    onConfigureWebSearch,
+  }: Props = $props()
 
   let toolsMenu: ActionMenu | undefined
+  let searchInput: HTMLInputElement | undefined
+
+  const focusSearch = async () => {
+    await tick()
+    searchInput?.focus()
+  }
 
   const openWebSearchConfig = () => {
     toolsMenu?.hide()
@@ -27,6 +46,7 @@
 
 <ActionMenu
   bind:this={toolsMenu}
+  on:open={focusSearch}
   align="right"
   roundedPopover
   portalTarget=".tools-popover-container"
@@ -38,6 +58,7 @@
   <div class="tools-menu">
     <div class="tools-menu-header">
       <input
+        bind:this={searchInput}
         class="tools-filter"
         type="text"
         placeholder="Search"
@@ -93,7 +114,7 @@
                       Web search
                     {:else}
                       {#if tool.sourceLabel}{tool.sourceLabel}:
-                      {/if}{tool.name}
+                      {/if}{tool.readableName || tool.name}
                     {/if}
                   </span>
                   {#if tool.sourceType === ToolType.SEARCH}

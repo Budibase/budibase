@@ -2,16 +2,20 @@ import { Document } from "../../"
 import type { UIMessage } from "ai"
 
 export enum ToolType {
-  BUDIBASE = "BUDIBASE",
+  INTERNAL_TABLE = "INTERNAL_TABLE",
+  EXTERNAL_TABLE = "EXTERNAL_TABLE",
+  AUTOMATION = "AUTOMATION",
   REST_QUERY = "REST_QUERY",
   SEARCH = "SEARCH",
 }
 
 export interface ToolMetadata {
   name: string
+  readableName?: string
   description?: string
   sourceType: ToolType
   sourceLabel?: string
+  sourceIconType?: string
 }
 
 export interface Agent extends Document {
@@ -42,6 +46,7 @@ export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
   createdAt?: number
   completedAt?: number
+  error?: string
 }
 
 export interface AgentChat extends Document {
