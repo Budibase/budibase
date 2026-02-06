@@ -426,22 +426,33 @@ describe("UserDB", () => {
     })
   })
 
-  describe("countUsersByApp", () => {
-    it("throws when appId is missing or not a string", async () => {
-      await config.doInTenant(async () => {
-        await expect(db.countUsersByApp(undefined as any)).rejects.toThrow(
-          "Must provide a string based workspace ID"
+  describe("countUsersByWorkspace", () => {
+    const errorMessage = "Must provide a string based workspace ID"
+    const assertInvalidWorkspaceId = async (workspaceId: unknown) => {
+      await config.doInTenant(() =>
+        expect(db.countUsersByWorkspace(workspaceId as string)).rejects.toThrow(
+          errorMessage
         )
-        await expect(db.countUsersByApp(null as any)).rejects.toThrow(
-          "Must provide a string based workspace ID"
-        )
-        await expect(db.countUsersByApp(123 as any)).rejects.toThrow(
-          "Must provide a string based workspace ID"
-        )
-        await expect(db.countUsersByApp("" as any)).rejects.toThrow(
-          "Must provide a string based workspace ID"
-        )
-      })
+      )
+    }
+
+    it("returns zero when the workspace has no users", async () => {
+      const workspaceId = `app_${generator.guid()}`
+
+      await config.doInTenant(() =>
+        expect(db.countUsersByWorkspace(workspaceId)).resolves.toEqual({
+          userCount: 0,
+        })
+      )
+    })
+
+    it.each<[string, unknown]>([
+      ["undefined", undefined],
+      ["null", null],
+      ["number", 123],
+      ["empty string", ""],
+    ])("throws when workspaceId is %s", async (_label, workspaceId) => {
+      await assertInvalidWorkspaceId(workspaceId)
     })
   })
 })
