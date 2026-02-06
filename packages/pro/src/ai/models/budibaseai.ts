@@ -14,7 +14,6 @@ import { proxyFetch } from "../../utilities/fetch"
 import { LLMRequest } from "../llm"
 import { LLM } from "./base"
 import { OpenAI } from "./openai"
-import type openai from "openai"
 
 export class BudibaseAI extends LLM {
   async prompt(prompt: string | LLMRequest): Promise<LLMPromptResponse> {
@@ -250,36 +249,6 @@ export class BudibaseAI extends LLM {
     })
     // @ts-expect-error - we're being cheeky and calling a protected method
     yield* llm.chatCompletionStream(request)
-  }
-
-  async chatCompletions(
-    request: openai.Chat.Completions.ChatCompletionCreateParamsNonStreaming
-  ): Promise<openai.Chat.Completions.ChatCompletion> {
-    if (env.SELF_HOSTED) {
-      throw new Error("Chat completions not supported for this provider")
-    }
-
-    const llm = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
-      model: this.model,
-      max_completion_tokens: this.maxTokens,
-    })
-    return await llm.chatCompletions(request)
-  }
-
-  async chatCompletionsStream(
-    request: openai.Chat.Completions.ChatCompletionCreateParamsStreaming
-  ): Promise<AsyncIterable<openai.Chat.Completions.ChatCompletionChunk>> {
-    if (env.SELF_HOSTED) {
-      throw new Error("Chat completions not supported for this provider")
-    }
-
-    const llm = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
-      model: this.model,
-      max_completion_tokens: this.maxTokens,
-    })
-    return await llm.chatCompletionsStream(request)
   }
 
   protected async *chatCompletionStreamSelfHost(
