@@ -24,9 +24,11 @@
   export let id: string | undefined = undefined
   export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = false
+  export let bordered: boolean = true
   export let fieldText: string = ""
   export let fieldIcon: PickerIconInput = undefined
   export let fieldColour: string = ""
+  export let fieldSubtitle: string | null = null
   export let isPlaceholder: boolean = false
   export let placeholderOption: string | undefined | boolean = undefined
   export let options: O[] = []
@@ -225,6 +227,7 @@
 <button
   {id}
   class="spectrum-Picker spectrum-Picker--size{size}"
+  class:has-border={bordered}
   class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-open={open}
@@ -250,8 +253,12 @@
     class="spectrum-Picker-label"
     class:is-placeholder={isPlaceholder}
     class:auto-width={autoWidth}
+    class:has-subtitle={!!fieldSubtitle}
   >
-    {fieldText}
+    <span class="picker-label-text">{fieldText}</span>
+    {#if fieldSubtitle}
+      <span class="picker-label-subtitle">{fieldSubtitle}</span>
+    {/if}
   </span>
   {#if !hideChevron}
     <Icon name="caret-down" size="S" />
@@ -420,6 +427,8 @@
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
+  }
+  .spectrum-Picker.has-border {
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
   }
@@ -533,6 +542,26 @@
     color: var(--spectrum-global-color-gray-600);
     display: block;
     margin-top: var(--spacing-s);
+  }
+  .spectrum-Picker-label.has-subtitle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    white-space: normal;
+    overflow: visible;
+    height: auto;
+    line-height: normal;
+  }
+  .spectrum-Picker-label.has-subtitle .picker-label-text {
+    font-size: 12px;
+    line-height: 15px;
+  }
+  .picker-label-subtitle {
+    font-size: 12px;
+    line-height: 15px;
+    color: var(--spectrum-global-color-gray-600);
+    font-weight: 500;
   }
 
   .select-all-item {

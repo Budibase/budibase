@@ -6,7 +6,6 @@ import {
   UpdateAgentRequest,
 } from "@budibase/types"
 import { listAgentFiles, removeAgentFile } from "./files"
-import { deleteAgentFileChunks, getAgentRagConfig } from "../rag/files"
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
@@ -60,7 +59,10 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
-    ragConfigId: request.ragConfigId,
+    embeddingModel: request.embeddingModel,
+    vectorDb: request.vectorDb,
+    ragMinDistance: request.ragMinDistance,
+    ragTopK: request.ragTopK,
   }
 
   const { rev } = await db.put(agent)
@@ -68,8 +70,8 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
   return withAgentDefaults(agent)
 }
 
-export async function update(request: UpdateAgentRequest): Promise<Agent> {
-  const { _id, _rev } = request
+export async function update(agent: UpdateAgentRequest): Promise<Agent> {
+  const { _id, _rev } = agent
   if (!_id || !_rev) {
     throw new HTTPError("_id and _rev are required", 400)
   }
@@ -79,9 +81,9 @@ export async function update(request: UpdateAgentRequest): Promise<Agent> {
 
   const updated: Agent = {
     ...existing,
-    ...request,
+    ...agent,
     updatedAt: new Date().toISOString(),
-    enabledTools: request.enabledTools ?? existing?.enabledTools ?? [],
+    enabledTools: agent.enabledTools ?? existing?.enabledTools ?? [],
   }
 
   const { rev } = await db.put(updated)
@@ -95,16 +97,9 @@ export async function remove(agentId: string) {
 
   await db.remove(agent)
 
-  if (agent.ragConfigId) {
-    const ragConfig = await getAgentRagConfig(agent)
-
+  if (agent.vectorDb) {
     const files = await listAgentFiles(agentId)
-    if (files.length > 0 && ragConfig) {
-      await deleteAgentFileChunks(
-        ragConfig,
-        files.map(file => file.ragSourceId).filter(Boolean)
-      )
-
+    if (files.length > 0) {
       await Promise.all(files.map(file => removeAgentFile(agent, file)))
     }
   }

@@ -14,6 +14,7 @@
   export let selectedAgentId: string | null = null
   export let selectedAgentName: string = ""
   export let enabledAgentList: EnabledAgentListItem[] = []
+  export let conversationStarters: { prompt: string }[] = []
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
@@ -69,9 +70,9 @@
 
     <Chatbox
       bind:chat
-      {loading}
       {workspaceId}
-      on:chatSaved={event => dispatch("chatSaved", event.detail)}
+      {conversationStarters}
+      onchatsaved={event => dispatch("chatSaved", event.detail)}
     />
   {:else}
     <div class="chat-empty">

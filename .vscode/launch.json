@@ -25,7 +25,10 @@
       "request": "launch",
       "name": "Launch Chrome against localhost",
       "url": "http://localhost:10000",
-      "webRoot": "${workspaceFolder}"
+      "webRoot": "${workspaceFolder}",
+      "sourceMapPathOverrides": {
+        "http://localhost:10000/builder/src/*": "${workspaceFolder}/packages/builder/src/*"
+      }
     }
   ],
   "compounds": [

@@ -5,7 +5,7 @@ import {
   CreateAdminUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
-  SearchFilters,
+  SearchUsersRequest,
   User,
 } from "@budibase/types"
 import structures from "../structures"
@@ -151,7 +151,7 @@ export class UserAPI extends TestAPI {
   }
 
   searchUsers = (
-    { query }: { query?: SearchFilters },
+    body: SearchUsersRequest = {},
     opts?: {
       status?: number
       noHeaders?: boolean
@@ -160,7 +160,7 @@ export class UserAPI extends TestAPI {
   ) => {
     const req = this.request
       .post("/api/global/users/search")
-      .send({ query })
+      .send(body)
       .expect("Content-Type", /json/)
       .expect(opts?.status ? opts.status : 200)
     if (opts?.useHeaders) {

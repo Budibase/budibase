@@ -47,6 +47,7 @@
   export let snippets: any[] = []
   export let defaultSortColumn: string | undefined = undefined
   export let defaultSortOrder: "Ascending" | "Descending" = "Ascending"
+  export let stickyHeader: boolean = true
 
   const dispatch = createEventDispatcher()
 
@@ -286,15 +287,17 @@
   const toggleSelectAll = (e: CustomEvent): void => {
     const select = !!e.detail
     if (select) {
+      const next = [...selectedRows]
       // Add any rows which are not already in selected rows
       rows.forEach(row => {
         if (
           row.__selectable !== false &&
-          selectedRows.findIndex(x => x._id === row._id) === -1
+          next.findIndex(x => x._id === row._id) === -1
         ) {
-          selectedRows.push(row)
+          next.push(row)
         }
       })
+      selectedRows = next
     } else {
       // Remove any rows from selected rows that are in the current data set
       selectedRows = selectedRows.filter(el =>
@@ -366,6 +369,7 @@
     class="wrapper"
     class:wrapper--quiet={quiet}
     class:wrapper--compact={compact}
+    class:wrapper--sticky-header={stickyHeader}
     style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
   >
     {#if loading}
@@ -577,8 +581,7 @@
   }
   .spectrum-Table-headCell {
     height: var(--header-height);
-    position: sticky;
-    top: 0;
+    position: relative;
     text-overflow: ellipsis;
     white-space: nowrap;
     background-color: var(--spectrum-alias-background-color-secondary);
@@ -617,12 +620,19 @@
     justify-content: flex-end;
   }
   .spectrum-Table-headCell--edit {
-    position: sticky;
-    left: 0;
+    position: relative;
     z-index: 3;
     justify-content: center;
     padding-left: calc(var(--cell-padding) / 1.33);
     padding-right: calc(var(--cell-padding) / 1.33);
+  }
+  .wrapper--sticky-header .spectrum-Table-headCell {
+    position: sticky;
+    top: 0;
+  }
+  .wrapper--sticky-header .spectrum-Table-headCell--edit {
+    position: sticky;
+    left: 0;
   }
   .spectrum-Table-headCell .title {
     overflow: visible;

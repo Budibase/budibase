@@ -12,6 +12,7 @@ import {
   Table,
   TableSchema,
   TableSourceType,
+  RelationshipType,
 } from "@budibase/types"
 
 const baseConstraints: FieldConstraints = { presence: false }
@@ -49,6 +50,29 @@ function buildQuery(table: Table, filters: SearchFilters): EnrichedQueryJson {
     relationships: [],
     resource: { fields: [] },
     extra: { idFilter: {} },
+  }
+}
+
+function buildWriteQuery(
+  table: Table,
+  filters: SearchFilters,
+  operation: Operation.UPDATE | Operation.DELETE
+): EnrichedQueryJson {
+  return {
+    operation,
+    table,
+    tables: { [table.name]: table },
+    filters,
+    relationships: [
+      {
+        tableName: "relTable",
+        column: "rel",
+        from: "rel",
+        to: "id",
+      },
+    ],
+    resource: { fields: [] },
+    body: operation === Operation.UPDATE ? { name: "new" } : undefined,
   }
 }
 
@@ -202,6 +226,66 @@ describe("SQL filter parameterization", () => {
     expect(result.sql).not.toContain(malicious)
     expect(result.bindings).toEqual(
       expect.arrayContaining([`["${malicious}"]`])
+    )
+  })
+
+  it("applies link empty filters for update queries", () => {
+    const table = buildTable({
+      name: {
+        name: "name",
+        type: FieldType.STRING,
+        externalType: "text",
+        constraints: baseConstraints,
+      },
+      rel: {
+        name: "rel",
+        type: FieldType.LINK,
+        constraints: baseConstraints,
+        fieldName: "rel",
+        tableId: "relTableId",
+        relationshipType: RelationshipType.MANY_TO_ONE,
+      },
+    })
+
+    const query = buildWriteQuery(
+      table,
+      { empty: { rel: null } },
+      Operation.UPDATE
+    )
+    const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+    expect(result.sql.toLowerCase()).toEqual(
+      'update "tbl" set "name" = $1 where not exists (select 1 from "reltable" as "reltable" where "reltable"."id" = "tbl"."rel") returning *'
+    )
+  })
+
+  it("applies link notEmpty filters for delete queries", () => {
+    const table = buildTable({
+      name: {
+        name: "name",
+        type: FieldType.STRING,
+        externalType: "text",
+        constraints: baseConstraints,
+      },
+      rel: {
+        name: "rel",
+        type: FieldType.LINK,
+        constraints: baseConstraints,
+        fieldName: "rel",
+        tableId: "relTableId",
+        relationshipType: RelationshipType.MANY_TO_ONE,
+      },
+    })
+
+    const query = buildWriteQuery(
+      table,
+      { notEmpty: { rel: null } },
+      Operation.DELETE
+    )
+    const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+    expect(result.sql.toLowerCase()).toEqual(
+      'delete from "tbl" where exists (select 1 from "reltable" as "reltable" where "reltable"."id" = "tbl"."rel") returning *'
     )
   })
 })

@@ -1,4 +1,5 @@
 import * as automationUtils from "../../automationUtils"
+import { getErrorMessage } from "@budibase/backend-core"
 import {
   AgentStepInputs,
   AgentStepOutputs,
@@ -8,12 +9,19 @@ import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import {
+  findIncompleteToolCalls,
+  formatIncompleteToolCallError,
+  updatePendingToolCalls,
+} from "../../../sdk/workspace/ai/agents/utils"
+import {
   ToolLoopAgent,
   stepCountIs,
   readUIMessageStream,
   UIMessage,
   Output,
   jsonSchema,
+  wrapLanguageModel,
+  extractReasoningMiddleware,
 } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
@@ -110,28 +118,77 @@ export async function run({
           outputOption = Output.object({ schema: jsonSchema(normalizedSchema) })
         }
 
+        const pendingToolCalls = new Set<string>()
+        const hasTools = Object.keys(tools).length > 0
         const agent = new ToolLoopAgent({
-          model: litellm.chat(modelId),
+          model: wrapLanguageModel({
+            model: litellm.chat(modelId),
+            middleware: extractReasoningMiddleware({
+              tagName: "think",
+            }),
+          }),
           instructions: systemPrompt || undefined,
           tools,
-
           stopWhen: stepCountIs(30),
-          providerOptions: {
-            litellm: ai.getLiteLLMProviderOptions(modelName),
-          },
+          providerOptions: ai.getLiteLLMProviderOptions(hasTools),
           output: outputOption,
+          onStepFinish({ toolCalls, toolResults }) {
+            updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+          },
         })
 
         const streamResult = await agent.stream({ prompt })
 
         let assistantMessage: UIMessage | undefined
+        let streamingError: string | undefined
+
         for await (const uiMessage of readUIMessageStream({
-          stream: streamResult.toUIMessageStream({ sendReasoning: true }),
+          stream: streamResult.toUIMessageStream({
+            sendReasoning: true,
+            onError: error => {
+              const errorMessage = getErrorMessage(error)
+              streamingError = errorMessage
+              return errorMessage
+            },
+          }),
         })) {
           assistantMessage = uiMessage
         }
 
-        const responseText = await streamResult.text
+        const incompleteTools = assistantMessage
+          ? findIncompleteToolCalls([assistantMessage])
+          : []
+        if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
+          const errorMessage = formatIncompleteToolCallError(incompleteTools)
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: errorMessage,
+            tags: { error: "1", "error.type": "IncompleteToolCall" },
+          })
+          return {
+            success: false,
+            response: errorMessage,
+          }
+        }
+
+        let responseText: string | undefined
+        let textExtractionError: string | undefined
+        try {
+          responseText = await streamResult.text
+        } catch (err) {
+          textExtractionError = getErrorMessage(err)
+        }
+
+        const error = streamingError || textExtractionError
+        if (error && !responseText) {
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: error,
+            tags: { error: "1", "error.type": "StreamingError" },
+          })
+          return {
+            success: false,
+            response: error,
+          }
+        }
         const usage = await streamResult.usage
         const output = outputOption
           ? ((await streamResult.output) as Record<string, any>)

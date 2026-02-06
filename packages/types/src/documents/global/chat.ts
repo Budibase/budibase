@@ -1,9 +1,15 @@
 import { AgentMessageMetadata, Document } from "../../"
 import type { UIMessage } from "ai"
 
-export interface ChatAppEnabledAgent {
+export interface ConversationStarter {
+  prompt: string
+}
+
+export interface ChatAppAgent {
   agentId: string
-  default?: boolean
+  isEnabled: boolean
+  isDefault: boolean
+  conversationStarters?: ConversationStarter[]
 }
 
 export interface ChatApp extends Document {
@@ -11,7 +17,7 @@ export interface ChatApp extends Document {
   greeting?: string
   description?: string
   theme?: string
-  enabledAgents: ChatAppEnabledAgent[]
+  agents: ChatAppAgent[]
   live?: boolean
   settings?: Record<string, any>
 }
@@ -22,6 +28,7 @@ export interface ChatConversationRequest extends Document {
   title?: string
   messages: UIMessage<AgentMessageMetadata>[]
   transient?: boolean
+  isPreview?: boolean
 }
 
 export type CreateChatConversationRequest = Pick<
