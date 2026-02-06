@@ -8,6 +8,7 @@
     ViewMode,
   } from "@/types/automations"
   import {
+    AutomationStatus,
     type AutomationStep,
     type AutomationStepResult,
     type AutomationTrigger,
@@ -174,7 +175,10 @@
         ? outputs.status.toLowerCase()
         : undefined
 
-    if (outputStatus === "stopped" || outputStatus === "stopped_error") {
+    if (
+      outputStatus === AutomationStatus.STOPPED ||
+      outputStatus === AutomationStatus.STOPPED_ERROR
+    ) {
       return {
         message: "Stopped",
         icon: "warning",
