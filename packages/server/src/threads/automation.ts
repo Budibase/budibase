@@ -616,6 +616,14 @@ class Orchestrator {
             const latest = results.at(-1)
             if (latest) {
               this.reportStepProgress(step, progressStatus(latest), latest, ctx)
+              if (
+                step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
+                latest.outputs.success === false &&
+                (latest.outputs.status === AutomationStatus.ERROR ||
+                  latest.outputs.status === AutomationStatus.STOPPED_ERROR)
+              ) {
+                return results
+              }
             }
             stepIndex++
             break

@@ -101,6 +101,30 @@ describe("Test triggering an automation from another automation", () => {
     expect(result.status).toBe(AutomationStatus.STOPPED)
   })
 
+  it("should stop the parent when the child automation errors", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction()
+      .executeScript({
+        code: `throw new Error("Child failure")`,
+      })
+      .save()
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .triggerAutomationRun({
+        automation: {
+          automationId: automation._id!,
+        },
+      })
+      .serverLog({ text: "This should not execute either" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toBe(false)
+    expect(result.steps[0].outputs.status).toBe(AutomationStatus.ERROR)
+    expect(result.steps[1]).toBeUndefined()
+    expect(result.status).toBe(AutomationStatus.ERROR)
+  })
+
   it("should stop the parent when the child automation stops inside a loop", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onAppAction()
