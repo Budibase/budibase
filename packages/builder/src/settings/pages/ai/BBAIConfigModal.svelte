@@ -65,10 +65,7 @@
     { label: "GPT 5", value: "bbai-openai-gpt-5" },
     { label: "GPT 5 Mini", value: "bbai-openai-gpt-5-mini" },
     { label: "GPT 5 Nano", value: "bbai-openai-gpt-5-nano" },
-    {
-      label: "Mistral Small 24B Instruct 2501",
-      value: "bbai-mistral-mistral-small-24b-instruct-2501",
-    },
+    { label: "Mistral Small", value: "bbai-mistral-mistral-small-latest" },
   ]
 
   $: providers = $aiConfigsStore.providers
