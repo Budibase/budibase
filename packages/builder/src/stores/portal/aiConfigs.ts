@@ -1,14 +1,14 @@
 import { API } from "@/api"
 import {
+  AIConfigResponse,
   CreateAIConfigRequest,
-  CustomAIProviderConfig,
   LLMProvider,
   UpdateAIConfigRequest,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 interface AIConfigState {
-  customConfigs: CustomAIProviderConfig[]
+  customConfigs: AIConfigResponse[]
   providers?: LLMProvider[]
 }
 
@@ -44,7 +44,7 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
 
   createConfig = async (
     config: CreateAIConfigRequest
-  ): Promise<CustomAIProviderConfig> => {
+  ): Promise<AIConfigResponse> => {
     const created = await API.aiConfig.create(config)
     this.update(state => {
       state.customConfigs = [...state.customConfigs, created]
@@ -56,7 +56,7 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
 
   updateConfig = async (
     config: UpdateAIConfigRequest
-  ): Promise<CustomAIProviderConfig> => {
+  ): Promise<AIConfigResponse> => {
     const updated = await API.aiConfig.update(config)
     this.update(state => {
       const idx = state.customConfigs.findIndex(c => c._id === updated._id)

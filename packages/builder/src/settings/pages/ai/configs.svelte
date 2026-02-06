@@ -1,20 +1,71 @@
 <script lang="ts">
+  import { aiConfigsStore } from "@/stores/portal"
+  import { Button, Layout, Modal, notifications } from "@budibase/bbui"
+  import type { AIConfigResponse } from "@budibase/types"
+  import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
-  import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
-  import { aiConfigsStore, featureFlags } from "@/stores/portal"
-  import { AIConfigType, type CustomAIProviderConfig } from "@budibase/types"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
+  import BBAIConfigModal from "./BBAIConfigModal.svelte"
 
   let customConfigModal: { show: () => void; hide: () => void }
-  let customModalConfig: CustomAIProviderConfig | null = null
+  let selectedModalConfig: AIConfigResponse | undefined
+  let selectedProvider: string | undefined
 
-  $: chatConfigs = ($aiConfigsStore.customConfigs || []).filter(
+  $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
     config => config.configType === AIConfigType.COMPLETIONS
   )
 
-  function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
-    customModalConfig = config ? { ...config } : null
+  $: modelProviders = [
+    ...(aiGenerationConfigs.find(c => c._id === "aiconfig_bbai")
+      ? []
+      : [
+          {
+            name: "Budibase AI",
+            provider: "budibase",
+            description: "Budibase managed",
+          },
+        ]),
+    {
+      name: "Anthropic",
+      provider: "anthropic",
+      description: "Connect to Claude models directly from Anthropic",
+    },
+    {
+      name: "Google",
+      provider: "google",
+      description: "Connect to Gemini models directly from Google",
+    },
+    {
+      name: "Mistral",
+      provider: "mistral",
+      description: "Connect to Mistral models directly from Mistral",
+    },
+    {
+      name: "OpenAI",
+      provider: "openai",
+      description: "Connect to ChatGPT models directly from OpenAI",
+    },
+    {
+      name: "OpenRouter",
+      provider: "openrouter",
+      description: "Connect to 100s of text, image, embedding models",
+    },
+    {
+      name: "Groq",
+      provider: "groq",
+      description: "Connect to 100s of text, image, embedding models",
+    },
+  ]
+
+  function createAIConfig(provider?: string) {
+    selectedModalConfig = undefined
+    selectedProvider = provider
+    customConfigModal?.show()
+  }
+  function editAIConfig(config: AIConfigResponse) {
+    selectedModalConfig = config
+    selectedProvider = config.provider
     customConfigModal?.show()
   }
 
@@ -27,65 +78,97 @@
   })
 </script>
 
-<Layout noPadding gap="S">
-  {#if $featureFlags.AI_AGENTS}
-    <div class="section">
-      <div class="section-header">
-        <div></div>
-        <Button size="S" cta on:click={() => openCustomAIConfigModal()}>
-          Add configuration
-        </Button>
-      </div>
-
-      {#if chatConfigs.length}
-        <div class="ai-list">
-          {#each chatConfigs as config (config._id)}
-            <CustomAIConfigTile
-              {config}
-              editHandler={() => openCustomAIConfigModal(config)}
-            />
-          {/each}
-        </div>
-      {:else}
-        <div class="no-enabled">
-          <Body size="S">No chat configurations yet</Body>
-        </div>
-      {/if}
+<Layout noPadding gap="XS">
+  {#if completionConfigs.length}
+    <div class="section-header">
+      <div class="section-title">Connected models</div>
+    </div>
+    <div class="model-list">
+      {#each completionConfigs as config (config._id)}
+        <CustomAIConfigTile
+          displayName={config.name}
+          provider={config.provider}
+          description={config.model}
+          isEdition
+          editHandler={() => editAIConfig(config)}
+        ></CustomAIConfigTile>
+      {/each}
     </div>
   {/if}
+  <div class="section-header new-provider-section">
+    <div class="section-title">Model providers</div>
+    <div class="provider-controls">
+      <Button icon="plus" size="S" on:click={() => createAIConfig()}
+        >Connect to a custom provider</Button
+      >
+    </div>
+  </div>
+  <div class="model-list">
+    {#each modelProviders as config (config.name)}
+      <CustomAIConfigTile
+        displayName={config.name}
+        provider={config.provider}
+        description={config.description}
+        editHandler={() => createAIConfig(config.provider)}
+      ></CustomAIConfigTile>
+    {/each}
+  </div>
 </Layout>
 
 <Modal bind:this={customConfigModal}>
-  <CustomConfigModal
-    config={customModalConfig}
-    type={AIConfigType.COMPLETIONS}
-    on:hide={() => {
-      customConfigModal.hide()
-    }}
-  />
+  {#if selectedProvider !== "budibase"}
+    <CustomConfigModal
+      config={selectedModalConfig}
+      provider={selectedProvider}
+      type={AIConfigType.COMPLETIONS}
+      on:hide={() => {
+        customConfigModal.hide()
+      }}
+    />
+  {:else}
+    <BBAIConfigModal
+      config={selectedModalConfig
+        ? {
+            _id: selectedModalConfig._id,
+            _rev: selectedModalConfig._rev,
+            model: selectedModalConfig.model,
+          }
+        : undefined}
+      type={AIConfigType.COMPLETIONS}
+      on:hide={() => {
+        customConfigModal.hide()
+      }}
+    />
+  {/if}
 </Modal>
 
 <style>
-  .ai-list {
-    margin-top: var(--spacing-l);
-    margin-bottom: var(--spacing-l);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .no-enabled {
-    padding: 16px;
-    background-color: var(--grey-1);
-    border: 1px solid var(--grey-4);
-    border-radius: var(--border-radius-m);
-  }
-
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
-    margin-bottom: var(--spacing-m);
+  }
+  .new-provider-section {
+    margin-top: var(--spacing-l);
+  }
+
+  .section-title {
+    font-size: 13px;
+    color: var(--grey-7, #a2a2a2);
+  }
+
+  .provider-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .model-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: var(--grey-1, #1d1d1d);
+    border-radius: 6px;
   }
 </style>

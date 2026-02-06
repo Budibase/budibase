@@ -8,15 +8,14 @@ import {
   UserCtx,
   AIConfigType,
   RequiredKeys,
-  WithoutDocMetadata,
-  ToDocUpdateMetadata,
   LLMProvidersResponse,
+  AIConfigResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
 const sanitizeConfig = async (
   config: CustomAIProviderConfig
-): Promise<CustomAIProviderConfig> => {
+): Promise<AIConfigResponse> => {
   const providers = await sdk.ai.configs.fetchLiteLLMProviders()
   const provider = providers.find(p => p.id === config.provider)
 
@@ -32,7 +31,7 @@ const sanitizeConfig = async (
     return updatedFields
   }, config.credentialsFields)
 
-  const sanitized: CustomAIProviderConfig = {
+  const sanitized: AIConfigResponse = {
     ...config,
     credentialsFields,
   }
@@ -65,7 +64,7 @@ export const fetchAIProviders = async (
 }
 
 export const createAIConfig = async (
-  ctx: UserCtx<CreateAIConfigRequest, CustomAIProviderConfig>
+  ctx: UserCtx<CreateAIConfigRequest, AIConfigResponse>
 ) => {
   const body = ctx.request.body
 
@@ -73,19 +72,18 @@ export const createAIConfig = async (
     throw new HTTPError("Config name is required", 400)
   }
 
-  const configType = body.configType ?? AIConfigType.COMPLETIONS
+  const createRequest: RequiredKeys<
+    Parameters<typeof sdk.ai.configs.create>[0]
+  > = {
+    name: body.name,
+    provider: body.provider,
+    credentialsFields: body.credentialsFields,
+    model: body.model,
 
-  const createRequest: RequiredKeys<WithoutDocMetadata<CreateAIConfigRequest>> =
-    {
-      name: body.name,
-      provider: body.provider,
-      credentialsFields: body.credentialsFields,
-      model: body.model,
-      liteLLMModelId: body.liteLLMModelId,
-      webSearchConfig: body.webSearchConfig,
-      configType,
-      reasoningEffort: body.reasoningEffort,
-    }
+    webSearchConfig: body.webSearchConfig,
+    configType: body.configType,
+    reasoningEffort: body.reasoningEffort,
+  }
 
   const newConfig = await sdk.ai.configs.create(createRequest)
 
@@ -93,7 +91,7 @@ export const createAIConfig = async (
 }
 
 export const updateAIConfig = async (
-  ctx: UserCtx<UpdateAIConfigRequest, CustomAIProviderConfig>
+  ctx: UserCtx<UpdateAIConfigRequest, AIConfigResponse>
 ) => {
   const body = ctx.request.body
 
@@ -112,7 +110,7 @@ export const updateAIConfig = async (
   const configType = body.configType ?? AIConfigType.COMPLETIONS
 
   const updateRequest: RequiredKeys<
-    ToDocUpdateMetadata<UpdateAIConfigRequest>
+    RequiredKeys<Parameters<typeof sdk.ai.configs.update>[0]>
   > = {
     _id: body._id,
     _rev: body._rev,
@@ -120,7 +118,7 @@ export const updateAIConfig = async (
     provider: body.provider,
     credentialsFields: body.credentialsFields,
     model: body.model,
-    liteLLMModelId: body.liteLLMModelId,
+
     webSearchConfig: body.webSearchConfig,
     configType,
     reasoningEffort: body.reasoningEffort,

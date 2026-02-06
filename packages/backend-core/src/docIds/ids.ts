@@ -141,8 +141,8 @@ export const generateAgentFileID = (agentId: string) => {
   return `${DocumentType.AGENT_FILE}${SEPARATOR}${agentId}${SEPARATOR}${newid()}`
 }
 
-export const generateAIConfigID = () => {
-  return `${DocumentType.AI_CONFIG}${SEPARATOR}${newid()}`
+export const generateAIConfigID = (id = newid()) => {
+  return `${DocumentType.AI_CONFIG}${SEPARATOR}${id}`
 }
 
 export const getLiteLLMKeyID = () => {
