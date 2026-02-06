@@ -60,11 +60,15 @@
   ]
 
   const models = [
-    { label: "GPT 4o Mini", value: "gpt-4o-mini" },
-    { label: "GPT 4o", value: "gpt-4o" },
-    { label: "GPT 5", value: "gpt-5" },
-    { label: "GPT 5 Mini", value: "gpt-5-mini" },
-    { label: "GPT 5 Nano", value: "gpt-5-nano" },
+    { label: "GPT 4o Mini", value: "bbai-openai-gpt-4o-mini" },
+    { label: "GPT 4o", value: "bbai-openai-gpt-4o" },
+    { label: "GPT 5", value: "bbai-openai-gpt-5" },
+    { label: "GPT 5 Mini", value: "bbai-openai-gpt-5-mini" },
+    { label: "GPT 5 Nano", value: "bbai-openai-gpt-5-nano" },
+    {
+      label: "Mistral Small 24B Instruct 2501",
+      value: "bbai-mistral-mistral-small-24b-instruct-2501",
+    },
   ]
 
   $: providers = $aiConfigsStore.providers

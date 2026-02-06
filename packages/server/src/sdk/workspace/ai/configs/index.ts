@@ -54,13 +54,16 @@ export async function create(
     config.credentialsFields.api_key = (await licensing.keys.getLicenseKey())!
   }
 
-  const modelId = await liteLLM.addModel({
-    provider: config.provider,
-    model: config.model,
-    credentialFields: config.credentialsFields,
-    configType: config.configType,
-    reasoningEffort: config.reasoningEffort,
-  })
+  const modelId =
+    config.provider === "budibase"
+      ? config.model
+      : await liteLLM.addModel({
+          provider: config.provider,
+          model: config.model,
+          credentialFields: config.credentialsFields,
+          configType: config.configType,
+          reasoningEffort: config.reasoningEffort,
+        })
 
   const newConfig: CustomAIProviderConfig = {
     _id: docIds.generateAIConfigID(),
@@ -77,7 +80,9 @@ export async function create(
   const { rev } = await db.put(newConfig)
   newConfig._rev = rev
 
-  await liteLLM.syncKeyModels()
+  if (config.provider !== "budibase") {
+    await liteLLM.syncKeyModels()
+  }
 
   return newConfig
 }
@@ -148,7 +153,7 @@ export async function update(
     JSON.stringify(getLiteLLMAwareFields(updatedConfig)) !==
     JSON.stringify(getLiteLLMAwareFields(existing))
 
-  if (shouldUpdateLiteLLM) {
+  if (shouldUpdateLiteLLM && updatedConfig.provider !== "budibase") {
     try {
       await liteLLM.updateModel({
         llmModelId: updatedConfig.liteLLMModelId,
