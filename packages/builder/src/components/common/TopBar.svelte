@@ -14,7 +14,7 @@
 
   $url
 
-  export let icon: string
+  export let icon: string | undefined = undefined
   export let breadcrumbs: Breadcrumb[]
   export let showPublish = true
 
@@ -34,6 +34,11 @@
 </script>
 
 <div class="top-bar">
+  {#if icon}
+    <div class="icon-container">
+      <Icon name={icon} size="M" weight="regular" />
+    </div>
+  {/if}
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}
       {#if breadcrumb.text}
@@ -106,5 +111,11 @@
     display: flex;
     gap: var(--spacing-s);
     padding: var(--spacing-m);
+  }
+  .icon-container {
+    padding: 3px;
+    border-radius: 6px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-200);
   }
 </style>

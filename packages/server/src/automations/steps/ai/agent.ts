@@ -119,7 +119,7 @@ export async function run({
         }
 
         const pendingToolCalls = new Set<string>()
-
+        const hasTools = Object.keys(tools).length > 0
         const agent = new ToolLoopAgent({
           model: wrapLanguageModel({
             model: litellm.chat(modelId),
@@ -130,7 +130,7 @@ export async function run({
           instructions: systemPrompt || undefined,
           tools,
           stopWhen: stepCountIs(30),
-          providerOptions: ai.getLiteLLMProviderOptions(),
+          providerOptions: ai.getLiteLLMProviderOptions(hasTools),
           output: outputOption,
           onStepFinish({ toolCalls, toolResults }) {
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)

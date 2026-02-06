@@ -1,10 +1,11 @@
-import { flatten } from "@/types/routing"
-import { derived } from "svelte/store"
+import { flatten, match } from "@/types/routing"
+import { derived, get } from "svelte/store"
 
 // Use direct imports to avoid circular dependency in licensing
 import { auth } from "@/stores/portal/auth"
 import { admin } from "@/stores/portal/admin"
 import { appStore } from "@/stores/builder/app"
+import { setSettingsRouteResolver } from "@/stores/bb"
 import { appsStore } from "@/stores/portal/apps"
 import {
   appRoutes,
@@ -32,4 +33,8 @@ export const permittedRoutes = derived(
 
 export const flattenedRoutes = derived([permittedRoutes], ([$permitted]) => {
   return flatten($permitted)
+})
+
+setSettingsRouteResolver(path => {
+  return match(path, get(flattenedRoutes)) || null
 })
