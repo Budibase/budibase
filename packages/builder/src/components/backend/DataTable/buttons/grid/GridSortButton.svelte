@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Select } from "@budibase/bbui"
+  import { ActionButton, Icon, Select } from "@budibase/bbui"
   import { FieldType, isNumeric } from "@budibase/types"
   import { canBeSortColumn } from "@budibase/frontend-core"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
@@ -146,14 +146,17 @@
           on:change={e => updateSortOrder(index, e.detail)}
           label="Order"
         />
-        <ActionButton
-          class="remove-sort"
-          icon="x"
-          quiet
-          size="S"
-          on:click={() => removeSort(index)}
-          aria-label="Remove sort"
-        />
+        <div class="remove-sort">
+          <Icon
+            name="x"
+            hoverable
+            color="var(--spectrum-global-color-gray-600)"
+            hoverColor="var(--spectrum-global-color-gray-900)"
+            size="S"
+            on:click={() => removeSort(index)}
+            title="Remove sort"
+          />
+        </div>
       {/if}
     </div>
   {/each}
@@ -177,7 +180,9 @@
   }
 
   .remove-sort {
-    align-self: center;
-    margin-top: 18px;
+    align-self: end;
+    height: var(--spectrum-global-dimension-size-400);
+    display: flex;
+    align-items: center;
   }
 </style>
