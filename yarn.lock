@@ -675,6 +675,51 @@
     "@smithy/util-utf8" "^3.0.0"
     tslib "^2.6.2"
 
+"@aws-sdk/client-sts@^3.899.0":
+  version "3.984.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/client-sts/-/client-sts-3.984.0.tgz#185c625e17fdbdba5aaa75affcd11df4a36f3f6f"
+  integrity sha512-gGe5krvQEcUNF51mXsQ2FOm/oS14V7qhNujcBux7uRiBS32rHoRhZBrg2wTkuz18E1srIL9VSQ503Opjb5tBxQ==
+  dependencies:
+    "@aws-crypto/sha256-browser" "5.2.0"
+    "@aws-crypto/sha256-js" "5.2.0"
+    "@aws-sdk/core" "^3.973.6"
+    "@aws-sdk/credential-provider-node" "^3.972.5"
+    "@aws-sdk/middleware-host-header" "^3.972.3"
+    "@aws-sdk/middleware-logger" "^3.972.3"
+    "@aws-sdk/middleware-recursion-detection" "^3.972.3"
+    "@aws-sdk/middleware-user-agent" "^3.972.6"
+    "@aws-sdk/region-config-resolver" "^3.972.3"
+    "@aws-sdk/types" "^3.973.1"
+    "@aws-sdk/util-endpoints" "3.984.0"
+    "@aws-sdk/util-user-agent-browser" "^3.972.3"
+    "@aws-sdk/util-user-agent-node" "^3.972.4"
+    "@smithy/config-resolver" "^4.4.6"
+    "@smithy/core" "^3.22.0"
+    "@smithy/fetch-http-handler" "^5.3.9"
+    "@smithy/hash-node" "^4.2.8"
+    "@smithy/invalid-dependency" "^4.2.8"
+    "@smithy/middleware-content-length" "^4.2.8"
+    "@smithy/middleware-endpoint" "^4.4.12"
+    "@smithy/middleware-retry" "^4.4.29"
+    "@smithy/middleware-serde" "^4.2.9"
+    "@smithy/middleware-stack" "^4.2.8"
+    "@smithy/node-config-provider" "^4.3.8"
+    "@smithy/node-http-handler" "^4.4.8"
+    "@smithy/protocol-http" "^5.3.8"
+    "@smithy/smithy-client" "^4.11.1"
+    "@smithy/types" "^4.12.0"
+    "@smithy/url-parser" "^4.2.8"
+    "@smithy/util-base64" "^4.3.0"
+    "@smithy/util-body-length-browser" "^4.2.0"
+    "@smithy/util-body-length-node" "^4.2.1"
+    "@smithy/util-defaults-mode-browser" "^4.3.28"
+    "@smithy/util-defaults-mode-node" "^4.2.31"
+    "@smithy/util-endpoints" "^3.2.8"
+    "@smithy/util-middleware" "^4.2.8"
+    "@smithy/util-retry" "^4.2.8"
+    "@smithy/util-utf8" "^4.2.0"
+    tslib "^2.6.2"
+
 "@aws-sdk/core@3.709.0":
   version "3.709.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/core/-/core-3.709.0.tgz#d2b3d5b90f6614e3afc109ebdcaaedbb54c2d68b"
@@ -928,7 +973,7 @@
     "@smithy/types" "^4.3.2"
     tslib "^2.6.2"
 
-"@aws-sdk/credential-provider-node@^3.972.5":
+"@aws-sdk/credential-provider-node@^3.823.0", "@aws-sdk/credential-provider-node@^3.972.5":
   version "3.972.5"
   resolved "https://registry.yarnpkg.com/@aws-sdk/credential-provider-node/-/credential-provider-node-3.972.5.tgz#2f16620eee963c445a727d4a7b5e000df41fa7b6"
   integrity sha512-VWXKgSISQCI2GKN3zakTNHSiZ0+mux7v6YHmmbLQp/o3fvYUQJmKGcLZZzg2GFA+tGGBStplra9VFNf/WwxpYg==
@@ -1058,6 +1103,19 @@
     "@smithy/property-provider" "^4.2.8"
     "@smithy/shared-ini-file-loader" "^4.4.3"
     "@smithy/types" "^4.12.0"
+    tslib "^2.6.2"
+
+"@aws-sdk/ec2-metadata-service@^3.826.0":
+  version "3.984.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/ec2-metadata-service/-/ec2-metadata-service-3.984.0.tgz#e1576027f1ff92fe39fa5d038787e04dec9ed1d8"
+  integrity sha512-qV+yRghPMOGymL2pPU/Z4LmCjZ/EdSKqBmR7Ozo92NDDKfg0Ln9YIGDFn49xpWaloEh7TzMmXGe6m7qZ2aeKlg==
+  dependencies:
+    "@aws-sdk/types" "^3.973.1"
+    "@smithy/node-config-provider" "^4.3.8"
+    "@smithy/node-http-handler" "^4.4.8"
+    "@smithy/protocol-http" "^5.3.8"
+    "@smithy/types" "^4.12.0"
+    "@smithy/util-stream" "^4.5.10"
     tslib "^2.6.2"
 
 "@aws-sdk/endpoint-cache@3.693.0":
@@ -1668,6 +1726,17 @@
     "@smithy/util-endpoints" "^3.2.8"
     tslib "^2.6.2"
 
+"@aws-sdk/util-endpoints@3.984.0":
+  version "3.984.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/util-endpoints/-/util-endpoints-3.984.0.tgz#a2cb22dbeee710be9558e8678370a44b75bbf162"
+  integrity sha512-9ebjLA0hMKHeVvXEtTDCCOBtwjb0bOXiuUV06HNeVdgAjH6gj4x4Zwt4IBti83TiyTGOCl5YfZqGx4ehVsasbQ==
+  dependencies:
+    "@aws-sdk/types" "^3.973.1"
+    "@smithy/types" "^4.12.0"
+    "@smithy/url-parser" "^4.2.8"
+    "@smithy/util-endpoints" "^3.2.8"
+    tslib "^2.6.2"
+
 "@aws-sdk/util-format-url@3.709.0":
   version "3.709.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/util-format-url/-/util-format-url-3.709.0.tgz#6ac420c297cae442f6d4065214eefc0d977e1a10"
@@ -1949,7 +2018,7 @@
     fast-xml-parser "^5.0.7"
     tslib "^2.8.1"
 
-"@azure/identity@4.2.1", "@azure/identity@^4.2.1":
+"@azure/identity@4.2.1", "@azure/identity@^4.10.1", "@azure/identity@^4.2.1":
   version "4.2.1"
   resolved "https://registry.yarnpkg.com/@azure/identity/-/identity-4.2.1.tgz#22b366201e989b7b41c0e1690e103bd579c31e4c"
   integrity sha512-U8hsyC9YPcEIzoaObJlRDvp7KiF0MGS7xcWbyJSVvXRkC/HXo1f0oYeBYmEvVgRfacw7GHf6D6yAoh9JHz6A5Q==
@@ -6989,7 +7058,7 @@
     "@smithy/util-utf8" "^4.0.0"
     tslib "^2.6.2"
 
-"@smithy/signature-v4@^5.3.8":
+"@smithy/signature-v4@^5.2.1", "@smithy/signature-v4@^5.3.8":
   version "5.3.8"
   resolved "https://registry.yarnpkg.com/@smithy/signature-v4/-/signature-v4-5.3.8.tgz#796619b10b7cc9467d0625b0ebd263ae04fdfb76"
   integrity sha512-6A4vdGj7qKNRF16UIcO8HhHjKW27thsxYci+5r/uVRkdcBEkOEiY8OMPuydLX4QHSrJqGHPJzPRwwVTqbLZJhg==
@@ -10181,7 +10250,7 @@ aws-sdk@2.1693.0:
     uuid "8.0.0"
     xml2js "0.6.2"
 
-axios@1.7.7, axios@^0.21.1, axios@^1.1.3, axios@^1.12.0, axios@^1.4.0, axios@^1.6.2, axios@^1.8.3:
+axios@1.7.7, axios@^0.21.1, axios@^1.1.3, axios@^1.12.0, axios@^1.12.2, axios@^1.4.0, axios@^1.6.2:
   version "1.7.7"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.7.tgz#2f554296f9892a72ac8d8e4c5b79c14a91d0a47f"
   integrity sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==
@@ -10465,11 +10534,6 @@ binary-extensions@^2.0.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-2.3.0.tgz#f6e14a97858d327252200242d4ccfe522c445522"
   integrity sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==
-
-binascii@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/binascii/-/binascii-0.0.2.tgz#a7f8a8801dbccf8b1756b743daa0fee9e2d9e0ee"
-  integrity sha512-rA2CrUl1+6yKrn+XgLs8Hdy18OER1UW146nM+ixzhQXDY+Bd3ySkyIJGwF2a4I45JwbvF1mDL/nWkqBwpOcdBA==
 
 bl@^1.0.0:
   version "1.2.3"
@@ -14822,7 +14886,7 @@ gonzales-pe@^4.2.3, gonzales-pe@^4.3.0:
   dependencies:
     minimist "^1.2.5"
 
-google-auth-library@^10.5.0:
+google-auth-library@^10.1.0, google-auth-library@^10.5.0:
   version "10.5.0"
   resolved "https://registry.yarnpkg.com/google-auth-library/-/google-auth-library-10.5.0.tgz#3f0ebd47173496b91d2868f572bb8a8180c4b561"
   integrity sha512-7ABviyMOlX5hIVD60YOfHw4/CxOfBhyduaYB+wbFWCWoni4N7SLcV46hrVRktuBbZjFC9ONyqamZITN7q3n32w==
@@ -18016,11 +18080,6 @@ logform@^2.7.0:
     safe-stable-stringify "^2.3.1"
     triple-beam "^1.3.0"
 
-long@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/long/-/long-4.0.0.tgz#9a7b71cfb7d361a194ea555241c92f7468d5bf28"
-  integrity sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
-
 long@^5.0.0, long@^5.2.1:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/long/-/long-5.3.2.tgz#1d84463095999262d7d7b7f8bfd4a8cc55167f83"
@@ -19092,10 +19151,10 @@ nodemailer@7.0.10:
   resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-7.0.10.tgz#540062dbbe574220b42e79d2d949956d3eac5a46"
   integrity sha512-Us/Se1WtT0ylXgNFfyFSx4LElllVLJXQjWi2Xz17xWw7amDKO2MLtFnVp1WACy7GkVGs+oBlRopVNUzlrGSw1w==
 
-nodemailer@7.0.12:
-  version "7.0.12"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-7.0.12.tgz#b6b7bb05566c6c8458ee360aa30a407a478d35b7"
-  integrity sha512-H+rnK5bX2Pi/6ms3sN4/jRQvYSMltV6vqup/0SFOrxYYY/qoNvhXPlYq3e+Pm9RFJRwrMGbMIwi81M4dxpomhA==
+nodemailer@7.0.13:
+  version "7.0.13"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-7.0.13.tgz#74acaa55f0c6f9476384c29f27f53e467e8483cd"
+  integrity sha512-PNDFSJdP+KFgdsG3ZzMXCgquO7I6McjY2vlqILjtJd0hy8wEvtugS9xKRF2NWlPNGxvLCXlTNIae4serI7dinw==
 
 nodemailer@7.0.3:
   version "7.0.3"
@@ -19404,6 +19463,11 @@ nwsapi@^2.2.0, nwsapi@^2.2.12, nwsapi@^2.2.4:
     "@nx/nx-linux-x64-musl" "22.3.3"
     "@nx/nx-win32-arm64-msvc" "22.3.3"
     "@nx/nx-win32-x64-msvc" "22.3.3"
+
+oauth4webapi@^3.0.1:
+  version "3.8.3"
+  resolved "https://registry.yarnpkg.com/oauth4webapi/-/oauth4webapi-3.8.3.tgz#8a3e36b88a52db5e619907f031bff3770b2ed1a4"
+  integrity sha512-pQ5BsX3QRTgnt5HxgHwgunIRaDXBdkT23tf8dfzmtTIL2LTpdmxgbpbBm0VgFWAIDlezQvQCTgnVIUmHupXHxw==
 
 oauth@0.10.x, oauth@^0.10.0:
   version "0.10.2"
@@ -21229,13 +21293,6 @@ pure-rand@^7.0.0:
   resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-7.0.1.tgz#6f53a5a9e3e4a47445822af96821ca509ed37566"
   integrity sha512-oTUZM/NAZS8p7ANR3SHh30kXB+zK2r2BPcEn/awJIbOvq82WoMN4p62AWWp3Hhw50G0xMsw1mhIBLqHw64EcNQ==
 
-python-struct@^1.1.3:
-  version "1.1.3"
-  resolved "https://registry.yarnpkg.com/python-struct/-/python-struct-1.1.3.tgz#f0ff1845ec520408e94dd8492bfd770aad26cae3"
-  integrity sha512-UsI/mNvk25jRpGKYI38Nfbv84z48oiIWwG67DLVvjRhy8B/0aIK+5Ju5WOHgw/o9rnEmbAS00v4rgKFQeC332Q==
-  dependencies:
-    long "^4.0.0"
-
 q@^1.1.2:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/q/-/q-1.5.1.tgz#7e32f75b41381291d04611f1bf14109ac00651d7"
@@ -22476,37 +22533,42 @@ smtp-server@^3.13.4:
     nodemailer "7.0.3"
     punycode.js "2.3.1"
 
-snowflake-sdk@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/snowflake-sdk/-/snowflake-sdk-2.0.4.tgz#0bb3bd4fefcaeddb22459b3e1120feb2f5f0f6de"
-  integrity sha512-YXvR05MQA2HCokqVj1mI720RGh3k/1ITZ+/Ggqe7AE4u39nPtbKI07IUMPo5IY0Hjt2iwPGwt4fTsapfosmmPg==
+snowflake-sdk@^2.3.3:
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/snowflake-sdk/-/snowflake-sdk-2.3.3.tgz#611b559ce19ab994af8e103c71d1b626aa10ea0f"
+  integrity sha512-ILuI762MUjbWZ2COzdCewtrU5ANKVWQWfJnz2UNhwgLVpbl/rHZg4ZfMTiSkcS6Qqos7qSD4FK6gORaOaCQNSQ==
   dependencies:
+    "@aws-crypto/sha256-js" "^5.2.0"
     "@aws-sdk/client-s3" "^3.726.0"
+    "@aws-sdk/client-sts" "^3.899.0"
+    "@aws-sdk/credential-provider-node" "^3.823.0"
+    "@aws-sdk/ec2-metadata-service" "^3.826.0"
+    "@azure/identity" "^4.10.1"
     "@azure/storage-blob" "12.26.x"
     "@google-cloud/storage" "^7.7.0"
     "@smithy/node-http-handler" "^4.0.1"
+    "@smithy/protocol-http" "^5.1.3"
+    "@smithy/signature-v4" "^5.2.1"
     "@techteamer/ocsp" "1.0.1"
     asn1.js-rfc2560 "^5.0.0"
     asn1.js-rfc5280 "^3.0.0"
-    axios "^1.8.3"
+    axios "^1.12.2"
     big-integer "^1.6.43"
     bignumber.js "^9.1.2"
-    binascii "0.0.2"
     bn.js "^5.2.1"
     browser-request "^0.3.3"
     expand-tilde "^2.0.2"
     fast-xml-parser "^4.2.5"
     fastest-levenshtein "^1.0.16"
     generic-pool "^3.8.2"
-    glob "^10.0.0"
+    google-auth-library "^10.1.0"
     https-proxy-agent "^7.0.2"
     jsonwebtoken "^9.0.0"
     mime-types "^2.1.29"
-    mkdirp "^1.0.3"
     moment "^2.29.4"
     moment-timezone "^0.5.15"
+    oauth4webapi "^3.0.1"
     open "^7.3.1"
-    python-struct "^1.1.3"
     simple-lru-cache "^0.0.2"
     toml "^3.0.0"
     uuid "^8.3.2"
@@ -24196,15 +24258,15 @@ undici-types@~7.10.0:
   resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-7.10.0.tgz#4ac2e058ce56b462b056e629cc6a02393d3ff350"
   integrity sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag==
 
-undici@^6.23.0:
-  version "6.23.0"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-6.23.0.tgz#7953087744d9095a96f115de3140ca3828aff3a4"
-  integrity sha512-VfQPToRA5FZs/qJxLIinmU59u0r7LXqoJkCzinq3ckNJp3vKEh7jTWN589YQ5+aoAC/TGRLyJLCPKcLQbM8r9g==
-
 undici@^7.12.0, undici@^7.16.0:
   version "7.18.2"
   resolved "https://registry.yarnpkg.com/undici/-/undici-7.18.2.tgz#6cf724ef799a67d94fd55adf66b1e184176efcdf"
   integrity sha512-y+8YjDFzWdQlSE9N5nzKMT3g4a5UBX1HKowfdXh0uvAnTaqqwqB92Jt4UXBAeKekDs5IaDKyJFR4X1gYVCgXcw==
+
+undici@^7.20.0:
+  version "7.20.0"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-7.20.0.tgz#62af069a2eae7cfccbe850ff11f44e04be7768e7"
+  integrity sha512-MJZrkjyd7DeC+uPZh+5/YaMDxFiiEEaDgbUSVMXayofAkDWF1088CDo+2RPg7B1BuS1qf1vgNE7xqwPxE0DuSQ==
 
 unicode-canonical-property-names-ecmascript@^2.0.0:
   version "2.0.1"
