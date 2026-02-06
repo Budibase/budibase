@@ -38,6 +38,17 @@ async function generateKey(
   return { id: json.token_id, secret: json.key }
 }
 
+function buildBudibaseLiteLLMParams(
+  model: string,
+  credentialFields: Record<string, string>
+) {
+  return {
+    model,
+    custom_llm_provider: "openai_like",
+    ...credentialFields,
+  }
+}
+
 export async function addModel({
   provider,
   model,
@@ -64,15 +75,16 @@ export async function addModel({
     })
   }
 
-  provider = await mapToLiteLLMProvider(provider)
-
-  const litellmParams = buildLiteLLMParams({
-    provider,
-    name: model,
-    credentialFields,
-    configType,
-    reasoningEffort,
-  })
+  const litellmParams =
+    provider === "budibase"
+      ? buildBudibaseLiteLLMParams(model, credentialFields)
+      : buildLiteLLMParams({
+          provider: await mapToLiteLLMProvider(provider),
+          name: model,
+          credentialFields,
+          configType,
+          reasoningEffort,
+        })
 
   const requestOptions = {
     method: "POST",
@@ -112,15 +124,16 @@ export async function updateModel({
 }) {
   await validateConfig({ provider, name, credentialFields, configType })
 
-  provider = await mapToLiteLLMProvider(provider)
-
-  const litellmParams = buildLiteLLMParams({
-    provider,
-    name,
-    credentialFields,
-    configType,
-    reasoningEffort,
-  })
+  const litellmParams =
+    provider === "budibase"
+      ? buildBudibaseLiteLLMParams(name, credentialFields)
+      : buildLiteLLMParams({
+          provider: await mapToLiteLLMProvider(provider),
+          name,
+          credentialFields,
+          configType,
+          reasoningEffort,
+        })
 
   const requestOptions = {
     method: "PATCH",
@@ -214,8 +227,8 @@ async function validateGenerationModel(model: {
   credentialFields: Record<string, string>
 }) {
   let { name, provider, credentialFields } = model
-
-  provider = await mapToLiteLLMProvider(provider)
+  const mappedProvider =
+    provider === "budibase" ? undefined : await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "POST",
@@ -225,9 +238,13 @@ async function validateGenerationModel(model: {
     },
     body: JSON.stringify({
       litellm_params: {
-        model: `${provider}/${name}`,
-        custom_llm_provider: provider,
-        ...credentialFields,
+        ...(provider === "budibase"
+          ? buildBudibaseLiteLLMParams(name, credentialFields)
+          : {
+              model: `${mappedProvider}/${name}`,
+              custom_llm_provider: mappedProvider,
+              ...credentialFields,
+            }),
       },
     }),
   }
@@ -254,6 +271,9 @@ async function validateConfig(model: {
   credentialFields: Record<string, string>
   configType: AIConfigType
 }) {
+  if (model.provider === "budibase") {
+    return
+  }
   switch (model.configType) {
     case AIConfigType.EMBEDDINGS:
       return validateEmbeddingConfig(model)

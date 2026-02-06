@@ -47,23 +47,20 @@ export async function create(
   const db = context.getWorkspaceDB()
 
   if (config.provider === "budibase") {
-    config.credentialsFields.base_url = new URL(
+    config.credentialsFields.api_base = new URL(
       "/api/ai",
       env.BUDICLOUD_URL
     ).toString()
     config.credentialsFields.api_key = (await licensing.keys.getLicenseKey())!
   }
 
-  const modelId =
-    config.provider === "budibase"
-      ? config.model
-      : await liteLLM.addModel({
-          provider: config.provider,
-          model: config.model,
-          credentialFields: config.credentialsFields,
-          configType: config.configType,
-          reasoningEffort: config.reasoningEffort,
-        })
+  const modelId = await liteLLM.addModel({
+    provider: config.provider,
+    model: config.model,
+    credentialFields: config.credentialsFields,
+    configType: config.configType,
+    reasoningEffort: config.reasoningEffort,
+  })
 
   const newConfig: CustomAIProviderConfig = {
     _id: docIds.generateAIConfigID(),
@@ -80,9 +77,7 @@ export async function create(
   const { rev } = await db.put(newConfig)
   newConfig._rev = rev
 
-  if (config.provider !== "budibase") {
-    await liteLLM.syncKeyModels()
-  }
+  await liteLLM.syncKeyModels()
 
   return newConfig
 }
@@ -153,7 +148,7 @@ export async function update(
     JSON.stringify(getLiteLLMAwareFields(updatedConfig)) !==
     JSON.stringify(getLiteLLMAwareFields(existing))
 
-  if (shouldUpdateLiteLLM && updatedConfig.provider !== "budibase") {
+  if (shouldUpdateLiteLLM) {
     try {
       await liteLLM.updateModel({
         llmModelId: updatedConfig.liteLLMModelId,
