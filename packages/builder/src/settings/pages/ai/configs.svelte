@@ -16,8 +16,9 @@
     config => config.configType === AIConfigType.COMPLETIONS
   )
 
+  $: hasBBAI = completionConfigs.some(c => c.provider === "budibase")
   $: modelProviders = [
-    ...(aiGenerationConfigs.find(c => c._id === "aiconfig_bbai")
+    ...(hasBBAI
       ? []
       : [
           {
