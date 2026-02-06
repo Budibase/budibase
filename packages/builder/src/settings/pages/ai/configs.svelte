@@ -16,12 +16,16 @@
     config => config.configType === AIConfigType.GENERATION
   )
 
-  const modelProviders = [
-    {
-      name: "Budibase AI",
-      provider: "budibase",
-      description: "Budibase managed",
-    },
+  $: modelProviders = [
+    ...(aiGenerationConfigs.find(c => c._id === "aiconfig_bbai")
+      ? []
+      : [
+          {
+            name: "Budibase AI",
+            provider: "budibase",
+            description: "Budibase managed",
+          },
+        ]),
     {
       name: "Anthropic",
       provider: "anthropic",
