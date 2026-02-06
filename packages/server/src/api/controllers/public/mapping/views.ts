@@ -11,7 +11,7 @@ function view(body: ViewV2): RequiredKeys<View> {
     schema: body.schema!,
     primaryDisplay: body.primaryDisplay,
     query: dataFilters.buildQuery(body.query),
-    sort: body.sort,
+    sort: Array.isArray(body.sort) ? body.sort[0] : body.sort,
   }
 }
 

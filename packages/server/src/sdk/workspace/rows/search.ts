@@ -128,7 +128,7 @@ export async function search(
       }
     }
 
-    if (options.sortOrder) {
+    if (options.sortOrder && typeof options.sort === "string") {
       options.sortOrder = options.sortOrder.toLowerCase() as SortOrder
     }
 

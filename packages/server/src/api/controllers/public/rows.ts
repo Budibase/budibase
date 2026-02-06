@@ -28,10 +28,19 @@ function buildSearchRequestBody(ctx: UserCtx) {
   if (!sort) {
     sort = {}
   }
+  if (sort && typeof sort === "object" && "column" in sort) {
+    return {
+      sort: sort.column,
+      sortType: sort.type,
+      sortOrder: sort.order,
+      bookmark: convertBookmark(bookmark),
+      paginate,
+      limit,
+      query,
+    }
+  }
   return {
-    sort: sort.column,
-    sortType: sort.type,
-    sortOrder: sort.order,
+    sort,
     bookmark: convertBookmark(bookmark),
     paginate,
     limit,
