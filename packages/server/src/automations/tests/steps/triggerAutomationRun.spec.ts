@@ -1,7 +1,11 @@
 import * as automation from "../../index"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { AutomationStatus, FilterCondition, LoopStepType } from "@budibase/types"
+import {
+  AutomationStatus,
+  FilterCondition,
+  LoopStepType,
+} from "@budibase/types"
 
 describe("Test triggering an automation from another automation", () => {
   const config = new TestConfiguration()

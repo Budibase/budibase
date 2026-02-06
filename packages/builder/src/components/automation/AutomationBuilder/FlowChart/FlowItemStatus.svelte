@@ -170,9 +170,7 @@
     }
 
     const outputStatus =
-      outputs &&
-      "status" in outputs &&
-      typeof outputs.status === "string"
+      outputs && "status" in outputs && typeof outputs.status === "string"
         ? outputs.status.toLowerCase()
         : undefined
 
