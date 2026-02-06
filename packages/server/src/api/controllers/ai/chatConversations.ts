@@ -256,6 +256,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
     const pendingToolCalls = new Set<string>()
 
+    const hasTools = Object.keys(tools).length > 0
     const result = streamText({
       model: wrapLanguageModel({
         model,
@@ -265,12 +266,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       }),
       messages: messagesWithContext,
       system,
-      tools,
+      tools: hasTools ? tools : undefined,
       stopWhen: stepCountIs(30),
-      providerOptions: ai.getLiteLLMProviderOptions(),
       onStepFinish({ toolCalls, toolResults }) {
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
       },
+      providerOptions: ai.getLiteLLMProviderOptions(),
       onError({ error }) {
         console.error("Agent streaming error", {
           agentId,

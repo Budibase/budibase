@@ -161,7 +161,7 @@ export class OpenAI extends LLM {
     const parameters: OpenAITypes.ChatCompletionCreateParamsStreaming = {
       model: this.model,
       messages: request.messages,
-      max_completion_tokens: this.maxTokens,
+      max_tokens: this.maxTokens,
       response_format: parseResponseFormat(request.format),
       stream: true,
     }
@@ -213,20 +213,5 @@ export class OpenAI extends LLM {
         content: error.message,
       }
     }
-  }
-
-  async chatCompletions(
-    request: OpenAITypes.ChatCompletionCreateParamsNonStreaming
-  ): Promise<OpenAITypes.ChatCompletion> {
-    return await this.client.chat.completions.create(request)
-  }
-
-  async chatCompletionsStream(
-    request: OpenAITypes.ChatCompletionCreateParamsStreaming
-  ): Promise<AsyncIterable<OpenAITypes.ChatCompletionChunk>> {
-    return await this.client.chat.completions.create({
-      ...request,
-      stream: true,
-    })
   }
 }

@@ -10,7 +10,6 @@ import {
 } from "@budibase/types"
 import tracer from "dd-trace"
 import { Readable } from "node:stream"
-import type openai from "openai"
 import { LLMFullResponse, LLMPromptResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
 import {
@@ -95,18 +94,6 @@ export abstract class LLM {
     request: LLMRequest
   ): AsyncGenerator<LLMStreamChunk, void, unknown> {
     yield* this.chatCompletionStream(request)
-  }
-
-  async chatCompletions(
-    _request: openai.Chat.Completions.ChatCompletionCreateParams
-  ): Promise<openai.Chat.Completions.ChatCompletion> {
-    throw new Error("Chat completions not supported for this provider")
-  }
-
-  async chatCompletionsStream(
-    _request: openai.Chat.Completions.ChatCompletionCreateParamsStreaming
-  ): Promise<AsyncIterable<openai.Chat.Completions.ChatCompletionChunk>> {
-    throw new Error("Chat completions not supported for this provider")
   }
 
   async summarizeText(prompt: string): Promise<LLMPromptResponse> {
