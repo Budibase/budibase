@@ -1,6 +1,7 @@
 import { z } from "zod"
 import {
   mockChatGPTResponse,
+  mockChatGPTStreamFailure,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -1137,6 +1138,98 @@ describe("BudibaseAI", () => {
           licenseKey,
         },
         { status: 403 }
+      )
+    })
+  })
+
+  describe("POST /api/ai/chat/completions", () => {
+    let licenseKey = "test-key"
+    let internalApiKey = "api-key"
+    let envCleanup: () => void
+    let cleanup: () => Promise<void> | void
+
+    beforeAll(async () => {
+      envCleanup = setEnv({
+        SELF_HOSTED: false,
+        ACCOUNT_PORTAL_API_KEY: internalApiKey,
+      })
+    })
+
+    afterAll(async () => {
+      envCleanup()
+    })
+
+    beforeEach(async () => {
+      await config.newTenant()
+      nock.cleanAll()
+      cleanup = await customAIConfig({
+        provider: "OpenAI",
+        defaultModel: "gpt-5-mini",
+        apiKey: "test-key",
+      })(config)
+      const license: License = {
+        plan: {
+          type: PlanType.FREE,
+          model: PlanModel.PER_USER,
+          usesInvoicing: false,
+        },
+        features: [Feature.BUDIBASE_AI],
+        quotas: {} as any,
+        tenantId: config.tenantId,
+      }
+      nock(env.ACCOUNT_PORTAL_URL)
+        .get(`/api/license/${licenseKey}`)
+        .reply(200, license)
+    })
+
+    afterEach(async () => {
+      await cleanup?.()
+    })
+
+    it("proxies the OpenAI response without reshaping", async () => {
+      mockChatGPTResponse("hello from openai")
+
+      const response = await config.api.ai.openaiChatCompletions({
+        model: "gpt-5-mini",
+        messages: [{ role: "user", content: "hello" }],
+        licenseKey,
+      })
+
+      expect(response.object).toBe("chat.completion")
+      expect(response.choices[0].message.content).toBe("hello from openai")
+      expect(response.usage?.total_tokens).toBeGreaterThan(0)
+    })
+
+    it("forwards extra fields (e.g. response_format)", async () => {
+      const format = toResponseFormat(z.object({ value: z.string() }))
+      mockChatGPTResponse(`{"value":"ok"}`, { format })
+
+      const response = await config.api.ai.openaiChatCompletions({
+        model: "gpt-5-mini",
+        messages: [{ role: "user", content: "return json" }],
+        response_format: format,
+        licenseKey,
+      })
+
+      expect(response.choices[0].message.content).toBe(`{"value":"ok"}`)
+    })
+
+    it("returns HTTP errors when stream initialization fails", async () => {
+      mockChatGPTStreamFailure({ status: 401, errorMessage: "Unauthorized" })
+
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "gpt-5-mini",
+          messages: [{ role: "user", content: "hello" }],
+          stream: true,
+          licenseKey,
+        },
+        {
+          status: 401,
+          headers: {
+            "Content-Type": /^application\/json/,
+          },
+        }
       )
     })
   })

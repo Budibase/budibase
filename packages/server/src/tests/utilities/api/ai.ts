@@ -15,6 +15,7 @@ import {
   UploadFileRequest,
   UploadFileResponse,
 } from "@budibase/types"
+import type OpenAI from "openai"
 import { Expectations, TestAPI } from "./base"
 
 export class AIAPI extends TestAPI {
@@ -66,6 +67,27 @@ export class AIAPI extends TestAPI {
       headers,
       expectations,
     })
+  }
+
+  openaiChatCompletions = async (
+    req: OpenAI.Chat.Completions.ChatCompletionCreateParams & {
+      licenseKey?: string
+    },
+    expectations?: Expectations
+  ): Promise<OpenAI.Chat.Completions.ChatCompletion> => {
+    const headers: Record<string, string> = {}
+    if (req.licenseKey) {
+      headers[constants.Header.LICENSE_KEY] = req.licenseKey
+    }
+    const { licenseKey, ...body } = req
+    return await this._post<OpenAI.Chat.Completions.ChatCompletion>(
+      `/api/ai/chat/completions`,
+      {
+        body,
+        headers,
+        expectations,
+      }
+    )
   }
 
   generateTables = async (
