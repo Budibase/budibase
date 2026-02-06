@@ -589,6 +589,12 @@ class Orchestrator {
               addToContext(step, result, true)
             }
             this.reportStepProgress(step, progressStatus(result), result, ctx)
+            if (
+              result.outputs.success === false &&
+              result.outputs.status == null
+            ) {
+              return results
+            }
             stepIndex++
             break
           }
