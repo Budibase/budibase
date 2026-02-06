@@ -1,9 +1,19 @@
+import { type GetGitHubStarsResponse } from "@budibase/types"
+
 jest.mock("node-fetch", () => jest.fn())
+
+interface CacheOpts {
+  useTenancy?: boolean
+}
+
+interface TestCtx {
+  body: GetGitHubStarsResponse | undefined
+}
 
 describe("GitHub controller", () => {
   let cacheGet: jest.Mock
   let cacheStore: jest.Mock
-  let cacheState: Map<string, any>
+  let cacheState: Map<string, unknown>
   let consoleErrorSpy: jest.SpyInstance
 
   beforeEach(() => {
@@ -17,7 +27,7 @@ describe("GitHub controller", () => {
 
     cacheState = new Map()
     jest.doMock("@budibase/backend-core", () => {
-      cacheGet = jest.fn(async (key: string, opts?: any) => {
+      cacheGet = jest.fn(async (key: string, opts?: CacheOpts) => {
         if (opts?.useTenancy !== false) {
           throw new Error("Expected global cache usage")
         }
@@ -25,7 +35,12 @@ describe("GitHub controller", () => {
       })
 
       cacheStore = jest.fn(
-        async (key: string, value: any, _ttl?: any, opts?: any) => {
+        async (
+          key: string,
+          value: unknown,
+          _ttl?: number,
+          opts?: CacheOpts
+        ) => {
           if (opts?.useTenancy !== false) {
             throw new Error("Expected global cache usage")
           }
@@ -52,7 +67,8 @@ describe("GitHub controller", () => {
   }
 
   const makeCtx = () => {
-    return { body: undefined } as any
+    const ctx: TestCtx = { body: undefined }
+    return ctx
   }
 
   it("adds a request timeout", async () => {

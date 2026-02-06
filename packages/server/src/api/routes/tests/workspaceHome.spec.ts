@@ -5,6 +5,7 @@ import tk from "timekeeper"
 import * as setup from "./utilities"
 
 describe("/workspace/home/metrics", () => {
+  const METRICS_FRESH_TTL_MS = 10 * 60 * 1000
   const config = setup.getConfig()
   const request = setup.getRequest()
 
@@ -23,9 +24,11 @@ describe("/workspace/home/metrics", () => {
 
   afterEach(() => {
     tk.reset()
+    jest.restoreAllMocks()
   })
 
   it("returns user access count for the workspace", async () => {
+    tk.freeze(new Date(2026, 0, 20, 12, 0, 0, 0))
     const prodWorkspaceId = config.getProdWorkspaceId()
 
     const initial = await request
@@ -48,6 +51,8 @@ describe("/workspace/home/metrics", () => {
       builder: { global: false },
       admin: { global: false },
     })
+
+    tk.travel(Date.now() + METRICS_FRESH_TTL_MS + 1)
 
     const res = await request
       .get("/api/workspace/home/metrics")
@@ -83,8 +88,12 @@ describe("/workspace/home/metrics", () => {
 
   it("returns 400 if workspace context is missing", async () => {
     const headers = config.defaultHeaders()
-    delete (headers as any)[Header.APP_ID]
+    const { [Header.APP_ID]: _workspaceId, ...headersWithoutWorkspaceId } =
+      headers
 
-    await request.get("/api/workspace/home/metrics").set(headers).expect(400)
+    await request
+      .get("/api/workspace/home/metrics")
+      .set(headersWithoutWorkspaceId)
+      .expect(400)
   })
 })
