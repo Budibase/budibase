@@ -1,5 +1,6 @@
 import {
   Agent,
+  ToolType,
   ToolMetadata,
   SourceName,
   WebSearchProvider,
@@ -31,12 +32,14 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
 export async function getAvailableTools(
   aiconfigId?: string
 ): Promise<AiToolDefinition[]> {
-  const [queries, datasources, aiConfig, tables] = await Promise.all([
-    sdk.queries.fetch(),
-    sdk.datasources.fetch(),
-    aiconfigId ? sdk.ai.configs.find(aiconfigId) : Promise.resolve(undefined),
-    sdk.tables.getAllTables(),
-  ])
+  const [queries, datasources, aiConfig, tables, automations] =
+    await Promise.all([
+      sdk.queries.fetch(),
+      sdk.datasources.fetch(),
+      aiconfigId ? sdk.ai.configs.find(aiconfigId) : Promise.resolve(undefined),
+      sdk.tables.getAllTables(),
+      sdk.automations.fetch(),
+    ])
   const webSearchConfig = aiConfig?.webSearchConfig
 
   const restDatasourceNames = new Map(
@@ -64,7 +67,12 @@ export async function getAvailableTools(
     )
 
   const tools: AiToolDefinition[] = [
-    ...getBudibaseTools(tables, datasourceNamesById, datasourceIconTypesById),
+    ...getBudibaseTools(
+      tables,
+      datasourceNamesById,
+      datasourceIconTypesById,
+      automations
+    ),
     ...restQueryTools,
   ]
   if (webSearchConfig?.apiKey) {
@@ -101,7 +109,10 @@ export async function buildPromptAndTools(
 
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
-  const enabledTools = allTools.filter(tool => enabledToolNames.has(tool.name))
+  const enabledTools = addHelperTools(
+    allTools.filter(tool => enabledToolNames.has(tool.name)),
+    allTools
+  )
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
@@ -114,6 +125,48 @@ export async function buildPromptAndTools(
     systemPrompt,
     tools: toToolSet(enabledTools),
   }
+}
+
+/*
+We want to add these tools for automations / tables if user has added related tools.
+This abstracts the decision of what tools to add away from the user.
+*/
+function addHelperTools(
+  enabledTools: AiToolDefinition[],
+  allTools: AiToolDefinition[]
+) {
+  const seenTools = new Set(enabledTools.map(tool => tool.name))
+  const toolByName = new Map(allTools.map(tool => [tool.name, tool]))
+
+  if (
+    enabledTools.some(
+      tool =>
+        tool.sourceType === ToolType.EXTERNAL_TABLE ||
+        tool.sourceType === ToolType.INTERNAL_TABLE
+    )
+  ) {
+    for (const toolName of ["get_table", "list_tables"]) {
+      if (seenTools.has(toolName)) continue
+      let tool = toolByName.get(toolName)
+      if (tool) {
+        enabledTools.push(tool)
+        seenTools.add(tool.name)
+      }
+    }
+  }
+
+  if (enabledTools.some(tool => tool.sourceType === ToolType.AUTOMATION)) {
+    for (const toolName of ["get_automation", "list_automations"]) {
+      if (seenTools.has(toolName)) continue
+      let tool = toolByName.get(toolName)
+      if (tool) {
+        enabledTools.push(tool)
+        seenTools.add(tool.name)
+      }
+    }
+  }
+
+  return enabledTools
 }
 
 export function createLiteLLMFetch(sessionId: string): typeof fetch {
