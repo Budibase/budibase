@@ -13,7 +13,7 @@
   let selectedProvider: string | undefined
 
   $: aiGenerationConfigs = ($aiConfigsStore.customConfigs || []).filter(
-    config => config.configType === AIConfigType.GENERATION
+    config => config.configType === AIConfigType.COMPLETIONS
   )
 
   $: modelProviders = [
@@ -120,7 +120,7 @@
     <CustomConfigModal
       config={selectedModalConfig}
       provider={selectedProvider}
-      type={AIConfigType.GENERATION}
+      type={AIConfigType.COMPLETIONS}
       on:hide={() => {
         customConfigModal.hide()
       }}
@@ -134,7 +134,7 @@
             model: selectedModalConfig.model,
           }
         : undefined}
-      type={AIConfigType.GENERATION}
+      type={AIConfigType.COMPLETIONS}
       on:hide={() => {
         customConfigModal.hide()
       }}

@@ -1,7 +1,7 @@
 import { Document, WebSearchConfig } from "../../"
 
 export enum AIConfigType {
-  GENERATION = "generation",
+  COMPLETIONS = "completions",
   EMBEDDINGS = "embeddings",
 }
 

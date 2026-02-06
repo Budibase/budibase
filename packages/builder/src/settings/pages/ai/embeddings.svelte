@@ -15,7 +15,7 @@
   let customConfigModal: { show: () => void; hide: () => void }
 
   let customModalConfig: CustomAIProviderConfig | null = null
-  let modalConfigType: AIConfigType = AIConfigType.GENERATION
+  let modalConfigType: AIConfigType = AIConfigType.COMPLETIONS
   let vectorModal: { show: () => void; hide: () => void }
   let vectorModalConfig: VectorDb | null = null
 
@@ -27,7 +27,7 @@
 
   function openAIConfigModal(
     config?: CustomAIProviderConfig,
-    type: AIConfigType = AIConfigType.GENERATION
+    type: AIConfigType = AIConfigType.COMPLETIONS
   ) {
     modalConfigType = type
     customModalConfig = config

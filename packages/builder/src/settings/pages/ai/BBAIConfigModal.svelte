@@ -35,7 +35,7 @@
         credentialsFields: {},
         model: config.model,
         webSearchConfig: undefined,
-        configType: AIConfigType.GENERATION,
+        configType: AIConfigType.COMPLETIONS,
         reasoningEffort: undefined,
       } satisfies RequiredKeys<UpdateAIConfigRequest>)
     : ({
@@ -176,7 +176,7 @@
     />
   </div>
 
-  {#if draft.configType === AIConfigType.GENERATION}
+  {#if draft.configType === AIConfigType.COMPLETIONS}
     <div class="row">
       <Label size="M">Reasoning effort</Label>
       <Select
