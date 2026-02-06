@@ -169,6 +169,21 @@
       }
     }
 
+    const outputStatus =
+      outputs &&
+      "status" in outputs &&
+      typeof outputs.status === "string"
+        ? outputs.status.toLowerCase()
+        : undefined
+
+    if (outputStatus === "stopped" || outputStatus === "stopped_error") {
+      return {
+        message: "Stopped",
+        icon: "warning",
+        type: FlowStatusType.WARN,
+      }
+    }
+
     if (branch && isBranchStep(block)) {
       // Do not give status markers to branch nodes that were not part of the run.
       if (outputs && "branchId" in outputs && outputs.branchId !== branch.id)
