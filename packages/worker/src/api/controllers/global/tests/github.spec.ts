@@ -71,6 +71,14 @@ describe("GitHub controller", () => {
     return ctx
   }
 
+  function assertHasBody(
+    ctx: TestCtx
+  ): asserts ctx is { body: GetGitHubStarsResponse } {
+    if (!ctx.body) {
+      throw new Error("Expected ctx.body to be set")
+    }
+  }
+
   it("adds a request timeout", async () => {
     const fetchMock = getFetchMock()
     fetchMock.mockResolvedValue({
@@ -87,6 +95,7 @@ describe("GitHub controller", () => {
     expect(fetchMock.mock.calls[0][1]).toEqual(
       expect.objectContaining({ timeout: 5000 })
     )
+    assertHasBody(ctx)
     expect(ctx.body.stars).toEqual(123)
 
     expect(cacheGet).toHaveBeenCalledWith("global:github:stars", {
@@ -178,6 +187,7 @@ describe("GitHub controller", () => {
     await getStars(ctx3)
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
+    assertHasBody(ctx3)
     expect(ctx3.body.stars).toEqual(222)
   })
 })
