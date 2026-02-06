@@ -1,4 +1,4 @@
-import { context, db, docIds, HTTPError, locks } from "@budibase/backend-core"
+import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
@@ -38,21 +38,6 @@ async function generateKey(
   return { id: json.token_id, secret: json.key }
 }
 
-function buildBudibaseLiteLLMParams(
-  model: string,
-  credentialFields: Record<string, string>
-) {
-  return {
-    model,
-    custom_llm_provider: "custom_openai",
-    ...credentialFields,
-  }
-}
-
-function prefixName(name: string) {
-  return `${context.getTenantId()}-${db.getProdWorkspaceID(context.getOrThrowWorkspaceId())}-${name}`
-}
-
 export async function addModel({
   provider,
   model,
@@ -79,16 +64,13 @@ export async function addModel({
     })
   }
 
-  const litellmParams =
-    provider === "budibase"
-      ? buildBudibaseLiteLLMParams(model, credentialFields)
-      : buildLiteLLMParams({
-          provider: await mapToLiteLLMProvider(provider),
-          name: prefixName(model),
-          credentialFields,
-          configType,
-          reasoningEffort,
-        })
+  const litellmParams = buildLiteLLMParams({
+    provider: await mapToLiteLLMProvider(provider),
+    name: model,
+    credentialFields,
+    configType,
+    reasoningEffort,
+  })
 
   const requestOptions = {
     method: "POST",
@@ -97,7 +79,7 @@ export async function addModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: prefixName(displayName || model),
+      model_name: displayName || model,
       litellm_params: litellmParams,
       model_info: {
         created_at: new Date().toISOString(),
@@ -128,16 +110,13 @@ export async function updateModel({
 }) {
   await validateConfig({ provider, name, credentialFields, configType })
 
-  const litellmParams =
-    provider === "budibase"
-      ? buildBudibaseLiteLLMParams(name, credentialFields)
-      : buildLiteLLMParams({
-          provider: await mapToLiteLLMProvider(provider),
-          name: prefixName(name),
-          credentialFields,
-          configType,
-          reasoningEffort,
-        })
+  const litellmParams = buildLiteLLMParams({
+    provider: await mapToLiteLLMProvider(provider),
+    name: name,
+    credentialFields,
+    configType,
+    reasoningEffort,
+  })
 
   const requestOptions = {
     method: "PATCH",
@@ -146,7 +125,7 @@ export async function updateModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: prefixName(name),
+      model_name: name,
       litellm_params: litellmParams,
       model_info: {
         updated_at: new Date().toISOString(),
@@ -231,8 +210,7 @@ async function validateCompletionsModel(model: {
   credentialFields: Record<string, string>
 }) {
   let { name, provider, credentialFields } = model
-  const mappedProvider =
-    provider === "budibase" ? undefined : await mapToLiteLLMProvider(provider)
+  const mappedProvider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "POST",
@@ -242,13 +220,9 @@ async function validateCompletionsModel(model: {
     },
     body: JSON.stringify({
       litellm_params: {
-        ...(provider === "budibase"
-          ? buildBudibaseLiteLLMParams(name, credentialFields)
-          : {
-              model: `${mappedProvider}/${name}`,
-              custom_llm_provider: mappedProvider,
-              ...credentialFields,
-            }),
+        model: `${mappedProvider}/${name}`,
+        custom_llm_provider: mappedProvider,
+        ...credentialFields,
       },
     }),
   }
