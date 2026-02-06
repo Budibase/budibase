@@ -75,6 +75,7 @@ services:
     command: ["--config", "/app/config.yaml"]
     env_file:
       - .env
+      - ../.env
     depends_on:
       - litellm-db
     healthcheck:  

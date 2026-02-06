@@ -2,6 +2,21 @@ general_settings:
   store_model_in_db: true
   store_prompts_in_spend_logs: true
 
+# Models used by BBAI
+model_list:
+  - model_name: bbai-openai-gpt-5
+    litellm_params:
+      model: openai/gpt-5
+      api_key: "os.environ/BB_OPENAI_API_KEY"
+  - model_name: bbai-openai-gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: "os.environ/BB_OPENAI_API_KEY"
+  - model_name: bbai-mistral-mistral-tiny
+    litellm_params:
+      model: mistral/mistral-tiny
+      api_key: "os.environ/BB_MISTRAL_API_KEY"
+
 litellm_settings:
   drop_params: true
   num_retries: 3
