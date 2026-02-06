@@ -268,10 +268,12 @@ export const adminUser = async (
   })
 }
 
-export const countByApp = async (ctx: UserCtx<void, CountUserResponse>) => {
-  const appId = ctx.params.appId
+export const countByWorkspace = async (
+  ctx: UserCtx<void, CountUserResponse>
+) => {
+  const workspaceId = ctx.params.workspaceId
   try {
-    ctx.body = await userSdk.db.countUsersByApp(appId)
+    ctx.body = await userSdk.db.countUsersByWorkspace(workspaceId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }

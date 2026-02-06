@@ -95,6 +95,7 @@
   }
   .root {
     flex: 1;
+    min-height: 0;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -107,6 +108,7 @@
   }
   .body {
     flex: 1 1 auto;
+    min-height: 0;
     width: 0;
     z-index: 1;
     display: flex;
