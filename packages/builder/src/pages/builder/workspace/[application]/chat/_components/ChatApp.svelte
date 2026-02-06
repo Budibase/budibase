@@ -60,6 +60,15 @@
   $: chatApp = $currentChatApp
   $: chatAgents = (chatApp?.agents || []) as ChatAgentConfig[]
   $: conversationHistory = $currentConversations
+  $: filteredConversationHistory = !agentsLoaded
+    ? conversationHistory
+    : conversationHistory.filter(conversation => {
+        if (!conversation?.agentId) {
+          return false
+        }
+        const agent = agents.find(item => item._id === conversation.agentId)
+        return Boolean(agent?.live)
+      })
   $: hasAnyAgents = agents.length > 0
   $: hasEnabledAgents = enabledAgentList.length > 0
   $: showEmptyState = agentsLoaded && !hasEnabledAgents
@@ -67,6 +76,13 @@
     ? "No agents enabled for this chat app. Add one in Settings to start chatting."
     : "No agents yet. Add one from the settings panel to start chatting."
   $: conversationStarters = $selectedChatAgent?.conversationStarters || []
+  $: isAgentKnown = selectedAgentId
+    ? !agentsLoaded || agents.some(agent => agent._id === selectedAgentId)
+    : false
+  $: isAgentLive = selectedAgentId
+    ? !agentsLoaded ||
+      agents.some(agent => agent._id === selectedAgentId && agent.live)
+    : false
 
   const getAgentName = (agentId: string) =>
     agents.find(agent => agent._id === agentId)?.name
@@ -274,7 +290,7 @@
   {:else}
     <ChatNavigationPanel
       {enabledAgentList}
-      {conversationHistory}
+      conversationHistory={filteredConversationHistory}
       selectedConversationId={$chatAppsStore.currentConversationId}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
@@ -288,6 +304,8 @@
       {selectedAgentName}
       {workspaceId}
       {conversationStarters}
+      {isAgentKnown}
+      {isAgentLive}
       on:deleteChat={deleteCurrentChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}

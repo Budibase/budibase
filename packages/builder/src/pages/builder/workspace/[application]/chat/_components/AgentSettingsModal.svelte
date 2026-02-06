@@ -123,15 +123,20 @@
     size="M"
     title={`${selectedAgent?.name || "Agent"} settings`}
     showConfirmButton={false}
+    showCancelButton={false}
   >
-    <div class="agent-settings">
-      <Button size="S" disabled={isDisabled} on:click={handleSetDefault}>
-        Set as default
-      </Button>
-      {#if disabledReason}
-        <p class="agent-settings-helper">{disabledReason}</p>
-      {/if}
-    </div>
+    {#if !isDefault}
+      <div class="agent-settings">
+        <div class="agent-settings-default">
+          <Button size="S" disabled={isDisabled} on:click={handleSetDefault}>
+            Set as default
+          </Button>
+        </div>
+        {#if disabledReason}
+          <p class="agent-settings-helper">{disabledReason}</p>
+        {/if}
+      </div>
+    {/if}
 
     <div class="agent-settings-section">
       <Body size="XS" color="var(--spectrum-global-color-gray-600)">
@@ -178,6 +183,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+  }
+
+  .agent-settings-default {
+    align-self: flex-start;
+    width: fit-content;
   }
 
   .agent-settings-section {

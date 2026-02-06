@@ -35,6 +35,8 @@
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     isAgentPreviewChat?: boolean
+    readOnly?: boolean
+    readOnlyReason?: "disabled" | "deleted" | "offline"
   }
 
   let {
@@ -44,6 +46,8 @@
     conversationStarters = [],
     onchatsaved,
     isAgentPreviewChat = false,
+    readOnly = false,
+    readOnlyReason,
   }: Props = $props()
 
   let API = $state(
@@ -198,12 +202,20 @@
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
-  let hasMessages = $derived(Boolean(chat?.messages?.length))
+  let hasMessages = $derived(Boolean(messages?.length))
   let showConversationStarters = $derived(
     !isBusy &&
       !hasMessages &&
       conversationStarters.length > 0 &&
-      !isAgentPreviewChat
+      !isAgentPreviewChat &&
+      !readOnly
+  )
+  let readOnlyMessage = $derived(
+    readOnlyReason === "deleted"
+      ? "This agent was deleted. Select another agent to resume chatting."
+      : readOnlyReason === "offline"
+        ? "This agent is no longer live. Make it live in Settings to resume chatting."
+        : "This agent is disabled. Enable it in Settings to resume chatting."
   )
 
   let lastChatId = $state<string | undefined>(chat?._id)
@@ -262,6 +274,10 @@
   }
 
   const handleKeyDown = async (event: KeyboardEvent) => {
+    if (readOnly) {
+      return
+    }
+
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
       await sendMessage()
@@ -269,6 +285,10 @@
   }
 
   const sendMessage = async () => {
+    if (readOnly) {
+      return
+    }
+
     const chatAppIdFromEnsure = await ensureChatApp()
 
     if (!chat) {
@@ -351,7 +371,9 @@
       mounted = true
       ensureChatApp()
       tick().then(() => {
-        textareaElement?.focus()
+        if (!readOnly) {
+          textareaElement?.focus()
+        }
       })
     }
   })
@@ -389,7 +411,7 @@
           {/each}
         </div>
       </div>
-    {:else}
+    {:else if !hasMessages}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -570,16 +592,26 @@
     {/each}
   </div>
 
-  <div class="input-wrapper">
-    <textarea
-      bind:value={inputValue}
-      bind:this={textareaElement}
-      class="input spectrum-Textfield-input"
-      onkeydown={handleKeyDown}
-      placeholder="Ask anything"
-      disabled={isBusy}
-    ></textarea>
-  </div>
+  {#if readOnly}
+    <div class="input-wrapper">
+      <div class="read-only-notice">
+        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          {readOnlyMessage}
+        </Body>
+      </div>
+    </div>
+  {:else}
+    <div class="input-wrapper">
+      <textarea
+        bind:value={inputValue}
+        bind:this={textareaElement}
+        class="input spectrum-Textfield-input"
+        onkeydown={handleKeyDown}
+        placeholder="Ask anything"
+        disabled={isBusy}
+      ></textarea>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -616,36 +648,45 @@
   .starter-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    align-items: center;
+    gap: var(--spacing-xl);
+    margin: auto 0;
   }
 
   .starter-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--spectrum-global-color-gray-600);
+    font-size: 14px;
+    letter-spacing: 0;
+    color: var(--spectrum-global-color-gray-700);
+    text-align: center;
   }
 
   .starter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
+    width: min(520px, 100%);
+    margin: 0 auto;
   }
 
   .starter-card {
-    border: 1px solid var(--grey-3);
+    border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 12px;
     padding: var(--spacing-m);
-    background: var(--grey-2);
-    color: var(--spectrum-global-color-gray-900);
+    background: var(--spectrum-global-color-gray-50);
+    color: var(--spectrum-global-color-gray-800);
     font: inherit;
-    text-align: left;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: center;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .starter-card:hover {
-    border-color: var(--grey-4);
-    background: var(--grey-1);
+    border-color: var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-100);
   }
 
   .message {
@@ -686,6 +727,14 @@
     flex-direction: column;
     flex-shrink: 0;
     line-height: 1.4;
+  }
+
+  .read-only-notice {
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 10px;
+    padding: var(--spacing-m);
+    background-color: var(--spectrum-global-color-gray-50);
+    text-align: center;
   }
 
   .input {
