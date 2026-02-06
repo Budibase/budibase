@@ -72,7 +72,10 @@ export async function create(
   })
 
   const newConfig: CustomAIProviderConfig = {
-    _id: docIds.generateAIConfigID(),
+    _id:
+      config.provider === "budibase"
+        ? docIds.generateAIConfigID("bbai")
+        : docIds.generateAIConfigID(),
     name: config.name,
     provider: config.provider,
     credentialsFields: config.credentialsFields,
