@@ -25,8 +25,6 @@
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
 
-  const automationNodeEnabled = true
-
   const discordConfigured = $derived.by(() => {
     const integration = currentAgent?.discordIntegration
     return !!(
@@ -126,7 +124,13 @@
 </div>
 
 <Modal bind:this={discordModal}>
-  <ModalContent title="Discord" size="L" showCloseIcon>
+  <ModalContent
+    title="Discord"
+    size="L"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
     <DiscordConfig agent={currentAgent} />
   </ModalContent>
 </Modal>

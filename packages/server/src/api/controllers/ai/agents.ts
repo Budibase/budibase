@@ -260,13 +260,24 @@ export async function syncAgentDiscordCommands(
     newCommandName
   )
 
+  const interactionsEndpointUrl = await buildDiscordWebhookUrl(
+    chatApp._id!,
+    agentId
+  )
+
+  await sdk.ai.agents.update({
+    ...agent,
+    discordIntegration: {
+      ...agent.discordIntegration,
+      chatAppId: chatApp._id!,
+      interactionsEndpointUrl,
+    },
+  })
+
   ctx.body = {
     success: true,
     chatAppId: chatApp._id!,
-    interactionsEndpointUrl: await buildDiscordWebhookUrl(
-      chatApp._id!,
-      agentId
-    ),
+    interactionsEndpointUrl,
     inviteUrl: buildDiscordInviteUrl(applicationId),
     askCommandName,
     newCommandName,

@@ -3,7 +3,6 @@ import {
   type DiscordInteraction,
   extractDiscordContent,
   getDiscordInteractionCommand,
-  isDiscordConversationExpired,
   matchesDiscordConversationScope,
   pickDiscordConversation,
 } from "./discord"

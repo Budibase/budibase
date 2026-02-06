@@ -63,12 +63,8 @@ describe("agent discord integration sync", () => {
       name: "No Discord Settings",
     })
 
-    await config.api.agent.syncDiscordCommands(
-      agent._id!,
-      undefined,
-      {
-        status: 400,
-      }
-    )
+    await config.api.agent.syncDiscordCommands(agent._id!, undefined, {
+      status: 400,
+    })
   })
 })

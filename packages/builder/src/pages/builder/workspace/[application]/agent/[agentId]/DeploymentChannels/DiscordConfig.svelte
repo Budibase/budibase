@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { Body, Button, Input, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    CopyInput,
+    Input,
+    Label,
+    StatusLight,
+    notifications,
+  } from "@budibase/bbui"
   import type { Agent, SyncAgentDiscordCommandsResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
 
@@ -21,10 +29,9 @@
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
   })
 
-  let saving = $state(false)
   let syncing = $state(false)
+  let saving = $state(false)
   let syncResult = $state<SyncAgentDiscordCommandsResponse | undefined>()
-  let webhookUrl = $state("")
 
   const isConnected = $derived.by(() => {
     if (syncResult?.success) {
@@ -37,8 +44,21 @@
     )
   })
 
-  $effect(() => {
-    webhookUrl = syncResult?.interactionsEndpointUrl || ""
+  const webhookUrl = $derived(
+    syncResult?.interactionsEndpointUrl ||
+      agent?.discordIntegration?.interactionsEndpointUrl ||
+      ""
+  )
+
+  const inviteUrl = $derived.by(() => {
+    if (syncResult?.inviteUrl) {
+      return syncResult.inviteUrl
+    }
+    const appId = draft.applicationId.trim()
+    if (appId) {
+      return `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot+applications.commands&permissions=0`
+    }
+    return ""
   })
 
   $effect(() => {
@@ -81,7 +101,7 @@
     return Math.floor(parsed)
   }
 
-  const saveDiscordIntegration = async (showToast = true) => {
+  const saveDiscordIntegration = async () => {
     if (!agent?._id || saving) {
       return
     }
@@ -108,9 +128,6 @@
         },
       })
       await agentsStore.fetchAgents()
-      if (showToast) {
-        notifications.success("Discord integration saved")
-      }
     } catch (error) {
       console.error(error)
       notifications.error("Failed to save Discord integration")
@@ -127,7 +144,7 @@
 
     syncing = true
     try {
-      await saveDiscordIntegration(false)
+      await saveDiscordIntegration()
       syncResult = await agentsStore.syncDiscordCommands(
         agent._id,
         toOptionalValue(draft.chatAppId)
@@ -138,19 +155,6 @@
       notifications.error("Failed to sync Discord commands")
     } finally {
       syncing = false
-    }
-  }
-
-  const copyWebhookUrl = async () => {
-    if (!webhookUrl) {
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(webhookUrl)
-      notifications.success("Webhook URL copied")
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to copy webhook URL")
     }
   }
 </script>
@@ -171,58 +175,35 @@
     />
   </div>
 
-  <div class="response-card">
-    <div class="response-title">
-      <Body size="S">Response</Body>
+  <div class="response-section">
+    <Label size="L">Response</Label>
+    <div class="status-light">
+      <StatusLight positive={isConnected} neutral={!isConnected}>
+        {isConnected ? "Connected" : "Not connected"}
+      </StatusLight>
     </div>
-    <div class="response-status">
-      <span class="status-dot" class:connected={isConnected}></span>
-      <Body size="S">{isConnected ? "Connected" : "Not connected"}</Body>
-    </div>
-
-    <div class="webhook-row">
-      <Input label="Webhook URL" bind:value={webhookUrl} disabled />
-      <Button
-        quiet
-        size="S"
-        icon="copy"
-        on:click={copyWebhookUrl}
-        disabled={!webhookUrl}
-      >
-        Copy
-      </Button>
-    </div>
-
     {#if syncResult}
-      <div class="response-info">
+      <div class="synced-info">
         <Body size="S">
           Commands synced: /{syncResult.askCommandName} and /{syncResult.newCommandName}
         </Body>
       </div>
-      <div class="response-info">
-        <Body size="S">
-          <a
-            href={syncResult.inviteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open Discord invite link
-          </a>
-        </Body>
-      </div>
+    {/if}
+
+    <CopyInput label="Webhook URL" value={webhookUrl} />
+
+    {#if inviteUrl}
+      <CopyInput label="Discord invite URL" value={inviteUrl} />
     {/if}
   </div>
 
-  <div class="modal-actions">
-    <Button
-      secondary
-      on:click={() => saveDiscordIntegration()}
-      disabled={saving || syncing}
-    >
-      Save
-    </Button>
-    <Button primary on:click={syncCommands} disabled={saving || syncing}>
-      {syncing ? "Enabling..." : "Enable channel"}
+  <div class="actions">
+    <Button cta on:click={syncCommands} disabled={saving || syncing}>
+      {syncing
+        ? "Enabling..."
+        : isConnected
+          ? "Update channel"
+          : "Enable channel"}
     </Button>
   </div>
 </div>
@@ -231,7 +212,7 @@
   .discord-config {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
   }
 
   .field-grid {
@@ -240,55 +221,25 @@
     gap: var(--spacing-s) var(--spacing-m);
   }
 
-  .response-card {
+  .response-section {
     border-top: 1px solid var(--spectrum-global-color-gray-200);
-    padding-top: var(--spacing-s);
+    padding-top: var(--spacing-m);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .response-title {
-    font-weight: 500;
-  }
-
-  .response-status {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
-
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--spectrum-global-color-gray-400);
-  }
-
-  .status-dot.connected {
-    background: var(--spectrum-semantic-positive-status-color);
-  }
-
-  .webhook-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
     gap: var(--spacing-s);
   }
 
-  .response-info {
+  .status-light :global(.spectrum-StatusLight) {
+    justify-content: flex-start;
+  }
+
+  .synced-info {
     color: var(--spectrum-global-color-gray-700);
-    overflow-wrap: anywhere;
   }
 
-  .response-info a {
-    color: var(--spectrum-global-color-blue-600);
-  }
-
-  .modal-actions {
+  .actions {
     display: flex;
     justify-content: flex-end;
-    gap: var(--spacing-s);
   }
 
   @media (max-width: 900px) {

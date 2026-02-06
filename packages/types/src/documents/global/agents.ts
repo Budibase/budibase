@@ -27,6 +27,7 @@ export interface DiscordAgentIntegration {
   newCommandName?: string
   chatAppId?: string
   idleTimeoutMinutes?: number
+  interactionsEndpointUrl?: string
 }
 
 export interface Agent extends Document {
