@@ -15,7 +15,7 @@
     "@vitest/eslint-plugin": "^1.1.14",
     "cross-spawn": "7.0.6",
     "depcheck": "^1.4.7",
-    "esbuild": "^0.18.17",
+    "esbuild": "^0.25.0",
     "esbuild-node-externals": "^1.14.0",
     "eslint": "9.26.0",
     "eslint-plugin-jest": "28.9.0",
