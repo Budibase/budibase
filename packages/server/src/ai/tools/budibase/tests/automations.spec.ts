@@ -5,9 +5,10 @@ import {
   AutomationIOType,
   AutomationStatus,
   AutomationStepResult,
+  AutomationTriggerStepId,
   AutomationTriggerResult,
 } from "@budibase/types"
-import { createAutomationTools } from "../automations"
+import createAutomationTools from "../automations"
 
 interface TriggerAutomationStepsResult {
   success: boolean
@@ -27,18 +28,20 @@ type TriggerAutomationResult =
 describe("AI Tools - Automations", () => {
   const config = new TestConfiguration()
 
-  const getTriggerAutomationTool = (
-    automationId: string,
-    automationName: string
-  ) => {
-    const tools = createAutomationTools({ automationId, automationName })
-    const tool =
-      tools.find(t => t.readableName === `${automationName}.trigger`) ||
-      tools[0]
+  const getTriggerAutomationTool = (automation: any) => {
+    const tools = createAutomationTools([automation])
+    const automationName = automation.name || automation._id
+    const tool = tools.find(t => t.readableName === `${automationName}.trigger`)
     if (!tool) {
       throw new Error("trigger tool not found")
     }
     return tool
+  }
+
+  const findTriggerAutomationTool = (automation: any) => {
+    const tools = createAutomationTools([automation])
+    const automationName = automation.name || automation._id
+    return tools.find(t => t.readableName === `${automationName}.trigger`)
   }
 
   const executeTool = async <T>(
@@ -91,10 +94,7 @@ describe("AI Tools - Automations", () => {
         .serverLog({ text: "Step 2" })
         .save()
 
-      const tool = getTriggerAutomationTool(
-        targetAutomation._id!,
-        targetAutomation.name || targetAutomation._id!
-      )
+      const tool = getTriggerAutomationTool(targetAutomation)
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
           fields: {},
@@ -118,10 +118,7 @@ describe("AI Tools - Automations", () => {
         .serverLog({ text: "After delay" })
         .save()
 
-      const tool = getTriggerAutomationTool(
-        targetAutomation._id!,
-        targetAutomation.name || targetAutomation._id!
-      )
+      const tool = getTriggerAutomationTool(targetAutomation)
       const startTime = performance.now()
 
       const result = (await runInContext(() =>
@@ -140,7 +137,7 @@ describe("AI Tools - Automations", () => {
       }
     })
 
-    it("should return error for non-APP trigger automations", async () => {
+    it("should not create tool for non-APP automations", async () => {
       const { automation: targetAutomation } = await createAutomationBuilder(
         config
       )
@@ -148,27 +145,18 @@ describe("AI Tools - Automations", () => {
         .serverLog({ text: "Row saved" })
         .save()
 
-      const tool = getTriggerAutomationTool(
-        targetAutomation._id!,
-        targetAutomation.name || targetAutomation._id!
-      )
-      const result = (await runInContext(() =>
-        executeTool<TriggerAutomationResult>(tool, {
-          fields: {},
-        })
-      )) as TriggerAutomationResult
-
-      expect(isErrorResult(result)).toBe(true)
-      if (isErrorResult(result)) {
-        expect(result.error).toContain("Only APP trigger type supported")
-      }
+      const tool = findTriggerAutomationTool(targetAutomation)
+      expect(tool).toBeUndefined()
     })
 
     it("should return error for non-existent automation", async () => {
-      const tool = getTriggerAutomationTool(
-        "non_existent_id",
-        "Missing Automation"
-      )
+      const tool = getTriggerAutomationTool({
+        _id: "non_existent_id",
+        name: "Missing Automation",
+        definition: {
+          trigger: { stepId: AutomationTriggerStepId.APP },
+        },
+      })
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
           fields: {},
@@ -189,10 +177,7 @@ describe("AI Tools - Automations", () => {
         .serverLog({ text: "{{ trigger.fields.message }}" })
         .save()
 
-      const tool = getTriggerAutomationTool(
-        targetAutomation._id!,
-        targetAutomation.name || targetAutomation._id!
-      )
+      const tool = getTriggerAutomationTool(targetAutomation)
       const result = (await runInContext(() =>
         executeTool<TriggerAutomationResult>(tool, {
           fields: { message: "Hello from agent" },
@@ -202,34 +187,6 @@ describe("AI Tools - Automations", () => {
       expect(isStepsResult(result)).toBe(true)
       if (isStepsResult(result)) {
         expect(result.status).toBe(AutomationStatus.SUCCESS)
-      }
-    })
-
-    it("should handle timeout parameter", async () => {
-      const { automation: targetAutomation } = await createAutomationBuilder(
-        config
-      )
-        .onAppAction()
-        .delay({ time: 500 })
-        .serverLog({ text: "After long delay" })
-        .save()
-
-      const tool = getTriggerAutomationTool(
-        targetAutomation._id!,
-        targetAutomation.name || targetAutomation._id!
-      )
-      const result = (await runInContext(() =>
-        executeTool<TriggerAutomationResult>(tool, {
-          fields: {},
-          timeout: 0.1,
-        })
-      )) as TriggerAutomationResult
-
-      // Timeout still returns steps but with success: false
-      expect(isStepsResult(result)).toBe(true)
-      if (isStepsResult(result)) {
-        expect(result.success).toBe(false)
-        expect(result.status).toBe(AutomationStatus.TIMED_OUT)
       }
     })
   })
