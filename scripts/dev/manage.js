@@ -22,7 +22,7 @@ async function init() {
     // empty string is false
     MULTI_TENANCY: "",
     DISABLE_ACCOUNT_PORTAL: "1",
-    ACCOUNT_PORTAL_URL: "https://account.budibaseqa.app",
+    ACCOUNT_PORTAL_URL: "http://localhost:10001",
     ACCOUNT_PORTAL_API_KEY: "budibase",
     PLATFORM_URL: "http://localhost:10000",
     APPS_URL: "http://localhost:4001",
