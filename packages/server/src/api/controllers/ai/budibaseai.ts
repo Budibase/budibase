@@ -1,5 +1,4 @@
 import { env } from "@budibase/backend-core"
-import serverEnv from "../../../environment"
 import { ai } from "@budibase/pro"
 import OpenAIClient from "openai"
 import type OpenAI from "openai"
@@ -42,14 +41,20 @@ export async function chatCompletion(
   ctx.body = await llm.chat(ai.LLMRequest.fromRequest(ctx.request.body))
 }
 
-const allowedModels = new Set([
-  "bbai-openai-gpt-4o-mini",
-  "bbai-openai-gpt-4o",
-  "bbai-openai-gpt-5",
-  "bbai-openai-gpt-5-mini",
-  "bbai-openai-gpt-5-nano",
-  "bbai-mistral-mistral-small-latest",
-])
+const modelAliasMap: Record<
+  string,
+  { provider: "openai" | "mistral"; model: string }
+> = {
+  "budibase/gpt-4o-mini": { provider: "openai", model: "gpt-4o-mini" },
+  "budibase/gpt-4o": { provider: "openai", model: "gpt-4o" },
+  "budibase/gpt-5": { provider: "openai", model: "gpt-5" },
+  "budibase/gpt-5-mini": { provider: "openai", model: "gpt-5-mini" },
+  "budibase/gpt-5-nano": { provider: "openai", model: "gpt-5-nano" },
+  "budibase/mistral-small-latest": {
+    provider: "mistral",
+    model: "mistral-small-latest",
+  },
+}
 
 export async function openaiChatCompletions(
   ctx: Ctx<
@@ -65,23 +70,39 @@ export async function openaiChatCompletions(
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
 
-  const modelId = ctx.request.body.model
-  if (!modelId) {
+  const requestedModel = ctx.request.body.model
+  if (!requestedModel) {
     ctx.throw(400, "Missing required field: model")
   }
-  if (!allowedModels.has(modelId)) {
-    ctx.throw(400, "Unsupported model")
+  const modelConfig = modelAliasMap[requestedModel]
+  if (!modelConfig) {
+    ctx.throw(400, `Unsupported model: ${requestedModel}`)
   }
+
+  const { provider, model } = modelConfig
 
   const requestBody: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
     messages: ctx.request.body.messages,
-    model: modelId,
+    model,
     stream: !!ctx.request.body.stream,
   }
 
+  let apiKey: string | undefined
+  let baseURL: string | undefined
+  if (provider === "openai") {
+    apiKey = env.BB_OPENAI_API_KEY
+  } else {
+    apiKey = env.BB_MISTRAL_API_KEY
+    baseURL = "https://api.mistral.ai/v1"
+  }
+
+  if (!apiKey) {
+    ctx.throw(500, `${provider.toUpperCase()} API key not configured`)
+  }
+
   const client = new OpenAIClient({
-    apiKey: serverEnv.LITELLM_MASTER_KEY,
-    baseURL: serverEnv.LITELLM_URL,
+    apiKey,
+    baseURL,
   })
 
   if (requestBody.stream) {
