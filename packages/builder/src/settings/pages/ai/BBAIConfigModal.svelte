@@ -24,7 +24,7 @@
   const dispatch = createEventDispatcher<{ hide: void }>()
 
   let draft: AIConfigResponse = config
-    ? config
+    ? structuredClone(config)
     : ({
         provider: "budibase",
         name: "Budibase AI",
