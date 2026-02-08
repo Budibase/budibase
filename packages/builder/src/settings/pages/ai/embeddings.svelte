@@ -110,7 +110,7 @@
   <CustomConfigModal
     config={selectedModalConfig}
     provider={selectedProvider}
-    type={AIConfigType.COMPLETIONS}
+    type={AIConfigType.EMBEDDINGS}
     on:hide={() => {
       selectedModalConfig = undefined
       selectedProvider = undefined
