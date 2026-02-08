@@ -39,7 +39,7 @@
           reasoningEffort: config.reasoningEffort,
         } satisfies RequiredKeys<UpdateAIConfigRequest>)
       : ({
-          provider: "",
+          provider: provider ?? "",
           name: "",
           model: "",
           configType: type,

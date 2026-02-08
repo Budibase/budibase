@@ -129,13 +129,7 @@
     />
   {:else}
     <BBAIConfigModal
-      config={selectedModalConfig
-        ? {
-            _id: selectedModalConfig._id,
-            _rev: selectedModalConfig._rev,
-            model: selectedModalConfig.model,
-          }
-        : undefined}
+      config={selectedModalConfig}
       type={AIConfigType.COMPLETIONS}
       on:hide={() => {
         configModal.hide()

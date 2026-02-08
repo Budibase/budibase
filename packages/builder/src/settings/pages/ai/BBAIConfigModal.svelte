@@ -14,30 +14,17 @@
     CreateAIConfigRequest,
     LLMProvider,
     RequiredKeys,
-    UpdateAIConfigRequest,
   } from "@budibase/types"
   import { AIConfigType, BUDIBASE_AI_MODELS } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
-  export let config:
-    | { _id: string | undefined; _rev: string | undefined; model: string }
-    | undefined
+  export let config: AIConfigResponse | undefined
   export let type: AIConfigType
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
   let draft: AIConfigResponse = config
-    ? ({
-        _id: config._id!,
-        _rev: config._rev!,
-        name: "Budibase AI",
-        provider: "budibase",
-        credentialsFields: {},
-        model: config.model,
-        webSearchConfig: undefined,
-        configType: AIConfigType.COMPLETIONS,
-        reasoningEffort: undefined,
-      } satisfies RequiredKeys<UpdateAIConfigRequest>)
+    ? config
     : ({
         provider: "budibase",
         name: "Budibase AI",
