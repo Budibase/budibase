@@ -16,14 +16,14 @@
     config => config.configType === AIConfigType.COMPLETIONS
   )
 
-  $: hasBBAI = completionConfigs.some(c => c.provider === "budibase")
+  $: hasBBAI = completionConfigs.some(c => c.provider === "Budibase")
   $: modelProviders = [
     ...(hasBBAI
       ? []
       : [
           {
             name: "Budibase AI",
-            provider: "budibase",
+            provider: "Budibase",
             description: "Budibase managed",
           },
         ]),
@@ -118,7 +118,7 @@
 </Layout>
 
 <Modal bind:this={configModal}>
-  {#if selectedProvider !== "budibase"}
+  {#if selectedProvider !== "Budibase"}
     <CustomConfigModal
       config={selectedModalConfig}
       provider={selectedProvider}

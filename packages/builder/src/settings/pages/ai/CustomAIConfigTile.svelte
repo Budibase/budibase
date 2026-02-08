@@ -17,7 +17,7 @@
   function getProviderLogo(providerName: string) {
     const providerToLogo = {
       Anthropic: AnthropicLogo,
-      budibase: BudibaseLogo,
+      Budibase: BudibaseLogo,
       Google_AI_Studio: GoogleLogo,
       Groq: GroqLogo,
       MistralAI: MistralLogo,

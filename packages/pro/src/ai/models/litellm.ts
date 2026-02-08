@@ -64,7 +64,7 @@ function createLiteLLMFetch(sessionId?: string): typeof fetch {
     const span = tracer.scope().active()
     let modifiedInit = init
 
-    if (sessionId && typeof init?.body === "string") {
+    if (typeof init?.body === "string") {
       try {
         const body = JSON.parse(init.body)
         body.litellm_session_id = sessionId

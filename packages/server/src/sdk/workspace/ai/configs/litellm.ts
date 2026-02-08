@@ -363,7 +363,7 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
 }
 
 async function mapToLiteLLMProvider(provider: string) {
-  if (provider === "budibase") {
+  if (provider === "Budibase") {
     return "custom_openai"
   }
 

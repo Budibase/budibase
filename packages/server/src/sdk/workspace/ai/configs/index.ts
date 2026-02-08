@@ -55,7 +55,7 @@ export async function create(
 ): Promise<CustomAIProviderConfig> {
   const db = context.getWorkspaceDB()
 
-  if (config.provider === "budibase") {
+  if (config.provider === "Budibase") {
     config.credentialsFields.api_base =
       env.BBAI_URL ||
       (() => {
@@ -81,7 +81,7 @@ export async function create(
 
   const newConfig: CustomAIProviderConfig = {
     _id:
-      config.provider === "budibase"
+      config.provider === "Budibase"
         ? docIds.generateAIConfigID("bbai")
         : docIds.generateAIConfigID(),
     name: config.name,
@@ -255,7 +255,7 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
       return mapProvider
     })
     liteLLMProviders.push({
-      id: "budibase",
+      id: "Budibase",
       displayName: "Budibase AI",
       externalProvider: "custom_openai",
       credentialFields: [],

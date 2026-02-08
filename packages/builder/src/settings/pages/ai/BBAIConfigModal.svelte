@@ -26,7 +26,7 @@
   let draft: AIConfigResponse = config
     ? structuredClone(config)
     : ({
-        provider: "budibase",
+        provider: "Budibase",
         name: "Budibase AI",
         model: "",
         configType: type,
