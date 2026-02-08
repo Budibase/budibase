@@ -72,7 +72,6 @@ services:
       DATABASE_URL: "postgresql://llmproxy:dbpassword9090@litellm-db:5432/litellm"
       STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
       LITELLM_REASONING_AUTO_SUMMARY: "true" # enables reasoning summaries for Responses API models
-      BBAI_URL: https://budibaseqa.app/api/ai
     command: ["--config", "/app/config.yaml"]
     env_file:
       - .env
