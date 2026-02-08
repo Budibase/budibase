@@ -8,7 +8,7 @@
   import CustomConfigModal from "./CustomConfigModal.svelte"
   import BBAIConfigModal from "./BBAIConfigModal.svelte"
 
-  let customConfigModal: { show: () => void; hide: () => void }
+  let configModal: { show: () => void; hide: () => void }
   let selectedModalConfig: AIConfigResponse | undefined
   let selectedProvider: string | undefined
 
@@ -62,12 +62,12 @@
   function createAIConfig(provider?: string) {
     selectedModalConfig = undefined
     selectedProvider = provider
-    customConfigModal?.show()
+    configModal?.show()
   }
   function editAIConfig(config: AIConfigResponse) {
     selectedModalConfig = config
     selectedProvider = config.provider
-    customConfigModal?.show()
+    configModal?.show()
   }
 
   onMount(async () => {
@@ -87,10 +87,10 @@
     <div class="model-list">
       {#each completionConfigs as config (config._id)}
         <CustomAIConfigTile
+          actionType="edit"
           displayName={config.name}
           provider={config.provider}
           description={config.model}
-          isEdition
           editHandler={() => editAIConfig(config)}
         ></CustomAIConfigTile>
       {/each}
@@ -107,6 +107,7 @@
   <div class="model-list">
     {#each modelProviders as config (config.name)}
       <CustomAIConfigTile
+        actionType="create"
         displayName={config.name}
         provider={config.provider}
         description={config.description}
@@ -116,14 +117,14 @@
   </div>
 </Layout>
 
-<Modal bind:this={customConfigModal}>
+<Modal bind:this={configModal}>
   {#if selectedProvider !== "budibase"}
     <CustomConfigModal
       config={selectedModalConfig}
       provider={selectedProvider}
       type={AIConfigType.COMPLETIONS}
       on:hide={() => {
-        customConfigModal.hide()
+        configModal.hide()
       }}
     />
   {:else}
@@ -137,7 +138,7 @@
         : undefined}
       type={AIConfigType.COMPLETIONS}
       on:hide={() => {
-        customConfigModal.hide()
+        configModal.hide()
       }}
     />
   {/if}

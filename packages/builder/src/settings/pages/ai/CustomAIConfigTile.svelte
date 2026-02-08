@@ -12,7 +12,7 @@
   export let provider: string
   export let displayName: string
   export let description: string
-  export let isEdition: boolean = false
+  export let actionType: "create" | "edit"
   export let editHandler: (() => void) | null
 
   function getProviderLogo(providerName: string) {
@@ -41,7 +41,7 @@
   <div class="model-description">{description}</div>
   <div class="model-actions">
     <ActionButton size="S" on:click={() => editHandler?.()}
-      >{isEdition ? "Edit" : "Connect"}</ActionButton
+      >{actionType === "edit" ? "Edit" : "Connect"}</ActionButton
     >
   </div>
 </div>
