@@ -2,12 +2,13 @@ import { env } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import OpenAIClient from "openai"
 import type OpenAI from "openai"
-import type {
-  ChatCompletionRequest,
-  ChatCompletionResponse,
-  Ctx,
-  UploadFileRequest,
-  UploadFileResponse,
+import {
+  BUDIBASE_AI_MODEL_MAP,
+  type ChatCompletionRequest,
+  type ChatCompletionResponse,
+  type Ctx,
+  type UploadFileRequest,
+  type UploadFileResponse,
 } from "@budibase/types"
 
 export async function uploadFile(
@@ -41,21 +42,6 @@ export async function chatCompletion(
   ctx.body = await llm.chat(ai.LLMRequest.fromRequest(ctx.request.body))
 }
 
-const modelAliasMap: Record<
-  string,
-  { provider: "openai" | "mistral"; model: string }
-> = {
-  "budibase/gpt-4o-mini": { provider: "openai", model: "gpt-4o-mini" },
-  "budibase/gpt-4o": { provider: "openai", model: "gpt-4o" },
-  "budibase/gpt-5": { provider: "openai", model: "gpt-5" },
-  "budibase/gpt-5-mini": { provider: "openai", model: "gpt-5-mini" },
-  "budibase/gpt-5-nano": { provider: "openai", model: "gpt-5-nano" },
-  "budibase/mistral-small-latest": {
-    provider: "mistral",
-    model: "mistral-small-latest",
-  },
-}
-
 export async function openaiChatCompletions(
   ctx: Ctx<
     OpenAI.Chat.Completions.ChatCompletionCreateParams,
@@ -74,7 +60,7 @@ export async function openaiChatCompletions(
   if (!requestedModel) {
     ctx.throw(400, "Missing required field: model")
   }
-  const modelConfig = modelAliasMap[requestedModel]
+  const modelConfig = BUDIBASE_AI_MODEL_MAP[requestedModel]
   if (!modelConfig) {
     ctx.throw(400, `Unsupported model: ${requestedModel}`)
   }

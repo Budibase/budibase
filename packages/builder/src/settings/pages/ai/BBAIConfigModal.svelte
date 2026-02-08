@@ -16,7 +16,7 @@
     RequiredKeys,
     UpdateAIConfigRequest,
   } from "@budibase/types"
-  import { AIConfigType } from "@budibase/types"
+  import { AIConfigType, BUDIBASE_AI_MODELS } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
   export let config:
@@ -57,15 +57,6 @@
     { label: "Low", value: "low" },
     { label: "Medium", value: "medium" },
     { label: "High", value: "high" },
-  ]
-
-  const models = [
-    { label: "GPT 4o Mini", value: "budibase/gpt-4o-mini" },
-    { label: "GPT 4o", value: "budibase/gpt-4o" },
-    { label: "GPT 5", value: "budibase/gpt-5" },
-    { label: "GPT 5 Mini", value: "budibase/gpt-5-mini" },
-    { label: "GPT 5 Nano", value: "budibase/gpt-5-nano" },
-    { label: "Mistral Small", value: "budibase/mistral-small-latest" },
   ]
 
   $: providers = $aiConfigsStore.providers
@@ -169,9 +160,9 @@
     <Label size="M">Model</Label>
     <Select
       placeholder="Select a model"
-      options={models}
+      options={BUDIBASE_AI_MODELS}
       getOptionLabel={option => option.label}
-      getOptionValue={option => option.value}
+      getOptionValue={option => option.id}
       bind:value={draft.model}
     />
   </div>
