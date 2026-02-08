@@ -64,7 +64,11 @@ export async function create(
           522
         )
       })()
-    config.credentialsFields.api_key = (await licensing.keys.getLicenseKey())!
+    const licenseKey = await licensing.keys.getLicenseKey()
+    if (!licenseKey) {
+      throw new HTTPError("No license key found", 403)
+    }
+    config.credentialsFields.api_key = licenseKey
   }
 
   const modelId = await liteLLM.addModel({
