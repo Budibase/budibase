@@ -56,10 +56,14 @@ export async function create(
   const db = context.getWorkspaceDB()
 
   if (config.provider === "budibase") {
-    config.credentialsFields.api_base = new URL(
-      "/api/ai",
-      env.BUDICLOUD_URL
-    ).toString()
+    config.credentialsFields.api_base =
+      env.BBAI_URL ||
+      (() => {
+        throw new HTTPError(
+          "BBAI_URL must be set in environment variables",
+          522
+        )
+      })()
     config.credentialsFields.api_key = (await licensing.keys.getLicenseKey())!
   }
 

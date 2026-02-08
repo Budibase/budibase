@@ -271,8 +271,9 @@ const environment = {
   CUSTOM_CSP_IMG_SRC: process.env.CUSTOM_CSP_IMG_SRC,
   CUSTOM_CSP_FONT_SRC: process.env.CUSTOM_CSP_FONT_SRC,
   CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
-  BB_OPENAI_API_KEY: process.env.BB_OPENAI_API_KEY,
-  BB_MISTRAL_API_KEY: process.env.BB_MISTRAL_API_KEY,
+  BBAI_URL: process.env.BBAI_URL,
+  BBAI_OPENAI_API_KEY: process.env.BBAI_OPENAI_API_KEY,
+  BBAI_MISTRAL_API_KEY: process.env.BBAI_MISTRAL_API_KEY,
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
@@ -317,8 +318,8 @@ export const SECRETS: EnvironmentKey[] = [
   "OPENAI_API_KEY",
   "REDIS_PASSWORD",
   "REDIS_USERNAME",
-  "BB_OPENAI_API_KEY",
-  "BB_MISTRAL_API_KEY",
+  "BBAI_OPENAI_API_KEY",
+  "BBAI_MISTRAL_API_KEY",
 ]
 
 // clean up any environment variable edge cases

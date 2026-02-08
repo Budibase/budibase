@@ -90,9 +90,9 @@ export async function openaiChatCompletions(
   let apiKey: string | undefined
   let baseURL: string | undefined
   if (provider === "openai") {
-    apiKey = env.BB_OPENAI_API_KEY
+    apiKey = env.BBAI_OPENAI_API_KEY
   } else {
-    apiKey = env.BB_MISTRAL_API_KEY
+    apiKey = env.BBAI_MISTRAL_API_KEY
     baseURL = "https://api.mistral.ai/v1"
   }
 
