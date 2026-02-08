@@ -1152,6 +1152,7 @@ describe("BudibaseAI", () => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
         ACCOUNT_PORTAL_API_KEY: internalApiKey,
+        BBAI_OPENAI_API_KEY: "openai-key",
       })
     })
 
@@ -1190,7 +1191,7 @@ describe("BudibaseAI", () => {
       mockChatGPTResponse("hello from openai")
 
       const response = await config.api.ai.openaiChatCompletions({
-        model: "gpt-5-mini",
+        model: "budibase/gpt-5-mini",
         messages: [{ role: "user", content: "hello" }],
         licenseKey,
       })
@@ -1200,12 +1201,12 @@ describe("BudibaseAI", () => {
       expect(response.usage?.total_tokens).toBeGreaterThan(0)
     })
 
-    it("forwards extra fields (e.g. response_format)", async () => {
+    it("ignores extra fields (e.g. response_format)", async () => {
       const format = toResponseFormat(z.object({ value: z.string() }))
-      mockChatGPTResponse(`{"value":"ok"}`, { format })
+      mockChatGPTResponse(`{"value":"ok"}`, { rejectFormat: true })
 
       const response = await config.api.ai.openaiChatCompletions({
-        model: "gpt-5-mini",
+        model: "budibase/gpt-5-mini",
         messages: [{ role: "user", content: "return json" }],
         response_format: format,
         licenseKey,
@@ -1219,7 +1220,7 @@ describe("BudibaseAI", () => {
 
       await config.api.ai.openaiChatCompletions(
         {
-          model: "gpt-5-mini",
+          model: "budibase/gpt-5-mini",
           messages: [{ role: "user", content: "hello" }],
           stream: true,
           licenseKey,
@@ -1231,6 +1232,59 @@ describe("BudibaseAI", () => {
           },
         }
       )
+    })
+
+    it("rejects requests missing required fields", async () => {
+      await config.api.ai.openaiChatCompletions(
+        {
+          // @ts-expect-error intentionally missing fields
+          model: undefined,
+          // @ts-expect-error intentionally missing fields
+          messages: undefined,
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
+    it("rejects unsupported models", async () => {
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "gpt-5-mini",
+          messages: [{ role: "user", content: "hello" }],
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
+    it("routes Mistral models to the Mistral API", async () => {
+      const mistralCleanup = setEnv({ BBAI_MISTRAL_API_KEY: "mistral-key" })
+      mockChatGPTResponse("hello from mistral", {
+        baseUrl: "https://api.mistral.ai",
+      })
+
+      const response = await config.api.ai.openaiChatCompletions({
+        model: "budibase/mistral-small-latest",
+        messages: [{ role: "user", content: "hello" }],
+        licenseKey,
+      })
+
+      expect(response.choices[0].message.content).toBe("hello from mistral")
+      mistralCleanup()
+    })
+
+    it("errors when OpenAI API key is missing", async () => {
+      const keyCleanup = setEnv({ BBAI_OPENAI_API_KEY: "" })
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "budibase/gpt-5-mini",
+          messages: [{ role: "user", content: "hello" }],
+          licenseKey,
+        },
+        { status: 500 }
+      )
+      keyCleanup()
     })
   })
 })
