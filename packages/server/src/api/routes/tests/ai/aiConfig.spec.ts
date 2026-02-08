@@ -57,7 +57,6 @@ describe("BudibaseAI", () => {
         api_key: "sk-test-key",
         api_base: "https://api.openai.com",
       },
-      liteLLMModelId: "",
       configType: AIConfigType.COMPLETIONS,
     }
 
@@ -481,7 +480,6 @@ describe("BudibaseAI", () => {
         api_key: "sk-test-key",
         api_base: "https://api.openai.com",
       },
-      liteLLMModelId: "",
       configType: AIConfigType.COMPLETIONS,
     }
 
