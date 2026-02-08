@@ -7,7 +7,6 @@
   import MistralLogo from "assets/llm-icons/mistral_ai.svg"
   import OpenrouterLogo from "assets/llm-icons/openrouter.svg"
   import OpenAiLogo from "assets/llm-icons/openai.svg"
-  import SalesLLMLogo from "assets/llm-icons/salesllm.svg"
 
   export let provider: string
   export let displayName: string
@@ -17,14 +16,13 @@
 
   function getProviderLogo(providerName: string) {
     const providerToLogo = {
-      anthropic: AnthropicLogo,
+      Anthropic: AnthropicLogo,
       budibase: BudibaseLogo,
-      google: GoogleLogo,
-      groq: GroqLogo,
-      mistral: MistralLogo,
-      openai: OpenAiLogo,
-      openrouter: OpenrouterLogo,
-      salesllm: SalesLLMLogo,
+      Google_AI_Studio: GoogleLogo,
+      Groq: GroqLogo,
+      MistralAI: MistralLogo,
+      OpenAI: OpenAiLogo,
+      Openrouter: OpenrouterLogo,
     }
 
     return providerToLogo[providerName as keyof typeof providerToLogo] || null

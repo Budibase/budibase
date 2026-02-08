@@ -29,32 +29,32 @@
         ]),
     {
       name: "Anthropic",
-      provider: "anthropic",
+      provider: "Anthropic",
       description: "Connect to Claude models directly from Anthropic",
     },
     {
       name: "Google",
-      provider: "google",
+      provider: "Google_AI_Studio",
       description: "Connect to Gemini models directly from Google",
     },
     {
       name: "Mistral",
-      provider: "mistral",
+      provider: "MistralAI",
       description: "Connect to Mistral models directly from Mistral",
     },
     {
       name: "OpenAI",
-      provider: "openai",
+      provider: "OpenAI",
       description: "Connect to ChatGPT models directly from OpenAI",
     },
     {
       name: "OpenRouter",
-      provider: "openrouter",
+      provider: "Openrouter",
       description: "Connect to 100s of text, image, embedding models",
     },
     {
       name: "Groq",
-      provider: "groq",
+      provider: "Groq",
       description: "Connect to 100s of text, image, embedding models",
     },
   ]
