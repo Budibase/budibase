@@ -1,23 +1,14 @@
 import { Ctx } from "@budibase/types"
 import { Next } from "koa"
-import { constants, context } from "@budibase/backend-core"
+import { constants, context, utils } from "@budibase/backend-core"
 import { getLicenseFromKey } from "../sdk/licensing"
 import { tracer } from "dd-trace"
-
-function getBearerToken(ctx: Ctx) {
-  const auth = ctx.get("authorization")
-  if (!auth) {
-    return null
-  }
-
-  const match = auth.match(/^Bearer\s+(.+)$/i)
-  return match ? match[1] : null
-}
 
 export default async function (ctx: Ctx, next: Next) {
   await tracer.trace("licenseAuth", async span => {
     let licenseKey =
-      ctx.request.headers[constants.Header.LICENSE_KEY] || getBearerToken(ctx)
+      ctx.request.headers[constants.Header.LICENSE_KEY] ||
+      utils.getBearerToken(ctx)
     if (Array.isArray(licenseKey)) {
       licenseKey = licenseKey[0]
     }
