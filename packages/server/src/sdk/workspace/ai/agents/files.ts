@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import {
   Agent,
   AgentFile,
@@ -7,7 +7,7 @@ import {
   RequiredKeys,
   ToDocCreateMetadata,
 } from "@budibase/types"
-import { deleteAgentFileChunks, getAgentRagConfig } from "../rag"
+import { deleteAgentFileChunks } from "../rag/files"
 
 interface CreateAgentFileOptions {
   agentId: string
@@ -34,7 +34,6 @@ export const createAgentFile = async (
     status: AgentFileStatus.PROCESSING,
     uploadedBy,
     chunkCount: 0,
-
     errorMessage: undefined,
     processedAt: undefined,
   }
@@ -83,8 +82,27 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
 }
 
 export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
-  const ragConfig = await getAgentRagConfig(agent)
-  await deleteAgentFileChunks(ragConfig, [file.ragSourceId])
-  const db = context.getWorkspaceDB()
-  await db.remove(file)
+  let isFileInProduction = false
+
+  try {
+    const prodWorkspaceId = db.getProdWorkspaceID(
+      context.getOrThrowWorkspaceId()
+    )
+    await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+      await getAgentFileOrThrow(file._id!)
+
+      isFileInProduction = true
+    })
+  } catch (error: any) {
+    if (error?.status === 404) {
+      // ignore if prod version does not exist yet
+    } else {
+      throw error
+    }
+  }
+  if (!isFileInProduction) {
+    await deleteAgentFileChunks(agent, [file.ragSourceId])
+  }
+
+  await context.getWorkspaceDB().remove(file)
 }

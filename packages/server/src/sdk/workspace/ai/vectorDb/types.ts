@@ -1,9 +1,16 @@
-import type { Client } from "pg"
+import { VectorDbProvider } from "@budibase/types"
 
-export interface VectorDbConfig {
-  databaseUrl: string
-  embeddingDimensions: number
+interface BaseVectorDbConfig {
+  provider: VectorDbProvider
 }
+
+export interface PgVectorDbConfig extends BaseVectorDbConfig {
+  provider: VectorDbProvider.PGVECTOR
+  databaseUrl: string
+  tableName: string
+}
+
+export type VectorDbConfig = PgVectorDbConfig
 
 export interface ChunkInput {
   hash: string
@@ -32,5 +39,3 @@ export interface VectorDb {
     topK: number
   ): Promise<QueryResultRow[]>
 }
-
-export type ClientHandler<T> = (client: Client) => Promise<T>

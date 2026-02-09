@@ -51,12 +51,100 @@ else
     sed -i "s#DATA_DIR#${DATA_DIR}#g" /opt/couchdb/etc/local.ini
 fi
 
-# Migration logic: if we find .couch files in the root DATA_DIR, move them to the subfolder.
-# This handles upgrades from older versions where data was stored directly in DATA_DIR.
-if ls ${DATA_DIR}/*.couch 1> /dev/null 2>&1; then
-    echo "Found existing .couch files in ${DATA_DIR}. Migrating to ${DATA_DIR}/couch/dbs/..."
-    mv ${DATA_DIR}/*.couch ${DATA_DIR}/couch/dbs/
+# =============================================================================
+# MIGRATION LOGIC
+# =============================================================================
+# This handles upgrades from older versions where data was stored differently.
+# Old docker-compose setup stored data directly in /opt/couchdb/data (now /data)
+# New setup expects data in /data/couch/dbs/ with views in /data/couch/views/
+# =============================================================================
+
+echo "=== CouchDB Data Migration Debug ==="
+echo "DATA_DIR=${DATA_DIR}"
+echo "TARGETBUILD=${TARGETBUILD}"
+echo ""
+echo "=== Current directory structure ==="
+echo "Listing ${DATA_DIR}:"
+ls -la ${DATA_DIR}/ 2>/dev/null || echo "(directory empty or doesn't exist)"
+echo ""
+
+# .shards
+if [ -d "${DATA_DIR}/.shards" ]; then
+    echo "Found .shards directory in ${DATA_DIR}/.shards"
+    ls -la ${DATA_DIR}/.shards/ 2>/dev/null
 fi
+
+# shards directory
+if [ -d "${DATA_DIR}/shards" ]; then
+    echo "Found shards directory in ${DATA_DIR}/shards"
+    ls -la ${DATA_DIR}/shards/ 2>/dev/null
+    echo ""
+    echo "Contents of shards subdirectories:"
+    find ${DATA_DIR}/shards -type f -name "*.couch" 2>/dev/null | head -20
+fi
+
+# .couch files at root level
+echo ""
+echo "=== Checking for .couch files at root of DATA_DIR ==="
+if ls ${DATA_DIR}/*.couch 1> /dev/null 2>&1; then
+    echo "Found .couch files in ${DATA_DIR}:"
+    ls -la ${DATA_DIR}/*.couch
+else
+    echo "No .couch files found directly in ${DATA_DIR}"
+fi
+
+# _dbs.couch
+echo ""
+echo "=== Checking for _dbs.couch (CouchDB registry) ==="
+if [ -f "${DATA_DIR}/_dbs.couch" ]; then
+    echo "Found _dbs.couch at ${DATA_DIR}/_dbs.couch"
+elif [ -f "${DATA_DIR}/couch/dbs/_dbs.couch" ]; then
+    echo "Found _dbs.couch at ${DATA_DIR}/couch/dbs/_dbs.couch (already migrated)"
+else
+    echo "No _dbs.couch found"
+fi
+
+echo ""
+echo "=== Starting Migration ==="
+
+if ls ${DATA_DIR}/*.couch 1> /dev/null 2>&1; then
+    echo "MIGRATING: Moving .couch files from ${DATA_DIR}/ to ${DATA_DIR}/couch/dbs/"
+    for f in ${DATA_DIR}/*.couch; do
+        echo "  Moving: $f -> ${DATA_DIR}/couch/dbs/$(basename $f)"
+        mv "$f" "${DATA_DIR}/couch/dbs/"
+    done
+fi
+
+if [ -d "${DATA_DIR}/shards" ] && [ ! -d "${DATA_DIR}/couch/dbs/shards" ]; then
+    echo "MIGRATING: Moving shards directory from ${DATA_DIR}/shards to ${DATA_DIR}/couch/dbs/shards"
+    mv "${DATA_DIR}/shards" "${DATA_DIR}/couch/dbs/shards"
+    chown -R couchdb:couchdb "${DATA_DIR}/couch/dbs/shards"
+fi
+
+if [ -d "${DATA_DIR}/.shards" ] && [ ! -d "${DATA_DIR}/couch/dbs/.shards" ]; then
+    echo "MIGRATING: Moving .shards directory from ${DATA_DIR}/.shards to ${DATA_DIR}/couch/dbs/.shards"
+    mv "${DATA_DIR}/.shards" "${DATA_DIR}/couch/dbs/.shards"
+    chown -R couchdb:couchdb "${DATA_DIR}/couch/dbs/.shards"
+fi
+
+if [ -d "${DATA_DIR}/_nodes" ] && [ ! -d "${DATA_DIR}/couch/dbs/_nodes" ]; then
+    echo "MIGRATING: Moving _nodes directory from ${DATA_DIR}/_nodes to ${DATA_DIR}/couch/dbs/_nodes"
+    mv "${DATA_DIR}/_nodes" "${DATA_DIR}/couch/dbs/_nodes"
+    chown -R couchdb:couchdb "${DATA_DIR}/couch/dbs/_nodes"
+fi
+
+echo ""
+echo "=== Post-Migration directory structure ==="
+echo "Listing ${DATA_DIR}/couch/dbs:"
+ls -la ${DATA_DIR}/couch/dbs/ 2>/dev/null || echo "(directory empty)"
+if [ -d "${DATA_DIR}/couch/dbs/shards" ]; then
+    echo ""
+    echo "Listing ${DATA_DIR}/couch/dbs/shards:"
+    ls -la ${DATA_DIR}/couch/dbs/shards/ 2>/dev/null
+fi
+echo ""
+echo "=== Migration Complete ==="
+echo ""
 
 sed -i "s#COUCHDB_ERLANG_COOKIE#${COUCHDB_ERLANG_COOKIE}#g" /opt/couchdb/etc/vm.args
 sed -i "s#COUCHDB_ERLANG_COOKIE#${COUCHDB_ERLANG_COOKIE}#g" /opt/clouseau/clouseau.ini

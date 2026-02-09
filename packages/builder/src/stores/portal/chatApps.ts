@@ -1,4 +1,5 @@
 import { API } from "@/api"
+import { agentsStore } from "./agents"
 import { BudiStore } from "../BudiStore"
 import { ChatApp, ChatConversation } from "@budibase/types"
 import { derived, get } from "svelte/store"
@@ -72,11 +73,18 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     }
 
     if (agentId) {
-      const isEnabled = chatApp.enabledAgents?.some(
-        agent => agent.agentId === agentId
-      )
-      if (!isEnabled) {
-        chatApp = await API.setChatAppAgent(chatAppId, agentId)
+      const matched = chatApp.agents?.find(agent => agent.agentId === agentId)
+      if (!matched || !matched.isEnabled) {
+        const createdAgent = await API.setChatAppAgent(chatAppId, agentId)
+        const nextAgents = matched
+          ? (chatApp.agents || []).map(agent =>
+              agent.agentId === agentId ? createdAgent : agent
+            )
+          : [...(chatApp.agents || []), createdAgent]
+        chatApp = {
+          ...chatApp,
+          agents: nextAgents,
+        }
       }
     }
 
@@ -93,7 +101,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return chatApp
   }
 
-  updateEnabledAgents = async (enabledAgents: ChatApp["enabledAgents"]) => {
+  updateChatApp = async (updates: Partial<ChatApp>) => {
     const { chatAppId, chatAppsById } = get(this.store)
     const chatApp = chatAppId ? chatAppsById[chatAppId] : undefined
     if (!chatAppId || !chatApp) {
@@ -102,7 +110,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 
     const updated = await API.updateChatApp({
       ...chatApp,
-      enabledAgents,
+      ...updates,
     })
 
     this.update(state => {
@@ -111,6 +119,10 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     })
 
     return updated
+  }
+
+  updateAgents = async (agents: ChatApp["agents"]) => {
+    return await this.updateChatApp({ agents })
   }
 
   fetchConversations = async (chatAppId?: string) => {
@@ -178,4 +190,20 @@ export const currentChatApp = derived(chatAppsStore, state =>
 
 export const currentConversations = derived(chatAppsStore, state =>
   state.chatAppId ? state.conversationsByAppId[state.chatAppId] || [] : []
+)
+
+type ChatAppAgent = NonNullable<ChatApp["agents"]>[number]
+
+const getSelectedChatAgent = (
+  chatApp: ChatApp | undefined,
+  agentId?: string
+): ChatAppAgent | undefined =>
+  agentId
+    ? chatApp?.agents?.find(agent => agent.agentId === agentId)
+    : undefined
+
+export const selectedChatAgent = derived(
+  [currentChatApp, agentsStore],
+  ([$currentChatApp, $agentsStore]) =>
+    getSelectedChatAgent($currentChatApp, $agentsStore.currentAgentId)
 )

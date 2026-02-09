@@ -5,14 +5,20 @@ export enum AIConfigType {
   EMBEDDINGS = "embeddings",
 }
 
+export type ReasoningEffort = "low" | "medium" | "high"
+
 export interface CustomAIProviderConfig extends Document {
   name: string
   provider: string
-  isDefault: boolean
-  baseUrl: string
+  credentialsFields: Record<string, string>
   model: string
-  apiKey?: string
   liteLLMModelId: string
   webSearchConfig?: WebSearchConfig
   configType: AIConfigType
+  reasoningEffort?: ReasoningEffort
+}
+
+export interface LiteLLMKeyConfig extends Document {
+  keyId: string
+  secretKey: string
 }

@@ -60,6 +60,7 @@ import MicrosoftSharepointLogo from "assets/rest-template-icons/microsoft-sharep
 import MicrosoftTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
 import NanonetsLogo from "assets/rest-template-icons/nanonets.svg"
 import NotionLogo from "assets/rest-template-icons/notion.svg"
+import OpenRouterLogo from "assets/rest-template-icons/openrouter.svg"
 import OysterLogo from "assets/rest-template-icons/oyster.svg"
 import PeachPaymentsLogo from "assets/rest-template-icons/peach-payments.svg"
 import PinpointLogo from "assets/rest-template-icons/pinpoint.svg"
@@ -1804,11 +1805,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       description: "Atlassian Confluence API for content, spaces, and users",
       specs: [
         {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/confluence/openapi.json",
+          version: "2.0.0",
+          url: "https://dac-static.atlassian.com/cloud/confluence/openapi-v2.v3.json?_v=1.8327.0",
         },
       ],
-      operationsCount: 616,
+      operationsCount: 212,
       icon: ConfluenceLogo,
       verified: true,
     },
@@ -2442,6 +2443,19 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 20,
       icon: NotionLogo,
+    },
+    {
+      name: "OpenRouter",
+      description: "OpenAI-compatible API with additional OpenRouter features",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://openrouter.ai/openapi.yaml",
+        },
+      ],
+      operationsCount: 57,
+      icon: OpenRouterLogo,
+      verified: true,
     },
     {
       name: "Oyster HR",

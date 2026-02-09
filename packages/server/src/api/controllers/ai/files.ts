@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 import { readFile, unlink } from "node:fs/promises"
 import sdk from "../../../sdk"
-import { ingestAgentFile } from "../../../sdk/workspace/ai/rag"
+import { ingestAgentFile } from "../../../sdk/workspace/ai/rag/files"
 
 const normalizeUpload = (fileInput: any) => {
   if (!fileInput) {
@@ -41,10 +41,11 @@ export async function fetchAgentFiles(
 }
 
 export async function uploadAgentFile(
-  ctx: UserCtx<void, AgentFileUploadResponse>
+  ctx: UserCtx<void, AgentFileUploadResponse, { agentId: string }>
 ) {
   const agentId = ctx.params.agentId
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+
   const upload = normalizeUpload(
     ctx.request.files?.file ||
       ctx.request.files?.agentFile ||
@@ -69,7 +70,7 @@ export async function uploadAgentFile(
 
   const buffer = await readFile(filePath)
   const agentFile = await sdk.ai.agents.createAgentFile({
-    agentId: agent._id!,
+    agentId: agentId,
     filename,
     mimetype,
     size: fileSize ?? buffer.byteLength,
@@ -101,11 +102,11 @@ export async function deleteAgentFile(
   ctx: UserCtx<void, { deleted: true }, { agentId: string; fileId: string }>
 ) {
   const { agentId, fileId } = ctx.params
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
   const file = await sdk.ai.agents.getAgentFileOrThrow(fileId)
   if (file.agentId !== agentId) {
     throw new HTTPError("File does not belong to this agent", 404)
   }
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
   await sdk.ai.agents.removeAgentFile(agent, file)
   ctx.body = { deleted: true }
   ctx.status = 200

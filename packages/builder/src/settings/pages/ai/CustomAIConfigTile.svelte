@@ -11,11 +11,6 @@
     <div class="header">
       <Body size="S" weight={"600"}>{config.name}</Body>
     </div>
-    <div class="controls">
-      {#if config.isDefault}
-        <div class="tag default">Default</div>
-      {/if}
-    </div>
   </div>
   <div>
     <ActionButton on:click={() => editHandler && editHandler()}>
@@ -43,11 +38,6 @@
     gap: 12px;
   }
 
-  .controls {
-    display: flex;
-    gap: 8px;
-  }
-
   .option :global(label) {
     cursor: pointer;
   }
@@ -59,19 +49,5 @@
   .header {
     align-items: center;
     color: var(--spectrum-global-color-gray-800);
-  }
-
-  .tag {
-    padding: 4px 8px;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    border-radius: 5px;
-    color: #fff;
-  }
-
-  .default {
-    background: var(--bb-indigo);
   }
 </style>

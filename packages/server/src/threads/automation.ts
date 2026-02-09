@@ -589,6 +589,12 @@ class Orchestrator {
               addToContext(step, result, true)
             }
             this.reportStepProgress(step, progressStatus(result), result, ctx)
+            if (
+              result.outputs.success === false &&
+              result.outputs.status == null
+            ) {
+              return results
+            }
             stepIndex++
             break
           }
@@ -610,6 +616,14 @@ class Orchestrator {
             const latest = results.at(-1)
             if (latest) {
               this.reportStepProgress(step, progressStatus(latest), latest, ctx)
+              if (
+                step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
+                latest.outputs.success === false &&
+                (latest.outputs.status === AutomationStatus.ERROR ||
+                  latest.outputs.status === AutomationStatus.STOPPED_ERROR)
+              ) {
+                return results
+              }
             }
             stepIndex++
             break
@@ -741,6 +755,20 @@ class Orchestrator {
                 )
               )
             }
+
+            if (this.stopped) {
+              const output = automationUtils.buildLoopOutput(
+                storage,
+                undefined,
+                iterations + 1
+              )
+              output.status = AutomationStatus.STOPPED
+              span.addTags({
+                status: AutomationStatus.STOPPED,
+                iterations: iterations + 1,
+              })
+              return stepSuccess(step, output)
+            }
           } finally {
             // Restore the previous loop context (for nested loops)
             ctx.loop = savedLoopContext
@@ -862,6 +890,13 @@ class Orchestrator {
       ) {
         this.stopped = true
         ;(outputs as any).status = AutomationStatus.STOPPED
+      }
+      if (
+        step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
+        "status" in outputs &&
+        outputs.status === AutomationStatus.STOPPED
+      ) {
+        this.stopped = true
       }
 
       span.addTags({ outputsKeys: Object.keys(outputs) })

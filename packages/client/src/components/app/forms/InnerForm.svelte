@@ -4,6 +4,7 @@
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
+  import { loadTranslationsByGroup } from "@budibase/frontend-core"
   import {
     type DataFetchDatasource,
     type FieldSchema,
@@ -12,6 +13,7 @@
     type UIFieldValidationRule,
     FieldType,
   } from "@budibase/types"
+  import type { FieldDefaultValue } from "@/types"
 
   type FieldInfo<T = unknown> = {
     name: string
@@ -55,6 +57,7 @@
 
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
+  const validationLabels = loadTranslationsByGroup("validation")
 
   let fields: Writable<FieldInfo>[] = []
   const formState = writable({
@@ -198,7 +201,7 @@
     registerField: (
       field: string,
       type: FieldType,
-      defaultValue: string | null = null,
+      defaultValue: FieldDefaultValue = null,
       fieldDisabled: boolean = false,
       fieldReadOnly: boolean = false,
       validationRules: UIFieldValidationRule[],
@@ -215,7 +218,8 @@
         schemaConstraints,
         validationRules,
         field,
-        definition
+        definition,
+        validationLabels.required
       )
 
       // Sanitise the default value to ensure it doesn't contain invalid data

@@ -534,7 +534,7 @@
     <div class="search" class:focused={searchFocus}>
       <span class="search-input">
         <Input
-          placeholder={"Add users and groups to your app"}
+          placeholder={"Add users and groups to your workspace"}
           autocomplete="off"
           disabled={inviting}
           bind:value={query}
@@ -613,6 +613,7 @@
                       allowPublic={false}
                       allowCreator={true}
                       quiet={true}
+                      bordered={false}
                       on:change={e => {
                         onUpdateUserInvite(invite, e.detail)
                       }}
@@ -666,6 +667,7 @@
                       allowRemove={!!group.role}
                       allowPublic={false}
                       quiet={true}
+                      bordered={false}
                       allowCreator={group.role === Constants.Roles.CREATOR}
                       on:change={e => {
                         onUpdateGroup(group, e.detail)
@@ -689,7 +691,7 @@
                 <div class="auth-entity-title">Users</div>
                 <div class="auth-entity-access-title">Access</div>
               </div>
-              {#each filteredUsers as user}
+              {#each filteredUsers as user (user._id)}
                 {@const userGroups = sdk.users.getUserAppGroups(
                   $appStore.appId,
                   user._id,
@@ -722,6 +724,7 @@
                       allowPublic={false}
                       allowCreator={true}
                       quiet={true}
+                      bordered={false}
                       on:addcreator={() => {}}
                       on:change={e => {
                         onUpdateUser(user, e.detail)

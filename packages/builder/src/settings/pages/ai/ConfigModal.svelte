@@ -63,6 +63,7 @@
         placeholder={config.provider ? "Choose an option" : "Select a provider"}
         bind:value={config.defaultModel}
         options={Models}
+        autoWidth
       />
     </div>
   {/if}
