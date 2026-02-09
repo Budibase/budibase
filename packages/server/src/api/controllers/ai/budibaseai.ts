@@ -79,7 +79,7 @@ export async function openaiChatCompletions(
     apiKey = env.BBAI_OPENAI_API_KEY
   } else {
     apiKey = env.BBAI_MISTRAL_API_KEY
-    baseURL = "https://api.mistral.ai/v1"
+    baseURL = env.MISTRAL_BASE_URL
   }
 
   if (!apiKey) {
