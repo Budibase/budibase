@@ -77,7 +77,10 @@ function createLiteLLMFetch(sessionId?: string): typeof fetch {
 
         if (sessionId) {
           body.litellm_session_id = sessionId
-          body.metadata.session_id = sessionId
+          body.metadata = {
+            ...body.metadata,
+            session_id: sessionId,
+          }
         }
 
         modifiedInit = { ...init, body: JSON.stringify(body) }
