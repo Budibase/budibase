@@ -31,6 +31,7 @@
     chat: ChatConversationLike
     persistConversation?: boolean
     conversationStarters?: { prompt: string }[]
+    initialPrompt?: string
     onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
@@ -44,6 +45,7 @@
     chat = $bindable(),
     persistConversation = true,
     conversationStarters = [],
+    initialPrompt = "",
     onchatsaved,
     isAgentPreviewChat = false,
     readOnly = false,
@@ -64,6 +66,7 @@
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
   let inputValue = $state("")
+  let lastInitialPrompt = $state("")
   let reasoningTimers = $state<Record<string, number>>({})
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
@@ -144,6 +147,20 @@
     await sendMessage()
     tick().then(() => textareaElement?.focus())
   }
+
+  $effect(() => {
+    if (!initialPrompt) {
+      lastInitialPrompt = ""
+      return
+    }
+
+    if (initialPrompt === lastInitialPrompt) {
+      return
+    }
+
+    lastInitialPrompt = initialPrompt
+    applyConversationStarter(initialPrompt)
+  })
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({

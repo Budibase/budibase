@@ -39,6 +39,7 @@
 
   let chat: ChatConversationLike = { ...INITIAL_CHAT }
   let deletingChat: boolean = false
+  let initialPrompt = ""
 
   // Local selection state for display and chat drafting.
   // Synced with `agentsStore.currentAgentId` so external changes (e.g. settings)
@@ -276,6 +277,10 @@
       chatAppId: newCurrentChat.chatAppId || $chatAppsStore.chatAppId || "",
     }
     chatAppsStore.setCurrentConversationId(newCurrentChat._id)
+
+    if (initialPrompt) {
+      initialPrompt = ""
+    }
   }
 
   const handleAgentSelected = (event: CustomEvent<{ agentId: string }>) => {
@@ -292,6 +297,13 @@
     if (conversation) {
       selectChat(conversation)
     }
+  }
+
+  const handleStartChat = async (
+    event: CustomEvent<{ agentId: string; prompt: string }>
+  ) => {
+    await selectAgent(event.detail.agentId)
+    initialPrompt = event.detail.prompt
   }
 
   onMount(async () => {
@@ -327,9 +339,11 @@
       {conversationStarters}
       {isAgentKnown}
       {isAgentLive}
+      {initialPrompt}
       on:deleteChat={deleteCurrentChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}
+      on:startChat={handleStartChat}
     />
   {/if}
 </div>
