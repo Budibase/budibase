@@ -130,7 +130,6 @@
       await agentsStore.fetchAgents()
     } catch (error) {
       console.error(error)
-      notifications.error("Failed to save Discord integration")
       throw error
     } finally {
       saving = false

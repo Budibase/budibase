@@ -44,18 +44,18 @@
 
 <div class="deployment-root">
   <section class="section">
-    <div>
-      <Body
-        color={"var(--spectrum-global-color-gray-900);"}
-        weight="500"
-        size="XS">Agent in automations</Body
-      >
-    </div>
-    <div style="display: flex; justify-content:space-between">
-      <Body color={"var(--spectrum-global-color-gray-700);"} size="XS"
-        >This agent can be triggered from within Budibase Agents via the Agent
-        node</Body
-      >
+    <div class="agent-node">
+      <div>
+        <Body
+          color={"var(--spectrum-global-color-gray-900);"}
+          weight="500"
+          size="XS">Agent in automations</Body
+        >
+        <Body color={"var(--spectrum-global-color-gray-700);"} size="XS"
+          >This agent can be triggered from within Budibase Agents via the Agent
+          node</Body
+        >
+      </div>
       <Toggle value={true} disabled={true} />
     </div>
   </section>
@@ -83,9 +83,7 @@
               height="22px"
               src={channel.logo}
             />
-            <div
-              style="display: flex: flex-direction: column; margin-left: var(--spacing-m)"
-            >
+            <div class="channel-details">
               <Body color={"var(--spectrum-global-color-gray-900)"} size="XS"
                 >{channel.name}</Body
               >
@@ -187,8 +185,9 @@
   }
 
   .channel-details {
-    color: var(--spectrum-global-color-gray-700);
-    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    margin-left: var(--spacing-m);
   }
 
   .row-action {
@@ -198,5 +197,17 @@
     min-width: 110px;
     gap: 10px;
     margin-left: 0px;
+  }
+
+  .agent-node {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .agent-node > :first-child {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
   }
 </style>
