@@ -115,7 +115,7 @@
                   <Icon
                     name={agent.icon || "SideKick"}
                     size="S"
-                    color="var(--spectrum-global-color-gray-50)"
+                    color="var(--agent-icon-color)"
                   />
                 </div>
                 <Body size="S" weight="500">
@@ -205,17 +205,13 @@
     cursor: pointer;
     text-align: left;
     overflow: hidden;
-    min-height: 120px;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
     transition:
       border-color 150ms ease,
-      box-shadow 150ms ease,
       transform 150ms ease;
   }
 
   .chat-empty-card:hover {
     border-color: var(--spectrum-global-color-gray-300);
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.2);
     transform: translateY(-3px);
   }
 
@@ -224,7 +220,8 @@
     align-items: center;
     gap: var(--spacing-s);
     padding: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-100);
+    background-color: black;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .chat-empty-card-icon {
@@ -234,10 +231,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--agent-icon-color);
+    background: transparent;
   }
 
   .chat-empty-card-subtitle {
-    padding: 0 var(--spacing-m) var(--spacing-m);
+    padding: var(--spacing-m);
   }
 </style>
