@@ -1,5 +1,6 @@
 import crypto from "crypto"
 import nock from "nock"
+import { DiscordCommands } from "@budibase/shared-core"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 const DISCORD_PUBLIC_KEY_DER_PREFIX = "302a300506032b6570032100"
@@ -65,15 +66,15 @@ describe("agent discord integration sync", () => {
           return (
             Array.isArray(commands) &&
             commands.length === 2 &&
-            commands.some(command => command.name === "ask") &&
-            commands.some(command => command.name === "new")
+            commands.some(command => command.name === DiscordCommands.ASK) &&
+            commands.some(command => command.name === DiscordCommands.NEW)
           )
         }
       )
       .matchHeader("authorization", "Bot bot-secret")
       .reply(200, [
-        { id: "cmd-1", name: "ask" },
-        { id: "cmd-2", name: "new" },
+        { id: "cmd-1", name: DiscordCommands.ASK },
+        { id: "cmd-2", name: DiscordCommands.NEW },
       ])
 
     const result = await config.api.agent.syncDiscordCommands(agent._id!)

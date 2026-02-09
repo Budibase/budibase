@@ -6,6 +6,7 @@ import {
   docIds,
   HTTPError,
 } from "@budibase/backend-core"
+import { DiscordCommands } from "@budibase/shared-core"
 import type {
   ChatApp,
   ChatConversation,
@@ -34,8 +35,8 @@ const DISCORD_INTERACTION_APPLICATION_COMMAND = 2
 const DISCORD_INTERACTION_MODAL_SUBMIT = 5
 const DISCORD_INTERACTION_CALLBACK_MESSAGE = 4
 const DISCORD_INTERACTION_CALLBACK_DEFERRED_MESSAGE = 5
-const DISCORD_ASK_COMMAND = "ask"
-const DISCORD_NEW_COMMAND = "new"
+const DISCORD_ASK_COMMAND = DiscordCommands.ASK
+const DISCORD_NEW_COMMAND = DiscordCommands.NEW
 const DISCORD_DEFAULT_IDLE_TIMEOUT_MINUTES = 45
 const DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 
@@ -76,12 +77,12 @@ export const getDiscordInteractionCommand = (
 ): DiscordCommand => {
   const rawName = interaction.data?.name?.trim().toLowerCase() || ""
 
-  if (rawName === DISCORD_NEW_COMMAND) return "new"
-  if (rawName === DISCORD_ASK_COMMAND) return "ask"
+  if (rawName === DISCORD_NEW_COMMAND) return DiscordCommands.NEW
+  if (rawName === DISCORD_ASK_COMMAND) return DiscordCommands.ASK
   if (interaction.type === DISCORD_INTERACTION_MODAL_SUBMIT || !rawName) {
-    return "ask"
+    return DiscordCommands.ASK
   }
-  return "unsupported"
+  return DiscordCommands.UNSUPPORTED
 }
 
 const buildDiscordUserContext = (
@@ -371,7 +372,7 @@ const handleDiscordInteraction = async ({
     const askName = DISCORD_ASK_COMMAND
     const newName = DISCORD_NEW_COMMAND
     const command = getDiscordInteractionCommand(interaction)
-    if (command === "unsupported") {
+    if (command === DiscordCommands.UNSUPPORTED) {
       return reply(
         `Use /${askName} with a message to chat, or /${newName} to start a new conversation.`
       )
@@ -405,7 +406,7 @@ const handleDiscordInteraction = async ({
       externalUserId: userId,
     }
 
-    if (command === "new" && !content) {
+    if (command === DiscordCommands.NEW && !content) {
       const chatId = docIds.generateChatConversationID()
       await db.put(
         prepareChatConversationForSave({
@@ -438,7 +439,7 @@ const handleDiscordInteraction = async ({
     }
 
     const existingChat =
-      command === "new"
+      command === DiscordCommands.NEW
         ? undefined
         : await findDiscordConversation({
             db,

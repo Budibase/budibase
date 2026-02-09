@@ -1,3 +1,4 @@
+import { DiscordCommands } from "@budibase/shared-core"
 import type { ChatConversation, DiscordInteraction } from "@budibase/types"
 import {
   extractDiscordContent,
@@ -55,10 +56,10 @@ describe("discord webhook helpers", () => {
   })
 
   it.each([
-    [{ type: 2, data: { name: "ask" } }, "ask"],
-    [{ type: 2, data: { name: "new" } }, "new"],
-    [{ type: 5, data: {} }, "ask"],
-    [{ type: 2, data: { name: "status" } }, "unsupported"],
+    [{ type: 2, data: { name: "ask" } }, DiscordCommands.ASK],
+    [{ type: 2, data: { name: "new" } }, DiscordCommands.NEW],
+    [{ type: 5, data: {} }, DiscordCommands.ASK],
+    [{ type: 2, data: { name: "status" } }, DiscordCommands.UNSUPPORTED],
   ] as [Partial<DiscordInteraction>, string][])(
     "maps interaction %j to command %s",
     (overrides, expected) => {
@@ -73,11 +74,11 @@ describe("discord webhook helpers", () => {
       getDiscordInteractionCommand(
         makeInteraction({ data: { name: "support" } })
       )
-    ).toEqual("unsupported")
+    ).toEqual(DiscordCommands.UNSUPPORTED)
 
     expect(
       getDiscordInteractionCommand(makeInteraction({ data: { name: "fresh" } }))
-    ).toEqual("unsupported")
+    ).toEqual(DiscordCommands.UNSUPPORTED)
   })
 
   it("scopes conversations by chat app, agent, channel, thread, and user", () => {

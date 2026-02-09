@@ -6,6 +6,7 @@ import {
   db as dbCore,
   HTTPError,
 } from "@budibase/backend-core"
+import { DiscordCommands } from "@budibase/shared-core"
 import type {
   Agent,
   ChatApp,
@@ -16,8 +17,8 @@ import * as chatApps from "../chatApps"
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10"
 const DISCORD_DEFAULT_SIGNATURE_MAX_AGE_SECONDS = 300
-export const DISCORD_ASK_COMMAND = "ask"
-export const DISCORD_NEW_COMMAND = "new"
+export const DISCORD_ASK_COMMAND = DiscordCommands.ASK
+export const DISCORD_NEW_COMMAND = DiscordCommands.NEW
 
 export const validateDiscordIntegration = (
   agent: Agent
@@ -113,7 +114,7 @@ export const syncGuildCommands = async (
     },
     body: JSON.stringify([
       {
-        name: DISCORD_ASK_COMMAND,
+        name: DiscordCommands.ASK,
         description: "Ask the configured Budibase agent",
         options: [
           {
@@ -125,7 +126,7 @@ export const syncGuildCommands = async (
         ],
       },
       {
-        name: DISCORD_NEW_COMMAND,
+        name: DiscordCommands.NEW,
         description: "Start a new conversation with the configured agent",
         options: [
           {
