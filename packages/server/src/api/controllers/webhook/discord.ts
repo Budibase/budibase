@@ -454,8 +454,8 @@ export async function discordWebhook(
 ) {
   const signature = ctx.headers[DISCORD_SIGNATURE_HEADER]
   const timestamp = ctx.headers[DISCORD_TIMESTAMP_HEADER]
-  const publicKey =
-    "c407779844c823b6a19fb31805625412431ae4bafcf7a348345238cb59a68a54"
+  const publicKey = ""
+
   if (
     !signature ||
     !timestamp ||
