@@ -191,7 +191,7 @@
   .chat-empty-grid {
     display: flex;
     flex-direction: row;
-    gap: var(--spacing-m);
+    gap: var(--spacing-xl);
     width: min(720px, 100%);
     align-items: center;
     justify-content: center;
@@ -208,6 +208,7 @@
     cursor: pointer;
     text-align: left;
     overflow: hidden;
+    transform: rotate(var(--card-rotation, 0deg));
     transition:
       border-color 150ms ease,
       transform 150ms ease;
@@ -215,7 +216,15 @@
 
   .chat-empty-card:hover {
     border-color: var(--spectrum-global-color-gray-300);
-    transform: translateY(-3px);
+    transform: translateY(-3px) rotate(var(--card-rotation, 0deg));
+  }
+
+  .chat-empty-card:first-child {
+    --card-rotation: -3deg;
+  }
+
+  .chat-empty-card:last-child {
+    --card-rotation: 3deg;
   }
 
   .chat-empty-card-head {
