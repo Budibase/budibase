@@ -1,26 +1,15 @@
 <script lang="ts">
   import {
+    ActionButton,
     Body,
-    Button,
-    Heading,
-    Icon,
     Modal,
     ModalContent,
     Toggle,
-    notifications,
   } from "@budibase/bbui"
-  import type { Agent } from "@budibase/types"
+  import type { Agent, DeploymentRow } from "@budibase/types"
   import { selectedAgent } from "@/stores/portal"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
-  interface DeploymentRow {
-    id: string
-    name: string
-    logo: string
-    status: "Enabled" | "Disabled"
-    details: string
-    configurable?: boolean
-  }
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
@@ -33,37 +22,38 @@
       integration?.guildId?.trim()
     )
   })
+
   const channels = $derived.by<DeploymentRow[]>(() => [
     {
       id: "discord",
       name: "Discord",
       logo: DiscordLogo,
       status: discordConfigured ? "Enabled" : "Disabled",
-      details: discordConfigured ? "Active 2 days ago" : "Not configured",
+      details:
+        "Allow this agent to respond in Discord DMs, channels and threads",
       configurable: true,
     },
   ])
-
-  const onAddChannel = () => {
-    notifications.info("More deployment channels are coming soon")
-  }
 
   const onConfigureChannel = (channel: DeploymentRow) => {
     if (channel.id === "discord") {
       discordModal?.show()
       return
     }
-    notifications.info(`${channel.name} configuration is coming soon`)
   }
 </script>
 
 <div class="deployment-root">
-  <section class="deployment-section">
-    <div class="section-title">
-      <Heading size="XS">Agent in automations</Heading>
+  <section class="section">
+    <div>
+      <Body
+        color={"var(--spectrum-global-color-gray-900);"}
+        weight="500"
+        size="XS">Agent in automations</Body
+      >
     </div>
     <div style="display: flex; justify-content:space-between">
-      <Body size="S"
+      <Body color={"var(--spectrum-global-color-gray-700);"} size="XS"
         >This agent can be triggered from within Budibase Agents via the Agent
         node</Body
       >
@@ -71,20 +61,19 @@
     </div>
   </section>
 
-  <section class="deployment-section">
-    <div class="section-header">
-      <div class="section-title">
-        <Heading size="XS">Channels</Heading>
-        <Body size="S"
-          >Select the channels and services you would like to deploy your agent
-          to.</Body
-        >
-      </div>
-      <div>
-        <Button quiet size="S" on:click={onAddChannel}>Add channel</Button>
-      </div>
+  <section class="section">
+    <div>
+      <Body
+        color={"var(--spectrum-global-color-gray-900)"}
+        weight="500"
+        size="XS">Messaging Channels</Body
+      >
     </div>
-
+    <div>
+      <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
+        >Deploy your agent to the following messagging channels.</Body
+      >
+    </div>
     <div class="integration-list">
       {#each channels as channel (channel.id)}
         <div class="integration-row">
@@ -95,25 +84,24 @@
               height="22px"
               src={channel.logo}
             />
-            <Body size="S">{channel.name}</Body>
-          </div>
-          <div
-            class="status-chip"
-            class:enabled={channel.status === "Enabled"}
-            class:disabled={channel.status === "Disabled"}
-          >
-            <Body size="S">{channel.status}</Body>
-          </div>
-          <div class="channel-details">
-            <Body size="S">{channel.details}</Body>
+            <div
+              style="display: flex: flex-direction: column; margin-left: var(--spacing-m)"
+            >
+              <Body color={"var(--spectrum-global-color-gray-900)"} size="XS"
+                >{channel.name}</Body
+              >
+              <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
+                >{channel.details}</Body
+              >
+            </div>
           </div>
           <div class="row-action">
-            <Icon
-              hoverable
-              size="M"
-              name="gear"
-              on:click={() => onConfigureChannel(channel)}
-            ></Icon>
+            <ActionButton
+              size="S"
+              icon="gear"
+              accentColor="Blue"
+              on:click={() => onConfigureChannel(channel)}>Manage</ActionButton
+            >
             <Toggle value={channel.status === "Enabled" ? true : false}
             ></Toggle>
           </div>
@@ -149,16 +137,9 @@
     gap: var(--spacing-s);
   }
 
-  .section-header {
+  .section {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
-  }
-
-  .section-title {
-    font-weight: 500;
-    color: var(--spectrum-global-color-gray-900);
+    gap: var(--spacing-xs);
   }
 
   .integration-list {
@@ -166,15 +147,17 @@
     border-radius: 10px;
     overflow: hidden;
     background: var(--background);
+    margin-top: var(--spacing-m);
   }
 
   .integration-row {
     display: grid;
-    grid-template-columns: minmax(0, 220px) 90px minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--spacing-m);
-    padding: var(--spacing-s) var(--spacing-m);
+    padding: var(--spacing-s) var(--spacing-s);
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    height: 40px;
   }
 
   .integration-row:last-child {
@@ -184,7 +167,7 @@
   .channel-main {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-s);
+    gap: var(--spacing-xs);
     min-width: 0;
   }
 
@@ -214,24 +197,7 @@
     justify-content: flex-end;
     align-items: center;
     min-width: 110px;
-    gap: 20px;
-  }
-
-  @media (max-width: 1100px) {
-    .integration-row {
-      grid-template-columns: minmax(0, 1fr) auto;
-      row-gap: var(--spacing-xs);
-    }
-
-    .channel-details,
-    .status-chip {
-      grid-column: 1 / 2;
-    }
-
-    .row-action {
-      grid-column: 2 / 3;
-      grid-row: 1 / 4;
-      align-self: center;
-    }
+    gap: 10px;
+    margin-left: 0px;
   }
 </style>
