@@ -67,15 +67,19 @@ function createLiteLLMFetch(sessionId?: string): typeof fetch {
     if (typeof init?.body === "string") {
       try {
         const body = JSON.parse(init.body)
-        body.litellm_session_id = sessionId
         if (span) {
           body.metadata = {
             ...body.metadata,
             dd_trace_id: span.context().toTraceId(),
             dd_span_id: span.context().toSpanId(),
-            session_id: sessionId,
           }
         }
+
+        if (sessionId) {
+          body.litellm_session_id = sessionId
+          body.metadata.session_id = sessionId
+        }
+
         modifiedInit = { ...init, body: JSON.stringify(body) }
       } catch {
         // Not JSON, pass through
