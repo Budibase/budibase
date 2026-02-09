@@ -70,7 +70,7 @@
     </div>
     <div>
       <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
-        >Deploy your agent to the following messagging channels.</Body
+        >Deploy your agent to the following messaging channels.</Body
       >
     </div>
     <div class="integration-list">
