@@ -274,7 +274,7 @@ const environment = {
   BBAI_OPENAI_API_KEY: process.env.BBAI_OPENAI_API_KEY,
   BBAI_MISTRAL_API_KEY: process.env.BBAI_MISTRAL_API_KEY,
   MISTRAL_BASE_URL:
-    process.env.MISTRAL_BASE_URL || 'https://api.mistral.ai/v1"',
+    process.env.MISTRAL_BASE_URL || "https://api.mistral.ai/v1",
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
