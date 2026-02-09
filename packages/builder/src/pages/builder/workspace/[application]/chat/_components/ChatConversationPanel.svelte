@@ -189,14 +189,17 @@
   }
 
   .chat-empty-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: flex;
+    flex-direction: row;
     gap: var(--spacing-m);
     width: min(720px, 100%);
+    align-items: center;
+    justify-content: center;
   }
 
   .chat-empty-card {
     border: 1px solid var(--spectrum-global-color-gray-200);
+    width: 240px;
     border-radius: 16px;
     padding: 0;
     background: var(--spectrum-alias-background-color-primary);
