@@ -52,8 +52,8 @@
 
   let readOnlyReason: "disabled" | "deleted" | "offline" | undefined
 
-  let emptyPrompt = ""
-  let emptyPromptInput: HTMLInputElement | null = null
+  let draftPrompt = ""
+  let draftPromptInput: HTMLInputElement | null = null
 
   $: userName = $auth.user ? helpers.getUserLabel($auth.user) : ""
   $: greetingText = buildGreeting(userName)
@@ -105,7 +105,7 @@
   }
 
   const startChat = () => {
-    const prompt = emptyPrompt.trim()
+    const prompt = draftPrompt.trim()
     if (!prompt) {
       return
     }
@@ -116,7 +116,7 @@
     }
 
     dispatch("startChat", { agentId, prompt })
-    emptyPrompt = ""
+    draftPrompt = ""
   }
 
   const handlePromptKeyDown = (event: KeyboardEvent) => {
@@ -129,7 +129,7 @@
   }
 
   onMount(() => {
-    emptyPromptInput?.focus()
+    draftPromptInput?.focus()
   })
 </script>
 
@@ -183,8 +183,8 @@
           class="chat-empty-input-field"
           type="text"
           placeholder="How can I help you today?"
-          bind:this={emptyPromptInput}
-          bind:value={emptyPrompt}
+          bind:this={draftPromptInput}
+          bind:value={draftPrompt}
           on:keydown={handlePromptKeyDown}
           disabled={!hasEnabledAgents}
         />
