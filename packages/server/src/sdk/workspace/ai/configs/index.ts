@@ -56,10 +56,10 @@ export async function create(
   const db = context.getWorkspaceDB()
 
   if (config.provider === "Budibase") {
-    config.credentialsFields.api_base = new URL(
-      "/api/ai",
-      env.BUDICLOUD_URL
-    ).toString()
+    const baseUrl = env.BUDICLOUD_URL.endsWith("/")
+      ? env.BUDICLOUD_URL
+      : `${env.BUDICLOUD_URL}/`
+    config.credentialsFields.api_base = new URL("api/ai", baseUrl).toString()
     const licenseKey = await licensing.keys.getLicenseKey()
     if (!licenseKey) {
       throw new HTTPError("No license key found", 403)
