@@ -257,7 +257,7 @@
   }
 
   .chat-empty-greeting :global(p) {
-    color: var(--spectrum-global-color-gray-800);
+    color: var(--spectrum-global-color-gray-300);
     font-size: 28px;
     line-height: 34px;
   }
@@ -266,7 +266,7 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
-    width: min(720px, 100%);
+    width: 600px;
     padding: 10px;
     padding-left: 20px;
     border-radius: 999px;
@@ -293,12 +293,12 @@
   }
 
   .chat-empty-input-field::placeholder {
-    color: var(--spectrum-global-color-gray-300);
+    color: var(--spectrum-global-color-gray-500);
   }
 
   .chat-empty-input-action {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 999px;
     background: #8cb4f0;
     color: #101828;
