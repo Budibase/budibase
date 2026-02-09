@@ -1,4 +1,3 @@
-import crypto from "crypto"
 import fetch from "node-fetch"
 import { v4 } from "uuid"
 import {
@@ -14,6 +13,10 @@ import type {
   ChatConversationRequest,
   ContextUser,
   Ctx,
+  DiscordCommand,
+  DiscordConversationScope,
+  DiscordInteraction,
+  DiscordInteractionComponent,
 } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -30,51 +33,9 @@ const DISCORD_INTERACTION_PING = 1
 const DISCORD_INTERACTION_APPLICATION_COMMAND = 2
 const DISCORD_INTERACTION_MODAL_SUBMIT = 5
 const DISCORD_DEFAULT_IDLE_TIMEOUT_MINUTES = 45
+const DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 
-interface DiscordUser {
-  id: string
-  username?: string
-  global_name?: string
-}
-
-interface DiscordInteractionOption {
-  name?: string
-  value?: string | number | boolean
-}
-
-interface DiscordInteractionData {
-  name?: string
-  options?: DiscordInteractionOption[]
-  components?: DiscordInteractionComponent[]
-}
-
-interface DiscordInteractionComponent {
-  value?: string
-  components?: DiscordInteractionComponent[]
-}
-
-export interface DiscordInteraction {
-  id: string
-  type: number
-  token: string
-  application_id: string
-  channel_id?: string
-  thread_id?: string
-  guild_id?: string
-  data?: DiscordInteractionData
-  member?: { user?: DiscordUser }
-  user?: DiscordUser
-}
-
-export interface DiscordConversationScope {
-  chatAppId: string
-  agentId: string
-  channelId: string
-  threadId?: string
-  externalUserId: string
-}
-
-export type DiscordCommand = "ask" | "new" | "unsupported"
+const discordConversationCache = new Map<string, string>()
 
 const getRawBody = (ctx: Ctx<any, any>) => {
   const body = ctx.request.body as Record<string, any>
@@ -86,31 +47,6 @@ const getRawBody = (ctx: Ctx<any, any>) => {
     return unparsedBody
   }
   return JSON.stringify(ctx.request.body ?? {})
-}
-
-const verifyDiscordSignature = ({
-  publicKey,
-  signature,
-  timestamp,
-  rawBody,
-}: {
-  publicKey: string
-  signature: string
-  timestamp: string
-  rawBody: string
-}) => {
-  const derPrefix = "302a300506032b6570032100"
-  const key = crypto.createPublicKey({
-    key: Buffer.from(`${derPrefix}${publicKey}`, "hex"),
-    format: "der",
-    type: "spki",
-  })
-  return crypto.verify(
-    null,
-    new Uint8Array(Buffer.from(`${timestamp}${rawBody}`)),
-    key,
-    new Uint8Array(Buffer.from(signature, "hex"))
-  )
 }
 
 const extractModalComponentValues = (
@@ -176,17 +112,52 @@ const splitDiscordMessage = (content: string, maxLength = 2000): string[] => {
   return chunks
 }
 
-const sendDiscordFollowup = async (
+const sendDiscordRequest = async ({
+  method,
+  url,
+  content,
+}: {
+  method: "PATCH" | "POST"
+  url: string
+  content: string
+}) => {
+  const response = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      content,
+      allowed_mentions: { parse: [] },
+    }),
+  })
+  if (!response.ok) {
+    throw new Error(
+      `Discord followup failed (${response.status}): ${response.statusText}`
+    )
+  }
+}
+
+const sendDiscordResponse = async (
   applicationId: string,
   token: string,
   content: string
 ) => {
-  const url = `${DISCORD_API_BASE_URL}/webhooks/${applicationId}/${token}`
-  for (const chunk of splitDiscordMessage(content)) {
-    await fetch(url, {
+  const chunks = splitDiscordMessage(content || "No response generated.")
+  const originalUrl = `${DISCORD_API_BASE_URL}/webhooks/${applicationId}/${token}/messages/@original`
+  const followupUrl = `${DISCORD_API_BASE_URL}/webhooks/${applicationId}/${token}`
+  const firstChunk = chunks[0] || "No response generated."
+  const remainingChunks = chunks.slice(1)
+
+  await sendDiscordRequest({
+    method: "PATCH",
+    url: originalUrl,
+    content: firstChunk,
+  })
+
+  for (const chunk of remainingChunks) {
+    await sendDiscordRequest({
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: chunk }),
+      url: followupUrl,
+      content: chunk,
     })
   }
 }
@@ -222,6 +193,54 @@ export const getDiscordIdleTimeoutMs = () => {
       ? configured
       : DISCORD_DEFAULT_IDLE_TIMEOUT_MINUTES
   return minutes * 60 * 1000
+}
+
+export const isDiscordTimestampFresh = (
+  timestamp: string,
+  nowMs = Date.now()
+) => sdk.ai.deployments.discord.isDiscordTimestampFresh(timestamp, nowMs)
+
+const getDiscordConversationCacheSize = () => {
+  const configured = Number(process.env.DISCORD_CONVERSATION_CACHE_SIZE)
+  if (Number.isFinite(configured) && configured > 0) {
+    return Math.floor(configured)
+  }
+  return DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE
+}
+
+const getDiscordConversationCacheKey = ({
+  workspaceId,
+  scope,
+}: {
+  workspaceId: string
+  scope: DiscordConversationScope
+}) =>
+  [
+    workspaceId,
+    scope.chatAppId,
+    scope.agentId,
+    scope.channelId,
+    scope.threadId || "",
+    scope.externalUserId,
+  ].join(":")
+
+const setDiscordConversationCache = (cacheKey: string, chatId: string) => {
+  if (!chatId) {
+    return
+  }
+  if (discordConversationCache.has(cacheKey)) {
+    discordConversationCache.delete(cacheKey)
+  }
+  discordConversationCache.set(cacheKey, chatId)
+
+  const maxSize = getDiscordConversationCacheSize()
+  while (discordConversationCache.size > maxSize) {
+    const firstKey = discordConversationCache.keys().next().value
+    if (!firstKey) {
+      break
+    }
+    discordConversationCache.delete(firstKey)
+  }
 }
 
 export const matchesDiscordConversationScope = ({
@@ -268,13 +287,31 @@ export const pickDiscordConversation = ({
     .sort((a, b) => toSortTimestamp(b) - toSortTimestamp(a))[0]
 
 const findDiscordConversation = async ({
+  db,
+  workspaceId,
   scope,
   idleTimeoutMs,
 }: {
+  db: ReturnType<typeof context.getWorkspaceDB>
+  workspaceId: string
   scope: DiscordConversationScope
   idleTimeoutMs: number
 }) => {
-  const db = context.getWorkspaceDB()
+  const cacheKey = getDiscordConversationCacheKey({ workspaceId, scope })
+  const cachedChatId = discordConversationCache.get(cacheKey)
+  if (cachedChatId) {
+    const cachedChat = await db.tryGet<ChatConversation>(cachedChatId)
+    if (
+      cachedChat &&
+      matchesDiscordConversationScope({ chat: cachedChat, scope }) &&
+      !isDiscordConversationExpired({ chat: cachedChat, idleTimeoutMs })
+    ) {
+      setDiscordConversationCache(cacheKey, cachedChatId)
+      return cachedChat
+    }
+    discordConversationCache.delete(cacheKey)
+  }
+
   const response = await db.allDocs<ChatConversation>(
     docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
       include_docs: true,
@@ -285,7 +322,11 @@ const findDiscordConversation = async ({
     .map(row => row.doc)
     .filter((chat): chat is ChatConversation => !!chat)
 
-  return pickDiscordConversation({ chats, scope, idleTimeoutMs })
+  const picked = pickDiscordConversation({ chats, scope, idleTimeoutMs })
+  if (picked?._id) {
+    setDiscordConversationCache(cacheKey, picked._id)
+  }
+  return picked
 }
 
 const getIdleTimeoutMs = (configMinutes?: number) => {
@@ -310,7 +351,7 @@ const handleDiscordInteraction = async ({
   const { application_id, token } = interaction
 
   const reply = (content: string) =>
-    sendDiscordFollowup(application_id, token, content)
+    sendDiscordResponse(application_id, token, content)
 
   await context.doInWorkspaceContext(prodAppId, async () => {
     const db = context.getWorkspaceDB()
@@ -362,6 +403,14 @@ const handleDiscordInteraction = async ({
       externalUserName: displayName,
     }
 
+    const scope: DiscordConversationScope = {
+      chatAppId,
+      agentId,
+      channelId,
+      threadId,
+      externalUserId: userId,
+    }
+
     if (command === "new" && !content) {
       const chatId = docIds.generateChatConversationID()
       await db.put(
@@ -381,6 +430,10 @@ const handleDiscordInteraction = async ({
           },
         })
       )
+      setDiscordConversationCache(
+        getDiscordConversationCacheKey({ workspaceId: prodAppId, scope }),
+        chatId
+      )
       return reply(
         `Started a new conversation. Use /${askName} with a message.`
       )
@@ -390,18 +443,12 @@ const handleDiscordInteraction = async ({
       return reply(`Please provide a message after /${askName}.`)
     }
 
-    const scope: DiscordConversationScope = {
-      chatAppId,
-      agentId,
-      channelId,
-      threadId,
-      externalUserId: userId,
-    }
-
     const existingChat =
       command === "new"
         ? undefined
         : await findDiscordConversation({
+            db,
+            workspaceId: prodAppId,
             scope,
             idleTimeoutMs: getIdleTimeoutMs(discord?.idleTimeoutMinutes),
           })
@@ -444,6 +491,10 @@ const handleDiscordInteraction = async ({
         existingChat,
       })
     )
+    setDiscordConversationCache(
+      getDiscordConversationCacheKey({ workspaceId: prodAppId, scope }),
+      chatId
+    )
 
     await reply(result.assistantText || "No response generated.")
   })
@@ -454,7 +505,6 @@ export async function discordWebhook(
 ) {
   const signature = ctx.headers[DISCORD_SIGNATURE_HEADER]
   const timestamp = ctx.headers[DISCORD_TIMESTAMP_HEADER]
-  const publicKey = ""
 
   if (
     !signature ||
@@ -468,7 +518,35 @@ export async function discordWebhook(
   }
 
   const rawBody = getRawBody(ctx)
-  if (!verifyDiscordSignature({ publicKey, signature, timestamp, rawBody })) {
+  if (!isDiscordTimestampFresh(timestamp)) {
+    ctx.status = 401
+    ctx.body = { error: "Invalid Discord signature timestamp" }
+    return
+  }
+
+  let publicKey: string
+  try {
+    publicKey = await sdk.ai.deployments.discord.getDiscordPublicKeyForRoute({
+      instance: ctx.params.instance,
+      agentId: ctx.params.agentId,
+    })
+  } catch (error) {
+    if (error instanceof HTTPError) {
+      ctx.status = error.status
+      ctx.body = { error: error.message }
+      return
+    }
+    throw error
+  }
+
+  if (
+    !sdk.ai.deployments.discord.verifyDiscordSignature({
+      publicKey,
+      signature,
+      timestamp,
+      rawBody,
+    })
+  ) {
     ctx.status = 401
     ctx.body = { error: "Invalid Discord signature" }
     return

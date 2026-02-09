@@ -29,8 +29,7 @@
       name: "Discord",
       logo: DiscordLogo,
       status: discordConfigured ? "Enabled" : "Disabled",
-      details:
-        "Allow this agent to respond in Discord DMs, channels and threads",
+      details: "Allow this agent to respond in Discord channels and threads",
       configurable: true,
     },
   ])

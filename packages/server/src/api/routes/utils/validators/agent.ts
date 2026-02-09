@@ -11,6 +11,7 @@ const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   askCommandName: OPTIONAL_STRING,
   newCommandName: OPTIONAL_STRING,
   chatAppId: OPTIONAL_STRING,
+  interactionsEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
 })
   .optional()

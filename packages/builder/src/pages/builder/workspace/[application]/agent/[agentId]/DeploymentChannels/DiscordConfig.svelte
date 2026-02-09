@@ -25,7 +25,6 @@
     guildId: "",
     askCommandName: DEFAULT_ASK_COMMAND,
     newCommandName: DEFAULT_NEW_COMMAND,
-    chatAppId: "",
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
   })
 
@@ -75,7 +74,6 @@
       guildId: integration?.guildId || "",
       askCommandName: integration?.askCommandName || DEFAULT_ASK_COMMAND,
       newCommandName: integration?.newCommandName || DEFAULT_NEW_COMMAND,
-      chatAppId: integration?.chatAppId || "",
       idleTimeoutMinutes:
         integration?.idleTimeoutMinutes || DEFAULT_IDLE_TIMEOUT_MINUTES,
     }
@@ -123,7 +121,9 @@
             draft.newCommandName,
             DEFAULT_NEW_COMMAND
           ),
-          chatAppId: toOptionalValue(draft.chatAppId),
+          chatAppId: agent.discordIntegration?.chatAppId,
+          interactionsEndpointUrl:
+            agent.discordIntegration?.interactionsEndpointUrl,
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
         },
       })
@@ -145,10 +145,7 @@
     syncing = true
     try {
       await saveDiscordIntegration()
-      syncResult = await agentsStore.syncDiscordCommands(
-        agent._id,
-        toOptionalValue(draft.chatAppId)
-      )
+      syncResult = await agentsStore.syncDiscordCommands(agent._id)
       notifications.success("Discord channel enabled")
     } catch (error) {
       console.error(error)
@@ -167,7 +164,6 @@
     <Input label="Guild ID" bind:value={draft.guildId} />
     <Input label="Ask command" bind:value={draft.askCommandName} />
     <Input label="New command" bind:value={draft.newCommandName} />
-    <Input label="Chat app ID (optional)" bind:value={draft.chatAppId} />
     <Input
       label="Idle timeout (minutes)"
       type="number"

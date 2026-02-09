@@ -4,7 +4,6 @@ import {
   CreateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
-  SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   ToolMetadata,
   UpdateAgentRequest,
@@ -29,8 +28,7 @@ export interface AgentEndpoints {
     fileId: string
   ) => Promise<{ deleted: true }>
   syncAgentDiscordCommands: (
-    agentId: string,
-    body?: SyncAgentDiscordCommandsRequest
+    agentId: string
   ) => Promise<SyncAgentDiscordCommandsResponse>
 }
 
@@ -91,16 +89,9 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  syncAgentDiscordCommands: async (
-    agentId: string,
-    body?: SyncAgentDiscordCommandsRequest
-  ) => {
-    return await API.post<
-      SyncAgentDiscordCommandsRequest | undefined,
-      SyncAgentDiscordCommandsResponse
-    >({
+  syncAgentDiscordCommands: async (agentId: string) => {
+    return await API.post<null, SyncAgentDiscordCommandsResponse>({
       url: `/api/agent/${agentId}/discord/sync`,
-      body,
     })
   },
 })

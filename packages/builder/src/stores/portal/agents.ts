@@ -140,10 +140,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   syncDiscordCommands = async (
-    agentId: string,
-    chatAppId?: string
+    agentId: string
   ): Promise<SyncAgentDiscordCommandsResponse> => {
-    return await API.syncAgentDiscordCommands(agentId, { chatAppId })
+    return await API.syncAgentDiscordCommands(agentId)
   }
 }
 export const agentsStore = new AgentsStore()

@@ -1,8 +1,8 @@
-import type { ChatConversation } from "@budibase/types"
+import type { ChatConversation, DiscordInteraction } from "@budibase/types"
 import {
-  type DiscordInteraction,
   extractDiscordContent,
   getDiscordInteractionCommand,
+  isDiscordTimestampFresh,
   matchesDiscordConversationScope,
   pickDiscordConversation,
 } from "./discord"
@@ -192,5 +192,21 @@ describe("discord webhook helpers", () => {
     })
 
     expect(picked?._id).toEqual("latest")
+  })
+
+  describe("isDiscordTimestampFresh", () => {
+    it("returns true for current timestamps", () => {
+      const nowSec = Math.floor(Date.now() / 1000).toString()
+      expect(isDiscordTimestampFresh(nowSec)).toBe(true)
+    })
+
+    it("returns false for stale timestamps", () => {
+      const staleSec = Math.floor(Date.now() / 1000 - 3600).toString()
+      expect(isDiscordTimestampFresh(staleSec)).toBe(false)
+    })
+
+    it("returns false for invalid timestamps", () => {
+      expect(isDiscordTimestampFresh("not-a-timestamp")).toBe(false)
+    })
   })
 })
