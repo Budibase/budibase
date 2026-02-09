@@ -15,22 +15,9 @@ import * as agents from "../agents"
 import * as chatApps from "../chatApps"
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10"
-const COMMAND_NAME_REGEX = /^[-_'\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u
 const DISCORD_DEFAULT_SIGNATURE_MAX_AGE_SECONDS = 300
-
-export const normalizeDiscordCommandName = (
-  value: string | undefined,
-  fallback: string
-) => {
-  const candidate = (value || fallback).trim().toLowerCase()
-  if (!COMMAND_NAME_REGEX.test(candidate)) {
-    throw new HTTPError(
-      `Invalid command name "${candidate}". Use Discord slash-command naming (1-32 chars).`,
-      400
-    )
-  }
-  return candidate
-}
+export const DISCORD_ASK_COMMAND = "ask"
+export const DISCORD_NEW_COMMAND = "new"
 
 export const validateDiscordIntegration = (
   agent: Agent
@@ -58,14 +45,6 @@ export const validateDiscordIntegration = (
     applicationId,
     botToken,
     guildId,
-    askCommandName: normalizeDiscordCommandName(
-      integration.askCommandName,
-      "ask"
-    ),
-    newCommandName: normalizeDiscordCommandName(
-      integration.newCommandName,
-      "new"
-    ),
     chatAppId: integration.chatAppId?.trim() || undefined,
   }
 }
@@ -123,9 +102,7 @@ export const buildDiscordInviteUrl = (applicationId: string) =>
 export const syncGuildCommands = async (
   applicationId: string,
   botToken: string,
-  guildId: string,
-  askCommandName: string,
-  newCommandName: string
+  guildId: string
 ) => {
   const url = `${DISCORD_API_BASE_URL}/applications/${applicationId}/guilds/${guildId}/commands`
   const response = await fetch(url, {
@@ -136,7 +113,7 @@ export const syncGuildCommands = async (
     },
     body: JSON.stringify([
       {
-        name: askCommandName,
+        name: DISCORD_ASK_COMMAND,
         description: "Ask the configured Budibase agent",
         options: [
           {
@@ -148,7 +125,7 @@ export const syncGuildCommands = async (
         ],
       },
       {
-        name: newCommandName,
+        name: DISCORD_NEW_COMMAND,
         description: "Start a new conversation with the configured agent",
         options: [
           {

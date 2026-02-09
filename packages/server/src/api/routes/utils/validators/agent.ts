@@ -8,8 +8,6 @@ const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   publicKey: OPTIONAL_STRING,
   botToken: OPTIONAL_STRING,
   guildId: OPTIONAL_STRING,
-  askCommandName: OPTIONAL_STRING,
-  newCommandName: OPTIONAL_STRING,
   chatAppId: OPTIONAL_STRING,
   interactionsEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),

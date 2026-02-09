@@ -47,7 +47,5 @@ export interface ResolvedDiscordIntegration {
   applicationId: string
   botToken: string
   guildId: string
-  askCommandName: string
-  newCommandName: string
   chatAppId?: string
 }

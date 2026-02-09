@@ -23,8 +23,6 @@ export interface DiscordAgentIntegration {
   publicKey?: string
   botToken?: string
   guildId?: string
-  askCommandName?: string
-  newCommandName?: string
   chatAppId?: string
   idleTimeoutMinutes?: number
   interactionsEndpointUrl?: string

@@ -68,25 +68,16 @@ describe("discord webhook helpers", () => {
     }
   )
 
-  it("supports custom command names", () => {
-    const commandNames = {
-      askCommandName: "support",
-      newCommandName: "fresh",
-    }
-
+  it("only supports /ask and /new command names", () => {
     expect(
       getDiscordInteractionCommand(
-        makeInteraction({ data: { name: "support" } }),
-        commandNames
+        makeInteraction({ data: { name: "support" } })
       )
-    ).toEqual("ask")
+    ).toEqual("unsupported")
 
     expect(
-      getDiscordInteractionCommand(
-        makeInteraction({ data: { name: "fresh" } }),
-        commandNames
-      )
-    ).toEqual("new")
+      getDiscordInteractionCommand(makeInteraction({ data: { name: "fresh" } }))
+    ).toEqual("unsupported")
   })
 
   it("scopes conversations by chat app, agent, channel, thread, and user", () => {

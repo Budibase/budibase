@@ -33,8 +33,6 @@ export interface SyncAgentDiscordCommandsResponse {
   chatAppId: string
   interactionsEndpointUrl: string
   inviteUrl: string
-  askCommandName: string
-  newCommandName: string
 }
 
 export type CreateAgentRequest = Optional<

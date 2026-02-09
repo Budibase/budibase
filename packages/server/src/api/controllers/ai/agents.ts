@@ -102,8 +102,6 @@ export async function syncAgentDiscordCommands(
     applicationId,
     botToken,
     guildId,
-    askCommandName,
-    newCommandName,
     chatAppId: configuredChatAppId,
   } = sdk.ai.deployments.discord.validateDiscordIntegration(agent)
 
@@ -116,9 +114,7 @@ export async function syncAgentDiscordCommands(
   await sdk.ai.deployments.discord.syncGuildCommands(
     applicationId,
     botToken,
-    guildId,
-    askCommandName,
-    newCommandName
+    guildId
   )
 
   const interactionsEndpointUrl =
@@ -141,8 +137,6 @@ export async function syncAgentDiscordCommands(
     chatAppId: chatApp._id!,
     interactionsEndpointUrl,
     inviteUrl: sdk.ai.deployments.discord.buildDiscordInviteUrl(applicationId),
-    askCommandName,
-    newCommandName,
   }
   ctx.status = 200
 }
