@@ -10,6 +10,7 @@ import {
   RequiredKeys,
   LLMProvidersResponse,
   AIConfigResponse,
+  BUDIBASE_AI_PROVIDER_ID,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -33,7 +34,14 @@ const sanitizeConfig = async (
 
   const sanitized: AIConfigResponse = {
     ...config,
-    credentialsFields,
+    credentialsFields: { ...credentialsFields },
+  }
+
+  if (
+    sanitized.provider === BUDIBASE_AI_PROVIDER_ID &&
+    sanitized.credentialsFields?.api_key
+  ) {
+    sanitized.credentialsFields.api_key = PASSWORD_REPLACEMENT
   }
 
   if (sanitized.webSearchConfig?.apiKey) {
