@@ -11,6 +11,14 @@ export interface RestQueryToolsConfig {
   datasourceName?: string
 }
 
+interface QueryToolOptions {
+  query: Query
+  sourceType: ToolType
+  sourceLabel?: string
+  sourceIconType?: string
+  description: string
+}
+
 type RestQueryToolResult =
   | {
       success: true
@@ -42,22 +50,22 @@ const buildParametersSchema = (query: Query) => {
   return z.object(schemaFields)
 }
 
-export const createRestQueryTool = (
-  query: Query,
-  datasourceName?: string
-): AiToolDefinition => {
+const createQueryTool = ({
+  query,
+  sourceType,
+  sourceLabel,
+  sourceIconType,
+  description,
+}: QueryToolOptions): AiToolDefinition => {
   const toolName = sanitiseToolName(query.name)
   const parametersSchema = buildParametersSchema(query)
-
-  const description = query.restTemplateMetadata?.description
-    ? `${query.name}: ${query.restTemplateMetadata.description}`
-    : `Execute REST query: ${query.name}`
 
   return {
     name: toolName,
     description,
-    sourceType: ToolType.REST_QUERY,
-    sourceLabel: datasourceName || "API",
+    sourceType,
+    sourceLabel,
+    sourceIconType,
     tool: tool({
       description,
       inputSchema: parametersSchema,
@@ -90,4 +98,34 @@ export const createRestQueryTool = (
       },
     }),
   }
+}
+
+export const createRestQueryTool = (
+  query: Query,
+  datasourceName?: string
+): AiToolDefinition => {
+  const description = query.restTemplateMetadata?.description
+    ? `${query.name}: ${query.restTemplateMetadata.description}`
+    : `Execute REST query: ${query.name}`
+
+  return createQueryTool({
+    query,
+    description,
+    sourceType: ToolType.REST_QUERY,
+    sourceLabel: datasourceName || "API",
+  })
+}
+
+export const createDatasourceQueryTool = (
+  query: Query,
+  datasourceName?: string,
+  sourceIconType?: string
+): AiToolDefinition => {
+  return createQueryTool({
+    query,
+    description: `Execute datasource query: ${query.name}`,
+    sourceType: ToolType.DATASOURCE_QUERY,
+    sourceLabel: datasourceName || "Datasource",
+    sourceIconType,
+  })
 }

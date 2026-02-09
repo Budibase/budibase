@@ -11,6 +11,7 @@ import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
   createRestQueryTool,
+  createDatasourceQueryTool,
   toToolSet,
   type AiToolDefinition,
 } from "../../../../ai/tools"
@@ -42,10 +43,8 @@ export async function getAvailableTools(
     ])
   const webSearchConfig = aiConfig?.webSearchConfig
 
-  const restDatasourceNames = new Map(
-    datasources
-      .filter(ds => ds.source === SourceName.REST)
-      .map(ds => [ds._id, ds.name || "API"])
+  const datasourcesById = new Map(
+    datasources.filter(ds => !!ds._id).map(ds => [ds._id!, ds])
   )
 
   const datasourceNamesById = Object.fromEntries(
@@ -60,11 +59,27 @@ export async function getAvailableTools(
       .map(ds => [ds._id!, ds.source || "CUSTOM"])
   )
 
-  const restQueryTools = queries
-    .filter(query => restDatasourceNames.has(query.datasourceId))
-    .map(query =>
-      createRestQueryTool(query, restDatasourceNames.get(query.datasourceId))
-    )
+  const restQueryTools = queries.flatMap(query => {
+    const datasource = datasourcesById.get(query.datasourceId)
+    if (!datasource || datasource.source !== SourceName.REST) {
+      return []
+    }
+    return [createRestQueryTool(query, datasource.name || "API")]
+  })
+
+  const datasourceQueryTools = queries.flatMap(query => {
+    const datasource = datasourcesById.get(query.datasourceId)
+    if (!datasource || datasource.source === SourceName.REST) {
+      return []
+    }
+    return [
+      createDatasourceQueryTool(
+        query,
+        datasource.name || "Datasource",
+        datasource.source || "CUSTOM"
+      ),
+    ]
+  })
 
   const tools: AiToolDefinition[] = [
     ...getBudibaseTools(
@@ -74,6 +89,7 @@ export async function getAvailableTools(
       automations
     ),
     ...restQueryTools,
+    ...datasourceQueryTools,
   ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
