@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { Body, Button, Icon, ProgressCircle } from "@budibase/bbui"
-  import type { ChatConversation, DraftChatConversation } from "@budibase/types"
-  import { Chatbox } from "@budibase/frontend-core/src/components"
   import { createEventDispatcher } from "svelte"
+  import { Body, Button, Icon, ProgressCircle } from "@budibase/bbui"
+  import { Chatbox } from "@budibase/frontend-core/src/components"
+  import { helpers } from "@budibase/shared-core"
+  import type { ChatConversation, DraftChatConversation } from "@budibase/types"
+  import { auth } from "@/stores/portal"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
 
@@ -34,7 +36,22 @@
   const hasChatId = (value: ChatConversationLike) =>
     value && "_id" in value && Boolean(value._id)
 
+  const buildGreeting = (name: string) => {
+    const currentDate = new Date()
+    const suffix = name ? `, ${name}` : ""
+
+    if (currentDate.getDay() === 1) {
+      return `Happy Monday${suffix}`
+    }
+
+    const isMorning = currentDate.getHours() < 12
+    return `${isMorning ? "Good Morning" : "Good Afternoon"}${suffix}`
+  }
+
   let readOnlyReason: "disabled" | "deleted" | "offline" | undefined
+
+  $: userName = $auth.user ? helpers.getUserLabel($auth.user) : ""
+  $: greetingText = buildGreeting(userName)
 
   $: visibleAgentList = enabledAgentList.slice(0, 3)
 
@@ -99,6 +116,11 @@
     />
   {:else}
     <div class="chat-empty">
+      <div class="chat-empty-greeting">
+        <Body size="XL" weight="600" serif>
+          {greetingText}
+        </Body>
+      </div>
       <Body size="S" color="var(--spectrum-global-color-gray-700)">
         Choose an agent to start a chat
       </Body>
@@ -188,10 +210,16 @@
     text-align: center;
   }
 
+  .chat-empty-greeting :global(p) {
+    color: var(--spectrum-global-color-gray-800);
+    font-size: 28px;
+    line-height: 34px;
+  }
+
   .chat-empty-grid {
     display: flex;
     flex-direction: row;
-    gap: var(--spacing-xl);
+    gap: 16px;
     width: min(720px, 100%);
     align-items: center;
     justify-content: center;
@@ -208,7 +236,8 @@
     cursor: pointer;
     text-align: left;
     overflow: hidden;
-    transform: rotate(var(--card-rotation, 0deg));
+    transform: translateY(var(--card-offset, 0px))
+      rotate(var(--card-rotation, 0deg));
     transition:
       border-color 150ms ease,
       transform 150ms ease;
@@ -216,15 +245,18 @@
 
   .chat-empty-card:hover {
     border-color: var(--spectrum-global-color-gray-300);
-    transform: translateY(-3px) rotate(var(--card-rotation, 0deg));
+    transform: translateY(calc(var(--card-offset, 0px) - 3px))
+      rotate(var(--card-rotation, 0deg));
   }
 
   .chat-empty-card:first-child {
-    --card-rotation: -3deg;
+    --card-rotation: -6deg;
+    --card-offset: 6px;
   }
 
   .chat-empty-card:last-child {
-    --card-rotation: 3deg;
+    --card-rotation: 6deg;
+    --card-offset: 6px;
   }
 
   .chat-empty-card-head {
@@ -232,7 +264,8 @@
     align-items: center;
     gap: var(--spacing-s);
     padding: var(--spacing-m);
-    background-color: black;
+    background-color: #080808;
+    color: white;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
