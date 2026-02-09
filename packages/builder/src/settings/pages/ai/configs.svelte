@@ -2,7 +2,7 @@
   import { aiConfigsStore } from "@/stores/portal"
   import { Button, Layout, Modal, notifications } from "@budibase/bbui"
   import type { AIConfigResponse } from "@budibase/types"
-  import { AIConfigType } from "@budibase/types"
+  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
@@ -16,14 +16,16 @@
     config => config.configType === AIConfigType.COMPLETIONS
   )
 
-  $: hasBBAI = completionConfigs.some(c => c.provider === "Budibase")
+  $: hasBBAI = completionConfigs.some(
+    c => c.provider === BUDIBASE_AI_PROVIDER_ID
+  )
   $: modelProviders = [
     ...(hasBBAI
       ? []
       : [
           {
             name: "Budibase AI",
-            provider: "Budibase",
+            provider: BUDIBASE_AI_PROVIDER_ID,
             description: "Budibase managed",
           },
         ]),
@@ -118,7 +120,7 @@
 </Layout>
 
 <Modal bind:this={configModal}>
-  {#if selectedProvider !== "Budibase"}
+  {#if selectedProvider !== BUDIBASE_AI_PROVIDER_ID}
     <CustomConfigModal
       config={selectedModalConfig}
       provider={selectedProvider}
