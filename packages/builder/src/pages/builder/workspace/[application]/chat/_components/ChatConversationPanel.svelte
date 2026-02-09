@@ -251,7 +251,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: var(--spacing-xl);
+    gap: 32px;
     padding: var(--spacing-xxl);
     text-align: center;
   }
@@ -350,12 +350,12 @@
 
   .chat-empty-card:first-child {
     --card-rotation: -6deg;
-    --card-offset: 6px;
+    --card-offset: 12px;
   }
 
   .chat-empty-card:last-child {
     --card-rotation: 6deg;
-    --card-offset: 6px;
+    --card-offset: 12px;
   }
 
   .chat-empty-card-head {
