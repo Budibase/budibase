@@ -61,18 +61,40 @@
   $: visibleAgentList = enabledAgentList.slice(0, 3)
   $: hasEnabledAgents = enabledAgentList.length > 0
 
-  $: isAgentEnabled = selectedAgentId
-    ? enabledAgentList.some(agent => agent.agentId === selectedAgentId)
-    : false
-  $: readOnlyReason = selectedAgentId
-    ? !isAgentKnown
-      ? "deleted"
-      : !isAgentLive
-        ? "offline"
-        : !isAgentEnabled
-          ? "disabled"
-          : undefined
-    : undefined
+  const getAgentStatus = (
+    agentId: string | null,
+    agents: EnabledAgentListItem[],
+    agentKnown: boolean,
+    agentLive: boolean
+  ): {
+    isAgentEnabled: boolean
+    readOnlyReason: "disabled" | "deleted" | "offline" | undefined
+  } => {
+    if (!agentId) {
+      return { isAgentEnabled: false, readOnlyReason: undefined }
+    }
+
+    if (!agentKnown) {
+      return { isAgentEnabled: false, readOnlyReason: "deleted" }
+    }
+
+    if (!agentLive) {
+      return { isAgentEnabled: false, readOnlyReason: "offline" }
+    }
+
+    const isAgentEnabled = agents.some(agent => agent.agentId === agentId)
+    return {
+      isAgentEnabled,
+      readOnlyReason: isAgentEnabled ? undefined : "disabled",
+    }
+  }
+
+  $: ({ isAgentEnabled, readOnlyReason } = getAgentStatus(
+    selectedAgentId,
+    enabledAgentList,
+    isAgentKnown,
+    isAgentLive
+  ))
 
   const deleteChat = () => {
     dispatch("deleteChat")
