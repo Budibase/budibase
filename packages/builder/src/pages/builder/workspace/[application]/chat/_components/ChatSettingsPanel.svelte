@@ -37,18 +37,14 @@
     agent => agent.agentId === selectedAgentId
   )
 
-  $: agentList = agents
-    .map(agentConfig => {
-      const details = namedAgents.find(
-        agent => agent._id === agentConfig.agentId
-      )
-      return {
-        agentId: agentConfig.agentId,
-        name: details?.name,
-        isDefault: agentConfig.isDefault,
-      }
-    })
-    .filter((agent): agent is AgentListItem => Boolean(agent.name))
+  $: agentList = agents.map(agentConfig => {
+    const details = namedAgents.find(agent => agent._id === agentConfig.agentId)
+    return {
+      agentId: agentConfig.agentId,
+      name: details?.name ?? "Unknown agent",
+      isDefault: agentConfig.isDefault,
+    }
+  })
 
   $: enabledAgentList = agentList.filter(agent =>
     isAgentAvailable(agent.agentId)

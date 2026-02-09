@@ -263,7 +263,7 @@
   }
 
   .chat-empty-greeting :global(p) {
-    color: var(--spectrum-global-color-gray-800);
+    color: var(--spectrum-global-color-gray-900);
     font-size: 28px;
     line-height: 34px;
   }
