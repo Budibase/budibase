@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import { Body, Button, Icon, ProgressCircle } from "@budibase/bbui"
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import { helpers } from "@budibase/shared-core"
@@ -53,6 +53,7 @@
   let readOnlyReason: "disabled" | "deleted" | "offline" | undefined
 
   let emptyPrompt = ""
+  let emptyPromptInput: HTMLInputElement | null = null
 
   $: userName = $auth.user ? helpers.getUserLabel($auth.user) : ""
   $: greetingText = buildGreeting(userName)
@@ -104,6 +105,10 @@
     event.preventDefault()
     startChat()
   }
+
+  onMount(() => {
+    emptyPromptInput?.focus()
+  })
 </script>
 
 <div class="chat-wrapper">
@@ -156,6 +161,7 @@
           class="chat-empty-input-field"
           type="text"
           placeholder="How can I help you today?"
+          bind:this={emptyPromptInput}
           bind:value={emptyPrompt}
           on:keydown={handlePromptKeyDown}
           disabled={!hasEnabledAgents}
@@ -257,7 +263,7 @@
   }
 
   .chat-empty-greeting :global(p) {
-    color: var(--spectrum-global-color-gray-300);
+    color: var(--spectrum-global-color-gray-800);
     font-size: 28px;
     line-height: 34px;
   }
@@ -293,7 +299,7 @@
   }
 
   .chat-empty-input-field::placeholder {
-    color: var(--spectrum-global-color-gray-500);
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .chat-empty-input-action {
