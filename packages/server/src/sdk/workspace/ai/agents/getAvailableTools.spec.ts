@@ -47,9 +47,15 @@ describe("getAvailableToolsMetadata", () => {
     ])
 
     const tools = await getAvailableToolsMetadata()
-    const restQueryTool = tools.find(tool => tool.name === "Get_Pokemon")
+    const restQueryTool = tools.find(
+      tool =>
+        tool.sourceType === ToolType.REST_QUERY &&
+        tool.readableName === "Get Pokemon"
+    )
 
     expect(restQueryTool).toMatchObject({
+      name: "rest_rest_api_get_pokemon",
+      readableName: "Get Pokemon",
       sourceType: ToolType.REST_QUERY,
       sourceLabel: "REST API",
     })
@@ -73,10 +79,14 @@ describe("getAvailableToolsMetadata", () => {
 
     const tools = await getAvailableToolsMetadata()
     const datasourceQueryTool = tools.find(
-      tool => tool.name === "Monthly_Sales"
+      tool =>
+        tool.sourceType === ToolType.DATASOURCE_QUERY &&
+        tool.readableName === "Monthly Sales"
     )
 
     expect(datasourceQueryTool).toMatchObject({
+      name: "ds_warehouse_monthly_sales",
+      readableName: "Monthly Sales",
       sourceType: ToolType.DATASOURCE_QUERY,
       sourceLabel: "Warehouse",
       sourceIconType: SourceName.SNOWFLAKE,
@@ -100,8 +110,48 @@ describe("getAvailableToolsMetadata", () => {
     ])
 
     const tools = await getAvailableToolsMetadata()
-    const missingQueryTool = tools.find(tool => tool.name === "Missing_Query")
+    const missingQueryTool = tools.find(
+      tool => tool.readableName === "Missing Query"
+    )
 
     expect(missingQueryTool).toBeUndefined()
+  })
+
+  it("generates unique runtime names for identical query names across datasources", async () => {
+    jest.spyOn(sdk.datasources, "fetch").mockResolvedValue([
+      makeDatasource({
+        _id: "datasource_rest",
+        source: SourceName.REST,
+        name: "REST API",
+      }),
+      makeDatasource({
+        _id: "datasource_snowflake",
+        source: SourceName.SNOWFLAKE,
+        name: "Warehouse",
+      }),
+    ])
+    jest.spyOn(sdk.queries, "fetch").mockResolvedValue([
+      makeQuery({
+        _id: "query_rest",
+        datasourceId: "datasource_rest",
+        name: "Get Data",
+      }),
+      makeQuery({
+        _id: "query_snowflake",
+        datasourceId: "datasource_snowflake",
+        name: "Get Data",
+      }),
+    ])
+
+    const tools = await getAvailableToolsMetadata()
+    const queryTools = tools.filter(
+      tool =>
+        tool.readableName === "Get Data" &&
+        (tool.sourceType === ToolType.REST_QUERY ||
+          tool.sourceType === ToolType.DATASOURCE_QUERY)
+    )
+
+    expect(queryTools).toHaveLength(2)
+    expect(new Set(queryTools.map(tool => tool.name)).size).toBe(2)
   })
 })

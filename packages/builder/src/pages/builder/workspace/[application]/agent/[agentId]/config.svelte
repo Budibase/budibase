@@ -451,6 +451,32 @@ Any constraints the agent must follow.
     )
   }
 
+  const getQueryForTool = (tool: AgentTool) => {
+    const normalizedReadableName = normaliseToolNameForMatch(
+      tool.readableName || ""
+    )
+    const matchingDatasource = $datasources.list.find(
+      datasource =>
+        datasource.name === tool.sourceLabel &&
+        (tool.sourceType === ToolType.REST_QUERY
+          ? datasource.source === "REST"
+          : datasource.source !== "REST")
+    )
+
+    return $queries.list.find(query => {
+      const queryNameMatches =
+        query.name === tool.readableName ||
+        normaliseToolNameForMatch(query.name || "") === normalizedReadableName
+      if (!queryNameMatches) {
+        return false
+      }
+      if (!matchingDatasource?._id) {
+        return true
+      }
+      return query.datasourceId === matchingDatasource._id
+    })
+  }
+
   const getToolResourcePath = (tool: AgentTool): string | null => {
     if (tool.sourceType === ToolType.AUTOMATION) {
       const automation = findResourceByName($automationStore.automations, tool)
@@ -463,7 +489,7 @@ Any constraints the agent must follow.
       tool.sourceType === ToolType.REST_QUERY ||
       tool.sourceType === ToolType.DATASOURCE_QUERY
     ) {
-      const query = findResourceByName($queries.list, tool)
+      const query = getQueryForTool(tool)
       if (query?._id) {
         return `../../apis/query/${query._id}`
       }
