@@ -312,6 +312,11 @@ const findDiscordConversation = async ({
     discordConversationCache.delete(cacheKey)
   }
 
+  /*
+  Concerned about this, but will revisit when more channels get added,
+  How many chat convos could a workspace end up having? 09/02/2026
+  Also a problem in general chat convo fetching
+  */
   const response = await db.allDocs<ChatConversation>(
     docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
       include_docs: true,
