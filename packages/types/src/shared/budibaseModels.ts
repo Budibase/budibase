@@ -38,12 +38,6 @@ export const BUDIBASE_AI_MODELS: BudibaseAIModel[] = [
     model: "gpt-5-nano",
     label: "GPT 5 Nano",
   },
-  {
-    id: "budibase/mistral-small-latest",
-    provider: "mistral",
-    model: "mistral-small-latest",
-    label: "Mistral Small",
-  },
 ]
 
 export const BUDIBASE_AI_MODEL_MAP: Record<

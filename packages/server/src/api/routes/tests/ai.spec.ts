@@ -30,6 +30,20 @@ import {
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
 
+jest.mock("@budibase/types", () => {
+  const actual = jest.requireActual("@budibase/types")
+  return {
+    ...actual,
+    BUDIBASE_AI_MODEL_MAP: {
+      ...actual.BUDIBASE_AI_MODEL_MAP,
+      "budibase/mistral-small-latest": {
+        provider: "mistral",
+        model: "mistral-small-latest",
+      },
+    },
+  }
+})
+
 function toResponseFormat(schema: any, name = "response") {
   return {
     type: "json_schema" as const,
