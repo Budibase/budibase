@@ -110,12 +110,27 @@
 
 <Modal bind:this={discordModal}>
   <ModalContent
-    title="Discord"
     size="L"
     showCloseIcon
     showConfirmButton={false}
     showCancelButton={false}
   >
+    <svelte:fragment slot="header">
+      <div class="modal-header">
+        <img
+          alt="Discord"
+          width="24px"
+          height="24px"
+          src={DiscordLogo}
+          class="modal-header-logo"
+        />
+        <div class="modal-header-copy">
+          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
+            >Discord</Body
+          >
+        </div>
+      </div>
+    </svelte:fragment>
     <DiscordConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
@@ -209,5 +224,21 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+
+  .modal-header-logo {
+    flex-shrink: 0;
+  }
+
+  .modal-header-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 </style>

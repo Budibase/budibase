@@ -8,11 +8,12 @@
     StatusLight,
     notifications,
   } from "@budibase/bbui"
+  import { DiscordCommands } from "@budibase/shared-core"
   import type { Agent, SyncAgentDiscordCommandsResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
 
-  const DEFAULT_ASK_COMMAND = "ask"
-  const DEFAULT_NEW_COMMAND = "new"
+  const DISCORD_ASK_COMMAND = DiscordCommands.ASK
+  const DISCORD_NEW_COMMAND = DiscordCommands.NEW
   const DEFAULT_IDLE_TIMEOUT_MINUTES = 45
 
   let { agent }: { agent?: Agent } = $props()
@@ -23,8 +24,6 @@
     publicKey: "",
     botToken: "",
     guildId: "",
-    askCommandName: DEFAULT_ASK_COMMAND,
-    newCommandName: DEFAULT_NEW_COMMAND,
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
   })
 
@@ -72,8 +71,6 @@
       publicKey: integration?.publicKey || "",
       botToken: integration?.botToken || "",
       guildId: integration?.guildId || "",
-      askCommandName: integration?.askCommandName || DEFAULT_ASK_COMMAND,
-      newCommandName: integration?.newCommandName || DEFAULT_NEW_COMMAND,
       idleTimeoutMinutes:
         integration?.idleTimeoutMinutes || DEFAULT_IDLE_TIMEOUT_MINUTES,
     }
@@ -84,11 +81,6 @@
   const toOptionalValue = (value: string) => {
     const trimmed = value.trim()
     return trimmed.length > 0 ? trimmed : undefined
-  }
-
-  const toOptionalCommandName = (value: string, fallback: string) => {
-    const trimmed = value.trim().toLowerCase()
-    return trimmed.length > 0 ? trimmed : fallback
   }
 
   const toOptionalIdleTimeout = (value: number) => {
@@ -113,14 +105,6 @@
           publicKey: toOptionalValue(draft.publicKey),
           botToken: toOptionalValue(draft.botToken),
           guildId: toOptionalValue(draft.guildId),
-          askCommandName: toOptionalCommandName(
-            draft.askCommandName,
-            DEFAULT_ASK_COMMAND
-          ),
-          newCommandName: toOptionalCommandName(
-            draft.newCommandName,
-            DEFAULT_NEW_COMMAND
-          ),
           chatAppId: agent.discordIntegration?.chatAppId,
           interactionsEndpointUrl:
             agent.discordIntegration?.interactionsEndpointUrl,
@@ -161,8 +145,6 @@
     <Input label="Public key" bind:value={draft.publicKey} />
     <Input label="Bot token" type="password" bind:value={draft.botToken} />
     <Input label="Guild ID" bind:value={draft.guildId} />
-    <Input label="Ask command" bind:value={draft.askCommandName} />
-    <Input label="New command" bind:value={draft.newCommandName} />
     <Input
       label="Idle timeout (minutes)"
       type="number"
@@ -179,16 +161,16 @@
     </div>
     {#if syncResult}
       <div class="synced-info">
-        <Body size="S">
-          Commands synced: /{syncResult.askCommandName} and /{syncResult.newCommandName}
-        </Body>
+        <Body size="S"
+          >Commands synced: /{DISCORD_ASK_COMMAND} and /{DISCORD_NEW_COMMAND}</Body
+        >
       </div>
     {/if}
 
-    <CopyInput label="Webhook URL" value={webhookUrl} />
+    <CopyInput label="Webhook URL" value={webhookUrl} disabled />
 
     {#if inviteUrl}
-      <CopyInput label="Discord invite URL" value={inviteUrl} />
+      <CopyInput label="Discord invite URL" value={inviteUrl} disabled />
     {/if}
   </div>
 
