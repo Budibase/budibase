@@ -9,6 +9,8 @@
   type EnabledAgentListItem = {
     agentId: string
     name?: string
+    icon?: string
+    iconColor?: string
   }
 
   export let selectedAgentId: string | null = null
@@ -33,6 +35,8 @@
     value && "_id" in value && Boolean(value._id)
 
   let readOnlyReason: "disabled" | "deleted" | "offline" | undefined
+
+  $: visibleAgentList = enabledAgentList.slice(0, 3)
 
   $: isAgentEnabled = selectedAgentId
     ? enabledAgentList.some(agent => agent.agentId === selectedAgentId)
@@ -99,13 +103,30 @@
         Choose an agent to start a chat
       </Body>
       <div class="chat-empty-grid">
-        {#if enabledAgentList.length}
-          {#each enabledAgentList as agent (agent.agentId)}
+        {#if visibleAgentList.length}
+          {#each visibleAgentList as agent (agent.agentId)}
             <button
               class="chat-empty-card"
               on:click={() => selectAgent(agent.agentId)}
+              style={`--agent-icon-color:${agent.iconColor || "#6366F1"};`}
             >
-              {agent.name || "Unknown agent"}
+              <div class="chat-empty-card-head">
+                <div class="chat-empty-card-icon">
+                  <Icon
+                    name={agent.icon || "SideKick"}
+                    size="S"
+                    color="var(--spectrum-global-color-gray-50)"
+                  />
+                </div>
+                <Body size="S" weight="500">
+                  {agent.name || "Unknown agent"}
+                </Body>
+              </div>
+              <div class="chat-empty-card-subtitle">
+                <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+                  Start a chat with this agent.
+                </Body>
+              </div>
             </button>
           {/each}
         {:else}
@@ -169,24 +190,54 @@
 
   .chat-empty-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-m);
-    width: min(520px, 100%);
+    width: min(720px, 100%);
   }
 
   .chat-empty-card {
     border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
-    padding: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-50);
+    border-radius: 16px;
+    padding: 0;
+    background: var(--spectrum-alias-background-color-primary);
     color: var(--spectrum-global-color-gray-800);
     font: inherit;
     cursor: pointer;
-    text-align: center;
+    text-align: left;
+    overflow: hidden;
+    min-height: 120px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease,
+      transform 150ms ease;
   }
 
   .chat-empty-card:hover {
     border-color: var(--spectrum-global-color-gray-300);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+  }
+
+  .chat-empty-card-head {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: var(--spacing-m);
     background: var(--spectrum-global-color-gray-100);
+  }
+
+  .chat-empty-card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--agent-icon-color);
+  }
+
+  .chat-empty-card-subtitle {
+    padding: 0 var(--spacing-m) var(--spacing-m);
   }
 </style>

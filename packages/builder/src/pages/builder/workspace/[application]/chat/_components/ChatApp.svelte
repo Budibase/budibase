@@ -50,6 +50,8 @@
     agentId: string
     name?: string
     isDefault?: boolean
+    icon?: string
+    iconColor?: string
   }[] = []
 
   let chatAgents: ChatAgentConfig[] = []
@@ -84,8 +86,25 @@
       agents.some(agent => agent._id === selectedAgentId && agent.live)
     : false
 
-  const getAgentName = (agentId: string) =>
-    agents.find(agent => agent._id === agentId)?.name
+  const agentIconColors = [
+    "#6366F1",
+    "#F59E0B",
+    "#10B981",
+    "#8B5CF6",
+    "#EF4444",
+  ]
+
+  const getAgent = (agentId: string) =>
+    agents.find(agent => agent._id === agentId)
+
+  const getAgentName = (agentId: string) => getAgent(agentId)?.name
+
+  const getAgentIcon = (agentId: string) =>
+    getAgent(agentId)?.icon || "SideKick"
+
+  const getAgentIconColor = (agentId: string, index: number) =>
+    getAgent(agentId)?.iconColor ||
+    agentIconColors[index % agentIconColors.length]
 
   $: selectedAgentName = selectedAgentId
     ? getAgentName(selectedAgentId) || "Unknown agent"
@@ -94,10 +113,12 @@
   $: {
     const baseAgentList = chatAgents
       .filter(agent => agent.isEnabled)
-      .map(agent => ({
+      .map((agent, index) => ({
         agentId: agent.agentId,
         name: getAgentName(agent.agentId),
         isDefault: agent.isDefault,
+        icon: getAgentIcon(agent.agentId),
+        iconColor: getAgentIconColor(agent.agentId, index),
       }))
       .filter(agent => Boolean(agent.name))
 
