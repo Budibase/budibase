@@ -18,6 +18,7 @@
     const integration = currentAgent?.discordIntegration
     return !!(
       integration?.applicationId?.trim() &&
+      integration?.publicKey?.trim() &&
       integration?.botToken?.trim() &&
       integration?.guildId?.trim()
     )

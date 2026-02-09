@@ -32,12 +32,13 @@ export const validateDiscordIntegration = (
   }
 
   const applicationId = integration.applicationId?.trim()
+  const publicKey = integration.publicKey?.trim()
   const botToken = integration.botToken?.trim()
   const guildId = integration.guildId?.trim()
 
-  if (!applicationId || !botToken || !guildId) {
+  if (!applicationId || !publicKey || !botToken || !guildId) {
     throw new HTTPError(
-      "Discord integration requires applicationId, botToken, and guildId",
+      "Discord integration requires applicationId, publicKey, botToken, and guildId",
       400
     )
   }

@@ -37,6 +37,7 @@
     }
     return !!(
       draft.applicationId.trim() &&
+      draft.publicKey.trim() &&
       draft.botToken.trim() &&
       draft.guildId.trim()
     )

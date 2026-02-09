@@ -49,10 +49,12 @@ describe("agent discord integration sync", () => {
   })
 
   it("syncs ask/new slash commands for an agent", async () => {
+    const signing = makeDiscordSigningKeyPair()
     const agent = await config.api.agent.create({
       name: "Discord Agent",
       discordIntegration: {
         applicationId: "app-123",
+        publicKey: signing.publicKey,
         botToken: "bot-secret",
         guildId: "guild-123",
       },
@@ -91,6 +93,21 @@ describe("agent discord integration sync", () => {
   it("returns a validation error when required discord settings are missing", async () => {
     const agent = await config.api.agent.create({
       name: "No Discord Settings",
+    })
+
+    await config.api.agent.syncDiscordCommands(agent._id!, undefined, {
+      status: 400,
+    })
+  })
+
+  it("returns a validation error when discord public key is missing", async () => {
+    const agent = await config.api.agent.create({
+      name: "Missing Discord Public Key",
+      discordIntegration: {
+        applicationId: "app-123",
+        botToken: "bot-secret",
+        guildId: "guild-123",
+      },
     })
 
     await config.api.agent.syncDiscordCommands(agent._id!, undefined, {
