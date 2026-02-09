@@ -4,6 +4,8 @@
     ModalContent,
     Icon,
     Body,
+    Helpers,
+    notifications,
     MarkdownViewer,
     StatusLight,
     Tabs,
@@ -32,8 +34,25 @@
   let selectedStep: ChainStep | null = $state(null)
   let selectedTab = $state("Output")
 
+  const LARGE_PAYLOAD_LIMIT = 200
+
   const isObjectValue = (value: unknown) => {
     return typeof value === "object" && value !== null
+  }
+
+  const isTooLarge = (value: unknown) => {
+    if (Array.isArray(value)) {
+      return value.length > LARGE_PAYLOAD_LIMIT
+    }
+
+    if (isObjectValue(value)) {
+      return (
+        Object.keys(value as Record<string, unknown>).length >
+        LARGE_PAYLOAD_LIMIT
+      )
+    }
+
+    return false
   }
 
   const formatPrimitiveValue = (value: unknown) => {
@@ -46,9 +65,15 @@
     return JSON.stringify(value, null, 2)
   }
 
+  $effect(() => {
+    if (selectedStep && !steps.some(step => step.id === selectedStep?.id)) {
+      selectedStep = null
+    }
+  })
+
   export function show() {
     modal?.show()
-    selectedStep = steps[0] || null
+    selectedStep = null
   }
 
   export function hide() {
@@ -134,8 +159,15 @@
               <Tab title="Input">
                 <div class="tab-content">
                   {#if selectedStep}
-                    {#if selectedStep.input !== undefined}
-                      <JSONViewer value={selectedStep.input} />
+                    {@const step = selectedStep}
+                    {#if step.input !== undefined}
+                      {#if isTooLarge(step.input)}
+                        <div class="large-payload-warning">
+                          <Body size="S">Input too large to render.</Body>
+                        </div>
+                      {:else}
+                        <JSONViewer value={step.input} />
+                      {/if}
                     {:else}
                       <div class="empty-state">
                         <Icon
@@ -161,24 +193,27 @@
               <Tab title="Output">
                 <div class="tab-content">
                   {#if selectedStep}
+                    {@const step = selectedStep}
                     <div class="tool-header" in:fade={{ duration: 150 }}>
-                      <h3 class="tool-title">{selectedStep.displayName}</h3>
+                      <h3 class="tool-title">{step.displayName}</h3>
                       <span
-                        class={`${getStatusActionButtonClass(
-                          selectedStep.status
-                        )} status-pill`}
+                        class={`${getStatusActionButtonClass(step.status)} status-pill`}
                       >
-                        {getStatusLabel(selectedStep.status)}
+                        {getStatusLabel(step.status)}
                       </span>
                     </div>
-                    {#key selectedStep.id}
+                    {#key step.id}
                       <div class="output-content" in:fade={{ duration: 150 }}>
-                        {#if selectedStep.output !== undefined}
-                          {#if isObjectValue(selectedStep.output)}
-                            <JSONViewer value={selectedStep.output} />
+                        {#if step.output !== undefined}
+                          {#if isTooLarge(step.output)}
+                            <div class="large-payload-warning">
+                              <Body size="S">Output too large to render</Body>
+                            </div>
+                          {:else if isObjectValue(step.output)}
+                            <JSONViewer value={step.output} />
                           {:else}
                             <pre class="primitive-value">
-{formatPrimitiveValue(selectedStep.output)}</pre>
+{formatPrimitiveValue(step.output)}</pre>
                           {/if}
                         {:else}
                           <div class="empty-state">
@@ -472,5 +507,31 @@
     gap: var(--spacing-m);
     padding: var(--spacing-xl);
     color: var(--spectrum-global-color-gray-500);
+  }
+
+  .large-payload-warning {
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--border-radius-s);
+    background: var(--spectrum-global-color-gray-75);
+    padding: var(--spacing-m);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .large-payload-action {
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-100);
+    color: var(--spectrum-global-color-gray-900);
+    padding: var(--spacing-xs) var(--spacing-s);
+    border-radius: var(--border-radius-s);
+    font-size: 12px;
+    line-height: 1.4;
+    cursor: pointer;
+    width: fit-content;
+  }
+
+  .large-payload-action:hover {
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>
