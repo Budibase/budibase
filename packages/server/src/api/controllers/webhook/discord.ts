@@ -39,6 +39,8 @@ const DISCORD_ASK_COMMAND = DiscordCommands.ASK
 const DISCORD_NEW_COMMAND = DiscordCommands.NEW
 const DISCORD_DEFAULT_IDLE_TIMEOUT_MINUTES = 45
 const DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE = 5000
+const DISCORD_FALLBACK_ERROR_MESSAGE =
+  "Sorry, something went wrong while processing your request."
 
 const discordConversationCache = new Map<string, string>()
 
@@ -153,6 +155,27 @@ const sendDiscordResponse = async (
       url: followupUrl,
       content: chunk,
     })
+  }
+}
+
+const getDiscordErrorMessage = (error: unknown) =>
+  error instanceof HTTPError ? error.message : DISCORD_FALLBACK_ERROR_MESSAGE
+
+const sendDiscordErrorResponse = async ({
+  interaction,
+  error,
+}: {
+  interaction: DiscordInteraction
+  error: unknown
+}) => {
+  try {
+    await sendDiscordResponse(
+      interaction.application_id,
+      interaction.token,
+      getDiscordErrorMessage(error)
+    )
+  } catch (responseError) {
+    console.error("Failed to send Discord fallback response", responseError)
   }
 }
 
@@ -470,7 +493,7 @@ const handleDiscordInteraction = async ({
         user: buildDiscordUserContext(userId, displayName),
       })
     } catch (error) {
-      const message = error instanceof HTTPError ? error.message : "Agent error"
+      const message = getDiscordErrorMessage(error)
       return reply(message)
     }
 
@@ -581,6 +604,7 @@ export async function discordWebhook(
       })
     } catch (error) {
       console.error("Discord webhook processing failed", error)
+      await sendDiscordErrorResponse({ interaction, error })
     }
   })
 }
