@@ -1,5 +1,6 @@
-import { Header, roles } from "@budibase/backend-core"
+import { Header, context, docIds, roles } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
+import { ChatApp, ChatConversation, DocumentType } from "@budibase/types"
 import tk from "timekeeper"
 
 import * as setup from "./utilities"
@@ -95,5 +96,97 @@ describe("/workspace/home/metrics", () => {
       .get("/api/workspace/home/metrics")
       .set(headersWithoutWorkspaceId)
       .expect(400)
+  })
+
+  it("returns user-scoped chats for workspace home", async () => {
+    const user = config.getUser()
+    const otherUser = await config.createUser({
+      roles: { [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC },
+      builder: { global: false },
+      admin: { global: false },
+    })
+
+    await context.doInWorkspaceContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const now = new Date().toISOString()
+      const chatApp: ChatApp = {
+        _id: docIds.generateChatAppID(),
+        agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+        createdAt: now,
+        updatedAt: now,
+      }
+
+      const visibleConversation: ChatConversation = {
+        _id: docIds.generateChatConversationID(),
+        chatAppId: chatApp._id!,
+        agentId: "agent-1",
+        userId: user._id!,
+        title: "Visible chat",
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      }
+
+      const hiddenConversation: ChatConversation = {
+        _id: docIds.generateChatConversationID(),
+        chatAppId: chatApp._id!,
+        agentId: "agent-1",
+        userId: otherUser._id!,
+        title: "Hidden chat",
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      }
+
+      const openConversation: ChatConversation = {
+        _id: docIds.generateChatConversationID(),
+        chatAppId: chatApp._id!,
+        agentId: "agent-1",
+        userId: user._id!,
+        title: "Shared chat",
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      }
+
+      await db.put(chatApp)
+      await db.put(visibleConversation)
+      await db.put(hiddenConversation)
+      await db.put(openConversation)
+    })
+
+    const res = await request
+      .get("/api/workspace/home/chats")
+      .set(config.defaultHeaders())
+      .expect(200)
+
+    expect(res.body.chats).toHaveLength(2)
+    expect(res.body.chats.map((chat: { title: string }) => chat.title)).toEqual(
+      expect.arrayContaining(["Visible chat", "Shared chat"])
+    )
+  })
+
+  it("returns empty chats when chat app is missing", async () => {
+    await context.doInWorkspaceContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const chatApps = await db.allDocs<ChatApp>(
+        docIds.getDocParams(DocumentType.CHAT_APP, undefined, {
+          include_docs: true,
+        })
+      )
+
+      for (const row of chatApps.rows) {
+        if (row.doc) {
+          await db.remove(row.doc)
+        }
+      }
+    })
+
+    const res = await request
+      .get("/api/workspace/home/chats")
+      .set(config.defaultHeaders())
+      .expect(200)
+
+    expect(res.body.chats).toEqual([])
   })
 })

@@ -6,6 +6,7 @@ import {
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { ai } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import {
   AgentMessageMetadata,
   ChatAgentRequest,
@@ -426,6 +427,71 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
 
   await db.remove(chat)
   ctx.status = 204
+}
+
+export async function duplicateChatConversation(
+  ctx: UserCtx<void, ChatConversation>
+) {
+  const db = context.getWorkspaceDB()
+  const chatConversationId = ctx.params.chatConversationId
+  const chatAppId = ctx.params.chatAppId
+  const userId = getGlobalUserId(ctx)
+
+  if (!chatConversationId) {
+    throw new HTTPError("chatConversationId is required", 400)
+  }
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
+
+  const source = await db.tryGet<ChatConversation>(chatConversationId)
+  if (!source || source.chatAppId !== chatAppId) {
+    throw new HTTPError("chat not found", 404)
+  }
+  if (source.userId && source.userId !== userId) {
+    throw new HTTPError("Forbidden", 403)
+  }
+
+  const allChats = await db.allDocs<ChatConversation>(
+    docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
+      include_docs: true,
+    })
+  )
+
+  const visibleTitles = allChats.rows
+    .map(row => row.doc)
+    .filter(
+      (chat): chat is ChatConversation =>
+        !!chat &&
+        chat.chatAppId === chatAppId &&
+        (!chat.userId || chat.userId === userId)
+    )
+    .map(chat => chat.title)
+    .filter((title): title is string => !!title)
+
+  const baseTitle = source.title || "Untitled Chat"
+  const duplicateTitle = helpers.duplicateName(baseTitle, visibleTitles)
+
+  const duplicated = prepareChatConversationForSave({
+    chatId: docIds.generateChatConversationID(),
+    chatAppId,
+    userId,
+    title: duplicateTitle,
+    messages: source.messages || [],
+    chat: {
+      chatAppId,
+      agentId: source.agentId,
+      title: duplicateTitle,
+      messages: source.messages || [],
+    },
+  })
+
+  await db.put(duplicated)
+
+  ctx.status = 201
+  ctx.body = duplicated
 }
 
 export async function fetchChatHistory(

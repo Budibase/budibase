@@ -193,6 +193,87 @@ describe("chat conversations authorization", () => {
   })
 })
 
+describe("chat conversation duplicate", () => {
+  const config = new TestConfiguration()
+  let userA: User
+  let userB: User
+  let chatApp: ChatApp
+  let convoA: ChatConversation
+
+  beforeAll(async () => {
+    await config.init("chat-conversation-duplicate")
+    userA = config.getUser()
+    userB = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: true },
+      admin: { global: false },
+    })
+
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        chatApp = {
+          _id: docIds.generateChatAppID(),
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
+          createdAt: now,
+        }
+        convoA = {
+          _id: docIds.generateChatConversationID(),
+          chatAppId: chatApp._id!,
+          agentId: "agent-1",
+          userId: userA._id!,
+          messages: [],
+          title: "Support conversation",
+          createdAt: now,
+        }
+        await db.put(chatApp)
+        await db.put(convoA)
+      }
+    )
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("duplicates a chat conversation for the same user", async () => {
+    const headers = await config.defaultHeaders({}, true)
+
+    const res = await config
+      .getRequest()!
+      .post(
+        `/api/chatapps/${chatApp._id}/conversations/${convoA._id}/duplicate`
+      )
+      .set(headers)
+
+    expect(res.status).toBe(201)
+    expect(res.body._id).not.toEqual(convoA._id)
+    expect(res.body.chatAppId).toEqual(chatApp._id)
+    expect(res.body.agentId).toEqual(convoA.agentId)
+    expect(res.body.title).not.toEqual(convoA.title)
+    expect(res.body.title).toContain("Support conversation")
+  })
+
+  it("blocks duplicating another user's chat conversation", async () => {
+    const headers = await config.withUser(userB, async () =>
+      config.defaultHeaders({}, true)
+    )
+
+    const res = await config
+      .getRequest()!
+      .post(
+        `/api/chatapps/${chatApp._id}/conversations/${convoA._id}/duplicate`
+      )
+      .set(headers)
+
+    expect(res.status).toBe(403)
+  })
+})
+
 describe("prepareChatConversationForSave", () => {
   const now = new Date("2024-01-01T00:00:00.000Z")
 

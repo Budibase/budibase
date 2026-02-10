@@ -85,6 +85,24 @@ export async function updateAgent(
   ctx.status = 200
 }
 
+export async function duplicateAgent(
+  ctx: UserCtx<void, CreateAgentResponse, { agentId: string }>
+) {
+  const agentId = ctx.params.agentId
+  if (!agentId) {
+    ctx.throw(400, "agentId is required")
+  }
+
+  const sourceAgent = await sdk.ai.agents.getOrThrow(agentId)
+
+  const createdBy = ctx.user?._id!
+  const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
+  const duplicated = await sdk.ai.agents.duplicate(sourceAgent, globalId)
+
+  ctx.body = duplicated
+  ctx.status = 201
+}
+
 export async function deleteAgent(
   ctx: UserCtx<void, { deleted: true }, { agentId: string }>
 ) {
