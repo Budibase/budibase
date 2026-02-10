@@ -59,32 +59,30 @@ export async function create(
   const isBBAI = config.provider === BUDIBASE_AI_PROVIDER_ID
   const isSelfhost = env.SELF_HOSTED
 
-  if (isBBAI) {
+  if (isBBAI && isSelfhost) {
     const baseUrl = env.BUDICLOUD_URL.endsWith("/")
       ? env.BUDICLOUD_URL
       : `${env.BUDICLOUD_URL}/`
     config.credentialsFields.api_base = new URL("api/ai", baseUrl).toString()
-    if (isSelfhost) {
-      const licenseKey = await licensing.keys.getLicenseKey()
-      if (!licenseKey) {
-        throw new HTTPError("No license key found", 422)
-      }
-      config.credentialsFields.api_key = licenseKey
-    } else {
-      if (!env.BBAI_SECRET) {
-        throw new Error("BBAI_SECRET is not set")
-      }
-      config.credentialsFields.api_key = env.BBAI_SECRET
+    const licenseKey = await licensing.keys.getLicenseKey()
+    if (!licenseKey) {
+      throw new HTTPError("No license key found", 422)
     }
+    config.credentialsFields.api_key = licenseKey
   }
 
-  const modelId = await liteLLM.addModel({
-    provider: config.provider,
-    model: config.model,
-    credentialFields: config.credentialsFields,
-    configType: config.configType,
-    reasoningEffort: config.reasoningEffort,
-  })
+  let modelId
+  if (!isBBAI || isSelfhost) {
+    modelId = await liteLLM.addModel({
+      provider: config.provider,
+      model: config.model,
+      credentialFields: config.credentialsFields,
+      configType: config.configType,
+      reasoningEffort: config.reasoningEffort,
+    })
+  } else {
+    modelId = BUDIBASE_AI_PROVIDER_ID
+  }
 
   const newConfig: CustomAIProviderConfig = {
     _id:
@@ -171,9 +169,12 @@ export async function update(
     }
   }
 
+  const isBBAI = config.provider === BUDIBASE_AI_PROVIDER_ID
+  const isSelfhost = env.SELF_HOSTED
   const shouldUpdateLiteLLM =
     JSON.stringify(getLiteLLMAwareFields(updatedConfig)) !==
-    JSON.stringify(getLiteLLMAwareFields(existing))
+      JSON.stringify(getLiteLLMAwareFields(existing)) &&
+    (isSelfhost || !isBBAI)
 
   if (shouldUpdateLiteLLM) {
     try {
