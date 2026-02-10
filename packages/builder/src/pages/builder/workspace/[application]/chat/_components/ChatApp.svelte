@@ -39,6 +39,7 @@
 
   let chat: ChatConversationLike = { ...INITIAL_CHAT }
   let deletingChat: boolean = false
+  let initialPrompt = ""
 
   // Local selection state for display and chat drafting.
   // Synced with `agentsStore.currentAgentId` so external changes (e.g. settings)
@@ -50,6 +51,8 @@
     agentId: string
     name?: string
     isDefault?: boolean
+    icon?: string
+    iconColor?: string
   }[] = []
 
   let chatAgents: ChatAgentConfig[] = []
@@ -60,6 +63,15 @@
   $: chatApp = $currentChatApp
   $: chatAgents = (chatApp?.agents || []) as ChatAgentConfig[]
   $: conversationHistory = $currentConversations
+  $: filteredConversationHistory = !agentsLoaded
+    ? conversationHistory
+    : conversationHistory.filter(conversation => {
+        if (!conversation?.agentId) {
+          return false
+        }
+        const agent = agents.find(item => item._id === conversation.agentId)
+        return Boolean(agent?.live)
+      })
   $: hasAnyAgents = agents.length > 0
   $: hasEnabledAgents = enabledAgentList.length > 0
   $: showEmptyState = agentsLoaded && !hasEnabledAgents
@@ -67,9 +79,33 @@
     ? "No agents enabled for this chat app. Add one in Settings to start chatting."
     : "No agents yet. Add one from the settings panel to start chatting."
   $: conversationStarters = $selectedChatAgent?.conversationStarters || []
+  $: isAgentKnown = selectedAgentId
+    ? !agentsLoaded || agents.some(agent => agent._id === selectedAgentId)
+    : false
+  $: isAgentLive = selectedAgentId
+    ? !agentsLoaded ||
+      agents.some(agent => agent._id === selectedAgentId && agent.live)
+    : false
 
-  const getAgentName = (agentId: string) =>
-    agents.find(agent => agent._id === agentId)?.name
+  const agentIconColors = [
+    "#6366F1",
+    "#F59E0B",
+    "#10B981",
+    "#8B5CF6",
+    "#EF4444",
+  ]
+
+  const getAgent = (agentId: string) =>
+    agents.find(agent => agent._id === agentId)
+
+  const getAgentName = (agentId: string) => getAgent(agentId)?.name
+
+  const getAgentIcon = (agentId: string) =>
+    getAgent(agentId)?.icon || "SideKick"
+
+  const getAgentIconColor = (agentId: string, index: number) =>
+    getAgent(agentId)?.iconColor ||
+    agentIconColors[index % agentIconColors.length]
 
   $: selectedAgentName = selectedAgentId
     ? getAgentName(selectedAgentId) || "Unknown agent"
@@ -78,10 +114,12 @@
   $: {
     const baseAgentList = chatAgents
       .filter(agent => agent.isEnabled)
-      .map(agent => ({
+      .map((agent, index) => ({
         agentId: agent.agentId,
         name: getAgentName(agent.agentId),
         isDefault: agent.isDefault,
+        icon: getAgentIcon(agent.agentId),
+        iconColor: getAgentIconColor(agent.agentId, index),
       }))
       .filter(agent => Boolean(agent.name))
 
@@ -239,6 +277,10 @@
       chatAppId: newCurrentChat.chatAppId || $chatAppsStore.chatAppId || "",
     }
     chatAppsStore.setCurrentConversationId(newCurrentChat._id)
+
+    if (initialPrompt) {
+      initialPrompt = ""
+    }
   }
 
   const handleAgentSelected = (event: CustomEvent<{ agentId: string }>) => {
@@ -255,6 +297,13 @@
     if (conversation) {
       selectChat(conversation)
     }
+  }
+
+  const handleStartChat = async (
+    event: CustomEvent<{ agentId: string; prompt: string }>
+  ) => {
+    await selectAgent(event.detail.agentId)
+    initialPrompt = event.detail.prompt
   }
 
   onMount(async () => {
@@ -274,7 +323,7 @@
   {:else}
     <ChatNavigationPanel
       {enabledAgentList}
-      {conversationHistory}
+      conversationHistory={filteredConversationHistory}
       selectedConversationId={$chatAppsStore.currentConversationId}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
@@ -288,9 +337,13 @@
       {selectedAgentName}
       {workspaceId}
       {conversationStarters}
+      {isAgentKnown}
+      {isAgentLive}
+      {initialPrompt}
       on:deleteChat={deleteCurrentChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}
+      on:startChat={handleStartChat}
     />
   {/if}
 </div>
