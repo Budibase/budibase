@@ -10,7 +10,7 @@ import {
 } from "@budibase/types"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
 import { agents } from ".."
-import { createLiteLLMOpenAI } from "../llm"
+import { createLLM } from "../llm"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
@@ -180,7 +180,7 @@ const createChunksFromContent = (content: string, filename?: string) => {
 }
 
 const getEmbeddingModel = async (configId: string) => {
-  const { embedding } = await createLiteLLMOpenAI(configId)
+  const { embedding } = await createLLM(configId)
   return embedding
 }
 

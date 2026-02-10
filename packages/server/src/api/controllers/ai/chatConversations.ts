@@ -232,8 +232,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   try {
     const sessionId = chat._id || v4()
-    const { chat: chatLLM, providerOptions } =
-      await sdk.ai.llm.createLiteLLMOpenAI(agent.aiconfig, sessionId)
+    const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
+      agent.aiconfig,
+      sessionId
+    )
 
     const modelMessages = await convertToModelMessages(chat.messages)
     const messagesWithContext: ModelMessage[] =

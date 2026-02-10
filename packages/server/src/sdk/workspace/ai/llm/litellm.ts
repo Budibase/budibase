@@ -1,9 +1,9 @@
 import { createOpenAI } from "@ai-sdk/openai"
 import { HTTPError } from "@budibase/backend-core"
 import tracer from "dd-trace"
-import sdk from "../../.."
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
+import { CustomAIProviderConfig } from "@budibase/types"
 
 type LiteLLMFetch = (
   input: Parameters<typeof fetch>[0],
@@ -11,13 +11,13 @@ type LiteLLMFetch = (
 ) => ReturnType<typeof fetch>
 
 export const createLiteLLMOpenAI = async (
-  configId: string,
+  aiConfig: CustomAIProviderConfig,
   sessionId?: string,
   span?: tracer.Span
 ) => {
-  const config = await getLiteLLMModelConfigOrThrow(configId)
+  const { apiKey, baseUrl } = await getLiteLLMModelSettings()
 
-  const { apiKey, baseUrl, modelId, modelName } = config
+  const { liteLLMModelId: modelId, model: modelName } = aiConfig
 
   if (span) {
     tracer.llmobs.annotate(span, {
@@ -109,18 +109,10 @@ const getLiteLLMProviderOptions = (hasTools: boolean) => {
   }
 }
 
-async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
-  modelName: string
-  modelId: string
+async function getLiteLLMModelSettings(): Promise<{
   apiKey: string
   baseUrl: string
 }> {
-  const aiConfig = await sdk.ai.configs.find(configId)
-
-  if (!aiConfig) {
-    throw new HTTPError("Config not found", 400)
-  }
-
   const { secretKey } = await getKeySettings()
   if (!secretKey) {
     throw new HTTPError(
@@ -130,8 +122,6 @@ async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
   }
 
   return {
-    modelName: aiConfig.model,
-    modelId: aiConfig.liteLLMModelId,
     apiKey: secretKey,
     baseUrl: environment.LITELLM_URL,
   }

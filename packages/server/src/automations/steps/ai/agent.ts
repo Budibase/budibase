@@ -89,7 +89,7 @@ export async function run({
           },
         })
 
-        const { chat, providerOptions } = await sdk.ai.llm.createLiteLLMOpenAI(
+        const { chat, providerOptions } = await sdk.ai.llm.createLLM(
           agentConfig.aiconfig,
           sessionId,
           agentSpan
