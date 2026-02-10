@@ -1,6 +1,3 @@
-import { LLMConfigOptions } from "@budibase/types"
-import { OpenAI } from "./openai"
-import { default as OpenAIClient } from "openai"
 import { createOpenAI } from "@ai-sdk/openai"
 import tracer from "dd-trace"
 
@@ -13,29 +10,6 @@ type LiteLLMOpenAIConfig = {
   apiKey: string
   baseUrl: string
   sessionId?: string
-}
-
-export class LiteLLMAI extends OpenAI {
-  protected override getClient(opts: LLMConfigOptions) {
-    if (!opts.apiKey) {
-      throw new Error("No LiteLLM API key found")
-    }
-    return new OpenAIClient({ apiKey: opts.apiKey, baseURL: opts.baseUrl })
-  }
-}
-
-export const getLiteLLMProvider = (modelId: string) => {
-  const [provider] = modelId.split("/")
-  return provider || "openai"
-}
-
-export const getLiteLLMProviderOptions = (hasTools: boolean) => {
-  if (!hasTools) return
-  return {
-    openai: {
-      parallelToolCalls: true,
-    },
-  }
 }
 
 export const createLiteLLMOpenAI = (config: LiteLLMOpenAIConfig) => {
@@ -53,7 +27,10 @@ export const createLiteLLMOpenAI = (config: LiteLLMOpenAIConfig) => {
     fetch: createLiteLLMFetch(sessionId),
   }
 
-  return createOpenAI(clientConfig)
+  return {
+    llm: createOpenAI(clientConfig),
+    providerOptions: getLiteLLMProviderOptions,
+  }
 }
 
 function createLiteLLMFetch(sessionId?: string): typeof fetch {
@@ -105,4 +82,13 @@ function createLiteLLMFetch(sessionId?: string): typeof fetch {
   }
 
   return liteFetch
+}
+
+const getLiteLLMProviderOptions = (hasTools: boolean) => {
+  if (!hasTools) return
+  return {
+    openai: {
+      parallelToolCalls: true,
+    },
+  }
 }

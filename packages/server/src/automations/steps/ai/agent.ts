@@ -5,7 +5,6 @@ import {
   AgentStepOutputs,
   AutomationStepInputBase,
 } from "@budibase/types"
-import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import {
@@ -99,7 +98,7 @@ export async function run({
           },
         })
 
-        const litellm = ai.createLiteLLMOpenAI({
+        const { llm, providerOptions } = sdk.ai.llm.createLiteLLMOpenAI({
           apiKey,
           baseUrl,
           sessionId,
@@ -122,7 +121,7 @@ export async function run({
         const hasTools = Object.keys(tools).length > 0
         const agent = new ToolLoopAgent({
           model: wrapLanguageModel({
-            model: litellm.chat(modelId),
+            model: llm.chat(modelId),
             middleware: extractReasoningMiddleware({
               tagName: "think",
             }),
@@ -130,7 +129,7 @@ export async function run({
           instructions: systemPrompt || undefined,
           tools,
           stopWhen: stepCountIs(30),
-          providerOptions: ai.getLiteLLMProviderOptions(hasTools),
+          providerOptions: providerOptions(hasTools),
           output: outputOption,
           onStepFinish({ toolCalls, toolResults }) {
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)

@@ -235,12 +235,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
 
     const sessionId = chat._id || v4()
-    const openai = ai.createLiteLLMOpenAI({
+    const { llm, providerOptions } = sdk.ai.llm.createLiteLLMOpenAI({
       apiKey,
       baseUrl,
       sessionId,
     })
-    const model = openai.chat(modelId)
+    const model = llm.chat(modelId)
 
     const modelMessages = await convertToModelMessages(chat.messages)
     const messagesWithContext: ModelMessage[] =
@@ -271,7 +271,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       onStepFinish({ toolCalls, toolResults }) {
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
       },
-      providerOptions: ai.getLiteLLMProviderOptions(hasTools),
+      providerOptions: providerOptions(hasTools),
       onError({ error }) {
         console.error("Agent streaming error", {
           agentId,

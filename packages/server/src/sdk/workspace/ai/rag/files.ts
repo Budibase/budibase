@@ -3,7 +3,6 @@ import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
 import { HTTPError } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
 import {
   AgentFileStatus,
   AgentMessageRagSource,
@@ -15,6 +14,7 @@ import { getLiteLLMModelConfigOrThrow } from "../configs"
 import { find as findVectorDb } from "../vectorDb/crud"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
 import { agents } from ".."
+import { createLiteLLMOpenAI } from "../llm"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
@@ -217,11 +217,11 @@ const createChunksFromContent = (content: string, filename?: string) => {
 }
 
 const getEmbeddingModel = async (config: ResolvedRagConfig) => {
-  const openai = ai.createLiteLLMOpenAI({
+  const { llm } = createLiteLLMOpenAI({
     apiKey: config.apiKey,
     baseUrl: config.baseUrl,
   })
-  return openai.embedding(config.embeddingModel)
+  return llm.embedding(config.embeddingModel)
 }
 
 const embedChunks = async (
