@@ -9,7 +9,6 @@
     notifications,
     Select,
     Stepper,
-    TextArea,
   } from "@budibase/bbui"
   import {
     themeStore,
