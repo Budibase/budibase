@@ -266,7 +266,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       onStepFinish({ toolCalls, toolResults }) {
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
       },
-      providerOptions: providerOptions(hasTools),
+      providerOptions: providerOptions?.(hasTools),
       onError({ error }) {
         console.error("Agent streaming error", {
           agentId,
