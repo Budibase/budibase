@@ -453,7 +453,7 @@ Any constraints the agent must follow.
 
   const getQueryForTool = (tool: AgentTool) => {
     const normalizedReadableName = normaliseToolNameForMatch(
-      tool.readableName || ""
+      tool.readableName || tool.runtimeBinding || tool.name || ""
     )
     const matchingDatasource = $datasources.list.find(
       datasource =>
