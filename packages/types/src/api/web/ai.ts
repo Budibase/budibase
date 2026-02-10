@@ -37,7 +37,7 @@ export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
 export interface ChatCompletionRequestV2 {
   messages: ModelMessage[]
   model: string
-  stream: boolean
+  stream?: boolean
 }
 
 export interface ChatCompletionRequest {
