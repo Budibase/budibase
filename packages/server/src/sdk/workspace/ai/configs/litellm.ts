@@ -2,6 +2,7 @@ import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
   LiteLLMKeyConfig,
   ReasoningEffort,
   LockName,
@@ -363,7 +364,7 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
 }
 
 async function mapToLiteLLMProvider(provider: string) {
-  if (provider === "Budibase") {
+  if (provider === BUDIBASE_AI_PROVIDER_ID) {
     return "custom_openai"
   }
 

@@ -1,29 +1,36 @@
 <script lang="ts">
-  import { aiConfigsStore } from "@/stores/portal"
+  import { admin, aiConfigsStore, licensing } from "@/stores/portal"
   import { Button, Layout, Modal, notifications } from "@budibase/bbui"
   import type { AIConfigResponse } from "@budibase/types"
-  import { AIConfigType } from "@budibase/types"
+  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
   import BBAIConfigModal from "./BBAIConfigModal.svelte"
+  import PortalModal from "./PortalModal.svelte"
+  import { API } from "@/api"
 
   let configModal: { show: () => void; hide: () => void }
+  let portalModal: { show: () => void; hide: () => void }
   let selectedModalConfig: AIConfigResponse | undefined
   let selectedProvider: string | undefined
+
+  let hasLicenseKey: boolean
 
   $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
     config => config.configType === AIConfigType.COMPLETIONS
   )
 
-  $: hasBBAI = completionConfigs.some(c => c.provider === "Budibase")
+  $: hasBBAI = completionConfigs.some(
+    c => c.provider === BUDIBASE_AI_PROVIDER_ID
+  )
   $: modelProviders = [
     ...(hasBBAI
       ? []
       : [
           {
             name: "Budibase AI",
-            provider: "Budibase",
+            provider: BUDIBASE_AI_PROVIDER_ID,
             description: "Budibase managed",
           },
         ]),
@@ -60,6 +67,15 @@
   ]
 
   function createAIConfig(provider?: string) {
+    if (
+      provider === BUDIBASE_AI_PROVIDER_ID &&
+      !$admin.cloud &&
+      !hasLicenseKey
+    ) {
+      portalModal.show()
+      return
+    }
+
     selectedModalConfig = undefined
     selectedProvider = provider
     configModal?.show()
@@ -73,6 +89,15 @@
   onMount(async () => {
     try {
       await aiConfigsStore.fetch()
+
+      const license = $licensing.license
+      const isOfflineLicense = () => license && "identifier" in license
+      if (isOfflineLicense()) {
+        hasLicenseKey = true
+      } else {
+        const licenseKeyResponse = await API.getLicenseKey()
+        hasLicenseKey = !!licenseKeyResponse?.licenseKey
+      }
     } catch {
       notifications.error("Error fetching AI settings")
     }
@@ -118,7 +143,7 @@
 </Layout>
 
 <Modal bind:this={configModal}>
-  {#if selectedProvider !== "Budibase"}
+  {#if selectedProvider !== BUDIBASE_AI_PROVIDER_ID}
     <CustomConfigModal
       config={selectedModalConfig}
       provider={selectedProvider}
@@ -136,6 +161,16 @@
       }}
     />
   {/if}
+</Modal>
+
+<Modal bind:this={portalModal}>
+  <PortalModal
+    confirmHandler={() => {
+      window.open($admin.accountPortalUrl, "_blank")
+      portalModal.hide()
+    }}
+    cancelHandler={() => portalModal.hide()}
+  />
 </Modal>
 
 <style>

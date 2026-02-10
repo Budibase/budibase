@@ -1,6 +1,7 @@
 import { context, docIds, env, HTTPError } from "@budibase/backend-core"
 import {
   AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
   LLMProviderField,
   CustomAIProviderConfig,
   DocumentType,
@@ -55,7 +56,7 @@ export async function create(
 ): Promise<CustomAIProviderConfig> {
   const db = context.getWorkspaceDB()
 
-  if (config.provider === "Budibase") {
+  if (config.provider === BUDIBASE_AI_PROVIDER_ID) {
     const baseUrl = env.BUDICLOUD_URL.endsWith("/")
       ? env.BUDICLOUD_URL
       : `${env.BUDICLOUD_URL}/`
@@ -77,7 +78,7 @@ export async function create(
 
   const newConfig: CustomAIProviderConfig = {
     _id:
-      config.provider === "Budibase"
+      config.provider === BUDIBASE_AI_PROVIDER_ID
         ? docIds.generateAIConfigID("bbai")
         : docIds.generateAIConfigID(),
     name: config.name,
@@ -251,7 +252,7 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
       return mapProvider
     })
     liteLLMProviders.push({
-      id: "Budibase",
+      id: BUDIBASE_AI_PROVIDER_ID,
       displayName: "Budibase AI",
       externalProvider: "custom_openai",
       credentialFields: [],
