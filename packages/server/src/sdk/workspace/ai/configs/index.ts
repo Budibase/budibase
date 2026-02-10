@@ -1,6 +1,5 @@
 import { context, docIds, env, HTTPError } from "@budibase/backend-core"
 import {
-  AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
   LLMProviderField,
   CustomAIProviderConfig,
@@ -11,13 +10,6 @@ import {
 } from "@budibase/types"
 import * as liteLLM from "./litellm"
 import { licensing } from "@budibase/pro"
-
-const withDefaults = (
-  config: CustomAIProviderConfig
-): CustomAIProviderConfig => ({
-  ...config,
-  configType: config.configType ?? AIConfigType.COMPLETIONS,
-})
 
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
   const db = context.getWorkspaceDB()
@@ -30,7 +22,6 @@ export async function fetch(): Promise<CustomAIProviderConfig[]> {
   return result.rows
     .map(row => row.doc)
     .filter((doc): doc is CustomAIProviderConfig => !!doc)
-    .map(withDefaults)
 }
 
 export async function find(
@@ -38,7 +29,7 @@ export async function find(
 ): Promise<CustomAIProviderConfig | undefined> {
   const db = context.getWorkspaceDB()
   const result = await db.tryGet<CustomAIProviderConfig>(id)
-  return result ? withDefaults(result) : result
+  return result
 }
 
 export async function create(

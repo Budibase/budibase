@@ -12,9 +12,12 @@ export async function createLLM(
   sessionId?: string,
   span?: tracer.Span
 ) {
+  if (!configId) {
+    throw new HTTPError("Config id not found", 422)
+  }
   const aiConfig = await sdk.ai.configs.find(configId)
   if (!aiConfig) {
-    throw new HTTPError("Config not found", 400)
+    throw new HTTPError(`Config id "${configId}" not found`, 422)
   }
 
   if (aiConfig.provider === BUDIBASE_AI_PROVIDER_ID && !env.SELF_HOSTED) {
