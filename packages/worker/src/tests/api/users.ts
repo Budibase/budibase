@@ -46,6 +46,7 @@ export class UserAPI extends TestAPI {
         password: "newpassword1",
         inviteCode: code,
         firstName: "Ted",
+        tenantId: this.config.getTenantId(),
       })
       .expect("Content-Type", /json/)
       .expect(200)
