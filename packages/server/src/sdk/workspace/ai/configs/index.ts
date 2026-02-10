@@ -63,7 +63,7 @@ export async function create(
     config.credentialsFields.api_base = new URL("api/ai", baseUrl).toString()
     const licenseKey = await licensing.keys.getLicenseKey()
     if (!licenseKey) {
-      throw new HTTPError("No license key found", 403)
+      throw new HTTPError("No license key found", 422)
     }
     config.credentialsFields.api_key = licenseKey
   }
