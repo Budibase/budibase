@@ -136,6 +136,8 @@
     return () => clearInterval(interval)
   })
 
+  const PREVIEW_CHAT_APP_ID = "agent-preview"
+
   let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
 
@@ -262,6 +264,15 @@
       resolvedChatAppId = chat.chatAppId
       return chat.chatAppId
     }
+
+    if (isAgentPreviewChat) {
+      resolvedChatAppId = PREVIEW_CHAT_APP_ID
+      if (chat) {
+        chat = { ...chat, chatAppId: PREVIEW_CHAT_APP_ID }
+      }
+      return PREVIEW_CHAT_APP_ID
+    }
+
     try {
       const chatApp = await API.fetchChatApp(workspaceId)
       if (chatApp?._id) {
@@ -327,7 +338,9 @@
 
     resolvedChatAppId = chatAppId
 
-    if (
+    if (isAgentPreviewChat) {
+      resolvedConversationId = chat._id
+    } else if (
       persistConversation &&
       !chat._id &&
       (!chat.messages || chat.messages.length === 0)
