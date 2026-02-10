@@ -18,7 +18,12 @@
   } from "@/stores/builder"
   import { API } from "@/api"
   import { bb } from "@/stores/bb"
-  import { agentsStore, auth, featureFlags } from "@/stores/portal"
+  import {
+    agentsStore,
+    auth,
+    chatAppsStore,
+    featureFlags,
+  } from "@/stores/portal"
   import { buildLiveUrl } from "@/helpers/urls"
   import { Body, Modal, type ModalAPI, notifications } from "@budibase/bbui"
   import {
@@ -32,6 +37,7 @@
     type HomeType,
     PublishResourceState,
     type Agent,
+    type WorkspaceHomeChat,
     type WorkspaceFavourite,
     type WorkspaceResource,
   } from "@budibase/types"
@@ -49,7 +55,7 @@
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
-  type HomeCreate = "app" | "automation" | "agent"
+  type HomeCreate = "app" | "automation" | "agent" | "chat"
 
   $beforeUrlChange
 
@@ -75,6 +81,11 @@
   let selectedAgent: Agent | undefined
   let updateAgentModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
+
+  let selectedChat: WorkspaceHomeChat | undefined
+  let confirmDeleteChatDialog: Pick<ModalAPI, "show" | "hide">
+
+  let chats: WorkspaceHomeChat[] = []
 
   let typeFilter: HomeType = "all"
   let searchTerm = ""
@@ -117,6 +128,9 @@
     if (value === "agent" && $featureFlags.AI_AGENTS) {
       return value
     }
+    if (value === "chat" && $featureFlags.AI_AGENTS) {
+      return value
+    }
     return null
   }
 
@@ -128,6 +142,9 @@
       return value
     }
     if (value === "agent" && $featureFlags.AI_AGENTS) {
+      return value
+    }
+    if (value === "chat" && $featureFlags.AI_AGENTS) {
       return value
     }
     return null
@@ -150,6 +167,8 @@
       createApp()
     } else if (create === "agent") {
       createAgent()
+    } else if (create === "chat") {
+      createChat()
     }
 
     parsed.searchParams.delete("create")
@@ -289,6 +308,10 @@
     agentModal?.show()
   }
 
+  const createChat = () => {
+    goto(url("../chat"))
+  }
+
   const buildLiveWorkspaceAppUrl = (workspaceApp?: UIWorkspaceApp | null) => {
     if (
       !workspaceApp ||
@@ -368,6 +391,64 @@
     } catch (error) {
       console.error(error)
       notifications.error("Error deleting agent")
+    }
+  }
+
+  async function duplicateAgent() {
+    const selectedId = selectedAgent?._id
+    if (!selectedId) {
+      return
+    }
+    try {
+      await agentsStore.duplicateAgent(selectedId)
+      notifications.success("Agent duplicated successfully")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error duplicating agent")
+    }
+  }
+
+  async function loadChats() {
+    try {
+      const { chats: workspaceChats } = await API.workspaceHome.getChats()
+      chats = workspaceChats
+    } catch (error) {
+      console.error(error)
+      chats = []
+    }
+  }
+
+  async function duplicateChat() {
+    if (!selectedChat?._id || !selectedChat.chatAppId) {
+      return
+    }
+    try {
+      await chatAppsStore.duplicateConversation(
+        selectedChat._id,
+        selectedChat.chatAppId
+      )
+      await loadChats()
+      notifications.success("Chat duplicated successfully")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error duplicating chat")
+    }
+  }
+
+  async function deleteChat() {
+    if (!selectedChat?._id || !selectedChat.chatAppId) {
+      return
+    }
+    try {
+      await chatAppsStore.removeConversation(
+        selectedChat._id,
+        selectedChat.chatAppId
+      )
+      await loadChats()
+      notifications.success("Chat deleted successfully")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error deleting chat")
     }
   }
 
@@ -479,11 +560,44 @@
           callback: () => updateAgentModal.show(),
         },
         {
+          icon: "copy",
+          name: "Duplicate",
+          visible: true,
+          callback: duplicateAgent,
+        },
+        {
           icon: "trash",
           name: "Delete",
           visible: true,
           disabled: false,
           callback: () => confirmDeleteAgentDialog.show(),
+        },
+      ]
+    }
+
+    if (row.type === "chat") {
+      if (!$featureFlags.AI_AGENTS) {
+        return []
+      }
+
+      return [
+        {
+          icon: "chat-circle",
+          name: "Open",
+          visible: true,
+          callback: () => openRow(row),
+        },
+        {
+          icon: "copy",
+          name: "Duplicate",
+          visible: true,
+          callback: duplicateChat,
+        },
+        {
+          icon: "trash",
+          name: "Delete",
+          visible: true,
+          callback: () => confirmDeleteChatDialog.show(),
         },
       ]
     }
@@ -503,6 +617,7 @@
     selectedWorkspaceApp = undefined
     selectedAutomation = undefined
     selectedAgent = undefined
+    selectedChat = undefined
 
     highlightedRowId = row._id
 
@@ -516,6 +631,12 @@
         return
       }
       selectedAgent = row.resource
+    } else if (row.type === "chat") {
+      if (!$featureFlags.AI_AGENTS) {
+        highlightedRowId = null
+        return
+      }
+      selectedChat = row.resource
     }
 
     contextMenuStore.open(
@@ -541,6 +662,10 @@
       goto(url(`../agent/${row.id}/config`))
       return
     }
+    if (row.type === "chat") {
+      goto(url("../chat"))
+      return
+    }
   }
 
   const loadMetrics = async () => {
@@ -556,6 +681,7 @@
     apps: $workspaceAppStore.workspaceApps,
     automations: $automationStore.automations,
     agents: $agentsStore.agents,
+    chats,
     agentsEnabled: $featureFlags.AI_AGENTS,
     getFavourite,
   })
@@ -594,6 +720,7 @@
 
     await Promise.all([
       $featureFlags.AI_AGENTS ? agentsStore.fetchAgents() : Promise.resolve(),
+      $featureFlags.AI_AGENTS ? loadChats() : Promise.resolve(),
       loadMetrics(),
     ])
   })
@@ -636,6 +763,7 @@
       on:createAutomation={createAutomation}
       on:createApp={createApp}
       on:createAgent={createAgent}
+      on:createChat={createChat}
     />
 
     <HomeTable
@@ -720,6 +848,19 @@
   >
     Are you sure you wish to delete the agent
     <b>{selectedAgent.name}?</b>
+    This action cannot be undone.
+  </ConfirmDialog>
+{/if}
+
+{#if $featureFlags.AI_AGENTS && selectedChat}
+  <ConfirmDialog
+    bind:this={confirmDeleteChatDialog}
+    okText="Delete Chat"
+    onOk={deleteChat}
+    title="Confirm Deletion"
+  >
+    Are you sure you wish to delete the chat
+    <b>{selectedChat.title || "Untitled Chat"}?</b>
     This action cannot be undone.
   </ConfirmDialog>
 {/if}

@@ -169,9 +169,8 @@
 
           <div class="cell">
             {#if row.type === "app" || row.type === "automation"}
-              <!-- todo: sort out for agents and chat -->
               <PublishStatusBadge status={row.status} />
-            {:else}
+            {:else if row.type === "agent"}
               <Body
                 size="S"
                 color={row.live
@@ -179,6 +178,10 @@
                   : "var(--spectrum-global-color-gray-600)"}
               >
                 {row.live ? "Live" : "Draft"}
+              </Body>
+            {:else}
+              <Body size="S" color="var(--spectrum-global-color-gray-600)">
+                Conversation
               </Body>
             {/if}
           </div>

@@ -24,7 +24,7 @@
 
     if (agentsEnabled) {
       options.push({ label: "Agents", value: "agent" })
-      options.push({ label: "Chat (Alpha)", value: "chat", disabled: true })
+      options.push({ label: "Chats", value: "chat" })
     }
 
     return options
@@ -95,15 +95,12 @@
       </button>
 
       <button
-        class="create-button create-button--disabled"
+        class="create-button"
         type="button"
-        disabled
-        title="Coming soon"
         on:click={() => dispatch("createChat")}
       >
         <Icon name="chat-circle" size="S" color="#8CA171" weight="fill" />
         <Body size="S">Chat</Body>
-        <Tag emphasized>Alpha</Tag>
       </button>
     {/if}
   </div>
@@ -199,11 +196,6 @@
 
   .create-button:hover {
     background: var(--spectrum-global-color-gray-300);
-  }
-
-  .create-button--disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
   }
 
   @media (max-width: 1140px) {
