@@ -9,7 +9,6 @@ import {
   PASSWORD_REPLACEMENT,
   RequiredKeys,
 } from "@budibase/types"
-import environment from "../../../../environment"
 import * as liteLLM from "./litellm"
 import { licensing } from "@budibase/pro"
 
@@ -206,34 +205,6 @@ export async function remove(id: string) {
   await db.remove(existing)
 
   await liteLLM.syncKeyModels()
-}
-
-export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
-  modelName: string
-  modelId: string
-  apiKey: string
-  baseUrl: string
-}> {
-  const aiConfig = await find(configId)
-
-  if (!aiConfig) {
-    throw new HTTPError("Config not found", 400)
-  }
-
-  const { secretKey } = await liteLLM.getKeySettings()
-  if (!secretKey) {
-    throw new HTTPError(
-      "LiteLLM should be configured. Contact support if the issue persists.",
-      500
-    )
-  }
-
-  return {
-    modelName: aiConfig.model,
-    modelId: aiConfig.liteLLMModelId,
-    apiKey: secretKey,
-    baseUrl: environment.LITELLM_URL,
-  }
 }
 
 let liteLLMProviders: LLMProvider[]

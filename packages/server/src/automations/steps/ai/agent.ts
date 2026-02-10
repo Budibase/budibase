@@ -83,26 +83,17 @@ export async function run({
         const { systemPrompt, tools } =
           await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
-        const { modelId, apiKey, baseUrl, modelName } =
-          await sdk.ai.configs.getLiteLLMModelConfigOrThrow(
-            agentConfig.aiconfig
-          )
-
         tracer.llmobs.annotate(agentSpan, {
           metadata: {
-            modelId,
-            modelName,
-            baseUrl,
-            envLiteLLMUrl: env.LITELLM_URL,
             toolCount: Object.keys(tools).length,
           },
         })
 
-        const { llm, providerOptions } = sdk.ai.llm.createLiteLLMOpenAI({
-          apiKey,
-          baseUrl,
+        const { chat, providerOptions } = await sdk.ai.llm.createLiteLLMOpenAI(
+          agentConfig.aiconfig,
           sessionId,
-        })
+          agentSpan
+        )
 
         let outputOption = undefined
         if (
@@ -121,7 +112,7 @@ export async function run({
         const hasTools = Object.keys(tools).length > 0
         const agent = new ToolLoopAgent({
           model: wrapLanguageModel({
-            model: llm.chat(modelId),
+            model: chat,
             middleware: extractReasoningMiddleware({
               tagName: "think",
             }),

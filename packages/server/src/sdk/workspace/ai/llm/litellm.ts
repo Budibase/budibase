@@ -1,19 +1,33 @@
 import { createOpenAI } from "@ai-sdk/openai"
+import { HTTPError } from "@budibase/backend-core"
 import tracer from "dd-trace"
+import sdk from "../../.."
+import environment from "../../../../environment"
+import { getKeySettings } from "../configs/litellm"
 
 type LiteLLMFetch = (
   input: Parameters<typeof fetch>[0],
   init?: Parameters<typeof fetch>[1]
 ) => ReturnType<typeof fetch>
 
-type LiteLLMOpenAIConfig = {
-  apiKey: string
-  baseUrl: string
-  sessionId?: string
-}
+export const createLiteLLMOpenAI = async (
+  configId: string,
+  sessionId?: string,
+  span?: tracer.Span
+) => {
+  const config = await getLiteLLMModelConfigOrThrow(configId)
 
-export const createLiteLLMOpenAI = (config: LiteLLMOpenAIConfig) => {
-  const { apiKey, baseUrl, sessionId } = config
+  const { apiKey, baseUrl, modelId, modelName } = config
+
+  if (span) {
+    tracer.llmobs.annotate(span, {
+      metadata: {
+        modelId,
+        modelName,
+        baseUrl,
+      },
+    })
+  }
 
   const clientConfig: {
     apiKey: string
@@ -27,8 +41,10 @@ export const createLiteLLMOpenAI = (config: LiteLLMOpenAIConfig) => {
     fetch: createLiteLLMFetch(sessionId),
   }
 
+  const llm = createOpenAI(clientConfig)
   return {
-    llm: createOpenAI(clientConfig),
+    chat: llm.chat(modelId),
+    embedding: llm.embedding(modelId),
     providerOptions: getLiteLLMProviderOptions,
   }
 }
@@ -90,5 +106,33 @@ const getLiteLLMProviderOptions = (hasTools: boolean) => {
     openai: {
       parallelToolCalls: true,
     },
+  }
+}
+
+async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
+  modelName: string
+  modelId: string
+  apiKey: string
+  baseUrl: string
+}> {
+  const aiConfig = await sdk.ai.configs.find(configId)
+
+  if (!aiConfig) {
+    throw new HTTPError("Config not found", 400)
+  }
+
+  const { secretKey } = await getKeySettings()
+  if (!secretKey) {
+    throw new HTTPError(
+      "LiteLLM should be configured. Contact support if the issue persists.",
+      500
+    )
+  }
+
+  return {
+    modelName: aiConfig.model,
+    modelId: aiConfig.liteLLMModelId,
+    apiKey: secretKey,
+    baseUrl: environment.LITELLM_URL,
   }
 }

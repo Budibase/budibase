@@ -231,16 +231,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
   try {
-    const { modelId, apiKey, baseUrl } =
-      await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
-
     const sessionId = chat._id || v4()
-    const { llm, providerOptions } = sdk.ai.llm.createLiteLLMOpenAI({
-      apiKey,
-      baseUrl,
-      sessionId,
-    })
-    const model = llm.chat(modelId)
+    const { chat: chatLLM, providerOptions } =
+      await sdk.ai.llm.createLiteLLMOpenAI(agent.aiconfig, sessionId)
 
     const modelMessages = await convertToModelMessages(chat.messages)
     const messagesWithContext: ModelMessage[] =
@@ -259,7 +252,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const hasTools = Object.keys(tools).length > 0
     const result = streamText({
       model: wrapLanguageModel({
-        model,
+        model: chatLLM,
         middleware: extractReasoningMiddleware({
           tagName: "think",
         }),
