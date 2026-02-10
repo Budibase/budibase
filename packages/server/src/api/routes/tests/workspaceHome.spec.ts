@@ -149,10 +149,21 @@ describe("/workspace/home/metrics", () => {
         updatedAt: now,
       }
 
+      const malformedConversation = {
+        _id: docIds.generateChatConversationID(),
+        chatAppId: chatApp._id!,
+        agentId: "agent-1",
+        title: "Malformed chat",
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      }
+
       await db.put(chatApp)
       await db.put(visibleConversation)
       await db.put(hiddenConversation)
       await db.put(sharedConversation)
+      await db.put(malformedConversation)
     })
 
     const res = await request
@@ -164,6 +175,9 @@ describe("/workspace/home/metrics", () => {
     expect(res.body.chats.map((chat: { title: string }) => chat.title)).toEqual(
       expect.arrayContaining(["Visible chat", "Shared chat"])
     )
+    expect(
+      res.body.chats.map((chat: { title: string }) => chat.title)
+    ).not.toEqual(expect.arrayContaining(["Malformed chat"]))
     expect(
       res.body.chats.every(
         (chat: { createdAt?: unknown; updatedAt?: unknown }) =>

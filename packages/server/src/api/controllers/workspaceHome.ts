@@ -53,9 +53,7 @@ export async function chats(ctx: UserCtx<void, GetWorkspaceHomeChatsResponse>) {
     .map(row => row.doc)
     .filter(
       (chat): chat is ChatConversation =>
-        !!chat &&
-        chat.chatAppId === chatApp._id &&
-        (!chat.userId || chat.userId === userId)
+        !!chat && chat.chatAppId === chatApp._id && chat.userId === userId
     )
     .sort((a, b) => {
       const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime()
