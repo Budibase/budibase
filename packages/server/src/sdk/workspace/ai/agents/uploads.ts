@@ -1,8 +1,8 @@
 import { context, docIds, objectStore } from "@budibase/backend-core"
-import { AgentFile } from "@budibase/types"
+import { AgentFile, AgentFileStatus } from "@budibase/types"
 import { ObjectStoreBuckets } from "../../../../constants"
 import { enqueueAgentFileIngestion } from "../rag/queue"
-import { createAgentFile } from "./files"
+import { createAgentFile, updateAgentFile } from "./files"
 
 interface UploadAgentFileInput {
   agentId: string
@@ -38,12 +38,20 @@ export const uploadAgentFile = async (
     uploadedBy: input.uploadedBy,
   })
 
-  await enqueueAgentFileIngestion({
-    workspaceId,
-    agentId: input.agentId,
-    fileId: agentFile._id!,
-    objectStoreKey,
-  })
+  try {
+    await enqueueAgentFileIngestion({
+      workspaceId,
+      agentId: input.agentId,
+      fileId: agentFile._id!,
+      objectStoreKey,
+    })
 
-  return agentFile
+    return agentFile
+  } catch (error: any) {
+    agentFile.status = AgentFileStatus.FAILED
+    agentFile.errorMessage = error?.message || "Failed to process uploaded file"
+    agentFile.chunkCount = 0
+    await updateAgentFile(agentFile)
+    throw error
+  }
 }

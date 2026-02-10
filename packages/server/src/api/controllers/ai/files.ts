@@ -1,7 +1,6 @@
 import { readFile, unlink } from "node:fs/promises"
 import { HTTPError } from "@budibase/backend-core"
 import {
-  AgentFileStatus,
   AgentFileUploadResponse,
   FetchAgentFilesResponse,
   UserCtx,
@@ -81,19 +80,6 @@ export async function uploadAgentFile(
     ctx.status = 201
   } catch (error: any) {
     console.error("Failed to upload agent file", error)
-    try {
-      const files = await sdk.ai.agents.listAgentFiles(agentId)
-      const latest = files[0]
-      if (latest) {
-        latest.status = AgentFileStatus.FAILED
-        latest.errorMessage =
-          error?.message || "Failed to process uploaded file"
-        latest.chunkCount = 0
-        await sdk.ai.agents.updateAgentFile(latest)
-      }
-    } catch (updateError) {
-      console.error("Failed to update agent file failure state", updateError)
-    }
     throw new HTTPError(
       error?.message || "Failed to process uploaded file",
       400
