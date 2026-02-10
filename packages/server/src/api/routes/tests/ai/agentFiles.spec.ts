@@ -65,7 +65,6 @@ describe("agent files", () => {
         api_key: "test",
         api_base: "https://example.com",
       },
-      liteLLMModelId: "test",
       configType: AIConfigType.EMBEDDINGS,
     })
     const vectorDb = await config.api.vectorDb.create({

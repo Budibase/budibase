@@ -1,6 +1,7 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, env, HTTPError } from "@budibase/backend-core"
 import {
   AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
   LLMProviderField,
   CustomAIProviderConfig,
   DocumentType,
@@ -10,6 +11,7 @@ import {
 } from "@budibase/types"
 import environment from "../../../../environment"
 import * as liteLLM from "./litellm"
+import { licensing } from "@budibase/pro"
 
 const withDefaults = (
   config: CustomAIProviderConfig
@@ -41,9 +43,30 @@ export async function find(
 }
 
 export async function create(
-  config: CustomAIProviderConfig
+  config: Pick<
+    CustomAIProviderConfig,
+    | "model"
+    | "provider"
+    | "credentialsFields"
+    | "configType"
+    | "reasoningEffort"
+    | "webSearchConfig"
+    | "name"
+  >
 ): Promise<CustomAIProviderConfig> {
   const db = context.getWorkspaceDB()
+
+  if (config.provider === BUDIBASE_AI_PROVIDER_ID) {
+    const baseUrl = env.BUDICLOUD_URL.endsWith("/")
+      ? env.BUDICLOUD_URL
+      : `${env.BUDICLOUD_URL}/`
+    config.credentialsFields.api_base = new URL("api/ai", baseUrl).toString()
+    const licenseKey = await licensing.keys.getLicenseKey()
+    if (!licenseKey) {
+      throw new HTTPError("No license key found", 403)
+    }
+    config.credentialsFields.api_key = licenseKey
+  }
 
   const modelId = await liteLLM.addModel({
     provider: config.provider,
@@ -54,7 +77,10 @@ export async function create(
   })
 
   const newConfig: CustomAIProviderConfig = {
-    _id: docIds.generateAIConfigID(),
+    _id:
+      config.provider === BUDIBASE_AI_PROVIDER_ID
+        ? docIds.generateAIConfigID("bbai")
+        : docIds.generateAIConfigID(),
     name: config.name,
     provider: config.provider,
     credentialsFields: config.credentialsFields,
@@ -74,7 +100,18 @@ export async function create(
 }
 
 export async function update(
-  config: CustomAIProviderConfig
+  config: Pick<
+    CustomAIProviderConfig,
+    | "_id"
+    | "_rev"
+    | "name"
+    | "provider"
+    | "credentialsFields"
+    | "model"
+    | "configType"
+    | "reasoningEffort"
+    | "webSearchConfig"
+  >
 ): Promise<CustomAIProviderConfig> {
   const id = config._id
   if (!id) {
@@ -213,6 +250,12 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
         }),
       }
       return mapProvider
+    })
+    liteLLMProviders.push({
+      id: BUDIBASE_AI_PROVIDER_ID,
+      displayName: "Budibase AI",
+      externalProvider: "custom_openai",
+      credentialFields: [],
     })
   }
   return liteLLMProviders

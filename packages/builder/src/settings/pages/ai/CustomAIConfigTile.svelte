@@ -1,53 +1,102 @@
 <script lang="ts">
-  import { Body, ActionButton } from "@budibase/bbui"
-  import type { CustomAIProviderConfig } from "@budibase/types"
+  import { ActionButton } from "@budibase/bbui"
+  import AnthropicLogo from "assets/llm-icons/anthropic.svg"
+  import BudibaseLogo from "assets/llm-icons/bbai.svg"
+  import GoogleLogo from "assets/llm-icons/google.svg"
+  import GroqLogo from "assets/llm-icons/groq.svg"
+  import MistralLogo from "assets/llm-icons/mistral_ai.svg"
+  import OpenrouterLogo from "assets/llm-icons/openrouter.svg"
+  import OpenAiLogo from "assets/llm-icons/openai.svg"
 
-  export let config: CustomAIProviderConfig
+  export let provider: string
+  export let displayName: string
+  export let description: string
+  export let actionType: "create" | "edit"
   export let editHandler: (() => void) | null
+
+  function getProviderLogo(providerName: string) {
+    const providerToLogo = {
+      Anthropic: AnthropicLogo,
+      Budibase: BudibaseLogo,
+      Google_AI_Studio: GoogleLogo,
+      Groq: GroqLogo,
+      MistralAI: MistralLogo,
+      OpenAI: OpenAiLogo,
+      Openrouter: OpenrouterLogo,
+    }
+
+    return providerToLogo[providerName as keyof typeof providerToLogo] || null
+  }
 </script>
 
-<div class="option">
-  <div class="details">
-    <div class="header">
-      <Body size="S" weight={"600"}>{config.name}</Body>
-    </div>
+<div class="config-row">
+  <div class="row-left">
+    <span class="model-icon">
+      <img src={getProviderLogo(provider)} alt="" />
+    </span>
+    <span>{displayName}</span>
   </div>
-  <div>
-    <ActionButton on:click={() => editHandler && editHandler()}>
-      Edit
-    </ActionButton>
+  <div class="model-description">{description}</div>
+  <div class="model-actions">
+    <ActionButton size="S" on:click={() => editHandler?.()}
+      >{actionType === "edit" ? "Edit" : "Connect"}</ActionButton
+    >
   </div>
 </div>
 
 <style>
-  .option {
-    background-color: var(--background-alt);
-    border: 1px solid var(--grey-2);
-    padding: 16px;
-    border-radius: 8px;
-    cursor: pointer;
+  .config-row {
+    display: grid;
+    grid-template-columns: 240px 1fr 100px;
+    align-items: center;
+    border: 1px solid var(--grey-2, #2c2c2c);
+    border-top: none;
+    background: var(--grey-75, #1a1a1a);
+    overflow: hidden;
+  }
+
+  .config-row:first-child {
+    border-top: 1px solid var(--grey-2, #2c2c2c);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+  }
+
+  .config-row:last-child {
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+  }
+
+  .row-left {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
+    padding: 8px 12px;
+    height: 100%;
   }
 
-  .details {
+  .model-description {
+    color: var(--grey-7, #a2a2a2);
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .model-actions {
     display: flex;
+    justify-content: flex-end;
+    padding: 8px 12px;
+  }
+
+  .model-icon {
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
   }
 
-  .option :global(label) {
-    cursor: pointer;
-  }
-
-  .option:hover {
-    background-color: var(--grey-2);
-  }
-
-  .header {
-    align-items: center;
-    color: var(--spectrum-global-color-gray-800);
+  .model-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
 </style>

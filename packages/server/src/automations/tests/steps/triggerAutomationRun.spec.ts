@@ -1,7 +1,11 @@
 import * as automation from "../../index"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
-import { AutomationStatus } from "@budibase/types"
+import {
+  AutomationStatus,
+  FilterCondition,
+  LoopStepType,
+} from "@budibase/types"
 
 describe("Test triggering an automation from another automation", () => {
   const config = new TestConfiguration()
@@ -67,6 +71,113 @@ describe("Test triggering an automation from another automation", () => {
 
     expect(result.steps[0].outputs.success).toBe(false)
     expect(result.steps[0].outputs.status).toBe(AutomationStatus.TIMED_OUT)
+    expect(result.status).toBe(AutomationStatus.ERROR)
+  })
+
+  it("should stop the parent when the child automation stops", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction()
+      .filter({
+        field: "1",
+        condition: FilterCondition.EQUAL,
+        value: "2",
+      })
+      .serverLog({ text: "This should not execute" })
+      .save()
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .triggerAutomationRun({
+        automation: {
+          automationId: automation._id!,
+        },
+      })
+      .serverLog({ text: "This should not execute either" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[0].outputs.status).toBe(AutomationStatus.STOPPED)
+    expect(result.steps[1]).toBeUndefined()
+    expect(result.status).toBe(AutomationStatus.STOPPED)
+  })
+
+  it("should stop the parent when the child automation errors", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction()
+      .executeScript({
+        code: `throw new Error("Child failure")`,
+      })
+      .save()
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .triggerAutomationRun({
+        automation: {
+          automationId: automation._id!,
+        },
+      })
+      .serverLog({ text: "This should not execute either" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toBe(false)
+    expect(result.steps[0].outputs.status).toBe(AutomationStatus.ERROR)
+    expect(result.steps[1]).toBeUndefined()
+    expect(result.status).toBe(AutomationStatus.ERROR)
+  })
+
+  it("should stop the parent when the child automation stops inside a loop", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction()
+      .filter({
+        field: "1",
+        condition: FilterCondition.EQUAL,
+        value: "2",
+      })
+      .serverLog({ text: "This should not execute" })
+      .save()
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: [1],
+      })
+      .triggerAutomationRun({
+        automation: {
+          automationId: automation._id!,
+        },
+      })
+      .serverLog({ text: "This should not execute either" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.status).toBe(AutomationStatus.STOPPED)
+    expect(result.status).toBe(AutomationStatus.STOPPED)
+  })
+
+  it("should stop at the loop step when a child automation fails", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction()
+      .executeScript({
+        code: `throw new Error("Child failure")`,
+      })
+      .save()
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .loop({
+        option: LoopStepType.ARRAY,
+        binding: [1],
+      })
+      .triggerAutomationRun({
+        automation: {
+          automationId: automation._id!,
+        },
+      })
+      .serverLog({ text: "This should not execute either" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toBe(false)
+    expect(result.steps[1]).toBeUndefined()
     expect(result.status).toBe(AutomationStatus.ERROR)
   })
 
