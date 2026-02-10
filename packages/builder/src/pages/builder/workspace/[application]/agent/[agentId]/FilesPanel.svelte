@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { agentsStore, aiConfigsStore } from "@/stores/portal"
+  import { onDestroy } from "svelte"
   import {
     AbsTooltip,
     ActionButton,
@@ -7,24 +7,50 @@
     Heading,
     notifications,
   } from "@budibase/bbui"
+  import { helpers } from "@budibase/shared-core"
   import {
     AgentFileStatus,
     AIConfigType,
     type AgentFile,
   } from "@budibase/types"
-  import { helpers } from "@budibase/shared-core"
+  import { agentsStore, aiConfigsStore } from "@/stores/portal"
+  import { createPolling } from "@/utils/polling"
 
   export let currentAgentId: string | undefined
 
+  const FILE_STATUS_POLL_MS = 500
   let uploadingFile = false
   let uploadError = ""
   let fileInput: HTMLInputElement | undefined
   let currentFiles: AgentFile[] = []
+  let shouldPoll = false
 
   $: currentFiles = $agentsStore.files || []
   $: hasEmbeddingConfig = ($aiConfigsStore.customConfigs || []).some(
     config => config.configType === AIConfigType.EMBEDDINGS
   )
+  $: shouldPoll =
+    !!currentAgentId &&
+    currentFiles.some(file => file.status === AgentFileStatus.PROCESSING)
+
+  const poller = createPolling({
+    intervalMs: FILE_STATUS_POLL_MS,
+    shouldPoll: () =>
+      !!currentAgentId &&
+      currentFiles.some(file => file.status === AgentFileStatus.PROCESSING),
+    poll: async () => {
+      if (!currentAgentId) {
+        return
+      }
+      await agentsStore.fetchFiles(currentAgentId)
+    },
+  })
+
+  $: if (shouldPoll) {
+    poller.start()
+  } else {
+    poller.stop()
+  }
 
   const formatTimestamp = (value?: string | number) => {
     if (!value) {
@@ -99,6 +125,10 @@
       notifications.error("Failed to remove file")
     }
   }
+
+  onDestroy(() => {
+    poller.stop()
+  })
 </script>
 
 <div class="files-header-row">
