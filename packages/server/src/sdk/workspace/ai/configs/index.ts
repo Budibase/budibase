@@ -56,16 +56,26 @@ export async function create(
 ): Promise<CustomAIProviderConfig> {
   const db = context.getWorkspaceDB()
 
-  if (config.provider === BUDIBASE_AI_PROVIDER_ID) {
+  const isBBAI = config.provider === BUDIBASE_AI_PROVIDER_ID
+  const isSelfhost = env.SELF_HOSTED
+
+  if (isBBAI) {
     const baseUrl = env.BUDICLOUD_URL.endsWith("/")
       ? env.BUDICLOUD_URL
       : `${env.BUDICLOUD_URL}/`
     config.credentialsFields.api_base = new URL("api/ai", baseUrl).toString()
-    const licenseKey = await licensing.keys.getLicenseKey()
-    if (!licenseKey) {
-      throw new HTTPError("No license key found", 422)
+    if (isSelfhost) {
+      const licenseKey = await licensing.keys.getLicenseKey()
+      if (!licenseKey) {
+        throw new HTTPError("No license key found", 422)
+      }
+      config.credentialsFields.api_key = licenseKey
+    } else {
+      if (!env.BBAI_SECRET) {
+        throw new Error("BBAI_SECRET is not set")
+      }
+      config.credentialsFields.api_key = env.BBAI_SECRET
     }
-    config.credentialsFields.api_key = licenseKey
   }
 
   const modelId = await liteLLM.addModel({
