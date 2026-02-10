@@ -27,21 +27,21 @@ export const BUDIBASE_AI_MODELS: BudibaseAIModel[] = [
     label: "GPT 5 Nano",
   },
   {
-    id: "mistral/mistral-small-latest",
+    id: "budibase/mistral-small-latest",
     provider: "mistral",
-    model: "mistral/mistral-small-latest",
+    model: "mistral-small-latest",
     label: "Mistral small",
   },
   {
-    id: "mistral/mistral-medium-latest",
+    id: "budibase/mistral-medium-latest",
     provider: "mistral",
-    model: "mistral/mistral-medium-latest",
+    model: "mistral-medium-latest",
     label: "Mistral medium",
   },
   {
-    id: "mistral/mistral-large-latest",
+    id: "budibase/mistral-large-latest",
     provider: "mistral",
-    model: "mistral/mistral-large-latest",
+    model: "mistral-large-latest",
     label: "Mistral large",
   },
 ]
