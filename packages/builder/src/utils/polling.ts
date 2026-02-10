@@ -58,7 +58,7 @@ export const createPolling = ({
     }
     stopped = false
     if (immediate && shouldPoll()) {
-      void run()
+      run()
     } else {
       schedule()
     }
