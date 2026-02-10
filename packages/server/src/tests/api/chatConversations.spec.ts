@@ -22,7 +22,7 @@ import {
   truncateTitle,
 } from "../../api/controllers/ai/chatConversations"
 import sdk from "../../sdk"
-import { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
+import type { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")

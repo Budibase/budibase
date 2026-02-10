@@ -4,7 +4,7 @@ import { HTTPError, env } from "@budibase/backend-core"
 import { BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
 import { createLiteLLMOpenAI } from "./litellm"
 import { createBBAIClient } from "./bbai"
-import { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
+import type { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
 
 export * as bbai from "./bbai"
 
