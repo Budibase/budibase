@@ -14,6 +14,20 @@ import { context } from "@budibase/backend-core"
 import environment from "../../../../environment"
 import { licensing } from "@budibase/pro"
 
+jest.mock("@budibase/pro", () => {
+  const actual = jest.requireActual("@budibase/pro")
+  return {
+    ...actual,
+    licensing: {
+      ...actual.licensing,
+      keys: {
+        ...actual.licensing.keys,
+        getLicenseKey: jest.fn(),
+      },
+    },
+  }
+})
+
 const mockLiteLLMProviders = () =>
   nock(environment.LITELLM_URL)
     .persist()
@@ -107,43 +121,41 @@ describe("BudibaseAI", () => {
     })
 
     it("sanitizes Budibase AI license key in API responses", async () => {
-      const licenseKeySpy = jest
-        .spyOn(licensing.keys, "getLicenseKey")
-        .mockResolvedValue("license-key-1")
+      const getLicenseKeyMock = licensing.keys
+        .getLicenseKey as jest.MockedFunction<
+        typeof licensing.keys.getLicenseKey
+      >
+      getLicenseKeyMock.mockResolvedValue("license-key-1")
 
-      try {
-        const liteLLMScope = nock(environment.LITELLM_URL)
-          .post("/key/generate")
-          .reply(200, { token_id: "key-bb-1", key: "secret-bb-1" })
-          .post("/health/test_connection")
-          .reply(200, { status: "success" })
-          .post("/model/new")
-          .reply(200, { model_id: "model-bb-1" })
-          .post("/key/update")
-          .reply(200, { status: "success" })
+      const liteLLMScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-bb-1", key: "secret-bb-1" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-bb-1" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
 
-        const created = await config.api.ai.createConfig({
-          name: "Budibase AI Config",
-          provider: BUDIBASE_AI_PROVIDER_ID,
-          model: "gpt-4o-mini",
-          credentialsFields: {},
-          configType: AIConfigType.COMPLETIONS,
-        })
+      const created = await config.api.ai.createConfig({
+        name: "Budibase AI Config",
+        provider: BUDIBASE_AI_PROVIDER_ID,
+        model: "gpt-4o-mini",
+        credentialsFields: {},
+        configType: AIConfigType.COMPLETIONS,
+      })
 
-        expect(liteLLMScope.isDone()).toBe(true)
-        expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
-        expect(
-          (await getPersistedConfigAI(created._id))?.credentialsFields.api_key
-        ).toBe("license-key-1")
+      expect(liteLLMScope.isDone()).toBe(true)
+      expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
+      expect(
+        (await getPersistedConfigAI(created._id))?.credentialsFields.api_key
+      ).toBe("license-key-1")
 
-        const configsResponse = await config.api.ai.fetchConfigs()
-        expect(configsResponse).toHaveLength(1)
-        expect(configsResponse[0].credentialsFields.api_key).toBe(
-          PASSWORD_REPLACEMENT
-        )
-      } finally {
-        licenseKeySpy.mockRestore()
-      }
+      const configsResponse = await config.api.ai.fetchConfigs()
+      expect(configsResponse).toHaveLength(1)
+      expect(configsResponse[0].credentialsFields.api_key).toBe(
+        PASSWORD_REPLACEMENT
+      )
     })
 
     it("updates a custom config while preserving the stored API key", async () => {
