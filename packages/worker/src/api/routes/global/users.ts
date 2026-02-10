@@ -51,6 +51,7 @@ function buildInviteAcceptValidation() {
     password: Joi.string().optional(),
     firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
+    tenantId: Joi.string().optional(),
   }).required().unknown(true))
 }
 
