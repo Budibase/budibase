@@ -1,5 +1,4 @@
 import { context, docIds, roles } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
 import { DocumentType } from "@budibase/types"
 import type {
   Agent,
@@ -23,6 +22,7 @@ import {
   truncateTitle,
 } from "../../api/controllers/ai/chatConversations"
 import sdk from "../../sdk"
+import { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -31,7 +31,6 @@ jest.mock("@budibase/pro", () => {
     ai: {
       ...actual.ai,
       agentSystemPrompt: jest.fn(() => "system"),
-      createLiteLLMOpenAI: jest.fn(),
     },
   }
 })
@@ -47,14 +46,6 @@ jest.mock("ai", () => {
   }
 })
 
-jest.mock("../../sdk/workspace/ai/configs", () => {
-  const actual = jest.requireActual("../../sdk/workspace/ai/configs")
-  return {
-    ...actual,
-    getLiteLLMModelConfigOrThrow: jest.fn(),
-  }
-})
-
 jest.mock("../../sdk/workspace/ai/agents", () => {
   const actual = jest.requireActual("../../sdk/workspace/ai/agents")
   return {
@@ -62,6 +53,14 @@ jest.mock("../../sdk/workspace/ai/agents", () => {
     getOrThrow: jest.fn(),
     listAgentFiles: jest.fn(),
     buildPromptAndTools: jest.fn(),
+  }
+})
+
+jest.mock("../../sdk/workspace/ai/llm", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/llm")
+  return {
+    ...actual,
+    createLLM: jest.fn(),
   }
 })
 
@@ -316,16 +315,12 @@ describe("chat conversation transient behavior", () => {
   })
 
   const setupMocks = () => {
-    type ChatModel = ReturnType<
-      ReturnType<typeof ai.createLiteLLMOpenAI>["chat"]
-    >
-
     const mockAgent: Agent = {
       _id: agentId,
       name: "Mock Agent",
       aiconfig: "config-1",
     }
-    const mockModel = {} as ChatModel
+    const mockModel = {}
     const mockMiddleware = {} as unknown as ReturnType<
       typeof extractReasoningMiddleware
     >
@@ -347,25 +342,12 @@ describe("chat conversation transient behavior", () => {
       >
     ).mockResolvedValue({ systemPrompt: "system", tools })
     ;(
-      sdk.ai.configs.getLiteLLMModelConfigOrThrow as jest.MockedFunction<
-        typeof sdk.ai.configs.getLiteLLMModelConfigOrThrow
-      >
+      sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
     ).mockResolvedValue({
-      modelName: "model-1",
-      modelId: "model-1",
-      apiKey: "api-key",
-      baseUrl: "http://localhost",
+      chat: mockModel as LanguageModelV3,
+      embedding: {} as EmbeddingModelV3,
+      providerOptions: jest.fn(),
     })
-
-    const openAiMock = {
-      chat: () => mockModel,
-    } as unknown as ReturnType<typeof ai.createLiteLLMOpenAI>
-
-    ;(
-      ai.createLiteLLMOpenAI as jest.MockedFunction<
-        typeof ai.createLiteLLMOpenAI
-      >
-    ).mockReturnValue(openAiMock)
     ;(
       convertToModelMessages as jest.MockedFunction<
         typeof convertToModelMessages
