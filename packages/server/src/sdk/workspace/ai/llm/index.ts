@@ -3,7 +3,9 @@ import sdk from "../../.."
 import { HTTPError, env } from "@budibase/backend-core"
 import { BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
 import { createLiteLLMOpenAI } from "./litellm"
-export * from "./litellm"
+import { createBBAIClient } from "./bbai"
+
+export * as bbai from "./bbai"
 
 export async function createLLM(
   configId: string,
@@ -16,8 +18,7 @@ export async function createLLM(
   }
 
   if (aiConfig.provider === BUDIBASE_AI_PROVIDER_ID && !env.SELF_HOSTED) {
-    // TODO
-    throw "No implemented"
+    return createBBAIClient(aiConfig.model)
   }
 
   return createLiteLLMOpenAI(aiConfig, sessionId, span)
