@@ -66,6 +66,7 @@ export interface AgentFile extends Document {
   filename: string
   mimetype?: string
   size?: number
+  objectStoreKey: string
   ragSourceId: string
   status: AgentFileStatus
   chunkCount: number
