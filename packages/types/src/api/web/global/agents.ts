@@ -29,12 +29,15 @@ export type CreateAgentRequest = Optional<
   "aiconfig"
 >
 export type CreateAgentResponse = Agent
+export type DuplicateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
   Agent,
   "createdAt" | "updatedAt" | "_deleted" | "createdBy"
 >
 export type UpdateAgentResponse = Agent
+
+export type DuplicateChatConversationResponse = ChatConversation
 
 export interface FetchAgentFilesResponse {
   files: AgentFile[]

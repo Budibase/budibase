@@ -2,6 +2,7 @@ import {
   AgentFileUploadResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  DuplicateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
   ToolMetadata,
@@ -16,6 +17,7 @@ export interface AgentEndpoints {
   fetchAgents: () => Promise<FetchAgentsResponse>
   createAgent: (agent: CreateAgentRequest) => Promise<CreateAgentResponse>
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
+  duplicateAgent: (agentId: string) => Promise<DuplicateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
   fetchAgentFiles: (agentId: string) => Promise<FetchAgentFilesResponse>
   uploadAgentFile: (
@@ -54,6 +56,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     return await API.put({
       url: "/api/agent",
       body: agent,
+    })
+  },
+
+  duplicateAgent: async (agentId: string) => {
+    return await API.post({
+      url: `/api/agent/${agentId}/duplicate`,
     })
   },
 

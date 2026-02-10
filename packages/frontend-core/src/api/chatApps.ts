@@ -8,6 +8,7 @@ import {
   FetchAgentHistoryResponse,
   UpdateChatAppRequest,
   AgentMessageMetadata,
+  DuplicateChatConversationResponse,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
@@ -35,6 +36,10 @@ export interface ChatAppEndpoints {
     workspaceId?: string
   ) => Promise<ChatConversation>
   updateChatApp: (chatApp: UpdateChatAppRequest) => Promise<ChatApp>
+  duplicateChatConversation: (
+    chatAppId: string,
+    chatConversationId: string
+  ) => Promise<DuplicateChatConversationResponse>
 }
 
 const throwOnErrorChunk = () =>
@@ -187,6 +192,23 @@ export const buildChatAppEndpoints = (
     return await API.put({
       url: `/api/chatapps/${chatApp._id}`,
       body: chatApp as any,
+    })
+  },
+
+  duplicateChatConversation: async (
+    chatAppId: string,
+    chatConversationId: string
+  ) => {
+    if (!chatAppId) {
+      throw new Error("chatAppId is required to duplicate a chat conversation")
+    }
+    if (!chatConversationId) {
+      throw new Error(
+        "chatConversationId is required to duplicate a chat conversation"
+      )
+    }
+    return await API.post({
+      url: `/api/chatapps/${chatAppId}/conversations/${chatConversationId}/duplicate`,
     })
   },
 })
