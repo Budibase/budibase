@@ -96,7 +96,7 @@
     bannerTextColor,
     bannerTextSize
   )
-  $: showBanner = !!bannerText?.trim?.()
+  $: showBanner = !!bannerText?.trim?.() && typeClass !== "none"
   $: autoCloseSidePanel =
     !$builderStore.inBuilder &&
     $sidePanelStore.open &&
