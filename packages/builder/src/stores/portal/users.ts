@@ -88,18 +88,20 @@ class UserStore extends BudiStore<UserState> {
     inviteCode: string,
     password: string,
     firstName: string,
-    lastName?: string
+    lastName?: string,
+    tenantId?: string
   ) {
     return API.acceptInvite({
       inviteCode,
       password,
       firstName,
       lastName: !lastName?.trim() ? undefined : lastName,
+      tenantId,
     })
   }
 
-  async fetchInvite(inviteCode: string) {
-    return API.getUserInvite(inviteCode)
+  async fetchInvite(inviteCode: string, tenantId?: string) {
+    return API.getUserInvite(inviteCode, tenantId)
   }
 
   async getInvites() {
