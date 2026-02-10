@@ -20,7 +20,7 @@
           {resolvedDefaultAgent.name}
         </Body>
       </div>
-      <div class="settings-agent-actions">
+      <div class="settings-agent-actions settings-agent-actions--default">
         <button
           class="settings-gear"
           type="button"
@@ -76,6 +76,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-l);
+  }
+
+  .settings-group:last-child {
+    margin-bottom: 0;
   }
 
   .settings-agent {
@@ -95,6 +100,10 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
+  }
+
+  .settings-agent-actions--default {
+    padding: 4px 0;
   }
 
   .settings-gear {

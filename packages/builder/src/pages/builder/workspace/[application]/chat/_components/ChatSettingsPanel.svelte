@@ -41,7 +41,7 @@
     const details = namedAgents.find(agent => agent._id === agentConfig.agentId)
     return {
       agentId: agentConfig.agentId,
-      name: details?.name!,
+      name: details?.name ?? "Unknown agent",
       isDefault: agentConfig.isDefault,
     }
   })
@@ -68,55 +68,59 @@
   }
 </script>
 
-<Panel customWidth={260} borderRight noHeaderBorder>
-  <div class="settings-container">
-    <div class="settings-header">
-      <Body size="S" color="var(--spectrum-global-color-gray-800)"
-        >Settings</Body
-      >
-    </div>
+<div class="settings-panel">
+  <Panel customWidth={260} noHeaderBorder>
+    <div class="settings-container">
+      <div class="settings-header">
+        <Body size="S" color="var(--spectrum-global-color-gray-800)"
+          >Settings</Body
+        >
+      </div>
 
-    <div class="settings-section">
-      <Body size="S" color="var(--spectrum-global-color-gray-700)">Agents</Body>
-      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-        Use the button below to add agents. After adding them, they’ll appear in
-        the chat side panel. The New chat button opens a new conversation with
-        the default agent.
-      </Body>
+      <div class="settings-section">
+        <Body size="S" color="var(--spectrum-global-color-gray-700)"
+          >Agents</Body
+        >
+        <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+          Use the button below to add agents. After adding them, they’ll appear
+          in the chat side panel. The New chat button opens a new conversation
+          with the default agent.
+        </Body>
 
-      <div class="settings-options">
-        <ActionMenu align="left" roundedPopover>
-          <div slot="control">
-            <Button secondary size="M" icon="plus">Add agent</Button>
-          </div>
-          {#if liveAgents.length}
-            {#each liveAgents as agent (agent._id)}
-              <MenuItem
-                icon="robot"
-                disabled={isAgentEnabled(agent._id!)}
-                on:click={() => handleAddAgent(agent._id!)}
-              >
-                {agent.name || "Unnamed agent"}
-              </MenuItem>
-            {/each}
-          {:else}
-            <MenuItem disabled>No live agents</MenuItem>
-          {/if}
-        </ActionMenu>
+        <div class="settings-options">
+          <ActionMenu align="left" roundedPopover>
+            <div slot="control">
+              <Button secondary size="M" icon="plus">Add agent</Button>
+            </div>
+            {#if liveAgents.length}
+              {#each liveAgents as agent (agent._id)}
+                <MenuItem
+                  icon="robot"
+                  disabled={isAgentEnabled(agent._id!)}
+                  on:click={() => handleAddAgent(agent._id!)}
+                >
+                  {agent.name || "Unnamed agent"}
+                </MenuItem>
+              {/each}
+            {:else}
+              <MenuItem disabled>No live agents</MenuItem>
+            {/if}
+          </ActionMenu>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <AgentList
+          {resolvedDefaultAgent}
+          {otherAgents}
+          {isAgentAvailable}
+          onToggleEnabled={handleAvailabilityToggle}
+          onOpenSettings={openAgentSettings}
+        />
       </div>
     </div>
-
-    <div class="settings-section">
-      <AgentList
-        {resolvedDefaultAgent}
-        {otherAgents}
-        {isAgentAvailable}
-        onToggleEnabled={handleAvailabilityToggle}
-        onOpenSettings={openAgentSettings}
-      />
-    </div>
-  </div>
-</Panel>
+  </Panel>
+</div>
 
 <AgentSettingsModal
   open={isModalOpen}
@@ -133,6 +137,21 @@
 />
 
 <style>
+  .settings-panel {
+    display: flex;
+    flex: 0 0 260px;
+    width: 260px;
+    margin: var(--spacing-xl) 0 var(--spacing-xl) var(--spacing-xl);
+    border-radius: 24px;
+    border: var(--border-light);
+    overflow: hidden;
+    background: var(--background-alt);
+  }
+
+  :global(.settings-panel .panel) {
+    background: var(--background-alt);
+  }
+
   .settings-container {
     padding: var(--spacing-m);
     gap: 32px;
@@ -149,6 +168,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+    padding: 0 var(--spacing-m);
   }
 
   .settings-options {

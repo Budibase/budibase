@@ -102,7 +102,7 @@ export async function run({
         const litellm = ai.createLiteLLMOpenAI({
           apiKey,
           baseUrl,
-          fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
+          sessionId,
         })
 
         let outputOption = undefined
