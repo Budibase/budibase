@@ -120,7 +120,7 @@ export async function run({
           instructions: systemPrompt || undefined,
           tools,
           stopWhen: stepCountIs(30),
-          providerOptions: providerOptions(hasTools),
+          providerOptions: providerOptions?.(hasTools),
           output: outputOption,
           onStepFinish({ toolCalls, toolResults }) {
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
