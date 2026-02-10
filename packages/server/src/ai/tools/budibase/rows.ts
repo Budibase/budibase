@@ -29,10 +29,16 @@ const SEARCH_QUERY_DESCRIPTION =
   `Query filters object. Structure: { operator: { fieldName: value } }. ` +
   `CRITICAL: fieldName must match an existing column in the table schema exactly (case-sensitive). ` +
   `Valid operators: "equal", "notEqual", "empty", "notEmpty", "fuzzy", "string", "contains", "notContains", "containsAny", "oneOf", "range". ` +
+  `IMPORTANT: Do NOT use "and", "or", or nested $and/$or conditions. All operators must be top-level keys in a single flat object. ` +
+  `Operators oneOf and containsAny require array values (e.g. {"oneOf": {"status": ["active", "pending"]}}). ` +
+  `To combine multiple filters, include multiple operator keys: {"fuzzy": {"name": "John", "city": "London"}, "equal": {"status": "active"}}. ` +
   `Examples: ` +
   `Find where status equals "active": {"equal": {"status": "active"}}. ` +
+  `Find where status is "active" OR "pending": {"oneOf": {"status": ["active", "pending"]}}. ` +
+  `Find where tags contains any of "urgent", "review": {"containsAny": {"tags": ["urgent", "review"]}}. ` +
   `Find where name is not empty: {"notEmpty": {"name": true}}. ` +
-  `Find where price is within the range of 10 to 100: {"range": {"price": {"low": 10, "high": 100}}}.`
+  `Find where price is within the range of 10 to 100: {"range": {"price": {"low": 10, "high": 100}}}. ` +
+  `Combine fuzzy name with exact status: {"fuzzy": {"name": "John"}, "equal": {"status": "active"}}.`
 
 const MAX_SCHEMA_FIELDS = 30
 

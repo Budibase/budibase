@@ -122,8 +122,13 @@ export async function run({
           stopWhen: stepCountIs(30),
           providerOptions: providerOptions?.(hasTools),
           output: outputOption,
-          onStepFinish({ toolCalls, toolResults }) {
+          onStepFinish({ content, toolCalls, toolResults }) {
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+            for (const part of content) {
+              if (part.type === "tool-error") {
+                pendingToolCalls.delete(part.toolCallId)
+              }
+            }
           },
         })
 
@@ -157,6 +162,7 @@ export async function run({
           return {
             success: false,
             response: errorMessage,
+            message: assistantMessage,
           }
         }
 
@@ -177,6 +183,7 @@ export async function run({
           return {
             success: false,
             response: error,
+            message: assistantMessage,
           }
         }
         const usage = await streamResult.usage
