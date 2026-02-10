@@ -9,6 +9,7 @@
     notifications,
     Select,
     Stepper,
+    TextArea,
   } from "@budibase/bbui"
   import {
     themeStore,
@@ -249,6 +250,50 @@
             onChange={show => update("openLogoLinkInNewTab", show)}
           />
         {/if}
+      </div>
+    </DetailSummary>
+
+    <DetailSummary name="Banner" initiallyShow collapsible={false}>
+      <div class="settings">
+        <PropertyControl
+          label="Message"
+          control={DrawerBindableInput}
+          value={$nav.bannerText}
+          onChange={text => update("bannerText", text)}
+          {bindings}
+          props={{
+            updateOnChange: false,
+            placeholder: "Enter banner text",
+          }}
+        />
+        <PropertyControl
+          label="Background"
+          control={ColorPicker}
+          onChange={color => update("bannerBackground", color)}
+          value={$nav.bannerBackground}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Text color"
+          control={ColorPicker}
+          onChange={color => update("bannerTextColor", color)}
+          value={$nav.bannerTextColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Text size (px)"
+          control={Stepper}
+          value={$nav.bannerTextSize}
+          onChange={size => update("bannerTextSize", size)}
+          props={{
+            updateOnChange: false,
+            placeholder: "12",
+          }}
+        />
       </div>
     </DetailSummary>
   {/if}
