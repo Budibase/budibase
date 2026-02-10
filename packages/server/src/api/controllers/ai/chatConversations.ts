@@ -268,8 +268,13 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       system,
       tools: hasTools ? tools : undefined,
       stopWhen: stepCountIs(30),
-      onStepFinish({ toolCalls, toolResults }) {
+      onStepFinish({ content, toolCalls, toolResults }) {
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+        for (const part of content) {
+          if (part.type === "tool-error") {
+            pendingToolCalls.delete(part.toolCallId)
+          }
+        }
       },
       providerOptions: ai.getLiteLLMProviderOptions(hasTools),
       onError({ error }) {
