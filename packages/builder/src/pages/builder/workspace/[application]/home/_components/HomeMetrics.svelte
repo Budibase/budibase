@@ -6,7 +6,6 @@
   import { API } from "@/api"
 
   export let metrics: GetWorkspaceHomeMetricsResponse | null = null
-  export let metricsError = false
   export let agentsEnabled = false
 
   let githubStars: number | null = null
@@ -66,14 +65,6 @@
   </div>
 </div>
 
-{#if metricsError}
-  <div class="metrics-error">
-    <Body size="S" color="var(--spectrum-global-color-static-red-600)">
-      Failed to load workspace metrics.
-    </Body>
-  </div>
-{/if}
-
 <style>
   .metrics {
     display: grid;
@@ -93,12 +84,6 @@
     display: flex;
     flex-direction: column;
     gap: calc(var(--spacing-s) - var(--spacing-xs));
-  }
-
-  .metrics-error {
-    padding: var(--spacing-s) var(--spacing-m);
-    border-radius: 4px;
-    background: var(--spectrum-global-color-gray-100);
   }
 
   @media (max-width: 900px) {

@@ -79,7 +79,6 @@
   let typeFilter: HomeType = "all"
   let searchTerm = ""
   let metrics: GetWorkspaceHomeMetricsResponse | null = null
-  let metricsError = false
 
   let sortColumn: HomeSortColumn = "created"
   let sortOrder: HomeSortOrder = "desc"
@@ -545,12 +544,10 @@
   }
 
   const loadMetrics = async () => {
-    metricsError = false
     try {
       metrics = await API.workspaceHome.getMetrics()
     } catch (err) {
       console.error(err)
-      metricsError = true
       metrics = null
     }
   }
@@ -628,11 +625,7 @@
       </div>
     </div>
 
-    <HomeMetrics
-      {metrics}
-      {metricsError}
-      agentsEnabled={$featureFlags.AI_AGENTS}
-    />
+    <HomeMetrics {metrics} agentsEnabled={$featureFlags.AI_AGENTS} />
 
     <HomeControls
       {typeFilter}
