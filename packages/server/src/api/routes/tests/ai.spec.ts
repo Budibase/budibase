@@ -1,6 +1,7 @@
 import { z } from "zod"
 import {
   mockChatGPTResponse,
+  mockChatGPTStreamFailure,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -28,6 +29,20 @@ import {
 } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
+
+jest.mock("@budibase/types", () => {
+  const actual = jest.requireActual("@budibase/types")
+  return {
+    ...actual,
+    BUDIBASE_AI_MODEL_MAP: {
+      ...actual.BUDIBASE_AI_MODEL_MAP,
+      "budibase/mistral-small-latest": {
+        provider: "mistral",
+        model: "mistral-small-latest",
+      },
+    },
+  }
+})
 
 function toResponseFormat(schema: any, name = "response") {
   return {
@@ -1138,6 +1153,152 @@ describe("BudibaseAI", () => {
         },
         { status: 403 }
       )
+    })
+  })
+
+  describe("POST /api/ai/chat/completions", () => {
+    let licenseKey = "test-key"
+    let internalApiKey = "api-key"
+    let envCleanup: () => void
+    let cleanup: () => Promise<void> | void
+
+    beforeAll(async () => {
+      envCleanup = setEnv({
+        SELF_HOSTED: false,
+        ACCOUNT_PORTAL_API_KEY: internalApiKey,
+        BBAI_OPENAI_API_KEY: "openai-key",
+      })
+    })
+
+    afterAll(async () => {
+      envCleanup()
+    })
+
+    beforeEach(async () => {
+      await config.newTenant()
+      nock.cleanAll()
+      cleanup = await customAIConfig({
+        provider: "OpenAI",
+        defaultModel: "gpt-5-mini",
+        apiKey: "test-key",
+      })(config)
+      const license: License = {
+        plan: {
+          type: PlanType.FREE,
+          model: PlanModel.PER_USER,
+          usesInvoicing: false,
+        },
+        features: [Feature.BUDIBASE_AI],
+        quotas: {} as any,
+        tenantId: config.tenantId,
+      }
+      nock(env.ACCOUNT_PORTAL_URL)
+        .get(`/api/license/${licenseKey}`)
+        .reply(200, license)
+    })
+
+    afterEach(async () => {
+      await cleanup?.()
+    })
+
+    it("proxies the OpenAI response without reshaping", async () => {
+      mockChatGPTResponse("hello from openai")
+
+      const response = await config.api.ai.openaiChatCompletions({
+        model: "budibase/gpt-5-mini",
+        messages: [{ role: "user", content: "hello" }],
+        licenseKey,
+      })
+
+      expect(response.object).toBe("chat.completion")
+      expect(response.choices[0].message.content).toBe("hello from openai")
+      expect(response.usage?.total_tokens).toBeGreaterThan(0)
+    })
+
+    it("ignores extra fields (e.g. response_format)", async () => {
+      const format = toResponseFormat(z.object({ value: z.string() }))
+      mockChatGPTResponse(`{"value":"ok"}`, { rejectFormat: true })
+
+      const response = await config.api.ai.openaiChatCompletions({
+        model: "budibase/gpt-5-mini",
+        messages: [{ role: "user", content: "return json" }],
+        response_format: format,
+        licenseKey,
+      })
+
+      expect(response.choices[0].message.content).toBe(`{"value":"ok"}`)
+    })
+
+    it("returns HTTP errors when stream initialization fails", async () => {
+      mockChatGPTStreamFailure({ status: 401, errorMessage: "Unauthorized" })
+
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "budibase/gpt-5-mini",
+          messages: [{ role: "user", content: "hello" }],
+          stream: true,
+          licenseKey,
+        },
+        {
+          status: 401,
+          headers: {
+            "Content-Type": /^application\/json/,
+          },
+        }
+      )
+    })
+
+    it("rejects requests missing required fields", async () => {
+      await config.api.ai.openaiChatCompletions(
+        {
+          // @ts-expect-error intentionally missing fields
+          model: undefined,
+          // @ts-expect-error intentionally missing fields
+          messages: undefined,
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
+    it("rejects unsupported models", async () => {
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "gpt-5-mini",
+          messages: [{ role: "user", content: "hello" }],
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
+    it("routes Mistral models to the Mistral API", async () => {
+      const mistralCleanup = setEnv({ BBAI_MISTRAL_API_KEY: "mistral-key" })
+      mockChatGPTResponse("hello from mistral", {
+        baseUrl: "https://api.mistral.ai",
+      })
+
+      const response = await config.api.ai.openaiChatCompletions({
+        model: "budibase/mistral-small-latest",
+        messages: [{ role: "user", content: "hello" }],
+        licenseKey,
+      })
+
+      expect(response.choices[0].message.content).toBe("hello from mistral")
+      mistralCleanup()
+    })
+
+    it("errors when OpenAI API key is missing", async () => {
+      const keyCleanup = setEnv({ BBAI_OPENAI_API_KEY: "" })
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "budibase/gpt-5-mini",
+          messages: [{ role: "user", content: "hello" }],
+          licenseKey,
+        },
+        { status: 500 }
+      )
+      keyCleanup()
     })
   })
 })

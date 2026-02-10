@@ -7,6 +7,8 @@ export enum AIConfigType {
 
 export type ReasoningEffort = "low" | "medium" | "high"
 
+export const BUDIBASE_AI_PROVIDER_ID = "Budibase"
+
 export interface CustomAIProviderConfig extends Document {
   name: string
   provider: string

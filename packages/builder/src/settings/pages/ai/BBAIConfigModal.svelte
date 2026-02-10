@@ -14,42 +14,33 @@
     CreateAIConfigRequest,
     LLMProvider,
     RequiredKeys,
-    UpdateAIConfigRequest,
   } from "@budibase/types"
-  import { AIConfigType } from "@budibase/types"
+  import {
+    AIConfigType,
+    BUDIBASE_AI_MODELS,
+    BUDIBASE_AI_PROVIDER_ID,
+  } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
-  export let config: Omit<AIConfigResponse, "provider"> | undefined
-  export let provider: string | undefined
+  export let config: AIConfigResponse | undefined
   export let type: AIConfigType
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
-  let draft: AIConfigResponse =
-    config?._id && provider
-      ? ({
-          _id: config._id,
-          _rev: config._rev,
-          name: config.name,
-          provider: provider,
-          credentialsFields: config.credentialsFields,
-          model: config.model,
-          webSearchConfig: config.webSearchConfig,
-          configType: config.configType,
-          reasoningEffort: config.reasoningEffort,
-        } satisfies RequiredKeys<UpdateAIConfigRequest>)
-      : ({
-          provider: provider ?? "",
-          name: "",
-          model: "",
-          configType: type,
-          credentialsFields: {},
-          webSearchConfig: undefined,
-          reasoningEffort: undefined,
-        } satisfies RequiredKeys<CreateAIConfigRequest>)
+  let draft: AIConfigResponse = config
+    ? structuredClone(config)
+    : ({
+        provider: BUDIBASE_AI_PROVIDER_ID,
+        name: "Budibase AI",
+        model: "",
+        configType: type,
+        credentialsFields: {},
+        webSearchConfig: undefined,
+        reasoningEffort: undefined,
+      } satisfies RequiredKeys<CreateAIConfigRequest>)
 
-  $: isEdit = !!config?._id
-  $: canSave = !!draft.name.trim() && !!draft.provider
+  $: isEdit = !!config
+  $: canSave = !!draft.model
   $: typeLabel =
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
 
@@ -60,12 +51,6 @@
   ]
 
   $: providers = $aiConfigsStore.providers
-
-  $: providerPlaceholder = !providers
-    ? "Loading providers..."
-    : providers.length
-      ? "Choose a provider"
-      : "No providers available"
 
   $: providersMap = providers?.reduce<Record<string, LLMProvider>>((acc, p) => {
     acc[p.id] = p
@@ -155,33 +140,22 @@
   <div slot="header">
     <Heading size="XS">
       {#if isEdit}
-        Edit {draft.name}
+        Edit Budibase AI
       {:else}
-        Add {typeLabel} configuration
+        Setup Budibase AI
       {/if}
     </Heading>
   </div>
 
   <div class="row">
-    <Label size="M">Name</Label>
-    <Input bind:value={draft.name} placeholder="Support chat" />
-  </div>
-
-  <div class="row">
-    <Label size="M">Provider</Label>
-    <Select
-      bind:value={draft.provider}
-      options={providers}
-      getOptionValue={o => o.id}
-      getOptionLabel={o => o.displayName}
-      placeholder={providerPlaceholder}
-      loading={!providers}
-    />
-  </div>
-
-  <div class="row">
     <Label size="M">Model</Label>
-    <Input bind:value={draft.model} />
+    <Select
+      placeholder="Select a model"
+      options={BUDIBASE_AI_MODELS}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.id}
+      bind:value={draft.model}
+    />
   </div>
 
   {#if draft.configType === AIConfigType.COMPLETIONS}
