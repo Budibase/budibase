@@ -138,7 +138,7 @@ describe("/workspace/home/metrics", () => {
         updatedAt: now,
       }
 
-      const openConversation: ChatConversation = {
+      const sharedConversation: ChatConversation = {
         _id: docIds.generateChatConversationID(),
         chatAppId: chatApp._id!,
         agentId: "agent-1",
@@ -152,7 +152,7 @@ describe("/workspace/home/metrics", () => {
       await db.put(chatApp)
       await db.put(visibleConversation)
       await db.put(hiddenConversation)
-      await db.put(openConversation)
+      await db.put(sharedConversation)
     })
 
     const res = await request
@@ -164,6 +164,13 @@ describe("/workspace/home/metrics", () => {
     expect(res.body.chats.map((chat: { title: string }) => chat.title)).toEqual(
       expect.arrayContaining(["Visible chat", "Shared chat"])
     )
+    expect(
+      res.body.chats.every(
+        (chat: { createdAt?: unknown; updatedAt?: unknown }) =>
+          (chat.createdAt == null || typeof chat.createdAt === "string") &&
+          (chat.updatedAt == null || typeof chat.updatedAt === "string")
+      )
+    ).toBe(true)
   })
 
   it("returns empty chats when chat app is missing", async () => {

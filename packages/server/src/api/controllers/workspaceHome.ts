@@ -26,7 +26,7 @@ const getGlobalUserId = (ctx: UserCtx) => {
   if (!userId) {
     throw new HTTPError("userId is required", 400)
   }
-  return userId as string
+  return userId
 }
 
 export async function chats(ctx: UserCtx<void, GetWorkspaceHomeChatsResponse>) {
@@ -68,7 +68,7 @@ export async function chats(ctx: UserCtx<void, GetWorkspaceHomeChatsResponse>) {
       agentId: chat.agentId,
       title: chat.title,
       createdAt: chat.createdAt == null ? undefined : String(chat.createdAt),
-      updatedAt: chat.updatedAt,
+      updatedAt: chat.updatedAt == null ? undefined : String(chat.updatedAt),
     }))
 
   ctx.body = { chats }

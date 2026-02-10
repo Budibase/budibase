@@ -88,12 +88,7 @@ export async function updateAgent(
 export async function duplicateAgent(
   ctx: UserCtx<void, CreateAgentResponse, { agentId: string }>
 ) {
-  const agentId = ctx.params.agentId
-  if (!agentId) {
-    ctx.throw(400, "agentId is required")
-  }
-
-  const sourceAgent = await sdk.ai.agents.getOrThrow(agentId)
+  const sourceAgent = await sdk.ai.agents.getOrThrow(ctx.params.agentId)
 
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)

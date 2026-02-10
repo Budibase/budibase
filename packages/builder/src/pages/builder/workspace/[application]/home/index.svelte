@@ -663,7 +663,7 @@
       return
     }
     if (row.type === "chat") {
-      goto(url("../chat"))
+      goto(url(`../chat?conversationId=${encodeURIComponent(row.id)}`))
       return
     }
   }
