@@ -109,7 +109,7 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
 }
 
 export async function enqueueAgentFileIngestion(job: RagIngestionJob) {
-  initRagIngestionQueue()
+  init()
   return await getQueue().add(job, { jobId: job.fileId })
 }
 
