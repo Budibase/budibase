@@ -273,7 +273,6 @@ const environment = {
   CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
   BBAI_OPENAI_API_KEY: process.env.BBAI_OPENAI_API_KEY,
   BBAI_MISTRAL_API_KEY: process.env.BBAI_MISTRAL_API_KEY,
-  BBAI_SECRET: process.env.BBAI_SECRET,
   MISTRAL_BASE_URL: process.env.MISTRAL_BASE_URL || "https://api.mistral.ai/v1",
 }
 
@@ -321,7 +320,6 @@ export const SECRETS: EnvironmentKey[] = [
   "REDIS_USERNAME",
   "BBAI_OPENAI_API_KEY",
   "BBAI_MISTRAL_API_KEY",
-  "BBAI_SECRET",
 ]
 
 // clean up any environment variable edge cases
