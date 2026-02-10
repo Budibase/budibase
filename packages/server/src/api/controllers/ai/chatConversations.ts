@@ -360,7 +360,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const openai = ai.createLiteLLMOpenAI({
       apiKey,
       baseUrl,
-      fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
+      sessionId,
     })
     const model = openai.chat(modelId)
 
