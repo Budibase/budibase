@@ -3,6 +3,7 @@ import { ResponseFormat } from "@budibase/types"
 export interface MockLLMResponseOpts {
   baseUrl?: string
   format?: ResponseFormat
+  rejectFormat?: boolean
 }
 
 export type MockLLMResponseFn = (

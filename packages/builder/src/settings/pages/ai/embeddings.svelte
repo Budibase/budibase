@@ -1,41 +1,34 @@
 <script lang="ts">
   import { aiConfigsStore, featureFlags, vectorDbStore } from "@/stores/portal"
   import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
-  import {
-    AIConfigType,
-    type CustomAIProviderConfig,
-    type VectorDb,
-  } from "@budibase/types"
+  import type { AIConfigResponse } from "@budibase/types"
+  import { AIConfigType, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
   import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
   import VectorDbModal from "./VectorDbModal.svelte"
   import VectorDbTile from "./VectorDbTile.svelte"
 
-  let customConfigModal: { show: () => void; hide: () => void }
+  let configModal: { show: () => void; hide: () => void }
 
-  let customModalConfig: CustomAIProviderConfig | null = null
-  let modalConfigType: AIConfigType = AIConfigType.COMPLETIONS
+  let selectedModalConfig: AIConfigResponse | undefined
+  let selectedProvider: string | undefined
   let vectorModal: { show: () => void; hide: () => void }
   let vectorModalConfig: VectorDb | null = null
 
-  $: customConfigs = $aiConfigsStore.customConfigs || []
-  $: embeddingConfigs = customConfigs.filter(
+  $: configs = $aiConfigsStore.customConfigs || []
+  $: embeddingConfigs = configs.filter(
     config => config.configType === AIConfigType.EMBEDDINGS
   )
   $: vectorDbs = $vectorDbStore.configs || []
 
-  function openCustomAIConfigModal(
-    config?: CustomAIProviderConfig,
-    type: AIConfigType = AIConfigType.COMPLETIONS
-  ) {
-    modalConfigType = type
-    customModalConfig = config
-      ? {
-          ...config,
-        }
-      : null
-    customConfigModal?.show()
+  function createAIConfigModal() {
+    configModal.show()
+  }
+  function editAIConfigModal(config: AIConfigResponse) {
+    selectedModalConfig = config
+    selectedProvider = config.provider
+    configModal.show()
   }
 
   const openVectorDbModal = (config?: VectorDb) => {
@@ -59,12 +52,7 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">Embeddings models</div>
-        <Button
-          size="S"
-          cta
-          on:click={() =>
-            openCustomAIConfigModal(undefined, AIConfigType.EMBEDDINGS)}
-        >
+        <Button size="S" cta on:click={() => createAIConfigModal()}>
           Add configuration
         </Button>
       </div>
@@ -73,9 +61,11 @@
         <div class="ai-list">
           {#each embeddingConfigs as config (config._id)}
             <CustomAIConfigTile
-              {config}
-              editHandler={() =>
-                openCustomAIConfigModal(config, AIConfigType.EMBEDDINGS)}
+              actionType="edit"
+              displayName={config.name}
+              provider={config.provider}
+              description={config.model}
+              editHandler={() => editAIConfigModal(config)}
             />
           {/each}
         </div>
@@ -116,12 +106,15 @@
   />
 </Modal>
 
-<Modal bind:this={customConfigModal}>
+<Modal bind:this={configModal}>
   <CustomConfigModal
-    config={customModalConfig}
-    type={modalConfigType}
+    config={selectedModalConfig}
+    provider={selectedProvider}
+    type={AIConfigType.EMBEDDINGS}
     on:hide={() => {
-      customConfigModal.hide()
+      selectedModalConfig = undefined
+      selectedProvider = undefined
+      configModal.hide()
     }}
   />
 </Modal>
