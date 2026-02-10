@@ -17,7 +17,7 @@
     Tag,
   } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
-  import { url, goto, isActive } from "@roxi/routify"
+  import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
@@ -42,7 +42,6 @@
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, onMount, setContext } from "svelte"
   import {
-    FeatureFlag,
     type Datasource,
     type Query,
     type Table,
@@ -73,15 +72,8 @@
     pinned.set(true)
   }
 
-  $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
-  $: automationErrorCount = Object.keys(automationErrors).length
   $: backupErrors = getBackupErrors($enrichedApps || [], workspaceId)
   $: backupErrorCount = Object.keys(backupErrors).length
-
-  const getAutomationErrors = (apps: EnrichedApp[], workspaceId: string) => {
-    const target = apps.find(app => app.devId === workspaceId)
-    return target?.automationErrors || {}
-  }
 
   const getBackupErrors = (apps: EnrichedApp[], workspaceId: string) => {
     const target = apps.find(app => app.devId === workspaceId)
@@ -463,7 +455,7 @@
   <CreateWorkspaceModal />
 </Modal>
 
-{#if workspaceId && $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+{#if workspaceId}
   <Modal bind:this={createAutomationModal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -496,7 +488,7 @@
       <div>
         <a
           class="logo_link"
-          href={$url("./")}
+          href={$url("./home")}
           aria-label="Workspace home"
           title="Workspace home"
           on:click={keepCollapsed}
@@ -532,145 +524,75 @@
     <div class="nav_body">
       <div class="links core">
         {#if workspaceId}
-          <div
-            class="core-sections"
-            class:workspace_home={$featureFlags[FeatureFlag.WORKSPACE_HOME]}
-          >
+          <div class="core-sections">
             <div>
-              {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
-                <SideNavLink
-                  icon="house"
-                  text="Home"
-                  url={$url("./home")}
-                  {collapsed}
-                  on:click={keepCollapsed}
-                />
+              <SideNavLink
+                icon="house"
+                text="Home"
+                url={$url("./home")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
 
-                <ActionMenu
-                  align={PopoverAlignment.RightContextMenu}
-                  portalTarget={".nav .create-popover-container"}
-                  animate={false}
-                  on:open={() => (createMenuOpen = true)}
-                  on:close={() => (createMenuOpen = false)}
-                >
-                  <svelte:fragment slot="control" let:open>
-                    <SideNavLink
-                      icon="plus"
-                      text="Create"
-                      {collapsed}
-                      forceActive={open}
-                      on:click={keepCollapsed}
-                    />
-                  </svelte:fragment>
+              <ActionMenu
+                align={PopoverAlignment.RightContextMenu}
+                portalTarget={".nav .create-popover-container"}
+                animate={false}
+                on:open={() => (createMenuOpen = true)}
+                on:close={() => (createMenuOpen = false)}
+              >
+                <svelte:fragment slot="control" let:open>
+                  <SideNavLink
+                    icon="plus"
+                    text="Create"
+                    {collapsed}
+                    forceActive={open}
+                    on:click={keepCollapsed}
+                  />
+                </svelte:fragment>
 
-                  <MenuItem icon="path" on:click={openCreateAutomation}>
-                    Automation
-                  </MenuItem>
-                  <MenuItem icon="browsers" on:click={openCreateApp}>
-                    App
-                  </MenuItem>
+                <MenuItem icon="path" on:click={openCreateAutomation}>
+                  Automation
+                </MenuItem>
+                <MenuItem icon="browsers" on:click={openCreateApp}>
+                  App
+                </MenuItem>
 
-                  {#if $featureFlags.AI_AGENTS}
-                    <MenuItem icon="sparkle" on:click={openCreateAgent}>
-                      Agent
-                      <div slot="right">
-                        <Tag emphasized>Beta</Tag>
-                      </div>
-                    </MenuItem>
-                    <MenuItem
-                      icon="chat-circle"
-                      on:click={() => goToCreate("chat")}
-                    >
-                      Chat
-                      <div slot="right">
-                        <Tag emphasized>Alpha</Tag>
-                      </div>
-                    </MenuItem>
-                  {/if}
-
-                  <MenuItem icon="grid-nine" on:click={openCreateTable}>
-                    Table
+                {#if $featureFlags.AI_AGENTS}
+                  <MenuItem icon="sparkle" on:click={openCreateAgent}>
+                    Agent
+                    <div slot="right">
+                      <Tag emphasized>Beta</Tag>
+                    </div>
                   </MenuItem>
                   <MenuItem
-                    icon="webhooks-logo"
-                    on:click={() => goToCreate("apis/new")}
-                  >
-                    API request
-                  </MenuItem>
-                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-                    Connection
-                  </MenuItem>
-                  <MenuSeparator />
-                  <MenuItem icon="user-circle-plus" on:click={openInviteUser}>
-                    User
-                  </MenuItem>
-                </ActionMenu>
-              {:else}
-                <SideNavLink
-                  icon="browser"
-                  text="Apps"
-                  url={$url("./design")}
-                  {collapsed}
-                  on:click={keepCollapsed}
-                />
-                <span
-                  class="root-nav"
-                  class:selected={$isActive("./automation")}
-                >
-                  {#if collapsed && automationErrorCount}
-                    <span class="status-indicator">
-                      <StatusLight
-                        color="var(--spectrum-global-color-static-red-600)"
-                        size="M"
-                      />
-                    </span>
-                  {/if}
-                  <SideNavLink
-                    icon="path"
-                    text="Automations"
-                    url={$url("./automation")}
-                    {collapsed}
-                    on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      {#if automationErrorCount}
-                        <StatusLight
-                          color="var(--spectrum-global-color-static-red-600)"
-                          size="M"
-                        />
-                      {/if}
-                    </svelte:fragment>
-                  </SideNavLink>
-                </span>
-                {#if $featureFlags.AI_AGENTS}
-                  <SideNavLink
-                    icon="memory"
-                    text="Agents"
-                    url={$url("./agent")}
-                    {collapsed}
-                    on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      <div class="beta-tag-wrapper">
-                        <Tag emphasized>Beta</Tag>
-                      </div>
-                    </svelte:fragment>
-                  </SideNavLink>
-                  <SideNavLink
                     icon="chat-circle"
-                    text="Chat"
-                    url={$url("./chat")}
-                    {collapsed}
-                    on:click={keepCollapsed}
+                    on:click={() => goToCreate("chat")}
                   >
-                    <svelte:fragment slot="right">
-                      <div class="beta-tag-wrapper">
-                        <Tag emphasized>Alpha</Tag>
-                      </div>
-                    </svelte:fragment>
-                  </SideNavLink>
+                    Chat
+                    <div slot="right">
+                      <Tag emphasized>Alpha</Tag>
+                    </div>
+                  </MenuItem>
                 {/if}
-              {/if}
+
+                <MenuItem icon="grid-nine" on:click={openCreateTable}>
+                  Table
+                </MenuItem>
+                <MenuItem
+                  icon="webhooks-logo"
+                  on:click={() => goToCreate("apis/new")}
+                >
+                  API request
+                </MenuItem>
+                <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+                  Connection
+                </MenuItem>
+                <MenuSeparator />
+                <MenuItem icon="user-circle-plus" on:click={openInviteUser}>
+                  User
+                </MenuItem>
+              </ActionMenu>
             </div>
 
             <div class="core-secondary">
@@ -1107,10 +1029,6 @@
     align-items: stretch;
   }
 
-  .core-sections:not(.workspace_home) .core-secondary {
-    margin-top: 4px;
-  }
-
   .favourite-links {
     flex: 1;
     overflow: auto;
@@ -1132,15 +1050,6 @@
     margin: 0 0 10px 0;
   }
 
-  .nav-section-title {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-  .nav-section-title hr {
-    border: none;
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    margin: 0;
-  }
   .favourite-empty-state {
     display: flex;
     flex-direction: column;
@@ -1166,9 +1075,6 @@
   }
 
   @container (max-width: 239px) {
-    .nav-section-title {
-      transition: all 130ms ease-in-out;
-    }
     .favourite-wrapper {
       display: none;
       transition: all 130ms ease-in-out;
