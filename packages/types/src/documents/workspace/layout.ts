@@ -13,4 +13,8 @@ export interface Layout extends Document {
   embedded?: boolean
   logoUrl?: string
   hideTitle?: boolean
+  bannerText?: string
+  bannerBackground?: string
+  bannerTextColor?: string
+  bannerTextSize?: number
 }
