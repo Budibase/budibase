@@ -31,7 +31,7 @@ export async function createBBAIClient(model: string): Promise<LLMResponse> {
   return {
     chat: client.chat(bbaiModel.model),
     embedding: (() => {
-      throw new Error("Not implemented")
+      throw new Error("BBAI embeddings are not supported")
     }) as any,
     providerOptions: undefined,
   }
