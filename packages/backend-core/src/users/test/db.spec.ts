@@ -425,4 +425,34 @@ describe("UserDB", () => {
       expect(preventSpy).toHaveBeenCalled()
     })
   })
+
+  describe("countUsersByWorkspace", () => {
+    const errorMessage = "Must provide a string based workspace ID"
+    const assertInvalidWorkspaceId = async (workspaceId: unknown) => {
+      await config.doInTenant(() =>
+        expect(db.countUsersByWorkspace(workspaceId as string)).rejects.toThrow(
+          errorMessage
+        )
+      )
+    }
+
+    it("returns zero when the workspace has no users", async () => {
+      const workspaceId = `app_${generator.guid()}`
+
+      await config.doInTenant(() =>
+        expect(db.countUsersByWorkspace(workspaceId)).resolves.toEqual({
+          userCount: 0,
+        })
+      )
+    })
+
+    it.each<[string, unknown]>([
+      ["undefined", undefined],
+      ["null", null],
+      ["number", 123],
+      ["empty string", ""],
+    ])("throws when workspaceId is %s", async (_label, workspaceId) => {
+      await assertInvalidWorkspaceId(workspaceId)
+    })
+  })
 })
