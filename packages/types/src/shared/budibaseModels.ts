@@ -9,22 +9,10 @@ export interface BudibaseAIModel {
 
 export const BUDIBASE_AI_MODELS: BudibaseAIModel[] = [
   {
-    id: "budibase/gpt-4o-mini",
-    provider: "openai",
-    model: "gpt-4o-mini",
-    label: "GPT 4o Mini",
-  },
-  {
-    id: "budibase/gpt-4o",
-    provider: "openai",
-    model: "gpt-4o",
-    label: "GPT 4o",
-  },
-  {
     id: "budibase/gpt-5",
     provider: "openai",
-    model: "gpt-5",
-    label: "GPT 5",
+    model: "gpt-5.2",
+    label: "GPT 5.2",
   },
   {
     id: "budibase/gpt-5-mini",
@@ -37,6 +25,24 @@ export const BUDIBASE_AI_MODELS: BudibaseAIModel[] = [
     provider: "openai",
     model: "gpt-5-nano",
     label: "GPT 5 Nano",
+  },
+  {
+    id: "budibase/mistral-small-latest",
+    provider: "mistral",
+    model: "mistral-small-latest",
+    label: "Mistral small",
+  },
+  {
+    id: "budibase/mistral-medium-latest",
+    provider: "mistral",
+    model: "mistral-medium-latest",
+    label: "Mistral medium",
+  },
+  {
+    id: "budibase/mistral-large-latest",
+    provider: "mistral",
+    model: "mistral-large-latest",
+    label: "Mistral large",
   },
 ]
 

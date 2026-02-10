@@ -203,6 +203,7 @@
           {#each visibleAgentList as agent (agent.agentId)}
             <button
               class="chat-empty-card"
+              class:chat-empty-card-single={visibleAgentList.length === 1}
               on:click={() => selectAgent(agent.agentId)}
               style={`--agent-icon-color:${agent.iconColor || "#6366F1"};`}
             >
@@ -384,6 +385,11 @@
   .chat-empty-card:last-child {
     --card-rotation: 6deg;
     --card-offset: 12px;
+  }
+
+  .chat-empty-card.chat-empty-card-single {
+    --card-rotation: 0deg;
+    --card-offset: 0px;
   }
 
   .chat-empty-card-head {
