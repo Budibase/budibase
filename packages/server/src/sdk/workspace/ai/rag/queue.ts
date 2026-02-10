@@ -119,9 +119,9 @@ const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {
     objectKey
   )
 
-  const chunks: Buffer[] = []
+  const chunks: Uint8Array[] = []
   for await (const chunk of stream) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    chunks.push(new Uint8Array(chunk))
   }
   return Buffer.concat(chunks)
 }
