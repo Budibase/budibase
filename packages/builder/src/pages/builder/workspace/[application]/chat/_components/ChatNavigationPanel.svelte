@@ -7,6 +7,8 @@
     agentId: string
     name?: string
     isDefault?: boolean
+    icon?: string
+    iconColor?: string
   }
 
   type ConversationListItem = {
@@ -60,6 +62,9 @@
               class="list-item list-item-button"
               on:click={() => selectAgent(agent.agentId)}
             >
+              <span class="list-item-icon">
+                <Icon name={agent.icon || "robot"} size="S" />
+              </span>
               {agent.name}
             </button>
           {/each}
@@ -168,6 +173,12 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .list-item-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .list-item-button {
