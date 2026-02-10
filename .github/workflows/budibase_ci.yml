@@ -26,7 +26,6 @@ env:
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
   ONLY_AFFECTED_TASKS: ${{ github.event_name == 'pull_request' }}
-  IS_OSS_CONTRIBUTOR: ${{ inputs.run_as_oss == true || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase') }}
 
 jobs:
   lint:
@@ -35,7 +34,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
@@ -52,7 +50,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
@@ -93,7 +90,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
@@ -127,7 +123,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
@@ -172,7 +167,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
@@ -264,7 +258,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
@@ -288,7 +281,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
@@ -318,7 +310,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x

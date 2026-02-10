@@ -3,6 +3,14 @@ import {
   createAgentValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
+import {
+  createAIConfigValidator,
+  updateAIConfigValidator,
+} from "./utils/validators/aiConfig"
+import {
+  createVectorDbValidator,
+  updateVectorDbValidator,
+} from "./utils/validators/vectorDb"
 import { middleware } from "@budibase/pro"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 
@@ -39,12 +47,12 @@ builderAdminRoutes
     ai.agentChatStream
   )
   .get("/api/configs", ai.fetchAIConfigs)
-  .post("/api/configs", ai.createAIConfig)
-  .put("/api/configs", ai.updateAIConfig)
+  .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)
+  .put("/api/configs", updateAIConfigValidator(), ai.updateAIConfig)
   .delete("/api/configs/:id", ai.deleteAIConfig)
   .get("/api/vectordb", ai.fetchVectorDbConfigs)
-  .post("/api/vectordb", ai.createVectorDbConfig)
-  .put("/api/vectordb", ai.updateVectorDbConfig)
+  .post("/api/vectordb", createVectorDbValidator(), ai.createVectorDbConfig)
+  .put("/api/vectordb", updateVectorDbValidator(), ai.updateVectorDbConfig)
   .delete("/api/vectordb/:id", ai.deleteVectorDbConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
@@ -53,5 +61,7 @@ builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
 
 // these are Budibase AI routes
 licensedRoutes
+  /** @deprecated Use the openai compatible /api/ai/chat/completions instead */
   .post("/api/ai/chat", ai.chatCompletion)
+  .post("/api/ai/chat/completions", ai.openaiChatCompletions)
   .post("/api/ai/upload-file", ai.uploadFile)
