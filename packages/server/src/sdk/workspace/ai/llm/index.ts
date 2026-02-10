@@ -4,14 +4,27 @@ import { HTTPError, env } from "@budibase/backend-core"
 import { BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
 import { createLiteLLMOpenAI } from "./litellm"
 import { createBBAIClient } from "./bbai"
+import { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
 
 export * as bbai from "./bbai"
+
+export interface LLMResponse {
+  chat: LanguageModelV3
+  embedding: EmbeddingModelV3
+  providerOptions?: (hasTools: boolean) =>
+    | {
+        openai: {
+          parallelToolCalls: boolean
+        }
+      }
+    | undefined
+}
 
 export async function createLLM(
   configId: string,
   sessionId?: string,
   span?: tracer.Span
-) {
+): Promise<LLMResponse> {
   if (!configId) {
     throw new HTTPError("Config id not found", 422)
   }

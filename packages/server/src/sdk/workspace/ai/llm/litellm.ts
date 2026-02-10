@@ -4,6 +4,7 @@ import tracer from "dd-trace"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
 import { CustomAIProviderConfig } from "@budibase/types"
+import { LLMResponse } from "."
 
 type LiteLLMFetch = (
   input: Parameters<typeof fetch>[0],
@@ -14,7 +15,7 @@ export const createLiteLLMOpenAI = async (
   aiConfig: CustomAIProviderConfig,
   sessionId?: string,
   span?: tracer.Span
-) => {
+): Promise<LLMResponse> => {
   const { apiKey, baseUrl } = await getLiteLLMModelSettings()
 
   const { liteLLMModelId: modelId, model: modelName } = aiConfig

@@ -1,8 +1,9 @@
 import { createOpenAI } from "@ai-sdk/openai"
 import { env, HTTPError } from "@budibase/backend-core"
 import { BUDIBASE_AI_MODEL_MAP } from "@budibase/types"
+import { LLMResponse } from "."
 
-export async function createBBAIClient(model: string) {
+export async function createBBAIClient(model: string): Promise<LLMResponse> {
   const bbaiModel = BUDIBASE_AI_MODEL_MAP[model]
   if (!bbaiModel) {
     throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
@@ -27,5 +28,11 @@ export async function createBBAIClient(model: string) {
   }
 
   const client = createOpenAI({ apiKey, baseURL })
-  return { chat: client.chat(bbaiModel.model), providerOptions: undefined }
+  return {
+    chat: client.chat(bbaiModel.model),
+    embedding: (() => {
+      throw new Error("Not implemented")
+    }) as any,
+    providerOptions: undefined,
+  }
 }
