@@ -24,7 +24,7 @@
 
     if (agentsEnabled) {
       options.push({ label: "Agents", value: "agent" })
-      options.push({ label: "Chats", value: "chat" })
+      options.push({ label: "Chat (Alpha)", value: "chat" })
     }
 
     return options
@@ -101,6 +101,7 @@
       >
         <Icon name="chat-circle" size="S" color="#8CA171" weight="fill" />
         <Body size="S">Chat</Body>
+        <Tag emphasized>Alpha</Tag>
       </button>
     {/if}
   </div>
