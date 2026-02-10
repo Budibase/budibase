@@ -89,7 +89,7 @@
     }
   }
 
-  $: ({ isAgentEnabled, readOnlyReason } = getAgentStatus(
+  $: ({ readOnlyReason } = getAgentStatus(
     selectedAgentId,
     enabledAgentList,
     isAgentKnown,
