@@ -6,7 +6,7 @@ import {
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
 import { configs, env, setEnv } from "@budibase/backend-core"
-import { generateText } from "ai"
+import { generateText, streamText } from "ai"
 import {
   AIInnerConfig,
   AIOperationEnum,
@@ -1174,6 +1174,7 @@ describe("BudibaseAI", () => {
     const generateTextMock = generateText as jest.MockedFunction<
       typeof generateText
     >
+    const streamTextMock = streamText as jest.MockedFunction<typeof streamText>
 
     beforeAll(async () => {
       envCleanup = setEnv({
@@ -1269,7 +1270,7 @@ describe("BudibaseAI", () => {
     })
 
     it("returns HTTP errors when stream initialization fails", async () => {
-      generateTextMock.mockImplementation(() => {
+      streamTextMock.mockImplementation(() => {
         const error = new Error("Unauthorized") as Error & { status: number }
         error.status = 401
         throw error
