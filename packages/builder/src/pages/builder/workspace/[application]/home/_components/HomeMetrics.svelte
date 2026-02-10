@@ -8,7 +8,6 @@
   const GITHUB_REPO_URL = "https://github.com/Budibase/budibase"
 
   export let metrics: GetWorkspaceHomeMetricsResponse | null = null
-  export let metricsError = false
   export let agentsEnabled = false
 
   let githubStars: number | null = null
@@ -81,14 +80,6 @@
   </div>
 </div>
 
-{#if metricsError}
-  <div class="metrics-error">
-    <Body size="S" color="var(--spectrum-global-color-static-red-600)">
-      Failed to load workspace metrics.
-    </Body>
-  </div>
-{/if}
-
 <style>
   .metrics {
     display: grid;
@@ -126,12 +117,6 @@
   .metric-label-link:hover :global(.spectrum-Body),
   .metric-label-link:hover :global(i) {
     color: var(--spectrum-global-color-gray-800) !important;
-  }
-
-  .metrics-error {
-    padding: var(--spacing-s) var(--spacing-m);
-    border-radius: 4px;
-    background: var(--spectrum-global-color-gray-100);
   }
 
   @media (max-width: 900px) {
