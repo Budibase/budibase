@@ -1,5 +1,5 @@
 import { context, docIds, roles } from "@budibase/backend-core"
-import type { ChatApp, User } from "@budibase/types"
+import type { ChatApp, ChatConversation, User } from "@budibase/types"
 import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 
@@ -195,38 +195,52 @@ describe("chat route auth split", () => {
   const headersForUser = async (user: User) =>
     await config.withUser(user, async () => config.defaultHeaders({}, true))
 
-  it("allows basic users to access runtime chat endpoints", async () => {
-    const headers = await headersForUser(basicUser)
+  const createConversation = async (title: string) => {
+    let conversation: ChatConversation | undefined
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        const doc: ChatConversation = {
+          _id: docIds.generateChatConversationID(),
+          chatAppId: chatApp._id!,
+          agentId: "agent-1",
+          userId: basicUser._id!,
+          messages: [],
+          title,
+          createdAt: now,
+          updatedAt: now,
+        }
+        await db.put(doc)
+        conversation = doc
+      }
+    )
+    return conversation!
+  }
 
-    const fetchRes = await config
+  it("allows basic users to access GET /api/chatapps", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config.getRequest()!.get("/api/chatapps").set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body?._id).toBe(chatApp._id)
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
       .getRequest()!
       .get(`/api/chatapps/${chatApp._id}`)
       .set(headers)
 
-    const createRes = await config
-      .getRequest()!
-      .post(`/api/chatapps/${chatApp._id}/conversations`)
-      .set(headers)
-      .send({
-        chatAppId: chatApp._id,
-        agentId: "agent-1",
-        title: "basic user conversation",
-      })
-
-    const historyRes = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/conversations`)
-      .set(headers)
-
-    expect(fetchRes.status).toBe(200)
-    expect(createRes.status).toBe(201)
-    expect(historyRes.status).toBe(200)
+    expect(res.status).toBe(200)
+    expect(res.body?._id).toBe(chatApp._id)
   })
 
-  it("blocks basic users from control chat endpoints", async () => {
+  it("blocks basic users from PUT /api/chatapps/:chatAppId", async () => {
     const headers = await headersForUser(basicUser)
-
-    const updateRes = await config
+    const res = await config
       .getRequest()!
       .put(`/api/chatapps/${chatApp._id}`)
       .set(headers)
@@ -236,13 +250,86 @@ describe("chat route auth split", () => {
         agents: chatApp.agents,
       })
 
-    const setAgentRes = await config
+    expect(res.status).toBe(403)
+  })
+
+  it("blocks basic users from POST /api/chatapps/:chatAppId/agent", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
       .getRequest()!
       .post(`/api/chatapps/${chatApp._id}/agent`)
       .set(headers)
       .send({ agentId: "agent-1" })
 
-    expect(updateRes.status).toBe(403)
-    expect(setAgentRes.status).toBe(403)
+    expect(res.status).toBe(403)
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId/conversations", async () => {
+    const headers = await headersForUser(basicUser)
+    const conversation = await createConversation("history conversation")
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body.map((chat: ChatConversation) => chat._id)).toContain(
+      conversation._id
+    )
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
+    const headers = await headersForUser(basicUser)
+    const conversation = await createConversation("single conversation")
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations/${conversation._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body._id).toBe(conversation._id)
+  })
+
+  it("allows basic users to access POST /api/chatapps/:chatAppId/conversations", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId: "agent-1",
+        title: "basic user conversation",
+      })
+
+    expect(res.status).toBe(201)
+    expect(res.body.chatAppId).toBe(chatApp._id)
+    expect(res.body.agentId).toBe("agent-1")
+  })
+
+  it("allows basic users to access DELETE /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
+    const headers = await headersForUser(basicUser)
+    const conversation = await createConversation("delete conversation")
+    const res = await config
+      .getRequest()!
+      .delete(`/api/chatapps/${chatApp._id}/conversations/${conversation._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(204)
+  })
+
+  it("allows basic users to access POST /api/chatapps/:chatAppId/conversations/:chatConversationId/stream", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        chatAppId: "mismatched-chat-app-id",
+        agentId: "agent-1",
+        messages: [],
+      })
+
+    expect(res.status).toBe(400)
   })
 })
