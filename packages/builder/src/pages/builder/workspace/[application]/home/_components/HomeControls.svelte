@@ -13,7 +13,6 @@
     createAutomation: void
     createApp: void
     createAgent: void
-    createChat: void
   }>()
 
   const getOptions = (agentsEnabled: boolean) => {
@@ -24,7 +23,6 @@
 
     if (agentsEnabled) {
       options.push({ label: "Agents", value: "agent" })
-      options.push({ label: "Chat (Alpha)", value: "chat", disabled: true })
     }
 
     return options
@@ -92,18 +90,6 @@
         <Icon name="sparkle" size="S" color="#BDB0F5" weight="fill" />
         <Body size="S">Agent</Body>
         <Tag emphasized>Beta</Tag>
-      </button>
-
-      <button
-        class="create-button create-button--disabled"
-        type="button"
-        disabled
-        title="Coming soon"
-        on:click={() => dispatch("createChat")}
-      >
-        <Icon name="chat-circle" size="S" color="#8CA171" weight="fill" />
-        <Body size="S">Chat</Body>
-        <Tag emphasized>Alpha</Tag>
       </button>
     {/if}
   </div>
@@ -199,11 +185,6 @@
 
   .create-button:hover {
     background: var(--spectrum-global-color-gray-300);
-  }
-
-  .create-button--disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
   }
 
   @media (max-width: 1140px) {

@@ -140,6 +140,12 @@ export const generateAgentToolSourceID = () => {
 export const generateAgentFileID = (agentId: string) => {
   return `${DocumentType.AGENT_FILE}${SEPARATOR}${agentId}${SEPARATOR}${newid()}`
 }
+const isAgentFileIDRegex = new RegExp(
+  `^${DocumentType.AGENT_FILE}${SEPARATOR}.+`
+)
+export const isAgentFileID = (id: string) => {
+  return isAgentFileIDRegex.test(id)
+}
 
 export const generateAIConfigID = (id = newid()) => {
   return `${DocumentType.AI_CONFIG}${SEPARATOR}${id}`
