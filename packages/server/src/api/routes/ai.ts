@@ -20,6 +20,7 @@ builderAdminRoutes
   .get("/api/agent", ai.fetchAgents)
   .post("/api/agent", createAgentValidator(), ai.createAgent)
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
+  .post("/api/agent/:agentId/duplicate", ai.duplicateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
   .post("/api/agent/:agentId/discord/sync", ai.syncAgentDiscordCommands)
   .get("/api/agent/:agentId/files", ai.fetchAgentFiles)

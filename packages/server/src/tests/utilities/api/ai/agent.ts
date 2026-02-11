@@ -61,4 +61,19 @@ export class AgentAPI extends TestAPI {
       }
     )
   }
+
+  duplicate = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<CreateAgentResponse> => {
+    return await this._post<CreateAgentResponse>(
+      `/api/agent/${agentId}/duplicate`,
+      {
+        expectations: {
+          ...expectations,
+          status: expectations?.status || 201,
+        },
+      }
+    )
+  }
 }

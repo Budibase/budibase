@@ -92,6 +92,15 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return updated
   }
 
+  duplicateAgent = async (agentId: string) => {
+    const duplicated = await API.duplicateAgent(agentId)
+    this.update(state => {
+      state.agents = [...state.agents, duplicated]
+      return state
+    })
+    return duplicated
+  }
+
   deleteAgent = async (agentId: string) => {
     await API.deleteAgent(agentId)
     await this.fetchAgents()

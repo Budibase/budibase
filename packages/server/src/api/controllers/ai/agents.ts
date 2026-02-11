@@ -141,6 +141,19 @@ export async function syncAgentDiscordCommands(
   ctx.status = 200
 }
 
+export async function duplicateAgent(
+  ctx: UserCtx<void, CreateAgentResponse, { agentId: string }>
+) {
+  const sourceAgent = await sdk.ai.agents.getOrThrow(ctx.params.agentId)
+
+  const createdBy = ctx.user?._id!
+  const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
+  const duplicated = await sdk.ai.agents.duplicate(sourceAgent, globalId)
+
+  ctx.body = duplicated
+  ctx.status = 201
+}
+
 export async function deleteAgent(
   ctx: UserCtx<void, { deleted: true }, { agentId: string }>
 ) {
