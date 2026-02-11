@@ -1,9 +1,24 @@
-# MS Teams Integration Plan (Based on Current Discord Branch Architecture)
+# MS Teams Integration Plan (Revised After OpenClaw Review)
 
 ## Summary
 - Reuse the same architecture implemented in this branch for Discord: agent-level integration config, explicit sync endpoint, public webhook route, chatApp enablement, channel-scoped conversation reuse, and async invocation into `agentChatComplete`.
 - Implement Teams using Bot Framework SDK adapter handling in `packages/server`, with per-agent bot credentials and support for personal, team, and group chat scopes.
 - Preserve `/ask` and `/new` semantics; in Teams these are driven by command-menu text insertion and message parsing, not dynamic slash-command registration.
+- No WebSocket is required. Teams integration is inbound HTTPS webhook traffic into the running server process.
+- Keep v1 intentionally small: text in, text out, scoped conversation reuse, and auth hardening. Defer file uploads/polls/proactive send to v2.
+
+## What OpenClaw Actually Does (Relevant to Budibase)
+- The core integration is straightforward:
+  - load Teams app credentials
+  - validate inbound Bot Framework JWT
+  - pass request to CloudAdapter
+  - process message and reply
+- The large code surface in OpenClaw is mostly optional platform features:
+  - allowlist and pairing flows
+  - media/file consent and SharePoint/OneDrive upload paths
+  - proactive messaging from stored conversation references
+  - polls and rich Adaptive Card helpers
+- We should replicate the simple core first and stage the optional features behind follow-up milestones.
 
 ## Discord Work Completed on This Branch
 
@@ -63,10 +78,20 @@
 
 ## Decisions (Locked)
 - Runtime/auth path: Bot Framework SDK adapter handling (not custom JWT auth implementation).
+- Transport model: HTTP webhook only (no WebSocket channel required).
 - Scope for v1: personal + team + group chat.
 - Tenant model: multi-tenant first, with optional config for tenant constraints.
 - Identity model: one Teams app registration per agent (Discord-like isolation).
 - Command UX: text commands with command-menu entries (`ask`, `new`).
+- v1 functional scope: text-only replies plus conversation state reuse; no Graph file pipeline or polls.
+
+## Required Dependencies
+- Add to `packages/server/package.json`:
+  - `@microsoft/agents-hosting`
+- Optional (only if we choose an Express-based sub-handler):
+  - `@microsoft/agents-hosting-express`
+  - `@microsoft/agents-hosting-extensions-teams`
+- Current repo does not include these packages; they must be installed for SDK-based Teams auth/adapter handling.
 
 ## 1) Data Model and Types
 - Add `TeamsAgentIntegration` in `packages/types/src/documents/global/agents.ts`:
@@ -116,16 +141,20 @@
 - Export handler from `packages/server/src/api/controllers/webhook.ts`.
 - Implement `packages/server/src/api/controllers/webhook/teams.ts`:
   - Accept inbound Teams activities.
-  - Authenticate and process via Bot Framework adapter path.
+  - Authenticate and process via Bot Framework adapter path (JWT validation + adapter processing).
   - Resolve prod workspace from `instance`.
   - Resolve `chatAppId` and `agentId` from route params.
   - For message activities:
     - Parse `ask <message>` and `new [message]`.
     - Build `ChatConversationChannel` with `provider: "msteams"` plus conversation identifiers.
     - Reuse or create conversations using same lifecycle used in Discord.
-    - Invoke `agentChatComplete` and send reply via activity response.
+    - Invoke `agentChatComplete` and send reply in the turn context.
   - For unsupported activity types:
     - Return safe no-op or short informational response.
+- Auth implementation detail for v1:
+  - Build Teams auth config from `teamsIntegration` (`appId`, `appPassword`, `tenantId`).
+  - Initialize adapter per request (or cached by `agentId`) and process inbound activity through SDK.
+  - Keep all auth verification in SDK/middleware path (no hand-rolled JWT verification logic).
 
 ## 6) Conversation Scoping for Teams
 - Add Teams-specific scope matcher and picker analogous to Discord:
@@ -143,6 +172,7 @@
 ## 7) Koa and Middleware Plumbing
 - Update `packages/server/src/koa.ts` to bypass default body parser for `/api/webhooks/teams/` similarly to Discord webhook path handling.
 - Update `packages/server/src/middleware/utils.ts` endpoint regex to include `webhooks/teams`.
+- Do not introduce a separate long-running gateway or WebSocket service for v1.
 
 ## 8) Builder UI and Frontend API
 - Extend frontend API client:
@@ -173,6 +203,9 @@
   - `ask message` -> continued conversation
   - `new` -> resets scope/starts new thread
   - unsupported text/activity -> safe response
+- Auth handling:
+  - invalid/missing auth token -> rejected
+  - valid token/activity -> processed
 - Scope matching and idle timeout behavior.
 - Error handling fallback response path.
 
@@ -187,6 +220,12 @@
   - new Teams webhook route
 - No migration required for existing agents.
 - Discord path remains unchanged.
+
+## Explicit Non-Goals for v1
+- Proactive message sending to Teams users/channels without an active inbound turn.
+- Teams file upload pipelines (File Consent Card, SharePoint/OneDrive Graph upload).
+- Teams poll cards and vote tracking.
+- Complex allowlist/pairing orchestration beyond existing Budibase access controls.
 
 ## Important Risks and Mitigations
 - Teams auth complexity:
