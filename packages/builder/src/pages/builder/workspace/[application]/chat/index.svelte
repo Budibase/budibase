@@ -1,5 +1,5 @@
 <script lang="ts">
-  import PublishMenu from "@/components/common/PublishMenu.svelte"
+  import { Button } from "@budibase/bbui"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, chatAppsStore, currentChatApp } from "@/stores/portal"
   import { params } from "@roxi/routify"
@@ -132,9 +132,13 @@
 
 <div class="wrapper">
   <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false}>
-    <div class="publish-menu-inert">
-      <PublishMenu />
-    </div>
+    <Button
+      primary
+      icon="play"
+      iconColor="var(--bb-blue)"
+      iconWeight="fill"
+      >Set your chat live</Button
+    >
   </TopBar>
   <div class="page">
     <ChatSettingsPanel
@@ -184,9 +188,5 @@
     background: transparent;
     overflow: hidden;
     min-width: 0;
-  }
-
-  .publish-menu-inert {
-    pointer-events: none;
   }
 </style>
