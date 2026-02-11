@@ -1,9 +1,27 @@
 import { withEnv } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
+import { mockChatGPTResponse } from "../../../../tests/utilities/mocks/ai/openai"
 import { createBBAIClient } from "./bbai"
 
+jest.mock("@budibase/pro", () => {
+  const actual = jest.requireActual("@budibase/pro")
+  return {
+    ...actual,
+    quotas: {
+      ...actual.quotas,
+      incrementBudibaseAICredits: jest.fn(),
+    },
+  }
+})
+
 describe("createBBAIClient", () => {
+  const incrementCreditsMock =
+    quotas.incrementBudibaseAICredits as jest.MockedFunction<
+      typeof quotas.incrementBudibaseAICredits
+    >
+
   afterEach(() => {
-    jest.restoreAllMocks()
+    jest.clearAllMocks()
   })
 
   it("rejects unsupported models", async () => {
@@ -38,5 +56,24 @@ describe("createBBAIClient", () => {
         })
       }
     )
+  })
+
+  it("increments credits for generate calls", async () => {
+    mockChatGPTResponse("hello world")
+
+    await withEnv({ BBAI_OPENAI_API_KEY: "openai-key" }, async () => {
+      const { chat } = await createBBAIClient("budibase/gpt-5-mini")
+      await chat.doGenerate({
+        prompt: [
+          {
+            role: "user",
+            content: [{ type: "text", text: "hello" }],
+          },
+        ],
+      })
+    })
+
+    expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
+    expect(incrementCreditsMock).toHaveBeenCalledWith(7)
   })
 })
