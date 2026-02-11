@@ -95,7 +95,8 @@ export const buildDiscordWebhookUrl = async (
   if (!workspaceId) {
     throw new HTTPError("workspaceId is required", 400)
   }
-  return `${platformUrl.replace(/\/$/, "")}/api/webhooks/discord/${workspaceId}/${chatAppId}/${agentId}`
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  return `${platformUrl.replace(/\/$/, "")}/api/webhooks/discord/${prodWorkspaceId}/${chatAppId}/${agentId}`
 }
 
 export const buildDiscordInviteUrl = (applicationId: string) =>

@@ -521,6 +521,15 @@ const handleDiscordInteraction = async ({
 export async function discordWebhook(
   ctx: Ctx<any, any, { instance: string; chatAppId: string; agentId: string }>
 ) {
+  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.instance)
+  if (ctx.params.instance !== prodAppId) {
+    ctx.status = 400
+    ctx.body = {
+      error: "Discord webhook must target a production workspace ID",
+    }
+    return
+  }
+
   const signature = ctx.headers[DISCORD_SIGNATURE_HEADER]
   const timestamp = ctx.headers[DISCORD_TIMESTAMP_HEADER]
 
