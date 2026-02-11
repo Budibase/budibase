@@ -40,6 +40,7 @@ import "./view"
 import "./webhook"
 import "./workspace"
 import "./workspaceApp"
+import "./workspaceHome"
 import "./workspaceFavourites"
 
 export { default as assetRoutes } from "./assets"

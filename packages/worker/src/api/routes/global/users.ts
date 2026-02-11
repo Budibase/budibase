@@ -92,7 +92,7 @@ adminRoutes
 
 builderOrAdminRoutes
   .get("/api/global/users", controller.fetch)
-  .get("/api/global/users/count/:appId", controller.countByApp)
+  .get("/api/global/users/count/:workspaceId", controller.countByWorkspace)
   .get("/api/global/users/invites", controller.getUserInvites)
   .get("/api/global/users/:id", controller.find)
   .post(

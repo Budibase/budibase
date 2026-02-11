@@ -1,5 +1,6 @@
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
+import { ModelMessage } from "ai"
 
 export type UserContent = string | openai.ChatCompletionContentPart[]
 
@@ -32,6 +33,12 @@ export type Message =
   | ToolMessage
 
 export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
+
+export interface ChatCompletionRequestV2 {
+  messages: ModelMessage[]
+  model: string
+  stream?: boolean
+}
 
 export interface ChatCompletionRequest {
   messages: Message[]

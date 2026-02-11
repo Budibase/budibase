@@ -29,6 +29,7 @@ interface LicensingState {
   isFreePlan: boolean
   isEnterprisePlan: boolean
   isBusinessPlan: boolean
+  isEnterpriseTrial: boolean
   // features
   groupsEnabled: boolean
   backupsEnabled: boolean
@@ -78,6 +79,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       isFreePlan: true,
       isEnterprisePlan: true,
       isBusinessPlan: true,
+      isEnterpriseTrial: false,
       // features
       groupsEnabled: false,
       backupsEnabled: false,
