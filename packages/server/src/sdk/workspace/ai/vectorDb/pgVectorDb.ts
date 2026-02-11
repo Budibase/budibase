@@ -169,11 +169,20 @@ class PgVectorDb implements VectorDb {
     if (!sourceIds || sourceIds.length === 0) {
       return
     }
+
     await this.withClient(async client => {
-      await client.query(
-        `DELETE FROM ${this.tableName} WHERE source = ANY($1::text[])`,
-        [sourceIds]
-      )
+      try {
+        await client.query(
+          `DELETE FROM ${this.tableName} WHERE source = ANY($1::text[])`,
+          [sourceIds]
+        )
+      } catch (error: any) {
+        if (error?.code === "42P01") {
+          // Table does not exist
+          return
+        }
+        throw error
+      }
     })
   }
 
