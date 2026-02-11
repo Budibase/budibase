@@ -33,37 +33,46 @@ export const uploadAgentFile = async (
     input.filename
   )
 
-  await objectStore.upload({
-    bucket: ObjectStoreBuckets.APPS,
-    filename: objectStoreKey,
-    body: input.buffer,
-    type: input.mimetype,
-  })
-
-  const agentFile = await createAgentFile({
-    id: fileId,
-    agentId: input.agentId,
-    filename: input.filename,
-    mimetype: input.mimetype,
-    objectStoreKey: objectStoreKey,
-    size: input.size ?? input.buffer.byteLength,
-    uploadedBy: input.uploadedBy,
-  })
-
   try {
-    await enqueueAgentFileIngestion({
-      workspaceId,
-      agentId: input.agentId,
-      fileId: agentFile._id!,
-      objectStoreKey,
+    await objectStore.upload({
+      bucket: ObjectStoreBuckets.APPS,
+      filename: objectStoreKey,
+      body: input.buffer,
+      type: input.mimetype,
     })
 
-    return agentFile
+    const agentFile = await createAgentFile({
+      id: fileId,
+      agentId: input.agentId,
+      filename: input.filename,
+      mimetype: input.mimetype,
+      objectStoreKey: objectStoreKey,
+      size: input.size ?? input.buffer.byteLength,
+      uploadedBy: input.uploadedBy,
+    })
+
+    try {
+      await enqueueAgentFileIngestion({
+        workspaceId,
+        agentId: input.agentId,
+        fileId: agentFile._id!,
+        objectStoreKey,
+      })
+
+      return agentFile
+    } catch (error: any) {
+      agentFile.status = AgentFileStatus.FAILED
+      agentFile.errorMessage =
+        error?.message || "Failed to process uploaded file"
+      agentFile.chunkCount = 0
+      await updateAgentFile(agentFile)
+      throw error
+    }
   } catch (error: any) {
-    agentFile.status = AgentFileStatus.FAILED
-    agentFile.errorMessage = error?.message || "Failed to process uploaded file"
-    agentFile.chunkCount = 0
-    await updateAgentFile(agentFile)
-    throw error
+    await objectStore
+      .deleteFile(ObjectStoreBuckets.APPS, objectStoreKey)
+      .catch(() => {
+        // Ignore, it might not exist
+      })
   }
 }
