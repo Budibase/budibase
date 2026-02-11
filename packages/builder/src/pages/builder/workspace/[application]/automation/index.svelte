@@ -39,12 +39,15 @@
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import NoResults from "../_components/NoResults.svelte"
   import { appsStore, featureFlags } from "@/stores/portal"
+  import { onMount } from "svelte"
 
   $url
-  $redirect
 
-  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] &&
-    $redirect("../home?type=automation")
+  onMount(() => {
+    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+      $redirect("../home?type=automation")
+    }
+  })
 
   let showHighlight = true
   let createModal: ModalAPI

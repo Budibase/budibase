@@ -108,13 +108,9 @@
       return b.updatedAt!.localeCompare(a.updatedAt!)
     })
 
-  $redirect
-
-  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] &&
-    $redirect($featureFlags.AI_AGENTS ? "../home?type=agent" : "../home")
-
   onMount(async () => {
     if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+      $redirect($featureFlags.AI_AGENTS ? "../home?type=agent" : "../home")
       return
     }
 

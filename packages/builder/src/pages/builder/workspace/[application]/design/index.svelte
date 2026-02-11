@@ -36,12 +36,15 @@
   import NoResults from "../_components/NoResults.svelte"
   import { redirect } from "@roxi/routify"
   import { featureFlags } from "@/stores/portal"
+  import { onMount } from "svelte"
 
   type ShowUI = { show: () => void }
 
-  $redirect
-
-  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] && $redirect("../home?type=app")
+  onMount(() => {
+    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+      $redirect("../home?type=app")
+    }
+  })
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
