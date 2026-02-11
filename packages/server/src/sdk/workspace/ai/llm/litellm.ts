@@ -3,8 +3,7 @@ import { HTTPError } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
-import { CustomAIProviderConfig } from "@budibase/types"
-import { LLMResponse } from "."
+import { CustomAIProviderConfig, LLMResponse } from "@budibase/types"
 
 type LiteLLMFetch = (
   input: Parameters<typeof fetch>[0],

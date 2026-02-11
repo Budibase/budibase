@@ -1,7 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai"
 import { env, HTTPError } from "@budibase/backend-core"
-import { BUDIBASE_AI_MODEL_MAP } from "@budibase/types"
-import { LLMResponse } from "."
+import { BUDIBASE_AI_MODEL_MAP, LLMResponse } from "@budibase/types"
 
 export async function createBBAIClient(model: string): Promise<LLMResponse> {
   const bbaiModel = BUDIBASE_AI_MODEL_MAP[model]
