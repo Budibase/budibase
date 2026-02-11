@@ -747,6 +747,9 @@ couchdb:
     accessModes:
       - ReadWriteOnce
     size: 10Gi
+    # -- The path where the persistent volume will be mounted.
+    # If you change this, make sure to also update the DATA_DIR environment variable above.
+    mountPath: /data
 
   extraPorts:
     # -- Extra ports to expose on the CouchDB service. We expose the SQS port
