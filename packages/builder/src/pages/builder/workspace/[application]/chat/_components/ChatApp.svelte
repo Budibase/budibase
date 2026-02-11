@@ -312,22 +312,6 @@
     if (workspaceId) {
       await chatAppsStore.initConversations({ workspaceId })
     }
-
-    const conversationId = new URLSearchParams(window.location.search).get(
-      "conversationId"
-    )
-
-    if (!conversationId) {
-      return
-    }
-
-    const conversation = conversationHistory.find(
-      convo => convo._id === conversationId
-    )
-
-    if (conversation) {
-      await selectChat(conversation)
-    }
   })
 </script>
 
