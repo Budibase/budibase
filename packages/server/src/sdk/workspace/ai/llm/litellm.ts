@@ -10,6 +10,7 @@ import {
   CustomAIProviderConfig,
 } from "@budibase/types"
 import { LLMResponse } from "."
+import nodeFetch from "node-fetch"
 
 type LiteLLMFetch = (
   input: Parameters<typeof fetch>[0],
@@ -139,7 +140,7 @@ const fetchAIQuotaUsage = async () => {
     return
   }
   const url = `${env.BUDICLOUD_URL}/api/ai/quotas`
-  const response = await fetch(url, {
+  const response = await nodeFetch(url, {
     headers: {
       [constants.Header.LICENSE_KEY]: licenseKey,
     },

@@ -1,15 +1,16 @@
 import { constants, withEnv } from "@budibase/backend-core"
-import { withEnv as serverWithEnv } from "../../../../environment"
-import { quotas, licensing } from "@budibase/pro"
+import { generator } from "@budibase/backend-core/tests"
+import { licensing, quotas } from "@budibase/pro"
 import {
   AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
   CustomAIProviderConfig,
 } from "@budibase/types"
-import { createLiteLLMOpenAI } from "./litellm"
-import { getKeySettings } from "../configs/litellm"
-import { mockChatGPTResponse } from "../../../../tests/utilities/mocks/ai/openai"
 import nock from "nock"
+import { withEnv as serverWithEnv } from "../../../../environment"
+import { mockChatGPTResponse } from "../../../../tests/utilities/mocks/ai/openai"
+import { getKeySettings } from "../configs/litellm"
+import { createLiteLLMOpenAI } from "./litellm"
 
 jest.mock("../configs/litellm", () => ({
   getKeySettings: jest.fn(),
@@ -21,7 +22,7 @@ jest.mock("@budibase/pro", () => {
     ...actual,
     quotas: {
       ...actual.quotas,
-      incrementBudibaseAICredits: jest.fn(),
+      setBudibaseAICredits: jest.fn(),
     },
     licensing: {
       ...actual.licensing,
@@ -34,11 +35,6 @@ jest.mock("@budibase/pro", () => {
 })
 
 describe("createLiteLLMOpenAI", () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    nock.cleanAll()
-  })
-
   it("syncs quota usage after BBAI responses in self host", async () => {
     const setBudibaseAICreditsMock =
       quotas.setBudibaseAICredits as jest.MockedFunction<
@@ -60,14 +56,11 @@ describe("createLiteLLMOpenAI", () => {
       baseUrl: "http://litellm.local",
     })
 
-    nock("https://budibase.app")
+    const monthlyCredits = generator.integer()
+    const quotaNock = nock("https://budibase.app")
       .get("/api/ai/quotas")
       .matchHeader(constants.Header.LICENSE_KEY, "license-key")
-      .reply(
-        200,
-        { monthlyCredits: 10 },
-        { "content-type": "application/json" }
-      )
+      .reply(200, { monthlyCredits }, { "content-type": "application/json" })
 
     const aiConfig: CustomAIProviderConfig = {
       _id: "config-1",
@@ -83,13 +76,13 @@ describe("createLiteLLMOpenAI", () => {
 
     await serverWithEnv(
       {
-        LITELLM_URL: "http://litellm.local",
+        LITELLM_URL: "http://litellm.local/v1",
       },
       async () => {
         await withEnv(
           {
             SELF_HOSTED: true,
-            PLATFORM_URL: "http://localhost:10000",
+            BUDICLOUD_URL: "https://budibase.app",
           },
           async () => {
             const llm = await createLiteLLMOpenAI(aiConfig)
@@ -106,7 +99,11 @@ describe("createLiteLLMOpenAI", () => {
       }
     )
 
+    // Await to allow the background setBudibaseAICredits to execute
+    await new Promise(r => setTimeout(r, 500))
+
+    expect(quotaNock.isDone()).toBe(true)
     expect(setBudibaseAICreditsMock).toHaveBeenCalledTimes(1)
-    expect(setBudibaseAICreditsMock).toHaveBeenCalledWith(5)
+    expect(setBudibaseAICreditsMock).toHaveBeenCalledWith(monthlyCredits)
   })
 })
