@@ -2,6 +2,7 @@ import { constants } from "@budibase/backend-core"
 import {
   AIConfigListResponse,
   ChatCompletionRequest,
+  ChatCompletionRequestV2,
   ChatCompletionResponse,
   CreateAIConfigRequest,
   CustomAIProviderConfig,
@@ -70,9 +71,7 @@ export class AIAPI extends TestAPI {
   }
 
   openaiChatCompletions = async (
-    req: OpenAI.Chat.Completions.ChatCompletionCreateParams & {
-      licenseKey?: string
-    },
+    req: ChatCompletionRequestV2 & { licenseKey?: string },
     expectations?: Expectations
   ): Promise<OpenAI.Chat.Completions.ChatCompletion> => {
     const headers: Record<string, string> = {}

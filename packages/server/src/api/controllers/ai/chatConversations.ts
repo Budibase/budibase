@@ -232,16 +232,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
   try {
-    const { modelId, apiKey, baseUrl } =
-      await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
-
     const sessionId = chat._id || v4()
-    const openai = ai.createLiteLLMOpenAI({
-      apiKey,
-      baseUrl,
-      sessionId,
-    })
-    const model = openai.chat(modelId)
+    const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
+      agent.aiconfig,
+      sessionId
+    )
 
     const modelMessages = await convertToModelMessages(chat.messages)
     const messagesWithContext: ModelMessage[] =
@@ -260,7 +255,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const hasTools = Object.keys(tools).length > 0
     const result = streamText({
       model: wrapLanguageModel({
-        model,
+        model: chatLLM,
         middleware: extractReasoningMiddleware({
           tagName: "think",
         }),
@@ -277,7 +272,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           }
         }
       },
-      providerOptions: ai.getLiteLLMProviderOptions(hasTools),
+      providerOptions: providerOptions?.(hasTools),
       onError({ error }) {
         console.error("Agent streaming error", {
           agentId,
@@ -350,7 +345,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   } catch (error: any) {
     const message = error?.message || "Agent action failed"
     ctx.res.write(
-      `data: ${JSON.stringify({ type: "error", errorText: message, content: message })}\n\n`
+      `data: ${JSON.stringify({ type: "error", errorText: message })}\n\n`
     )
     ctx.res.end()
   }
