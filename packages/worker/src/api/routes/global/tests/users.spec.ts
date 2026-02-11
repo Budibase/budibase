@@ -116,6 +116,34 @@ describe("/api/global/users", () => {
       expect(events.user.inviteAccepted).toHaveBeenCalledTimes(1)
       expect(events.user.inviteAccepted).toHaveBeenCalledWith(user)
     })
+
+    it("should set creator builder access when invite includes CREATOR app role", async () => {
+      const email = structures.users.newEmail()
+      const appId = "app_123456789"
+      await config.api.users.sendMultiUserInvite([
+        {
+          email,
+          userInfo: {
+            apps: {
+              [appId]: "CREATOR",
+            },
+          },
+        },
+      ])
+
+      const emailCall = sendMailMock.mock.calls[0][0]
+      const code = emailCall.html
+        .split("http://localhost:10000/builder/invite?code=")[1]
+        .split('"')[0]
+        .split("&")[0]
+
+      await config.api.users.acceptInvite(code)
+
+      const user = await config.getUser(email)
+      expect(user.roles?.[appId]).toBe("CREATOR")
+      expect(user.builder?.creator).toBe(true)
+      expect(user.builder?.apps).toEqual([appId])
+    })
   })
 
   describe("POST /api/global/users/invite/:code/:role", () => {

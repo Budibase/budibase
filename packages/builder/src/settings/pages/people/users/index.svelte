@@ -436,7 +436,7 @@
       return undefined
     }
     if (role === Constants.BudibaseRoles.Creator) {
-      return Constants.Roles.ADMIN
+      return Constants.Roles.CREATOR
     }
     if (role === Constants.BudibaseRoles.Admin) {
       return Constants.Roles.ADMIN

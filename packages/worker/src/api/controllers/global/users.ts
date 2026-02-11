@@ -727,6 +727,7 @@ export const inviteAccept = async (
             ...request,
             ...info,
           }
+          syncCreatorBuilderAccess(request)
 
           const saved = await userSdk.db.save(request)
           await events.user.inviteAccepted(saved)
@@ -774,6 +775,29 @@ export const removeUserFromWorkspace = async (
   >
 ) => handleUserWorkspacePermission(ctx, ctx.params.userId, undefined)
 
+function syncCreatorBuilderAccess(user: {
+  roles?: Record<string, string>
+  builder?: {
+    creator?: boolean
+    apps?: string[]
+  }
+}) {
+  const creatorForApps = Object.entries(user.roles || {})
+    .filter(([_appId, role]) => role === "CREATOR")
+    .map(([appId]) => appId)
+
+  const shouldHaveCreatorRole = user.builder?.creator || creatorForApps.length
+  if (!shouldHaveCreatorRole) {
+    delete user.builder?.creator
+    delete user.builder?.apps
+    return
+  }
+
+  user.builder ??= {}
+  user.builder.creator = true
+  user.builder.apps = creatorForApps
+}
+
 async function handleUserWorkspacePermission(
   ctx: UserCtx<EditUserPermissionsResponse, SaveUserResponse>,
   userId: string,
@@ -804,20 +828,7 @@ async function handleUserWorkspacePermission(
     throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
-  const creatorForApps = Object.entries(existingUser.roles)
-    .filter(([_appId, role]) => role === "CREATOR")
-    .map(([appId]) => appId)
-
-  const shouldHaveCreatorRole =
-    existingUser.builder?.creator || creatorForApps.length
-  if (!shouldHaveCreatorRole) {
-    delete existingUser.builder?.creator
-    delete existingUser.builder?.apps
-  } else {
-    existingUser.builder ??= {}
-    existingUser.builder.creator = true
-    existingUser.builder.apps = creatorForApps
-  }
+  syncCreatorBuilderAccess(existingUser)
 
   const user = await userSdk.db.save(existingUser, {
     currentUserId,
