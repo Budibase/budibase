@@ -679,18 +679,20 @@
         >
       </div>
 
-      <div class="header-actions">
-        <a href={url("../chat")} class="header-link header-link--with-icons">
-          <Icon name="chat-circle" size="XS" color="#8CA171" weight="fill" />
-          <Body size="S">Agent chat</Body>
-          <Icon
-            name="arrow-up-right"
-            size="XS"
-            color="var(--spectrum-global-color-gray-600)"
-            weight="regular"
-          />
-        </a>
-      </div>
+      {#if $featureFlags.AI_AGENTS}
+        <div class="header-actions">
+          <a href={url("../chat")} class="header-link header-link--with-icons">
+            <Icon name="chat-circle" size="XS" color="#8CA171" weight="fill" />
+            <Body size="S">Agent chat</Body>
+            <Icon
+              name="arrow-up-right"
+              size="XS"
+              color="var(--spectrum-global-color-gray-600)"
+              weight="regular"
+            />
+          </a>
+        </div>
+      {/if}
     </div>
 
     <HomeMetrics {metrics} agentsEnabled={$featureFlags.AI_AGENTS} />
