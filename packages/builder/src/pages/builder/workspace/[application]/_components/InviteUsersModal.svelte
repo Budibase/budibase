@@ -56,7 +56,7 @@
     }
 
     if (!newUsers.length) {
-      notifications.info("Duplicated! There is no new users to add.")
+      notifications.info("No new users to add.")
     }
     return { ...userData, users: newUsers }
   }
@@ -83,10 +83,15 @@
   }
 
   const createUsers = async (userData: UserData) => {
+    const assignToWorkspace = userData.assignToWorkspace ?? true
     let response: BulkUserCreated = { successful: [], unsuccessful: [] }
     response = (await users.create(userData)) || response
 
-    if (!currentWorkspaceId || !response.successful?.length) {
+    if (
+      !assignToWorkspace ||
+      !currentWorkspaceId ||
+      !response.successful?.length
+    ) {
       notifications.success("Successfully created user")
       return
     }

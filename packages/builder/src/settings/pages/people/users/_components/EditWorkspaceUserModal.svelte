@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
   import { roles } from "@/stores/builder"
-  import { auth, users } from "@/stores/portal"
+  import { auth, licensing, users } from "@/stores/portal"
   import type { User } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
 
@@ -62,6 +62,9 @@
         role.uiMetadata?.color ||
         "var(--spectrum-global-color-static-magenta-400)",
     }))
+  $: creatorRoleEnabled =
+    !$licensing.isFreePlan &&
+    !!$licensing.license?.features?.includes(Constants.Features.APP_BUILDERS)
   $: endUserRoleOptions = [
     {
       label: "Basic user",
@@ -74,6 +77,12 @@
       color: roleColorLookup[Constants.Roles.ADMIN],
     },
     ...customEndUserRoleOptions,
+    {
+      label: "Can edit",
+      value: Constants.Roles.CREATOR,
+      icon: creatorRoleEnabled ? "pencil" : "lock",
+      enabled: creatorRoleEnabled,
+    },
   ]
   $: roleOptions = isTenantOwner
     ? Constants.ExtendedBudibaseRoleOptions
@@ -81,16 +90,12 @@
   $: disableFields = readonly || !!user?.scimInfo?.isSync
   $: disableRole =
     disableFields || isTenantOwner || user?._id === $auth.user?._id
-  $: isEndUser = draft.role === Constants.BudibaseRoles.AppUser
   $: hasChanges =
     !!initialDraft &&
     (draft.firstName !== initialDraft.firstName ||
       draft.lastName !== initialDraft.lastName ||
       draft.role !== initialDraft.role ||
       draft.appRole !== initialDraft.appRole)
-  $: if (!endUserRoleOptions.some(option => option.value === draft.appRole)) {
-    draft = { ...draft, appRole: Constants.Roles.BASIC }
-  }
 
   $: if (user?._id && user._id !== selectedUserId) {
     selectedUserId = user._id
@@ -98,14 +103,29 @@
     initialDraft = { ...draft }
   }
 
+  const sanitizeAppRole = (appRole: string) => {
+    const rolesLoaded = ($roles || []).length > 0
+    if (
+      rolesLoaded &&
+      !endUserRoleOptions.some(option => option.value === appRole)
+    ) {
+      return Constants.Roles.BASIC
+    }
+    if (appRole === Constants.Roles.CREATOR && !creatorRoleEnabled) {
+      return Constants.Roles.BASIC
+    }
+    return appRole
+  }
+
   const createDraft = (user: User): UserDraft => {
     const role = users.getUserRole(user)
+    const appRole = user.roles?.[workspaceId] || Constants.Roles.BASIC
     return {
       firstName: user.firstName || "",
       lastName: user.lastName || "",
       email: user.email || "",
       role: isTenantOwner ? "owner" : role,
-      appRole: user.roles?.[workspaceId] || Constants.Roles.BASIC,
+      appRole: sanitizeAppRole(appRole),
     }
   }
 
@@ -158,8 +178,9 @@
       }
 
       if (!disableRole) {
+        const appRole = sanitizeAppRole(draft.appRole)
         if (draft.role === Constants.BudibaseRoles.AppUser) {
-          await users.addUserToWorkspace(user._id, draft.appRole, updated._rev)
+          await users.addUserToWorkspace(user._id, appRole, updated._rev)
         } else if (updated.roles?.[workspaceId]) {
           await users.removeUserFromWorkspace(user._id, updated._rev)
         }
@@ -212,7 +233,7 @@
         disabled={disableRole}
       />
     </div>
-    {#if isEndUser}
+    {#if draft.role === Constants.BudibaseRoles.AppUser}
       <div class="role-select-compact">
         <Select
           label="Select end user role"
@@ -220,7 +241,9 @@
           options={endUserRoleOptions}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
+          getOptionIcon={option => option.icon}
           getOptionColour={option => option.color}
+          isOptionEnabled={option => option.enabled !== false}
           placeholder={false}
           disabled={disableRole}
         />

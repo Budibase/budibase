@@ -461,11 +461,15 @@
   }
 
   onMount(async () => {
+    roles.fetch().catch(() => {
+      notifications.error("Error fetching role data")
+    })
     try {
-      await Promise.all([groups.init(), roles.fetch()])
-      groupsLoaded = true
+      await groups.init()
     } catch (error) {
       notifications.error("Error fetching user group data")
+    } finally {
+      groupsLoaded = true
     }
     try {
       tenantOwner = await users.getAccountHolder()
