@@ -42,6 +42,7 @@ export async function uploadAgentFile(
   ctx: UserCtx<void, AgentFileUploadResponse, { agentId: string }>
 ) {
   const agentId = ctx.params.agentId
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   const upload = normalizeUpload(
     ctx.request.files?.file ||
@@ -69,7 +70,7 @@ export async function uploadAgentFile(
 
   try {
     const updated = await sdk.ai.agents.uploadAgentFile({
-      agentId,
+      agentId: agent._id!,
       filename,
       mimetype,
       size: fileSize ?? buffer.byteLength,
