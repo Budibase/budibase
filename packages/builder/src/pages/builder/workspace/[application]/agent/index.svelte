@@ -1,7 +1,7 @@
 <script lang="ts">
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { contextMenuStore, workspaceFavouriteStore } from "@/stores/builder"
-  import { agentsStore } from "@/stores/portal"
+  import { agentsStore, featureFlags } from "@/stores/portal"
   import {
     ActionButton,
     Body,
@@ -13,13 +13,13 @@
     Tabs,
     Tab,
   } from "@budibase/bbui"
-  import type { Agent } from "@budibase/types"
-  import { WorkspaceResource } from "@budibase/types"
+  import { FeatureFlag, WorkspaceResource, type Agent } from "@budibase/types"
   import NoResults from "../_components/NoResults.svelte"
   import AgentModal from "./AgentModal.svelte"
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
   import AgentCard from "./AgentCard.svelte"
   import { onMount } from "svelte"
+  import { redirect } from "@roxi/routify"
 
   let showHighlight = false
   let upsertModal: AgentModal
@@ -108,7 +108,15 @@
       return b.updatedAt!.localeCompare(a.updatedAt!)
     })
 
+  $redirect
+
+  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] && $redirect("../home")
+
   onMount(async () => {
+    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+      return
+    }
+
     await agentsStore.fetchAgents()
   })
 </script>

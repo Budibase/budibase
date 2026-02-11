@@ -29,24 +29,6 @@ builderAdminRoutes
 
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)
-  .get("/api/chatapps", ai.fetchChatApp)
-  .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
-  .put("/api/chatapps/:chatAppId", ai.updateChatApp)
-  .post("/api/chatapps/:chatAppId/agent", ai.setChatAppAgent)
-  .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)
-  .get(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId",
-    ai.fetchChatConversation
-  )
-  .post("/api/chatapps/:chatAppId/conversations", ai.createChatConversation)
-  .delete(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId",
-    ai.removeChatConversation
-  )
-  .post(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId/stream",
-    ai.agentChatStream
-  )
   .get("/api/configs", ai.fetchAIConfigs)
   .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)
   .put("/api/configs", updateAIConfigValidator(), ai.updateAIConfig)
@@ -64,5 +46,5 @@ builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
 licensedRoutes
   /** @deprecated Use the openai compatible /api/ai/chat/completions instead */
   .post("/api/ai/chat", ai.chatCompletion)
-  .post("/api/ai/chat/completions", ai.openaiChatCompletions)
+  .post("/api/ai/chat/completions", ai.chatCompletionV2)
   .post("/api/ai/upload-file", ai.uploadFile)

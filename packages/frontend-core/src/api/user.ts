@@ -55,7 +55,7 @@ export interface UserEndpoints {
   acceptInvite: (
     data: AcceptUserInviteRequest
   ) => Promise<AcceptUserInviteResponse>
-  getUserCountByApp: (appId: string) => Promise<number>
+  getUserCountByWorkspace: (workspaceId: string) => Promise<number>
   getAccountHolder: () => Promise<LookupAccountHolderResponse>
   searchUsers: (data: SearchUsersRequest) => Promise<SearchUsersResponse>
   createUsers: (
@@ -274,11 +274,11 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
   },
 
   /**
-   * Counts the number of users in an app
+   * Counts the number of users in a workspace
    */
-  getUserCountByApp: async appId => {
+  getUserCountByWorkspace: async workspaceId => {
     const res = await API.get<CountUserResponse>({
-      url: `/api/global/users/count/${appId}`,
+      url: `/api/global/users/count/${workspaceId}`,
     })
     return res.userCount
   },
