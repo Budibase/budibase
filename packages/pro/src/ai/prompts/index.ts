@@ -118,18 +118,6 @@ export function cleanData(text: string) {
   )
 }
 
-export function generateSQL(prompt: string, tableSchema: string) {
-  return new LLMRequest().addUserMessage(
-    `Given the table schema:\n${tableSchema}\n\nGenerate a SQL query for the following request:\n${prompt}.\n Only provide the SQL.`
-  )
-}
-
-export function generateCode(prompt: string) {
-  return new LLMRequest().addUserMessage(
-    `Generate JavaScript code for the following request:\n${prompt}.\n Only provide the JS and nothing else.`
-  )
-}
-
 export function generateCronExpression(text: string) {
   return new LLMRequest().addUserMessage(
     `Generate a node-cron compatible expression based on the following prompt. Return only the cron expression (without backticks), and if not possible return only 'Error generating cron' with a short explanation:\n${text}`
@@ -265,35 +253,6 @@ a variable, it will be provided to you as a binding.
 ${snippetsPrompt}
 
 ${bindingsPrompt}`
-}
-
-export function generateTablesPrompt(): string {
-  const tablesMessage = `
-You are generating Budibase table schemas from user prompts.
-Always return at least 2 tables, and define only one side of relationships using a link field.
-Exclude id, created_at, and updated_at (Budibase adds them).
-Include a variety of column types: text, dropdown, date, number.
-Add at least one formula column, one attachment, and one multi-attachment column across the tables.
-Budibase handles reverse relationships and many-to-many links — never define join tables or reverse fields.
-You may specify foreignColumnName, but do not create that field manually.
-`
-
-  return tablesMessage
-}
-
-export function generateAIColumnsPrompt(): string {
-  const tablesMessage = `Given the generated schema, add only one field of type "AI" to relevant tables to add value to the Budibase user.`
-
-  return tablesMessage
-}
-
-export function generateDataPrompt(): string {
-  const dataMessage = `
-For each table, populate the data field with realistic-looking sample records.
-Avoid placeholder values like "foo" or "bar". Use real names, emails, etc., and ensure values are unique across rows.
-`
-
-  return dataMessage
 }
 
 export function composeAutomationAgentSystemPrompt(

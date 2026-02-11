@@ -1,10 +1,5 @@
 import { utils } from "@budibase/shared-core"
 import {
-  generateAIColumnsPrompt,
-  generateDataPrompt,
-  generateTablesPrompt,
-} from "../prompts"
-import {
   aiColumnSchemas,
   aiTableResponseToTableSchema,
   appendAIColumns,
@@ -26,6 +21,23 @@ interface Delegates {
     userId: string,
     tables: Record<string, TableSchemaFromAI>
   ) => Promise<void>
+}
+
+const prompts = {
+  generateTable: `
+You are generating Budibase table schemas from user prompts.
+Always return at least 2 tables, and define only one side of relationships using a link field.
+Exclude id, created_at, and updated_at (Budibase adds them).
+Include a variety of column types: text, dropdown, date, number.
+Add at least one formula column, one attachment, and one multi-attachment column across the tables.
+Budibase handles reverse relationships and many-to-many links — never define join tables or reverse fields.
+You may specify foreignColumnName, but do not create that field manually.
+`,
+  generateAIColumns: `Given the generated schema, add only one field of type "AI" to relevant tables to add value to the Budibase user.`,
+  generateData: `
+For each table, populate the data field with realistic-looking sample records.
+Avoid placeholder values like "foo" or "bar". Use real names, emails, etc., and ensure values are unique across rows.
+`,
 }
 
 export class TableGeneration {
@@ -56,7 +68,7 @@ export class TableGeneration {
     ): Promise<TableSchemaFromAI[]> => {
       return tracer.trace("llm.getTableStructure", async () => {
         const response = await this.generateStructuredOutput(
-          generateTablesPrompt(),
+          prompts.generateTable,
           userPrompt,
           generationStructure
         )
@@ -77,7 +89,7 @@ export class TableGeneration {
     ) => {
       return tracer.trace("llm.generateData", async () => {
         return this.generateStructuredOutput(
-          generateDataPrompt(),
+          prompts.generateData,
           userPrompt,
           tableDataStructuredOutput(forTables)
         )
@@ -120,7 +132,7 @@ export class TableGeneration {
     tables: TableSchemaFromAI[]
   ) {
     return this.generateStructuredOutput(
-      generateAIColumnsPrompt(),
+      prompts.generateAIColumns,
       `This is the initial user prompt that generated the given schema:
             "${userPrompt}"`,
       aiColumnSchemas(tables)
