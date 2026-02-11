@@ -1,45 +1,34 @@
-import { LLMConfigOptions } from "@budibase/types"
-import { OpenAI } from "./openai"
-import { default as OpenAIClient } from "openai"
 import { createOpenAI } from "@ai-sdk/openai"
+import { HTTPError } from "@budibase/backend-core"
 import tracer from "dd-trace"
+import environment from "../../../../environment"
+import { getKeySettings } from "../configs/litellm"
+import { CustomAIProviderConfig } from "@budibase/types"
+import { LLMResponse } from "."
 
 type LiteLLMFetch = (
   input: Parameters<typeof fetch>[0],
   init?: Parameters<typeof fetch>[1]
 ) => ReturnType<typeof fetch>
 
-type LiteLLMOpenAIConfig = {
-  apiKey: string
-  baseUrl: string
-  sessionId?: string
-}
+export const createLiteLLMOpenAI = async (
+  aiConfig: CustomAIProviderConfig,
+  sessionId?: string,
+  span?: tracer.Span
+): Promise<LLMResponse> => {
+  const { apiKey, baseUrl } = await getLiteLLMModelSettings()
 
-export class LiteLLMAI extends OpenAI {
-  protected override getClient(opts: LLMConfigOptions) {
-    if (!opts.apiKey) {
-      throw new Error("No LiteLLM API key found")
-    }
-    return new OpenAIClient({ apiKey: opts.apiKey, baseURL: opts.baseUrl })
+  const { liteLLMModelId: modelId, model: modelName } = aiConfig
+
+  if (span) {
+    tracer.llmobs.annotate(span, {
+      metadata: {
+        modelId,
+        modelName,
+        baseUrl,
+      },
+    })
   }
-}
-
-export const getLiteLLMProvider = (modelId: string) => {
-  const [provider] = modelId.split("/")
-  return provider || "openai"
-}
-
-export const getLiteLLMProviderOptions = (hasTools: boolean) => {
-  if (!hasTools) return
-  return {
-    openai: {
-      parallelToolCalls: true,
-    },
-  }
-}
-
-export const createLiteLLMOpenAI = (config: LiteLLMOpenAIConfig) => {
-  const { apiKey, baseUrl, sessionId } = config
 
   const clientConfig: {
     apiKey: string
@@ -53,7 +42,12 @@ export const createLiteLLMOpenAI = (config: LiteLLMOpenAIConfig) => {
     fetch: createLiteLLMFetch(sessionId),
   }
 
-  return createOpenAI(clientConfig)
+  const llm = createOpenAI(clientConfig)
+  return {
+    chat: llm.chat(modelId),
+    embedding: llm.embedding(modelId),
+    providerOptions: getLiteLLMProviderOptions,
+  }
 }
 
 function createLiteLLMFetch(sessionId?: string): typeof fetch {
@@ -105,4 +99,31 @@ function createLiteLLMFetch(sessionId?: string): typeof fetch {
   }
 
   return liteFetch
+}
+
+const getLiteLLMProviderOptions = (hasTools: boolean) => {
+  if (!hasTools) return
+  return {
+    openai: {
+      parallelToolCalls: true,
+    },
+  }
+}
+
+async function getLiteLLMModelSettings(): Promise<{
+  apiKey: string
+  baseUrl: string
+}> {
+  const { secretKey } = await getKeySettings()
+  if (!secretKey) {
+    throw new HTTPError(
+      "LiteLLM should be configured. Contact support if the issue persists.",
+      500
+    )
+  }
+
+  return {
+    apiKey: secretKey,
+    baseUrl: environment.LITELLM_URL,
+  }
 }

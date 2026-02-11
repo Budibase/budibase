@@ -100,7 +100,6 @@
   let typeFilter: HomeType = "all"
   let searchTerm = ""
   let metrics: GetWorkspaceHomeMetricsResponse | null = null
-  let metricsError = false
 
   let sortColumn: HomeSortColumn = "created"
   let sortOrder: HomeSortOrder = "desc"
@@ -419,6 +418,20 @@
     }
   }
 
+  async function duplicateAgent() {
+    const selectedId = selectedAgent?._id
+    if (!selectedId) {
+      return
+    }
+    try {
+      await agentsStore.duplicateAgent(selectedId)
+      notifications.success("Agent duplicated successfully")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error duplicating agent")
+    }
+  }
+
   const getContextMenuItemsForRow = (row: HomeRow) => {
     if (row.type === "app") {
       const workspaceApp = row.resource
@@ -527,6 +540,12 @@
           callback: () => updateAgentModal.show(),
         },
         {
+          icon: "copy",
+          name: "Duplicate",
+          visible: true,
+          callback: duplicateAgent,
+        },
+        {
           icon: "trash",
           name: "Delete",
           visible: true,
@@ -592,12 +611,10 @@
   }
 
   const loadMetrics = async () => {
-    metricsError = false
     try {
       metrics = await API.workspaceHome.getMetrics()
     } catch (err) {
       console.error(err)
-      metricsError = true
       metrics = null
     }
   }
@@ -680,11 +697,7 @@
       </div>
     </div>
 
-    <HomeMetrics
-      {metrics}
-      {metricsError}
-      agentsEnabled={$featureFlags.AI_AGENTS}
-    />
+    <HomeMetrics {metrics} agentsEnabled={$featureFlags.AI_AGENTS} />
 
     <div class="controls-row">
       <HomeControls
