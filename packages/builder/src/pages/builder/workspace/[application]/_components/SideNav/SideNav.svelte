@@ -6,6 +6,7 @@
     Body,
     Link,
     MenuItem,
+    MenuSeparator,
     Modal,
     type ModalAPI,
     PopoverAlignment,
@@ -38,7 +39,7 @@
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
-  import { onDestroy, onMount, setContext } from "svelte"
+  import { createEventDispatcher, onDestroy, onMount, setContext } from "svelte"
   import {
     FeatureFlag,
     type Datasource,
@@ -122,6 +123,7 @@
   const favouriteLookup = workspaceFavouriteStore.lookup
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
   const navLogoSize = 18
+  const dispatch = createEventDispatcher()
 
   let ignoreFocus = false
   let focused = false
@@ -190,6 +192,11 @@
       : `${prefix}/${target.replace(/^\.\//, "")}`
 
     $goto(normalisedTarget)
+    keepCollapsed()
+  }
+
+  const openInviteUser = () => {
+    dispatch("inviteUser")
     keepCollapsed()
   }
 
@@ -593,6 +600,10 @@
                   <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
                     Connection
                   </MenuItem>
+                  <MenuSeparator />
+                  <MenuItem icon="user-circle-plus" on:click={openInviteUser}>
+                    User
+                  </MenuItem>
                 </ActionMenu>
               {:else}
                 <SideNavLink
@@ -685,6 +696,12 @@
                 url={$url("./data")}
                 {collapsed}
                 on:click={keepCollapsed}
+              />
+              <SideNavLink
+                icon="user-plus"
+                text="Invite user"
+                on:click={openInviteUser}
+                {collapsed}
               />
               <span class="root-nav" class:error={backupErrorCount}>
                 {#if collapsed && backupErrorCount}

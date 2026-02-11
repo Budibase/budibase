@@ -18,6 +18,7 @@
 
   let promise = getPackage(application)
   let sideNav: SideNav
+  let showInviteUsersModal = false
 
   async function getPackage(appId: string) {
     try {
@@ -44,10 +45,15 @@
   }
 </script>
 
-<InviteUsersModal />
+{#if showInviteUsersModal}
+  <InviteUsersModal on:hide={() => (showInviteUsersModal = false)} />
+{/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
-  <SideNav bind:this={sideNav} />
+  <SideNav
+    bind:this={sideNav}
+    on:inviteUser={() => (showInviteUsersModal = true)}
+  />
   {#await promise}
     <div class="loading"></div>
   {:then _}

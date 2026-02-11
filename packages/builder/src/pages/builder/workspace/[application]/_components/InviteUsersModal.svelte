@@ -3,7 +3,7 @@
   import { Constants } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import type { BulkUserCreated } from "@budibase/types"
-  import { onMount } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import { OnboardingType } from "@/constants"
   import AddUserModal from "@/settings/pages/people/users/_components/AddUserModal.svelte"
   import { appStore, roles } from "@/stores/builder"
@@ -17,6 +17,7 @@
   }
 
   let createUserModal: Modal
+  const dispatch = createEventDispatcher()
   let hasOpened = false
 
   $: currentWorkspaceId = $appStore.appId
@@ -135,6 +136,7 @@
     if (!hasOpened) {
       return
     }
+    dispatch("hide")
   }
 
   const showModal = () => {
