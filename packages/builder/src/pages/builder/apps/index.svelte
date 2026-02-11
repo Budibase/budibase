@@ -39,6 +39,14 @@
   $goto // manually initialize the helper
 
   let loaded: boolean = false
+  let chatAppsLoaded: boolean = false
+  type PublishedChatAppData = {
+    appId: string
+    chatAppId: string
+    name: string
+    updatedAt?: string
+  }
+  let liveChatApps: PublishedChatAppData[] = []
   let userInfoModal: Modal
   let changePasswordModal: Modal
 
@@ -65,7 +73,21 @@
 
   onMount(async () => {
     try {
-      await Promise.all([clientAppsStore.load(), translations.init()])
+      await Promise.all([
+        clientAppsStore.load(),
+        translations.init(),
+        API.get<{ chatApps: PublishedChatAppData[] }>({
+          url: "/api/client/chatapps",
+        })
+          .then(response => {
+            liveChatApps = response.chatApps
+            chatAppsLoaded = true
+          })
+          .catch(() => {
+            notifications.error("Error loading chat apps")
+            chatAppsLoaded = true
+          }),
+      ])
     } catch (error) {
       notifications.error("Error loading apps")
     }
@@ -193,16 +215,37 @@
             <Heading size="S">Chat</Heading>
             <div class="group">
               <Layout gap="S" noPadding>
-                <div class="app static">
-                  <div class="preview" use:gradient={{ seed: "Chat apps" }}></div>
-                  <div class="app-info">
-                    <Heading size="XS">Live, published chat apps</Heading>
-                    <Body size="S">Coming soon</Body>
-                  </div>
-                  <div class="icon-muted">
-                    <Icon name="caret-right" />
-                  </div>
-                </div>
+                {#if !chatAppsLoaded}
+                  <Body size="S">Loading chat apps...</Body>
+                {:else if liveChatApps.length}
+                  {#each liveChatApps as chatApp (chatApp.chatAppId)}
+                    <div class="app static">
+                      <div
+                        class="preview"
+                        use:gradient={{ seed: chatApp.name }}
+                      ></div>
+                      <div class="app-info">
+                        <Heading size="XS">{chatApp.name}</Heading>
+                        <Body size="S">
+                          {#if chatApp.updatedAt}
+                            {processStringSync(portalLabels.updatedAgo, {
+                              time:
+                                new Date().getTime() -
+                                new Date(chatApp.updatedAt).getTime(),
+                            })}
+                          {:else}
+                            {portalLabels.neverUpdated}
+                          {/if}
+                        </Body>
+                      </div>
+                      <div class="icon-muted">
+                        <Icon name="caret-right" />
+                      </div>
+                    </div>
+                  {/each}
+                {:else}
+                  <Body size="S">No live chat apps yet.</Body>
+                {/if}
               </Layout>
             </div>
           {:else}

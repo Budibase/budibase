@@ -67,6 +67,17 @@ export interface FetchPublishedAppsResponse {
   apps: PublishedWorkspaceData[]
 }
 
+export interface PublishedChatAppData {
+  appId: string
+  chatAppId: string
+  name: string
+  updatedAt?: string
+}
+
+export interface FetchPublishedChatAppsResponse {
+  chatApps: PublishedChatAppData[]
+}
+
 export interface UpdateWorkspaceRequest extends Partial<Workspace> {}
 export interface UpdateWorkspaceResponse extends Workspace {}
 export interface UpdateAppClientResponse extends Workspace {}

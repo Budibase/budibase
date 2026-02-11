@@ -34,6 +34,7 @@ import {
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
   FetchPublishedAppsResponse,
+  FetchPublishedChatAppsResponse,
   FetchWorkspacesResponse,
   FieldType,
   ImportToUpdateWorkspaceRequest,
@@ -318,6 +319,35 @@ export async function fetchClientApps(
   }
 
   ctx.body = { apps: result }
+}
+
+export async function fetchClientChatApps(
+  ctx: UserCtx<void, FetchPublishedChatAppsResponse>
+) {
+  const workspaces = await sdk.workspaces.fetch(
+    WorkspaceStatus.DEPLOYED,
+    ctx.user
+  )
+
+  const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
+  for (const workspace of workspaces) {
+    const chatApp = await context.doInWorkspaceContext(workspace.appId, () =>
+      sdk.ai.chatApps.getSingle()
+    )
+
+    if (!chatApp?.live || !chatApp._id) {
+      continue
+    }
+
+    chatApps.push({
+      appId: workspace.appId,
+      chatAppId: chatApp._id,
+      name: chatApp.title || workspace.name,
+      updatedAt: chatApp.updatedAt || workspace.updatedAt,
+    })
+  }
+
+  ctx.body = { chatApps }
 }
 
 export async function fetchAppDefinition(
