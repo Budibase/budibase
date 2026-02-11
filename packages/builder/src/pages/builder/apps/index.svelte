@@ -190,6 +190,21 @@
                 {/each}
               </Layout>
             </div>
+            <Heading size="S">Chat</Heading>
+            <div class="group">
+              <Layout gap="S" noPadding>
+                <div class="app static">
+                  <div class="preview" use:gradient={{ seed: "Chat apps" }}></div>
+                  <div class="app-info">
+                    <Heading size="XS">Live, published chat apps</Heading>
+                    <Body size="S">Coming soon</Body>
+                  </div>
+                  <div class="icon-muted">
+                    <Icon name="caret-right" />
+                  </div>
+                </div>
+              </Layout>
+            </div>
           {:else}
             <Layout gap="XS" noPadding>
               <Heading size="S">{portalLabels.noAppsHeading}</Heading>
@@ -269,6 +284,15 @@
     cursor: pointer;
     background: var(--spectrum-global-color-gray-200);
     transition: background-color 130ms ease-in-out;
+  }
+  .app.static {
+    cursor: default;
+  }
+  .app.static:hover {
+    background: var(--background);
+  }
+  .app .icon-muted {
+    color: var(--spectrum-global-color-gray-500);
   }
   .preview {
     height: 40px;
