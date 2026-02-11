@@ -675,7 +675,7 @@
           size="M"
           weight="500"
           color="var(--spectrum-global-color-gray-900)"
-          >{$appStore.name || "Workspace"} workspace</Body
+          >{$appStore.name || "Workspace"}</Body
         >
       </div>
 
