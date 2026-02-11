@@ -54,6 +54,8 @@
         role.uiMetadata?.color ||
         "var(--spectrum-global-color-static-magenta-400)",
     }))
+  $: creatorRoleEnabled =
+    !$licensing.isFreePlan && !!$licensing.perAppBuildersEnabled
   $: endUserRoleOptions = [
     {
       label: "Basic user",
@@ -66,6 +68,12 @@
       color: roleColorLookup[Constants.Roles.ADMIN],
     },
     ...customEndUserRoleOptions,
+    {
+      label: "Can edit",
+      value: Constants.Roles.CREATOR,
+      icon: creatorRoleEnabled ? "pencil" : "lock",
+      enabled: creatorRoleEnabled,
+    },
   ]
   let endUserRole = Constants.Roles.BASIC
   let onboardingType = OnboardingType.EMAIL
@@ -99,6 +107,9 @@
     onboardingType = OnboardingType.EMAIL
   }
   $: if (!endUserRoleOptions.some(option => option.value === endUserRole)) {
+    endUserRole = Constants.Roles.BASIC
+  }
+  $: if (endUserRole === Constants.Roles.CREATOR && !creatorRoleEnabled) {
     endUserRole = Constants.Roles.BASIC
   }
 
@@ -276,7 +287,9 @@
             options={endUserRoleOptions}
             getOptionLabel={option => option.label}
             getOptionValue={option => option.value}
+            getOptionIcon={option => option.icon}
             getOptionColour={option => option.color}
+            isOptionEnabled={option => option.enabled !== false}
             placeholder={false}
           />
         </div>

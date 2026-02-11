@@ -29,10 +29,10 @@
       return undefined
     }
     if (role === Constants.BudibaseRoles.Creator) {
-      return Constants.Roles.CREATOR
+      return Constants.Roles.ADMIN
     }
     if (role === Constants.BudibaseRoles.Admin) {
-      return Constants.Roles.CREATOR
+      return Constants.Roles.ADMIN
     }
     if (role === Constants.BudibaseRoles.AppUser) {
       return appRole || Constants.Roles.BASIC
