@@ -41,7 +41,8 @@
             quiet
             selected={typeFilter === option.value}
             disabled={option.disabled}
-            on:click={() => !option.disabled && dispatch("typeChange", option.value)}
+            on:click={() =>
+              !option.disabled && dispatch("typeChange", option.value)}
           >
             <Icon
               name={getHomeTypeIcon(option.value)}

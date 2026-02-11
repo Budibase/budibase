@@ -17,7 +17,6 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { bb } from "@/stores/bb"
   import { agentsStore, auth, featureFlags } from "@/stores/portal"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
@@ -49,10 +48,7 @@
     type WorkspaceResource,
   } from "@budibase/types"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import {
-    getHomeTypeIcon,
-    getHomeTypeIconColor,
-  } from "./_components/rows"
+  import { getHomeTypeIcon, getHomeTypeIconColor } from "./_components/rows"
   import {
     beforeUrlChange,
     goto as gotoStore,
@@ -680,12 +676,7 @@
 
       <div class="header-actions">
         <a href={url("../chat")} class="header-link header-link--with-icons">
-          <Icon
-            name="chat-circle"
-            size="XS"
-            color="#8CA171"
-            weight="fill"
-          />
+          <Icon name="chat-circle" size="XS" color="#8CA171" weight="fill" />
           <Body size="S">Agent chat</Body>
           <Icon
             name="arrow-up-right"
@@ -717,60 +708,53 @@
         </div>
         <div class="create-popover-container"></div>
         <ActionMenu
-        align={PopoverAlignment.Right}
-        portalTarget=".workspace-home .create-popover-container"
-        animate={false}
-      >
-        <div slot="control">
-          <Button size="M" icon="plus" primary>
-            Create
-          </Button>
-        </div>
+          align={PopoverAlignment.Right}
+          portalTarget=".workspace-home .create-popover-container"
+          animate={false}
+        >
+          <div slot="control">
+            <Button size="M" icon="plus" primary>Create</Button>
+          </div>
 
-        {#if $featureFlags.AI_AGENTS}
+          {#if $featureFlags.AI_AGENTS}
+            <MenuItem
+              icon={getHomeTypeIcon("agent")}
+              iconColour={getHomeTypeIconColor("agent")}
+              iconWeight="fill"
+              on:click={createAgent}
+            >
+              Agent
+              <div slot="right">
+                <Tag emphasized>Beta</Tag>
+              </div>
+            </MenuItem>
+          {/if}
           <MenuItem
-            icon={getHomeTypeIcon("agent")}
-            iconColour={getHomeTypeIconColor("agent")}
+            icon={getHomeTypeIcon("automation")}
+            iconColour={getHomeTypeIconColor("automation")}
             iconWeight="fill"
-            on:click={createAgent}
+            on:click={createAutomation}
           >
-            Agent
-            <div slot="right">
-              <Tag emphasized>Beta</Tag>
-            </div>
+            Automation
           </MenuItem>
-        {/if}
-        <MenuItem
-          icon={getHomeTypeIcon("automation")}
-          iconColour={getHomeTypeIconColor("automation")}
-          iconWeight="fill"
-          on:click={createAutomation}
-        >
-          Automation
-        </MenuItem>
-        <MenuItem
-          icon={getHomeTypeIcon("app")}
-          iconColour={getHomeTypeIconColor("app")}
-          iconWeight="fill"
-          on:click={createApp}
-        >
-          App
-        </MenuItem>
+          <MenuItem
+            icon={getHomeTypeIcon("app")}
+            iconColour={getHomeTypeIconColor("app")}
+            iconWeight="fill"
+            on:click={createApp}
+          >
+            App
+          </MenuItem>
 
-        <MenuSeparator />
-        <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-          Connection
-        </MenuItem>
-        <MenuItem icon="grid-nine" on:click={openCreateTable}>
-          Table
-        </MenuItem>
-        <MenuItem
-          icon="globe-simple"
-          on:click={() => goToCreate("apis/new")}
-        >
-          API request
-        </MenuItem>
-      </ActionMenu>
+          <MenuSeparator />
+          <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+            Connection
+          </MenuItem>
+          <MenuItem icon="grid-nine" on:click={openCreateTable}>Table</MenuItem>
+          <MenuItem icon="globe-simple" on:click={() => goToCreate("apis/new")}>
+            API request
+          </MenuItem>
+        </ActionMenu>
       </div>
     </div>
 

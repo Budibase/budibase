@@ -57,7 +57,6 @@
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
   import { DISCORD_URL, DOCUMENTATION_URL, SUPPORT_EMAIL } from "@/constants"
-  import { API } from "@/api"
   import { bb } from "@/stores/bb"
   import WorkspaceSelect from "@/components/common/WorkspaceSelect.svelte"
   import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"

@@ -49,14 +49,14 @@ export const getRowIconColor = (type: HomeRowType) => {
 }
 
 export const getHomeTypeIcon = (type: HomeType) => {
-  if (type === "all" || type === "chat") {
+  if (type === "all") {
     return "squares-four"
   }
   return getRowIcon(type)
 }
 
 export const getHomeTypeIconColor = (type: HomeType) => {
-  if (type === "all" || type === "chat") {
+  if (type === "all") {
     return "var(--spectrum-global-color-gray-700)"
   }
   return getRowIconColor(type)
