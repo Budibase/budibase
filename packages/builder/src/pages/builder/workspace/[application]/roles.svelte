@@ -7,7 +7,8 @@
 </script>
 
 <div class="wrapper">
-  <TopBar icon="lock-simple-open" breadcrumbs={[{ text: "Manage roles" }]}></TopBar>
+  <TopBar icon="lock-simple-open" breadcrumbs={[{ text: "Manage roles" }]}
+  ></TopBar>
   <div class="content">
     <RoleEditor />
   </div>
