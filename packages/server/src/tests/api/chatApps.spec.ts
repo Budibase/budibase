@@ -1,5 +1,5 @@
-import { context, docIds } from "@budibase/backend-core"
-import type { ChatApp } from "@budibase/types"
+import { context, docIds, roles } from "@budibase/backend-core"
+import type { ChatApp, User } from "@budibase/types"
 import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 
@@ -153,5 +153,96 @@ describe("chat apps create validation", () => {
         )
       }
     )
+  })
+})
+
+describe("chat route auth split", () => {
+  const config = new TestConfiguration()
+  let chatApp: ChatApp
+  let basicUser: User
+
+  beforeAll(async () => {
+    await config.init("chat-route-auth-split")
+    basicUser = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: false },
+      admin: { global: false },
+    })
+
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        const doc: ChatApp = {
+          _id: docIds.generateChatAppID(),
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+          createdAt: now,
+          updatedAt: now,
+        }
+        const { rev } = await db.put(doc)
+        chatApp = { ...doc, _rev: rev }
+      }
+    )
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  const headersForUser = async (user: User) =>
+    await config.withUser(user, async () => config.defaultHeaders({}, true))
+
+  it("allows basic users to access runtime chat endpoints", async () => {
+    const headers = await headersForUser(basicUser)
+
+    const fetchRes = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    const createRes = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId: "agent-1",
+        title: "basic user conversation",
+      })
+
+    const historyRes = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+
+    expect(fetchRes.status).toBe(200)
+    expect(createRes.status).toBe(201)
+    expect(historyRes.status).toBe(200)
+  })
+
+  it("blocks basic users from control chat endpoints", async () => {
+    const headers = await headersForUser(basicUser)
+
+    const updateRes = await config
+      .getRequest()!
+      .put(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+      .send({
+        _id: chatApp._id,
+        _rev: chatApp._rev,
+        agents: chatApp.agents,
+      })
+
+    const setAgentRes = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/agent`)
+      .set(headers)
+      .send({ agentId: "agent-1" })
+
+    expect(updateRes.status).toBe(403)
+    expect(setAgentRes.status).toBe(403)
   })
 })
