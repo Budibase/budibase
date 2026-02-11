@@ -61,7 +61,7 @@ export async function createBBAIClient(model: string): Promise<LLMResponse> {
       specificationVersion: "v3",
       async wrapGenerate({ doGenerate }) {
         const result = await doGenerate()
-        await incrementBudibaseAICreditsFromUsage(result.usage)
+        await incrementBudibaseAICreditsFromUsage(result.usage).catch(() => {})
         return result
       },
       async wrapStream({ doStream }) {
