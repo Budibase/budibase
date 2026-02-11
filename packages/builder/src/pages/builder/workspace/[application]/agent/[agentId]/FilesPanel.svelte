@@ -18,7 +18,7 @@
 
   export let currentAgentId: string | undefined
 
-  const FILE_STATUS_POLL_MS = 500
+  const FILE_STATUS_POLL_MS = 1000
   let uploadingFile = false
   let uploadError = ""
   let fileInput: HTMLInputElement | undefined
