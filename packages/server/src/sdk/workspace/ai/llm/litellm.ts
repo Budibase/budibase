@@ -126,6 +126,7 @@ const syncBudibaseAICredits = async () => {
     }
   } catch {
     // Best-effort sync only.
+    console.error("Error synching budibase AI credits")
   }
 }
 
