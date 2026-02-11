@@ -34,7 +34,7 @@
     PublishResourceState,
     WorkspaceResource,
   } from "@budibase/types"
-  import { goto, url } from "@roxi/routify"
+  import { goto as gotoStore, url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import NoResults from "../_components/NoResults.svelte"
@@ -42,11 +42,11 @@
   import { onMount } from "svelte"
 
   $url
-  $goto
+  $: goto = $gotoStore
 
   onMount(() => {
     if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
-      $goto("../home?type=automation")
+      goto("../home?type=automation")
     }
   })
 

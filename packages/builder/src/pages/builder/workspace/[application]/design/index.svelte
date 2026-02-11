@@ -34,17 +34,17 @@
   } from "@budibase/types"
   import AppsHero from "assets/apps-hero-x1.png"
   import NoResults from "../_components/NoResults.svelte"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { featureFlags } from "@/stores/portal"
   import { onMount } from "svelte"
 
   type ShowUI = { show: () => void }
 
-  $goto
+  $: goto = $gotoStore
 
   onMount(() => {
     if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
-      $goto("../home?type=app")
+      goto("../home?type=app")
     }
   })
 

@@ -19,9 +19,9 @@
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
   import AgentCard from "./AgentCard.svelte"
   import { onMount } from "svelte"
-  import { goto } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
 
-  $goto
+  $: goto = $gotoStore
 
   let showHighlight = false
   let upsertModal: AgentModal
@@ -112,7 +112,7 @@
 
   onMount(async () => {
     if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
-      $goto($featureFlags.AI_AGENTS ? "../home?type=agent" : "../home")
+      goto($featureFlags.AI_AGENTS ? "../home?type=agent" : "../home")
       return
     }
 
