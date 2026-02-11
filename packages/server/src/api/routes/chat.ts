@@ -3,7 +3,7 @@ import { permissions } from "@budibase/backend-core"
 import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 
-const runtimeRoutes = endpointGroupList.group({
+const userRoutes = endpointGroupList.group({
   middleware: authorized(
     permissions.PermissionType.WORKSPACE,
     permissions.PermissionLevel.READ
@@ -15,7 +15,7 @@ builderAdminRoutes
   .put("/api/chatapps/:chatAppId", ai.updateChatApp)
   .post("/api/chatapps/:chatAppId/agent", ai.setChatAppAgent)
 
-runtimeRoutes
+userRoutes
   .get("/api/chatapps", ai.fetchChatApp)
   .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
   .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)
