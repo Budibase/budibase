@@ -13,13 +13,25 @@ interface UploadAgentFileInput {
   uploadedBy: string
 }
 
+const buildAgentFileObjectStoreKey = (
+  workspaceId: string,
+  agentId: string,
+  fileId: string,
+  filename: string
+) => `${workspaceId}/ai/agents/${agentId}/files/${fileId}/${filename}`
+
 export const uploadAgentFile = async (
   input: UploadAgentFileInput
 ): Promise<AgentFile> => {
   const workspaceId = context.getOrThrowWorkspaceId()
 
   const fileId = docIds.generateAgentFileID(input.agentId)
-  const objectStoreKey = `${workspaceId}/ai/agents/${input.agentId}/files/${fileId}/${input.filename}`
+  const objectStoreKey = buildAgentFileObjectStoreKey(
+    workspaceId,
+    input.agentId,
+    fileId,
+    input.filename
+  )
 
   await objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
