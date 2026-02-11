@@ -230,13 +230,18 @@
     const params = new URLSearchParams(window.location.search)
 
     params.delete("create")
-    params.delete("type")
 
     const q = searchTerm.trim()
     if (!q) {
       params.delete("q")
     } else {
       params.set("q", q)
+    }
+
+    if (typeFilter === "all") {
+      params.delete("type")
+    } else {
+      params.set("type", typeFilter)
     }
 
     const defaultSortColumn: HomeSortColumn = "updated"
