@@ -71,10 +71,11 @@ export async function createBBAIClient(model: string): Promise<LLMResponse> {
           LanguageModelV3StreamPart
         >({
           async transform(chunk, controller) {
-            if (chunk.type === "finish") {
-              await incrementBudibaseAICreditsFromUsage(chunk.usage)
-            }
             controller.enqueue(chunk)
+            if (chunk.type === "finish") {
+              await incrementBudibaseAICreditsFromUsage(chunk.usage).catch(() => {})
+            }
+            return
           },
         }) as Parameters<typeof result.stream.pipeThrough>[0]
 
