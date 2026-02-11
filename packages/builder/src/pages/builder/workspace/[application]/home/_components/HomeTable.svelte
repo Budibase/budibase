@@ -118,13 +118,13 @@
       <button
         type="button"
         class="header-cell header-cell--with-icon"
-        on:click={() => headerClick("created")}
+        on:click={() => headerClick("updated")}
       >
-        <span>Created</span>
+        <span>Updated</span>
         <span
           class="sort-indicator"
-          class:sort-indicator--active={isSorted("created")}
-          class:sort-indicator--up={isSorted("created") && sortOrder === "desc"}
+          class:sort-indicator--active={isSorted("updated")}
+          class:sort-indicator--up={isSorted("updated") && sortOrder === "desc"}
         >
           <Icon
             name="caret-down"
@@ -188,8 +188,8 @@
 
           <div class="cell">
             <Body size="S" color="var(--spectrum-global-color-gray-700)">
-              {#if row.createdAt}
-                {dayjs(row.createdAt).fromNow()}
+              {#if row.updatedAt}
+                {dayjs(row.updatedAt).fromNow()}
               {:else}
                 -
               {/if}

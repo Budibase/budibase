@@ -97,7 +97,7 @@
   let searchTerm = ""
   let metrics: GetWorkspaceHomeMetricsResponse | null = null
 
-  let sortColumn: HomeSortColumn = "created"
+  let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
 
   let highlightedRowId: string | null = null
@@ -182,11 +182,14 @@
     if (!value) {
       return null
     }
+    if (value === "created") {
+      return "updated"
+    }
     if (
       value === "name" ||
       value === "type" ||
       value === "status" ||
-      value === "created"
+      value === "updated"
     ) {
       return value
     }
@@ -236,7 +239,7 @@
       params.set("q", q)
     }
 
-    const defaultSortColumn: HomeSortColumn = "created"
+    const defaultSortColumn: HomeSortColumn = "updated"
     const defaultSortOrder: HomeSortOrder = "desc"
     const isDefaultSort =
       sortColumn === defaultSortColumn && sortOrder === defaultSortOrder
@@ -292,7 +295,7 @@
       return
     }
     sortColumn = column
-    sortOrder = column === "created" ? "desc" : "asc"
+    sortOrder = column === "updated" ? "desc" : "asc"
   }
 
   const createApp = () => {

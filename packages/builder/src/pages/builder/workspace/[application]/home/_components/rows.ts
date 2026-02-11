@@ -73,8 +73,8 @@ export const getTypeLabel = (type: HomeRowType) => {
   }
 }
 
-const getDateTimestamp = (row: HomeRow) => {
-  const value = row.createdAt || row.updatedAt
+const getUpdatedTimestamp = (row: HomeRow) => {
+  const value = row.updatedAt
   if (!value) {
     return 0
   }
@@ -102,8 +102,8 @@ const getSortValue = (row: HomeRow, column: HomeSortColumn) => {
       return getTypeLabel(row.type).toLowerCase()
     case "status":
       return getStatusSortValue(row)
-    case "created":
-      return getDateTimestamp(row)
+    case "updated":
+      return getUpdatedTimestamp(row)
   }
 }
 
