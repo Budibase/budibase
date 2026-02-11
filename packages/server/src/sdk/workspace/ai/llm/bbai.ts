@@ -73,7 +73,9 @@ export async function createBBAIClient(model: string): Promise<LLMResponse> {
           async transform(chunk, controller) {
             controller.enqueue(chunk)
             if (chunk.type === "finish") {
-              await incrementBudibaseAICreditsFromUsage(chunk.usage).catch(() => {})
+              await incrementBudibaseAICreditsFromUsage(chunk.usage).catch(
+                () => {}
+              )
             }
             return
           },
