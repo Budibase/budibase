@@ -1,6 +1,8 @@
+import { generateText } from "ai"
 import { TranslateStepInputs, TranslateStepOutputs } from "@budibase/types"
 import * as automationUtils from "../../automationUtils"
 import { ai } from "@budibase/pro"
+import sdk from "../../../sdk"
 
 export async function run({
   inputs,
@@ -15,12 +17,15 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
     const request = ai.translate(inputs.text, inputs.language)
-
-    const response = await llm?.prompt(request)
+    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+    const response = await generateText({
+      model: llm.chat,
+      messages: request.messages,
+      providerOptions: llm.providerOptions?.(false),
+    })
     return {
-      response: response?.message,
+      response: response.text,
       success: true,
     }
   } catch (err) {

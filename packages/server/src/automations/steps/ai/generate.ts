@@ -1,3 +1,4 @@
+import { generateText } from "ai"
 import { ai } from "@budibase/pro"
 import * as automationUtils from "../../automationUtils"
 import {
@@ -6,6 +7,7 @@ import {
   ContentType,
 } from "@budibase/types"
 import { utils } from "@budibase/shared-core"
+import sdk from "../../../sdk"
 
 export async function run({
   inputs,
@@ -21,8 +23,6 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
-
     const contentTypePrompt = getContentTypePrompt(
       inputs.contentType as ContentType
     )
@@ -35,8 +35,13 @@ Instructions: ${inputs.instructions}
 Generate the content based on these instructions. Format appropriately for a ${inputs.contentType}.`
     )
 
-    const llmResponse = await llm.prompt(request)
-    const generatedText = llmResponse?.message?.trim()
+    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+    const response = await generateText({
+      model: llm.chat,
+      messages: request.messages,
+      providerOptions: llm.providerOptions?.(false),
+    })
+    const generatedText = response.text?.trim()
 
     if (generatedText) {
       return {

@@ -1,6 +1,7 @@
+import { generateText } from "ai"
 import { PromptLLMStepInputs, PromptLLMStepOutputs } from "@budibase/types"
 import * as automationUtils from "../../automationUtils"
-import { ai } from "@budibase/pro"
+import sdk from "../../../sdk"
 
 export async function run({
   inputs,
@@ -15,10 +16,14 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLM()
-    const response = await llm?.prompt(inputs.prompt)
+    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+    const response = await generateText({
+      model: llm.chat,
+      messages: [{ role: "user", content: inputs.prompt }],
+      providerOptions: llm.providerOptions?.(false),
+    })
     return {
-      response: response?.message,
+      response: response.text,
       success: true,
     }
   } catch (err) {
