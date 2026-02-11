@@ -267,7 +267,7 @@ ${snippetsPrompt}
 ${bindingsPrompt}`
 }
 
-export function generateTables() {
+export function generateTablesPrompt(): string {
   const tablesMessage = `
 You are generating Budibase table schemas from user prompts.
 Always return at least 2 tables, and define only one side of relationships using a link field.
@@ -278,22 +278,22 @@ Budibase handles reverse relationships and many-to-many links — never define j
 You may specify foreignColumnName, but do not create that field manually.
 `
 
-  return new LLMRequest().addSystemMessage(tablesMessage)
+  return tablesMessage
 }
 
-export function generateAIColumns() {
+export function generateAIColumnsPrompt(): string {
   const tablesMessage = `Given the generated schema, add only one field of type "AI" to relevant tables to add value to the Budibase user.`
 
-  return new LLMRequest().addSystemMessage(tablesMessage)
+  return tablesMessage
 }
 
-export function generateData() {
+export function generateDataPrompt(): string {
   const dataMessage = `
 For each table, populate the data field with realistic-looking sample records.
 Avoid placeholder values like "foo" or "bar". Use real names, emails, etc., and ensure values are unique across rows.
 `
 
-  return new LLMRequest().addSystemMessage(dataMessage)
+  return dataMessage
 }
 
 export function composeAutomationAgentSystemPrompt(

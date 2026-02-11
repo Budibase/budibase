@@ -1,20 +1,21 @@
-import { HTTPError } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import { getLLM } from "../llm"
-import { LLM } from "../models/base"
 
-import { generateAIColumns, generateData, generateTables } from "../prompts"
+import {
+  generateAIColumnsPrompt,
+  generateDataPrompt,
+  generateTablesPrompt,
+} from "../prompts"
 import {
   aiColumnSchemas,
-  AIColumnSchemas,
   aiTableResponseToTableSchema,
   appendAIColumns,
-  GenerationStructure,
   generationStructure,
   tableDataStructuredOutput,
 } from "../structuredOutputs"
 import { TableSchemaFromAI } from "../types"
 import tracer from "dd-trace"
+import { generateText, ModelMessage, Output } from "ai"
+import { LLMResponse } from "@budibase/types"
 
 interface Delegates {
   generateTablesDelegate: (
@@ -28,20 +29,16 @@ interface Delegates {
 }
 
 export class TableGeneration {
-  private llm: LLM
+  private llm: LLMResponse
 
   private delegates: Delegates
 
-  private constructor(llm: LLM, delegates: Delegates) {
+  private constructor(llm: LLMResponse, delegates: Delegates) {
     this.llm = llm
     this.delegates = delegates
   }
 
-  static async init(delegates: Delegates) {
-    const llm = await getLLM({ model: "gpt-5-mini", maxTokens: 5000 })
-    if (!llm) {
-      throw new HTTPError("LLM not available", 422)
-    }
+  static async init(llm: LLMResponse, delegates: Delegates) {
     return new TableGeneration(llm, delegates)
   }
 
@@ -58,19 +55,19 @@ export class TableGeneration {
       userPrompt: string
     ): Promise<TableSchemaFromAI[]> => {
       return tracer.trace("llm.getTableStructure", async () => {
-        const response = await this.llm.prompt(
-          generateTables()
-            .addUserMessage(userPrompt)
-            .withFormat(generationStructure)
-        )
-        try {
-          const parsedResponse = JSON.parse(
-            response.message!
-          ) as GenerationStructure
-          return aiTableResponseToTableSchema(parsedResponse)
-        } catch (e) {
-          throw new HTTPError("Error generating tables", 500)
-        }
+        const systemMessage = generateTablesPrompt()
+
+        const messages: ModelMessage[] = [
+          { role: "system", content: systemMessage },
+          { role: "user", content: userPrompt },
+        ]
+
+        const parsedResponse = await generateText({
+          model: this.llm.chat,
+          messages,
+          output: Output.object({ schema: generationStructure }),
+        })
+        return aiTableResponseToTableSchema(parsedResponse.output)
       })
     },
     generateAIColumns: (
@@ -86,20 +83,21 @@ export class TableGeneration {
       forTables: TableSchemaFromAI[]
     ) => {
       return tracer.trace("llm.generateData", async () => {
-        const llmResponse = await this.llm.prompt(
-          generateData()
-            .addUserMessage(userPrompt)
-            .withFormat(tableDataStructuredOutput(forTables))
-        )
-        try {
-          const json = JSON.parse(llmResponse.message!) as Record<
-            string,
-            Record<string, any>[]
-          >
-          return json
-        } catch (e) {
-          throw new HTTPError("Error generating data", 500)
-        }
+        const systemMessage = generateDataPrompt()
+
+        const messages: ModelMessage[] = [
+          { role: "system", content: systemMessage },
+          { role: "user", content: userPrompt },
+        ]
+
+        const response = await generateText({
+          model: this.llm.chat,
+          messages,
+          output: Output.object({
+            schema: tableDataStructuredOutput(forTables),
+          }),
+        })
+        return response.output
       })
     },
   }
@@ -138,20 +136,23 @@ export class TableGeneration {
     userPrompt: string,
     tables: TableSchemaFromAI[]
   ) {
-    const response = await this.llm.prompt(
-      generateAIColumns()
-        .addUserMessage(
-          `This is the initial user prompt that generated the given schema:
-            "${userPrompt}"`
-        )
-        .withFormat(aiColumnSchemas(tables))
-    )
+    const systemMessage = generateAIColumnsPrompt()
 
-    try {
-      const aiColumns = JSON.parse(response.message!) as AIColumnSchemas
-      return aiColumns
-    } catch (e) {
-      throw new HTTPError("Error generating columns", 500)
-    }
+    const messages: ModelMessage[] = [
+      { role: "system", content: systemMessage },
+      {
+        role: "user",
+        content: `This is the initial user prompt that generated the given schema:
+            "${userPrompt}"`,
+      },
+    ]
+
+    const response = await generateText({
+      model: this.llm.chat,
+      messages,
+      output: Output.object({ schema: aiColumnSchemas(tables) }),
+    })
+
+    return response.output
   }
 }
