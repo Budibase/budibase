@@ -13,6 +13,11 @@
   export let iconColor: string = ""
 
   $: active = forceActive ?? (url ? $isActive(url) : false)
+  $: computedIconColor =
+    iconColor ||
+    (active
+      ? "var(--spectrum-global-color-gray-900)"
+      : "var(--spectrum-global-color-gray-600)")
 </script>
 
 <a
@@ -27,12 +32,7 @@
   <div class="link_icon">
     <slot name="icon" />
     {#if icon}
-      <Icon
-        name={icon}
-        size="M"
-        weight="regular"
-        color={iconColor || "var(--spectrum-global-color-gray-800)"}
-      />
+      <Icon name={icon} size="M" weight="regular" color={computedIconColor} />
     {/if}
   </div>
   <div class="link_content">
@@ -72,23 +72,27 @@
     align-items: center;
     margin-bottom: 2px;
     height: 28px;
-    gap: 5px;
-    padding: 0 calc(var(--nav-padding) / 2);
-    color: var(--spectrum-global-color-gray-900);
+    gap: 8px;
+    padding: 0 8px;
+    color: var(--spectrum-global-color-gray-700);
     border-radius: 9px;
-    border: 1px solid transparent;
+    border: none;
     transition:
       background 130ms ease-out,
-      border 130ms ease-out,
       color 130ms ease-out;
   }
   .link.active,
   .link:hover {
     color: var(--spectrum-global-color-gray-900);
     background: var(--spectrum-global-color-gray-200);
-    border: 1px solid var(--spectrum-global-color-gray-300);
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
   }
+  .link:hover .link_icon :global(i) {
+    color: var(--spectrum-global-color-gray-900);
+  }
+
   .link:active {
     background: var(--spectrum-global-color-gray-200);
   }
@@ -98,12 +102,17 @@
     display: grid;
     place-items: center;
   }
+  .link_icon :global(i) {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
   .link_text {
     font-family: Inter;
     letter-spacing: -0.02em;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 20px;
-    font-size: 14px;
+    font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -116,6 +125,9 @@
     display: flex;
     justify-content: space-between;
     min-width: 0;
+  }
+  .link.collapsed {
+    justify-content: center;
   }
   .link.collapsed .link_content {
     display: none;
