@@ -230,6 +230,11 @@
   .table-wrapper {
     overflow-x: auto;
     width: 100%;
+    scrollbar-width: none;
+  }
+
+  .table-wrapper::-webkit-scrollbar {
+    display: none;
   }
 
   .table {

@@ -40,7 +40,7 @@
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
-  import { onDestroy, onMount, setContext } from "svelte"
+  import { onDestroy, setContext } from "svelte"
   import {
     FeatureFlag,
     type Datasource,
@@ -142,32 +142,6 @@
   let createTableModal: ModalAPI
   let tableName = ""
 
-  let githubStars: number | null = null
-
-  const formatStars = (stars: number) => {
-    return new Intl.NumberFormat("en", {
-      notation: "compact",
-      maximumFractionDigits: 1,
-      compactDisplay: "short",
-    })
-      .format(stars)
-      .toLowerCase()
-  }
-
-  $: githubStarsText =
-    githubStars != null
-      ? `${formatStars(githubStars)} GitHub stars`
-      : "25k+ GitHub stars"
-
-  onMount(async () => {
-    try {
-      const response = await API.workspaceHome.getGitHubStars()
-      githubStars = response.stars
-    } catch (err) {
-      console.error("Failed to load GitHub stars", err)
-    }
-  })
-
   $: workspaceId = $appStore.appId
   $: !$pinned && unPin()
 
@@ -192,11 +166,6 @@
       : `${prefix}/${target.replace(/^\.\//, "")}`
 
     $goto(normalisedTarget)
-    keepCollapsed()
-  }
-
-  const openInviteUser = () => {
-    builderStore.showBuilderSidePanel()
     keepCollapsed()
   }
 
@@ -563,13 +532,6 @@
                     />
                   </svelte:fragment>
 
-                  <MenuItem icon="path" on:click={openCreateAutomation}>
-                    Automation
-                  </MenuItem>
-                  <MenuItem icon="browsers" on:click={openCreateApp}>
-                    App
-                  </MenuItem>
-
                   {#if $featureFlags.AI_AGENTS}
                     <MenuItem icon="sparkle" on:click={openCreateAgent}>
                       Agent
@@ -577,32 +539,26 @@
                         <Tag emphasized>Beta</Tag>
                       </div>
                     </MenuItem>
-                    <MenuItem
-                      icon="chat-circle"
-                      on:click={() => goToCreate("chat")}
-                    >
-                      Chat
-                      <div slot="right">
-                        <Tag emphasized>Alpha</Tag>
-                      </div>
-                    </MenuItem>
                   {/if}
+                  <MenuItem icon="path" on:click={openCreateAutomation}>
+                    Automation
+                  </MenuItem>
+                  <MenuItem icon="browsers" on:click={openCreateApp}>
+                    App
+                  </MenuItem>
 
+                  <MenuSeparator />
+                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+                    Connection
+                  </MenuItem>
                   <MenuItem icon="grid-nine" on:click={openCreateTable}>
                     Table
                   </MenuItem>
                   <MenuItem
-                    icon="webhooks-logo"
+                    icon="globe-simple"
                     on:click={() => goToCreate("apis/new")}
                   >
                     API request
-                  </MenuItem>
-                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-                    Connection
-                  </MenuItem>
-                  <MenuSeparator />
-                  <MenuItem icon="user-circle-plus" on:click={openInviteUser}>
-                    User
                   </MenuItem>
                 </ActionMenu>
               {:else}
@@ -684,15 +640,15 @@
                 }}
               />
               <SideNavLink
-                icon="cube"
-                text="APIs"
+                icon="globe-simple"
+                text="API explorer"
                 url={$url("./apis")}
                 {collapsed}
                 on:click={keepCollapsed}
               />
               <SideNavLink
                 icon="database"
-                text="Data"
+                text="Data tables"
                 url={$url("./data")}
                 {collapsed}
                 on:click={keepCollapsed}
@@ -845,20 +801,6 @@
             keepCollapsed()
           }}
         />
-        <SideNavLink
-          icon="star"
-          text={githubStarsText}
-          {collapsed}
-          on:click={() => {
-            window.open(
-              "https://github.com/Budibase/budibase",
-              "_blank",
-              "noopener,noreferrer"
-            )
-            keepCollapsed()
-          }}
-        />
-
         {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isEnterpriseTrial}
           <SideNavLink
             icon="paper-plane-tilt"
@@ -872,7 +814,7 @@
         {:else}
           <SideNavLink
             icon="paper-plane-tilt"
-            text="Upgrade for support"
+            text="Contact support"
             {collapsed}
             on:click={() => {
               licensing.goToUpgradePage()
@@ -977,8 +919,8 @@
   .logo_link {
     display: grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
+    width: 18px;
+    height: 18px;
     border-radius: 6px;
     text-decoration: none;
     color: inherit;
