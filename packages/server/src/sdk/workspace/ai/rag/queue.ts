@@ -6,7 +6,7 @@ import { ingestAgentFile } from "./files"
 import { agents } from ".."
 
 const DEFAULT_CONCURRENCY = 2
-const DEFAULT_BACKOFF_MS = utils.Duration.fromSeconds(30).toMs()
+const DEFAULT_BACKOFF_MS = utils.Duration.fromSeconds(10).toMs()
 const DEFAULT_TIMEOUT_MS = utils.Duration.fromMinutes(10).toMs()
 
 export interface RagIngestionJob {
