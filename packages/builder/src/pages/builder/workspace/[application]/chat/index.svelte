@@ -1,4 +1,5 @@
 <script lang="ts">
+  import PublishMenu from "@/components/common/PublishMenu.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, chatAppsStore, currentChatApp } from "@/stores/portal"
   import { params } from "@roxi/routify"
@@ -130,7 +131,11 @@
 </script>
 
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false} />
+  <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false}>
+    <div class="publish-menu-inert">
+      <PublishMenu />
+    </div>
+  </TopBar>
   <div class="page">
     <ChatSettingsPanel
       {namedAgents}
@@ -179,5 +184,9 @@
     background: transparent;
     overflow: hidden;
     min-width: 0;
+  }
+
+  .publish-menu-inert {
+    pointer-events: none;
   }
 </style>
