@@ -22,7 +22,7 @@ import type {
 import { DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
 import {
-  agentChatComplete,
+  discordChat,
   prepareChatConversationForSave,
   truncateTitle,
 } from "../ai/chatConversations"
@@ -486,9 +486,9 @@ const handleDiscordInteraction = async ({
       channel,
     }
 
-    let result: Awaited<ReturnType<typeof agentChatComplete>>
+    let result: Awaited<ReturnType<typeof discordChat>>
     try {
-      result = await agentChatComplete({
+      result = await discordChat({
         chat: draftChat,
         user: buildDiscordUserContext(userId, displayName),
       })
