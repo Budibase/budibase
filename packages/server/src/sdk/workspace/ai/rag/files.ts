@@ -322,6 +322,10 @@ export const retrieveContextForAgent = async (
     throw new Error("RAG settings not properly configured")
   }
 
+  if (!agent.embeddingModel) {
+    throw new Error("Embedding model is not set")
+  }
+
   const agentFiles = await agents.listAgentFiles(agent._id!)
   const readyFileSources = agentFiles
     .filter(file => file.status === AgentFileStatus.READY && file.ragSourceId)
@@ -331,7 +335,11 @@ export const retrieveContextForAgent = async (
     return { text: "", chunks: [], sources: [] }
   }
 
-  const [queryEmbedding] = await embedChunks(agent.aiconfig, [question], 1)
+  const [queryEmbedding] = await embedChunks(
+    agent.embeddingModel,
+    [question],
+    1
+  )
   if (!queryEmbedding?.length) {
     throw new Error("Embedding response missing dimensions")
   }
