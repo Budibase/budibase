@@ -43,7 +43,8 @@
   $url
   $redirect
 
-  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] && $redirect("../home")
+  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] &&
+    $redirect("../home?type=automation")
 
   let showHighlight = true
   let createModal: ModalAPI

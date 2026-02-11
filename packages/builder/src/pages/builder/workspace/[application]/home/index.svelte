@@ -204,6 +204,7 @@
     if (typeof window === "undefined") {
       return {
         q: "",
+        type: null as HomeType | null,
         create: null as HomeCreate | null,
         sort: null as HomeSortColumn | null,
         order: null as HomeSortOrder | null,
@@ -211,10 +212,11 @@
     }
     const params = new URLSearchParams(window.location.search)
     const q = params.get("q") ?? ""
+    const type = normaliseType(params.get("type"))
     const sort = normaliseSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
     const create = normaliseCreate(params.get("create"))
-    return { q, sort, order, create }
+    return { q, type, sort, order, create }
   }
 
   const writeUrlState = () => {
@@ -640,9 +642,12 @@
       return
     }
 
-    const { q, sort, order } = readUrlState()
+    const { q, type, sort, order } = readUrlState()
     if (q) {
       searchTerm = q
+    }
+    if (type) {
+      typeFilter = type
     }
     if (sort) {
       sortColumn = sort

@@ -41,7 +41,7 @@
 
   $redirect
 
-  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] && $redirect("../home")
+  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] && $redirect("../home?type=app")
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
