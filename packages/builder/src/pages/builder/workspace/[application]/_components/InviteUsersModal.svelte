@@ -6,7 +6,7 @@
   import { onMount } from "svelte"
   import { OnboardingType } from "@/constants"
   import AddUserModal from "@/settings/pages/people/users/_components/AddUserModal.svelte"
-  import { appStore, builderStore } from "@/stores/builder"
+  import { appStore, builderStore, roles } from "@/stores/builder"
   import { users } from "@/stores/portal"
   import type { UserInfo } from "@/types"
 
@@ -143,6 +143,7 @@
   }
 
   onMount(() => {
+    roles.fetch().catch(() => {})
     createUserModal.show()
   })
 </script>

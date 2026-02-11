@@ -21,6 +21,7 @@
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import { roles } from "@/stores/builder"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
@@ -30,6 +31,7 @@
   import PasswordModal from "./_components/PasswordModal.svelte"
   import InvitedModal from "./_components/InvitedModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
+  import EditWorkspaceUserModal from "./_components/EditWorkspaceUserModal.svelte"
   import { get } from "svelte/store"
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "@/api"
@@ -96,9 +98,11 @@
     onboardingTypeModal: Modal,
     passwordModal: Modal,
     importUsersModal: Modal,
-    userLimitReachedModal: Modal
+    userLimitReachedModal: Modal,
+    editWorkspaceUserModal: Modal
   let searchEmail: string | undefined = undefined
   let selectedRows: User[] = []
+  let selectedWorkspaceUser: User | null = null
   let bulkSaveResponse: BulkUserCreated
 
   let currentWorkspaceId = ""
@@ -139,11 +143,13 @@
       sortable: false,
       width: "2fr",
       minWidth: "200px",
+      preventSelectRow: isWorkspaceOnly,
     },
     role: {
       displayName: "Access",
       sortable: false,
       width: "1fr",
+      preventSelectRow: isWorkspaceOnly,
     },
     ...(!isWorkspaceOnly &&
       $licensing.groupsEnabled && {
@@ -156,12 +162,14 @@
             sortable: false,
             width: "1fr",
             minWidth: "160px",
+            preventSelectRow: true,
           },
         }
       : {
           workspaces: {
             sortable: false,
             width: "1fr",
+            preventSelectRow: false,
           },
         }),
   }
@@ -439,9 +447,22 @@
     return Constants.Roles.BASIC
   }
 
+  const onRowClick = ({ detail }: { detail: User }) => {
+    if (isWorkspaceOnly) {
+      selectedWorkspaceUser = detail
+      editWorkspaceUserModal.show()
+      return
+    }
+    bb.settings(`/people/users/${detail._id}`)
+  }
+
+  const onWorkspaceUserSaved = async () => {
+    await refreshUserList()
+  }
+
   onMount(async () => {
     try {
-      await groups.init()
+      await Promise.all([groups.init(), roles.fetch()])
       groupsLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
@@ -512,9 +533,7 @@
   </div>
   <div class="table-wrap" style={`min-height: ${TABLE_MIN_HEIGHT}px;`}>
     <Table
-      on:click={({ detail }) => {
-        bb.settings(`/people/users/${detail._id}`)
-      }}
+      on:click={onRowClick}
       {schema}
       bind:selectedRows
       data={tableLoading ? [] : enrichedUsers}
@@ -574,6 +593,18 @@
 <Modal bind:this={userLimitReachedModal}>
   <UpgradeModal {isOwner} />
 </Modal>
+
+{#if isWorkspaceOnly}
+  <Modal bind:this={editWorkspaceUserModal} closeOnOutsideClick={false}>
+    <EditWorkspaceUserModal
+      user={selectedWorkspaceUser}
+      workspaceId={currentWorkspaceId}
+      {readonly}
+      isTenantOwner={selectedWorkspaceUser?.email === tenantOwner?.email}
+      on:saved={onWorkspaceUserSaved}
+    />
+  </Modal>
+{/if}
 
 <style>
   .buttons {
