@@ -123,6 +123,7 @@
   const favouriteLookup = workspaceFavouriteStore.lookup
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
   const navLogoSize = 18
+  const navTransitionMs = 160
 
   let ignoreFocus = false
   let focused = false
@@ -403,7 +404,7 @@
     focused = false
     timeout = setTimeout(() => {
       ignoreFocus = false
-    }, 130)
+    }, navTransitionMs)
   }
 
   const setFocused = (nextFocused: boolean) => {
@@ -450,7 +451,10 @@
   </Modal>
 {/if}
 
-<div class="nav_wrapper" style={`--nav-logo-width: ${navLogoSize}px;`}>
+<div
+  class="nav_wrapper"
+  style={`--nav-logo-width: ${navLogoSize}px; --nav-transition-ms: ${navTransitionMs}ms; --nav-transition-ease: cubic-bezier(0.22, 1, 0.36, 1);`}
+>
   <div class="nav_spacer" class:pinned={$pinned}></div>
   <div
     class="nav"
@@ -890,7 +894,7 @@
     justify-content: flex-start;
     align-items: stretch;
     border-right: var(--nav-border);
-    transition: width 130ms ease-out;
+    transition: width var(--nav-transition-ms) var(--nav-transition-ease);
     overflow: hidden;
     padding-bottom: var(--nav-padding);
     container-type: inline-size;
@@ -935,7 +939,7 @@
   .logo_link :global(svg) {
     display: grid;
     place-items: center;
-    transition: filter 130ms ease-out;
+    transition: filter var(--nav-transition-ms) var(--nav-transition-ease);
   }
   .nav:not(.pinned):not(.focused) .nav-title {
     opacity: 0;
@@ -950,7 +954,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    transition: opacity 130ms ease-out;
+    transition: opacity var(--nav-transition-ms) var(--nav-transition-ease);
     color: var(--spectrum-global-color-gray-900);
   }
 
@@ -1088,7 +1092,7 @@
     align-items: flex-start;
     padding: 12px;
     gap: 8px;
-    transition: all 130ms ease-out;
+    transition: all var(--nav-transition-ms) var(--nav-transition-ease);
   }
 
   .live-app-link {
@@ -1108,14 +1112,25 @@
 
   @container (max-width: 239px) {
     .nav-section-title {
-      transition: all 130ms ease-in-out;
+      transition: all var(--nav-transition-ms) var(--nav-transition-ease);
     }
     .favourite-wrapper {
       display: none;
-      transition: all 130ms ease-in-out;
+      transition: all var(--nav-transition-ms) var(--nav-transition-ease);
     }
     .favourite-empty-state {
-      display: all 130ms ease-in-out;
+      transition: all var(--nav-transition-ms) var(--nav-transition-ease);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav,
+    .nav-title,
+    .logo_link :global(svg),
+    .favourite-empty-state,
+    .nav-section-title,
+    .favourite-wrapper {
+      transition: none;
     }
   }
 
