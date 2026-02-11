@@ -4,9 +4,11 @@ env.DISABLE_PINO_LOGGER = "true"
 import { EnrichedBinding, Snippet } from "../../types/src"
 import { init } from "../../server/src/jsRunner"
 import { isPlainObject } from "lodash"
-import { getOpenAIUsingLocalAPIKey } from "../src/ai/llm"
+import { DefaultModelByProvider } from "../src/ai/llm"
 import { processStringSync } from "@budibase/string-templates"
 import { doInTenant, getCurrentContext } from "../../backend-core/src/context"
+import { OpenAI } from "../src/ai/models"
+import { LLM } from "../src/ai/models/base"
 
 function red(text: string | number) {
   return `\x1b[31m${text}\x1b[0m`
@@ -67,6 +69,17 @@ function contextToBindings(
     }
   }
   return result
+}
+
+async function getOpenAIUsingLocalAPIKey(): Promise<LLM | undefined> {
+  if (!env.OPENAI_API_KEY) {
+    throw new Error(`OPENAI_API_KEY is not defined`)
+  }
+
+  return new OpenAI({
+    model: DefaultModelByProvider.OpenAI,
+    apiKey: env.OPENAI_API_KEY,
+  })
 }
 
 async function runTest(test: Test): Promise<Result> {

@@ -22,15 +22,17 @@ import { OpenAI, OpenAIModel } from "./models/openai"
 // Provider-specific default models. If a provider's saved config does not
 // include a default model, we fall back to these. Azure defaults to gpt-4.1
 // so we avoid GPT-5-only parameters like verbosity/reasoning_effort.
-const DefaultModelByProvider: Record<AIProvider, OpenAIModel | AnthropicModel> =
-  {
-    OpenAI: "gpt-5-mini",
-    TogetherAI: "gpt-5-mini",
-    AzureOpenAI: "gpt-4.1",
-    Custom: "gpt-5-mini",
-    Anthropic: "claude-3-5-sonnet-20240620",
-    BudibaseAI: "gpt-5-mini",
-  }
+export const DefaultModelByProvider: Record<
+  AIProvider,
+  OpenAIModel | AnthropicModel
+> = {
+  OpenAI: "gpt-5-mini",
+  TogetherAI: "gpt-5-mini",
+  AzureOpenAI: "gpt-4.1",
+  Custom: "gpt-5-mini",
+  Anthropic: "claude-3-5-sonnet-20240620",
+  BudibaseAI: "gpt-5-mini",
+}
 
 const ProviderMap = {
   OpenAI: OpenAI,
@@ -167,23 +169,6 @@ export async function getLLMOrThrow(): Promise<LLM> {
 // This function is intended to be used in the local development environment
 // and for running local AI testing. It should not be used in production code
 // paths.
-export async function getOpenAIUsingLocalAPIKey(): Promise<LLM | undefined> {
-  if (
-    env.BUDIBASE_ENVIRONMENT === "production" ||
-    env.BUDIBASE_ENVIRONMENT === "qa"
-  ) {
-    return
-  }
-
-  if (!env.OPENAI_API_KEY) {
-    return
-  }
-
-  return new OpenAI({
-    model: DefaultModelByProvider.OpenAI,
-    apiKey: env.OPENAI_API_KEY,
-  })
-}
 
 export class LLMRequest {
   messages: Message[] = []
