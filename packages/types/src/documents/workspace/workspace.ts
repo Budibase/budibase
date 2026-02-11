@@ -55,10 +55,7 @@ export interface AppNavigation {
   hideTitle?: boolean
   navBackground?: string
   navTextColor?: string
-  bannerText?: string
-  bannerBackground?: string
-  bannerTextColor?: string
-  bannerTextSize?: number
+  banner?: AppBanner
   links?: AppNavigationLink[]
   textAlign?: "Left" | "Center" | "Right"
   collapsible?: boolean
@@ -82,6 +79,13 @@ export interface AppCustomTheme {
   // Used to exist before new design UI
   navTextColor?: string
   navBackground?: string
+}
+
+export interface AppBanner {
+  text?: string
+  background?: string
+  textColor?: string
+  textSize?: number
 }
 
 export interface WorkspaceIcon {

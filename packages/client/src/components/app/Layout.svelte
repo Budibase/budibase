@@ -43,10 +43,7 @@
   export let openLogoLinkInNewTab
   export let textAlign
   export let embedded = false
-  export let bannerText
-  export let bannerBackground
-  export let bannerTextColor
-  export let bannerTextSize
+  export let banner
 
   export let collapsible = false
 
@@ -92,11 +89,11 @@
     $context.device.height
   )
   $: bannerStyle = getBannerStyle(
-    bannerBackground,
-    bannerTextColor,
-    bannerTextSize
+    banner?.background,
+    banner?.textColor,
+    banner?.textSize
   )
-  $: showBanner = !!bannerText?.trim?.() && typeClass !== "none"
+  $: showBanner = !!banner?.text?.trim?.() && typeClass !== "none"
   $: autoCloseSidePanel =
     !$builderStore.inBuilder &&
     $sidePanelStore.open &&
@@ -271,7 +268,7 @@
   <div class="screen-wrapper layout-body">
     {#if showBanner}
       <div class="banner" style={bannerStyle}>
-        <div class="banner-content">{bannerText}</div>
+        <div class="banner-content">{banner?.text}</div>
       </div>
     {/if}
     {#if typeClass !== "none"}

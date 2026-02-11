@@ -65,6 +65,19 @@
       notifications.error("Error updating navigation settings")
     }
   }
+
+  const updateBanner = async (key, value) => {
+    try {
+      let navigation = $nav
+      navigation.banner = {
+        ...(navigation.banner || {}),
+        [key]: value,
+      }
+      await nav.save(navigation)
+    } catch (error) {
+      notifications.error("Error updating navigation settings")
+    }
+  }
 </script>
 
 <Panel
@@ -257,8 +270,8 @@
         <PropertyControl
           label="Message"
           control={DrawerBindableInput}
-          value={$nav.bannerText}
-          onChange={text => update("bannerText", text)}
+          value={$nav.banner?.text}
+          onChange={text => updateBanner("text", text)}
           {bindings}
           props={{
             updateOnChange: false,
@@ -268,8 +281,8 @@
         <PropertyControl
           label="Background"
           control={ColorPicker}
-          onChange={color => update("bannerBackground", color)}
-          value={$nav.bannerBackground}
+          onChange={color => updateBanner("background", color)}
+          value={$nav.banner?.background}
           props={{
             spectrumTheme: $themeStore.theme,
           }}
@@ -277,8 +290,8 @@
         <PropertyControl
           label="Text color"
           control={ColorPicker}
-          onChange={color => update("bannerTextColor", color)}
-          value={$nav.bannerTextColor}
+          onChange={color => updateBanner("textColor", color)}
+          value={$nav.banner?.textColor}
           props={{
             spectrumTheme: $themeStore.theme,
           }}
@@ -286,8 +299,8 @@
         <PropertyControl
           label="Text size (px)"
           control={Stepper}
-          value={$nav.bannerTextSize}
-          onChange={size => update("bannerTextSize", size)}
+          value={$nav.banner?.textSize}
+          onChange={size => updateBanner("textSize", size)}
           props={{
             updateOnChange: false,
             placeholder: "12",
