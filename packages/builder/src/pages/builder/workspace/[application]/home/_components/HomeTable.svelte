@@ -180,9 +180,9 @@
                 {row.live ? "Live" : "Draft"}
               </Body>
             {:else}
-              <Body size="S" color="var(--spectrum-global-color-gray-600)">
-                Conversation
-              </Body>
+              <Body size="S" color="var(--spectrum-global-color-gray-600)"
+                >-</Body
+              >
             {/if}
           </div>
 

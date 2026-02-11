@@ -8,7 +8,6 @@ import {
   type HomeType,
   type UIAutomation,
   type UIWorkspaceApp,
-  type WorkspaceHomeChat,
   type WorkspaceFavourite,
 } from "@budibase/types"
 
@@ -16,7 +15,6 @@ interface BuildHomeRowsParams {
   apps: UIWorkspaceApp[]
   automations: UIAutomation[]
   agents: Agent[]
-  chats: WorkspaceHomeChat[]
   agentsEnabled: boolean
   getFavourite: (
     resourceType: WorkspaceResource,
@@ -32,8 +30,6 @@ export const getRowIcon = (type: HomeRowType) => {
       return "browsers"
     case "agent":
       return "sparkle"
-    case "chat":
-      return "chat-circle"
     default:
       return "cube"
   }
@@ -47,8 +43,6 @@ export const getRowIconColor = (type: HomeRowType) => {
       return "#D4A27F"
     case "agent":
       return "#BDB0F5"
-    case "chat":
-      return "#8CA171"
     default:
       return "var(--spectrum-global-color-gray-700)"
   }
@@ -62,8 +56,6 @@ export const getTypeLabel = (type: HomeRowType) => {
       return "Automation"
     case "agent":
       return "Agent"
-    case "chat":
-      return "Chat"
   }
 }
 
@@ -84,9 +76,6 @@ const getDateTimestamp = (row: HomeRow) => {
 const getStatusSortValue = (row: HomeRow) => {
   if (row.type === "app" || row.type === "automation") {
     return `${row.status}`.toLowerCase()
-  }
-  if (row.type === "chat") {
-    return "chat"
   }
   return row.live ? "live" : "draft"
 }
@@ -172,7 +161,6 @@ export const buildHomeRows = ({
   apps,
   automations,
   agents,
-  chats,
   agentsEnabled,
   getFavourite,
 }: BuildHomeRowsParams): HomeRow[] => {
@@ -231,19 +219,5 @@ export const buildHomeRows = ({
       })
     : []
 
-  const chatRows: HomeRow[] = agentsEnabled
-    ? chats.map(chat => ({
-        _id: chat._id,
-        id: chat._id,
-        name: chat.title || "Untitled Chat",
-        type: "chat",
-        updatedAt: chat.updatedAt,
-        createdAt: chat.createdAt,
-        resource: chat,
-        icon: getRowIcon("chat"),
-        iconColor: getRowIconColor("chat"),
-      }))
-    : []
-
-  return [...appRows, ...automationRows, ...agentRows, ...chatRows]
+  return [...appRows, ...automationRows, ...agentRows]
 }

@@ -1,10 +1,10 @@
-import type { PublishResourceState, WorkspaceHomeChat } from "../../api"
+import type { PublishResourceState } from "../../api"
 import type { Agent, WorkspaceFavourite } from "../../documents"
 import type { UIAutomation } from "../stores/automations"
 import type { UIWorkspaceApp } from "../workspaceApps"
 
-export type HomeType = "all" | "app" | "automation" | "agent" | "chat"
-export type HomeRowType = "app" | "automation" | "agent" | "chat"
+export type HomeType = "all" | "app" | "automation" | "agent"
+export type HomeRowType = "app" | "automation" | "agent"
 
 export type HomeSortColumn = "name" | "type" | "status" | "created"
 export type HomeSortOrder = "asc" | "desc"
@@ -39,10 +39,4 @@ export interface AgentRow extends HomeRowBase {
   live: boolean
 }
 
-export interface ChatRow extends Omit<HomeRowBase, "favourite"> {
-  type: "chat"
-  resource: WorkspaceHomeChat
-  favourite?: WorkspaceFavourite
-}
-
-export type HomeRow = AppRow | AutomationRow | AgentRow | ChatRow
+export type HomeRow = AppRow | AutomationRow | AgentRow
