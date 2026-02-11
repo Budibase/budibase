@@ -35,6 +35,14 @@
     Constants.Roles.CREATOR,
     Constants.Roles.GROUP,
   ]
+  let roleColorLookup: Record<string, string | undefined> = {}
+  $: roleColorLookup = ($roles || []).reduce<Record<string, string | undefined>>(
+    (acc, role) => {
+      acc[role._id] = role.uiMetadata?.color
+      return acc
+    },
+    {}
+  )
 
   let draft: UserDraft = {
     firstName: "",
@@ -49,12 +57,23 @@
   $: customEndUserRoleOptions = ($roles || [])
     .filter(role => !excludedRoleIds.includes(role._id))
     .map(role => ({
-      label: `End user: ${role.uiMetadata?.displayName || role.name || "Custom role"}`,
+      label: role.uiMetadata?.displayName || role.name || "Custom role",
       value: role._id,
+      color:
+        role.uiMetadata?.color ||
+        "var(--spectrum-global-color-static-magenta-400)",
     }))
   $: endUserRoleOptions = [
-    { label: "End user: Basic", value: Constants.Roles.BASIC },
-    { label: "End user: Admin", value: Constants.Roles.ADMIN },
+    {
+      label: "Basic user",
+      value: Constants.Roles.BASIC,
+      color: roleColorLookup[Constants.Roles.BASIC],
+    },
+    {
+      label: "Admin user",
+      value: Constants.Roles.ADMIN,
+      color: roleColorLookup[Constants.Roles.ADMIN],
+    },
     ...customEndUserRoleOptions,
   ]
   $: roleOptions = isTenantOwner
@@ -201,6 +220,7 @@
           options={endUserRoleOptions}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
+          getOptionColour={option => option.color}
           placeholder={false}
           disabled={disableRole}
         />
