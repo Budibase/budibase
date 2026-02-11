@@ -246,6 +246,10 @@ export const ingestAgentFile = async (
     throw new Error("Agent id not set")
   }
 
+  if (!agent.embeddingModel) {
+    throw new Error("Embedding model is not set")
+  }
+
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
 
@@ -260,7 +264,7 @@ export const ingestAgentFile = async (
     return { inserted: 0, total: 0 }
   }
 
-  const embeddings = await embedChunks(agent.aiconfig, chunks)
+  const embeddings = await embedChunks(agent.embeddingModel, chunks)
   if (embeddings.length !== chunks.length) {
     throw new Error("Embedding response size mismatch")
   }
