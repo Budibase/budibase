@@ -1,5 +1,4 @@
 import { utils } from "@budibase/shared-core"
-
 import {
   generateAIColumnsPrompt,
   generateDataPrompt,
@@ -16,6 +15,7 @@ import { TableSchemaFromAI } from "../types"
 import tracer from "dd-trace"
 import { generateText, ModelMessage, Output } from "ai"
 import { LLMResponse } from "@budibase/types"
+import z, { ZodObject } from "zod"
 
 interface Delegates {
   generateTablesDelegate: (
@@ -55,19 +55,12 @@ export class TableGeneration {
       userPrompt: string
     ): Promise<TableSchemaFromAI[]> => {
       return tracer.trace("llm.getTableStructure", async () => {
-        const systemMessage = generateTablesPrompt()
-
-        const messages: ModelMessage[] = [
-          { role: "system", content: systemMessage },
-          { role: "user", content: userPrompt },
-        ]
-
-        const parsedResponse = await generateText({
-          model: this.llm.chat,
-          messages,
-          output: Output.object({ schema: generationStructure }),
-        })
-        return aiTableResponseToTableSchema(parsedResponse.output)
+        const response = await this.generateStructuredOutput(
+          generateTablesPrompt(),
+          userPrompt,
+          generationStructure
+        )
+        return aiTableResponseToTableSchema(response)
       })
     },
     generateAIColumns: (
@@ -83,21 +76,11 @@ export class TableGeneration {
       forTables: TableSchemaFromAI[]
     ) => {
       return tracer.trace("llm.generateData", async () => {
-        const systemMessage = generateDataPrompt()
-
-        const messages: ModelMessage[] = [
-          { role: "system", content: systemMessage },
-          { role: "user", content: userPrompt },
-        ]
-
-        const response = await generateText({
-          model: this.llm.chat,
-          messages,
-          output: Output.object({
-            schema: tableDataStructuredOutput(forTables),
-          }),
-        })
-        return response.output
+        return this.generateStructuredOutput(
+          generateDataPrompt(),
+          userPrompt,
+          tableDataStructuredOutput(forTables)
+        )
       })
     },
   }
@@ -136,23 +119,37 @@ export class TableGeneration {
     userPrompt: string,
     tables: TableSchemaFromAI[]
   ) {
-    const systemMessage = generateAIColumnsPrompt()
-
-    const messages: ModelMessage[] = [
-      { role: "system", content: systemMessage },
-      {
-        role: "user",
-        content: `This is the initial user prompt that generated the given schema:
+    return this.generateStructuredOutput(
+      generateAIColumnsPrompt(),
+      `This is the initial user prompt that generated the given schema:
             "${userPrompt}"`,
-      },
-    ]
+      aiColumnSchemas(tables)
+    )
+  }
 
+  private buildMessages(
+    systemMessage: string,
+    userContent: string
+  ): ModelMessage[] {
+    return [
+      { role: "system", content: systemMessage },
+      { role: "user", content: userContent },
+    ]
+  }
+
+  private async generateStructuredOutput<T extends ZodObject>(
+    systemMessage: string,
+    userContent: string,
+    schema: T
+  ): Promise<z.infer<T>> {
+    const messages = this.buildMessages(systemMessage, userContent)
     const response = await generateText({
       model: this.llm.chat,
       messages,
-      output: Output.object({ schema: aiColumnSchemas(tables) }),
+      output: Output.object({ schema }),
+      providerOptions: this.llm.providerOptions?.(false),
     })
 
-    return response.output
+    return response.output as z.infer<T>
   }
 }
