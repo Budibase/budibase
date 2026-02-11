@@ -74,5 +74,6 @@ export const uploadAgentFile = async (
       .catch(() => {
         // Ignore, it might not exist
       })
+    throw error
   }
 }
