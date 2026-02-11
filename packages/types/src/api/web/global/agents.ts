@@ -37,8 +37,6 @@ export type UpdateAgentRequest = Omit<
 >
 export type UpdateAgentResponse = Agent
 
-export type DuplicateChatConversationResponse = ChatConversation
-
 export interface FetchAgentFilesResponse {
   files: AgentFile[]
 }

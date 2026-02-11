@@ -39,10 +39,6 @@ builderAdminRoutes
     ai.fetchChatConversation
   )
   .post("/api/chatapps/:chatAppId/conversations", ai.createChatConversation)
-  .post(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId/duplicate",
-    ai.duplicateChatConversation
-  )
   .delete(
     "/api/chatapps/:chatAppId/conversations/:chatConversationId",
     ai.removeChatConversation

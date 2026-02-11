@@ -167,24 +167,6 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     }
   }
 
-  duplicateConversation = async (
-    chatConversationId: string,
-    chatAppId?: string
-  ) => {
-    const targetChatAppId = chatAppId || get(this.store).chatAppId
-    if (!targetChatAppId) {
-      return null
-    }
-
-    const duplicated = await API.duplicateChatConversation(
-      targetChatAppId,
-      chatConversationId
-    )
-
-    await this.fetchConversations(targetChatAppId)
-    return duplicated
-  }
-
   setCurrentConversationId = (chatId: string) => {
     this.update(state => {
       state.currentConversationId = chatId
