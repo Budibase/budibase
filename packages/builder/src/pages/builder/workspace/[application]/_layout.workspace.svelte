@@ -44,9 +44,7 @@
   }
 </script>
 
-{#if $builderStore.builderSidePanel}
-  <InviteUsersModal />
-{/if}
+<InviteUsersModal />
 
 <div class="root" class:blur={$previewStore.showPreview}>
   <SideNav bind:this={sideNav} />

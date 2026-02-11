@@ -6,7 +6,6 @@
     Body,
     Link,
     MenuItem,
-    MenuSeparator,
     Modal,
     type ModalAPI,
     PopoverAlignment,
@@ -21,7 +20,6 @@
   import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
-    builderStore,
     workspaceFavouriteStore,
     workspaceAppStore,
     automationStore,
@@ -192,11 +190,6 @@
       : `${prefix}/${target.replace(/^\.\//, "")}`
 
     $goto(normalisedTarget)
-    keepCollapsed()
-  }
-
-  const openInviteUser = () => {
-    builderStore.showBuilderSidePanel()
     keepCollapsed()
   }
 
@@ -600,10 +593,6 @@
                   <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
                     Connection
                   </MenuItem>
-                  <MenuSeparator />
-                  <MenuItem icon="user-circle-plus" on:click={openInviteUser}>
-                    User
-                  </MenuItem>
                 </ActionMenu>
               {:else}
                 <SideNavLink
@@ -696,12 +685,6 @@
                 url={$url("./data")}
                 {collapsed}
                 on:click={keepCollapsed}
-              />
-              <SideNavLink
-                icon="user-plus"
-                text="Invite user"
-                on:click={openInviteUser}
-                {collapsed}
               />
               <span class="root-nav" class:error={backupErrorCount}>
                 {#if collapsed && backupErrorCount}

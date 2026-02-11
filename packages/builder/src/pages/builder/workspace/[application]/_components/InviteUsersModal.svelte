@@ -6,7 +6,7 @@
   import { onMount } from "svelte"
   import { OnboardingType } from "@/constants"
   import AddUserModal from "@/settings/pages/people/users/_components/AddUserModal.svelte"
-  import { appStore, builderStore, roles } from "@/stores/builder"
+  import { appStore, roles } from "@/stores/builder"
   import { users } from "@/stores/portal"
   import type { UserInfo } from "@/types"
 
@@ -135,7 +135,6 @@
     if (!hasOpened) {
       return
     }
-    builderStore.hideBuilderSidePanel()
   }
 
   const showModal = () => {

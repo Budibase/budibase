@@ -36,13 +36,12 @@
     Constants.Roles.GROUP,
   ]
   let roleColorLookup: Record<string, string | undefined> = {}
-  $: roleColorLookup = ($roles || []).reduce<Record<string, string | undefined>>(
-    (acc, role) => {
-      acc[role._id] = role.uiMetadata?.color
-      return acc
-    },
-    {}
-  )
+  $: roleColorLookup = ($roles || []).reduce<
+    Record<string, string | undefined>
+  >((acc, role) => {
+    acc[role._id] = role.uiMetadata?.color
+    return acc
+  }, {})
 
   let draft: UserDraft = {
     firstName: "",
@@ -80,7 +79,8 @@
     ? Constants.ExtendedBudibaseRoleOptions
     : Constants.BudibaseRoleOptions
   $: disableFields = readonly || !!user?.scimInfo?.isSync
-  $: disableRole = disableFields || isTenantOwner || user?._id === $auth.user?._id
+  $: disableRole =
+    disableFields || isTenantOwner || user?._id === $auth.user?._id
   $: isEndUser = draft.role === Constants.BudibaseRoles.AppUser
   $: hasChanges =
     !!initialDraft &&

@@ -61,7 +61,6 @@ describe("Builder store", () => {
 
     ctx.test.builderStore.update(state => ({
       ...state,
-      builderSidePanel: true,
       onboarding: true,
     }))
 
@@ -143,24 +142,6 @@ describe("Builder store", () => {
     expect(ctx.test.store).toStrictEqual({
       ...INITIAL_BUILDER_STATE,
       propertyFocus: "testing",
-    })
-  })
-
-  it("Update the builder side panel visibility", ctx => {
-    expect(ctx.test.store.builderSidePanel).toBe(false)
-
-    ctx.test.builderStore.showBuilderSidePanel()
-
-    expect(ctx.test.store).toStrictEqual({
-      ...INITIAL_BUILDER_STATE,
-      builderSidePanel: true,
-    })
-
-    ctx.test.builderStore.hideBuilderSidePanel()
-
-    expect(ctx.test.store).toStrictEqual({
-      ...INITIAL_BUILDER_STATE,
-      builderSidePanel: false,
     })
   })
 
