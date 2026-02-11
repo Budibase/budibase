@@ -10,7 +10,7 @@
   import { appsStore, admin } from "@/stores/portal"
   import { Heading, Layout, Body } from "@budibase/bbui"
   import { API } from "@/api"
-  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
+  import InviteUsersModal from "./_components/InviteUsersModal.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
 
@@ -45,7 +45,7 @@
 </script>
 
 {#if $builderStore.builderSidePanel}
-  <BuilderSidePanel />
+  <InviteUsersModal />
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>

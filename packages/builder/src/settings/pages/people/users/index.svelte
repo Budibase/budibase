@@ -177,6 +177,13 @@
     tenantOwner,
     $groups
   )
+  $: shouldOpenWorkspaceInviteModal =
+    isWorkspaceOnly &&
+    $bb.settings.route?.entry?.path === "/people/workspace" &&
+    $bb.settings.route?.hash === "#invite"
+  $: if (shouldOpenWorkspaceInviteModal && createUserModal) {
+    createUserModal.show()
+  }
 
   const buildEnrichedUsers = (
     rows: User[],

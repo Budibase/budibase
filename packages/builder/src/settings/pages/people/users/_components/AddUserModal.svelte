@@ -12,6 +12,7 @@
     Layout,
     Icon,
   } from "@budibase/bbui"
+  import { roles } from "@/stores/builder"
   import { groups } from "@/stores/portal/groups"
   import { licensing } from "@/stores/portal/licensing"
   import { admin } from "@/stores/portal/admin"
@@ -32,9 +33,24 @@
   let emailError = null
   const maxItems = 15
   let selectedRole = Constants.BudibaseRoles.AppUser
-  const endUserRoleOptions = [
+  const builtInEndUserRoles = [Constants.Roles.BASIC, Constants.Roles.ADMIN]
+  const excludedRoleIds = [
+    ...builtInEndUserRoles,
+    Constants.Roles.PUBLIC,
+    Constants.Roles.POWER,
+    Constants.Roles.CREATOR,
+    Constants.Roles.GROUP,
+  ]
+  $: customEndUserRoleOptions = ($roles || [])
+    .filter(role => !excludedRoleIds.includes(role._id))
+    .map(role => ({
+      label: `End user: ${role.uiMetadata?.displayName || role.name || "Custom role"}`,
+      value: role._id,
+    }))
+  $: endUserRoleOptions = [
     { label: "End user: Basic", value: Constants.Roles.BASIC },
     { label: "End user: Admin", value: Constants.Roles.ADMIN },
+    ...customEndUserRoleOptions,
   ]
   let endUserRole = Constants.Roles.BASIC
   let onboardingType = OnboardingType.EMAIL
@@ -66,6 +82,9 @@
     onboardingType = OnboardingType.EMAIL
   } else if (!onboardingType) {
     onboardingType = OnboardingType.EMAIL
+  }
+  $: if (!endUserRoleOptions.some(option => option.value === endUserRole)) {
+    endUserRole = Constants.Roles.BASIC
   }
 
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)

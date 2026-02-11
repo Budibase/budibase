@@ -12,7 +12,6 @@
   import {
     automationStore,
     previewStore,
-    builderStore,
     sortedScreens,
     appStore,
     datasources,
@@ -26,6 +25,7 @@
   import { ThemeOptions, BUILDER_URLS } from "@budibase/shared-core"
   import { FeatureFlag } from "@budibase/types"
   import { IntegrationTypes } from "@/constants/backend"
+  import { bb } from "@/stores/bb"
 
   $goto
   $isActive
@@ -43,7 +43,7 @@
       name: "Invite users and manage app access",
       description: "",
       icon: "user",
-      action: () => builderStore.showBuilderSidePanel(),
+      action: () => bb.settings("/people/users"),
       requiresApp: true,
     },
     ...navigationCommands(),

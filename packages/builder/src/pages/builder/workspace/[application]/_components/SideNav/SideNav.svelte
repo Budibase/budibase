@@ -700,10 +700,7 @@
               <SideNavLink
                 icon="user-plus"
                 text="Invite user"
-                on:click={() => {
-                  builderStore.showBuilderSidePanel()
-                  keepCollapsed()
-                }}
+                on:click={openInviteUser}
                 {collapsed}
               />
               <span class="root-nav" class:error={backupErrorCount}>
