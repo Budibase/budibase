@@ -712,7 +712,7 @@
           portalTarget=".workspace-home .create-popover-container"
           animate={false}
         >
-          <div slot="control">
+          <div slot="control" class="create-menu-control">
             <Button size="M" icon="plus" primary>Create</Button>
           </div>
 
@@ -948,7 +948,7 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .controls-row .controls-right > div:last-child :global(button) {
+  .controls-row .create-menu-control :global(button) {
     border-radius: 100px;
     padding: 7px 15px 8px;
     height: 32px;

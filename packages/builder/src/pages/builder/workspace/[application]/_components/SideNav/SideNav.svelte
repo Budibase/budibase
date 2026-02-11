@@ -813,7 +813,7 @@
         {:else}
           <SideNavLink
             icon="paper-plane-tilt"
-            text="Contact support"
+            text="Upgrade for support"
             {collapsed}
             on:click={() => {
               licensing.goToUpgradePage()

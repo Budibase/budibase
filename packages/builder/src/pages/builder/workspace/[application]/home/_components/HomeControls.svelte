@@ -7,12 +7,18 @@
   export let typeFilter: HomeType = "all"
   export let agentsEnabled = false
 
+  interface HomeFilterOption {
+    label: string
+    value: HomeType
+    disabled?: boolean
+  }
+
   const dispatch = createEventDispatcher<{
-    typeChange: string
+    typeChange: HomeType
   }>()
 
   const getOptions = (agentsEnabled: boolean) => {
-    const options: { label: string; value: HomeType; disabled?: boolean }[] = []
+    const options: HomeFilterOption[] = []
 
     if (agentsEnabled) {
       options.push({ label: "Agents", value: "agent" })
@@ -24,9 +30,9 @@
   }
 
   $: tabOptions = [
-    { label: "All", value: "all" as HomeType },
+    { label: "All", value: "all" },
     ...getOptions(agentsEnabled),
-  ]
+  ] satisfies HomeFilterOption[]
 </script>
 
 <div class="controls">
