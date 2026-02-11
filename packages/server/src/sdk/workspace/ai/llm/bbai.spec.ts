@@ -1,6 +1,9 @@
 import { withEnv } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import { mockChatGPTResponse } from "../../../../tests/utilities/mocks/ai/openai"
+import {
+  mockChatGPTResponse,
+  mockChatGPTStreamResponse,
+} from "../../../../tests/utilities/mocks/ai/openai"
 import { createBBAIClient } from "./bbai"
 
 jest.mock("@budibase/pro", () => {
@@ -21,6 +24,7 @@ describe("createBBAIClient", () => {
     >
 
   afterEach(() => {
+    jest.restoreAllMocks()
     jest.clearAllMocks()
   })
 
@@ -75,5 +79,35 @@ describe("createBBAIClient", () => {
 
     expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
     expect(incrementCreditsMock).toHaveBeenCalledWith(7)
+  })
+
+  it("increments credits for stream calls", async () => {
+    mockChatGPTStreamResponse("Hello user. How are you today?")
+
+    await withEnv({ BBAI_OPENAI_API_KEY: "openai-key" }, async () => {
+      const { chat } = await createBBAIClient("budibase/gpt-5-mini")
+      const result = await chat.doStream({
+        prompt: [
+          {
+            role: "user",
+            content: [{ type: "text", text: "hi bbai!" }],
+          },
+        ],
+      })
+
+      const reader = result.stream.getReader()
+
+      for (
+        let next = await reader.read();
+        !next.done;
+        next = await reader.read()
+      ) {
+        // Read all stream
+      }
+      reader.releaseLock()
+    })
+
+    expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
+    expect(incrementCreditsMock).toHaveBeenCalledWith(20)
   })
 })
