@@ -90,7 +90,6 @@
               {datasourceFilter}
               datasourceSort={sortByDatasourceName}
               showAppUsers={false}
-              showManageRoles={false}
             />
           </Layout>
         </Panel>

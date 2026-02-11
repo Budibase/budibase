@@ -698,6 +698,13 @@
                 on:click={keepCollapsed}
               />
               <SideNavLink
+                icon="user-gear"
+                text="Manage roles"
+                url={$url("./roles")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+              <SideNavLink
                 icon="user-plus"
                 text="Invite user"
                 on:click={() => {

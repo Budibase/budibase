@@ -27,7 +27,6 @@
   export let searchTerm
   export let datasourceFilter = _ => true
   export let showAppUsers = true
-  export let showManageRoles = true
   export let datasourceSort
   let toggledDatasources = {}
 
@@ -95,15 +94,6 @@
         $tables.selected?._id === TableNames.USERS}
       on:click={() => selectTable(TableNames.USERS)}
       selectedBy={$userSelectedResourceMap[TableNames.USERS]}
-    />
-  {/if}
-  {#if showManageRoles}
-    <NavItem
-      icon="user-gear"
-      text="Manage roles"
-      selected={$isActive("./roles")}
-      on:click={() => $goto("./roles")}
-      selectedBy={$userSelectedResourceMap.roles}
     />
   {/if}
   {#each displayedDatasources.filter(ds => ds.show) as datasource}
