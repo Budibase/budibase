@@ -152,6 +152,19 @@
     }
   }
 
+  const getWorkspaceRole = (role: string, appRole: string) => {
+    if (role === Constants.BudibaseRoles.Creator) {
+      return Constants.Roles.CREATOR
+    }
+    if (role === Constants.BudibaseRoles.Admin) {
+      return Constants.Roles.ADMIN
+    }
+    if (role === Constants.BudibaseRoles.AppUser) {
+      return appRole || Constants.Roles.BASIC
+    }
+    return Constants.Roles.BASIC
+  }
+
   const onConfirm = async () => {
     if (!user?._id || !hasChanges) {
       return
@@ -179,9 +192,18 @@
 
       if (!disableRole) {
         const appRole = sanitizeAppRole(draft.appRole)
-        if (draft.role === Constants.BudibaseRoles.AppUser) {
-          await users.addUserToWorkspace(user._id, appRole, updated._rev)
-        } else if (updated.roles?.[workspaceId]) {
+        const desiredWorkspaceRole = getWorkspaceRole(draft.role, appRole)
+        const currentWorkspaceRole = updated.roles?.[workspaceId]
+        if (
+          desiredWorkspaceRole &&
+          currentWorkspaceRole !== desiredWorkspaceRole
+        ) {
+          await users.addUserToWorkspace(
+            user._id,
+            desiredWorkspaceRole,
+            updated._rev
+          )
+        } else if (!desiredWorkspaceRole && currentWorkspaceRole) {
           await users.removeUserFromWorkspace(user._id, updated._rev)
         }
       }
