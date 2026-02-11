@@ -14,13 +14,7 @@ export async function generateJs(
   const snippets = currentContext?.snippets || []
   const { prompt, bindings = [] } = ctx.request.body
 
-  const request = ai.generateJs(bindings, snippets)
-  const systemMessage = request.messages.find(
-    message => message.role === "system"
-  )?.content
-  if (typeof systemMessage !== "string") {
-    throw new Error("AI system message must be a string")
-  }
+  const systemMessage = ai.generateJsPrompt(bindings, snippets)
   const messages: ModelMessage[] = [
     { role: "system", content: systemMessage },
     { role: "user", content: prompt },

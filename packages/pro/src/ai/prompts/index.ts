@@ -154,7 +154,10 @@ export function searchWeb(text: string) {
   )
 }
 
-export function generateJs(bindings: EnrichedBinding[], snippets: Snippet[]) {
+export function generateJsPrompt(
+  bindings: EnrichedBinding[],
+  snippets: Snippet[]
+): string {
   let bindingsPrompt = "You do not have access to any bindings in this request."
   if (bindings && bindings.length > 0) {
     bindingsPrompt = `The bindings you have access to are: \n\n${bindings
@@ -172,7 +175,7 @@ export function generateJs(bindings: EnrichedBinding[], snippets: Snippet[]) {
       .join("\n")}`
   }
 
-  return new LLMRequest().addSystemMessage(`
+  return `
 You are a helpful expert in writing JavaScript.  A user is asking you for help
 writing some JavaScript for their application.
 
@@ -261,7 +264,7 @@ a variable, it will be provided to you as a binding.
 
 ${snippetsPrompt}
 
-${bindingsPrompt}`)
+${bindingsPrompt}`
 }
 
 export function generateTables() {
