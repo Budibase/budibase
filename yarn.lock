@@ -12,6 +12,15 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
   integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==
 
+"@ai-sdk/azure@^3.0.26":
+  version "3.0.28"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/azure/-/azure-3.0.28.tgz#c9201afc0863fd51b0693220dbc6a08d8ce51bf5"
+  integrity sha512-FDzx/MF7M9boJ7pB5zMUwbGU2HadYM0ZsI7b/sPiHKecwirk7Endl9RtwGrfjauPDrRnP0W+djMc2NhKwp0B8w==
+  dependencies:
+    "@ai-sdk/openai" "3.0.27"
+    "@ai-sdk/provider" "3.0.8"
+    "@ai-sdk/provider-utils" "4.0.14"
+
 "@ai-sdk/gateway@3.0.22":
   version "3.0.22"
   resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-3.0.22.tgz#96836072096ead43f046192c29be188109a5bec6"
@@ -20,6 +29,14 @@
     "@ai-sdk/provider" "3.0.5"
     "@ai-sdk/provider-utils" "4.0.9"
     "@vercel/oidc" "3.1.0"
+
+"@ai-sdk/openai@3.0.27":
+  version "3.0.27"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/openai/-/openai-3.0.27.tgz#56c9bf4c89152784b08c11e6d6dac8f83d9b40a3"
+  integrity sha512-pLMxWOypwroXiK9dxNpn60/HGhWWWDEOJ3lo9vZLoxvpJNtKnLKojwVIvlW3yEjlD7ll1+jUO2uzsABNTaP5Yg==
+  dependencies:
+    "@ai-sdk/provider" "3.0.8"
+    "@ai-sdk/provider-utils" "4.0.14"
 
 "@ai-sdk/openai@^3.0.26":
   version "3.0.26"

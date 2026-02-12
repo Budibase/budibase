@@ -12,10 +12,9 @@ import { LLM } from "./base"
 import { generateText, LanguageModelUsage, Output } from "ai"
 import {
   createOpenAI,
-  OpenAIProvider,
   type OpenAIChatLanguageModelOptions,
 } from "@ai-sdk/openai"
-import { SharedV3ProviderOptions } from "@ai-sdk/provider"
+import { ProviderV3, SharedV3ProviderOptions } from "@ai-sdk/provider"
 
 export type OpenAIModel =
   | "gpt-4o-mini"
@@ -69,7 +68,7 @@ function calculateBudibaseAICredits(usage?: LanguageModelUsage): number {
 }
 
 export class OpenAI extends LLM {
-  protected client: OpenAIProvider
+  protected client: ProviderV3
   protected openAIClient: OpenAIClient
   constructor(opts: LLMConfigOptions) {
     super(opts)
@@ -81,10 +80,28 @@ export class OpenAI extends LLM {
     if (baseUrl === "https://api.openai.com") {
       baseUrl = "https://api.openai.com/v1"
     }
-    this.client = createOpenAI({ apiKey: opts.apiKey, baseURL: baseUrl })
-    this.openAIClient = new OpenAIClient({
+
+    this.client = this.getAISDKClient({
+      ...opts,
+      baseUrl: baseUrl,
+    })
+    this.openAIClient = this.getOpenAIClientClient({
+      ...opts,
+      baseUrl: baseUrl,
+    })
+  }
+
+  protected getAISDKClient(opts: LLMConfigOptions): ProviderV3 {
+    return createOpenAI({
       apiKey: opts.apiKey,
-      baseURL: baseUrl,
+      baseURL: opts.baseUrl,
+    })
+  }
+
+  protected getOpenAIClientClient(opts: LLMConfigOptions) {
+    return new OpenAIClient({
+      apiKey: opts.apiKey,
+      baseURL: opts.baseUrl,
     })
   }
 
@@ -151,7 +168,7 @@ export class OpenAI extends LLM {
     const providerOptions = this.getProviderOptions()
 
     const response = await generateText({
-      model: this.client.chat(this.model),
+      model: this.client.languageModel(this.model),
       messages: request.messages,
       maxOutputTokens: this._maxTokens,
       output: parseResponseFormat(request.format),
