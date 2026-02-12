@@ -77,8 +77,16 @@ export class OpenAI extends LLM {
     if (!opts.apiKey) {
       throw new Error("No OpenAI API key found")
     }
-    this.client = createOpenAI({ apiKey: opts.apiKey, baseURL: opts.baseUrl })
-    this.openAIClient = new OpenAIClient({ apiKey: process.env.OPENAI_API_KEY })
+
+    let baseUrl = opts.baseUrl
+    if (baseUrl === "https://api.openai.com") {
+      baseUrl = "https://api.openai.com/v1"
+    }
+    this.client = createOpenAI({ apiKey: opts.apiKey, baseURL: baseUrl })
+    this.openAIClient = new OpenAIClient({
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: baseUrl,
+    })
   }
 
   // Default verbosity preference for supported models. Subclasses

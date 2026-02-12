@@ -73,7 +73,15 @@ export abstract class LLM {
         return { message: "", tokensUsed }
       }
       const lastMessage = messages[messages.length - 1]
-      return { message: (lastMessage.content as string) || "", tokensUsed }
+      const message =
+        typeof lastMessage.content === "string"
+          ? lastMessage.content
+          : lastMessage.content
+              .filter(m => m.type === "text")
+              .map(m => m.text)
+              .join("\n\n")
+
+      return { message: message, tokensUsed }
     })
   }
 
