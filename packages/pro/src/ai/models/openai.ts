@@ -5,16 +5,18 @@ import {
   ResponseFormat,
 } from "@budibase/types"
 import { Readable } from "node:stream"
-import {
-  default as openai,
-  default as OpenAIClient,
-  OpenAI as OpenAITypes,
-  toFile,
-} from "openai"
+import { toFile } from "openai"
 import { LLMFullResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
 import { normalizeContentType } from "../utils"
 import { LLM } from "./base"
+import { generateText, LanguageModelUsage, Output, streamText } from "ai"
+import {
+  createOpenAI,
+  OpenAIProvider,
+  type OpenAIChatLanguageModelOptions,
+} from "@ai-sdk/openai"
+import { SharedV3ProviderOptions } from "@ai-sdk/provider"
 
 export type OpenAIModel =
   | "gpt-4o-mini"
@@ -37,43 +39,44 @@ export enum GPT_5_MODELS {
 export function parseResponseFormat(
   responseFormat?: ResponseFormat
 ):
-  | openai.ResponseFormatText
-  | openai.ResponseFormatJSONObject
-  | openai.ResponseFormatJSONSchema
+  | ReturnType<typeof Output.text>
+  | ReturnType<typeof Output.json>
+  | ReturnType<typeof Output.object>
   | undefined {
   if (!responseFormat) {
     return
   }
 
   if (responseFormat === "text") {
-    return { type: "text" }
+    return Output.text()
   }
   if (responseFormat === "json") {
-    return { type: "json_object" }
+    return Output.json()
   }
 
-  return responseFormat
+  return Output.object({ schema: responseFormat })
 }
 
-function calculateBudibaseAICredits(
-  usage?: OpenAIClient.CompletionUsage
-): number {
+function calculateBudibaseAICredits(usage?: LanguageModelUsage): number {
   if (!usage) {
     return 0
   }
 
   // Output tokens are 3 times more expensive in OpenAI
   // We want to have a single figure in BB for simplicity
-  const inputTokens = usage.prompt_tokens
-  const outputTokens = usage.completion_tokens
+  const inputTokens = usage.inputTokens ?? 0
+  const outputTokens = usage.outputTokens ?? 0
   return outputTokens * 3 + inputTokens
 }
 
 export class OpenAI extends LLM {
-  protected client: OpenAIClient
+  protected client: OpenAIProvider
   constructor(opts: LLMConfigOptions) {
     super(opts)
-    this.client = this.getClient(opts)
+    if (!opts.apiKey) {
+      throw new Error("No OpenAI API key found")
+    }
+    this.client = createOpenAI({ apiKey: opts.apiKey, baseURL: opts.baseUrl })
   }
 
   // Default verbosity preference for supported models. Subclasses
@@ -85,11 +88,19 @@ export class OpenAI extends LLM {
     return undefined
   }
 
-  protected getClient(opts: LLMConfigOptions): OpenAIClient {
-    if (!opts.apiKey) {
-      throw new Error("No OpenAI API key found")
+  protected getProviderOptions(): SharedV3ProviderOptions | undefined {
+    if (!Object.values(GPT_5_MODELS).includes(this.model as GPT_5_MODELS)) {
+      return
     }
-    return new OpenAIClient({ apiKey: opts.apiKey })
+
+    const openAIConfig: OpenAIChatLanguageModelOptions = {}
+    const verbosity = this.getVerbosityForModel()
+    if (verbosity) {
+      openAIConfig.textVerbosity = verbosity
+    }
+    openAIConfig.reasoningEffort = "minimal" // This effectively results in 0 reasoning tokens.
+
+    return { openai: openAIConfig }
   }
 
   async uploadFile(
@@ -124,75 +135,57 @@ export class OpenAI extends LLM {
   protected async chatCompletion(
     request: LLMRequest
   ): Promise<LLMFullResponse> {
-    const parameters: OpenAITypes.ChatCompletionCreateParamsNonStreaming = {
-      model: this.model,
+    const providerOptions = this.getProviderOptions()
+
+    const response = await generateText({
+      model: this.client.chat(this.model),
       messages: request.messages,
-      max_completion_tokens: this._maxTokens,
-      response_format: parseResponseFormat(request.format),
-    }
+      maxOutputTokens: this._maxTokens,
+      output: parseResponseFormat(request.format),
+      providerOptions: providerOptions,
+    })
 
-    if (Object.values(GPT_5_MODELS).includes(this.model as GPT_5_MODELS)) {
-      const verbosity = this.getVerbosityForModel()
-      if (verbosity) {
-        parameters.verbosity = verbosity
-      }
-      parameters.reasoning_effort = "minimal" // This effectively results in 0 reasoning tokens.
-    }
-
-    const completion = await this.client.chat.completions.create(parameters)
-    const response = completion?.choices?.[0]?.message
-
-    if (response?.content) {
+    if (response.response.messages.length) {
       return {
-        messages: [
-          ...request.messages,
-          { role: response.role, content: response.content },
-        ],
-        tokensUsed: calculateBudibaseAICredits(completion.usage),
+        messages: [...request.messages, ...response.response.messages],
+        tokensUsed: calculateBudibaseAICredits(response.totalUsage),
       }
-    } else {
-      throw new Error("No response found")
     }
+
+    throw new Error("No response found")
   }
 
   protected async *chatCompletionStream(
     request: LLMRequest
   ): AsyncGenerator<LLMStreamChunk, void, unknown> {
-    const parameters: OpenAITypes.ChatCompletionCreateParamsStreaming = {
-      model: this.model,
-      messages: request.messages,
-      max_tokens: this.maxTokens,
-      response_format: parseResponseFormat(request.format),
-      stream: true,
-    }
-
     try {
-      const stream = await this.client.chat.completions.create(parameters)
-
       let contentBuffer = ""
-      let finalUsage: OpenAIClient.CompletionUsage | null = null
+      let totalUsage: LanguageModelUsage | undefined
 
-      for await (const chunk of stream) {
-        const delta = chunk?.choices?.[0]?.delta
-        if (!delta) continue
+      const providerOptions = this.getProviderOptions()
+      const stream = streamText({
+        model: this.client.chat(this.model),
+        messages: request.messages,
+        maxOutputTokens: this._maxTokens,
+        output: parseResponseFormat(request.format),
+        providerOptions: providerOptions,
+      })
 
-        // Handle content streaming
-        if (delta.content) {
-          contentBuffer += delta.content
+      for await (const part of stream.fullStream) {
+        if (part.type === "text-delta") {
+          contentBuffer += part.text
           yield {
             type: "content",
-            content: delta.content,
+            content: part.text,
           }
         }
 
-        if (chunk.usage) {
-          finalUsage = chunk.usage
+        if (part.type === "finish") {
+          totalUsage = part.totalUsage
         }
       }
 
-      const totalTokens = finalUsage
-        ? calculateBudibaseAICredits(finalUsage)
-        : 0
+      const totalTokens = calculateBudibaseAICredits(totalUsage)
 
       // Final response
       if (contentBuffer) {
