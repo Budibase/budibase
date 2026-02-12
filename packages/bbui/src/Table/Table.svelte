@@ -278,7 +278,7 @@
         const nameA = getDisplayName(a)
         const nameB = getDisplayName(b)
         if (orderA !== orderB) {
-          return orderA < orderB ? orderA : orderB
+          return orderA - orderB
         }
         return nameA.localeCompare(nameB)
       })
