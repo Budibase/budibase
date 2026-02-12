@@ -1,6 +1,7 @@
 import * as ai from "../controllers/ai"
 import {
   createAgentValidator,
+  syncAgentDiscordCommandsValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 import {
