@@ -486,8 +486,8 @@
                   class:spectrum-Table-cell--divider={!!schema[field].divider}
                   style={cellStyles[field]}
                   on:click={() => {
-                    dispatch("click", row)
                     if (!schema[field]?.preventSelectRow) {
+                      dispatch("click", row)
                       toggleSelectRow(row)
                     }
                   }}
