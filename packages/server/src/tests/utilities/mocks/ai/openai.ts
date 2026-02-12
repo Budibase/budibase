@@ -157,6 +157,75 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   }) // Each mock call handles one request
 }
 
+export const mockChatGPTStreamResponse = (content = "hi") => {
+  const origin = "https://api.openai.com"
+  const pool = getPool(origin)
+
+  const interceptor = pool.intercept({
+    path: "/v1/chat/completions",
+    method: "POST",
+  })
+  interceptor.defaultReplyHeaders({
+    "content-type": "text/event-stream",
+    "cache-control": "no-cache",
+    connection: "keep-alive",
+  })
+  interceptor.reply(200, (reqOpts: any) => {
+    const prompt = getPromptFromRequest(reqOpts.body)
+
+    // We mock token usage because we use it to calculate Budibase AI quota
+    // usage when Budibase AI is enabled, and some tests assert against quota
+    // usage to make sure we're tracking correctly.
+    const prompt_tokens = prompt.split(SPACE_REGEX).length
+    const completion_tokens = content.split(SPACE_REGEX).length
+
+    const chunks = [
+      `data: ${JSON.stringify({
+        id: "chatcmpl-test",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "gpt-5-mini",
+        choices: [{ index: 0, delta: { content } }],
+      })}\n\n`,
+      `data: ${JSON.stringify({
+        id: "chatcmpl-test",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "gpt-5-mini",
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+        usage: {
+          prompt_tokens: prompt_tokens,
+          completion_tokens: completion_tokens,
+          total_tokens: prompt_tokens + completion_tokens,
+          completion_tokens_details: {
+            reasoning_tokens: 0,
+            accepted_prediction_tokens: 0,
+            rejected_prediction_tokens: 0,
+          },
+        },
+      })}\n\n`,
+      "data: [DONE]\n\n",
+    ]
+
+    return chunks.join("")
+  })
+}
+
+const getPromptFromRequest = (body: unknown): string => {
+  const reqBody = parseJsonBody(body)
+  const messageContent = reqBody.messages?.[0]?.content
+  if (typeof messageContent === "string") {
+    return messageContent
+  }
+  if (Array.isArray(messageContent)) {
+    return messageContent
+      .filter((part: any) => part.type === "text")
+      .map((part: any) => part.text)
+      .join(" ")
+  }
+  return ""
+}
+
 export const mockChatGPTStreamFailure = (opts?: {
   baseUrl?: string
   status?: number

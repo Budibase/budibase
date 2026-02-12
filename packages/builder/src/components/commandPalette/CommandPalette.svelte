@@ -112,6 +112,10 @@
         url: BUILDER_URLS.WORKSPACES,
       },
       {
+        name: "Home",
+        url: "/builder/workspace/:application/home",
+      },
+      {
         name: "Data",
         url: "/builder/workspace/:application/data",
       },

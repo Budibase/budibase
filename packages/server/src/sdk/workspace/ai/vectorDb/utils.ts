@@ -1,23 +1,33 @@
-import { VectorDbProvider, type VectorDb as VectorDbDoc } from "@budibase/types"
+import { VectorDbProvider } from "@budibase/types"
 import { buildPgVectorDbConfig } from "./pgVectorDb"
 import type { VectorDb as VectorDbClient } from "./types"
 import { utils } from "@budibase/shared-core"
+import sdk from "../../.."
 
-export const createVectorDb = (
-  config: VectorDbDoc,
-  options: {
-    agentId: string
+export const createVectorDb = async ({
+  agentId,
+  vectorDbId,
+}: {
+  agentId: string
+  vectorDbId: string | undefined
+}): Promise<VectorDbClient> => {
+  if (!vectorDbId) {
+    throw new Error("Vectordb id not set")
   }
-): VectorDbClient => {
-  switch (config.provider) {
+
+  const vectorDb = await sdk.ai.vectorDb.find(vectorDbId)
+  if (!vectorDb) {
+    throw new Error("Vector db not found")
+  }
+  switch (vectorDb.provider) {
     case VectorDbProvider.PGVECTOR:
-      return buildPgVectorDbConfig(config, {
-        agentId: options.agentId,
+      return buildPgVectorDbConfig(vectorDb, {
+        agentId,
       })
 
     default:
-      throw utils.unreachable(config.provider, {
-        message: `Unsupported vector db provider: ${config.provider}`,
+      throw utils.unreachable(vectorDb.provider, {
+        message: `Unsupported vector db provider: ${vectorDb.provider}`,
       })
   }
 }

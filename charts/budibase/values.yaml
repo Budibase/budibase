@@ -1,5 +1,12 @@
 # -- Passed to all pods created by this chart. Should not ordinarily need to be changed.
 imagePullSecrets: []
+
+podDisruptionBudget:
+  # -- Whether to create a PodDisruptionBudget for the services.
+  enabled: false
+  # -- The minimum number of available pods for the services.
+  minAvailable: 1
+
 # -- Override the name of the deployment. Defaults to {{ .Chart.Name }}.
 nameOverride: ""
 
@@ -169,9 +176,9 @@ services:
       couchdb: "http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}"
     # -- The time in seconds to wait before sending SIGKILL after SIGTERM.
     # Must be greater than preStopDelaySeconds to allow graceful shutdown.
-    terminationGracePeriodSeconds: 30
+    terminationGracePeriodSeconds: 60
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 5
+    preStopDelaySeconds: 10
     # -- The resources to use for proxy pods. See
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
@@ -187,7 +194,7 @@ services:
         port: 10000
         scheme: HTTP
       # @ignore
-      failureThreshold: 30
+      failureThreshold: 40
       # @ignore
       periodSeconds: 3
     # -- Readiness probe configuration for proxy pods. You shouldn't need to
@@ -201,9 +208,9 @@ services:
         port: 10000
         scheme: HTTP
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 5
       # @ignore
-      failureThreshold: 1
+      failureThreshold: 3
     # -- Liveness probe configuration for proxy pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -460,7 +467,7 @@ services:
     # Ensures pods are stable before receiving traffic.
     minReadySeconds: 10
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 5
+    preStopDelaySeconds: 10
     # -- Extra environment variables to set for worker pods. Takes a list of
     # name=value pairs.
     extraEnv: []
@@ -482,7 +489,7 @@ services:
         port: 4003
         scheme: HTTP
       # @ignore
-      failureThreshold: 30
+      failureThreshold: 40
       # @ignore
       periodSeconds: 3
     # -- Readiness probe configuration for worker pods. You shouldn't need to
@@ -496,9 +503,9 @@ services:
         port: 4003
         scheme: HTTP
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 5
       # @ignore
-      failureThreshold: 1
+      failureThreshold: 3
     # -- Liveness probe configuration for worker pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -747,6 +754,9 @@ couchdb:
     accessModes:
       - ReadWriteOnce
     size: 10Gi
+    # -- The path where the persistent volume will be mounted.
+    # If you change this, make sure to also update the DATA_DIR environment variable above.
+    mountPath: /data
 
   extraPorts:
     # -- Extra ports to expose on the CouchDB service. We expose the SQS port

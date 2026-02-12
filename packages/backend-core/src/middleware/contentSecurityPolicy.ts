@@ -69,6 +69,7 @@ const CSP_DIRECTIVES = {
     "https://*.s3.us-gov-east-1.amazonaws.com",
     "https://*.s3.us-gov-west-1.amazonaws.com",
     "https://api.github.com",
+    "https://d2l5prqdbvm3op.cloudfront.net",
   ],
   "font-src": [
     "'self'",

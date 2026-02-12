@@ -1,12 +1,13 @@
 <script lang="ts">
-  import { Body } from "@budibase/bbui"
+  import { Body, Icon } from "@budibase/bbui"
   import type { GetWorkspaceHomeMetricsResponse } from "@budibase/types"
   import { onMount } from "svelte"
 
   import { API } from "@/api"
 
+  const GITHUB_REPO_URL = "https://github.com/Budibase/budibase"
+
   export let metrics: GetWorkspaceHomeMetricsResponse | null = null
-  export let metricsError = false
   export let agentsEnabled = false
 
   let githubStars: number | null = null
@@ -60,19 +61,24 @@
     <Body size="XL" weight="600">
       {githubStars != null ? formatStars(githubStars) : "25000+"}
     </Body>
-    <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      GitHub stars
-    </Body>
+    <a
+      href={GITHUB_REPO_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="metric-label-link"
+    >
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        GitHub stars
+      </Body>
+      <Icon
+        name="arrow-up-right"
+        size="XS"
+        color="var(--spectrum-global-color-gray-600)"
+        weight="regular"
+      />
+    </a>
   </div>
 </div>
-
-{#if metricsError}
-  <div class="metrics-error">
-    <Body size="S" color="var(--spectrum-global-color-static-red-600)">
-      Failed to load workspace metrics.
-    </Body>
-  </div>
-{/if}
 
 <style>
   .metrics {
@@ -95,10 +101,22 @@
     gap: calc(var(--spacing-s) - var(--spacing-xs));
   }
 
-  .metrics-error {
-    padding: var(--spacing-s) var(--spacing-m);
-    border-radius: 4px;
-    background: var(--spectrum-global-color-gray-100);
+  .metric-label-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+    width: fit-content;
+  }
+
+  .metric-label-link:hover {
+    color: var(--spectrum-global-color-gray-800);
+  }
+
+  .metric-label-link:hover :global(.spectrum-Body),
+  .metric-label-link:hover :global(i) {
+    color: var(--spectrum-global-color-gray-800) !important;
   }
 
   @media (max-width: 900px) {
