@@ -299,29 +299,40 @@ Any constraints the agent must follow.
       sourceLabel,
     }: { sourceType: ToolType | undefined; sourceLabel: string | undefined }
   ): { icon?: IconInfo; tagIconUrl?: string } {
+    const resolveDatasourceIcon = (sourceIconType?: string) => {
+      if (!sourceIconType) {
+        return undefined
+      }
+      const integrationIcon = getIntegrationIcon(sourceIconType)
+      if (!integrationIcon) {
+        return undefined
+      }
+      if (integrationIcon.url) {
+        return {
+          icon: integrationIcon,
+          tagIconUrl: integrationIcon.url,
+        }
+      }
+      if (integrationIcon.icon) {
+        const iconKey = sourceIconType.toUpperCase()
+        const tagIconUrl =
+          DATASOURCE_TAG_ICON_URLS[iconKey] ||
+          DATASOURCE_TAG_ICON_URLS.CUSTOM ||
+          BudibaseLogoSvg
+        return { icon: integrationIcon, tagIconUrl }
+      }
+      return undefined
+    }
+
     if (
       sourceType === ToolType.INTERNAL_TABLE ||
       sourceType === ToolType.EXTERNAL_TABLE ||
       sourceType === ToolType.AUTOMATION
     ) {
-      if (sourceType === ToolType.EXTERNAL_TABLE && tool.sourceIconType) {
-        const integrationIcon = getIntegrationIcon(tool.sourceIconType)
-        if (integrationIcon) {
-          if (integrationIcon.url) {
-            return {
-              icon: integrationIcon,
-              tagIconUrl: integrationIcon.url,
-            }
-          }
-          if (integrationIcon.icon) {
-            const iconKey = tool.sourceIconType?.toUpperCase()
-            const tagIconUrl = iconKey
-              ? DATASOURCE_TAG_ICON_URLS[iconKey] ||
-                DATASOURCE_TAG_ICON_URLS.CUSTOM ||
-                BudibaseLogoSvg
-              : BudibaseLogoSvg
-            return { icon: integrationIcon, tagIconUrl }
-          }
+      if (sourceType === ToolType.EXTERNAL_TABLE) {
+        const externalIcon = resolveDatasourceIcon(tool.sourceIconType)
+        if (externalIcon) {
+          return externalIcon
         }
       }
       return {
@@ -348,6 +359,17 @@ Any constraints the agent must follow.
       }
 
       return { icon: { icon: RestLogo }, tagIconUrl: RestIconSvg }
+    }
+
+    if (sourceType === ToolType.DATASOURCE_QUERY) {
+      const datasourceIcon = resolveDatasourceIcon(tool.sourceIconType)
+      if (datasourceIcon) {
+        return datasourceIcon
+      }
+      return {
+        icon: { icon: BudibaseLogo },
+        tagIconUrl: BudibaseLogoSvg,
+      }
     }
 
     return {}
@@ -377,6 +399,9 @@ Any constraints the agent must follow.
     if (sourceType === ToolType.REST_QUERY && sourceLabel) {
       return `api.${sanitizeString(sourceLabel, true)}`
     }
+    if (sourceType === ToolType.DATASOURCE_QUERY) {
+      return sourceLabel ? sanitizeString(sourceLabel, true) : "datasource"
+    }
     return "tool"
   }
 
@@ -398,6 +423,9 @@ Any constraints the agent must follow.
     }
     if (sourceType === ToolType.REST_QUERY) {
       return "API tools"
+    }
+    if (sourceType === ToolType.DATASOURCE_QUERY) {
+      return sourceLabel || "Datasource tools"
     }
     return "Tools"
   }
@@ -423,6 +451,32 @@ Any constraints the agent must follow.
     )
   }
 
+  const getQueryForTool = (tool: AgentTool) => {
+    const normalizedReadableName = normaliseToolNameForMatch(
+      tool.readableName || tool.runtimeBinding || tool.name || ""
+    )
+    const matchingDatasource = $datasources.list.find(
+      datasource =>
+        datasource.name === tool.sourceLabel &&
+        (tool.sourceType === ToolType.REST_QUERY
+          ? datasource.source === "REST"
+          : datasource.source !== "REST")
+    )
+
+    return $queries.list.find(query => {
+      const queryNameMatches =
+        query.name === tool.readableName ||
+        normaliseToolNameForMatch(query.name || "") === normalizedReadableName
+      if (!queryNameMatches) {
+        return false
+      }
+      if (!matchingDatasource?._id) {
+        return true
+      }
+      return query.datasourceId === matchingDatasource._id
+    })
+  }
+
   const getToolResourcePath = (tool: AgentTool): string | null => {
     if (tool.sourceType === ToolType.AUTOMATION) {
       const automation = findResourceByName($automationStore.automations, tool)
@@ -431,8 +485,11 @@ Any constraints the agent must follow.
       }
     }
 
-    if (tool.sourceType === ToolType.REST_QUERY) {
-      const query = findResourceByName($queries.list, tool)
+    if (
+      tool.sourceType === ToolType.REST_QUERY ||
+      tool.sourceType === ToolType.DATASOURCE_QUERY
+    ) {
+      const query = getQueryForTool(tool)
       if (query?._id) {
         return `../../apis/query/${query._id}`
       }

@@ -122,19 +122,19 @@ export const truncateTitle = (value: string, maxLength = 120) => {
   return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`
 }
 
-interface AgentChatCompleteResult {
+interface DiscordChatCompleteResult {
   messages: ChatConversation["messages"]
   assistantText: string
   title?: string
 }
 
-export async function agentChatComplete({
+export async function discordChat({
   chat,
   user,
 }: {
   chat: ChatConversationRequest
   user: ContextUser
-}): Promise<AgentChatCompleteResult> {
+}): Promise<DiscordChatCompleteResult> {
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
 
@@ -177,17 +177,11 @@ export async function agentChatComplete({
       baseSystemPrompt: ai.agentSystemPrompt(user),
       includeGoal: false,
     })
-
-  const { modelId, apiKey, baseUrl } =
-    await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
+  const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
+    agent.aiconfig
+  )
 
   const sessionId = chat._id || v4()
-  const openai = ai.createLiteLLMOpenAI({
-    apiKey,
-    baseUrl,
-    fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
-  })
-  const model = openai.chat(modelId)
 
   const modelMessages = await convertToModelMessages(chat.messages)
   const messagesWithContext: ModelMessage[] =
@@ -201,9 +195,10 @@ export async function agentChatComplete({
         ]
       : modelMessages
 
+  const hasTools = Object.keys(tools).length > 0
   const result = streamText({
     model: wrapLanguageModel({
-      model,
+      model: chatLLM,
       middleware: extractReasoningMiddleware({
         tagName: "think",
       }),
@@ -212,9 +207,7 @@ export async function agentChatComplete({
     system,
     tools,
     stopWhen: stepCountIs(30),
-    providerOptions: ai.getLiteLLMProviderOptions(
-      Object.keys(tools).length > 0
-    ),
+    providerOptions: providerOptions?.(hasTools),
     onError({ error }) {
       console.error("Agent streaming error", {
         agentId,
@@ -353,16 +346,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
   try {
-    const { modelId, apiKey, baseUrl } =
-      await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
-
     const sessionId = chat._id || v4()
-    const openai = ai.createLiteLLMOpenAI({
-      apiKey,
-      baseUrl,
-      fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
-    })
-    const model = openai.chat(modelId)
+    const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
+      agent.aiconfig,
+      sessionId
+    )
 
     const modelMessages = await convertToModelMessages(chat.messages)
     const messagesWithContext: ModelMessage[] =
@@ -381,7 +369,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const hasTools = Object.keys(tools).length > 0
     const result = streamText({
       model: wrapLanguageModel({
-        model,
+        model: chatLLM,
         middleware: extractReasoningMiddleware({
           tagName: "think",
         }),
@@ -390,10 +378,15 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       system,
       tools: hasTools ? tools : undefined,
       stopWhen: stepCountIs(30),
-      onStepFinish({ toolCalls, toolResults }) {
+      onStepFinish({ content, toolCalls, toolResults }) {
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+        for (const part of content) {
+          if (part.type === "tool-error") {
+            pendingToolCalls.delete(part.toolCallId)
+          }
+        }
       },
-      providerOptions: ai.getLiteLLMProviderOptions(hasTools),
+      providerOptions: providerOptions?.(hasTools),
       onError({ error }) {
         console.error("Agent streaming error", {
           agentId,
@@ -466,7 +459,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   } catch (error: any) {
     const message = error?.message || "Agent action failed"
     ctx.res.write(
-      `data: ${JSON.stringify({ type: "error", errorText: message, content: message })}\n\n`
+      `data: ${JSON.stringify({ type: "error", errorText: message })}\n\n`
     )
     ctx.res.end()
   }

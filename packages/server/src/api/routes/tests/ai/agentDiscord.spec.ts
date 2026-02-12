@@ -60,7 +60,30 @@ describe("agent discord integration sync", () => {
       },
     })
 
-    const scope = nock("https://discord.com")
+    const globalScope = nock("https://discord.com")
+      .put("/api/v10/applications/app-123/commands", payload => {
+        const commands = payload as Array<{ name: string; contexts?: number[] }>
+        return (
+          Array.isArray(commands) &&
+          commands.length === 2 &&
+          commands.some(
+            command =>
+              command.name === DiscordCommands.ASK &&
+              command.contexts?.includes(1)
+          ) &&
+          commands.some(
+            command =>
+              command.name === DiscordCommands.NEW &&
+              command.contexts?.includes(1)
+          )
+        )
+      })
+      .matchHeader("authorization", "Bot bot-secret")
+      .reply(200, [
+        { id: "cmd-1", name: DiscordCommands.ASK },
+        { id: "cmd-2", name: DiscordCommands.NEW },
+      ])
+    const guildScope = nock("https://discord.com")
       .put(
         "/api/v10/applications/app-123/guilds/guild-123/commands",
         payload => {
@@ -84,10 +107,59 @@ describe("agent discord integration sync", () => {
     expect(result.success).toBe(true)
     expect(result.chatAppId).toBeTruthy()
     expect(result.interactionsEndpointUrl).toContain("/api/webhooks/discord/")
+    expect(result.interactionsEndpointUrl).toContain(
+      `/${config.getProdWorkspaceId()}/`
+    )
     expect(result.interactionsEndpointUrl).toContain(`/${result.chatAppId}/`)
     expect(result.interactionsEndpointUrl).toContain(`/${agent._id}`)
     expect(result.inviteUrl).toContain("client_id=app-123")
-    expect(scope.isDone()).toBe(true)
+    expect(globalScope.isDone()).toBe(true)
+    expect(guildScope.isDone()).toBe(true)
+  })
+
+  it("obfuscates discord secrets in responses and preserves them on update", async () => {
+    const signing = makeDiscordSigningKeyPair()
+    const created = await config.api.agent.create({
+      name: "Discord Obfuscation Agent",
+      aiconfig: "test-config",
+      discordIntegration: {
+        applicationId: "app-123",
+        publicKey: signing.publicKey,
+        botToken: "bot-secret",
+        guildId: "guild-123",
+      },
+    })
+
+    expect(created.discordIntegration?.publicKey).toEqual("********")
+    expect(created.discordIntegration?.botToken).toEqual("********")
+
+    const { agents } = await config.api.agent.fetch()
+    const fetched = agents.find(a => a._id === created._id)
+
+    expect(fetched?.discordIntegration?.publicKey).toEqual("********")
+    expect(fetched?.discordIntegration?.botToken).toEqual("********")
+
+    const updated = await config.api.agent.update({
+      ...(fetched as NonNullable<typeof fetched>),
+      live: true,
+    })
+
+    expect(updated.discordIntegration?.publicKey).toEqual("********")
+    expect(updated.discordIntegration?.botToken).toEqual("********")
+
+    const globalScope = nock("https://discord.com")
+      .put("/api/v10/applications/app-123/commands")
+      .matchHeader("authorization", "Bot bot-secret")
+      .reply(200, [])
+
+    const guildScope = nock("https://discord.com")
+      .put("/api/v10/applications/app-123/guilds/guild-123/commands")
+      .matchHeader("authorization", "Bot bot-secret")
+      .reply(200, [])
+
+    await config.api.agent.syncDiscordCommands(created._id!)
+    expect(globalScope.isDone()).toBe(true)
+    expect(guildScope.isDone()).toBe(true)
   })
 
   it("returns a validation error when required discord settings are missing", async () => {
@@ -106,7 +178,6 @@ describe("agent discord integration sync", () => {
       discordIntegration: {
         applicationId: "app-123",
         botToken: "bot-secret",
-        guildId: "guild-123",
       },
     })
 
@@ -116,6 +187,39 @@ describe("agent discord integration sync", () => {
   })
 
   describe("discord webhook signature validation", () => {
+    it("rejects webhook calls that target a dev workspace ID", async () => {
+      const signing = makeDiscordSigningKeyPair()
+      const agent = await config.api.agent.create({
+        name: "Discord Dev Path Rejected Agent",
+        discordIntegration: {
+          publicKey: signing.publicKey,
+        },
+      })
+      await config.publish()
+
+      const body = { type: 1 }
+      const timestamp = Math.floor(Date.now() / 1000).toString()
+      const signature = signDiscordPayload({
+        body,
+        privateKey: signing.privateKey,
+        timestamp,
+      })
+
+      const response = await config
+        .getRequest()!
+        .post(
+          `/api/webhooks/discord/${config.getDevWorkspaceId()}/chatapp-test/${agent._id}`
+        )
+        .set("x-signature-ed25519", signature)
+        .set("x-signature-timestamp", timestamp)
+        .send(body)
+        .expect(400)
+
+      expect(response.body.error).toEqual(
+        "Discord webhook must target a production workspace ID"
+      )
+    })
+
     it("validates signatures with the configured agent public key", async () => {
       const signing = makeDiscordSigningKeyPair()
       const agent = await config.api.agent.create({

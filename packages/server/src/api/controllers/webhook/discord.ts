@@ -22,7 +22,7 @@ import type {
 import { DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
 import {
-  agentChatComplete,
+  discordChat,
   prepareChatConversationForSave,
   truncateTitle,
 } from "../ai/chatConversations"
@@ -486,9 +486,9 @@ const handleDiscordInteraction = async ({
       channel,
     }
 
-    let result: Awaited<ReturnType<typeof agentChatComplete>>
+    let result: Awaited<ReturnType<typeof discordChat>>
     try {
-      result = await agentChatComplete({
+      result = await discordChat({
         chat: draftChat,
         user: buildDiscordUserContext(userId, displayName),
       })
@@ -521,6 +521,15 @@ const handleDiscordInteraction = async ({
 export async function discordWebhook(
   ctx: Ctx<any, any, { instance: string; chatAppId: string; agentId: string }>
 ) {
+  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.instance)
+  if (ctx.params.instance !== prodAppId) {
+    ctx.status = 400
+    ctx.body = {
+      error: "Discord webhook must target a production workspace ID",
+    }
+    return
+  }
+
   const signature = ctx.headers[DISCORD_SIGNATURE_HEADER]
   const timestamp = ctx.headers[DISCORD_TIMESTAMP_HEADER]
 

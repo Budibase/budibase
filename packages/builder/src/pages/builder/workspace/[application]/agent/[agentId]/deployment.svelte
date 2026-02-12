@@ -73,8 +73,8 @@
           size="XS">Agent in automations</Body
         >
         <Body color={"var(--spectrum-global-color-gray-700);"} size="XS"
-          >This agent can be triggered from within Budibase Agents via the Agent
-          node</Body
+          >This agent can be triggered from within Budibase Automations via the
+          Agent node</Body
         >
       </div>
       <Toggle value={true} disabled={true} />
@@ -86,7 +86,7 @@
       <Body
         color={"var(--spectrum-global-color-gray-900)"}
         weight="500"
-        size="XS">Messaging Channels</Body
+        size="XS">Messaging channels</Body
       >
     </div>
     <div>

@@ -20,6 +20,20 @@ const DISCORD_DEFAULT_SIGNATURE_MAX_AGE_SECONDS = 300
 export const DISCORD_ASK_COMMAND = DiscordCommands.ASK
 export const DISCORD_NEW_COMMAND = DiscordCommands.NEW
 
+interface DiscordCommandOption {
+  type: 3
+  name: string
+  description: string
+  required: boolean
+}
+
+interface DiscordCommandDefinition {
+  name: string
+  description: string
+  options: DiscordCommandOption[]
+  contexts?: number[]
+}
+
 export const validateDiscordIntegration = (
   agent: Agent
 ): ResolvedDiscordIntegration => {
@@ -95,50 +109,85 @@ export const buildDiscordWebhookUrl = async (
   if (!workspaceId) {
     throw new HTTPError("workspaceId is required", 400)
   }
-  return `${platformUrl.replace(/\/$/, "")}/api/webhooks/discord/${workspaceId}/${chatAppId}/${agentId}`
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  return `${platformUrl.replace(/\/$/, "")}/api/webhooks/discord/${prodWorkspaceId}/${chatAppId}/${agentId}`
 }
 
 export const buildDiscordInviteUrl = (applicationId: string) =>
   `https://discord.com/oauth2/authorize?client_id=${applicationId}&scope=bot+applications.commands&permissions=0`
 
-export const syncGuildCommands = async (
-  applicationId: string,
-  botToken: string,
-  guildId: string
-) => {
-  const url = `${DISCORD_API_BASE_URL}/applications/${applicationId}/guilds/${guildId}/commands`
+const buildGlobalCommandPayload = (): DiscordCommandDefinition[] => [
+  {
+    name: DiscordCommands.ASK,
+    description: "Ask the configured Budibase agent",
+    contexts: [0, 1], // guild and bot DM contexts
+    options: [
+      {
+        type: 3,
+        name: "message",
+        description: "Message to send to the agent",
+        required: true,
+      },
+    ],
+  },
+  {
+    name: DiscordCommands.NEW,
+    description: "Start a new conversation with the configured agent",
+    contexts: [0, 1], // guild and bot DM contexts
+    options: [
+      {
+        type: 3,
+        name: "message",
+        description: "Optional opening message",
+        required: false,
+      },
+    ],
+  },
+]
+
+const buildGuildCommandPayload = (): DiscordCommandDefinition[] => [
+  {
+    name: DiscordCommands.ASK,
+    description: "Ask the configured Budibase agent",
+    options: [
+      {
+        type: 3,
+        name: "message",
+        description: "Message to send to the agent",
+        required: true,
+      },
+    ],
+  },
+  {
+    name: DiscordCommands.NEW,
+    description: "Start a new conversation with the configured agent",
+    options: [
+      {
+        type: 3,
+        name: "message",
+        description: "Optional opening message",
+        required: false,
+      },
+    ],
+  },
+]
+
+const syncCommandsOnEndpoint = async ({
+  url,
+  botToken,
+  payload,
+}: {
+  url: string
+  botToken: string
+  payload: DiscordCommandDefinition[]
+}) => {
   const response = await fetch(url, {
     method: "PUT",
     headers: {
       Authorization: `Bot ${botToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify([
-      {
-        name: DiscordCommands.ASK,
-        description: "Ask the configured Budibase agent",
-        options: [
-          {
-            type: 3,
-            name: "message",
-            description: "Message to send to the agent",
-            required: true,
-          },
-        ],
-      },
-      {
-        name: DiscordCommands.NEW,
-        description: "Start a new conversation with the configured agent",
-        options: [
-          {
-            type: 3,
-            name: "message",
-            description: "Optional opening message",
-            required: false,
-          },
-        ],
-      },
-    ]),
+    body: JSON.stringify(payload),
   })
 
   if (!response.ok) {
@@ -148,6 +197,24 @@ export const syncGuildCommands = async (
       400
     )
   }
+}
+
+export const syncApplicationCommands = async (
+  applicationId: string,
+  botToken: string,
+  guildId: string
+) => {
+  await syncCommandsOnEndpoint({
+    url: `${DISCORD_API_BASE_URL}/applications/${applicationId}/commands`,
+    botToken,
+    payload: buildGlobalCommandPayload(),
+  })
+
+  await syncCommandsOnEndpoint({
+    url: `${DISCORD_API_BASE_URL}/applications/${applicationId}/guilds/${guildId}/commands`,
+    botToken,
+    payload: buildGuildCommandPayload(),
+  })
 }
 
 export const verifyDiscordSignature = ({

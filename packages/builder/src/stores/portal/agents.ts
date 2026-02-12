@@ -5,6 +5,7 @@ import {
   AgentFile,
   CreateAgentRequest,
   ProvisionAgentTeamsChannelResponse,
+  SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   UpdateAgentRequest,
   ToolMetadata,
@@ -93,6 +94,15 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return updated
   }
 
+  duplicateAgent = async (agentId: string) => {
+    const duplicated = await API.duplicateAgent(agentId)
+    this.update(state => {
+      state.agents = [...state.agents, duplicated]
+      return state
+    })
+    return duplicated
+  }
+
   deleteAgent = async (agentId: string) => {
     await API.deleteAgent(agentId)
     await this.fetchAgents()
@@ -141,9 +151,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   syncDiscordCommands = async (
-    agentId: string
+    agentId: string,
+    body?: SyncAgentDiscordCommandsRequest
   ): Promise<SyncAgentDiscordCommandsResponse> => {
-    return await API.syncAgentDiscordCommands(agentId)
+    return await API.syncAgentDiscordCommands(agentId, body)
   }
 
   provisionTeamsChannel = async (

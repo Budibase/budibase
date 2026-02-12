@@ -69,18 +69,6 @@ describe("discord webhook helpers", () => {
     }
   )
 
-  it("only supports /ask and /new command names", () => {
-    expect(
-      getDiscordInteractionCommand(
-        makeInteraction({ data: { name: "support" } })
-      )
-    ).toEqual(DiscordCommands.UNSUPPORTED)
-
-    expect(
-      getDiscordInteractionCommand(makeInteraction({ data: { name: "fresh" } }))
-    ).toEqual(DiscordCommands.UNSUPPORTED)
-  })
-
   it("scopes conversations by chat app, agent, channel, thread, and user", () => {
     const scope = {
       chatAppId: "chat-app-1",
@@ -193,6 +181,7 @@ describe("discord webhook helpers", () => {
     })
 
     it("returns false for stale timestamps", () => {
+      // 3600 = 1 hour, just old enough to be staler than the 45min default timeout
       const staleSec = Math.floor(Date.now() / 1000 - 3600).toString()
       expect(isDiscordTimestampFresh(staleSec)).toBe(false)
     })

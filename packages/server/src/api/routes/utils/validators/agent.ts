@@ -69,3 +69,13 @@ export function updateAgentValidator() {
     }).unknown(true)
   )
 }
+
+export function syncAgentDiscordCommandsValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      chatAppId: OPTIONAL_STRING,
+    })
+      .optional()
+      .allow(null)
+  )
+}
