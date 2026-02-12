@@ -316,25 +316,13 @@
     agentModal?.show()
   }
 
-  $: workspaceId = $appStore.appId
-
-  const goToCreate = (target: string) => {
-    if (!workspaceId) {
-      return
-    }
-    const prefix = `/builder/workspace/${workspaceId}`
-    const normalisedTarget = target.startsWith("/")
-      ? target
-      : `${prefix}/${target.replace(/^\.\//, "")}`
-    goto(normalisedTarget)
+  const goToCreate = (target: "data/new" | "apis/new") => {
+    goto(url(`../${target}`))
   }
 
   const handleTableSave = async (table: Table) => {
-    if (!workspaceId) {
-      return
-    }
     notifications.success("Table created successfully")
-    goto(`/builder/workspace/${workspaceId}/data/table/${table._id}`)
+    goto(url(`../data/table/${table._id}`))
   }
 
   const openCreateTable = () => {
