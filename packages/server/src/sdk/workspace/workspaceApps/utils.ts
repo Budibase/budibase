@@ -16,16 +16,33 @@ export async function getMatchedWorkspaceApp(
 
   const allWorkspaceApps = await sdk.workspaceApps.fetch()
 
-  function isWorkspaceAppMatch({ url, isDefault }: WorkspaceApp) {
+  function isWorkspaceAppMatch(
+    urlPath: string,
+    { url, isDefault }: WorkspaceApp
+  ) {
     return (
-      fromUrl.replace(/\/$/, "") === `${baseUrl}${url.replace(/\/$/, "")}` ||
+      urlPath.replace(/\/$/, "") === `${baseUrl}${url.replace(/\/$/, "")}` ||
       (embedUrl &&
-        fromUrl.replace(/\/$/, "") ===
+        urlPath.replace(/\/$/, "") ===
           `${embedUrl}${url.replace(/\/$/, "")}`) ||
-      (!fromUrl && isDefault) // Support getMatchedWorkspaceApp without url referrer
+      (!urlPath && isDefault) // Support getMatchedWorkspaceApp without url referrer
     )
   }
 
-  const matchedWorkspaceApp = allWorkspaceApps.find(isWorkspaceAppMatch)
+  const findWorkspaceApp = (urlPath: string) =>
+    allWorkspaceApps.find(workspaceApp =>
+      isWorkspaceAppMatch(urlPath, workspaceApp)
+    )
+
+  const matchedWorkspaceApp = findWorkspaceApp(fromUrl)
+  if (matchedWorkspaceApp) {
+    return matchedWorkspaceApp
+  }
+
+  const chatPath = fromUrl.replace(/\/_chat(?:\/.*)?$/, "")
+  if (chatPath !== fromUrl) {
+    return findWorkspaceApp(chatPath)
+  }
+
   return matchedWorkspaceApp
 }

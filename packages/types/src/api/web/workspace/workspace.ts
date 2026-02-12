@@ -71,6 +71,7 @@ export interface PublishedChatAppData {
   appId: string
   chatAppId: string
   name: string
+  url: string
   updatedAt?: string
 }
 

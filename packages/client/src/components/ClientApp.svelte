@@ -57,6 +57,7 @@
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
   import RecaptchaV2 from "./RecaptchaV2.svelte"
   import { ActionTypes } from "@/constants"
+  import AppChatbox from "./app/Chatbox.svelte"
 
   // Provide contexts
   const context = createContextStore()
@@ -78,10 +79,18 @@
 
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
+  $: isChatOnlyRoute =
+    typeof window !== "undefined" &&
+    window.location.pathname.replace(/\/$/, "").endsWith("/_chat")
 
   // Handle no matching route
   $: {
-    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
+    if (
+      !isChatOnlyRoute &&
+      dataLoaded &&
+      $routeStore.routerLoaded &&
+      !$routeStore.activeRoute
+    ) {
       if ($screenStore.screens.length) {
         // If we have some available screens, use the first screen which
         // represents the best route based on rank
@@ -240,6 +249,16 @@
                                   </Body>
                                 </Layout>
                               </div>
+                            {:else if isChatOnlyRoute}
+                              <CustomThemeWrapper>
+                                <AppChatbox intro="" />
+
+                                <!-- Layers on top of app -->
+                                <NotificationDisplay />
+                                <ConfirmationDisplay />
+                                <PeekScreenDisplay />
+                                <InstallPrompt />
+                              </CustomThemeWrapper>
                             {:else if !$screenStore.activeLayout}
                               <div class="error">
                                 <Layout justifyItems="center" gap="S">

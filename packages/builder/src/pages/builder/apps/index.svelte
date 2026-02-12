@@ -44,6 +44,7 @@
     appId: string
     chatAppId: string
     name: string
+    url: string
     updatedAt?: string
   }
   let liveChatApps: PublishedChatAppData[] = []
@@ -219,7 +220,12 @@
                   <Body size="S">Loading chat apps...</Body>
                 {:else if liveChatApps.length}
                   {#each liveChatApps as chatApp (chatApp.chatAppId)}
-                    <div class="app static">
+                    <a
+                      class="app"
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`/app${chatApp.url}/_chat`}
+                    >
                       <div
                         class="preview"
                         use:gradient={{ seed: chatApp.name }}
@@ -241,7 +247,7 @@
                       <div class="icon-muted">
                         <Icon name="caret-right" />
                       </div>
-                    </div>
+                    </a>
                   {/each}
                 {:else}
                   <Body size="S">No live chat apps yet.</Body>

@@ -331,8 +331,23 @@ export async function fetchClientChatApps(
 
   const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
   for (const workspace of workspaces) {
-    const chatApp = await context.doInWorkspaceContext(workspace.appId, () =>
-      sdk.ai.chatApps.getSingle()
+    const { chatApp, workspaceAppUrl } = await context.doInWorkspaceContext(
+      workspace.appId,
+      async () => {
+        const [chatApp, workspaceApps] = await Promise.all([
+          sdk.ai.chatApps.getSingle(),
+          sdk.workspaceApps.fetch(),
+        ])
+
+        const workspaceApp =
+          workspaceApps.find(app => app.isDefault && !app.disabled) ||
+          workspaceApps.find(app => !app.disabled)
+
+        return {
+          chatApp,
+          workspaceAppUrl: workspaceApp?.url || "",
+        }
+      }
     )
 
     if (!chatApp?.live || !chatApp._id) {
@@ -343,6 +358,7 @@ export async function fetchClientChatApps(
       appId: workspace.appId,
       chatAppId: chatApp._id,
       name: chatApp.title || workspace.name,
+      url: `${workspace.url}${workspaceAppUrl}`.replace(/\/$/, ""),
       updatedAt: chatApp.updatedAt || workspace.updatedAt,
     })
   }
@@ -465,8 +481,15 @@ export async function fetchAppPackage(
       embedPath ||
       (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
 
-    const matchedWorkspaceApp =
+    let matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+    if (!matchedWorkspaceApp) {
+      const chatPath = urlPath.replace(/\/_chat(?:\/.*)?$/, "")
+      if (chatPath !== urlPath) {
+        matchedWorkspaceApp =
+          await sdk.workspaceApps.getMatchedWorkspaceApp(chatPath)
+      }
+    }
 
     // disabled workspace apps should appear to not exist
     // if the dev workspace is being served, allow the request regardless
