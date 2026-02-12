@@ -253,34 +253,37 @@
     showAutoColumns: boolean,
     autoSortColumns: boolean
   ): string[] => {
-    let columns: TableFieldSchema[] = []
-    let autoColumns: TableFieldSchema[] = []
+    let columns: (TableFieldSchema & { name: string })[] = []
+    let autoColumns: (TableFieldSchema & { name: string })[] = []
     Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
       if (!field || !fieldSchema) {
         return
       }
       if (!autoSortColumns || !fieldSchema?.autocolumn) {
-        columns.push(fieldSchema)
+        columns.push({
+          name: field,
+          ...fieldSchema,
+        })
       } else if (showAutoColumns) {
-        autoColumns.push(fieldSchema)
+        autoColumns.push({ name: field, ...fieldSchema })
       }
     })
     return columns
       .sort((a, b) => {
         if (a.divider) {
-          return a
+          return 1
         }
         if (b.divider) {
-          return b
+          return -1
         }
         const orderA = a.order || Number.MAX_SAFE_INTEGER
         const orderB = b.order || Number.MAX_SAFE_INTEGER
         const nameA = getDisplayName(a)
         const nameB = getDisplayName(b)
         if (orderA !== orderB) {
-          return orderA < orderB ? a : b
+          return orderA < orderB ? orderA : orderB
         }
-        return nameA < nameB ? a : b
+        return nameA.localeCompare(nameB)
       })
       .concat(autoColumns)
       .map(column => column.name)
