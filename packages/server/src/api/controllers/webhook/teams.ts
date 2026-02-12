@@ -230,14 +230,9 @@ const getTeamsErrorMessage = (error: unknown) =>
   error instanceof HTTPError ? error.message : TEAMS_FALLBACK_ERROR_MESSAGE
 
 export const stripTeamsMentions = (text: string) =>
-  text
-    .replace(/<at>[^<]*<\/at>/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim()
+  text.replace(/<at>[^<]*<\/at>/gi, " ").replace(/\s+/g, " ").trim()
 
-export const parseTeamsCommand = (
-  text?: string
-): {
+export const parseTeamsCommand = (text?: string): {
   command: TeamsCommand
   content: string
 } => {
@@ -437,8 +432,7 @@ const handleTeamsMessage = async ({
     const channelId = activity.channelData?.channel?.id?.trim()
     const teamId = activity.channelData?.team?.id?.trim()
     const tenantId =
-      activity.channelData?.tenant?.id?.trim() ||
-      activity.from?.tenantId?.trim()
+      activity.channelData?.tenant?.id?.trim() || activity.from?.tenantId?.trim()
     const conversationType = activity.conversation?.conversationType?.trim()
 
     const channel: ChatConversationChannel = {
@@ -483,9 +477,7 @@ const handleTeamsMessage = async ({
         getTeamsConversationCacheKey({ workspaceId: prodAppId, scope }),
         chatId
       )
-      return await reply(
-        "Started a new conversation. Send a message to continue."
-      )
+      return await reply("Started a new conversation. Send a message to continue.")
     }
 
     if (!content) {
@@ -584,9 +576,7 @@ export async function teamsWebhook(
   const { instance, chatAppId, agentId } = ctx.params
   const prodAppId = dbCore.getProdWorkspaceID(instance)
 
-  let integration: ReturnType<
-    typeof sdk.ai.deployments.teams.validateTeamsIntegration
-  >
+  let integration: ReturnType<typeof sdk.ai.deployments.teams.validateTeamsIntegration>
   try {
     integration = await context.doInWorkspaceContext(prodAppId, async () => {
       const agent = await sdk.ai.agents.getOrThrow(agentId)

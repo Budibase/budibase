@@ -46,8 +46,7 @@
       name: "Microsoft Teams",
       logo: TeamsLogo,
       status: teamsConfigured ? "Enabled" : "Disabled",
-      details:
-        "Allow this agent to respond in Teams personal, group, and team chats",
+      details: "Allow this agent to respond in Teams personal, group, and team chats",
       configurable: true,
     },
   ])

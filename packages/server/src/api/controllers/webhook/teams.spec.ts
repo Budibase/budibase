@@ -38,10 +38,7 @@ describe("teams webhook helpers", () => {
     ["/ask hello there", { command: "ask", content: "hello there" }],
     ["new", { command: "new", content: "" }],
     ["/new start fresh", { command: "new", content: "start fresh" }],
-    [
-      "<at>Budibase Bot</at> ask follow up",
-      { command: "ask", content: "follow up" },
-    ],
+    ["<at>Budibase Bot</at> ask follow up", { command: "ask", content: "follow up" }],
     ["status", { command: "ask", content: "status" }],
   ] as const)("parses command text %s", (text, expected) => {
     expect(parseTeamsCommand(text)).toEqual(expected)
