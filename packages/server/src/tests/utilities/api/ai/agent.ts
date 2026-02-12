@@ -61,6 +61,7 @@ export class AgentAPI extends TestAPI {
       }
     )
   }
+
   duplicate = async (
     agentId: string,
     expectations?: Expectations

@@ -179,6 +179,7 @@ export async function duplicateAgent(
   ctx.body = obfuscateAgentSecrets(duplicated)
   ctx.status = 201
 }
+
 export async function deleteAgent(
   ctx: UserCtx<void, { deleted: true }, { agentId: string }>
 ) {
