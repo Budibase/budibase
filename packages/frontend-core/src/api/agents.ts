@@ -5,9 +5,13 @@ import {
   DuplicateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
+<<<<<<< HEAD
   ProvisionAgentTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
+=======
+>>>>>>> parent of 41c62591da (naming updates)
   SyncAgentDiscordCommandsResponse,
+  SyncAgentTeamsResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -35,9 +39,7 @@ export interface AgentEndpoints {
     agentId: string,
     body?: SyncAgentDiscordCommandsRequest
   ) => Promise<SyncAgentDiscordCommandsResponse>
-  provisionAgentTeamsChannel: (
-    agentId: string
-  ) => Promise<ProvisionAgentTeamsChannelResponse>
+  syncAgentTeams: (agentId: string) => Promise<SyncAgentTeamsResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -113,9 +115,9 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  provisionAgentTeamsChannel: async (agentId: string) => {
-    return await API.post<null, ProvisionAgentTeamsChannelResponse>({
-      url: `/api/agent/${agentId}/teams/provision`,
+  syncAgentTeams: async (agentId: string) => {
+    return await API.post<null, SyncAgentTeamsResponse>({
+      url: `/api/agent/${agentId}/teams/sync`,
     })
   },
 })

@@ -4,11 +4,11 @@ import {
   CreateAgentRequest,
   CreateAgentResponse,
   FetchAgentsResponse,
-  ProvisionAgentTeamsChannelRequest,
-  ProvisionAgentTeamsChannelResponse,
   RequiredKeys,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
+  SyncAgentTeamsRequest,
+  SyncAgentTeamsResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -171,12 +171,8 @@ export async function syncAgentDiscordCommands(
   ctx.status = 200
 }
 
-export async function provisionAgentTeamsChannel(
-  ctx: UserCtx<
-    ProvisionAgentTeamsChannelRequest,
-    ProvisionAgentTeamsChannelResponse,
-    { agentId: string }
-  >
+export async function syncAgentTeamsChannel(
+  ctx: UserCtx<SyncAgentTeamsRequest, SyncAgentTeamsResponse, { agentId: string }>
 ) {
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)

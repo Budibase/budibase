@@ -4,9 +4,13 @@ import {
   Agent,
   AgentFile,
   CreateAgentRequest,
+<<<<<<< HEAD
   ProvisionAgentTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
+=======
+>>>>>>> parent of 41c62591da (naming updates)
   SyncAgentDiscordCommandsResponse,
+  SyncAgentTeamsResponse,
   UpdateAgentRequest,
   ToolMetadata,
 } from "@budibase/types"
@@ -157,10 +161,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return await API.syncAgentDiscordCommands(agentId, body)
   }
 
-  provisionTeamsChannel = async (
+  syncTeamsChannel = async (
     agentId: string
-  ): Promise<ProvisionAgentTeamsChannelResponse> => {
-    return await API.provisionAgentTeamsChannel(agentId)
+  ): Promise<SyncAgentTeamsResponse> => {
+    return await API.syncAgentTeams(agentId)
   }
 }
 export const agentsStore = new AgentsStore()

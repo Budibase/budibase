@@ -1,6 +1,6 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
-describe("agent teams integration provisioning", () => {
+describe("agent teams integration sync", () => {
   const config = new TestConfiguration()
 
   beforeEach(async () => {
@@ -11,7 +11,7 @@ describe("agent teams integration provisioning", () => {
     config.end()
   })
 
-  it("provisions teams channel for an agent", async () => {
+  it("syncs teams channel for an agent", async () => {
     const agent = await config.api.agent.create({
       name: "Teams Agent",
       teamsIntegration: {
@@ -20,7 +20,7 @@ describe("agent teams integration provisioning", () => {
       },
     })
 
-    const result = await config.api.agent.provisionTeamsChannel(agent._id!)
+    const result = await config.api.agent.syncTeamsChannel(agent._id!)
 
     expect(result.success).toBe(true)
     expect(result.chatAppId).toBeTruthy()
@@ -41,7 +41,7 @@ describe("agent teams integration provisioning", () => {
       name: "No Teams Settings",
     })
 
-    await config.api.agent.provisionTeamsChannel(agent._id!, undefined, {
+    await config.api.agent.syncTeamsChannel(agent._id!, undefined, {
       status: 400,
     })
   })
@@ -54,7 +54,7 @@ describe("agent teams integration provisioning", () => {
       },
     })
 
-    await config.api.agent.provisionTeamsChannel(agent._id!, undefined, {
+    await config.api.agent.syncTeamsChannel(agent._id!, undefined, {
       status: 400,
     })
   })
