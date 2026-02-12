@@ -13,6 +13,7 @@
     "url": "https://github.com/Budibase/budibase-pro.git"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.26",
     "@anthropic-ai/sdk": "^0.27.3",
     "@budibase/backend-core": "*",
     "@budibase/shared-core": "*",
