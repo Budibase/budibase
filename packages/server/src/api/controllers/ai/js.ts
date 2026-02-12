@@ -1,4 +1,4 @@
-import { generateText, type ModelMessage } from "ai"
+import { generateText } from "ai"
 import { GenerateJsRequest, GenerateJsResponse, UserCtx } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
@@ -14,11 +14,7 @@ export async function generateJs(
   const snippets = currentContext?.snippets || []
   const { prompt, bindings = [] } = ctx.request.body
 
-  const systemMessage = ai.generateJsPrompt(bindings, snippets)
-  const messages: ModelMessage[] = [
-    { role: "system", content: systemMessage },
-    { role: "user", content: prompt },
-  ]
+  const { messages } = ai.generateJs(bindings, snippets).addUserMessage(prompt)
 
   const { chat, providerOptions } = await sdk.ai.llm.getDefaultLLMOrThrow()
   const result = await generateText({

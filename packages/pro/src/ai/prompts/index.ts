@@ -1,13 +1,13 @@
 import {
-  ContextUser,
   EnrichedBinding,
   Snippet,
+  ContextUser,
   SummariseLength,
   UserContent,
 } from "@budibase/types"
+import { LLMRequest } from "../llm"
 import { z } from "zod"
 import { AgentPromptOptions } from "../../types"
-import { LLMRequest } from "../llm"
 
 export interface AutomationAgentToolGuideline {
   toolName: string
@@ -118,6 +118,18 @@ export function cleanData(text: string) {
   )
 }
 
+export function generateSQL(prompt: string, tableSchema: string) {
+  return new LLMRequest().addUserMessage(
+    `Given the table schema:\n${tableSchema}\n\nGenerate a SQL query for the following request:\n${prompt}.\n Only provide the SQL.`
+  )
+}
+
+export function generateCode(prompt: string) {
+  return new LLMRequest().addUserMessage(
+    `Generate JavaScript code for the following request:\n${prompt}.\n Only provide the JS and nothing else.`
+  )
+}
+
 export function generateCronExpression(text: string) {
   return new LLMRequest().addUserMessage(
     `Generate a node-cron compatible expression based on the following prompt. Return only the cron expression (without backticks), and if not possible return only 'Error generating cron' with a short explanation:\n${text}`
@@ -142,10 +154,7 @@ export function searchWeb(text: string) {
   )
 }
 
-export function generateJsPrompt(
-  bindings: EnrichedBinding[],
-  snippets: Snippet[]
-): string {
+export function generateJs(bindings: EnrichedBinding[], snippets: Snippet[]) {
   let bindingsPrompt = "You do not have access to any bindings in this request."
   if (bindings && bindings.length > 0) {
     bindingsPrompt = `The bindings you have access to are: \n\n${bindings
@@ -163,7 +172,7 @@ export function generateJsPrompt(
       .join("\n")}`
   }
 
-  return `
+  return new LLMRequest().addSystemMessage(`
 You are a helpful expert in writing JavaScript.  A user is asking you for help
 writing some JavaScript for their application.
 
@@ -252,7 +261,36 @@ a variable, it will be provided to you as a binding.
 
 ${snippetsPrompt}
 
-${bindingsPrompt}`
+${bindingsPrompt}`)
+}
+
+export function generateTables() {
+  const tablesMessage = `
+You are generating Budibase table schemas from user prompts.
+Always return at least 2 tables, and define only one side of relationships using a link field.
+Exclude id, created_at, and updated_at (Budibase adds them).
+Include a variety of column types: text, dropdown, date, number.
+Add at least one formula column, one attachment, and one multi-attachment column across the tables.
+Budibase handles reverse relationships and many-to-many links — never define join tables or reverse fields.
+You may specify foreignColumnName, but do not create that field manually.
+`
+
+  return new LLMRequest().addSystemMessage(tablesMessage)
+}
+
+export function generateAIColumns() {
+  const tablesMessage = `Given the generated schema, add only one field of type "AI" to relevant tables to add value to the Budibase user.`
+
+  return new LLMRequest().addSystemMessage(tablesMessage)
+}
+
+export function generateData() {
+  const dataMessage = `
+For each table, populate the data field with realistic-looking sample records.
+Avoid placeholder values like "foo" or "bar". Use real names, emails, etc., and ensure values are unique across rows.
+`
+
+  return new LLMRequest().addSystemMessage(dataMessage)
 }
 
 export function composeAutomationAgentSystemPrompt(

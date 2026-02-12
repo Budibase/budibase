@@ -16,7 +16,7 @@ import {
   classifyText,
   cleanData,
   generateCronExpression,
-  generateJsPrompt,
+  generateJs,
   searchWeb,
   sentimentAnalysis,
   summarizeText,
@@ -166,7 +166,7 @@ export abstract class LLM {
     return await tracer.trace("generateJs", async () => {
       const { bindings = [], snippets = [] } = opts || {}
       return await this.prompt(
-        generateJsPrompt(bindings, snippets).addUserMessage(prompt)
+        generateJs(bindings, snippets).addUserMessage(prompt)
       )
     })
   }
