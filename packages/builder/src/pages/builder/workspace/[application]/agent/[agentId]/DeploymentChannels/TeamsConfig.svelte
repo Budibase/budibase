@@ -8,7 +8,7 @@
     StatusLight,
     notifications,
   } from "@budibase/bbui"
-  import type { Agent, SyncAgentTeamsResponse } from "@budibase/types"
+  import type { Agent, ProvisionAgentTeamsChannelResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
 
   const TEAMS_NEW_COMMAND = "new"
@@ -24,19 +24,18 @@
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
   })
 
-  let syncing = $state(false)
-  let saving = $state(false)
-  let syncResult = $state<SyncAgentTeamsResponse | undefined>()
+  let provisioning = $state(false)
+  let provisionResult = $state<ProvisionAgentTeamsChannelResponse | undefined>()
 
   const isConnected = $derived.by(() => {
-    if (syncResult?.success) {
+    if (provisionResult?.success) {
       return true
     }
     return !!(draft.appId.trim() && draft.appPassword.trim())
   })
 
   const messagingEndpointUrl = $derived(
-    syncResult?.messagingEndpointUrl ||
+    provisionResult?.messagingEndpointUrl ||
       agent?.teamsIntegration?.messagingEndpointUrl ||
       ""
   )
@@ -55,7 +54,7 @@
       idleTimeoutMinutes:
         integration?.idleTimeoutMinutes || DEFAULT_IDLE_TIMEOUT_MINUTES,
     }
-    syncResult = undefined
+    provisionResult = undefined
     draftAgentId = currentAgent._id
   })
 
@@ -72,12 +71,12 @@
     return Math.floor(parsed)
   }
 
-  const saveTeamsIntegration = async () => {
-    if (!agent?._id || saving) {
+  const provisionTeamsChannel = async () => {
+    if (!agent?._id || provisioning) {
       return
     }
 
-    saving = true
+    provisioning = true
     try {
       await agentsStore.updateAgent({
         ...agent,
@@ -90,30 +89,14 @@
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
         },
       })
+      provisionResult = await agentsStore.provisionTeamsChannel(agent._id)
       await agentsStore.fetchAgents()
-    } catch (error) {
-      console.error(error)
-      throw error
-    } finally {
-      saving = false
-    }
-  }
-
-  const syncTeams = async () => {
-    if (!agent?._id || syncing) {
-      return
-    }
-
-    syncing = true
-    try {
-      await saveTeamsIntegration()
-      syncResult = await agentsStore.syncTeamsChannel(agent._id)
       notifications.success("Microsoft Teams channel enabled")
     } catch (error) {
       console.error(error)
-      notifications.error("Failed to sync Microsoft Teams channel")
+      notifications.error("Failed to enable Microsoft Teams channel")
     } finally {
-      syncing = false
+      provisioning = false
     }
   }
 </script>
@@ -158,8 +141,8 @@
   </div>
 
   <div class="actions">
-    <Button cta on:click={syncTeams} disabled={saving || syncing}>
-      {syncing
+    <Button cta on:click={provisionTeamsChannel} disabled={provisioning}>
+      {provisioning
         ? "Enabling..."
         : isConnected
           ? "Update channel"
