@@ -9,8 +9,8 @@ import {
   type UploadFileRequest,
   type UploadFileResponse,
 } from "@budibase/types"
-import { bbai } from "../../../sdk/workspace/ai/llm"
 import { generateText, streamText } from "ai"
+import sdk from "../../../sdk"
 
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
@@ -64,7 +64,8 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     ctx.throw(400, "Missing required field: model")
   }
 
-  const { chat } = await bbai.createBBAIClient(model)
+  const { chat, providerOptions } =
+    await sdk.ai.llm.bbai.createBBAIClient(model)
 
   if (stream) {
     try {
@@ -72,6 +73,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
         model: chat,
         messages,
         includeRawChunks: true,
+        providerOptions: providerOptions?.(false),
       })
 
       ctx.status = 200
@@ -114,6 +116,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
   const result = await generateText({
     model: chat,
     messages,
+    providerOptions: providerOptions?.(false),
   })
   ctx.body = result.response.body
 }
