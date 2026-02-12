@@ -97,6 +97,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     ragMinDistance: request.ragMinDistance,
     ragTopK: request.ragTopK,
     discordIntegration: request.discordIntegration,
+    teamsIntegration: request.teamsIntegration,
   }
 
   const { rev } = await db.put(agent)
