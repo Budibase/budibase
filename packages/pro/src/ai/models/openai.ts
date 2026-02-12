@@ -83,7 +83,7 @@ export class OpenAI extends LLM {
     }
     this.client = createOpenAI({ apiKey: opts.apiKey, baseURL: baseUrl })
     this.openAIClient = new OpenAIClient({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: opts.apiKey,
       baseURL: baseUrl,
     })
   }
