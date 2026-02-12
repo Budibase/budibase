@@ -14,7 +14,7 @@ import { generateText, streamText } from "ai"
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
 ) {
-  if (env.SELF_HOSTED) {
+  if (env.SELF_HOSTED && !env.isDev()) {
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
   const llm = await ai.getLLMOrThrow()
