@@ -1,6 +1,7 @@
 import { env } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
+import { ai, quotas } from "@budibase/pro"
 import {
+  AIQuotaUsageResponse,
   ChatCompletionRequestV2,
   type ChatCompletionRequest,
   type ChatCompletionResponse,
@@ -29,6 +30,12 @@ export async function uploadFile(
   ctx.body = {
     file: response,
   }
+}
+
+export async function getAIQuotaUsage(ctx: Ctx<void, AIQuotaUsageResponse>) {
+  const usage = await quotas.getQuotaUsage()
+  const monthlyCredits = usage?.monthly?.current?.budibaseAICredits ?? 0
+  ctx.body = { monthlyCredits }
 }
 
 export async function chatCompletion(

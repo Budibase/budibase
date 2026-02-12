@@ -50,6 +50,10 @@ export interface ChatCompletionResponse {
   tokensUsed: number
 }
 
+export interface AIQuotaUsageResponse {
+  monthlyCredits: number
+}
+
 export interface GenerateJsRequest {
   prompt: string
   bindings?: EnrichedBinding[]
