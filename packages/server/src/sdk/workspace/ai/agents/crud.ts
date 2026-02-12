@@ -5,6 +5,7 @@ import {
   DocumentType,
   UpdateAgentRequest,
 } from "@budibase/types"
+import { helpers } from "@budibase/shared-core"
 import { listAgentFiles, removeAgentFile } from "./files"
 
 const withAgentDefaults = (agent: Agent): Agent => ({
@@ -68,6 +69,35 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
   const { rev } = await db.put(agent)
   agent._rev = rev
   return withAgentDefaults(agent)
+}
+
+export async function duplicate(
+  source: Agent,
+  createdBy: string
+): Promise<Agent> {
+  const allAgents = await fetch()
+  const name = helpers.duplicateName(
+    source.name,
+    allAgents.map(agent => agent.name)
+  )
+
+  return await create({
+    name,
+    description: source.description,
+    aiconfig: source.aiconfig,
+    promptInstructions: source.promptInstructions,
+    goal: source.goal,
+    icon: source.icon,
+    iconColor: source.iconColor,
+    live: source.live,
+    _deleted: false,
+    createdBy,
+    enabledTools: source.enabledTools || [],
+    embeddingModel: source.embeddingModel,
+    vectorDb: source.vectorDb,
+    ragMinDistance: source.ragMinDistance,
+    ragTopK: source.ragTopK,
+  })
 }
 
 export async function update(agent: UpdateAgentRequest): Promise<Agent> {
