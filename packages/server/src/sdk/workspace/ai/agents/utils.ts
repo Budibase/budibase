@@ -11,12 +11,12 @@ import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
   createRestQueryTool,
+  createDatasourceQueryTool,
   toToolSet,
   type AiToolDefinition,
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
-import tracer from "dd-trace"
 
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
@@ -42,10 +42,8 @@ export async function getAvailableTools(
     ])
   const webSearchConfig = aiConfig?.webSearchConfig
 
-  const restDatasourceNames = new Map(
-    datasources
-      .filter(ds => ds.source === SourceName.REST)
-      .map(ds => [ds._id, ds.name || "API"])
+  const datasourcesById = new Map(
+    datasources.filter(ds => !!ds._id).map(ds => [ds._id!, ds])
   )
 
   const datasourceNamesById = Object.fromEntries(
@@ -60,11 +58,27 @@ export async function getAvailableTools(
       .map(ds => [ds._id!, ds.source || "CUSTOM"])
   )
 
-  const restQueryTools = queries
-    .filter(query => restDatasourceNames.has(query.datasourceId))
-    .map(query =>
-      createRestQueryTool(query, restDatasourceNames.get(query.datasourceId))
-    )
+  const restQueryTools = queries.flatMap(query => {
+    const datasource = datasourcesById.get(query.datasourceId)
+    if (!datasource || datasource.source !== SourceName.REST) {
+      return []
+    }
+    return [createRestQueryTool(query, datasource.name || "API")]
+  })
+
+  const datasourceQueryTools = queries.flatMap(query => {
+    const datasource = datasourcesById.get(query.datasourceId)
+    if (!datasource || datasource.source === SourceName.REST) {
+      return []
+    }
+    return [
+      createDatasourceQueryTool(
+        query,
+        datasource.name || "Datasource",
+        datasource.source || "CUSTOM"
+      ),
+    ]
+  })
 
   const tools: AiToolDefinition[] = [
     ...getBudibaseTools(
@@ -74,6 +88,7 @@ export async function getAvailableTools(
       automations
     ),
     ...restQueryTools,
+    ...datasourceQueryTools,
   ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
@@ -167,50 +182,6 @@ function addHelperTools(
   }
 
   return enabledTools
-}
-
-export function createLiteLLMFetch(sessionId: string): typeof fetch {
-  const liteFetch = (async (
-    input: Parameters<typeof fetch>[0],
-    init?: Parameters<typeof fetch>[1]
-  ) => {
-    const span = tracer.scope().active()
-    let modifiedInit = init
-
-    if (typeof init?.body === "string") {
-      try {
-        const body = JSON.parse(init.body)
-        body.litellm_session_id = sessionId
-        if (span) {
-          body.metadata = {
-            ...body.metadata,
-            dd_trace_id: span.context().toTraceId(),
-            dd_span_id: span.context().toSpanId(),
-            session_id: sessionId,
-          }
-        }
-        modifiedInit = { ...init, body: JSON.stringify(body) }
-      } catch {
-        // Not JSON, pass through
-      }
-    }
-
-    const response = await fetch(input, modifiedInit)
-
-    const litellmCallId = response.headers.get("x-litellm-call-id")
-    if (litellmCallId && span) {
-      span.setTag("litellm.call_id", litellmCallId)
-    }
-
-    return response
-  }) as typeof fetch
-
-  // Preserve the preconnect helper required by the OpenAI client typings.
-  if (typeof (fetch as any).preconnect === "function") {
-    ;(liteFetch as any).preconnect = (fetch as any).preconnect.bind(fetch)
-  }
-
-  return liteFetch
 }
 
 export interface IncompleteToolCall {

@@ -1,34 +1,100 @@
 <script lang="ts">
+  import { createEventDispatcher, onMount } from "svelte"
   import { Body, Button, Icon, ProgressCircle } from "@budibase/bbui"
-  import type { ChatConversation, DraftChatConversation } from "@budibase/types"
   import { Chatbox } from "@budibase/frontend-core/src/components"
-  import { createEventDispatcher } from "svelte"
+  import { helpers } from "@budibase/shared-core"
+  import type { ChatConversation, DraftChatConversation } from "@budibase/types"
+  import { auth } from "@/stores/portal"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
 
   type EnabledAgentListItem = {
     agentId: string
     name?: string
+    icon?: string
+    iconColor?: string
   }
 
   export let selectedAgentId: string | null = null
   export let selectedAgentName: string = ""
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationStarters: { prompt: string }[] = []
+  export let isAgentKnown: boolean = true
+  export let isAgentLive: boolean = true
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
   export let deletingChat: boolean = false
   export let workspaceId: string
+  export let initialPrompt: string = ""
 
   const dispatch = createEventDispatcher<{
     chatSaved: { chatId?: string; chat: ChatConversationLike }
     deleteChat: undefined
     agentSelected: { agentId: string }
+    startChat: { agentId: string; prompt: string }
   }>()
 
   const hasChatId = (value: ChatConversationLike) =>
     value && "_id" in value && Boolean(value._id)
+
+  const buildGreeting = (name: string) => {
+    const currentDate = new Date()
+    const suffix = name ? `, ${name}` : ""
+
+    if (currentDate.getDay() === 1) {
+      return `Happy Monday${suffix}`
+    }
+
+    const isMorning = currentDate.getHours() < 12
+    return `${isMorning ? "Good Morning" : "Good Afternoon"}${suffix}`
+  }
+
+  let readOnlyReason: "disabled" | "deleted" | "offline" | undefined
+
+  let draftPrompt = ""
+  let draftPromptInput: HTMLInputElement | null = null
+
+  $: userName = $auth.user ? helpers.getUserLabel($auth.user) : ""
+  $: greetingText = buildGreeting(userName)
+
+  $: visibleAgentList = enabledAgentList.slice(0, 3)
+  $: hasEnabledAgents = enabledAgentList.length > 0
+
+  const getAgentStatus = (
+    agentId: string | null,
+    agents: EnabledAgentListItem[],
+    agentKnown: boolean,
+    agentLive: boolean
+  ): {
+    isAgentEnabled: boolean
+    readOnlyReason: "disabled" | "deleted" | "offline" | undefined
+  } => {
+    if (!agentId) {
+      return { isAgentEnabled: false, readOnlyReason: undefined }
+    }
+
+    if (!agentKnown) {
+      return { isAgentEnabled: false, readOnlyReason: "deleted" }
+    }
+
+    if (!agentLive) {
+      return { isAgentEnabled: false, readOnlyReason: "offline" }
+    }
+
+    const isAgentEnabled = agents.some(agent => agent.agentId === agentId)
+    return {
+      isAgentEnabled,
+      readOnlyReason: isAgentEnabled ? undefined : "disabled",
+    }
+  }
+
+  $: ({ readOnlyReason } = getAgentStatus(
+    selectedAgentId,
+    enabledAgentList,
+    isAgentKnown,
+    isAgentLive
+  ))
 
   const deleteChat = () => {
     dispatch("deleteChat")
@@ -37,6 +103,34 @@
   const selectAgent = (agentId: string) => {
     dispatch("agentSelected", { agentId })
   }
+
+  const startChat = () => {
+    const prompt = draftPrompt.trim()
+    if (!prompt) {
+      return
+    }
+
+    const agentId = enabledAgentList[0]?.agentId
+    if (!agentId) {
+      return
+    }
+
+    dispatch("startChat", { agentId, prompt })
+    draftPrompt = ""
+  }
+
+  const handlePromptKeyDown = (event: KeyboardEvent) => {
+    if (event.key !== "Enter") {
+      return
+    }
+
+    event.preventDefault()
+    startChat()
+  }
+
+  onMount(() => {
+    draftPromptInput?.focus()
+  })
 </script>
 
 <div class="chat-wrapper">
@@ -72,21 +166,64 @@
       bind:chat
       {workspaceId}
       {conversationStarters}
+      {initialPrompt}
+      readOnly={Boolean(readOnlyReason)}
+      {readOnlyReason}
       onchatsaved={event => dispatch("chatSaved", event.detail)}
     />
   {:else}
     <div class="chat-empty">
-      <Body size="S" color="var(--spectrum-global-color-gray-700)">
-        Choose an agent to start a chat
-      </Body>
+      <div class="chat-empty-greeting">
+        <Body size="XL" weight="600" serif>
+          {greetingText}
+        </Body>
+      </div>
+      <div class="chat-empty-input" role="presentation">
+        <input
+          class="chat-empty-input-field"
+          type="text"
+          placeholder="How can I help you today?"
+          bind:this={draftPromptInput}
+          bind:value={draftPrompt}
+          on:keydown={handlePromptKeyDown}
+          disabled={!hasEnabledAgents}
+        />
+        <button
+          class="chat-empty-input-action"
+          type="button"
+          on:click={startChat}
+          disabled={!hasEnabledAgents}
+          aria-label="Start chat"
+        >
+          <Icon name="arrow-up" size="S" />
+        </button>
+      </div>
       <div class="chat-empty-grid">
-        {#if enabledAgentList.length}
-          {#each enabledAgentList as agent (agent.agentId)}
+        {#if visibleAgentList.length}
+          {#each visibleAgentList as agent (agent.agentId)}
             <button
               class="chat-empty-card"
+              class:chat-empty-card-single={visibleAgentList.length === 1}
               on:click={() => selectAgent(agent.agentId)}
+              style={`--agent-icon-color:${agent.iconColor || "#6366F1"};`}
             >
-              {agent.name || "Unknown agent"}
+              <div class="chat-empty-card-head">
+                <div class="chat-empty-card-icon">
+                  <Icon
+                    name={agent.icon || "SideKick"}
+                    size="S"
+                    color="var(--agent-icon-color)"
+                  />
+                </div>
+                <Body size="S" weight="500">
+                  {agent.name || "Unknown agent"}
+                </Body>
+              </div>
+              <div class="chat-empty-card-subtitle">
+                <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+                  Start a chat with this agent.
+                </Body>
+              </div>
             </button>
           {/each}
         {:else}
@@ -143,31 +280,139 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: var(--spacing-m);
+    gap: 32px;
     padding: var(--spacing-xxl);
     text-align: center;
   }
 
-  .chat-empty-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  .chat-empty-greeting :global(p) {
+    color: var(--spectrum-global-color-gray-900);
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .chat-empty-input {
+    display: flex;
+    align-items: center;
     gap: var(--spacing-m);
-    width: min(520px, 100%);
+    width: 600px;
+    padding: 10px;
+    padding-left: 20px;
+    border-radius: 999px;
+    background: #2b2b2b;
+    color: var(--spectrum-global-color-gray-100);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .chat-empty-input-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--spectrum-global-color-gray-100);
+  }
+
+  .chat-empty-input-field {
+    flex: 1;
+    font-size: 16px;
+    color: white;
+    background: transparent;
+    border: none;
+    outline: none;
+    font: inherit;
+  }
+
+  .chat-empty-input-field::placeholder {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .chat-empty-input-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #8cb4f0;
+    color: #101828;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+  }
+
+  .chat-empty-input-action:disabled,
+  .chat-empty-input-field:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .chat-empty-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    width: min(720px, 100%);
+    align-items: center;
+    justify-content: center;
   }
 
   .chat-empty-card {
     border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
-    padding: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-50);
+    width: 240px;
+    border-radius: 16px;
+    padding: 0;
+    background: var(--spectrum-alias-background-color-primary);
     color: var(--spectrum-global-color-gray-800);
     font: inherit;
     cursor: pointer;
-    text-align: center;
+    text-align: left;
+    overflow: hidden;
+    transform: translateY(var(--card-offset, 0px))
+      rotate(var(--card-rotation, 0deg));
+    transition:
+      border-color 150ms ease,
+      transform 150ms ease;
   }
 
   .chat-empty-card:hover {
     border-color: var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-global-color-gray-100);
+    transform: translateY(calc(var(--card-offset, 0px) - 3px))
+      rotate(var(--card-rotation, 0deg));
+  }
+
+  .chat-empty-card:first-child {
+    --card-rotation: -6deg;
+    --card-offset: 12px;
+  }
+
+  .chat-empty-card:last-child {
+    --card-rotation: 6deg;
+    --card-offset: 12px;
+  }
+
+  .chat-empty-card.chat-empty-card-single {
+    --card-rotation: 0deg;
+    --card-offset: 0px;
+  }
+
+  .chat-empty-card-head {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: var(--spacing-m);
+    background-color: #080808;
+    color: white;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .chat-empty-card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+  }
+
+  .chat-empty-card-subtitle {
+    padding: var(--spacing-m);
   }
 </style>

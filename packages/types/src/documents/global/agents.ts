@@ -6,6 +6,7 @@ export enum ToolType {
   EXTERNAL_TABLE = "EXTERNAL_TABLE",
   AUTOMATION = "AUTOMATION",
   REST_QUERY = "REST_QUERY",
+  DATASOURCE_QUERY = "DATASOURCE_QUERY",
   SEARCH = "SEARCH",
 }
 
@@ -66,6 +67,7 @@ export interface AgentFile extends Document {
   filename: string
   mimetype?: string
   size?: number
+  objectStoreKey: string
   ragSourceId: string
   status: AgentFileStatus
   chunkCount: number

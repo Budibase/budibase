@@ -1,7 +1,7 @@
 import { VectorDbProvider, type VectorDb as VectorDbDoc } from "@budibase/types"
 import * as crypto from "crypto"
 import { Client } from "pg"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, tenancy } from "@budibase/backend-core"
 import type {
   ChunkInput,
   PgVectorDbConfig,
@@ -21,10 +21,10 @@ const buildAgentTableName = (agentId: string) => {
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
   const currentWorkspaceId = context.getOrThrowWorkspaceId()
-  const hashWorkspaceId = dbCore.getProdWorkspaceID(currentWorkspaceId)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(currentWorkspaceId)
   const hash = crypto
     .createHash("sha256")
-    .update(`${hashWorkspaceId}:${agentId}`)
+    .update(`${tenancy.getTenantId()}:${prodWorkspaceId}:${agentId}`)
     .digest("hex")
     .slice(0, TABLE_HASH_LENGTH)
   const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH
@@ -169,11 +169,20 @@ class PgVectorDb implements VectorDb {
     if (!sourceIds || sourceIds.length === 0) {
       return
     }
+
     await this.withClient(async client => {
-      await client.query(
-        `DELETE FROM ${this.tableName} WHERE source = ANY($1::text[])`,
-        [sourceIds]
-      )
+      try {
+        await client.query(
+          `DELETE FROM ${this.tableName} WHERE source = ANY($1::text[])`,
+          [sourceIds]
+        )
+      } catch (error: any) {
+        if (error?.code === "42P01") {
+          // Table does not exist
+          return
+        }
+        throw error
+      }
     })
   }
 

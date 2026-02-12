@@ -29,6 +29,7 @@ export type CreateAgentRequest = Optional<
   "aiconfig"
 >
 export type CreateAgentResponse = Agent
+export type DuplicateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
   Agent,
