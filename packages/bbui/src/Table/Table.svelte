@@ -12,7 +12,7 @@
 
   interface TableFieldSchema {
     type?: string
-    name?: string
+    name: string
     displayName?: string | null
     sortable?: boolean
     editable?: boolean
@@ -30,8 +30,8 @@
     preventSelectRow?: boolean
   }
 
-  type TableSchemaInput = Record<string, TableFieldSchema>
-  type TableSchema = Record<string, TableFieldSchema>
+  type TableSchemaInput = Record<string, Omit<TableFieldSchema, "name">>
+  type TableSchema = Record<string, TableFieldSchema & { name: string }>
 
   /**
    /**
@@ -91,9 +91,9 @@
   let loaded: boolean = false
   let checkboxStatus: boolean = false
 
-  $: schema = fixSchema(schema)
+  $: fixedSchema = fixSchema(schema)
   $: if (!loading) loaded = true
-  $: fields = getFields(schema, showAutoColumns, autoSortColumns)
+  $: fields = getFields(fixedSchema, showAutoColumns, autoSortColumns)
   $: rows = fields?.length ? data || [] : []
   $: totalRowCount = rows?.length || 0
   $: visibleRowCount = getVisibleRowCount(
@@ -111,9 +111,9 @@
     loading
   )
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
-  $: gridStyle = getGridStyle(fields, schema, showEditColumn)
+  $: gridStyle = getGridStyle(fields, fixedSchema, showEditColumn)
   $: showEditColumn = allowEditRows || allowSelectRows
-  $: cellStyles = computeCellStyles(schema)
+  $: cellStyles = computeCellStyles(fixedSchema)
 
   // Deselect the "select all" checkbox when the user navigates to a new page
   $: {
@@ -253,19 +253,16 @@
     showAutoColumns: boolean,
     autoSortColumns: boolean
   ): string[] => {
-    let columns: (TableFieldSchema & { name: string })[] = []
+    let columns: TableFieldSchema[] = []
     let autoColumns: (TableFieldSchema & { name: string })[] = []
     Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
       if (!field || !fieldSchema) {
         return
       }
       if (!autoSortColumns || !fieldSchema?.autocolumn) {
-        columns.push({
-          name: field,
-          ...fieldSchema,
-        })
+        columns.push(fieldSchema)
       } else if (showAutoColumns) {
-        autoColumns.push({ name: field, ...fieldSchema })
+        autoColumns.push(fieldSchema)
       }
     })
     return columns
@@ -431,20 +428,20 @@
               <div
                 class="spectrum-Table-headCell"
                 class:noBorderHeader={!showHeaderBorder}
-                class:spectrum-Table-headCell--alignCenter={schema[field]
+                class:spectrum-Table-headCell--alignCenter={fixedSchema[field]
                   .align === "Center"}
-                class:spectrum-Table-headCell--alignRight={schema[field]
+                class:spectrum-Table-headCell--alignRight={fixedSchema[field]
                   .align === "Right"}
-                class:is-sortable={schema[field].sortable !== false}
+                class:is-sortable={fixedSchema[field].sortable !== false}
                 class:is-sorted-desc={sortColumn === field &&
                   sortOrder === "Descending"}
                 class:is-sorted-asc={sortColumn === field &&
                   sortOrder === "Ascending"}
-                on:click={() => sortBy(schema[field])}
+                on:click={() => sortBy(fixedSchema[field])}
               >
                 <div class="title" title={field}>
-                  {getDisplayName(schema[field])}
-                  {#if schema[field]?.autocolumn}
+                  {getDisplayName(fixedSchema[field])}
+                  {#if fixedSchema[field]?.autocolumn}
                     <Icon
                       name="magic-wand"
                       size="S"
@@ -458,7 +455,7 @@
                       color="var(--spectrum-global-color-gray-700)"
                     />
                   {/if}
-                  {#if allowEditColumns && schema[field]?.editable !== false}
+                  {#if allowEditColumns && fixedSchema[field]?.editable !== false}
                     <Icon
                       name="pencil"
                       size="S"
@@ -502,10 +499,11 @@
               {#each fields as field}
                 <div
                   class="spectrum-Table-cell"
-                  class:spectrum-Table-cell--divider={!!schema[field].divider}
+                  class:spectrum-Table-cell--divider={!!fixedSchema[field]
+                    .divider}
                   style={cellStyles[field]}
                   on:click={() => {
-                    if (!schema[field]?.preventSelectRow) {
+                    if (!fixedSchema[field]?.preventSelectRow) {
                       dispatch("click", row)
                       toggleSelectRow(row)
                     }
@@ -515,7 +513,7 @@
                     {customRenderers}
                     {row}
                     {snippets}
-                    schema={schema[field]}
+                    schema={fixedSchema[field]}
                     value={deepGet(row, field)}
                     on:clickrelationship
                     on:buttonclick
