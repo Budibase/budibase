@@ -2,6 +2,8 @@ import {
   Agent,
   CreateAgentRequest,
   CreateAgentResponse,
+  SyncAgentDiscordCommandsRequest,
+  SyncAgentDiscordCommandsResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -44,6 +46,20 @@ export class AgentAPI extends TestAPI {
     return await this._delete<{ deleted: true }>(`/api/agent/${agentId}`, {
       expectations,
     })
+  }
+
+  syncDiscordCommands = async (
+    agentId: string,
+    body?: SyncAgentDiscordCommandsRequest,
+    expectations?: Expectations
+  ): Promise<SyncAgentDiscordCommandsResponse> => {
+    return await this._post<SyncAgentDiscordCommandsResponse>(
+      `/api/agent/${agentId}/discord/sync`,
+      {
+        body,
+        expectations,
+      }
+    )
   }
 
   duplicate = async (
