@@ -22,7 +22,6 @@
   import { buildLiveUrl } from "@/helpers/urls"
   import { Body, Modal, type ModalAPI, notifications } from "@budibase/bbui"
   import {
-    FeatureFlag,
     type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
@@ -187,6 +186,7 @@
     if (typeof window === "undefined") {
       return {
         q: "",
+        type: null as HomeType | null,
         create: null as HomeCreate | null,
         sort: null as HomeSortColumn | null,
         order: null as HomeSortOrder | null,
@@ -194,10 +194,11 @@
     }
     const params = new URLSearchParams(window.location.search)
     const q = params.get("q") ?? ""
+    const type = normaliseType(params.get("type"))
     const sort = normaliseSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
     const create = normaliseCreate(params.get("create"))
-    return { q, sort, order, create }
+    return { q, type, sort, order, create }
   }
 
   const writeUrlState = () => {
@@ -208,8 +209,6 @@
     const params = new URLSearchParams(window.location.search)
 
     params.delete("create")
-    params.delete("type")
-
     const q = searchTerm.trim()
     if (!q) {
       params.delete("q")
@@ -227,6 +226,12 @@
     } else {
       params.set("sort", sortColumn)
       params.set("order", sortOrder)
+    }
+
+    if (typeFilter === "all") {
+      params.delete("type")
+    } else {
+      params.set("type", typeFilter)
     }
 
     const query = params.toString()
@@ -592,14 +597,12 @@
       return
     }
 
-    if (!$featureFlags[FeatureFlag.WORKSPACE_HOME]) {
-      goto(url("../design"))
-      return
-    }
-
-    const { q, sort, order } = readUrlState()
+    const { q, type, sort, order } = readUrlState()
     if (q) {
       searchTerm = q
+    }
+    if (type) {
+      typeFilter = type
     }
     if (sort) {
       sortColumn = sort

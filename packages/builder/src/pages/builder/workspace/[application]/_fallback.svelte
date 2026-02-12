@@ -3,5 +3,5 @@
 
   $redirect
 
-  $redirect("../design")
+  $redirect("../home")
 </script>
