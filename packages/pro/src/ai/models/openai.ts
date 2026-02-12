@@ -5,7 +5,7 @@ import {
   ResponseFormat,
 } from "@budibase/types"
 import { Readable } from "node:stream"
-import { toFile } from "openai"
+import { toFile, OpenAI as OpenAIClient } from "openai"
 import { LLMFullResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
 import { normalizeContentType } from "../utils"
@@ -71,12 +71,14 @@ function calculateBudibaseAICredits(usage?: LanguageModelUsage): number {
 
 export class OpenAI extends LLM {
   protected client: OpenAIProvider
+  protected openAIClient: OpenAIClient
   constructor(opts: LLMConfigOptions) {
     super(opts)
     if (!opts.apiKey) {
       throw new Error("No OpenAI API key found")
     }
     this.client = createOpenAI({ apiKey: opts.apiKey, baseURL: opts.baseUrl })
+    this.openAIClient = new OpenAIClient({ apiKey: process.env.OPENAI_API_KEY })
   }
 
   // Default verbosity preference for supported models. Subclasses
@@ -128,7 +130,11 @@ export class OpenAI extends LLM {
 
     // For documents, use the files API
     const file = await toFile(data, filename)
-    const res = await this.client.files.create({ file, purpose: "assistants" })
+
+    const res = await this.openAIClient.files.create({
+      file,
+      purpose: "assistants",
+    })
     return res.id
   }
 
