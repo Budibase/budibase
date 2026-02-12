@@ -9,13 +9,10 @@
   import type { Agent, DeploymentRow } from "@budibase/types"
   import { selectedAgent } from "@/stores/portal"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
-  import TeamsConfig from "./DeploymentChannels/TeamsConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
-  import TeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
-  let teamsModal: Modal
 
   const discordConfigured = $derived.by(() => {
     const integration = currentAgent?.discordIntegration
@@ -27,11 +24,6 @@
     )
   })
 
-  const teamsConfigured = $derived.by(() => {
-    const integration = currentAgent?.teamsIntegration
-    return !!(integration?.appId?.trim() && integration?.appPassword?.trim())
-  })
-
   const channels = $derived.by<DeploymentRow[]>(() => [
     {
       id: "discord",
@@ -41,23 +33,11 @@
       details: "Allow this agent to respond in Discord channels and threads",
       configurable: true,
     },
-    {
-      id: "teams",
-      name: "Microsoft Teams",
-      logo: TeamsLogo,
-      status: teamsConfigured ? "Enabled" : "Disabled",
-      details: "Allow this agent to respond in Teams personal, group, and team chats",
-      configurable: true,
-    },
   ])
 
   const onConfigureChannel = (channel: DeploymentRow) => {
     if (channel.id === "discord") {
       discordModal?.show()
-      return
-    }
-    if (channel.id === "teams") {
-      teamsModal?.show()
       return
     }
   }
@@ -156,39 +136,18 @@
   </ModalContent>
 </Modal>
 
-<Modal bind:this={teamsModal}>
-  <ModalContent
-    size="L"
-    showCloseIcon
-    showConfirmButton={false}
-    showCancelButton={false}
-  >
-    <svelte:fragment slot="header">
-      <div class="modal-header">
-        <img
-          alt="Microsoft Teams"
-          width="24px"
-          height="24px"
-          src={TeamsLogo}
-          class="modal-header-logo"
-        />
-        <div class="modal-header-copy">
-          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
-            >Microsoft Teams</Body
-          >
-        </div>
-      </div>
-    </svelte:fragment>
-    <TeamsConfig agent={currentAgent} />
-  </ModalContent>
-</Modal>
-
 <style>
   .deployment-root {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
     min-height: 0;
+  }
+
+  .deployment-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
   }
 
   .section {
@@ -227,6 +186,18 @@
 
   .channel-main :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-700);
+  }
+
+  .status-chip {
+    font-weight: 500;
+  }
+
+  .status-chip.enabled {
+    color: var(--spectrum-semantic-positive-status-color);
+  }
+
+  .status-chip.disabled {
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .channel-details {
