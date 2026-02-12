@@ -35,11 +35,11 @@ export interface SyncAgentDiscordCommandsResponse {
   inviteUrl: string
 }
 
-export interface SyncAgentTeamsRequest {
+export interface ProvisionAgentTeamsChannelRequest {
   chatAppId?: string
 }
 
-export interface SyncAgentTeamsResponse {
+export interface ProvisionAgentTeamsChannelResponse {
   success: true
   chatAppId: string
   messagingEndpointUrl: string

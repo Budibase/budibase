@@ -4,8 +4,8 @@ import {
   CreateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
+  ProvisionAgentTeamsChannelResponse,
   SyncAgentDiscordCommandsResponse,
-  SyncAgentTeamsResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -31,7 +31,9 @@ export interface AgentEndpoints {
   syncAgentDiscordCommands: (
     agentId: string
   ) => Promise<SyncAgentDiscordCommandsResponse>
-  syncAgentTeams: (agentId: string) => Promise<SyncAgentTeamsResponse>
+  provisionAgentTeamsChannel: (
+    agentId: string
+  ) => Promise<ProvisionAgentTeamsChannelResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -97,9 +99,9 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  syncAgentTeams: async (agentId: string) => {
-    return await API.post<null, SyncAgentTeamsResponse>({
-      url: `/api/agent/${agentId}/teams/sync`,
+  provisionAgentTeamsChannel: async (agentId: string) => {
+    return await API.post<null, ProvisionAgentTeamsChannelResponse>({
+      url: `/api/agent/${agentId}/teams/provision`,
     })
   },
 })
