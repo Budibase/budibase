@@ -2,6 +2,7 @@
   import { Button, notifications } from "@budibase/bbui"
   import TopBar from "@/components/common/TopBar.svelte"
   import { agentsStore, chatAppsStore, currentChatApp } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import { params } from "@roxi/routify"
 
   import ChatApp from "./_components/ChatApp.svelte"
@@ -148,7 +149,10 @@
 
       nextLive = !Boolean(ensured.live)
       await chatAppsStore.updateChatApp({ live: nextLive })
-      notifications.success(nextLive ? "Chat is now live" : "Chat has been paused")
+      await deploymentStore.publishApp()
+      notifications.success(
+        nextLive ? "Chat is now live" : "Chat has been paused"
+      )
     } catch (error) {
       console.error(error)
       if (nextLive === false) {
