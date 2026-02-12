@@ -117,6 +117,51 @@ describe("agent discord integration sync", () => {
     expect(guildScope.isDone()).toBe(true)
   })
 
+  it("obfuscates discord secrets in responses and preserves them on update", async () => {
+    const signing = makeDiscordSigningKeyPair()
+    const created = await config.api.agent.create({
+      name: "Discord Obfuscation Agent",
+      aiconfig: "test-config",
+      discordIntegration: {
+        applicationId: "app-123",
+        publicKey: signing.publicKey,
+        botToken: "bot-secret",
+        guildId: "guild-123",
+      },
+    })
+
+    expect(created.discordIntegration?.publicKey).toEqual("********")
+    expect(created.discordIntegration?.botToken).toEqual("********")
+
+    const { agents } = await config.api.agent.fetch()
+    const fetched = agents.find(a => a._id === created._id)
+
+    expect(fetched?.discordIntegration?.publicKey).toEqual("********")
+    expect(fetched?.discordIntegration?.botToken).toEqual("********")
+
+    const updated = await config.api.agent.update({
+      ...(fetched as NonNullable<typeof fetched>),
+      live: true,
+    })
+
+    expect(updated.discordIntegration?.publicKey).toEqual("********")
+    expect(updated.discordIntegration?.botToken).toEqual("********")
+
+    const globalScope = nock("https://discord.com")
+      .put("/api/v10/applications/app-123/commands")
+      .matchHeader("authorization", "Bot bot-secret")
+      .reply(200, [])
+
+    const guildScope = nock("https://discord.com")
+      .put("/api/v10/applications/app-123/guilds/guild-123/commands")
+      .matchHeader("authorization", "Bot bot-secret")
+      .reply(200, [])
+
+    await config.api.agent.syncDiscordCommands(created._id!)
+    expect(globalScope.isDone()).toBe(true)
+    expect(guildScope.isDone()).toBe(true)
+  })
+
   it("returns a validation error when required discord settings are missing", async () => {
     const agent = await config.api.agent.create({
       name: "No Discord Settings",

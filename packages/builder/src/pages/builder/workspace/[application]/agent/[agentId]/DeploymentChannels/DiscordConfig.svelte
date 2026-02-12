@@ -143,7 +143,7 @@
 <div class="discord-config">
   <div class="field-grid">
     <Input label="Application ID" bind:value={draft.applicationId} />
-    <Input label="Public key" bind:value={draft.publicKey} />
+    <Input label="Public key" type="password" bind:value={draft.publicKey} />
     <Input label="Bot token" type="password" bind:value={draft.botToken} />
     <Input label="Guild ID" bind:value={draft.guildId} />
     <Input
