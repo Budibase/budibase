@@ -4,6 +4,8 @@ import {
   CreateAgentResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
+  SyncAgentTeamsRequest,
+  SyncAgentTeamsResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -55,6 +57,20 @@ export class AgentAPI extends TestAPI {
   ): Promise<SyncAgentDiscordCommandsResponse> => {
     return await this._post<SyncAgentDiscordCommandsResponse>(
       `/api/agent/${agentId}/discord/sync`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  syncTeamsChannel = async (
+    agentId: string,
+    body?: SyncAgentTeamsRequest,
+    expectations?: Expectations
+  ): Promise<SyncAgentTeamsResponse> => {
+    return await this._post<SyncAgentTeamsResponse>(
+      `/api/agent/${agentId}/teams/sync`,
       {
         body,
         expectations,

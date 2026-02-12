@@ -35,6 +35,16 @@ export interface SyncAgentDiscordCommandsResponse {
   inviteUrl: string
 }
 
+export interface SyncAgentTeamsRequest {
+  chatAppId?: string
+}
+
+export interface SyncAgentTeamsResponse {
+  success: true
+  chatAppId: string
+  messagingEndpointUrl: string
+}
+
 export type CreateAgentRequest = Optional<
   Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt">,
   "aiconfig"

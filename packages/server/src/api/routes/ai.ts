@@ -18,6 +18,7 @@ builderAdminRoutes
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
   .post("/api/agent/:agentId/discord/sync", ai.syncAgentDiscordCommands)
+  .post("/api/agent/:agentId/teams/sync", ai.syncAgentTeamsChannel)
   .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
