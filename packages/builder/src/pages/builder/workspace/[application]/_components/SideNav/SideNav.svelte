@@ -17,7 +17,7 @@
     Tag,
   } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
-  import { url, goto, isActive } from "@roxi/routify"
+  import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
@@ -42,7 +42,6 @@
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
   import {
-    FeatureFlag,
     type Datasource,
     type Query,
     type Table,
@@ -72,15 +71,8 @@
     pinned.set(true)
   }
 
-  $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
-  $: automationErrorCount = Object.keys(automationErrors).length
   $: backupErrors = getBackupErrors($enrichedApps || [], workspaceId)
   $: backupErrorCount = Object.keys(backupErrors).length
-
-  const getAutomationErrors = (apps: EnrichedApp[], workspaceId: string) => {
-    const target = apps.find(app => app.devId === workspaceId)
-    return target?.automationErrors || {}
-  }
 
   const getBackupErrors = (apps: EnrichedApp[], workspaceId: string) => {
     const target = apps.find(app => app.devId === workspaceId)
@@ -432,7 +424,7 @@
   <CreateWorkspaceModal />
 </Modal>
 
-{#if workspaceId && $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+{#if workspaceId}
   <Modal bind:this={createAutomationModal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -504,132 +496,62 @@
     <div class="nav_body">
       <div class="links core">
         {#if workspaceId}
-          <div
-            class="core-sections"
-            class:workspace_home={$featureFlags[FeatureFlag.WORKSPACE_HOME]}
-          >
+          <div class="core-sections workspace_home">
             <div>
-              {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
-                <SideNavLink
-                  icon="house"
-                  text="Home"
-                  url={$url("./home")}
-                  {collapsed}
-                  on:click={keepCollapsed}
-                />
+              <SideNavLink
+                icon="house"
+                text="Home"
+                url={$url("./home")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
 
-                <ActionMenu
-                  align={PopoverAlignment.RightContextMenu}
-                  portalTarget={".nav .create-popover-container"}
-                  animate={false}
-                  on:open={() => (createMenuOpen = true)}
-                  on:close={() => (createMenuOpen = false)}
-                >
-                  <svelte:fragment slot="control" let:open>
-                    <SideNavLink
-                      icon="plus"
-                      text="Create"
-                      {collapsed}
-                      forceActive={open}
-                      on:click={keepCollapsed}
-                    />
-                  </svelte:fragment>
-
-                  {#if $featureFlags.AI_AGENTS}
-                    <MenuItem icon="sparkle" on:click={openCreateAgent}>
-                      Agent
-                      <div slot="right">
-                        <Tag emphasized>Beta</Tag>
-                      </div>
-                    </MenuItem>
-                  {/if}
-                  <MenuItem icon="path" on:click={openCreateAutomation}>
-                    Automation
-                  </MenuItem>
-                  <MenuItem icon="browsers" on:click={openCreateApp}>
-                    App
-                  </MenuItem>
-
-                  <MenuSeparator />
-                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-                    Connection
-                  </MenuItem>
-                  <MenuItem icon="grid-nine" on:click={openCreateTable}>
-                    Table
-                  </MenuItem>
-                  <MenuItem
-                    icon="globe-simple"
-                    on:click={() => goToCreate("apis/new")}
-                  >
-                    API request
-                  </MenuItem>
-                </ActionMenu>
-              {:else}
-                <SideNavLink
-                  icon="browser"
-                  text="Apps"
-                  url={$url("./design")}
-                  {collapsed}
-                  on:click={keepCollapsed}
-                />
-                <span
-                  class="root-nav"
-                  class:selected={$isActive("./automation")}
-                >
-                  {#if collapsed && automationErrorCount}
-                    <span class="status-indicator">
-                      <StatusLight
-                        color="var(--spectrum-global-color-static-red-600)"
-                        size="M"
-                      />
-                    </span>
-                  {/if}
+              <ActionMenu
+                align={PopoverAlignment.RightContextMenu}
+                portalTarget={".nav .create-popover-container"}
+                animate={false}
+                on:open={() => (createMenuOpen = true)}
+                on:close={() => (createMenuOpen = false)}
+              >
+                <svelte:fragment slot="control" let:open>
                   <SideNavLink
-                    icon="path"
-                    text="Automations"
-                    url={$url("./automation")}
+                    icon="plus"
+                    text="Create"
                     {collapsed}
+                    forceActive={open}
                     on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      {#if automationErrorCount}
-                        <StatusLight
-                          color="var(--spectrum-global-color-static-red-600)"
-                          size="M"
-                        />
-                      {/if}
-                    </svelte:fragment>
-                  </SideNavLink>
-                </span>
+                  />
+                </svelte:fragment>
+
                 {#if $featureFlags.AI_AGENTS}
-                  <SideNavLink
-                    icon="memory"
-                    text="Agents"
-                    url={$url("./agent")}
-                    {collapsed}
-                    on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      <div class="beta-tag-wrapper">
-                        <Tag emphasized>Beta</Tag>
-                      </div>
-                    </svelte:fragment>
-                  </SideNavLink>
-                  <SideNavLink
-                    icon="chat-circle"
-                    text="Chat"
-                    url={$url("./chat")}
-                    {collapsed}
-                    on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      <div class="beta-tag-wrapper">
-                        <Tag emphasized>Alpha</Tag>
-                      </div>
-                    </svelte:fragment>
-                  </SideNavLink>
+                  <MenuItem icon="sparkle" on:click={openCreateAgent}>
+                    Agent
+                    <div slot="right">
+                      <Tag emphasized>Beta</Tag>
+                    </div>
+                  </MenuItem>
                 {/if}
-              {/if}
+                <MenuItem icon="path" on:click={openCreateAutomation}>
+                  Automation
+                </MenuItem>
+                <MenuItem icon="browsers" on:click={openCreateApp}>
+                  App
+                </MenuItem>
+
+                <MenuSeparator />
+                <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+                  Connection
+                </MenuItem>
+                <MenuItem icon="grid-nine" on:click={openCreateTable}>
+                  Table
+                </MenuItem>
+                <MenuItem
+                  icon="globe-simple"
+                  on:click={() => goToCreate("apis/new")}
+                >
+                  API request
+                </MenuItem>
+              </ActionMenu>
             </div>
 
             <div class="core-secondary">

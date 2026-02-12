@@ -1,5 +1,4 @@
 <script>
-  import FavouriteAppButton from "@/pages/builder/portal/workspaces/_components/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
   import { auth } from "@/stores/portal"
   import { goto as gotoStore } from "@roxi/routify"
@@ -132,9 +131,10 @@
       {/if}
     </div>
 
-    <div class="favourite-icon">
+    <!-- Favourite functionality temporarily removed - component needs to be reimplemented -->
+    <!-- <div class="favourite-icon">
       <FavouriteAppButton {app} noWrap />
-    </div>
+    </div> -->
   </div>
   <AppContextMenuModals {app} bind:this={appContextMenuModals} />
 </div>
