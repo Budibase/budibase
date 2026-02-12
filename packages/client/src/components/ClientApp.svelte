@@ -251,7 +251,11 @@
                               </div>
                             {:else if isChatOnlyRoute}
                               <CustomThemeWrapper>
-                                <AppChatbox intro="" />
+                                <div class="chat-route-shell">
+                                  <div class="chat-app-container">
+                                    <AppChatbox />
+                                  </div>
+                                </div>
 
                                 <!-- Layers on top of app -->
                                 <NotificationDisplay />
@@ -414,6 +418,28 @@
     font-weight: 400;
   }
 
+  .chat-route-shell {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: var(--spacing-xl);
+    box-sizing: border-box;
+  }
+
+  .chat-app-container {
+    flex: 1 1 auto;
+    display: flex;
+    border-radius: 24px;
+    border: var(--border-light);
+    background: transparent;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+  }
+
   /* Preview styles */
   #clip-root.preview {
     padding: 6px;
@@ -432,6 +458,16 @@
   #clip-root.modal-mobile-preview.mobile-preview {
     width: 100%;
     height: 100%;
+  }
+
+  @media (max-width: 1000px) {
+    .chat-route-shell {
+      padding: var(--spacing-m);
+    }
+
+    .chat-app-container {
+      border-radius: 16px;
+    }
   }
 
   /* Print styles */
