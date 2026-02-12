@@ -5,6 +5,7 @@
   export let value
   export let title
   export let darkMode
+  export let penColour
 
   export const show = () => {
     edited = false
@@ -34,6 +35,7 @@
     <div class="signature-wrap modal">
       <CoreSignature
         {darkMode}
+        {penColour}
         {value}
         saveIcon={false}
         bind:this={canvas}

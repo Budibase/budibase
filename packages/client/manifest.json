@@ -4953,6 +4953,12 @@
         "placeholder": "Add signature"
       },
       {
+        "type": "color",
+        "label": "Pen colour",
+        "key": "penColour",
+        "defaultValue": "#000000"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",

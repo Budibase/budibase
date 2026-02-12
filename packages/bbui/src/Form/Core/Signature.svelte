@@ -14,6 +14,53 @@
   export let height = 220
   export let saveIcon = false
   export let darkMode
+  export let penColour
+
+  const fallbackPenColour = "#000000"
+
+  const getCssVariableValue = colour => {
+    if (!colour?.startsWith("var(")) {
+      return colour
+    }
+
+    const cssVariable = colour.slice(4, -1).trim()
+    if (!cssVariable.startsWith("--")) {
+      return colour
+    }
+
+    const styleRoot = canvasRef || document.documentElement
+    const resolved = getComputedStyle(styleRoot).getPropertyValue(cssVariable)
+
+    return resolved?.trim() || colour
+  }
+
+  const getResolvedPenColour = colour => {
+    if (typeof colour !== "string") {
+      return fallbackPenColour
+    }
+
+    const trimmed = colour.trim()
+    if (!trimmed.length) {
+      return fallbackPenColour
+    }
+
+    const resolved = getCssVariableValue(trimmed)
+    if (CSS.supports("color", resolved)) {
+      return resolved
+    }
+
+    return fallbackPenColour
+  }
+
+  export function getSignatureMetadata() {
+    if (useLegacyInversion) {
+      return {}
+    }
+
+    return {
+      signaturePenColour: resolvedPenColour,
+    }
+  }
 
   export function toDataUrl() {
     // PNG to preserve transparency
@@ -67,6 +114,13 @@
   let signatureFile
   let urlFailed
 
+  $: effectivePenColour = penColour ?? value?.signaturePenColour
+  $: hasPenColour =
+    typeof effectivePenColour === "string" &&
+    effectivePenColour.trim().length > 0
+  $: resolvedPenColour = getResolvedPenColour(effectivePenColour)
+  $: useLegacyInversion = !hasPenColour
+
   $: if (value) {
     signatureFile = value
   }
@@ -110,7 +164,7 @@
     signature = new Atrament(canvasRef, {
       width,
       height,
-      color: "white",
+      color: useLegacyInversion ? "white" : resolvedPenColour,
     })
 
     signature.weight = 4
@@ -132,9 +186,17 @@
       document.removeEventListener("pointerup", checkUp)
     }
   })
+
+  $: if (signature) {
+    signature.color = useLegacyInversion ? "white" : resolvedPenColour
+  }
 </script>
 
-<div class="signature" class:light={!darkMode} class:image-error={urlFailed}>
+<div
+  class="signature"
+  class:light={useLegacyInversion && !darkMode}
+  class:image-error={urlFailed}
+>
   {#if !disabled}
     <div class="overlay">
       {#if updated && saveIcon}
@@ -142,9 +204,9 @@
           <Icon
             name="check"
             hoverable
-            tooltip={"Save"}
-            tooltipPosition={"top"}
-            tooltipType={"info"}
+            tooltip="Save"
+            tooltipPosition="top"
+            tooltipType="info"
             on:click={() => {
               dispatch("change", toDataUrl())
             }}
@@ -156,9 +218,9 @@
           <Icon
             name="trash"
             hoverable
-            tooltip={"Delete"}
-            tooltipPosition={"top"}
-            tooltipType={"info"}
+            tooltip="Delete"
+            tooltipPosition="top"
+            tooltipType="info"
             on:click={() => {
               if (editable) {
                 clearCanvas()

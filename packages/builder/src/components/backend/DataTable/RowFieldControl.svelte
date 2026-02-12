@@ -53,8 +53,10 @@
 
 <SignatureModal
   {darkMode}
+  penColour={value?.signaturePenColour}
   onConfirm={async sigCanvas => {
     const signatureFile = sigCanvas.toFile()
+    const signatureMetadata = sigCanvas.getSignatureMetadata()
 
     let attachRequest = new FormData()
     attachRequest.append("file", signatureFile)
@@ -62,7 +64,10 @@
     try {
       const uploadReq = await API.uploadBuilderAttachment(attachRequest)
       const [signatureAttachment] = uploadReq
-      value = signatureAttachment
+      value = {
+        ...signatureAttachment,
+        ...signatureMetadata,
+      }
     } catch (error) {
       $notifications.error(error.message || "Failed to save signature")
       value = []
@@ -116,6 +121,7 @@
       {#if value}
         <CoreSignature
           {darkMode}
+          penColour={value?.signaturePenColour}
           {value}
           editable={false}
           on:clear={() => {

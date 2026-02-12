@@ -13,6 +13,7 @@
   export let span
   export let helpText = null
   export let buttonText = "Add signature"
+  export let penColour
 
   let fieldState
   let fieldApi
@@ -26,6 +27,7 @@
   const saveSignature = async canvas => {
     try {
       const signatureFile = canvas.toFile()
+      const signatureMetadata = canvas.getSignatureMetadata()
       let updateValue
 
       if (signatureFile) {
@@ -39,7 +41,10 @@
 
         const resp = await API.uploadAttachment(sourceId, attachRequest)
         const [signatureAttachment] = resp
-        updateValue = signatureAttachment
+        updateValue = {
+          ...signatureAttachment,
+          ...signatureMetadata,
+        }
       } else {
         updateValue = null
       }
@@ -71,6 +76,7 @@
   onConfirm={saveSignature}
   title={label || fieldSchema?.name || ""}
   value={fieldState?.value}
+  {penColour}
   {darkMode}
   bind:this={modal}
 />
@@ -106,6 +112,7 @@
       <div class="signature-field">
         <CoreSignature
           {darkMode}
+          {penColour}
           disabled={$builderStore.inBuilder || fieldState.disabled}
           editable={false}
           value={fieldState?.value}

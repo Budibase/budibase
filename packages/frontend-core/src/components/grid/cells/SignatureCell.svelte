@@ -23,6 +23,8 @@
   let anchor
 
   $: editable = focused && !readonly
+  $: signaturePenColour = value?.signaturePenColour
+  $: legacySignature = !signaturePenColour
   $: {
     if (!focused) {
       close()
@@ -47,6 +49,7 @@
 
   const saveSignature = async sigCanvas => {
     const signatureFile = sigCanvas.toFile()
+    const signatureMetadata = sigCanvas.getSignatureMetadata()
 
     let attachRequest = new FormData()
     attachRequest.append("file", signatureFile)
@@ -57,7 +60,10 @@
         ? API.uploadAttachment(tableId, attachRequest)
         : API.uploadBuilderAttachment(attachRequest))
 
-      onChange(result[0])
+      onChange({
+        ...result[0],
+        ...signatureMetadata,
+      })
     } catch (error) {
       $notifications.error(error.message || "Failed to save signature")
       return []
@@ -78,7 +84,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="signature-cell"
-  class:light={!$gridProps?.darkMode}
+  class:light={!$gridProps?.darkMode && legacySignature}
   class:editable
   bind:this={anchor}
   on:click={editable ? open : null}
@@ -93,6 +99,7 @@
   onConfirm={saveSignature}
   title={schema?.name}
   {value}
+  penColour={signaturePenColour}
   darkMode={$gridProps.darkMode}
   bind:this={modal}
 />
@@ -104,6 +111,7 @@
         <div class="signature-wrap">
           <CoreSignature
             darkMode={$gridProps.darkMode}
+            penColour={signaturePenColour}
             editable={false}
             {value}
             on:change={saveSignature}

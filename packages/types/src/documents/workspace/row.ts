@@ -192,6 +192,7 @@ export interface RowAttachment {
   name: string
   extension: string
   key?: string
+  signaturePenColour?: string
   // Populated on read
   url?: string
 }
