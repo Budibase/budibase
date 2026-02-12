@@ -17,10 +17,21 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { bb } from "@/stores/bb"
   import { agentsStore, auth, featureFlags } from "@/stores/portal"
   import { buildLiveUrl } from "@/helpers/urls"
-  import { Body, Modal, type ModalAPI, notifications } from "@budibase/bbui"
+  import {
+    ActionMenu,
+    Body,
+    Button,
+    Icon,
+    MenuItem,
+    MenuSeparator,
+    Modal,
+    type ModalAPI,
+    notifications,
+    PopoverAlignment,
+    Tag,
+  } from "@budibase/bbui"
   import {
     FeatureFlag,
     type GetWorkspaceHomeMetricsResponse,
@@ -32,9 +43,12 @@
     type HomeType,
     PublishResourceState,
     type Agent,
+    type Table,
     type WorkspaceFavourite,
     type WorkspaceResource,
   } from "@budibase/types"
+  import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
+  import { getHomeTypeIcon, getHomeTypeIconColor } from "./_components/rows"
   import {
     beforeUrlChange,
     goto as gotoStore,
@@ -72,6 +86,9 @@
 
   let agentModal: AgentModal
 
+  let createTableModal: ModalAPI
+  let tableName = ""
+
   let selectedAgent: Agent | undefined
   let updateAgentModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
@@ -80,7 +97,7 @@
   let searchTerm = ""
   let metrics: GetWorkspaceHomeMetricsResponse | null = null
 
-  let sortColumn: HomeSortColumn = "created"
+  let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
 
   let highlightedRowId: string | null = null
@@ -165,11 +182,14 @@
     if (!value) {
       return null
     }
+    if (value === "created") {
+      return "updated"
+    }
     if (
       value === "name" ||
       value === "type" ||
       value === "status" ||
-      value === "created"
+      value === "updated"
     ) {
       return value
     }
@@ -187,6 +207,7 @@
     if (typeof window === "undefined") {
       return {
         q: "",
+        type: null as HomeType | null,
         create: null as HomeCreate | null,
         sort: null as HomeSortColumn | null,
         order: null as HomeSortOrder | null,
@@ -194,10 +215,11 @@
     }
     const params = new URLSearchParams(window.location.search)
     const q = params.get("q") ?? ""
+    const type = normaliseType(params.get("type"))
     const sort = normaliseSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
     const create = normaliseCreate(params.get("create"))
-    return { q, sort, order, create }
+    return { q, type, sort, order, create }
   }
 
   const writeUrlState = () => {
@@ -208,7 +230,6 @@
     const params = new URLSearchParams(window.location.search)
 
     params.delete("create")
-    params.delete("type")
 
     const q = searchTerm.trim()
     if (!q) {
@@ -217,7 +238,13 @@
       params.set("q", q)
     }
 
-    const defaultSortColumn: HomeSortColumn = "created"
+    if (typeFilter === "all") {
+      params.delete("type")
+    } else {
+      params.set("type", typeFilter)
+    }
+
+    const defaultSortColumn: HomeSortColumn = "updated"
     const defaultSortOrder: HomeSortOrder = "desc"
     const isDefaultSort =
       sortColumn === defaultSortColumn && sortOrder === defaultSortOrder
@@ -273,7 +300,7 @@
       return
     }
     sortColumn = column
-    sortOrder = column === "created" ? "desc" : "asc"
+    sortOrder = column === "updated" ? "desc" : "asc"
   }
 
   const createApp = () => {
@@ -287,6 +314,20 @@
 
   const createAgent = () => {
     agentModal?.show()
+  }
+
+  const goToCreate = (target: "data/new" | "apis/new") => {
+    goto(url(`../${target}`))
+  }
+
+  const handleTableSave = async (table: Table) => {
+    notifications.success("Table created successfully")
+    goto(url(`../data/table/${table._id}`))
+  }
+
+  const openCreateTable = () => {
+    tableName = ""
+    createTableModal?.show()
   }
 
   const buildLiveWorkspaceAppUrl = (workspaceApp?: UIWorkspaceApp | null) => {
@@ -597,9 +638,12 @@
       return
     }
 
-    const { q, sort, order } = readUrlState()
+    const { q, type, sort, order } = readUrlState()
     if (q) {
       searchTerm = q
+    }
+    if (type) {
+      typeFilter = type
     }
     if (sort) {
       sortColumn = sort
@@ -627,36 +671,95 @@
           size="M"
           weight="500"
           color="var(--spectrum-global-color-gray-900)"
-          >{$appStore.name || "Workspace"} workspace</Body
+          >{$appStore.name || "Workspace"}</Body
         >
       </div>
 
-      <div class="header-actions">
-        <button
-          type="button"
-          class="header-link"
-          on:click={() => bb.settings()}
-        >
-          <Body size="S">Add connection</Body>
-        </button>
-        <a href={"/builder/apps"} class="header-link">
-          <Body size="S">Portal</Body>
-        </a>
-      </div>
+      {#if $featureFlags.AI_AGENTS}
+        <div class="header-actions">
+          <a href={url("../chat")} class="header-link header-link--with-icons">
+            <Icon name="chat-circle" size="XS" color="#8CA171" weight="fill" />
+            <Body size="S">Agent chat</Body>
+            <Icon
+              name="arrow-up-right"
+              size="XS"
+              color="var(--spectrum-global-color-gray-600)"
+              weight="regular"
+            />
+          </a>
+        </div>
+      {/if}
     </div>
 
     <HomeMetrics {metrics} agentsEnabled={$featureFlags.AI_AGENTS} />
 
-    <HomeControls
-      {typeFilter}
-      {searchTerm}
-      agentsEnabled={$featureFlags.AI_AGENTS}
-      on:typeChange={({ detail }) => setTypeFilter(detail)}
-      on:searchChange={({ detail }) => (searchTerm = detail)}
-      on:createAutomation={createAutomation}
-      on:createApp={createApp}
-      on:createAgent={createAgent}
-    />
+    <div class="controls-row">
+      <HomeControls
+        {typeFilter}
+        agentsEnabled={$featureFlags.AI_AGENTS}
+        on:typeChange={({ detail }) => setTypeFilter(detail)}
+      />
+      <div class="controls-right">
+        <div class="search-wrapper">
+          <Icon name="magnifying-glass" size="S" />
+          <input
+            class="search-input"
+            type="text"
+            placeholder="Search"
+            bind:value={searchTerm}
+          />
+        </div>
+        <div class="create-popover-container"></div>
+        <ActionMenu
+          align={PopoverAlignment.Right}
+          portalTarget=".workspace-home .create-popover-container"
+          animate={false}
+        >
+          <div slot="control" class="create-menu-control">
+            <Button size="M" icon="plus" primary>Create</Button>
+          </div>
+
+          {#if $featureFlags.AI_AGENTS}
+            <MenuItem
+              icon={getHomeTypeIcon("agent")}
+              iconColour={getHomeTypeIconColor("agent")}
+              iconWeight="fill"
+              on:click={createAgent}
+            >
+              Agent
+              <div slot="right">
+                <Tag emphasized>Beta</Tag>
+              </div>
+            </MenuItem>
+          {/if}
+          <MenuItem
+            icon={getHomeTypeIcon("automation")}
+            iconColour={getHomeTypeIconColor("automation")}
+            iconWeight="fill"
+            on:click={createAutomation}
+          >
+            Automation
+          </MenuItem>
+          <MenuItem
+            icon={getHomeTypeIcon("app")}
+            iconColour={getHomeTypeIconColor("app")}
+            iconWeight="fill"
+            on:click={createApp}
+          >
+            App
+          </MenuItem>
+
+          <MenuSeparator />
+          <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+            Connection
+          </MenuItem>
+          <MenuItem icon="grid-nine" on:click={openCreateTable}>Table</MenuItem>
+          <MenuItem icon="globe-simple" on:click={() => goToCreate("apis/new")}>
+            API request
+          </MenuItem>
+        </ActionMenu>
+      </div>
+    </div>
 
     <HomeTable
       rows={filteredRows}
@@ -686,6 +789,10 @@
 </Modal>
 <Modal bind:this={webhookModal}>
   <CreateWebhookModal />
+</Modal>
+
+<Modal bind:this={createTableModal} closeOnOutsideClick={false}>
+  <CreateTableModal bind:name={tableName} afterSave={handleTableSave} />
 </Modal>
 
 {#if $featureFlags.AI_AGENTS}
@@ -793,11 +900,102 @@
     font-family: inherit;
   }
 
-  .header-link:first-child {
-    margin-right: 12px;
-  }
-
   .header-link:hover {
     color: var(--spectrum-global-color-gray-900);
+  }
+
+  .header-link--with-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    position: relative;
+    margin-bottom: -12px;
+  }
+
+  .controls-row .controls-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .controls-row .search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 6px;
+    padding: 3px 8px;
+    min-width: 200px;
+    height: 32px;
+    box-sizing: border-box;
+  }
+
+  .controls-row .search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    flex: 1;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .controls-row .search-input::placeholder {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .controls-row .create-menu-control :global(button) {
+    border-radius: 100px;
+    padding: 7px 15px 8px;
+    height: 32px;
+    box-sizing: border-box;
+  }
+
+  .create-popover-container {
+    position: absolute;
+  }
+
+  .create-popover-container :global(.spectrum-Popover) {
+    min-width: 245px;
+    border-radius: 6px !important;
+    background: var(--background) !important;
+    border: 1px solid var(--spectrum-global-color-gray-200) !important;
+    padding: 4px !important;
+    margin-top: 4px;
+    margin-left: 2px;
+  }
+
+  .create-popover-container :global(.spectrum-Menu) {
+    background: transparent;
+    padding: 0;
+  }
+
+  .create-popover-container :global(.spectrum-Menu-item) {
+    border-radius: 4px;
+    margin: 0;
+  }
+
+  .create-popover-container :global(.spectrum-Menu-item:hover) {
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .create-popover-container
+    :global(.spectrum-Menu-item)
+    :global(.spectrum-Menu-itemLabel) {
+    font-size: 13px;
+    line-height: 17px;
+    color: var(--spectrum-global-color-gray-800);
+  }
+
+  .create-popover-container :global(.spectrum-Menu-divider) {
+    margin: 4px 0;
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>
