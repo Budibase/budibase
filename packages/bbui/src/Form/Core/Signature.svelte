@@ -18,23 +18,17 @@
 
   const fallbackPenColour = "#000000"
 
-  const getCssVariableValue = colour => {
-    if (!colour?.startsWith("var(")) {
-      return colour
+  const getCssVariableValue = (colour, element) => {
+    const cssVariable = colour.match(/^var\((--[^),\s]+)/)?.[1]
+    if (!cssVariable || !element) {
+      return null
     }
 
-    const cssVariable = colour.slice(4, -1).trim()
-    if (!cssVariable.startsWith("--")) {
-      return colour
-    }
-
-    const styleRoot = canvasRef || document.documentElement
-    const resolved = getComputedStyle(styleRoot).getPropertyValue(cssVariable)
-
-    return resolved?.trim() || colour
+    const resolved = getComputedStyle(element).getPropertyValue(cssVariable)
+    return resolved?.trim() || null
   }
 
-  const getResolvedPenColour = colour => {
+  const getResolvedPenColour = (colour, element) => {
     if (typeof colour !== "string") {
       return fallbackPenColour
     }
@@ -44,12 +38,40 @@
       return fallbackPenColour
     }
 
-    const resolved = getCssVariableValue(trimmed)
-    if (CSS.supports("color", resolved)) {
-      return resolved
+    if (trimmed.startsWith("var(")) {
+      const resolved = getCssVariableValue(trimmed, element)
+      if (resolved && CSS.supports("color", resolved)) {
+        return resolved
+      }
+      return fallbackPenColour
+    }
+
+    if (CSS.supports("color", trimmed)) {
+      return trimmed
     }
 
     return fallbackPenColour
+  }
+
+  const getLegacyPenColour = () => {
+    if (!canvasRef) {
+      return "white"
+    }
+
+    return (
+      getCssVariableValue(
+        "var(--spectrum-global-color-static-white)",
+        canvasRef
+      ) || "white"
+    )
+  }
+
+  const getAtramentColour = () => {
+    if (useLegacyInversion) {
+      return getLegacyPenColour()
+    }
+
+    return resolvedPenColour
   }
 
   export function getSignatureMetadata() {
@@ -118,8 +140,9 @@
   $: hasPenColour =
     typeof effectivePenColour === "string" &&
     effectivePenColour.trim().length > 0
-  $: resolvedPenColour = getResolvedPenColour(effectivePenColour)
+  $: resolvedPenColour = getResolvedPenColour(effectivePenColour, canvasRef)
   $: useLegacyInversion = !hasPenColour
+  $: atramentColour = getAtramentColour()
 
   $: if (value) {
     signatureFile = value
@@ -164,7 +187,7 @@
     signature = new Atrament(canvasRef, {
       width,
       height,
-      color: useLegacyInversion ? "white" : resolvedPenColour,
+      color: atramentColour,
     })
 
     signature.weight = 4
@@ -188,7 +211,7 @@
   })
 
   $: if (signature) {
-    signature.color = useLegacyInversion ? "white" : resolvedPenColour
+    signature.color = atramentColour
   }
 </script>
 
