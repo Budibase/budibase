@@ -43,7 +43,7 @@
   export let compact: boolean = false
   export let customPlaceholder: boolean = false
   export let showHeaderBorder: boolean = true
-  export let showHeader: boolean = true
+  export let hideHeader: boolean = false
   export let placeholderText: string = "No rows found"
   export let snippets: any[] = []
   export let defaultSortColumn: string | undefined = undefined
@@ -80,12 +80,14 @@
     rowCount,
     rowHeight
   )
+  $: effectiveHeaderHeight = hideHeader ? 0 : headerHeight
   $: heightStyle = getHeightStyle(
     visibleRowCount,
     rowCount,
     totalRowCount,
     rowHeight,
-    loading
+    loading,
+    effectiveHeaderHeight
   )
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
@@ -148,15 +150,16 @@
     rowCount: number,
     totalRowCount: number,
     rowHeight: number,
-    loading: boolean
+    loading: boolean,
+    effectiveHeaderHeight: number
   ): string => {
     if (loading) {
-      return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
+      return `height: ${effectiveHeaderHeight + visibleRowCount * rowHeight}px;`
     }
     if (!rowCount || !visibleRowCount || totalRowCount <= rowCount) {
       return ""
     }
-    return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
+    return `height: ${effectiveHeaderHeight + visibleRowCount * rowHeight}px;`
   }
 
   const getGridStyle = (
@@ -372,7 +375,7 @@
     class:wrapper--quiet={quiet}
     class:wrapper--compact={compact}
     class:wrapper--sticky-header={stickyHeader}
-    style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
+    style={`--row-height: ${rowHeight}px; --header-height: ${hideHeader ? 0 : headerHeight}px;`}
   >
     {#if loading}
       <div class="loading" style={heightStyle}>
@@ -386,9 +389,9 @@
         class:no-scroll={!rowCount}
         class:rounded
         style={`${heightStyle}${gridStyle}`}
-        class:show-header={showHeader}
+        class:show-header={!hideHeader}
       >
-        {#if fields.length && showHeader}
+        {#if fields.length && !hideHeader}
           <div class="spectrum-Table-head">
             {#if showEditColumn}
               <div
