@@ -8,7 +8,10 @@
     StatusLight,
     notifications,
   } from "@budibase/bbui"
-  import type { Agent, ProvisionAgentTeamsChannelResponse } from "@budibase/types"
+  import type {
+    Agent,
+    ProvisionAgentTeamsChannelResponse,
+  } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
 
   const TEAMS_NEW_COMMAND = "new"
@@ -109,7 +112,10 @@
       type="password"
       bind:value={draft.appPassword}
     />
-    <Input label="Directory (tenant) ID (optional)" bind:value={draft.tenantId} />
+    <Input
+      label="Directory (tenant) ID (optional)"
+      bind:value={draft.tenantId}
+    />
     <Input
       label="Idle timeout (minutes)"
       type="number"

@@ -7,7 +7,10 @@ export const validateTeamsIntegration = (
 ): ResolvedTeamsIntegration => {
   const integration = agent.teamsIntegration
   if (!integration) {
-    throw new HTTPError("Teams integration is not configured for this agent", 400)
+    throw new HTTPError(
+      "Teams integration is not configured for this agent",
+      400
+    )
   }
 
   const appId = integration.appId?.trim()
@@ -63,7 +66,10 @@ export const resolveChatAppForAgent = async (
   })
 }
 
-export const buildTeamsWebhookUrl = async (chatAppId: string, agentId: string) => {
+export const buildTeamsWebhookUrl = async (
+  chatAppId: string,
+  agentId: string
+) => {
   const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
