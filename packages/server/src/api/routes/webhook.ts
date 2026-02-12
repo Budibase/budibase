@@ -14,7 +14,7 @@ publicRoutes.post("/api/webhooks/trigger/:instance/:id", controller.trigger)
 
 const discordWebhookBodyParser = koaBody({
   multipart: true,
-  // @ts-ignore
+  // @ts-expect-error
   enableTypes: ["json", "form", "text"],
   parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
   includeUnparsed: true,
