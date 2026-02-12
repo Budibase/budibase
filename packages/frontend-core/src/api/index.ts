@@ -54,6 +54,7 @@ import { buildWorkspaceAppEndpoints } from "./workspaceApps"
 import { buildResourceEndpoints } from "./resource"
 import { buildDeploymentEndpoints } from "./deploy"
 import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
+import { buildWorkspaceHomeEndpoints } from "./workspaceHome"
 import { buildRecaptchaEndpoints } from "./recaptcha"
 import { buildAIConfigEndpoints } from "./aiConfig"
 import { buildVectorDbEndpoints } from "./vectorDbs"
@@ -326,6 +327,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     workspaceApp: buildWorkspaceAppEndpoints(API),
     workspace: buildWorkspaceFavouriteEndpoints(API),
     workspaceConnections: buildWorkspaceConnectionEndpoints(API),
+    workspaceHome: buildWorkspaceHomeEndpoints(API),
     resource: buildResourceEndpoints(API),
     recaptcha: buildRecaptchaEndpoints(API),
     aiConfig: buildAIConfigEndpoints(API),

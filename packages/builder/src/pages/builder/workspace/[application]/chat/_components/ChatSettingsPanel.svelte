@@ -37,14 +37,20 @@
     agent => agent.agentId === selectedAgentId
   )
 
-  $: agentList = agents.map(agentConfig => {
+  $: agentList = agents.reduce<AgentListItem[]>((list, agentConfig) => {
     const details = namedAgents.find(agent => agent._id === agentConfig.agentId)
-    return {
-      agentId: agentConfig.agentId,
-      name: details?.name ?? "Unknown agent",
-      isDefault: agentConfig.isDefault,
+    if (!details) {
+      return list
     }
-  })
+    return [
+      ...list,
+      {
+        agentId: agentConfig.agentId,
+        name: details.name,
+        isDefault: agentConfig.isDefault,
+      },
+    ]
+  }, [])
 
   $: enabledAgentList = agentList.filter(agent =>
     isAgentAvailable(agent.agentId)

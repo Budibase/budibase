@@ -42,6 +42,7 @@ import { ResourceEndpoints } from "./resource"
 import { DeploymentEndpoints } from "./deploy"
 import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { WorkspaceConnectionEndpoints } from "./workspaceConnections"
+import { WorkspaceHomeEndpoints } from "./workspaceHome"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
 import { VectorDbEndpoints } from "./vectorDbs"
@@ -157,6 +158,7 @@ export type APIClient = BaseAPIClient &
     workspaceApp: WorkspaceAppEndpoints
     workspace: WorkspaceFavouriteEndpoints
     workspaceConnections: WorkspaceConnectionEndpoints
+    workspaceHome: WorkspaceHomeEndpoints
     deployment: DeploymentEndpoints
     recaptcha: RecaptchaEndpoints
     aiConfig: AIConfigEndpoints
