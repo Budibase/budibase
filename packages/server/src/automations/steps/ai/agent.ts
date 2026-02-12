@@ -5,7 +5,6 @@ import {
   AgentStepOutputs,
   AutomationStepInputBase,
 } from "@budibase/types"
-import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import {
@@ -84,26 +83,17 @@ export async function run({
         const { systemPrompt, tools } =
           await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
-        const { modelId, apiKey, baseUrl, modelName } =
-          await sdk.ai.configs.getLiteLLMModelConfigOrThrow(
-            agentConfig.aiconfig
-          )
-
         tracer.llmobs.annotate(agentSpan, {
           metadata: {
-            modelId,
-            modelName,
-            baseUrl,
-            envLiteLLMUrl: env.LITELLM_URL,
             toolCount: Object.keys(tools).length,
           },
         })
 
-        const litellm = ai.createLiteLLMOpenAI({
-          apiKey,
-          baseUrl,
-          fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
-        })
+        const { chat, providerOptions } = await sdk.ai.llm.createLLM(
+          agentConfig.aiconfig,
+          sessionId,
+          agentSpan
+        )
 
         let outputOption = undefined
         if (
@@ -122,7 +112,7 @@ export async function run({
         const hasTools = Object.keys(tools).length > 0
         const agent = new ToolLoopAgent({
           model: wrapLanguageModel({
-            model: litellm.chat(modelId),
+            model: chat,
             middleware: extractReasoningMiddleware({
               tagName: "think",
             }),
@@ -130,10 +120,15 @@ export async function run({
           instructions: systemPrompt || undefined,
           tools,
           stopWhen: stepCountIs(30),
-          providerOptions: ai.getLiteLLMProviderOptions(hasTools),
+          providerOptions: providerOptions?.(hasTools),
           output: outputOption,
-          onStepFinish({ toolCalls, toolResults }) {
+          onStepFinish({ content, toolCalls, toolResults }) {
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+            for (const part of content) {
+              if (part.type === "tool-error") {
+                pendingToolCalls.delete(part.toolCallId)
+              }
+            }
           },
         })
 
@@ -167,6 +162,7 @@ export async function run({
           return {
             success: false,
             response: errorMessage,
+            message: assistantMessage,
           }
         }
 
@@ -187,6 +183,7 @@ export async function run({
           return {
             success: false,
             response: error,
+            message: assistantMessage,
           }
         }
         const usage = await streamResult.usage

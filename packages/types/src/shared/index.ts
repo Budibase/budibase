@@ -1,2 +1,3 @@
-export * from "./typeUtils"
+export * from "./budibaseModels"
 export * from "./sort"
+export * from "./typeUtils"

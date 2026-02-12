@@ -1,11 +1,13 @@
+import nock from "nock"
+import { utils } from "@budibase/backend-core/tests"
 import {
   AgentFileStatus,
   AIConfigType,
   VectorDbProvider,
 } from "@budibase/types"
-import nock from "nock"
 import environment from "../../../../environment"
-import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
+import * as ragSdk from "../../../../sdk/workspace/ai/rag"
+import { getQueue } from "../../../../sdk/workspace/ai/rag/queue"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
@@ -65,7 +67,6 @@ describe("agent files", () => {
         api_key: "test",
         api_base: "https://example.com",
       },
-      liteLLMModelId: "test",
       configType: AIConfigType.EMBEDDINGS,
     })
     const vectorDb = await config.api.vectorDb.create({
@@ -112,14 +113,18 @@ describe("agent files", () => {
       name: "notes.txt",
     })
 
-    expect(upload.file.status).toBe(AgentFileStatus.READY)
-    expect(upload.file.chunkCount).toBe(2)
+    expect(upload.file.status).toBe(AgentFileStatus.PROCESSING)
+    expect(upload.file.chunkCount).toBe(0)
     expect(upload.file.filename).toBe("notes.txt")
-    expect(ingestSpy).toHaveBeenCalled()
 
+    await utils.queue.processMessages(getQueue().getBullQueue())
+
+    expect(ingestSpy).toHaveBeenCalled()
     const { files } = await config.api.agentFiles.fetch(agent._id!)
     expect(files).toHaveLength(1)
     expect(files[0]._id).toBe(upload.file._id)
+    expect(files[0].status).toBe(AgentFileStatus.READY)
+    expect(files[0].chunkCount).toBe(2)
   })
 
   it("deletes agent files (but not the embeddings)", async () => {
@@ -164,6 +169,8 @@ describe("agent files", () => {
       file: fileBuffer,
       name: "docs.txt",
     })
+
+    await utils.queue.processMessages(ragSdk.queue.getQueue().getBullQueue())
 
     const response = await config.api.agentFiles.remove(
       agent._id!,
