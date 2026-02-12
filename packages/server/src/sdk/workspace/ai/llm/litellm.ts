@@ -1,9 +1,16 @@
 import { createOpenAI } from "@ai-sdk/openai"
-import { HTTPError } from "@budibase/backend-core"
+import { constants, env, HTTPError } from "@budibase/backend-core"
+import { licensing, quotas } from "@budibase/pro"
 import tracer from "dd-trace"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
-import { CustomAIProviderConfig, LLMResponse } from "@budibase/types"
+import {
+  CustomAIProviderConfig,
+  LLMResponse,
+  AIQuotaUsageResponse,
+  BUDIBASE_AI_PROVIDER_ID,
+} from "@budibase/types"
+import nodeFetch from "node-fetch"
 
 type LiteLLMFetch = (
   input: Parameters<typeof fetch>[0],
@@ -38,7 +45,7 @@ export const createLiteLLMOpenAI = async (
     apiKey,
     baseURL: baseUrl,
     name: "litellm",
-    fetch: createLiteLLMFetch(sessionId),
+    fetch: createLiteLLMFetch(sessionId, aiConfig),
   }
 
   const llm = createOpenAI(clientConfig)
@@ -49,7 +56,15 @@ export const createLiteLLMOpenAI = async (
   }
 }
 
-function createLiteLLMFetch(sessionId?: string): typeof fetch {
+function createLiteLLMFetch(
+  sessionId?: string,
+  aiConfig?: CustomAIProviderConfig
+): typeof fetch {
+  const shouldSyncCredits =
+    !!aiConfig &&
+    aiConfig.provider === BUDIBASE_AI_PROVIDER_ID &&
+    env.SELF_HOSTED
+
   const liteFetch = (async (
     input: Parameters<typeof fetch>[0],
     init?: Parameters<typeof fetch>[1]
@@ -89,6 +104,10 @@ function createLiteLLMFetch(sessionId?: string): typeof fetch {
       span.setTag("litellm.call_id", litellmCallId)
     }
 
+    if (shouldSyncCredits) {
+      syncBudibaseAICredits()
+    }
+
     return response
   }) as typeof fetch
 
@@ -98,6 +117,41 @@ function createLiteLLMFetch(sessionId?: string): typeof fetch {
   }
 
   return liteFetch
+}
+
+const syncBudibaseAICredits = async () => {
+  try {
+    const aiQuota = await fetchAIQuotaUsage()
+    if (aiQuota != null) {
+      await quotas.setBudibaseAICredits(aiQuota.monthlyCredits)
+    }
+  } catch {
+    // Best-effort sync only.
+    console.error("Error synching budibase AI credits")
+  }
+}
+
+const fetchAIQuotaUsage = async () => {
+  if (!env.BUDICLOUD_URL) {
+    return
+  }
+  const licenseKey = await licensing.keys.getLicenseKey()
+  if (!licenseKey) {
+    return
+  }
+  const url = `${env.BUDICLOUD_URL}/api/ai/quotas`
+  const response = await nodeFetch(url, {
+    headers: {
+      [constants.Header.LICENSE_KEY]: licenseKey,
+    },
+  })
+  if (!response.ok) {
+    console.error("Error fetching AI quota", {
+      statusText: response.statusText,
+    })
+    return
+  }
+  return (await response.json()) as AIQuotaUsageResponse
 }
 
 const getLiteLLMProviderOptions = (hasTools: boolean) => {
