@@ -34,14 +34,19 @@
   } from "@budibase/types"
   import AppsHero from "assets/apps-hero-x1.png"
   import NoResults from "../_components/NoResults.svelte"
-  import { redirect } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import { featureFlags } from "@/stores/portal"
+  import { onMount } from "svelte"
 
   type ShowUI = { show: () => void }
 
-  $redirect
+  $: goto = $gotoStore
 
-  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] && $redirect("../home")
+  onMount(() => {
+    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+      goto("../home?type=app")
+    }
+  })
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
