@@ -5,6 +5,9 @@ import {
   DuplicateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
+  ProvisionAgentTeamsChannelResponse,
+  SyncAgentDiscordCommandsRequest,
+  SyncAgentDiscordCommandsResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -28,6 +31,13 @@ export interface AgentEndpoints {
     agentId: string,
     fileId: string
   ) => Promise<{ deleted: true }>
+  syncAgentDiscordCommands: (
+    agentId: string,
+    body?: SyncAgentDiscordCommandsRequest
+  ) => Promise<SyncAgentDiscordCommandsResponse>
+  provisionAgentTeamsChannel: (
+    agentId: string
+  ) => Promise<ProvisionAgentTeamsChannelResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -90,6 +100,22 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   deleteAgentFile: async (agentId: string, fileId: string) => {
     return await API.delete({
       url: `/api/agent/${agentId}/files/${fileId}`,
+    })
+  },
+
+  syncAgentDiscordCommands: async (agentId: string, body) => {
+    return await API.post<
+      SyncAgentDiscordCommandsRequest | undefined,
+      SyncAgentDiscordCommandsResponse
+    >({
+      url: `/api/agent/${agentId}/discord/sync`,
+      body,
+    })
+  },
+
+  provisionAgentTeamsChannel: async (agentId: string) => {
+    return await API.post<null, ProvisionAgentTeamsChannelResponse>({
+      url: `/api/agent/${agentId}/teams/provision`,
     })
   },
 })

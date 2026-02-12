@@ -1,15 +1,41 @@
 import { db } from "@budibase/backend-core"
 import {
+  Agent,
   CreateAgentRequest,
   CreateAgentResponse,
   FetchAgentsResponse,
+  ProvisionAgentTeamsChannelRequest,
+  ProvisionAgentTeamsChannelResponse,
   RequiredKeys,
+  SyncAgentDiscordCommandsRequest,
+  SyncAgentDiscordCommandsResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+
+const DISCORD_SECRET_MASK = "********"
+
+const obfuscateAgentSecrets = (agent: Agent): Agent => {
+  if (!agent.discordIntegration) {
+    return agent
+  }
+
+  return {
+    ...agent,
+    discordIntegration: {
+      ...agent.discordIntegration,
+      ...(agent.discordIntegration.publicKey
+        ? { publicKey: DISCORD_SECRET_MASK }
+        : {}),
+      ...(agent.discordIntegration.botToken
+        ? { botToken: DISCORD_SECRET_MASK }
+        : {}),
+    },
+  }
+}
 
 export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
   const rawAiconfigId = ctx.query.aiconfigId
@@ -22,7 +48,7 @@ export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
   const agents = await sdk.ai.agents.fetch()
-  ctx.body = { agents }
+  ctx.body = { agents: agents.map(obfuscateAgentSecrets) }
 }
 
 export async function createAgent(
@@ -48,11 +74,13 @@ export async function createAgent(
     vectorDb: body.vectorDb,
     ragMinDistance: body.ragMinDistance,
     ragTopK: body.ragTopK,
+    discordIntegration: body.discordIntegration,
+    teamsIntegration: body.teamsIntegration,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
 
-  ctx.body = agent
+  ctx.body = obfuscateAgentSecrets(agent)
   ctx.status = 201
 }
 
@@ -77,11 +105,107 @@ export async function updateAgent(
     vectorDb: body.vectorDb,
     ragMinDistance: body.ragMinDistance,
     ragTopK: body.ragTopK,
+    discordIntegration: body.discordIntegration,
+    teamsIntegration: body.teamsIntegration,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)
 
-  ctx.body = agent
+  ctx.body = obfuscateAgentSecrets(agent)
+  ctx.status = 200
+}
+
+export async function syncAgentDiscordCommands(
+  ctx: UserCtx<
+    SyncAgentDiscordCommandsRequest,
+    SyncAgentDiscordCommandsResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const {
+    applicationId,
+    botToken,
+    guildId,
+    chatAppId: configuredChatAppId,
+  } = sdk.ai.deployments.discord.validateDiscordIntegration(agent)
+
+  const requestedChatAppIdRaw = ctx.request.body?.chatAppId
+  const requestedChatAppId =
+    typeof requestedChatAppIdRaw === "string"
+      ? requestedChatAppIdRaw.trim()
+      : undefined
+  const chatApp = await sdk.ai.deployments.discord.resolveChatAppForAgent(
+    agentId,
+    requestedChatAppId || configuredChatAppId
+  )
+
+  await sdk.ai.deployments.discord.syncApplicationCommands(
+    applicationId,
+    botToken,
+    guildId
+  )
+
+  const interactionsEndpointUrl =
+    await sdk.ai.deployments.discord.buildDiscordWebhookUrl(
+      chatApp._id!,
+      agentId
+    )
+
+  await sdk.ai.agents.update({
+    ...agent,
+    discordIntegration: {
+      ...agent.discordIntegration,
+      chatAppId: chatApp._id!,
+      interactionsEndpointUrl,
+    },
+  })
+
+  ctx.body = {
+    success: true,
+    chatAppId: chatApp._id!,
+    interactionsEndpointUrl,
+    inviteUrl: sdk.ai.deployments.discord.buildDiscordInviteUrl(applicationId),
+  }
+  ctx.status = 200
+}
+
+export async function provisionAgentTeamsChannel(
+  ctx: UserCtx<
+    ProvisionAgentTeamsChannelRequest,
+    ProvisionAgentTeamsChannelResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const { chatAppId: configuredChatAppId } =
+    sdk.ai.deployments.teams.validateTeamsIntegration(agent)
+
+  const requestedChatAppId = ctx.request.body?.chatAppId?.trim()
+  const chatApp = await sdk.ai.deployments.teams.resolveChatAppForAgent(
+    agentId,
+    requestedChatAppId || configuredChatAppId
+  )
+
+  const messagingEndpointUrl =
+    await sdk.ai.deployments.teams.buildTeamsWebhookUrl(chatApp._id!, agentId)
+
+  await sdk.ai.agents.update({
+    ...agent,
+    teamsIntegration: {
+      ...agent.teamsIntegration,
+      chatAppId: chatApp._id!,
+      messagingEndpointUrl,
+    },
+  })
+
+  ctx.body = {
+    success: true,
+    chatAppId: chatApp._id!,
+    messagingEndpointUrl,
+  }
   ctx.status = 200
 }
 
@@ -94,7 +218,7 @@ export async function duplicateAgent(
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
   const duplicated = await sdk.ai.agents.duplicate(sourceAgent, globalId)
 
-  ctx.body = duplicated
+  ctx.body = obfuscateAgentSecrets(duplicated)
   ctx.status = 201
 }
 
