@@ -1,7 +1,6 @@
 import {
   ImageContentTypes,
   LLMConfigOptions,
-  LLMStreamChunk,
   ResponseFormat,
 } from "@budibase/types"
 import { Readable } from "node:stream"
@@ -10,7 +9,7 @@ import { LLMFullResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
 import { normalizeContentType } from "../utils"
 import { LLM } from "./base"
-import { generateText, LanguageModelUsage, Output, streamText } from "ai"
+import { generateText, LanguageModelUsage, Output } from "ai"
 import {
   createOpenAI,
   OpenAIProvider,
@@ -167,58 +166,5 @@ export class OpenAI extends LLM {
     }
 
     throw new Error("No response found")
-  }
-
-  protected async *chatCompletionStream(
-    request: LLMRequest
-  ): AsyncGenerator<LLMStreamChunk, void, unknown> {
-    try {
-      let contentBuffer = ""
-      let totalUsage: LanguageModelUsage | undefined
-
-      const providerOptions = this.getProviderOptions()
-      const stream = streamText({
-        model: this.client.chat(this.model),
-        messages: request.messages,
-        maxOutputTokens: this._maxTokens,
-        output: parseResponseFormat(request.format),
-        providerOptions: providerOptions,
-      })
-
-      for await (const part of stream.fullStream) {
-        if (part.type === "text-delta") {
-          contentBuffer += part.text
-          yield {
-            type: "content",
-            content: part.text,
-          }
-        }
-
-        if (part.type === "finish") {
-          totalUsage = part.totalUsage
-        }
-      }
-
-      const totalTokens = calculateBudibaseAICredits(totalUsage)
-
-      // Final response
-      if (contentBuffer) {
-        request.addMessage({
-          role: "assistant",
-          content: contentBuffer,
-        })
-      }
-
-      yield {
-        type: "done",
-        messages: request.messages,
-        tokensUsed: totalTokens,
-      }
-    } catch (error: any) {
-      yield {
-        type: "error",
-        content: error.message,
-      }
-    }
   }
 }
