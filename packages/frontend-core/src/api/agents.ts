@@ -5,11 +5,7 @@ import {
   DuplicateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
-<<<<<<< HEAD
-  ProvisionAgentTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
-=======
->>>>>>> parent of 41c62591da (naming updates)
   SyncAgentDiscordCommandsResponse,
   SyncAgentTeamsResponse,
   ToolMetadata,

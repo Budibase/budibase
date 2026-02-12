@@ -4,11 +4,7 @@ import {
   Agent,
   AgentFile,
   CreateAgentRequest,
-<<<<<<< HEAD
-  ProvisionAgentTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
-=======
->>>>>>> parent of 41c62591da (naming updates)
   SyncAgentDiscordCommandsResponse,
   SyncAgentTeamsResponse,
   UpdateAgentRequest,
