@@ -80,6 +80,7 @@
         on:click={onClickLink}
         use:active={url}
         class:builderActive
+        class:collapsed
         style={customStyles}
       >
         {#if collapsed}
@@ -100,7 +101,7 @@
         {/if}
       </a>
     {:else}
-      <a href={url} on:click={onClickLink}>
+      <a href={url} on:click={onClickLink} class:collapsed>
         {#if collapsed}
           <AbsTooltip {text} position={TooltipPosition.Right}>
             <span class="nav-item-letter">
@@ -125,7 +126,7 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   {#key renderKey}
     <div class="dropdown" class:left={renderLeftNav} class:expanded>
-      <div class="text" on:click={onClickDropdown}>
+      <div class="text" class:collapsed on:click={onClickDropdown}>
         {#if collapsed}
           <AbsTooltip {text} position={TooltipPosition.Right}>
             {#if icon}
@@ -201,6 +202,10 @@
   .text:hover span {
     cursor: pointer;
     opacity: 1;
+  }
+  a:hover.collapsed,
+  .text:hover.collapsed {
+    background-color: rgba(255, 255, 255, 0.25);
   }
 
   .nav-item-letter {

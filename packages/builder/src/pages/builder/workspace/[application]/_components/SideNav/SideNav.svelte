@@ -39,7 +39,7 @@
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
-  import { createEventDispatcher, onDestroy, onMount, setContext } from "svelte"
+  import { createEventDispatcher, onDestroy, setContext } from "svelte"
   import {
     FeatureFlag,
     type Datasource,
@@ -56,7 +56,6 @@
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
   import { DISCORD_URL, DOCUMENTATION_URL, SUPPORT_EMAIL } from "@/constants"
-  import { API } from "@/api"
   import { bb } from "@/stores/bb"
   import WorkspaceSelect from "@/components/common/WorkspaceSelect.svelte"
   import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"
@@ -123,6 +122,7 @@
   const favouriteLookup = workspaceFavouriteStore.lookup
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
   const navLogoSize = 18
+  const navTransitionMs = 160
   const dispatch = createEventDispatcher()
 
   let ignoreFocus = false
@@ -141,32 +141,6 @@
   let agentModal: AgentModal
   let createTableModal: ModalAPI
   let tableName = ""
-
-  let githubStars: number | null = null
-
-  const formatStars = (stars: number) => {
-    return new Intl.NumberFormat("en", {
-      notation: "compact",
-      maximumFractionDigits: 1,
-      compactDisplay: "short",
-    })
-      .format(stars)
-      .toLowerCase()
-  }
-
-  $: githubStarsText =
-    githubStars != null
-      ? `${formatStars(githubStars)} GitHub stars`
-      : "25k+ GitHub stars"
-
-  onMount(async () => {
-    try {
-      const response = await API.workspaceHome.getGitHubStars()
-      githubStars = response.stars
-    } catch (err) {
-      console.error("Failed to load GitHub stars", err)
-    }
-  })
 
   $: workspaceId = $appStore.appId
   $: !$pinned && unPin()
@@ -435,7 +409,7 @@
     focused = false
     timeout = setTimeout(() => {
       ignoreFocus = false
-    }, 130)
+    }, navTransitionMs)
   }
 
   const setFocused = (nextFocused: boolean) => {
@@ -482,7 +456,10 @@
   </Modal>
 {/if}
 
-<div class="nav_wrapper" style={`--nav-logo-width: ${navLogoSize}px;`}>
+<div
+  class="nav_wrapper"
+  style={`--nav-logo-width: ${navLogoSize}px; --nav-transition-ms: ${navTransitionMs}ms; --nav-transition-ease: cubic-bezier(0.22, 1, 0.36, 1);`}
+>
   <div class="nav_spacer" class:pinned={$pinned}></div>
   <div
     class="nav"
@@ -563,13 +540,6 @@
                     />
                   </svelte:fragment>
 
-                  <MenuItem icon="path" on:click={openCreateAutomation}>
-                    Automation
-                  </MenuItem>
-                  <MenuItem icon="browsers" on:click={openCreateApp}>
-                    App
-                  </MenuItem>
-
                   {#if $featureFlags.AI_AGENTS}
                     <MenuItem icon="sparkle" on:click={openCreateAgent}>
                       Agent
@@ -577,32 +547,26 @@
                         <Tag emphasized>Beta</Tag>
                       </div>
                     </MenuItem>
-                    <MenuItem
-                      icon="chat-circle"
-                      on:click={() => goToCreate("chat")}
-                    >
-                      Chat
-                      <div slot="right">
-                        <Tag emphasized>Alpha</Tag>
-                      </div>
-                    </MenuItem>
                   {/if}
+                  <MenuItem icon="path" on:click={openCreateAutomation}>
+                    Automation
+                  </MenuItem>
+                  <MenuItem icon="browsers" on:click={openCreateApp}>
+                    App
+                  </MenuItem>
 
+                  <MenuSeparator />
+                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+                    Connection
+                  </MenuItem>
                   <MenuItem icon="grid-nine" on:click={openCreateTable}>
                     Table
                   </MenuItem>
                   <MenuItem
-                    icon="webhooks-logo"
+                    icon="globe-simple"
                     on:click={() => goToCreate("apis/new")}
                   >
                     API request
-                  </MenuItem>
-                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-                    Connection
-                  </MenuItem>
-                  <MenuSeparator />
-                  <MenuItem icon="user-circle-plus" on:click={openInviteUser}>
-                    User
                   </MenuItem>
                 </ActionMenu>
               {:else}
@@ -684,15 +648,15 @@
                 }}
               />
               <SideNavLink
-                icon="cube"
-                text="APIs"
+                icon="globe-simple"
+                text="API explorer"
                 url={$url("./apis")}
                 {collapsed}
                 on:click={keepCollapsed}
               />
               <SideNavLink
                 icon="database"
-                text="Data"
+                text="Data tables"
                 url={$url("./data")}
                 {collapsed}
                 on:click={keepCollapsed}
@@ -842,20 +806,6 @@
             keepCollapsed()
           }}
         />
-        <SideNavLink
-          icon="star"
-          text={githubStarsText}
-          {collapsed}
-          on:click={() => {
-            window.open(
-              "https://github.com/Budibase/budibase",
-              "_blank",
-              "noopener,noreferrer"
-            )
-            keepCollapsed()
-          }}
-        />
-
         {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isEnterpriseTrial}
           <SideNavLink
             icon="paper-plane-tilt"
@@ -946,7 +896,7 @@
     justify-content: flex-start;
     align-items: stretch;
     border-right: var(--nav-border);
-    transition: width 130ms ease-out;
+    transition: width var(--nav-transition-ms) var(--nav-transition-ease);
     overflow: hidden;
     padding-bottom: var(--nav-padding);
     container-type: inline-size;
@@ -974,8 +924,8 @@
   .logo_link {
     display: grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
+    width: 18px;
+    height: 18px;
     border-radius: 6px;
     text-decoration: none;
     color: inherit;
@@ -991,7 +941,7 @@
   .logo_link :global(svg) {
     display: grid;
     place-items: center;
-    transition: filter 130ms ease-out;
+    transition: filter var(--nav-transition-ms) var(--nav-transition-ease);
   }
   .nav:not(.pinned):not(.focused) .nav-title {
     opacity: 0;
@@ -1006,7 +956,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    transition: opacity 130ms ease-out;
+    transition: opacity var(--nav-transition-ms) var(--nav-transition-ease);
     color: var(--spectrum-global-color-gray-900);
   }
 
@@ -1144,7 +1094,7 @@
     align-items: flex-start;
     padding: 12px;
     gap: 8px;
-    transition: all 130ms ease-out;
+    transition: all var(--nav-transition-ms) var(--nav-transition-ease);
   }
 
   .live-app-link {
@@ -1164,14 +1114,25 @@
 
   @container (max-width: 239px) {
     .nav-section-title {
-      transition: all 130ms ease-in-out;
+      transition: all var(--nav-transition-ms) var(--nav-transition-ease);
     }
     .favourite-wrapper {
       display: none;
-      transition: all 130ms ease-in-out;
+      transition: all var(--nav-transition-ms) var(--nav-transition-ease);
     }
     .favourite-empty-state {
-      display: all 130ms ease-in-out;
+      transition: all var(--nav-transition-ms) var(--nav-transition-ease);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav,
+    .nav-title,
+    .logo_link :global(svg),
+    .favourite-empty-state,
+    .nav-section-title,
+    .favourite-wrapper {
+      transition: none;
     }
   }
 
