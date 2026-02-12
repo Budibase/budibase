@@ -4,6 +4,7 @@ import {
   Agent,
   AgentFile,
   CreateAgentRequest,
+  SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   UpdateAgentRequest,
   ToolMetadata,
@@ -149,9 +150,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   syncDiscordCommands = async (
-    agentId: string
+    agentId: string,
+    body?: SyncAgentDiscordCommandsRequest
   ): Promise<SyncAgentDiscordCommandsResponse> => {
-    return await API.syncAgentDiscordCommands(agentId)
+    return await API.syncAgentDiscordCommands(agentId, body)
   }
 }
 export const agentsStore = new AgentsStore()

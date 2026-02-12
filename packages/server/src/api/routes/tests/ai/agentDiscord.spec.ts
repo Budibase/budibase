@@ -60,7 +60,30 @@ describe("agent discord integration sync", () => {
       },
     })
 
-    const scope = nock("https://discord.com")
+    const globalScope = nock("https://discord.com")
+      .put("/api/v10/applications/app-123/commands", payload => {
+        const commands = payload as Array<{ name: string; contexts?: number[] }>
+        return (
+          Array.isArray(commands) &&
+          commands.length === 2 &&
+          commands.some(
+            command =>
+              command.name === DiscordCommands.ASK &&
+              command.contexts?.includes(1)
+          ) &&
+          commands.some(
+            command =>
+              command.name === DiscordCommands.NEW &&
+              command.contexts?.includes(1)
+          )
+        )
+      })
+      .matchHeader("authorization", "Bot bot-secret")
+      .reply(200, [
+        { id: "cmd-1", name: DiscordCommands.ASK },
+        { id: "cmd-2", name: DiscordCommands.NEW },
+      ])
+    const guildScope = nock("https://discord.com")
       .put(
         "/api/v10/applications/app-123/guilds/guild-123/commands",
         payload => {
@@ -90,7 +113,8 @@ describe("agent discord integration sync", () => {
     expect(result.interactionsEndpointUrl).toContain(`/${result.chatAppId}/`)
     expect(result.interactionsEndpointUrl).toContain(`/${agent._id}`)
     expect(result.inviteUrl).toContain("client_id=app-123")
-    expect(scope.isDone()).toBe(true)
+    expect(globalScope.isDone()).toBe(true)
+    expect(guildScope.isDone()).toBe(true)
   })
 
   it("returns a validation error when required discord settings are missing", async () => {
@@ -109,7 +133,6 @@ describe("agent discord integration sync", () => {
       discordIntegration: {
         applicationId: "app-123",
         botToken: "bot-secret",
-        guildId: "guild-123",
       },
     })
 

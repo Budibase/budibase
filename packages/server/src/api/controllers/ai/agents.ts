@@ -105,13 +105,17 @@ export async function syncAgentDiscordCommands(
     chatAppId: configuredChatAppId,
   } = sdk.ai.deployments.discord.validateDiscordIntegration(agent)
 
-  const requestedChatAppId = ctx.request.body?.chatAppId?.trim()
+  const requestedChatAppIdRaw = ctx.request.body?.chatAppId
+  const requestedChatAppId =
+    typeof requestedChatAppIdRaw === "string"
+      ? requestedChatAppIdRaw.trim()
+      : undefined
   const chatApp = await sdk.ai.deployments.discord.resolveChatAppForAgent(
     agentId,
     requestedChatAppId || configuredChatAppId
   )
 
-  await sdk.ai.deployments.discord.syncGuildCommands(
+  await sdk.ai.deployments.discord.syncApplicationCommands(
     applicationId,
     botToken,
     guildId
