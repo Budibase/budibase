@@ -100,7 +100,7 @@
   {#if showManageRoles}
     <NavItem
       icon="user-gear"
-      text="Manage roles"
+      text="Custom roles"
       selected={$isActive("./roles")}
       on:click={() => $goto("./roles")}
       selectedBy={$userSelectedResourceMap.roles}
