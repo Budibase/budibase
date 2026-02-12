@@ -8,6 +8,31 @@
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
 
+  type TableAlign = "Left" | "Center" | "Right"
+
+  interface TableFieldSchema {
+    type?: string
+    name?: string
+    displayName?: string | null
+    sortable?: boolean
+    editable?: boolean
+    width?: string | number
+    minWidth?: string | number
+    align?: TableAlign
+    template?: string
+    background?: string
+    color?: string
+    borderLeft?: boolean
+    borderRight?: boolean
+    divider?: boolean
+    autocolumn?: boolean
+    order?: number
+    preventSelectRow?: boolean
+  }
+
+  type TableSchemaInput = Record<string, TableFieldSchema>
+  type TableSchema = Record<string, TableFieldSchema>
+
   /**
    /**
    * The expected schema is our normal couch schemas for our tables.
@@ -27,7 +52,7 @@
    * borderRight: show a right border
    */
   export let data: any[] = []
-  export let schema: Record<string, any> = {}
+  export let schema: TableSchemaInput = {}
   export let showAutoColumns: boolean = false
   export let rowCount: number = 0
   export let quiet: boolean = false
@@ -100,8 +125,8 @@
     }
   }
 
-  const fixSchema = (schema: Record<string, any>): Record<string, any> => {
-    let fixedSchema: Record<string, any> = {}
+  const fixSchema = (schema: TableSchemaInput): TableSchema => {
+    let fixedSchema: TableSchema = {}
     Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
       if (typeof fieldSchema === "string") {
         fixedSchema[fieldName] = {
@@ -159,7 +184,7 @@
 
   const getGridStyle = (
     fields: string[],
-    schema: Record<string, any>,
+    schema: TableSchema,
     showEditColumn: boolean
   ): string => {
     let style = "grid-template-columns:"
@@ -199,7 +224,7 @@
     })
   }
 
-  const sortBy = (fieldSchema: Record<string, any>): void => {
+  const sortBy = (fieldSchema: TableFieldSchema): void => {
     if (disableSorting) {
       return
     }
@@ -215,7 +240,7 @@
     dispatch("sort", { column: sortColumn, order: sortOrder })
   }
 
-  const getDisplayName = (schema: Record<string, any>): string => {
+  const getDisplayName = (schema: TableFieldSchema): string => {
     let name = schema?.displayName
     if (schema && name === undefined) {
       name = schema.name
@@ -224,12 +249,12 @@
   }
 
   const getFields = (
-    schema: Record<string, any>,
+    schema: TableSchema,
     showAutoColumns: boolean,
     autoSortColumns: boolean
   ): string[] => {
-    let columns: any[] = []
-    let autoColumns: any[] = []
+    let columns: TableFieldSchema[] = []
+    let autoColumns: TableFieldSchema[] = []
     Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
       if (!field || !fieldSchema) {
         return
@@ -261,7 +286,7 @@
       .map(column => column.name)
   }
 
-  const editColumn = (e: Event, field: any): void => {
+  const editColumn = (e: Event, field: string): void => {
     e.stopPropagation()
     dispatch("editcolumn", field)
   }
@@ -306,9 +331,7 @@
     }
   }
 
-  const computeCellStyles = (
-    schema: Record<string, any>
-  ): Record<string, string> => {
+  const computeCellStyles = (schema: TableSchema): Record<string, string> => {
     let styles: Record<string, string> = {}
     Object.keys(schema || {}).forEach(field => {
       styles[field] = ""
