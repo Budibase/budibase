@@ -3,6 +3,7 @@
   import NewPill from "@/components/common/NewPill.svelte"
   import { permittedRoutes, flattenedRoutes } from "@/stores/routing"
   import { bb } from "@/stores/bb"
+  import { appStore } from "@/stores/builder"
   import Router from "@/settings/Router.svelte"
   import RouteHeader from "@/settings/RouteHeader.svelte"
   import { tick } from "svelte"
@@ -266,7 +267,10 @@
     border: 0.5px solid #5645a1;
   }
 
-  .groups.full .root-nav .status-indicator :global(.spectrum-StatusLight::before) {
+  .groups.full
+    .root-nav
+    .status-indicator
+    :global(.spectrum-StatusLight::before) {
     border: unset;
   }
 
