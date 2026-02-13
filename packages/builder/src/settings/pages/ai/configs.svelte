@@ -1,11 +1,10 @@
 <script lang="ts">
   import { aiConfigsStore } from "@/stores/portal"
-  import { Button, Layout, Modal, notifications, Table } from "@budibase/bbui"
+  import { Button, Layout, Modal, notifications } from "@budibase/bbui"
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
-  import AILogo from "./AILogo.svelte"
-  import UpsertAIConfigButton from "./UpsertAIConfigButton.svelte"
+  import AIConfigList from "./AIConfigList.svelte"
 
   let configModal: { show: () => void; hide: () => void }
 
@@ -58,24 +57,6 @@
     },
   ]
 
-  const customRenderers = [
-    {
-      column: "icon",
-      component: AILogo,
-    },
-    {
-      column: "edit",
-      component: UpsertAIConfigButton,
-    },
-  ]
-
-  const schema = {
-    icon: { width: "40px" },
-    name: { width: "200px" },
-    model: {},
-    edit: { width: "100px", align: "Right" },
-  }
-
   function createAIConfig() {
     configModal?.show()
   }
@@ -95,16 +76,7 @@
       <div class="section-title">Connected models</div>
     </div>
     <div class="model-list">
-      <Table
-        compact
-        data={completionConfigs}
-        {schema}
-        {customRenderers}
-        hideHeader
-        rounded
-        allowClickRows={false}
-        allowEditRows={false}
-      ></Table>
+      <AIConfigList configs={completionConfigs}></AIConfigList>
     </div>
   {/if}
   <div class="section-header new-provider-section">
@@ -116,16 +88,7 @@
     </div>
   </div>
   <div class="model-list">
-    <Table
-      compact
-      data={modelProviders}
-      {schema}
-      {customRenderers}
-      hideHeader
-      rounded
-      allowClickRows={false}
-      allowEditRows={false}
-    ></Table>
+    <AIConfigList configs={modelProviders}></AIConfigList>
   </div>
 </Layout>
 
