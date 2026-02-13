@@ -21,6 +21,7 @@
   $: entry = $memoRoute?.entry
   $: path = entry?.path
   $: comp = entry?.comp
+  $: props = entry?.props || {}
 
   $: params = { ...($memoRoute?.params || {}) }
   $: routing.update(state => ({ ...state, params: { ...params } }))
@@ -32,6 +33,6 @@
 
 {#if page}
   {#key path}
-    <svelte:component this={page} />
+    <svelte:component this={page} {...props} />
   {/key}
 {/if}

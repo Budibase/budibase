@@ -17,7 +17,7 @@
   import AddPluginModal from "./_components/AddPluginModal.svelte"
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
-  import { routeActions } from "@/settings/pages"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
 
   const schema = {
     name: {
@@ -144,37 +144,39 @@
     </Banner>
   {/if}
   <Layout noPadding gap="S">
-    <div use:routeActions class="controls">
-      <ActionButton
-        size="M"
-        quiet
-        on:click={() =>
-          window
-            ?.open("https://github.com/Budibase/plugins", "_blank")
-            ?.focus()}
-      >
-        <Icon
-          name={"github-logo"}
+    <RouteActions>
+      <div class="controls">
+        <ActionButton
           size="M"
-          weight="fill"
-          tooltip={"Github repo"}
-          tooltipPosition={TooltipPosition.Top}
-        />
-      </ActionButton>
-      {#if $plugins?.length}
-        <div class="filters">
-          <div class="select">
-            <Select
-              bind:value={filter}
-              placeholder={undefined}
-              options={filterOptions}
-              autoWidth
-            />
+          quiet
+          on:click={() =>
+            window
+              ?.open("https://github.com/Budibase/plugins", "_blank")
+              ?.focus()}
+        >
+          <Icon
+            name={"github-logo"}
+            size="M"
+            weight="fill"
+            tooltip={"Github repo"}
+            tooltipPosition={TooltipPosition.Top}
+          />
+        </ActionButton>
+        {#if $plugins?.length}
+          <div class="filters">
+            <div class="select">
+              <Select
+                bind:value={filter}
+                placeholder={undefined}
+                options={filterOptions}
+                autoWidth
+              />
+            </div>
           </div>
-        </div>
-      {/if}
-      <Button size="M" on:click={modal.show} cta>Add plugin</Button>
-    </div>
+        {/if}
+        <Button size="M" on:click={modal.show} cta>Add plugin</Button>
+      </div>
+    </RouteActions>
 
     {#if $plugins?.length}
       <Table

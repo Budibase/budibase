@@ -22,7 +22,7 @@
   import { licensing } from "@/stores/portal/licensing"
   import { auth } from "@/stores/portal/auth"
   import { admin } from "@/stores/portal/admin"
-  import { routeActions } from "@/settings/pages"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
 
   const schema = {
@@ -112,9 +112,9 @@
           </Link>
         </Body>
         {#if !selectedScript && enabled}
-          <div use:routeActions class="controls">
+          <RouteActions>
             <Button cta size="M" on:click={addScript}>Add script</Button>
-          </div>
+          </RouteActions>
         {/if}
       </div>
     </Layout>
@@ -167,13 +167,15 @@
           placeholder="https://external.api.com&#013;https://*.domain.com"
         />
         <div></div>
-        <div class="buttons" use:routeActions>
-          {#if !isNew}
-            <Button warning quiet on:click={requestDeletion}>Delete</Button>
-          {/if}
-          <Button secondary on:click={cancel}>Cancel</Button>
-          <Button cta disabled={invalid} on:click={save}>Save</Button>
-        </div>
+        <RouteActions>
+          <div class="buttons">
+            {#if !isNew}
+              <Button warning quiet on:click={requestDeletion}>Delete</Button>
+            {/if}
+            <Button secondary on:click={cancel}>Cancel</Button>
+            <Button cta disabled={invalid} on:click={save}>Save</Button>
+          </div>
+        </RouteActions>
       </div>
     {:else}
       <Table

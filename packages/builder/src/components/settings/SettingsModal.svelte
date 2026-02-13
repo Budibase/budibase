@@ -3,7 +3,6 @@
   import NewPill from "@/components/common/NewPill.svelte"
   import { permittedRoutes, flattenedRoutes } from "@/stores/routing"
   import { bb } from "@/stores/bb"
-  import { appStore } from "@/stores/builder"
   import Router from "@/settings/Router.svelte"
   import RouteHeader from "@/settings/RouteHeader.svelte"
   import { tick } from "svelte"
