@@ -3,6 +3,7 @@ import { mocks } from "@budibase/backend-core/tests"
 import {
   Automation,
   AutomationResults,
+  AutomationStatus,
   AutomationTriggerStepId,
   ConfigType,
   EmailTrigger,
@@ -354,6 +355,30 @@ describe("/automations", () => {
           body: {
             success: true,
             value: [1, 2, 3],
+          },
+        }
+      )
+    })
+
+    it("returns a timeout response when a synchronous automation times out before collect", async () => {
+      mocks.licenses.useSyncAutomations()
+      const { automation } = await createAutomationBuilder(config)
+        .onAppAction()
+        .delay({ time: 200 })
+        .collect({ collection: "done" })
+        .save()
+
+      await config.api.automation.trigger(
+        automation._id!,
+        {
+          fields: {},
+          timeout: 0.05,
+        },
+        {
+          status: 200,
+          body: {
+            success: false,
+            status: AutomationStatus.TIMED_OUT,
           },
         }
       )

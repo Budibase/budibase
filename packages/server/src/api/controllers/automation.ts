@@ -11,6 +11,7 @@ import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
   Automation,
   AutomationActionStepId,
+  AutomationStatus,
   ClearAutomationLogRequest,
   ClearAutomationLogResponse,
   CreateAutomationRequest,
@@ -219,7 +220,25 @@ export async function trigger(
       let collectedValue = response.steps.find(
         step => step.stepId === AutomationActionStepId.COLLECT
       )
-      ctx.body = collectedValue?.outputs
+      if (!collectedValue) {
+        if (response.status === AutomationStatus.TIMED_OUT) {
+          ctx.body = {
+            success: false,
+            status: AutomationStatus.TIMED_OUT,
+            message:
+              "Automation timed out before it produced a collected response.",
+          }
+          return
+        }
+
+        ctx.body = {
+          success: false,
+          status: response.status,
+          message: `Unable to collect response from automation (status: ${response.status}).`,
+        }
+        return
+      }
+      ctx.body = collectedValue.outputs
     } catch (err: any) {
       if (err.message) {
         ctx.throw(400, err.message)

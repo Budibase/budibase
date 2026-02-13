@@ -223,8 +223,24 @@ const triggerAutomationHandler = async action => {
       timeout
     )
 
+    if (!result) {
+      if (!notificationOverride) {
+        notificationStore.actions.error("Automation did not return a result")
+      }
+      return false
+    }
+
+    if (result.success === false) {
+      if (!notificationOverride) {
+        notificationStore.actions.error(
+          result.message || "Automation failed to execute"
+        )
+      }
+      return false
+    }
+
     // Value will exist if automation is synchronous, so return it.
-    if (result.value) {
+    if (result.value !== undefined) {
       if (!notificationOverride) {
         notificationStore.actions.success("Automation ran successfully")
       }
@@ -235,6 +251,11 @@ const triggerAutomationHandler = async action => {
       notificationStore.actions.success("Automation triggered")
     }
   } catch (error) {
+    if (!notificationOverride) {
+      notificationStore.actions.error(
+        error?.message || "An error occurred while triggering the automation"
+      )
+    }
     // Abort next actions
     return false
   }
