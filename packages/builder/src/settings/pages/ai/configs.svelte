@@ -1,6 +1,6 @@
 <script lang="ts">
   import { admin, aiConfigsStore, licensing } from "@/stores/portal"
-  import { Button, Layout, Modal, notifications } from "@budibase/bbui"
+  import { Button, Layout, Modal, notifications, Table } from "@budibase/bbui"
   import type { AIConfigResponse } from "@budibase/types"
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
@@ -9,6 +9,7 @@
   import BBAIConfigModal from "./BBAIConfigModal.svelte"
   import PortalModal from "./PortalModal.svelte"
   import { API } from "@/api"
+  import AILogo from "./AILogo.svelte"
 
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
@@ -66,6 +67,13 @@
     },
   ]
 
+  const customRenderers = [
+    {
+      column: "icon",
+      component: AILogo,
+    },
+  ]
+
   function createAIConfig(provider?: string) {
     if (
       provider === BUDIBASE_AI_PROVIDER_ID &&
@@ -110,6 +118,15 @@
       <div class="section-title">Connected models</div>
     </div>
     <div class="model-list">
+      <Table
+        data={completionConfigs}
+        schema={{ icon: {}, name: {}, provider: {}, edit: {} }}
+        {customRenderers}
+        hideHeader
+        rounded
+        allowClickRows={false}
+        on:editrow={e => editAIConfig(e.detail)}
+      ></Table>
       {#each completionConfigs as config (config._id)}
         <CustomAIConfigTile
           actionType="edit"
