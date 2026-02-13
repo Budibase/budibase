@@ -139,9 +139,9 @@
   $: debouncedUpdateFetch(searchEmail, currentWorkspaceId)
   $: schema = {
     email: {
-      displayName: isWorkspaceOnly ? "User" : "Email",
+      displayName: "Email",
       sortable: false,
-      width: "2fr",
+      width: "minmax(200px, max-content)",
       minWidth: "200px",
     },
     role: {
