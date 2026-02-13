@@ -15,6 +15,9 @@
   export let value: string | undefined = undefined
   export let error: string | undefined = undefined
   export let placeholder: string | undefined = undefined
+  export let autocomplete: HTMLInputElement["autocomplete"] | undefined =
+    undefined
+  export let required: boolean | undefined = false
 
   let modal: Modal
 
@@ -47,6 +50,8 @@
   type={type === "port" ? "text" : type}
   {error}
   {placeholder}
+  {autocomplete}
+  {required}
   variables={$environment.variables}
   environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
   showModal={() => modal.show()}
