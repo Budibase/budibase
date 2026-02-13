@@ -88,7 +88,12 @@
     </div>
   </div>
   <div class="model-list">
-    <AIConfigList configs={modelProviders}></AIConfigList>
+    <AIConfigList
+      configs={modelProviders.map(provider => ({
+        ...provider,
+        configType: AIConfigType.COMPLETIONS,
+      }))}
+    ></AIConfigList>
   </div>
 </Layout>
 
