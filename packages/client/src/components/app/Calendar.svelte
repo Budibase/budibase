@@ -40,12 +40,10 @@
   export let openOnDate: string
   export let calendarType: CalendarView = "dayGridMonth"
 
-  const { styleable, componentStore } = getContext("sdk")
+  const { styleable } = getContext("sdk")
   const component = getContext("component")
   let calendarRef: FullCalendar | null = null
   $: isTimeGridDay = calendarType === "timeGridDay"
-  $: definition = componentStore.actions.getComponentDefinition($component.type)
-  $: calendarHeight = definition?.size?.height ?? 600
 
   $: events =
     dataProvider?.rows?.map((row: Row) => ({
@@ -112,7 +110,7 @@
       minute: "2-digit",
       meridiem: "short",
     },
-    height: calendarHeight,
+    height: "100%",
   }
 
   $: if (calendarRef && calendarType) {
@@ -182,6 +180,7 @@
 
   .calendar {
     color: var(--spectrum-alias-text-color, inherit);
+    height: 420px;
   }
 
   .calendar :global(.fc-daygrid-day-number),
