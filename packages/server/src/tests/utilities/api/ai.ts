@@ -89,6 +89,22 @@ export class AIAPI extends TestAPI {
     )
   }
 
+  openaiChatCompletionsRaw = async (
+    req: ChatCompletionRequestV2 & { licenseKey?: string },
+    expectations?: Expectations
+  ): Promise<import("supertest").Response> => {
+    const headers: Record<string, string> = {}
+    if (req.licenseKey) {
+      headers[constants.Header.LICENSE_KEY] = req.licenseKey
+    }
+    const { licenseKey, ...body } = req
+    return await this._requestRaw("post", `/api/ai/chat/completions`, {
+      body,
+      headers,
+      expectations,
+    })
+  }
+
   generateTables = async (
     req: GenerateTablesRequest,
     expectations?: Expectations

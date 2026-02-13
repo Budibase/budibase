@@ -72,6 +72,11 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
         model: chat,
         messages,
         includeRawChunks: true,
+        onError({ error }) {
+          console.error("Agent streaming error", {
+            error,
+          })
+        },
       })
 
       ctx.status = 200

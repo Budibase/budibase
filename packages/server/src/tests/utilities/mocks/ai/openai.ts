@@ -3,7 +3,6 @@ import _ from "lodash"
 import { ai } from "@budibase/pro"
 import { ResponseFormat } from "@budibase/types"
 import { MockLLMResponseOpts } from "."
-import { Readable } from "stream"
 
 let chatID = 1
 const SPACE_REGEX = /\s+/g
@@ -50,7 +49,7 @@ interface ChatCompletionResponse {
 
 function parseJsonBody(body: unknown): ChatCompletionRequest {
   if (typeof body === "string") return JSON.parse(body)
-  if (body && typeof (body as any).toString === "function") {
+  if (body && typeof body.toString === "function") {
     const s = String(body)
     try {
       return JSON.parse(s)
@@ -157,8 +156,76 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   }) // Each mock call handles one request
 }
 
-export const mockChatGPTStreamResponse = (content = "hi") => {
-  const origin = "https://api.openai.com"
+export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
+  answer,
+  opts
+) => {
+  const origin = opts?.baseUrl || "https://api.openai.com"
+  const pool = getPool(origin)
+
+  const interceptor = pool.intercept({
+    path: "/v1/responses",
+    method: "POST",
+  })
+  interceptor.defaultReplyHeaders?.({
+    "content-type": "application/json",
+  })
+  interceptor.reply(200, (reqOpts: any) => {
+    const reqBody = parseJsonBody(reqOpts.body)
+
+    let prompt = ""
+    const input = reqBody && "input" in reqBody && reqBody.input
+    if (Array.isArray(input)) {
+      const userMessage = input.find((item: any) => item.role === "user")
+      const content = userMessage?.content
+      if (Array.isArray(content)) {
+        prompt = content
+          .filter((part: any) => part.type === "input_text")
+          .map((part: any) => part.text)
+          .join(" ")
+      }
+    }
+
+    const content = typeof answer === "function" ? answer(prompt) : answer
+
+    chatID++
+
+    const prompt_tokens = prompt ? prompt.split(SPACE_REGEX).length : 1
+    const completion_tokens = content.split(SPACE_REGEX).length
+
+    return {
+      id: `resp_${chatID}`,
+      created_at: Math.floor(Date.now() / 1000),
+      model: reqBody?.model ?? "gpt-5-mini",
+      output: [
+        {
+          type: "message",
+          role: "assistant",
+          id: `msg_${chatID}`,
+          content: [
+            {
+              type: "output_text",
+              text: content,
+              annotations: [],
+            },
+          ],
+        },
+      ],
+      usage: {
+        input_tokens: prompt_tokens,
+        input_tokens_details: { cached_tokens: 0 },
+        output_tokens: completion_tokens,
+        output_tokens_details: { reasoning_tokens: 0 },
+      },
+    }
+  })
+}
+
+export const mockChatGPTStreamResponse = (
+  content = "hi",
+  options?: { baseUrl?: string }
+) => {
+  const origin = options?.baseUrl || "https://api.openai.com"
   const pool = getPool(origin)
 
   const interceptor = pool.intercept({
@@ -230,7 +297,6 @@ export const mockChatGPTStreamFailure = (opts?: {
   baseUrl?: string
   status?: number
   errorMessage?: string
-  afterFirstChunk?: boolean
 }) => {
   const origin = opts?.baseUrl || "https://api.openai.com"
   const pool = getPool(origin)
@@ -240,45 +306,18 @@ export const mockChatGPTStreamFailure = (opts?: {
     method: "POST",
   })
 
-  if (!opts?.afterFirstChunk) {
-    interceptor.defaultReplyHeaders({ "content-type": "application/json" })
-    interceptor.reply(opts?.status || 401, {
-      error: {
-        message: opts?.errorMessage || "Unauthorized",
-        type: "invalid_request_error",
-      },
-    })
-    return
-  }
-
-  let pushed = false
-  const stream = new Readable({
-    read() {
-      if (pushed) {
-        return
-      }
-      pushed = true
-      this.push(
-        `data: ${JSON.stringify({
-          id: "chatcmpl-test",
-          object: "chat.completion.chunk",
-          created: Math.floor(Date.now() / 1000),
-          model: "gpt-5-mini",
-          choices: [{ index: 0, delta: { content: "hi" } }],
-        })}\n\n`
-      )
-      setImmediate(() => {
-        this.destroy(new Error(opts?.errorMessage || "stream failure"))
-      })
-    },
-  })
-
   interceptor.defaultReplyHeaders({
     "content-type": "text/event-stream",
     "cache-control": "no-cache",
     connection: "keep-alive",
   })
-  interceptor.reply(200, stream as any)
+  interceptor.reply(200, () => {
+    return [
+      `data: ${JSON.stringify({ id: "chatcmpl-test", choices: [{ delta: { content: "hi" } }] })}\n\n`,
+      `data: ${JSON.stringify({ error: { message: opts?.errorMessage || "stream failure", type: "server_error" } })}\n\n`,
+      "data: [DONE]\n\n",
+    ].join("")
+  })
 }
 
 interface FileUploadResponse {
