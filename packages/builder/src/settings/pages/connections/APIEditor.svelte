@@ -218,14 +218,12 @@
     }
   }
 
-  // Workspace connection: single auth, replace on type change
   const onAuthTypeChange = (authType: RestAuthType) => {
     if (!authType) return
     data.authConfigs = [createAuthConfig(authType)]
     data = { ...data }
   }
 
-  // Datasource: multi auth, append new config
   const addAuthConfig = (authType: RestAuthType) => {
     if (!authType) return
     data.authConfigs = [...(data.authConfigs || []), createAuthConfig(authType)]

@@ -47,7 +47,6 @@
   const validate = (): boolean => {
     errors = {}
 
-    // Name validation
     if (!data.name) {
       errors.name = "Name is required"
     } else if (
@@ -56,12 +55,10 @@
       errors.name = "Name must be unique"
     }
 
-    // Type validation
     if (!data.type) {
       errors.type = "Type is required"
     }
 
-    // Type-specific validation
     if (data.type === RestAuthType.BASIC) {
       if (!data.config.username) {
         errors.username = "Username is required"

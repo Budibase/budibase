@@ -6,7 +6,6 @@
   $: icon = row?.icon
 </script>
 
-<!-- lock-simple default -->
 <div class="connection-icon">
   {#if icon?.type == "icon"}
     <Icon name={icon.value} />
