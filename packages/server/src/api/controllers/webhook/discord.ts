@@ -2,7 +2,6 @@ import fetch from "node-fetch"
 import { v4 } from "uuid"
 import {
   context,
-  db as dbCore,
   docIds,
   HTTPError,
 } from "@budibase/backend-core"
@@ -22,10 +21,16 @@ import type {
 import { DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
 import {
-  discordChat,
+  webhookChat,
   prepareChatConversationForSave,
   truncateTitle,
 } from "../ai/chatConversations"
+import {
+  ensureProdWorkspaceWebhookRoute,
+  isConversationExpired,
+  pickLatestConversation,
+  touchConversationCache,
+} from "./utils"
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10"
 const DISCORD_SIGNATURE_HEADER = "x-signature-ed25519"
@@ -179,13 +184,6 @@ const sendDiscordErrorResponse = async ({
   }
 }
 
-const toSortTimestamp = (chat: ChatConversation): number => {
-  const latest = chat.updatedAt || chat.createdAt
-  if (!latest) return 0
-  const parsed = new Date(latest).getTime()
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
 export const isDiscordConversationExpired = ({
   chat,
   idleTimeoutMs,
@@ -194,12 +192,7 @@ export const isDiscordConversationExpired = ({
   chat: ChatConversation
   idleTimeoutMs: number
   nowMs?: number
-}) => {
-  if (idleTimeoutMs <= 0) return false
-  const lastActivity = toSortTimestamp(chat)
-  if (!lastActivity) return false
-  return nowMs - lastActivity > idleTimeoutMs
-}
+}) => isConversationExpired({ chat, idleTimeoutMs, nowMs })
 
 export const getDiscordIdleTimeoutMs = () => {
   const configured = Number(
@@ -241,25 +234,6 @@ const getDiscordConversationCacheKey = ({
     scope.externalUserId,
   ].join(":")
 
-const setDiscordConversationCache = (cacheKey: string, chatId: string) => {
-  if (!chatId) {
-    return
-  }
-  if (discordConversationCache.has(cacheKey)) {
-    discordConversationCache.delete(cacheKey)
-  }
-  discordConversationCache.set(cacheKey, chatId)
-
-  const maxSize = getDiscordConversationCacheSize()
-  while (discordConversationCache.size > maxSize) {
-    const firstKey = discordConversationCache.keys().next().value
-    if (!firstKey) {
-      break
-    }
-    discordConversationCache.delete(firstKey)
-  }
-}
-
 export const matchesDiscordConversationScope = ({
   chat,
   scope,
@@ -295,13 +269,13 @@ export const pickDiscordConversation = ({
   idleTimeoutMs: number
   nowMs?: number
 }) =>
-  chats
-    .filter(
-      chat =>
-        matchesDiscordConversationScope({ chat, scope }) &&
-        !isDiscordConversationExpired({ chat, idleTimeoutMs, nowMs })
-    )
-    .sort((a, b) => toSortTimestamp(b) - toSortTimestamp(a))[0]
+  pickLatestConversation({
+    chats,
+    scope,
+    idleTimeoutMs,
+    matchesConversationScope: matchesDiscordConversationScope,
+    nowMs,
+  })
 
 const findDiscordConversation = async ({
   db,
@@ -323,7 +297,12 @@ const findDiscordConversation = async ({
       matchesDiscordConversationScope({ chat: cachedChat, scope }) &&
       !isDiscordConversationExpired({ chat: cachedChat, idleTimeoutMs })
     ) {
-      setDiscordConversationCache(cacheKey, cachedChatId)
+      touchConversationCache({
+        cache: discordConversationCache,
+        cacheKey,
+        chatId: cachedChatId,
+        maxSize: getDiscordConversationCacheSize(),
+      })
       return cachedChat
     }
     discordConversationCache.delete(cacheKey)
@@ -346,7 +325,12 @@ const findDiscordConversation = async ({
 
   const picked = pickDiscordConversation({ chats, scope, idleTimeoutMs })
   if (picked?._id) {
-    setDiscordConversationCache(cacheKey, picked._id)
+    touchConversationCache({
+      cache: discordConversationCache,
+      cacheKey,
+      chatId: picked._id,
+      maxSize: getDiscordConversationCacheSize(),
+    })
   }
   return picked
 }
@@ -360,22 +344,21 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
 
 const handleDiscordInteraction = async ({
   interaction,
-  instance,
+  workspaceId,
   chatAppId,
   agentId,
 }: {
   interaction: DiscordInteraction
-  instance: string
+  workspaceId: string
   chatAppId: string
   agentId: string
 }) => {
-  const prodAppId = dbCore.getProdWorkspaceID(instance)
   const { application_id, token } = interaction
 
   const reply = (content: string) =>
     sendDiscordResponse(application_id, token, content)
 
-  await context.doInWorkspaceContext(prodAppId, async () => {
+  await context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
     const chatApp = await db.tryGet<ChatApp>(chatAppId)
     if (!chatApp) {
@@ -448,10 +431,15 @@ const handleDiscordInteraction = async ({
           },
         })
       )
-      setDiscordConversationCache(
-        getDiscordConversationCacheKey({ workspaceId: prodAppId, scope }),
-        chatId
-      )
+      touchConversationCache({
+        cache: discordConversationCache,
+        cacheKey: getDiscordConversationCacheKey({
+          workspaceId,
+          scope,
+        }),
+        chatId,
+        maxSize: getDiscordConversationCacheSize(),
+      })
       return reply(
         `Started a new conversation. Use /${askName} with a message.`
       )
@@ -466,7 +454,7 @@ const handleDiscordInteraction = async ({
         ? undefined
         : await findDiscordConversation({
             db,
-            workspaceId: prodAppId,
+            workspaceId,
             scope,
             idleTimeoutMs: getIdleTimeoutMs(discord?.idleTimeoutMinutes),
           })
@@ -486,9 +474,9 @@ const handleDiscordInteraction = async ({
       channel,
     }
 
-    let result: Awaited<ReturnType<typeof discordChat>>
+    let result: Awaited<ReturnType<typeof webhookChat>>
     try {
-      result = await discordChat({
+      result = await webhookChat({
         chat: draftChat,
         user: buildDiscordUserContext(userId, displayName),
       })
@@ -509,10 +497,15 @@ const handleDiscordInteraction = async ({
         existingChat,
       })
     )
-    setDiscordConversationCache(
-      getDiscordConversationCacheKey({ workspaceId: prodAppId, scope }),
-      chatId
-    )
+    touchConversationCache({
+      cache: discordConversationCache,
+      cacheKey: getDiscordConversationCacheKey({
+        workspaceId,
+        scope,
+      }),
+      chatId,
+      maxSize: getDiscordConversationCacheSize(),
+    })
 
     await reply(result.assistantText || "No response generated.")
   })
@@ -521,12 +514,12 @@ const handleDiscordInteraction = async ({
 export async function discordWebhook(
   ctx: Ctx<any, any, { instance: string; chatAppId: string; agentId: string }>
 ) {
-  const prodAppId = dbCore.getProdWorkspaceID(ctx.params.instance)
-  if (ctx.params.instance !== prodAppId) {
-    ctx.status = 400
-    ctx.body = {
-      error: "Discord webhook must target a production workspace ID",
-    }
+  const prodAppId = ensureProdWorkspaceWebhookRoute({
+    ctx,
+    instance: ctx.params.instance,
+    providerName: "Discord",
+  })
+  if (!prodAppId) {
     return
   }
 
@@ -554,7 +547,7 @@ export async function discordWebhook(
   let publicKey: string
   try {
     publicKey = await sdk.ai.deployments.discord.getDiscordPublicKeyForRoute({
-      instance: ctx.params.instance,
+      instance: prodAppId,
       agentId: ctx.params.agentId,
     })
   } catch (error) {
@@ -607,7 +600,7 @@ export async function discordWebhook(
     try {
       await handleDiscordInteraction({
         interaction,
-        instance: ctx.params.instance,
+        workspaceId: prodAppId,
         chatAppId: ctx.params.chatAppId,
         agentId: ctx.params.agentId,
       })

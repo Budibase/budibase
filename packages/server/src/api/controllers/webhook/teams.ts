@@ -8,7 +8,6 @@ import {
 import { v4 } from "uuid"
 import {
   context,
-  db as dbCore,
   docIds,
   HTTPError,
 } from "@budibase/backend-core"
@@ -26,17 +25,26 @@ import type {
 import { DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
 import {
-  agentChatComplete,
+  webhookChat,
   prepareChatConversationForSave,
   truncateTitle,
 } from "../ai/chatConversations"
+import {
+  ensureProdWorkspaceWebhookRoute,
+  isConversationExpired,
+  pickLatestConversation,
+  touchConversationCache,
+} from "./utils"
 
 const TEAMS_ASK_COMMAND = "ask"
 const TEAMS_NEW_COMMAND = "new"
 const TEAMS_DEFAULT_IDLE_TIMEOUT_MINUTES = 45
 const TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE = 5000
+const TEAMS_MAX_MESSAGE_LENGTH = 3500
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
+const TEAMS_WELCOME_MESSAGE =
+  `Budibase agent is ready. Send a message to chat, or "${TEAMS_NEW_COMMAND}" to start a new conversation.`
 
 const teamsConversationCache = new Map<string, string>()
 
@@ -47,13 +55,6 @@ interface TeamsRuntime {
 
 const teamsRuntimeCache = new Map<string, TeamsRuntime>()
 
-const toSortTimestamp = (chat: ChatConversation): number => {
-  const latest = chat.updatedAt || chat.createdAt
-  if (!latest) return 0
-  const parsed = new Date(latest).getTime()
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
 export const isTeamsConversationExpired = ({
   chat,
   idleTimeoutMs,
@@ -62,12 +63,7 @@ export const isTeamsConversationExpired = ({
   chat: ChatConversation
   idleTimeoutMs: number
   nowMs?: number
-}) => {
-  if (idleTimeoutMs <= 0) return false
-  const lastActivity = toSortTimestamp(chat)
-  if (!lastActivity) return false
-  return nowMs - lastActivity > idleTimeoutMs
-}
+}) => isConversationExpired({ chat, idleTimeoutMs, nowMs })
 
 export const getTeamsIdleTimeoutMs = () => {
   const configured = Number(process.env.TEAMS_CONVERSATION_IDLE_TIMEOUT_MINUTES)
@@ -101,25 +97,6 @@ const getTeamsConversationCacheKey = ({
     scope.channelId || "",
     scope.externalUserId,
   ].join(":")
-
-const setTeamsConversationCache = (cacheKey: string, chatId: string) => {
-  if (!chatId) {
-    return
-  }
-  if (teamsConversationCache.has(cacheKey)) {
-    teamsConversationCache.delete(cacheKey)
-  }
-  teamsConversationCache.set(cacheKey, chatId)
-
-  const maxSize = getTeamsConversationCacheSize()
-  while (teamsConversationCache.size > maxSize) {
-    const firstKey = teamsConversationCache.keys().next().value
-    if (!firstKey) {
-      break
-    }
-    teamsConversationCache.delete(firstKey)
-  }
-}
 
 export const matchesTeamsConversationScope = ({
   chat,
@@ -156,13 +133,13 @@ export const pickTeamsConversation = ({
   idleTimeoutMs: number
   nowMs?: number
 }) =>
-  chats
-    .filter(
-      chat =>
-        matchesTeamsConversationScope({ chat, scope }) &&
-        !isTeamsConversationExpired({ chat, idleTimeoutMs, nowMs })
-    )
-    .sort((a, b) => toSortTimestamp(b) - toSortTimestamp(a))[0]
+  pickLatestConversation({
+    chats,
+    scope,
+    idleTimeoutMs,
+    matchesConversationScope: matchesTeamsConversationScope,
+    nowMs,
+  })
 
 const findTeamsConversation = async ({
   db,
@@ -184,7 +161,12 @@ const findTeamsConversation = async ({
       matchesTeamsConversationScope({ chat: cachedChat, scope }) &&
       !isTeamsConversationExpired({ chat: cachedChat, idleTimeoutMs })
     ) {
-      setTeamsConversationCache(cacheKey, cachedChatId)
+      touchConversationCache({
+        cache: teamsConversationCache,
+        cacheKey,
+        chatId: cachedChatId,
+        maxSize: getTeamsConversationCacheSize(),
+      })
       return cachedChat
     }
     teamsConversationCache.delete(cacheKey)
@@ -202,7 +184,12 @@ const findTeamsConversation = async ({
 
   const picked = pickTeamsConversation({ chats, scope, idleTimeoutMs })
   if (picked?._id) {
-    setTeamsConversationCache(cacheKey, picked._id)
+    touchConversationCache({
+      cache: teamsConversationCache,
+      cacheKey,
+      chatId: picked._id,
+      maxSize: getTeamsConversationCacheSize(),
+    })
   }
   return picked
 }
@@ -228,6 +215,22 @@ const buildTeamsUserContext = (
 
 const getTeamsErrorMessage = (error: unknown) =>
   error instanceof HTTPError ? error.message : TEAMS_FALLBACK_ERROR_MESSAGE
+
+export const splitTeamsMessage = (
+  content: string,
+  maxLength = TEAMS_MAX_MESSAGE_LENGTH
+): string[] => {
+  const normalized = content || "No response generated."
+  if (normalized.length <= maxLength) {
+    return [normalized]
+  }
+
+  const chunks: string[] = []
+  for (let i = 0; i < normalized.length; i += maxLength) {
+    chunks.push(normalized.slice(i, i + maxLength))
+  }
+  return chunks
+}
 
 export const stripTeamsMentions = (text: string) =>
   text.replace(/<at>[^<]*<\/at>/gi, " ").replace(/\s+/g, " ").trim()
@@ -293,7 +296,7 @@ const getTeamsRuntime = ({
   appPassword: string
   tenantId?: string
 }): TeamsRuntime => {
-  const cacheKey = [agentId, appId, tenantId || ""].join(":")
+  const cacheKey = [agentId, appId, appPassword, tenantId || ""].join(":")
   const existing = teamsRuntimeCache.get(cacheKey)
   if (existing) {
     return existing
@@ -389,7 +392,10 @@ const handleTeamsMessage = async ({
   activity: TeamsActivity
 }) => {
   const reply = async (content: string) => {
-    await turnContext.sendActivity(content)
+    const chunks = splitTeamsMessage(content)
+    for (const chunk of chunks) {
+      await turnContext.sendActivity(chunk)
+    }
   }
 
   await context.doInWorkspaceContext(prodAppId, async () => {
@@ -473,10 +479,15 @@ const handleTeamsMessage = async ({
           },
         })
       )
-      setTeamsConversationCache(
-        getTeamsConversationCacheKey({ workspaceId: prodAppId, scope }),
-        chatId
-      )
+      touchConversationCache({
+        cache: teamsConversationCache,
+        cacheKey: getTeamsConversationCacheKey({
+          workspaceId: prodAppId,
+          scope,
+        }),
+        chatId,
+        maxSize: getTeamsConversationCacheSize(),
+      })
       return await reply("Started a new conversation. Send a message to continue.")
     }
 
@@ -513,9 +524,9 @@ const handleTeamsMessage = async ({
       channel,
     }
 
-    let result: Awaited<ReturnType<typeof agentChatComplete>>
+    let result: Awaited<ReturnType<typeof webhookChat>>
     try {
-      result = await agentChatComplete({
+      result = await webhookChat({
         chat: draftChat,
         user: buildTeamsUserContext(externalUserId, displayName),
       })
@@ -536,14 +547,36 @@ const handleTeamsMessage = async ({
       })
     )
 
-    setTeamsConversationCache(
-      getTeamsConversationCacheKey({ workspaceId: prodAppId, scope }),
-      chatId
-    )
+    touchConversationCache({
+      cache: teamsConversationCache,
+      cacheKey: getTeamsConversationCacheKey({
+        workspaceId: prodAppId,
+        scope,
+      }),
+      chatId,
+      maxSize: getTeamsConversationCacheSize(),
+    })
 
     await reply(result.assistantText || "No response generated.")
   })
 }
+
+const handleTeamsLifecycleActivity = async ({
+  turnContext,
+  activity,
+}: {
+  turnContext: TurnContext
+  activity: TeamsActivity
+}) => {
+  if (!isTeamsLifecycleActivity(activity)) {
+    return
+  }
+  await turnContext.sendActivity(TEAMS_WELCOME_MESSAGE)
+}
+
+export const isTeamsLifecycleActivity = (activity: TeamsActivity) =>
+  activity.type === "conversationUpdate" ||
+  activity.type === "installationUpdate"
 
 const handleTeamsTurn = async ({
   turnContext,
@@ -557,15 +590,19 @@ const handleTeamsTurn = async ({
   agentId: string
 }) => {
   const activity = turnContext.activity as TeamsActivity
-  if (activity.type !== "message") {
+  if (activity.type === "message") {
+    await handleTeamsMessage({
+      turnContext,
+      prodAppId,
+      chatAppId,
+      agentId,
+      activity,
+    })
     return
   }
 
-  await handleTeamsMessage({
+  await handleTeamsLifecycleActivity({
     turnContext,
-    prodAppId,
-    chatAppId,
-    agentId,
     activity,
   })
 }
@@ -574,7 +611,14 @@ export async function teamsWebhook(
   ctx: Ctx<any, any, { instance: string; chatAppId: string; agentId: string }>
 ) {
   const { instance, chatAppId, agentId } = ctx.params
-  const prodAppId = dbCore.getProdWorkspaceID(instance)
+  const prodAppId = ensureProdWorkspaceWebhookRoute({
+    ctx,
+    instance,
+    providerName: "Teams",
+  })
+  if (!prodAppId) {
+    return
+  }
 
   let integration: ReturnType<typeof sdk.ai.deployments.teams.validateTeamsIntegration>
   try {
@@ -634,7 +678,7 @@ export async function teamsWebhook(
     )
   } catch (error) {
     const message = getTeamsErrorMessage(error)
-    ctx.status = ctx.status || 500
+    ctx.status = 500
     ctx.body = { error: message }
   }
 }

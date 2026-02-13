@@ -1,19 +1,10 @@
 import crypto from "crypto"
 import fetch from "node-fetch"
-import {
-  configs,
-  context,
-  db as dbCore,
-  HTTPError,
-} from "@budibase/backend-core"
+import { context, db as dbCore, HTTPError } from "@budibase/backend-core"
 import { DiscordCommands } from "@budibase/shared-core"
-import type {
-  Agent,
-  ChatApp,
-  ResolvedDiscordIntegration,
-} from "@budibase/types"
+import type { Agent, ResolvedDiscordIntegration } from "@budibase/types"
 import * as agents from "../agents"
-import * as chatApps from "../chatApps"
+import * as shared from "./shared"
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10"
 const DISCORD_DEFAULT_SIGNATURE_MAX_AGE_SECONDS = 300
@@ -65,53 +56,25 @@ export const validateDiscordIntegration = (
   }
 }
 
-const enableAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
-  const existingAgents = chatApp.agents || []
-  const existing = existingAgents.find(agent => agent.agentId === agentId)
-  if (existing?.isEnabled) {
-    return chatApp
-  }
-
-  const updatedAgents = existing
-    ? existingAgents.map(agent =>
-        agent.agentId === agentId ? { ...agent, isEnabled: true } : agent
-      )
-    : [...existingAgents, { agentId, isEnabled: true, isDefault: false }]
-
-  return await chatApps.update({ ...chatApp, agents: updatedAgents })
-}
-
 export const resolveChatAppForAgent = async (
   agentId: string,
   chatAppId?: string
-) => {
-  if (chatAppId) {
-    const app = await chatApps.getOrThrow(chatAppId)
-    return await enableAgentOnChatApp(app, agentId)
-  }
-
-  const existing = await chatApps.getSingle()
-  if (existing) {
-    return await enableAgentOnChatApp(existing, agentId)
-  }
-
-  return await chatApps.create({
-    agents: [{ agentId, isEnabled: true, isDefault: false }],
+) =>
+  await shared.resolveChatAppForAgent({
+    agentId,
+    chatAppId,
   })
-}
 
 export const buildDiscordWebhookUrl = async (
   chatAppId: string,
   agentId: string
-) => {
-  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
-  const workspaceId = context.getWorkspaceId()
-  if (!workspaceId) {
-    throw new HTTPError("workspaceId is required", 400)
-  }
-  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
-  return `${platformUrl.replace(/\/$/, "")}/api/webhooks/discord/${prodWorkspaceId}/${chatAppId}/${agentId}`
-}
+) =>
+  await shared.buildWebhookUrl({
+    provider: "discord",
+    chatAppId,
+    agentId,
+    useProdWorkspaceId: true,
+  })
 
 export const buildDiscordInviteUrl = (applicationId: string) =>
   `https://discord.com/oauth2/authorize?client_id=${applicationId}&scope=bot+applications.commands&permissions=0`

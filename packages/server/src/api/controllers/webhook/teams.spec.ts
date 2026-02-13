@@ -1,8 +1,10 @@
 import type { ChatConversation } from "@budibase/types"
 import {
+  isTeamsLifecycleActivity,
   matchesTeamsConversationScope,
   parseTeamsCommand,
   pickTeamsConversation,
+  splitTeamsMessage,
   stripTeamsMentions,
 } from "./teams"
 
@@ -49,6 +51,18 @@ describe("teams webhook helpers", () => {
       command: "unsupported",
       content: "",
     })
+  })
+
+  it("splits long Teams responses into multiple messages", () => {
+    const chunks = splitTeamsMessage("x".repeat(7001), 3500)
+    expect(chunks).toHaveLength(3)
+    expect(chunks.map(chunk => chunk.length)).toEqual([3500, 3500, 1])
+  })
+
+  it("detects Teams lifecycle activities", () => {
+    expect(isTeamsLifecycleActivity({ type: "conversationUpdate" })).toBe(true)
+    expect(isTeamsLifecycleActivity({ type: "installationUpdate" })).toBe(true)
+    expect(isTeamsLifecycleActivity({ type: "message" })).toBe(false)
   })
 
   it("scopes conversations by chat app, agent, conversation, channel, and user", () => {

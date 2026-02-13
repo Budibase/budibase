@@ -1,6 +1,7 @@
 import * as ai from "../controllers/ai"
 import {
   createAgentValidator,
+  provisionAgentTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
@@ -45,8 +46,16 @@ builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
 
 // Agent Deployment Channel Routes
 builderAdminRoutes
-  .post("/api/agent/:agentId/discord/sync", ai.syncAgentDiscordCommands)
-  .post("/api/agent/:agentId/teams/provision", ai.provisionAgentTeamsChannel)
+  .post(
+    "/api/agent/:agentId/discord/sync",
+    syncAgentDiscordCommandsValidator(),
+    ai.syncAgentDiscordCommands
+  )
+  .post(
+    "/api/agent/:agentId/teams/provision",
+    provisionAgentTeamsChannelValidator(),
+    ai.provisionAgentTeamsChannel
+  )
 
 // these are Budibase AI routes
 licensedRoutes

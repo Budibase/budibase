@@ -71,6 +71,14 @@ export function updateAgentValidator() {
 }
 
 export function syncAgentDiscordCommandsValidator() {
+  return chatAppIdBodyValidator()
+}
+
+export function provisionAgentTeamsChannelValidator() {
+  return chatAppIdBodyValidator()
+}
+
+function chatAppIdBodyValidator() {
   return auth.joiValidator.body(
     Joi.object({
       chatAppId: OPTIONAL_STRING,

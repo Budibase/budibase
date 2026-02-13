@@ -122,19 +122,19 @@ export const truncateTitle = (value: string, maxLength = 120) => {
   return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`
 }
 
-interface DiscordChatCompleteResult {
+interface WebhookChatCompleteResult {
   messages: ChatConversation["messages"]
   assistantText: string
   title?: string
 }
 
-export async function discordChat({
+export async function webhookChat({
   chat,
   user,
 }: {
   chat: ChatConversationRequest
   user: ContextUser
-}): Promise<DiscordChatCompleteResult> {
+}): Promise<WebhookChatCompleteResult> {
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
 

@@ -1,3 +1,5 @@
+import { context } from "@budibase/backend-core"
+import type { Agent } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("agent teams integration provisioning", () => {
@@ -34,6 +36,35 @@ describe("agent teams integration provisioning", () => {
     expect(updated?.teamsIntegration?.messagingEndpointUrl).toEqual(
       result.messagingEndpointUrl
     )
+  })
+
+  it("obfuscates teams secrets in responses and preserves them on update", async () => {
+    const created = await config.api.agent.create({
+      name: "Teams Obfuscation Agent",
+      aiconfig: "test-config",
+      teamsIntegration: {
+        appId: "teams-app-id",
+        appPassword: "teams-app-password",
+      },
+    })
+
+    expect(created.teamsIntegration?.appPassword).toEqual("********")
+
+    const { agents } = await config.api.agent.fetch()
+    const fetched = agents.find(a => a._id === created._id)
+    expect(fetched?.teamsIntegration?.appPassword).toEqual("********")
+
+    const updated = await config.api.agent.update({
+      ...(fetched as NonNullable<typeof fetched>),
+      live: true,
+    })
+    expect(updated.teamsIntegration?.appPassword).toEqual("********")
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const stored = await db.get<Agent>(created._id!)
+      expect(stored.teamsIntegration?.appPassword).toEqual("teams-app-password")
+    })
   })
 
   it("returns a validation error when teams settings are missing", async () => {

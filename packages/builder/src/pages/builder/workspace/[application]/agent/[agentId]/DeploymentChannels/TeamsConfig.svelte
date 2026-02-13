@@ -27,18 +27,17 @@
   let provisioning = $state(false)
   let provisionResult = $state<ProvisionAgentTeamsChannelResponse | undefined>()
 
-  const isConnected = $derived.by(() => {
-    if (provisionResult?.success) {
-      return true
-    }
-    return !!(draft.appId.trim() && draft.appPassword.trim())
-  })
-
   const messagingEndpointUrl = $derived(
     provisionResult?.messagingEndpointUrl ||
       agent?.teamsIntegration?.messagingEndpointUrl ||
       ""
   )
+
+  const hasRequiredCredentials = $derived.by(
+    () => !!(draft.appId.trim() && draft.appPassword.trim())
+  )
+
+  const isProvisioned = $derived.by(() => messagingEndpointUrl.trim().length > 0)
 
   $effect(() => {
     const currentAgent = agent
@@ -91,10 +90,10 @@
       })
       provisionResult = await agentsStore.provisionTeamsChannel(agent._id)
       await agentsStore.fetchAgents()
-      notifications.success("Microsoft Teams channel enabled")
+      notifications.success("Microsoft Teams channel settings saved")
     } catch (error) {
       console.error(error)
-      notifications.error("Failed to enable Microsoft Teams channel")
+      notifications.error("Failed to save Microsoft Teams channel settings")
     } finally {
       provisioning = false
     }
@@ -120,17 +119,20 @@
   <div class="response-section">
     <Label size="L">Response</Label>
     <div class="status-light">
-      <StatusLight positive={isConnected} neutral={!isConnected}>
-        {isConnected ? "Connected" : "Not connected"}
+      <StatusLight positive={isProvisioned} neutral={!isProvisioned}>
+        {isProvisioned ? "Configured" : "Not configured"}
       </StatusLight>
     </div>
 
     <Body size="S">
-      Users can send any message to chat. Add `{TEAMS_NEW_COMMAND}` as a command
-      to start a new conversation.
+      Settings are saved when the endpoint URL is available.
     </Body>
     <Body size="S">
-      Supported scopes: personal chat, group chat, and team channel chat.
+      In team channels, users may need to mention the bot unless message-read
+      permissions are configured in Teams.
+    </Body>
+    <Body size="S">
+      Use `{TEAMS_NEW_COMMAND}` to start a new conversation.
     </Body>
 
     <CopyInput
@@ -141,12 +143,16 @@
   </div>
 
   <div class="actions">
-    <Button cta on:click={provisionTeamsChannel} disabled={provisioning}>
+    <Button
+      cta
+      on:click={provisionTeamsChannel}
+      disabled={provisioning || !hasRequiredCredentials}
+    >
       {provisioning
-        ? "Enabling..."
-        : isConnected
-          ? "Update channel"
-          : "Enable channel"}
+        ? "Saving..."
+        : isProvisioned
+          ? "Save changes"
+          : "Save channel"}
     </Button>
   </div>
 </div>

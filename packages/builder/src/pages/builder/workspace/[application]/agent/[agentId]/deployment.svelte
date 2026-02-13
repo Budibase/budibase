@@ -29,7 +29,11 @@
 
   const teamsConfigured = $derived.by(() => {
     const integration = currentAgent?.teamsIntegration
-    return !!(integration?.appId?.trim() && integration?.appPassword?.trim())
+    return !!(
+      integration?.appId?.trim() &&
+      integration?.appPassword?.trim() &&
+      integration?.messagingEndpointUrl?.trim()
+    )
   })
 
   const channels = $derived.by<DeploymentRow[]>(() => [
@@ -46,7 +50,7 @@
       name: "Microsoft Teams",
       logo: TeamsLogo,
       status: teamsConfigured ? "Enabled" : "Disabled",
-      details: "Allow this agent to respond in Teams personal, group, and team chats",
+      details: "Configure this agent for Teams personal, group, and team chats",
       configurable: true,
     },
   ])

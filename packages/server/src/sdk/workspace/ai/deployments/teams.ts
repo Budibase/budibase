@@ -1,6 +1,6 @@
-import { configs, context, HTTPError } from "@budibase/backend-core"
-import type { Agent, ChatApp, ResolvedTeamsIntegration } from "@budibase/types"
-import * as chatApps from "../chatApps"
+import { HTTPError } from "@budibase/backend-core"
+import type { Agent, ResolvedTeamsIntegration } from "@budibase/types"
+import * as shared from "./shared"
 
 export const validateTeamsIntegration = (
   agent: Agent
@@ -28,46 +28,19 @@ export const validateTeamsIntegration = (
   }
 }
 
-const enableAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
-  const existingAgents = chatApp.agents || []
-  const existing = existingAgents.find(agent => agent.agentId === agentId)
-  if (existing?.isEnabled) {
-    return chatApp
-  }
-
-  const updatedAgents = existing
-    ? existingAgents.map(agent =>
-        agent.agentId === agentId ? { ...agent, isEnabled: true } : agent
-      )
-    : [...existingAgents, { agentId, isEnabled: true, isDefault: false }]
-
-  return await chatApps.update({ ...chatApp, agents: updatedAgents })
-}
-
 export const resolveChatAppForAgent = async (
   agentId: string,
   chatAppId?: string
-) => {
-  if (chatAppId) {
-    const app = await chatApps.getOrThrow(chatAppId)
-    return await enableAgentOnChatApp(app, agentId)
-  }
-
-  const existing = await chatApps.getSingle()
-  if (existing) {
-    return await enableAgentOnChatApp(existing, agentId)
-  }
-
-  return await chatApps.create({
-    agents: [{ agentId, isEnabled: true, isDefault: false }],
+) =>
+  await shared.resolveChatAppForAgent({
+    agentId,
+    chatAppId,
   })
-}
 
-export const buildTeamsWebhookUrl = async (chatAppId: string, agentId: string) => {
-  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
-  const workspaceId = context.getWorkspaceId()
-  if (!workspaceId) {
-    throw new HTTPError("workspaceId is required", 400)
-  }
-  return `${platformUrl.replace(/\/$/, "")}/api/webhooks/teams/${workspaceId}/${chatAppId}/${agentId}`
-}
+export const buildTeamsWebhookUrl = async (chatAppId: string, agentId: string) =>
+  await shared.buildWebhookUrl({
+    provider: "teams",
+    chatAppId,
+    agentId,
+    useProdWorkspaceId: true,
+  })
