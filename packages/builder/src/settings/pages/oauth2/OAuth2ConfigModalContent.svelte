@@ -30,6 +30,7 @@
   $: data = (config as Partial<OAuth2Config>) ?? {}
 
   $: data.grantType ??= OAuth2GrantType.CLIENT_CREDENTIALS
+  $: data.audience ??= "bbdemo"
 
   $: isCreation = !config
   $: title = isCreation
@@ -75,6 +76,10 @@
         .string()
         .transform(s => s || undefined)
         .optional(),
+      audience: z
+        .string()
+        .transform(s => s || undefined)
+        .optional(),
     }) satisfies ZodType<InsertOAuth2ConfigRequest>
 
     const validationResult = validator.safeParse(config)
@@ -111,6 +116,7 @@
         method: configData.method,
         grantType: configData.grantType,
         scope: configData.scope,
+        audience: configData.audience,
       })
       if (!connectionValidation.valid) {
         let message = "Connection settings could not be validated"
@@ -227,6 +233,17 @@
     bind:value={data.scope}
     error={errors.scope}
   />
+  <Input
+    label="Audience"
+    placeholder="E.g. bbdemo, https://api.myapp.com"
+    bind:value={data.audience}
+    error={errors.audience}
+  />
+  <div class="field-info">
+    <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+      The intended recipient of the token. Required by some providers like Auth0.
+    </Body>
+  </div>
 </ModalContent>
 
 <style>

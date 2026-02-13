@@ -22,6 +22,7 @@ async function fetchToken(config: {
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
   scope?: string
+  audience?: string
 }) {
   config = await processEnvironmentVariable(config)
 
@@ -54,6 +55,9 @@ async function fetchToken(config: {
   }
   if (config.scope) {
     bodyParams.scope = config.scope
+  }
+  if (config.audience) {
+    bodyParams.audience = config.audience
   }
   fetchConfig.body = new URLSearchParams(bodyParams)
 
@@ -106,6 +110,7 @@ export async function validateConfig(config: {
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
   scope?: string
+  audience?: string
 }): Promise<{ valid: boolean; message?: string }> {
   try {
     const resp = await fetchToken(config)
