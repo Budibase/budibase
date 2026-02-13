@@ -10,7 +10,7 @@ import {
   type UploadFileResponse,
 } from "@budibase/types"
 import { bbai } from "../../../sdk/workspace/ai/llm"
-import { generateText, streamText } from "ai"
+import { generateText, ModelMessage, streamText } from "ai"
 
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
@@ -46,7 +46,29 @@ export async function chatCompletion(
   }
 
   const llm = await ai.getLLMOrThrow()
-  ctx.body = await llm.chat(ai.LLMRequest.fromRequest(ctx.request.body))
+  const response = await llm.chat(ai.LLMRequest.fromRequest(ctx.request.body))
+
+  const flatMessage = (message: ModelMessage) => {
+    if (message.role === "tool") {
+      return message
+    }
+    if (typeof message.content === "string") {
+      return message
+    }
+
+    return {
+      role: message.role,
+      content: message.content
+        .filter(c => c.type === "text")
+        .map(c => c.text)
+        .join("\n\n"),
+    }
+  }
+
+  ctx.body = {
+    messages: response.messages.map(flatMessage),
+    tokensUsed: response.tokensUsed,
+  }
 }
 
 export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {

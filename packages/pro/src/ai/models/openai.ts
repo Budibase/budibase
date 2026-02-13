@@ -15,6 +15,7 @@ import {
   type OpenAIChatLanguageModelOptions,
 } from "@ai-sdk/openai"
 import { ProviderV3, SharedV3ProviderOptions } from "@ai-sdk/provider"
+import z from "zod"
 
 export type OpenAIModel =
   | "gpt-4o-mini"
@@ -50,6 +51,10 @@ export function parseResponseFormat(
   }
   if (responseFormat === "json") {
     return Output.json()
+  }
+
+  if (!(responseFormat instanceof z.ZodObject)) {
+    return Output.object({ schema: z.fromJSONSchema(responseFormat) })
   }
 
   return Output.object({ schema: responseFormat })

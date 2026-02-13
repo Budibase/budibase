@@ -46,6 +46,17 @@ jest.mock("@budibase/types", () => {
   }
 })
 
+function toResponseFormat(schema: any, name = "response") {
+  return {
+    type: "json_schema" as const,
+    json_schema: {
+      name,
+      strict: false,
+      schema: schema.toJSONSchema({ target: "draft-7" }),
+    },
+  }
+}
+
 function dedent(str: string) {
   return str
     .split("\n")
@@ -351,7 +362,7 @@ describe("BudibaseAI", () => {
       expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
-      mockChatGPTResponse("Hi there!")
+      mockOpenAIResponsesResponse("Hi there!")
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         licenseKey: licenseKey,
@@ -372,7 +383,7 @@ describe("BudibaseAI", () => {
     })
 
     it("handles chat response error", async () => {
-      mockChatGPTResponse(() => {
+      mockOpenAIResponsesResponse(() => {
         throw new Error("LLM error")
       })
       await config.api.ai.chat(
@@ -417,7 +428,7 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.word()
-      mockChatGPTResponse(gptResponse, { format: "text" })
+      mockOpenAIResponsesResponse(gptResponse, { format: "text" })
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "text",
@@ -446,7 +457,7 @@ describe("BudibaseAI", () => {
       const gptResponse = JSON.stringify({
         [generator.word()]: generator.word(),
       })
-      mockChatGPTResponse(gptResponse, { format: "json" })
+      mockOpenAIResponsesResponse(gptResponse, { format: "json" })
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "json",
@@ -476,10 +487,12 @@ describe("BudibaseAI", () => {
       const structuredOutput = z.object({
         [generator.word()]: z.string(),
       })
-      mockChatGPTResponse(gptResponse, { format: structuredOutput })
+      mockOpenAIResponsesResponse(gptResponse, {
+        format: toResponseFormat(structuredOutput),
+      })
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
-        format: structuredOutput,
+        format: toResponseFormat(structuredOutput),
         licenseKey: licenseKey,
       })
       expect(messages).toEqual([

@@ -1,12 +1,12 @@
+import openai from "openai"
 import { EnrichedBinding } from "../../ui"
 import { ModelMessage, UserContent as AIUserContent } from "ai"
-import type z from "zod"
 
 export type UserContent = string | AIUserContent
 
 export type Message = ModelMessage
 
-export type ResponseFormat = "text" | "json" | z.ZodObject
+export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
 
 export interface ChatCompletionRequestV2 {
   messages: ModelMessage[]
