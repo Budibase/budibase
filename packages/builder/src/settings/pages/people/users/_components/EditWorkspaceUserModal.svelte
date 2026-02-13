@@ -87,6 +87,9 @@
       draft.lastName !== initialDraft.lastName ||
       draft.role !== initialDraft.role ||
       draft.appRole !== initialDraft.appRole)
+  $: hasRoleChanges =
+    !!initialDraft &&
+    (draft.role !== initialDraft.role || draft.appRole !== initialDraft.appRole)
 
   $: if (user?._id && user._id !== selectedUserId) {
     selectedUserId = user._id
@@ -178,7 +181,7 @@
         return keepOpen
       }
 
-      if (!disableRole) {
+      if (!disableRole && hasRoleChanges) {
         const appRole = sanitizeAppRole(draft.appRole)
         const desiredWorkspaceRole = getWorkspaceRole(draft.role, appRole)
         const currentWorkspaceRole = updated.roles?.[workspaceId]
