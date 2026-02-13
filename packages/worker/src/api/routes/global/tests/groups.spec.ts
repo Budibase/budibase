@@ -451,7 +451,6 @@ describe("/api/global/groups", () => {
     let group: UserGroup
 
     beforeEach(async () => {
-      mocks.licenses.useAppBuilders()
       const groupResponse = await config.api.groups.saveGroup(
         structures.groups.UserGroup()
       )
