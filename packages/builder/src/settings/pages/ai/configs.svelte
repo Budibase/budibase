@@ -124,23 +124,20 @@
     </div>
     <div class="model-list">
       <Table
+        compact
         data={completionConfigs}
-        schema={{ icon: {}, name: {}, provider: {}, edit: {} }}
+        schema={{
+          icon: { width: "40px" },
+          name: { width: "200px" },
+          model: {},
+          edit: { width: "64px" },
+        }}
         {customRenderers}
         hideHeader
         rounded
         allowClickRows={false}
         allowEditRows={false}
       ></Table>
-      {#each completionConfigs as config (config._id)}
-        <CustomAIConfigTile
-          actionType="edit"
-          displayName={config.name}
-          provider={config.provider}
-          description={config.model}
-          editHandler={() => editAIConfig(config)}
-        ></CustomAIConfigTile>
-      {/each}
     </div>
   {/if}
   <div class="section-header new-provider-section">
