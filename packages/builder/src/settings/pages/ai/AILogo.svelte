@@ -10,6 +10,9 @@
 
   export let row: AIConfigResponse
 
+  const invertOnLight = new Set(["Anthropic", "Budibase", "OpenAI"])
+  const invertOnDark = new Set(["Openrouter"])
+
   function getProviderLogo(providerName: string) {
     const providerToLogo = {
       Anthropic: AnthropicLogo,
@@ -23,9 +26,19 @@
 
     return providerToLogo[providerName as keyof typeof providerToLogo] || null
   }
+
+  function getThemeClass(providerName: string) {
+    if (invertOnLight.has(providerName)) {
+      return "invert-on-light"
+    }
+    if (invertOnDark.has(providerName)) {
+      return "invert-on-dark"
+    }
+    return ""
+  }
 </script>
 
-<span class="model-icon">
+<span class={`model-icon ${getThemeClass(row.provider)}`}>
   <img src={getProviderLogo(row.provider)} alt="" />
 </span>
 
@@ -42,5 +55,17 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+
+  :global(.spectrum--light) .model-icon.invert-on-light img,
+  :global(.spectrum--lightest) .model-icon.invert-on-light img {
+    filter: invert(100%);
+  }
+
+  :global(.spectrum--darkest) .model-icon.invert-on-dark img,
+  :global(.spectrum--dark) .model-icon.invert-on-dark img,
+  :global(.spectrum--nord) .model-icon.invert-on-dark img,
+  :global(.spectrum--midnight) .model-icon.invert-on-dark img {
+    filter: invert(100%);
   }
 </style>
