@@ -13,8 +13,10 @@
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
   export let getOptionTitle = option => extractProperty(option, "label")
-  export let getOptionSubtitle = option => extractProperty(option, "subtitle", undefined)
-  export let getOptionDisabled = option => extractProperty(option, "disabled", false)
+  export let getOptionSubtitle = option =>
+    extractProperty(option, "subtitle", undefined)
+  export let getOptionDisabled = option =>
+    extractProperty(option, "disabled", false)
   export let helpText = undefined
 
   const dispatch = createEventDispatcher()
