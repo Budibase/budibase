@@ -224,7 +224,7 @@
                       class="app"
                       target="_blank"
                       rel="noreferrer"
-                      href={`/app${chatApp.url}/_chat`}
+                      href={`/app-chat${chatApp.url}`}
                     >
                       <div
                         class="preview"

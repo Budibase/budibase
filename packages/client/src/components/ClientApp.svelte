@@ -84,7 +84,8 @@
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
   $: isChatOnlyRoute =
     typeof window !== "undefined" &&
-    window.location.pathname.replace(/\/$/, "").endsWith("/_chat")
+    (window.location.pathname.replace(/\/$/, "").endsWith("/_chat") ||
+      window.location.pathname.startsWith("/app-chat/"))
   $: resolvedThemeClassNames = getThemeClassNames(
     isChatOnlyRoute ? DefaultBuilderTheme : $themeStore.theme
   )

@@ -96,6 +96,26 @@ describe("workspaceApps utils", () => {
           expect(result?._id).toEqual(workspaceApps[1]._id)
         })
       })
+
+      it("should match the default workspace app for published chat route", async () => {
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const result = await getMatchedWorkspaceApp(
+            `/app-chat/${config.getDevWorkspaceId()}${closingChar}`
+          )
+          expect(result).toBeDefined()
+          expect(result?._id).toEqual(workspaceApps[0]._id)
+        })
+      })
+
+      it("should match the default workspace app for published chat route with trailing segments", async () => {
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const result = await getMatchedWorkspaceApp(
+            `/app-chat/${config.getDevWorkspaceId()}/history${closingChar}`
+          )
+          expect(result).toBeDefined()
+          expect(result?._id).toEqual(workspaceApps[0]._id)
+        })
+      })
     }
   )
 })

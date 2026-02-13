@@ -331,23 +331,8 @@ export async function fetchClientChatApps(
 
   const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
   for (const workspace of workspaces) {
-    const { chatApp, workspaceAppUrl } = await context.doInWorkspaceContext(
-      workspace.appId,
-      async () => {
-        const [chatApp, workspaceApps] = await Promise.all([
-          sdk.ai.chatApps.getSingle(),
-          sdk.workspaceApps.fetch(),
-        ])
-
-        const workspaceApp =
-          workspaceApps.find(app => app.isDefault && !app.disabled) ||
-          workspaceApps.find(app => !app.disabled)
-
-        return {
-          chatApp,
-          workspaceAppUrl: workspaceApp?.url || "",
-        }
-      }
+    const chatApp = await context.doInWorkspaceContext(workspace.appId, () =>
+      sdk.ai.chatApps.getSingle()
     )
 
     if (!chatApp?.live || !chatApp._id) {
@@ -358,7 +343,7 @@ export async function fetchClientChatApps(
       appId: workspace.appId,
       chatAppId: chatApp._id,
       name: chatApp.title || workspace.name,
-      url: `${workspace.url}${workspaceAppUrl}`.replace(/\/$/, ""),
+      url: `${workspace.url}`.replace(/\/$/, ""),
       updatedAt: chatApp.updatedAt || workspace.updatedAt,
     })
   }

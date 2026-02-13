@@ -6,15 +6,24 @@ export async function getMatchedWorkspaceApp(
   fromUrl: string
 ): Promise<WorkspaceApp | undefined> {
   const workspace = await sdk.workspaces.metadata.get()
+  const normalizedFromUrl = fromUrl.split("?")[0]
   const baseUrl = db.isProdWorkspaceID(workspace.appId)
     ? `/app/${workspace.url}`.replace("//", "/")
     : `/${workspace.appId}`
+
+  const chatUrl = db.isProdWorkspaceID(workspace.appId)
+    ? `/app-chat/${workspace.url}`.replace("//", "/")
+    : `/app-chat/${workspace.appId}`
 
   const embedUrl = db.isProdWorkspaceID(workspace.appId)
     ? `/embed/${workspace.url}`.replace("//", "/")
     : null
 
   const allWorkspaceApps = await sdk.workspaceApps.fetch()
+  const enabledWorkspaceApps = allWorkspaceApps.filter(app => !app.disabled)
+
+  const getDefaultWorkspaceApp = () =>
+    enabledWorkspaceApps.find(app => app.isDefault) || enabledWorkspaceApps[0]
 
   function isWorkspaceAppMatch(
     urlPath: string,
@@ -34,13 +43,20 @@ export async function getMatchedWorkspaceApp(
       isWorkspaceAppMatch(urlPath, workspaceApp)
     )
 
-  const matchedWorkspaceApp = findWorkspaceApp(fromUrl)
+  if (
+    normalizedFromUrl.replace(/\/$/, "") === chatUrl.replace(/\/$/, "") ||
+    normalizedFromUrl.startsWith(`${chatUrl.replace(/\/$/, "")}/`)
+  ) {
+    return getDefaultWorkspaceApp()
+  }
+
+  const matchedWorkspaceApp = findWorkspaceApp(normalizedFromUrl)
   if (matchedWorkspaceApp) {
     return matchedWorkspaceApp
   }
 
-  const chatPath = fromUrl.replace(/\/_chat(?:\/.*)?$/, "")
-  if (chatPath !== fromUrl) {
+  const chatPath = normalizedFromUrl.replace(/\/_chat(?:\/.*)?$/, "")
+  if (chatPath !== normalizedFromUrl) {
     return findWorkspaceApp(chatPath)
   }
 
