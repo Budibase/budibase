@@ -44,6 +44,7 @@ export interface Route {
   group?: string
   color?: string // for highlighting
   skipNav?: boolean // Exclude from nav tabs but still process as navigable route
+  props?: Record<string, unknown> // Props to pass to the component
 
   nav?: Route[]
   regex?: RegExp
@@ -134,6 +135,7 @@ export const flatten = (
         path: currentPath,
         section: section || entry.section,
         crumbs: currentTrail,
+        props: entry.props,
       })
     }
 
