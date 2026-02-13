@@ -257,6 +257,7 @@
       <div class="role-select">
         <Select
           label="Select role"
+          placeholder={false}
           bind:value={selectedRole}
           options={Constants.BudibaseRoleOptions}
           getOptionLabel={option => option.label}

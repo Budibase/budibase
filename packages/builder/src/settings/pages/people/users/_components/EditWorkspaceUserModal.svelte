@@ -229,6 +229,7 @@
     <div class="role-select">
       <Select
         label="Select role"
+        placeholder={false}
         bind:value={draft.role}
         options={roleOptions}
         getOptionLabel={option => option.label}
