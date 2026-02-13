@@ -11,7 +11,7 @@
     DraftChatConversation,
     WithoutDocMetadata,
   } from "@budibase/types"
-  import { appStore } from "@/stores"
+  import { appStore, authStore } from "@/stores"
   import { onMount } from "svelte"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
@@ -22,6 +22,12 @@
     isDefault?: boolean
     icon?: string
     iconColor?: string
+  }
+
+  type ChatUser = {
+    firstName?: string
+    lastName?: string
+    email?: string
   }
 
   const INITIAL_CHAT: WithoutDocMetadata<DraftChatConversation> = {
@@ -51,7 +57,28 @@
   let chatAgents: ChatAppAgent[] = []
   let agents: Agent[] = []
 
+  const getUserLabel = (user?: ChatUser) => {
+    if (!user) {
+      return ""
+    }
+
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`
+    }
+
+    if (user.firstName) {
+      return user.firstName
+    }
+
+    if (user.lastName) {
+      return user.lastName
+    }
+
+    return user.email || ""
+  }
+
   $: workspaceId = $appStore?.appId ?? ""
+  $: userName = getUserLabel($authStore)
   $: filteredConversationHistory = conversationHistory.filter(conversation => {
     if (!conversation?.agentId) {
       return false
@@ -277,6 +304,7 @@
       {selectedAgentId}
       {selectedAgentName}
       {workspaceId}
+      {userName}
       {conversationStarters}
       {isAgentKnown}
       {isAgentLive}
