@@ -432,6 +432,9 @@
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
   }
+  .spectrum-Picker--quiet {
+    padding: 0 8px;
+  }
   .spectrum-Picker-label.auto-width {
     margin-right: var(--spacing-xs);
   }

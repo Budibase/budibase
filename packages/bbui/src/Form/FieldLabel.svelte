@@ -7,6 +7,7 @@
   export let label
   export let position = "above"
   export let tooltip = ""
+  export let required = false
 
   $: className = position === "above" ? "" : `spectrum-FieldLabel--${position}`
 </script>
@@ -17,6 +18,9 @@
     class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${className}`}
   >
     {label || ""}
+    {#if required}
+      <sup class="required-asterisk">*</sup>
+    {/if}
   </label>
 </TooltipWrapper>
 
@@ -28,5 +32,10 @@
   .spectrum-FieldLabel--right,
   .spectrum-FieldLabel--left {
     padding-right: var(--spectrum-global-dimension-size-200);
+  }
+
+  .required-asterisk {
+    color: var(--spectrum-global-color-red-500);
+    margin-left: -2px;
   }
 </style>

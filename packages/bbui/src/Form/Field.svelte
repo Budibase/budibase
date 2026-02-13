@@ -10,11 +10,18 @@
   export let error: string | undefined | false = undefined
   export let helpText: string | undefined = undefined
   export let tooltip: string | undefined = undefined
+  export let required: boolean | undefined = false
 </script>
 
 <div class="spectrum-Form-item" class:above={labelPosition === "above"}>
   {#if label}
-    <FieldLabel forId={id} {label} position={labelPosition} {tooltip} />
+    <FieldLabel
+      forId={id}
+      {label}
+      position={labelPosition}
+      {tooltip}
+      {required}
+    />
   {/if}
   <div class="spectrum-Form-itemField">
     <slot />
