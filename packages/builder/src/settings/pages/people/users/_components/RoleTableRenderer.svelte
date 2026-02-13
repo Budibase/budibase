@@ -10,21 +10,21 @@
   )
   const isBuiltInEndUserRole = roleId =>
     roleId === Constants.Roles.BASIC || roleId === Constants.Roles.ADMIN
-  const getWorkspaceRoleLabel = roleId => {
+  const getWorkspaceRoleLabel = (roleId, availableRoles) => {
     if (!roleId || roleId === Constants.Roles.BASIC) {
       return "Basic"
     }
     if (roleId === Constants.Roles.ADMIN) {
       return "Admin"
     }
-    const customRole = $roles.find(x => x._id === roleId)
+    const customRole = availableRoles.find(x => x._id === roleId)
     return customRole?.uiMetadata?.displayName || customRole?.name || roleId
   }
   $: value =
     role?.value === Constants.BudibaseRoles.AppUser && row?.workspaceRole
       ? isBuiltInEndUserRole(row.workspaceRole)
-        ? `${role.label}: ${getWorkspaceRoleLabel(row.workspaceRole)}`
-        : getWorkspaceRoleLabel(row.workspaceRole)
+        ? `${role.label}: ${getWorkspaceRoleLabel(row.workspaceRole, $roles)}`
+        : getWorkspaceRoleLabel(row.workspaceRole, $roles)
       : role?.label || "Not available"
   $: tooltip = role?.subtitle || ""
 </script>

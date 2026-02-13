@@ -182,17 +182,12 @@
         const appRole = sanitizeAppRole(draft.appRole)
         const desiredWorkspaceRole = getWorkspaceRole(draft.role, appRole)
         const currentWorkspaceRole = updated.roles?.[workspaceId]
-        if (
-          desiredWorkspaceRole &&
-          currentWorkspaceRole !== desiredWorkspaceRole
-        ) {
+        if (currentWorkspaceRole !== desiredWorkspaceRole) {
           await users.addUserToWorkspace(
             user._id,
             desiredWorkspaceRole,
             updated._rev
           )
-        } else if (!desiredWorkspaceRole && currentWorkspaceRole) {
-          await users.removeUserFromWorkspace(user._id, updated._rev)
         }
       }
 
