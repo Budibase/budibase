@@ -88,6 +88,9 @@ export interface RestQueryFields {
   method?: string
   authConfigId?: string
   authConfigType?: RestAuthType
+  // References auth from another source: "workspace_connection_xyz" or "datasource_xyz"
+  // When undefined, uses own datasource's authConfigs (legacy behaviour)
+  authSourceId?: string
   pagination?: PaginationConfig
   paginationValues?: PaginationValues
 }

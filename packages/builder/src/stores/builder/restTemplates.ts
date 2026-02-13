@@ -1,7 +1,8 @@
-import {
+import type {
   RestTemplate,
   RestTemplateGroup,
   RestTemplateGroupName,
+  RestTemplateId,
   RestTemplateName,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
@@ -1815,6 +1816,15 @@ const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
   ],
 }
 
+// Microsoft SharePoint templates were renamed from "SharePoint X" to "X"
+// to match the slugify pattern (group prefix + name = id). This alias map
+// maintains backwards compatibility for legacy datasources.
+const MICROSOFT_SHAREPOINT_NAME_ALIASES: Record<string, string> = {
+  "SharePoint Sites": "Sites",
+  "SharePoint Drives": "Drives",
+  "SharePoint Shares": "Shares",
+}
+
 const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePoint"> =
   {
     name: "Microsoft SharePoint",
@@ -1825,8 +1835,8 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
     operationsCount: 2826,
     templates: [
       {
-        id: "sharepoint-sites",
-        name: "SharePoint Sites",
+        id: "microsoft-sharepoint-sites",
+        name: "Sites",
         description: "SharePoint sites, lists, and content types.",
         specs: [
           {
@@ -1837,8 +1847,8 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
         operationsCount: 650,
       },
       {
-        id: "sharepoint-drives",
-        name: "SharePoint Drives",
+        id: "microsoft-sharepoint-drives",
+        name: "Drives",
         description: "Drive items and file operations for SharePoint.",
         specs: [
           {
@@ -1849,8 +1859,8 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
         operationsCount: 2024,
       },
       {
-        id: "sharepoint-shares",
-        name: "SharePoint Shares",
+        id: "microsoft-sharepoint-shares",
+        name: "Shares",
         description: "Shared items and sharing operations for SharePoint.",
         specs: [
           {
@@ -1914,6 +1924,21 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
 
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
+    {
+      id: "fake-auth0-test",
+      name: "Fake Auth0 Test",
+      description:
+        "Test API with OAuth2 client credentials flow for Auth0 testing",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "http://localhost:5000/openapi.json",
+        },
+      ],
+      operationsCount: 2,
+      icon: OktaLogo,
+      verified: true,
+    },
     {
       id: "attio",
       name: "Attio",
@@ -3034,17 +3059,18 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
     return templateGroups
   }
 
-  getByName(name?: RestTemplateName) {
+  getByName(name?: string) {
     if (!name) {
       return undefined
     }
-    const template = this.templates.find(template => template.name === name)
+    const actualName = MICROSOFT_SHAREPOINT_NAME_ALIASES[name] || name
+    const template = this.templates.find(template => template.name === actualName)
     if (template) {
       return template
     }
     for (const group of this.templateGroups) {
       const groupTemplate = group.templates.find(
-        template => template.name === name
+        template => template.name === actualName
       )
       if (groupTemplate) {
         return {
@@ -3054,6 +3080,52 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
       }
     }
     return undefined
+  }
+
+  private slugify(str: string): string {
+    return str
+      .toLowerCase()
+      .replace(/['"&]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+  }
+
+  getById(id: string, groupName?: string) {
+    const searchId = (targetId: string) => {
+      const template = this.templates.find(t => t.id === targetId)
+      if (template) {
+        return template
+      }
+
+      for (const group of this.templateGroups) {
+        const groupTemplate = group.templates.find(t => t.id === targetId)
+        if (groupTemplate) {
+          return { ...groupTemplate, icon: group.icon }
+        }
+      }
+      return undefined
+    }
+
+    // If group provided, try with group prefix first
+    if (groupName) {
+      const groupSlug = this.slugify(groupName)
+      const withPrefix = `${groupSlug}-${id}`
+      const found = searchId(withPrefix)
+      if (found) return found
+    }
+
+    // Fall back to just the id as-is
+    return searchId(id)
+  }
+
+  // getByName is legacy behaviour
+  // Makes no sense to have a lookup be the display value.
+  get(nameOrId?: RestTemplateName | RestTemplateId) {
+    if (!nameOrId) {
+      return undefined
+    }
+    return this.getById(nameOrId) || this.getByName(nameOrId as RestTemplateName)
   }
 }
 

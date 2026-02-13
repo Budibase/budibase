@@ -1,7 +1,11 @@
 import { Document } from "../document"
 import { SourceName } from "../../sdk"
 import { Table } from "./table"
-import { RestTemplateName, RestTemplateSpecVersion } from "../../ui/rest"
+import {
+  RestTemplateId,
+  RestTemplateName,
+  RestTemplateSpecVersion,
+} from "../../ui/rest"
 
 export interface Datasource extends Document {
   type: string
@@ -14,7 +18,13 @@ export interface Datasource extends Document {
   config?: Record<string, any>
   plus?: boolean
   isSQL?: boolean
+  /**
+   * @deprecated Use restTemplateId instead. This field stored template names
+   * which could change. restTemplateId stores stable identifiers.
+   * Use getRestTemplateIdentifier() helper for backwards-compatible lookups.
+   */
   restTemplate?: RestTemplateName
+  restTemplateId?: RestTemplateId
   restTemplateVersion?: RestTemplateSpecVersion
   usesEnvironmentVariables?: boolean
   entities?: Record<string, Table>
@@ -24,6 +34,7 @@ export enum RestAuthType {
   BASIC = "basic",
   BEARER = "bearer",
   OAUTH2 = "oauth2",
+  API_KEY = "apiKey",
 }
 
 export interface RestBasicAuthConfig {
