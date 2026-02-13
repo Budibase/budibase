@@ -272,7 +272,7 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
         continue
       }
       const basic = config.config as RestBasicAuthConfig
-      const oldBasic = oldConfigs.find(old => old.name === config.name)
+      const oldBasic = oldConfigs.find(old => old._id === config._id)
         ?.config as RestBasicAuthConfig
       if (basic.password === PASSWORD_REPLACEMENT) {
         basic.password = oldBasic.password

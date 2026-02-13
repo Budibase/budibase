@@ -7,6 +7,8 @@ export enum OAuth2CredentialsMethod {
 
 export enum OAuth2GrantType {
   CLIENT_CREDENTIALS = "client_credentials",
+  // We don't currently support this, but adding it in for the future
+  AUTHORIZATION_CODE = "authorization_code",
 }
 
 export interface OAuth2Config extends Document {
