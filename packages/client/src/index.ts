@@ -93,7 +93,6 @@ export interface SDK {
   generateGoldenSample: any
   createContextStore: any
   builderStore: typeof builderStore
-  componentStore: typeof componentStore
   authStore: typeof authStore
   notificationStore: typeof notificationStore
   environmentStore: typeof environmentStore
