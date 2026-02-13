@@ -3,6 +3,7 @@
   import RestQueryViewer from "@/components/integration/RestQueryViewer.svelte"
   import { IntegrationTypes } from "@/constants/backend"
   import { datasources } from "@/stores/builder"
+  import { hasRestTemplate } from "@/stores/builder/datasources"
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
 
   $: datasource = $datasources.list.find(ds => ds._id === $params.datasourceId)
@@ -17,7 +18,7 @@
 </script>
 
 {#if isRestSource}
-  {#if datasource.restTemplate}
+  {#if hasRestTemplate(datasource)}
     <APIEndpointViewer datasourceId={$params.datasourceId} />
   {:else}
     <RestQueryViewer />

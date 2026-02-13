@@ -1,6 +1,7 @@
 <script>
   import { beforeUrlChange, goto as gotoStore, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "@/stores/builder"
+  import { hasRestTemplate } from "@/stores/builder/datasources"
   import { consumeSkipUnsavedPrompt } from "@/stores/builder/queries"
 
   import {
@@ -51,7 +52,7 @@
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
-  import AuthPicker from "./rest/AuthPicker.svelte"
+  import NewAuthPicker from "./rest/NewAuthPicker.svelte"
   import {
     getBindingContext,
     getDefaultRestAuthConfig,
@@ -137,7 +138,7 @@
     ...globalDynamicRequestBindings,
   ]
 
-  $: isTemplateDatasource = Boolean(datasource?.restTemplate)
+  $: isTemplateDatasource = hasRestTemplate(datasource)
   $: bindingPreviewContext = getBindingContext([
     requestBindings,
     globalDynamicBindings,
@@ -160,7 +161,6 @@
   $: checkQueryName(url)
   $: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
   $: isGet = query?.queryVerb === "read"
-  $: authConfigs = buildAuthConfigs(datasource)
   $: schemaReadOnly = !responseSuccess
   $: variablesReadOnly = !responseSuccess
   $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
@@ -279,7 +279,11 @@
     saving = true
     try {
       const isNew = !query._rev
-      const { _id } = await queries.save(toSave.datasourceId, toSave, datasourceType)
+      const { _id } = await queries.save(
+        toSave.datasourceId,
+        toSave,
+        datasourceType
+      )
       saveId = _id
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
@@ -362,16 +366,6 @@
     } catch (error) {
       notifications.error(`Query Error: ${getErrorMessage(error)}`)
     }
-  }
-
-  const buildAuthConfigs = datasource => {
-    if (datasource?.config?.authConfigs) {
-      return datasource.config.authConfigs.map(c => ({
-        label: c.name,
-        value: c._id,
-      }))
-    }
-    return []
   }
 
   const schemaMenuItems = [
@@ -756,11 +750,11 @@
           <div class="auth-container">
             <div></div>
             <!-- spacer -->
-
-            <AuthPicker
+            <NewAuthPicker
+              bind:authSourceId={query.fields.authSourceId}
               bind:authConfigId={query.fields.authConfigId}
               bind:authConfigType={query.fields.authConfigType}
-              {authConfigs}
+              restTemplateId={datasource.restTemplateId}
               datasourceId={datasource._id}
             />
           </div>

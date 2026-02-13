@@ -155,9 +155,11 @@ export function buildQueryBindings(
   datasource: any,
   requestBindings: Record<string, any>,
   globalDynamicBindings: Record<string, any>,
-  dynamicVariables?: Record<string, any>
+  dynamicVariables?: Record<string, any>,
+  connectionStaticVariables?: Record<string, any>
 ) {
   const staticVariables = datasource?.config?.staticVariables || {}
+  const connectionStatic = connectionStaticVariables || {}
   const restBindings = getRestBindings() as EnrichedBinding[]
 
   const customRequestBindings = toBindingsArray(
@@ -178,8 +180,15 @@ export function buildQueryBindings(
     "Datasource Static"
   ) as EnrichedBinding[]
 
+  const connectionStaticBindings = toBindingsArray(
+    connectionStatic,
+    "Connection.Static",
+    "Connection Static"
+  ) as EnrichedBinding[]
+
   const mergedBindings: EnrichedBinding[] = [
     ...dataSourceStaticBindings,
+    ...connectionStaticBindings,
     ...restBindings,
     ...customRequestBindings,
     ...globalDynamicRequestBindings,
@@ -189,6 +198,7 @@ export function buildQueryBindings(
     requestBindings,
     globalDynamicBindings,
     staticVariables,
+    connectionStatic,
   ]
 
   if (dynamicVariables) {
@@ -201,6 +211,7 @@ export function buildQueryBindings(
     customRequestBindings,
     globalDynamicRequestBindings,
     dataSourceStaticBindings,
+    connectionStaticBindings,
     restBindings,
     mergedBindings,
     bindingPreviewContext,
@@ -441,11 +452,22 @@ export function getSelectedQuery(queryId: string, datasourceId: string) {
 }
 
 export function keyValueArrayToRecord(
-  items: Array<{ name: string; value: any }>
+  items: Array<{ name: string; value: any }>,
+  options?: {
+    transform?: (value: any) => any
+    filterEmpty?: boolean
+  }
 ): Record<string, any> {
   return items.reduce(
     (acc, { name, value }) => {
-      acc[name] = value
+      const key = options?.filterEmpty ? (name ?? "").toString().trim() : name
+      const valueStr = value?.toString?.() || ""
+
+      if (options?.filterEmpty && key === "" && valueStr.trim() === "") {
+        return acc
+      }
+
+      acc[key] = options?.transform ? options.transform(value) : value
       return acc
     },
     {} as Record<string, any>
