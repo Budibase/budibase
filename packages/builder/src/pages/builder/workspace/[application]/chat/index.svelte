@@ -147,7 +147,7 @@
         return
       }
 
-      nextLive = !Boolean(ensured.live)
+      nextLive = !ensured.live
       await chatAppsStore.updateChatApp({ live: nextLive })
       await deploymentStore.publishApp()
       notifications.success(

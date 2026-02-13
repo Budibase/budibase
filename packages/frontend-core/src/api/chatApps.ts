@@ -36,7 +36,9 @@ export interface ChatAppEndpoints {
     workspaceId?: string
   ) => Promise<ChatConversation>
   updateChatApp: (chatApp: UpdateChatAppRequest) => Promise<ChatApp>
-  getPublishedChatApps: () => Promise<FetchPublishedChatAppsResponse["chatApps"]>
+  getPublishedChatApps: () => Promise<
+    FetchPublishedChatAppsResponse["chatApps"]
+  >
 }
 
 const throwOnErrorChunk = () =>
