@@ -5,8 +5,23 @@
 
   export let row
 
+  const getRoleFromWorkspaceRole = workspaceRole => {
+    if (workspaceRole === Constants.Roles.CREATOR) {
+      return Constants.BudibaseRoles.Creator
+    }
+    if (workspaceRole) {
+      return Constants.BudibaseRoles.AppUser
+    }
+    return undefined
+  }
+
+  $: globalRoleValue = users.getUserRole(row)
+  $: roleValue =
+    globalRoleValue === Constants.BudibaseRoles.Owner
+      ? globalRoleValue
+      : getRoleFromWorkspaceRole(row?.workspaceRole) || globalRoleValue
   $: role = Constants.ExtendedBudibaseRoleOptions.find(
-    x => x.value === users.getUserRole(row)
+    x => x.value === roleValue
   )
   const isBuiltInEndUserRole = roleId =>
     roleId === Constants.Roles.BASIC || roleId === Constants.Roles.ADMIN
