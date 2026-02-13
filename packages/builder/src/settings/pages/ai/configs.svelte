@@ -3,7 +3,7 @@
   import { Button, Layout, Modal, notifications } from "@budibase/bbui"
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
-  import CustomConfigModal from "./CustomConfigModal.svelte"
+  import CustomConfigModal from "./AIConfigModal.svelte"
   import AIConfigList from "./AIConfigList.svelte"
 
   let configModal: { show: () => void; hide: () => void }

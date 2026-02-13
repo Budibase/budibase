@@ -4,7 +4,7 @@
     type AIConfigResponse,
   } from "@budibase/types"
   import { ActionButton, Modal, Body, ProgressCircle } from "@budibase/bbui"
-  import CustomConfigModal from "./CustomConfigModal.svelte"
+  import CustomConfigModal from "./AIConfigModal.svelte"
   import BBAIConfigModal from "./BBAIConfigModal.svelte"
   import { onMount } from "svelte"
   import { admin, licensing } from "@/stores/portal"

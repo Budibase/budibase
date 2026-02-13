@@ -3,7 +3,7 @@
   import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
   import { AIConfigType, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
-  import CustomConfigModal from "./CustomConfigModal.svelte"
+  import CustomConfigModal from "./AIConfigModal.svelte"
   import VectorDbModal from "./VectorDbModal.svelte"
   import VectorDbTile from "./VectorDbTile.svelte"
   import AIConfigList from "./AIConfigList.svelte"
