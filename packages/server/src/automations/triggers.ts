@@ -1,5 +1,5 @@
 import { automations } from "@budibase/shared-core"
-import { getAutomationParams, isDevWorkspaceID } from "../db/utils"
+import { getAutomationParams } from "../db/utils"
 import emitter from "../events/index"
 import { coerce } from "../utilities/rowProcessor"
 // need this to call directly, so we can get a response
@@ -99,17 +99,6 @@ async function queueRelevantRowAutomations(
     })
 
     for (const automation of automations) {
-      // don't queue events which are for dev workspaces, only way to test automations is
-      // running tests on them, in production the test flag will never
-      // be checked due to lazy evaluation (first always false)
-      if (
-        !env.ALLOW_DEV_AUTOMATIONS &&
-        isDevWorkspaceID(event.appId) &&
-        !(await checkTestFlag(automation._id!))
-      ) {
-        continue
-      }
-
       const shouldTrigger = await checkTriggerFilters(automation, {
         row: event.row,
         oldRow: event.oldRow,
