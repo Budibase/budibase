@@ -4,13 +4,13 @@
   import type { AIConfigResponse } from "@budibase/types"
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
-  import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
+
   import CustomConfigModal from "./CustomConfigModal.svelte"
   import BBAIConfigModal from "./BBAIConfigModal.svelte"
   import PortalModal from "./PortalModal.svelte"
   import { API } from "@/api"
   import AILogo from "./AILogo.svelte"
-  import EditAIConfigButton from "./EditAIConfigButton.svelte"
+  import UpsertAIConfigButton from "./UpsertAIConfigButton.svelte"
 
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
@@ -33,38 +33,38 @@
           {
             name: "Budibase AI",
             provider: BUDIBASE_AI_PROVIDER_ID,
-            description: "Budibase managed",
+            model: "Budibase managed",
           },
         ]),
     {
       name: "Anthropic",
       provider: "Anthropic",
-      description: "Connect to Claude models directly from Anthropic",
+      model: "Connect to Claude models directly from Anthropic",
     },
     {
       name: "Google",
       provider: "Google_AI_Studio",
-      description: "Connect to Gemini models directly from Google",
+      model: "Connect to Gemini models directly from Google",
     },
     {
       name: "Mistral",
       provider: "MistralAI",
-      description: "Connect to Mistral models directly from Mistral",
+      model: "Connect to Mistral models directly from Mistral",
     },
     {
       name: "OpenAI",
       provider: "OpenAI",
-      description: "Connect to ChatGPT models directly from OpenAI",
+      model: "Connect to ChatGPT models directly from OpenAI",
     },
     {
       name: "OpenRouter",
       provider: "Openrouter",
-      description: "Connect to 100s of text, image, embedding models",
+      model: "Connect to 100s of text, image, embedding models",
     },
     {
       name: "Groq",
       provider: "Groq",
-      description: "Connect to 100s of text, image, embedding models",
+      model: "Connect to 100s of text, image, embedding models",
     },
   ]
 
@@ -75,9 +75,16 @@
     },
     {
       column: "edit",
-      component: EditAIConfigButton,
+      component: UpsertAIConfigButton,
     },
   ]
+
+  const schema = {
+    icon: { width: "40px" },
+    name: { width: "200px" },
+    model: {},
+    edit: { width: "100px", align: "Right" },
+  }
 
   function createAIConfig(provider?: string) {
     if (
@@ -91,11 +98,6 @@
 
     selectedModalConfig = undefined
     selectedProvider = provider
-    configModal?.show()
-  }
-  function editAIConfig(config: AIConfigResponse) {
-    selectedModalConfig = config
-    selectedProvider = config.provider
     configModal?.show()
   }
 
@@ -126,12 +128,7 @@
       <Table
         compact
         data={completionConfigs}
-        schema={{
-          icon: { width: "40px" },
-          name: { width: "200px" },
-          model: {},
-          edit: { width: "64px" },
-        }}
+        {schema}
         {customRenderers}
         hideHeader
         rounded
@@ -149,15 +146,16 @@
     </div>
   </div>
   <div class="model-list">
-    {#each modelProviders as config (config.name)}
-      <CustomAIConfigTile
-        actionType="create"
-        displayName={config.name}
-        provider={config.provider}
-        description={config.description}
-        editHandler={() => createAIConfig(config.provider)}
-      ></CustomAIConfigTile>
-    {/each}
+    <Table
+      compact
+      data={modelProviders}
+      {schema}
+      {customRenderers}
+      hideHeader
+      rounded
+      allowClickRows={false}
+      allowEditRows={false}
+    ></Table>
   </div>
 </Layout>
 

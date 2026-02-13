@@ -9,6 +9,8 @@
 
   export let row: AIConfigResponse
 
+  $: isEdit = !!row._id
+
   let configModal: { show: () => void; hide: () => void }
   let openModal: boolean
 
@@ -19,7 +21,7 @@
   size="S"
   on:click={() => {
     openModal = true
-  }}>Edit</ActionButton
+  }}>{isEdit ? "Edit" : "Connect"}</ActionButton
 >
 
 {#if openModal}
