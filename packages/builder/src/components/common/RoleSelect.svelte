@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { capitalise } from "@/helpers"
   import { roles } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
   import type { PopoverAlignment } from "@budibase/bbui"
@@ -91,11 +90,10 @@
     }))
 
     // Add creator if required
-    if (allowCreator || isPremiumOrAbove) {
+    if (allowCreator) {
       options.unshift({
         _id: Constants.Roles.CREATOR,
         name: "Can edit",
-        tag: isPremiumOrAbove ? null : capitalise(Constants.PlanType.PREMIUM),
       })
     }
 
@@ -153,7 +151,7 @@
     getOptionColour={getColor}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return isPremiumOrAbove
+        return allowCreator
       }
       return true
     }}
@@ -176,7 +174,7 @@
     getOptionIcon={getIcon}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return isPremiumOrAbove
+        return allowCreator
       }
       return option.enabled !== false
     }}
