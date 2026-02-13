@@ -68,7 +68,10 @@
         }}
       />
     {:else}
-      <BBAIConfigModal config={row} type={row.configType} />
+      <BBAIConfigModal
+        config={row._id ? row : undefined}
+        type={row.configType}
+      />
     {/if}
   </Modal>
 {/if}
