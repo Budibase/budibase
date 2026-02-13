@@ -2,6 +2,7 @@ import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
   LiteLLMKeyConfig,
   ReasoningEffort,
   LockName,
@@ -64,10 +65,8 @@ export async function addModel({
     })
   }
 
-  provider = await mapToLiteLLMProvider(provider)
-
   const litellmParams = buildLiteLLMParams({
-    provider,
+    provider: await mapToLiteLLMProvider(provider),
     name: model,
     credentialFields,
     configType,
@@ -112,11 +111,9 @@ export async function updateModel({
 }) {
   await validateConfig({ provider, name, credentialFields, configType })
 
-  provider = await mapToLiteLLMProvider(provider)
-
   const litellmParams = buildLiteLLMParams({
-    provider,
-    name,
+    provider: await mapToLiteLLMProvider(provider),
+    name: name,
     credentialFields,
     configType,
     reasoningEffort,
@@ -214,8 +211,7 @@ async function validateCompletionsModel(model: {
   credentialFields: Record<string, string>
 }) {
   let { name, provider, credentialFields } = model
-
-  provider = await mapToLiteLLMProvider(provider)
+  const mappedProvider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "POST",
@@ -225,8 +221,8 @@ async function validateCompletionsModel(model: {
     },
     body: JSON.stringify({
       litellm_params: {
-        model: `${provider}/${name}`,
-        custom_llm_provider: provider,
+        model: `${mappedProvider}/${name}`,
+        custom_llm_provider: mappedProvider,
         ...credentialFields,
       },
     }),
@@ -368,8 +364,13 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
 }
 
 async function mapToLiteLLMProvider(provider: string) {
+  if (provider === BUDIBASE_AI_PROVIDER_ID) {
+    return "custom_openai"
+  }
+
   const providers = await fetchPublicProviders()
   const result = providers.find(p => p.provider === provider)?.litellm_provider
+
   if (!result) {
     throw new Error(`Provider ${provider} not found in LiteLLM`)
   }

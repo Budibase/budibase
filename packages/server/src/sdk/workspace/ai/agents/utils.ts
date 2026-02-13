@@ -1,5 +1,6 @@
 import {
   Agent,
+  ToolType,
   ToolMetadata,
   SourceName,
   WebSearchProvider,
@@ -10,12 +11,12 @@ import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
   createRestQueryTool,
+  createDatasourceQueryTool,
   toToolSet,
   type AiToolDefinition,
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
-import tracer from "dd-trace"
 
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
@@ -31,18 +32,18 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
 export async function getAvailableTools(
   aiconfigId?: string
 ): Promise<AiToolDefinition[]> {
-  const [queries, datasources, aiConfig, tables] = await Promise.all([
-    sdk.queries.fetch(),
-    sdk.datasources.fetch(),
-    aiconfigId ? sdk.ai.configs.find(aiconfigId) : Promise.resolve(undefined),
-    sdk.tables.getAllTables(),
-  ])
+  const [queries, datasources, aiConfig, tables, automations] =
+    await Promise.all([
+      sdk.queries.fetch(),
+      sdk.datasources.fetch(),
+      aiconfigId ? sdk.ai.configs.find(aiconfigId) : Promise.resolve(undefined),
+      sdk.tables.getAllTables(),
+      sdk.automations.fetch(),
+    ])
   const webSearchConfig = aiConfig?.webSearchConfig
 
-  const restDatasourceNames = new Map(
-    datasources
-      .filter(ds => ds.source === SourceName.REST)
-      .map(ds => [ds._id, ds.name || "API"])
+  const datasourcesById = new Map(
+    datasources.filter(ds => !!ds._id).map(ds => [ds._id!, ds])
   )
 
   const datasourceNamesById = Object.fromEntries(
@@ -57,15 +58,37 @@ export async function getAvailableTools(
       .map(ds => [ds._id!, ds.source || "CUSTOM"])
   )
 
-  const restQueryTools = queries
-    .filter(query => restDatasourceNames.has(query.datasourceId))
-    .map(query =>
-      createRestQueryTool(query, restDatasourceNames.get(query.datasourceId))
-    )
+  const restQueryTools = queries.flatMap(query => {
+    const datasource = datasourcesById.get(query.datasourceId)
+    if (!datasource || datasource.source !== SourceName.REST) {
+      return []
+    }
+    return [createRestQueryTool(query, datasource.name || "API")]
+  })
+
+  const datasourceQueryTools = queries.flatMap(query => {
+    const datasource = datasourcesById.get(query.datasourceId)
+    if (!datasource || datasource.source === SourceName.REST) {
+      return []
+    }
+    return [
+      createDatasourceQueryTool(
+        query,
+        datasource.name || "Datasource",
+        datasource.source || "CUSTOM"
+      ),
+    ]
+  })
 
   const tools: AiToolDefinition[] = [
-    ...getBudibaseTools(tables, datasourceNamesById, datasourceIconTypesById),
+    ...getBudibaseTools(
+      tables,
+      datasourceNamesById,
+      datasourceIconTypesById,
+      automations
+    ),
     ...restQueryTools,
+    ...datasourceQueryTools,
   ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
@@ -101,7 +124,10 @@ export async function buildPromptAndTools(
 
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
-  const enabledTools = allTools.filter(tool => enabledToolNames.has(tool.name))
+  const enabledTools = addHelperTools(
+    allTools.filter(tool => enabledToolNames.has(tool.name)),
+    allTools
+  )
 
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
@@ -116,48 +142,46 @@ export async function buildPromptAndTools(
   }
 }
 
-export function createLiteLLMFetch(sessionId: string): typeof fetch {
-  const liteFetch = (async (
-    input: Parameters<typeof fetch>[0],
-    init?: Parameters<typeof fetch>[1]
-  ) => {
-    const span = tracer.scope().active()
-    let modifiedInit = init
+/*
+We want to add these tools for automations / tables if user has added related tools.
+This abstracts the decision of what tools to add away from the user.
+*/
+function addHelperTools(
+  enabledTools: AiToolDefinition[],
+  allTools: AiToolDefinition[]
+) {
+  const seenTools = new Set(enabledTools.map(tool => tool.name))
+  const toolByName = new Map(allTools.map(tool => [tool.name, tool]))
 
-    if (typeof init?.body === "string") {
-      try {
-        const body = JSON.parse(init.body)
-        body.litellm_session_id = sessionId
-        if (span) {
-          body.metadata = {
-            ...body.metadata,
-            dd_trace_id: span.context().toTraceId(),
-            dd_span_id: span.context().toSpanId(),
-            session_id: sessionId,
-          }
-        }
-        modifiedInit = { ...init, body: JSON.stringify(body) }
-      } catch {
-        // Not JSON, pass through
+  if (
+    enabledTools.some(
+      tool =>
+        tool.sourceType === ToolType.EXTERNAL_TABLE ||
+        tool.sourceType === ToolType.INTERNAL_TABLE
+    )
+  ) {
+    for (const toolName of ["get_table", "list_tables"]) {
+      if (seenTools.has(toolName)) continue
+      let tool = toolByName.get(toolName)
+      if (tool) {
+        enabledTools.push(tool)
+        seenTools.add(tool.name)
       }
     }
-
-    const response = await fetch(input, modifiedInit)
-
-    const litellmCallId = response.headers.get("x-litellm-call-id")
-    if (litellmCallId && span) {
-      span.setTag("litellm.call_id", litellmCallId)
-    }
-
-    return response
-  }) as typeof fetch
-
-  // Preserve the preconnect helper required by the OpenAI client typings.
-  if (typeof (fetch as any).preconnect === "function") {
-    ;(liteFetch as any).preconnect = (fetch as any).preconnect.bind(fetch)
   }
 
-  return liteFetch
+  if (enabledTools.some(tool => tool.sourceType === ToolType.AUTOMATION)) {
+    for (const toolName of ["get_automation", "list_automations"]) {
+      if (seenTools.has(toolName)) continue
+      let tool = toolByName.get(toolName)
+      if (tool) {
+        enabledTools.push(tool)
+        seenTools.add(tool.name)
+      }
+    }
+  }
+
+  return enabledTools
 }
 
 export interface IncompleteToolCall {

@@ -1,6 +1,11 @@
-import { TableSourceType, type Table, type ToolType } from "@budibase/types"
 import type { Tool } from "ai"
-import AUTOMATION_TOOLS from "./automations"
+import {
+  Automation,
+  TableSourceType,
+  type Table,
+  type ToolType,
+} from "@budibase/types"
+import createAutomationTools from "./automations"
 import TABLE_TOOLS from "./tables"
 import { createRowTools } from "./rows"
 
@@ -17,9 +22,10 @@ export interface BudibaseToolDefinition {
 export const getBudibaseTools = (
   tables: Table[] = [],
   datasourceNamesById: Record<string, string> = {},
-  datasourceIconTypesById: Record<string, string> = {}
+  datasourceIconTypesById: Record<string, string> = {},
+  automations: Automation[] = []
 ): BudibaseToolDefinition[] => {
-  const baseTools = [...AUTOMATION_TOOLS, ...TABLE_TOOLS]
+  const baseTools = [...createAutomationTools(automations), ...TABLE_TOOLS]
 
   const rowTools = tables
     .filter(table => table._id)
@@ -29,6 +35,7 @@ export const getBudibaseTools = (
         tableId: table._id!,
         tableName: table.name || table._id!,
         tableSourceType: table.sourceType,
+        tableSchema: table.schema,
         sourceLabel: isExternal
           ? datasourceNamesById[table.sourceId] || "External"
           : "Budibase",

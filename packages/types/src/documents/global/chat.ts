@@ -22,6 +22,15 @@ export interface ChatApp extends Document {
   settings?: Record<string, any>
 }
 
+export interface ChatConversationChannel {
+  provider: string
+  guildId?: string
+  channelId?: string
+  threadId?: string
+  externalUserId?: string
+  externalUserName?: string
+}
+
 export interface ChatConversationRequest extends Document {
   chatAppId: string
   agentId: string
@@ -29,6 +38,7 @@ export interface ChatConversationRequest extends Document {
   messages: UIMessage<AgentMessageMetadata>[]
   transient?: boolean
   isPreview?: boolean
+  channel?: ChatConversationChannel
 }
 
 export type CreateChatConversationRequest = Pick<

@@ -10,48 +10,45 @@
     Select,
   } from "@budibase/bbui"
   import type {
-    CustomAIProviderConfig,
+    AIConfigResponse,
+    CreateAIConfigRequest,
     LLMProvider,
     RequiredKeys,
-    ToDocCreateMetadata,
-    ToDocUpdateMetadata,
+    UpdateAIConfigRequest,
   } from "@budibase/types"
   import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
-  export let config: CustomAIProviderConfig | null
+  export let config: Omit<AIConfigResponse, "provider"> | undefined
+  export let provider: string | undefined
   export let type: AIConfigType
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
-  let draft: CustomAIProviderConfig = config
-    ? ({
-        _id: config._id!,
-        _rev: config._rev!,
+  let draft: AIConfigResponse =
+    config?._id && provider
+      ? ({
+          _id: config._id,
+          _rev: config._rev,
+          name: config.name,
+          provider: provider,
+          credentialsFields: config.credentialsFields,
+          model: config.model,
+          webSearchConfig: config.webSearchConfig,
+          configType: config.configType,
+          reasoningEffort: config.reasoningEffort,
+        } satisfies RequiredKeys<UpdateAIConfigRequest>)
+      : ({
+          provider: provider ?? "",
+          name: "",
+          model: "",
+          configType: type,
+          credentialsFields: {},
+          webSearchConfig: undefined,
+          reasoningEffort: undefined,
+        } satisfies RequiredKeys<CreateAIConfigRequest>)
 
-        name: config.name,
-        provider: config.provider,
-        credentialsFields: config.credentialsFields ?? {},
-
-        model: config.model,
-        liteLLMModelId: config.liteLLMModelId,
-        webSearchConfig: config.webSearchConfig,
-        configType: config.configType,
-        reasoningEffort: config.reasoningEffort,
-      } satisfies RequiredKeys<ToDocUpdateMetadata<CustomAIProviderConfig>>)
-    : ({
-        _id: "",
-        provider: "",
-        name: "",
-        model: "",
-        liteLLMModelId: "",
-        configType: type,
-        credentialsFields: {},
-        webSearchConfig: undefined,
-        reasoningEffort: undefined,
-      } satisfies RequiredKeys<ToDocCreateMetadata<CustomAIProviderConfig>>)
-
-  $: isEdit = !!config
+  $: isEdit = !!config?._id
   $: canSave = !!draft.name.trim() && !!draft.provider
   $: typeLabel =
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
