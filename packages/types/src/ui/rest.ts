@@ -3,6 +3,18 @@ export interface RestTemplateSpec {
   url?: string
 }
 
+export interface OpenAPIServerVariable {
+  default: string
+  enum?: string[]
+  description?: string
+}
+
+export interface OpenAPIServer {
+  url: string
+  description?: string
+  variables?: Record<string, OpenAPIServerVariable>
+}
+
 export type RestTemplateSpecVersion = RestTemplateSpec["version"]
 
 export type RestTemplateId =
@@ -82,6 +94,7 @@ export type RestTemplateId =
   | "verifiable"
   | "volt-io"
   | "workable"
+  | "openrouter"
   | "x"
   | HubSpotRestTemplateId
   | MicrosoftSharepointRestTemplateId
@@ -240,9 +253,9 @@ export type SplunkRestTemplateId =
 export type ZendeskRestTemplateId = "zendesk-sunshine-conversations"
 
 export type MicrosoftSharepointRestTemplateId =
-  | "sharepoint-drives"
-  | "sharepoint-shares"
-  | "sharepoint-sites"
+  | "microsoft-sharepoint-drives"
+  | "microsoft-sharepoint-shares"
+  | "microsoft-sharepoint-sites"
 
 export type RestTemplateName =
   | "Ansible AWX"
@@ -502,10 +515,7 @@ export type SplunkRestTemplateName =
 
 export type ZendeskRestTemplateName = "Sunshine Conversations"
 
-export type MicrosoftSharepointRestTemplateName =
-  | "SharePoint Drives"
-  | "SharePoint Shares"
-  | "SharePoint Sites"
+export type MicrosoftSharepointRestTemplateName = "Drives" | "Shares" | "Sites"
 
 export interface RestTemplate {
   id: RestTemplateId
@@ -562,7 +572,7 @@ export interface TemplateSelectionContext {
   description: string
   specs: RestTemplateSpec[]
   icon?: string
-  restTemplateName?: RestTemplateName
+  restTemplateId?: RestTemplateId
 }
 
 export type TemplateSelectionDetail = {
