@@ -1,33 +1,24 @@
 <script lang="ts">
   import { aiConfigsStore, featureFlags, vectorDbStore } from "@/stores/portal"
   import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
-  import type { AIConfigResponse } from "@budibase/types"
   import { AIConfigType, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
-  import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
   import CustomConfigModal from "./CustomConfigModal.svelte"
   import VectorDbModal from "./VectorDbModal.svelte"
   import VectorDbTile from "./VectorDbTile.svelte"
+  import AIConfigList from "./AIConfigList.svelte"
 
   let configModal: { show: () => void; hide: () => void }
 
-  let selectedModalConfig: AIConfigResponse | undefined
-  let selectedProvider: string | undefined
   let vectorModal: { show: () => void; hide: () => void }
   let vectorModalConfig: VectorDb | null = null
 
-  $: configs = $aiConfigsStore.customConfigs || []
-  $: embeddingConfigs = configs.filter(
+  $: embeddingConfigs = $aiConfigsStore.customConfigs.filter(
     config => config.configType === AIConfigType.EMBEDDINGS
   )
   $: vectorDbs = $vectorDbStore.configs || []
 
   function createAIConfigModal() {
-    configModal.show()
-  }
-  function editAIConfigModal(config: AIConfigResponse) {
-    selectedModalConfig = config
-    selectedProvider = config.provider
     configModal.show()
   }
 
@@ -58,17 +49,7 @@
       </div>
 
       {#if embeddingConfigs.length}
-        <div class="ai-list">
-          {#each embeddingConfigs as config (config._id)}
-            <CustomAIConfigTile
-              actionType="edit"
-              displayName={config.name}
-              provider={config.provider}
-              description={config.model}
-              editHandler={() => editAIConfigModal(config)}
-            />
-          {/each}
-        </div>
+        <AIConfigList configs={embeddingConfigs}></AIConfigList>
       {:else}
         <div class="no-enabled">
           <Body size="S">No embeddings configurations yet</Body>
@@ -107,16 +88,7 @@
 </Modal>
 
 <Modal bind:this={configModal}>
-  <CustomConfigModal
-    config={selectedModalConfig}
-    provider={selectedProvider}
-    type={AIConfigType.EMBEDDINGS}
-    on:hide={() => {
-      selectedModalConfig = undefined
-      selectedProvider = undefined
-      configModal.hide()
-    }}
-  />
+  <CustomConfigModal type={AIConfigType.EMBEDDINGS} />
 </Modal>
 
 <style>
