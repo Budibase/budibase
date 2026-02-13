@@ -1,6 +1,5 @@
 <script lang="ts">
   import { roles } from "@/stores/builder"
-  import { licensing } from "@/stores/portal"
   import type { PopoverAlignment } from "@budibase/bbui"
   import { FancySelect, Select } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
@@ -33,16 +32,6 @@
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
-  const subType = $licensing.license?.plan?.type ?? null
-
-  $: isPremiumOrAbove = [
-    Constants.PlanType.PREMIUM,
-    Constants.PlanType.PREMIUM_PLUS,
-    Constants.PlanType.ENTERPRISE,
-    Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
-    // @ts-expect-error this is not in the enum anymore, but it might be in some licences
-    Constants.PlanType.ENTERPRISE_BASIC,
-  ].includes(subType)
 
   $: enrichLabel = (label: string) =>
     labelPrefix ? `${labelPrefix} ${label}` : label
