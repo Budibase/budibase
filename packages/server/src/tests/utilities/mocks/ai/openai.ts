@@ -77,7 +77,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   const rejectFormat = opts?.rejectFormat
 
   const interceptor = pool.intercept({
-    path: "/v1/chat/completions",
+    path: opts?.path || "/v1/chat/completions",
     method: "POST",
   })
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })

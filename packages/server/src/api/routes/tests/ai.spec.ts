@@ -2,13 +2,12 @@ import { z } from "zod"
 import {
   mockChatGPTResponse,
   mockChatGPTStreamFailure,
-  mockChatGPTStreamResponse,
   mockOpenAIFileUpload,
   mockOpenAIResponsesResponse,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, setEnv } from "@budibase/backend-core"
+import { configs, env, setEnv, withEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
   AIOperationEnum,
@@ -503,9 +502,6 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      // Ensure MockAgent is installed for OpenAI interceptors
-      const { installHttpMocking } = require("../../../tests/jestEnv")
-      installHttpMocking()
     })
 
     const mockAIGenerationStructure = (
@@ -1269,23 +1265,27 @@ describe("BudibaseAI", () => {
     })
 
     it("accepts Mistral models when configured", async () => {
-      const mistralCleanup = setEnv({
-        BBAI_MISTRAL_API_KEY: "mistral-key",
-        MISTRAL_BASE_URL: "https://fake.mistral.ai",
-      })
-      mockChatGPTStreamResponse("hello from mistral", {
-        baseUrl: "https://fake.mistral.ai",
-      })
+      await withEnv(
+        {
+          BBAI_MISTRAL_API_KEY: "mistral-key",
+          MISTRAL_BASE_URL: "https://fake.mistral.ai",
+        },
+        async () => {
+          mockChatGPTResponse("hello from mistral", {
+            baseUrl: "https://fake.mistral.ai",
+            path: "/chat/completions",
+          })
 
-      const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/mistral-small-latest",
-        messages: [{ role: "user", content: "hello" }],
-        stream: false,
-        licenseKey,
-      })
+          const response = await config.api.ai.openaiChatCompletions({
+            model: "budibase/mistral-small-latest",
+            messages: [{ role: "user", content: "hello" }],
+            stream: false,
+            licenseKey,
+          })
 
-      expect(response.choices[0].message.content).toBe("hello from mistral")
-      mistralCleanup()
+          expect(response.choices[0].message.content).toBe("hello from mistral")
+        }
+      )
     })
 
     it("errors when OpenAI API key is missing", async () => {
