@@ -440,7 +440,7 @@
     flex: 1 1 auto;
     display: flex;
     border-radius: 24px;
-    border: var(--border-light);
+    border: var(--border-dark);
     background: transparent;
     overflow: hidden;
     min-width: 0;

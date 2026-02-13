@@ -101,7 +101,7 @@
     display: flex;
     width: 260px;
     min-width: 260px;
-    border-right: 1px solid var(--spectrum-global-color-gray-200);
+    border-right: var(--border-dark);
     background: transparent;
   }
 
