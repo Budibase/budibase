@@ -32,9 +32,9 @@
     return params
   }
 
-  const handleKeyValueChange = (e: CustomEvent<KeyValuePair[]>) => {
+  const handleKeyValueChange = (e: CustomEvent) => {
     const update = {
-      [key]: e.detail.map(({ name, value }) => ({
+      [key]: e.detail.fields.map(({ name, value }) => ({
         url: name,
         filename: value,
       })),

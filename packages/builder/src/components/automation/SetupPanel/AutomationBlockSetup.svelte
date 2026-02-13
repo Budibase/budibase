@@ -917,7 +917,7 @@
                     <KeyValueBuilder
                       on:change={e =>
                         onChange({
-                          [key]: e.detail.map(({ name, value }) => ({
+                          [key]: e.detail.fields.map(({ name, value }) => ({
                             url: name,
                             filename: value,
                           })),
