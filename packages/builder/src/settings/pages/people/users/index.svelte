@@ -58,6 +58,7 @@
     userGroups: UserGroup[]
     apps: string[]
     access: number
+    workspaceRole?: string
   }
 
   export let workspaceOnly: boolean
@@ -217,6 +218,9 @@
           ...user,
           name: user.firstName ? user.firstName + " " + user.lastName : "",
           userGroups,
+          workspaceRole: isWorkspaceOnly
+            ? user.roles?.[currentWorkspaceId] || Constants.Roles.BASIC
+            : undefined,
           __selectable:
             role.value === Constants.BudibaseRoles.Owner ||
             $auth.user?.email === user.email
