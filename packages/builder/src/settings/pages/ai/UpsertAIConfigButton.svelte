@@ -3,7 +3,7 @@
     BUDIBASE_AI_PROVIDER_ID,
     type AIConfigResponse,
   } from "@budibase/types"
-  import { ActionButton, Modal } from "@budibase/bbui"
+  import { ActionButton, Modal, Body, ProgressCircle } from "@budibase/bbui"
   import CustomConfigModal from "./CustomConfigModal.svelte"
   import BBAIConfigModal from "./BBAIConfigModal.svelte"
   import { onMount } from "svelte"
@@ -17,7 +17,8 @@
 
   let configModal: { show: () => void; hide: () => void }
   let openModal: boolean
-  let hasLicenseKey: boolean
+  let hasLicenseKey: boolean | null = null
+  let licenseChecked = false
 
   $: configModal?.show()
 
@@ -32,7 +33,9 @@
         hasLicenseKey = !!licenseKeyResponse?.licenseKey
       }
     } catch {
-      //
+      hasLicenseKey = false
+    } finally {
+      licenseChecked = true
     }
   })
 </script>
@@ -57,7 +60,12 @@
         provider={row.provider}
         type={row.configType}
       />
-    {:else if !hasLicenseKey}
+    {:else if !licenseChecked}
+      <div class="license-check">
+        <ProgressCircle />
+        <Body size="S">Checking license...</Body>
+      </div>
+    {:else if hasLicenseKey === false}
       <PortalModal
         confirmHandler={() => {
           window.open($admin.accountPortalUrl, "_blank")
@@ -75,3 +83,12 @@
     {/if}
   </Modal>
 {/if}
+
+<style>
+  .license-check {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: var(--spacing-m);
+  }
+</style>
