@@ -19,8 +19,6 @@ describe("buildLiteLLMParams", () => {
       use_litellm_proxy: false,
       merge_reasoning_content_in_choices: true,
       drop_params: true,
-      input_cost_per_token: 0,
-      output_cost_per_token: 0,
       guardrails: [],
       api_key: "secret",
     })
