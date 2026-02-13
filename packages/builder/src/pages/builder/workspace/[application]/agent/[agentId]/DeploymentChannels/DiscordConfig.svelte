@@ -1,10 +1,5 @@
 <script lang="ts">
-  import {
-    Body,
-    CopyInput,
-    Input,
-    notifications,
-  } from "@budibase/bbui"
+  import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
   import { DiscordCommands } from "@budibase/shared-core"
   import type { Agent, SyncAgentDiscordCommandsResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"

@@ -199,35 +199,36 @@ export async function syncAgentDiscordCommands(
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
 
-  const { chatAppId, endpointUrl, integration } = await configureDeploymentChannel({
-    agent,
-    agentId,
-    requestedChatAppId,
-    validateIntegration: sdk.ai.deployments.discord.validateDiscordIntegration,
-    resolveChatAppForAgent: sdk.ai.deployments.discord.resolveChatAppForAgent,
-    buildEndpointUrl: sdk.ai.deployments.discord.buildDiscordWebhookUrl,
-    beforeBuildEndpoint: async ({
-      applicationId,
-      botToken,
-      guildId,
-    }) => {
-      await sdk.ai.deployments.discord.syncApplicationCommands(
-        applicationId,
-        botToken,
-        guildId
-      )
-    },
-    persistIntegration: async (resolvedChatAppId, interactionsEndpointUrl) => {
-      await sdk.ai.agents.update({
-        ...agent,
-        discordIntegration: {
-          ...agent.discordIntegration,
-          chatAppId: resolvedChatAppId,
-          interactionsEndpointUrl,
-        },
-      })
-    },
-  })
+  const { chatAppId, endpointUrl, integration } =
+    await configureDeploymentChannel({
+      agent,
+      agentId,
+      requestedChatAppId,
+      validateIntegration:
+        sdk.ai.deployments.discord.validateDiscordIntegration,
+      resolveChatAppForAgent: sdk.ai.deployments.discord.resolveChatAppForAgent,
+      buildEndpointUrl: sdk.ai.deployments.discord.buildDiscordWebhookUrl,
+      beforeBuildEndpoint: async ({ applicationId, botToken, guildId }) => {
+        await sdk.ai.deployments.discord.syncApplicationCommands(
+          applicationId,
+          botToken,
+          guildId
+        )
+      },
+      persistIntegration: async (
+        resolvedChatAppId,
+        interactionsEndpointUrl
+      ) => {
+        await sdk.ai.agents.update({
+          ...agent,
+          discordIntegration: {
+            ...agent.discordIntegration,
+            chatAppId: resolvedChatAppId,
+            interactionsEndpointUrl,
+          },
+        })
+      },
+    })
 
   ctx.body = {
     success: true,
