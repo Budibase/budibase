@@ -53,17 +53,6 @@ jest.mock("@budibase/types", () => {
   }
 })
 
-function toResponseFormat(schema: any, name = "response") {
-  return {
-    type: "json_schema" as const,
-    json_schema: {
-      name,
-      strict: false,
-      schema: schema.toJSONSchema({ target: "draft-7" }),
-    },
-  }
-}
-
 function dedent(str: string) {
   return str
     .split("\n")
@@ -489,12 +478,9 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.guid()
-      const structuredOutput = toResponseFormat(
-        z.object({
-          [generator.word()]: z.string(),
-        }),
-        "key"
-      )
+      const structuredOutput = z.object({
+        [generator.word()]: z.string(),
+      })
       mockChatGPTResponse(gptResponse, { format: structuredOutput })
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
@@ -530,7 +516,7 @@ describe("BudibaseAI", () => {
       generationStructure: ai.GenerationStructure
     ) => {
       mockChatGPTResponse(JSON.stringify(generationStructure), {
-        format: toResponseFormat(ai.generationStructure),
+        format: ai.generationStructure,
       })
     }
 
@@ -539,10 +525,8 @@ describe("BudibaseAI", () => {
       aiColumnGeneration: ai.AIColumnSchemas
     ) =>
       mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
-        format: toResponseFormat(
-          ai.aiColumnSchemas(
-            ai.aiTableResponseToTableSchema(generationStructure)
-          )
+        format: ai.aiColumnSchemas(
+          ai.aiTableResponseToTableSchema(generationStructure)
         ),
       })
 
@@ -550,7 +534,7 @@ describe("BudibaseAI", () => {
       dataGeneration: Record<string, Record<string, any>[]>
     ) =>
       mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: toResponseFormat(ai.tableDataStructuredOutput([])),
+        format: ai.tableDataStructuredOutput([]),
       })
 
     const mockProcessAIColumn = (response: string) =>
@@ -1243,7 +1227,7 @@ describe("BudibaseAI", () => {
     })
 
     it("ignores extra fields (e.g. response_format)", async () => {
-      const format = toResponseFormat(z.object({ value: z.string() }))
+      const format = z.object({ value: z.string() })
       generateTextMock.mockResolvedValue({
         response: {
           body: {
