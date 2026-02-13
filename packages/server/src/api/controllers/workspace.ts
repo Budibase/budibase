@@ -465,6 +465,10 @@ export async function fetchAppPackage(
     const urlPath =
       embedPath ||
       (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
+    const normalizedUrlPath = urlPath.split("?")[0].replace(/\/$/, "")
+    const isChatRoute =
+      normalizedUrlPath.startsWith("/app-chat/") ||
+      /\/_chat(?:\/.*)?$/.test(normalizedUrlPath)
 
     let matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
@@ -478,7 +482,10 @@ export async function fetchAppPackage(
 
     // disabled workspace apps should appear to not exist
     // if the dev workspace is being served, allow the request regardless
-    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
+    if (
+      !matchedWorkspaceApp ||
+      (matchedWorkspaceApp.disabled && !isDev && !isChatRoute)
+    ) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)

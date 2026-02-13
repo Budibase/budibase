@@ -23,7 +23,10 @@ export async function getMatchedWorkspaceApp(
   const enabledWorkspaceApps = allWorkspaceApps.filter(app => !app.disabled)
 
   const getDefaultWorkspaceApp = () =>
-    enabledWorkspaceApps.find(app => app.isDefault) || enabledWorkspaceApps[0]
+    enabledWorkspaceApps.find(app => app.isDefault) ||
+    enabledWorkspaceApps[0] ||
+    allWorkspaceApps.find(app => app.isDefault) ||
+    allWorkspaceApps[0]
 
   function isWorkspaceAppMatch(
     urlPath: string,
