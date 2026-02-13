@@ -9,7 +9,10 @@
     invalidationMessage,
     popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
-  import { getThemeClassNames } from "@budibase/shared-core"
+  import {
+    DefaultBuilderTheme,
+    getThemeClassNames,
+  } from "@budibase/shared-core"
   import Component from "./Component.svelte"
   import SDK from "@/sdk"
   import {
@@ -82,6 +85,9 @@
   $: isChatOnlyRoute =
     typeof window !== "undefined" &&
     window.location.pathname.replace(/\/$/, "").endsWith("/_chat")
+  $: resolvedThemeClassNames = getThemeClassNames(
+    isChatOnlyRoute ? DefaultBuilderTheme : $themeStore.theme
+  )
 
   // Handle no matching route
   $: {
@@ -195,7 +201,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {getThemeClassNames($themeStore.theme)}"
+    class="spectrum spectrum--medium {resolvedThemeClassNames}"
     class:builder={$builderStore.inBuilder}
     class:show={fontsLoaded && dataLoaded}
   >
@@ -426,6 +432,7 @@
     min-width: 0;
     min-height: 0;
     padding: var(--spacing-xl);
+    background: var(--background-alt);
     box-sizing: border-box;
   }
 
