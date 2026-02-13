@@ -1,10 +1,6 @@
 import fetch from "node-fetch"
 import { v4 } from "uuid"
-import {
-  context,
-  docIds,
-  HTTPError,
-} from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { DiscordCommands } from "@budibase/shared-core"
 import type {
   ChatApp,
@@ -40,8 +36,6 @@ const DISCORD_INTERACTION_APPLICATION_COMMAND = 2
 const DISCORD_INTERACTION_MODAL_SUBMIT = 5
 const DISCORD_INTERACTION_CALLBACK_MESSAGE = 4
 const DISCORD_INTERACTION_CALLBACK_DEFERRED_MESSAGE = 5
-const DISCORD_ASK_COMMAND = DiscordCommands.ASK
-const DISCORD_NEW_COMMAND = DiscordCommands.NEW
 const DISCORD_DEFAULT_IDLE_TIMEOUT_MINUTES = 45
 const DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 const DISCORD_FALLBACK_ERROR_MESSAGE =
@@ -84,8 +78,8 @@ export const getDiscordInteractionCommand = (
 ): DiscordCommand => {
   const rawName = interaction.data?.name?.trim().toLowerCase() || ""
 
-  if (rawName === DISCORD_NEW_COMMAND) return DiscordCommands.NEW
-  if (rawName === DISCORD_ASK_COMMAND) return DiscordCommands.ASK
+  if (rawName === DiscordCommands.NEW) return DiscordCommands.NEW
+  if (rawName === DiscordCommands.ASK) return DiscordCommands.ASK
   if (interaction.type === DISCORD_INTERACTION_MODAL_SUBMIT || !rawName) {
     return DiscordCommands.ASK
   }
@@ -210,14 +204,6 @@ export const isDiscordTimestampFresh = (
   nowMs = Date.now()
 ) => sdk.ai.deployments.discord.isDiscordTimestampFresh(timestamp, nowMs)
 
-const getDiscordConversationCacheSize = () => {
-  const configured = Number(process.env.DISCORD_CONVERSATION_CACHE_SIZE)
-  if (Number.isFinite(configured) && configured > 0) {
-    return Math.floor(configured)
-  }
-  return DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE
-}
-
 const getDiscordConversationCacheKey = ({
   workspaceId,
   scope,
@@ -301,7 +287,7 @@ const findDiscordConversation = async ({
         cache: discordConversationCache,
         cacheKey,
         chatId: cachedChatId,
-        maxSize: getDiscordConversationCacheSize(),
+        maxSize: DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE,
       })
       return cachedChat
     }
@@ -329,7 +315,7 @@ const findDiscordConversation = async ({
       cache: discordConversationCache,
       cacheKey,
       chatId: picked._id,
-      maxSize: getDiscordConversationCacheSize(),
+      maxSize: DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE,
     })
   }
   return picked
@@ -375,8 +361,8 @@ const handleDiscordInteraction = async ({
 
     const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
     const discord = agentConfig.discordIntegration
-    const askName = DISCORD_ASK_COMMAND
-    const newName = DISCORD_NEW_COMMAND
+    const askName = DiscordCommands.ASK
+    const newName = DiscordCommands.NEW
     const command = getDiscordInteractionCommand(interaction)
     if (command === DiscordCommands.UNSUPPORTED) {
       return reply(
@@ -438,7 +424,7 @@ const handleDiscordInteraction = async ({
           scope,
         }),
         chatId,
-        maxSize: getDiscordConversationCacheSize(),
+        maxSize: DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE,
       })
       return reply(
         `Started a new conversation. Use /${askName} with a message.`
@@ -504,7 +490,7 @@ const handleDiscordInteraction = async ({
         scope,
       }),
       chatId,
-      maxSize: getDiscordConversationCacheSize(),
+      maxSize: DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE,
     })
 
     await reply(result.assistantText || "No response generated.")

@@ -7,6 +7,10 @@ import {
   splitTeamsMessage,
   stripTeamsMentions,
 } from "./teams"
+import {
+  evictExpiredTimedCache,
+  touchTimedCache,
+} from "./utils"
 
 const makeChat = (
   overrides: Partial<ChatConversation> = {}
@@ -168,5 +172,79 @@ describe("teams webhook helpers", () => {
     })
 
     expect(picked?._id).toEqual("latest")
+  })
+
+  it("evicts least recently used runtime entries when max size is exceeded", () => {
+    const cache = new Map<
+      string,
+      {
+        value: string
+        lastAccessedAt: number
+      }
+    >()
+
+    touchTimedCache({
+      cache,
+      cacheKey: "agent-a",
+      value: "runtime-a",
+      maxSize: 2,
+      nowMs: 1,
+    })
+    touchTimedCache({
+      cache,
+      cacheKey: "agent-b",
+      value: "runtime-b",
+      maxSize: 2,
+      nowMs: 2,
+    })
+    touchTimedCache({
+      cache,
+      cacheKey: "agent-a",
+      value: "runtime-a",
+      maxSize: 2,
+      nowMs: 3,
+    })
+    touchTimedCache({
+      cache,
+      cacheKey: "agent-c",
+      value: "runtime-c",
+      maxSize: 2,
+      nowMs: 4,
+    })
+
+    expect([...cache.keys()]).toEqual(["agent-a", "agent-c"])
+  })
+
+  it("evicts expired runtime entries by ttl", () => {
+    const cache = new Map<
+      string,
+      {
+        value: string
+        lastAccessedAt: number
+      }
+    >()
+
+    touchTimedCache({
+      cache,
+      cacheKey: "agent-a",
+      value: "runtime-a",
+      maxSize: 10,
+      nowMs: 1,
+    })
+    touchTimedCache({
+      cache,
+      cacheKey: "agent-b",
+      value: "runtime-b",
+      maxSize: 10,
+      nowMs: 50,
+    })
+
+    evictExpiredTimedCache({
+      cache,
+      ttlMs: 60,
+      nowMs: 100,
+    })
+
+    expect([...cache.keys()]).toEqual(["agent-b"])
   })
 })

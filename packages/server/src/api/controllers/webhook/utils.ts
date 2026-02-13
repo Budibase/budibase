@@ -67,6 +67,31 @@ export const pickLatestConversation = <TScope>({
     )
     .sort((a, b) => toSortTimestamp(b) - toSortTimestamp(a))[0]
 
+export const touchBoundedCache = <TValue>({
+  cache,
+  cacheKey,
+  value,
+  maxSize,
+}: {
+  cache: Map<string, TValue>
+  cacheKey: string
+  value: TValue
+  maxSize: number
+}) => {
+  if (cache.has(cacheKey)) {
+    cache.delete(cacheKey)
+  }
+  cache.set(cacheKey, value)
+
+  while (cache.size > maxSize) {
+    const firstKey = cache.keys().next().value
+    if (!firstKey) {
+      break
+    }
+    cache.delete(firstKey)
+  }
+}
+
 export const touchConversationCache = ({
   cache,
   cacheKey,
@@ -82,16 +107,59 @@ export const touchConversationCache = ({
     return
   }
 
-  if (cache.has(cacheKey)) {
-    cache.delete(cacheKey)
-  }
-  cache.set(cacheKey, chatId)
+  touchBoundedCache({
+    cache,
+    cacheKey,
+    value: chatId,
+    maxSize,
+  })
+}
 
-  while (cache.size > maxSize) {
-    const firstKey = cache.keys().next().value
-    if (!firstKey) {
-      break
+export interface TimedCacheEntry<TValue> {
+  value: TValue
+  lastAccessedAt: number
+}
+
+export const touchTimedCache = <TValue>({
+  cache,
+  cacheKey,
+  value,
+  maxSize,
+  nowMs = Date.now(),
+}: {
+  cache: Map<string, TimedCacheEntry<TValue>>
+  cacheKey: string
+  value: TValue
+  maxSize: number
+  nowMs?: number
+}) => {
+  touchBoundedCache({
+    cache,
+    cacheKey,
+    value: {
+      value,
+      lastAccessedAt: nowMs,
+    },
+    maxSize,
+  })
+}
+
+export const evictExpiredTimedCache = <TValue>({
+  cache,
+  ttlMs,
+  nowMs = Date.now(),
+}: {
+  cache: Map<string, TimedCacheEntry<TValue>>
+  ttlMs: number
+  nowMs?: number
+}) => {
+  if (ttlMs <= 0 || cache.size === 0) {
+    return
+  }
+
+  for (const [cacheKey, entry] of cache.entries()) {
+    if (nowMs - entry.lastAccessedAt > ttlMs) {
+      cache.delete(cacheKey)
     }
-    cache.delete(firstKey)
   }
 }

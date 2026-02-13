@@ -6,11 +6,7 @@ import {
   type TurnContext,
 } from "@microsoft/agents-hosting"
 import { v4 } from "uuid"
-import {
-  context,
-  docIds,
-  HTTPError,
-} from "@budibase/backend-core"
+import { context, docIds, HTTPError } from "@budibase/backend-core"
 import type {
   ChatApp,
   ChatConversation,
@@ -30,9 +26,12 @@ import {
   truncateTitle,
 } from "../ai/chatConversations"
 import {
+  evictExpiredTimedCache,
   ensureProdWorkspaceWebhookRoute,
   isConversationExpired,
   pickLatestConversation,
+  type TimedCacheEntry,
+  touchTimedCache,
   touchConversationCache,
 } from "./utils"
 
@@ -40,20 +39,20 @@ const TEAMS_ASK_COMMAND = "ask"
 const TEAMS_NEW_COMMAND = "new"
 const TEAMS_DEFAULT_IDLE_TIMEOUT_MINUTES = 45
 const TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE = 5000
+const TEAMS_DEFAULT_RUNTIME_CACHE_SIZE = 500
+const TEAMS_DEFAULT_RUNTIME_CACHE_TTL_MINUTES = 60
 const TEAMS_MAX_MESSAGE_LENGTH = 3500
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
-const TEAMS_WELCOME_MESSAGE =
-  `Budibase agent is ready. Send a message to chat, or "${TEAMS_NEW_COMMAND}" to start a new conversation.`
+const TEAMS_WELCOME_MESSAGE = `Budibase agent is ready. Send a message to chat, or "${TEAMS_NEW_COMMAND}" to start a new conversation.`
 
 const teamsConversationCache = new Map<string, string>()
+const teamsRuntimeCache = new Map<string, TimedCacheEntry<TeamsRuntime>>()
 
 interface TeamsRuntime {
   adapter: CloudAdapter
   authenticate: ReturnType<typeof authorizeJWT>
 }
-
-const teamsRuntimeCache = new Map<string, TeamsRuntime>()
 
 export const isTeamsConversationExpired = ({
   chat,
@@ -64,23 +63,6 @@ export const isTeamsConversationExpired = ({
   idleTimeoutMs: number
   nowMs?: number
 }) => isConversationExpired({ chat, idleTimeoutMs, nowMs })
-
-export const getTeamsIdleTimeoutMs = () => {
-  const configured = Number(process.env.TEAMS_CONVERSATION_IDLE_TIMEOUT_MINUTES)
-  const minutes =
-    Number.isFinite(configured) && configured > 0
-      ? configured
-      : TEAMS_DEFAULT_IDLE_TIMEOUT_MINUTES
-  return minutes * 60 * 1000
-}
-
-const getTeamsConversationCacheSize = () => {
-  const configured = Number(process.env.TEAMS_CONVERSATION_CACHE_SIZE)
-  if (Number.isFinite(configured) && configured > 0) {
-    return Math.floor(configured)
-  }
-  return TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE
-}
 
 const getTeamsConversationCacheKey = ({
   workspaceId,
@@ -165,7 +147,7 @@ const findTeamsConversation = async ({
         cache: teamsConversationCache,
         cacheKey,
         chatId: cachedChatId,
-        maxSize: getTeamsConversationCacheSize(),
+        maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE,
       })
       return cachedChat
     }
@@ -188,7 +170,7 @@ const findTeamsConversation = async ({
       cache: teamsConversationCache,
       cacheKey,
       chatId: picked._id,
-      maxSize: getTeamsConversationCacheSize(),
+      maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE,
     })
   }
   return picked
@@ -198,7 +180,7 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
   if (configMinutes && configMinutes > 0) {
     return configMinutes * 60 * 1000
   }
-  return getTeamsIdleTimeoutMs()
+  return TEAMS_DEFAULT_IDLE_TIMEOUT_MINUTES
 }
 
 const buildTeamsUserContext = (
@@ -233,9 +215,14 @@ export const splitTeamsMessage = (
 }
 
 export const stripTeamsMentions = (text: string) =>
-  text.replace(/<at>[^<]*<\/at>/gi, " ").replace(/\s+/g, " ").trim()
+  text
+    .replace(/<at>[^<]*<\/at>/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
 
-export const parseTeamsCommand = (text?: string): {
+export const parseTeamsCommand = (
+  text?: string
+): {
   command: TeamsCommand
   content: string
 } => {
@@ -296,10 +283,25 @@ const getTeamsRuntime = ({
   appPassword: string
   tenantId?: string
 }): TeamsRuntime => {
+  const nowMs = Date.now()
+  const maxSize = TEAMS_DEFAULT_RUNTIME_CACHE_SIZE
+  const ttlMs = TEAMS_DEFAULT_RUNTIME_CACHE_TTL_MINUTES
   const cacheKey = [agentId, appId, appPassword, tenantId || ""].join(":")
+  evictExpiredTimedCache({
+    cache: teamsRuntimeCache,
+    ttlMs,
+    nowMs,
+  })
   const existing = teamsRuntimeCache.get(cacheKey)
   if (existing) {
-    return existing
+    touchTimedCache({
+      cache: teamsRuntimeCache,
+      cacheKey,
+      value: existing.value,
+      maxSize,
+      nowMs,
+    })
+    return existing.value
   }
 
   const authConfig = buildTeamsAuthConfig({ appId, appPassword, tenantId })
@@ -307,7 +309,13 @@ const getTeamsRuntime = ({
     adapter: new CloudAdapter(authConfig),
     authenticate: authorizeJWT(authConfig),
   }
-  teamsRuntimeCache.set(cacheKey, runtime)
+  touchTimedCache({
+    cache: teamsRuntimeCache,
+    cacheKey,
+    value: runtime,
+    maxSize,
+    nowMs,
+  })
   return runtime
 }
 
@@ -438,7 +446,8 @@ const handleTeamsMessage = async ({
     const channelId = activity.channelData?.channel?.id?.trim()
     const teamId = activity.channelData?.team?.id?.trim()
     const tenantId =
-      activity.channelData?.tenant?.id?.trim() || activity.from?.tenantId?.trim()
+      activity.channelData?.tenant?.id?.trim() ||
+      activity.from?.tenantId?.trim()
     const conversationType = activity.conversation?.conversationType?.trim()
 
     const channel: ChatConversationChannel = {
@@ -486,9 +495,11 @@ const handleTeamsMessage = async ({
           scope,
         }),
         chatId,
-        maxSize: getTeamsConversationCacheSize(),
+        maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE,
       })
-      return await reply("Started a new conversation. Send a message to continue.")
+      return await reply(
+        "Started a new conversation. Send a message to continue."
+      )
     }
 
     if (!content) {
@@ -554,7 +565,7 @@ const handleTeamsMessage = async ({
         scope,
       }),
       chatId,
-      maxSize: getTeamsConversationCacheSize(),
+      maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE,
     })
 
     await reply(result.assistantText || "No response generated.")
@@ -620,7 +631,9 @@ export async function teamsWebhook(
     return
   }
 
-  let integration: ReturnType<typeof sdk.ai.deployments.teams.validateTeamsIntegration>
+  let integration: ReturnType<
+    typeof sdk.ai.deployments.teams.validateTeamsIntegration
+  >
   try {
     integration = await context.doInWorkspaceContext(prodAppId, async () => {
       const agent = await sdk.ai.agents.getOrThrow(agentId)
