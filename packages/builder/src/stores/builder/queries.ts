@@ -1,6 +1,6 @@
 import { derived, get, Writable } from "svelte/store"
-import { datasources } from "./datasources"
 import { integrations } from "./integrations"
+import type { SourceName } from "@budibase/types"
 import { API } from "@/api"
 import { duplicateName } from "@/helpers/duplicate"
 import { DerivedBudiStore } from "@/stores/BudiStore"
@@ -68,19 +68,22 @@ export class QueryStore extends DerivedBudiStore<
     }))
   }
 
-  async save(datasourceId: string, query: SaveQueryRequest) {
+  async save(
+    datasourceId: string,
+    query: SaveQueryRequest,
+    datasourceSource?: SourceName
+  ) {
     const _integrations = get(integrations)
-    const dataSource = get(datasources).list.filter(
-      ds => ds._id === datasourceId
-    )
+
     // Check if readable attribute is found
-    if (dataSource.length !== 0) {
-      const integration = _integrations[dataSource[0].source]
-      const readable = integration?.query[query.queryVerb].readable
+    if (datasourceSource) {
+      const integration = _integrations[datasourceSource]
+      const readable = integration?.query?.[query.queryVerb]?.readable
       if (readable) {
         query.readable = readable
       }
     }
+
     query.datasourceId = datasourceId
     const savedQuery = await API.saveQuery(query)
     this.store.update(state => {
@@ -176,6 +179,23 @@ export class QueryStore extends DerivedBudiStore<
 }
 
 export const queries = new QueryStore()
+
+/**
+ * These break the circular dependency with datasources.ts
+ * Temporary work around until a general approach is applied to all
+ * stores
+ */
+export const saveQuery = (
+  datasourceId: string,
+  query: SaveQueryRequest,
+  datasourceSource?: SourceName
+) => {
+  return queries.save(datasourceId, query, datasourceSource)
+}
+
+export const removeDatasourceQueries = (datasourceId: string) => {
+  queries.removeDatasourceQueries(datasourceId)
+}
 
 export const markSkipUnsavedPrompt = (queryId?: string | null) => {
   skipNextUnsavedPrompt = true
