@@ -10,6 +10,7 @@
   import PortalModal from "./PortalModal.svelte"
   import { API } from "@/api"
   import AILogo from "./AILogo.svelte"
+  import EditAIConfigButton from "./EditAIConfigButton.svelte"
 
   let configModal: { show: () => void; hide: () => void }
   let portalModal: { show: () => void; hide: () => void }
@@ -72,6 +73,10 @@
       column: "icon",
       component: AILogo,
     },
+    {
+      column: "edit",
+      component: EditAIConfigButton,
+    },
   ]
 
   function createAIConfig(provider?: string) {
@@ -125,7 +130,7 @@
         hideHeader
         rounded
         allowClickRows={false}
-        on:editrow={e => editAIConfig(e.detail)}
+        allowEditRows={false}
       ></Table>
       {#each completionConfigs as config (config._id)}
         <CustomAIConfigTile
