@@ -1,6 +1,7 @@
 import {
   BodyType,
   ImportEndpoint,
+  OpenAPIServer,
   Query,
   QueryParameter,
   QueryVerb,
@@ -22,6 +23,7 @@ export interface ImportInfo {
   securityHeaders?: string[]
   staticVariables?: Record<string, string>
   securitySchemes?: Record<string, SecurityScheme>
+  servers?: OpenAPIServer[]
 }
 
 enum MethodToVerb {
