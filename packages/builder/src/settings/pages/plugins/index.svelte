@@ -27,7 +27,6 @@
   interface PluginTableRow extends Plugin {
     usedInApps: string[]
     usedInAppsLabel: string
-    __selectable: boolean
   }
 
   const schema = {
@@ -68,9 +67,9 @@
   ]
 
   let modal: any
-  let bulkDeleteDialog: any
-  let searchTerm: any = ""
-  let filter: any = "all"
+  let bulkDeleteDialog: ConfirmDialog
+  let searchTerm = ""
+  let filter = "all"
   let selectedRows: PluginTableRow[] = []
   let deletingPlugins = false
   let filterOptions = [
@@ -123,26 +122,8 @@
       usedInAppsLabel: usedInApps.length
         ? `${usedInApps.length} app${usedInApps.length === 1 ? "" : "s"}`
         : "Not used",
-      __selectable: usedInApps.length === 0,
     }
   }) as PluginTableRow[]
-
-  $: {
-    const selectablePluginIds = new Set(
-      enrichedPlugins
-        .filter(plugin => plugin._id && plugin.__selectable !== false)
-        .map(plugin => plugin._id as string)
-    )
-    const nextSelection = selectedRows.filter(
-      row => row._id && selectablePluginIds.has(row._id)
-    )
-    const hasSameSelection =
-      nextSelection.length === selectedRows.length &&
-      nextSelection.every((row, index) => row?._id === selectedRows[index]?._id)
-    if (!hasSameSelection) {
-      selectedRows = nextSelection
-    }
-  }
 
   $: filteredPlugins = enrichedPlugins
     .filter((plugin: any) => {
@@ -362,6 +343,18 @@
   1
     ? ""
     : "s"}?
+  {#if selectedRows.some(row => row.usedInApps?.length)}
+    <div class="usage-warning">
+      The following plugins are currently used in apps:
+      <ul>
+        {#each selectedRows.filter(row => row.usedInApps?.length) as row}
+          <li>
+            <strong>{row.name}</strong> — {row.usedInApps.join(", ")}
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
 </ConfirmDialog>
 
 <style>
@@ -397,6 +390,13 @@
       width: 100%;
       justify-content: flex-end;
     }
+  }
+  .usage-warning {
+    margin-top: var(--spacing-m);
+  }
+  .usage-warning ul {
+    margin: var(--spacing-xs) 0 0 0;
+    padding-left: var(--spacing-l);
   }
   .updates-banner {
     display: flex;
