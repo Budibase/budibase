@@ -19,8 +19,8 @@
   import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
-  export let config: Omit<AIConfigResponse, "provider"> | undefined
-  export let provider: string | undefined
+  export let config: Omit<AIConfigResponse, "provider"> | undefined = undefined
+  export let provider: string | undefined = undefined
   export let type: AIConfigType
 
   const dispatch = createEventDispatcher<{ hide: void }>()
