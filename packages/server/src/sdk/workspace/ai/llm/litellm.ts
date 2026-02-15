@@ -5,11 +5,11 @@ import tracer from "dd-trace"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
 import {
+  CustomAIProviderConfig,
+  LLMResponse,
   AIQuotaUsageResponse,
   BUDIBASE_AI_PROVIDER_ID,
-  CustomAIProviderConfig,
 } from "@budibase/types"
-import { LLMResponse } from "."
 import nodeFetch from "node-fetch"
 
 type LiteLLMFetch = (

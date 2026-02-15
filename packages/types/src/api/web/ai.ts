@@ -1,36 +1,10 @@
+import { ModelMessage } from "ai"
 import openai from "openai"
 import { EnrichedBinding } from "../../ui"
-import { ModelMessage } from "ai"
 
-export type UserContent = string | openai.ChatCompletionContentPart[]
+export type { UserContent } from "ai"
 
-export interface SystemMessage {
-  role: "system"
-  content: string
-}
-
-export interface UserMessage {
-  role: "user"
-  content: UserContent
-}
-
-export interface AssistantMessage {
-  role: "assistant"
-  content: string | null
-  tool_calls?: openai.ChatCompletionMessageToolCall[]
-}
-
-export interface ToolMessage {
-  role: "tool"
-  tool_call_id: string
-  content: string
-}
-
-export type Message =
-  | SystemMessage
-  | UserMessage
-  | AssistantMessage
-  | ToolMessage
+export type Message = ModelMessage
 
 export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
 

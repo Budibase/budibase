@@ -5,11 +5,10 @@ import type {
   LanguageModelV3Usage,
 } from "@ai-sdk/provider"
 import { env, HTTPError } from "@budibase/backend-core"
+import { BUDIBASE_AI_MODEL_MAP, LLMResponse } from "@budibase/types"
 import { quotas } from "@budibase/pro"
-import { BUDIBASE_AI_MODEL_MAP } from "@budibase/types"
 import { wrapLanguageModel } from "ai"
 import { TransformStream } from "node:stream/web"
-import { LLMResponse } from "."
 
 const calculateBudibaseAICredits = (usage?: LanguageModelV3Usage): number => {
   if (!usage) {

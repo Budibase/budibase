@@ -1,20 +1,16 @@
-import { HTTPError } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import { getLLM } from "../llm"
-import { LLM } from "../models/base"
-
-import { generateAIColumns, generateData, generateTables } from "../prompts"
 import {
   aiColumnSchemas,
-  AIColumnSchemas,
   aiTableResponseToTableSchema,
   appendAIColumns,
-  GenerationStructure,
   generationStructure,
   tableDataStructuredOutput,
 } from "../structuredOutputs"
 import { TableSchemaFromAI } from "../types"
 import tracer from "dd-trace"
+import { generateText, ModelMessage, Output } from "ai"
+import { LLMResponse } from "@budibase/types"
+import z, { ZodObject } from "zod"
 
 interface Delegates {
   generateTablesDelegate: (
@@ -27,21 +23,34 @@ interface Delegates {
   ) => Promise<void>
 }
 
+const prompts = {
+  generateTable: `
+You are generating Budibase table schemas from user prompts.
+Always return at least 2 tables, and define only one side of relationships using a link field.
+Exclude id, created_at, and updated_at (Budibase adds them).
+Include a variety of column types: text, dropdown, date, number.
+Add at least one formula column, one attachment, and one multi-attachment column across the tables.
+Budibase handles reverse relationships and many-to-many links — never define join tables or reverse fields.
+You may specify foreignColumnName, but do not create that field manually.
+`,
+  generateAIColumns: `Given the generated schema, add only one field of type "AI" to relevant tables to add value to the Budibase user.`,
+  generateData: `
+For each table, populate the data field with realistic-looking sample records.
+Avoid placeholder values like "foo" or "bar". Use real names, emails, etc., and ensure values are unique across rows.
+`,
+}
+
 export class TableGeneration {
-  private llm: LLM
+  private llm: LLMResponse
 
   private delegates: Delegates
 
-  private constructor(llm: LLM, delegates: Delegates) {
+  private constructor(llm: LLMResponse, delegates: Delegates) {
     this.llm = llm
     this.delegates = delegates
   }
 
-  static async init(delegates: Delegates) {
-    const llm = await getLLM({ model: "gpt-5-mini", maxTokens: 5000 })
-    if (!llm) {
-      throw new HTTPError("LLM not available", 422)
-    }
+  static async init(llm: LLMResponse, delegates: Delegates) {
     return new TableGeneration(llm, delegates)
   }
 
@@ -58,19 +67,12 @@ export class TableGeneration {
       userPrompt: string
     ): Promise<TableSchemaFromAI[]> => {
       return tracer.trace("llm.getTableStructure", async () => {
-        const response = await this.llm.prompt(
-          generateTables()
-            .addUserMessage(userPrompt)
-            .withFormat(generationStructure)
+        const response = await this.generateStructuredOutput(
+          prompts.generateTable,
+          userPrompt,
+          generationStructure
         )
-        try {
-          const parsedResponse = JSON.parse(
-            response.message!
-          ) as GenerationStructure
-          return aiTableResponseToTableSchema(parsedResponse)
-        } catch (e) {
-          throw new HTTPError("Error generating tables", 500)
-        }
+        return aiTableResponseToTableSchema(response)
       })
     },
     generateAIColumns: (
@@ -86,20 +88,11 @@ export class TableGeneration {
       forTables: TableSchemaFromAI[]
     ) => {
       return tracer.trace("llm.generateData", async () => {
-        const llmResponse = await this.llm.prompt(
-          generateData()
-            .addUserMessage(userPrompt)
-            .withFormat(tableDataStructuredOutput(forTables))
+        return this.generateStructuredOutput(
+          prompts.generateData,
+          userPrompt,
+          tableDataStructuredOutput(forTables)
         )
-        try {
-          const json = JSON.parse(llmResponse.message!) as Record<
-            string,
-            Record<string, any>[]
-          >
-          return json
-        } catch (e) {
-          throw new HTTPError("Error generating data", 500)
-        }
       })
     },
   }
@@ -138,20 +131,37 @@ export class TableGeneration {
     userPrompt: string,
     tables: TableSchemaFromAI[]
   ) {
-    const response = await this.llm.prompt(
-      generateAIColumns()
-        .addUserMessage(
-          `This is the initial user prompt that generated the given schema:
-            "${userPrompt}"`
-        )
-        .withFormat(aiColumnSchemas(tables))
+    return this.generateStructuredOutput(
+      prompts.generateAIColumns,
+      `This is the initial user prompt that generated the given schema:
+            "${userPrompt}"`,
+      aiColumnSchemas(tables)
     )
+  }
 
-    try {
-      const aiColumns = JSON.parse(response.message!) as AIColumnSchemas
-      return aiColumns
-    } catch (e) {
-      throw new HTTPError("Error generating columns", 500)
-    }
+  private buildMessages(
+    systemMessage: string,
+    userContent: string
+  ): ModelMessage[] {
+    return [
+      { role: "system", content: systemMessage },
+      { role: "user", content: userContent },
+    ]
+  }
+
+  private async generateStructuredOutput<T extends ZodObject>(
+    systemMessage: string,
+    userContent: string,
+    schema: T
+  ): Promise<z.infer<T>> {
+    const messages = this.buildMessages(systemMessage, userContent)
+    const response = await generateText({
+      model: this.llm.chat,
+      messages,
+      output: Output.object({ schema }),
+      providerOptions: this.llm.providerOptions?.(false),
+    })
+
+    return response.output as z.infer<T>
   }
 }

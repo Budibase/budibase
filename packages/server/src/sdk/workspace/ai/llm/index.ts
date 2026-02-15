@@ -1,24 +1,12 @@
+import { HTTPError, env } from "@budibase/backend-core"
+import { BUDIBASE_AI_PROVIDER_ID, LLMResponse } from "@budibase/types"
 import tracer from "dd-trace"
 import sdk from "../../.."
-import { HTTPError, env } from "@budibase/backend-core"
-import { BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
-import { createLiteLLMOpenAI } from "./litellm"
 import { createBBAIClient } from "./bbai"
-import type { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
+import { createLiteLLMOpenAI } from "./litellm"
 
 export * as bbai from "./bbai"
-
-export interface LLMResponse {
-  chat: LanguageModelV3
-  embedding: EmbeddingModelV3
-  providerOptions?: (hasTools: boolean) =>
-    | {
-        openai: {
-          parallelToolCalls: boolean
-        }
-      }
-    | undefined
-}
+export * from "./utils"
 
 export async function createLLM(
   configId: string,

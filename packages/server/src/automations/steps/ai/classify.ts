@@ -1,9 +1,11 @@
+import { generateText } from "ai"
 import { ai } from "@budibase/pro"
 import * as automationUtils from "../../automationUtils"
 import {
   ClassifyContentStepInputs,
   ClassifyContentStepOutputs,
 } from "@budibase/types"
+import sdk from "../../../sdk"
 
 export async function run({
   inputs,
@@ -23,14 +25,17 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
-
     const categories = inputs.categoryItems!.map(item => item.category)
 
     const request = ai.classifyText(inputs.textInput, categories)
 
-    const llmResponse = await llm.prompt(request)
-    const determinedCategory = llmResponse?.message?.trim()
+    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+    const response = await generateText({
+      model: llm.chat,
+      messages: request.messages,
+      providerOptions: llm.providerOptions?.(false),
+    })
+    const determinedCategory = response.text?.trim()
 
     if (determinedCategory && categories.includes(determinedCategory)) {
       return {

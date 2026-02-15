@@ -1,5 +1,18 @@
+import type { EmbeddingModelV3, LanguageModelV3 } from "@ai-sdk/provider"
 import { Message } from "../api"
-import { ChatConversation, AIProvider } from "../documents"
+import { AIProvider, ChatConversation } from "../documents"
+
+export interface LLMResponse {
+  chat: LanguageModelV3
+  embedding: EmbeddingModelV3
+  providerOptions?: (hasTools: boolean) =>
+    | {
+        openai: {
+          parallelToolCalls: boolean
+        }
+      }
+    | undefined
+}
 
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",

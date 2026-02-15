@@ -3,9 +3,9 @@ import {
   Snippet,
   ContextUser,
   SummariseLength,
+  UserContent,
 } from "@budibase/types"
 import { LLMRequest } from "../llm"
-import { ChatCompletionContentPart } from "openai/resources/chat/completions"
 import { z } from "zod"
 import { AgentPromptOptions } from "../../types"
 
@@ -51,13 +51,11 @@ export function extractFileData(
   // Check if it's a base64 data URL (for images) or a file ID (for documents)
   const isDataUrl = fileIdOrDataUrl.startsWith("data:")
 
-  const content: ChatCompletionContentPart[] = isDataUrl
+  const content: UserContent = isDataUrl
     ? [
         {
-          type: "image_url",
-          image_url: {
-            url: fileIdOrDataUrl,
-          },
+          type: "image",
+          image: fileIdOrDataUrl,
         },
         { type: "text", text: prompt },
       ]
