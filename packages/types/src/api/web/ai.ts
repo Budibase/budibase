@@ -1,38 +1,12 @@
-import openai from "openai"
 import { EnrichedBinding } from "../../ui"
-import { ModelMessage } from "ai"
+import { ModelMessage, UserContent as AIUserContent } from "ai"
+import type z from "zod"
 
-export type UserContent = string | openai.ChatCompletionContentPart[]
+export type UserContent = string | AIUserContent
 
-export interface SystemMessage {
-  role: "system"
-  content: string
-}
+export type Message = ModelMessage
 
-export interface UserMessage {
-  role: "user"
-  content: UserContent
-}
-
-export interface AssistantMessage {
-  role: "assistant"
-  content: string | null
-  tool_calls?: openai.ChatCompletionMessageToolCall[]
-}
-
-export interface ToolMessage {
-  role: "tool"
-  tool_call_id: string
-  content: string
-}
-
-export type Message =
-  | SystemMessage
-  | UserMessage
-  | AssistantMessage
-  | ToolMessage
-
-export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
+export type ResponseFormat = "text" | "json" | z.ZodObject
 
 export interface ChatCompletionRequestV2 {
   messages: ModelMessage[]

@@ -1,20 +1,20 @@
 import {
   ImageContentTypes,
   LLMConfigOptions,
-  LLMStreamChunk,
   ResponseFormat,
 } from "@budibase/types"
 import { Readable } from "node:stream"
-import {
-  default as openai,
-  default as OpenAIClient,
-  OpenAI as OpenAITypes,
-  toFile,
-} from "openai"
+import { toFile, OpenAI as OpenAIClient } from "openai"
 import { LLMFullResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
 import { normalizeContentType } from "../utils"
 import { LLM } from "./base"
+import { generateText, LanguageModelUsage, Output } from "ai"
+import {
+  createOpenAI,
+  type OpenAIChatLanguageModelOptions,
+} from "@ai-sdk/openai"
+import { ProviderV3, SharedV3ProviderOptions } from "@ai-sdk/provider"
 
 export type OpenAIModel =
   | "gpt-4o-mini"
@@ -37,43 +37,72 @@ export enum GPT_5_MODELS {
 export function parseResponseFormat(
   responseFormat?: ResponseFormat
 ):
-  | openai.ResponseFormatText
-  | openai.ResponseFormatJSONObject
-  | openai.ResponseFormatJSONSchema
+  | ReturnType<typeof Output.text>
+  | ReturnType<typeof Output.json>
+  | ReturnType<typeof Output.object>
   | undefined {
   if (!responseFormat) {
     return
   }
 
   if (responseFormat === "text") {
-    return { type: "text" }
+    return Output.text()
   }
   if (responseFormat === "json") {
-    return { type: "json_object" }
+    return Output.json()
   }
 
-  return responseFormat
+  return Output.object({ schema: responseFormat })
 }
 
-function calculateBudibaseAICredits(
-  usage?: OpenAIClient.CompletionUsage
-): number {
+function calculateBudibaseAICredits(usage?: LanguageModelUsage): number {
   if (!usage) {
     return 0
   }
 
   // Output tokens are 3 times more expensive in OpenAI
   // We want to have a single figure in BB for simplicity
-  const inputTokens = usage.prompt_tokens
-  const outputTokens = usage.completion_tokens
+  const inputTokens = usage.inputTokens ?? 0
+  const outputTokens = usage.outputTokens ?? 0
   return outputTokens * 3 + inputTokens
 }
 
 export class OpenAI extends LLM {
-  protected client: OpenAIClient
+  protected client: ProviderV3
+  protected openAIClient: OpenAIClient
   constructor(opts: LLMConfigOptions) {
     super(opts)
-    this.client = this.getClient(opts)
+    if (!opts.apiKey) {
+      throw new Error("No OpenAI API key found")
+    }
+
+    let baseUrl = opts.baseUrl
+    if (baseUrl === "https://api.openai.com") {
+      baseUrl = "https://api.openai.com/v1"
+    }
+
+    this.client = this.getAISDKClient({
+      ...opts,
+      baseUrl: baseUrl,
+    })
+    this.openAIClient = this.getOpenAIClientClient({
+      ...opts,
+      baseUrl: baseUrl,
+    })
+  }
+
+  protected getAISDKClient(opts: LLMConfigOptions): ProviderV3 {
+    return createOpenAI({
+      apiKey: opts.apiKey,
+      baseURL: opts.baseUrl,
+    })
+  }
+
+  protected getOpenAIClientClient(opts: LLMConfigOptions) {
+    return new OpenAIClient({
+      apiKey: opts.apiKey,
+      baseURL: opts.baseUrl,
+    })
   }
 
   // Default verbosity preference for supported models. Subclasses
@@ -85,11 +114,19 @@ export class OpenAI extends LLM {
     return undefined
   }
 
-  protected getClient(opts: LLMConfigOptions): OpenAIClient {
-    if (!opts.apiKey) {
-      throw new Error("No OpenAI API key found")
+  protected getProviderOptions(): SharedV3ProviderOptions | undefined {
+    if (!Object.values(GPT_5_MODELS).includes(this.model as GPT_5_MODELS)) {
+      return
     }
-    return new OpenAIClient({ apiKey: opts.apiKey })
+
+    const openAIConfig: OpenAIChatLanguageModelOptions = {}
+    const verbosity = this.getVerbosityForModel()
+    if (verbosity) {
+      openAIConfig.textVerbosity = verbosity
+    }
+    openAIConfig.reasoningEffort = "minimal" // This effectively results in 0 reasoning tokens.
+
+    return { openai: openAIConfig }
   }
 
   async uploadFile(
@@ -117,101 +154,34 @@ export class OpenAI extends LLM {
 
     // For documents, use the files API
     const file = await toFile(data, filename)
-    const res = await this.client.files.create({ file, purpose: "assistants" })
+
+    const res = await this.openAIClient.files.create({
+      file,
+      purpose: "assistants",
+    })
     return res.id
   }
 
   protected async chatCompletion(
     request: LLMRequest
   ): Promise<LLMFullResponse> {
-    const parameters: OpenAITypes.ChatCompletionCreateParamsNonStreaming = {
-      model: this.model,
+    const providerOptions = this.getProviderOptions()
+
+    const response = await generateText({
+      model: this.client.languageModel(this.model),
       messages: request.messages,
-      max_completion_tokens: this._maxTokens,
-      response_format: parseResponseFormat(request.format),
-    }
+      maxOutputTokens: this._maxTokens,
+      output: parseResponseFormat(request.format),
+      providerOptions: providerOptions,
+    })
 
-    if (Object.values(GPT_5_MODELS).includes(this.model as GPT_5_MODELS)) {
-      const verbosity = this.getVerbosityForModel()
-      if (verbosity) {
-        parameters.verbosity = verbosity
-      }
-      parameters.reasoning_effort = "minimal" // This effectively results in 0 reasoning tokens.
-    }
-
-    const completion = await this.client.chat.completions.create(parameters)
-    const response = completion?.choices?.[0]?.message
-
-    if (response?.content) {
+    if (response.response.messages.length) {
       return {
-        messages: [
-          ...request.messages,
-          { role: response.role, content: response.content },
-        ],
-        tokensUsed: calculateBudibaseAICredits(completion.usage),
-      }
-    } else {
-      throw new Error("No response found")
-    }
-  }
-
-  protected async *chatCompletionStream(
-    request: LLMRequest
-  ): AsyncGenerator<LLMStreamChunk, void, unknown> {
-    const parameters: OpenAITypes.ChatCompletionCreateParamsStreaming = {
-      model: this.model,
-      messages: request.messages,
-      max_tokens: this.maxTokens,
-      response_format: parseResponseFormat(request.format),
-      stream: true,
-    }
-
-    try {
-      const stream = await this.client.chat.completions.create(parameters)
-
-      let contentBuffer = ""
-      let finalUsage: OpenAIClient.CompletionUsage | null = null
-
-      for await (const chunk of stream) {
-        const delta = chunk?.choices?.[0]?.delta
-        if (!delta) continue
-
-        // Handle content streaming
-        if (delta.content) {
-          contentBuffer += delta.content
-          yield {
-            type: "content",
-            content: delta.content,
-          }
-        }
-
-        if (chunk.usage) {
-          finalUsage = chunk.usage
-        }
-      }
-
-      const totalTokens = finalUsage
-        ? calculateBudibaseAICredits(finalUsage)
-        : 0
-
-      // Final response
-      if (contentBuffer) {
-        request.addMessage({
-          role: "assistant",
-          content: contentBuffer,
-        })
-      }
-
-      yield {
-        type: "done",
-        messages: request.messages,
-        tokensUsed: totalTokens,
-      }
-    } catch (error: any) {
-      yield {
-        type: "error",
-        content: error.message,
+        messages: [...request.messages, ...response.response.messages],
+        tokensUsed: calculateBudibaseAICredits(response.totalUsage),
       }
     }
+
+    throw new Error("No response found")
   }
 }

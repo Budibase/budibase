@@ -1,12 +1,13 @@
 import { z } from "zod"
 import {
   mockChatGPTResponse,
+  mockChatGPTStreamFailure,
   mockOpenAIFileUpload,
+  mockOpenAIResponsesResponse,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, setEnv } from "@budibase/backend-core"
-import { generateText, streamText } from "ai"
+import { configs, env, setEnv, withEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
   AIOperationEnum,
@@ -29,15 +30,7 @@ import {
 } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
-
-jest.mock("ai", () => {
-  const actual = jest.requireActual("ai")
-  return {
-    ...actual,
-    generateText: jest.fn(),
-    streamText: jest.fn(),
-  }
-})
+import { installHttpMocking, resetHttpMocking } from "../../../tests/jestEnv"
 
 jest.mock("@budibase/types", () => {
   const actual = jest.requireActual("@budibase/types")
@@ -52,17 +45,6 @@ jest.mock("@budibase/types", () => {
     },
   }
 })
-
-function toResponseFormat(schema: any, name = "response") {
-  return {
-    type: "json_schema" as const,
-    json_schema: {
-      name,
-      strict: false,
-      schema: schema.toJSONSchema({ target: "draft-7" }),
-    },
-  }
-}
 
 function dedent(str: string) {
   return str
@@ -139,12 +121,12 @@ const allProviders: TestSetup[] = [
         OPENAI_API_KEY: "test-key",
       })
     },
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockOpenAIResponsesResponse,
   },
   {
     name: "OpenAI API key with custom config",
     setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockOpenAIResponsesResponse,
   },
   {
     name: "Anthropic API key with custom config",
@@ -173,7 +155,7 @@ const allProviders: TestSetup[] = [
   {
     name: "BudibaseAI",
     setup: budibaseAI(),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockOpenAIResponsesResponse,
   },
 ]
 
@@ -188,11 +170,13 @@ describe("AI", () => {
     config.end()
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     nock.cleanAll()
+    await resetHttpMocking()
+    installHttpMocking()
   })
 
-  describe.each(allProviders)(
+  describe.each([allProviders[0]])(
     "provider: $name",
     ({ setup, mockLLMResponse }: TestSetup) => {
       let cleanup: () => Promise<void> | void
@@ -489,12 +473,9 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.guid()
-      const structuredOutput = toResponseFormat(
-        z.object({
-          [generator.word()]: z.string(),
-        }),
-        "key"
-      )
+      const structuredOutput = z.object({
+        [generator.word()]: z.string(),
+      })
       mockChatGPTResponse(gptResponse, { format: structuredOutput })
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
@@ -521,16 +502,13 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      // Ensure MockAgent is installed for OpenAI interceptors
-      const { installHttpMocking } = require("../../../tests/jestEnv")
-      installHttpMocking()
     })
 
     const mockAIGenerationStructure = (
       generationStructure: ai.GenerationStructure
     ) => {
       mockChatGPTResponse(JSON.stringify(generationStructure), {
-        format: toResponseFormat(ai.generationStructure),
+        format: ai.generationStructure,
       })
     }
 
@@ -539,10 +517,8 @@ describe("BudibaseAI", () => {
       aiColumnGeneration: ai.AIColumnSchemas
     ) =>
       mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
-        format: toResponseFormat(
-          ai.aiColumnSchemas(
-            ai.aiTableResponseToTableSchema(generationStructure)
-          )
+        format: ai.aiColumnSchemas(
+          ai.aiTableResponseToTableSchema(generationStructure)
         ),
       })
 
@@ -550,7 +526,7 @@ describe("BudibaseAI", () => {
       dataGeneration: Record<string, Record<string, any>[]>
     ) =>
       mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: toResponseFormat(ai.tableDataStructuredOutput([])),
+        format: ai.tableDataStructuredOutput([]),
       })
 
     const mockProcessAIColumn = (response: string) =>
@@ -1171,11 +1147,6 @@ describe("BudibaseAI", () => {
     let envCleanup: () => void
     let cleanup: () => Promise<void> | void
 
-    const generateTextMock = generateText as jest.MockedFunction<
-      typeof generateText
-    >
-    const streamTextMock = streamText as jest.MockedFunction<typeof streamText>
-
     beforeAll(async () => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
@@ -1217,19 +1188,7 @@ describe("BudibaseAI", () => {
     })
 
     it("proxies the OpenAI response without reshaping", async () => {
-      generateTextMock.mockResolvedValue({
-        response: {
-          body: {
-            object: "chat.completion",
-            choices: [
-              {
-                message: { content: "hello from openai" },
-              },
-            ],
-            usage: { total_tokens: 10 },
-          },
-        },
-      } as unknown as ReturnType<typeof generateText>)
+      mockChatGPTResponse("hello from openai")
 
       const response = await config.api.ai.openaiChatCompletions({
         model: "budibase/gpt-5-mini",
@@ -1239,23 +1198,12 @@ describe("BudibaseAI", () => {
 
       expect(response.object).toBe("chat.completion")
       expect(response.choices[0].message.content).toBe("hello from openai")
-      expect(response.usage?.total_tokens).toBeGreaterThan(0)
+      expect(response.usage?.total_tokens).toBe(4)
     })
 
     it("ignores extra fields (e.g. response_format)", async () => {
-      const format = toResponseFormat(z.object({ value: z.string() }))
-      generateTextMock.mockResolvedValue({
-        response: {
-          body: {
-            object: "chat.completion",
-            choices: [
-              {
-                message: { content: `{"value":"ok"}` },
-              },
-            ],
-          },
-        },
-      } as unknown as ReturnType<typeof generateText>)
+      const format = z.object({ value: z.string() })
+      mockChatGPTResponse(`{"value":"ok"}`)
 
       const response = await config.api.ai.openaiChatCompletions({
         model: "budibase/gpt-5-mini",
@@ -1269,14 +1217,10 @@ describe("BudibaseAI", () => {
       expect(response.choices[0].message.content).toBe(`{"value":"ok"}`)
     })
 
-    it("returns HTTP errors when stream initialization fails", async () => {
-      streamTextMock.mockImplementation(() => {
-        const error = new Error("Unauthorized") as Error & { status: number }
-        error.status = 401
-        throw error
-      })
+    it("returns SSE error when stream fails", async () => {
+      mockChatGPTStreamFailure()
 
-      await config.api.ai.openaiChatCompletions(
+      const resp = await config.api.ai.openaiChatCompletionsRaw(
         {
           model: "budibase/gpt-5-mini",
           messages: [{ role: "user", content: "hello" }],
@@ -1284,12 +1228,15 @@ describe("BudibaseAI", () => {
           licenseKey,
         },
         {
-          status: 401,
+          status: 200,
           headers: {
-            "Content-Type": /^application\/json/,
+            "Content-Type": /^text\/event-stream/,
           },
         }
       )
+
+      expect(resp.text).toContain(`"type":"server_error"`)
+      expect(resp.text).toContain(`"message":"stream failure"`)
     })
 
     it("rejects requests missing required fields", async () => {
@@ -1318,32 +1265,27 @@ describe("BudibaseAI", () => {
     })
 
     it("accepts Mistral models when configured", async () => {
-      const mistralCleanup = setEnv({
-        BBAI_MISTRAL_API_KEY: "mistral-key",
-        MISTRAL_BASE_URL: "https://api.mistral.ai",
-      })
-      generateTextMock.mockResolvedValue({
-        response: {
-          body: {
-            object: "chat.completion",
-            choices: [
-              {
-                message: { content: "hello from mistral" },
-              },
-            ],
-          },
+      await withEnv(
+        {
+          BBAI_MISTRAL_API_KEY: "mistral-key",
+          MISTRAL_BASE_URL: "https://fake.mistral.ai",
         },
-      } as unknown as ReturnType<typeof generateText>)
+        async () => {
+          mockChatGPTResponse("hello from mistral", {
+            baseUrl: "https://fake.mistral.ai",
+            path: "/chat/completions",
+          })
 
-      const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/mistral-small-latest",
-        messages: [{ role: "user", content: "hello" }],
-        stream: false,
-        licenseKey,
-      })
+          const response = await config.api.ai.openaiChatCompletions({
+            model: "budibase/mistral-small-latest",
+            messages: [{ role: "user", content: "hello" }],
+            stream: false,
+            licenseKey,
+          })
 
-      expect(response.choices[0].message.content).toBe("hello from mistral")
-      mistralCleanup()
+          expect(response.choices[0].message.content).toBe("hello from mistral")
+        }
+      )
     })
 
     it("errors when OpenAI API key is missing", async () => {

@@ -10,7 +10,6 @@ import {
   ResponseFormat,
 } from "@budibase/types"
 import { tracer } from "dd-trace"
-import openai from "openai"
 import { z } from "zod"
 import { enrichAIConfig } from "../sdk/ai"
 import { Anthropic, AnthropicModel } from "./models"
@@ -189,18 +188,9 @@ export class LLMRequest {
   messages: Message[] = []
   format?: ResponseFormat
 
-  withFormat(
-    format: "text" | "json" | openai.ResponseFormatJSONSchema | z.ZodType
-  ) {
-    if (format instanceof z.ZodType) {
-      this.format = {
-        type: "json_schema",
-        json_schema: {
-          name: "response",
-          strict: false,
-          schema: format.toJSONSchema({ target: "draft-7" }),
-        },
-      }
+  withFormat(format: "text" | "json" | z.ZodObject) {
+    if (format instanceof z.ZodObject) {
+      this.format = format
     } else {
       this.format = format
     }

@@ -1,9 +1,17 @@
 import { LLMConfigOptions } from "@budibase/types"
 import { OpenAI, GPT_5_MODELS } from "./openai"
 import { AzureOpenAI as AzureOpenAIClient } from "openai"
+import { createAzure } from "@ai-sdk/azure"
 
 export class AzureOpenAI extends OpenAI {
-  protected override getClient(opts: LLMConfigOptions) {
+  protected override getAISDKClient(opts: LLMConfigOptions) {
+    return createAzure({
+      apiKey: opts.apiKey,
+      baseURL: opts.baseUrl,
+    })
+  }
+
+  protected override getOpenAIClientClient(opts: LLMConfigOptions) {
     if (!opts.apiKey) {
       throw new Error("No Azure OpenAI API key found")
     }
