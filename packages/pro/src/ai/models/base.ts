@@ -4,7 +4,6 @@ import {
   AIOperationEnum,
   EnrichedBinding,
   LLMConfigOptions,
-  LLMStreamChunk,
   Row,
   Snippet,
 } from "@budibase/types"
@@ -53,10 +52,6 @@ export abstract class LLM {
     request: LLMRequest
   ): Promise<LLMFullResponse>
 
-  protected abstract chatCompletionStream(
-    request: LLMRequest
-  ): AsyncGenerator<LLMStreamChunk, void, unknown>
-
   async prompt(
     requestOrString: string | LLMRequest
   ): Promise<LLMPromptResponse> {
@@ -88,12 +83,6 @@ export abstract class LLM {
       const response = await this.chatCompletion(request)
       return response
     })
-  }
-
-  async *chatStream(
-    request: LLMRequest
-  ): AsyncGenerator<LLMStreamChunk, void, unknown> {
-    yield* this.chatCompletionStream(request)
   }
 
   async summarizeText(prompt: string): Promise<LLMPromptResponse> {
