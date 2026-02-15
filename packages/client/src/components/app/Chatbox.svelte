@@ -1,49 +1,326 @@
 <script lang="ts">
+  import { createAPIClient } from "@budibase/frontend-core"
+  import ChatConversationPanel from "@budibase/frontend-core/src/components/Chatbox/ChatConversationPanel.svelte"
+  import ChatNavigationPanel from "@budibase/frontend-core/src/components/Chatbox/ChatNavigationPanel.svelte"
+  import { Body, notifications } from "@budibase/bbui"
+  import { Header } from "@budibase/shared-core"
+  import type {
+    Agent,
+    ChatAppAgent,
+    ChatConversation,
+    DraftChatConversation,
+    WithoutDocMetadata,
+  } from "@budibase/types"
   import { appStore } from "@/stores"
-  import { Chatbox } from "@budibase/frontend-core"
-  import type { ChatConversationRequest } from "@budibase/types"
+  import { onMount } from "svelte"
 
-  export let intro: string = "Ask our assistant anything about this app."
+  type ChatConversationLike = ChatConversation | DraftChatConversation
 
-  let chat: ChatConversationRequest = {
+  type EnabledAgentListItem = {
+    agentId: string
+    name?: string
+    isDefault?: boolean
+    icon?: string
+    iconColor?: string
+  }
+
+  const INITIAL_CHAT: WithoutDocMetadata<DraftChatConversation> = {
     title: "",
     messages: [],
     chatAppId: "",
     agentId: "",
   }
-  $: workspaceId = $appStore?.appId ?? null
-</script>
 
-<section class="agent-chat">
-  {#if intro}
-    <p class="agent-chat__intro">{intro}</p>
-  {/if}
-  <div class="chat-wrapper">
-    {#if workspaceId}
-      <Chatbox {chat} {workspaceId} />
-    {/if}
-  </div>
-</section>
+  const API = createAPIClient({
+    attachHeaders: headers => {
+      if (workspaceId) {
+        headers[Header.APP_ID] = workspaceId
+      }
+    },
+  })
 
-<style>
-  .agent-chat {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m, 16px);
-    width: 100%;
+  let chat: ChatConversationLike = { ...INITIAL_CHAT }
+  let deletingChat = false
+  let loading = true
+  let initialPrompt = ""
+  let selectedAgentId: string | null = null
+  let enabledAgentList: EnabledAgentListItem[] = []
+  let conversationHistory: ChatConversation[] = []
+  let selectedConversationId: string | undefined
+  let chatAppId = ""
+  let chatAgents: ChatAppAgent[] = []
+  let agents: Agent[] = []
+
+  $: workspaceId = $appStore?.appId ?? ""
+  $: filteredConversationHistory = conversationHistory.filter(conversation => {
+    if (!conversation?.agentId) {
+      return false
+    }
+    const agent = agents.find(item => item._id === conversation.agentId)
+    return Boolean(agent?.live)
+  })
+  $: hasAnyAgents = agents.length > 0
+  $: hasEnabledAgents = enabledAgentList.length > 0
+  $: showEmptyState = !loading && !hasEnabledAgents
+  $: emptyStateMessage = hasAnyAgents
+    ? "No agents enabled for this chat app. Ask your administrator to enable one to start chatting."
+    : "No agents have been configured for this chat app yet."
+  $: selectedAgentName = selectedAgentId
+    ? agents.find(agent => agent._id === selectedAgentId)?.name ||
+      "Unknown agent"
+    : ""
+  $: conversationStarters =
+    chatAgents.find(agent => agent.agentId === selectedAgentId)
+      ?.conversationStarters || []
+  $: isAgentKnown = selectedAgentId
+    ? agents.some(agent => agent._id === selectedAgentId)
+    : false
+  $: isAgentLive = selectedAgentId
+    ? agents.some(agent => agent._id === selectedAgentId && agent.live)
+    : false
+
+  const agentIconColors = [
+    "#6366F1",
+    "#F59E0B",
+    "#10B981",
+    "#8B5CF6",
+    "#EF4444",
+  ]
+
+  const refreshConversations = async () => {
+    if (!chatAppId) {
+      conversationHistory = []
+      return []
+    }
+    const conversations = await API.fetchChatHistory(chatAppId)
+    conversationHistory = conversations || []
+    return conversationHistory
   }
 
-  .agent-chat__intro {
-    margin: 0;
-    color: var(--spectrum-global-color-gray-700);
+  const refreshChatData = async () => {
+    if (!workspaceId) {
+      loading = false
+      return
+    }
+
+    loading = true
+    try {
+      const [chatApp, agentsResponse] = await Promise.all([
+        API.fetchChatApp(workspaceId),
+        API.fetchAgents(),
+      ])
+
+      chatAppId = chatApp?._id || ""
+      chatAgents = chatApp?.agents || []
+      agents = agentsResponse?.agents || []
+
+      const baseAgentList = chatAgents
+        .filter(agent => agent.isEnabled)
+        .map((agent, index) => {
+          const resolvedAgent = agents.find(item => item._id === agent.agentId)
+          return {
+            agentId: agent.agentId,
+            name: resolvedAgent?.name,
+            isDefault: agent.isDefault,
+            icon: resolvedAgent?.icon || "SideKick",
+            iconColor:
+              resolvedAgent?.iconColor ||
+              agentIconColors[index % agentIconColors.length],
+          }
+        })
+        .filter(agent => Boolean(agent.name))
+
+      const defaultAgent = baseAgentList.find(agent => agent.isDefault)
+      const sortedAgents = baseAgentList
+        .filter(agent => !agent.isDefault)
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+
+      enabledAgentList = defaultAgent
+        ? [defaultAgent, ...sortedAgents]
+        : sortedAgents
+
+      await refreshConversations()
+    } catch (err) {
+      console.error(err)
+      notifications.error("Failed to load chat")
+      enabledAgentList = []
+      conversationHistory = []
+    } finally {
+      loading = false
+    }
+  }
+
+  const selectAgent = async (agentId: string) => {
+    selectedAgentId = agentId
+    selectedConversationId = undefined
+    chat = {
+      ...INITIAL_CHAT,
+      chatAppId,
+      agentId,
+    }
+  }
+
+  const selectChat = async (selectedChat: ChatConversation) => {
+    if (!selectedChat.agentId) {
+      return
+    }
+    selectedAgentId = selectedChat.agentId
+    selectedConversationId = selectedChat._id
+    chat = {
+      ...selectedChat,
+      agentId: selectedChat.agentId,
+      chatAppId: selectedChat.chatAppId || chatAppId,
+    }
+  }
+
+  const deleteCurrentChat = async () => {
+    if (!chat?._id || deletingChat || !chatAppId) {
+      return
+    }
+
+    deletingChat = true
+    try {
+      await API.deleteChatConversation(chat._id, chatAppId)
+      const updatedConversations = await refreshConversations()
+      if (updatedConversations.length) {
+        await selectChat(updatedConversations[0])
+      } else {
+        selectedAgentId = null
+        selectedConversationId = undefined
+        chat = { ...INITIAL_CHAT, chatAppId }
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to delete chat"
+      notifications.error(message)
+    } finally {
+      deletingChat = false
+    }
+  }
+
+  const handleChatSaved = async (
+    event: CustomEvent<{ chatId?: string; chat: ChatConversationLike }>
+  ) => {
+    const { chatId, chat: savedChat } = event.detail
+    const updatedConversations = await refreshConversations()
+    const lastMessageId = savedChat.messages[savedChat.messages.length - 1]?.id
+
+    const newCurrentChat =
+      updatedConversations.find(conversation => conversation._id === chatId) ||
+      (lastMessageId
+        ? updatedConversations.find(conversation =>
+            conversation.messages?.some(message => message.id === lastMessageId)
+          )
+        : undefined)
+
+    if (!newCurrentChat?._id) {
+      return
+    }
+
+    selectedConversationId = newCurrentChat._id
+    chat = {
+      ...newCurrentChat,
+      chatAppId: newCurrentChat.chatAppId || chatAppId,
+    }
+
+    if (initialPrompt) {
+      initialPrompt = ""
+    }
+  }
+
+  const handleAgentSelected = (event: CustomEvent<{ agentId: string }>) => {
+    selectAgent(event.detail.agentId)
+  }
+
+  const handleConversationSelected = (
+    event: CustomEvent<{ conversationId: string }>
+  ) => {
+    const conversation = filteredConversationHistory.find(
+      convo => convo._id === event.detail.conversationId
+    )
+
+    if (conversation) {
+      selectChat(conversation)
+    }
+  }
+
+  const handleStartChat = async (
+    event: CustomEvent<{ agentId: string; prompt: string }>
+  ) => {
+    await selectAgent(event.detail.agentId)
+    initialPrompt = event.detail.prompt
+  }
+
+  onMount(async () => {
+    await refreshChatData()
+  })
+</script>
+
+<div class="chat-app-shell">
+  {#if showEmptyState}
+    <div class="chat-empty-state">
+      <Body size="M">{emptyStateMessage}</Body>
+    </div>
+  {:else}
+    <ChatNavigationPanel
+      {enabledAgentList}
+      conversationHistory={filteredConversationHistory}
+      {selectedConversationId}
+      on:agentSelected={handleAgentSelected}
+      on:conversationSelected={handleConversationSelected}
+    />
+
+    <ChatConversationPanel
+      bind:chat
+      {deletingChat}
+      {enabledAgentList}
+      {selectedAgentId}
+      {selectedAgentName}
+      {workspaceId}
+      {conversationStarters}
+      {isAgentKnown}
+      {isAgentLive}
+      {initialPrompt}
+      {loading}
+      on:deleteChat={deleteCurrentChat}
+      on:chatSaved={handleChatSaved}
+      on:agentSelected={handleAgentSelected}
+      on:startChat={handleStartChat}
+    />
+  {/if}
+</div>
+
+<style>
+  .chat-app-shell {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .chat-empty-state {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
     text-align: center;
   }
 
-  .chat-wrapper {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    align-items: stretch;
+  @media (max-width: 1000px) {
+    .chat-app-shell {
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .chat-app-shell :global(.chat-nav-shell) {
+      width: 100%;
+      min-width: 100%;
+      border-right: 0;
+      border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    }
   }
 </style>
