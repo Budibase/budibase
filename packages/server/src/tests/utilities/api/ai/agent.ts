@@ -2,6 +2,8 @@ import {
   Agent,
   CreateAgentRequest,
   CreateAgentResponse,
+  ProvisionAgentTeamsChannelRequest,
+  ProvisionAgentTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   UpdateAgentRequest,
@@ -55,6 +57,20 @@ export class AgentAPI extends TestAPI {
   ): Promise<SyncAgentDiscordCommandsResponse> => {
     return await this._post<SyncAgentDiscordCommandsResponse>(
       `/api/agent/${agentId}/discord/sync`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  provisionTeamsChannel = async (
+    agentId: string,
+    body?: ProvisionAgentTeamsChannelRequest,
+    expectations?: Expectations
+  ): Promise<ProvisionAgentTeamsChannelResponse> => {
+    return await this._post<ProvisionAgentTeamsChannelResponse>(
+      `/api/agent/${agentId}/teams/provision`,
       {
         body,
         expectations,

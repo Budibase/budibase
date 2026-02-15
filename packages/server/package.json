@@ -57,6 +57,7 @@
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
     "@budibase/types": "*",
+    "@microsoft/agents-hosting": "^1.2.3",
     "@bull-board/api": "5.10.2",
     "@bull-board/koa": "5.10.2",
     "@elastic/elasticsearch": "7.10.0",

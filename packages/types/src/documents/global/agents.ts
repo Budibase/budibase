@@ -29,6 +29,15 @@ export interface DiscordAgentIntegration {
   interactionsEndpointUrl?: string
 }
 
+export interface TeamsAgentIntegration {
+  appId?: string
+  appPassword?: string
+  tenantId?: string
+  chatAppId?: string
+  messagingEndpointUrl?: string
+  idleTimeoutMinutes?: number
+}
+
 export interface Agent extends Document {
   name: string
   description?: string
@@ -45,6 +54,7 @@ export interface Agent extends Document {
   ragMinDistance?: number
   ragTopK?: number
   discordIntegration?: DiscordAgentIntegration
+  teamsIntegration?: TeamsAgentIntegration
 }
 
 export interface AgentMessageRagSource {
