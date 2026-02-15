@@ -1,16 +1,10 @@
 <script lang="ts">
-  import {
-    Body,
-    Button,
-    CopyInput,
-    Input,
-    Label,
-    StatusLight,
-    notifications,
-  } from "@budibase/bbui"
+  import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
   import { DiscordCommands } from "@budibase/shared-core"
   import type { Agent, SyncAgentDiscordCommandsResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
+  import { toOptionalIdleTimeout, toOptionalValue } from "./utils"
 
   const DISCORD_ASK_COMMAND = DiscordCommands.ASK
   const DISCORD_NEW_COMMAND = DiscordCommands.NEW
@@ -79,19 +73,6 @@
     draftAgentId = currentAgent._id
   })
 
-  const toOptionalValue = (value: string) => {
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : undefined
-  }
-
-  const toOptionalIdleTimeout = (value: number) => {
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return undefined
-    }
-    return Math.floor(parsed)
-  }
-
   const saveDiscordIntegration = async () => {
     if (!agent?._id || saving) {
       return
@@ -140,8 +121,19 @@
   }
 </script>
 
-<div class="discord-config">
-  <div class="field-grid">
+<ChannelConfigLayout
+  statusPositive={isConnected}
+  positiveStatusLabel="Connected"
+  negativeStatusLabel="Not connected"
+  actionLabel={syncing
+    ? "Enabling..."
+    : isConnected
+      ? "Update channel"
+      : "Enable channel"}
+  actionDisabled={saving || syncing}
+  onAction={syncCommands}
+>
+  {#snippet fields()}
     <Input label="Application ID" bind:value={draft.applicationId} />
     <Input label="Public key" type="password" bind:value={draft.publicKey} />
     <Input label="Bot token" type="password" bind:value={draft.botToken} />
@@ -151,15 +143,9 @@
       type="number"
       bind:value={draft.idleTimeoutMinutes}
     />
-  </div>
+  {/snippet}
 
-  <div class="response-section">
-    <Label size="L">Response</Label>
-    <div class="status-light">
-      <StatusLight positive={isConnected} neutral={!isConnected}>
-        {isConnected ? "Connected" : "Not connected"}
-      </StatusLight>
-    </div>
+  {#snippet response()}
     {#if syncResult}
       <div class="synced-info">
         <Body size="S"
@@ -173,56 +159,11 @@
     {#if inviteUrl}
       <CopyInput label="Discord invite URL" value={inviteUrl} disabled />
     {/if}
-  </div>
-
-  <div class="actions">
-    <Button cta on:click={syncCommands} disabled={saving || syncing}>
-      {syncing
-        ? "Enabling..."
-        : isConnected
-          ? "Update channel"
-          : "Enable channel"}
-    </Button>
-  </div>
-</div>
+  {/snippet}
+</ChannelConfigLayout>
 
 <style>
-  .discord-config {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-  }
-
-  .field-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-s) var(--spacing-m);
-  }
-
-  .response-section {
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    padding-top: var(--spacing-m);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .status-light :global(.spectrum-StatusLight) {
-    justify-content: flex-start;
-  }
-
   .synced-info {
     color: var(--spectrum-global-color-gray-700);
-  }
-
-  .actions {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  @media (max-width: 900px) {
-    .field-grid {
-      grid-template-columns: 1fr;
-    }
   }
 </style>

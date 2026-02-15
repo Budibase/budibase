@@ -27,6 +27,10 @@ export interface ChatConversationChannel {
   guildId?: string
   channelId?: string
   threadId?: string
+  conversationId?: string
+  conversationType?: string
+  teamId?: string
+  tenantId?: string
   externalUserId?: string
   externalUserName?: string
 }

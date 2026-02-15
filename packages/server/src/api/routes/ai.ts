@@ -1,6 +1,7 @@
 import * as ai from "../controllers/ai"
 import {
   createAgentValidator,
+  provisionAgentTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
@@ -23,11 +24,6 @@ builderAdminRoutes
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
   .post("/api/agent/:agentId/duplicate", ai.duplicateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
-  .post(
-    "/api/agent/:agentId/discord/sync",
-    syncAgentDiscordCommandsValidator(),
-    ai.syncAgentDiscordCommands
-  )
   .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
@@ -47,6 +43,19 @@ builderAdminRoutes
   .post("/api/ai/js", ai.generateJs)
 
 builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
+
+// Agent Deployment Channel Routes
+builderAdminRoutes
+  .post(
+    "/api/agent/:agentId/discord/sync",
+    syncAgentDiscordCommandsValidator(),
+    ai.syncAgentDiscordCommands
+  )
+  .post(
+    "/api/agent/:agentId/teams/provision",
+    provisionAgentTeamsChannelValidator(),
+    ai.provisionAgentTeamsChannel
+  )
 
 // these are Budibase AI routes
 licensedRoutes
