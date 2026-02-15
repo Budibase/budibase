@@ -11,9 +11,9 @@ import {
   UpdateWorkspaceBackupRequest,
   UserCtx,
 } from "@budibase/types"
-import { backups, utils } from "../../../sdk"
+import { backups, utils } from "@budibase/pro"
 
-async function checkAppID(ctx: UserCtx, appId?: string) {
+async function checkAppId(ctx: UserCtx, appId?: string) {
   if (!appId) {
     ctx.throw(400, "App ID missing")
   }
@@ -26,7 +26,7 @@ export async function manualBackup(
   ctx: UserCtx<CreateWorkspaceBackupRequest, CreateWorkspaceBackupResponse>
 ) {
   const appId = ctx.params.appId
-  await checkAppID(ctx, appId)
+  await checkAppId(ctx, appId)
   const { body } = ctx.request
   const createdBy = ctx.user?._id
   const backupId = await backups.triggerAppBackup(appId, BackupTrigger.MANUAL, {
@@ -46,7 +46,7 @@ export async function importBackup(
   ctx: UserCtx<ImportWorkspaceBackupRequest, ImportWorkspaceBackupResponse>
 ) {
   const appId = ctx.params.appId
-  await checkAppID(ctx, appId)
+  await checkAppId(ctx, appId)
   const backupId = ctx.params.backupId
   const nameForBackup = ctx.request.body.name
   const response = await backups.triggerAppRestore(
@@ -67,7 +67,7 @@ export async function importBackup(
 
 export async function deleteBackup(ctx: UserCtx) {
   const appId = ctx.params.appId
-  await checkAppID(ctx, appId)
+  await checkAppId(ctx, appId)
   const backupId = ctx.params.backupId
   await backups.deleteAppBackup(backupId)
   ctx.body = {
@@ -79,7 +79,7 @@ export async function deleteBackups(
   ctx: UserCtx<DeleteWorkspaceBackupsRequest, DeleteWorkspaceBackupsResponse>
 ) {
   const appId = context.getWorkspaceId()
-  await checkAppID(ctx, appId)
+  await checkAppId(ctx, appId)
   const { backupIds } = ctx.request.body
 
   if (!Array.isArray(backupIds) || backupIds.length === 0) {
@@ -100,7 +100,7 @@ export async function deleteBackups(
 
 export async function fetchBackups(ctx: UserCtx) {
   const appId = ctx.params.appId
-  await checkAppID(ctx, appId)
+  await checkAppId(ctx, appId)
   const body = ctx.request.body as SearchWorkspaceBackupsRequest
   if (body?.trigger) {
     body.trigger = body.trigger.toLowerCase() as BackupTrigger
@@ -116,7 +116,7 @@ export async function fetchBackups(ctx: UserCtx) {
 
 export async function updateBackup(ctx: UserCtx) {
   const appId = ctx.params.appId
-  await checkAppID(ctx, appId)
+  await checkAppId(ctx, appId)
   const backupId = ctx.params.backupId
   const body = ctx.request.body as UpdateWorkspaceBackupRequest
   ctx.body = await backups.updateAppBackup(backupId, body.name)
@@ -124,7 +124,7 @@ export async function updateBackup(ctx: UserCtx) {
 
 export async function downloadBackup(ctx: UserCtx) {
   const appId = ctx.params.appId
-  await checkAppID(ctx, appId)
+  await checkAppId(ctx, appId)
   const backupId = ctx.params.backupId
   const { metadata, stream } = await backups.getBackupDownloadStream(backupId)
   ctx.attachment(`backup-${metadata.timestamp}.tar.gz`)

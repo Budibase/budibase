@@ -1,8 +1,8 @@
-import * as controllers from "../../controllers/global/auditLogs"
-import { Event } from "@budibase/types"
-import { auth, middleware } from "@budibase/backend-core"
 import Router from "@koa/router"
 import Joi from "joi"
+import { auth, middleware } from "@budibase/backend-core"
+import { Event } from "@budibase/types"
+import * as controllers from "../../controllers/global/auditLogs"
 
 function buildAuditLogSearchValidator() {
   return auth.joiValidator.body(

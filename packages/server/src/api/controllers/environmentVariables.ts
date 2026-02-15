@@ -10,7 +10,7 @@ import {
   UpdateEnvironmentVariableResponse,
   UserCtx,
 } from "@budibase/types"
-import { environmentVariables } from "../../../sdk"
+import { environmentVariables } from "@budibase/pro"
 
 export async function status(
   ctx: UserCtx<void, StatusEnvironmentVariableResponse>

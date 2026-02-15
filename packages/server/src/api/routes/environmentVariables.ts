@@ -1,7 +1,7 @@
-import * as controllers from "../../controllers/global/environmentVariables"
-import { auth } from "@budibase/backend-core"
 import Router from "@koa/router"
 import Joi from "joi"
+import { auth } from "@budibase/backend-core"
+import * as controllers from "../controllers/environmentVariables"
 
 const router: Router = new Router()
 

@@ -1,3 +1,6 @@
+import { Readable } from "stream"
+import { events } from "@budibase/backend-core"
+import { auditLogs } from "@budibase/pro"
 import {
   SearchAuditLogsRequest,
   SearchAuditLogsResponse,
@@ -6,9 +9,6 @@ import {
   AuditLogSearchParams,
   UserCtx,
 } from "@budibase/types"
-import { auditLogs } from "../../../sdk"
-import { events } from "@budibase/backend-core"
-import { Readable } from "stream"
 
 export async function search(
   ctx: UserCtx<SearchAuditLogsRequest, SearchAuditLogsResponse>

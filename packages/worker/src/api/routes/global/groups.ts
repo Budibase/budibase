@@ -1,8 +1,8 @@
-import { auth } from "@budibase/backend-core"
-import { Feature } from "@budibase/types"
 import Router from "@koa/router"
 import Joi from "joi"
-import { feature, internalGroupOnly } from "../../../middleware"
+import { auth } from "@budibase/backend-core"
+import { middleware as proMiddleware } from "@budibase/pro"
+import { Feature } from "@budibase/types"
 import * as controller from "../../controllers/global/groups"
 
 const router: Router = new Router()
@@ -29,32 +29,32 @@ router
   .post(
     "/api/global/groups",
     auth.adminOnly,
-    feature.requireFeature(Feature.USER_GROUPS),
+    proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
     buildGroupSaveValidation(),
     controller.save
   )
   .get(
     "/api/global/groups",
-    feature.requireFeature(Feature.USER_GROUPS),
+    proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
     controller.fetch
   )
 
   .delete(
     "/api/global/groups/:groupId/:rev",
-    feature.requireFeature(Feature.USER_GROUPS),
+    proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
     auth.adminOnly,
-    internalGroupOnly("groupId"),
+    proMiddleware.internalGroupOnly("groupId"),
     controller.destroy
   )
   .get(
     "/api/global/groups/:groupId",
-    feature.requireFeature(Feature.USER_GROUPS),
+    proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
     auth.builderOrAdmin,
     controller.find
   )
   .get(
     "/api/global/groups/:groupId/users",
-    feature.requireFeature(Feature.USER_GROUPS),
+    proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
     auth.builderOrAdmin,
     controller.searchUsers
   )
@@ -62,15 +62,15 @@ router
   .post(
     "/api/global/groups/:groupId/users",
     auth.adminOnly,
-    feature.requireFeature(Feature.USER_GROUPS),
-    internalGroupOnly("groupId"),
+    proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
+    proMiddleware.internalGroupOnly("groupId"),
     controller.updateGroupUsers
   )
   .post(
     "/api/global/groups/:groupId/users/bulk",
     auth.adminOnly,
-    feature.requireFeature(Feature.USER_GROUPS),
-    internalGroupOnly("groupId"),
+    proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
+    proMiddleware.internalGroupOnly("groupId"),
     auth.joiValidator.body(
       Joi.object({
         csvContent: Joi.string().required(),
@@ -81,7 +81,7 @@ router
   .post(
     "/api/global/groups/:groupId/apps",
     auth.builderOrAdmin,
-    feature.requireFeature(Feature.USER_GROUPS),
+    proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
     controller.updateGroupApps
   )
 

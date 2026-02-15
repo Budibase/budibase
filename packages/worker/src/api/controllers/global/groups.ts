@@ -12,9 +12,7 @@ import {
   UserCtx,
   UserGroup,
 } from "@budibase/types"
-import { getGroupUsers } from "../../../db/groups"
-import * as groups from "../../../sdk/groups"
-import { db } from "../../../sdk/users"
+import { db, groups, users as usersSdk } from "@budibase/pro"
 
 export async function save(ctx: UserCtx) {
   const group: UserGroup = ctx.request.body
@@ -106,7 +104,7 @@ export async function searchUsers(ctx: Ctx<{}, SearchUserGroupResponse>) {
 
   const params: DatabaseQueryOpts = { limit: pageSize + 1 }
 
-  const users = await getGroupUsers(groupId, {
+  const users = await db.groups.getGroupUsers(groupId, {
     ...params,
     emailSearch,
     bookmark,
@@ -182,7 +180,9 @@ export async function bulkAddUsersFromCsv(
   const skipped: { email: string; reason: string }[] = []
   const userIds: string[] = []
 
-  const users = await Promise.all(emails.map(email => db.getUserByEmail(email)))
+  const users = await Promise.all(
+    emails.map(email => usersSdk.db.getUserByEmail(email))
+  )
 
   for (const email of emails) {
     const user = users.find(u => u?.email === email)
