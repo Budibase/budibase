@@ -35,7 +35,10 @@
     Are you sure you want to delete <strong>{plugin?.name}</strong>?
     {#if isUsedInApps}
       <div>
-        This plugin is currently used in {usedInApps.length} app{usedInApps.length === 1 ? "" : "s"}:
+        This plugin is currently used in {usedInApps.length} app{usedInApps.length ===
+        1
+          ? ""
+          : "s"}:
         <ul>
           {#each usedInApps as appName}
             <li>{appName}</li>
