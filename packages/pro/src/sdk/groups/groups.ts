@@ -3,7 +3,6 @@ import {
   context,
   db as dbUtils,
   events,
-  HTTPError,
   logging,
   roles,
   tenancy,
@@ -425,10 +424,6 @@ export async function updateGroupApps(
     apps: Object.entries(group.roles)
       .filter(([_groupId, role]) => role === "CREATOR")
       .map(([groupId]) => groupId),
-  }
-
-  if (group.builder.apps.length && !features.isAppBuildersEnabled()) {
-    throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
   return await save(group)

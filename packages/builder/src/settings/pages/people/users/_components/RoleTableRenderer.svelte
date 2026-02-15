@@ -1,13 +1,46 @@
 <script>
   import { users } from "@/stores/portal/users"
+  import { roles } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
 
   export let row
 
+  const getRoleFromWorkspaceRole = workspaceRole => {
+    if (workspaceRole === Constants.Roles.CREATOR) {
+      return Constants.BudibaseRoles.Creator
+    }
+    if (workspaceRole) {
+      return Constants.BudibaseRoles.AppUser
+    }
+    return undefined
+  }
+
+  $: globalRoleValue = users.getUserRole(row)
+  $: roleValue =
+    globalRoleValue === Constants.BudibaseRoles.Owner
+      ? globalRoleValue
+      : getRoleFromWorkspaceRole(row?.workspaceRole) || globalRoleValue
   $: role = Constants.ExtendedBudibaseRoleOptions.find(
-    x => x.value === users.getUserRole(row)
+    x => x.value === roleValue
   )
-  $: value = role?.label || "Not available"
+  const isBuiltInEndUserRole = roleId =>
+    roleId === Constants.Roles.BASIC || roleId === Constants.Roles.ADMIN
+  const getWorkspaceRoleLabel = (roleId, availableRoles) => {
+    if (!roleId || roleId === Constants.Roles.BASIC) {
+      return "Basic"
+    }
+    if (roleId === Constants.Roles.ADMIN) {
+      return "Admin"
+    }
+    const customRole = availableRoles.find(x => x._id === roleId)
+    return customRole?.uiMetadata?.displayName || customRole?.name || roleId
+  }
+  $: value =
+    role?.value === Constants.BudibaseRoles.AppUser && row?.workspaceRole
+      ? isBuiltInEndUserRole(row.workspaceRole)
+        ? `${role.label}: ${getWorkspaceRoleLabel(row.workspaceRole, $roles)}`
+        : getWorkspaceRoleLabel(row.workspaceRole, $roles)
+      : role?.label || "Not available"
   $: tooltip = role?.subtitle || ""
 </script>
 

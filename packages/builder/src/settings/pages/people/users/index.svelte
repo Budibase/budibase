@@ -21,6 +21,7 @@
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import { roles } from "@/stores/builder"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
@@ -30,6 +31,7 @@
   import PasswordModal from "./_components/PasswordModal.svelte"
   import InvitedModal from "./_components/InvitedModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
+  import EditWorkspaceUserModal from "./_components/EditWorkspaceUserModal.svelte"
   import { get } from "svelte/store"
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "@/api"
@@ -56,6 +58,7 @@
     userGroups: UserGroup[]
     apps: string[]
     access: number
+    workspaceRole?: string
   }
 
   export let workspaceOnly: boolean
@@ -96,9 +99,11 @@
     onboardingTypeModal: Modal,
     passwordModal: Modal,
     importUsersModal: Modal,
-    userLimitReachedModal: Modal
+    userLimitReachedModal: Modal,
+    editWorkspaceUserModal: Modal
   let searchEmail: string | undefined = undefined
   let selectedRows: User[] = []
+  let selectedWorkspaceUser: User | null = null
   let bulkSaveResponse: BulkUserCreated
 
   let currentWorkspaceId = ""
@@ -135,9 +140,9 @@
   $: debouncedUpdateFetch(searchEmail, currentWorkspaceId)
   $: schema = {
     email: {
-      displayName: isWorkspaceOnly ? "User" : "Email",
+      displayName: "Email",
       sortable: false,
-      width: "2fr",
+      width: "minmax(200px, max-content)",
       minWidth: "200px",
     },
     role: {
@@ -162,6 +167,7 @@
           workspaces: {
             sortable: false,
             width: "1fr",
+            preventSelectRow: false,
           },
         }),
   }
@@ -177,6 +183,13 @@
     tenantOwner,
     $groups
   )
+  $: shouldOpenWorkspaceInviteModal =
+    isWorkspaceOnly &&
+    $bb.settings.route?.entry?.path === "/people/workspace" &&
+    $bb.settings.route?.hash === "#invite"
+  $: if (shouldOpenWorkspaceInviteModal && createUserModal) {
+    createUserModal.show()
+  }
 
   const buildEnrichedUsers = (
     rows: User[],
@@ -205,6 +218,9 @@
           ...user,
           name: user.firstName ? user.firstName + " " + user.lastName : "",
           userGroups,
+          workspaceRole: isWorkspaceOnly
+            ? user.roles?.[currentWorkspaceId] || Constants.Roles.BASIC
+            : undefined,
           __selectable:
             role.value === Constants.BudibaseRoles.Owner ||
             $auth.user?.email === user.email
@@ -424,7 +440,7 @@
       return Constants.Roles.CREATOR
     }
     if (role === Constants.BudibaseRoles.Admin) {
-      return Constants.Roles.CREATOR
+      return Constants.Roles.ADMIN
     }
     if (role === Constants.BudibaseRoles.AppUser) {
       return appRole || Constants.Roles.BASIC
@@ -432,12 +448,29 @@
     return Constants.Roles.BASIC
   }
 
+  const onRowClick = ({ detail }: { detail: User }) => {
+    if (isWorkspaceOnly) {
+      selectedWorkspaceUser = detail
+      editWorkspaceUserModal.show()
+      return
+    }
+    bb.settings(`/people/users/${detail._id}`)
+  }
+
+  const onWorkspaceUserSaved = async () => {
+    await refreshUserList()
+  }
+
   onMount(async () => {
+    roles.fetch().catch(() => {
+      notifications.error("Error fetching role data")
+    })
     try {
       await groups.init()
-      groupsLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
+    } finally {
+      groupsLoaded = true
     }
     try {
       tenantOwner = await users.getAccountHolder()
@@ -505,15 +538,14 @@
   </div>
   <div class="table-wrap" style={`min-height: ${TABLE_MIN_HEIGHT}px;`}>
     <Table
-      on:click={({ detail }) => {
-        bb.settings(`/people/users/${detail._id}`)
-      }}
+      on:click={onRowClick}
       {schema}
       bind:selectedRows
       data={tableLoading ? [] : enrichedUsers}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={!readonly}
+      selectOnRowClick={!isWorkspaceOnly}
       {customRenderers}
       loading={false}
       customPlaceholder={tableLoading}
@@ -567,6 +599,18 @@
 <Modal bind:this={userLimitReachedModal}>
   <UpgradeModal {isOwner} />
 </Modal>
+
+{#if isWorkspaceOnly}
+  <Modal bind:this={editWorkspaceUserModal} closeOnOutsideClick={false}>
+    <EditWorkspaceUserModal
+      user={selectedWorkspaceUser}
+      workspaceId={currentWorkspaceId}
+      {readonly}
+      isTenantOwner={selectedWorkspaceUser?.email === tenantOwner?.email}
+      on:saved={onWorkspaceUserSaved}
+    />
+  </Modal>
+{/if}
 
 <style>
   .buttons {
