@@ -54,6 +54,14 @@ const queryFilterValidation: Record<SearchFilterKey, z.ZodTypeAny> = {
   [LogicalOperator.OR]: logicFilter.optional(),
 }
 
+const sortJson = z.record(
+  z.string(),
+  z.object({
+    direction: z.nativeEnum(SortOrder),
+    type: z.nativeEnum(SortType).optional(),
+  })
+)
+
 const searchRowRequest = z.object({
   query: z
     .object({
@@ -66,7 +74,7 @@ const searchRowRequest = z.object({
   paginate: z.boolean().optional(),
   bookmark: z.union([z.string(), z.number()]).nullish(),
   limit: z.number().optional(),
-  sort: z.string().nullish(),
+  sort: z.union([z.string(), sortJson]).nullish(),
   sortOrder: z.nativeEnum(SortOrder).optional(),
   sortType: z.nativeEnum(SortType).nullish(),
   version: z.string().optional(),

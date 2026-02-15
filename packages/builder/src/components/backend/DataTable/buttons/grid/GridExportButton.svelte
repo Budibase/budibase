@@ -7,6 +7,7 @@
 
   $: disabled = !$rows.length || !$columns.length
   $: selectedRowArray = Object.keys($selectedRows).map(id => ({ _id: id }))
+  $: primarySort = $sort[0]
 </script>
 
 <ExportButton
@@ -14,8 +15,8 @@
   view={$datasource.tableId}
   filters={$filter}
   sorting={{
-    sortColumn: $sort.column,
-    sortOrder: $sort.order,
+    sortColumn: primarySort?.column,
+    sortOrder: primarySort?.order,
   }}
   selectedRows={selectedRowArray}
 />

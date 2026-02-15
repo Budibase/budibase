@@ -4,6 +4,7 @@ import {
   Row,
   SearchFilters,
   SortOrder,
+  SortField,
   SortType,
   TableSchema,
 } from "@budibase/types"
@@ -15,6 +16,50 @@ import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
 
 const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
+
+const multiSortRows = <T extends Record<string, any>>(
+  rows: T[],
+  sorts: SortField[]
+) => {
+  if (!sorts?.length) {
+    return rows
+  }
+
+  const parseValue = (value: any, type?: SortType) => {
+    if (value == null) {
+      return value
+    }
+    if (type === SortType.NUMBER) {
+      return parseFloat(value)
+    }
+    return `${value}`
+  }
+
+  return rows.slice().sort((a, b) => {
+    for (const sortEntry of sorts) {
+      const sortType = sortEntry.type || SortType.STRING
+      const valA = parseValue(a[sortEntry.field], sortType)
+      const valB = parseValue(b[sortEntry.field], sortType)
+
+      if (valA == null && valB == null) {
+        continue
+      }
+      if (valA == null) {
+        return sortEntry.order === SortOrder.DESCENDING ? -1 : 1
+      }
+      if (valB == null) {
+        return sortEntry.order === SortOrder.DESCENDING ? 1 : -1
+      }
+      if (valA === valB) {
+        continue
+      }
+
+      const result = valA > valB ? 1 : -1
+      return sortEntry.order === SortOrder.DESCENDING ? result * -1 : result
+    }
+    return 0
+  })
+}
 
 interface DataFetchStore<TDefinition, TQuery, TRow extends Row> {
   rows: TRow[]
@@ -109,6 +154,7 @@ export default abstract class BaseDataFetch<
       sortColumn: null,
       sortOrder: SortOrder.ASCENDING,
       sortType: null,
+      sorts: null,
 
       // Pagination config
       paginate: true,
@@ -219,42 +265,67 @@ export default abstract class BaseDataFetch<
     }
     schema = this.enrichSchema(schema)
 
-    // If an invalid sort column is specified, delete it
-    if (this.options.sortColumn && !schema[this.options.sortColumn]) {
-      this.options.sortColumn = null
-    }
-
-    // If no sort column, get the default column for this datasource
-    if (!this.options.sortColumn) {
-      this.options.sortColumn = this.getDefaultSortColumn(definition, schema)
-    }
-
-    // If we don't have a sort column specified then just ensure we don't set
-    // any sorting params
-    if (!this.options.sortColumn) {
-      this.options.sortOrder = SortOrder.ASCENDING
-      this.options.sortType = null
-    } else {
-      // Otherwise determine what sort type to use base on sort column
-      this.options.sortType = SortType.STRING
-      const fieldSchema = schema?.[this.options.sortColumn]
+    const getSortType = (field: string) => {
+      const fieldSchema = schema?.[field]
       if (
         fieldSchema?.type === FieldType.NUMBER ||
         fieldSchema?.type === FieldType.BIGINT ||
         fieldSchema?.responseType === FieldType.NUMBER ||
         ("calculationType" in fieldSchema && fieldSchema?.calculationType)
       ) {
-        this.options.sortType = SortType.NUMBER
+        return SortType.NUMBER
       }
+      return SortType.STRING
+    }
 
-      // If no sort order, default to ascending
-      if (!this.options.sortOrder) {
-        this.options.sortOrder = SortOrder.ASCENDING
-      } else {
-        // Ensure sortOrder matches the enum
-        this.options.sortOrder =
-          this.options.sortOrder.toLowerCase() as SortOrder
+    let normalizedSorts =
+      (this.options.sorts || [])
+        ?.filter(sortEntry => sortEntry?.field && schema?.[sortEntry.field])
+        .map(sortEntry => ({
+          ...sortEntry,
+          order: (
+            sortEntry.order || SortOrder.ASCENDING
+          ).toLowerCase() as SortOrder,
+          type: sortEntry.type || getSortType(sortEntry.field),
+        })) || []
+
+    if (!normalizedSorts.length && this.options.sortColumn) {
+      if (schema?.[this.options.sortColumn]) {
+        normalizedSorts = [
+          {
+            field: this.options.sortColumn,
+            order: (
+              this.options.sortOrder || SortOrder.ASCENDING
+            ).toLowerCase() as SortOrder,
+            type: this.options.sortType || getSortType(this.options.sortColumn),
+          },
+        ]
       }
+    }
+
+    if (!normalizedSorts.length) {
+      const defaultSortColumn = this.getDefaultSortColumn(definition, schema)
+      if (defaultSortColumn) {
+        normalizedSorts = [
+          {
+            field: defaultSortColumn,
+            order: SortOrder.ASCENDING,
+            type: getSortType(defaultSortColumn),
+          },
+        ]
+      }
+    }
+
+    if (!normalizedSorts.length) {
+      this.options.sortColumn = null
+      this.options.sortOrder = SortOrder.ASCENDING
+      this.options.sortType = null
+      this.options.sorts = []
+    } else {
+      this.options.sorts = normalizedSorts
+      this.options.sortColumn = normalizedSorts[0]?.field ?? null
+      this.options.sortOrder = normalizedSorts[0]?.order || SortOrder.ASCENDING
+      this.options.sortType = normalizedSorts[0]?.type || null
     }
 
     // Build the query
@@ -298,6 +369,7 @@ export default abstract class BaseDataFetch<
       sortColumn,
       sortOrder,
       sortType,
+      sorts,
       limit,
       clientSideSearching,
       clientSideSorting,
@@ -314,8 +386,23 @@ export default abstract class BaseDataFetch<
     }
 
     // If we don't support sorting, do a client-side sort
-    if (!this.features.supportsSort && clientSideSorting && sortType) {
-      rows = sort(rows, sortColumn as any, sortOrder, sortType)
+    if (!this.features.supportsSort && clientSideSorting) {
+      const activeSorts = (sorts || []).filter(
+        sortEntry => sortEntry?.field && sortEntry?.order
+      )
+      if (activeSorts.length > 1) {
+        rows = multiSortRows(rows, activeSorts)
+      } else if (activeSorts.length === 1) {
+        const [entry] = activeSorts
+        rows = sort(
+          rows,
+          entry.field as any,
+          entry.order || sortOrder,
+          entry.type || sortType || SortType.STRING
+        )
+      } else if (sortType && sortColumn) {
+        rows = sort(rows, sortColumn as any, sortOrder, sortType)
+      }
     }
 
     // If we don't support pagination, do a client-side limit
