@@ -483,9 +483,12 @@ describe("BudibaseAI", () => {
       expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
-      const gptResponse = generator.guid()
+      const key = generator.word()
+      const gptResponse = JSON.stringify({
+        [key]: generator.guid(),
+      })
       const structuredOutput = z.object({
-        [generator.word()]: z.string(),
+        [key]: z.string(),
       })
       mockOpenAIResponsesResponse(gptResponse, {
         format: toResponseFormat(structuredOutput),

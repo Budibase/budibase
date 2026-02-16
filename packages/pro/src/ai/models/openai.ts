@@ -9,7 +9,7 @@ import { LLMFullResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
 import { normalizeContentType } from "../utils"
 import { LLM } from "./base"
-import { generateText, LanguageModelUsage, Output } from "ai"
+import { generateText, jsonSchema, LanguageModelUsage, Output } from "ai"
 import {
   createOpenAI,
   type OpenAIChatLanguageModelOptions,
@@ -54,8 +54,15 @@ export function parseResponseFormat(
   }
 
   if (!(responseFormat instanceof z.ZodObject)) {
-    // @ts-expect-error TODO fix zod types
-    return Output.object({ schema: responseFormat })
+    if (!responseFormat.json_schema.schema) {
+      throw new Error("Schema must be defined")
+    }
+    // TODO
+    return Output.object({
+      schema: jsonSchema(responseFormat.json_schema.schema),
+      name: responseFormat.json_schema.name,
+      description: responseFormat.json_schema.description,
+    })
   }
 
   return Output.object({ schema: responseFormat })
