@@ -62,19 +62,32 @@ export async function run({
 
   try {
     const llm = await ai.getLLMOrThrow()
-
     let fileIdOrDataUrl: string
 
-    if (
-      inputs.source === DocumentSourceType.URL &&
-      typeof inputs.file === "string"
-    ) {
-      fileIdOrDataUrl = await processUrlFile(inputs.file, inputs.fileType, llm)
+    function tryParse(value: any) {
+      if (typeof value !== "string") {
+        return value
+      }
+      try {
+        const parsed = JSON.parse(value)
+        return parsed
+      } catch {
+        return value
+      }
+    }
+
+    const file =
+      inputs.source === DocumentSourceType.URL
+        ? inputs.file
+        : tryParse(inputs.file)
+
+    if (inputs.source === DocumentSourceType.URL && typeof file === "string") {
+      fileIdOrDataUrl = await processUrlFile(file, inputs.fileType, llm)
     } else if (
       inputs.source === DocumentSourceType.ATTACHMENT &&
-      typeof inputs.file !== "string"
+      typeof file !== "string"
     ) {
-      fileIdOrDataUrl = await processAttachmentFile(inputs.file, llm)
+      fileIdOrDataUrl = await processAttachmentFile(file, llm)
     } else {
       throw new Error("Invalid file input – source and file type do not match")
     }

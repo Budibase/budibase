@@ -64,7 +64,7 @@ export function extractFileData(
   // We create a structured zod schema from the user object
   const zodSchema = createZodSchemaFromRecord(schema)
   const responseSchema = z.object({
-    data: z.array(zodSchema),
+    data: zodSchema,
   })
 
   return new LLMRequest()
