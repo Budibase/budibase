@@ -582,7 +582,7 @@
           {#if isRestTemplate}
             <Input
               label="Base URL"
-              value={openApiInfo?.url + ""}
+              value={openApiInfo?.url ?? ""}
               disabled={!!openApiInfo}
             />
           {/if}
