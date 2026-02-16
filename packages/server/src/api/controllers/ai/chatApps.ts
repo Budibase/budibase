@@ -1,7 +1,9 @@
 import { HTTPError } from "@budibase/backend-core"
 import {
+  ChatAppAgentMetadata,
   ChatApp,
   ChatAppAgent,
+  FetchChatAppAgentsResponse,
   UpdateChatAppRequest,
   UserCtx,
 } from "@budibase/types"
@@ -43,6 +45,38 @@ export async function fetchChatAppById(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   ctx.body = chatApp
+}
+
+export async function fetchChatAppAgents(
+  ctx: UserCtx<void, FetchChatAppAgentsResponse, { chatAppId: string }>
+) {
+  const chatAppId = ctx.params?.chatAppId
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const configuredAgentIds = new Set(
+    (chatApp.agents || []).map(agent => agent.agentId)
+  )
+
+  if (configuredAgentIds.size === 0) {
+    ctx.body = { agents: [] }
+    return
+  }
+
+  const workspaceAgents = await sdk.ai.agents.fetch()
+  const agents: ChatAppAgentMetadata[] = workspaceAgents
+    .filter(agent => agent._id && configuredAgentIds.has(agent._id))
+    .map(agent => ({
+      _id: agent._id,
+      name: agent.name,
+      icon: agent.icon,
+      iconColor: agent.iconColor,
+      live: agent.live,
+    }))
+
+  ctx.body = { agents }
 }
 
 export async function setChatAppAgent(

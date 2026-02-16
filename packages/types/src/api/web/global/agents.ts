@@ -24,6 +24,15 @@ export interface FetchAgentsResponse {
   agents: Agent[]
 }
 
+export type ChatAppAgentMetadata = Pick<
+  Agent,
+  "_id" | "name" | "icon" | "iconColor" | "live"
+>
+
+export interface FetchChatAppAgentsResponse {
+  agents: ChatAppAgentMetadata[]
+}
+
 export type CreateAgentRequest = Optional<
   Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt">,
   "aiconfig"

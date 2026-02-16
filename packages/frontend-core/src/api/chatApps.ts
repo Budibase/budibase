@@ -3,6 +3,7 @@ import {
   ChatConversation,
   ChatConversationRequest,
   CreateChatConversationRequest,
+  FetchChatAppAgentsResponse,
   ChatApp,
   ChatAppAgent,
   FetchAgentHistoryResponse,
@@ -28,6 +29,7 @@ export interface ChatAppEndpoints {
     chatAppId: string,
     chatConversationId: string
   ) => Promise<ChatConversation>
+  fetchChatAppAgents: (chatAppId: string) => Promise<FetchChatAppAgentsResponse>
   fetchChatHistory: (chatAppId: string) => Promise<FetchAgentHistoryResponse>
   fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
   setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatAppAgent>
@@ -113,6 +115,12 @@ export const buildChatAppEndpoints = (
   ) => {
     return await API.get({
       url: `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+    })
+  },
+
+  fetchChatAppAgents: async (chatAppId: string) => {
+    return await API.get({
+      url: `/api/chatapps/${chatAppId}/agents`,
     })
   },
 

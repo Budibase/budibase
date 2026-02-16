@@ -5,7 +5,6 @@
   import { Body, notifications } from "@budibase/bbui"
   import { Header } from "@budibase/shared-core"
   import type {
-    Agent,
     ChatAppAgent,
     ChatConversation,
     DraftChatConversation,
@@ -28,6 +27,14 @@
     firstName?: string
     lastName?: string
     email?: string
+  }
+
+  type ChatAppAgentMetadata = {
+    _id?: string
+    name: string
+    icon?: string
+    iconColor?: string
+    live?: boolean
   }
 
   const INITIAL_CHAT: WithoutDocMetadata<DraftChatConversation> = {
@@ -55,7 +62,7 @@
   let selectedConversationId: string | undefined
   let chatAppId = ""
   let chatAgents: ChatAppAgent[] = []
-  let agents: Agent[] = []
+  let agents: ChatAppAgentMetadata[] = []
 
   const getUserLabel = (user?: ChatUser) => {
     if (!user) {
@@ -93,7 +100,8 @@
     ? "No agents enabled for this chat app. Ask your administrator to enable one to start chatting."
     : "No agents have been configured for this chat app yet."
   $: selectedAgentName = selectedAgentId
-    ? agents.find(agent => agent._id === selectedAgentId)?.name ||
+    ? enabledAgentList.find(agent => agent.agentId === selectedAgentId)?.name ||
+      agents.find(agent => agent._id === selectedAgentId)?.name ||
       "Unknown agent"
     : ""
   $: conversationStarters =
@@ -132,13 +140,15 @@
 
     loading = true
     try {
-      const [chatApp, agentsResponse] = await Promise.all([
-        API.fetchChatApp(workspaceId),
-        API.fetchAgents(),
-      ])
+      const chatApp = await API.fetchChatApp(workspaceId)
 
       chatAppId = chatApp?._id || ""
       chatAgents = chatApp?.agents || []
+      const agentsResponse = chatAppId
+        ? await API.get<{ agents: ChatAppAgentMetadata[] }>({
+            url: `/api/chatapps/${chatAppId}/agents`,
+          })
+        : { agents: [] }
       agents = agentsResponse?.agents || []
 
       const baseAgentList = chatAgents
