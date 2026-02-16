@@ -74,7 +74,7 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
   interceptor.defaultReplyHeaders?.({
     "content-type": "application/json",
   })
-  interceptor.reply<object>(reqOpts => {
+  const scope = interceptor.reply<object>(reqOpts => {
     const reqBody = parseJsonBody(reqOpts.body)
     if (expectedFormat && !expectedFormat(reqBody)) {
       return {
@@ -141,4 +141,7 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
       data: response,
     }
   })
+  if (opts?.times != null) {
+    scope.times(opts.times)
+  }
 }

@@ -81,9 +81,12 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
-    mockOpenAIResponsesResponse(() => {
-      throw new Error("oh no")
-    })
+    mockOpenAIResponsesResponse(
+      () => {
+        throw new Error("oh no")
+      },
+      { times: 3 }
+    )
 
     const result = await expectAIUsage(0, () =>
       createAutomationBuilder(config)

@@ -81,7 +81,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
     method: "POST",
   })
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
-  interceptor.reply<object>((reqOpts: any) => {
+  const scope = interceptor.reply<object>((reqOpts: any) => {
     const reqBody = parseJsonBody(reqOpts.body)
     if (expectedFormat && !expectedFormat(reqBody)) {
       return {
@@ -166,6 +166,9 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
       data: response,
     }
   }) // Each mock call handles one request
+  if (opts?.times != null) {
+    scope.times(opts.times)
+  }
 }
 
 export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
@@ -182,7 +185,7 @@ export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
   interceptor.defaultReplyHeaders?.({
     "content-type": "application/json",
   })
-  interceptor.reply<object>((reqOpts: any) => {
+  const scope = interceptor.reply<object>((reqOpts: any) => {
     const reqBody = parseJsonBody(reqOpts.body)
 
     let prompt = ""
@@ -206,7 +209,14 @@ export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
         const message = e?.message || "Internal Server Error"
         return {
           statusCode: 500,
-          data: message,
+          data: {
+            error: {
+              message,
+              type: "server_error",
+              param: null,
+              code: null,
+            },
+          },
         }
       }
     } else {
@@ -247,6 +257,9 @@ export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
       },
     }
   })
+  if (opts?.times != null) {
+    scope.times(opts.times)
+  }
 }
 
 export const mockChatGPTStreamResponse = (
