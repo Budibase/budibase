@@ -1,8 +1,15 @@
 import * as setup from "../utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { BodyType, Datasource, SourceName } from "@budibase/types"
+import {
+  BodyType,
+  Datasource,
+  RestAuthType,
+  SourceName,
+  WorkspaceConnectionType,
+} from "@budibase/types"
 import { getCachedVariable } from "../../../../threads/utils"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
+import { setEnv as setCoreEnv } from "@budibase/backend-core"
 import type { MockAgent } from "undici"
 import { setEnv } from "../../../../environment"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
@@ -779,6 +786,614 @@ describe("rest", () => {
         path: "www.example.com",
         queryString: "emptyParam1={{emptyParam1}}&emptyParam2={{emptyParam2}}",
       },
+    })
+  })
+
+  describe("workspace connection query execution", () => {
+    it("should merge workspace connection headers into the request", async () => {
+      const connection = await config.api.workspaceConnection.create({
+        name: generator.guid(),
+        type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+        auth: [
+          {
+            _id: generator.guid(),
+            name: "Basic",
+            type: RestAuthType.BASIC,
+            config: { username: "user", password: "pass" },
+          },
+        ],
+        props: {
+          headers: {
+            "X-Connection-Header": "from-connection",
+          },
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            "x-connection-header": "from-connection",
+          },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authSourceId: connection.connection._id,
+        },
+      })
+    })
+
+    it("should merge workspace connection query params into the request", async () => {
+      const connection = await config.api.workspaceConnection.create({
+        name: generator.guid(),
+        type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+        auth: [
+          {
+            _id: generator.guid(),
+            name: "Basic",
+            type: RestAuthType.BASIC,
+            config: { username: "user", password: "pass" },
+          },
+        ],
+        props: {
+          query: {
+            apiVersion: "v2",
+          },
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          query: { apiVersion: "v2" },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authSourceId: connection.connection._id,
+        },
+      })
+    })
+
+    it("should apply workspace connection basic auth to the request", async () => {
+      const connection = await config.api.workspaceConnection.create({
+        name: generator.guid(),
+        type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+        auth: [
+          {
+            _id: generator.guid(),
+            name: "Basic Auth",
+            type: RestAuthType.BASIC,
+            config: { username: "myuser", password: "mypass" },
+          },
+        ],
+        props: {},
+      })
+
+      const expectedAuth = Buffer.from("myuser:mypass").toString("base64")
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            authorization: `Basic ${expectedAuth}`,
+          },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authSourceId: connection.connection._id,
+        },
+      })
+    })
+
+    it("should apply workspace connection bearer auth to the request", async () => {
+      const connection = await config.api.workspaceConnection.create({
+        name: generator.guid(),
+        type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+        auth: [
+          {
+            _id: generator.guid(),
+            name: "Bearer Auth",
+            type: RestAuthType.BEARER,
+            config: { token: "my-bearer-token" },
+          },
+        ],
+        props: {},
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            authorization: "Bearer my-bearer-token",
+          },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authSourceId: connection.connection._id,
+        },
+      })
+    })
+
+    it("query-level headers override workspace connection headers", async () => {
+      const connection = await config.api.workspaceConnection.create({
+        name: generator.guid(),
+        type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+        auth: [
+          {
+            _id: generator.guid(),
+            name: "Basic",
+            type: RestAuthType.BASIC,
+            config: { username: "u", password: "p" },
+          },
+        ],
+        props: {
+          headers: {
+            "X-Shared": "from-connection",
+            "X-Only-Connection": "conn-value",
+          },
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            "x-shared": "from-query",
+            "x-only-connection": "conn-value",
+            "x-only-query": "query-value",
+          },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authSourceId: connection.connection._id,
+          headers: {
+            "X-Shared": "from-query",
+            "X-Only-Query": "query-value",
+          },
+        },
+      })
+    })
+
+    it("query-level query params override workspace connection query params", async () => {
+      const connection = await config.api.workspaceConnection.create({
+        name: generator.guid(),
+        type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+        auth: [
+          {
+            _id: generator.guid(),
+            name: "Basic",
+            type: RestAuthType.BASIC,
+            config: { username: "u", password: "p" },
+          },
+        ],
+        props: {
+          query: {
+            format: "json",
+            version: "1",
+          },
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          query: { format: "xml", version: "1" },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          queryString: "format=xml",
+          authSourceId: connection.connection._id,
+        },
+      })
+    })
+
+    it("should use workspace connection static variables in query bindings", async () => {
+      const connection = await config.api.workspaceConnection.create({
+        name: generator.guid(),
+        type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+        auth: [
+          {
+            _id: generator.guid(),
+            name: "Basic",
+            type: RestAuthType.BASIC,
+            config: { username: "u", password: "p" },
+          },
+        ],
+        props: {
+          staticVariables: {
+            companyId: "acme-123",
+          },
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          query: { company: "acme-123" },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: generator.guid(),
+        parameters: [
+          { name: "companyId", default: "{{ companyId }}" },
+        ],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          queryString: "company={{companyId}}",
+          authSourceId: connection.connection._id,
+        },
+      })
+    })
+
+    it("should resolve env var bindings in workspace connection headers", async () => {
+      const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
+      mocks.licenses.useEnvironmentVariables()
+      try {
+        await config.api.environment.create({
+          name: "API_TOKEN",
+          production: "resolved-token-value",
+          development: "resolved-token-value",
+        })
+
+        const connection = await config.api.workspaceConnection.create({
+          name: generator.guid(),
+          type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+          auth: [
+            {
+              _id: generator.guid(),
+              name: "Bearer",
+              type: RestAuthType.BEARER,
+              config: { token: "static-token" },
+            },
+          ],
+          props: {
+            headers: {
+              "X-Api-Token": "{{ env.API_TOKEN }}",
+            },
+          },
+        })
+
+        mockAgent!
+          .get("http://www.example.com")
+          .intercept({
+            path: "/",
+            method: "GET",
+            headers: {
+              "x-api-token": "resolved-token-value",
+            },
+          })
+          .reply(200, { ok: true }, { headers: jsonHeaders })
+
+        await config.api.query.preview({
+          datasourceId: datasource._id!,
+          name: generator.guid(),
+          parameters: [],
+          queryVerb: "read",
+          transformer: "",
+          schema: {},
+          readable: true,
+          fields: {
+            path: "www.example.com",
+            authSourceId: connection.connection._id,
+          },
+        })
+      } finally {
+        await config.api.environment.destroy("API_TOKEN")
+        restoreCoreEnv()
+      }
+    })
+
+    it("should resolve env var bindings in workspace connection auth config", async () => {
+      const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
+      mocks.licenses.useEnvironmentVariables()
+      try {
+        await config.api.environment.create({
+          name: "AUTH_PASS",
+          production: "env-password",
+          development: "env-password",
+        })
+
+        const connection = await config.api.workspaceConnection.create({
+          name: generator.guid(),
+          type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+          auth: [
+            {
+              _id: generator.guid(),
+              name: "Basic Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "env-user",
+                password: "{{ env.AUTH_PASS }}",
+              },
+            },
+          ],
+          props: {},
+        })
+
+        const expectedAuth = Buffer.from("env-user:env-password").toString(
+          "base64"
+        )
+        mockAgent!
+          .get("http://www.example.com")
+          .intercept({
+            path: "/",
+            method: "GET",
+            headers: {
+              authorization: `Basic ${expectedAuth}`,
+            },
+          })
+          .reply(200, { ok: true }, { headers: jsonHeaders })
+
+        await config.api.query.preview({
+          datasourceId: datasource._id!,
+          name: generator.guid(),
+          parameters: [],
+          queryVerb: "read",
+          transformer: "",
+          schema: {},
+          readable: true,
+          fields: {
+            path: "www.example.com",
+            authSourceId: connection.connection._id,
+          },
+        })
+      } finally {
+        await config.api.environment.destroy("AUTH_PASS")
+        restoreCoreEnv()
+      }
+    })
+
+    it("should resolve env var bindings in workspace connection static variables", async () => {
+      const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
+      mocks.licenses.useEnvironmentVariables()
+      try {
+        await config.api.environment.create({
+          name: "TENANT_ID",
+          production: "env-tenant-42",
+          development: "env-tenant-42",
+        })
+
+        const connection = await config.api.workspaceConnection.create({
+          name: generator.guid(),
+          type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+          auth: [
+            {
+              _id: generator.guid(),
+              name: "Basic",
+              type: RestAuthType.BASIC,
+              config: { username: "u", password: "p" },
+            },
+          ],
+          props: {
+            staticVariables: {
+              tenantId: "{{ env.TENANT_ID }}",
+            },
+          },
+        })
+
+        mockAgent!
+          .get("http://www.example.com")
+          .intercept({
+            path: "/",
+            method: "GET",
+            query: { tenant: "env-tenant-42" },
+          })
+          .reply(200, { ok: true }, { headers: jsonHeaders })
+
+        await config.api.query.preview({
+          datasourceId: datasource._id!,
+          name: generator.guid(),
+          parameters: [{ name: "tenantId", default: "{{ tenantId }}" }],
+          queryVerb: "read",
+          transformer: "",
+          schema: {},
+          readable: true,
+          fields: {
+            path: "www.example.com",
+            queryString: "tenant={{tenantId}}",
+            authSourceId: connection.connection._id,
+          },
+        })
+      } finally {
+        await config.api.environment.destroy("TENANT_ID")
+        restoreCoreEnv()
+      }
+    })
+
+    it("should use datasource auth and headers when authSourceId is datasource-prefixed", async () => {
+      const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
+      const externalDs = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "test",
+        source: SourceName.REST,
+        config: {
+          defaultHeaders: {
+            "X-External-Header": "from-external-ds",
+          },
+          authConfigs: [
+            {
+              _id: "ext-auth-1",
+              name: "External Bearer",
+              type: RestAuthType.BEARER,
+              config: { token: "ext-bearer-token" },
+            },
+          ],
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            "x-external-header": "from-external-ds",
+            authorization: "Bearer ext-bearer-token",
+          },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authSourceId: externalDs._id,
+          authConfigId: "ext-auth-1",
+        },
+      })
+
+      restoreCoreEnv()
+    })
+
+    it("should not use datasource defaultHeaders when authSourceId is a workspace connection", async () => {
+      const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
+      const dsWithHeaders = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "test",
+        source: SourceName.REST,
+        config: {
+          defaultHeaders: {
+            "X-Datasource-Header": "should-not-appear",
+          },
+        },
+      })
+
+      const connection = await config.api.workspaceConnection.create({
+        name: generator.guid(),
+        type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
+        auth: [
+          {
+            _id: generator.guid(),
+            name: "Basic",
+            type: RestAuthType.BASIC,
+            config: { username: "u", password: "p" },
+          },
+        ],
+        props: {
+          headers: {
+            "X-Connection-Header": "should-appear",
+          },
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            "x-connection-header": "should-appear",
+          },
+        })
+        .reply(({ headers }) => {
+          expect((headers as Record<string, string>)["x-datasource-header"]).toBeUndefined()
+          return {
+            statusCode: 200,
+            data: { ok: true },
+            responseOptions: { headers: jsonHeaders },
+          }
+        })
+
+      await config.api.query.preview({
+        datasourceId: dsWithHeaders._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authSourceId: connection.connection._id,
+        },
+      })
+
+      restoreCoreEnv()
     })
   })
 })
