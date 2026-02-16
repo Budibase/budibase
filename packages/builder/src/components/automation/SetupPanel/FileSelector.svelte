@@ -33,7 +33,7 @@
 
   const handleKeyValueChange = (e: CustomEvent) => {
     const update = {
-      [key]: e.detail.fields.map(({ name, value }) => ({
+      [key]: e.detail.fields.map(({ name, value }: { name: string; value: string }) => ({
         url: name,
         filename: value,
       })),
