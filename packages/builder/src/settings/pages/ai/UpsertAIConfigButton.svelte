@@ -18,7 +18,6 @@
   let configModal: { show: () => void; hide: () => void }
   let openModal: boolean
   let hasLicenseKey: boolean | null = null
-  let licenseChecked = false
 
   $: configModal?.show()
 
@@ -34,8 +33,6 @@
       }
     } catch {
       hasLicenseKey = false
-    } finally {
-      licenseChecked = true
     }
   })
 </script>
@@ -60,7 +57,7 @@
         provider={row.provider}
         type={row.configType}
       />
-    {:else if !licenseChecked}
+    {:else if hasLicenseKey == null}
       <div class="license-check">
         <ProgressCircle />
         <Body size="S">Checking license...</Body>
