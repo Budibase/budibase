@@ -233,7 +233,7 @@
       </div>
       <Input
         label="Service URL"
-        placeholder="E.g. www.google.com"
+        placeholder="E.g. https://www.google.com"
         value={data.url}
         on:change={e => onUpdate("url", e.detail)}
         on:blur={() => (blurred.url = true)}
