@@ -12,7 +12,7 @@
     deploymentStore,
     workspaceDeploymentStore,
   } from "@/stores/builder"
-  import { themeStore, admin, licensing } from "@/stores/portal"
+  import { themeStore, admin, aiStore } from "@/stores/portal"
   import { TableNames } from "@/constants"
   import { Grid, gridClipboard } from "@budibase/frontend-core"
   import type { Store as GridStore } from "@budibase/frontend-core/src/components/grid/stores"
@@ -328,7 +328,7 @@
         schemaOverrides={isUsersTable ? userSchemaOverrides : null}
         showAvatars={false}
         isCloud={$admin.cloud}
-        aiEnabled={$licensing.budibaseAIEnabled}
+        aiEnabled={$aiStore.aiEnabled}
         {buttons}
         buttonsCollapsed
         canHideColumns={false}
