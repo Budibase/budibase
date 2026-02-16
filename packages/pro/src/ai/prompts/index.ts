@@ -45,7 +45,7 @@ export function extractFileData(
     "The schema defines the structure where values like 'string', 'number', 'boolean' indicate the expected data types.",
     "Extract all items that match the schema from the document.",
     "Return the data in json format",
-    "If no matching data is found, return an empty data array.",
+    "If no matching data is found, return an empty object.",
   ].join("\n\n")
 
   // Check if it's a base64 data URL (for images) or a file ID (for documents)
