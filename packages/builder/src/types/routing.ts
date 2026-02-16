@@ -92,7 +92,7 @@ export const flatten = (
 
     if (entry.routes) {
       // Navigation sibling pages at this level - should have a comp defined
-      // Exclude routes with skipNav: false
+      // Exclude routes with skipNav: true
       const pageSiblings = entry.routes.filter(r => r.comp && !r.skipNav)
 
       // Build nav only if there is more than one sibling page
