@@ -17,7 +17,18 @@ import sdk from "../../../sdk"
 const sanitizeConfig = async (
   config: CustomAIProviderConfig
 ): Promise<AIConfigResponse> => {
-  const providers = await sdk.ai.configs.fetchLiteLLMProviders()
+  let providers = await sdk.ai.configs.fetchLiteLLMProviders()
+  providers = [
+    ...providers,
+    {
+      id: BUDIBASE_AI_PROVIDER_ID,
+      displayName: "Budibase AI",
+      externalProvider: "custom_openai",
+      credentialFields: [
+        { key: "api_key", label: "api_key", field_type: "password" },
+      ],
+    },
+  ]
   const provider = providers.find(p => p.id === config.provider)
 
   if (!provider) {
@@ -35,13 +46,6 @@ const sanitizeConfig = async (
   const sanitized: AIConfigResponse = {
     ...config,
     credentialsFields: { ...credentialsFields },
-  }
-
-  if (
-    sanitized.provider === BUDIBASE_AI_PROVIDER_ID &&
-    sanitized.credentialsFields?.api_key
-  ) {
-    sanitized.credentialsFields.api_key = PASSWORD_REPLACEMENT
   }
 
   if (sanitized.webSearchConfig?.apiKey) {
