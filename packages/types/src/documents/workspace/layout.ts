@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { AppBanner } from "./workspace"
 
 export interface Layout extends Document {
   componentLibraries?: string[]
@@ -13,4 +14,5 @@ export interface Layout extends Document {
   embedded?: boolean
   logoUrl?: string
   hideTitle?: boolean
+  banner?: AppBanner
 }
