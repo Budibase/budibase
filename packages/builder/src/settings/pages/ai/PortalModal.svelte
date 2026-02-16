@@ -17,12 +17,19 @@
 
   <div>
     Get your key from the
-    <Link href={$admin.accountPortalUrl}>Budibase Account Portal</Link> then add
-    it to your self-hosted instance via the Account → Upgrade page.
+    <Link
+      href={$admin.accountPortalUrl}
+      target="_blank"
+      rel="noopener noreferrer">Budibase Account Portal</Link
+    > then add it to your self-hosted instance via the Account → Upgrade page.
   </div>
 
   <div>
-    <Link href="https://docs.budibase.com/docs/quickstart-budibase-ai">
+    <Link
+      href="https://docs.budibase.com/docs/quickstart-budibase-ai"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
       Learn more about this step.
     </Link>
   </div>

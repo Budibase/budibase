@@ -68,7 +68,7 @@
     {:else if hasLicenseKey === false}
       <PortalModal
         confirmHandler={() => {
-          window.open($admin.accountPortalUrl, "_blank")
+          window.open($admin.accountPortalUrl, "_blank", "noopener,noreferrer")
           openModal = false
         }}
         cancelHandler={() => {
