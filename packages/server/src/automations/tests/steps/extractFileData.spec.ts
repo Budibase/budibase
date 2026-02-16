@@ -2,8 +2,8 @@ import { objectStore, setEnv as setCoreEnv } from "@budibase/backend-core"
 import { DocumentSourceType, SupportedFileType } from "@budibase/types"
 import nock from "nock"
 import {
-  mockChatGPTResponse,
   mockOpenAIFileUpload,
+  mockOpenAIResponsesResponse,
 } from "../../../tests/utilities/mocks/ai/openai"
 import { basicTableWithAttachmentField } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -43,7 +43,7 @@ describe("test the extract file data action", () => {
   })
 
   it("should successfully extract data from a file attachment", async () => {
-    mockChatGPTResponse(
+    mockOpenAIResponsesResponse(
       JSON.stringify({
         data: {
           name: "John Doe",
@@ -98,7 +98,7 @@ describe("test the extract file data action", () => {
   })
 
   it("should successfully extract data from a URL", async () => {
-    mockChatGPTResponse(
+    mockOpenAIResponsesResponse(
       JSON.stringify({
         data: {
           product: "Widget",
@@ -241,7 +241,7 @@ describe("test the extract file data action", () => {
   })
 
   it("should handle invalid JSON response from AI", async () => {
-    mockChatGPTResponse("This is not valid JSON - should cause parsing error")
+    mockOpenAIResponsesResponse("This is not valid JSON - should cause parsing")
     mockOpenAIFileUpload("file-id-789")
 
     let filename = await uploadTestFile("test-document.pdf")
@@ -274,7 +274,7 @@ describe("test the extract file data action", () => {
 
     expect(result.steps[1].outputs.success).toBe(false)
     expect(result.steps[1].outputs.response).toContain(
-      "Could not parse AI response as valid JSON"
+      "AI_NoObjectGeneratedError: No object generated: could not parse the response."
     )
   })
 
