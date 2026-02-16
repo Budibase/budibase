@@ -74,11 +74,14 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
   interceptor.defaultReplyHeaders?.({
     "content-type": "application/json",
   })
-  interceptor.reply(200, reqOpts => {
+  interceptor.reply<object>(reqOpts => {
     const reqBody = parseJsonBody(reqOpts.body)
     if (expectedFormat && !expectedFormat(reqBody)) {
       return {
-        error: { message: "Unexpected response_format in request body" },
+        statusCode: 200,
+        data: {
+          error: { message: "Unexpected response_format in request body" },
+        },
       }
     }
 
@@ -133,6 +136,9 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
       },
     }
 
-    return response
+    return {
+      statusCode: 200,
+      data: response,
+    }
   })
 }

@@ -81,16 +81,22 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
     method: "POST",
   })
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
-  interceptor.reply(200, (reqOpts: any) => {
+  interceptor.reply<object>((reqOpts: any) => {
     const reqBody = parseJsonBody(reqOpts.body)
     if (expectedFormat && !expectedFormat(reqBody)) {
       return {
-        error: { message: "Unexpected response_format in request body" },
+        statusCode: 200,
+        data: {
+          error: { message: "Unexpected response_format in request body" },
+        },
       }
     }
     if (rejectFormat && "response_format" in reqBody) {
       return {
-        error: { message: "Unexpected response_format in request body" },
+        statusCode: 200,
+        data: {
+          error: { message: "Unexpected response_format in request body" },
+        },
       }
     }
 
@@ -155,7 +161,10 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
       },
     }
 
-    return response
+    return {
+      statusCode: 200,
+      data: response,
+    }
   }) // Each mock call handles one request
 }
 
@@ -173,7 +182,7 @@ export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
   interceptor.defaultReplyHeaders?.({
     "content-type": "application/json",
   })
-  interceptor.reply(200, (reqOpts: any) => {
+  interceptor.reply<object>((reqOpts: any) => {
     const reqBody = parseJsonBody(reqOpts.body)
 
     let prompt = ""
@@ -194,9 +203,10 @@ export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
       try {
         content = answer(prompt)
       } catch (e: any) {
+        const message = e?.message || "Internal Server Error"
         return {
           statusCode: 500,
-          data: e.message,
+          data: message,
         }
       }
     } else {
@@ -209,28 +219,31 @@ export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
     const completion_tokens = content.split(SPACE_REGEX).length
 
     return {
-      id: `resp_${chatID}`,
-      created_at: Math.floor(Date.now() / 1000),
-      model: reqBody?.model ?? "gpt-5-mini",
-      output: [
-        {
-          type: "message",
-          role: "assistant",
-          id: `msg_${chatID}`,
-          content: [
-            {
-              type: "output_text",
-              text: content,
-              annotations: [],
-            },
-          ],
+      statusCode: 200,
+      data: {
+        id: `resp_${chatID}`,
+        created_at: Math.floor(Date.now() / 1000),
+        model: reqBody?.model ?? "gpt-5-mini",
+        output: [
+          {
+            type: "message",
+            role: "assistant",
+            id: `msg_${chatID}`,
+            content: [
+              {
+                type: "output_text",
+                text: content,
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: prompt_tokens,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens: completion_tokens,
+          output_tokens_details: { reasoning_tokens: 0 },
         },
-      ],
-      usage: {
-        input_tokens: prompt_tokens,
-        input_tokens_details: { cached_tokens: 0 },
-        output_tokens: completion_tokens,
-        output_tokens_details: { reasoning_tokens: 0 },
       },
     }
   })

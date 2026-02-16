@@ -92,7 +92,7 @@ describe("test the openai action", () => {
         .test({ fields: {} })
     )
 
-    expect(result.steps[0].outputs.response).toEqual("Error: No response found")
+    expect(result.steps[0].outputs.response).toContain("oh no")
     expect(result.steps[0].outputs.success).toBeFalsy()
   })
 
