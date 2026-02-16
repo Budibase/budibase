@@ -523,7 +523,7 @@ describe("BudibaseAI", () => {
     const mockAIGenerationStructure = (
       generationStructure: ai.GenerationStructure
     ) => {
-      mockChatGPTResponse(JSON.stringify(generationStructure), {
+      mockOpenAIResponsesResponse(JSON.stringify(generationStructure), {
         format: toResponseFormat(ai.generationStructure),
       })
     }
@@ -532,7 +532,7 @@ describe("BudibaseAI", () => {
       generationStructure: ai.GenerationStructure,
       aiColumnGeneration: ai.AIColumnSchemas
     ) =>
-      mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
+      mockOpenAIResponsesResponse(JSON.stringify(aiColumnGeneration), {
         format: toResponseFormat(
           ai.aiColumnSchemas(
             ai.aiTableResponseToTableSchema(generationStructure)
@@ -543,12 +543,12 @@ describe("BudibaseAI", () => {
     const mockDataGeneration = (
       dataGeneration: Record<string, Record<string, any>[]>
     ) =>
-      mockChatGPTResponse(JSON.stringify(dataGeneration), {
+      mockOpenAIResponsesResponse(JSON.stringify(dataGeneration), {
         format: toResponseFormat(ai.tableDataStructuredOutput([])),
       })
 
     const mockProcessAIColumn = (response: string) =>
-      mockChatGPTResponse(response)
+      mockOpenAIResponsesResponse(response)
 
     it("handles correct chat response", async () => {
       const prompt = "Create me a table for managing IT tickets"
