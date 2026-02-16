@@ -5,6 +5,7 @@
     admin,
     auth,
     clientAppsStore,
+    clientChatAppsStore,
     licensing,
     organisation,
     translations,
@@ -39,21 +40,14 @@
   $goto // manually initialize the helper
 
   let loaded: boolean = false
-  let chatAppsLoaded: boolean = false
-  type PublishedChatAppData = {
-    appId: string
-    chatAppId: string
-    name: string
-    url: string
-    updatedAt?: string
-  }
-  let liveChatApps: PublishedChatAppData[] = []
   let userInfoModal: Modal
   let changePasswordModal: Modal
 
   const { accountPortalAccountUrl } = helpers
 
   $: userApps = $clientAppsStore.apps
+  $: liveChatApps = $clientChatAppsStore.chatApps
+  $: chatAppsLoaded = $clientChatAppsStore.loaded
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUrl(app: EnrichedApp | PublishedWorkspaceData) {
@@ -77,17 +71,7 @@
       await Promise.all([
         clientAppsStore.load(),
         translations.init(),
-        API.get<{ chatApps: PublishedChatAppData[] }>({
-          url: "/api/client/chatapps",
-        })
-          .then(response => {
-            liveChatApps = response.chatApps
-            chatAppsLoaded = true
-          })
-          .catch(() => {
-            notifications.error("Error loading chat apps")
-            chatAppsLoaded = true
-          }),
+        clientChatAppsStore.load(),
       ])
     } catch (error) {
       notifications.error("Error loading apps")
