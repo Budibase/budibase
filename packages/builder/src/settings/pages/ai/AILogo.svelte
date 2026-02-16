@@ -36,10 +36,14 @@
     }
     return ""
   }
+
+  $: logo = getProviderLogo(row.provider)
 </script>
 
 <span class={`model-icon ${getThemeClass(row.provider)}`}>
-  <img src={getProviderLogo(row.provider)} alt="" />
+  {#if logo}
+    <img src={logo} alt="" />
+  {/if}
 </span>
 
 <style>
