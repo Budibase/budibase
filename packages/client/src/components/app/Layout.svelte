@@ -22,6 +22,7 @@
   } = sdk
   const context = getContext("context")
   const navStateStore = writable({})
+  let navStateBeforeCollapse = {}
 
   // Legacy props which must remain unchanged for backwards compatibility
   export let title
@@ -293,6 +294,9 @@
             class:collapsed={navCollapsed}
             on:click={() => {
               if (navCollapsed) {
+                // Restore dropdown state when expanding
+                navStateStore.set(navStateBeforeCollapse)
+                navStateBeforeCollapse = {}
                 navCollapsed = false
               }
             }}
@@ -326,19 +330,23 @@
                     {title}
                   </Heading>
                 {/if}
-                {#if navigation === "Left" && collapsible && !navCollapsed && !mobile}
-                  <div
-                    class="nav-toggle"
-                    on:click|stopPropagation={() =>
-                      (navCollapsed = !navCollapsed)}
-                  >
-                    <i
-                      class="ph ph-sidebar-simple"
-                      style:color={"var(--navTextColor)"}
-                    ></i>
-                  </div>
-                {/if}
               </div>
+              {#if navigation === "Left" && collapsible && !mobile && !navCollapsed}
+                <div
+                  class="nav-toggle"
+                  on:click|stopPropagation={() => {
+                    // Save current dropdown state before collapsing
+                    navStateBeforeCollapse = $navStateStore
+                    navStateStore.set({})
+                    navCollapsed = !navCollapsed
+                  }}
+                >
+                  <i
+                    class="ph ph-sidebar-simple"
+                    style:color={"var(--navTextColor)"}
+                  ></i>
+                </div>
+              {/if}
               {#if !embedded}
                 <div class="user top">
                   <UserMenu compact />
@@ -615,12 +623,25 @@
     padding: var(--spacing-s);
     border-radius: 4px;
     transition: background-color 0.2s ease;
+    flex-shrink: 0;
+    align-self: flex-start;
   }
   .nav-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.25);
   }
   .collapsed-logo {
     cursor: pointer;
+  }
+  .logo.collapsed-logo {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 4px;
+  }
+  .logo.collapsed-logo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
   .burger {
     display: none;
@@ -629,9 +650,14 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--spacing-m);
     flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .logo :global(img) {
+    flex-shrink: 0;
   }
   .logo :global(h1) {
     font-weight: 600;
@@ -686,6 +712,10 @@
     padding: var(--spacing-xs);
     justify-content: center;
     width: 100%;
+  }
+  .desktop .nav--left.collapsed .links :global(.link:hover),
+  .desktop .nav--left.collapsed .links :global(.dropdown .text:hover) {
+    background-color: rgba(255, 255, 255, 0.25);
   }
   .desktop .nav--left .links {
     margin-top: var(--spacing-m);

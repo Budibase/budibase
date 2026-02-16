@@ -118,13 +118,13 @@
       <button
         type="button"
         class="header-cell header-cell--with-icon"
-        on:click={() => headerClick("created")}
+        on:click={() => headerClick("updated")}
       >
-        <span>Created</span>
+        <span>Updated</span>
         <span
           class="sort-indicator"
-          class:sort-indicator--active={isSorted("created")}
-          class:sort-indicator--up={isSorted("created") && sortOrder === "desc"}
+          class:sort-indicator--active={isSorted("updated")}
+          class:sort-indicator--up={isSorted("updated") && sortOrder === "desc"}
         >
           <Icon
             name="caret-down"
@@ -169,9 +169,8 @@
 
           <div class="cell">
             {#if row.type === "app" || row.type === "automation"}
-              <!-- todo: sort out for agents and chat -->
               <PublishStatusBadge status={row.status} />
-            {:else}
+            {:else if row.type === "agent"}
               <Body
                 size="S"
                 color={row.live
@@ -180,13 +179,17 @@
               >
                 {row.live ? "Live" : "Draft"}
               </Body>
+            {:else}
+              <Body size="S" color="var(--spectrum-global-color-gray-600)"
+                >-</Body
+              >
             {/if}
           </div>
 
           <div class="cell">
             <Body size="S" color="var(--spectrum-global-color-gray-700)">
-              {#if row.createdAt}
-                {dayjs(row.createdAt).fromNow()}
+              {#if row.updatedAt}
+                {dayjs(row.updatedAt).fromNow()}
               {:else}
                 -
               {/if}
@@ -230,6 +233,11 @@
   .table-wrapper {
     overflow-x: auto;
     width: 100%;
+    scrollbar-width: none;
+  }
+
+  .table-wrapper::-webkit-scrollbar {
+    display: none;
   }
 
   .table {

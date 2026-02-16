@@ -6,7 +6,6 @@
 <h1 align="center">
   Budibase
 </h1>
-
 <h3 align="center">
   The low code platform you'll enjoy using
 </h3>

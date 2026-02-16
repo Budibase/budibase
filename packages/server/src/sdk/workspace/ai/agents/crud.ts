@@ -5,13 +5,46 @@ import {
   DocumentType,
   UpdateAgentRequest,
 } from "@budibase/types"
+import { helpers } from "@budibase/shared-core"
 import { listAgentFiles, removeAgentFile } from "./files"
+
+const DISCORD_SECRET_MASK = "********"
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
 })
+
+const mergeDiscordIntegration = ({
+  existing,
+  incoming,
+}: {
+  existing?: Agent["discordIntegration"]
+  incoming?: Agent["discordIntegration"]
+}) => {
+  if (incoming === undefined) {
+    return existing
+  }
+  if (!incoming) {
+    return incoming
+  }
+
+  const merged = {
+    ...(existing || {}),
+    ...incoming,
+  }
+
+  if (incoming.publicKey === DISCORD_SECRET_MASK && existing?.publicKey) {
+    merged.publicKey = existing.publicKey
+  }
+
+  if (incoming.botToken === DISCORD_SECRET_MASK && existing?.botToken) {
+    merged.botToken = existing.botToken
+  }
+
+  return merged
+}
 
 export async function fetch(): Promise<Agent[]> {
   const db = context.getWorkspaceDB()
@@ -63,11 +96,41 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     vectorDb: request.vectorDb,
     ragMinDistance: request.ragMinDistance,
     ragTopK: request.ragTopK,
+    discordIntegration: request.discordIntegration,
   }
 
   const { rev } = await db.put(agent)
   agent._rev = rev
   return withAgentDefaults(agent)
+}
+
+export async function duplicate(
+  source: Agent,
+  createdBy: string
+): Promise<Agent> {
+  const allAgents = await fetch()
+  const name = helpers.duplicateName(
+    source.name,
+    allAgents.map(agent => agent.name)
+  )
+
+  return await create({
+    name,
+    description: source.description,
+    aiconfig: source.aiconfig,
+    promptInstructions: source.promptInstructions,
+    goal: source.goal,
+    icon: source.icon,
+    iconColor: source.iconColor,
+    live: source.live,
+    _deleted: false,
+    createdBy,
+    enabledTools: source.enabledTools || [],
+    embeddingModel: source.embeddingModel,
+    vectorDb: source.vectorDb,
+    ragMinDistance: source.ragMinDistance,
+    ragTopK: source.ragTopK,
+  })
 }
 
 export async function update(agent: UpdateAgentRequest): Promise<Agent> {
@@ -84,6 +147,10 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
     ...agent,
     updatedAt: new Date().toISOString(),
     enabledTools: agent.enabledTools ?? existing?.enabledTools ?? [],
+    discordIntegration: mergeDiscordIntegration({
+      existing: existing?.discordIntegration,
+      incoming: agent.discordIntegration,
+    }),
   }
 
   const { rev } = await db.put(updated)

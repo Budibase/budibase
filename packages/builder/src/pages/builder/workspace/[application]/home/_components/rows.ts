@@ -48,6 +48,20 @@ export const getRowIconColor = (type: HomeRowType) => {
   }
 }
 
+export const getHomeTypeIcon = (type: HomeType) => {
+  if (type === "all") {
+    return "squares-four"
+  }
+  return getRowIcon(type)
+}
+
+export const getHomeTypeIconColor = (type: HomeType) => {
+  if (type === "all") {
+    return "var(--spectrum-global-color-gray-700)"
+  }
+  return getRowIconColor(type)
+}
+
 export const getTypeLabel = (type: HomeRowType) => {
   switch (type) {
     case "app":
@@ -59,8 +73,8 @@ export const getTypeLabel = (type: HomeRowType) => {
   }
 }
 
-const getDateTimestamp = (row: HomeRow) => {
-  const value = row.createdAt || row.updatedAt
+const getUpdatedTimestamp = (row: HomeRow) => {
+  const value = row.updatedAt
   if (!value) {
     return 0
   }
@@ -74,10 +88,10 @@ const getDateTimestamp = (row: HomeRow) => {
 }
 
 const getStatusSortValue = (row: HomeRow) => {
-  if (row.type === "agent") {
-    return row.live ? "live" : "draft"
+  if (row.type === "app" || row.type === "automation") {
+    return `${row.status}`.toLowerCase()
   }
-  return `${row.status}`.toLowerCase()
+  return row.live ? "live" : "draft"
 }
 
 const getSortValue = (row: HomeRow, column: HomeSortColumn) => {
@@ -88,8 +102,8 @@ const getSortValue = (row: HomeRow, column: HomeSortColumn) => {
       return getTypeLabel(row.type).toLowerCase()
     case "status":
       return getStatusSortValue(row)
-    case "created":
-      return getDateTimestamp(row)
+    case "updated":
+      return getUpdatedTimestamp(row)
   }
 }
 
@@ -116,8 +130,8 @@ export const sortHomeRows = (
   }
 ) =>
   rows.slice().sort((a, b) => {
-    const aIsFav = !!a.favourite._id
-    const bIsFav = !!b.favourite._id
+    const aIsFav = !!a.favourite?._id
+    const bIsFav = !!b.favourite?._id
 
     if (aIsFav !== bIsFav) {
       return bIsFav ? 1 : -1
@@ -145,13 +159,8 @@ export const filterHomeRows = ({
   const normalisedSearchTerm = searchTerm.trim().toLowerCase()
 
   return rows.filter(row => {
-    if (typeFilter !== "all") {
-      if (typeFilter === "chat") {
-        return false
-      }
-      if (row.type !== typeFilter) {
-        return false
-      }
+    if (typeFilter !== "all" && row.type !== typeFilter) {
+      return false
     }
 
     if (normalisedSearchTerm) {
