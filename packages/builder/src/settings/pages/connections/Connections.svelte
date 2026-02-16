@@ -52,7 +52,11 @@
           value={searchValue}
           on:change={event => (searchValue = event.detail)}
         />
-        <Button size="M" on:click={() => bb.settings("/connections/create")} cta>
+        <Button
+          size="M"
+          on:click={() => bb.settings("/connections/create")}
+          cta
+        >
           Add connection
         </Button>
       </div>

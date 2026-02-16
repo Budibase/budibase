@@ -75,9 +75,17 @@
     return Object.keys(errors).length === 0
   }
 
-  export const getConfig = (opts?: { showErrors?: boolean }): RestAuthConfig | null => {
+  export const getConfig = (opts?: {
+    showErrors?: boolean
+  }): RestAuthConfig | null => {
     if (opts?.showErrors) {
-      blurred = { name: true, type: true, username: true, password: true, token: true }
+      blurred = {
+        name: true,
+        type: true,
+        username: true,
+        password: true,
+        token: true,
+      }
     }
     if (!validate()) {
       return null

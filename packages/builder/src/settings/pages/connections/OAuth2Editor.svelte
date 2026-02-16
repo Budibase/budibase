@@ -124,9 +124,20 @@
     return validationResult.success
   }
 
-  export const getConfig = (opts?: { showErrors?: boolean }): OAuth2AuthConfig | null => {
+  export const getConfig = (opts?: {
+    showErrors?: boolean
+  }): OAuth2AuthConfig | null => {
     if (opts?.showErrors) {
-      blurred = { name: true, url: true, clientId: true, clientSecret: true, method: true, grantType: true, scope: true, audience: true }
+      blurred = {
+        name: true,
+        url: true,
+        clientId: true,
+        clientSecret: true,
+        method: true,
+        grantType: true,
+        scope: true,
+        audience: true,
+      }
     }
     if (!validate()) {
       return null

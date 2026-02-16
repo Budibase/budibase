@@ -325,8 +325,7 @@ class QueryRunner {
     const datasourcePrefix = `${DocumentType.DATASOURCE}${SEPARATOR}`
 
     if (authSourceId.startsWith(workspaceConnectionPrefix)) {
-      const { connection } =
-        await sdk.connections.getWithEnvVars(authSourceId)
+      const { connection } = await sdk.connections.getWithEnvVars(authSourceId)
       return connection?.props?.staticVariables || {}
     }
 

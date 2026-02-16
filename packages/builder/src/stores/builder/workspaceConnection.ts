@@ -31,7 +31,9 @@ interface DerivedWorkspaceConnectionStoreState
 const fromWorkspaceConnection = (
   c: WorkspaceConnectionResponse
 ): UIWorkspaceConnection => {
-  const template = c.templateId ? restTemplates.getById(c.templateId) : undefined
+  const template = c.templateId
+    ? restTemplates.getById(c.templateId)
+    : undefined
   return {
     ...c,
     source: "workspace_connection" as const,

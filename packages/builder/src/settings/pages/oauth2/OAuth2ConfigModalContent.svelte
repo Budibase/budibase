@@ -241,7 +241,8 @@
   />
   <div class="field-info">
     <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-      The intended recipient of the token. Required by some providers like Auth0.
+      The intended recipient of the token. Required by some providers like
+      Auth0.
     </Body>
   </div>
 </ModalContent>

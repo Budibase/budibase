@@ -1089,9 +1089,7 @@ describe("rest", () => {
       await config.api.query.preview({
         datasourceId: datasource._id!,
         name: generator.guid(),
-        parameters: [
-          { name: "companyId", default: "{{ companyId }}" },
-        ],
+        parameters: [{ name: "companyId", default: "{{ companyId }}" }],
         queryVerb: "read",
         transformer: "",
         schema: {},
@@ -1371,7 +1369,9 @@ describe("rest", () => {
           },
         })
         .reply(({ headers }) => {
-          expect((headers as Record<string, string>)["x-datasource-header"]).toBeUndefined()
+          expect(
+            (headers as Record<string, string>)["x-datasource-header"]
+          ).toBeUndefined()
           return {
             statusCode: 200,
             data: { ok: true },

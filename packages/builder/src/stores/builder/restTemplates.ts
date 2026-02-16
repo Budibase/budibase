@@ -3049,7 +3049,9 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
       return undefined
     }
     const actualName = MICROSOFT_SHAREPOINT_NAME_ALIASES[name] || name
-    const template = this.templates.find(template => template.name === actualName)
+    const template = this.templates.find(
+      template => template.name === actualName
+    )
     if (template) {
       return template
     }
@@ -3110,7 +3112,9 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
     if (!nameOrId) {
       return undefined
     }
-    return this.getById(nameOrId) || this.getByName(nameOrId as RestTemplateName)
+    return (
+      this.getById(nameOrId) || this.getByName(nameOrId as RestTemplateName)
+    )
   }
 }
 

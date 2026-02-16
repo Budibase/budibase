@@ -97,9 +97,7 @@ function makeConnection(
   }
 }
 
-function makeOAuth2Config(
-  overrides: Partial<OAuth2Config> = {}
-): OAuth2Config {
+function makeOAuth2Config(overrides: Partial<OAuth2Config> = {}): OAuth2Config {
   return {
     _id: "oauth2-1",
     _rev: "1-abc",
