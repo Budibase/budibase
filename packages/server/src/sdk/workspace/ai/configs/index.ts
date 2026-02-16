@@ -1,15 +1,100 @@
-import { context, docIds, env, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  encryption,
+  env,
+  HTTPError,
+} from "@budibase/backend-core"
+import { licensing } from "@budibase/pro"
 import {
   BUDIBASE_AI_PROVIDER_ID,
-  LLMProviderField,
   CustomAIProviderConfig,
   DocumentType,
   LLMProvider,
+  LLMProviderField,
   PASSWORD_REPLACEMENT,
   RequiredKeys,
 } from "@budibase/types"
 import * as liteLLM from "./litellm"
-import { licensing } from "@budibase/pro"
+
+const SECRET_ENCODING_PREFIX = "bbai_enc::"
+
+const encodeSecret = (value: string): string => {
+  if (!value || value.startsWith(SECRET_ENCODING_PREFIX)) {
+    return value
+  }
+  return `${SECRET_ENCODING_PREFIX}${encryption.encrypt(value)}`
+}
+
+const decodeSecret = (value: string): string => {
+  if (!value || !value.startsWith(SECRET_ENCODING_PREFIX)) {
+    return value
+  }
+  return encryption.decrypt(value.slice(SECRET_ENCODING_PREFIX.length))
+}
+
+const getPasswordCredentialFieldKeys = async (
+  providerId: string
+): Promise<Set<string>> => {
+  const providers = await fetchLiteLLMProviders()
+  const provider = providers.find(p => p.id === providerId)
+  return new Set(
+    provider?.credentialFields
+      .filter(field => field.field_type === "password")
+      .map(field => field.key) || []
+  )
+}
+
+const encodeConfigSecrets = async (
+  config: Pick<
+    CustomAIProviderConfig,
+    "provider" | "credentialsFields" | "webSearchConfig"
+  >
+) => {
+  const passwordKeys = await getPasswordCredentialFieldKeys(config.provider)
+  return {
+    credentialsFields: Object.fromEntries(
+      Object.entries(config.credentialsFields || {}).map(([key, value]) => [
+        key,
+        typeof value === "string" && passwordKeys.has(key)
+          ? encodeSecret(value)
+          : value,
+      ])
+    ),
+    webSearchConfig: config.webSearchConfig
+      ? {
+          ...config.webSearchConfig,
+          apiKey: config.webSearchConfig.apiKey
+            ? encodeSecret(config.webSearchConfig.apiKey)
+            : config.webSearchConfig.apiKey,
+        }
+      : undefined,
+  }
+}
+
+const decodeConfigSecrets = (
+  config: CustomAIProviderConfig
+): CustomAIProviderConfig => {
+  return {
+    ...config,
+    credentialsFields: Object.fromEntries(
+      Object.entries(config.credentialsFields || {}).map(([key, value]) => [
+        key,
+        typeof value === "string" ? decodeSecret(value) : value,
+      ])
+    ),
+    ...(config.webSearchConfig
+      ? {
+          webSearchConfig: {
+            ...config.webSearchConfig,
+            apiKey: config.webSearchConfig.apiKey
+              ? decodeSecret(config.webSearchConfig.apiKey)
+              : config.webSearchConfig.apiKey,
+          },
+        }
+      : {}),
+  }
+}
 
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
   const db = context.getWorkspaceDB()
@@ -22,6 +107,7 @@ export async function fetch(): Promise<CustomAIProviderConfig[]> {
   return result.rows
     .map(row => row.doc)
     .filter((doc): doc is CustomAIProviderConfig => !!doc)
+    .map(config => decodeConfigSecrets(config))
 }
 
 export async function find(
@@ -29,7 +115,7 @@ export async function find(
 ): Promise<CustomAIProviderConfig | undefined> {
   const db = context.getWorkspaceDB()
   const result = await db.tryGet<CustomAIProviderConfig>(id)
-  return result
+  return result ? decodeConfigSecrets(result) : undefined
 }
 
 export async function create(
@@ -89,7 +175,11 @@ export async function create(
     reasoningEffort: config.reasoningEffort,
   }
 
-  const { rev } = await db.put(newConfig)
+  const encodedConfig: CustomAIProviderConfig = {
+    ...newConfig,
+    ...(await encodeConfigSecrets(newConfig)),
+  }
+  const { rev } = await db.put(encodedConfig)
   newConfig._rev = rev
 
   await liteLLM.syncKeyModels()
@@ -146,7 +236,11 @@ export async function update(
   }
 
   const db = context.getWorkspaceDB()
-  const { rev } = await db.put(updatedConfig)
+  const encodedConfig: CustomAIProviderConfig = {
+    ...updatedConfig,
+    ...(await encodeConfigSecrets(updatedConfig)),
+  }
+  const { rev } = await db.put(encodedConfig)
   updatedConfig._rev = rev
 
   function getLiteLLMAwareFields(config: CustomAIProviderConfig) {
