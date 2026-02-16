@@ -461,9 +461,8 @@ export function keyValueArrayToRecord(
   return items.reduce(
     (acc, { name, value }) => {
       const key = options?.filterEmpty ? (name ?? "").toString().trim() : name
-      const valueStr = value?.toString?.() || ""
 
-      if (options?.filterEmpty && key === "" && valueStr.trim() === "") {
+      if (options?.filterEmpty && key === "") {
         return acc
       }
 
