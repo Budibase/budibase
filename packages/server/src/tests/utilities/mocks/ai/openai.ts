@@ -336,7 +336,6 @@ const getPromptFromRequest = (body: unknown): string => {
 
 export const mockChatGPTStreamFailure = (opts?: {
   baseUrl?: string
-  status?: number
   errorMessage?: string
 }) => {
   const origin = opts?.baseUrl || "https://api.openai.com"
