@@ -155,6 +155,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   ): Promise<SyncAgentDiscordCommandsResponse> => {
     return await API.syncAgentDiscordCommands(agentId, body)
   }
+
+  toggleDiscordDeployment = async (agentId: string, enabled: boolean) => {
+    await API.toggleAgentDiscordDeployment(agentId, enabled)
+    await this.fetchAgents()
+  }
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state =>

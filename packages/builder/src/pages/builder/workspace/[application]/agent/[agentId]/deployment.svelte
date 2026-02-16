@@ -56,19 +56,10 @@
     toggling = true
     try {
       if (isCurrentlyEnabled) {
-        await agentsStore.updateAgent({
-          ...currentAgent,
-          discordIntegration: {
-            ...currentAgent.discordIntegration,
-            interactionsEndpointUrl: undefined,
-            chatAppId: undefined,
-          },
-        })
-        await agentsStore.fetchAgents()
+        await agentsStore.toggleDiscordDeployment(currentAgent._id, false)
         notifications.success("Discord channel disabled")
       } else if (discordConfigured) {
-        await agentsStore.syncDiscordCommands(currentAgent._id)
-        await agentsStore.fetchAgents()
+        await agentsStore.toggleDiscordDeployment(currentAgent._id, true)
         notifications.success("Discord channel enabled")
       } else {
         discordModal?.show()

@@ -28,6 +28,7 @@ builderAdminRoutes
     syncAgentDiscordCommandsValidator(),
     ai.syncAgentDiscordCommands
   )
+  .post("/api/agent/:agentId/discord/toggle", ai.toggleAgentDiscordDeployment)
   .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)

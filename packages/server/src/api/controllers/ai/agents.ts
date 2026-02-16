@@ -5,6 +5,8 @@ import {
   CreateAgentResponse,
   FetchAgentsResponse,
   RequiredKeys,
+  ToggleAgentDiscordRequest,
+  ToggleAgentDiscordResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   ToolMetadata,
@@ -164,6 +166,74 @@ export async function syncAgentDiscordCommands(
     interactionsEndpointUrl,
     inviteUrl: sdk.ai.deployments.discord.buildDiscordInviteUrl(applicationId),
   }
+  ctx.status = 200
+}
+
+export async function toggleAgentDiscordDeployment(
+  ctx: UserCtx<
+    ToggleAgentDiscordRequest,
+    ToggleAgentDiscordResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const { enabled } = ctx.request.body
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+
+  if (enabled) {
+    const {
+      applicationId,
+      botToken,
+      guildId,
+      chatAppId: configuredChatAppId,
+    } = sdk.ai.deployments.discord.validateDiscordIntegration(agent)
+
+    const chatApp = await sdk.ai.deployments.discord.resolveChatAppForAgent(
+      agentId,
+      configuredChatAppId
+    )
+
+    await sdk.ai.deployments.discord.syncApplicationCommands(
+      applicationId,
+      botToken,
+      guildId
+    )
+
+    const interactionsEndpointUrl =
+      await sdk.ai.deployments.discord.buildDiscordWebhookUrl(
+        chatApp._id!,
+        agentId
+      )
+
+    await sdk.ai.agents.update({
+      ...agent,
+      discordIntegration: {
+        ...agent.discordIntegration,
+        chatAppId: chatApp._id!,
+        interactionsEndpointUrl,
+      },
+    })
+  } else {
+    const chatAppId = agent.discordIntegration?.chatAppId?.trim()
+
+    if (chatAppId) {
+      await sdk.ai.deployments.discord.disableAgentOnChatApp(
+        chatAppId,
+        agentId
+      )
+    }
+
+    await sdk.ai.agents.update({
+      ...agent,
+      discordIntegration: {
+        ...agent.discordIntegration,
+        interactionsEndpointUrl: undefined,
+        chatAppId: undefined,
+      },
+    })
+  }
+
+  ctx.body = { success: true, enabled }
   ctx.status = 200
 }
 
