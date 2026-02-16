@@ -775,7 +775,7 @@
     padding: 20px;
     font-size: 16px;
     background-color: var(--spectrum-global-color-gray-200);
-    color: var(--grey-9);
+    color: var(--spectrum-alias-text-color);
     border-radius: 10px;
     border: 1px solid var(--spectrum-global-color-gray-300) !important;
     outline: none;
