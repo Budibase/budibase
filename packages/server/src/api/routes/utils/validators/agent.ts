@@ -15,17 +15,6 @@ const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   .optional()
   .allow(null)
 
-const TEAMS_INTEGRATION_SCHEMA = Joi.object({
-  appId: OPTIONAL_STRING,
-  appPassword: OPTIONAL_STRING,
-  tenantId: OPTIONAL_STRING,
-  chatAppId: OPTIONAL_STRING,
-  messagingEndpointUrl: OPTIONAL_STRING,
-  idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
-})
-  .optional()
-  .allow(null)
-
 export function createAgentValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -42,7 +31,6 @@ export function createAgentValidator() {
       ragMinDistance: OPTIONAL_NUMBER.min(0).max(1),
       ragTopK: OPTIONAL_NUMBER.integer().min(1).max(10),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
-      teamsIntegration: TEAMS_INTEGRATION_SCHEMA,
     })
   )
 }
@@ -65,7 +53,6 @@ export function updateAgentValidator() {
       ragMinDistance: OPTIONAL_NUMBER.min(0).max(1),
       ragTopK: OPTIONAL_NUMBER.integer().min(1).max(10),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
-      teamsIntegration: TEAMS_INTEGRATION_SCHEMA,
     }).unknown(true)
   )
 }

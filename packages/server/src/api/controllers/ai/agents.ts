@@ -4,8 +4,6 @@ import {
   CreateAgentRequest,
   CreateAgentResponse,
   FetchAgentsResponse,
-  ProvisionAgentTeamsChannelRequest,
-  ProvisionAgentTeamsChannelResponse,
   RequiredKeys,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
@@ -75,7 +73,6 @@ export async function createAgent(
     ragMinDistance: body.ragMinDistance,
     ragTopK: body.ragTopK,
     discordIntegration: body.discordIntegration,
-    teamsIntegration: body.teamsIntegration,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -106,7 +103,6 @@ export async function updateAgent(
     ragMinDistance: body.ragMinDistance,
     ragTopK: body.ragTopK,
     discordIntegration: body.discordIntegration,
-    teamsIntegration: body.teamsIntegration,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)
@@ -167,44 +163,6 @@ export async function syncAgentDiscordCommands(
     chatAppId: chatApp._id!,
     interactionsEndpointUrl,
     inviteUrl: sdk.ai.deployments.discord.buildDiscordInviteUrl(applicationId),
-  }
-  ctx.status = 200
-}
-
-export async function provisionAgentTeamsChannel(
-  ctx: UserCtx<
-    ProvisionAgentTeamsChannelRequest,
-    ProvisionAgentTeamsChannelResponse,
-    { agentId: string }
-  >
-) {
-  const { agentId } = ctx.params
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const { chatAppId: configuredChatAppId } =
-    sdk.ai.deployments.teams.validateTeamsIntegration(agent)
-
-  const requestedChatAppId = ctx.request.body?.chatAppId?.trim()
-  const chatApp = await sdk.ai.deployments.teams.resolveChatAppForAgent(
-    agentId,
-    requestedChatAppId || configuredChatAppId
-  )
-
-  const messagingEndpointUrl =
-    await sdk.ai.deployments.teams.buildTeamsWebhookUrl(chatApp._id!, agentId)
-
-  await sdk.ai.agents.update({
-    ...agent,
-    teamsIntegration: {
-      ...agent.teamsIntegration,
-      chatAppId: chatApp._id!,
-      messagingEndpointUrl,
-    },
-  })
-
-  ctx.body = {
-    success: true,
-    chatAppId: chatApp._id!,
-    messagingEndpointUrl,
   }
   ctx.status = 200
 }

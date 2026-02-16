@@ -5,7 +5,6 @@ import {
   DuplicateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
-  ProvisionAgentTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   ToolMetadata,
@@ -35,9 +34,6 @@ export interface AgentEndpoints {
     agentId: string,
     body?: SyncAgentDiscordCommandsRequest
   ) => Promise<SyncAgentDiscordCommandsResponse>
-  provisionAgentTeamsChannel: (
-    agentId: string
-  ) => Promise<ProvisionAgentTeamsChannelResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -110,12 +106,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     >({
       url: `/api/agent/${agentId}/discord/sync`,
       body,
-    })
-  },
-
-  provisionAgentTeamsChannel: async (agentId: string) => {
-    return await API.post<null, ProvisionAgentTeamsChannelResponse>({
-      url: `/api/agent/${agentId}/teams/provision`,
     })
   },
 })
