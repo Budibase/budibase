@@ -1,6 +1,5 @@
 import { HTTPError } from "@budibase/backend-core"
 import {
-  ChatAppAgentMetadata,
   ChatApp,
   ChatAppAgent,
   FetchChatAppAgentsResponse,
@@ -66,7 +65,7 @@ export async function fetchChatAppAgents(
   }
 
   const workspaceAgents = await sdk.ai.agents.fetch()
-  const agents: ChatAppAgentMetadata[] = workspaceAgents
+  const agents: FetchChatAppAgentsResponse["agents"] = workspaceAgents
     .filter(agent => agent._id && configuredAgentIds.has(agent._id))
     .map(agent => ({
       _id: agent._id,
