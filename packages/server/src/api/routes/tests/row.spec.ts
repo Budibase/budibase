@@ -49,7 +49,7 @@ import * as uuid from "uuid"
 import emitter from "../../../../src/events"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
+import { mockOpenAIResponsesResponse } from "../../../tests/utilities/mocks/ai/openai"
 import { isDate } from "../../../utilities"
 import { outputProcessing } from "../../../utilities/rowProcessor"
 
@@ -3779,8 +3779,8 @@ if (descriptions.length) {
             installHttpMocking()
 
             //We need to supply multiple interceptors.
-            mockChatGPTResponse("Mock LLM Response")
-            mockChatGPTResponse("Mock LLM Response")
+            mockOpenAIResponsesResponse("Mock LLM Response")
+            mockOpenAIResponsesResponse("Mock LLM Response")
 
             table = await config.api.table.save(
               saveTableRequest({

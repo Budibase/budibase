@@ -43,7 +43,7 @@ import { cloneDeep } from "lodash/fp"
 import tk from "timekeeper"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
+import { mockOpenAIResponsesResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
 
@@ -1937,8 +1937,8 @@ if (descriptions.length) {
                   installHttpMocking()
 
                   // Set up 2 interceptors for the 2 rows that will be processed
-                  mockChatGPTResponse("Mock LLM Response")
-                  mockChatGPTResponse("Mock LLM Response")
+                  mockOpenAIResponsesResponse("Mock LLM Response")
+                  mockOpenAIResponsesResponse("Mock LLM Response")
 
                   tableOrViewId = await createTableOrView({
                     product: { name: "product", type: FieldType.STRING },

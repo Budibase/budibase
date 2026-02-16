@@ -43,7 +43,7 @@ import {
 import merge from "lodash/merge"
 import nock from "nock"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
+import { mockOpenAIResponsesResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
 
@@ -963,9 +963,9 @@ if (descriptions.length) {
                 }
 
                 // Each row save will trigger AI processing
-                mockChatGPTResponse(responseFunction)
-                mockChatGPTResponse(responseFunction)
-                mockChatGPTResponse(responseFunction)
+                mockOpenAIResponsesResponse(responseFunction)
+                mockOpenAIResponsesResponse(responseFunction)
+                mockOpenAIResponsesResponse(responseFunction)
               })
 
               afterAll(() => {
