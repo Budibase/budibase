@@ -1,4 +1,5 @@
 import { context, docIds, HTTPError, cache } from "@budibase/backend-core"
+import { processObjectSync } from "@budibase/string-templates"
 import {
   SEPARATOR,
   WorkspaceConnection,
@@ -8,6 +9,8 @@ import {
   PASSWORD_REPLACEMENT,
   RestAuthType,
 } from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
+import { getEnvironmentVariables } from "../utils"
 
 type CreatedWorkspaceConnection = WithRequired<
   WorkspaceConnection,
@@ -19,6 +22,25 @@ export async function get(
 ): Promise<WorkspaceConnection | undefined> {
   const db = context.getWorkspaceDB()
   return await db.tryGet(id)
+}
+
+export async function getWithEnvVars(id: string) {
+  const db = context.getWorkspaceDB()
+  const connection = await db.tryGet<WorkspaceConnection>(id)
+  if (!connection) {
+    return { connection: undefined, envVars: undefined }
+  }
+  const cloned = cloneDeep(connection)
+  const env = await getEnvironmentVariables()
+  const processed = processObjectSync(
+    cloned,
+    { env },
+    { onlyFound: true }
+  ) as WorkspaceConnection
+  return {
+    connection: processed,
+    envVars: env as Record<string, string>,
+  }
 }
 
 async function cleanCache(configId: string) {

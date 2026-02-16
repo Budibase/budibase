@@ -652,7 +652,8 @@ export class RestIntegration implements IntegrationBase {
     const datasourcePrefix = `${DocumentType.DATASOURCE}${SEPARATOR}`
 
     if (authSourceId.startsWith(workspaceConnectionPrefix)) {
-      const connection = await sdk.connections.get(authSourceId)
+      const { connection } =
+        await sdk.connections.getWithEnvVars(authSourceId)
       return connection?.props?.headers || {}
     }
 
@@ -673,7 +674,8 @@ export class RestIntegration implements IntegrationBase {
 
     const workspaceConnectionPrefix = `${DocumentType.WORKSPACE_CONNECTION}${SEPARATOR}`
     if (authSourceId.startsWith(workspaceConnectionPrefix)) {
-      const connection = await sdk.connections.get(authSourceId)
+      const { connection } =
+        await sdk.connections.getWithEnvVars(authSourceId)
       return connection?.props?.query || {}
     }
 
@@ -683,7 +685,7 @@ export class RestIntegration implements IntegrationBase {
   private async resolveWorkspaceConnectionAuth(
     authSourceId: string
   ): Promise<ResolvedAuthConfig | null> {
-    const connection = await sdk.connections.get(authSourceId)
+    const { connection } = await sdk.connections.getWithEnvVars(authSourceId)
     if (!connection?.auth?.length) {
       return null
     }
