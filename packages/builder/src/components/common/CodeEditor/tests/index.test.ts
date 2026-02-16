@@ -20,6 +20,24 @@ describe("hbInsert", () => {
 
     expect(result).toBe(" user.roleId ")
   })
+
+  it("closes a partially-open handlebars wrapper", () => {
+    const doc = "{{"
+    const insertionPoint = doc.length
+
+    const result = hbInsert(doc, insertionPoint, insertionPoint, "user.roleId")
+
+    expect(result).toBe(" user.roleId }}")
+  })
+
+  it("completes a single dangling opening brace", () => {
+    const doc = "{"
+    const insertionPoint = doc.length
+
+    const result = hbInsert(doc, insertionPoint, insertionPoint, "user.roleId")
+
+    expect(result).toBe("{ user.roleId }}")
+  })
 })
 
 describe("htmlInsert", () => {
