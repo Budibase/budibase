@@ -84,13 +84,16 @@ class ApiClient {
     const username = process.env.BUDIBASE_USERNAME || "local@budibase.com"
     const password = process.env.BUDIBASE_PASSWORD || "cheekychuckles"
 
-    const response = await fetch(`${this.baseUrl}/api/global/auth/default/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    })
+    const response = await fetch(
+      `${this.baseUrl}/api/global/auth/default/login`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      }
+    )
 
     if (!response.ok) {
       const body = await response.text()
@@ -346,7 +349,9 @@ function parseFeatureList(raw?: string): Set<EvalFeature> | undefined {
   return features.size > 0 ? features : undefined
 }
 
-function resolveFeatures(globalFeatures: Set<EvalFeature> | undefined): Set<EvalFeature> {
+function resolveFeatures(
+  globalFeatures: Set<EvalFeature> | undefined
+): Set<EvalFeature> {
   return globalFeatures || new Set(ALL_FEATURES)
 }
 
@@ -377,7 +382,7 @@ function buildScenarios(selected?: string[]): Scenario[] {
   return [
     {
       id: "bbai",
-      name: "BBAI (instance-managed mode)",
+      name: "BBAI",
       enabled: shouldRunBBAI(selected),
       config: {
         provider: "BudibaseAI",
@@ -424,7 +429,10 @@ function buildScenarios(selected?: string[]): Scenario[] {
   ]
 }
 
-async function configureAIProvider(client: ApiClient, config: AIProviderConfig) {
+async function configureAIProvider(
+  client: ApiClient,
+  config: AIProviderConfig
+) {
   const body = {
     type: ConfigType.AI,
     config: {
@@ -558,14 +566,12 @@ async function runFeatureEvals(
   }
 
   await runIf("table-generation", "Table generation", async () => {
-    const response = await client.request<{ createdTables: Array<{ id: string }> }>(
-      "POST",
-      "/api/ai/tables",
-      {
-        prompt:
-          "Create one table called Eval Tasks with columns title (string) and status (string), with one sample row.",
-      }
-    )
+    const response = await client.request<{
+      createdTables: Array<{ id: string }>
+    }>("POST", "/api/ai/tables", {
+      prompt:
+        "Create one table called Eval Tasks with columns title (string) and status (string), with one sample row.",
+    })
 
     if (!response.createdTables || response.createdTables.length < 1) {
       throw new Error("No tables were created")
@@ -573,9 +579,13 @@ async function runFeatureEvals(
   })
 
   await runIf("js-generation", "JS generation", async () => {
-    const response = await client.request<{ code: string }>("POST", "/api/ai/js", {
-      prompt: "Return the number 42 and nothing else",
-    })
+    const response = await client.request<{ code: string }>(
+      "POST",
+      "/api/ai/js",
+      {
+        prompt: "Return the number 42 and nothing else",
+      }
+    )
 
     if (!response.code || !response.code.includes("42")) {
       throw new Error(`Unexpected JS output: ${response.code}`)
@@ -597,10 +607,15 @@ async function runFeatureEvals(
   })
 
   await runIf("automation-translate", "Automation translate step", async () => {
-    const result = await runAutomationStepEval(client, definitions, "TRANSLATE", {
-      text: "Hello world",
-      language: "Spanish",
-    })
+    const result = await runAutomationStepEval(
+      client,
+      definitions,
+      "TRANSLATE",
+      {
+        text: "Hello world",
+        language: "Spanish",
+      }
+    )
 
     const output = getActionOutput(result, "TRANSLATE")
     if (!output?.success || !output?.response) {
@@ -630,22 +645,32 @@ async function runFeatureEvals(
     "automation-prompt-llm",
     "Automation LLM prompt step",
     async () => {
-    const result = await runAutomationStepEval(client, definitions, "PROMPT_LLM", {
-      prompt: "Reply with exactly EVAL_OK",
-    })
+      const result = await runAutomationStepEval(
+        client,
+        definitions,
+        "PROMPT_LLM",
+        {
+          prompt: "Reply with exactly EVAL_OK",
+        }
+      )
 
-    const output = getActionOutput(result, "PROMPT_LLM")
-    if (!output?.success || !output?.response) {
-      throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
-    }
+      const output = getActionOutput(result, "PROMPT_LLM")
+      if (!output?.success || !output?.response) {
+        throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+      }
     }
   )
 
   await runIf("automation-summarise", "Automation summarise step", async () => {
-    const result = await runAutomationStepEval(client, definitions, "SUMMARISE", {
-      text: "Budibase helps teams build internal tools faster with less code and strong integrations.",
-      length: "Short",
-    })
+    const result = await runAutomationStepEval(
+      client,
+      definitions,
+      "SUMMARISE",
+      {
+        text: "Budibase helps teams build internal tools faster with less code and strong integrations.",
+        length: "Short",
+      }
+    )
 
     const output = getActionOutput(result, "SUMMARISE")
     if (!output?.success || !output?.response) {
@@ -657,28 +682,38 @@ async function runFeatureEvals(
     "automation-generate-text",
     "Automation generate text step",
     async () => {
-    const result = await runAutomationStepEval(client, definitions, "GENERATE_TEXT", {
-      contentType: ContentType.EMAIL,
-      instructions:
-        "Write a one sentence welcome email to Alex for joining the team.",
-    })
+      const result = await runAutomationStepEval(
+        client,
+        definitions,
+        "GENERATE_TEXT",
+        {
+          contentType: ContentType.EMAIL,
+          instructions:
+            "Write a one sentence welcome email to Alex for joining the team.",
+        }
+      )
 
-    const output = getActionOutput(result, "GENERATE_TEXT")
-    if (!output?.success || !output?.response) {
-      throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
-    }
+      const output = getActionOutput(result, "GENERATE_TEXT")
+      if (!output?.success || !output?.response) {
+        throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+      }
     }
   )
 
   await runIf("extract-document", "Extract document step", async () => {
-    const result = await runAutomationStepEval(client, definitions, "EXTRACT_FILE_DATA", {
-      source: DocumentSourceType.URL,
-      file: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      fileType: "pdf",
-      schema: {
-        title: "string",
-      },
-    })
+    const result = await runAutomationStepEval(
+      client,
+      definitions,
+      "EXTRACT_FILE_DATA",
+      {
+        source: DocumentSourceType.URL,
+        file: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+        fileType: "pdf",
+        schema: {
+          title: "string",
+        },
+      }
+    )
 
     const output = getActionOutput(result, "EXTRACT_FILE_DATA")
     if (!output?.success || !output?.data) {
