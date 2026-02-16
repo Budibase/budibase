@@ -521,7 +521,7 @@ describe("BudibaseAI", () => {
       generationStructure: ai.GenerationStructure
     ) => {
       mockChatGPTResponse(JSON.stringify(generationStructure), {
-        format: ai.generationStructure,
+        format: toResponseFormat(ai.generationStructure),
       })
     }
 
@@ -530,8 +530,10 @@ describe("BudibaseAI", () => {
       aiColumnGeneration: ai.AIColumnSchemas
     ) =>
       mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
-        format: ai.aiColumnSchemas(
-          ai.aiTableResponseToTableSchema(generationStructure)
+        format: toResponseFormat(
+          ai.aiColumnSchemas(
+            ai.aiTableResponseToTableSchema(generationStructure)
+          )
         ),
       })
 
@@ -539,7 +541,7 @@ describe("BudibaseAI", () => {
       dataGeneration: Record<string, Record<string, any>[]>
     ) =>
       mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: ai.tableDataStructuredOutput([]),
+        format: toResponseFormat(ai.tableDataStructuredOutput([])),
       })
 
     const mockProcessAIColumn = (response: string) =>
