@@ -406,7 +406,7 @@ describe("/workspace/connections", () => {
 
     it("preserves API key value when PASSWORD_REPLACEMENT is sent back", async () => {
       const body = makeApiKeyAuthConnection()
-      const created = await config.api.workspaceConnection.create(body)
+      await config.api.workspaceConnection.create(body)
 
       const fetched = await config.api.workspaceConnection.fetch()
       const conn = fetched.connections[0]
@@ -435,7 +435,7 @@ describe("/workspace/connections", () => {
 
     it("preserves OAuth2 clientSecret when PASSWORD_REPLACEMENT is sent back", async () => {
       const body = makeOAuth2AuthConnection()
-      const created = await config.api.workspaceConnection.create(body)
+      await config.api.workspaceConnection.create(body)
 
       const fetched = await config.api.workspaceConnection.fetch()
       const conn = fetched.connections[0]
@@ -493,7 +493,7 @@ describe("/workspace/connections", () => {
 
     it("does not preserve secret when auth config _id does not match", async () => {
       const body = makeBasicAuthConnection()
-      const created = await config.api.workspaceConnection.create(body)
+      await config.api.workspaceConnection.create(body)
 
       const fetched = await config.api.workspaceConnection.fetch()
       const conn = fetched.connections[0]
