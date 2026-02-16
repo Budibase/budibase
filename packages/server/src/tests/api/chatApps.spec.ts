@@ -161,6 +161,7 @@ describe("chat route auth split", () => {
   let chatApp: ChatApp
   let basicUser: User
   let agentId: string
+  let disabledAgentId: string
 
   beforeAll(async () => {
     await config.init("chat-route-auth-split")
@@ -190,9 +191,25 @@ describe("chat route auth split", () => {
         await db.put(agent)
         agentId = agent._id!
 
+        const disabledAgent: Agent = {
+          _id: docIds.generateAgentID(),
+          name: "Disabled support agent",
+          aiconfig: "",
+          live: true,
+          icon: "robot",
+          iconColor: "#9f8cd1",
+          createdAt: now,
+          enabledTools: [],
+        }
+        await db.put(disabledAgent)
+        disabledAgentId = disabledAgent._id!
+
         const doc: ChatApp = {
           _id: docIds.generateChatAppID(),
-          agents: [{ agentId, isEnabled: true, isDefault: true }],
+          agents: [
+            { agentId, isEnabled: true, isDefault: true },
+            { agentId: disabledAgentId, isEnabled: false, isDefault: false },
+          ],
           createdAt: now,
           updatedAt: now,
         }
@@ -269,6 +286,9 @@ describe("chat route auth split", () => {
       live: true,
     })
     expect(res.body.agents[0]).not.toHaveProperty("aiconfig")
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).not.toContain(disabledAgentId)
   })
 
   it("blocks basic users from PUT /api/chatapps/:chatAppId", async () => {

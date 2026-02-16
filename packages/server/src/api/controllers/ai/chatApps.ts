@@ -56,7 +56,9 @@ export async function fetchChatAppAgents(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   const configuredAgentIds = new Set(
-    (chatApp.agents || []).map(agent => agent.agentId)
+    (chatApp.agents || [])
+      .filter(agent => agent.isEnabled === true)
+      .map(agent => agent.agentId)
   )
 
   if (configuredAgentIds.size === 0) {
