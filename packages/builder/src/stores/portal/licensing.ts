@@ -38,7 +38,6 @@ interface LicensingState {
   scimEnabled: boolean
   environmentVariablesEnabled: boolean
   budibaseAIEnabled: boolean
-  customAIConfigsEnabled: boolean
   auditLogsEnabled: boolean
   customAppScriptsEnabled: boolean
   syncAutomationsEnabled: boolean
@@ -88,7 +87,6 @@ class LicensingStore extends BudiStore<LicensingState> {
       scimEnabled: false,
       environmentVariablesEnabled: false,
       budibaseAIEnabled: false,
-      customAIConfigsEnabled: false,
       auditLogsEnabled: false,
       customAppScriptsEnabled: false,
       syncAutomationsEnabled: false,

@@ -26,8 +26,7 @@
   let aiCronPrompt = ""
   let loadingAICronExpression = false
 
-  $: aiEnabled =
-    $licensing.customAIConfigsEnabled || $licensing.budibaseAIEnabled
+  $: aiEnabled = $licensing.budibaseAIEnabled
   $: {
     if (cronExpression) {
       try {
