@@ -39,6 +39,10 @@ export function extractFileData(
   schema: Record<string, any>,
   fileIdOrDataUrl: string
 ) {
+  if (typeof fileIdOrDataUrl !== "string" || !fileIdOrDataUrl.trim()) {
+    throw new Error("Invalid file reference returned from uploadFile")
+  }
+
   const prompt = [
     "You are a data extraction assistant.",
     `Extract data from the attached document/image that matches the provided schema.`,
@@ -61,7 +65,16 @@ export function extractFileData(
         },
         { type: "text", text: prompt },
       ]
-    : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
+    : [
+        {
+          type: "file",
+          file: {
+            file_id: fileIdOrDataUrl,
+          },
+        },
+        // Keep a text fallback for providers that ignore file parts.
+        { type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` },
+      ]
 
   // We create a structured zod schema from the user object
   const zodSchema = createZodSchemaFromRecord(schema)
