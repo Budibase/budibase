@@ -12,6 +12,9 @@
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
 
+  const AI_CONFIG_REQUIRED_MESSAGE =
+    "Select an AI model in Agent config before enabling Discord."
+
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
   let toggling = $state(false)
@@ -29,6 +32,8 @@
   const discordEnabled = $derived(
     !!currentAgent?.discordIntegration?.interactionsEndpointUrl
   )
+
+  const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
 
   const channels = $derived.by<DeploymentRow[]>(() => [
     {
@@ -53,6 +58,10 @@
       return
     }
     const isCurrentlyEnabled = channel.status === "Enabled"
+    if (!isCurrentlyEnabled && !hasAiConfig) {
+      notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
+      return
+    }
     toggling = true
     try {
       if (isCurrentlyEnabled) {

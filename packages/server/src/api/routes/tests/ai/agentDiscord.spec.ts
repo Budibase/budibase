@@ -186,6 +186,25 @@ describe("agent discord integration sync", () => {
     })
   })
 
+  it("allows saving discord config for agents with an empty aiconfig", async () => {
+    const created = await config.api.agent.create({
+      name: "Discord Empty AI Config Agent",
+    })
+
+    const updated = await config.api.agent.update({
+      ...created,
+      discordIntegration: {
+        applicationId: "app-123",
+        publicKey: "pub-123",
+        botToken: "bot-123",
+        guildId: "guild-123",
+      },
+    })
+
+    expect(updated.aiconfig).toEqual("")
+    expect(updated.discordIntegration?.applicationId).toEqual("app-123")
+  })
+
   it("returns a validation error when toggle deployment payload is missing enabled", async () => {
     const signing = makeDiscordSigningKeyPair()
     const agent = await config.api.agent.create({

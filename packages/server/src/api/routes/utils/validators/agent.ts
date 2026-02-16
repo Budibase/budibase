@@ -3,6 +3,7 @@ import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
+const OPTIONAL_AICONFIG = Joi.string().optional().allow("")
 const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   applicationId: OPTIONAL_STRING,
   publicKey: OPTIONAL_STRING,
@@ -20,7 +21,7 @@ export function createAgentValidator() {
     Joi.object({
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      aiconfig: Joi.string().optional(),
+      aiconfig: OPTIONAL_AICONFIG,
       promptInstructions: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
       goal: OPTIONAL_STRING,
@@ -42,7 +43,7 @@ export function updateAgentValidator() {
       _rev: Joi.string().required(),
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      aiconfig: Joi.string().optional(),
+      aiconfig: OPTIONAL_AICONFIG,
       promptInstructions: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
       goal: OPTIONAL_STRING,

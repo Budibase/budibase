@@ -15,6 +15,8 @@
   const DISCORD_ASK_COMMAND = DiscordCommands.ASK
   const DISCORD_NEW_COMMAND = DiscordCommands.NEW
   const DEFAULT_IDLE_TIMEOUT_MINUTES = 45
+  const AI_CONFIG_REQUIRED_MESSAGE =
+    "Select an AI model in Agent config before enabling Discord."
 
   let { agent }: { agent?: Agent } = $props()
 
@@ -40,6 +42,8 @@
       integration?.guildId
     )
   })
+
+  const hasAiConfig = $derived.by(() => !!agent?.aiconfig?.trim())
 
   const isEnabled = $derived.by(() => {
     if (syncResult?.success) {
@@ -140,6 +144,10 @@
     if (!agent?._id || syncing) {
       return
     }
+    if (!hasAiConfig) {
+      notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
+      return
+    }
 
     syncing = true
     try {
@@ -185,6 +193,9 @@
         Invite the bot to your server using the URL above, then enable the
         channel below.
       </Body>
+      {#if !hasAiConfig}
+        <Body size="S">{AI_CONFIG_REQUIRED_MESSAGE}</Body>
+      {/if}
     {/if}
 
     {#if isEnabled}
@@ -206,7 +217,11 @@
       <Button secondary on:click={connect} disabled={saving || syncing}>
         {saving ? "Saving..." : "Save"}
       </Button>
-      <Button cta on:click={enableChannel} disabled={saving || syncing}>
+      <Button
+        cta
+        on:click={enableChannel}
+        disabled={saving || syncing || !hasAiConfig}
+      >
         {syncing
           ? "Enabling..."
           : isEnabled
