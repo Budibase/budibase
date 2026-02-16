@@ -224,12 +224,6 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
       }
       return mapProvider
     })
-    liteLLMProviders.push({
-      id: BUDIBASE_AI_PROVIDER_ID,
-      displayName: "Budibase AI",
-      externalProvider: "custom_openai",
-      credentialFields: [],
-    })
   }
   return liteLLMProviders
 }
