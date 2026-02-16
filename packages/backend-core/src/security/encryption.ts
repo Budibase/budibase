@@ -89,8 +89,15 @@ export function compare(
   secretOption: SecretOption = SecretOption.API
 ) {
   try {
-    const decrypted = decrypt(encrypted, secretOption)
-    return decrypted === plain
+    const encoder = new TextEncoder()
+    const decryptedBuffer = encoder.encode(decrypt(encrypted, secretOption))
+    const plainBuffer = encoder.encode(plain)
+
+    if (decryptedBuffer.length !== plainBuffer.length) {
+      return false
+    }
+
+    return crypto.timingSafeEqual(decryptedBuffer, plainBuffer)
   } catch {
     return false
   }
