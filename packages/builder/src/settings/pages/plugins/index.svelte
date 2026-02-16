@@ -22,7 +22,6 @@
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import UsedInAppsRenderer from "./_components/UsedInAppsRenderer.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { routeActions } from "@/settings/pages"
   import type { StoreApp } from "@/types"
 
   interface PluginTableRow extends Plugin {
