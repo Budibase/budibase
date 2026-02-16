@@ -5,14 +5,16 @@
     Modal,
     ModalContent,
     Toggle,
+    notifications,
   } from "@budibase/bbui"
   import type { Agent, DeploymentRow } from "@budibase/types"
-  import { selectedAgent } from "@/stores/portal"
+  import { selectedAgent, agentsStore } from "@/stores/portal"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
+  let toggling = $state(false)
 
   const discordConfigured = $derived.by(() => {
     const integration = currentAgent?.discordIntegration
@@ -24,12 +26,16 @@
     )
   })
 
+  const discordEnabled = $derived(
+    !!currentAgent?.discordIntegration?.interactionsEndpointUrl
+  )
+
   const channels = $derived.by<DeploymentRow[]>(() => [
     {
       id: "discord",
       name: "Discord",
       logo: DiscordLogo,
-      status: discordConfigured ? "Enabled" : "Disabled",
+      status: discordEnabled ? "Enabled" : "Disabled",
       details: "Allow this agent to respond in Discord channels and threads",
       configurable: true,
     },
@@ -39,6 +45,42 @@
     if (channel.id === "discord") {
       discordModal?.show()
       return
+    }
+  }
+
+  const onToggleChannel = async (channel: DeploymentRow) => {
+    if (channel.id !== "discord" || !currentAgent?._id) {
+      return
+    }
+    const isCurrentlyEnabled = channel.status === "Enabled"
+    toggling = true
+    try {
+      if (isCurrentlyEnabled) {
+        await agentsStore.updateAgent({
+          ...currentAgent,
+          discordIntegration: {
+            ...currentAgent.discordIntegration,
+            interactionsEndpointUrl: undefined,
+            chatAppId: undefined,
+          },
+        })
+        await agentsStore.fetchAgents()
+        notifications.success("Discord channel disabled")
+      } else if (discordConfigured) {
+        await agentsStore.syncDiscordCommands(currentAgent._id)
+        await agentsStore.fetchAgents()
+        notifications.success("Discord channel enabled")
+      } else {
+        discordModal?.show()
+      }
+    } catch (e) {
+      notifications.error(
+        isCurrentlyEnabled
+          ? "Failed to disable Discord channel"
+          : "Failed to enable Discord channel"
+      )
+    } finally {
+      toggling = false
     }
   }
 </script>
@@ -100,8 +142,11 @@
               accentColor="Blue"
               on:click={() => onConfigureChannel(channel)}>Manage</ActionButton
             >
-            <Toggle value={channel.status === "Enabled" ? true : false}
-            ></Toggle>
+            <Toggle
+              value={channel.status === "Enabled"}
+              disabled={toggling}
+              on:change={() => onToggleChannel(channel)}
+            />
           </div>
         </div>
       {/each}
