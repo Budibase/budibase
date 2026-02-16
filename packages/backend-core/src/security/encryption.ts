@@ -83,6 +83,19 @@ export function decrypt(
   return Buffer.concat([new Uint8Array(base), new Uint8Array(final)]).toString()
 }
 
+export function compare(
+  plain: string,
+  encrypted: string,
+  secretOption: SecretOption = SecretOption.API
+) {
+  try {
+    const decrypted = decrypt(encrypted, secretOption)
+    return decrypted === plain
+  } catch {
+    return false
+  }
+}
+
 export async function encryptFile(
   { dir, filename }: { dir: string; filename: string },
   secret: string
