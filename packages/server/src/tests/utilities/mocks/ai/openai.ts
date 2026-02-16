@@ -112,7 +112,10 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
       try {
         content = answer(prompt)
       } catch (e) {
-        return [500, "Internal Server Error"]
+        return {
+          statusCode: 500,
+          data: "Internal Server Error",
+        }
       }
     } else {
       content = answer
@@ -191,7 +194,10 @@ export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
       try {
         content = answer(prompt)
       } catch (e: any) {
-        return [500, e.message]
+        return {
+          statusCode: 500,
+          data: e.message,
+        }
       }
     } else {
       content = answer

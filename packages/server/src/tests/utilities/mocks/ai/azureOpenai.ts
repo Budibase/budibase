@@ -90,7 +90,10 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
       try {
         content = answer(prompt)
       } catch (e) {
-        return [500, "Internal Server Error"]
+        return {
+          statusCode: 500,
+          data: "Internal Server Error",
+        }
       }
     } else {
       content = answer
