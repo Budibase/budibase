@@ -54,7 +54,8 @@ export function parseResponseFormat(
   }
 
   if (!(responseFormat instanceof z.ZodObject)) {
-    return Output.object({ schema: z.fromJSONSchema(responseFormat) })
+    // @ts-expect-error TODO fix zod types
+    return Output.object({ schema: responseFormat })
   }
 
   return Output.object({ schema: responseFormat })

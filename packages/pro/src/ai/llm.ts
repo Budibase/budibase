@@ -7,6 +7,7 @@ import {
   LLMConfigOptions,
   LLMProviderConfig,
   Message,
+  ResponseFormat,
 } from "@budibase/types"
 import { tracer } from "dd-trace"
 import openai from "openai"
@@ -186,13 +187,20 @@ export async function getOpenAIUsingLocalAPIKey(): Promise<LLM | undefined> {
 
 export class LLMRequest {
   messages: Message[] = []
-  format?: "text" | "json" | z.ZodType
+  format?: ResponseFormat
 
   withFormat(
     format: "text" | "json" | openai.ResponseFormatJSONSchema | z.ZodType
   ) {
-    if (typeof format === "object" && !(format instanceof z.ZodType)) {
-      this.format = z.fromJSONSchema({ schema: format.json_schema })
+    if (format instanceof z.ZodType) {
+      this.format = {
+        type: "json_schema",
+        json_schema: {
+          name: "response",
+          strict: false,
+          schema: format.toJSONSchema({ target: "draft-7" }),
+        },
+      }
     } else {
       this.format = format
     }
