@@ -4,6 +4,8 @@ import {
   Agent,
   AgentFile,
   CreateAgentRequest,
+  SyncAgentDiscordCommandsRequest,
+  SyncAgentDiscordCommandsResponse,
   UpdateAgentRequest,
   ToolMetadata,
 } from "@budibase/types"
@@ -145,6 +147,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       }
       return state
     })
+  }
+
+  syncDiscordCommands = async (
+    agentId: string,
+    body?: SyncAgentDiscordCommandsRequest
+  ): Promise<SyncAgentDiscordCommandsResponse> => {
+    return await API.syncAgentDiscordCommands(agentId, body)
   }
 }
 export const agentsStore = new AgentsStore()
