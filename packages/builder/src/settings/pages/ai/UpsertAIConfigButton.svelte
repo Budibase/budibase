@@ -11,15 +11,21 @@
   import { API } from "@/api"
   import PortalModal from "./PortalModal.svelte"
 
-  export let row: AIConfigResponse
+  interface Props {
+    row: AIConfigResponse
+  }
 
-  $: isEdit = !!row._id
+  let { row }: Props = $props()
 
-  let configModal: { show: () => void; hide: () => void }
-  let openModal: boolean
-  let hasLicenseKey: boolean | null = null
+  let isEdit = $derived(!!row._id)
 
-  $: configModal?.show()
+  let configModal = $state<Modal>()
+  let openModal = $state(false)
+  let hasLicenseKey: boolean | null = $state(null)
+
+  $effect(() => {
+    configModal?.show()
+  })
 
   onMount(async () => {
     try {

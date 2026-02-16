@@ -8,7 +8,11 @@
   import OpenAiLogo from "assets/llm-icons/openai.svg"
   import type { AIConfigResponse } from "@budibase/types"
 
-  export let row: AIConfigResponse
+  interface Props {
+    row: AIConfigResponse
+  }
+
+  let { row }: Props = $props()
 
   const invertOnLight = new Set(["Anthropic", "Budibase", "OpenAI"])
   const invertOnDark = new Set(["Openrouter"])
@@ -37,7 +41,7 @@
     return ""
   }
 
-  $: logo = getProviderLogo(row.provider)
+  let logo = $derived(getProviderLogo(row.provider))
 </script>
 
 <span class={`model-icon ${getThemeClass(row.provider)}`}>

@@ -8,23 +8,25 @@
   import VectorDbTile from "./VectorDbTile.svelte"
   import AIConfigList from "./AIConfigList.svelte"
 
-  let configModal: { show: () => void; hide: () => void }
+  let configModal = $state<Modal>()
 
-  let vectorModal: { show: () => void; hide: () => void }
-  let vectorModalConfig: VectorDb | null = null
+  let vectorModal = $state<Modal>()
+  let vectorModalConfig: VectorDb | null = $state(null)
 
-  $: embeddingConfigs = $aiConfigsStore.customConfigs.filter(
-    config => config.configType === AIConfigType.EMBEDDINGS
+  let embeddingConfigs = $derived(
+    $aiConfigsStore.customConfigs.filter(
+      config => config.configType === AIConfigType.EMBEDDINGS
+    )
   )
-  $: vectorDbs = $vectorDbStore.configs || []
+  let vectorDbs = $derived($vectorDbStore.configs || [])
 
   function createAIConfigModal() {
-    configModal.show()
+    configModal?.show()
   }
 
   const openVectorDbModal = (config?: VectorDb) => {
     vectorModalConfig = config ?? null
-    vectorModal.show()
+    vectorModal?.show()
   }
 
   onMount(async () => {
@@ -82,8 +84,8 @@
 <Modal bind:this={vectorModal}>
   <VectorDbModal
     config={vectorModalConfig}
-    onDelete={() => vectorModal.hide()}
-    on:hide={() => vectorModal.hide()}
+    onDelete={() => vectorModal?.hide()}
+    on:hide={() => vectorModal?.hide()}
   />
 </Modal>
 

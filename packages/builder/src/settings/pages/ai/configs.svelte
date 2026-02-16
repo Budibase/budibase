@@ -6,16 +6,18 @@
   import CustomConfigModal from "./AIConfigModal.svelte"
   import AIConfigList from "./AIConfigList.svelte"
 
-  let configModal: { show: () => void; hide: () => void }
+  let configModal = $state<Modal>()
 
-  $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
-    config => config.configType === AIConfigType.COMPLETIONS
+  let completionConfigs = $derived(
+    ($aiConfigsStore.customConfigs || []).filter(
+      config => config.configType === AIConfigType.COMPLETIONS
+    )
   )
 
-  $: hasBBAI = completionConfigs.some(
-    c => c.provider === BUDIBASE_AI_PROVIDER_ID
+  let hasBBAI = $derived(
+    completionConfigs.some(c => c.provider === BUDIBASE_AI_PROVIDER_ID)
   )
-  $: modelProviders = [
+  let modelProviders = $derived([
     ...(hasBBAI
       ? []
       : [
@@ -55,7 +57,7 @@
       provider: "Groq",
       model: "Connect to 100s of text, image, embedding models",
     },
-  ]
+  ])
 
   function createAIConfig() {
     configModal?.show()

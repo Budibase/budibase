@@ -2,8 +2,12 @@
   import { ModalContent, Link } from "@budibase/bbui"
   import { admin } from "@/stores/portal/admin"
 
-  export let confirmHandler: () => void
-  export let cancelHandler: () => void
+  interface Props {
+    confirmHandler: () => void
+    cancelHandler: () => void
+  }
+
+  let { confirmHandler, cancelHandler }: Props = $props()
 </script>
 
 <ModalContent

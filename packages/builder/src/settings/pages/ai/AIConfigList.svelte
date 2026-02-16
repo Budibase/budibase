@@ -3,11 +3,15 @@
   import AILogo from "./AILogo.svelte"
   import UpsertAIConfigButton from "./UpsertAIConfigButton.svelte"
 
-  export let configs: {
-    name: string
-    provider: string
-    model: string
-  }[]
+  interface Props {
+    configs: {
+      name: string
+      provider: string
+      model: string
+    }[]
+  }
+
+  let { configs }: Props = $props()
 
   const customRenderers = [
     {
