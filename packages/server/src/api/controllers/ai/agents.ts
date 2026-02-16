@@ -177,7 +177,11 @@ export async function toggleAgentDiscordDeployment(
   >
 ) {
   const { agentId } = ctx.params
-  const { enabled } = ctx.request.body
+  const enabledResponse = ctx.request.body?.enabled
+  if (typeof enabledResponse !== "boolean") {
+    ctx.throw(400, "enabled must be a boolean")
+  }
+  const enabled = enabledResponse
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   if (enabled) {

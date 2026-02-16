@@ -66,3 +66,11 @@ export function syncAgentDiscordCommandsValidator() {
       .allow(null)
   )
 }
+
+export function toggleAgentDiscordDeploymentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      enabled: Joi.boolean().required(),
+    }).required()
+  )
+}
