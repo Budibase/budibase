@@ -1319,7 +1319,7 @@ describe("BudibaseAI", () => {
     })
 
     it("accepts Mistral models when configured", async () => {
-      withEnv(
+      await withEnv(
         {
           BBAI_MISTRAL_API_KEY: "mistral-key",
           MISTRAL_BASE_URL: "https://api.mistral.ai",
@@ -1351,7 +1351,7 @@ describe("BudibaseAI", () => {
     })
 
     it("errors when mistral API key is missing", async () => {
-      withEnv({ BBAI_MISTRAL_API_KEY: "" }, async () => {
+      await withEnv({ BBAI_MISTRAL_API_KEY: "" }, async () => {
         await config.api.ai.openaiChatCompletions(
           {
             model: "budibase/v1",
