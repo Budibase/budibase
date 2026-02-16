@@ -187,7 +187,7 @@ describe("AI", () => {
     installHttpMocking()
   })
 
-  describe.each([allProviders[0]])(
+  describe.each(allProviders)(
     "provider: $name",
     ({ setup, mockLLMResponse }: TestSetup) => {
       let cleanup: () => Promise<void> | void
