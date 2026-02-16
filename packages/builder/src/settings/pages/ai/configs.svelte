@@ -6,7 +6,7 @@
   import CustomConfigModal from "./AIConfigModal.svelte"
   import AIConfigList from "./AIConfigList.svelte"
 
-  let configModal = $state<Modal>()
+  let configModal = $state<Modal | null>()
 
   let completionConfigs = $derived(
     ($aiConfigsStore.customConfigs || []).filter(

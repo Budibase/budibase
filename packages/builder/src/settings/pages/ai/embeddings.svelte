@@ -8,9 +8,8 @@
   import VectorDbTile from "./VectorDbTile.svelte"
   import AIConfigList from "./AIConfigList.svelte"
 
-  let configModal = $state<Modal>()
-
-  let vectorModal = $state<Modal>()
+  let configModal = $state<Modal | null>()
+  let vectorModal = $state<Modal | null>()
   let vectorModalConfig: VectorDb | null = $state(null)
 
   let embeddingConfigs = $derived(

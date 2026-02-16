@@ -19,7 +19,7 @@
 
   let isEdit = $derived(!!row._id)
 
-  let configModal = $state<Modal>()
+  let configModal = $state<Modal | null>()
   let openModal = $state(false)
   let hasLicenseKey: boolean | null = $state(null)
 
