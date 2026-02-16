@@ -538,6 +538,34 @@ function getActionOutput(
   return undefined
 }
 
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function countWords(value: string) {
+  if (!value.trim()) {
+    return 0
+  }
+  return value.trim().split(/\s+/).length
+}
+
+function hasExpectedCronShape(value: string) {
+  const parts = value.trim().split(/\s+/)
+  if (parts.length !== 5 && parts.length !== 6) {
+    return false
+  }
+  return parts.every(part => /^[\d*/,\-A-Za-z?LW#]+$/.test(part))
+}
+
+function hasKeyCaseInsensitive(obj: Record<string, any>, key: string) {
+  const target = key.toLowerCase()
+  return Object.keys(obj).some(k => k.toLowerCase() === target)
+}
+
 async function runFeatureEvals(
   client: ApiClient,
   enabledFeatures: Set<EvalFeature>
@@ -570,11 +598,30 @@ async function runFeatureEvals(
       createdTables: Array<{ id: string }>
     }>("POST", "/api/ai/tables", {
       prompt:
-        "Create one table called Eval Tasks with columns title (string) and status (string), with one sample row.",
+        "Create exactly one table named EvalTasks with exactly two string fields named title and status. Use title as primary display.",
     })
 
     if (!response.createdTables || response.createdTables.length < 1) {
       throw new Error("No tables were created")
+    }
+
+    const created = response.createdTables[0]
+    const table = await client.request<{ schema: Record<string, any> }>(
+      "GET",
+      `/api/tables/${created.id}`
+    )
+    if (!table.schema) {
+      throw new Error("Created table schema missing")
+    }
+    if (!hasKeyCaseInsensitive(table.schema, "title")) {
+      throw new Error(
+        `Expected title column. Found: ${Object.keys(table.schema).join(", ")}`
+      )
+    }
+    if (!hasKeyCaseInsensitive(table.schema, "status")) {
+      throw new Error(
+        `Expected status column. Found: ${Object.keys(table.schema).join(", ")}`
+      )
     }
   })
 
@@ -590,6 +637,12 @@ async function runFeatureEvals(
     if (!response.code || !response.code.includes("42")) {
       throw new Error(`Unexpected JS output: ${response.code}`)
     }
+    if (response.code.includes("```")) {
+      throw new Error("JS output should not include markdown fences")
+    }
+    if (!response.code.includes("return")) {
+      throw new Error(`JS output missing return statement: ${response.code}`)
+    }
   })
 
   await runIf("cron-generation", "Cron generation", async () => {
@@ -601,7 +654,11 @@ async function runFeatureEvals(
       }
     )
 
-    if (!response.message || !hasCronShape(response.message)) {
+    if (
+      !response.message ||
+      !hasCronShape(response.message) ||
+      !hasExpectedCronShape(response.message)
+    ) {
       throw new Error(`Unexpected cron output: ${response.message}`)
     }
   })
@@ -621,6 +678,11 @@ async function runFeatureEvals(
     if (!output?.success || !output?.response) {
       throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
     }
+    const translated = normalizeText(String(output.response))
+    const source = normalizeText("Hello world")
+    if (translated === source) {
+      throw new Error(`Translation appears unchanged: ${output.response}`)
+    }
   })
 
   await runIf("automation-classify", "Automation classify step", async () => {
@@ -636,7 +698,7 @@ async function runFeatureEvals(
 
     const output = getActionOutput(result, "CLASSIFY_CONTENT")
     const category = output?.category?.toLowerCase?.()
-    if (!output?.success || !["positive", "negative"].includes(category)) {
+    if (!output?.success || category !== "positive") {
       throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
     }
   })
@@ -658,16 +720,21 @@ async function runFeatureEvals(
       if (!output?.success || !output?.response) {
         throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
       }
+      if (!String(output.response).toUpperCase().includes("EVAL_OK")) {
+        throw new Error(`Prompt output missing EVAL_OK: ${output.response}`)
+      }
     }
   )
 
   await runIf("automation-summarise", "Automation summarise step", async () => {
+    const sourceText =
+      "Budibase helps teams build internal tools quickly with less code. It provides data integration, automation, role-based access, and app builder capabilities in one platform. Teams use it to ship operational apps faster while maintaining governance and security standards."
     const result = await runAutomationStepEval(
       client,
       definitions,
       "SUMMARISE",
       {
-        text: "Budibase helps teams build internal tools faster with less code and strong integrations.",
+        text: sourceText,
         length: "Short",
       }
     )
@@ -675,6 +742,24 @@ async function runFeatureEvals(
     const output = getActionOutput(result, "SUMMARISE")
     if (!output?.success || !output?.response) {
       throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+    }
+    const summaryText = String(output.response).trim()
+    if (!summaryText) {
+      throw new Error("Summary response is empty")
+    }
+
+    const normalizedSummary = normalizeText(summaryText)
+    const normalizedSource = normalizeText(sourceText)
+    if (normalizedSummary === normalizedSource) {
+      throw new Error("Summary is identical to source text")
+    }
+
+    const summaryWordCount = countWords(summaryText)
+    const sourceWordCount = countWords(sourceText)
+    if (summaryWordCount >= sourceWordCount) {
+      throw new Error(
+        `Summary is not shorter than source (${summaryWordCount}/${sourceWordCount} words): ${summaryText}`
+      )
     }
   })
 
@@ -697,6 +782,11 @@ async function runFeatureEvals(
       if (!output?.success || !output?.response) {
         throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
       }
+      if (!normalizeText(String(output.response)).includes("alex")) {
+        throw new Error(
+          `Generated text should mention Alex: ${output.response}`
+        )
+      }
     }
   )
 
@@ -707,10 +797,12 @@ async function runFeatureEvals(
       "EXTRACT_FILE_DATA",
       {
         source: DocumentSourceType.URL,
-        file: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+        file: "https://pdfobject.com/pdf/sample.pdf",
         fileType: "pdf",
         schema: {
-          title: "string",
+          language: "string",
+          words: "number",
+          lines: "number",
         },
       }
     )
@@ -718,6 +810,21 @@ async function runFeatureEvals(
     const output = getActionOutput(result, "EXTRACT_FILE_DATA")
     if (!output?.success || !output?.data) {
       throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+    }
+    if (!output.data[0].language.toLowerCase().startsWith("en")) {
+      throw new Error(
+        `Extract output wrong language: ${JSON.stringify(output.data)}`
+      )
+    }
+    if (!(typeof output.data[0].lines === "number")) {
+      throw new Error(
+        `Extract output wrong lines: ${JSON.stringify(output.data)}`
+      )
+    }
+    if (!(typeof output.data[0].words === "number")) {
+      throw new Error(
+        `Extract output wrong words: ${JSON.stringify(output.data)}`
+      )
     }
   })
 
