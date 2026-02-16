@@ -328,8 +328,7 @@
         schemaOverrides={isUsersTable ? userSchemaOverrides : null}
         showAvatars={false}
         isCloud={$admin.cloud}
-        aiEnabled={$licensing.customAIConfigsEnabled ||
-          $licensing.budibaseAIEnabled}
+        aiEnabled={$licensing.budibaseAIEnabled}
         {buttons}
         buttonsCollapsed
         canHideColumns={false}

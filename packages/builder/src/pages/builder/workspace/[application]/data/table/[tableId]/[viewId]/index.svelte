@@ -130,8 +130,7 @@
       {buttons}
       allowAddRows
       allowDeleteRows
-      aiEnabled={$licensing.customAIConfigsEnabled ||
-        $licensing.budibaseAIEnabled}
+      aiEnabled={$licensing.budibaseAIEnabled}
       showAvatars={false}
       externalClipboard={externalClipboardData}
       on:updatedatasource={handleGridViewUpdate}
