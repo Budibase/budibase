@@ -1925,21 +1925,6 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
-      id: "fake-auth0-test",
-      name: "Fake Auth0 Test",
-      description:
-        "Test API with OAuth2 client credentials flow for Auth0 testing",
-      specs: [
-        {
-          version: "1.0.0",
-          url: "http://localhost:5000/openapi.json",
-        },
-      ],
-      operationsCount: 2,
-      icon: OktaLogo,
-      verified: true,
-    },
-    {
       id: "attio",
       name: "Attio",
       description:
