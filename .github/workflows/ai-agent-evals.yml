@@ -1,0 +1,209 @@
+name: AI Agent Evals
+
+on:
+  pull_request:
+    paths:
+      - "packages/server/src/automations/steps/ai/**"
+      - "packages/server/src/api/controllers/ai/**"
+      - "packages/server/src/sdk/workspace/ai/**"
+      - "packages/server/scripts/ai-evals/**"
+      - "packages/server/promptfoo.agent-evals.yaml"
+      - ".github/workflows/ai-agent-evals.yml"
+      - "packages/server/package.json"
+      - "yarn.lock"
+  schedule:
+    - cron: "15 3 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Which eval suite to run"
+        required: true
+        default: "smoke"
+        type: choice
+        options:
+          - smoke
+          - full
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  eval-smoke:
+    if: |
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
+      ) || (
+        github.event_name == 'workflow_dispatch' &&
+        inputs.mode == 'smoke'
+      )
+    runs-on: ubuntu-24.04
+    env:
+      BBAI_OPENAI_API_KEY: ${{ secrets.BBAI_OPENAI_API_KEY }}
+      BBAI_MISTRAL_API_KEY: ${{ secrets.BBAI_MISTRAL_API_KEY }}
+      MISTRAL_BASE_URL: ${{ secrets.MISTRAL_BASE_URL }}
+      COUCH_DB_URL: http://127.0.0.1:4005
+      COUCH_DB_SQL_URL: http://127.0.0.1:4006
+      COUCH_DB_USER: budibase
+      COUCH_DB_PASSWORD: budibase
+      MINIO_URL: http://127.0.0.1:4004
+      MINIO_ACCESS_KEY: budibase
+      MINIO_SECRET_KEY: budibase
+      REDIS_URL: 127.0.0.1:6379
+      REDIS_PASSWORD: budibase
+      DISABLE_THREADING: "1"
+      SELF_HOSTED: "0"
+      AI_EVAL_ENFORCE: "1"
+      AI_EVAL_MIN_PASS_RATE: "1"
+      AI_EVAL_MAX_INCOMPLETE_TOOL_CALLS: "0"
+      AI_EVAL_MAX_TOOL_ERRORS: "0"
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+
+      - name: Validate required AI provider secrets
+        run: |
+          if [ -z "$BBAI_OPENAI_API_KEY" ]; then
+            echo "Missing required secret: BBAI_OPENAI_API_KEY"
+            exit 1
+          fi
+          if [ -z "$BBAI_MISTRAL_API_KEY" ]; then
+            echo "Missing required secret: BBAI_MISTRAL_API_KEY"
+            exit 1
+          fi
+          if [ -z "$MISTRAL_BASE_URL" ]; then
+            echo "Missing required secret: MISTRAL_BASE_URL"
+            exit 1
+          fi
+
+      - run: yarn --frozen-lockfile
+
+      - name: Start eval data services
+        run: |
+          cd hosting
+          docker compose -f docker-compose.dev.yaml up -d couchdb-service minio-service redis-service
+
+      - name: Wait for services
+        run: |
+          for i in {1..60}; do
+            if curl -sf http://budibase:budibase@127.0.0.1:4005/_up >/dev/null && curl -sf http://127.0.0.1:4004/minio/health/live >/dev/null && docker exec budi-redis-dev redis-cli -a budibase ping >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Timed out waiting for services"
+          exit 1
+
+      - name: Run smoke evals
+        run: cd packages/server && yarn eval:agent:smoke
+
+      - name: Upload eval artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-agent-evals-smoke
+          path: packages/server/.artifacts/ai-evals
+          if-no-files-found: warn
+
+      - name: Stop eval data services
+        if: always()
+        run: |
+          cd hosting
+          docker compose -f docker-compose.dev.yaml down
+
+  eval-full:
+    if: |
+      github.event_name == 'schedule' || (
+        github.event_name == 'workflow_dispatch' &&
+        inputs.mode == 'full'
+      )
+    runs-on: ubuntu-24.04
+    env:
+      BBAI_OPENAI_API_KEY: ${{ secrets.BBAI_OPENAI_API_KEY }}
+      BBAI_MISTRAL_API_KEY: ${{ secrets.BBAI_MISTRAL_API_KEY }}
+      MISTRAL_BASE_URL: ${{ secrets.MISTRAL_BASE_URL }}
+      COUCH_DB_URL: http://127.0.0.1:4005
+      COUCH_DB_SQL_URL: http://127.0.0.1:4006
+      COUCH_DB_USER: budibase
+      COUCH_DB_PASSWORD: budibase
+      MINIO_URL: http://127.0.0.1:4004
+      MINIO_ACCESS_KEY: budibase
+      MINIO_SECRET_KEY: budibase
+      REDIS_URL: 127.0.0.1:6379
+      REDIS_PASSWORD: budibase
+      DISABLE_THREADING: "1"
+      SELF_HOSTED: "0"
+      AI_EVAL_ENFORCE: "1"
+      AI_EVAL_MIN_PASS_RATE: "0.8"
+      AI_EVAL_MAX_INCOMPLETE_TOOL_CALLS: "0"
+      AI_EVAL_MAX_TOOL_ERRORS: "0"
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+
+      - name: Validate required AI provider secrets
+        run: |
+          if [ -z "$BBAI_OPENAI_API_KEY" ]; then
+            echo "Missing required secret: BBAI_OPENAI_API_KEY"
+            exit 1
+          fi
+          if [ -z "$BBAI_MISTRAL_API_KEY" ]; then
+            echo "Missing required secret: BBAI_MISTRAL_API_KEY"
+            exit 1
+          fi
+          if [ -z "$MISTRAL_BASE_URL" ]; then
+            echo "Missing required secret: MISTRAL_BASE_URL"
+            exit 1
+          fi
+
+      - run: yarn --frozen-lockfile
+
+      - name: Start eval data services
+        run: |
+          cd hosting
+          docker compose -f docker-compose.dev.yaml up -d couchdb-service minio-service redis-service
+
+      - name: Wait for services
+        run: |
+          for i in {1..60}; do
+            if curl -sf http://budibase:budibase@127.0.0.1:4005/_up >/dev/null && curl -sf http://127.0.0.1:4004/minio/health/live >/dev/null && docker exec budi-redis-dev redis-cli -a budibase ping >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Timed out waiting for services"
+          exit 1
+
+      - name: Run full eval suite
+        run: cd packages/server && yarn eval:agent:full
+
+      - name: Upload eval artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-agent-evals-full
+          path: packages/server/.artifacts/ai-evals
+          if-no-files-found: warn
+
+      - name: Stop eval data services
+        if: always()
+        run: |
+          cd hosting
+          docker compose -f docker-compose.dev.yaml down

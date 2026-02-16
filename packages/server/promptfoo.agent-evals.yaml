@@ -1,0 +1,41 @@
+description: Budibase agent evals (outside Jest runtime)
+
+providers:
+  - id: file://scripts/ai-evals/promptfooProvider.js
+
+prompts:
+  - "{{prompt}}"
+
+tests:
+  - vars:
+      caseId: automation_tables_tool_usage
+      caseTitle: Automation uses list_tables before answer
+      surface: automation
+      tooling: tables
+      prompt: "Use the list_tables tool first, then answer with the exact text: table-check-complete"
+      modelId: budibase/gpt-5-nano
+      provider: openai
+      requiredTools:
+        - list_tables
+      responseMustContain:
+        - table-check-complete
+    assert:
+      - type: contains
+        value: table-check-complete
+
+  - vars:
+      caseId: chat_no_tools_short_answer
+      caseTitle: Chat no tools concise response
+      surface: chat
+      tooling: none
+      prompt: "Reply with exactly: chat-eval-ok"
+      modelId: budibase/mistral-small-latest
+      provider: mistral
+      forbiddenTools:
+        - list_tables
+        - get_table
+      responseMustContain:
+        - chat-eval-ok
+    assert:
+      - type: contains
+        value: chat-eval-ok

@@ -32,7 +32,14 @@
     "dev:stack:nuke": "node scripts/dev/manage.js nuke",
     "dev": "yarn run dev:stack:up && nodemon",
     "dev:built": "yarn run dev:stack:up && yarn run run:docker",
-    "specs": "ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts"
+    "specs": "ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts",
+    "eval:agent:services:up": "cd ../../hosting && docker compose -f docker-compose.dev.yaml up -d couchdb-service redis-service",
+    "eval:agent:services:down": "cd ../../hosting && docker compose -f docker-compose.dev.yaml down",
+    "eval:agent:smoke": "DISABLE_THREADING=1 SELF_HOSTED=0 node -r ts-node/register/transpile-only -r tsconfig-paths/register scripts/ai-evals/run.ts --mode smoke",
+    "eval:agent:full": "DISABLE_THREADING=1 SELF_HOSTED=0 node -r ts-node/register/transpile-only -r tsconfig-paths/register scripts/ai-evals/run.ts --mode full",
+    "eval:agent:adhoc": "DISABLE_THREADING=1 SELF_HOSTED=0 node -r ts-node/register/transpile-only -r tsconfig-paths/register scripts/ai-evals/adhoc.ts",
+    "eval:agent:report": "node -r ts-node/register/transpile-only scripts/ai-evals/report.ts",
+    "eval:agent:promptfoo": "mkdir -p .artifacts/ai-evals/promptfoo && DISABLE_THREADING=1 SELF_HOSTED=0 npx -y promptfoo@latest eval -c promptfoo.agent-evals.yaml -o .artifacts/ai-evals/promptfoo/report.json"
   },
   "keywords": [
     "budibase"

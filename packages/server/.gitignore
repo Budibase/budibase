@@ -9,3 +9,4 @@ dist
 coverage/
 watchtower-hook.json
 .claude
+.artifacts/

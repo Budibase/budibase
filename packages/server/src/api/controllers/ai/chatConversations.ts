@@ -23,6 +23,7 @@ import {
   extractReasoningMiddleware,
   isTextUIPart,
   ModelMessage,
+  readUIMessageStream,
   stepCountIs,
   streamText,
   wrapLanguageModel,
@@ -205,7 +206,7 @@ export async function discordChat({
     }),
     messages: messagesWithContext,
     system,
-    tools,
+    tools: hasTools ? tools : undefined,
     stopWhen: stepCountIs(30),
     providerOptions: providerOptions?.(hasTools),
     onError({ error }) {
@@ -218,11 +219,39 @@ export async function discordChat({
     },
   })
 
-  const assistantText = await result.text
-  const assistantMessage: ChatConversation["messages"][number] = {
-    id: v4(),
-    role: "assistant",
-    parts: [{ type: "text", text: assistantText || "" }],
+  let assistantMessage: ChatConversation["messages"][number] | undefined
+  let streamError: string | undefined
+  for await (const message of readUIMessageStream({
+    stream: result.toUIMessageStream({
+      sendReasoning: true,
+      onError: error => {
+        const message = getErrorMessage(error)
+        streamError = message
+        return message
+      },
+    }),
+  })) {
+    assistantMessage = message
+  }
+
+  let assistantText = assistantMessage ? extractUserText(assistantMessage) : ""
+  if (!assistantText) {
+    try {
+      assistantText = await result.text
+    } catch (error) {
+      streamError = streamError || getErrorMessage(error)
+    }
+  }
+
+  if (!assistantMessage) {
+    assistantMessage = {
+      id: v4(),
+      role: "assistant",
+      parts: [{ type: "text", text: assistantText || streamError || "" }],
+    }
+    if (!assistantText && streamError) {
+      assistantText = streamError
+    }
   }
 
   const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
