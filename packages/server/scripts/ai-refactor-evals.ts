@@ -525,17 +525,7 @@ function getActionOutput(
   actionStepId: string
 ): Record<string, any> | undefined {
   const matched = response.steps?.find(step => step.stepId === actionStepId)
-  if (matched?.outputs) {
-    return matched.outputs
-  }
-
-  // Fallback for unexpected/legacy response shapes
-  const fallback = response as unknown as Record<string, any>
-  if (fallback.outputs && typeof fallback.outputs === "object") {
-    return fallback.outputs as Record<string, any>
-  }
-
-  return undefined
+  return matched?.outputs
 }
 
 function normalizeText(value: string) {
