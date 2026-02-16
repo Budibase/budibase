@@ -6,7 +6,6 @@
     DrawerBindableInput,
     ServerBindingPanel as AutomationBindingPanel,
   } from "@/components/common/bindings"
-  import { type KeyValuePair } from "@/types/automations"
 
   export let useAttachmentBinding
   export let buttonText
