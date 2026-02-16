@@ -186,7 +186,16 @@ export const mockOpenAIResponsesResponse: MockLLMResponseFn = (
       }
     }
 
-    const content = typeof answer === "function" ? answer(prompt) : answer
+    let content
+    if (typeof answer === "function") {
+      try {
+        content = answer(prompt)
+      } catch (e: any) {
+        return [500, e.message]
+      }
+    } else {
+      content = answer
+    }
 
     chatID++
 

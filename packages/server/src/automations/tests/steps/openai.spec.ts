@@ -3,7 +3,7 @@ import { quotas } from "@budibase/pro"
 import { Model, MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
 import nock from "nock"
 import TestConfiguration from "../../..//tests/utilities/TestConfiguration"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
+import { mockOpenAIResponsesResponse } from "../../../tests/utilities/mocks/ai/openai"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("test the openai action", () => {
@@ -50,7 +50,7 @@ describe("test the openai action", () => {
   }
 
   it("should be able to receive a response from ChatGPT given a prompt", async () => {
-    mockChatGPTResponse("This is a test")
+    mockOpenAIResponsesResponse("This is a test")
 
     // The AI usage is 0 because the AI feature is disabled by default, which
     // means it goes through the "legacy" path which requires you to set your
@@ -81,7 +81,7 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
-    mockChatGPTResponse(() => {
+    mockOpenAIResponsesResponse(() => {
       throw new Error("oh no")
     })
 
@@ -92,12 +92,12 @@ describe("test the openai action", () => {
         .test({ fields: {} })
     )
 
-    expect(result.steps[0].outputs.response).toEqual("Error: No response found")
+    expect(result.steps[0].outputs.response).toContain("AI_APICallError")
     expect(result.steps[0].outputs.success).toBeFalsy()
   })
 
   it("should ensure that the pro AI module is called when the budibase AI features are enabled", async () => {
-    mockChatGPTResponse("This is a test")
+    mockOpenAIResponsesResponse("This is a test")
 
     // We expect a non-0 AI usage here because it goes through the @budibase/pro
     // path, because we've enabled Budibase AI. The exact value depends on a
