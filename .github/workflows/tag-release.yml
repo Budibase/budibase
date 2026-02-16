@@ -3,6 +3,9 @@ concurrency:
   group: tag-release
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -29,7 +32,7 @@ jobs:
           exit 1
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - run: cd scripts && yarn
       - name: Tag release
