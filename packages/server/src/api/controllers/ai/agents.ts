@@ -217,10 +217,7 @@ export async function toggleAgentDiscordDeployment(
     const chatAppId = agent.discordIntegration?.chatAppId?.trim()
 
     if (chatAppId) {
-      await sdk.ai.deployments.discord.disableAgentOnChatApp(
-        chatAppId,
-        agentId
-      )
+      await sdk.ai.deployments.discord.disableAgentOnChatApp(chatAppId, agentId)
     }
 
     await sdk.ai.agents.update({

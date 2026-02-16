@@ -116,11 +116,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   },
 
   toggleAgentDiscordDeployment: async (agentId: string, enabled: boolean) => {
-    return await API.post<ToggleAgentDiscordRequest, ToggleAgentDiscordResponse>(
-      {
-        url: `/api/agent/${agentId}/discord/toggle`,
-        body: { enabled },
-      }
-    )
+    return await API.post<
+      ToggleAgentDiscordRequest,
+      ToggleAgentDiscordResponse
+    >({
+      url: `/api/agent/${agentId}/discord/toggle`,
+      body: { enabled },
+    })
   },
 })
