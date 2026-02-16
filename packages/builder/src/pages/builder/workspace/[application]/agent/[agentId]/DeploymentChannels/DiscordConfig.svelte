@@ -31,16 +31,21 @@
   let saving = $state(false)
   let syncResult = $state<SyncAgentDiscordCommandsResponse | undefined>()
 
-  const isConnected = $derived.by(() => {
+  const hasConfig = $derived.by(() => {
+    const integration = agent?.discordIntegration
+    return !!(
+      integration?.applicationId &&
+      integration?.publicKey &&
+      integration?.botToken &&
+      integration?.guildId
+    )
+  })
+
+  const isEnabled = $derived.by(() => {
     if (syncResult?.success) {
       return true
     }
-    return !!(
-      draft.applicationId.trim() &&
-      draft.publicKey.trim() &&
-      draft.botToken.trim() &&
-      draft.guildId.trim()
-    )
+    return !!agent?.discordIntegration?.interactionsEndpointUrl
   })
 
   const webhookUrl = $derived(
@@ -121,7 +126,17 @@
     }
   }
 
-  const syncCommands = async () => {
+  const connect = async () => {
+    try {
+      await saveDiscordIntegration()
+      notifications.success("Discord configuration saved")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to save Discord configuration")
+    }
+  }
+
+  const enableChannel = async () => {
     if (!agent?._id || syncing) {
       return
     }
@@ -156,33 +171,49 @@
   <div class="response-section">
     <Label size="L">Response</Label>
     <div class="status-light">
-      <StatusLight positive={isConnected} neutral={!isConnected}>
-        {isConnected ? "Connected" : "Not connected"}
+      <StatusLight positive={isEnabled} neutral={!isEnabled}>
+        {isEnabled ? "Connected" : "Not connected"}
       </StatusLight>
     </div>
-    {#if syncResult}
+
+    {#if hasConfig}
+      <CopyInput label="Discord invite URL" value={inviteUrl} disabled />
+    {/if}
+
+    {#if hasConfig && !isEnabled}
+      <Body size="S">
+        Invite the bot to your server using the URL above, then enable the
+        channel below.
+      </Body>
+    {/if}
+
+    {#if isEnabled}
       <div class="synced-info">
         <Body size="S"
           >Commands synced: /{DISCORD_ASK_COMMAND} and /{DISCORD_NEW_COMMAND}</Body
         >
       </div>
-    {/if}
-
-    <CopyInput label="Webhook URL" value={webhookUrl} disabled />
-
-    {#if inviteUrl}
-      <CopyInput label="Discord invite URL" value={inviteUrl} disabled />
+      <CopyInput label="Webhook URL" value={webhookUrl} disabled />
     {/if}
   </div>
 
   <div class="actions">
-    <Button cta on:click={syncCommands} disabled={saving || syncing}>
-      {syncing
-        ? "Enabling..."
-        : isConnected
-          ? "Update channel"
-          : "Enable channel"}
-    </Button>
+    {#if !hasConfig}
+      <Button cta on:click={connect} disabled={saving}>
+        {saving ? "Connecting..." : "Connect"}
+      </Button>
+    {:else}
+      <Button secondary on:click={connect} disabled={saving || syncing}>
+        {saving ? "Saving..." : "Save"}
+      </Button>
+      <Button cta on:click={enableChannel} disabled={saving || syncing}>
+        {syncing
+          ? "Enabling..."
+          : isEnabled
+            ? "Update channel"
+            : "Enable channel"}
+      </Button>
+    {/if}
   </div>
 </div>
 
@@ -218,6 +249,7 @@
   .actions {
     display: flex;
     justify-content: flex-end;
+    gap: var(--spacing-m);
   }
 
   @media (max-width: 900px) {
