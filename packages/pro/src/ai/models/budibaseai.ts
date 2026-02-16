@@ -129,7 +129,7 @@ export class BudibaseAI extends LLM {
     }
 
     const result = await resp.json()
-    return result.fileId
+    return result.file
   }
 
   protected async chatCompletion(prompt: LLMRequest): Promise<LLMFullResponse> {
