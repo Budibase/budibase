@@ -1,11 +1,6 @@
 import { Document } from "../../../documents/document"
 import { RestTemplateId } from "../../../ui"
-import {
-  RestAuthConfig,
-  RestBasicAuthConfig,
-  RestBearerAuthConfig,
-  OAuth2Config,
-} from "../../../documents"
+import { RestAuthConfig, OAuth2Config } from "../../../documents"
 
 export enum ApiKeyLocation {
   HEADER = "header",
@@ -57,21 +52,7 @@ export interface WorkspaceConnection extends Document {
   props: WorkspaceConnectionProps
 }
 
-// Nuke sensitive info from orbit
-export interface WorkspaceConnectionResponse
-  extends Omit<WorkspaceConnection, "auth"> {
-  auth: Array<
-    | (Omit<RestAuthConfig, "config"> & {
-        config:
-          | Omit<RestBasicAuthConfig, "password">
-          | Omit<RestBearerAuthConfig, "token">
-      })
-    | (Omit<ApiKeyAuthConfig, "config"> & {
-        config: Omit<ApiKeyAuthConfig["config"], "value">
-      })
-    | Omit<OAuth2AuthConfig, "clientSecret">
-  >
-}
+export type WorkspaceConnectionResponse = WorkspaceConnection
 
 export interface FetchWorkspaceConnectionsResponse {
   connections: WorkspaceConnectionResponse[]
