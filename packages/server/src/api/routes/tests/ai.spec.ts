@@ -5,7 +5,7 @@ import {
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, setEnv } from "@budibase/backend-core"
+import { configs, env, setEnv, withEnv } from "@budibase/backend-core"
 import { generateText, streamText } from "ai"
 import {
   AIInnerConfig,
@@ -1180,7 +1180,8 @@ describe("BudibaseAI", () => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
         ACCOUNT_PORTAL_API_KEY: internalApiKey,
-        BBAI_OPENAI_API_KEY: "openai-key",
+        BBAI_MISTRAL_API_KEY: "mistral-key",
+        MISTRAL_BASE_URL: "https://api.mistral.ai",
       })
     })
 
@@ -1232,7 +1233,7 @@ describe("BudibaseAI", () => {
       } as unknown as ReturnType<typeof generateText>)
 
       const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/gpt-5-mini",
+        model: "budibase/v1",
         messages: [{ role: "user", content: "hello" }],
         licenseKey,
       })
@@ -1258,7 +1259,7 @@ describe("BudibaseAI", () => {
       } as unknown as ReturnType<typeof generateText>)
 
       const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/gpt-5-mini",
+        model: "budibase/v1",
         messages: [{ role: "user", content: "return json" }],
         stream: false,
         // @ts-expect-error extra field should be ignored
@@ -1278,7 +1279,7 @@ describe("BudibaseAI", () => {
 
       await config.api.ai.openaiChatCompletions(
         {
-          model: "budibase/gpt-5-mini",
+          model: "budibase/v1",
           messages: [{ role: "user", content: "hello" }],
           stream: true,
           licenseKey,
@@ -1318,46 +1319,49 @@ describe("BudibaseAI", () => {
     })
 
     it("accepts Mistral models when configured", async () => {
-      const mistralCleanup = setEnv({
-        BBAI_MISTRAL_API_KEY: "mistral-key",
-        MISTRAL_BASE_URL: "https://api.mistral.ai",
-      })
-      generateTextMock.mockResolvedValue({
-        response: {
-          body: {
-            object: "chat.completion",
-            choices: [
-              {
-                message: { content: "hello from mistral" },
-              },
-            ],
-          },
+      withEnv(
+        {
+          BBAI_MISTRAL_API_KEY: "mistral-key",
+          MISTRAL_BASE_URL: "https://api.mistral.ai",
         },
-      } as unknown as ReturnType<typeof generateText>)
+        async () => {
+          generateTextMock.mockResolvedValue({
+            response: {
+              body: {
+                object: "chat.completion",
+                choices: [
+                  {
+                    message: { content: "hello from mistral" },
+                  },
+                ],
+              },
+            },
+          } as unknown as ReturnType<typeof generateText>)
 
-      const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/mistral-small-latest",
-        messages: [{ role: "user", content: "hello" }],
-        stream: false,
-        licenseKey,
-      })
+          const response = await config.api.ai.openaiChatCompletions({
+            model: "budibase/mistral-small-latest",
+            messages: [{ role: "user", content: "hello" }],
+            stream: false,
+            licenseKey,
+          })
 
-      expect(response.choices[0].message.content).toBe("hello from mistral")
-      mistralCleanup()
+          expect(response.choices[0].message.content).toBe("hello from mistral")
+        }
+      )
     })
 
-    it("errors when OpenAI API key is missing", async () => {
-      const keyCleanup = setEnv({ BBAI_OPENAI_API_KEY: "" })
-      await config.api.ai.openaiChatCompletions(
-        {
-          model: "budibase/gpt-5-mini",
-          messages: [{ role: "user", content: "hello" }],
-          stream: false,
-          licenseKey,
-        },
-        { status: 500 }
-      )
-      keyCleanup()
+    it("errors when mistral API key is missing", async () => {
+      withEnv({ BBAI_MISTRAL_API_KEY: "" }, async () => {
+        await config.api.ai.openaiChatCompletions(
+          {
+            model: "budibase/v1",
+            messages: [{ role: "user", content: "hello" }],
+            stream: false,
+            licenseKey,
+          },
+          { status: 500 }
+        )
+      })
     })
   })
 })
