@@ -68,12 +68,18 @@ export async function run({
       if (typeof value !== "string") {
         return value
       }
+      let parsed
       try {
-        const parsed = JSON.parse(value)
-        return parsed
+        parsed = JSON.parse(value)
       } catch {
         return value
       }
+
+      if (typeof parsed !== "object" || !("key" in parsed)) {
+        throw new Error("Object is not a valid attachment")
+      }
+
+      return parsed
     }
 
     const file =
