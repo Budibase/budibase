@@ -37,7 +37,6 @@ interface LicensingState {
   pwaEnabled: boolean
   scimEnabled: boolean
   environmentVariablesEnabled: boolean
-  budibaseAIEnabled: boolean
   auditLogsEnabled: boolean
   customAppScriptsEnabled: boolean
   syncAutomationsEnabled: boolean
@@ -86,7 +85,6 @@ class LicensingStore extends BudiStore<LicensingState> {
       pwaEnabled: false,
       scimEnabled: false,
       environmentVariablesEnabled: false,
-      budibaseAIEnabled: false,
       auditLogsEnabled: false,
       customAppScriptsEnabled: false,
       syncAutomationsEnabled: false,
@@ -216,7 +214,6 @@ class LicensingStore extends BudiStore<LicensingState> {
     const perAppBuildersEnabled = features.includes(
       Constants.Features.APP_BUILDERS
     )
-    const budibaseAIEnabled = features.includes(Constants.Features.BUDIBASE_AI)
     const customAppScriptsEnabled = features.includes(
       Constants.Features.CUSTOM_APP_SCRIPTS
     )
@@ -238,7 +235,6 @@ class LicensingStore extends BudiStore<LicensingState> {
         backupsEnabled,
         brandingEnabled,
         pwaEnabled,
-        budibaseAIEnabled,
         scimEnabled,
         environmentVariablesEnabled,
         auditLogsEnabled,

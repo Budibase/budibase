@@ -33,5 +33,6 @@ export { appCreationStore } from "./appCreation"
 export { aiConfigsStore } from "./aiConfigs"
 export { translations } from "./translations"
 export { vectorDbStore } from "./vectorDbs"
+export { aiStore } from "./ai"
 
 export const sideBarCollapsed = writable(false)
