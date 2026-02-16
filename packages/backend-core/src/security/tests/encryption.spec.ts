@@ -1,4 +1,10 @@
-import { encrypt, decrypt, SecretOption, getSecret } from "../encryption"
+import {
+  compare,
+  decrypt,
+  encrypt,
+  getSecret,
+  SecretOption,
+} from "../encryption"
 import env from "../../environment"
 
 describe("encryption", () => {
@@ -27,5 +33,13 @@ describe("encryption", () => {
     const encryptionEncrypted = encrypt(plaintext, SecretOption.ENCRYPTION)
     const decrypted = decrypt(encryptionEncrypted, SecretOption.ENCRYPTION)
     expect(decrypted).toEqual(plaintext)
+  })
+
+  it("should compare plaintext against encrypted values", () => {
+    env._set("API_ENCRYPTION_KEY", "api_secret")
+    const plaintext = "budibase"
+    const encrypted = encrypt(plaintext, SecretOption.API)
+    expect(compare(plaintext, encrypted, SecretOption.API)).toBe(true)
+    expect(compare("not-budibase", encrypted, SecretOption.API)).toBe(false)
   })
 })
