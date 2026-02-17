@@ -67,6 +67,7 @@
     "pouchdb": "9.0.0",
     "pouchdb-all-dbs": "1.1.1",
     "scim2-parse-filter": "^0.2.8",
+    "scim-patch": "^0.8.1",
     "server-destroy": "1.0.1",
     "undici": "^7.16.0",
     "uuid": "^8.3.2",
