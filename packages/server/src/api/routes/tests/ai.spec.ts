@@ -1169,7 +1169,8 @@ describe("BudibaseAI", () => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
         ACCOUNT_PORTAL_API_KEY: internalApiKey,
-        BBAI_OPENAI_API_KEY: "openai-key",
+        BBAI_MISTRAL_API_KEY: "mistral-key",
+        MISTRAL_BASE_URL: "https://api.mistral.ai",
       })
     })
 
@@ -1209,7 +1210,7 @@ describe("BudibaseAI", () => {
       mockChatGPTResponse("hello from openai")
 
       const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/gpt-5-mini",
+        model: "budibase/v1",
         messages: [{ role: "user", content: "hello" }],
         licenseKey,
       })
@@ -1224,7 +1225,7 @@ describe("BudibaseAI", () => {
       mockChatGPTResponse(`{"value":"ok"}`)
 
       const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/gpt-5-mini",
+        model: "budibase/v1",
         messages: [{ role: "user", content: "return json" }],
         stream: false,
         // @ts-expect-error extra field should be ignored
@@ -1240,7 +1241,7 @@ describe("BudibaseAI", () => {
 
       const resp = await config.api.ai.openaiChatCompletionsRaw(
         {
-          model: "budibase/gpt-5-mini",
+          model: "budibase/v1",
           messages: [{ role: "user", content: "hello" }],
           stream: true,
           licenseKey,
@@ -1306,18 +1307,18 @@ describe("BudibaseAI", () => {
       )
     })
 
-    it("errors when OpenAI API key is missing", async () => {
-      const keyCleanup = setEnv({ BBAI_OPENAI_API_KEY: "" })
-      await config.api.ai.openaiChatCompletions(
-        {
-          model: "budibase/gpt-5-mini",
-          messages: [{ role: "user", content: "hello" }],
-          stream: false,
-          licenseKey,
-        },
-        { status: 500 }
-      )
-      keyCleanup()
+    it("errors when mistral API key is missing", async () => {
+      await withEnv({ BBAI_MISTRAL_API_KEY: "" }, async () => {
+        await config.api.ai.openaiChatCompletions(
+          {
+            model: "budibase/v1",
+            messages: [{ role: "user", content: "hello" }],
+            stream: false,
+            licenseKey,
+          },
+          { status: 500 }
+        )
+      })
     })
   })
 })
