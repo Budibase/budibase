@@ -202,11 +202,7 @@
 <style>
   .description-viewer {
     position: relative;
-    padding: 12px;
-    border: 1px solid var(--grey-3);
-    border-radius: 4px;
     color: var(--grey-8);
-    background-color: var(--background);
     font-family: monospace;
     display: flex;
     flex-direction: column;

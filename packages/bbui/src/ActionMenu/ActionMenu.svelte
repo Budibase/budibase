@@ -10,8 +10,10 @@
   export let openOnHover: boolean = false
   export let animate: boolean | undefined = true
   export let offset: number | undefined = undefined
+  export let minWidth: number | undefined = undefined
   export let useAnchorWidth = false
   export let roundedPopover: boolean = false
+  export let popoverBorderRadius: string | undefined = undefined
 
   const actionMenuContext = getContext("actionMenu")
 
@@ -76,9 +78,10 @@
   {portalTarget}
   {animate}
   {offset}
+  {minWidth}
   {useAnchorWidth}
   resizable={false}
-  borderRadius={roundedPopover ? "12px" : undefined}
+  borderRadius={popoverBorderRadius ?? (roundedPopover ? "12px" : undefined)}
   on:open
   on:close
   on:mouseenter={() => {

@@ -450,6 +450,10 @@
   .spectrum-Picker-label.auto-width.is-placeholder {
     padding-right: 2px;
   }
+  .picker-label-text {
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-900);
+  }
 
   /* Icon and colour alignment */
   .check {

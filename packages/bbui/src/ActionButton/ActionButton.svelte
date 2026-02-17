@@ -13,6 +13,7 @@
   export let active: boolean = false
   export let fullWidth: boolean = false
   export let noPadding: boolean = false
+  export let bordered: boolean = false
   export let tooltip: string = ""
   export let accentColor: string | null = null
 
@@ -39,6 +40,7 @@
 <button
   class="spectrum-ActionButton spectrum-ActionButton--size{size}"
   class:spectrum-ActionButton--quiet={quiet}
+  class:spectrum-ActionButton--bordered={bordered}
   class:is-selected={selected}
   class:noPadding
   class:fullWidth
@@ -115,6 +117,10 @@
   .spectrum-ActionButton--quiet {
     padding: 0 8px;
     border: 1px dashed transparent;
+  }
+  .spectrum-ActionButton--bordered {
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
   }
   .spectrum-ActionButton--quiet:hover:not(:disabled) {
     background-color: var(--spectrum-global-color-gray-200);

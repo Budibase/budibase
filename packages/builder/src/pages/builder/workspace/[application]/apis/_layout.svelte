@@ -69,7 +69,7 @@
 
 <!-- routify:options index=1 -->
 <div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
-  <TopBar icon="webhooks-logo" breadcrumbs={[{ text: "APIs" }]}></TopBar>
+  <TopBar breadcrumbs={[{ text: "API explorer" }]}></TopBar>
   <div class="data">
     {#if !$isActive("./new")}
       <div class="panel-container" style="width: {panelWidth}px;" use:resizable>

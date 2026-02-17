@@ -100,7 +100,7 @@
     color: var(--spectrum-global-color-gray-900);
   }
   .breadcrumbs a:first-child {
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-global-color-gray-900);
   }
   .breadcrumbs .divider {
     font-size: 14px;
