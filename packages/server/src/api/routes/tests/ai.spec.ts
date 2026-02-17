@@ -27,6 +27,7 @@ import {
   MockLLMResponseFn,
   MockLLMResponseOpts,
 } from "../../../tests/utilities/mocks/ai"
+import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
 import { resetHttpMocking } from "../../../tests/jestEnv"
 
@@ -135,6 +136,14 @@ const allProviders: TestSetup[] = [
     name: "OpenAI API key with custom config",
     setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
     mockLLMResponse: mockChatGPTResponse,
+  },
+  {
+    name: "Anthropic API key with custom config",
+    setup: customAIConfig({
+      provider: "Anthropic",
+      defaultModel: "claude-3-5-sonnet-20240620",
+    }),
+    mockLLMResponse: mockAnthropicResponse,
   },
   {
     name: "Azure OpenAI API key with custom config",

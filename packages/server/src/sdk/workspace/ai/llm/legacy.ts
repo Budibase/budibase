@@ -22,6 +22,11 @@ const getLegacyProviderClient = (
         baseURL: config.baseUrl,
         apiKey: config.apiKey,
       })
+    case "Anthropic":
+      return createOpenAI({
+        baseURL: config.baseUrl || "https://api.anthropic.com/v1",
+        apiKey: config.apiKey,
+      })
     case "AzureOpenAI":
       return createAzure({
         apiKey: config.apiKey,
@@ -29,10 +34,6 @@ const getLegacyProviderClient = (
         apiVersion: "2024-10-01-preview",
         useDeploymentBasedUrls: true,
       })
-    case "Anthropic":
-      throw new Error(
-        "Legacy Anthropic is not supported in this path. Use AI Configs instead."
-      )
     default:
       throw new Error(`Unsupported legacy provider: ${provider}`)
   }
