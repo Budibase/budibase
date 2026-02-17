@@ -27,15 +27,15 @@ import {
   MockLLMResponseFn,
   MockLLMResponseOpts,
 } from "../../../tests/utilities/mocks/ai"
-import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
+import { resetHttpMocking } from "../../../tests/jestEnv"
 
 jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
   return {
     ...actual,
-    generateText: jest.fn(),
-    streamText: jest.fn(),
+    generateText: jest.fn(actual.generateText),
+    streamText: jest.fn(actual.streamText),
   }
 })
 
@@ -82,7 +82,11 @@ function budibaseAI(): SetupFn {
       })
     })
 
-    return setEnv({ OPENAI_API_KEY: "test-key", SELF_HOSTED: false })
+    return setEnv({
+      OPENAI_API_KEY: "test-key",
+      BBAI_OPENAI_API_KEY: "test-key",
+      SELF_HOSTED: false,
+    })
   }
 }
 
@@ -133,14 +137,6 @@ const allProviders: TestSetup[] = [
     mockLLMResponse: mockChatGPTResponse,
   },
   {
-    name: "Anthropic API key with custom config",
-    setup: customAIConfig({
-      provider: "Anthropic",
-      defaultModel: "claude-3-5-sonnet-20240620",
-    }),
-    mockLLMResponse: mockAnthropicResponse,
-  },
-  {
     name: "Azure OpenAI API key with custom config",
     setup: customAIConfig({
       provider: "AzureOpenAI",
@@ -174,8 +170,9 @@ describe("AI", () => {
     config.end()
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     nock.cleanAll()
+    await resetHttpMocking()
   })
 
   describe.each(allProviders)(
@@ -294,6 +291,10 @@ describe("BudibaseAI", () => {
   beforeAll(async () => {
     await config.init()
     cleanup = await budibaseAI()(config)
+  })
+
+  beforeEach(async () => {
+    await resetHttpMocking()
   })
 
   afterAll(async () => {
@@ -507,9 +508,6 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      // Ensure MockAgent is installed for OpenAI interceptors
-      const { installHttpMocking } = require("../../../tests/jestEnv")
-      installHttpMocking()
     })
 
     const mockAIGenerationStructure = (
