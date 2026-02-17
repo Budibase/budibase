@@ -234,7 +234,7 @@
   }
   .embed :global(.cm-editor) {
     min-height: 200px;
-    border: 1px solid var(--spectrum-global-color-gray-400);
+    border: 1px solid var(--spectrum-global-color-gray-100);
     border-radius: 4px;
   }
   .embed :global(.cm-gutters) {

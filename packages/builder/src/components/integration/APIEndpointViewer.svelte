@@ -1137,7 +1137,7 @@
     margin: 0px -40px;
   }
   .wrap {
-    --sidebar-width: 280px;
+    --sidebar-width: 380px;
     display: flex;
     flex-direction: row;
     flex: 1;
@@ -1243,7 +1243,7 @@
     min-width: 0;
   }
   .request :global(.spectrum-ActionButton) {
-    height: 40px;
+    height: 36px;
     border-radius: 4px;
   }
   .request .picker {
@@ -1251,7 +1251,10 @@
   }
   .request .picker :global(.spectrum-Picker),
   .endpoint {
-    height: 40px;
+    height: 36px;
+  }
+  .request .send :global(.spectrum-Button) {
+    height: 36px;
   }
   .endpoint {
     border: 0.5px dashed var(--spectrum-global-color-gray-300);
@@ -1311,7 +1314,7 @@
   }
   .embed :global(.cm-editor) {
     min-height: 200px;
-    border: 1px solid var(--spectrum-global-color-gray-400);
+    border: 1px solid var(--spectrum-global-color-gray-100);
     border-radius: 4px;
   }
   .embed :global(.cm-gutters) {
