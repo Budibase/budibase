@@ -4,6 +4,8 @@ import { AzureOpenAI as AzureOpenAIClient } from "openai"
 import { createAzure } from "@ai-sdk/azure"
 
 export class AzureOpenAI extends OpenAI {
+  override supportsFiles = false
+
   protected override getAISDKClient(opts: LLMConfigOptions) {
     return createAzure({
       apiKey: opts.apiKey,
