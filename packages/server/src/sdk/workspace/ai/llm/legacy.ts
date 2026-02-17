@@ -50,7 +50,7 @@ export const createLegacyLLM = async (
   }
 
   if (config.provider === "BudibaseAI") {
-    return createBBAIClient(config.model)
+    return createBBAIClient(`legacy/${config.model}`)
   }
 
   const llm = getLegacyProviderClient(config.provider, config)

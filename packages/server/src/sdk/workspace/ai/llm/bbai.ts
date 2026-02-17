@@ -30,8 +30,16 @@ const incrementBudibaseAICreditsFromUsage = async (
   }
 }
 
+const availableBudibaseAIModels: typeof BUDIBASE_AI_MODEL_MAP = {
+  ...BUDIBASE_AI_MODEL_MAP,
+  "legacy/gpt-5-mini": {
+    provider: "openai",
+    model: "gpt-5-mini",
+  },
+}
+
 export async function createBBAIClient(model: string): Promise<LLMResponse> {
-  const bbaiModel = BUDIBASE_AI_MODEL_MAP[model]
+  const bbaiModel = availableBudibaseAIModels[model]
   if (!bbaiModel) {
     throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
   }
