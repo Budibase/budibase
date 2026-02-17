@@ -8,6 +8,7 @@ import {
 import { LLMRequest } from "../llm"
 import { z } from "zod"
 import { AgentPromptOptions } from "../../types"
+import { normalizeContentType } from "../utils"
 
 export interface AutomationAgentToolGuideline {
   toolName: string
@@ -38,7 +39,8 @@ export function summarizeText(text: string, length?: SummariseLength) {
 export function extractFileData(
   schema: Record<string, any>,
   fileIdOrDataUrl: string,
-  supportsFile: boolean
+  supportsFile: boolean,
+  contentType?: string
 ) {
   if (typeof fileIdOrDataUrl !== "string" || !fileIdOrDataUrl.trim()) {
     throw new Error("Invalid file reference returned from uploadFile")
@@ -55,6 +57,7 @@ export function extractFileData(
 
   // Check if it's a base64 data URL (for images) or a file ID (for documents)
   const isDataUrl = fileIdOrDataUrl.startsWith("data:")
+  const normalizedContentType = normalizeContentType(contentType)
 
   const content: UserContent = isDataUrl
     ? [
@@ -66,7 +69,11 @@ export function extractFileData(
       ]
     : supportsFile
       ? [
-          { type: "file", data: fileIdOrDataUrl, mediaType: "" },
+          {
+            type: "file",
+            data: fileIdOrDataUrl,
+            mediaType: normalizedContentType,
+          },
           { type: "text", text: prompt },
         ]
       : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]

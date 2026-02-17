@@ -20,7 +20,7 @@ async function processUrlFile(
   fileUrl: string,
   fileType: string | undefined,
   llm: ai.LLM
-): Promise<string> {
+): Promise<{ fileIdOrDataUrl: string; contentType?: string }> {
   const response = await fetch(fileUrl)
   if (!response.ok) {
     throw new Error(`Failed to fetch file from URL: ${response.statusText}`)
@@ -28,17 +28,23 @@ async function processUrlFile(
   const stream = response.body as Readable
   const contentType = response.headers.get("content-type") || fileType
   const filename = `document.${fileType}`
-  return await llm.uploadFile(stream, filename, contentType)
+  const fileIdOrDataUrl = await llm.uploadFile(stream, filename, contentType)
+  return { fileIdOrDataUrl, contentType }
 }
 
 async function processAttachmentFile(
   attachment: any,
   llm: ai.LLM
-): Promise<string> {
+): Promise<{ fileIdOrDataUrl: string; contentType?: string }> {
   const bucket = objectStore.ObjectStoreBuckets.APPS
   const { stream } = await objectStore.getReadStream(bucket, attachment.key!)
   const filename = attachment.name || "document"
-  return await llm.uploadFile(stream, filename, attachment.extension)
+  const fileIdOrDataUrl = await llm.uploadFile(
+    stream,
+    filename,
+    attachment.extension
+  )
+  return { fileIdOrDataUrl, contentType: attachment.extension }
 }
 
 async function parseAIResponse(
@@ -70,6 +76,7 @@ export async function run({
   try {
     const llm = await ai.getLLMOrThrow()
     let fileIdOrDataUrl: string
+    let contentType: string | undefined
 
     function tryParse(value: any) {
       if (typeof value !== "string") {
@@ -95,12 +102,16 @@ export async function run({
         : tryParse(inputs.file)
 
     if (inputs.source === DocumentSourceType.URL && typeof file === "string") {
-      fileIdOrDataUrl = await processUrlFile(file, inputs.fileType, llm)
+      const result = await processUrlFile(file, inputs.fileType, llm)
+      fileIdOrDataUrl = result.fileIdOrDataUrl
+      contentType = result.contentType
     } else if (
       inputs.source === DocumentSourceType.ATTACHMENT &&
       typeof file !== "string"
     ) {
-      fileIdOrDataUrl = await processAttachmentFile(file, llm)
+      const result = await processAttachmentFile(file, llm)
+      fileIdOrDataUrl = result.fileIdOrDataUrl
+      contentType = result.contentType
     } else {
       throw new Error("Invalid file input – source and file type do not match")
     }
@@ -108,7 +119,8 @@ export async function run({
     const request = ai.extractFileData(
       inputs.schema,
       fileIdOrDataUrl,
-      llm.supportsFiles
+      llm.supportsFiles,
+      contentType
     )
     let data: Record<string, any> | any[] = []
     let lastError: unknown
