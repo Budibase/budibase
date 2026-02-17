@@ -220,15 +220,13 @@
           helpText={field.tooltip ?? undefined}
         />
       {:else if field.field_type === "password" || field.key.includes("key")}
-        <div class="secret-input">
-          <Input
-            bind:value={draft.credentialsFields[field.key]}
-            type="text"
-            autocomplete="new-password"
-            placeholder={field.placeholder ?? undefined}
-            helpText={field.tooltip ?? undefined}
-          />
-        </div>
+        <Input
+          bind:value={draft.credentialsFields[field.key]}
+          type="password"
+          autocomplete="new-password"
+          placeholder={field.placeholder ?? undefined}
+          helpText={field.tooltip ?? undefined}
+        />
       {:else}
         <Input
           bind:value={draft.credentialsFields[field.key]}
@@ -245,9 +243,5 @@
   .row {
     display: grid;
     gap: var(--spacing-s);
-  }
-
-  .secret-input :global(input) {
-    -webkit-text-security: disc;
   }
 </style>

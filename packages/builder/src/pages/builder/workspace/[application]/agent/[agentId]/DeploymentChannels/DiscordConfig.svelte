@@ -169,7 +169,7 @@
     <div class="secret-input">
       <Input
         label="Public key"
-        type="text"
+        type="password"
         autocomplete="new-password"
         bind:value={draft.publicKey}
       />
@@ -177,7 +177,7 @@
     <div class="secret-input">
       <Input
         label="Bot token"
-        type="text"
+        type="password"
         autocomplete="new-password"
         bind:value={draft.botToken}
       />

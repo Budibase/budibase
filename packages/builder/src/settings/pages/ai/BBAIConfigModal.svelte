@@ -187,7 +187,7 @@
         <div class="secret-input">
           <Input
             bind:value={draft.credentialsFields[field.key]}
-            type="text"
+            type="password"
             autocomplete="new-password"
             placeholder={field.placeholder ?? undefined}
             helpText={field.tooltip ?? undefined}
@@ -196,7 +196,8 @@
       {:else}
         <Input
           bind:value={draft.credentialsFields[field.key]}
-          type="text"
+          type="password"
+          autocomplete="new-password"
           placeholder={field.placeholder ?? undefined}
           helpText={field.tooltip ?? undefined}
         />
