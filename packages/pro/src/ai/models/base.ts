@@ -48,6 +48,8 @@ export abstract class LLM {
     return this._maxTokens
   }
 
+  abstract supportsFiles: boolean
+
   protected abstract chatCompletion(
     request: LLMRequest
   ): Promise<LLMFullResponse>

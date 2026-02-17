@@ -75,6 +75,8 @@ export class OpenAI extends LLM {
     this.client = this.getClient(opts)
   }
 
+  override supportsFiles = true
+
   // Default verbosity preference for supported models. Subclasses
   // (e.g. AzureOpenAI) can override to align with provider limits.
   protected getVerbosityForModel(): "low" | "medium" | undefined {
