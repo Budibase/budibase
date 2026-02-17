@@ -9529,22 +9529,26 @@
       {
         "type": "dataProvider",
         "label": "Data provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Event start",
-        "key": "eventStart"
+        "key": "eventStart",
+        "required": true
       },
       {
         "type": "field",
         "label": "Event end",
-        "key": "eventEnd"
+        "key": "eventEnd",
+        "required": true
       },
       {
         "type": "field",
         "label": "Event title",
-        "key": "eventTitle"
+        "key": "eventTitle",
+        "required": true
       },
       {
         "type": "select",
@@ -9589,16 +9593,53 @@
         "defaultValue": true
       },
       {
-        "type": "select",
-        "label": "Title date format",
-        "key": "titleDateFormat",
+        "section": true,
+        "name": "title",
         "dependsOn": "showTitleDate",
-        "options": [
-          { "label": "DD MM YYYY", "value": "en-gb" },
-          { "label": "MM DD YYYY", "value": "en-us" }
-        ],
-        "defaultValue": "en-gb"
+        "settings": [
+          {
+            "type": "select",
+            "label": "Date locale",
+            "key": "locale",
+            "options": [
+              { "label": "DD MM YYYY", "value": "en-gb" },
+              { "label": "MM DD YYYY", "value": "en-us" }
+            ],
+            "defaultValue": "en-gb"
+          },
+          {
+            "type": "select",
+            "label": "Year title format",
+            "key": "yearTitleFormat",
+            "options": [
+              { "label": "4-digit", "value": "numeric" },
+              { "label": "2-digit", "value": "2-digit" }
+            ]
+          },
+          {
+            "type": "select",
+            "label": "Month title format",
+            "key": "monthTitleFormat",
+            "options": [
+              { "label": "Numeric", "value": "numeric" },
+              { "label": "2-digit", "value": "2-digit" },
+              { "label": "short", "value": "short" },
+              { "label": "Long", "value": "long" },
+              { "label": "Narrow", "value": "narrow" }
+            ]
+          },
+          {
+            "type": "select",
+            "label": "Day title format",
+            "key": "dayTitleFormat",
+            "options": [
+              { "label": "Numeric", "value": "numeric" },
+              { "label": "2-digit", "value": "2-digit" }
+            ]
+          }
+        ]
       },
+
       {
         "type": "text",
         "label": "Empty agenda text",
@@ -9614,7 +9655,9 @@
       {
         "type": "text",
         "label": "Open on date",
-        "key": "openOnDate"
+        "key": "openOnDate",
+        "defaultValue": "{{ now }}",
+        "required": true
       },
       {
         "section": true,

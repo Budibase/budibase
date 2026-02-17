@@ -35,9 +35,12 @@
   export let dayText: string = "Day"
   export let agendaText: string = "Agenda"
   export let showTitleDate: boolean = true
-  export let titleDateFormat: TitleDateLocale = "en-gb"
+  export let locale: TitleDateLocale = "en-gb"
+  export let yearTitleFormat: string
+  export let monthTitleFormat: string
+  export let dayTitleFormat: string
   export let emptyAgendaText: string = "No events found"
-  export let openOnDate: string
+  export let openOnDate: string = "{{ now }}"
   export let calendarType: CalendarView = "dayGridMonth"
 
   const { styleable } = getContext("sdk")
@@ -61,6 +64,8 @@
     onClick?.({ title, start, end, row_id })
   }
 
+  console.log({ dayTitleFormat, monthTitleFormat, yearTitleFormat })
+
   $: options = {
     headerToolbar: {
       left: showButtons ? "dayGridMonth,dayGridWeek,timeGridDay,listWeek" : "",
@@ -68,25 +73,7 @@
       right: showButtons ? "prevYear,prev,today,next,nextYear" : "",
     },
     footerToolbar: "",
-    titleFormat: {
-      dayGridMonth: { year: "numeric", month: "2-digit" },
-      dayGridWeek: {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      },
-      timeGridDay: {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      },
-      listWeek: {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      },
-    },
-    locale: titleDateFormat,
+    locale,
     buttonText: {
       today: todayText,
       dayGridMonth: monthText,
@@ -97,7 +84,33 @@
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: calendarType || "dayGridMonth",
     views: {
+      dayGridMonth: {
+        titleFormat: {
+          year: yearTitleFormat,
+          month: monthTitleFormat,
+        },
+      },
+      dayGridWeek: {
+        titleFormat: {
+          day: dayTitleFormat,
+          month: monthTitleFormat,
+          year: yearTitleFormat,
+        },
+      },
+      timeGridDay: {
+        titleFormat: {
+          day: dayTitleFormat,
+          month: monthTitleFormat,
+          year: yearTitleFormat,
+          weekday: "short",
+        },
+      },
       listWeek: {
+        titleFormat: {
+          day: dayTitleFormat,
+          month: monthTitleFormat,
+          year: yearTitleFormat,
+        },
         noEventsContent: emptyAgendaText,
       },
     },
