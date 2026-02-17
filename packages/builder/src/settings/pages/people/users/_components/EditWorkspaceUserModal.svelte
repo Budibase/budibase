@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import {
     Input,
@@ -11,7 +13,6 @@
   import { roles } from "@/stores/builder"
   import { auth, users } from "@/stores/portal"
   import type { User } from "@budibase/types"
-  import { createEventDispatcher } from "svelte"
 
   interface UserDraft {
     firstName: string
@@ -21,12 +22,22 @@
     appRole: string
   }
 
-  export let user: User | null = null
-  export let workspaceId: string
-  export let readonly = false
-  export let isTenantOwner = false
+  interface Props {
+    user?: User | null
+    workspaceId: string
+    readonly?: boolean
+    isTenantOwner?: boolean
+    onsaved?: () => void
+  }
 
-  const dispatch = createEventDispatcher()
+  let {
+    user = null,
+    workspaceId,
+    readonly = false,
+    isTenantOwner = false,
+    onsaved,
+  }: Props = $props()
+
   const builtInEndUserRoles = [Constants.Roles.BASIC, Constants.Roles.ADMIN]
   const excludedRoleIds = [
     ...builtInEndUserRoles,
@@ -35,34 +46,36 @@
     Constants.Roles.CREATOR,
     Constants.Roles.GROUP,
   ]
-  let roleColorLookup: Record<string, string | undefined> = {}
-  $: roleColorLookup = ($roles || []).reduce<
-    Record<string, string | undefined>
-  >((acc, role) => {
-    acc[role._id] = role.uiMetadata?.color
-    return acc
-  }, {})
 
-  let draft: UserDraft = {
+  const roleColorLookup = $derived(
+    ($roles || []).reduce<Record<string, string | undefined>>((acc, role) => {
+      acc[role._id] = role.uiMetadata?.color
+      return acc
+    }, {})
+  )
+
+  let draft = $state<UserDraft>({
     firstName: "",
     lastName: "",
     email: "",
     role: Constants.BudibaseRoles.AppUser,
     appRole: Constants.Roles.BASIC,
-  }
-  let initialDraft: UserDraft | null = null
-  let selectedUserId: string | null = null
+  })
+  let initialDraft = $state<UserDraft | null>(null)
+  let selectedUserId = $state<string | null>(null)
 
-  $: customEndUserRoleOptions = ($roles || [])
-    .filter(role => !excludedRoleIds.includes(role._id))
-    .map(role => ({
-      label: role.uiMetadata?.displayName || role.name || "Custom role",
-      value: role._id,
-      color:
-        role.uiMetadata?.color ||
-        "var(--spectrum-global-color-static-magenta-400)",
-    }))
-  $: endUserRoleOptions = [
+  const customEndUserRoleOptions = $derived(
+    ($roles || [])
+      .filter(role => !excludedRoleIds.includes(role._id))
+      .map(role => ({
+        label: role.uiMetadata?.displayName || role.name || "Custom role",
+        value: role._id,
+        color:
+          role.uiMetadata?.color ||
+          "var(--spectrum-global-color-static-magenta-400)",
+      }))
+  )
+  const endUserRoleOptions = $derived([
     {
       label: "Basic user",
       value: Constants.Roles.BASIC,
@@ -74,28 +87,35 @@
       color: roleColorLookup[Constants.Roles.ADMIN],
     },
     ...customEndUserRoleOptions,
-  ]
-  $: roleOptions = isTenantOwner
+  ])
+  const roleOptions = $derived(
+    isTenantOwner
     ? Constants.ExtendedBudibaseRoleOptions
     : Constants.BudibaseRoleOptions
-  $: disableFields = readonly || !!user?.scimInfo?.isSync
-  $: disableRole =
+  )
+  const disableFields = $derived(readonly || !!user?.scimInfo?.isSync)
+  const disableRole = $derived(
     disableFields || isTenantOwner || user?._id === $auth.user?._id
-  $: hasChanges =
+  )
+  const hasChanges = $derived(
     !!initialDraft &&
     (draft.firstName !== initialDraft.firstName ||
       draft.lastName !== initialDraft.lastName ||
       draft.role !== initialDraft.role ||
       draft.appRole !== initialDraft.appRole)
-  $: hasRoleChanges =
+  )
+  const hasRoleChanges = $derived(
     !!initialDraft &&
     (draft.role !== initialDraft.role || draft.appRole !== initialDraft.appRole)
+  )
 
-  $: if (user?._id && user._id !== selectedUserId) {
-    selectedUserId = user._id
-    draft = createDraft(user)
-    initialDraft = { ...draft }
-  }
+  $effect(() => {
+    if (user?._id && user._id !== selectedUserId) {
+      selectedUserId = user._id
+      draft = createDraft(user)
+      initialDraft = { ...draft }
+    }
+  })
 
   const sanitizeAppRole = (appRole: string) => {
     const rolesLoaded = ($roles || []).length > 0
@@ -195,7 +215,7 @@
       }
 
       notifications.success("User updated successfully")
-      dispatch("saved")
+      onsaved?.()
     } catch (error) {
       console.error(error)
       notifications.error("Error updating user")

@@ -607,7 +607,7 @@
       workspaceId={currentWorkspaceId}
       {readonly}
       isTenantOwner={selectedWorkspaceUser?.email === tenantOwner?.email}
-      on:saved={onWorkspaceUserSaved}
+      onsaved={onWorkspaceUserSaved}
     />
   </Modal>
 {/if}
