@@ -65,16 +65,7 @@ export function extractFileData(
         },
         { type: "text", text: prompt },
       ]
-    : [
-        {
-          type: "file",
-          file: {
-            file_id: fileIdOrDataUrl,
-          },
-        },
-        // Keep a text fallback for providers that ignore file parts.
-        { type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` },
-      ]
+    : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
 
   // We create a structured zod schema from the user object
   const zodSchema = createZodSchemaFromRecord(schema)
