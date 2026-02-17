@@ -24,11 +24,23 @@ export interface FetchAgentsResponse {
   agents: Agent[]
 }
 
+export interface SyncAgentDiscordCommandsRequest {
+  chatAppId?: string
+}
+
+export interface SyncAgentDiscordCommandsResponse {
+  success: true
+  chatAppId: string
+  interactionsEndpointUrl: string
+  inviteUrl: string
+}
+
 export type CreateAgentRequest = Optional<
   Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt">,
   "aiconfig"
 >
 export type CreateAgentResponse = Agent
+export type DuplicateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
   Agent,

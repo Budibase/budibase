@@ -93,4 +93,41 @@ describe("activeTenant middleware", () => {
 
     expect(mockGetConfig).toHaveBeenCalledWith(ConfigType.SETTINGS)
   })
+
+  describe("noActivationPatterns", () => {
+    it("should skip activation check for excluded endpoints even when tenant is inactive", async () => {
+      mockGetConfig.mockResolvedValue({
+        type: ConfigType.SETTINGS,
+        config: { active: false },
+      })
+
+      ctx.request = { url: "/api/system/tenants/tenant1", method: "DELETE" }
+
+      const middleware = activeTenant([
+        { route: "/api/system/tenants/:tenantId", method: "DELETE" },
+      ])
+      await middleware(ctx, next)
+
+      expect(next).toHaveBeenCalled()
+      expect(ctx.status).toBeUndefined()
+      expect(mockGetConfig).not.toHaveBeenCalled()
+    })
+
+    it("should still check activation for non-excluded endpoints when tenant is inactive", async () => {
+      mockGetConfig.mockResolvedValue({
+        type: ConfigType.SETTINGS,
+        config: { active: false },
+      })
+
+      ctx.request = { url: "/api/system/environment", method: "GET" }
+
+      const middleware = activeTenant([
+        { route: "/api/system/tenants/:tenantId", method: "DELETE" },
+      ])
+      await middleware(ctx, next)
+
+      expect(next).not.toHaveBeenCalled()
+      expect(ctx.status).toBe(404)
+    })
+  })
 })

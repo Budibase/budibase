@@ -1,24 +1,100 @@
-import { context, docIds, env, HTTPError } from "@budibase/backend-core"
 import {
-  AIConfigType,
+  context,
+  docIds,
+  encryption,
+  env,
+  HTTPError,
+} from "@budibase/backend-core"
+import { licensing } from "@budibase/pro"
+import {
   BUDIBASE_AI_PROVIDER_ID,
-  LLMProviderField,
   CustomAIProviderConfig,
   DocumentType,
   LLMProvider,
+  LLMProviderField,
   PASSWORD_REPLACEMENT,
   RequiredKeys,
 } from "@budibase/types"
-import environment from "../../../../environment"
 import * as liteLLM from "./litellm"
-import { licensing } from "@budibase/pro"
 
-const withDefaults = (
+const SECRET_ENCODING_PREFIX = "bbai_enc::"
+
+const encodeSecret = (value: string): string => {
+  if (!value || value.startsWith(SECRET_ENCODING_PREFIX)) {
+    return value
+  }
+  return `${SECRET_ENCODING_PREFIX}${encryption.encrypt(value)}`
+}
+
+const decodeSecret = (value: string): string => {
+  if (!value || !value.startsWith(SECRET_ENCODING_PREFIX)) {
+    return value
+  }
+  return encryption.decrypt(value.slice(SECRET_ENCODING_PREFIX.length))
+}
+
+const getPasswordCredentialFieldKeys = async (
+  providerId: string
+): Promise<Set<string>> => {
+  const providers = await fetchLiteLLMProviders()
+  const provider = providers.find(p => p.id === providerId)
+  return new Set(
+    provider?.credentialFields
+      .filter(field => field.field_type === "password")
+      .map(field => field.key) || []
+  )
+}
+
+const encodeConfigSecrets = async (
+  config: Pick<
+    CustomAIProviderConfig,
+    "provider" | "credentialsFields" | "webSearchConfig"
+  >
+) => {
+  const passwordKeys = await getPasswordCredentialFieldKeys(config.provider)
+  return {
+    credentialsFields: Object.fromEntries(
+      Object.entries(config.credentialsFields || {}).map(([key, value]) => [
+        key,
+        typeof value === "string" && passwordKeys.has(key)
+          ? encodeSecret(value)
+          : value,
+      ])
+    ),
+    webSearchConfig: config.webSearchConfig
+      ? {
+          ...config.webSearchConfig,
+          apiKey: config.webSearchConfig.apiKey
+            ? encodeSecret(config.webSearchConfig.apiKey)
+            : config.webSearchConfig.apiKey,
+        }
+      : undefined,
+  }
+}
+
+const decodeConfigSecrets = (
   config: CustomAIProviderConfig
-): CustomAIProviderConfig => ({
-  ...config,
-  configType: config.configType ?? AIConfigType.COMPLETIONS,
-})
+): CustomAIProviderConfig => {
+  return {
+    ...config,
+    credentialsFields: Object.fromEntries(
+      Object.entries(config.credentialsFields || {}).map(([key, value]) => [
+        key,
+        typeof value === "string" ? decodeSecret(value) : value,
+      ])
+    ),
+    ...(config.webSearchConfig
+      ? {
+          webSearchConfig: {
+            ...config.webSearchConfig,
+            apiKey: config.webSearchConfig.apiKey
+              ? decodeSecret(config.webSearchConfig.apiKey)
+              : config.webSearchConfig.apiKey,
+          },
+        }
+      : {}),
+  }
+}
 
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
   const db = context.getWorkspaceDB()
@@ -31,7 +107,7 @@ export async function fetch(): Promise<CustomAIProviderConfig[]> {
   return result.rows
     .map(row => row.doc)
     .filter((doc): doc is CustomAIProviderConfig => !!doc)
-    .map(withDefaults)
+    .map(config => decodeConfigSecrets(config))
 }
 
 export async function find(
@@ -39,7 +115,7 @@ export async function find(
 ): Promise<CustomAIProviderConfig | undefined> {
   const db = context.getWorkspaceDB()
   const result = await db.tryGet<CustomAIProviderConfig>(id)
-  return result ? withDefaults(result) : result
+  return result ? decodeConfigSecrets(result) : undefined
 }
 
 export async function create(
@@ -56,25 +132,33 @@ export async function create(
 ): Promise<CustomAIProviderConfig> {
   const db = context.getWorkspaceDB()
 
-  if (config.provider === BUDIBASE_AI_PROVIDER_ID) {
+  const isBBAI = config.provider === BUDIBASE_AI_PROVIDER_ID
+  const isSelfhost = env.SELF_HOSTED
+
+  if (isBBAI && isSelfhost) {
     const baseUrl = env.BUDICLOUD_URL.endsWith("/")
       ? env.BUDICLOUD_URL
       : `${env.BUDICLOUD_URL}/`
     config.credentialsFields.api_base = new URL("api/ai", baseUrl).toString()
     const licenseKey = await licensing.keys.getLicenseKey()
     if (!licenseKey) {
-      throw new HTTPError("No license key found", 403)
+      throw new HTTPError("No license key found", 422)
     }
     config.credentialsFields.api_key = licenseKey
   }
 
-  const modelId = await liteLLM.addModel({
-    provider: config.provider,
-    model: config.model,
-    credentialFields: config.credentialsFields,
-    configType: config.configType,
-    reasoningEffort: config.reasoningEffort,
-  })
+  let modelId
+  if (!isBBAI || isSelfhost) {
+    modelId = await liteLLM.addModel({
+      provider: config.provider,
+      model: config.model,
+      credentialFields: config.credentialsFields,
+      configType: config.configType,
+      reasoningEffort: config.reasoningEffort,
+    })
+  } else {
+    modelId = BUDIBASE_AI_PROVIDER_ID
+  }
 
   const newConfig: CustomAIProviderConfig = {
     _id:
@@ -91,7 +175,11 @@ export async function create(
     reasoningEffort: config.reasoningEffort,
   }
 
-  const { rev } = await db.put(newConfig)
+  const encodedConfig: CustomAIProviderConfig = {
+    ...newConfig,
+    ...(await encodeConfigSecrets(newConfig)),
+  }
+  const { rev } = await db.put(encodedConfig)
   newConfig._rev = rev
 
   await liteLLM.syncKeyModels()
@@ -148,7 +236,11 @@ export async function update(
   }
 
   const db = context.getWorkspaceDB()
-  const { rev } = await db.put(updatedConfig)
+  const encodedConfig: CustomAIProviderConfig = {
+    ...updatedConfig,
+    ...(await encodeConfigSecrets(updatedConfig)),
+  }
+  const { rev } = await db.put(encodedConfig)
   updatedConfig._rev = rev
 
   function getLiteLLMAwareFields(config: CustomAIProviderConfig) {
@@ -161,9 +253,12 @@ export async function update(
     }
   }
 
+  const isBBAI = config.provider === BUDIBASE_AI_PROVIDER_ID
+  const isSelfhost = env.SELF_HOSTED
   const shouldUpdateLiteLLM =
     JSON.stringify(getLiteLLMAwareFields(updatedConfig)) !==
-    JSON.stringify(getLiteLLMAwareFields(existing))
+      JSON.stringify(getLiteLLMAwareFields(existing)) &&
+    (isSelfhost || !isBBAI)
 
   if (shouldUpdateLiteLLM) {
     try {
@@ -197,34 +292,6 @@ export async function remove(id: string) {
   await liteLLM.syncKeyModels()
 }
 
-export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
-  modelName: string
-  modelId: string
-  apiKey: string
-  baseUrl: string
-}> {
-  const aiConfig = await find(configId)
-
-  if (!aiConfig) {
-    throw new HTTPError("Config not found", 400)
-  }
-
-  const { secretKey } = await liteLLM.getKeySettings()
-  if (!secretKey) {
-    throw new HTTPError(
-      "LiteLLM should be configured. Contact support if the issue persists.",
-      500
-    )
-  }
-
-  return {
-    modelName: aiConfig.model,
-    modelId: aiConfig.liteLLMModelId,
-    apiKey: secretKey,
-    baseUrl: environment.LITELLM_URL,
-  }
-}
-
 let liteLLMProviders: LLMProvider[]
 
 export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
@@ -251,11 +318,14 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
       }
       return mapProvider
     })
+
     liteLLMProviders.push({
       id: BUDIBASE_AI_PROVIDER_ID,
       displayName: "Budibase AI",
       externalProvider: "custom_openai",
-      credentialFields: [],
+      credentialFields: [
+        { key: "api_key", label: "api_key", field_type: "password" },
+      ],
     })
   }
   return liteLLMProviders
