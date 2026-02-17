@@ -66,12 +66,7 @@ export function extractFileData(
       ]
     : supportsFile
       ? [
-          {
-            type: "file",
-            file: {
-              file_id: fileIdOrDataUrl,
-            },
-          },
+          { type: "file", data: fileIdOrDataUrl, mediaType: "" },
           { type: "text", text: prompt },
         ]
       : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
