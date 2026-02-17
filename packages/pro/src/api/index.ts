@@ -1,5 +1,0 @@
-export { default as appBackups } from "./routes/apps/backups"
-export { default as auditLogs } from "./routes/global/auditLogs"
-export { default as environmentVariables } from "./routes/global/environmentVariables"
-export { default as groups } from "./routes/global/groups"
-export { default as scim } from "./routes/global/scim"

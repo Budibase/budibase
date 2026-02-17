@@ -15,6 +15,8 @@ import { LLM } from "./base"
 import { OpenAI } from "./openai"
 
 export class BudibaseAI extends LLM {
+  override supportsFiles = true
+
   async prompt(prompt: string | LLMRequest): Promise<LLMPromptResponse> {
     const response = await super.prompt(prompt)
     if (response.tokensUsed) {
@@ -129,7 +131,7 @@ export class BudibaseAI extends LLM {
     }
 
     const result = await resp.json()
-    return result.fileId
+    return result.file
   }
 
   protected async chatCompletion(prompt: LLMRequest): Promise<LLMFullResponse> {
@@ -171,9 +173,6 @@ export class BudibaseAI extends LLM {
           throw new Error("No license key found")
         }
         this._apiKey = licenseKey
-        span.addTags({
-          licenseKey: this._apiKey,
-        })
       }
 
       const body: ChatCompletionRequest = {
