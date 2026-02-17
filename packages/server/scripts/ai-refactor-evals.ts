@@ -22,7 +22,7 @@ interface Scenario {
   name: string
   enabled: boolean
   config: AIProviderConfig
-  bbaiMode?: BBAIMode
+  mode: BudibaseMode
 }
 
 interface EvalResult {
@@ -31,7 +31,7 @@ interface EvalResult {
   detail?: string
 }
 
-type BBAIMode = "self" | "cloud"
+type BudibaseMode = "self" | "cloud"
 
 type EvalFeature =
   | "table-generation"
@@ -283,8 +283,9 @@ function parseProviderFilter() {
     .filter(Boolean)
 }
 
-function parseBBAIModeFilter(): BBAIMode[] {
-  const raw = process.env.AI_EVAL_BBAI_MODES
+function parseBudibaseModeFilter(): BudibaseMode[] {
+  const raw =
+    process.env.AI_EVAL_BUDIBASE_MODES || process.env.AI_EVAL_BBAI_MODES
   if (!raw) {
     return ["self", "cloud"]
   }
@@ -292,7 +293,7 @@ function parseBBAIModeFilter(): BBAIMode[] {
   const modes = raw
     .split(",")
     .map(v => v.trim().toLowerCase())
-    .filter((v): v is BBAIMode => v === "self" || v === "cloud")
+    .filter((v): v is BudibaseMode => v === "self" || v === "cloud")
 
   return modes.length > 0 ? modes : ["self", "cloud"]
 }
@@ -324,7 +325,7 @@ async function waitForServerReady(baseUrl: string, timeoutMs = 120000) {
   )
 }
 
-function switchBBAIMode(mode: BBAIMode) {
+function switchBudibaseMode(mode: BudibaseMode) {
   const repoRoot = resolve(__dirname, "../../..")
   const command = mode === "self" ? "yarn mode:self" : "yarn mode:cloud"
 
@@ -414,32 +415,28 @@ function resolveFeatures(
   return globalFeatures || new Set(ALL_FEATURES)
 }
 
-function shouldRunScenario(id: string, selected?: string[]) {
+function shouldRunProviderMode(
+  providerId: "bbai" | "openai" | "azure-openai",
+  mode: BudibaseMode,
+  selected?: string[]
+) {
   if (!selected || selected.length === 0) {
     return true
   }
-  return selected.includes(id.toLowerCase())
-}
 
-function shouldRunBBAIMode(mode: BBAIMode, selected?: string[]) {
-  if (!selected || selected.length === 0) {
-    return true
-  }
-  if (selected.includes("bbai")) {
+  if (selected.includes(providerId)) {
     return true
   }
 
-  const aliases =
-    mode === "self"
-      ? ["bbai-self", "bbai-selfhost"]
-      : ["bbai-cloud", "bbai-cloudhost"]
+  const modeAliases = mode === "self" ? ["self", "selfhost"] : ["cloud"]
+  const aliases = modeAliases.map(alias => `${providerId}-${alias}`)
 
   return aliases.some(alias => selected.includes(alias))
 }
 
 function buildScenarios(
   selected: string[] | undefined,
-  bbaiModes: BBAIMode[]
+  budibaseModes: BudibaseMode[]
 ): Scenario[] {
   const openaiKey = process.env.OPENAI_API_KEY
   const azureKey = process.env.AZURE_OPENAI_API_KEY
@@ -458,20 +455,24 @@ function buildScenarios(
       "gpt-5-mini",
   }
 
-  const bbaiScenarios: Scenario[] = bbaiModes.map(mode => ({
-    id: mode === "self" ? "bbai-self" : "bbai-cloud",
-    name: mode === "self" ? "BBAI (selfhost mode)" : "BBAI (cloud mode)",
-    bbaiMode: mode,
-    enabled: shouldRunBBAIMode(mode, selected),
-    config: bbaiBaseConfig,
-  }))
+  const scenarios: Scenario[] = []
+  for (const mode of budibaseModes) {
+    const modeName = mode === "self" ? "selfhost mode" : "cloud mode"
 
-  return [
-    ...bbaiScenarios,
-    {
-      id: "openai",
-      name: "OpenAI",
-      enabled: shouldRunScenario("openai", selected) && Boolean(openaiKey),
+    scenarios.push({
+      id: mode === "self" ? "bbai-self" : "bbai-cloud",
+      name: `BBAI (${modeName})`,
+      mode,
+      enabled: shouldRunProviderMode("bbai", mode, selected),
+      config: bbaiBaseConfig,
+    })
+
+    scenarios.push({
+      id: mode === "self" ? "openai-self" : "openai-cloud",
+      name: `OpenAI (${modeName})`,
+      mode,
+      enabled:
+        shouldRunProviderMode("openai", mode, selected) && Boolean(openaiKey),
       config: {
         provider: "OpenAI",
         name: "Eval OpenAI",
@@ -480,12 +481,14 @@ function buildScenarios(
         apiKey: openaiKey,
         defaultModel: process.env.OPENAI_MODEL || "gpt-5-mini",
       },
-    },
-    {
-      id: "azure-openai",
-      name: "Azure OpenAI",
+    })
+
+    scenarios.push({
+      id: mode === "self" ? "azure-openai-self" : "azure-openai-cloud",
+      name: `Azure OpenAI (${modeName})`,
+      mode,
       enabled:
-        shouldRunScenario("azure-openai", selected) &&
+        shouldRunProviderMode("azure-openai", mode, selected) &&
         Boolean(azureKey) &&
         Boolean(azureBaseUrl),
       config: {
@@ -497,8 +500,10 @@ function buildScenarios(
         baseUrl: azureBaseUrl,
         defaultModel: azureModel,
       },
-    },
-  ]
+    })
+  }
+
+  return scenarios
 }
 
 async function configureAIProvider(
@@ -1033,8 +1038,8 @@ async function main() {
 
   const baseUrl = process.env.BUDIBASE_BASE_URL || "http://localhost:10000"
   const selected = parseProviderFilter()
-  const bbaiModes = parseBBAIModeFilter()
-  const scenarios = buildScenarios(selected, bbaiModes)
+  const budibaseModes = parseBudibaseModeFilter()
+  const scenarios = buildScenarios(selected, budibaseModes)
   const globalFeatures = parseFeatureList(process.env.AI_EVAL_FEATURES)
 
   const client = new ApiClient(baseUrl)
@@ -1047,24 +1052,29 @@ async function main() {
     results: EvalResult[]
   }> = []
 
-  for (const scenario of scenarios) {
-    if (scenario.bbaiMode && scenario.enabled) {
-      switchBBAIMode(scenario.bbaiMode)
-      console.log(
-        yellow(`Waiting for server readiness after mode:${scenario.bbaiMode}...`)
-      )
-      await waitForServerReady(baseUrl)
-      await client.init()
+  for (const mode of budibaseModes) {
+    const modeScenarios = scenarios.filter(s => s.mode === mode)
+    const enabledModeScenarios = modeScenarios.filter(s => s.enabled)
+
+    if (enabledModeScenarios.length === 0) {
+      continue
     }
 
-    const enabledFeatures = resolveFeatures(globalFeatures)
-    await executeScenarioAndLog(
-      client,
-      scenario,
-      scenario.name,
-      enabledFeatures,
-      summary
-    )
+    switchBudibaseMode(mode)
+    console.log(yellow(`Waiting for server readiness after mode:${mode}...`))
+    await waitForServerReady(baseUrl)
+    await client.init()
+
+    for (const scenario of modeScenarios) {
+      const enabledFeatures = resolveFeatures(globalFeatures)
+      await executeScenarioAndLog(
+        client,
+        scenario,
+        scenario.name,
+        enabledFeatures,
+        summary
+      )
+    }
   }
 
   const executed = summary.filter(s => !s.skipped)
