@@ -29,7 +29,6 @@
     "memorystream": "^0.3.1",
     "node-fetch": "2.6.7",
     "openai": "5.12.1",
-    "scim-patch": "^0.8.1",
     "scim2-parse-filter": "^0.2.8",
     "zod": "^4.2.1"
   },
