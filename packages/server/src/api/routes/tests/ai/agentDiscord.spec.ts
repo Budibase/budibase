@@ -69,12 +69,14 @@ describe("agent discord integration sync", () => {
           commands.some(
             command =>
               command.name === DiscordCommands.ASK &&
-              command.contexts?.includes(1)
+              command.contexts?.includes(1) &&
+              !command.contexts?.includes(0)
           ) &&
           commands.some(
             command =>
               command.name === DiscordCommands.NEW &&
-              command.contexts?.includes(1)
+              command.contexts?.includes(1) &&
+              !command.contexts?.includes(0)
           )
         )
       })
