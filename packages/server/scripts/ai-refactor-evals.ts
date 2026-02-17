@@ -467,40 +467,42 @@ function buildScenarios(
       config: bbaiBaseConfig,
     })
 
-    scenarios.push({
-      id: mode === "self" ? "openai-self" : "openai-cloud",
-      name: `OpenAI (${modeName})`,
-      mode,
-      enabled:
-        shouldRunProviderMode("openai", mode, selected) && Boolean(openaiKey),
-      config: {
-        provider: "OpenAI",
-        name: "Eval OpenAI",
-        isDefault: true,
-        active: true,
-        apiKey: openaiKey,
-        defaultModel: process.env.OPENAI_MODEL || "gpt-5-mini",
-      },
-    })
+    if (mode === "self") {
+      scenarios.push({
+        id: "openai-self",
+        name: `OpenAI (${modeName})`,
+        mode,
+        enabled:
+          shouldRunProviderMode("openai", mode, selected) && Boolean(openaiKey),
+        config: {
+          provider: "OpenAI",
+          name: "Eval OpenAI",
+          isDefault: true,
+          active: true,
+          apiKey: openaiKey,
+          defaultModel: process.env.OPENAI_MODEL || "gpt-5-mini",
+        },
+      })
 
-    scenarios.push({
-      id: mode === "self" ? "azure-openai-self" : "azure-openai-cloud",
-      name: `Azure OpenAI (${modeName})`,
-      mode,
-      enabled:
-        shouldRunProviderMode("azure-openai", mode, selected) &&
-        Boolean(azureKey) &&
-        Boolean(azureBaseUrl),
-      config: {
-        provider: "AzureOpenAI",
-        name: "Eval Azure OpenAI",
-        isDefault: true,
-        active: true,
-        apiKey: azureKey,
-        baseUrl: azureBaseUrl,
-        defaultModel: azureModel,
-      },
-    })
+      scenarios.push({
+        id: "azure-openai-self",
+        name: `Azure OpenAI (${modeName})`,
+        mode,
+        enabled:
+          shouldRunProviderMode("azure-openai", mode, selected) &&
+          Boolean(azureKey) &&
+          Boolean(azureBaseUrl),
+        config: {
+          provider: "AzureOpenAI",
+          name: "Eval Azure OpenAI",
+          isDefault: true,
+          active: true,
+          apiKey: azureKey,
+          baseUrl: azureBaseUrl,
+          defaultModel: azureModel,
+        },
+      })
+    }
   }
 
   return scenarios
