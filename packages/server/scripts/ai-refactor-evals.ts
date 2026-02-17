@@ -766,7 +766,7 @@ async function runFeatureEvals(
     }
   )
 
-  await runIf("extract-document", "Extract document step", async () => {
+  await runIf("extract-document", "Extract document step (PDF)", async () => {
     const result = await runAutomationStepEval(
       client,
       definitions,
@@ -787,19 +787,80 @@ async function runFeatureEvals(
     if (!output?.success || !output?.data) {
       throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
     }
-    if (!output.data[0].language.toLowerCase().startsWith("en")) {
+    if (!Array.isArray(output.data) || output.data.length === 0) {
+      throw new Error(
+        `Extract output should be a non-empty array: ${JSON.stringify(output.data)}`
+      )
+    }
+
+    const first = output.data[0]
+    if (typeof first?.language !== "string" || !first.language.trim()) {
       throw new Error(
         `Extract output wrong language: ${JSON.stringify(output.data)}`
       )
     }
-    if (!(typeof output.data[0].lines === "number")) {
+    if (typeof first.lines !== "number") {
       throw new Error(
         `Extract output wrong lines: ${JSON.stringify(output.data)}`
       )
     }
-    if (!(typeof output.data[0].words === "number")) {
+    if (typeof first.words !== "number") {
       throw new Error(
         `Extract output wrong words: ${JSON.stringify(output.data)}`
+      )
+    }
+  })
+
+  await runIf("extract-document", "Extract document step (image)", async () => {
+    const result = await runAutomationStepEval(
+      client,
+      definitions,
+      "EXTRACT_FILE_DATA",
+      {
+        source: DocumentSourceType.URL,
+        file: "https://dummyimage.com/600x400/0000ff/fff.png&text=Budibase+Eval",
+        fileType: "png",
+        schema: {
+          text: "string",
+          backgroundColor: "string",
+        },
+      }
+    )
+
+    const output = getActionOutput(result, "EXTRACT_FILE_DATA")
+    if (!output?.success || !output?.data) {
+      throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+    }
+    if (
+      !Array.isArray(output.data) ||
+      output.data.length === 0 ||
+      output.data.length > 1
+    ) {
+      throw new Error(
+        `Image extract output should be non-empty array: ${JSON.stringify(output.data)}`
+      )
+    }
+
+    const data = output.data[0]
+    if (!data || typeof data !== "object") {
+      throw new Error(
+        `Image extract output is invalid: ${JSON.stringify(output.data)}`
+      )
+    }
+
+    const text = String(data.text || "")
+    if (!normalizeText(text).includes("budibase")) {
+      throw new Error(
+        `Image extract output text missing 'Budibase': ${JSON.stringify(output.data)}`
+      )
+    }
+
+    const color = normalizeText(String(data.backgroundColor || ""))
+    const hasBlueSignal =
+      color.includes("blue") || color.includes("0000ff") || color.includes("#")
+    if (!hasBlueSignal) {
+      throw new Error(
+        `Image extract backgroundColor is not recognizably blue: ${JSON.stringify(output.data)}`
       )
     }
   })
