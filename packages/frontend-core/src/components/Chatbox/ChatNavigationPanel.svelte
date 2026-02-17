@@ -101,7 +101,7 @@
     display: flex;
     width: 260px;
     min-width: 260px;
-    border-right: var(--border-dark);
+    border-right: var(--border-light);
     background: transparent;
   }
 
