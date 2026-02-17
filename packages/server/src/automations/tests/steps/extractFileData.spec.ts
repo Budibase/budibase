@@ -1,5 +1,9 @@
 import { objectStore, setEnv as setCoreEnv } from "@budibase/backend-core"
-import { DocumentSourceType, SupportedFileType } from "@budibase/types"
+import {
+  DocumentSourceType,
+  ResponseFormat,
+  SupportedFileType,
+} from "@budibase/types"
 import nock from "nock"
 import {
   mockChatGPTResponse,
@@ -8,6 +12,7 @@ import {
 import { basicTableWithAttachmentField } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { resetHttpMocking } from "../../../tests/jestEnv"
 async function uploadTestFile(filename: string, content?: string) {
   let bucket = objectStore.ObjectStoreBuckets.APPS
   await objectStore.upload({
@@ -21,12 +26,21 @@ async function uploadTestFile(filename: string, content?: string) {
 describe("test the extract file data action", () => {
   const config = new TestConfiguration()
   let resetEnv: () => void | undefined
+  const extractResponseFormat: ResponseFormat = {
+    type: "json_schema",
+    json_schema: {
+      name: "response",
+      strict: false,
+      schema: {},
+    },
+  }
 
   beforeAll(async () => {
     await config.init()
   })
 
   beforeEach(async () => {
+    await resetHttpMocking()
     await config.api.table.save(basicTableWithAttachmentField())
     await config.api.automation.deleteAll()
     resetEnv = setCoreEnv({ SELF_HOSTED: true, OPENAI_API_KEY: "abc123" })
@@ -49,7 +63,10 @@ describe("test the extract file data action", () => {
           name: "John Doe",
           email: "john@example.com",
         },
-      })
+      }),
+      {
+        format: extractResponseFormat,
+      }
     )
 
     mockOpenAIFileUpload("file-id-123")
@@ -104,7 +121,10 @@ describe("test the extract file data action", () => {
           product: "Widget",
           price: 29.99,
         },
-      })
+      }),
+      {
+        format: extractResponseFormat,
+      }
     )
 
     mockOpenAIFileUpload("file-id-456")
@@ -241,7 +261,12 @@ describe("test the extract file data action", () => {
   })
 
   it("should handle invalid JSON response from AI", async () => {
-    mockChatGPTResponse("This is not valid JSON - should cause parsing error")
+    mockChatGPTResponse("This is not valid JSON - should cause parsing error", {
+      format: extractResponseFormat,
+    })
+    mockChatGPTResponse("This is not valid JSON - should cause parsing error", {
+      format: extractResponseFormat,
+    })
     mockOpenAIFileUpload("file-id-789")
 
     let filename = await uploadTestFile("test-document.pdf")
