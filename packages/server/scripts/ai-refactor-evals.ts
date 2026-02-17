@@ -1,6 +1,6 @@
 import { ConfigType, ContentType, DocumentSourceType } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
-import { existsSync } from "fs"
+import { existsSync, readFileSync } from "fs"
 import { isAbsolute, resolve } from "path"
 import * as dotenv from "dotenv"
 import { execSync } from "child_process"
@@ -340,6 +340,38 @@ function switchBudibaseMode(mode: BudibaseMode) {
       `Failed to switch Budibase mode (${mode}) with '${command}': ${error?.message || String(error)}`
     )
   }
+}
+
+function detectBudibaseMode(): BudibaseMode | undefined {
+  const repoRoot = resolve(__dirname, "../../..")
+  const envPath = resolve(repoRoot, ".env")
+
+  let source: Record<string, string | undefined> = process.env
+  if (existsSync(envPath)) {
+    try {
+      source = {
+        ...source,
+        ...dotenv.parse(readFileSync(envPath)),
+      }
+    } catch (err) {
+      console.warn(
+        yellow(
+          `Could not parse ${envPath} to detect current mode, falling back to process env.`
+        )
+      )
+    }
+  }
+
+  const selfHosted = source.SELF_HOSTED === "1"
+  const multiTenancy = source.MULTI_TENANCY === "1"
+
+  if (selfHosted && !multiTenancy) {
+    return "self"
+  }
+  if (!selfHosted && multiTenancy) {
+    return "cloud"
+  }
+  return undefined
 }
 
 const ALL_FEATURES: EvalFeature[] = [
@@ -1043,6 +1075,8 @@ async function main() {
   const budibaseModes = parseBudibaseModeFilter()
   const scenarios = buildScenarios(selected, budibaseModes)
   const globalFeatures = parseFeatureList(process.env.AI_EVAL_FEATURES)
+  const initialMode = detectBudibaseMode()
+  let activeMode = initialMode
 
   const client = new ApiClient(baseUrl)
   await client.init()
@@ -1054,28 +1088,40 @@ async function main() {
     results: EvalResult[]
   }> = []
 
-  for (const mode of budibaseModes) {
-    const modeScenarios = scenarios.filter(s => s.mode === mode)
-    const enabledModeScenarios = modeScenarios.filter(s => s.enabled)
+  try {
+    for (const mode of budibaseModes) {
+      const modeScenarios = scenarios.filter(s => s.mode === mode)
+      const enabledModeScenarios = modeScenarios.filter(s => s.enabled)
 
-    if (enabledModeScenarios.length === 0) {
-      continue
+      if (enabledModeScenarios.length === 0) {
+        continue
+      }
+
+      switchBudibaseMode(mode)
+      activeMode = mode
+      console.log(yellow(`Waiting for server readiness after mode:${mode}...`))
+      await waitForServerReady(baseUrl)
+      await client.init()
+
+      for (const scenario of modeScenarios) {
+        const enabledFeatures = resolveFeatures(globalFeatures)
+        await executeScenarioAndLog(
+          client,
+          scenario,
+          scenario.name,
+          enabledFeatures,
+          summary
+        )
+      }
     }
-
-    switchBudibaseMode(mode)
-    console.log(yellow(`Waiting for server readiness after mode:${mode}...`))
-    await waitForServerReady(baseUrl)
-    await client.init()
-
-    for (const scenario of modeScenarios) {
-      const enabledFeatures = resolveFeatures(globalFeatures)
-      await executeScenarioAndLog(
-        client,
-        scenario,
-        scenario.name,
-        enabledFeatures,
-        summary
+  } finally {
+    if (initialMode && activeMode && initialMode !== activeMode) {
+      console.log(yellow(`Restoring Budibase mode: ${initialMode}`))
+      switchBudibaseMode(initialMode)
+      console.log(
+        yellow(`Waiting for server readiness after mode:${initialMode}...`)
       )
+      await waitForServerReady(baseUrl)
     }
   }
 
