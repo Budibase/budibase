@@ -4,6 +4,8 @@ import {
   CreateAgentResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
+  ToggleAgentDiscordRequest,
+  ToggleAgentDiscordResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -55,6 +57,20 @@ export class AgentAPI extends TestAPI {
   ): Promise<SyncAgentDiscordCommandsResponse> => {
     return await this._post<SyncAgentDiscordCommandsResponse>(
       `/api/agent/${agentId}/discord/sync`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  toggleDiscordDeployment = async (
+    agentId: string,
+    body?: ToggleAgentDiscordRequest | Record<string, unknown>,
+    expectations?: Expectations
+  ): Promise<ToggleAgentDiscordResponse> => {
+    return await this._post<ToggleAgentDiscordResponse>(
+      `/api/agent/${agentId}/discord/toggle`,
       {
         body,
         expectations,

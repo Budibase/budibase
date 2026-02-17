@@ -2,6 +2,7 @@ import * as ai from "../controllers/ai"
 import {
   createAgentValidator,
   syncAgentDiscordCommandsValidator,
+  toggleAgentDiscordDeploymentValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 import {
@@ -27,6 +28,11 @@ builderAdminRoutes
     "/api/agent/:agentId/discord/sync",
     syncAgentDiscordCommandsValidator(),
     ai.syncAgentDiscordCommands
+  )
+  .post(
+    "/api/agent/:agentId/discord/toggle",
+    toggleAgentDiscordDeploymentValidator(),
+    ai.toggleAgentDiscordDeployment
   )
   .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
