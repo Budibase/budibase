@@ -335,15 +335,15 @@ const getPromptFromRequest = (body: unknown): string => {
   return ""
 }
 
-export const mockChatGPTStreamFailure = (opts?: {
-  baseUrl?: string
-  errorMessage?: string
+export const mockChatGPTStreamFailure = (opts: {
+  url: string
+  errorMessage: string
 }) => {
-  const origin = opts?.baseUrl || "https://api.openai.com"
-  const pool = getPool(origin)
+  const url = new URL(opts.url)
+  const pool = getPool(url.origin)
 
   const interceptor = pool.intercept({
-    path: "/v1/chat/completions",
+    path: url.pathname,
     method: "POST",
   })
 
@@ -355,7 +355,7 @@ export const mockChatGPTStreamFailure = (opts?: {
   interceptor.reply(200, () => {
     return [
       `data: ${JSON.stringify({ id: "chatcmpl-test", choices: [{ delta: { content: "hi" } }] })}\n\n`,
-      `data: ${JSON.stringify({ error: { message: opts?.errorMessage || "stream failure", type: "server_error" } })}\n\n`,
+      `data: ${JSON.stringify({ error: { message: opts.errorMessage || "stream failure", type: "server_error" } })}\n\n`,
       "data: [DONE]\n\n",
     ].join("")
   })

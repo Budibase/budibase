@@ -1237,7 +1237,10 @@ describe("BudibaseAI", () => {
     })
 
     it("returns SSE error when stream fails", async () => {
-      mockChatGPTStreamFailure()
+      mockChatGPTStreamFailure({
+        url: "https://api.mistral.ai/chat/completions",
+        errorMessage: "stream failure",
+      })
 
       const resp = await config.api.ai.openaiChatCompletionsRaw(
         {
