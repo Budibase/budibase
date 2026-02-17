@@ -19,7 +19,7 @@ export async function getDefaultLLMOrThrow() {
 
   const allConfigs = await configs.fetch()
   const configToUse = allConfigs.find(
-    c => c.configType === AIConfigType.COMPLETIONS
+    c => c.configType === AIConfigType.COMPLETIONS && c.isDefault === true
   )
   if (!configToUse?._id) {
     return getLegacyLLMOrThrow()

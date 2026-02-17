@@ -7,6 +7,7 @@ import {
 } from "@budibase/backend-core"
 import { licensing } from "@budibase/pro"
 import {
+  AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
   CustomAIProviderConfig,
   DocumentType,
@@ -96,6 +97,33 @@ const decodeConfigSecrets = (
   }
 }
 
+const ensureDefaultUniqueness = async (excludeId?: string) => {
+  const db = context.getWorkspaceDB()
+  const result = await db.allDocs<CustomAIProviderConfig>(
+    docIds.getDocParams(DocumentType.AI_CONFIG, undefined, {
+      include_docs: true,
+    })
+  )
+
+  const docsToUpdate = result.rows
+    .map(row => row.doc)
+    .filter((doc): doc is CustomAIProviderConfig => !!doc)
+    .filter(
+      doc =>
+        doc.configType === AIConfigType.COMPLETIONS &&
+        doc.isDefault === true &&
+        doc._id !== excludeId
+    )
+    .map(doc => ({
+      ...doc,
+      isDefault: false,
+    }))
+
+  for (const doc of docsToUpdate) {
+    await db.put(doc)
+  }
+}
+
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
   const db = context.getWorkspaceDB()
   const result = await db.allDocs<CustomAIProviderConfig>(
@@ -128,6 +156,7 @@ export async function create(
     | "reasoningEffort"
     | "webSearchConfig"
     | "name"
+    | "isDefault"
   >
 ): Promise<CustomAIProviderConfig> {
   const db = context.getWorkspaceDB()
@@ -173,6 +202,7 @@ export async function create(
     ...(config.webSearchConfig && { webSearchConfig: config.webSearchConfig }),
     configType: config.configType,
     reasoningEffort: config.reasoningEffort,
+    isDefault: config.isDefault,
   }
 
   const encodedConfig: CustomAIProviderConfig = {
@@ -181,6 +211,13 @@ export async function create(
   }
   const { rev } = await db.put(encodedConfig)
   newConfig._rev = rev
+
+  if (
+    newConfig.configType === AIConfigType.COMPLETIONS &&
+    newConfig.isDefault === true
+  ) {
+    await ensureDefaultUniqueness(newConfig._id)
+  }
 
   await liteLLM.syncKeyModels()
 
@@ -199,6 +236,7 @@ export async function update(
     | "configType"
     | "reasoningEffort"
     | "webSearchConfig"
+    | "isDefault"
   >
 ): Promise<CustomAIProviderConfig> {
   const id = config._id
@@ -242,6 +280,13 @@ export async function update(
   }
   const { rev } = await db.put(encodedConfig)
   updatedConfig._rev = rev
+
+  if (
+    updatedConfig.configType === AIConfigType.COMPLETIONS &&
+    updatedConfig.isDefault === true
+  ) {
+    await ensureDefaultUniqueness(updatedConfig._id)
+  }
 
   function getLiteLLMAwareFields(config: CustomAIProviderConfig) {
     return {
