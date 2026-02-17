@@ -2,10 +2,8 @@ import { utils } from "@budibase/shared-core"
 import {
   AIFieldMetadata,
   AIOperationEnum,
-  EnrichedBinding,
   LLMConfigOptions,
   Row,
-  Snippet,
 } from "@budibase/types"
 import tracer from "dd-trace"
 import { Readable } from "node:stream"
@@ -15,7 +13,6 @@ import {
   classifyText,
   cleanData,
   generateCronExpression,
-  generateJs,
   searchWeb,
   sentimentAnalysis,
   summarizeText,
@@ -148,17 +145,5 @@ export abstract class LLM {
       default:
         throw utils.unreachable(operation)
     }
-  }
-
-  async generateJs(
-    prompt: string,
-    opts?: { bindings: EnrichedBinding[]; snippets: Snippet[] }
-  ): Promise<LLMPromptResponse> {
-    return await tracer.trace("generateJs", async () => {
-      const { bindings = [], snippets = [] } = opts || {}
-      return await this.prompt(
-        generateJs(bindings, snippets).addUserMessage(prompt)
-      )
-    })
   }
 }
