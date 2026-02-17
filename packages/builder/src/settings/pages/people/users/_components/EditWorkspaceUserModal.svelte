@@ -22,7 +22,7 @@
   }
 
   export let user: User | null = null
-  export let workspaceId = ""
+  export let workspaceId: string
   export let readonly = false
   export let isTenantOwner = false
 
