@@ -1165,6 +1165,9 @@ describe("BudibaseAI", () => {
     let envCleanup: () => void
     let cleanup: () => Promise<void> | void
 
+    const DEFAULT_BB_BASE_URL = "https://api.mistral.ai"
+    const DEFAULT_BB_CHAT_PATH = "/chat/completions"
+
     beforeAll(async () => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
@@ -1206,8 +1209,11 @@ describe("BudibaseAI", () => {
       jest.clearAllMocks()
     })
 
-    it("proxies the OpenAI response without reshaping", async () => {
-      mockChatGPTResponse("hello from openai")
+    it("proxies the provider response without reshaping", async () => {
+      mockChatGPTResponse("hello from mistral", {
+        baseUrl: DEFAULT_BB_BASE_URL,
+        path: DEFAULT_BB_CHAT_PATH,
+      })
 
       const response = await config.api.ai.openaiChatCompletions({
         model: "budibase/v1",
@@ -1216,13 +1222,16 @@ describe("BudibaseAI", () => {
       })
 
       expect(response.object).toBe("chat.completion")
-      expect(response.choices[0].message.content).toBe("hello from openai")
+      expect(response.choices[0].message.content).toBe("hello from mistral")
       expect(response.usage?.total_tokens).toBe(4)
     })
 
     it("ignores extra fields (e.g. response_format)", async () => {
       const format = z.object({ value: z.string() })
-      mockChatGPTResponse(`{"value":"ok"}`)
+      mockChatGPTResponse(`{"value":"ok"}`, {
+        baseUrl: DEFAULT_BB_BASE_URL,
+        path: DEFAULT_BB_CHAT_PATH,
+      })
 
       const response = await config.api.ai.openaiChatCompletions({
         model: "budibase/v1",
