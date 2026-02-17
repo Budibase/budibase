@@ -31,7 +31,7 @@ const getLegacyProviderClient = (
       })
     case "Anthropic":
       throw new Error(
-        "Legacy Anthropic is not supported in this path. Use AI Configs (LiteLLM-backed) instead."
+        "Legacy Anthropic is not supported in this path. Use AI Configs instead."
       )
     default:
       throw new Error(`Unsupported legacy provider: ${provider}`)

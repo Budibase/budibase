@@ -76,22 +76,31 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
       })
     : null
   const rejectFormat = opts?.rejectFormat
+  const bodyMatcher = (body: string) => {
+    const reqBody = parseJsonBody(body)
+    if (expectedFormat) {
+      return expectedFormat(reqBody)
+    }
+    if (rejectFormat) {
+      return "response_format" in reqBody
+    }
+    return !("response_format" in reqBody)
+  }
 
   const interceptor = pool.intercept({
     path: "/v1/chat/completions",
     method: "POST",
+    body: bodyMatcher,
   })
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
-  const scope = interceptor.reply(200, (reqOpts: any) => {
+  const scope = interceptor.reply(reqOpts => {
     const reqBody = parseJsonBody(reqOpts.body)
-    if (expectedFormat && !expectedFormat(reqBody)) {
+    if (rejectFormat) {
       return {
-        error: { message: "Unexpected response_format in request body" },
-      }
-    }
-    if (rejectFormat && "response_format" in reqBody) {
-      return {
-        error: { message: "Unexpected response_format in request body" },
+        statusCode: 400,
+        data: {
+          error: { message: "Unexpected response_format in request body" },
+        },
       }
     }
 
@@ -113,7 +122,12 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
       try {
         content = answer(prompt)
       } catch (e) {
-        return [500, "Internal Server Error"]
+        return {
+          statusCode: 500,
+          data: {
+            error: { message: "Internal Server Error" },
+          },
+        }
       }
     } else {
       content = answer
@@ -153,12 +167,14 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
       },
     }
 
-    return response
+    return {
+      statusCode: 200,
+      data: response,
+    }
   }) // Each mock call handles one request
 
-  if (opts?.times != null) {
-    scope.times(opts.times)
-  }
+  // ai-sdk retries 3 times
+  scope.times(3)
 }
 
 export const mockChatGPTStreamResponse = (content = "hi") => {
