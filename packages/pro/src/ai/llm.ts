@@ -124,7 +124,7 @@ export async function getLLMConfig(): Promise<LLMProviderConfig | undefined> {
 // the user has no LLM configuration it will return undefined. It's the caller's
 // responsibility to handle this case.
 export async function getLLM(
-  options?: LLMConfigOptions
+  options?: Omit<LLMConfigOptions, "model"> & { model?: string }
 ): Promise<LLM | undefined> {
   return await tracer.trace("getLLM", async span => {
     const { model, maxTokens } = options || {}
