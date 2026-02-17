@@ -15,7 +15,7 @@ import { generateText, streamText } from "ai"
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
 ) {
-  if (env.SELF_HOSTED) {
+  if (env.SELF_HOSTED && !env.isDev()) {
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
   const llm = await ai.getLLMOrThrow()
@@ -41,7 +41,7 @@ export async function getAIQuotaUsage(ctx: Ctx<void, AIQuotaUsageResponse>) {
 export async function chatCompletion(
   ctx: Ctx<ChatCompletionRequest, ChatCompletionResponse>
 ) {
-  if (env.SELF_HOSTED) {
+  if (env.SELF_HOSTED && !env.isDev()) {
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
 
