@@ -16,6 +16,10 @@
   const dispatch = createEventDispatcher()
   let modal: ModalRef | undefined
 
+  const showModal = () => {
+    modal?.show()
+  }
+
   async function confirmDeletion() {
     await deleteRows(selectedRows)
     modal?.hide()
@@ -26,7 +30,7 @@
   $: actionText = action.toLowerCase()
 </script>
 
-<Button icon="trash" warning quiet on:click={modal.show}>
+<Button icon="trash" warning quiet on:click={showModal}>
   {action}
   {selectedRows.length}
   {text}
