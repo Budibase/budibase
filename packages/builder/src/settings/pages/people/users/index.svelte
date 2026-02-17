@@ -219,7 +219,7 @@
           name: user.firstName ? user.firstName + " " + user.lastName : "",
           userGroups,
           workspaceRole: isWorkspaceOnly
-            ? user.roles?.[currentWorkspaceId] || Constants.Roles.BASIC
+            ? user.roles?.[currentWorkspaceId]
             : undefined,
           __selectable:
             role.value === Constants.BudibaseRoles.Owner ||
