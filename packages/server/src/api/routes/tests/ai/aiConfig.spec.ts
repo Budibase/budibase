@@ -1,6 +1,6 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { db, docIds } from "@budibase/backend-core"
+import { db, docIds, encryption } from "@budibase/backend-core"
 import {
   CustomAIProviderConfig,
   BUDIBASE_AI_PROVIDER_ID,
@@ -43,6 +43,18 @@ const mockLiteLLMProviders = () =>
         ],
       },
     ])
+
+const passwordMatch = (plain: string, encoded: string) => {
+  if (!encoded.startsWith("bbai_enc::")) {
+    throw new Error("Encoded password not properly configured.")
+  }
+
+  const matches = encryption.compare(
+    plain,
+    encoded.substring("bbai_enc::".length)
+  )
+  return matches
+}
 
 describe("BudibaseAI", () => {
   const config = new TestConfiguration()
@@ -103,9 +115,6 @@ describe("BudibaseAI", () => {
       expect(created._id).toBeDefined()
       expect(created.liteLLMModelId).toBe("model-1")
       expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
-      expect(
-        (await getPersistedConfigAI(created._id))?.credentialsFields.api_key
-      ).toBe(defaultRequest.credentialsFields?.api_key)
       expect(liteLLMScope.isDone()).toBe(true)
 
       const configsResponse = await config.api.ai.fetchConfigs()
@@ -114,10 +123,14 @@ describe("BudibaseAI", () => {
       expect(configsResponse[0].credentialsFields.api_key).toBe(
         PASSWORD_REPLACEMENT
       )
+
+      const persistedConfig = await getPersistedConfigAI(created._id)
       expect(
-        (await getPersistedConfigAI(configsResponse[0]._id))?.credentialsFields
-          .api_key
-      ).toBe(defaultRequest.credentialsFields?.api_key)
+        passwordMatch(
+          defaultRequest.credentialsFields!.api_key,
+          persistedConfig.credentialsFields!.api_key
+        )
+      ).toBeTrue()
     })
 
     it("sanitizes Budibase AI license key in API responses", async () => {
@@ -147,9 +160,13 @@ describe("BudibaseAI", () => {
 
       expect(liteLLMScope.isDone()).toBe(true)
       expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
+      const persistedConfig = await getPersistedConfigAI(created._id)
       expect(
-        (await getPersistedConfigAI(created._id))?.credentialsFields.api_key
-      ).toBe("license-key-1")
+        passwordMatch(
+          "license-key-1",
+          persistedConfig.credentialsFields.api_key
+        )
+      ).toBeTrue()
 
       const configsResponse = await config.api.ai.fetchConfigs()
       expect(configsResponse).toHaveLength(1)
@@ -195,8 +212,11 @@ describe("BudibaseAI", () => {
       expect(updated.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
 
       expect(
-        (await getPersistedConfigAI(updated._id))?.credentialsFields.api_key
-      ).toBe(defaultRequest.credentialsFields?.api_key)
+        passwordMatch(
+          defaultRequest.credentialsFields!.api_key,
+          (await getPersistedConfigAI(updated._id)).credentialsFields.api_key
+        )
+      ).toBeTrue()
 
       const storedConfig = await config.doInContext(
         config.getDevWorkspaceId(),
@@ -206,9 +226,12 @@ describe("BudibaseAI", () => {
             .get<CustomAIProviderConfig>(created._id!)
         }
       )
-      expect(storedConfig.credentialsFields.api_key).toBe(
-        defaultRequest.credentialsFields?.api_key
-      )
+      expect(
+        passwordMatch(
+          defaultRequest.credentialsFields!.api_key,
+          storedConfig.credentialsFields.api_key
+        )
+      ).toBeTrue()
 
       const configsResponse = await config.api.ai.fetchConfigs()
       expect(configsResponse).toHaveLength(1)
@@ -218,9 +241,12 @@ describe("BudibaseAI", () => {
       )
 
       expect(
-        (await getPersistedConfigAI(configsResponse[0]._id))?.credentialsFields
-          .api_key
-      ).toBe(defaultRequest.credentialsFields?.api_key)
+        passwordMatch(
+          defaultRequest.credentialsFields!.api_key,
+          (await getPersistedConfigAI(configsResponse[0]._id)).credentialsFields
+            .api_key
+        )
+      ).toBeTrue()
     })
 
     it("updates web search config without calling LiteLLM", async () => {
@@ -271,7 +297,9 @@ describe("BudibaseAI", () => {
             .tryGet<CustomAIProviderConfig>(created._id!)
         }
       )
-      expect(storedConfig?.webSearchConfig?.apiKey).toBe(newWebSearchApiKey)
+      expect(
+        passwordMatch(newWebSearchApiKey, storedConfig!.webSearchConfig!.apiKey)
+      ).toBeTrue()
     })
 
     it("deletes a custom config and syncs LiteLLM models", async () => {
@@ -376,7 +404,9 @@ describe("BudibaseAI", () => {
             .tryGet<CustomAIProviderConfig>(created._id!)
         }
       )
-      expect(storedConfig?.webSearchConfig?.apiKey).toBe(webSearchApiKey)
+      expect(
+        passwordMatch(webSearchApiKey, storedConfig!.webSearchConfig!.apiKey)
+      ).toBeTrue()
     })
   })
 
@@ -424,8 +454,11 @@ describe("BudibaseAI", () => {
       expect(created.liteLLMModelId).toBe("embed-model-1")
       expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
       expect(
-        (await getPersistedConfigAI(created._id))?.credentialsFields.api_key
-      ).toBe(defaultEmbeddingRequest.credentialsFields.api_key)
+        passwordMatch(
+          defaultEmbeddingRequest.credentialsFields.api_key,
+          (await getPersistedConfigAI(created._id)).credentialsFields.api_key
+        )
+      ).toBeTrue()
 
       expect(creationScope.isDone()).toBe(true)
       expect(embeddingValidationScope.isDone()).toBe(true)

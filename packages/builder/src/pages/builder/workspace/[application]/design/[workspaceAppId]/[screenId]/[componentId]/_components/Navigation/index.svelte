@@ -65,6 +65,19 @@
       notifications.error("Error updating navigation settings")
     }
   }
+
+  const updateBanner = async (key, value) => {
+    try {
+      let navigation = $nav
+      navigation.banner = {
+        ...(navigation.banner || {}),
+        [key]: value,
+      }
+      await nav.save(navigation)
+    } catch (error) {
+      notifications.error("Error updating navigation settings")
+    }
+  }
 </script>
 
 <Panel
@@ -249,6 +262,50 @@
             onChange={show => update("openLogoLinkInNewTab", show)}
           />
         {/if}
+      </div>
+    </DetailSummary>
+
+    <DetailSummary name="Banner" initiallyShow collapsible={false}>
+      <div class="settings">
+        <PropertyControl
+          label="Message"
+          control={DrawerBindableInput}
+          value={$nav.banner?.text}
+          onChange={text => updateBanner("text", text)}
+          {bindings}
+          props={{
+            updateOnChange: false,
+            placeholder: "Enter banner text",
+          }}
+        />
+        <PropertyControl
+          label="Background"
+          control={ColorPicker}
+          onChange={color => updateBanner("background", color)}
+          value={$nav.banner?.background}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Text color"
+          control={ColorPicker}
+          onChange={color => updateBanner("textColor", color)}
+          value={$nav.banner?.textColor}
+          props={{
+            spectrumTheme: $themeStore.theme,
+          }}
+        />
+        <PropertyControl
+          label="Text size (px)"
+          control={Stepper}
+          value={$nav.banner?.textSize}
+          onChange={size => updateBanner("textSize", size)}
+          props={{
+            updateOnChange: false,
+            placeholder: "12",
+          }}
+        />
       </div>
     </DetailSummary>
   {/if}

@@ -3,7 +3,6 @@ import {
   ChatCompletionRequest,
   ChatCompletionResponse,
   ImageContentTypes,
-  LLMStreamChunk,
 } from "@budibase/types"
 import { tracer } from "dd-trace"
 import { Readable } from "node:stream"
@@ -227,81 +226,5 @@ export class BudibaseAI extends LLM {
 
       return result
     })
-  }
-
-  protected async *chatCompletionStream(
-    request: LLMRequest
-  ): AsyncGenerator<LLMStreamChunk, void, unknown> {
-    if (env.SELF_HOSTED) {
-      yield* this.chatCompletionStreamSelfHost(request)
-    } else {
-      yield* this.chatCompletionStreamCloud(request)
-    }
-  }
-
-  protected async *chatCompletionStreamCloud(
-    request: LLMRequest
-  ): AsyncGenerator<LLMStreamChunk, void, unknown> {
-    const llm = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
-      model: this.model,
-      max_completion_tokens: this.maxTokens,
-    })
-    // @ts-expect-error - we're being cheeky and calling a protected method
-    yield* llm.chatCompletionStream(request)
-  }
-
-  protected async *chatCompletionStreamSelfHost(
-    request: LLMRequest
-  ): AsyncGenerator<LLMStreamChunk, void, unknown> {
-    // TODO: Implement streaming for self-hosted BudibaseAI
-    // For now, fall back to non-streaming and yield all at once
-    console.debug(
-      "[BudibaseAI] chatCompletionStreamSelfHost - Starting streaming (fallback to non-streaming)",
-      {
-        messagesCount: request.messages.length,
-      }
-    )
-
-    try {
-      const response = await this.chatCompletionSelfHost(request)
-
-      console.debug(
-        "[BudibaseAI] chatCompletionStreamSelfHost - Yielding response chunks",
-        {
-          responseMessagesCount: response.messages.length,
-          tokensUsed: response.tokensUsed,
-        }
-      )
-
-      // Yield the final message content if available
-      if (response.messages.length > 0) {
-        const lastMessage = response.messages[response.messages.length - 1]
-        if (lastMessage.content) {
-          yield {
-            type: "content",
-            content: lastMessage.content as string,
-          }
-        }
-      }
-
-      yield {
-        type: "done",
-        messages: response.messages,
-        tokensUsed: response.tokensUsed,
-      }
-    } catch (error: any) {
-      console.debug(
-        "[BudibaseAI] chatCompletionStreamSelfHost - Error occurred",
-        {
-          error: error.message,
-        }
-      )
-
-      yield {
-        type: "error",
-        content: error.message,
-      }
-    }
   }
 }
