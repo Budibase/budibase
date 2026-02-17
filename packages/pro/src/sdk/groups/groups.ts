@@ -15,7 +15,7 @@ import {
   User,
   UserGroup,
 } from "@budibase/types"
-import { GroupNameUnavailableError } from "../../api/errors"
+import { GroupNameUnavailableError } from "../../errors"
 import * as db from "../../db"
 import * as features from "../features"
 import * as quotas from "../quotas"
