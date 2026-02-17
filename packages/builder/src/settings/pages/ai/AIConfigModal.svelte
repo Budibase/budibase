@@ -51,7 +51,7 @@
           credentialsFields: {},
           webSearchConfig: undefined,
           reasoningEffort: undefined,
-          isDefault: undefined,
+          isDefault: !$aiConfigsStore.customConfigs.length,
         } satisfies RequiredKeys<CreateAIConfigRequest>)
   )
 

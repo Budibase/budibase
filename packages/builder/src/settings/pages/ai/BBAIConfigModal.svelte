@@ -37,6 +37,7 @@
         credentialsFields: {},
         webSearchConfig: undefined,
         reasoningEffort: undefined,
+        isDefault: !$aiConfigsStore.customConfigs.length,
       } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   $: isEdit = !!config

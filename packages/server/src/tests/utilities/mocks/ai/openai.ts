@@ -93,7 +93,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
     body: bodyMatcher,
   })
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
-  const scope = interceptor.reply(reqOpts => {
+  const scope = interceptor.reply<object>(reqOpts => {
     const reqBody = parseJsonBody(reqOpts.body)
     if (rejectFormat) {
       return {
