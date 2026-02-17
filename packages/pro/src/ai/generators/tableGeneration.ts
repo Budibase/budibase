@@ -38,7 +38,7 @@ export class TableGeneration {
   }
 
   static async init(delegates: Delegates) {
-    const llm = await getLLM({ model: "gpt-5-mini", maxTokens: 5000 })
+    const llm = await getLLM({ maxTokens: 5000 })
     if (!llm) {
       throw new HTTPError("LLM not available", 422)
     }
