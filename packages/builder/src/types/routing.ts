@@ -21,7 +21,9 @@ export const isRouteHREF = (href: string | RouteHREF): href is RouteHREF => {
 export const isSettingIcon = (
   icon: string | RouteIcon | undefined
 ): icon is RouteIcon => {
-  return typeof icon === "object" && icon && "component" in icon && "props" in icon
+  return (
+    typeof icon === "object" && icon && "component" in icon && "props" in icon
+  )
 }
 
 export interface RouteIcon {

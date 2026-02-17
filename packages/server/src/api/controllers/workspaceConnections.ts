@@ -91,15 +91,16 @@ export async function create(
 ) {
   const { body } = ctx.request
 
-  const newConnection: RequiredKeys<Omit<WorkspaceConnection, keyof Document>> = {
-    name: body.name,
-    type: body.type,
-    templateId: body.templateId,
-    templateVersion: body.templateVersion,
-    baseUrl: body.baseUrl,
-    auth: body.auth,
-    props: body.props,
-  }
+  const newConnection: RequiredKeys<Omit<WorkspaceConnection, keyof Document>> =
+    {
+      name: body.name,
+      type: body.type,
+      templateId: body.templateId,
+      templateVersion: body.templateVersion,
+      baseUrl: body.baseUrl,
+      auth: body.auth,
+      props: body.props,
+    }
 
   const connection = await sdk.connections.create(newConnection)
   ctx.status = 201
