@@ -545,6 +545,27 @@ function hasKeyCaseInsensitive(obj: Record<string, any>, key: string) {
   return Object.keys(obj).some(k => k.toLowerCase() === target)
 }
 
+function looksBlueColor(value: string) {
+  const raw = value.trim().toLowerCase()
+  if (!raw) {
+    return false
+  }
+  if (raw.includes("blue")) {
+    return true
+  }
+
+  const hex = raw.replace(/^#/, "")
+  if (!/^[0-9a-f]{6}$/.test(hex)) {
+    return false
+  }
+
+  const r = parseInt(hex.slice(0, 2), 16)
+  const g = parseInt(hex.slice(2, 4), 16)
+  const b = parseInt(hex.slice(4, 6), 16)
+
+  return b > 0 && b >= r && b >= g
+}
+
 async function runFeatureEvals(
   client: ApiClient,
   enabledFeatures: Set<EvalFeature>
@@ -855,10 +876,8 @@ async function runFeatureEvals(
       )
     }
 
-    const color = normalizeText(String(data.backgroundColor || ""))
-    const hasBlueSignal =
-      color.includes("blue") || color.includes("0000ff") || color.includes("#")
-    if (!hasBlueSignal) {
+    const color = String(data.backgroundColor || "")
+    if (!looksBlueColor(color)) {
       throw new Error(
         `Image extract backgroundColor is not recognizably blue: ${JSON.stringify(output.data)}`
       )
