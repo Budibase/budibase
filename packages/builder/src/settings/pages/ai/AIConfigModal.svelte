@@ -231,12 +231,18 @@
           placeholder={field.placeholder ?? undefined}
           helpText={field.tooltip ?? undefined}
         />
+      {:else if field.field_type === "password" || field.key.includes("key")}
+        <Input
+          bind:value={draft.credentialsFields[field.key]}
+          type="password"
+          autocomplete="new-password"
+          placeholder={field.placeholder ?? undefined}
+          helpText={field.tooltip ?? undefined}
+        />
       {:else}
         <Input
           bind:value={draft.credentialsFields[field.key]}
-          type={field.field_type === "password" || field.key.includes("key")
-            ? "password"
-            : "text"}
+          type="text"
           placeholder={field.placeholder ?? undefined}
           helpText={field.tooltip ?? undefined}
         />
