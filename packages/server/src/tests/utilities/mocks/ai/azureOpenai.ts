@@ -90,7 +90,9 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
     let prompt = ""
     if (isResponsesApi) {
       const input = reqBody && "input" in reqBody && reqBody.input
-      if (Array.isArray(input)) {
+      if (typeof input === "string") {
+        prompt = input
+      } else if (Array.isArray(input)) {
         const userMessage = input.find((item: any) => item.role === "user")
         const content = userMessage?.content
         if (Array.isArray(content)) {
