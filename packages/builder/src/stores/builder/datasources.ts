@@ -18,6 +18,7 @@ import {
   UIInternalDatasource,
 } from "@budibase/types"
 import { derived, get, Readable, Writable } from "svelte/store"
+import { restTemplates } from "./restTemplates"
 import { removeDatasourceQueries, saveQuery } from "./queries"
 import { tables } from "./tables"
 
@@ -183,7 +184,7 @@ export class DatasourceStore extends DerivedBudiStore<
         datasource.source === source &&
         (restTemplateId !== undefined
           ? datasource.restTemplateId === restTemplateId ||
-            datasource.restTemplate === restTemplateId
+            restTemplates.get(datasource.restTemplate)?.id === restTemplateId
           : true)
     ).length
   }

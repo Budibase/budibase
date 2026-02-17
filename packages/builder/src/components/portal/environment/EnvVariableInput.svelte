@@ -8,7 +8,9 @@
   import { environment, licensing } from "@/stores/portal"
   import CreateEditVariableModal from "./CreateEditVariableModal.svelte"
   import type { CreateEnvironmentVariableRequest } from "@budibase/types"
-  import { onMount } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   export let label: string = ""
   export let type: EnvDropdownType = "text"
@@ -29,6 +31,7 @@
   async function saveVariable(data: CreateEnvironmentVariableRequest) {
     await environment.createVariable(data)
     value = `{{ env.${data.name} }}`
+    dispatch("change", value)
     modal.hide()
   }
 

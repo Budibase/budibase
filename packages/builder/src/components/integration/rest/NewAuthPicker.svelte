@@ -223,7 +223,7 @@
         <div class="auth-empty">No connections match your search.</div>
       {:else}
         <div class="auth-section">
-          {#each sortedAuthOptions as option (option.authCfg._id)}
+          {#each sortedAuthOptions as option (option.connectionSourceId + ":" + option.authCfg._id)}
             {@const isSelected =
               authSourceId === option.connectionSourceId &&
               authConfigId === option.authCfg._id}

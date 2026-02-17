@@ -19,13 +19,17 @@
   import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
-  export let config: Omit<AIConfigResponse, "provider"> | undefined
-  export let provider: string | undefined
-  export let type: AIConfigType
+  interface Props {
+    config?: Omit<AIConfigResponse, "provider"> | undefined
+    provider?: string | undefined
+    type: AIConfigType
+  }
+
+  let { config = undefined, provider = undefined, type }: Props = $props()
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
-  let draft: AIConfigResponse =
+  let draft: AIConfigResponse = $state(
     config?._id && provider
       ? ({
           _id: config._id,
@@ -47,11 +51,13 @@
           webSearchConfig: undefined,
           reasoningEffort: undefined,
         } satisfies RequiredKeys<CreateAIConfigRequest>)
+  )
 
-  $: isEdit = !!config?._id
-  $: canSave = !!draft.name.trim() && !!draft.provider
-  $: typeLabel =
+  let isEdit = $derived(!!config?._id)
+  let canSave = $derived(!!draft.name.trim() && !!draft.provider)
+  let typeLabel = $derived(
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
+  )
 
   const reasoningEffortOptions = [
     { label: "Low", value: "low" },
@@ -59,19 +65,23 @@
     { label: "High", value: "high" },
   ]
 
-  $: providers = $aiConfigsStore.providers
+  let providers = $derived($aiConfigsStore.providers)
 
-  $: providerPlaceholder = !providers
-    ? "Loading providers..."
-    : providers.length
-      ? "Choose a provider"
-      : "No providers available"
+  let providerPlaceholder = $derived(
+    !providers
+      ? "Loading providers..."
+      : providers.length
+        ? "Choose a provider"
+        : "No providers available"
+  )
 
-  $: providersMap = providers?.reduce<Record<string, LLMProvider>>((acc, p) => {
-    acc[p.id] = p
-    return acc
-  }, {})
-  $: selectedProvider = providersMap?.[draft.provider]
+  let providersMap = $derived(
+    providers?.reduce<Record<string, LLMProvider>>((acc, p) => {
+      acc[p.id] = p
+      return acc
+    }, {})
+  )
+  let selectedProvider = $derived(providersMap?.[draft.provider])
 
   onMount(async () => {
     try {
@@ -152,15 +162,17 @@
   secondaryAction={deleteConfig}
   secondaryButtonWarning
 >
-  <div slot="header">
-    <Heading size="XS">
-      {#if isEdit}
-        Edit {draft.name}
-      {:else}
-        Add {typeLabel} configuration
-      {/if}
-    </Heading>
-  </div>
+  {#snippet header()}
+    <div>
+      <Heading size="XS">
+        {#if isEdit}
+          Edit {draft.name}
+        {:else}
+          Add {typeLabel} configuration
+        {/if}
+      </Heading>
+    </div>
+  {/snippet}
 
   <div class="row">
     <Label size="M">Name</Label>
