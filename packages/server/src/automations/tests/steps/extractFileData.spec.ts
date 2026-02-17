@@ -241,7 +241,9 @@ describe("test the extract file data action", () => {
   })
 
   it("should handle invalid JSON response from AI", async () => {
-    mockChatGPTResponse("This is not valid JSON - should cause parsing error")
+    mockChatGPTResponse("This is not valid JSON - should cause parsing error", {
+      times: 5,
+    })
     mockOpenAIFileUpload("file-id-789")
 
     let filename = await uploadTestFile("test-document.pdf")
