@@ -90,8 +90,8 @@
   ])
   const roleOptions = $derived(
     isTenantOwner
-    ? Constants.ExtendedBudibaseRoleOptions
-    : Constants.BudibaseRoleOptions
+      ? Constants.ExtendedBudibaseRoleOptions
+      : Constants.BudibaseRoleOptions
   )
   const disableFields = $derived(readonly || !!user?.scimInfo?.isSync)
   const disableRole = $derived(
@@ -99,14 +99,15 @@
   )
   const hasChanges = $derived(
     !!initialDraft &&
-    (draft.firstName !== initialDraft.firstName ||
-      draft.lastName !== initialDraft.lastName ||
-      draft.role !== initialDraft.role ||
-      draft.appRole !== initialDraft.appRole)
+      (draft.firstName !== initialDraft.firstName ||
+        draft.lastName !== initialDraft.lastName ||
+        draft.role !== initialDraft.role ||
+        draft.appRole !== initialDraft.appRole)
   )
   const hasRoleChanges = $derived(
     !!initialDraft &&
-    (draft.role !== initialDraft.role || draft.appRole !== initialDraft.appRole)
+      (draft.role !== initialDraft.role ||
+        draft.appRole !== initialDraft.appRole)
   )
 
   $effect(() => {
