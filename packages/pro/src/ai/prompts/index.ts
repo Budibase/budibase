@@ -74,6 +74,7 @@ export function extractFileData(
               file_id: fileIdOrDataUrl,
             },
           },
+          { type: "text", text: prompt },
         ]
       : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
 
