@@ -3,6 +3,7 @@ import { helpers } from "@budibase/shared-core"
 import { existsSync } from "fs"
 import { isAbsolute, resolve } from "path"
 import * as dotenv from "dotenv"
+import { execSync } from "child_process"
 
 type ProviderName = "BudibaseAI" | "OpenAI" | "AzureOpenAI"
 
@@ -21,6 +22,7 @@ interface Scenario {
   name: string
   enabled: boolean
   config: AIProviderConfig
+  bbaiMode?: BBAIMode
 }
 
 interface EvalResult {
@@ -28,6 +30,8 @@ interface EvalResult {
   ok: boolean
   detail?: string
 }
+
+type BBAIMode = "self" | "cloud"
 
 type EvalFeature =
   | "table-generation"
@@ -279,6 +283,64 @@ function parseProviderFilter() {
     .filter(Boolean)
 }
 
+function parseBBAIModeFilter(): BBAIMode[] {
+  const raw = process.env.AI_EVAL_BBAI_MODES
+  if (!raw) {
+    return ["self", "cloud"]
+  }
+
+  const modes = raw
+    .split(",")
+    .map(v => v.trim().toLowerCase())
+    .filter((v): v is BBAIMode => v === "self" || v === "cloud")
+
+  return modes.length > 0 ? modes : ["self", "cloud"]
+}
+
+function wait(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function waitForServerReady(baseUrl: string, timeoutMs = 120000) {
+  const normalizedBaseUrl = baseUrl.replace(/\/$/, "")
+  const startedAt = Date.now()
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const healthResponse = await fetch(`${normalizedBaseUrl}/health`, {
+        method: "GET",
+      })
+      if (healthResponse.status === 200) {
+        return
+      }
+    } catch {
+      // server is not reachable yet
+    }
+
+    await wait(1500)
+  }
+
+  throw new Error(
+    `Timed out waiting for server readiness at ${baseUrl} after ${timeoutMs}ms`
+  )
+}
+
+function switchBBAIMode(mode: BBAIMode) {
+  const repoRoot = resolve(__dirname, "../../..")
+  const command = mode === "self" ? "yarn mode:self" : "yarn mode:cloud"
+
+  console.log(yellow(`Switching Budibase mode: ${mode}`))
+  try {
+    execSync(command, {
+      cwd: repoRoot,
+      stdio: "ignore",
+    })
+  } catch (error: any) {
+    throw new Error(
+      `Failed to switch Budibase mode (${mode}) with '${command}': ${error?.message || String(error)}`
+    )
+  }
+}
+
 const ALL_FEATURES: EvalFeature[] = [
   "table-generation",
   "js-generation",
@@ -359,40 +421,53 @@ function shouldRunScenario(id: string, selected?: string[]) {
   return selected.includes(id.toLowerCase())
 }
 
-function shouldRunBBAI(selected?: string[]) {
+function shouldRunBBAIMode(mode: BBAIMode, selected?: string[]) {
   if (!selected || selected.length === 0) {
     return true
   }
-  return (
-    selected.includes("bbai") ||
-    selected.includes("bbai-cloud") ||
-    selected.includes("bbai-selfhost")
-  )
+  if (selected.includes("bbai")) {
+    return true
+  }
+
+  const aliases =
+    mode === "self"
+      ? ["bbai-self", "bbai-selfhost"]
+      : ["bbai-cloud", "bbai-cloudhost"]
+
+  return aliases.some(alias => selected.includes(alias))
 }
 
-function buildScenarios(selected?: string[]): Scenario[] {
+function buildScenarios(
+  selected: string[] | undefined,
+  bbaiModes: BBAIMode[]
+): Scenario[] {
   const openaiKey = process.env.OPENAI_API_KEY
   const azureKey = process.env.AZURE_OPENAI_API_KEY
   const azureBaseUrl = process.env.AZURE_OPENAI_BASE_URL
   const azureModel = process.env.AZURE_OPENAI_MODEL || "gpt-4.1"
 
+  const bbaiBaseConfig: AIProviderConfig = {
+    provider: "BudibaseAI",
+    name: "Eval BBAI",
+    isDefault: true,
+    active: true,
+    defaultModel:
+      process.env.BBAI_MODEL ||
+      process.env.BBAI_CLOUD_MODEL ||
+      process.env.BBAI_SELFHOST_MODEL ||
+      "gpt-5-mini",
+  }
+
+  const bbaiScenarios: Scenario[] = bbaiModes.map(mode => ({
+    id: mode === "self" ? "bbai-self" : "bbai-cloud",
+    name: mode === "self" ? "BBAI (selfhost mode)" : "BBAI (cloud mode)",
+    bbaiMode: mode,
+    enabled: shouldRunBBAIMode(mode, selected),
+    config: bbaiBaseConfig,
+  }))
+
   return [
-    {
-      id: "bbai",
-      name: "BBAI",
-      enabled: shouldRunBBAI(selected),
-      config: {
-        provider: "BudibaseAI",
-        name: "Eval BBAI",
-        isDefault: true,
-        active: true,
-        defaultModel:
-          process.env.BBAI_MODEL ||
-          process.env.BBAI_CLOUD_MODEL ||
-          process.env.BBAI_SELFHOST_MODEL ||
-          "gpt-5-mini",
-      },
-    },
+    ...bbaiScenarios,
     {
       id: "openai",
       name: "OpenAI",
@@ -914,12 +989,52 @@ async function runScenario(
   }
 }
 
+function printScenarioResult(result: {
+  skipped?: string
+  results: EvalResult[]
+}) {
+  if (result.skipped) {
+    console.log(yellow(`SKIPPED: ${result.skipped}`))
+    return
+  }
+
+  for (const item of result.results) {
+    if (item.ok) {
+      console.log(green(`PASS: ${item.name}`))
+    } else {
+      console.log(red(`FAIL: ${item.name}`))
+      if (item.detail) {
+        console.log(red(`  ${item.detail}`))
+      }
+    }
+  }
+}
+
+async function executeScenarioAndLog(
+  client: ApiClient,
+  scenario: Scenario,
+  displayName: string,
+  enabledFeatures: Set<EvalFeature>,
+  summary: Array<{
+    name: string
+    ok: boolean
+    skipped?: string
+    results: EvalResult[]
+  }>
+) {
+  console.log(section(`Provider: ${displayName}`))
+  const result = await runScenario(client, scenario, enabledFeatures)
+  summary.push({ name: displayName, ...result })
+  printScenarioResult(result)
+}
+
 async function main() {
   loadEvalEnvFile()
 
   const baseUrl = process.env.BUDIBASE_BASE_URL || "http://localhost:10000"
   const selected = parseProviderFilter()
-  const scenarios = buildScenarios(selected)
+  const bbaiModes = parseBBAIModeFilter()
+  const scenarios = buildScenarios(selected, bbaiModes)
   const globalFeatures = parseFeatureList(process.env.AI_EVAL_FEATURES)
 
   const client = new ApiClient(baseUrl)
@@ -933,26 +1048,23 @@ async function main() {
   }> = []
 
   for (const scenario of scenarios) {
-    console.log(section(`Provider: ${scenario.name}`))
+    if (scenario.bbaiMode && scenario.enabled) {
+      switchBBAIMode(scenario.bbaiMode)
+      console.log(
+        yellow(`Waiting for server readiness after mode:${scenario.bbaiMode}...`)
+      )
+      await waitForServerReady(baseUrl)
+      await client.init()
+    }
+
     const enabledFeatures = resolveFeatures(globalFeatures)
-    const result = await runScenario(client, scenario, enabledFeatures)
-    summary.push({ name: scenario.name, ...result })
-
-    if (result.skipped) {
-      console.log(yellow(`SKIPPED: ${result.skipped}`))
-      continue
-    }
-
-    for (const item of result.results) {
-      if (item.ok) {
-        console.log(green(`PASS: ${item.name}`))
-      } else {
-        console.log(red(`FAIL: ${item.name}`))
-        if (item.detail) {
-          console.log(red(`  ${item.detail}`))
-        }
-      }
-    }
+    await executeScenarioAndLog(
+      client,
+      scenario,
+      scenario.name,
+      enabledFeatures,
+      summary
+    )
   }
 
   const executed = summary.filter(s => !s.skipped)
