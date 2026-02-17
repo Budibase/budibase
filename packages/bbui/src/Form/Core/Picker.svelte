@@ -477,7 +477,7 @@
     flex: 1 1 auto;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: wrap;
+    white-space: nowrap;
   }
   .popover-content.auto-width .spectrum-Menu-item {
     padding-right: var(--spacing-xl);
