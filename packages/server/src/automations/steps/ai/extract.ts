@@ -9,6 +9,13 @@ import fetch from "node-fetch"
 import { Readable } from "stream"
 import * as automationUtils from "../../automationUtils"
 
+const EXTRACT_RETRY_ATTEMPTS = 5
+const EXTRACT_RETRY_DELAY_MS = 100
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 async function processUrlFile(
   fileUrl: string,
   fileType: string | undefined,
@@ -84,9 +91,44 @@ export async function run({
       fileIdOrDataUrl,
       llm.supportsFiles
     )
-    const llmResponse = await llm.prompt(request)
+    let data: Record<string, any> | any[] = []
+    let lastError: unknown
 
-    const data = await parseAIResponse(llmResponse)
+    for (let attempt = 1; attempt <= EXTRACT_RETRY_ATTEMPTS; attempt++) {
+      try {
+        const llmResponse = await llm.prompt(request)
+        data = await parseAIResponse(llmResponse)
+
+        const isEmptyArray = Array.isArray(data) && data.length === 0
+        if (!isEmptyArray || attempt === EXTRACT_RETRY_ATTEMPTS) {
+          break
+        }
+
+        console.warn(
+          `[Extract AI] Empty extraction result on attempt ${attempt}/${EXTRACT_RETRY_ATTEMPTS}, retrying...`
+        )
+      } catch (err) {
+        lastError = err
+        if (attempt === EXTRACT_RETRY_ATTEMPTS) {
+          console.error(
+            `[Extract AI] Final extraction attempt ${attempt}/${EXTRACT_RETRY_ATTEMPTS} failed:`,
+            err
+          )
+          throw err
+        }
+
+        console.warn(
+          `[Extract AI] Extraction attempt ${attempt}/${EXTRACT_RETRY_ATTEMPTS} failed, retrying...`,
+          err
+        )
+      }
+
+      await sleep(EXTRACT_RETRY_DELAY_MS)
+    }
+
+    if (lastError && Array.isArray(data) && data.length === 0) {
+      throw lastError
+    }
 
     return {
       data,
