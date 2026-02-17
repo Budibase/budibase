@@ -82,7 +82,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
       return expectedFormat(reqBody)
     }
     if (rejectFormat) {
-      return "response_format" in reqBody
+      return true
     }
     return !("response_format" in reqBody)
   }
@@ -95,7 +95,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
   const scope = interceptor.reply<object>(reqOpts => {
     const reqBody = parseJsonBody(reqOpts.body)
-    if (rejectFormat) {
+    if (rejectFormat && "response_format" in reqBody) {
       return {
         statusCode: 400,
         data: {
