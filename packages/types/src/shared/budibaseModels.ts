@@ -1,4 +1,4 @@
-export type BudibaseAIProvider = "openai" | "mistral"
+export type BudibaseAIProvider = "openai" | "openrouter"
 
 export interface BudibaseAIModel {
   id: string
@@ -10,9 +10,9 @@ export interface BudibaseAIModel {
 export const BUDIBASE_AI_MODELS: BudibaseAIModel[] = [
   {
     id: "budibase/v1",
-    provider: "mistral",
-    model: "mistral-large-latest",
-    label: "Mistral large",
+    provider: "openrouter",
+    model: "google/gemini-3-flash-preview",
+    label: "Gemini 3 Flash",
   },
 ]
 
