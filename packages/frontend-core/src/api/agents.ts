@@ -5,6 +5,10 @@ import {
   DuplicateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
+  SyncAgentDiscordCommandsRequest,
+  SyncAgentDiscordCommandsResponse,
+  ToggleAgentDiscordRequest,
+  ToggleAgentDiscordResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -28,6 +32,14 @@ export interface AgentEndpoints {
     agentId: string,
     fileId: string
   ) => Promise<{ deleted: true }>
+  syncAgentDiscordCommands: (
+    agentId: string,
+    body?: SyncAgentDiscordCommandsRequest
+  ) => Promise<SyncAgentDiscordCommandsResponse>
+  toggleAgentDiscordDeployment: (
+    agentId: string,
+    enabled: boolean
+  ) => Promise<ToggleAgentDiscordResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -90,6 +102,26 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   deleteAgentFile: async (agentId: string, fileId: string) => {
     return await API.delete({
       url: `/api/agent/${agentId}/files/${fileId}`,
+    })
+  },
+
+  syncAgentDiscordCommands: async (agentId: string, body) => {
+    return await API.post<
+      SyncAgentDiscordCommandsRequest | undefined,
+      SyncAgentDiscordCommandsResponse
+    >({
+      url: `/api/agent/${agentId}/discord/sync`,
+      body,
+    })
+  },
+
+  toggleAgentDiscordDeployment: async (agentId: string, enabled: boolean) => {
+    return await API.post<
+      ToggleAgentDiscordRequest,
+      ToggleAgentDiscordResponse
+    >({
+      url: `/api/agent/${agentId}/discord/toggle`,
+      body: { enabled },
     })
   },
 })

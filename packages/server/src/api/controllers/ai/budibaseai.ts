@@ -1,6 +1,7 @@
 import { env } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
+import { ai, quotas } from "@budibase/pro"
 import {
+  AIQuotaUsageResponse,
   ChatCompletionRequestV2,
   type ChatCompletionRequest,
   type ChatCompletionResponse,
@@ -14,7 +15,7 @@ import { generateText, streamText } from "ai"
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
 ) {
-  if (env.SELF_HOSTED) {
+  if (env.SELF_HOSTED && !env.isDev()) {
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
   const llm = await ai.getLLMOrThrow()
@@ -31,10 +32,16 @@ export async function uploadFile(
   }
 }
 
+export async function getAIQuotaUsage(ctx: Ctx<void, AIQuotaUsageResponse>) {
+  const usage = await quotas.getQuotaUsage()
+  const monthlyCredits = usage?.monthly?.current?.budibaseAICredits ?? 0
+  ctx.body = { monthlyCredits }
+}
+
 export async function chatCompletion(
   ctx: Ctx<ChatCompletionRequest, ChatCompletionResponse>
 ) {
-  if (env.SELF_HOSTED) {
+  if (env.SELF_HOSTED && !env.isDev()) {
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
 

@@ -1,9 +1,45 @@
 import { withEnv } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
+import {
+  mockChatGPTResponse,
+  mockChatGPTStreamResponse,
+} from "../../../../tests/utilities/mocks/ai/openai"
 import { createBBAIClient } from "./bbai"
 
+jest.mock("@budibase/types", () => {
+  const actual = jest.requireActual("@budibase/types")
+  return {
+    ...actual,
+    BUDIBASE_AI_MODEL_MAP: {
+      ...actual.BUDIBASE_AI_MODEL_MAP,
+      "budibase/gpt-5-mini": {
+        provider: "openai",
+        model: "gpt-5-mini",
+      },
+    },
+  }
+})
+
+jest.mock("@budibase/pro", () => {
+  const actual = jest.requireActual("@budibase/pro")
+  return {
+    ...actual,
+    quotas: {
+      ...actual.quotas,
+      incrementBudibaseAICredits: jest.fn(),
+    },
+  }
+})
+
 describe("createBBAIClient", () => {
+  const incrementCreditsMock =
+    quotas.incrementBudibaseAICredits as jest.MockedFunction<
+      typeof quotas.incrementBudibaseAICredits
+    >
+
   afterEach(() => {
     jest.restoreAllMocks()
+    jest.clearAllMocks()
   })
 
   it("rejects unsupported models", async () => {
@@ -23,20 +59,107 @@ describe("createBBAIClient", () => {
     })
   })
 
-  it("requires MISTRAL_BASE_URL for Mistral models", async () => {
+  it("requires an OpenRouter API key for OpenRouter models", async () => {
+    await withEnv({ BBAI_OPENROUTER_API_KEY: "" }, async () => {
+      await expect(createBBAIClient("budibase/v1")).rejects.toMatchObject({
+        status: 500,
+        message: "OPENROUTER API key not configured",
+      })
+    })
+  })
+
+  it("requires OPENROUTER_BASE_URL for OpenRouter models", async () => {
     await withEnv(
       {
-        BBAI_MISTRAL_API_KEY: "mistral-key",
-        MISTRAL_BASE_URL: "",
+        BBAI_OPENROUTER_API_KEY: "openrouter-key",
+        OPENROUTER_BASE_URL: "",
       },
       async () => {
-        await expect(
-          createBBAIClient("budibase/mistral-small-latest")
-        ).rejects.toMatchObject({
+        await expect(createBBAIClient("budibase/v1")).rejects.toMatchObject({
           status: 500,
-          message: "MISTRAL_BASE_URL not configured",
+          message: "OPENROUTER_BASE_URL not configured",
         })
       }
     )
+  })
+
+  it("increments credits for generate calls", async () => {
+    mockChatGPTResponse("hello world")
+
+    await withEnv(
+      {
+        BBAI_OPENROUTER_API_KEY: "openrouter-key",
+        OPENROUTER_BASE_URL: "https://api.openai.com/v1",
+      },
+      async () => {
+        const { chat } = await createBBAIClient("budibase/v1")
+        await chat.doGenerate({
+          prompt: [
+            {
+              role: "user",
+              content: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+      }
+    )
+
+    expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
+    expect(incrementCreditsMock).toHaveBeenCalledWith(7)
+  })
+
+  it("increments credits for stream calls", async () => {
+    mockChatGPTStreamResponse("Hello user. How are you today?")
+
+    await withEnv(
+      {
+        BBAI_OPENROUTER_API_KEY: "openrouter-key",
+        OPENROUTER_BASE_URL: "https://api.openai.com/v1",
+      },
+      async () => {
+        const { chat } = await createBBAIClient("budibase/v1")
+        const result = await chat.doStream({
+          prompt: [
+            {
+              role: "user",
+              content: [{ type: "text", text: "hi bbai!" }],
+            },
+          ],
+        })
+
+        const reader = result.stream.getReader()
+
+        for (
+          let next = await reader.read();
+          !next.done;
+          next = await reader.read()
+        ) {
+          // Read all stream
+        }
+        reader.releaseLock()
+      }
+    )
+
+    expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
+    expect(incrementCreditsMock).toHaveBeenCalledWith(20)
+  })
+
+  it("increments credits for OpenAI models", async () => {
+    mockChatGPTResponse("hello world")
+
+    await withEnv({ BBAI_OPENAI_API_KEY: "openai-key" }, async () => {
+      const { chat } = await createBBAIClient("budibase/gpt-5-mini")
+      await chat.doGenerate({
+        prompt: [
+          {
+            role: "user",
+            content: [{ type: "text", text: "hello" }],
+          },
+        ],
+      })
+    })
+
+    expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
+    expect(incrementCreditsMock).toHaveBeenCalledWith(7)
   })
 })

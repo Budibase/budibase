@@ -1,6 +1,7 @@
 export * as agents from "./agents"
 export * as chatApps from "./chatApps"
 export * as configs from "./configs"
+export * as deployments from "./deployments"
 export * as helpers from "./helpers"
 export * as rag from "./rag"
 export * as vectorDb from "./vectorDb"

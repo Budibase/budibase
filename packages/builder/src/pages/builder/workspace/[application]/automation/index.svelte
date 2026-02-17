@@ -34,16 +34,21 @@
     PublishResourceState,
     WorkspaceResource,
   } from "@budibase/types"
-  import { redirect, url } from "@roxi/routify"
+  import { goto as gotoStore, url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import NoResults from "../_components/NoResults.svelte"
   import { appsStore, featureFlags } from "@/stores/portal"
+  import { onMount } from "svelte"
 
   $url
-  $redirect
+  $: goto = $gotoStore
 
-  $: $featureFlags[FeatureFlag.WORKSPACE_HOME] && $redirect("../home")
+  onMount(() => {
+    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+      goto("../home?type=automation")
+    }
+  })
 
   let showHighlight = true
   let createModal: ModalAPI

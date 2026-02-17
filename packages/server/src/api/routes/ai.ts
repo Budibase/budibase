@@ -1,6 +1,8 @@
 import * as ai from "../controllers/ai"
 import {
   createAgentValidator,
+  syncAgentDiscordCommandsValidator,
+  toggleAgentDiscordDeploymentValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 import {
@@ -22,6 +24,16 @@ builderAdminRoutes
   .put("/api/agent", updateAgentValidator(), ai.updateAgent)
   .post("/api/agent/:agentId/duplicate", ai.duplicateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
+  .post(
+    "/api/agent/:agentId/discord/sync",
+    syncAgentDiscordCommandsValidator(),
+    ai.syncAgentDiscordCommands
+  )
+  .post(
+    "/api/agent/:agentId/discord/toggle",
+    toggleAgentDiscordDeploymentValidator(),
+    ai.toggleAgentDiscordDeployment
+  )
   .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
@@ -47,4 +59,5 @@ licensedRoutes
   /** @deprecated Use the openai compatible /api/ai/chat/completions instead */
   .post("/api/ai/chat", ai.chatCompletion)
   .post("/api/ai/chat/completions", ai.chatCompletionV2)
+  .get("/api/ai/quotas", ai.getAIQuotaUsage)
   .post("/api/ai/upload-file", ai.uploadFile)

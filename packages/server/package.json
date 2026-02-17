@@ -32,6 +32,7 @@
     "dev:stack:nuke": "node scripts/dev/manage.js nuke",
     "dev": "yarn run dev:stack:up && nodemon",
     "dev:built": "yarn run dev:stack:up && yarn run run:docker",
+    "ai:evals": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" ts-node --transpileOnly -r tsconfig-paths/register ./scripts/ai-refactor-evals.ts",
     "specs": "ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts"
   },
   "keywords": [
@@ -40,8 +41,8 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.1",
-    "@ai-sdk/provider": "^3.0.1",
+    "@ai-sdk/openai": "^3.0.26",
+    "@ai-sdk/provider": "^3.0.8",
     "@anthropic-ai/sdk": "^0.27.3",
     "@apidevtools/swagger-parser": "12.1.0",
     "@aws-sdk/client-dynamodb": "3.709.0",
