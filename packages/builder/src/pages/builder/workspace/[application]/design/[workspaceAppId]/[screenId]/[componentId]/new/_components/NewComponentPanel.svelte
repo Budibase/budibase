@@ -37,7 +37,9 @@
     $selectedScreen,
     $selectedComponent
   )
-  $: structure = getComponentStructure({ chatbox: $featureFlags.AI_AGENTS })
+  $: structure = getComponentStructure({
+    chatbox: $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT,
+  })
   $: enrichedStructure = enrichStructure(
     structure,
     $componentStore.components,
