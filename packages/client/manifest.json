@@ -9608,7 +9608,8 @@
       {
         "type": "boolean",
         "label": "Show controls",
-        "key": "showButtons"
+        "key": "showButtons",
+        "defaultValue": true
       },
       {
         "type": "text",
