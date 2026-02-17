@@ -1,5 +1,6 @@
 import {
   context,
+  features,
   docIds,
   getErrorMessage,
   HTTPError,
@@ -16,6 +17,7 @@ import {
   DocumentType,
   FetchAgentHistoryResponse,
   ContextUser,
+  FeatureFlag,
   UserCtx,
 } from "@budibase/types"
 import {
@@ -161,9 +163,10 @@ export async function discordChat({
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
+  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
 
   const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
-  if (hasRagConfig && latestQuestion) {
+  if (ragEnabled && hasRagConfig && latestQuestion) {
     try {
       const result = await retrieveContextForAgent(agent, latestQuestion)
       retrievedContext = result.text
@@ -326,9 +329,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
+  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
 
   const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
-  if (hasRagConfig && latestQuestion) {
+  if (ragEnabled && hasRagConfig && latestQuestion) {
     try {
       const result = await retrieveContextForAgent(agent, latestQuestion)
       retrievedContext = result.text
