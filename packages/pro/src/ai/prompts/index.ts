@@ -37,7 +37,8 @@ export function summarizeText(text: string, length?: SummariseLength) {
 
 export function extractFileData(
   schema: Record<string, any>,
-  fileIdOrDataUrl: string
+  fileIdOrDataUrl: string,
+  supportsFile: boolean
 ) {
   if (typeof fileIdOrDataUrl !== "string" || !fileIdOrDataUrl.trim()) {
     throw new Error("Invalid file reference returned from uploadFile")
@@ -65,7 +66,16 @@ export function extractFileData(
         },
         { type: "text", text: prompt },
       ]
-    : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
+    : supportsFile
+      ? [
+          {
+            type: "file",
+            file: {
+              file_id: fileIdOrDataUrl,
+            },
+          },
+        ]
+      : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
 
   // We create a structured zod schema from the user object
   const zodSchema = createZodSchemaFromRecord(schema)

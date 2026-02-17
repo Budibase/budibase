@@ -93,7 +93,7 @@ export type AIColumnSchema =
   | SearchWebSchema
 
 export interface LLMConfigOptions {
-  model?: string
+  model: string
   apiKey?: string
   maxTokens?: number
   max_completion_tokens?: number
