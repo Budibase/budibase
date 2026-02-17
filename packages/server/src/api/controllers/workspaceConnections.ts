@@ -8,6 +8,8 @@ import {
   RestAuthType,
   UpdateWorkspaceConnectionRequest,
   PASSWORD_REPLACEMENT,
+  RequiredKeys,
+  Document,
 } from "@budibase/types"
 import { findHBSBlocks } from "@budibase/string-templates"
 
@@ -89,7 +91,7 @@ export async function create(
 ) {
   const { body } = ctx.request
 
-  const newConnection = {
+  const newConnection: RequiredKeys<Omit<WorkspaceConnection, keyof Document>> = {
     name: body.name,
     type: body.type,
     templateId: body.templateId,

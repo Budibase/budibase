@@ -21,17 +21,17 @@ export const isRouteHREF = (href: string | RouteHREF): href is RouteHREF => {
 export const isSettingIcon = (
   icon: string | RouteIcon | undefined
 ): icon is RouteIcon => {
-  return typeof icon === "object" && icon && "comp" in icon && "props" in icon
+  return typeof icon === "object" && icon && "component" in icon && "props" in icon
 }
 
 export interface RouteIcon {
   props: Record<string, any>
-  comp: Component<any>
+  component: Component<any>
 }
 
 export interface Route {
   path?: string
-  comp?: Component<any>
+  component?: Component<any>
   routes?: Route[]
   section?: string
   title?: string
@@ -91,9 +91,9 @@ export const flatten = (
     let nav: Route[] = []
 
     if (entry.routes) {
-      // Navigation sibling pages at this level - should have a comp defined
+      // Navigation sibling pages at this level - should have a component defined
       // Exclude routes with skipNav: true
-      const pageSiblings = entry.routes.filter(r => r.comp && !r.skipNav)
+      const pageSiblings = entry.routes.filter(r => r.component && !r.skipNav)
 
       // Build nav only if there is more than one sibling page
       nav =
@@ -125,11 +125,11 @@ export const flatten = (
     }
 
     // Presense of a component means that this is a renderable page
-    if (entry.comp) {
+    if (entry.component) {
       const { regex, keys } = buildRoute(currentPath)
 
       acc.push({
-        comp: entry.comp,
+        component: entry.component,
         regex,
         keys,
         path: currentPath,

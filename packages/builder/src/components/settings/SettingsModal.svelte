@@ -111,7 +111,7 @@
   }
 
   const navItemClick = (route: Route) => {
-    const { routes, comp } = route
+    const { routes, component } = route
     let path
 
     // Handle urls
@@ -125,7 +125,7 @@
       return
     }
 
-    if (comp) {
+    if (component) {
       // If there's a component at the section level, render it
       path = route.path
     } else if (routes?.length) {
@@ -217,7 +217,7 @@
                       {#if route.icon && isSettingIcon(route.icon)}
                         <div class="custom-icon">
                           <svelte:component
-                            this={route.icon.comp}
+                            this={route.icon.component}
                             {...route.icon.props}
                           />
                         </div>

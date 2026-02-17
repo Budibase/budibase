@@ -30,7 +30,7 @@
   $: data = (config as Partial<OAuth2Config>) ?? {}
 
   $: data.grantType ??= OAuth2GrantType.CLIENT_CREDENTIALS
-  $: data.audience ??= "bbdemo"
+  $: data.audience ??= ""
 
   $: isCreation = !config
   $: title = isCreation
