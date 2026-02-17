@@ -81,9 +81,7 @@ const removeDatasourceTablesMock = vi.mocked(
 )
 const removeDatasourceQueriesMock = vi.mocked(removeDatasourceQueries)
 
-const makeDatasource = (
-  overrides: Partial<Datasource> = {}
-): Datasource => ({
+const makeDatasource = (overrides: Partial<Datasource> = {}): Datasource => ({
   _id: "datasource_1",
   _rev: "1-abc",
   type: "datasource",
@@ -289,9 +287,7 @@ describe("DatasourceStore", () => {
     })
 
     it("appends count suffix when datasources of the same type exist", async () => {
-      setRawList([
-        makeDatasource({ _id: "ds1", source: SourceName.REST }),
-      ])
+      setRawList([makeDatasource({ _id: "ds1", source: SourceName.REST })])
       validateDatasourceMock.mockResolvedValue({ connected: true })
       createDatasourceMock.mockResolvedValue({
         datasource: makeDatasource({ _id: "ds_new", name: "REST API 2" }),
