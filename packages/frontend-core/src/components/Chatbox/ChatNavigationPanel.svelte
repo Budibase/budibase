@@ -144,7 +144,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #6a9bcc;
+    background: var(--spectrum-semantic-cta-color-background-default);
     color: var(--spectrum-global-color-gray-50);
   }
 
@@ -154,7 +154,7 @@
   }
 
   .new-chat:hover .new-chat-icon {
-    background: #5c8dbf;
+    background: var(--spectrum-semantic-cta-color-background-hover);
   }
 
   .list-item {

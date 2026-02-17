@@ -203,7 +203,10 @@
               class="chat-empty-card"
               class:chat-empty-card-single={visibleAgentList.length === 1}
               on:click={() => selectAgent(agent.agentId)}
-              style={`--agent-icon-color:${agent.iconColor || "#6366F1"};`}
+              style={`--agent-icon-color:${
+                agent.iconColor ||
+                "var(--spectrum-semantic-cta-color-background-default)"
+              };`}
             >
               <div class="chat-empty-card-head">
                 <div class="chat-empty-card-icon">
@@ -265,7 +268,7 @@
     line-height: 17px;
     letter-spacing: 0;
     font-weight: 400;
-    color: white;
+    color: var(--spectrum-alias-text-color);
   }
 
   .delete-button-content {
@@ -286,7 +289,7 @@
   }
 
   .chat-empty-greeting :global(p) {
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--spectrum-alias-text-color);
     font-size: 28px;
     line-height: 34px;
   }
@@ -299,15 +302,15 @@
     padding: 10px;
     padding-left: 20px;
     border-radius: 999px;
-    background: #2b2b2b;
-    color: var(--spectrum-global-color-gray-100);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--spectrum-alias-background-color-secondary);
+    color: var(--spectrum-alias-text-color);
+    border: 1px solid var(--spectrum-alias-border-color);
   }
 
   .chat-empty-input-field {
     flex: 1;
     font-size: 16px;
-    color: white;
+    color: var(--spectrum-alias-text-color);
     background: transparent;
     border: none;
     outline: none;
@@ -315,15 +318,15 @@
   }
 
   .chat-empty-input-field::placeholder {
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-alias-text-color-disabled);
   }
 
   .chat-empty-input-action {
     width: 32px;
     height: 32px;
     border-radius: 999px;
-    background: #8cb4f0;
-    color: #101828;
+    background: var(--spectrum-semantic-cta-color-background-default);
+    color: var(--spectrum-global-color-gray-50);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -337,6 +340,10 @@
     cursor: not-allowed;
   }
 
+  .chat-empty-input-action:hover {
+    background: var(--spectrum-semantic-cta-color-background-hover);
+  }
+
   .chat-empty-grid {
     display: flex;
     flex-direction: row;
@@ -347,12 +354,12 @@
   }
 
   .chat-empty-card {
-    border: 1px solid var(--spectrum-global-color-gray-200);
+    border: 1px solid var(--spectrum-alias-border-color);
     width: 240px;
     border-radius: 16px;
     padding: 0;
     background: var(--spectrum-alias-background-color-primary);
-    color: var(--spectrum-global-color-gray-800);
+    color: var(--spectrum-alias-text-color);
     font: inherit;
     cursor: pointer;
     text-align: left;
@@ -365,7 +372,7 @@
   }
 
   .chat-empty-card:hover {
-    border-color: var(--spectrum-global-color-gray-300);
+    border-color: var(--spectrum-alias-border-color-hover);
     transform: translateY(calc(var(--card-offset, 0px) - 3px))
       rotate(var(--card-rotation, 0deg));
   }
@@ -390,9 +397,9 @@
     align-items: center;
     gap: var(--spacing-s);
     padding: var(--spacing-m);
-    background-color: #080808;
-    color: white;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    background-color: var(--spectrum-alias-background-color-secondary);
+    color: var(--spectrum-alias-text-color);
+    border-bottom: 1px solid var(--spectrum-alias-border-color);
   }
 
   .chat-empty-card-icon {

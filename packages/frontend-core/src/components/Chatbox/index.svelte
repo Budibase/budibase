@@ -733,7 +733,7 @@
   .message.user {
     border-radius: 8px;
     align-self: flex-end;
-    background-color: #215f9e33;
+    background-color: var(--spectrum-alias-background-color-secondary);
     font-size: 14px;
     color: var(--spectrum-global-color-gray-800);
   }
@@ -783,7 +783,7 @@
   }
 
   .input:focus {
-    border: 1px solid #215f9e33 !important;
+    border: 1px solid var(--spectrum-alias-border-color-mouse-focus) !important;
   }
 
   .input::placeholder {
