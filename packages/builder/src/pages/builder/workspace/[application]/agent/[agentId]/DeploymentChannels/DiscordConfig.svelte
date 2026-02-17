@@ -166,8 +166,22 @@
 <div class="discord-config">
   <div class="field-grid">
     <Input label="Application ID" bind:value={draft.applicationId} />
-    <Input label="Public key" type="password" bind:value={draft.publicKey} />
-    <Input label="Bot token" type="password" bind:value={draft.botToken} />
+    <div class="secret-input">
+      <Input
+        label="Public key"
+        type="text"
+        autocomplete="new-password"
+        bind:value={draft.publicKey}
+      />
+    </div>
+    <div class="secret-input">
+      <Input
+        label="Bot token"
+        type="text"
+        autocomplete="new-password"
+        bind:value={draft.botToken}
+      />
+    </div>
     <Input label="Guild ID" bind:value={draft.guildId} />
     <Input
       label="Idle timeout (minutes)"
@@ -251,6 +265,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+  }
+
+  .secret-input :global(input) {
+    -webkit-text-security: disc;
   }
 
   .status-light :global(.spectrum-StatusLight) {
