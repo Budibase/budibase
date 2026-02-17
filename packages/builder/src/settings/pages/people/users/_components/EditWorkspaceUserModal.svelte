@@ -22,8 +22,12 @@
     appRole: string
   }
 
+  interface WorkspaceUser extends User {
+    workspaceRole?: string
+  }
+
   interface Props {
-    user?: User | null
+    user?: WorkspaceUser | null
     workspaceId: string
     readonly?: boolean
     isTenantOwner?: boolean
@@ -75,6 +79,9 @@
           "var(--spectrum-global-color-static-magenta-400)",
       }))
   )
+  const hasGroupMembership = $derived(
+    Array.isArray(user?.userGroups) && user.userGroups.length > 0
+  )
   const endUserRoleOptions = $derived([
     {
       label: "Basic user",
@@ -86,6 +93,15 @@
       value: Constants.Roles.ADMIN,
       color: roleColorLookup[Constants.Roles.ADMIN],
     },
+    ...(hasGroupMembership
+      ? [
+          {
+            label: "Controlled by group",
+            value: Constants.Roles.GROUP,
+            color: roleColorLookup[Constants.Roles.GROUP],
+          },
+        ]
+      : []),
     ...customEndUserRoleOptions,
   ])
   const roleOptions = $derived(
@@ -119,6 +135,9 @@
   })
 
   const sanitizeAppRole = (appRole: string) => {
+    if (appRole === Constants.Roles.GROUP && !hasGroupMembership) {
+      return Constants.Roles.BASIC
+    }
     const rolesLoaded = ($roles || []).length > 0
     if (
       rolesLoaded &&
@@ -129,9 +148,13 @@
     return appRole
   }
 
-  const createDraft = (user: User): UserDraft => {
+  const createDraft = (user: WorkspaceUser): UserDraft => {
     const role = users.getUserRole(user)
-    const appRole = user.roles?.[workspaceId] || Constants.Roles.BASIC
+    const appRole =
+      user.roles?.[workspaceId] ||
+      (user.workspaceRole === Constants.Roles.GROUP
+        ? Constants.Roles.GROUP
+        : Constants.Roles.BASIC)
     return {
       firstName: user.firstName || "",
       lastName: user.lastName || "",
@@ -172,6 +195,9 @@
       return Constants.Roles.ADMIN
     }
     if (role === Constants.BudibaseRoles.AppUser) {
+      if (appRole === Constants.Roles.GROUP) {
+        return undefined
+      }
       return appRole || Constants.Roles.BASIC
     }
     return Constants.Roles.BASIC
@@ -207,11 +233,15 @@
         const desiredWorkspaceRole = getWorkspaceRole(draft.role, appRole)
         const currentWorkspaceRole = updated.roles?.[workspaceId]
         if (currentWorkspaceRole !== desiredWorkspaceRole) {
-          await users.addUserToWorkspace(
-            user._id,
-            desiredWorkspaceRole,
-            updated._rev
-          )
+          if (desiredWorkspaceRole) {
+            await users.addUserToWorkspace(
+              user._id,
+              desiredWorkspaceRole,
+              updated._rev
+            )
+          } else {
+            await users.removeUserFromWorkspace(user._id, updated._rev)
+          }
         }
       }
 

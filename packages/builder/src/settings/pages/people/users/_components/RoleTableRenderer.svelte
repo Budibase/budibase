@@ -41,11 +41,22 @@
         ? `${role.label}: ${getWorkspaceRoleLabel(row.workspaceRole, $roles)}`
         : getWorkspaceRoleLabel(row.workspaceRole, $roles)
       : role?.label || "Not available"
+  $: groupUserValue = row?.workspaceRoleGroupRole
+    ? `Group user: ${getWorkspaceRoleLabel(row.workspaceRoleGroupRole, $roles)}`
+    : "Group user"
   $: tooltip = role?.subtitle || ""
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<div on:click|stopPropagation title={tooltip}>
-  {value}
-</div>
+{#if row?.workspaceRole === Constants.Roles.GROUP}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <div on:click|stopPropagation title={groupUserValue}>
+    {groupUserValue}
+  </div>
+{:else}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <div on:click|stopPropagation title={tooltip}>
+    {value}
+  </div>
+{/if}

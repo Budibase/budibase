@@ -33,7 +33,7 @@
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import EditWorkspaceUserModal from "./_components/EditWorkspaceUserModal.svelte"
   import { get } from "svelte/store"
-  import { Constants, Utils, fetchData } from "@budibase/frontend-core"
+  import { Constants, RoleUtils, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { OnboardingType } from "@/constants"
   import { sdk } from "@budibase/shared-core"
@@ -59,6 +59,7 @@
     apps: string[]
     access: number
     workspaceRole?: string
+    workspaceRoleGroupRole?: string
   }
 
   export let workspaceOnly: boolean
@@ -214,12 +215,35 @@
         const role = Constants.ExtendedBudibaseRoleOptions.find(
           x => x.value === users.getUserRole(user)
         )!
+        const workspaceRoleFromUser = currentWorkspaceId
+          ? user.roles?.[currentWorkspaceId]
+          : undefined
+        const workspaceRoleGroupRoles =
+          isWorkspaceOnly && currentWorkspaceId
+            ? userGroups
+                .filter(group => group.roles?.[currentWorkspaceId])
+                .map(group => group.roles?.[currentWorkspaceId])
+                .filter(Boolean)
+                .sort((roleA, roleB) => {
+                  const priorityA = RoleUtils.getRolePriority(roleA)
+                  const priorityB = RoleUtils.getRolePriority(roleB)
+                  if (priorityA !== priorityB) {
+                    return priorityB - priorityA
+                  }
+                  return `${roleA}`.localeCompare(`${roleB}`)
+                })
+            : []
+        const workspaceRoleGroupRole = workspaceRoleGroupRoles[0]
+        const workspaceRole =
+          workspaceRoleFromUser ||
+          (workspaceRoleGroupRole ? Constants.Roles.GROUP : undefined)
         return {
           ...user,
           name: user.firstName ? user.firstName + " " + user.lastName : "",
           userGroups,
-          workspaceRole: isWorkspaceOnly
-            ? user.roles?.[currentWorkspaceId]
+          workspaceRole: isWorkspaceOnly ? workspaceRole : undefined,
+          workspaceRoleGroupRole: isWorkspaceOnly
+            ? workspaceRoleGroupRole
             : undefined,
           __selectable:
             role.value === Constants.BudibaseRoles.Owner ||
