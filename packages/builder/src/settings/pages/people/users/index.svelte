@@ -397,30 +397,73 @@
   const deleteUsers = async () => {
     try {
       let ids = selectedRows.map(user => user._id)
-      if (ids.includes(get(auth).user?._id)) {
-        notifications.error("You cannot delete yourself")
-        return
-      }
 
       if (selectedRows.some(u => u.scimInfo?.isSync)) {
         notifications.error("You cannot remove users created via your AD")
         return
       }
 
-      if (ids.length > 0) {
-        await users.bulkDelete(
-          selectedRows.map(user => ({
-            userId: user._id!,
-            email: user.email,
-          }))
+      if (isWorkspaceOnly) {
+        if (!currentWorkspaceId) {
+          notifications.error("Workspace not found")
+          return
+        }
+
+        const settled = await Promise.allSettled(
+          selectedRows.map(async user => {
+            if (!user._id) {
+              throw new Error("User ID missing")
+            }
+
+            let rev = user._rev
+            if (!rev) {
+              const fullUser = await users.get(user._id)
+              rev = fullUser?._rev
+            }
+            if (!rev) {
+              throw new Error("User revision missing")
+            }
+
+            await users.removeUserFromWorkspace(user._id, rev)
+          })
+        )
+        const failed = settled.filter(result => result.status === "rejected")
+        const removed = selectedRows.length - failed.length
+
+        if (removed > 0) {
+          notifications.success(`Successfully removed ${removed} users`)
+        }
+        if (failed.length > 0) {
+          notifications.error("Error removing some users from workspace")
+        }
+      } else {
+        if (ids.includes(get(auth).user?._id)) {
+          notifications.error("You cannot delete yourself")
+          return
+        }
+
+        if (ids.length > 0) {
+          await users.bulkDelete(
+            selectedRows.map(user => ({
+              userId: user._id!,
+              email: user.email,
+            }))
+          )
+        }
+
+        notifications.success(
+          `Successfully deleted ${selectedRows.length} users`
         )
       }
 
-      notifications.success(`Successfully deleted ${selectedRows.length} users`)
       selectedRows = []
       await refreshUserList()
     } catch (error) {
-      notifications.error("Error deleting users")
+      notifications.error(
+        isWorkspaceOnly
+          ? "Error removing users from workspace"
+          : "Error deleting users"
+      )
     }
   }
 
@@ -506,6 +549,7 @@
         {#if selectedRows.length > 0}
           <DeleteRowsButton
             item="user"
+            action={isWorkspaceOnly ? "Remove" : "Delete"}
             on:updaterows
             selectedRows={[...selectedRows]}
             deleteRows={deleteUsers}
