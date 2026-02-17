@@ -460,10 +460,7 @@ function shouldRunProviderMode(
     return true
   }
 
-  const modeAliases = mode === "self" ? ["self", "selfhost"] : ["cloud"]
-  const aliases = modeAliases.map(alias => `${providerId}-${alias}`)
-
-  return aliases.some(alias => selected.includes(alias))
+  return selected.includes(`${providerId}-${mode}`)
 }
 
 function buildScenarios(
