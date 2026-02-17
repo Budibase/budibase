@@ -624,14 +624,8 @@ async function runFeatureEvals(
       }
     )
 
-    if (!response.code || !response.code.includes("42")) {
+    if (!response.code || !new RegExp(/^return 42;?$/).test(response.code)) {
       throw new Error(`Unexpected JS output: ${response.code}`)
-    }
-    if (response.code.includes("```")) {
-      throw new Error("JS output should not include markdown fences")
-    }
-    if (!response.code.includes("return")) {
-      throw new Error(`JS output missing return statement: ${response.code}`)
     }
   })
 
