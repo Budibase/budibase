@@ -267,10 +267,6 @@
     gap: var(--spacing-s);
   }
 
-  .secret-input :global(input) {
-    -webkit-text-security: disc;
-  }
-
   .status-light :global(.spectrum-StatusLight) {
     justify-content: flex-start;
   }
