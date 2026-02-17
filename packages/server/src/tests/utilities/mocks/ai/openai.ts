@@ -76,6 +76,101 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
       })
     : null
   const rejectFormat = opts?.rejectFormat
+
+  const interceptor = pool.intercept({
+    path: "/v1/chat/completions",
+    method: "POST",
+  })
+  interceptor.defaultReplyHeaders({ "content-type": "application/json" })
+  const scope = interceptor.reply(200, (reqOpts: any) => {
+    const reqBody = parseJsonBody(reqOpts.body)
+    if (expectedFormat && !expectedFormat(reqBody)) {
+      return {
+        error: { message: "Unexpected response_format in request body" },
+      }
+    }
+    if (rejectFormat && "response_format" in reqBody) {
+      return {
+        error: { message: "Unexpected response_format in request body" },
+      }
+    }
+
+    let prompt
+    const messageContent = reqBody.messages[0].content
+    if (typeof messageContent === "string") {
+      prompt = messageContent
+    } else if (Array.isArray(messageContent)) {
+      const textParts = messageContent
+        .filter((part: any) => part.type === "text")
+        .map((part: any) => part.text)
+      prompt = textParts.join(" ")
+    } else {
+      prompt = ""
+    }
+
+    let content
+    if (typeof answer === "function") {
+      try {
+        content = answer(prompt)
+      } catch (e) {
+        return [500, "Internal Server Error"]
+      }
+    } else {
+      content = answer
+    }
+
+    chatID++
+
+    // We mock token usage because we use it to calculate Budibase AI quota
+    // usage when Budibase AI is enabled, and some tests assert against quota
+    // usage to make sure we're tracking correctly.
+    const prompt_tokens = prompt.split(SPACE_REGEX).length
+    const completion_tokens = content.split(SPACE_REGEX).length
+
+    const response: ChatCompletionResponse = {
+      id: `chatcmpl-${chatID}`,
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model: reqBody.model,
+      system_fingerprint: `fp_${chatID}`,
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content },
+          logprobs: null,
+          finish_reason: "stop",
+        },
+      ],
+      usage: {
+        prompt_tokens,
+        completion_tokens,
+        total_tokens: prompt_tokens + completion_tokens,
+        completion_tokens_details: {
+          reasoning_tokens: 0,
+          accepted_prediction_tokens: 0,
+          rejected_prediction_tokens: 0,
+        },
+      },
+    }
+
+    return response
+  }) // Each mock call handles one request
+
+  if (opts?.times != null) {
+    scope.times(opts.times)
+  }
+}
+
+export const mockAISDKChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
+  const origin = opts?.baseUrl || "https://api.openai.com"
+  const pool = getPool(origin)
+
+  const expectedFormat = opts?.format
+    ? _.matches({
+        response_format: ai.parseResponseFormat(opts.format as ResponseFormat),
+      })
+    : null
+  const rejectFormat = opts?.rejectFormat
   const bodyMatcher = (body: string) => {
     const reqBody = parseJsonBody(body)
     if (expectedFormat) {
@@ -174,7 +269,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   }) // Each mock call handles one request
 
   // ai-sdk retries 3 times
-  scope.times(3)
+  scope.times(opts?.times ?? 3)
 }
 
 export const mockChatGPTStreamResponse = (content = "hi") => {
