@@ -48,7 +48,7 @@ export function extractFileData(
     `Extract data from the attached document/image that matches the provided schema.`,
     "The schema defines the structure where values like 'string', 'number', 'boolean' indicate the expected data types.",
     "Extract all items that match the schema from the document.",
-    "Return the data in json format",
+    "Return the data in json format. This array should never have more than 1 element.",
     "If no matching data is found, return an empty data array.",
   ].join("\n\n")
 
