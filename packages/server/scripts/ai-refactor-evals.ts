@@ -1,8 +1,9 @@
 import { ConfigType, ContentType, DocumentSourceType } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
-import { existsSync } from "fs"
+import { existsSync, readFileSync } from "fs"
 import { isAbsolute, resolve } from "path"
 import * as dotenv from "dotenv"
+import { execSync } from "child_process"
 
 type ProviderName = "BudibaseAI" | "OpenAI" | "AzureOpenAI"
 
@@ -21,6 +22,7 @@ interface Scenario {
   name: string
   enabled: boolean
   config: AIProviderConfig
+  mode: BudibaseMode
 }
 
 interface EvalResult {
@@ -28,6 +30,8 @@ interface EvalResult {
   ok: boolean
   detail?: string
 }
+
+type BudibaseMode = "self" | "cloud"
 
 type EvalFeature =
   | "table-generation"
@@ -279,6 +283,97 @@ function parseProviderFilter() {
     .filter(Boolean)
 }
 
+function parseBudibaseModeFilter(): BudibaseMode[] {
+  const raw =
+    process.env.AI_EVAL_BUDIBASE_MODES || process.env.AI_EVAL_BBAI_MODES
+  if (!raw) {
+    return ["self", "cloud"]
+  }
+
+  const modes = raw
+    .split(",")
+    .map(v => v.trim().toLowerCase())
+    .filter((v): v is BudibaseMode => v === "self" || v === "cloud")
+
+  return modes.length > 0 ? modes : ["self", "cloud"]
+}
+
+function wait(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function waitForServerReady(baseUrl: string, timeoutMs = 120000) {
+  const normalizedBaseUrl = baseUrl.replace(/\/$/, "")
+  const startedAt = Date.now()
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const healthResponse = await fetch(`${normalizedBaseUrl}/health`, {
+        method: "GET",
+      })
+      if (healthResponse.status === 200) {
+        return
+      }
+    } catch {
+      // server is not reachable yet
+    }
+
+    await wait(1500)
+  }
+
+  throw new Error(
+    `Timed out waiting for server readiness at ${baseUrl} after ${timeoutMs}ms`
+  )
+}
+
+function switchBudibaseMode(mode: BudibaseMode) {
+  const repoRoot = resolve(__dirname, "../../..")
+  const command = mode === "self" ? "yarn mode:self" : "yarn mode:cloud"
+
+  console.log(yellow(`Switching Budibase mode: ${mode}`))
+  try {
+    execSync(command, {
+      cwd: repoRoot,
+      stdio: "ignore",
+    })
+  } catch (error: any) {
+    throw new Error(
+      `Failed to switch Budibase mode (${mode}) with '${command}': ${error?.message || String(error)}`
+    )
+  }
+}
+
+function detectBudibaseMode(): BudibaseMode | undefined {
+  const repoRoot = resolve(__dirname, "../../..")
+  const envPath = resolve(repoRoot, ".env")
+
+  let source: Record<string, string | undefined> = process.env
+  if (existsSync(envPath)) {
+    try {
+      source = {
+        ...source,
+        ...dotenv.parse(readFileSync(envPath)),
+      }
+    } catch (err) {
+      console.warn(
+        yellow(
+          `Could not parse ${envPath} to detect current mode, falling back to process env.`
+        )
+      )
+    }
+  }
+
+  const selfHosted = source.SELF_HOSTED === "1"
+  const multiTenancy = source.MULTI_TENANCY === "1"
+
+  if (selfHosted && !multiTenancy) {
+    return "self"
+  }
+  if (!selfHosted && multiTenancy) {
+    return "cloud"
+  }
+  return undefined
+}
+
 const ALL_FEATURES: EvalFeature[] = [
   "table-generation",
   "js-generation",
@@ -352,78 +447,94 @@ function resolveFeatures(
   return globalFeatures || new Set(ALL_FEATURES)
 }
 
-function shouldRunScenario(id: string, selected?: string[]) {
+function shouldRunProviderMode(
+  providerId: "bbai" | "openai" | "azure-openai",
+  mode: BudibaseMode,
+  selected?: string[]
+) {
   if (!selected || selected.length === 0) {
     return true
   }
-  return selected.includes(id.toLowerCase())
-}
 
-function shouldRunBBAI(selected?: string[]) {
-  if (!selected || selected.length === 0) {
+  if (selected.includes(providerId)) {
     return true
   }
-  return (
-    selected.includes("bbai") ||
-    selected.includes("bbai-cloud") ||
-    selected.includes("bbai-selfhost")
-  )
+
+  return selected.includes(`${providerId}-${mode}`)
 }
 
-function buildScenarios(selected?: string[]): Scenario[] {
+function buildScenarios(
+  selected: string[] | undefined,
+  budibaseModes: BudibaseMode[]
+): Scenario[] {
   const openaiKey = process.env.OPENAI_API_KEY
   const azureKey = process.env.AZURE_OPENAI_API_KEY
   const azureBaseUrl = process.env.AZURE_OPENAI_BASE_URL
   const azureModel = process.env.AZURE_OPENAI_MODEL || "gpt-4.1"
 
-  return [
-    {
-      id: "bbai",
-      name: "BBAI",
-      enabled: shouldRunBBAI(selected),
-      config: {
-        provider: "BudibaseAI",
-        name: "Eval BBAI",
-        isDefault: true,
-        active: true,
-        defaultModel:
-          process.env.BBAI_MODEL ||
-          process.env.BBAI_CLOUD_MODEL ||
-          process.env.BBAI_SELFHOST_MODEL ||
-          "gpt-5-mini",
-      },
-    },
-    {
-      id: "openai",
-      name: "OpenAI",
-      enabled: shouldRunScenario("openai", selected) && Boolean(openaiKey),
-      config: {
-        provider: "OpenAI",
-        name: "Eval OpenAI",
-        isDefault: true,
-        active: true,
-        apiKey: openaiKey,
-        defaultModel: process.env.OPENAI_MODEL || "gpt-5-mini",
-      },
-    },
-    {
-      id: "azure-openai",
-      name: "Azure OpenAI",
-      enabled:
-        shouldRunScenario("azure-openai", selected) &&
-        Boolean(azureKey) &&
-        Boolean(azureBaseUrl),
-      config: {
-        provider: "AzureOpenAI",
-        name: "Eval Azure OpenAI",
-        isDefault: true,
-        active: true,
-        apiKey: azureKey,
-        baseUrl: azureBaseUrl,
-        defaultModel: azureModel,
-      },
-    },
-  ]
+  const bbaiBaseConfig: AIProviderConfig = {
+    provider: "BudibaseAI",
+    name: "Eval BBAI",
+    isDefault: true,
+    active: true,
+    defaultModel:
+      process.env.BBAI_MODEL ||
+      process.env.BBAI_CLOUD_MODEL ||
+      process.env.BBAI_SELFHOST_MODEL ||
+      "gpt-5-mini",
+  }
+
+  const scenarios: Scenario[] = []
+  for (const mode of budibaseModes) {
+    const modeName = mode === "self" ? "selfhost mode" : "cloud mode"
+
+    scenarios.push({
+      id: mode === "self" ? "bbai-self" : "bbai-cloud",
+      name: `BBAI (${modeName})`,
+      mode,
+      enabled: shouldRunProviderMode("bbai", mode, selected),
+      config: bbaiBaseConfig,
+    })
+
+    if (mode === "self") {
+      scenarios.push({
+        id: "openai-self",
+        name: `OpenAI (${modeName})`,
+        mode,
+        enabled:
+          shouldRunProviderMode("openai", mode, selected) && Boolean(openaiKey),
+        config: {
+          provider: "OpenAI",
+          name: "Eval OpenAI",
+          isDefault: true,
+          active: true,
+          apiKey: openaiKey,
+          defaultModel: process.env.OPENAI_MODEL || "gpt-5-mini",
+        },
+      })
+
+      scenarios.push({
+        id: "azure-openai-self",
+        name: `Azure OpenAI (${modeName})`,
+        mode,
+        enabled:
+          shouldRunProviderMode("azure-openai", mode, selected) &&
+          Boolean(azureKey) &&
+          Boolean(azureBaseUrl),
+        config: {
+          provider: "AzureOpenAI",
+          name: "Eval Azure OpenAI",
+          isDefault: true,
+          active: true,
+          apiKey: azureKey,
+          baseUrl: azureBaseUrl,
+          defaultModel: azureModel,
+        },
+      })
+    }
+  }
+
+  return scenarios
 }
 
 async function configureAIProvider(
@@ -794,10 +905,12 @@ async function runFeatureEvals(
       "EXTRACT_FILE_DATA",
       {
         source: DocumentSourceType.URL,
-        file: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+        file: "https://pdfobject.com/pdf/sample.pdf",
         fileType: "pdf",
         schema: {
-          summary: "string",
+          language: "text",
+          words: "number",
+          lines: "number",
         },
       }
     )
@@ -813,15 +926,25 @@ async function runFeatureEvals(
     }
 
     const first = output.data[0]
-    if (typeof first?.summary !== "string" || !first.summary.trim()) {
+    if (typeof first?.language !== "string" || !first.language.trim()) {
       throw new Error(
-        `Extract output missing summary: ${JSON.stringify(output.data)}`
+        `Extract output wrong language: ${JSON.stringify(output.data)}`
       )
     }
-    const summary = normalizeText(first.summary)
-    if (!summary.includes("pdf") && !summary.includes("dummy")) {
+    const language = normalizeText(first.language)
+    if (language !== "english") {
       throw new Error(
-        `Extract output summary does not appear to describe document content: ${JSON.stringify(output.data)}`
+        `Extract output language should be English: ${JSON.stringify(output.data)}`
+      )
+    }
+    if (typeof first.words !== "number" || first.words <= 0) {
+      throw new Error(
+        `Extract output words should be > 0: ${JSON.stringify(output.data)}`
+      )
+    }
+    if (typeof first.lines !== "number" || first.lines <= 0) {
+      throw new Error(
+        `Extract output lines should be > 0: ${JSON.stringify(output.data)}`
       )
     }
   })
@@ -902,13 +1025,55 @@ async function runScenario(
   }
 }
 
+function printScenarioResult(result: {
+  skipped?: string
+  results: EvalResult[]
+}) {
+  if (result.skipped) {
+    console.log(yellow(`SKIPPED: ${result.skipped}`))
+    return
+  }
+
+  for (const item of result.results) {
+    if (item.ok) {
+      console.log(green(`PASS: ${item.name}`))
+    } else {
+      console.log(red(`FAIL: ${item.name}`))
+      if (item.detail) {
+        console.log(red(`  ${item.detail}`))
+      }
+    }
+  }
+}
+
+async function executeScenarioAndLog(
+  client: ApiClient,
+  scenario: Scenario,
+  displayName: string,
+  enabledFeatures: Set<EvalFeature>,
+  summary: Array<{
+    name: string
+    ok: boolean
+    skipped?: string
+    results: EvalResult[]
+  }>
+) {
+  console.log(section(`Provider: ${displayName}`))
+  const result = await runScenario(client, scenario, enabledFeatures)
+  summary.push({ name: displayName, ...result })
+  printScenarioResult(result)
+}
+
 async function main() {
   loadEvalEnvFile()
 
   const baseUrl = process.env.BUDIBASE_BASE_URL || "http://localhost:10000"
   const selected = parseProviderFilter()
-  const scenarios = buildScenarios(selected)
+  const budibaseModes = parseBudibaseModeFilter()
+  const scenarios = buildScenarios(selected, budibaseModes)
   const globalFeatures = parseFeatureList(process.env.AI_EVAL_FEATURES)
+  const initialMode = detectBudibaseMode()
+  let activeMode = initialMode
 
   const client = new ApiClient(baseUrl)
   await client.init()
@@ -920,26 +1085,40 @@ async function main() {
     results: EvalResult[]
   }> = []
 
-  for (const scenario of scenarios) {
-    console.log(section(`Provider: ${scenario.name}`))
-    const enabledFeatures = resolveFeatures(globalFeatures)
-    const result = await runScenario(client, scenario, enabledFeatures)
-    summary.push({ name: scenario.name, ...result })
+  try {
+    for (const mode of budibaseModes) {
+      const modeScenarios = scenarios.filter(s => s.mode === mode)
+      const enabledModeScenarios = modeScenarios.filter(s => s.enabled)
 
-    if (result.skipped) {
-      console.log(yellow(`SKIPPED: ${result.skipped}`))
-      continue
-    }
-
-    for (const item of result.results) {
-      if (item.ok) {
-        console.log(green(`PASS: ${item.name}`))
-      } else {
-        console.log(red(`FAIL: ${item.name}`))
-        if (item.detail) {
-          console.log(red(`  ${item.detail}`))
-        }
+      if (enabledModeScenarios.length === 0) {
+        continue
       }
+
+      switchBudibaseMode(mode)
+      activeMode = mode
+      console.log(yellow(`Waiting for server readiness after mode:${mode}...`))
+      await waitForServerReady(baseUrl)
+      await client.init()
+
+      for (const scenario of modeScenarios) {
+        const enabledFeatures = resolveFeatures(globalFeatures)
+        await executeScenarioAndLog(
+          client,
+          scenario,
+          scenario.name,
+          enabledFeatures,
+          summary
+        )
+      }
+    }
+  } finally {
+    if (initialMode && activeMode && initialMode !== activeMode) {
+      console.log(yellow(`Restoring Budibase mode: ${initialMode}`))
+      switchBudibaseMode(initialMode)
+      console.log(
+        yellow(`Waiting for server readiness after mode:${initialMode}...`)
+      )
+      await waitForServerReady(baseUrl)
     }
   }
 

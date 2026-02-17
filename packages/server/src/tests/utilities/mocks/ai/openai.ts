@@ -166,6 +166,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
       data: response,
     }
   }) // Each mock call handles one request
+
   if (opts?.times != null) {
     scope.times(opts.times)
   }

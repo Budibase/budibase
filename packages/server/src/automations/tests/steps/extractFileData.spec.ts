@@ -241,7 +241,12 @@ describe("test the extract file data action", () => {
   })
 
   it("should handle invalid JSON response from AI", async () => {
-    mockOpenAIResponsesResponse("This is not valid JSON - should cause parsing")
+    mockOpenAIResponsesResponse(
+      "This is not valid JSON - should cause parsing error",
+      {
+        times: 5,
+      }
+    )
     mockOpenAIFileUpload("file-id-789")
 
     let filename = await uploadTestFile("test-document.pdf")
