@@ -42,12 +42,14 @@ export async function createBBAIClient(model: string): Promise<LLMResponse> {
   let baseURL: string | undefined
   if (provider === "openai") {
     apiKey = env.BBAI_OPENAI_API_KEY
-  } else {
-    apiKey = env.BBAI_MISTRAL_API_KEY
-    baseURL = env.MISTRAL_BASE_URL
+  } else if (provider === "openrouter") {
+    apiKey = env.BBAI_OPENROUTER_API_KEY
+    baseURL = env.OPENROUTER_BASE_URL
     if (!baseURL) {
-      throw new HTTPError("MISTRAL_BASE_URL not configured", 500)
+      throw new HTTPError("OPENROUTER_BASE_URL not configured", 500)
     }
+  } else {
+    throw new HTTPError(`Unsupported BBAI provider: ${provider}`, 400)
   }
 
   if (!apiKey) {
