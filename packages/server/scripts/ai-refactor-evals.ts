@@ -1,4 +1,5 @@
 import { ConfigType, ContentType, DocumentSourceType } from "@budibase/types"
+import { helpers } from "@budibase/shared-core"
 import { existsSync } from "fs"
 import { isAbsolute, resolve } from "path"
 import * as dotenv from "dotenv"
@@ -265,10 +266,6 @@ function loadEvalEnvFile() {
   })
 
   console.log(yellow(`Loaded env: ${envFilePath}`))
-}
-
-function hasCronShape(value: string) {
-  return /^\S+\s+\S+\s+\S+\s+\S+\s+\S+(\s+\S+)?$/.test(value.trim())
 }
 
 function parseProviderFilter() {
@@ -543,14 +540,6 @@ function countWords(value: string) {
   return value.trim().split(/\s+/).length
 }
 
-function hasExpectedCronShape(value: string) {
-  const parts = value.trim().split(/\s+/)
-  if (parts.length !== 5 && parts.length !== 6) {
-    return false
-  }
-  return parts.every(part => /^[\d*/,\-A-Za-z?LW#]+$/.test(part))
-}
-
 function hasKeyCaseInsensitive(obj: Record<string, any>, key: string) {
   const target = key.toLowerCase()
   return Object.keys(obj).some(k => k.toLowerCase() === target)
@@ -638,12 +627,15 @@ async function runFeatureEvals(
       }
     )
 
-    if (
-      !response.message ||
-      !hasCronShape(response.message) ||
-      !hasExpectedCronShape(response.message)
-    ) {
+    if (!response.message) {
       throw new Error(`Unexpected cron output: ${response.message}`)
+    }
+
+    const validation = helpers.cron.validate(response.message)
+    if (!validation.valid) {
+      throw new Error(
+        `Invalid cron output: ${response.message}. Errors: ${validation.err.join(", ")}`
+      )
     }
   })
 
