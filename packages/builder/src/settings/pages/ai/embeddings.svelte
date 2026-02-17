@@ -40,7 +40,7 @@
 </script>
 
 <Layout noPadding gap="S">
-  {#if $featureFlags.AI_AGENTS}
+  {#if $featureFlags.AI_RAG}
     <div class="section">
       <div class="section-header">
         <div class="section-title">Embeddings models</div>
