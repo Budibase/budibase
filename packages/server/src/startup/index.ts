@@ -29,6 +29,7 @@ import { watch } from "../watch"
 import { initialise as initialiseWebsockets } from "../websockets"
 import * as workspaceMigrations from "../workspaceMigrations/queue"
 import { rag } from "../sdk/workspace/ai"
+import { FeatureFlag } from "@budibase/types"
 
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
@@ -127,7 +128,9 @@ export async function startup(
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
-  queuePromises.push(rag.queue.init())
+  if (await features.isEnabled(FeatureFlag.AI_RAG)) {
+    queuePromises.push(rag.queue.init())
+  }
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())
