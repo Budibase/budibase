@@ -46,9 +46,7 @@ function validate(table: Table, oldTable?: Table) {
     table.schema[DEFAULT_PRIMARY_COLUMN] &&
     noPrimaryKey(table)
   ) {
-    throw new Error(
-      "External tables with no `primary` column set will define an `id` column, but we found an `id` column in the supplied schema. Either set a `primary` column or remove the `id` column."
-    )
+    table.primary = [DEFAULT_PRIMARY_COLUMN]
   }
 
   if (hasTypeChanged(table, oldTable)) {
