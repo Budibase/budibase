@@ -1,5 +1,6 @@
 import { z } from "zod"
 import {
+  mockAISDKChatGPTResponse,
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
@@ -130,12 +131,12 @@ const allProviders: TestSetup[] = [
         OPENAI_API_KEY: "test-key",
       })
     },
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
   {
     name: "OpenAI API key with custom config",
     setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
   {
     name: "Anthropic API key with custom config",
@@ -164,7 +165,7 @@ const allProviders: TestSetup[] = [
   {
     name: "BudibaseAI",
     setup: budibaseAI(),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
 ]
 
