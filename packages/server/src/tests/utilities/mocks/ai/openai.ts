@@ -82,7 +82,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
     method: "POST",
   })
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
-  interceptor.reply(200, (reqOpts: any) => {
+  const scope = interceptor.reply(200, (reqOpts: any) => {
     const reqBody = parseJsonBody(reqOpts.body)
     if (expectedFormat && !expectedFormat(reqBody)) {
       return {
@@ -155,6 +155,10 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
 
     return response
   }) // Each mock call handles one request
+
+  if (opts?.times != null) {
+    scope.times(opts.times)
+  }
 }
 
 export const mockChatGPTStreamResponse = (content = "hi") => {

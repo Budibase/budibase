@@ -37,14 +37,19 @@ export function summarizeText(text: string, length?: SummariseLength) {
 
 export function extractFileData(
   schema: Record<string, any>,
-  fileIdOrDataUrl: string
+  fileIdOrDataUrl: string,
+  supportsFile: boolean
 ) {
+  if (typeof fileIdOrDataUrl !== "string" || !fileIdOrDataUrl.trim()) {
+    throw new Error("Invalid file reference returned from uploadFile")
+  }
+
   const prompt = [
     "You are a data extraction assistant.",
     `Extract data from the attached document/image that matches the provided schema.`,
     "The schema defines the structure where values like 'string', 'number', 'boolean' indicate the expected data types.",
     "Extract all items that match the schema from the document.",
-    "Return the data in json format",
+    "Return the data in json format. This array should never have more than 1 element.",
     "If no matching data is found, return an empty data array.",
   ].join("\n\n")
 
@@ -61,12 +66,22 @@ export function extractFileData(
         },
         { type: "text", text: prompt },
       ]
-    : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
+    : supportsFile
+      ? [
+          {
+            type: "file",
+            file: {
+              file_id: fileIdOrDataUrl,
+            },
+          },
+          { type: "text", text: prompt },
+        ]
+      : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
 
   // We create a structured zod schema from the user object
   const zodSchema = createZodSchemaFromRecord(schema)
   const responseSchema = z.object({
-    data: z.array(zodSchema),
+    data: z.array(zodSchema).max(1),
   })
 
   return new LLMRequest()
