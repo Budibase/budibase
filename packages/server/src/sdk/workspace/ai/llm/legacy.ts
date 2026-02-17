@@ -1,3 +1,4 @@
+import { createAzure } from "@ai-sdk/azure"
 import { createOpenAI } from "@ai-sdk/openai"
 import { AIProvider } from "@budibase/types"
 import tracer from "dd-trace"
@@ -16,11 +17,17 @@ const getLegacyProviderClient = (
   switch (provider) {
     case "OpenAI":
     case "TogetherAI":
-    case "AzureOpenAI":
     case "Custom":
       return createOpenAI({
         baseURL: config.baseUrl,
         apiKey: config.apiKey,
+      })
+    case "AzureOpenAI":
+      return createAzure({
+        apiKey: config.apiKey,
+        baseURL: config.baseUrl,
+        apiVersion: "2024-10-01-preview",
+        useDeploymentBasedUrls: true,
       })
     case "Anthropic":
       throw new Error(
