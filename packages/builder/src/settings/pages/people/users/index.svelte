@@ -33,7 +33,12 @@
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import EditWorkspaceUserModal from "./_components/EditWorkspaceUserModal.svelte"
   import { get } from "svelte/store"
-  import { Constants, RoleUtils, Utils, fetchData } from "@budibase/frontend-core"
+  import {
+    Constants,
+    RoleUtils,
+    Utils,
+    fetchData,
+  } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { OnboardingType } from "@/constants"
   import { sdk } from "@budibase/shared-core"

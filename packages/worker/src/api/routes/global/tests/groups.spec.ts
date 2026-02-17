@@ -131,7 +131,9 @@ describe("/api/global/groups", () => {
         { expect: 200 }
       )
 
-      const { body: updatedGroup } = await config.api.groups.find(savedGroup._id)
+      const { body: updatedGroup } = await config.api.groups.find(
+        savedGroup._id
+      )
       expect(updatedGroup.name).toEqual(updatedName)
       expect(updatedGroup.builder.apps).toEqual([appId])
     })
