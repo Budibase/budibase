@@ -274,6 +274,7 @@ Any constraints the agent must follow.
       // Only set default if agent never had a value and current draft is empty
       if (!agentHasAiconfig && !currentValue) {
         draft.aiconfig = modelOptions[0].value
+        scheduleSave(true)
       }
     }
   })
