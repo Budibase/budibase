@@ -32,7 +32,7 @@
     : ({
         provider: BUDIBASE_AI_PROVIDER_ID,
         name: "Budibase AI",
-        model: "",
+        model: BUDIBASE_AI_MODELS.length === 1 ? BUDIBASE_AI_MODELS[0].id : "",
         configType: type,
         credentialsFields: {},
         webSearchConfig: undefined,
@@ -147,16 +147,18 @@
     </Heading>
   </div>
 
-  <div class="row">
-    <Label size="M">Model</Label>
-    <Select
-      placeholder="Select a model"
-      options={BUDIBASE_AI_MODELS}
-      getOptionLabel={option => option.label}
-      getOptionValue={option => option.id}
-      bind:value={draft.model}
-    />
-  </div>
+  {#if BUDIBASE_AI_MODELS.length > 1}
+    <div class="row">
+      <Label size="M">Model</Label>
+      <Select
+        placeholder="Select a model"
+        options={BUDIBASE_AI_MODELS}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.id}
+        bind:value={draft.model}
+      />
+    </div>
+  {/if}
 
   {#if draft.configType === AIConfigType.COMPLETIONS}
     <div class="row">

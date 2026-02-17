@@ -6,6 +6,24 @@ import {
 } from "../../../../tests/utilities/mocks/ai/openai"
 import { createBBAIClient } from "./bbai"
 
+jest.mock("@budibase/types", () => {
+  const actual = jest.requireActual("@budibase/types")
+  return {
+    ...actual,
+    BUDIBASE_AI_MODEL_MAP: {
+      ...actual.BUDIBASE_AI_MODEL_MAP,
+      "budibase/gpt-5-mini": {
+        provider: "openai",
+        model: "gpt-5-mini",
+      },
+      "budibase/mistral-small-latest": {
+        provider: "mistral",
+        model: "mistral-small-latest",
+      },
+    },
+  }
+})
+
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
   return {
