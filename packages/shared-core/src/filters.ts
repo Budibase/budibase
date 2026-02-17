@@ -562,7 +562,7 @@ export function search<T extends Record<string, any>>(
   query: Omit<RowSearchParams, "tableId">
 ): SearchResponse<T> {
   let result = runQuery(docs, query.query)
-  if (query.sort) {
+  if (typeof query.sort === "string") {
     result = sort(
       result,
       query.sort,

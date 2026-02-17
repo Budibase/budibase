@@ -91,8 +91,8 @@ export class QueryBuilder<T> {
     return this
   }
 
-  setSort(sort?: string) {
-    if (sort != null) {
+  setSort(sort?: SearchParams["sort"]) {
+    if (typeof sort === "string") {
       this.#sort = sort
     }
     return this
