@@ -794,10 +794,12 @@ async function runFeatureEvals(
       "EXTRACT_FILE_DATA",
       {
         source: DocumentSourceType.URL,
-        file: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+        file: "https://pdfobject.com/pdf/sample.pdf",
         fileType: "pdf",
         schema: {
-          summary: "string",
+          language: "text",
+          words: "number",
+          lines: "number",
         },
       }
     )
@@ -813,15 +815,25 @@ async function runFeatureEvals(
     }
 
     const first = output.data[0]
-    if (typeof first?.summary !== "string" || !first.summary.trim()) {
+    if (typeof first?.language !== "string" || !first.language.trim()) {
       throw new Error(
-        `Extract output missing summary: ${JSON.stringify(output.data)}`
+        `Extract output wrong language: ${JSON.stringify(output.data)}`
       )
     }
-    const summary = normalizeText(first.summary)
-    if (!summary.includes("pdf") && !summary.includes("dummy")) {
+    const language = normalizeText(first.language)
+    if (language !== "english") {
       throw new Error(
-        `Extract output summary does not appear to describe document content: ${JSON.stringify(output.data)}`
+        `Extract output language should be English: ${JSON.stringify(output.data)}`
+      )
+    }
+    if (typeof first.words !== "number" || first.words <= 0) {
+      throw new Error(
+        `Extract output words should be > 0: ${JSON.stringify(output.data)}`
+      )
+    }
+    if (typeof first.lines !== "number" || first.lines <= 0) {
+      throw new Error(
+        `Extract output lines should be > 0: ${JSON.stringify(output.data)}`
       )
     }
   })
