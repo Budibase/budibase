@@ -1,5 +1,5 @@
 import { context, docIds, roles } from "@budibase/backend-core"
-import type { ChatApp, ChatConversation, User } from "@budibase/types"
+import type { Agent, ChatApp, ChatConversation, User } from "@budibase/types"
 import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 
@@ -160,6 +160,8 @@ describe("chat route auth split", () => {
   const config = new TestConfiguration()
   let chatApp: ChatApp
   let basicUser: User
+  let agentId: string
+  let disabledAgentId: string
 
   beforeAll(async () => {
     await config.init("chat-route-auth-split")
@@ -176,9 +178,38 @@ describe("chat route auth split", () => {
       async () => {
         const db = context.getWorkspaceDB()
         const now = new Date().toISOString()
+        const agent: Agent = {
+          _id: docIds.generateAgentID(),
+          name: "Support agent",
+          aiconfig: "",
+          live: true,
+          icon: "robot",
+          iconColor: "#6a9bcc",
+          createdAt: now,
+          enabledTools: [],
+        }
+        await db.put(agent)
+        agentId = agent._id!
+
+        const disabledAgent: Agent = {
+          _id: docIds.generateAgentID(),
+          name: "Disabled support agent",
+          aiconfig: "",
+          live: true,
+          icon: "robot",
+          iconColor: "#9f8cd1",
+          createdAt: now,
+          enabledTools: [],
+        }
+        await db.put(disabledAgent)
+        disabledAgentId = disabledAgent._id!
+
         const doc: ChatApp = {
           _id: docIds.generateChatAppID(),
-          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+          agents: [
+            { agentId, isEnabled: true, isDefault: true },
+            { agentId: disabledAgentId, isEnabled: false, isDefault: false },
+          ],
           createdAt: now,
           updatedAt: now,
         }
@@ -205,7 +236,7 @@ describe("chat route auth split", () => {
         const doc: ChatConversation = {
           _id: docIds.generateChatConversationID(),
           chatAppId: chatApp._id!,
-          agentId: "agent-1",
+          agentId,
           userId: basicUser._id!,
           messages: [],
           title,
@@ -238,6 +269,28 @@ describe("chat route auth split", () => {
     expect(res.body?._id).toBe(chatApp._id)
   })
 
+  it("allows basic users to access GET /api/chatapps/:chatAppId/agents", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/agents`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body.agents).toHaveLength(1)
+    expect(res.body.agents[0]).toEqual({
+      _id: agentId,
+      name: "Support agent",
+      icon: "robot",
+      iconColor: "#6a9bcc",
+      live: true,
+    })
+    expect(res.body.agents[0]).not.toHaveProperty("aiconfig")
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).not.toContain(disabledAgentId)
+  })
+
   it("blocks basic users from PUT /api/chatapps/:chatAppId", async () => {
     const headers = await headersForUser(basicUser)
     const res = await config
@@ -259,7 +312,7 @@ describe("chat route auth split", () => {
       .getRequest()!
       .post(`/api/chatapps/${chatApp._id}/agent`)
       .set(headers)
-      .send({ agentId: "agent-1" })
+      .send({ agentId })
 
     expect(res.status).toBe(403)
   })
@@ -298,13 +351,13 @@ describe("chat route auth split", () => {
       .set(headers)
       .send({
         chatAppId: chatApp._id,
-        agentId: "agent-1",
+        agentId,
         title: "basic user conversation",
       })
 
     expect(res.status).toBe(201)
     expect(res.body.chatAppId).toBe(chatApp._id)
-    expect(res.body.agentId).toBe("agent-1")
+    expect(res.body.agentId).toBe(agentId)
   })
 
   it("allows basic users to access DELETE /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
@@ -326,7 +379,7 @@ describe("chat route auth split", () => {
       .set(headers)
       .send({
         chatAppId: "mismatched-chat-app-id",
-        agentId: "agent-1",
+        agentId,
         messages: [],
       })
 

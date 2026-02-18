@@ -87,6 +87,24 @@ describe("/api/global/users", () => {
       expect(events.user.invited).toHaveBeenCalledTimes(0)
     })
 
+    it("should not invite the same user twice when email casing differs", async () => {
+      const email = structures.users.newEmail().toLowerCase()
+      await config.api.users.sendUserInvite(sendMailMock, email)
+
+      jest.clearAllMocks()
+
+      const { code, res } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email.toUpperCase(),
+        400
+      )
+
+      expect(res.body.message).toBe(`Unavailable`)
+      expect(sendMailMock).toHaveBeenCalledTimes(0)
+      expect(code).toBeUndefined()
+      expect(events.user.invited).toHaveBeenCalledTimes(0)
+    })
+
     it("should not allow creator users to access single invite endpoint", async () => {
       const user = await createBuilderUser()
 

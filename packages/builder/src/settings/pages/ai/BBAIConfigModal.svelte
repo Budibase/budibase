@@ -37,6 +37,7 @@
         credentialsFields: {},
         webSearchConfig: undefined,
         reasoningEffort: undefined,
+        isDefault: !$aiConfigsStore.customConfigsPerType[type].length,
       } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   $: isEdit = !!config
@@ -183,12 +184,21 @@
           placeholder={field.placeholder ?? undefined}
           helpText={field.tooltip ?? undefined}
         />
+      {:else if field.field_type === "password" || field.key.includes("key")}
+        <div class="secret-input">
+          <Input
+            bind:value={draft.credentialsFields[field.key]}
+            type="password"
+            autocomplete="new-password"
+            placeholder={field.placeholder ?? undefined}
+            helpText={field.tooltip ?? undefined}
+          />
+        </div>
       {:else}
         <Input
           bind:value={draft.credentialsFields[field.key]}
-          type={field.field_type === "password" || field.key.includes("key")
-            ? "password"
-            : "text"}
+          type="password"
+          autocomplete="new-password"
           placeholder={field.placeholder ?? undefined}
           helpText={field.tooltip ?? undefined}
         />
@@ -201,5 +211,9 @@
   .row {
     display: grid;
     gap: var(--spacing-s);
+  }
+
+  .secret-input :global(input) {
+    -webkit-text-security: disc;
   }
 </style>

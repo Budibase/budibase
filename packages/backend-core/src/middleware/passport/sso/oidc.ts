@@ -113,18 +113,18 @@ function buildJwtClaims(
 function getEmail(profile: SSOProfile, jwtClaims: JwtClaims) {
   // profile not guaranteed to contain email e.g. github connected azure ad account
   if (profile._json.email) {
-    return profile._json.email
+    return profile._json.email.toLowerCase()
   }
 
   // fallback to id token email
   if (jwtClaims.email) {
-    return jwtClaims.email
+    return jwtClaims.email.toLowerCase()
   }
 
   // fallback to id token preferred username
   const username = jwtClaims.preferred_username
   if (username && validEmail(username)) {
-    return username
+    return username.toLowerCase()
   }
 
   throw new Error(

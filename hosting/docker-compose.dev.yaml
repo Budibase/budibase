@@ -69,7 +69,7 @@ services:
     volumes:
       - ./litellm_config.yaml:/app/config.yaml
     environment:
-      DATABASE_URL: "postgresql://llmproxy:dbpassword9090@litellm-db:5432/litellm"
+      DATABASE_URL: "postgresql://${LITELLM_DB_USER}:${LITELLM_DB_PASSWORD}@litellm-db:5432/${LITELLM_DB_NAME}"
       STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
       LITELLM_REASONING_AUTO_SUMMARY: "true" # enables reasoning summaries for Responses API models
     command: ["--config", "/app/config.yaml"]
@@ -88,11 +88,11 @@ services:
     image: postgres:16
     restart: always
     environment:
-      POSTGRES_DB: litellm
-      POSTGRES_USER: llmproxy
-      POSTGRES_PASSWORD: dbpassword9090
+      POSTGRES_DB: ${LITELLM_DB_NAME}
+      POSTGRES_USER: ${LITELLM_DB_USER}
+      POSTGRES_PASSWORD: ${LITELLM_DB_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d litellm -U llmproxy"]
+      test: ["CMD-SHELL", "pg_isready -d ${LITELLM_DB_NAME} -U ${LITELLM_DB_USER}"]
       interval: 1s
       timeout: 5s
       retries: 10
