@@ -17,6 +17,7 @@
   export let autofocus: boolean | undefined = undefined
   export let autocomplete: FullAutoFill | boolean | null | undefined = undefined
   export let helpText: string | undefined = undefined
+  export let required: boolean | undefined = false
 
   const dispatch = createEventDispatcher<{
     change: any
@@ -42,7 +43,7 @@
   }
 </script>
 
-<Field {helpText} {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error} {required}>
   <TextField
     {updateOnChange}
     {disabled}
