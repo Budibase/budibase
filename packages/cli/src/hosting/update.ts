@@ -18,6 +18,7 @@ const BB_COMPOSE_SERVICES = [
   "worker-service",
   "proxy-service",
   "couchdb-service",
+  "litellm-service",
 ]
 const BB_SINGLE_SERVICE = ["budibase"]
 
