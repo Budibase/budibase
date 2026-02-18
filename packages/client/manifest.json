@@ -9623,9 +9623,8 @@
             "options": [
               { "label": "Numeric", "value": "numeric" },
               { "label": "2-digit", "value": "2-digit" },
-              { "label": "short", "value": "short" },
-              { "label": "Long", "value": "long" },
-              { "label": "Narrow", "value": "narrow" }
+              { "label": "Short", "value": "short" },
+              { "label": "Long", "value": "long" }
             ]
           },
           {
@@ -9662,41 +9661,47 @@
       {
         "section": true,
         "name": "Controls",
+        "dependsOn": "showButtons",
         "settings": [
+          {
+            "type": "select",
+            "label": "Button type",
+            "key": "buttonType",
+            "options": [
+              { "label": "Action", "value": "action" },
+              { "label": "Primary", "value": "primary" }
+            ],
+            "defaultValue": "action"
+          },
           {
             "type": "text",
             "label": "Month button Text",
             "key": "monthText",
-            "defaultValue": "Month",
-            "dependsOn": "showButtons"
+            "defaultValue": "Month"
           },
           {
             "type": "text",
             "label": "Week button Text",
             "key": "weekText",
-            "defaultValue": "Week",
-            "dependsOn": "showButtons"
+            "defaultValue": "Week"
           },
           {
             "type": "text",
             "label": "Day button Text",
             "key": "dayText",
-            "defaultValue": "Day",
-            "dependsOn": "showButtons"
+            "defaultValue": "Day"
           },
           {
             "type": "text",
             "label": "Agenda button Text",
             "key": "agendaText",
-            "defaultValue": "Agenda",
-            "dependsOn": "showButtons"
+            "defaultValue": "Agenda"
           },
           {
             "type": "text",
             "label": "Today button text",
             "key": "todayText",
-            "defaultValue": "Today",
-            "dependsOn": "showButtons"
+            "defaultValue": "Today"
           }
         ]
       }

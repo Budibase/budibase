@@ -30,6 +30,7 @@
 
   export let onClick: ((_payload: CalendarEventPayload) => void) | undefined
   export let showButtons: boolean
+  export let buttonType: string
   export let monthText: string = "Month"
   export let weekText: string = "Week"
   export let dayText: string = "Day"
@@ -64,7 +65,7 @@
     onClick?.({ title, start, end, row_id })
   }
 
-  console.log({ dayTitleFormat, monthTitleFormat, yearTitleFormat })
+  console.log({ buttonType })
 
   $: options = {
     headerToolbar: {
