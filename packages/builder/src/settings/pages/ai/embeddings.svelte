@@ -1,26 +1,25 @@
 <script lang="ts">
+  import { bb } from "@/stores/bb"
   import { aiConfigsStore, featureFlags, vectorDbStore } from "@/stores/portal"
   import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
   import { AIConfigType, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
-  import CustomConfigModal from "./AIConfigForm.svelte"
   import VectorDbModal from "./VectorDbModal.svelte"
   import VectorDbTile from "./VectorDbTile.svelte"
   import AIConfigList from "./AIConfigList.svelte"
 
-  let configModal = $state<Modal | null>()
   let vectorModal = $state<Modal | null>()
   let vectorModalConfig: VectorDb | null = $state(null)
 
   let embeddingConfigs = $derived(
-    $aiConfigsStore.customConfigs.filter(
-      config => config.configType === AIConfigType.EMBEDDINGS
+    $aiConfigsStore.customConfigsPerType.embeddings.sort((a, b) =>
+      a.name.localeCompare(b.name)
     )
   )
   let vectorDbs = $derived($vectorDbStore.configs || [])
 
-  function createAIConfigModal() {
-    configModal?.show()
+  function createAIConfig() {
+    bb.settings("/ai-config/configs/new", { type: AIConfigType.EMBEDDINGS })
   }
 
   const openVectorDbModal = (config?: VectorDb) => {
@@ -44,7 +43,7 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">Embeddings models</div>
-        <Button size="S" cta on:click={() => createAIConfigModal()}>
+        <Button size="S" icon="plus" on:click={() => createAIConfig()}>
           Add configuration
         </Button>
       </div>
@@ -61,7 +60,7 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">Vector databases</div>
-        <Button size="S" cta on:click={() => openVectorDbModal()}>
+        <Button size="S" icon="plus" on:click={() => openVectorDbModal()}>
           Add database
         </Button>
       </div>
@@ -86,10 +85,6 @@
     onDelete={() => vectorModal?.hide()}
     on:hide={() => vectorModal?.hide()}
   />
-</Modal>
-
-<Modal bind:this={configModal}>
-  <CustomConfigModal type={AIConfigType.EMBEDDINGS} />
 </Modal>
 
 <style>
