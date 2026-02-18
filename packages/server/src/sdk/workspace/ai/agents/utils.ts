@@ -129,8 +129,11 @@ export async function buildPromptAndTools(
     allTools
   )
 
-  const systemPrompt = ai.composeAutomationAgentSystemPrompt({
-    baseSystemPrompt,
+  const resolvedBaseSystemPrompt =
+    baseSystemPrompt?.trim() || ai.composeAutomationAgentBasePrompt()
+
+  const systemPrompt = ai.composeAgentSystemPrompt({
+    baseSystemPrompt: resolvedBaseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
     promptInstructions: agent.promptInstructions,
     includeGoal,

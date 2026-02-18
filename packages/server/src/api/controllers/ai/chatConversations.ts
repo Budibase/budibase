@@ -190,7 +190,7 @@ export async function discordChat({
 
   const { systemPrompt: system, tools } =
     await sdk.ai.agents.buildPromptAndTools(agent, {
-      baseSystemPrompt: ai.agentSystemPrompt(user),
+      baseSystemPrompt: ai.composeChatAgentBasePrompt(user),
       includeGoal: false,
     })
   const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
@@ -352,7 +352,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   const { systemPrompt: system, tools } =
     await sdk.ai.agents.buildPromptAndTools(agent, {
-      baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
+      baseSystemPrompt: ai.composeChatAgentBasePrompt(ctx.user),
       includeGoal: false,
     })
 

@@ -30,7 +30,7 @@ jest.mock("@budibase/pro", () => {
     ...actual,
     ai: {
       ...actual.ai,
-      agentSystemPrompt: jest.fn(() => "system"),
+      composeChatAgentBasePrompt: jest.fn(() => "system"),
     },
   }
 })
