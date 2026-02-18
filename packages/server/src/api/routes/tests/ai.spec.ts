@@ -1,5 +1,6 @@
 import { z } from "zod"
 import {
+  mockAISDKChatGPTResponse,
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
@@ -29,13 +30,14 @@ import {
 } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
+import { resetHttpMocking } from "../../../tests/jestEnv"
 
 jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
   return {
     ...actual,
-    generateText: jest.fn(),
-    streamText: jest.fn(),
+    generateText: jest.fn(actual.generateText),
+    streamText: jest.fn(actual.streamText),
   }
 })
 
@@ -82,7 +84,11 @@ function budibaseAI(): SetupFn {
       })
     })
 
-    return setEnv({ OPENAI_API_KEY: "test-key", SELF_HOSTED: false })
+    return setEnv({
+      OPENAI_API_KEY: "test-key",
+      BBAI_OPENAI_API_KEY: "test-key",
+      SELF_HOSTED: false,
+    })
   }
 }
 
@@ -125,12 +131,12 @@ const allProviders: TestSetup[] = [
         OPENAI_API_KEY: "test-key",
       })
     },
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
   {
     name: "OpenAI API key with custom config",
     setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
   {
     name: "Anthropic API key with custom config",
@@ -159,7 +165,7 @@ const allProviders: TestSetup[] = [
   {
     name: "BudibaseAI",
     setup: budibaseAI(),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
 ]
 
@@ -174,8 +180,9 @@ describe("AI", () => {
     config.end()
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     nock.cleanAll()
+    await resetHttpMocking()
   })
 
   describe.each(allProviders)(
@@ -294,6 +301,10 @@ describe("BudibaseAI", () => {
   beforeAll(async () => {
     await config.init()
     cleanup = await budibaseAI()(config)
+  })
+
+  beforeEach(async () => {
+    await resetHttpMocking()
   })
 
   afterAll(async () => {
@@ -507,9 +518,6 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      // Ensure MockAgent is installed for OpenAI interceptors
-      const { installHttpMocking } = require("../../../tests/jestEnv")
-      installHttpMocking()
     })
 
     const mockAIGenerationStructure = (
