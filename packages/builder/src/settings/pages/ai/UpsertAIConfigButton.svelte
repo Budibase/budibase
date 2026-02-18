@@ -17,19 +17,32 @@
   let { row }: Props = $props()
 
   let isEdit = $derived(!!row._id)
+  let isBBAI = $derived(row.provider === BUDIBASE_AI_PROVIDER_ID)
 
   let enableBBAIModal = $state<Modal | null>()
-  let hasLicenseKey: boolean | null = $state(null)
+  let licenseStatus = $state<"checking" | "has_key" | "missing_key">("checking")
+  let pendingOpen = $state(false)
+
+  function openConfig() {
+    bb.settings(`/ai-config/${row.configType}/${row._id || "new"}`, {
+      provider: row.provider,
+      type: row.configType,
+    })
+  }
 
   function onClick() {
-    if (row.provider === BUDIBASE_AI_PROVIDER_ID && !hasLicenseKey) {
-      enableBBAIModal?.show()
-    } else {
-      bb.settings(`/ai-config/${row.configType}/${row._id || "new"}`, {
-        provider: row.provider,
-        type: row.configType,
-      })
+    if (!isBBAI) {
+      openConfig()
+      return
     }
+
+    if (licenseStatus === "has_key") {
+      openConfig()
+      return
+    }
+
+    pendingOpen = licenseStatus === "checking"
+    enableBBAIModal?.show()
   }
 
   onMount(async () => {
@@ -37,13 +50,20 @@
       const license = $licensing.license
       const isOfflineLicense = () => license && "identifier" in license
       if (isOfflineLicense()) {
-        hasLicenseKey = true
+        licenseStatus = "has_key"
       } else {
         const licenseKeyResponse = await API.getLicenseKey()
-        hasLicenseKey = !!licenseKeyResponse?.licenseKey
+        licenseStatus = licenseKeyResponse?.licenseKey
+          ? "has_key"
+          : "missing_key"
+        if (pendingOpen && licenseStatus === "has_key") {
+          pendingOpen = false
+          enableBBAIModal?.hide()
+          openConfig()
+        }
       }
     } catch {
-      hasLicenseKey = false
+      licenseStatus = "missing_key"
     }
   })
 </script>
@@ -53,12 +73,12 @@
 >
 
 <Modal bind:this={enableBBAIModal}>
-  {#if hasLicenseKey == null}
+  {#if licenseStatus === "checking"}
     <div class="license-check">
       <ProgressCircle />
       <Body size="S">Checking license...</Body>
     </div>
-  {:else if hasLicenseKey === false}
+  {:else if licenseStatus === "missing_key"}
     <PortalModal
       confirmHandler={() => {
         window.open($admin.accountPortalUrl, "_blank", "noopener,noreferrer")
