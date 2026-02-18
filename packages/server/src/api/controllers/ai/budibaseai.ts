@@ -101,7 +101,7 @@ class UsageTrackingTransform extends Transform {
 
   _transform(
     chunk: Buffer,
-    _encoding: BufferEncoding,
+    _encoding: NodeJS.BufferEncoding,
     callback: TransformCallback
   ) {
     const text = chunk.toString("utf8")
