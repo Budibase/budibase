@@ -122,7 +122,7 @@ function createLiteLLMFetch(
 const syncBudibaseAICredits = async () => {
   try {
     const aiQuota = await fetchAIQuotaUsage()
-    console.log(aiQuota)
+
     if (aiQuota != null) {
       await quotas.setBudibaseAICredits(aiQuota.monthlyCredits)
     }
