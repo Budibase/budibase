@@ -88,7 +88,8 @@
   let canSave = $derived(
     !isSaving &&
       !!draft.name.trim() &&
-      !!draft.provider &&
+      !!draft.model.trim() &&
+      !!draft.provider.trim() &&
       selectedProvider &&
       !selectedProvider.credentialFields.find(
         f => f.required && !draft.credentialsFields[f.key].trim()
@@ -113,7 +114,8 @@
     try {
       isSaving = true
       if (draft._id) {
-        await aiConfigsStore.updateConfig(draft)
+        const updated = await aiConfigsStore.updateConfig(draft)
+        draft._rev = updated._rev
         notifications.success(
           `${typeLabel[0].toUpperCase()}${typeLabel.slice(
             1
@@ -131,30 +133,19 @@
         ) {
           rest.isDefault = true
         }
-        await aiConfigsStore.createConfig(rest)
+        const created = await aiConfigsStore.createConfig(rest)
+        draft._id = created._id
+        draft._rev = created._rev
         notifications.success(
           `${typeLabel[0].toUpperCase()}${typeLabel.slice(
             1
           )} configuration created`
         )
       }
-
-      await aiConfigsStore.fetch()
-
-      draft._rev = $aiConfigsStore.customConfigs.find(
-        c => c._id === draft._id
-      )?._rev
     } catch (err: any) {
       notifications.error(
         err.message || `Failed to save ${typeLabel} configuration`
       )
-      if (draft._id) {
-        // Update rev if the llm validation failed (as the doc might be persisted)
-        await aiConfigsStore.fetch()
-        draft._rev = $aiConfigsStore.customConfigs.find(
-          c => c._id === draft._id
-        )?._rev
-      }
     } finally {
       isSaving = false
     }
