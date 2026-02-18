@@ -8,6 +8,8 @@
 
   let completionConfigs = $derived(
     $aiConfigsStore.customConfigsPerType.completions
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
   )
 
   let hasBBAI = $derived(
