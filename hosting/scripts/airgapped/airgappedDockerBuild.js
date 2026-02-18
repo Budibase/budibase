@@ -12,8 +12,6 @@ let IMAGES = {
 	couch: "ibmcom/couchdb3",
 	curl: "curlimages/curl",
 	redis: "redis",
-	litellm: "docker.litellm.ai/berriai/litellm:1.80.15-stable.1",
-	litellmPostgres: "postgres:16",
 }
 
 if (IS_SINGLE_IMAGE) {
@@ -24,8 +22,7 @@ if (IS_SINGLE_IMAGE) {
 
 const FILES = {
 	COMPOSE: "docker-compose.yaml",
-	ENV: ".env",
-	LITELLM_CONFIG: "litellm_config.yaml",
+	ENV: ".env"
 }
 
 const OUTPUT_DIR = path.join(__dirname, "../", "bb-airgapped")
@@ -51,7 +48,6 @@ for (let image in IMAGES) {
 // copy config files
 if (!IS_SINGLE_IMAGE) {
 	copyFile(FILES.COMPOSE)
-	copyFile(FILES.LITELLM_CONFIG)
 }
 copyFile(FILES.ENV)
 
