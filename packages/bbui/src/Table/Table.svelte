@@ -716,7 +716,6 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    /* border-top: none; */
     border: var(--table-border);
     grid-column: 1 / -1;
     background-color: var(--table-bg);
