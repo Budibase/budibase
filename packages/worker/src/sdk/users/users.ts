@@ -22,7 +22,7 @@ export async function invite(
 
   // separate duplicates from new users
   for (let user of users) {
-    if (matchedEmails.includes(user.email)) {
+    if (matchedEmails.includes(user.email.toLowerCase())) {
       // This "Unavailable" is load bearing. The tests and frontend both check for it
       // specifically
       response.unsuccessful.push({ email: user.email, reason: "Unavailable" })
