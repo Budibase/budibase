@@ -15,6 +15,7 @@
     | "timeGridDay"
     | "listWeek"
   type TitleDateLocale = "en-gb" | "en-us"
+  type CalendarButtonType = "action" | "primary"
   interface CalendarEventPayload {
     row_id?: string
     title: string
@@ -30,7 +31,7 @@
 
   export let onClick: ((_payload: CalendarEventPayload) => void) | undefined
   export let showButtons: boolean
-  export let buttonType: string
+  export let buttonType: CalendarButtonType = "action"
   export let monthText: string = "Month"
   export let weekText: string = "Week"
   export let dayText: string = "Day"
@@ -48,6 +49,7 @@
   const component = getContext("component")
   let calendarRef: FullCalendar | null = null
   $: isTimeGridDay = calendarType === "timeGridDay"
+  $: calendarButtonType = buttonType === "primary" ? "primary" : "action"
 
   $: events =
     dataProvider?.rows?.map((row: Row) => ({
@@ -64,8 +66,6 @@
     const row_id = info.event.extendedProps?.row_id || info.event.id
     onClick?.({ title, start, end, row_id })
   }
-
-  console.log({ buttonType })
 
   $: options = {
     headerToolbar: {
@@ -138,6 +138,7 @@
 <div
   class="calendar"
   class:timeGridDay={isTimeGridDay}
+  data-button-type={calendarButtonType}
   use:styleable={$component.styles}
 >
   <FullCalendar bind:this={calendarRef} {options} />
@@ -145,39 +146,110 @@
 
 <style>
   .calendar :global(.fc-button-primary) {
-    --fc-button-text-color: var(--spectrum-global-color-static-white, #fff);
-    --fc-button-bg-color: var(
-      --primaryColor,
-      var(--spectrum-global-color-blue-600)
-    );
-    --fc-button-border-color: var(
-      --primaryColor,
-      var(--spectrum-global-color-blue-600)
-    );
-    --fc-button-hover-bg-color: var(
-      --primaryColorHover,
-      var(--primaryColor, var(--spectrum-global-color-blue-500))
-    );
-    --fc-button-hover-border-color: var(
-      --primaryColorHover,
-      var(--primaryColor, var(--spectrum-global-color-blue-500))
-    );
-    --fc-button-active-bg-color: var(
-      --primaryColorHover,
-      var(--primaryColor, var(--spectrum-global-color-red-500))
-    );
-    --fc-button-active-border-color: var(
-      --primaryColorHover,
-      var(--primaryColor, var(--spectrum-global-color-blue-500))
-    );
     box-shadow: none;
     font-size: 13px;
+  }
+
+  .calendar[data-button-type="action"] :global(.fc-button-primary) {
+    --fc-button-text-color: var(
+      --spectrum-button-cta-m-text-color,
+      var(--spectrum-global-color-static-white, #fff)
+    );
+    --fc-button-bg-color: var(
+      --spectrum-button-cta-m-background-color,
+      var(--spectrum-semantic-cta-color-background-default)
+    );
+    --fc-button-border-color: var(
+      --spectrum-button-cta-m-border-color,
+      var(--spectrum-semantic-cta-color-background-default)
+    );
+    --fc-button-hover-bg-color: var(
+      --spectrum-button-cta-m-background-color-hover,
+      var(--spectrum-semantic-cta-color-background-hover)
+    );
+    --fc-button-hover-border-color: var(
+      --spectrum-button-cta-m-border-color-hover,
+      var(--spectrum-semantic-cta-color-background-hover)
+    );
+    --fc-button-active-bg-color: var(
+      --spectrum-button-cta-m-background-color-down,
+      var(--spectrum-semantic-cta-color-background-down)
+    );
+    --fc-button-active-border-color: var(
+      --spectrum-button-cta-m-border-color-down,
+      var(--spectrum-semantic-cta-color-background-down)
+    );
+    border-width: var(
+      --spectrum-button-primary-m-border-size,
+      var(--spectrum-alias-border-size-thick, 2px)
+    );
+    color: var(
+      --spectrum-button-cta-m-text-color,
+      var(--spectrum-global-color-static-white, #fff)
+    );
+  }
+
+  .calendar[data-button-type="action"] :global(.fc-button-primary:hover),
+  .calendar[data-button-type="action"] :global(.fc-button-primary:active) {
+    color: var(
+      --spectrum-button-cta-m-text-color-hover,
+      var(--spectrum-global-color-static-white, #fff)
+    );
+  }
+
+  .calendar[data-button-type="primary"] :global(.fc-button-primary) {
+    --fc-button-text-color: var(
+      --spectrum-button-primary-m-text-color,
+      var(--spectrum-global-color-gray-800)
+    );
+    --fc-button-bg-color: var(
+      --spectrum-button-primary-m-background-color,
+      var(--spectrum-alias-background-color-transparent)
+    );
+    --fc-button-border-color: var(
+      --spectrum-button-primary-m-border-color,
+      var(--spectrum-global-color-gray-800)
+    );
+    --fc-button-hover-bg-color: var(
+      --spectrum-button-primary-m-background-color-hover,
+      var(--spectrum-global-color-gray-800)
+    );
+    --fc-button-hover-border-color: var(
+      --spectrum-button-primary-m-border-color-hover,
+      var(--spectrum-global-color-gray-800)
+    );
+    --fc-button-active-bg-color: var(
+      --spectrum-button-primary-m-background-color-hover,
+      var(--spectrum-global-color-gray-800)
+    );
+    --fc-button-active-border-color: var(
+      --spectrum-button-primary-m-border-color-hover,
+      var(--spectrum-global-color-gray-800)
+    );
+    color: var(
+      --spectrum-button-primary-m-text-color,
+      var(--spectrum-global-color-gray-800)
+    );
+    border-width: var(
+      --spectrum-button-primary-m-border-size,
+      var(--spectrum-alias-border-size-thick, 2px)
+    );
+  }
+
+  .calendar[data-button-type="primary"] :global(.fc-button-primary:hover),
+  .calendar[data-button-type="primary"]
+    :global(.fc-button-primary.fc-button-active),
+  .calendar[data-button-type="primary"]
+    :global(.fc-button-primary.fc-button-active:hover) {
+    color: var(
+      --spectrum-button-primary-m-text-color-hover,
+      var(--spectrum-global-color-gray-50)
+    );
   }
 
   .calendar :global(.fc-button-group .fc-button-primary) {
     font-weight: 600;
     padding: 4px 17px 4px 17px;
-    color: var(--spectrum-global-color-static-white, #fff);
   }
 
   .calendar :global(.fc .fc-button:focus),
@@ -211,8 +283,11 @@
   }
 
   .calendar :global(.fc-button) {
-    color: var(--spectrum-alias-heading-text-color);
-    font-weight: 700;
+    color: var(--fc-button-text-color);
+    font-weight: var(
+      --spectrum-button-primary-m-text-font-weight,
+      var(--spectrum-global-font-weight-bold, 700)
+    );
   }
 
   /* Specific radiuses (radii?) for first and last buttons */
