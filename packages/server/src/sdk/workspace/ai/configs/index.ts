@@ -271,6 +271,7 @@ export async function update(
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
     ...config,
+    isDefault: config.isDefault ?? existing.isDefault,
   }
 
   const db = context.getWorkspaceDB()
