@@ -30,8 +30,32 @@ const incrementBudibaseAICreditsFromUsage = async (
   }
 }
 
+const availableBudibaseAIModels: typeof BUDIBASE_AI_MODEL_MAP = {
+  ...BUDIBASE_AI_MODEL_MAP,
+  "legacy/gpt-4o-mini": {
+    provider: "openai",
+    model: "gpt-4o-mini",
+  },
+  "legacy/gpt-4o": {
+    provider: "openai",
+    model: "gpt-4o",
+  },
+  "legacy/gpt-5": {
+    provider: "openai",
+    model: "gpt-5",
+  },
+  "legacy/gpt-5-mini": {
+    provider: "openai",
+    model: "gpt-5-mini",
+  },
+  "legacy/gpt-5-nano": {
+    provider: "openai",
+    model: "gpt-5-nano",
+  },
+}
+
 export async function createBBAIClient(model: string): Promise<LLMResponse> {
-  const bbaiModel = BUDIBASE_AI_MODEL_MAP[model]
+  const bbaiModel = availableBudibaseAIModels[model]
   if (!bbaiModel) {
     throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
   }

@@ -5,6 +5,7 @@
     admin,
     auth,
     clientAppsStore,
+    clientChatAppsStore,
     licensing,
     organisation,
     translations,
@@ -45,6 +46,8 @@
   const { accountPortalAccountUrl } = helpers
 
   $: userApps = $clientAppsStore.apps
+  $: liveChatApps = $clientChatAppsStore.chatApps
+  $: chatAppsLoaded = $clientChatAppsStore.loaded
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUrl(app: EnrichedApp | PublishedWorkspaceData) {
@@ -65,7 +68,11 @@
 
   onMount(async () => {
     try {
-      await Promise.all([clientAppsStore.load(), translations.init()])
+      await Promise.all([
+        clientAppsStore.load(),
+        translations.init(),
+        clientChatAppsStore.load(),
+      ])
     } catch (error) {
       notifications.error("Error loading apps")
     }
@@ -156,45 +163,91 @@
                 {portalLabels.offlineDescription}
               </Layout>
             </div>
-          {:else if userApps.length}
-            <Heading>{portalLabels.appsHeading}</Heading>
-            <div class="group">
-              <Layout gap="S" noPadding>
-                {#each userApps as app (app.appId)}
-                  <a
-                    class="app"
-                    target="_blank"
-                    rel="noreferrer"
-                    href={getUrl(app)}
-                  >
-                    <div
-                      class="preview"
-                      use:gradient={{ seed: app.name }}
-                    ></div>
-                    <div class="app-info">
-                      <Heading size="XS">{app.name}</Heading>
-                      <Body size="S">
-                        {#if app.updatedAt}
-                          {processStringSync(portalLabels.updatedAgo, {
-                            time:
-                              new Date().getTime() -
-                              new Date(app.updatedAt).getTime(),
-                          })}
-                        {:else}
-                          {portalLabels.neverUpdated}
-                        {/if}
-                      </Body>
-                    </div>
-                    <Icon name="caret-right" />
-                  </a>
-                {/each}
-              </Layout>
-            </div>
           {:else}
-            <Layout gap="XS" noPadding>
-              <Heading size="S">{portalLabels.noAppsHeading}</Heading>
-              <Body size="S">{portalLabels.noAppsDescription}</Body>
-            </Layout>
+            {#if userApps.length}
+              <Heading>{portalLabels.appsHeading}</Heading>
+              <div class="group">
+                <Layout gap="S" noPadding>
+                  {#each userApps as app (app.appId)}
+                    <a
+                      class="app"
+                      target="_blank"
+                      rel="noreferrer"
+                      href={getUrl(app)}
+                    >
+                      <div
+                        class="preview"
+                        use:gradient={{ seed: app.name }}
+                      ></div>
+                      <div class="app-info">
+                        <Heading size="XS">{app.name}</Heading>
+                        <Body size="S">
+                          {#if app.updatedAt}
+                            {processStringSync(portalLabels.updatedAgo, {
+                              time:
+                                new Date().getTime() -
+                                new Date(app.updatedAt).getTime(),
+                            })}
+                          {:else}
+                            {portalLabels.neverUpdated}
+                          {/if}
+                        </Body>
+                      </div>
+                      <Icon name="caret-right" />
+                    </a>
+                  {/each}
+                </Layout>
+              </div>
+            {/if}
+            {#if userApps.length || !chatAppsLoaded || liveChatApps.length}
+              <Heading size="S">Chat</Heading>
+              <div class="group">
+                <Layout gap="S" noPadding>
+                  {#if !chatAppsLoaded}
+                    <Body size="S">Loading chat apps...</Body>
+                  {:else if liveChatApps.length}
+                    {#each liveChatApps as chatApp (chatApp.chatAppId)}
+                      <a
+                        class="app"
+                        target="_blank"
+                        rel="noreferrer"
+                        href={`/app-chat${chatApp.url}`}
+                      >
+                        <div
+                          class="preview"
+                          use:gradient={{ seed: chatApp.name }}
+                        ></div>
+                        <div class="app-info">
+                          <Heading size="XS">{chatApp.name}</Heading>
+                          <Body size="S">
+                            {#if chatApp.updatedAt}
+                              {processStringSync(portalLabels.updatedAgo, {
+                                time:
+                                  new Date().getTime() -
+                                  new Date(chatApp.updatedAt).getTime(),
+                              })}
+                            {:else}
+                              {portalLabels.neverUpdated}
+                            {/if}
+                          </Body>
+                        </div>
+                        <div class="icon-muted">
+                          <Icon name="caret-right" />
+                        </div>
+                      </a>
+                    {/each}
+                  {:else}
+                    <Body size="S">No live chat apps yet.</Body>
+                  {/if}
+                </Layout>
+              </div>
+            {/if}
+            {#if !userApps.length && chatAppsLoaded && !liveChatApps.length}
+              <Layout gap="XS" noPadding>
+                <Heading size="S">{portalLabels.noAppsHeading}</Heading>
+                <Body size="S">{portalLabels.noAppsDescription}</Body>
+              </Layout>
+            {/if}
           {/if}
         </Layout>
       </div>
@@ -269,6 +322,15 @@
     cursor: pointer;
     background: var(--spectrum-global-color-gray-200);
     transition: background-color 130ms ease-in-out;
+  }
+  .app.static {
+    cursor: default;
+  }
+  .app.static:hover {
+    background: var(--background);
+  }
+  .app .icon-muted {
+    color: var(--spectrum-global-color-gray-500);
   }
   .preview {
     height: 40px;

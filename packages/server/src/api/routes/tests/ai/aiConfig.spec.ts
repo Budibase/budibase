@@ -249,6 +249,35 @@ describe("BudibaseAI", () => {
       ).toBeTrue()
     })
 
+    it("preserves existing isDefault when omitted in update payload", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-default", key: "secret-default" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-default" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        isDefault: true,
+      })
+      expect(creationScope.isDone()).toBe(true)
+
+      const { isDefault: _isDefault, ...updateWithoutIsDefault } = created
+      const updated = await config.api.ai.updateConfig({
+        ...updateWithoutIsDefault,
+        name: "Updated Without Default Field",
+      })
+
+      expect(updated.isDefault).toBe(true)
+
+      const persisted = await getPersistedConfigAI(updated._id)
+      expect(persisted.isDefault).toBe(true)
+    })
+
     it("updates web search config without calling LiteLLM", async () => {
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")

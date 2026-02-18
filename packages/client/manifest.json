@@ -3874,6 +3874,16 @@
       },
       {
         "type": "boolean",
+        "label": "Wrap text",
+        "key": "wrapText",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "select"
+        }
+      },
+      {
+        "type": "boolean",
         "label": "Alphabetical",
         "key": "sort",
         "defaultValue": true
@@ -4051,6 +4061,16 @@
         "type": "boolean",
         "label": "Search",
         "key": "autocomplete",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "select"
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Wrap text",
+        "key": "wrapText",
         "defaultValue": false,
         "dependsOn": {
           "setting": "optionsType",
@@ -5414,6 +5434,12 @@
         "label": "Search",
         "key": "autocomplete",
         "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Wrap text",
+        "key": "wrapText",
+        "defaultValue": false
       },
       {
         "type": "boolean",

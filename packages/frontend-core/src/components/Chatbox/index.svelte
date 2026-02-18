@@ -758,7 +758,7 @@
   .message.user {
     border-radius: 8px;
     align-self: flex-end;
-    background-color: #215f9e33;
+    background-color: var(--spectrum-alias-background-color-secondary);
     font-size: 14px;
     color: var(--spectrum-global-color-gray-800);
   }
@@ -805,7 +805,7 @@
     padding: 20px;
     font-size: 16px;
     background-color: var(--spectrum-global-color-gray-200);
-    color: var(--grey-9);
+    color: var(--spectrum-alias-text-color);
     border-radius: 10px;
     border: 1px solid var(--spectrum-global-color-gray-300) !important;
     outline: none;
@@ -813,7 +813,7 @@
   }
 
   .input:focus {
-    border: 1px solid #215f9e33 !important;
+    border: 1px solid var(--spectrum-alias-border-color-mouse-focus) !important;
   }
 
   .input::placeholder {
