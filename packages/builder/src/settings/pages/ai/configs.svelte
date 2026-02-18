@@ -62,6 +62,7 @@
   function createAIConfig() {
     bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}/new`, {
       type: AIConfigType.COMPLETIONS,
+      configName: "Custom",
     })
   }
 

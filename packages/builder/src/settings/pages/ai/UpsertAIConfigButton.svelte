@@ -28,6 +28,7 @@
       bb.settings(`/ai-config/${row.configType}/${row._id || "new"}`, {
         provider: row.provider,
         type: row.configType,
+        configName: row.name ?? row.provider,
       })
     }
   }

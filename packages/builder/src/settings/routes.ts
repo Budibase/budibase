@@ -299,7 +299,7 @@ export const appRoutes = (
             {
               path: ":configId",
               comp: Pages.get("ai_config"),
-              title: "AI config",
+              titleResolver: (params: Record<string, any>) => params.configName,
             },
           ],
         },
@@ -312,7 +312,7 @@ export const appRoutes = (
             {
               path: ":configId",
               comp: Pages.get("ai_config"),
-              title: "AI config",
+              titleResolver: (params: Record<string, any>) => params.configName,
             },
           ],
         },

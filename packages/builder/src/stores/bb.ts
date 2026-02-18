@@ -1,4 +1,4 @@
-import type { MatchedRoute } from "@/types/routing"
+import type { MatchedRoute, Route } from "@/types/routing"
 import { BudiStore } from "./BudiStore"
 
 type SettingsRouteResolver = (path: string) => MatchedRoute | null
@@ -48,16 +48,28 @@ export class BBStore extends BudiStore<BBState> {
 
     const matchedRoute = settingsRouteResolver?.(path)
     if (matchedRoute) {
+      const routeParams = {
+        ...matchedRoute.params,
+        ...(params || {}),
+      }
+
+      const resolveRouteTitle = (route: Route): Route => ({
+        ...route,
+        title: route.titleResolver?.(routeParams) || route.title,
+      })
+
       this.update(state => ({
         ...state,
         settings: {
           ...state.settings,
           route: {
             ...matchedRoute,
-            params: {
-              ...matchedRoute.params,
-              ...(params || {}),
+            entry: {
+              ...resolveRouteTitle(matchedRoute.entry),
+              crumbs: matchedRoute.entry.crumbs?.map(resolveRouteTitle),
+              nav: matchedRoute.entry.nav?.map(resolveRouteTitle),
             },
+            params: routeParams,
           },
           open: true,
         },

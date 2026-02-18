@@ -35,6 +35,7 @@ export interface Route {
   routes?: Route[]
   section?: string
   title?: string
+  titleResolver?: (params: Record<string, any>) => string
   icon?: string | RouteIcon
   new?: boolean
   access?: () => boolean
@@ -79,11 +80,13 @@ export const flatten = (
     // Clone the current entry with resolved full path
     const crumb: Route = {
       title: entry.title,
+      titleResolver: entry.titleResolver,
       path: currentPath,
     }
 
     // Only include it in trail if it has a title
-    const currentTrail = entry.title ? [...trail, crumb] : trail
+    const currentTrail =
+      entry.title || entry.titleResolver ? [...trail, crumb] : trail
 
     let children: Route[] = []
     let nav: Route[] = []
