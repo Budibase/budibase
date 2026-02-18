@@ -230,7 +230,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(50000),
+        ...quotas.budibaseAICredits(millions(2)),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -253,7 +253,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(50000),
+        ...quotas.budibaseAICredits(millions(2)),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -345,7 +345,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(50000),
+        ...quotas.budibaseAICredits(millions(4)),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -368,7 +368,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(50000),
+        ...quotas.budibaseAICredits(millions(4)),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -391,7 +391,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(50000),
+        ...quotas.budibaseAICredits(millions(4)),
         ...quotas.actions(UNLIMITED),
       },
       static: {
