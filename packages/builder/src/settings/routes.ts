@@ -1,5 +1,5 @@
 import { sdk, helpers } from "@budibase/shared-core"
-import { GetGlobalSelfResponse } from "@budibase/types"
+import { FeatureFlag, GetGlobalSelfResponse } from "@budibase/types"
 import { UserAvatar } from "@budibase/frontend-core"
 
 import { Target, type Route } from "@/types/routing"
@@ -333,6 +333,7 @@ export const workspaceRoutes = (
         {
           path: "embedding-settings",
           title: "Embeddings",
+          access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
           comp: Pages.get("embeddings"),
         },
       ],
