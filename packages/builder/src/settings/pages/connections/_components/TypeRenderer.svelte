@@ -24,12 +24,12 @@
       }))
 </script>
 
-{#if authTags.length > 0}
-  <Tags>
+<Tags>
+  {#if authTags.length > 0}
     {#each authTags as tag}
       <Tag>{tag.label}</Tag>
     {/each}
-  </Tags>
-{:else}
-  <Tag>No auth</Tag>
-{/if}
+  {:else}
+    <Tag>No auth</Tag>
+  {/if}
+</Tags>

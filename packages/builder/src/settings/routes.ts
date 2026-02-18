@@ -16,10 +16,10 @@ export const globalRoutes = (user: GetGlobalSelfResponse) => {
       section: "Preferences",
       path: "profile",
       icon: {
-        comp: UserAvatar,
+        component: UserAvatar,
         props: { user, size: "XS" },
       },
-      comp: Pages.get("profile"),
+      component: Pages.get("profile"),
     },
   ]
 }
@@ -39,17 +39,17 @@ export const orgRoutes = (
     {
       path: "smtp",
       title: "SMTP",
-      comp: Pages.get("email"),
+      component: Pages.get("email"),
     },
     {
       path: "templates",
       title: "Templates",
-      comp: Pages.get("email_templates"),
+      component: Pages.get("email_templates"),
       routes: [
         {
           path: ":templateId",
           title: "Template",
-          comp: Pages.get("email_template"),
+          component: Pages.get("email_template"),
         },
       ],
     },
@@ -64,25 +64,25 @@ export const orgRoutes = (
         {
           path: "usage",
           title: "Usage",
-          comp: Pages.get("usage"),
+          component: Pages.get("usage"),
         },
         {
           path: "org",
           access: () => isAdmin,
           title: "Organisation",
-          comp: Pages.get("org"),
+          component: Pages.get("org"),
         },
         {
           path: "branding",
           access: () => isAdmin,
           title: "Branding",
-          comp: Pages.get("branding"),
+          component: Pages.get("branding"),
         },
         {
           path: "translations",
           access: () => isAdmin,
           title: "Translations",
-          comp: Pages.get("translations"),
+          component: Pages.get("translations"),
         },
       ],
     },
@@ -95,25 +95,27 @@ export const orgRoutes = (
         {
           path: "workspace",
           title: "Workspace",
-          comp: Pages.get("workspace_users"),
+          component: Pages.get("workspace_users"),
         },
         {
           path: "users",
           title: "Organisation",
-          comp: Pages.get("users"),
-          routes: [{ path: ":userId", comp: Pages.get("user"), title: "User" }],
+          component: Pages.get("users"),
+          routes: [
+            { path: ":userId", component: Pages.get("user"), title: "User" },
+          ],
         },
         {
           path: "invites",
           title: "Invites",
-          comp: Pages.get("user_invites"),
+          component: Pages.get("user_invites"),
         },
         {
           path: "groups",
           title: "Groups",
-          comp: Pages.get("groups"),
+          component: Pages.get("groups"),
           routes: [
-            { path: ":groupId", comp: Pages.get("group"), title: "Group" },
+            { path: ":groupId", component: Pages.get("group"), title: "Group" },
           ],
         },
       ],
@@ -123,14 +125,14 @@ export const orgRoutes = (
       access: () => isGlobalBuilder,
       path: "plugins",
       icon: "plug",
-      comp: Pages.get("plugins"),
+      component: Pages.get("plugins"),
     },
     {
       section: "Environment",
       access: () => isAdmin,
       path: "environment",
       icon: "shipping-container",
-      comp: Pages.get("environment"),
+      component: Pages.get("environment"),
     },
     {
       section: "Email",
@@ -144,28 +146,28 @@ export const orgRoutes = (
       access: () => isAdmin,
       path: "ai",
       icon: "sparkle",
-      comp: Pages.get("ai"),
+      component: Pages.get("ai"),
     },
     {
       section: "Auth",
       access: () => isAdmin,
       path: "auth",
       icon: "key",
-      comp: Pages.get("auth"),
+      component: Pages.get("auth"),
     },
     {
       section: "Recaptcha",
       access: () => isAdmin,
       path: "recaptcha",
       icon: "shield-check",
-      comp: Pages.get("recaptcha"),
+      component: Pages.get("recaptcha"),
     },
     {
       section: "Audit logs",
       access: () => isAdmin,
       path: "audit",
       icon: "notepad",
-      comp: Pages.get("audit_logs"),
+      component: Pages.get("audit_logs"),
     },
     {
       section: "Self host",
@@ -175,17 +177,17 @@ export const orgRoutes = (
       routes: [
         {
           path: "version",
-          comp: Pages.get("version"),
+          component: Pages.get("version"),
           title: "Version",
         },
         {
           path: "diagnostics",
-          comp: Pages.get("diagnostics"),
+          component: Pages.get("diagnostics"),
           title: "Diagnostics",
         },
         {
           path: "systemLogs",
-          comp: Pages.get("system_logs"),
+          component: Pages.get("system_logs"),
           title: "System logs",
         },
       ],
@@ -204,7 +206,7 @@ export const orgRoutes = (
       access: () => !cloud && isAdmin,
       icon: "arrow-circle-up",
       path: "upgrade",
-      comp: Pages.get("upgrade"),
+      component: Pages.get("upgrade"),
       color: "var(--spectrum-global-color-blue-500)",
     },
     {
@@ -247,17 +249,17 @@ export const workspaceRoutes = (
       icon: "sliders-horizontal",
       path: "general",
       routes: [
-        { path: "info", comp: Pages.get("general_info"), title: "Info" },
+        { path: "info", component: Pages.get("general_info"), title: "Info" },
         {
           path: "backups",
-          comp: Pages.get("backups"),
+          component: Pages.get("backups"),
           title: "Backups",
           error: () => backupErrorCount > 0,
         },
         {
           title: "OAuth2",
           path: "oauth2",
-          comp: Pages.get("oauth2"),
+          component: Pages.get("oauth2"),
         },
       ],
     },
@@ -268,32 +270,32 @@ export const workspaceRoutes = (
       path: "connections",
       icon: "cube",
       new: true,
-      comp: Pages.get("connections"),
+      component: Pages.get("connections"),
       routes: [
         {
           title: "Create",
           path: "create",
-          comp: Pages.get("create_connection"),
+          component: Pages.get("create_connection"),
           skipNav: true,
         },
         {
           title: "New connection",
           path: "new",
-          comp: Pages.get("connection"),
+          component: Pages.get("connection"),
           skipNav: true,
           props: { create: true },
         },
         {
           title: "New connection from template",
           path: "new/:templateId",
-          comp: Pages.get("connection"),
+          component: Pages.get("connection"),
           skipNav: true,
           props: { create: true },
         },
         {
           title: "Connection",
           path: ":id",
-          comp: Pages.get("connection"),
+          component: Pages.get("connection"),
           skipNav: true,
         },
       ],
@@ -305,7 +307,7 @@ export const workspaceRoutes = (
       routes: [
         {
           path: "logs",
-          comp: Pages.get("automations"),
+          component: Pages.get("automations"),
         },
       ],
     },
@@ -314,9 +316,9 @@ export const workspaceRoutes = (
       icon: "layout",
       path: "app",
       routes: [
-        { path: "pwa", comp: Pages.get("pwa"), title: "PWA" },
-        { path: "embed", comp: Pages.get("embed"), title: "Embed" },
-        { path: "scripts", comp: Pages.get("scripts"), title: "Scripts" },
+        { path: "pwa", component: Pages.get("pwa"), title: "PWA" },
+        { path: "embed", component: Pages.get("embed"), title: "Embed" },
+        { path: "scripts", component: Pages.get("scripts"), title: "Scripts" },
       ],
     },
     {
@@ -328,13 +330,13 @@ export const workspaceRoutes = (
         {
           path: "configs",
           title: "AI Configs",
-          comp: Pages.get("ai_configs"),
+          component: Pages.get("ai_configs"),
         },
         {
           path: "embedding-settings",
           title: "Embeddings",
           access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
-          comp: Pages.get("embeddings"),
+          component: Pages.get("embeddings"),
         },
       ],
     },
