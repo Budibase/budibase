@@ -28,6 +28,7 @@ export {
   selectedChatAgent,
 } from "./chatApps"
 export { clientAppsStore } from "./clientApps"
+export { clientChatAppsStore } from "./clientChatApps"
 export { bannerStore } from "./banners"
 export { appCreationStore } from "./appCreation"
 export { aiConfigsStore } from "./aiConfigs"

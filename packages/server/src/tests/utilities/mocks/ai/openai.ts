@@ -161,6 +161,117 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   }
 }
 
+export const mockAISDKChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
+  const origin = opts?.baseUrl || "https://api.openai.com"
+  const pool = getPool(origin)
+
+  const expectedFormat = opts?.format
+    ? _.matches({
+        response_format: ai.parseResponseFormat(opts.format as ResponseFormat),
+      })
+    : null
+  const rejectFormat = opts?.rejectFormat
+  const bodyMatcher = (body: string) => {
+    const reqBody = parseJsonBody(body)
+    if (expectedFormat) {
+      return expectedFormat(reqBody)
+    }
+    if (rejectFormat) {
+      return true
+    }
+    return !("response_format" in reqBody)
+  }
+
+  const interceptor = pool.intercept({
+    path: "/v1/chat/completions",
+    method: "POST",
+    body: bodyMatcher,
+  })
+  interceptor.defaultReplyHeaders({ "content-type": "application/json" })
+  const scope = interceptor.reply<object>(reqOpts => {
+    const reqBody = parseJsonBody(reqOpts.body)
+    if (rejectFormat && "response_format" in reqBody) {
+      return {
+        statusCode: 400,
+        data: {
+          error: { message: "Unexpected response_format in request body" },
+        },
+      }
+    }
+
+    let prompt
+    const messageContent = reqBody.messages[0].content
+    if (typeof messageContent === "string") {
+      prompt = messageContent
+    } else if (Array.isArray(messageContent)) {
+      const textParts = messageContent
+        .filter((part: any) => part.type === "text")
+        .map((part: any) => part.text)
+      prompt = textParts.join(" ")
+    } else {
+      prompt = ""
+    }
+
+    let content
+    if (typeof answer === "function") {
+      try {
+        content = answer(prompt)
+      } catch (e) {
+        return {
+          statusCode: 500,
+          data: {
+            error: { message: "Internal Server Error" },
+          },
+        }
+      }
+    } else {
+      content = answer
+    }
+
+    chatID++
+
+    // We mock token usage because we use it to calculate Budibase AI quota
+    // usage when Budibase AI is enabled, and some tests assert against quota
+    // usage to make sure we're tracking correctly.
+    const prompt_tokens = prompt.split(SPACE_REGEX).length
+    const completion_tokens = content.split(SPACE_REGEX).length
+
+    const response: ChatCompletionResponse = {
+      id: `chatcmpl-${chatID}`,
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model: reqBody.model,
+      system_fingerprint: `fp_${chatID}`,
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content },
+          logprobs: null,
+          finish_reason: "stop",
+        },
+      ],
+      usage: {
+        prompt_tokens,
+        completion_tokens,
+        total_tokens: prompt_tokens + completion_tokens,
+        completion_tokens_details: {
+          reasoning_tokens: 0,
+          accepted_prediction_tokens: 0,
+          rejected_prediction_tokens: 0,
+        },
+      },
+    }
+
+    return {
+      statusCode: 200,
+      data: response,
+    }
+  }) // Each mock call handles one request
+
+  // ai-sdk retries 3 times
+  scope.times(opts?.times ?? 3)
+}
+
 export const mockChatGPTStreamResponse = (content = "hi") => {
   const origin = "https://api.openai.com"
   const pool = getPool(origin)
