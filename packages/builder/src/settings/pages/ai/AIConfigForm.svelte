@@ -97,8 +97,8 @@
       return false
     }
 
-    if ((isBBAI && isModified) || !draft?._id) {
-      return true
+    if (isBBAI) {
+      return isModified || !draft?._id
     }
 
     if (!isModified) {

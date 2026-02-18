@@ -12,7 +12,7 @@
   let vectorModalConfig: VectorDb | null = $state(null)
 
   let embeddingConfigs = $derived(
-    $aiConfigsStore.customConfigsPerType.embeddings.sort((a, b) =>
+    [...$aiConfigsStore.customConfigsPerType.embeddings].sort((a, b) =>
       a.name.localeCompare(b.name)
     )
   )
