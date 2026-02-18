@@ -208,7 +208,8 @@ export async function discordChat({
     }),
     messages: messagesWithContext,
     system,
-    tools,
+    tools: hasTools ? tools : undefined,
+    toolChoice: hasTools ? "auto" : "none",
     stopWhen: stepCountIs(30),
     providerOptions: providerOptions?.(hasTools),
     onError({ error }) {
@@ -381,6 +382,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       messages: messagesWithContext,
       system,
       tools: hasTools ? tools : undefined,
+      toolChoice: hasTools ? "auto" : "none",
       stopWhen: stepCountIs(30),
       onStepFinish({ content, toolCalls, toolResults }) {
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
