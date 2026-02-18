@@ -9624,6 +9624,20 @@
       },
 
       {
+        "type": "text",
+        "label": "Empty agenda text",
+        "key": "emptyAgendaText",
+        "defaultValue": "No events found"
+      },
+
+      {
+        "type": "text",
+        "label": "Open on date",
+        "key": "openOnDate",
+        "defaultValue": "{{ now }}",
+        "required": true
+      },
+      {
         "type": "boolean",
         "label": "Show title date",
         "key": "showTitleDate",
@@ -9686,25 +9700,11 @@
           }
         ]
       },
-
-      {
-        "type": "text",
-        "label": "Empty agenda text",
-        "key": "emptyAgendaText",
-        "defaultValue": "No events found"
-      },
       {
         "type": "boolean",
         "label": "Show controls",
         "key": "showButtons",
         "defaultValue": true
-      },
-      {
-        "type": "text",
-        "label": "Open on date",
-        "key": "openOnDate",
-        "defaultValue": "{{ now }}",
-        "required": true
       },
       {
         "section": true,
