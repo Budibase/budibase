@@ -1,15 +1,15 @@
 import { createAzure } from "@ai-sdk/azure"
 import { createOpenAI } from "@ai-sdk/openai"
-import { env } from "@budibase/backend-core"
-import { AIProvider } from "@budibase/types"
+import { env, HTTPError } from "@budibase/backend-core"
+import { AIProvider, LLMProviderConfig } from "@budibase/types"
 import tracer from "dd-trace"
 import { LLMResponse } from "."
-import { ai } from "@budibase/pro"
+import { ai, licensing } from "@budibase/pro"
 import { createBBAIClient } from "./bbai"
 
-const getLegacyProviderClient = (
+const getLegacyProviderClient = async (
   provider: AIProvider,
-  config: Awaited<ReturnType<typeof ai.getLLMConfig>>
+  config: LLMProviderConfig
 ) => {
   if (!config) {
     throw new Error("No LLM config found")
@@ -19,11 +19,21 @@ const getLegacyProviderClient = (
     case "OpenAI":
     case "TogetherAI":
     case "Custom":
-    case "BudibaseAI":
       return createOpenAI({
         baseURL: config.baseUrl,
         apiKey: config.apiKey,
       })
+    case "BudibaseAI": {
+      const licenseKey = await licensing.keys.getLicenseKey()
+      if (!licenseKey) {
+        throw new HTTPError("No license key found", 422)
+      }
+      return createOpenAI({
+        baseURL: `${env.BUDICLOUD_URL}/api/ai`,
+        apiKey: licenseKey,
+      })
+    }
+
     case "Anthropic":
       return createOpenAI({
         baseURL: config.baseUrl || "https://api.anthropic.com/v1",
@@ -59,14 +69,17 @@ export const createLegacyLLM = async (
     })
   }
 
+  const model =
+    config.provider === "BudibaseAI" ? `legacy/${config.model}` : config.model
+
   if (config.provider === "BudibaseAI" && !env.SELF_HOSTED) {
-    return createBBAIClient(`legacy/${config.model}`)
+    return createBBAIClient(model)
   }
 
-  const llm = getLegacyProviderClient(config.provider, config)
+  const llm = await getLegacyProviderClient(config.provider, config)
 
   return {
-    chat: llm.chat(config.model),
-    embedding: llm.embedding(config.model),
+    chat: llm.chat(model),
+    embedding: llm.embedding(model),
   }
 }
