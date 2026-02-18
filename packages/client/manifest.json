@@ -9552,7 +9552,8 @@
           "typeSupport": {
             "preset": "dateTimeLike"
           }
-        }
+        },
+        "info": "Event start and end should equate to date-times."
       },
       {
         "type": "field",
