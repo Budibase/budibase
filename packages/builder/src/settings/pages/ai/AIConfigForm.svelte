@@ -17,6 +17,8 @@
   import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
   import { routeActions } from ".."
+  import { confirm } from "@/helpers"
+  import { bb } from "@/stores/bb"
 
   export interface Props {
     configId?: string
@@ -162,24 +164,37 @@
       return
     }
 
-    try {
-      await aiConfigsStore.deleteConfig(draft._id)
-      notifications.success(
-        `${typeLabel[0].toUpperCase()}${typeLabel.slice(
-          1
-        )} configuration deleted`
-      )
-      dispatch("hide")
-    } catch (err: any) {
-      notifications.error(
-        err.message || `Failed to delete ${typeLabel} configuration`
-      )
-    }
+    const configId = draft._id
+
+    await confirm({
+      title: "Delete model",
+      body: "Are you sure you want to permanently delete this model?",
+      onConfirm: async () => {
+        try {
+          await aiConfigsStore.deleteConfig(configId)
+          notifications.success(
+            `${typeLabel[0].toUpperCase()}${typeLabel.slice(
+              1
+            )} configuration deleted`
+          )
+          bb.settings("/ai-config/configs")
+        } catch (err: any) {
+          notifications.error(
+            err.message || `Failed to delete ${typeLabel} configuration`
+          )
+        }
+      },
+    })
   }
 </script>
 
 <div use:routeActions>
-  <Button on:click={saveConfig} cta>Save</Button>
+  <div class="actions">
+    {#if isEdit}
+      <Button on:click={deleteConfig} quiet overBackground>Delete</Button>
+    {/if}
+    <Button on:click={saveConfig} cta disabled={!canSave}>Save</Button>
+  </div>
 </div>
 
 <div class="form">
@@ -253,5 +268,9 @@
     display: flex;
     gap: var(--spacing-s);
     flex-direction: column;
+  }
+  .actions {
+    display: flex;
+    gap: var(--spacing-s);
   }
 </style>
