@@ -1,7 +1,6 @@
 import * as inviteCache from "../../../src/cache/invite"
 import { setEnv } from "../../../src/environment"
 import * as redis from "../../../src/redis/init"
-import { Duration, newid } from "../../../src/utils"
 import { testEnv } from "../../extra"
 
 describe("invite cache", () => {
@@ -16,8 +15,6 @@ describe("invite cache", () => {
   })
 
   afterEach(async () => {
-    const inviteClient = await redis.getInviteClient()
-    await inviteClient.clear()
     const inviteListClient = await redis.getInviteListClient()
     await inviteListClient.clear()
   })
@@ -34,33 +31,6 @@ describe("invite cache", () => {
 
       const invites = await inviteCache.getInviteCodes()
       expect(invites.some(inv => inv.code === code)).toBe(true)
-
-      const inviteClient = await redis.getInviteClient()
-      expect(await inviteClient.exists(code)).toBe(0)
-    })
-  })
-
-  it("combines legacy invites with tenant list", async () => {
-    await testEnv.withTenant(async tenantId => {
-      const inviteClient = await redis.getInviteClient()
-      const code = `legacy-${newid()}`
-      await inviteClient.store(
-        code,
-        {
-          email: "legacy@budibase.com",
-          info: { tenantId },
-        },
-        Duration.fromDays(7).toSeconds()
-      )
-
-      const invites = await inviteCache.getInviteCodes()
-      expect(invites.some(inv => inv.code === code)).toBe(true)
-
-      const inviteListClient = await redis.getInviteListClient()
-      const list = (await inviteListClient.get(tenantId)) as any
-      if (list) {
-        expect(list.invites[code]).toBeUndefined()
-      }
     })
   })
 
