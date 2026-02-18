@@ -4,7 +4,6 @@
     type AIConfigResponse,
   } from "@budibase/types"
   import { ActionButton, Modal, Body, ProgressCircle } from "@budibase/bbui"
-  import CustomConfigModal from "./AIConfigForm.svelte"
   import { onMount } from "svelte"
   import { admin, licensing } from "@/stores/portal"
   import { API } from "@/api"
@@ -23,10 +22,10 @@
   let hasLicenseKey: boolean | null = $state(null)
 
   function onClick() {
-    if (row.provider !== BUDIBASE_AI_PROVIDER_ID && !hasLicenseKey) {
+    if (row.provider === BUDIBASE_AI_PROVIDER_ID && !hasLicenseKey) {
       enableBBAIModal?.show()
     } else {
-      bb.settings(`/ai-config/configs/${row._id}`, {
+      bb.settings(`/ai-config/configs/${row._id || "new"}`, {
         provider: row.provider,
         type: row.configType,
       })
@@ -54,13 +53,7 @@
 >
 
 <Modal bind:this={enableBBAIModal}>
-  {#if row.provider !== BUDIBASE_AI_PROVIDER_ID}
-    <CustomConfigModal
-      config={row}
-      provider={row.provider}
-      type={row.configType}
-    />
-  {:else if hasLicenseKey == null}
+  {#if hasLicenseKey == null}
     <div class="license-check">
       <ProgressCircle />
       <Body size="S">Checking license...</Body>
