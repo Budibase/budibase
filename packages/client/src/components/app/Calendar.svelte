@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
 
   import "@fullcalendar/core/locales-all"
   import FullCalendar from "svelte-fullcalendar"
@@ -49,6 +49,8 @@
   const { styleable } = getContext("sdk")
   const component = getContext("component")
   let calendarRef: FullCalendar | null = null
+  let calendarContainer: HTMLDivElement | null = null
+  let resizeObserver: ResizeObserver | null = null
   $: isTimeGridDay = calendarType === "timeGridDay"
   $: calendarButtonType = buttonType === "primary" ? "primary" : "action"
   $: yearTitleFormatProps =
@@ -63,6 +65,28 @@
       end: row[eventEnd],
       row_id: row["_id"],
     })) ?? []
+
+  const updateCalendarSize = () => {
+    const api = calendarRef?.getAPI?.()
+    api?.updateSize()
+  }
+
+  onMount(() => {
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => updateCalendarSize())
+      if (calendarContainer) {
+        resizeObserver.observe(calendarContainer)
+      }
+    }
+    return () => {
+      resizeObserver?.disconnect()
+      resizeObserver = null
+    }
+  })
+
+  $: if (resizeObserver && calendarContainer) {
+    resizeObserver.observe(calendarContainer)
+  }
 
   function handleEventClick(info: EventClickArg) {
     const title = info.event.title
@@ -145,6 +169,7 @@
   class="calendar"
   class:timeGridDay={isTimeGridDay}
   data-button-type={calendarButtonType}
+  bind:this={calendarContainer}
   use:styleable={$component.styles}
 >
   <FullCalendar bind:this={calendarRef} {options} />
@@ -291,7 +316,7 @@
 
   .calendar {
     color: var(--spectrum-alias-text-color, inherit);
-    height: 420px;
+    min-height: 420px;
   }
 
   .calendar :global(.fc-daygrid-day-number),
