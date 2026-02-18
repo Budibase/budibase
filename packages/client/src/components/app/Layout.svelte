@@ -267,7 +267,7 @@
   data-icon="browser"
 >
   <div class="screen-wrapper layout-body">
-    {#if showBanner}
+    {#if showBanner && (typeClass !== "left" || mobile)}
       <div class="banner" style={bannerStyle}>
         <div class="banner-content">{banner?.text}</div>
       </div>
@@ -414,8 +414,15 @@
           }
         }}
       >
-        <div class="main size--{pageWidthClass}">
-          <slot />
+        <div class="main-content-area">
+          {#if showBanner && typeClass === "left" && !mobile}
+            <div class="banner" style={bannerStyle}>
+              <div class="banner-content">{banner?.text}</div>
+            </div>
+          {/if}
+          <div class="main size--{pageWidthClass}">
+            <slot />
+          </div>
         </div>
       </div>
     </div>
@@ -589,6 +596,12 @@
     flex: 1 1 auto;
     z-index: 1;
   }
+  .main-content-area {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+  }
   .main {
     display: flex;
     flex-direction: column;
@@ -597,6 +610,7 @@
     max-width: 100%;
     position: relative;
     padding: 32px;
+    align-self: center;
   }
   .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
     padding: calc(32px - var(--grid-spacing) * 2px);
