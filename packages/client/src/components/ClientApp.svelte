@@ -9,7 +9,10 @@
     invalidationMessage,
     popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
-  import { getThemeClassNames } from "@budibase/shared-core"
+  import {
+    DefaultBuilderTheme,
+    getThemeClassNames,
+  } from "@budibase/shared-core"
   import Component from "./Component.svelte"
   import SDK from "@/sdk"
   import {
@@ -57,6 +60,7 @@
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
   import RecaptchaV2 from "./RecaptchaV2.svelte"
   import { ActionTypes } from "@/constants"
+  import AppChatbox from "./app/Chatbox.svelte"
 
   // Provide contexts
   const context = createContextStore()
@@ -78,10 +82,22 @@
 
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
+  $: isChatOnlyRoute =
+    typeof window !== "undefined" &&
+    (window.location.pathname.replace(/\/$/, "").endsWith("/_chat") ||
+      window.location.pathname.startsWith("/app-chat/"))
+  $: resolvedThemeClassNames = getThemeClassNames(
+    isChatOnlyRoute ? DefaultBuilderTheme : $themeStore.theme
+  )
 
   // Handle no matching route
   $: {
-    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
+    if (
+      !isChatOnlyRoute &&
+      dataLoaded &&
+      $routeStore.routerLoaded &&
+      !$routeStore.activeRoute
+    ) {
       if ($screenStore.screens.length) {
         // If we have some available screens, use the first screen which
         // represents the best route based on rank
@@ -186,7 +202,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {getThemeClassNames($themeStore.theme)}"
+    class="spectrum spectrum--medium {resolvedThemeClassNames}"
     class:builder={$builderStore.inBuilder}
     class:show={fontsLoaded && dataLoaded}
   >
@@ -240,6 +256,20 @@
                                   </Body>
                                 </Layout>
                               </div>
+                            {:else if isChatOnlyRoute}
+                              <CustomThemeWrapper>
+                                <div class="chat-route-shell">
+                                  <div class="chat-app-container">
+                                    <AppChatbox />
+                                  </div>
+                                </div>
+
+                                <!-- Layers on top of app -->
+                                <NotificationDisplay />
+                                <ConfirmationDisplay />
+                                <PeekScreenDisplay />
+                                <InstallPrompt />
+                              </CustomThemeWrapper>
                             {:else if !$screenStore.activeLayout}
                               <div class="error">
                                 <Layout justifyItems="center" gap="S">
@@ -395,6 +425,29 @@
     font-weight: 400;
   }
 
+  .chat-route-shell {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: var(--spacing-xl);
+    background: var(--background-alt);
+    box-sizing: border-box;
+  }
+
+  .chat-app-container {
+    flex: 1 1 auto;
+    display: flex;
+    border-radius: 24px;
+    border: var(--border-dark);
+    background: transparent;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+  }
+
   /* Preview styles */
   #clip-root.preview {
     padding: 6px;
@@ -413,6 +466,16 @@
   #clip-root.modal-mobile-preview.mobile-preview {
     width: 100%;
     height: 100%;
+  }
+
+  @media (max-width: 1000px) {
+    .chat-route-shell {
+      padding: var(--spacing-m);
+    }
+
+    .chat-app-container {
+      border-radius: 16px;
+    }
   }
 
   /* Print styles */
