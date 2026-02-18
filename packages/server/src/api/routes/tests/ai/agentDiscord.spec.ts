@@ -1,9 +1,12 @@
 import crypto from "crypto"
 import nock from "nock"
+import { db, encryption } from "@budibase/backend-core"
 import { DiscordCommands } from "@budibase/shared-core"
+import type { Agent } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 const DISCORD_PUBLIC_KEY_DER_PREFIX = "302a300506032b6570032100"
+const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
 const makeDiscordSigningKeyPair = () => {
   const { publicKey, privateKey } = crypto.generateKeyPairSync("ed25519")
@@ -35,8 +38,28 @@ const signDiscordPayload = ({
     )
     .toString("hex")
 
+const secretMatch = (plain: string, encoded: string) => {
+  if (!encoded.startsWith(SECRET_ENCODING_PREFIX)) {
+    throw new Error("Encoded discord secret not properly configured.")
+  }
+  return encryption.compare(
+    plain,
+    encoded.substring(SECRET_ENCODING_PREFIX.length)
+  )
+}
+
 describe("agent discord integration sync", () => {
   const config = new TestConfiguration()
+
+  async function getPersistedAgent(id: string | undefined) {
+    const result = await db.doWithDB(config.getDevWorkspaceId(), db =>
+      db.tryGet<Agent>(id)
+    )
+    if (!result) {
+      throw new Error(`Agent ${id} not found`)
+    }
+    return result
+  }
 
   beforeEach(async () => {
     await config.newTenant()
@@ -69,12 +92,14 @@ describe("agent discord integration sync", () => {
           commands.some(
             command =>
               command.name === DiscordCommands.ASK &&
-              command.contexts?.includes(1)
+              command.contexts?.includes(1) &&
+              !command.contexts?.includes(0)
           ) &&
           commands.some(
             command =>
               command.name === DiscordCommands.NEW &&
-              command.contexts?.includes(1)
+              command.contexts?.includes(1) &&
+              !command.contexts?.includes(0)
           )
         )
       })
@@ -147,6 +172,14 @@ describe("agent discord integration sync", () => {
     expect(updated.discordIntegration?.publicKey).toEqual("********")
     expect(updated.discordIntegration?.botToken).toEqual("********")
 
+    const persisted = await getPersistedAgent(created._id)
+    expect(
+      secretMatch(signing.publicKey, persisted.discordIntegration!.publicKey!)
+    ).toBeTrue()
+    expect(
+      secretMatch("bot-secret", persisted.discordIntegration!.botToken!)
+    ).toBeTrue()
+
     const globalScope = nock("https://discord.com")
       .put("/api/v10/applications/app-123/commands")
       .matchHeader("authorization", "Bot bot-secret")
@@ -184,6 +217,75 @@ describe("agent discord integration sync", () => {
     await config.api.agent.syncDiscordCommands(agent._id!, undefined, {
       status: 400,
     })
+  })
+
+  it("allows saving discord config for agents with an empty aiconfig", async () => {
+    const created = await config.api.agent.create({
+      name: "Discord Empty AI Config Agent",
+    })
+
+    const updated = await config.api.agent.update({
+      ...created,
+      discordIntegration: {
+        applicationId: "app-123",
+        publicKey: "pub-123",
+        botToken: "bot-123",
+        guildId: "guild-123",
+      },
+    })
+
+    expect(updated.aiconfig).toEqual("")
+    expect(updated.discordIntegration?.applicationId).toEqual("app-123")
+  })
+
+  it("returns a validation error when toggle deployment payload is missing enabled", async () => {
+    const signing = makeDiscordSigningKeyPair()
+    const agent = await config.api.agent.create({
+      name: "Discord Toggle Validation Agent",
+      discordIntegration: {
+        applicationId: "app-123",
+        publicKey: signing.publicKey,
+        botToken: "bot-secret",
+        guildId: "guild-123",
+      },
+    })
+
+    nock("https://discord.com")
+      .put("/api/v10/applications/app-123/commands")
+      .matchHeader("authorization", "Bot bot-secret")
+      .reply(200, [])
+    nock("https://discord.com")
+      .put("/api/v10/applications/app-123/guilds/guild-123/commands")
+      .matchHeader("authorization", "Bot bot-secret")
+      .reply(200, [])
+
+    const syncResult = await config.api.agent.syncDiscordCommands(agent._id!)
+
+    await config.api.agent.toggleDiscordDeployment(agent._id!, undefined, {
+      status: 400,
+    })
+
+    const { agents } = await config.api.agent.fetch()
+    const updatedAgent = agents.find(a => a._id === agent._id)
+
+    expect(updatedAgent?.discordIntegration?.interactionsEndpointUrl).toEqual(
+      syncResult.interactionsEndpointUrl
+    )
+    expect(updatedAgent?.discordIntegration?.chatAppId).toEqual(
+      syncResult.chatAppId
+    )
+  })
+
+  it("returns a validation error when toggle deployment enabled is not a boolean", async () => {
+    const agent = await config.api.agent.create({
+      name: "Discord Toggle Invalid Type Agent",
+    })
+
+    await config.api.agent.toggleDiscordDeployment(
+      agent._id!,
+      { enabled: "true" },
+      { status: 400 }
+    )
   })
 
   describe("discord webhook signature validation", () => {

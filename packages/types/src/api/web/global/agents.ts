@@ -24,6 +24,10 @@ export interface FetchAgentsResponse {
   agents: Agent[]
 }
 
+export interface FetchChatAppAgentsResponse {
+  agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
+}
+
 export interface SyncAgentDiscordCommandsRequest {
   chatAppId?: string
 }
@@ -33,6 +37,15 @@ export interface SyncAgentDiscordCommandsResponse {
   chatAppId: string
   interactionsEndpointUrl: string
   inviteUrl: string
+}
+
+export interface ToggleAgentDiscordRequest {
+  enabled: boolean
+}
+
+export interface ToggleAgentDiscordResponse {
+  success: true
+  enabled: boolean
 }
 
 export type CreateAgentRequest = Optional<

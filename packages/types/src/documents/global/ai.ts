@@ -15,6 +15,7 @@ export interface CustomAIProviderConfig extends Document {
   credentialsFields: Record<string, string>
   model: string
   liteLLMModelId: string
+  isDefault?: boolean
   webSearchConfig?: WebSearchConfig
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort

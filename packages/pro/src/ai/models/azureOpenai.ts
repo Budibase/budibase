@@ -3,6 +3,8 @@ import { OpenAI, GPT_5_MODELS } from "./openai"
 import { AzureOpenAI as AzureOpenAIClient } from "openai"
 
 export class AzureOpenAI extends OpenAI {
+  override supportsFiles = false
+
   protected override getClient(opts: LLMConfigOptions) {
     if (!opts.apiKey) {
       throw new Error("No Azure OpenAI API key found")

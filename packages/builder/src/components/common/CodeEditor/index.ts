@@ -295,8 +295,16 @@ export const hbInsert = (
   to: number,
   text: string
 ) => {
-  const { inside } = getWrapperState(value, from, to, "{{", "}}")
-  return inside ? ` ${text} ` : `{{ ${text} }}`
+  const doc = value ?? ""
+  const left = doc.slice(0, from)
+  const right = doc.slice(to)
+  const { hasOpen, hasClose } = getWrapperState(value, from, to, "{{", "}}")
+  const hasPartialOpen = left.endsWith("{") && !left.endsWith("{{")
+  const hasPartialClose = right.startsWith("}") && !right.startsWith("}}")
+  const leftPrefix = hasOpen ? "" : hasPartialOpen ? "{" : "{{"
+  const rightPrefix = hasClose ? "" : hasPartialClose ? "}" : "}}"
+
+  return `${leftPrefix} ${text} ${rightPrefix}`
 }
 
 export const htmlInsert = (

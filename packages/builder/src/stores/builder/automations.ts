@@ -2478,15 +2478,18 @@ const automationActions = (store: AutomationStore) => ({
       // used in the server to detect relationships. It would be far better to
       // instead fetch the schema in the backend at runtime.
       // If _tableId is explicitly included in the update request, the schema will be requested
-      let schema: Record<any, any> = {}
+      let requestedTableSchema: Record<string, any> | undefined
       if (request?._tableId) {
-        schema = getSchemaForDatasourcePlus(request._tableId, {
+        requestedTableSchema = getSchemaForDatasourcePlus(request._tableId, {
           searchableSchema: true,
         }).schema
         delete request._tableId
       }
       try {
-        const data = { schema, ...request }
+        const data = { ...request }
+        if (requestedTableSchema) {
+          data.schema = requestedTableSchema
+        }
         const stepBlock = block as AutomationStep
         await automationStore.actions.updateBlockInputs(stepBlock, data)
       } catch (error) {

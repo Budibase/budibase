@@ -1,11 +1,12 @@
 import { z } from "zod"
 import {
+  mockAISDKChatGPTResponse,
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, setEnv } from "@budibase/backend-core"
+import { configs, env, setEnv, withEnv } from "@budibase/backend-core"
 import { generateText, streamText } from "ai"
 import {
   AIInnerConfig,
@@ -29,27 +30,14 @@ import {
 } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
+import { resetHttpMocking } from "../../../tests/jestEnv"
 
 jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
   return {
     ...actual,
-    generateText: jest.fn(),
-    streamText: jest.fn(),
-  }
-})
-
-jest.mock("@budibase/types", () => {
-  const actual = jest.requireActual("@budibase/types")
-  return {
-    ...actual,
-    BUDIBASE_AI_MODEL_MAP: {
-      ...actual.BUDIBASE_AI_MODEL_MAP,
-      "budibase/mistral-small-latest": {
-        provider: "mistral",
-        model: "mistral-small-latest",
-      },
-    },
+    generateText: jest.fn(actual.generateText),
+    streamText: jest.fn(actual.streamText),
   }
 })
 
@@ -96,7 +84,11 @@ function budibaseAI(): SetupFn {
       })
     })
 
-    return setEnv({ OPENAI_API_KEY: "test-key", SELF_HOSTED: false })
+    return setEnv({
+      OPENAI_API_KEY: "test-key",
+      BBAI_OPENAI_API_KEY: "test-key",
+      SELF_HOSTED: false,
+    })
   }
 }
 
@@ -139,12 +131,12 @@ const allProviders: TestSetup[] = [
         OPENAI_API_KEY: "test-key",
       })
     },
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
   {
     name: "OpenAI API key with custom config",
     setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
   {
     name: "Anthropic API key with custom config",
@@ -173,7 +165,7 @@ const allProviders: TestSetup[] = [
   {
     name: "BudibaseAI",
     setup: budibaseAI(),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
 ]
 
@@ -188,8 +180,9 @@ describe("AI", () => {
     config.end()
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     nock.cleanAll()
+    await resetHttpMocking()
   })
 
   describe.each(allProviders)(
@@ -308,6 +301,10 @@ describe("BudibaseAI", () => {
   beforeAll(async () => {
     await config.init()
     cleanup = await budibaseAI()(config)
+  })
+
+  beforeEach(async () => {
+    await resetHttpMocking()
   })
 
   afterAll(async () => {
@@ -521,9 +518,6 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      // Ensure MockAgent is installed for OpenAI interceptors
-      const { installHttpMocking } = require("../../../tests/jestEnv")
-      installHttpMocking()
     })
 
     const mockAIGenerationStructure = (
@@ -1180,7 +1174,8 @@ describe("BudibaseAI", () => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
         ACCOUNT_PORTAL_API_KEY: internalApiKey,
-        BBAI_OPENAI_API_KEY: "openai-key",
+        BBAI_OPENROUTER_API_KEY: "openrouter-key",
+        OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1",
       })
     })
 
@@ -1232,7 +1227,7 @@ describe("BudibaseAI", () => {
       } as unknown as ReturnType<typeof generateText>)
 
       const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/gpt-5-mini",
+        model: "budibase/v1",
         messages: [{ role: "user", content: "hello" }],
         licenseKey,
       })
@@ -1258,7 +1253,7 @@ describe("BudibaseAI", () => {
       } as unknown as ReturnType<typeof generateText>)
 
       const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/gpt-5-mini",
+        model: "budibase/v1",
         messages: [{ role: "user", content: "return json" }],
         stream: false,
         // @ts-expect-error extra field should be ignored
@@ -1278,7 +1273,7 @@ describe("BudibaseAI", () => {
 
       await config.api.ai.openaiChatCompletions(
         {
-          model: "budibase/gpt-5-mini",
+          model: "budibase/v1",
           messages: [{ role: "user", content: "hello" }],
           stream: true,
           licenseKey,
@@ -1317,47 +1312,18 @@ describe("BudibaseAI", () => {
       )
     })
 
-    it("accepts Mistral models when configured", async () => {
-      const mistralCleanup = setEnv({
-        BBAI_MISTRAL_API_KEY: "mistral-key",
-        MISTRAL_BASE_URL: "https://api.mistral.ai",
-      })
-      generateTextMock.mockResolvedValue({
-        response: {
-          body: {
-            object: "chat.completion",
-            choices: [
-              {
-                message: { content: "hello from mistral" },
-              },
-            ],
+    it("errors when OpenRouter API key is missing", async () => {
+      await withEnv({ BBAI_OPENROUTER_API_KEY: "" }, async () => {
+        await config.api.ai.openaiChatCompletions(
+          {
+            model: "budibase/v1",
+            messages: [{ role: "user", content: "hello" }],
+            stream: false,
+            licenseKey,
           },
-        },
-      } as unknown as ReturnType<typeof generateText>)
-
-      const response = await config.api.ai.openaiChatCompletions({
-        model: "budibase/mistral-small-latest",
-        messages: [{ role: "user", content: "hello" }],
-        stream: false,
-        licenseKey,
+          { status: 500 }
+        )
       })
-
-      expect(response.choices[0].message.content).toBe("hello from mistral")
-      mistralCleanup()
-    })
-
-    it("errors when OpenAI API key is missing", async () => {
-      const keyCleanup = setEnv({ BBAI_OPENAI_API_KEY: "" })
-      await config.api.ai.openaiChatCompletions(
-        {
-          model: "budibase/gpt-5-mini",
-          messages: [{ role: "user", content: "hello" }],
-          stream: false,
-          licenseKey,
-        },
-        { status: 500 }
-      )
-      keyCleanup()
     })
   })
 })

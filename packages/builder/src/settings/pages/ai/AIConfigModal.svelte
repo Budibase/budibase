@@ -41,6 +41,7 @@
           webSearchConfig: config.webSearchConfig,
           configType: config.configType,
           reasoningEffort: config.reasoningEffort,
+          isDefault: config.isDefault,
         } satisfies RequiredKeys<UpdateAIConfigRequest>)
       : ({
           provider: provider ?? "",
@@ -50,6 +51,9 @@
           credentialsFields: {},
           webSearchConfig: undefined,
           reasoningEffort: undefined,
+          isDefault:
+            type === AIConfigType.COMPLETIONS &&
+            !$aiConfigsStore.customConfigs.length,
         } satisfies RequiredKeys<CreateAIConfigRequest>)
   )
 
@@ -108,6 +112,16 @@
         )
       } else {
         const { _id, ...rest } = draft
+        if (
+          rest.configType === AIConfigType.COMPLETIONS &&
+          !$aiConfigsStore.customConfigs.some(
+            config =>
+              config.configType === AIConfigType.COMPLETIONS &&
+              config.isDefault === true
+          )
+        ) {
+          rest.isDefault = true
+        }
         await aiConfigsStore.createConfig(rest)
         notifications.success(
           `${typeLabel[0].toUpperCase()}${typeLabel.slice(
@@ -219,12 +233,18 @@
           placeholder={field.placeholder ?? undefined}
           helpText={field.tooltip ?? undefined}
         />
+      {:else if field.field_type === "password" || field.key.includes("key")}
+        <Input
+          bind:value={draft.credentialsFields[field.key]}
+          type="password"
+          autocomplete="new-password"
+          placeholder={field.placeholder ?? undefined}
+          helpText={field.tooltip ?? undefined}
+        />
       {:else}
         <Input
           bind:value={draft.credentialsFields[field.key]}
-          type={field.field_type === "password" || field.key.includes("key")
-            ? "password"
-            : "text"}
+          type="text"
           placeholder={field.placeholder ?? undefined}
           helpText={field.tooltip ?? undefined}
         />
