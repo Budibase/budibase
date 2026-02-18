@@ -54,7 +54,7 @@ RUN mkdir -p /litellm
 # This is the default litellm config file, users can mount their own
 COPY hosting/litellm_config.yaml /litellm/config.yaml
 
-# Install postgres client for pg_dump utils
+# Install postgres client/server for pg_dump and LiteLLM metadata storage
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -68,6 +68,7 @@ RUN set -eux; \
       > /etc/apt/sources.list.d/postgresql.list; \
     apt-get update; \
     apt-get install -y --no-install-recommends postgresql-client-15; \
+    apt-get install -y --no-install-recommends postgresql-15; \
     rm -rf /var/lib/apt/lists/*; \
     apt-get purge -y --auto-remove gnupg lsb-release; \
     rm -f /etc/apt/sources.list.d/postgresql.list
@@ -103,6 +104,8 @@ COPY hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
 COPY hosting/single/redis-runner.sh .
 RUN chmod +x ./redis-runner.sh
+COPY hosting/single/litellm-db-runner.sh .
+RUN chmod +x ./litellm-db-runner.sh
 COPY hosting/single/healthcheck.sh .
 RUN chmod +x ./healthcheck.sh
 

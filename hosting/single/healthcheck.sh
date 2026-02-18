@@ -25,6 +25,11 @@ if [[ $(curl -s -w "%{http_code}\n" http://localhost:4002/health -o /dev/null) -
     healthy=false
 fi
 
+if [[ $(curl -s -w "%{http_code}\n" http://localhost:4000/health/liveliness -o /dev/null) -ne 200 ]]; then
+    echo 'ERROR: LiteLLM is not running';
+    healthy=false
+fi
+
 if [[ $(curl -s -w "%{http_code}\n" http://localhost:5984/_up -o /dev/null) -ne 200 ]]; then
     echo 'ERROR: CouchDB is not running';
     healthy=false
@@ -32,6 +37,13 @@ fi
 if [[ $(redis-cli -a $REDIS_PASSWORD --no-auth-warning  ping) != 'PONG' ]]; then
     echo 'ERROR: Redis is down';
     healthy=false
+fi
+
+if [[ "${LITELLM_INTERNAL_DB}" == "true" ]]; then
+    if ! pg_isready -h 127.0.0.1 -p "${LITELLM_DB_PORT:-5432}" -U postgres >/dev/null 2>&1; then
+        echo 'ERROR: LiteLLM Postgres is down';
+        healthy=false
+    fi
 fi
 # mino, clouseau, 
 nginx -t -q
