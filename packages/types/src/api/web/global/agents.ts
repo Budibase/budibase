@@ -24,6 +24,10 @@ export interface FetchAgentsResponse {
   agents: Agent[]
 }
 
+export interface FetchChatAppAgentsResponse {
+  agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
+}
+
 export interface SyncAgentDiscordCommandsRequest {
   chatAppId?: string
 }

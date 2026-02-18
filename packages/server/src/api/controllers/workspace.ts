@@ -34,6 +34,7 @@ import {
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
   FetchPublishedAppsResponse,
+  FetchPublishedChatAppsResponse,
   FetchWorkspacesResponse,
   FieldType,
   ImportToUpdateWorkspaceRequest,
@@ -320,6 +321,36 @@ export async function fetchClientApps(
   ctx.body = { apps: result }
 }
 
+export async function fetchClientChatApps(
+  ctx: UserCtx<void, FetchPublishedChatAppsResponse>
+) {
+  const workspaces = await sdk.workspaces.fetch(
+    WorkspaceStatus.DEPLOYED,
+    ctx.user
+  )
+
+  const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
+  for (const workspace of workspaces) {
+    const chatApp = await context.doInWorkspaceContext(workspace.appId, () =>
+      sdk.ai.chatApps.getSingle()
+    )
+
+    if (!chatApp?.live || !chatApp._id) {
+      continue
+    }
+
+    chatApps.push({
+      appId: workspace.appId,
+      chatAppId: chatApp._id,
+      name: chatApp.title || workspace.name,
+      url: `${workspace.url}`.replace(/\/$/, ""),
+      updatedAt: chatApp.updatedAt || workspace.updatedAt,
+    })
+  }
+
+  ctx.body = { chatApps }
+}
+
 export async function fetchAppDefinition(
   ctx: UserCtx<void, FetchAppDefinitionResponse>
 ) {
@@ -434,13 +465,27 @@ export async function fetchAppPackage(
     const urlPath =
       embedPath ||
       (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
+    const normalizedUrlPath = urlPath.split("?")[0].replace(/\/$/, "")
+    const isChatRoute =
+      normalizedUrlPath.startsWith("/app-chat/") ||
+      /\/_chat(?:\/.*)?$/.test(normalizedUrlPath)
 
-    const matchedWorkspaceApp =
+    let matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+    if (!matchedWorkspaceApp) {
+      const chatPath = urlPath.replace(/\/_chat(?:\/.*)?$/, "")
+      if (chatPath !== urlPath) {
+        matchedWorkspaceApp =
+          await sdk.workspaceApps.getMatchedWorkspaceApp(chatPath)
+      }
+    }
 
     // disabled workspace apps should appear to not exist
     // if the dev workspace is being served, allow the request regardless
-    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
+    if (
+      !matchedWorkspaceApp ||
+      (matchedWorkspaceApp.disabled && !isDev && !isChatRoute)
+    ) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
     screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
