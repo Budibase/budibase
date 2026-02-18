@@ -1,19 +1,63 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
-import {
+import { context, docIds, encryption, HTTPError } from "@budibase/backend-core"
+import { DocumentType } from "@budibase/types"
+import type {
   Agent,
   CreateAgentRequest,
-  DocumentType,
   UpdateAgentRequest,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import { listAgentFiles, removeAgentFile } from "./files"
 
 const DISCORD_SECRET_MASK = "********"
+const SECRET_ENCODING_PREFIX = "bbai_enc::"
+
+const encodeSecret = (value?: string): string | undefined => {
+  if (!value || value.startsWith(SECRET_ENCODING_PREFIX)) {
+    return value
+  }
+  return `${SECRET_ENCODING_PREFIX}${encryption.encrypt(value)}`
+}
+
+const decodeSecret = (value?: string): string | undefined => {
+  if (!value || !value.startsWith(SECRET_ENCODING_PREFIX)) {
+    return value
+  }
+  return encryption.decrypt(value.slice(SECRET_ENCODING_PREFIX.length))
+}
+
+const encodeDiscordIntegrationSecrets = (
+  discordIntegration?: Agent["discordIntegration"]
+) => {
+  if (!discordIntegration) {
+    return discordIntegration
+  }
+
+  return {
+    ...discordIntegration,
+    publicKey: encodeSecret(discordIntegration.publicKey),
+    botToken: encodeSecret(discordIntegration.botToken),
+  }
+}
+
+const decodeDiscordIntegrationSecrets = (
+  discordIntegration?: Agent["discordIntegration"]
+) => {
+  if (!discordIntegration) {
+    return discordIntegration
+  }
+
+  return {
+    ...discordIntegration,
+    publicKey: decodeSecret(discordIntegration.publicKey),
+    botToken: decodeSecret(discordIntegration.botToken),
+  }
+}
 
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
+  discordIntegration: decodeDiscordIntegrationSecrets(agent.discordIntegration),
 })
 
 const mergeDiscordIntegration = ({
@@ -99,7 +143,12 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     discordIntegration: request.discordIntegration,
   }
 
-  const { rev } = await db.put(agent)
+  const { rev } = await db.put({
+    ...agent,
+    discordIntegration: encodeDiscordIntegrationSecrets(
+      agent.discordIntegration
+    ),
+  })
   agent._rev = rev
   return withAgentDefaults(agent)
 }
@@ -140,7 +189,8 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
   }
 
   const db = context.getWorkspaceDB()
-  const existing = await db.tryGet<Agent>(_id)
+  const existingRaw = await db.tryGet<Agent>(_id)
+  const existing = existingRaw ? withAgentDefaults(existingRaw) : undefined
 
   const updated: Agent = {
     ...existing,
@@ -153,7 +203,12 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
     }),
   }
 
-  const { rev } = await db.put(updated)
+  const { rev } = await db.put({
+    ...updated,
+    discordIntegration: encodeDiscordIntegrationSecrets(
+      updated.discordIntegration
+    ),
+  })
   updated._rev = rev
   return withAgentDefaults(updated)
 }

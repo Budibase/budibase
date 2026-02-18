@@ -221,6 +221,7 @@
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
+  let canStart = $derived(inputValue.trim().length > 0)
   let hasMessages = $derived(Boolean(messages?.length))
   let showConversationStarters = $derived(
     !isBusy &&
@@ -370,6 +371,14 @@
 
     inputValue = ""
     chatInstance.sendMessage({ text })
+  }
+
+  const handlePromptAction = async () => {
+    if (isBusy) {
+      await chatInstance.stop()
+      return
+    }
+    await sendMessage()
   }
 
   const toggleTool = (toolId: string) => {
@@ -632,14 +641,30 @@
     </div>
   {:else}
     <div class="input-wrapper">
-      <textarea
-        bind:value={inputValue}
-        bind:this={textareaElement}
-        class="input spectrum-Textfield-input"
-        onkeydown={handleKeyDown}
-        placeholder="Ask anything"
-        disabled={isBusy}
-      ></textarea>
+      <div class="input-container">
+        <textarea
+          bind:value={inputValue}
+          bind:this={textareaElement}
+          class="input spectrum-Textfield-input"
+          onkeydown={handleKeyDown}
+          placeholder="Ask..."
+          disabled={isBusy}
+        ></textarea>
+        <button
+          type="button"
+          class="prompt-action"
+          class:running={isBusy}
+          onclick={handlePromptAction}
+          aria-label={isBusy ? "Pause response" : "Start response"}
+          disabled={!isBusy && !canStart}
+        >
+          {#if isBusy}
+            <Icon name="stop" size="M" weight="fill" color="#ffffff" />
+          {:else}
+            <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
+          {/if}
+        </button>
+      </div>
     </div>
   {/if}
 </div>
@@ -767,9 +792,14 @@
     text-align: center;
   }
 
+  .input-container {
+    position: relative;
+    width: 100%;
+  }
+
   .input {
     width: 100%;
-    height: 100px;
+    height: 80px;
     top: 0;
     resize: none;
     padding: 20px;
@@ -779,7 +809,7 @@
     border-radius: 10px;
     border: 1px solid var(--spectrum-global-color-gray-300) !important;
     outline: none;
-    min-height: 100px;
+    min-height: 80px;
   }
 
   .input:focus {
@@ -788,6 +818,37 @@
 
   .input::placeholder {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .prompt-action {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: #f2f2f2;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s ease;
+  }
+
+  .prompt-action:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .prompt-action.running {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .prompt-action:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 
   /* Style the markdown tool sections in assistant messages */
