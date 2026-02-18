@@ -289,7 +289,7 @@ export const appRoutes = (
       routes: [
         {
           path: "configs",
-          title: "AI Configs",
+          title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI Configs" : "",
           comp: Pages.get("ai_configs"),
         },
         {
