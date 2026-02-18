@@ -458,6 +458,34 @@ describe("chat conversation transient behavior", () => {
       }
     )
   })
+
+  it("disables tool calling when no tools are enabled", async () => {
+    setupMocks()
+    const headers = await config.defaultHeaders({}, true)
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        agentId,
+        messages: [
+          {
+            id: "message-0",
+            role: "user",
+            parts: [{ type: "text", text: "hi" }],
+          },
+        ],
+      })
+
+    expect(res.status).toBe(200)
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tools: undefined,
+        toolChoice: "none",
+      })
+    )
+  })
 })
 
 describe("chat conversation title helpers", () => {

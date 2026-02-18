@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Button, notifications } from "@budibase/bbui"
   import TopBar from "@/components/common/TopBar.svelte"
   import {
     agentsStore,
@@ -6,6 +7,7 @@
     currentChatApp,
     featureFlags,
   } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import { FeatureFlag } from "@budibase/types"
   import { goto as gotoStore, params } from "@roxi/routify"
   import { onMount } from "svelte"
@@ -23,6 +25,7 @@
   $: goto = $gotoStore
 
   let chatAgents: ChatAgentConfig[] = []
+  let settingChatLive = false
 
   $: chatEnabled =
     $featureFlags[FeatureFlag.AI_AGENTS] && $featureFlags[FeatureFlag.AI_CHAT]
@@ -155,10 +158,57 @@
 
     await chatAppsStore.updateAgents(nextAgents)
   }
+
+  const toggleChatLive = async () => {
+    const workspaceId = $params.application
+    if (!workspaceId || settingChatLive) {
+      return
+    }
+
+    settingChatLive = true
+    let nextLive: boolean | undefined
+
+    try {
+      const ensured = await chatAppsStore.ensureChatApp(undefined, workspaceId)
+      if (!ensured) {
+        notifications.error("Could not update chat")
+        return
+      }
+
+      nextLive = !ensured.live
+      await chatAppsStore.updateChatApp({ live: nextLive })
+      await deploymentStore.publishApp()
+      notifications.success(
+        nextLive ? "Chat is now live" : "Chat has been paused"
+      )
+    } catch (error) {
+      console.error(error)
+      if (nextLive === false) {
+        notifications.error("Error pausing chat")
+      } else if (nextLive === true) {
+        notifications.error("Error setting chat live")
+      } else {
+        notifications.error("Error updating chat")
+      }
+    } finally {
+      settingChatLive = false
+    }
+  }
 </script>
 
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false} />
+  <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false}>
+    <Button
+      primary={!chatApp?.live}
+      secondary={chatApp?.live}
+      icon={chatApp?.live ? undefined : "play"}
+      iconColor={chatApp?.live ? "" : "var(--bb-blue)"}
+      iconWeight="fill"
+      on:click={toggleChatLive}
+      disabled={settingChatLive}
+      >{chatApp?.live ? "Pause chat" : "Set your chat live"}</Button
+    >
+  </TopBar>
   <div class="page">
     <ChatSettingsPanel
       {namedAgents}
