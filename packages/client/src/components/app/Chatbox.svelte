@@ -55,7 +55,6 @@
   let chat: ChatConversationLike = { ...INITIAL_CHAT }
   let deletingChat = false
   let loading = true
-  let isChatPaused = false
   let initialPrompt = ""
   let selectedAgentId: string | null = null
   let enabledAgentList: EnabledAgentListItem[] = []
@@ -96,7 +95,6 @@
   })
   $: hasAnyAgents = agents.length > 0
   $: hasEnabledAgents = enabledAgentList.length > 0
-  $: showPausedState = !loading && isChatPaused
   $: showEmptyState = !loading && !hasEnabledAgents
   $: emptyStateMessage = hasAnyAgents
     ? "No agents enabled for this chat app. Ask your administrator to enable one to start chatting."
@@ -143,19 +141,6 @@
     loading = true
     try {
       const chatApp = await API.fetchChatApp(workspaceId)
-      isChatPaused = chatApp?.live === false
-
-      if (isChatPaused) {
-        chatAppId = chatApp?._id || ""
-        chatAgents = chatApp?.agents || []
-        agents = []
-        enabledAgentList = []
-        conversationHistory = []
-        selectedAgentId = null
-        selectedConversationId = undefined
-        chat = { ...INITIAL_CHAT, chatAppId }
-        return
-      }
 
       chatAppId = chatApp?._id || ""
       chatAgents = chatApp?.agents || []
@@ -195,7 +180,6 @@
     } catch (err) {
       console.error(err)
       notifications.error("Failed to load chat")
-      isChatPaused = false
       enabledAgentList = []
       conversationHistory = []
     } finally {
@@ -310,11 +294,7 @@
 </script>
 
 <div class="chat-app-shell">
-  {#if showPausedState}
-    <div class="chat-empty-state">
-      <Body size="M">Chat is paused</Body>
-    </div>
-  {:else if showEmptyState}
+  {#if showEmptyState}
     <div class="chat-empty-state">
       <Body size="M">{emptyStateMessage}</Body>
     </div>
