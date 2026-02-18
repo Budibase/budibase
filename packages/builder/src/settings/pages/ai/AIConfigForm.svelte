@@ -29,6 +29,7 @@
   )
 
   const serialise = (value: unknown): string => JSON.stringify(value)
+  const clone = <T,>(value: T): T => JSON.parse(serialise(value))
 
   const createDraft = (): AIConfigResponse =>
     config?._id && provider
@@ -133,16 +134,18 @@
     try {
       isSaving = true
       if (draft._id) {
-        const updated = await aiConfigsStore.updateConfig(draft)
+        const payload = clone(draft)
+        const updated = await aiConfigsStore.updateConfig(payload)
         draft._rev = updated._rev
-        savedSnapshot = serialise(draft)
+        payload._rev = updated._rev
+        savedSnapshot = serialise(payload)
         notifications.success(
           `${typeLabel[0].toUpperCase()}${typeLabel.slice(
             1
           )} configuration updated`
         )
       } else {
-        const { _id, ...rest } = draft
+        const { _id, ...rest } = clone(draft)
         if (
           rest.configType === AIConfigType.COMPLETIONS &&
           !$aiConfigsStore.customConfigs.some(
@@ -156,7 +159,11 @@
         const created = await aiConfigsStore.createConfig(rest)
         draft._id = created._id
         draft._rev = created._rev
-        savedSnapshot = serialise(draft)
+        savedSnapshot = serialise({
+          ...rest,
+          _id: created._id,
+          _rev: created._rev,
+        })
         notifications.success(
           `${typeLabel[0].toUpperCase()}${typeLabel.slice(
             1
