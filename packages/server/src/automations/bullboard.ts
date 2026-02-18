@@ -1,6 +1,6 @@
-import { features, queue } from "@budibase/backend-core"
+import { queue } from "@budibase/backend-core"
 import { backups } from "@budibase/pro"
-import { AutomationData, FeatureFlag } from "@budibase/types"
+import { AutomationData } from "@budibase/types"
 import { createBullBoard } from "@bull-board/api"
 import { BullAdapter } from "@bull-board/api/bullAdapter"
 import { KoaAdapter } from "@bull-board/koa"
@@ -42,9 +42,7 @@ export async function init() {
   }
 
   queues.push(new BullAdapter(UserSyncProcessor.queue.getBullQueue()))
-  if (await features.isEnabled(FeatureFlag.AI_RAG)) {
-    queues.push(new BullAdapter(rag.queue.getQueue().getBullQueue()))
-  }
+  queues.push(new BullAdapter(rag.queue.getQueue().getBullQueue()))
 
   const serverAdapter = new KoaAdapter()
   createBullBoard({ queues, serverAdapter })
