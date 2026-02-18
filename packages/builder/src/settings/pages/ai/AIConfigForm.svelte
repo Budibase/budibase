@@ -26,6 +26,8 @@
     $aiConfigsStore.customConfigs.find(c => c._id === configId)
   )
 
+  const serialise = (value: unknown): string => JSON.stringify(value)
+
   const createDraft = (): AIConfigResponse =>
     config?._id && provider
       ? ({
@@ -33,9 +35,9 @@
           _rev: config._rev,
           name: config.name,
           provider: provider,
-          credentialsFields: config.credentialsFields,
+          credentialsFields: structuredClone(config.credentialsFields),
           model: config.model,
-          webSearchConfig: config.webSearchConfig,
+          webSearchConfig: structuredClone(config.webSearchConfig),
           configType: config.configType,
           reasoningEffort: config.reasoningEffort,
           isDefault: config.isDefault,
@@ -85,8 +87,11 @@
   let selectedProvider = $derived(providersMap?.[draft.provider])
 
   let isSaving = $state(false)
+  let savedSnapshot = $state(serialise(draft))
+  let isModified = $derived(savedSnapshot !== serialise(draft))
   let canSave = $derived(
     !isSaving &&
+      isModified &&
       !!draft.name?.trim() &&
       !!draft.model?.trim() &&
       !!draft.provider?.trim() &&
@@ -116,6 +121,7 @@
       if (draft._id) {
         const updated = await aiConfigsStore.updateConfig(draft)
         draft._rev = updated._rev
+        savedSnapshot = serialise(draft)
         notifications.success(
           `${typeLabel[0].toUpperCase()}${typeLabel.slice(
             1
@@ -136,6 +142,7 @@
         const created = await aiConfigsStore.createConfig(rest)
         draft._id = created._id
         draft._rev = created._rev
+        savedSnapshot = serialise(draft)
         notifications.success(
           `${typeLabel[0].toUpperCase()}${typeLabel.slice(
             1
