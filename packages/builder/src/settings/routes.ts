@@ -1,5 +1,9 @@
 import { sdk, helpers } from "@budibase/shared-core"
-import { FeatureFlag, GetGlobalSelfResponse } from "@budibase/types"
+import {
+  AIConfigType,
+  FeatureFlag,
+  GetGlobalSelfResponse,
+} from "@budibase/types"
 import { UserAvatar } from "@budibase/frontend-core"
 
 import { Target, type Route } from "@/types/routing"
@@ -288,7 +292,7 @@ export const appRoutes = (
       access: () => featureFlag.isEnabled("AI_AGENTS"),
       routes: [
         {
-          path: "configs",
+          path: AIConfigType.COMPLETIONS,
           title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI Configs" : "",
           comp: Pages.get("ai_configs"),
           routes: [
@@ -300,10 +304,17 @@ export const appRoutes = (
           ],
         },
         {
-          path: "embedding-settings",
+          path: AIConfigType.EMBEDDINGS,
           title: "Embeddings",
           access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
           comp: Pages.get("embeddings"),
+          routes: [
+            {
+              path: ":configId",
+              comp: Pages.get("ai_config"),
+              title: "AI config",
+            },
+          ],
         },
       ],
     },

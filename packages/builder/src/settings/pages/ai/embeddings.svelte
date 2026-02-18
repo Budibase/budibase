@@ -19,7 +19,9 @@
   let vectorDbs = $derived($vectorDbStore.configs || [])
 
   function createAIConfig() {
-    bb.settings("/ai-config/configs/new", { type: AIConfigType.EMBEDDINGS })
+    bb.settings(`/ai-config/${AIConfigType.EMBEDDINGS}/new`, {
+      type: AIConfigType.EMBEDDINGS,
+    })
   }
 
   const openVectorDbModal = (config?: VectorDb) => {
