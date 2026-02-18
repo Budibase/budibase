@@ -10,7 +10,7 @@
     RequiredKeys,
     UpdateAIConfigRequest,
   } from "@budibase/types"
-  import { AIConfigType } from "@budibase/types"
+  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
   import { routeActions } from ".."
 
@@ -21,6 +21,8 @@
   }
 
   let { configId, provider, type }: Props = $props()
+
+  let isBBAI = $derived(provider === BUDIBASE_AI_PROVIDER_ID)
 
   let config = $derived(
     $aiConfigsStore.customConfigs.find(c => c._id === configId)
@@ -44,9 +46,9 @@
         } satisfies RequiredKeys<UpdateAIConfigRequest>)
       : ({
           provider: provider ?? "",
-          name: "",
-          model: "",
-          configType: type || config?.configType || AIConfigType.COMPLETIONS,
+          name: isBBAI ? "bbai" : "",
+          model: isBBAI ? "v1" : "",
+          configType: type || AIConfigType.COMPLETIONS,
           credentialsFields: {},
           webSearchConfig: undefined,
           reasoningEffort: undefined,
@@ -89,9 +91,20 @@
   let isSaving = $state(false)
   let savedSnapshot = $state(serialise(draft))
   let isModified = $derived(savedSnapshot !== serialise(draft))
-  let canSave = $derived(
-    !isSaving &&
-      isModified &&
+  let canSave = $derived.by(() => {
+    if (isSaving) {
+      return false
+    }
+
+    if (isBBAI) {
+      return true
+    }
+
+    if (!isModified) {
+      return false
+    }
+
+    return (
       !!draft.name?.trim() &&
       !!draft.model?.trim() &&
       !!draft.provider?.trim() &&
@@ -99,7 +112,8 @@
       !selectedProvider.credentialFields.find(
         f => f.required && !draft.credentialsFields[f.key]?.trim()
       )
-  )
+    )
+  })
 
   onMount(async () => {
     try {
@@ -192,37 +206,47 @@
     {#if isEdit}
       <Button on:click={deleteConfig} quiet overBackground>Delete</Button>
     {/if}
-    <Button on:click={saveConfig} cta disabled={!canSave}>Save</Button>
+    <Button on:click={saveConfig} cta disabled={!canSave}>
+      {#if !isBBAI && isEdit}
+        Save
+      {:else if isEdit}
+        Connect
+      {:else}
+        Connect
+      {/if}</Button
+    >
   </div>
 </div>
 
 <div class="form">
-  <Select
-    label="Provider"
-    required
-    bind:value={draft.provider}
-    options={providers}
-    getOptionValue={o => o.id}
-    getOptionLabel={o => o.displayName}
-    placeholder={providerPlaceholder}
-    loading={!providers}
-  />
+  {#if !isBBAI}
+    <Select
+      label="Provider"
+      required
+      bind:value={draft.provider}
+      options={providers}
+      getOptionValue={o => o.id}
+      getOptionLabel={o => o.displayName}
+      placeholder={providerPlaceholder}
+      loading={!providers}
+    />
 
-  <Input
-    label="Model"
-    description="The model you would like to connect to"
-    required
-    bind:value={draft.model}
-    placeholder="Support chat"
-  />
+    <Input
+      label="Model"
+      description="The model you would like to connect to"
+      required
+      bind:value={draft.model}
+      placeholder="Support chat"
+    />
 
-  <Input
-    label="Display name"
-    description="Human readable name for the model"
-    required
-    bind:value={draft.name}
-    placeholder="e.g. Meta"
-  />
+    <Input
+      label="Display name"
+      description="Human readable name for the model"
+      required
+      bind:value={draft.name}
+      placeholder="e.g. Meta"
+    />
+  {/if}
 
   {#each selectedProvider?.credentialFields as field (field.key)}
     {#if field.options?.length || field.field_type === "select"}
