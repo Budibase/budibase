@@ -96,7 +96,7 @@
       return false
     }
 
-    if (isBBAI) {
+    if ((isBBAI && isModified) || !draft?._id) {
       return true
     }
 
@@ -207,12 +207,10 @@
       <Button on:click={deleteConfig} quiet overBackground>Delete</Button>
     {/if}
     <Button on:click={saveConfig} cta disabled={!canSave}>
-      {#if !isBBAI && isEdit}
-        Save
-      {:else if isEdit}
+      {#if !isEdit}
         Connect
       {:else}
-        Connect
+        Save
       {/if}</Button
     >
   </div>
