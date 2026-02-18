@@ -67,6 +67,29 @@ describe("utils", () => {
       })
     })
 
+    it("gets workspaceId from chat url", async () => {
+      await config.doInTenant(async () => {
+        const url = "http://example.com"
+        env._set("PLATFORM_URL", url)
+
+        const ctx = structures.koa.newContext()
+        ctx.host = `${config.tenantId}.example.com`
+
+        const expected = db.generateWorkspaceID(config.tenantId)
+        const app = structures.apps.app(expected)
+
+        const appUrl = newid()
+        app.url = `/${appUrl}`
+        ctx.path = `/app-chat/${appUrl}`
+
+        const database = db.getDB(expected)
+        await database.put(app)
+
+        const actual = await utils.getWorkspaceIdFromCtx(ctx)
+        expect(actual).toBe(expected)
+      })
+    })
+
     it("gets workspaceId from query params", async () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateWorkspaceID()
@@ -198,6 +221,30 @@ describe("utils", () => {
       expectResult(false)
 
       ctx.path = "/xx"
+      expectResult(false)
+    })
+  })
+
+  describe("isServingApp", () => {
+    let ctx: Ctx
+
+    const expectResult = (result: boolean) =>
+      expect(utils.isServingApp(ctx)).toBe(result)
+
+    beforeEach(() => {
+      ctx = structures.koa.newContext()
+    })
+
+    it("returns true for published app and chat routes", async () => {
+      ctx.path = "/app/test-app"
+      expectResult(true)
+
+      ctx.path = "/app-chat/test-app"
+      expectResult(true)
+    })
+
+    it("returns false for non app routes", async () => {
+      ctx.path = "/builder"
       expectResult(false)
     })
   })
