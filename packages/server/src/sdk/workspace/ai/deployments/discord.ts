@@ -81,6 +81,24 @@ const enableAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
   return await chatApps.update({ ...chatApp, agents: updatedAgents })
 }
 
+export const disableAgentOnChatApp = async (
+  chatAppId: string,
+  agentId: string
+) => {
+  const chatApp = await chatApps.getOrThrow(chatAppId)
+  const existingAgents = chatApp.agents || []
+  const existing = existingAgents.find(agent => agent.agentId === agentId)
+  if (!existing || !existing.isEnabled) {
+    return chatApp
+  }
+
+  const updatedAgents = existingAgents.map(agent =>
+    agent.agentId === agentId ? { ...agent, isEnabled: false } : agent
+  )
+
+  return await chatApps.update({ ...chatApp, agents: updatedAgents })
+}
+
 export const resolveChatAppForAgent = async (
   agentId: string,
   chatAppId?: string
@@ -120,7 +138,7 @@ const buildGlobalCommandPayload = (): DiscordCommandDefinition[] => [
   {
     name: DiscordCommands.ASK,
     description: "Ask the configured Budibase agent",
-    contexts: [0, 1], // guild and bot DM contexts
+    contexts: [1], // bot DM context only
     options: [
       {
         type: 3,
@@ -133,7 +151,7 @@ const buildGlobalCommandPayload = (): DiscordCommandDefinition[] => [
   {
     name: DiscordCommands.NEW,
     description: "Start a new conversation with the configured agent",
-    contexts: [0, 1], // guild and bot DM contexts
+    contexts: [1], // bot DM context only
     options: [
       {
         type: 3,

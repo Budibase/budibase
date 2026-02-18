@@ -235,6 +235,8 @@ export class FlagSet<T extends { [name: string]: boolean }> {
 const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_AGENTS]: false,
+  [FeatureFlag.AI_CHAT]: false,
+  [FeatureFlag.AI_RAG]: false,
   [FeatureFlag.WORKSPACE_HOME]: false,
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,

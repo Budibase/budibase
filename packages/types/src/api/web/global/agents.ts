@@ -35,6 +35,15 @@ export interface SyncAgentDiscordCommandsResponse {
   inviteUrl: string
 }
 
+export interface ToggleAgentDiscordRequest {
+  enabled: boolean
+}
+
+export interface ToggleAgentDiscordResponse {
+  success: true
+  enabled: boolean
+}
+
 export type CreateAgentRequest = Optional<
   Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt">,
   "aiconfig"

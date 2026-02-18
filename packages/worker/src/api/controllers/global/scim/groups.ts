@@ -1,4 +1,6 @@
 import groupBy from "lodash/groupBy"
+import { patchBodyValidation, scimPatch } from "scim-patch"
+import { filter, parse } from "scim2-parse-filter"
 import {
   Ctx,
   ScimCreateGroupRequest,
@@ -8,9 +10,7 @@ import {
   UserGroup,
 } from "@budibase/types"
 import { utils } from "@budibase/shared-core"
-import { patchBodyValidation, scimPatch } from "scim-patch"
-import { groups, mappers, scimGroups, scimUsers } from "../../../../"
-import { filter, parse } from "scim2-parse-filter"
+import { groups, mappers, scimGroups, scimUsers } from "@budibase/pro"
 
 function cleanResponse(group: ScimGroupResponse, excludedAttributes: string) {
   for (const attr of (excludedAttributes as string).split(",")) {

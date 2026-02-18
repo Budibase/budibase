@@ -23,6 +23,8 @@ function calculateBudibaseAICredits(usage?: AnthropicClient.Usage): number {
 }
 
 export class Anthropic extends LLM {
+  override supportsFiles = false
+
   private client: AnthropicClient
 
   constructor(opts: LLMConfigOptions) {
