@@ -14,6 +14,5 @@ export interface AgentPromptOptions {
   baseSystemPrompt?: string
   goal?: string
   promptInstructions?: string
-  toolGuidelines?: string
   includeGoal?: boolean
 }
