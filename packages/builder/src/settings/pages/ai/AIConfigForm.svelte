@@ -1,12 +1,8 @@
 <script lang="ts">
+  import { confirm } from "@/helpers"
+  import { bb } from "@/stores/bb"
   import { aiConfigsStore } from "@/stores/portal"
-  import {
-    Button,
-    Input,
-    keepOpen,
-    notifications,
-    Select,
-  } from "@budibase/bbui"
+  import { Button, Input, notifications, Select } from "@budibase/bbui"
   import type {
     AIConfigResponse,
     CreateAIConfigRequest,
@@ -17,8 +13,6 @@
   import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
   import { routeActions } from ".."
-  import { confirm } from "@/helpers"
-  import { bb } from "@/stores/bb"
 
   export interface Props {
     configId?: string
@@ -60,15 +54,6 @@
         } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   let draft: AIConfigResponse = $state(createDraft())
-  let draftKey = $derived(`${configId ?? ""}:${provider ?? ""}:${type ?? ""}`)
-  let lastDraftKey = $state("")
-
-  $effect(() => {
-    if (lastDraftKey !== draftKey) {
-      draft = createDraft()
-      lastDraftKey = draftKey
-    }
-  })
 
   let isEdit = $derived(!!config?._id)
   let typeLabel = $derived(
@@ -153,6 +138,12 @@
           )} configuration created`
         )
       }
+
+      await aiConfigsStore.fetch()
+
+      draft._rev = $aiConfigsStore.customConfigs.find(
+        c => c._id === draft._id
+      )?._rev
     } catch (err: any) {
       notifications.error(
         err.message || `Failed to save ${typeLabel} configuration`
@@ -164,7 +155,6 @@
           c => c._id === draft._id
         )?._rev
       }
-      return keepOpen
     } finally {
       isSaving = false
     }
