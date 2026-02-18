@@ -109,8 +109,6 @@ export async function updateModel({
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
 }) {
-  await validateConfig({ provider, name, credentialFields, configType })
-
   const litellmParams = buildLiteLLMParams({
     provider: await mapToLiteLLMProvider(provider),
     name: name,
