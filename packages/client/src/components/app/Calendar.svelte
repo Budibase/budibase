@@ -150,6 +150,25 @@
     font-size: 13px;
   }
 
+  .calendar :global(.fc-today-button.fc-button-primary) {
+    background-color: var(--fc-button-bg-color);
+    border-color: var(--fc-button-border-color);
+    transition:
+      background-color 130ms ease-out,
+      border-color 130ms ease-out;
+  }
+
+  .calendar :global(.fc-today-button.fc-button-primary:hover),
+  .calendar :global(.fc-today-button.fc-button-primary:focus) {
+    background-color: var(--fc-button-hover-bg-color);
+    border-color: var(--fc-button-hover-border-color);
+  }
+
+  .calendar :global(.fc-today-button.fc-button-primary:active) {
+    background-color: var(--fc-button-active-bg-color);
+    border-color: var(--fc-button-active-border-color);
+  }
+
   .calendar[data-button-type="action"] :global(.fc-button-primary) {
     --fc-button-text-color: var(
       --spectrum-button-cta-m-text-color,
