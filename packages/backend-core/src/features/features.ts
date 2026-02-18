@@ -240,6 +240,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.WORKSPACE_HOME]: false,
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
+  [FeatureFlag.USE_NEW_AICONFIGS]: false,
 }
 export const flags = new FlagSet(featureFlagDefaults)
 

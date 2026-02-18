@@ -1,12 +1,13 @@
-import tracer from "dd-trace"
-import sdk from "../../.."
+import type { EmbeddingModelV3, LanguageModelV3 } from "@ai-sdk/provider"
 import { HTTPError, env } from "@budibase/backend-core"
 import { BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
-import { createLiteLLMOpenAI } from "./litellm"
+import tracer from "dd-trace"
+import sdk from "../../.."
 import { createBBAIClient } from "./bbai"
-import type { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
+import { createLiteLLMOpenAI } from "./litellm"
 
 export * as bbai from "./bbai"
+export * from "./utils"
 
 export interface LLMResponse {
   chat: LanguageModelV3
