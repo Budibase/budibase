@@ -149,7 +149,11 @@ export function generateCode(prompt: string) {
 
 export function generateCronExpression(text: string) {
   return new LLMRequest().addUserMessage(
-    `Generate a node-cron compatible expression based on the following prompt. Return only the cron expression (without backticks), and if not possible return only 'Error generating cron' with a short explanation:\n${text}`
+    `Generate a cron expression with exactly 5 fields (minute hour day-of-month month day-of-week) based on the following prompt.
+Do not include a seconds field.
+Return only the cron expression (without backticks or explanation).
+If not possible, return only 'Error generating cron:' followed by a short explanation.
+\n${text}`
   )
 }
 
