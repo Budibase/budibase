@@ -242,6 +242,7 @@
         const workspaceRole =
           workspaceRoleFromUser ||
           (workspaceRoleGroupRole ? Constants.Roles.GROUP : undefined)
+        const isGroupUser = workspaceRole === Constants.Roles.GROUP
         return {
           ...user,
           name: user.firstName ? user.firstName + " " + user.lastName : "",
@@ -252,7 +253,8 @@
             : undefined,
           __selectable:
             role.value === Constants.BudibaseRoles.Owner ||
-            $auth.user?.email === user.email
+            $auth.user?.email === user.email ||
+            isGroupUser
               ? false
               : true,
           apps: sdk.users.userAppAccessList(user, allGroups),
