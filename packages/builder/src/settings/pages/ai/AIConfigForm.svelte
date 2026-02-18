@@ -15,7 +15,7 @@
     UpdateAIConfigRequest,
   } from "@budibase/types"
   import { AIConfigType } from "@budibase/types"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { onMount } from "svelte"
   import { routeActions } from ".."
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
@@ -27,8 +27,6 @@
   }
 
   let { configId, provider, type }: Props = $props()
-
-  const dispatch = createEventDispatcher<{ hide: void }>()
 
   let config = $derived(
     $aiConfigsStore.customConfigs.find(c => c._id === configId)
@@ -73,7 +71,6 @@
   })
 
   let isEdit = $derived(!!config?._id)
-  let canSave = $derived(!!draft.name.trim() && !!draft.provider)
   let typeLabel = $derived(
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
   )
@@ -102,6 +99,17 @@
   )
   let selectedProvider = $derived(providersMap?.[draft.provider])
 
+  let isSaving = $state(false)
+  let canSave = $derived(
+    !isSaving &&
+      !!draft.name.trim() &&
+      !!draft.provider &&
+      selectedProvider &&
+      !selectedProvider.credentialFields.find(
+        f => f.required && !draft.credentialsFields[f.key].trim()
+      )
+  )
+
   onMount(async () => {
     try {
       await aiConfigsStore.fetchProviders()
@@ -118,6 +126,7 @@
     }
 
     try {
+      isSaving = true
       if (draft._id) {
         await aiConfigsStore.updateConfig(draft)
         notifications.success(
@@ -156,6 +165,8 @@
         )?._rev
       }
       return keepOpen
+    } finally {
+      isSaving = false
     }
   }
 
@@ -210,7 +221,7 @@
   />
 
   <Input
-    label="Model ID"
+    label="Model"
     description="The model you would like to connect to"
     required
     bind:value={draft.model}
