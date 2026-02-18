@@ -34,10 +34,27 @@ export type Message =
 
 export type ResponseFormat = "text" | "json" | openai.ResponseFormatJSONSchema
 
+export interface OpenAIFunctionTool {
+  type: "function"
+  function: {
+    name: string
+    description?: string
+    parameters?: Record<string, unknown>
+  }
+}
+
+export type OpenAIToolChoice =
+  | "auto"
+  | "none"
+  | "required"
+  | { type: "function"; function: { name: string } }
+
 export interface ChatCompletionRequestV2 {
   messages: ModelMessage[]
   model: string
   stream?: boolean
+  tools?: OpenAIFunctionTool[]
+  tool_choice?: OpenAIToolChoice
 }
 
 export interface ChatCompletionRequest {

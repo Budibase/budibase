@@ -52,7 +52,7 @@ export const createLiteLLMOpenAI = async (
   return {
     chat: llm.chat(modelId),
     embedding: llm.embedding(modelId),
-    providerOptions: getLiteLLMProviderOptions,
+    providerOptions: hasTools => getLiteLLMProviderOptions(hasTools),
   }
 }
 
@@ -122,6 +122,7 @@ function createLiteLLMFetch(
 const syncBudibaseAICredits = async () => {
   try {
     const aiQuota = await fetchAIQuotaUsage()
+    console.log(aiQuota)
     if (aiQuota != null) {
       await quotas.setBudibaseAICredits(aiQuota.monthlyCredits)
     }

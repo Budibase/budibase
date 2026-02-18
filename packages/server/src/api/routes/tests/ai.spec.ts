@@ -7,7 +7,6 @@ import {
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
 import { configs, env, setEnv, withEnv } from "@budibase/backend-core"
-import { generateText, streamText } from "ai"
 import {
   AIInnerConfig,
   AIOperationEnum,
@@ -31,15 +30,6 @@ import {
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
 import { resetHttpMocking } from "../../../tests/jestEnv"
-
-jest.mock("ai", () => {
-  const actual = jest.requireActual("ai")
-  return {
-    ...actual,
-    generateText: jest.fn(actual.generateText),
-    streamText: jest.fn(actual.streamText),
-  }
-})
 
 function toResponseFormat(schema: any, name = "response") {
   return {
@@ -1165,11 +1155,6 @@ describe("BudibaseAI", () => {
     let envCleanup: () => void
     let cleanup: () => Promise<void> | void
 
-    const generateTextMock = generateText as jest.MockedFunction<
-      typeof generateText
-    >
-    const streamTextMock = streamText as jest.MockedFunction<typeof streamText>
-
     beforeAll(async () => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
@@ -1208,23 +1193,26 @@ describe("BudibaseAI", () => {
 
     afterEach(async () => {
       await cleanup?.()
-      jest.clearAllMocks()
     })
 
-    it("proxies the OpenAI response without reshaping", async () => {
-      generateTextMock.mockResolvedValue({
-        response: {
-          body: {
-            object: "chat.completion",
-            choices: [
-              {
-                message: { content: "hello from openai" },
-              },
-            ],
-            usage: { total_tokens: 10 },
-          },
-        },
-      } as unknown as ReturnType<typeof generateText>)
+    it("proxies provider responses without reshaping", async () => {
+      const providerScope = nock("https://openrouter.ai")
+        .post("/api/v1/chat/completions", body => {
+          expect(body).toMatchObject({
+            model: "google/gemini-3-flash-preview",
+            messages: [{ role: "user", content: "hello" }],
+          })
+          return true
+        })
+        .reply(200, {
+          object: "chat.completion",
+          choices: [
+            {
+              message: { content: "hello from provider" },
+            },
+          ],
+          usage: { prompt_tokens: 4, completion_tokens: 3, total_tokens: 7 },
+        })
 
       const response = await config.api.ai.openaiChatCompletions({
         model: "budibase/v1",
@@ -1232,44 +1220,91 @@ describe("BudibaseAI", () => {
         licenseKey,
       })
 
+      expect(providerScope.isDone()).toBe(true)
       expect(response.object).toBe("chat.completion")
-      expect(response.choices[0].message.content).toBe("hello from openai")
+      expect(response.choices[0].message.content).toBe("hello from provider")
       expect(response.usage?.total_tokens).toBeGreaterThan(0)
     })
 
-    it("ignores extra fields (e.g. response_format)", async () => {
+    it("forwards extra OpenAI-compatible fields as-is", async () => {
       const format = toResponseFormat(z.object({ value: z.string() }))
-      generateTextMock.mockResolvedValue({
-        response: {
-          body: {
-            object: "chat.completion",
-            choices: [
+      const providerScope = nock("https://openrouter.ai")
+        .post("/api/v1/chat/completions", body => {
+          expect(body).toMatchObject({
+            model: "google/gemini-3-flash-preview",
+            response_format: format,
+            tools: [
               {
-                message: { content: `{"value":"ok"}` },
+                type: "function",
+                function: {
+                  name: "ta_bb_employee_list_rows",
+                },
               },
             ],
-          },
-        },
-      } as unknown as ReturnType<typeof generateText>)
+            tool_choice: "auto",
+          })
+          return true
+        })
+        .reply(200, {
+          object: "chat.completion",
+          choices: [
+            {
+              message: { content: `{"value":"ok"}` },
+            },
+          ],
+        })
 
       const response = await config.api.ai.openaiChatCompletions({
         model: "budibase/v1",
-        messages: [{ role: "user", content: "return json" }],
+        // The payload should be passed through even when it contains tool-call turns.
+        messages: [
+          { role: "user", content: "return json" },
+          {
+            role: "assistant",
+            content: "",
+            tool_calls: [
+              {
+                id: "tool-call-1",
+                type: "function",
+                function: {
+                  name: "ta_bb_employee_list_rows",
+                  arguments: "{}",
+                },
+              },
+            ],
+          },
+          {
+            role: "tool",
+            tool_call_id: "tool-call-1",
+            content: '{"rows":[]}',
+          },
+        ] as any,
         stream: false,
-        // @ts-expect-error extra field should be ignored
         response_format: format,
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "ta_bb_employee_list_rows",
+            },
+          },
+        ],
+        tool_choice: "auto",
         licenseKey,
-      })
+      } as any)
 
+      expect(providerScope.isDone()).toBe(true)
       expect(response.choices[0].message.content).toBe(`{"value":"ok"}`)
     })
 
-    it("returns HTTP errors when stream initialization fails", async () => {
-      streamTextMock.mockImplementation(() => {
-        const error = new Error("Unauthorized") as Error & { status: number }
-        error.status = 401
-        throw error
-      })
+    it("returns provider HTTP errors for stream requests", async () => {
+      nock("https://openrouter.ai")
+        .post("/api/v1/chat/completions")
+        .reply(401, {
+          error: {
+            message: "Unauthorized",
+          },
+        })
 
       await config.api.ai.openaiChatCompletions(
         {

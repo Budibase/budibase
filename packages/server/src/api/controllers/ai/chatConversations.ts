@@ -186,7 +186,9 @@ export async function discordChat({
 
   const sessionId = chat._id || v4()
 
-  const modelMessages = await convertToModelMessages(chat.messages)
+  const modelMessages = await convertToModelMessages(chat.messages, {
+    ignoreIncompleteToolCalls: true,
+  })
   const messagesWithContext: ModelMessage[] =
     retrievedContext.trim().length > 0
       ? [
@@ -357,7 +359,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId
     )
 
-    const modelMessages = await convertToModelMessages(chat.messages)
+    const modelMessages = await convertToModelMessages(chat.messages, {
+      ignoreIncompleteToolCalls: true,
+    })
     const messagesWithContext: ModelMessage[] =
       retrievedContext.trim().length > 0
         ? [

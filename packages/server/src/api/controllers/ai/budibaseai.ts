@@ -9,8 +9,13 @@ import {
   type UploadFileRequest,
   type UploadFileResponse,
 } from "@budibase/types"
-import { bbai } from "../../../sdk/workspace/ai/llm"
-import { generateText, streamText } from "ai"
+import nodeFetch from "node-fetch"
+import { Transform, type TransformCallback } from "stream"
+import { pipeline } from "stream/promises"
+import {
+  incrementBudibaseAICreditsFromTokenUsage,
+  resolveBudibaseAIProviderRequest,
+} from "../../../sdk/workspace/ai/llm/bbaiShared"
 
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
@@ -49,8 +54,92 @@ export async function chatCompletion(
   ctx.body = await llm.chat(ai.LLMRequest.fromRequest(ctx.request.body))
 }
 
+type CompletionUsage = {
+  prompt_tokens?: number
+  completion_tokens?: number
+}
+
+const toBudibaseUsage = (
+  usage?: CompletionUsage
+): { inputTokens: number; outputTokens: number } | undefined => {
+  if (!usage) {
+    return
+  }
+  return {
+    inputTokens: usage.prompt_tokens ?? 0,
+    outputTokens: usage.completion_tokens ?? 0,
+  }
+}
+
+const tryReadProviderErrorMessage = async (
+  response: Awaited<ReturnType<typeof nodeFetch>>
+) => {
+  try {
+    const text = await response.text()
+    if (!text) {
+      return response.statusText
+    }
+    try {
+      const parsed = JSON.parse(text)
+      return (
+        parsed?.error?.message ||
+        parsed?.message ||
+        parsed?.error ||
+        response.statusText
+      )
+    } catch {
+      return text
+    }
+  } catch {
+    return response.statusText
+  }
+}
+
+class UsageTrackingTransform extends Transform {
+  private buffer = ""
+  private creditsSynced = false
+
+  _transform(
+    chunk: Buffer,
+    _encoding: BufferEncoding,
+    callback: TransformCallback
+  ) {
+    const text = chunk.toString("utf8")
+    this.buffer += text
+
+    const lines = this.buffer.split("\n")
+    this.buffer = lines.pop() ?? ""
+
+    for (const line of lines) {
+      if (!line.startsWith("data:")) {
+        continue
+      }
+      const payload = line.slice(5).trim()
+      if (!payload || payload === "[DONE]" || this.creditsSynced) {
+        continue
+      }
+      try {
+        const parsed = JSON.parse(payload)
+        if (parsed?.usage) {
+          this.creditsSynced = true
+          incrementBudibaseAICreditsFromTokenUsage(
+            toBudibaseUsage(parsed.usage)
+          ).catch(() => {})
+        }
+      } catch {
+        // Ignore non-json chunks.
+      }
+    }
+
+    callback(null, chunk)
+  }
+}
+
 export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
-  const { messages, model, stream } = ctx.request.body
+  const body = ctx.request.body
+  const messages = body.messages
+  const model = body.model
+  const stream = body.stream === true
 
   if (!messages?.length) {
     ctx.throw(400, "Missing required field: messages")
@@ -64,56 +153,50 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     ctx.throw(400, "Missing required field: model")
   }
 
-  const { chat } = await bbai.createBBAIClient(model)
+  const providerRequest = resolveBudibaseAIProviderRequest(model)
 
-  if (stream) {
-    try {
-      const result = streamText({
-        model: chat,
-        messages,
-        includeRawChunks: true,
-      })
+  const providerUrl = `${providerRequest.baseUrl.replace(/\/$/, "")}/chat/completions`
+  const providerBody = {
+    ...body,
+    model: providerRequest.model,
+    stream,
+  }
+  const providerResponse = await nodeFetch(providerUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${providerRequest.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(providerBody),
+  })
 
-      ctx.status = 200
-      ctx.set("Content-Type", "text/event-stream")
-      ctx.set("Cache-Control", "no-cache")
-      ctx.set("Connection", "keep-alive")
-
-      ctx.res.setHeader("X-Accel-Buffering", "no")
-      ctx.res.setHeader("Transfer-Encoding", "chunked")
-
-      ctx.respond = false
-
-      for await (const chunk of result.fullStream) {
-        if (chunk.type !== "raw") continue
-        ctx.res.write(`data: ${JSON.stringify(chunk.rawValue)}\n\n`)
-      }
-      ctx.res.write("data: [DONE]\n\n")
-      ctx.res.end()
-      return
-    } catch (error: any) {
-      if (ctx.res.headersSent) {
-        ctx.res.write(
-          `data: ${JSON.stringify({
-            error: {
-              message: env.isProd()
-                ? "Streaming error"
-                : error?.message || "Streaming error",
-              type: "server_error",
-            },
-          })}\n\n`
-        )
-        ctx.res.end()
-        return
-      }
-
-      ctx.throw(error?.status || 500, error?.message || "Streaming error")
-    }
+  if (!providerResponse.ok) {
+    const message = await tryReadProviderErrorMessage(providerResponse)
+    ctx.throw(providerResponse.status, message || "Provider request failed")
   }
 
-  const result = await generateText({
-    model: chat,
-    messages,
-  })
-  ctx.body = result.response.body
+  if (stream) {
+    if (!providerResponse.body) {
+      ctx.throw(500, "Provider returned no response body")
+    }
+
+    ctx.status = providerResponse.status
+    ctx.set("Content-Type", "text/event-stream")
+    ctx.set("Cache-Control", "no-cache, no-transform")
+    ctx.set("Connection", "keep-alive")
+    ctx.res.setHeader("X-Accel-Buffering", "no")
+    ctx.respond = false
+
+    const usageTrackingStream = new UsageTrackingTransform()
+    await pipeline(providerResponse.body, usageTrackingStream, ctx.res)
+    return
+  }
+
+  const json = (await providerResponse.json()) as {
+    usage?: CompletionUsage
+  }
+  await incrementBudibaseAICreditsFromTokenUsage(
+    toBudibaseUsage(json.usage)
+  ).catch(() => {})
+  ctx.body = json
 }

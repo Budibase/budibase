@@ -181,6 +181,7 @@ export async function create(
     modelId = await liteLLM.addModel({
       provider: config.provider,
       model: config.model,
+      displayName: config.name,
       credentialFields: config.credentialsFields,
       configType: config.configType,
       reasoningEffort: config.reasoningEffort,
@@ -312,6 +313,7 @@ export async function update(
         llmModelId: updatedConfig.liteLLMModelId,
         provider: updatedConfig.provider,
         name: updatedConfig.model,
+        displayName: updatedConfig.name,
         credentialFields: updatedConfig.credentialsFields,
         configType: updatedConfig.configType,
         reasoningEffort: updatedConfig.reasoningEffort,

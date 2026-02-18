@@ -98,6 +98,7 @@ export async function updateModel({
   llmModelId,
   provider,
   name,
+  displayName,
   credentialFields,
   configType,
   reasoningEffort,
@@ -105,6 +106,7 @@ export async function updateModel({
   llmModelId: string
   provider: string
   name: string
+  displayName?: string
   credentialFields: Record<string, string>
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
@@ -126,7 +128,7 @@ export async function updateModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: name,
+      model_name: displayName || name,
       litellm_params: litellmParams,
       model_info: {
         updated_at: new Date().toISOString(),
