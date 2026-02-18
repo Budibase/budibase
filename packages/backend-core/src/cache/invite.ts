@@ -1,6 +1,5 @@
 import * as utils from "../utils"
 import { Duration } from "../utils"
-import env from "../environment"
 import { getTenantId } from "../context"
 import * as redis from "../redis/init"
 import * as locks from "../redis/redlockImpl"
@@ -112,12 +111,6 @@ async function findInviteInList(code: string, tenantId: string) {
  * @param value The body of the updated user invitation
  */
 export async function updateCode(code: string, value: Invite) {
-  const client = await redis.getInviteClient()
-  const legacyExists = await client.exists(code)
-  if (legacyExists) {
-    await client.store(code, value, TTL_SECONDS)
-  }
-
   const info: Invite["info"] = {
     ...value.info,
   }
@@ -178,12 +171,6 @@ export async function getCode(
   code: string,
   tenantId?: string
 ): Promise<Invite> {
-  const client = await redis.getInviteClient()
-  const value = (await client.get(code)) as Invite | undefined
-  if (value) {
-    return value
-  }
-
   const resolvedTenantId = tenantId || getTenantId()
   return await withInviteListLock(resolvedTenantId, async () => {
     const found = await findInviteInList(code, resolvedTenantId)
@@ -203,9 +190,6 @@ export async function getCode(
 }
 
 export async function deleteCode(code: string, tenantId?: string) {
-  const client = await redis.getInviteClient()
-  await client.delete(code)
-
   const resolvedTenantId = tenantId || getTenantId()
   try {
     await withInviteListLock(resolvedTenantId, async () => {
@@ -243,20 +227,6 @@ export async function getInviteCodes(): Promise<InviteWithCode[]> {
   const results = new Map<string, InviteWithCode>()
   for (const [code, invite] of Object.entries(list.invites)) {
     results.set(code, toInviteWithCode(code, invite))
-  }
-
-  const client = await redis.getInviteClient()
-  const legacyInvites: { key: string; value: Invite }[] = await client.scan()
-  for (const invite of legacyInvites) {
-    if (!invite?.value?.info) {
-      continue
-    }
-    if (env.MULTI_TENANCY && invite.value.info.tenantId !== tenantId) {
-      continue
-    }
-    if (!results.has(invite.key)) {
-      results.set(invite.key, { ...invite.value, code: invite.key })
-    }
   }
 
   return Array.from(results.values())
