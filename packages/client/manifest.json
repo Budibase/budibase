@@ -9623,6 +9623,7 @@
             "label": "Year title format",
             "key": "yearTitleFormat",
             "options": [
+              { "label": "Hidden", "value": "hidden" },
               { "label": "4-digit", "value": "numeric" },
               { "label": "2-digit", "value": "2-digit" }
             ]
@@ -9645,6 +9646,16 @@
             "options": [
               { "label": "Numeric", "value": "numeric" },
               { "label": "2-digit", "value": "2-digit" }
+            ]
+          },
+          {
+            "type": "select",
+            "label": "Weekday title format",
+            "key": "weekdayTitleFormat",
+            "options": [
+              { "label": "short", "value": "short" },
+              { "label": "long", "value": "long" },
+              { "label": "narrow", "value": "narrow" }
             ]
           }
         ]

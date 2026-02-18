@@ -41,6 +41,7 @@
   export let yearTitleFormat: string
   export let monthTitleFormat: string
   export let dayTitleFormat: string
+  export let weekdayTitleFormat: string
   export let emptyAgendaText: string = "No events found"
   export let openOnDate: string = "{{ now }}"
   export let calendarType: CalendarView = "dayGridMonth"
@@ -50,6 +51,10 @@
   let calendarRef: FullCalendar | null = null
   $: isTimeGridDay = calendarType === "timeGridDay"
   $: calendarButtonType = buttonType === "primary" ? "primary" : "action"
+  $: yearTitleFormatProps =
+    yearTitleFormat && yearTitleFormat !== "hidden"
+      ? { year: yearTitleFormat }
+      : {}
 
   $: events =
     dataProvider?.rows?.map((row: Row) => ({
@@ -87,30 +92,31 @@
     views: {
       dayGridMonth: {
         titleFormat: {
-          year: yearTitleFormat,
+          ...yearTitleFormatProps,
           month: monthTitleFormat,
         },
       },
       dayGridWeek: {
         titleFormat: {
+          ...yearTitleFormatProps,
           day: dayTitleFormat,
           month: monthTitleFormat,
-          year: yearTitleFormat,
         },
       },
       timeGridDay: {
         titleFormat: {
+          ...yearTitleFormatProps,
           day: dayTitleFormat,
           month: monthTitleFormat,
-          year: yearTitleFormat,
-          weekday: "short",
+          weekday: weekdayTitleFormat,
+          omitCommas: true,
         },
       },
       listWeek: {
         titleFormat: {
+          ...yearTitleFormatProps,
           day: dayTitleFormat,
           month: monthTitleFormat,
-          year: yearTitleFormat,
         },
         noEventsContent: emptyAgendaText,
       },
