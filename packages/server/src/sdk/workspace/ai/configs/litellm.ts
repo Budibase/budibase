@@ -244,7 +244,7 @@ async function validateCompletionsModel(model: {
   }
 }
 
-async function validateConfig(model: {
+export async function validateConfig(model: {
   provider: string
   name: string
   credentialFields: Record<string, string>
