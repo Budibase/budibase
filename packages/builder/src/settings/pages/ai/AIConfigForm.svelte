@@ -5,7 +5,6 @@
     Input,
     keepOpen,
     Label,
-    ModalContent,
     notifications,
     Select,
   } from "@budibase/bbui"
@@ -19,17 +18,21 @@
   import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
-  interface Props {
-    config?: Omit<AIConfigResponse, "provider"> | undefined
+  export interface Props {
+    configId?: string
     provider?: string | undefined
     type: AIConfigType
   }
 
-  let { config = undefined, provider = undefined, type }: Props = $props()
+  let { configId, provider, type }: Props = $props()
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
-  let draft: AIConfigResponse = $state(
+  let config = $derived(
+    $aiConfigsStore.customConfigs.find(c => c._id === configId)
+  )
+
+  const createDraft = (): AIConfigResponse =>
     config?._id && provider
       ? ({
           _id: config._id,
@@ -47,7 +50,7 @@
           provider: provider ?? "",
           name: "",
           model: "",
-          configType: type,
+          configType: type || config?.configType || AIConfigType.COMPLETIONS,
           credentialsFields: {},
           webSearchConfig: undefined,
           reasoningEffort: undefined,
@@ -55,7 +58,17 @@
             type === AIConfigType.COMPLETIONS &&
             !$aiConfigsStore.customConfigs.length,
         } satisfies RequiredKeys<CreateAIConfigRequest>)
-  )
+
+  let draft: AIConfigResponse = $state(createDraft())
+  let draftKey = $derived(`${configId ?? ""}:${provider ?? ""}:${type ?? ""}`)
+  let lastDraftKey = $state("")
+
+  $effect(() => {
+    if (lastDraftKey !== draftKey) {
+      draft = createDraft()
+      lastDraftKey = draftKey
+    }
+  })
 
   let isEdit = $derived(!!config?._id)
   let canSave = $derived(!!draft.name.trim() && !!draft.provider)
@@ -165,93 +178,81 @@
   }
 </script>
 
-<ModalContent
-  size="M"
-  confirmText={isEdit ? "Save" : "Create"}
-  cancelText="Cancel"
-  onConfirm={confirm}
-  disabled={!canSave}
-  showSecondaryButton={isEdit}
-  secondaryButtonText={"Delete"}
-  secondaryAction={deleteConfig}
-  secondaryButtonWarning
->
-  {#snippet header()}
-    <div>
-      <Heading size="XS">
-        {#if isEdit}
-          Edit {draft.name}
-        {:else}
-          Add {typeLabel} configuration
-        {/if}
-      </Heading>
-    </div>
-  {/snippet}
-
-  <div class="row">
-    <Label size="M">Name</Label>
-    <Input bind:value={draft.name} placeholder="Support chat" />
+{#snippet header()}
+  <div>
+    <Heading size="XS">
+      {#if isEdit}
+        Edit {draft.name}
+      {:else}
+        Add {typeLabel} configuration
+      {/if}
+    </Heading>
   </div>
+{/snippet}
 
+<div class="row">
+  <Label size="M">Name</Label>
+  <Input bind:value={draft.name} placeholder="Support chat" />
+</div>
+
+<div class="row">
+  <Label size="M">Provider</Label>
+  <Select
+    bind:value={draft.provider}
+    options={providers}
+    getOptionValue={o => o.id}
+    getOptionLabel={o => o.displayName}
+    placeholder={providerPlaceholder}
+    loading={!providers}
+  />
+</div>
+
+<div class="row">
+  <Label size="M">Model</Label>
+  <Input bind:value={draft.model} />
+</div>
+
+{#if draft.configType === AIConfigType.COMPLETIONS}
   <div class="row">
-    <Label size="M">Provider</Label>
+    <Label size="M">Reasoning effort</Label>
     <Select
-      bind:value={draft.provider}
-      options={providers}
-      getOptionValue={o => o.id}
-      getOptionLabel={o => o.displayName}
-      placeholder={providerPlaceholder}
-      loading={!providers}
+      placeholder="Use provider default"
+      options={reasoningEffortOptions}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.value}
+      bind:value={draft.reasoningEffort}
     />
   </div>
+{/if}
 
+{#each selectedProvider?.credentialFields as field (field.key)}
   <div class="row">
-    <Label size="M">Model</Label>
-    <Input bind:value={draft.model} />
-  </div>
-
-  {#if draft.configType === AIConfigType.COMPLETIONS}
-    <div class="row">
-      <Label size="M">Reasoning effort</Label>
+    <Label size="M">{field.label || field.key}</Label>
+    {#if field.options?.length || field.field_type === "select"}
       <Select
-        placeholder="Use provider default"
-        options={reasoningEffortOptions}
-        getOptionLabel={option => option.label}
-        getOptionValue={option => option.value}
-        bind:value={draft.reasoningEffort}
+        bind:value={draft.credentialsFields[field.key]}
+        options={field.options || []}
+        placeholder={field.placeholder ?? undefined}
+        helpText={field.tooltip ?? undefined}
       />
-    </div>
-  {/if}
-
-  {#each selectedProvider?.credentialFields as field (field.key)}
-    <div class="row">
-      <Label size="M">{field.label || field.key}</Label>
-      {#if field.options?.length || field.field_type === "select"}
-        <Select
-          bind:value={draft.credentialsFields[field.key]}
-          options={field.options || []}
-          placeholder={field.placeholder ?? undefined}
-          helpText={field.tooltip ?? undefined}
-        />
-      {:else if field.field_type === "password" || field.key.includes("key")}
-        <Input
-          bind:value={draft.credentialsFields[field.key]}
-          type="password"
-          autocomplete="new-password"
-          placeholder={field.placeholder ?? undefined}
-          helpText={field.tooltip ?? undefined}
-        />
-      {:else}
-        <Input
-          bind:value={draft.credentialsFields[field.key]}
-          type="text"
-          placeholder={field.placeholder ?? undefined}
-          helpText={field.tooltip ?? undefined}
-        />
-      {/if}
-    </div>
-  {/each}
-</ModalContent>
+    {:else if field.field_type === "password" || field.key.includes("key")}
+      <Input
+        bind:value={draft.credentialsFields[field.key]}
+        type="password"
+        autocomplete="new-password"
+        placeholder={field.placeholder ?? undefined}
+        helpText={field.tooltip ?? undefined}
+      />
+    {:else}
+      <Input
+        bind:value={draft.credentialsFields[field.key]}
+        type="text"
+        placeholder={field.placeholder ?? undefined}
+        helpText={field.tooltip ?? undefined}
+      />
+    {/if}
+  </div>
+{/each}
 
 <style>
   .row {

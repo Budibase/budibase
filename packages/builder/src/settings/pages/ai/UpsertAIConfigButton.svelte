@@ -4,12 +4,12 @@
     type AIConfigResponse,
   } from "@budibase/types"
   import { ActionButton, Modal, Body, ProgressCircle } from "@budibase/bbui"
-  import CustomConfigModal from "./AIConfigModal.svelte"
-  import BBAIConfigModal from "./BBAIConfigModal.svelte"
+  import CustomConfigModal from "./AIConfigForm.svelte"
   import { onMount } from "svelte"
   import { admin, licensing } from "@/stores/portal"
   import { API } from "@/api"
   import PortalModal from "./PortalModal.svelte"
+  import { bb } from "@/stores/bb"
 
   interface Props {
     row: AIConfigResponse
@@ -19,13 +19,19 @@
 
   let isEdit = $derived(!!row._id)
 
-  let configModal = $state<Modal | null>()
-  let openModal = $state(false)
+  let enableBBAIModal = $state<Modal | null>()
   let hasLicenseKey: boolean | null = $state(null)
 
-  $effect(() => {
-    configModal?.show()
-  })
+  function onClick() {
+    if (row.provider !== BUDIBASE_AI_PROVIDER_ID && !hasLicenseKey) {
+      enableBBAIModal?.show()
+    } else {
+      bb.settings(`/ai-config/configs/${row._id}`, {
+        provider: row.provider,
+        type: row.configType,
+      })
+    }
+  }
 
   onMount(async () => {
     try {
@@ -43,49 +49,31 @@
   })
 </script>
 
-<ActionButton
-  size="S"
-  on:click={() => {
-    openModal = true
-  }}>{isEdit ? "Edit" : "Connect"}</ActionButton
+<ActionButton size="S" on:click={onClick}
+  >{isEdit ? "Edit" : "Connect"}</ActionButton
 >
 
-{#if openModal}
-  <Modal
-    bind:this={configModal}
-    on:hide={() => {
-      openModal = false
-    }}
-  >
-    {#if row.provider !== BUDIBASE_AI_PROVIDER_ID}
-      <CustomConfigModal
-        config={row}
-        provider={row.provider}
-        type={row.configType}
-      />
-    {:else if hasLicenseKey == null}
-      <div class="license-check">
-        <ProgressCircle />
-        <Body size="S">Checking license...</Body>
-      </div>
-    {:else if hasLicenseKey === false}
-      <PortalModal
-        confirmHandler={() => {
-          window.open($admin.accountPortalUrl, "_blank", "noopener,noreferrer")
-          openModal = false
-        }}
-        cancelHandler={() => {
-          openModal = false
-        }}
-      />
-    {:else}
-      <BBAIConfigModal
-        config={row._id ? row : undefined}
-        type={row.configType}
-      />
-    {/if}
-  </Modal>
-{/if}
+<Modal bind:this={enableBBAIModal}>
+  {#if row.provider !== BUDIBASE_AI_PROVIDER_ID}
+    <CustomConfigModal
+      config={row}
+      provider={row.provider}
+      type={row.configType}
+    />
+  {:else if hasLicenseKey == null}
+    <div class="license-check">
+      <ProgressCircle />
+      <Body size="S">Checking license...</Body>
+    </div>
+  {:else if hasLicenseKey === false}
+    <PortalModal
+      confirmHandler={() => {
+        window.open($admin.accountPortalUrl, "_blank", "noopener,noreferrer")
+      }}
+      cancelHandler={() => {}}
+    />
+  {/if}
+</Modal>
 
 <style>
   .license-check {

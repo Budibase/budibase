@@ -291,6 +291,13 @@ export const appRoutes = (
           path: "configs",
           title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI Configs" : "",
           comp: Pages.get("ai_configs"),
+          routes: [
+            {
+              path: ":configId",
+              comp: Pages.get("ai_config"),
+              title: "AI config",
+            },
+          ],
         },
         {
           path: "embedding-settings",

@@ -3,7 +3,7 @@
   import { Button, Layout, Modal, notifications } from "@budibase/bbui"
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
-  import CustomConfigModal from "./AIConfigModal.svelte"
+  import CustomConfigModal from "./AIConfigForm.svelte"
   import AIConfigList from "./AIConfigList.svelte"
 
   let configModal = $state<Modal | null>()
