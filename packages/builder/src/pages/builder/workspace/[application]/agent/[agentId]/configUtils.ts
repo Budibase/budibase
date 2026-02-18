@@ -17,8 +17,5 @@ export const shouldAutoSelectAgentModel = ({
     return false
   }
 
-  const agentHasAiconfig = agentAiconfig != null && agentAiconfig !== ""
-  const draftValue = draftAiconfig || ""
-
-  return !agentHasAiconfig && !draftValue
+  return !agentAiconfig && !draftAiconfig
 }
