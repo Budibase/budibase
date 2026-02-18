@@ -1,7 +1,7 @@
 <script lang="ts">
   import { aiConfigsStore } from "@/stores/portal"
   import {
-    Heading,
+    Button,
     Input,
     keepOpen,
     Label,
@@ -17,6 +17,7 @@
   } from "@budibase/types"
   import { AIConfigType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
+  import { routeActions } from ".."
 
   export interface Props {
     configId?: string
@@ -108,7 +109,7 @@
     }
   })
 
-  async function confirm() {
+  async function saveConfig() {
     draft.name = draft.name.trim()
     draft.model = draft.model.trim()
     if (!draft.reasoningEffort) {
@@ -178,17 +179,9 @@
   }
 </script>
 
-{#snippet header()}
-  <div>
-    <Heading size="XS">
-      {#if isEdit}
-        Edit {draft.name}
-      {:else}
-        Add {typeLabel} configuration
-      {/if}
-    </Heading>
-  </div>
-{/snippet}
+<div use:routeActions>
+  <Button on:click={saveConfig} cta>Save</Button>
+</div>
 
 <div class="row">
   <Label size="M">Name</Label>
