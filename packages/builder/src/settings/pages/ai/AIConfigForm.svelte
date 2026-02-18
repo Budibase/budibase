@@ -87,12 +87,12 @@
   let isSaving = $state(false)
   let canSave = $derived(
     !isSaving &&
-      !!draft.name.trim() &&
-      !!draft.model.trim() &&
-      !!draft.provider.trim() &&
+      !!draft.name?.trim() &&
+      !!draft.model?.trim() &&
+      !!draft.provider?.trim() &&
       selectedProvider &&
       !selectedProvider.credentialFields.find(
-        f => f.required && !draft.credentialsFields[f.key].trim()
+        f => f.required && !draft.credentialsFields[f.key]?.trim()
       )
   )
 
