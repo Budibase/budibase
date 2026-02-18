@@ -210,6 +210,7 @@ describe("chat route auth split", () => {
             { agentId, isEnabled: true, isDefault: true },
             { agentId: disabledAgentId, isEnabled: false, isDefault: false },
           ],
+          live: true,
           createdAt: now,
           updatedAt: now,
         }
@@ -225,6 +226,23 @@ describe("chat route auth split", () => {
 
   const headersForUser = async (user: User) =>
     await config.withUser(user, async () => config.defaultHeaders({}, true))
+
+  const setChatAppLive = async (live: boolean) => {
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const existing = await db.get<ChatApp>(chatApp._id!)
+        const updated: ChatApp = {
+          ...existing,
+          live,
+          updatedAt: new Date().toISOString(),
+        }
+        const { rev } = await db.put(updated)
+        chatApp = { ...updated, _rev: rev }
+      }
+    )
+  }
 
   const createConversation = async (title: string) => {
     let conversation: ChatConversation | undefined
@@ -267,6 +285,34 @@ describe("chat route auth split", () => {
 
     expect(res.status).toBe(200)
     expect(res.body?._id).toBe(chatApp._id)
+  })
+
+  it("blocks basic users from GET /api/chatapps/:chatAppId when chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(basicUser)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(403)
+
+    await setChatAppLive(true)
+  })
+
+  it("allows builders to access GET /api/chatapps/:chatAppId when chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(config.getUser())
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+
+    await setChatAppLive(true)
   })
 
   it("allows basic users to access GET /api/chatapps/:chatAppId/agents", async () => {
@@ -331,6 +377,20 @@ describe("chat route auth split", () => {
     )
   })
 
+  it("blocks basic users from GET /api/chatapps/:chatAppId/conversations when chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(basicUser)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+
+    expect(res.status).toBe(403)
+
+    await setChatAppLive(true)
+  })
+
   it("allows basic users to access GET /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
     const headers = await headersForUser(basicUser)
     const conversation = await createConversation("single conversation")
@@ -384,5 +444,24 @@ describe("chat route auth split", () => {
       })
 
     expect(res.status).toBe(400)
+  })
+
+  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations/:chatConversationId/stream when chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(basicUser)
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId,
+        messages: [],
+      })
+
+    expect(res.status).toBe(403)
+
+    await setChatAppLive(true)
   })
 })
