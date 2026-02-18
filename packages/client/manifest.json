@@ -9536,13 +9536,23 @@
         "type": "field",
         "label": "Event start",
         "key": "eventStart",
-        "required": true
+        "required": true,
+        "explanation": {
+          "typeSupport": {
+            "preset": "dateTimeLike"
+          }
+        }
       },
       {
         "type": "field",
         "label": "Event end",
         "key": "eventEnd",
-        "required": true
+        "required": true,
+        "explanation": {
+          "typeSupport": {
+            "preset": "dateTimeLike"
+          }
+        }
       },
       {
         "type": "field",
