@@ -49,4 +49,19 @@ describe("invite cache", () => {
       expect(list.invites[code]).toBeUndefined()
     })
   })
+
+  it("matches existing invites regardless of email casing", async () => {
+    await testEnv.withTenant(async tenantId => {
+      await inviteCache.createCode("mixed.case@budibase.com", {
+        tenantId,
+      })
+
+      const invites = await inviteCache.getExistingInvites([
+        "MIXED.CASE@BUDIBASE.COM",
+      ])
+
+      expect(invites).toHaveLength(1)
+      expect(invites[0].email).toBe("mixed.case@budibase.com")
+    })
+  })
 })
