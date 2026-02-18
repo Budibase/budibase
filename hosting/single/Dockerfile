@@ -49,6 +49,7 @@ RUN apt-get update && \
 # Install litellm
 RUN python3 -m venv /opt/venv/litellm
 RUN /opt/venv/litellm/bin/pip install 'litellm[proxy]'
+ENV PATH="/opt/venv/litellm/bin:${PATH}"
 RUN mkdir -p /litellm
 
 # This is the default litellm config file, users can mount their own
@@ -108,6 +109,9 @@ COPY hosting/single/litellm-db-runner.sh .
 RUN chmod +x ./litellm-db-runner.sh
 COPY hosting/single/healthcheck.sh .
 RUN chmod +x ./healthcheck.sh
+RUN /opt/venv/litellm/bin/pip install prisma
+RUN PRISMA_HIDE_UPDATE_MESSAGE=true /opt/venv/litellm/bin/prisma generate --schema /opt/venv/litellm/lib/python3.11/site-packages/litellm/proxy/schema.prisma
+RUN PRISMA_HIDE_UPDATE_MESSAGE=true /opt/venv/litellm/bin/prisma generate --schema /opt/venv/litellm/lib/python3.11/site-packages/litellm_proxy_extras/schema.prisma
 
 # Script below sets the path for storing data based on $DATA_DIR
 # For Azure App Service install SSH & point data locations to /home

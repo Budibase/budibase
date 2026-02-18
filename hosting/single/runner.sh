@@ -163,7 +163,7 @@ if [[ "${LITELLM_INTERNAL_DB}" == "true" ]]; then
 
     echo "Waiting for internal LiteLLM postgres to become ready..."
     postgres_wait_seconds=0
-    until pg_isready -h 127.0.0.1 -p "${LITELLM_DB_PORT}" -U postgres >/dev/null 2>&1; do
+    until pg_isready -p "${LITELLM_DB_PORT}" -U postgres >/dev/null 2>&1; do
         postgres_wait_seconds=$((postgres_wait_seconds + 1))
         if [[ "${postgres_wait_seconds}" -ge 60 ]]; then
             echo "Timed out waiting for internal LiteLLM postgres to start."
@@ -177,7 +177,6 @@ if [[ "${LITELLM_INTERNAL_DB}" == "true" ]]; then
       --set=bb_user="${LITELLM_DB_USER}" \
       --set=bb_pass="${LITELLM_DB_PASSWORD}" \
       --set=bb_db="${LITELLM_DB_NAME}" \
-      -h 127.0.0.1 \
       -p "${LITELLM_DB_PORT}" \
       -U postgres \
       postgres <<'SQL'

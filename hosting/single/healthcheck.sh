@@ -40,7 +40,7 @@ if [[ $(redis-cli -a $REDIS_PASSWORD --no-auth-warning  ping) != 'PONG' ]]; then
 fi
 
 if [[ "${LITELLM_INTERNAL_DB}" == "true" ]]; then
-    if ! pg_isready -h 127.0.0.1 -p "${LITELLM_DB_PORT:-5432}" -U postgres >/dev/null 2>&1; then
+    if ! pg_isready -p "${LITELLM_DB_PORT:-5432}" -U postgres >/dev/null 2>&1; then
         echo 'ERROR: LiteLLM Postgres is down';
         healthy=false
     fi
