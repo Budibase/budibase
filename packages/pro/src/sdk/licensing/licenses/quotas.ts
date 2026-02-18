@@ -85,7 +85,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(1000),
-        ...quotas.budibaseAICredits(0),
+        ...quotas.budibaseAICredits(millions(2)),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -131,7 +131,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(10000),
-        ...quotas.budibaseAICredits(0),
+        ...quotas.budibaseAICredits(millions(2)),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -230,7 +230,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(0),
+        ...quotas.budibaseAICredits(50000),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -253,7 +253,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(0),
+        ...quotas.budibaseAICredits(50000),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -345,7 +345,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(0),
+        ...quotas.budibaseAICredits(50000),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -368,7 +368,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(0),
+        ...quotas.budibaseAICredits(50000),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -391,7 +391,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(0),
+        ...quotas.budibaseAICredits(50000),
         ...quotas.actions(UNLIMITED),
       },
       static: {
