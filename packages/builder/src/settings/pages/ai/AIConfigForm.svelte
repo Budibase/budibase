@@ -4,7 +4,6 @@
     Button,
     Input,
     keepOpen,
-    Label,
     notifications,
     Select,
   } from "@budibase/bbui"
@@ -183,14 +182,10 @@
   <Button on:click={saveConfig} cta>Save</Button>
 </div>
 
-<div class="row">
-  <Label size="M">Name</Label>
-  <Input bind:value={draft.name} placeholder="Support chat" />
-</div>
-
-<div class="row">
-  <Label size="M">Provider</Label>
+<div class="form">
   <Select
+    label="Provider"
+    required
     bind:value={draft.provider}
     options={providers}
     getOptionValue={o => o.id}
@@ -198,58 +193,65 @@
     placeholder={providerPlaceholder}
     loading={!providers}
   />
-</div>
 
-<div class="row">
-  <Label size="M">Model</Label>
-  <Input bind:value={draft.model} />
-</div>
+  <Input
+    label="Model ID"
+    description="The model you would like to connect to"
+    required
+    bind:value={draft.model}
+    placeholder="Support chat"
+  />
 
-{#if draft.configType === AIConfigType.COMPLETIONS}
-  <div class="row">
-    <Label size="M">Reasoning effort</Label>
+  <Input
+    label="Display name"
+    description="Human readable name for the model"
+    required
+    bind:value={draft.name}
+    placeholder="e.g. Meta"
+  />
+
+  {#each selectedProvider?.credentialFields as field (field.key)}
+    {#if field.options?.length || field.field_type === "select"}
+      <Select
+        label={field.label || field.key}
+        required={field.required}
+        description={field.tooltip ?? undefined}
+        bind:value={draft.credentialsFields[field.key]}
+        options={field.options || []}
+        placeholder={field.placeholder ?? undefined}
+        helpText={field.tooltip ?? undefined}
+      />
+    {:else}
+      <Input
+        label={field.label || field.key}
+        type={field.field_type === "password" || field.key.includes("key")
+          ? "password"
+          : undefined}
+        description={field.tooltip ?? undefined}
+        required={field.required}
+        bind:value={draft.credentialsFields[field.key]}
+        placeholder={field.placeholder ?? undefined}
+      />
+    {/if}
+  {/each}
+
+  {#if draft.configType === AIConfigType.COMPLETIONS}
     <Select
+      label="Reasoning effort"
+      required
       placeholder="Use provider default"
       options={reasoningEffortOptions}
       getOptionLabel={option => option.label}
       getOptionValue={option => option.value}
       bind:value={draft.reasoningEffort}
     />
-  </div>
-{/if}
-
-{#each selectedProvider?.credentialFields as field (field.key)}
-  <div class="row">
-    <Label size="M">{field.label || field.key}</Label>
-    {#if field.options?.length || field.field_type === "select"}
-      <Select
-        bind:value={draft.credentialsFields[field.key]}
-        options={field.options || []}
-        placeholder={field.placeholder ?? undefined}
-        helpText={field.tooltip ?? undefined}
-      />
-    {:else if field.field_type === "password" || field.key.includes("key")}
-      <Input
-        bind:value={draft.credentialsFields[field.key]}
-        type="password"
-        autocomplete="new-password"
-        placeholder={field.placeholder ?? undefined}
-        helpText={field.tooltip ?? undefined}
-      />
-    {:else}
-      <Input
-        bind:value={draft.credentialsFields[field.key]}
-        type="text"
-        placeholder={field.placeholder ?? undefined}
-        helpText={field.tooltip ?? undefined}
-      />
-    {/if}
-  </div>
-{/each}
+  {/if}
+</div>
 
 <style>
-  .row {
-    display: grid;
+  .form {
+    display: flex;
     gap: var(--spacing-s);
+    flex-direction: column;
   }
 </style>
