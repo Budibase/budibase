@@ -25,7 +25,7 @@
     if (row.provider === BUDIBASE_AI_PROVIDER_ID && !hasLicenseKey) {
       enableBBAIModal?.show()
     } else {
-      bb.settings(`/ai-config/configs/${row._id || "new"}`, {
+      bb.settings(`/ai-config/${row.configType}/${row._id || "new"}`, {
         provider: row.provider,
         type: row.configType,
       })
