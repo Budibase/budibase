@@ -86,6 +86,7 @@ export const createAIConfig = async (
     webSearchConfig: body.webSearchConfig,
     configType: body.configType,
     reasoningEffort: body.reasoningEffort,
+    isDefault: body.isDefault,
   }
 
   const newConfig = await sdk.ai.configs.create(createRequest)
@@ -125,6 +126,7 @@ export const updateAIConfig = async (
     webSearchConfig: body.webSearchConfig,
     configType,
     reasoningEffort: body.reasoningEffort,
+    isDefault: body.isDefault,
   }
 
   const updatedConfig = await sdk.ai.configs.update(updateRequest)

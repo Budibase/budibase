@@ -1,12 +1,15 @@
-import { db } from "@budibase/backend-core"
+import { db, features } from "@budibase/backend-core"
 import {
   Agent,
   CreateAgentRequest,
   CreateAgentResponse,
   FetchAgentsResponse,
   RequiredKeys,
+  ToggleAgentDiscordRequest,
+  ToggleAgentDiscordResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
+  FeatureFlag,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -53,6 +56,7 @@ export async function createAgent(
   ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
 ) {
   const body = ctx.request.body
+  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
 
@@ -68,10 +72,10 @@ export async function createAgent(
     _deleted: false,
     createdBy: globalId,
     enabledTools: body.enabledTools,
-    embeddingModel: body.embeddingModel,
-    vectorDb: body.vectorDb,
-    ragMinDistance: body.ragMinDistance,
-    ragTopK: body.ragTopK,
+    embeddingModel: ragEnabled ? body.embeddingModel : undefined,
+    vectorDb: ragEnabled ? body.vectorDb : undefined,
+    ragMinDistance: ragEnabled ? body.ragMinDistance : undefined,
+    ragTopK: ragEnabled ? body.ragTopK : undefined,
     discordIntegration: body.discordIntegration,
   }
 
@@ -85,6 +89,7 @@ export async function updateAgent(
   ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
 ) {
   const body = ctx.request.body
+  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
@@ -98,10 +103,10 @@ export async function updateAgent(
     iconColor: body.iconColor,
     live: body.live,
     enabledTools: body.enabledTools,
-    embeddingModel: body.embeddingModel,
-    vectorDb: body.vectorDb,
-    ragMinDistance: body.ragMinDistance,
-    ragTopK: body.ragTopK,
+    embeddingModel: ragEnabled ? body.embeddingModel : undefined,
+    vectorDb: ragEnabled ? body.vectorDb : undefined,
+    ragMinDistance: ragEnabled ? body.ragMinDistance : undefined,
+    ragTopK: ragEnabled ? body.ragTopK : undefined,
     discordIntegration: body.discordIntegration,
   }
 
@@ -164,6 +169,75 @@ export async function syncAgentDiscordCommands(
     interactionsEndpointUrl,
     inviteUrl: sdk.ai.deployments.discord.buildDiscordInviteUrl(applicationId),
   }
+  ctx.status = 200
+}
+
+export async function toggleAgentDiscordDeployment(
+  ctx: UserCtx<
+    ToggleAgentDiscordRequest,
+    ToggleAgentDiscordResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const enabledResponse = ctx.request.body?.enabled
+  if (typeof enabledResponse !== "boolean") {
+    ctx.throw(400, "enabled must be a boolean")
+  }
+  const enabled = enabledResponse
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+
+  if (enabled) {
+    const {
+      applicationId,
+      botToken,
+      guildId,
+      chatAppId: configuredChatAppId,
+    } = sdk.ai.deployments.discord.validateDiscordIntegration(agent)
+
+    const chatApp = await sdk.ai.deployments.discord.resolveChatAppForAgent(
+      agentId,
+      configuredChatAppId
+    )
+
+    await sdk.ai.deployments.discord.syncApplicationCommands(
+      applicationId,
+      botToken,
+      guildId
+    )
+
+    const interactionsEndpointUrl =
+      await sdk.ai.deployments.discord.buildDiscordWebhookUrl(
+        chatApp._id!,
+        agentId
+      )
+
+    await sdk.ai.agents.update({
+      ...agent,
+      discordIntegration: {
+        ...agent.discordIntegration,
+        chatAppId: chatApp._id!,
+        interactionsEndpointUrl,
+      },
+    })
+  } else {
+    const chatAppId = agent.discordIntegration?.chatAppId?.trim()
+
+    if (chatAppId) {
+      await sdk.ai.deployments.discord.disableAgentOnChatApp(chatAppId, agentId)
+    }
+
+    await sdk.ai.agents.update({
+      ...agent,
+      discordIntegration: {
+        ...agent.discordIntegration,
+        interactionsEndpointUrl: undefined,
+        chatAppId: undefined,
+      },
+    })
+  }
+
+  ctx.body = { success: true, enabled }
   ctx.status = 200
 }
 

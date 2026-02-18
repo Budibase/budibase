@@ -1,4 +1,6 @@
 import { patchBodyValidation, scimPatch } from "scim-patch"
+import { EmailUnavailableError } from "@budibase/backend-core"
+import { mappers, scimUsers } from "@budibase/pro"
 import {
   Ctx,
   ScimUserListResponse,
@@ -6,9 +8,6 @@ import {
   ScimUserResponse,
   ScimUpdateRequest,
 } from "@budibase/types"
-import { mappers } from "../../../../"
-import { scimUsers } from "../../../../sdk"
-import { EmailUnavailableError } from "@budibase/backend-core"
 
 function tryGetQueryAsNumber(ctx: Ctx, name: string) {
   const value = ctx.request.query[name]
