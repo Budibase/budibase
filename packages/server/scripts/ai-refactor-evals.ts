@@ -256,7 +256,7 @@ function loadEvalEnvFile() {
     ? isAbsolute(configuredPath)
       ? configuredPath
       : resolve(process.cwd(), configuredPath)
-    : resolve(__dirname, "../.env.ai-evals")
+    : resolve(__dirname, "./.env.ai-evals")
 
   if (!existsSync(envFilePath)) {
     if (configuredPath) {

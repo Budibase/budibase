@@ -9,4 +9,4 @@ dist
 coverage/
 watchtower-hook.json
 .claude
-.env.ai-evals
+scripts/.env.ai-evals
