@@ -1,5 +1,6 @@
 import { createAzure } from "@ai-sdk/azure"
 import { createOpenAI } from "@ai-sdk/openai"
+import { env } from "@budibase/backend-core"
 import { AIProvider } from "@budibase/types"
 import tracer from "dd-trace"
 import { LLMResponse } from "."
@@ -18,6 +19,7 @@ const getLegacyProviderClient = (
     case "OpenAI":
     case "TogetherAI":
     case "Custom":
+    case "BudibaseAI":
       return createOpenAI({
         baseURL: config.baseUrl,
         apiKey: config.apiKey,
@@ -57,7 +59,7 @@ export const createLegacyLLM = async (
     })
   }
 
-  if (config.provider === "BudibaseAI") {
+  if (config.provider === "BudibaseAI" && !env.SELF_HOSTED) {
     return createBBAIClient(`legacy/${config.model}`)
   }
 
