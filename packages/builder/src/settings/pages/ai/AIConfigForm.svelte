@@ -55,7 +55,7 @@
 
   let draft: AIConfigResponse = $state(createDraft())
 
-  let isEdit = $derived(!!config?._id)
+  let isEdit = $derived(!!draft._id)
   let typeLabel = $derived(
     draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
   )
