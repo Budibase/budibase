@@ -323,15 +323,25 @@ export async function update(
   }
 
   if (shouldUpdateLiteLLM) {
-    await liteLLM.updateModel({
-      llmModelId: updatedConfig.liteLLMModelId,
-      provider: updatedConfig.provider,
-      name: updatedConfig.model,
-      credentialFields: updatedConfig.credentialsFields,
-      configType: updatedConfig.configType,
-      reasoningEffort: updatedConfig.reasoningEffort,
-    })
-    await liteLLM.syncKeyModels()
+    try {
+      await liteLLM.updateModel({
+        llmModelId: updatedConfig.liteLLMModelId,
+        provider: updatedConfig.provider,
+        name: updatedConfig.model,
+        credentialFields: updatedConfig.credentialsFields,
+        configType: updatedConfig.configType,
+        reasoningEffort: updatedConfig.reasoningEffort,
+      })
+      await liteLLM.syncKeyModels()
+    } catch (err) {
+      const rollbackConfig: CustomAIProviderConfig = {
+        ...existing,
+        ...(await encodeConfigSecrets(existing)),
+        _rev: updatedConfig._rev,
+      }
+      await db.put(rollbackConfig)
+      throw err
+    }
   }
 
   return updatedConfig
