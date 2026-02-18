@@ -12,7 +12,6 @@ import { LLMRequest } from "../llm"
 import {
   classifyText,
   cleanData,
-  generateCronExpression,
   searchWeb,
   sentimentAnalysis,
   summarizeText,
@@ -87,12 +86,6 @@ export abstract class LLM {
   async summarizeText(prompt: string): Promise<LLMPromptResponse> {
     return tracer.trace("summarizeText", () =>
       this.prompt(summarizeText(prompt))
-    )
-  }
-
-  async generateCronExpression(prompt: string): Promise<LLMPromptResponse> {
-    return tracer.trace("generateCronExpression", () =>
-      this.prompt(generateCronExpression(prompt))
     )
   }
 
