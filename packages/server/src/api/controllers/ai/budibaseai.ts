@@ -124,7 +124,9 @@ class UsageTrackingTransform extends Transform {
           this.creditsSynced = true
           incrementBudibaseAICreditsFromTokenUsage(
             toBudibaseUsage(parsed.usage)
-          ).catch(() => {})
+          ).catch(error =>
+            console.error("Failed to update credits from stream chunk", error)
+          )
         }
       } catch {
         // Ignore non-json chunks.
@@ -195,8 +197,6 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
   const json = (await providerResponse.json()) as {
     usage?: CompletionUsage
   }
-  await incrementBudibaseAICreditsFromTokenUsage(
-    toBudibaseUsage(json.usage)
-  ).catch(() => {})
+  await incrementBudibaseAICreditsFromTokenUsage(toBudibaseUsage(json.usage))
   ctx.body = json
 }

@@ -40,7 +40,7 @@ export async function createBBAIClient(model: string): Promise<LLMResponse> {
         const result = await doGenerate()
         await incrementBudibaseAICreditsFromTokenUsage(
           toBudibaseUsage(result.usage)
-        ).catch(() => {})
+        )
         return result
       },
       async wrapStream({ doStream }) {
@@ -54,7 +54,7 @@ export async function createBBAIClient(model: string): Promise<LLMResponse> {
             if (chunk.type === "finish") {
               await incrementBudibaseAICreditsFromTokenUsage(
                 toBudibaseUsage(chunk.usage)
-              ).catch(() => {})
+              )
             }
             return
           },

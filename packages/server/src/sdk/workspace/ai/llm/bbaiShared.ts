@@ -89,9 +89,16 @@ export const calculateBudibaseAICredits = (
 export const incrementBudibaseAICreditsFromTokenUsage = async (
   usage?: BudibaseAITokenUsage
 ) => {
-  console.log(JSON.stringify(usage))
   const credits = calculateBudibaseAICredits(usage)
   if (credits > 0) {
-    await quotas.incrementBudibaseAICredits(credits)
+    try {
+      await quotas.incrementBudibaseAICredits(credits)
+    } catch (error) {
+      console.error("Failed to increment Budibase AI credits", {
+        usage,
+        credits,
+        error,
+      })
+    }
   }
 }
