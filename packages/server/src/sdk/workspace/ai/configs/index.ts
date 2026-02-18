@@ -178,6 +178,13 @@ export async function create(
 
   let modelId
   if (!isBBAI || isSelfhost) {
+    await liteLLM.validateConfig({
+      provider: config.provider,
+      name: config.model,
+      credentialFields: config.credentialsFields,
+      configType: config.configType,
+    })
+
     modelId = await liteLLM.addModel({
       provider: config.provider,
       model: config.model,
