@@ -47,7 +47,7 @@
       : ({
           provider: provider ?? "",
           name: isBBAI ? "bbai" : "",
-          model: isBBAI ? "v1" : "",
+          model: isBBAI ? "budibase/v1" : "",
           configType: type || AIConfigType.COMPLETIONS,
           credentialsFields: {},
           webSearchConfig: undefined,
