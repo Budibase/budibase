@@ -255,7 +255,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-m);
-    border-bottom: var(--border-dark);
+    border-bottom: var(--border-light);
   }
 
   .chat-header-agent {

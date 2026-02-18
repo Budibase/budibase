@@ -9,10 +9,7 @@
     invalidationMessage,
     popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
-  import {
-    DefaultBuilderTheme,
-    getThemeClassNames,
-  } from "@budibase/shared-core"
+  import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
   import SDK from "@/sdk"
   import {
@@ -88,9 +85,7 @@
     typeof window !== "undefined" &&
     (window.location.pathname.replace(/\/$/, "").endsWith("/_chat") ||
       window.location.pathname.startsWith("/app-chat/"))
-  $: resolvedThemeClassNames = getThemeClassNames(
-    isChatOnlyRoute ? DefaultBuilderTheme : $themeStore.theme
-  )
+  $: resolvedThemeClassNames = getThemeClassNames($themeStore.theme)
 
   // Handle no matching route
   $: {
@@ -480,13 +475,13 @@
     width: 100%;
     min-width: 0;
     min-height: 0;
-    background: var(--spectrum-alias-background-color-primary);
+    background: transparent;
   }
 
   .chat-paused-nav {
     width: 340px;
     min-width: 340px;
-    border-right: 1px solid var(--spectrum-global-color-gray-200);
+    border-right: var(--border-light);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -530,7 +525,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-m);
-    border-bottom: var(--border-dark);
+    border-bottom: var(--border-light);
   }
 
   .chat-paused-line {
@@ -595,7 +590,7 @@
       width: 100%;
       min-width: 100%;
       border-right: 0;
-      border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+      border-bottom: var(--border-light);
     }
 
     .chat-paused-main {
@@ -645,7 +640,7 @@
     flex: 1 1 auto;
     display: flex;
     border-radius: 24px;
-    border: var(--border-dark);
+    border: var(--border-light);
     background: transparent;
     overflow: hidden;
     min-width: 0;
