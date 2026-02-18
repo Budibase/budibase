@@ -1,21 +1,19 @@
 <script lang="ts">
+  import { bb } from "@/stores/bb"
   import { aiConfigsStore } from "@/stores/portal"
-  import { Button, Layout, Modal, notifications } from "@budibase/bbui"
+  import { Button, Layout, notifications } from "@budibase/bbui"
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
-  import CustomConfigModal from "./AIConfigForm.svelte"
   import AIConfigList from "./AIConfigList.svelte"
 
-  let configModal = $state<Modal | null>()
-
   let completionConfigs = $derived(
-    ($aiConfigsStore.customConfigs || []).filter(
-      config => config.configType === AIConfigType.COMPLETIONS
-    )
+    $aiConfigsStore.customConfigsPerType.completions
   )
 
   let hasBBAI = $derived(
-    completionConfigs.some(c => c.provider === BUDIBASE_AI_PROVIDER_ID)
+    $aiConfigsStore.customConfigsPerType.completions.some(
+      c => c.provider === BUDIBASE_AI_PROVIDER_ID
+    )
   )
   let modelProviders = $derived([
     ...(hasBBAI
@@ -60,7 +58,7 @@
   ])
 
   function createAIConfig() {
-    configModal?.show()
+    bb.settings(`/ai-config/configs/new`, { type: AIConfigType.COMPLETIONS })
   }
 
   onMount(async () => {
@@ -98,10 +96,6 @@
     ></AIConfigList>
   </div>
 </Layout>
-
-<Modal bind:this={configModal}>
-  <CustomConfigModal type={AIConfigType.COMPLETIONS} />
-</Modal>
 
 <style>
   .section-header {
