@@ -70,14 +70,15 @@
 
   onMount(async () => {
     try {
-      await Promise.all(
-        [clientAppsStore.load(), translations.init()].concat(
-          chatFeatureEnabled ? [clientChatAppsStore.load()] : []
-        )
-      )
+      await Promise.all([clientAppsStore.load(), translations.init()])
     } catch (error) {
       notifications.error("Error loading apps")
     }
+
+    if (chatFeatureEnabled) {
+      await clientChatAppsStore.load()
+    }
+
     loaded = true
   })
 
