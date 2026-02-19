@@ -32,7 +32,6 @@
   import InvitedModal from "./_components/InvitedModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import EditWorkspaceUserModal from "./_components/EditWorkspaceUserModal.svelte"
-  import WorkspaceUserPicker from "./_components/WorkspaceUserPicker.svelte"
   import { get } from "svelte/store"
   import {
     Constants,
@@ -587,12 +586,6 @@
             deleteRows={deleteUsers}
           />
         {:else}
-          {#if isWorkspaceOnly}
-            <WorkspaceUserPicker
-              workspaceId={currentWorkspaceId}
-              onUsersUpdated={refreshUserList}
-            />
-          {/if}
           <Search bind:value={searchEmail} placeholder="Search" />
           <ActionButton
             size="M"
