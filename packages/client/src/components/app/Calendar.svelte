@@ -58,7 +58,7 @@
       ? { year: yearTitleFormat }
       : {}
   $: monthTitleFormatProps =
-    monthTitleFormat && yearTitleFormat !== "hidden"
+    monthTitleFormat && monthTitleFormat !== "hidden"
       ? { month: monthTitleFormat }
       : {}
   $: dayTitleFormatProps =
