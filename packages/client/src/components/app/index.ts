@@ -30,6 +30,7 @@ export const accordion = () => import("./Accordion.svelte")
 export const chatbox = () => import("./Chatbox.svelte")
 export const singlerowprovider = () => import("./SingleRowProvider.svelte")
 export const codegenerator = () => import("./CodeGenerator.svelte")
+export const calendar = () => import("./Calendar.svelte")
 export * from "./blocks"
 export * from "./charts"
 export * from "./dynamic-filter"

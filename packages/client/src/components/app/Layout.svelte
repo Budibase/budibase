@@ -611,6 +611,7 @@
     position: relative;
     padding: 32px;
     align-self: center;
+    flex: 1;
   }
   .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
     padding: calc(32px - var(--grid-spacing) * 2px);
