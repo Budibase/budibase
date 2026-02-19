@@ -8,7 +8,8 @@
     featureFlags,
   } from "@/stores/portal"
   import { deploymentStore, themeStore } from "@/stores/builder"
-  import { Theme, FeatureFlag } from "@budibase/types"
+  import { FeatureFlag } from "@budibase/types"
+  import type { Theme } from "@budibase/types"
   import { ensureValidTheme } from "@budibase/shared-core"
   import { goto as gotoStore, params } from "@roxi/routify"
   import { onMount } from "svelte"
