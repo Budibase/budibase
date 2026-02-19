@@ -50,6 +50,7 @@ describe("createLiteLLMOpenAI", () => {
     getKeySettingsMock.mockResolvedValue({
       keyId: "key-id",
       secretKey: "secret-key",
+      teamId: "team-id",
     })
 
     mockChatGPTResponse("hello", {
