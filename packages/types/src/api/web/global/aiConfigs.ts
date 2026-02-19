@@ -1,11 +1,24 @@
 import { CustomAIProviderConfig } from "../../../documents"
+import { WithoutDocMetadata } from "../../../shared"
 
-export type AIConfigListResponse = CustomAIProviderConfig[]
-export type CreateAIConfigRequest = Omit<
-  CustomAIProviderConfig,
-  "_id" | "_rev" | "_deleted"
->
-export type UpdateAIConfigRequest = CustomAIProviderConfig
+export interface AIConfigResponse
+  extends Pick<
+    CustomAIProviderConfig,
+    | "_id"
+    | "_rev"
+    | "name"
+    | "provider"
+    | "model"
+    | "isDefault"
+    | "webSearchConfig"
+    | "configType"
+    | "reasoningEffort"
+    | "credentialsFields"
+  > {}
+
+export type AIConfigListResponse = AIConfigResponse[]
+export type CreateAIConfigRequest = WithoutDocMetadata<AIConfigResponse>
+export type UpdateAIConfigRequest = AIConfigResponse
 
 export interface LLMProviderField {
   key: string

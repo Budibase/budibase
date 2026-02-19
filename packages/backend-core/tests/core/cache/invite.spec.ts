@@ -1,0 +1,67 @@
+import * as inviteCache from "../../../src/cache/invite"
+import { setEnv } from "../../../src/environment"
+import * as redis from "../../../src/redis/init"
+import { testEnv } from "../../extra"
+
+describe("invite cache", () => {
+  let resetEnv: (() => void) | undefined
+
+  beforeAll(() => {
+    resetEnv = setEnv({ MULTI_TENANCY: "1" })
+  })
+
+  afterAll(() => {
+    resetEnv?.()
+  })
+
+  afterEach(async () => {
+    const inviteListClient = await redis.getInviteListClient()
+    await inviteListClient.clear()
+  })
+
+  it("stores invites in tenant list and retrieves", async () => {
+    await testEnv.withTenant(async tenantId => {
+      const code = await inviteCache.createCode("alpha@budibase.com", {
+        tenantId,
+      })
+
+      const invite = await inviteCache.getCode(code, tenantId)
+      expect(invite.email).toBe("alpha@budibase.com")
+      expect(invite.info.tenantId).toBe(tenantId)
+
+      const invites = await inviteCache.getInviteCodes()
+      expect(invites.some(inv => inv.code === code)).toBe(true)
+    })
+  })
+
+  it("deletes list invites", async () => {
+    await testEnv.withTenant(async tenantId => {
+      const code = await inviteCache.createCode("delete@budibase.com", {
+        tenantId,
+      })
+
+      await inviteCache.deleteCode(code, tenantId)
+      await expect(inviteCache.getCode(code, tenantId)).rejects.toBeDefined()
+
+      const inviteListClient = await redis.getInviteListClient()
+      const list = (await inviteListClient.get(tenantId)) as any
+      expect(list).toBeDefined()
+      expect(list.invites[code]).toBeUndefined()
+    })
+  })
+
+  it("matches existing invites regardless of email casing", async () => {
+    await testEnv.withTenant(async tenantId => {
+      await inviteCache.createCode("mixed.case@budibase.com", {
+        tenantId,
+      })
+
+      const invites = await inviteCache.getExistingInvites([
+        "MIXED.CASE@BUDIBASE.COM",
+      ])
+
+      expect(invites).toHaveLength(1)
+      expect(invites[0].email).toBe("mixed.case@budibase.com")
+    })
+  })
+})

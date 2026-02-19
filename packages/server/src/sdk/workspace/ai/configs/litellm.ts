@@ -2,6 +2,7 @@ import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
   LiteLLMKeyConfig,
   ReasoningEffort,
   LockName,
@@ -45,7 +46,6 @@ export async function addModel({
   credentialFields,
   configType,
   reasoningEffort,
-  validate = true,
 }: {
   provider: string
   model: string
@@ -53,21 +53,9 @@ export async function addModel({
   credentialFields: Record<string, string>
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
-  validate?: boolean
 }): Promise<string> {
-  if (validate) {
-    await validateConfig({
-      provider,
-      name: model,
-      credentialFields,
-      configType,
-    })
-  }
-
-  provider = await mapToLiteLLMProvider(provider)
-
   const litellmParams = buildLiteLLMParams({
-    provider,
+    provider: await mapToLiteLLMProvider(provider),
     name: model,
     credentialFields,
     configType,
@@ -110,13 +98,9 @@ export async function updateModel({
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
 }) {
-  await validateConfig({ provider, name, credentialFields, configType })
-
-  provider = await mapToLiteLLMProvider(provider)
-
   const litellmParams = buildLiteLLMParams({
-    provider,
-    name,
+    provider: await mapToLiteLLMProvider(provider),
+    name: name,
     credentialFields,
     configType,
     reasoningEffort,
@@ -164,7 +148,6 @@ async function validateEmbeddingConfig(model: {
       displayName: `tmp-${model.name}`,
       credentialFields: model.credentialFields,
       configType: AIConfigType.EMBEDDINGS,
-      validate: false,
     })
 
     const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
@@ -214,8 +197,7 @@ async function validateCompletionsModel(model: {
   credentialFields: Record<string, string>
 }) {
   let { name, provider, credentialFields } = model
-
-  provider = await mapToLiteLLMProvider(provider)
+  const mappedProvider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "POST",
@@ -225,8 +207,8 @@ async function validateCompletionsModel(model: {
     },
     body: JSON.stringify({
       litellm_params: {
-        model: `${provider}/${name}`,
-        custom_llm_provider: provider,
+        model: `${mappedProvider}/${name}`,
+        custom_llm_provider: mappedProvider,
         ...credentialFields,
       },
     }),
@@ -248,7 +230,7 @@ async function validateCompletionsModel(model: {
   }
 }
 
-async function validateConfig(model: {
+export async function validateConfig(model: {
   provider: string
   name: string
   credentialFields: Record<string, string>
@@ -368,8 +350,13 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
 }
 
 async function mapToLiteLLMProvider(provider: string) {
+  if (provider === BUDIBASE_AI_PROVIDER_ID) {
+    return "custom_openai"
+  }
+
   const providers = await fetchPublicProviders()
   const result = providers.find(p => p.provider === provider)?.litellm_provider
+
   if (!result) {
     throw new Error(`Provider ${provider} not found in LiteLLM`)
   }

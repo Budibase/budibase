@@ -8,8 +8,9 @@
   } from "@budibase/bbui"
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
-  import { agentsStore, selectedAgent } from "@/stores/portal"
+  import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
+  import { FeatureFlag } from "@budibase/types"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import AgentChatPanel from "./AgentChatPanel.svelte"
@@ -30,11 +31,24 @@
 
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
+  let ragEnabled = $derived($featureFlags[FeatureFlag.AI_RAG])
 
-  let activeTab = $derived(
-    $isActive("./knowledge") ? "Knowledge" : "Configuration"
-  )
+  let activeTab = $derived.by(() => {
+    if (ragEnabled && $isActive("./knowledge")) {
+      return "Knowledge"
+    }
+    if ($isActive("./deployment")) {
+      return "Deployment"
+    }
+    return "Configuration"
+  })
   let currentAgent = $derived($selectedAgent)
+
+  $effect(() => {
+    if (!ragEnabled && $isActive("./knowledge")) {
+      $goto("./config")
+    }
+  })
 
   async function toggleAgentLive() {
     if (!currentAgent || togglingLive) return
@@ -85,12 +99,21 @@
       >
         Configuration
       </ActionButton>
+      {#if ragEnabled}
+        <ActionButton
+          quiet
+          selected={activeTab === "Knowledge"}
+          on:click={() => $goto("./knowledge")}
+        >
+          Knowledge
+        </ActionButton>
+      {/if}
       <ActionButton
         quiet
-        selected={activeTab === "Knowledge"}
-        on:click={() => $goto("./knowledge")}
+        selected={activeTab === "Deployment"}
+        on:click={() => $goto("./deployment")}
       >
-        Knowledge
+        Deployment
       </ActionButton>
     </div>
     <div class="start-pause-row">

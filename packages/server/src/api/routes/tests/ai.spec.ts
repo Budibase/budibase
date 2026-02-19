@@ -1,11 +1,13 @@
 import { z } from "zod"
 import {
+  mockAISDKChatGPTResponse,
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, setEnv } from "@budibase/backend-core"
+import { configs, env, setEnv, withEnv } from "@budibase/backend-core"
+import { generateText, streamText } from "ai"
 import {
   AIInnerConfig,
   AIOperationEnum,
@@ -28,6 +30,16 @@ import {
 } from "../../../tests/utilities/mocks/ai"
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
+import { resetHttpMocking } from "../../../tests/jestEnv"
+
+jest.mock("ai", () => {
+  const actual = jest.requireActual("ai")
+  return {
+    ...actual,
+    generateText: jest.fn(actual.generateText),
+    streamText: jest.fn(actual.streamText),
+  }
+})
 
 function toResponseFormat(schema: any, name = "response") {
   return {
@@ -72,7 +84,11 @@ function budibaseAI(): SetupFn {
       })
     })
 
-    return setEnv({ OPENAI_API_KEY: "test-key", SELF_HOSTED: false })
+    return setEnv({
+      OPENAI_API_KEY: "test-key",
+      BBAI_OPENAI_API_KEY: "test-key",
+      SELF_HOSTED: false,
+    })
   }
 }
 
@@ -115,12 +131,12 @@ const allProviders: TestSetup[] = [
         OPENAI_API_KEY: "test-key",
       })
     },
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
   {
     name: "OpenAI API key with custom config",
     setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
   {
     name: "Anthropic API key with custom config",
@@ -149,7 +165,7 @@ const allProviders: TestSetup[] = [
   {
     name: "BudibaseAI",
     setup: budibaseAI(),
-    mockLLMResponse: mockChatGPTResponse,
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
 ]
 
@@ -164,8 +180,9 @@ describe("AI", () => {
     config.end()
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     nock.cleanAll()
+    await resetHttpMocking()
   })
 
   describe.each(allProviders)(
@@ -284,6 +301,10 @@ describe("BudibaseAI", () => {
   beforeAll(async () => {
     await config.init()
     cleanup = await budibaseAI()(config)
+  })
+
+  beforeEach(async () => {
+    await resetHttpMocking()
   })
 
   afterAll(async () => {
@@ -497,9 +518,6 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      // Ensure MockAgent is installed for OpenAI interceptors
-      const { installHttpMocking } = require("../../../tests/jestEnv")
-      installHttpMocking()
     })
 
     const mockAIGenerationStructure = (
@@ -1138,6 +1156,174 @@ describe("BudibaseAI", () => {
         },
         { status: 403 }
       )
+    })
+  })
+
+  describe("POST /api/ai/chat/completions", () => {
+    let licenseKey = "test-key"
+    let internalApiKey = "api-key"
+    let envCleanup: () => void
+    let cleanup: () => Promise<void> | void
+
+    const generateTextMock = generateText as jest.MockedFunction<
+      typeof generateText
+    >
+    const streamTextMock = streamText as jest.MockedFunction<typeof streamText>
+
+    beforeAll(async () => {
+      envCleanup = setEnv({
+        SELF_HOSTED: false,
+        ACCOUNT_PORTAL_API_KEY: internalApiKey,
+        BBAI_OPENROUTER_API_KEY: "openrouter-key",
+        OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1",
+      })
+    })
+
+    afterAll(async () => {
+      envCleanup()
+    })
+
+    beforeEach(async () => {
+      await config.newTenant()
+      nock.cleanAll()
+      cleanup = await customAIConfig({
+        provider: "OpenAI",
+        defaultModel: "gpt-5-mini",
+        apiKey: "test-key",
+      })(config)
+      const license: License = {
+        plan: {
+          type: PlanType.FREE,
+          model: PlanModel.PER_USER,
+          usesInvoicing: false,
+        },
+        features: [Feature.BUDIBASE_AI],
+        quotas: {} as any,
+        tenantId: config.tenantId,
+      }
+      nock(env.ACCOUNT_PORTAL_URL)
+        .get(`/api/license/${licenseKey}`)
+        .reply(200, license)
+    })
+
+    afterEach(async () => {
+      await cleanup?.()
+      jest.clearAllMocks()
+    })
+
+    it("proxies the OpenAI response without reshaping", async () => {
+      generateTextMock.mockResolvedValue({
+        response: {
+          body: {
+            object: "chat.completion",
+            choices: [
+              {
+                message: { content: "hello from openai" },
+              },
+            ],
+            usage: { total_tokens: 10 },
+          },
+        },
+      } as unknown as ReturnType<typeof generateText>)
+
+      const response = await config.api.ai.openaiChatCompletions({
+        model: "budibase/v1",
+        messages: [{ role: "user", content: "hello" }],
+        licenseKey,
+      })
+
+      expect(response.object).toBe("chat.completion")
+      expect(response.choices[0].message.content).toBe("hello from openai")
+      expect(response.usage?.total_tokens).toBeGreaterThan(0)
+    })
+
+    it("ignores extra fields (e.g. response_format)", async () => {
+      const format = toResponseFormat(z.object({ value: z.string() }))
+      generateTextMock.mockResolvedValue({
+        response: {
+          body: {
+            object: "chat.completion",
+            choices: [
+              {
+                message: { content: `{"value":"ok"}` },
+              },
+            ],
+          },
+        },
+      } as unknown as ReturnType<typeof generateText>)
+
+      const response = await config.api.ai.openaiChatCompletions({
+        model: "budibase/v1",
+        messages: [{ role: "user", content: "return json" }],
+        stream: false,
+        // @ts-expect-error extra field should be ignored
+        response_format: format,
+        licenseKey,
+      })
+
+      expect(response.choices[0].message.content).toBe(`{"value":"ok"}`)
+    })
+
+    it("returns HTTP errors when stream initialization fails", async () => {
+      streamTextMock.mockImplementation(() => {
+        const error = new Error("Unauthorized") as Error & { status: number }
+        error.status = 401
+        throw error
+      })
+
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "budibase/v1",
+          messages: [{ role: "user", content: "hello" }],
+          stream: true,
+          licenseKey,
+        },
+        {
+          status: 401,
+          headers: {
+            "Content-Type": /^application\/json/,
+          },
+        }
+      )
+    })
+
+    it("rejects requests missing required fields", async () => {
+      await config.api.ai.openaiChatCompletions(
+        {
+          // @ts-expect-error intentionally missing fields
+          model: undefined,
+          // @ts-expect-error intentionally missing fields
+          messages: undefined,
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
+    it("rejects unsupported models", async () => {
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "gpt-5-mini",
+          messages: [{ role: "user", content: "hello" }],
+          stream: false,
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
+    it("errors when OpenRouter API key is missing", async () => {
+      await withEnv({ BBAI_OPENROUTER_API_KEY: "" }, async () => {
+        await config.api.ai.openaiChatCompletions(
+          {
+            model: "budibase/v1",
+            messages: [{ role: "user", content: "hello" }],
+            stream: false,
+            licenseKey,
+          },
+          { status: 500 }
+        )
+      })
     })
   })
 })

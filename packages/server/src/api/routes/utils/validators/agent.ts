@@ -3,13 +3,25 @@ import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
+const OPTIONAL_AICONFIG = Joi.string().optional().allow("")
+const DISCORD_INTEGRATION_SCHEMA = Joi.object({
+  applicationId: OPTIONAL_STRING,
+  publicKey: OPTIONAL_STRING,
+  botToken: OPTIONAL_STRING,
+  guildId: OPTIONAL_STRING,
+  chatAppId: OPTIONAL_STRING,
+  interactionsEndpointUrl: OPTIONAL_STRING,
+  idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
+})
+  .optional()
+  .allow(null)
 
 export function createAgentValidator() {
   return auth.joiValidator.body(
     Joi.object({
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      aiconfig: Joi.string().optional(),
+      aiconfig: OPTIONAL_AICONFIG,
       promptInstructions: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
       goal: OPTIONAL_STRING,
@@ -19,6 +31,7 @@ export function createAgentValidator() {
       vectorDb: OPTIONAL_STRING,
       ragMinDistance: OPTIONAL_NUMBER.min(0).max(1),
       ragTopK: OPTIONAL_NUMBER.integer().min(1).max(10),
+      discordIntegration: DISCORD_INTEGRATION_SCHEMA,
     })
   )
 }
@@ -30,7 +43,7 @@ export function updateAgentValidator() {
       _rev: Joi.string().required(),
       name: Joi.string().required(),
       description: OPTIONAL_STRING,
-      aiconfig: Joi.string().optional(),
+      aiconfig: OPTIONAL_AICONFIG,
       promptInstructions: OPTIONAL_STRING,
       live: Joi.boolean().optional(),
       goal: OPTIONAL_STRING,
@@ -40,6 +53,25 @@ export function updateAgentValidator() {
       vectorDb: OPTIONAL_STRING,
       ragMinDistance: OPTIONAL_NUMBER.min(0).max(1),
       ragTopK: OPTIONAL_NUMBER.integer().min(1).max(10),
+      discordIntegration: DISCORD_INTEGRATION_SCHEMA,
     }).unknown(true)
+  )
+}
+
+export function syncAgentDiscordCommandsValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      chatAppId: OPTIONAL_STRING,
+    })
+      .optional()
+      .allow(null)
+  )
+}
+
+export function toggleAgentDiscordDeploymentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      enabled: Joi.boolean().required(),
+    }).required()
   )
 }

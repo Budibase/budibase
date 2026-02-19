@@ -39,6 +39,8 @@
   {#if parsedOptions && Array.isArray(parsedOptions)}
     {#each parsedOptions as option}
       {@const isOptionDisabled = disabled || getOptionDisabled(option)}
+      {@const optionLabel = getOptionLabel(option)}
+      {@const optionSubtitle = getOptionSubtitle(option)}
       <div
         title={getOptionTitle(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"
@@ -54,10 +56,10 @@
         />
         <span class="spectrum-Radio-button"></span>
         <label for="" class="spectrum-Radio-label radio-label">
-          <span class="radio-label-text">{getOptionLabel(option)}</span>
-          {#if getOptionSubtitle(option)}
+          <span class="radio-label-text">{optionLabel}</span>
+          {#if optionSubtitle && optionSubtitle !== optionLabel}
             <span class="radio-label-subtitle">
-              {getOptionSubtitle(option)}
+              {optionSubtitle}
             </span>
           {/if}
         </label>

@@ -31,10 +31,13 @@
     chat: ChatConversationLike
     persistConversation?: boolean
     conversationStarters?: { prompt: string }[]
+    initialPrompt?: string
     onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     isAgentPreviewChat?: boolean
+    readOnly?: boolean
+    readOnlyReason?: "disabled" | "deleted" | "offline"
   }
 
   let {
@@ -42,8 +45,11 @@
     chat = $bindable(),
     persistConversation = true,
     conversationStarters = [],
+    initialPrompt = "",
     onchatsaved,
     isAgentPreviewChat = false,
+    readOnly = false,
+    readOnlyReason,
   }: Props = $props()
 
   let API = $state(
@@ -60,6 +66,7 @@
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
   let inputValue = $state("")
+  let lastInitialPrompt = $state("")
   let reasoningTimers = $state<Record<string, number>>({})
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
@@ -129,6 +136,8 @@
     return () => clearInterval(interval)
   })
 
+  const PREVIEW_CHAT_APP_ID = "agent-preview"
+
   let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
 
@@ -140,6 +149,20 @@
     await sendMessage()
     tick().then(() => textareaElement?.focus())
   }
+
+  $effect(() => {
+    if (!initialPrompt) {
+      lastInitialPrompt = ""
+      return
+    }
+
+    if (initialPrompt === lastInitialPrompt) {
+      return
+    }
+
+    lastInitialPrompt = initialPrompt
+    applyConversationStarter(initialPrompt)
+  })
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
@@ -198,12 +221,21 @@
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
-  let hasMessages = $derived(Boolean(chat?.messages?.length))
+  let canStart = $derived(inputValue.trim().length > 0)
+  let hasMessages = $derived(Boolean(messages?.length))
   let showConversationStarters = $derived(
     !isBusy &&
       !hasMessages &&
       conversationStarters.length > 0 &&
-      !isAgentPreviewChat
+      !isAgentPreviewChat &&
+      !readOnly
+  )
+  let readOnlyMessage = $derived(
+    readOnlyReason === "deleted"
+      ? "This agent was deleted. Select another agent to resume chatting."
+      : readOnlyReason === "offline"
+        ? "This agent is no longer live. Make it live in Settings to resume chatting."
+        : "This agent is disabled. Enable it in Settings to resume chatting."
   )
 
   let lastChatId = $state<string | undefined>(chat?._id)
@@ -233,6 +265,15 @@
       resolvedChatAppId = chat.chatAppId
       return chat.chatAppId
     }
+
+    if (isAgentPreviewChat) {
+      resolvedChatAppId = PREVIEW_CHAT_APP_ID
+      if (chat) {
+        chat = { ...chat, chatAppId: PREVIEW_CHAT_APP_ID }
+      }
+      return PREVIEW_CHAT_APP_ID
+    }
+
     try {
       const chatApp = await API.fetchChatApp(workspaceId)
       if (chatApp?._id) {
@@ -262,6 +303,10 @@
   }
 
   const handleKeyDown = async (event: KeyboardEvent) => {
+    if (readOnly) {
+      return
+    }
+
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
       await sendMessage()
@@ -269,6 +314,10 @@
   }
 
   const sendMessage = async () => {
+    if (readOnly) {
+      return
+    }
+
     const chatAppIdFromEnsure = await ensureChatApp()
 
     if (!chat) {
@@ -290,7 +339,9 @@
 
     resolvedChatAppId = chatAppId
 
-    if (
+    if (isAgentPreviewChat) {
+      resolvedConversationId = chat._id
+    } else if (
       persistConversation &&
       !chat._id &&
       (!chat.messages || chat.messages.length === 0)
@@ -322,6 +373,14 @@
     chatInstance.sendMessage({ text })
   }
 
+  const handlePromptAction = async () => {
+    if (isBusy) {
+      await chatInstance.stop()
+      return
+    }
+    await sendMessage()
+  }
+
   const toggleTool = (toolId: string) => {
     expandedTools = { ...expandedTools, [toolId]: !expandedTools[toolId] }
   }
@@ -351,7 +410,9 @@
       mounted = true
       ensureChatApp()
       tick().then(() => {
-        textareaElement?.focus()
+        if (!readOnly) {
+          textareaElement?.focus()
+        }
       })
     }
   })
@@ -389,7 +450,7 @@
           {/each}
         </div>
       </div>
-    {:else}
+    {:else if !hasMessages}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -570,16 +631,42 @@
     {/each}
   </div>
 
-  <div class="input-wrapper">
-    <textarea
-      bind:value={inputValue}
-      bind:this={textareaElement}
-      class="input spectrum-Textfield-input"
-      onkeydown={handleKeyDown}
-      placeholder="Ask anything"
-      disabled={isBusy}
-    ></textarea>
-  </div>
+  {#if readOnly}
+    <div class="input-wrapper">
+      <div class="read-only-notice">
+        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          {readOnlyMessage}
+        </Body>
+      </div>
+    </div>
+  {:else}
+    <div class="input-wrapper">
+      <div class="input-container">
+        <textarea
+          bind:value={inputValue}
+          bind:this={textareaElement}
+          class="input spectrum-Textfield-input"
+          onkeydown={handleKeyDown}
+          placeholder="Ask..."
+          disabled={isBusy}
+        ></textarea>
+        <button
+          type="button"
+          class="prompt-action"
+          class:running={isBusy}
+          onclick={handlePromptAction}
+          aria-label={isBusy ? "Pause response" : "Start response"}
+          disabled={!isBusy && !canStart}
+        >
+          {#if isBusy}
+            <Icon name="stop" size="M" weight="fill" color="#ffffff" />
+          {:else}
+            <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
+          {/if}
+        </button>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -616,36 +703,45 @@
   .starter-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    align-items: center;
+    gap: var(--spacing-xl);
+    margin: auto 0;
   }
 
   .starter-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--spectrum-global-color-gray-600);
+    font-size: 14px;
+    letter-spacing: 0;
+    color: var(--spectrum-global-color-gray-700);
+    text-align: center;
   }
 
   .starter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
+    width: min(520px, 100%);
+    margin: 0 auto;
   }
 
   .starter-card {
-    border: 1px solid var(--grey-3);
+    border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 12px;
     padding: var(--spacing-m);
-    background: var(--grey-2);
-    color: var(--spectrum-global-color-gray-900);
+    background: var(--spectrum-global-color-gray-50);
+    color: var(--spectrum-global-color-gray-800);
     font: inherit;
-    text-align: left;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: center;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .starter-card:hover {
-    border-color: var(--grey-4);
-    background: var(--grey-1);
+    border-color: var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-100);
   }
 
   .message {
@@ -662,7 +758,7 @@
   .message.user {
     border-radius: 8px;
     align-self: flex-end;
-    background-color: #215f9e33;
+    background-color: var(--spectrum-alias-background-color-secondary);
     font-size: 14px;
     color: var(--spectrum-global-color-gray-800);
   }
@@ -688,27 +784,71 @@
     line-height: 1.4;
   }
 
+  .read-only-notice {
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 10px;
+    padding: var(--spacing-m);
+    background-color: var(--spectrum-global-color-gray-50);
+    text-align: center;
+  }
+
+  .input-container {
+    position: relative;
+    width: 100%;
+  }
+
   .input {
     width: 100%;
-    height: 100px;
+    height: 80px;
     top: 0;
     resize: none;
     padding: 20px;
     font-size: 16px;
     background-color: var(--spectrum-global-color-gray-200);
-    color: var(--grey-9);
+    color: var(--spectrum-alias-text-color);
     border-radius: 10px;
     border: 1px solid var(--spectrum-global-color-gray-300) !important;
     outline: none;
-    min-height: 100px;
+    min-height: 80px;
   }
 
   .input:focus {
-    border: 1px solid #215f9e33 !important;
+    border: 1px solid var(--spectrum-alias-border-color-mouse-focus) !important;
   }
 
   .input::placeholder {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .prompt-action {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: #f2f2f2;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s ease;
+  }
+
+  .prompt-action:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .prompt-action.running {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .prompt-action:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 
   /* Style the markdown tool sections in assistant messages */

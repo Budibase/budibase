@@ -1,91 +1,134 @@
 <script lang="ts">
+  import { bb } from "@/stores/bb"
+  import { aiConfigsStore } from "@/stores/portal"
+  import { Button, Layout, notifications } from "@budibase/bbui"
+  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
-  import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
-  import { aiConfigsStore, featureFlags } from "@/stores/portal"
-  import { AIConfigType, type CustomAIProviderConfig } from "@budibase/types"
-  import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
-  import CustomConfigModal from "./CustomConfigModal.svelte"
+  import AIConfigList from "./AIConfigList.svelte"
+  import { ensureAILicenseStatus } from "./licenseStatus"
 
-  let customConfigModal: { show: () => void; hide: () => void }
-  let customModalConfig: CustomAIProviderConfig | null = null
-
-  $: chatConfigs = ($aiConfigsStore.customConfigs || []).filter(
-    config => config.configType === AIConfigType.COMPLETIONS
+  let completionConfigs = $derived(
+    [...$aiConfigsStore.customConfigsPerType.completions]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
   )
 
-  function openCustomAIConfigModal(config?: CustomAIProviderConfig) {
-    customModalConfig = config ? { ...config } : null
-    customConfigModal?.show()
+  let hasBBAI = $derived(
+    $aiConfigsStore.customConfigsPerType.completions.some(
+      c => c.provider === BUDIBASE_AI_PROVIDER_ID
+    )
+  )
+  let modelProviders = $derived([
+    ...(hasBBAI
+      ? []
+      : [
+          {
+            name: "Budibase AI",
+            provider: BUDIBASE_AI_PROVIDER_ID,
+            model: "Budibase managed",
+          },
+        ]),
+    {
+      name: "Anthropic",
+      provider: "Anthropic",
+      model: "Connect to Claude models directly from Anthropic",
+    },
+    {
+      name: "Google",
+      provider: "Google_AI_Studio",
+      model: "Connect to Gemini models directly from Google",
+    },
+    {
+      name: "Mistral",
+      provider: "MistralAI",
+      model: "Connect to Mistral models directly from Mistral",
+    },
+    {
+      name: "OpenAI",
+      provider: "OpenAI",
+      model: "Connect to ChatGPT models directly from OpenAI",
+    },
+    {
+      name: "OpenRouter",
+      provider: "Openrouter",
+      model: "Connect to 100s of text, image, embedding models",
+    },
+    {
+      name: "Groq",
+      provider: "Groq",
+      model: "Connect to 100s of text, image, embedding models",
+    },
+  ])
+
+  function createAIConfig() {
+    bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}/new`, {
+      type: AIConfigType.COMPLETIONS,
+    })
   }
 
   onMount(async () => {
     try {
-      await aiConfigsStore.fetch()
+      await Promise.all([aiConfigsStore.fetch(), await ensureAILicenseStatus()])
     } catch {
       notifications.error("Error fetching AI settings")
     }
   })
 </script>
 
-<Layout noPadding gap="S">
-  {#if $featureFlags.AI_AGENTS}
-    <div class="section">
-      <div class="section-header">
-        <div></div>
-        <Button size="S" cta on:click={() => openCustomAIConfigModal()}>
-          Add configuration
-        </Button>
-      </div>
-
-      {#if chatConfigs.length}
-        <div class="ai-list">
-          {#each chatConfigs as config (config._id)}
-            <CustomAIConfigTile
-              {config}
-              editHandler={() => openCustomAIConfigModal(config)}
-            />
-          {/each}
-        </div>
-      {:else}
-        <div class="no-enabled">
-          <Body size="S">No chat configurations yet</Body>
-        </div>
-      {/if}
+<Layout noPadding gap="XS">
+  {#if completionConfigs.length}
+    <div class="section-header">
+      <div class="section-title">Connected models</div>
+    </div>
+    <div class="model-list">
+      <AIConfigList configs={completionConfigs}></AIConfigList>
     </div>
   {/if}
+  <div class="section-header new-provider-section">
+    <div class="section-title">Model providers</div>
+    <div class="provider-controls">
+      <Button icon="plus" size="S" on:click={() => createAIConfig()}
+        >Connect to a custom provider</Button
+      >
+    </div>
+  </div>
+  <div class="model-list">
+    <AIConfigList
+      configs={modelProviders.map(provider => ({
+        ...provider,
+        configType: AIConfigType.COMPLETIONS,
+      }))}
+    ></AIConfigList>
+  </div>
 </Layout>
 
-<Modal bind:this={customConfigModal}>
-  <CustomConfigModal
-    config={customModalConfig}
-    type={AIConfigType.COMPLETIONS}
-    on:hide={() => {
-      customConfigModal.hide()
-    }}
-  />
-</Modal>
-
 <style>
-  .ai-list {
-    margin-top: var(--spacing-l);
-    margin-bottom: var(--spacing-l);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .no-enabled {
-    padding: 16px;
-    background-color: var(--grey-1);
-    border: 1px solid var(--grey-4);
-    border-radius: var(--border-radius-m);
-  }
-
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
-    margin-bottom: var(--spacing-m);
+  }
+  .new-provider-section {
+    margin-top: var(--spacing-l);
+  }
+
+  .section-title {
+    font-size: 13px;
+    color: var(--grey-7, #a2a2a2);
+  }
+
+  .provider-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .model-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: var(--grey-1, #1d1d1d);
+    border-radius: 6px;
   }
 </style>

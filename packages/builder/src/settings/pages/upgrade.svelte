@@ -29,7 +29,8 @@
 
   // LICENSE KEY
 
-  $: activateDisabled = !licenseKey || licenseKeyDisabled
+  let activatingLicense = false
+  $: activateDisabled = !licenseKey || licenseKeyDisabled || activatingLicense
   let licenseKeyDisabled = false
   let licenseKeyType = "text"
   let licenseKey = ""
@@ -61,6 +62,7 @@
   }
 
   const activateLicenseKey = async () => {
+    activatingLicense = true
     try {
       await API.activateLicenseKey(licenseKey)
       await auth.getSelf()
@@ -73,6 +75,8 @@
       } else {
         notifications.error("Error activating license key")
       }
+    } finally {
+      activatingLicense = false
     }
   }
 

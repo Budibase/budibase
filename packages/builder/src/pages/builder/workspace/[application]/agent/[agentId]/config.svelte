@@ -41,6 +41,7 @@
   import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
+  import { shouldAutoSelectAgentModel } from "./configUtils"
 
   $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
@@ -266,15 +267,16 @@ Any constraints the agent must follow.
   })
 
   $effect(() => {
-    if (modelOptions.length > 0 && currentAgent) {
-      // Only auto-select if agent doesn't have an aiconfig set (undefined/null/empty)
-      const agentHasAiconfig =
-        currentAgent.aiconfig != null && currentAgent.aiconfig !== ""
-      const currentValue = draft.aiconfig || ""
-      // Only set default if agent never had a value and current draft is empty
-      if (!agentHasAiconfig && !currentValue) {
-        draft.aiconfig = modelOptions[0].value
-      }
+    if (
+      currentAgent &&
+      shouldAutoSelectAgentModel({
+        modelOptions,
+        agentAiconfig: currentAgent.aiconfig,
+        draftAiconfig: draft.aiconfig,
+      })
+    ) {
+      draft.aiconfig = modelOptions[0].value
+      scheduleSave(true)
     }
   })
 
@@ -299,29 +301,40 @@ Any constraints the agent must follow.
       sourceLabel,
     }: { sourceType: ToolType | undefined; sourceLabel: string | undefined }
   ): { icon?: IconInfo; tagIconUrl?: string } {
+    const resolveDatasourceIcon = (sourceIconType?: string) => {
+      if (!sourceIconType) {
+        return undefined
+      }
+      const integrationIcon = getIntegrationIcon(sourceIconType)
+      if (!integrationIcon) {
+        return undefined
+      }
+      if (integrationIcon.url) {
+        return {
+          icon: integrationIcon,
+          tagIconUrl: integrationIcon.url,
+        }
+      }
+      if (integrationIcon.icon) {
+        const iconKey = sourceIconType.toUpperCase()
+        const tagIconUrl =
+          DATASOURCE_TAG_ICON_URLS[iconKey] ||
+          DATASOURCE_TAG_ICON_URLS.CUSTOM ||
+          BudibaseLogoSvg
+        return { icon: integrationIcon, tagIconUrl }
+      }
+      return undefined
+    }
+
     if (
       sourceType === ToolType.INTERNAL_TABLE ||
       sourceType === ToolType.EXTERNAL_TABLE ||
       sourceType === ToolType.AUTOMATION
     ) {
-      if (sourceType === ToolType.EXTERNAL_TABLE && tool.sourceIconType) {
-        const integrationIcon = getIntegrationIcon(tool.sourceIconType)
-        if (integrationIcon) {
-          if (integrationIcon.url) {
-            return {
-              icon: integrationIcon,
-              tagIconUrl: integrationIcon.url,
-            }
-          }
-          if (integrationIcon.icon) {
-            const iconKey = tool.sourceIconType?.toUpperCase()
-            const tagIconUrl = iconKey
-              ? DATASOURCE_TAG_ICON_URLS[iconKey] ||
-                DATASOURCE_TAG_ICON_URLS.CUSTOM ||
-                BudibaseLogoSvg
-              : BudibaseLogoSvg
-            return { icon: integrationIcon, tagIconUrl }
-          }
+      if (sourceType === ToolType.EXTERNAL_TABLE) {
+        const externalIcon = resolveDatasourceIcon(tool.sourceIconType)
+        if (externalIcon) {
+          return externalIcon
         }
       }
       return {
@@ -348,6 +361,17 @@ Any constraints the agent must follow.
       }
 
       return { icon: { icon: RestLogo }, tagIconUrl: RestIconSvg }
+    }
+
+    if (sourceType === ToolType.DATASOURCE_QUERY) {
+      const datasourceIcon = resolveDatasourceIcon(tool.sourceIconType)
+      if (datasourceIcon) {
+        return datasourceIcon
+      }
+      return {
+        icon: { icon: BudibaseLogo },
+        tagIconUrl: BudibaseLogoSvg,
+      }
     }
 
     return {}
@@ -377,6 +401,9 @@ Any constraints the agent must follow.
     if (sourceType === ToolType.REST_QUERY && sourceLabel) {
       return `api.${sanitizeString(sourceLabel, true)}`
     }
+    if (sourceType === ToolType.DATASOURCE_QUERY) {
+      return sourceLabel ? sanitizeString(sourceLabel, true) : "datasource"
+    }
     return "tool"
   }
 
@@ -398,6 +425,9 @@ Any constraints the agent must follow.
     }
     if (sourceType === ToolType.REST_QUERY) {
       return "API tools"
+    }
+    if (sourceType === ToolType.DATASOURCE_QUERY) {
+      return sourceLabel || "Datasource tools"
     }
     return "Tools"
   }
@@ -423,6 +453,32 @@ Any constraints the agent must follow.
     )
   }
 
+  const getQueryForTool = (tool: AgentTool) => {
+    const normalizedReadableName = normaliseToolNameForMatch(
+      tool.readableName || tool.runtimeBinding || tool.name || ""
+    )
+    const matchingDatasource = $datasources.list.find(
+      datasource =>
+        datasource.name === tool.sourceLabel &&
+        (tool.sourceType === ToolType.REST_QUERY
+          ? datasource.source === "REST"
+          : datasource.source !== "REST")
+    )
+
+    return $queries.list.find(query => {
+      const queryNameMatches =
+        query.name === tool.readableName ||
+        normaliseToolNameForMatch(query.name || "") === normalizedReadableName
+      if (!queryNameMatches) {
+        return false
+      }
+      if (!matchingDatasource?._id) {
+        return true
+      }
+      return query.datasourceId === matchingDatasource._id
+    })
+  }
+
   const getToolResourcePath = (tool: AgentTool): string | null => {
     if (tool.sourceType === ToolType.AUTOMATION) {
       const automation = findResourceByName($automationStore.automations, tool)
@@ -431,8 +487,11 @@ Any constraints the agent must follow.
       }
     }
 
-    if (tool.sourceType === ToolType.REST_QUERY) {
-      const query = findResourceByName($queries.list, tool)
+    if (
+      tool.sourceType === ToolType.REST_QUERY ||
+      tool.sourceType === ToolType.DATASOURCE_QUERY
+    ) {
+      const query = getQueryForTool(tool)
       if (query?._id) {
         return `../../apis/query/${query._id}`
       }
@@ -635,7 +694,7 @@ Any constraints the agent must follow.
       Select which provider and model to use for the agent.{" "}
       <button
         class="link-button"
-        onclick={() => bb.settings("/ai-config/configs")}
+        onclick={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
       >
         View AI Connectors.
       </button>
@@ -650,7 +709,7 @@ Any constraints the agent must follow.
           icon="sparkle"
           iconWeight="fill"
           iconColor="#8777D1"
-          on:click={() => bb.settings("/ai-config/configs")}
+          on:click={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
         >
           Connect AI Model
         </Button>

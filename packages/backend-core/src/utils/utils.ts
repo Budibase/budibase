@@ -15,9 +15,14 @@ import * as tenancy from "../tenancy"
 
 const WORKSPACE_PREFIX = DocumentType.WORKSPACE + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
+const PROD_CHAT_PREFIX = "/app-chat/"
 
 async function resolveAppUrl(ctx: Ctx) {
-  const workspaceUrl = ctx.path.split("/")[2]
+  const pathParts = ctx.path.split("/")
+  const workspaceUrl = pathParts[2]
+  if (!workspaceUrl) {
+    return
+  }
   let possibleUrl = `/${workspaceUrl.toLowerCase()}`
 
   let tenantId: string | undefined = context.getTenantId()
@@ -47,7 +52,10 @@ export function isServingApp(ctx: Ctx) {
     return true
   }
   // prod workspace
-  return ctx.path.startsWith(PROD_APP_PREFIX)
+  return (
+    ctx.path.startsWith(PROD_APP_PREFIX) ||
+    ctx.path.startsWith(PROD_CHAT_PREFIX)
+  )
 }
 
 export function isServingBuilder(ctx: Ctx): boolean {
@@ -122,7 +130,9 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
   // to ensure we don't load all apps excessively
   const isBuilderPreview = isBuilderPreviewUrl(ctx.path)
   const isViewingProdApp =
-    ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
+    (ctx.path.startsWith(PROD_APP_PREFIX) ||
+      ctx.path.startsWith(PROD_CHAT_PREFIX)) &&
+    !isBuilderPreview
   if (isViewingProdApp) {
     setWorkspaceIdIfValid(await resolveAppUrl(ctx))
   }

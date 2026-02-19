@@ -1,5 +1,5 @@
-import { context, docIds } from "@budibase/backend-core"
-import type { ChatApp } from "@budibase/types"
+import { context, docIds, roles } from "@budibase/backend-core"
+import type { Agent, ChatApp, ChatConversation, User } from "@budibase/types"
 import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 
@@ -153,5 +153,236 @@ describe("chat apps create validation", () => {
         )
       }
     )
+  })
+})
+
+describe("chat route auth split", () => {
+  const config = new TestConfiguration()
+  let chatApp: ChatApp
+  let basicUser: User
+  let agentId: string
+  let disabledAgentId: string
+
+  beforeAll(async () => {
+    await config.init("chat-route-auth-split")
+    basicUser = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: false },
+      admin: { global: false },
+    })
+
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        const agent: Agent = {
+          _id: docIds.generateAgentID(),
+          name: "Support agent",
+          aiconfig: "",
+          live: true,
+          icon: "robot",
+          iconColor: "#6a9bcc",
+          createdAt: now,
+          enabledTools: [],
+        }
+        await db.put(agent)
+        agentId = agent._id!
+
+        const disabledAgent: Agent = {
+          _id: docIds.generateAgentID(),
+          name: "Disabled support agent",
+          aiconfig: "",
+          live: true,
+          icon: "robot",
+          iconColor: "#9f8cd1",
+          createdAt: now,
+          enabledTools: [],
+        }
+        await db.put(disabledAgent)
+        disabledAgentId = disabledAgent._id!
+
+        const doc: ChatApp = {
+          _id: docIds.generateChatAppID(),
+          agents: [
+            { agentId, isEnabled: true, isDefault: true },
+            { agentId: disabledAgentId, isEnabled: false, isDefault: false },
+          ],
+          createdAt: now,
+          updatedAt: now,
+        }
+        const { rev } = await db.put(doc)
+        chatApp = { ...doc, _rev: rev }
+      }
+    )
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  const headersForUser = async (user: User) =>
+    await config.withUser(user, async () => config.defaultHeaders({}, true))
+
+  const createConversation = async (title: string) => {
+    let conversation: ChatConversation | undefined
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        const doc: ChatConversation = {
+          _id: docIds.generateChatConversationID(),
+          chatAppId: chatApp._id!,
+          agentId,
+          userId: basicUser._id!,
+          messages: [],
+          title,
+          createdAt: now,
+          updatedAt: now,
+        }
+        await db.put(doc)
+        conversation = doc
+      }
+    )
+    return conversation!
+  }
+
+  it("allows basic users to access GET /api/chatapps", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config.getRequest()!.get("/api/chatapps").set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body?._id).toBe(chatApp._id)
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body?._id).toBe(chatApp._id)
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId/agents", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/agents`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body.agents).toHaveLength(1)
+    expect(res.body.agents[0]).toEqual({
+      _id: agentId,
+      name: "Support agent",
+      icon: "robot",
+      iconColor: "#6a9bcc",
+      live: true,
+    })
+    expect(res.body.agents[0]).not.toHaveProperty("aiconfig")
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).not.toContain(disabledAgentId)
+  })
+
+  it("blocks basic users from PUT /api/chatapps/:chatAppId", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .put(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+      .send({
+        _id: chatApp._id,
+        _rev: chatApp._rev,
+        agents: chatApp.agents,
+      })
+
+    expect(res.status).toBe(403)
+  })
+
+  it("blocks basic users from POST /api/chatapps/:chatAppId/agent", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/agent`)
+      .set(headers)
+      .send({ agentId })
+
+    expect(res.status).toBe(403)
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId/conversations", async () => {
+    const headers = await headersForUser(basicUser)
+    const conversation = await createConversation("history conversation")
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body.map((chat: ChatConversation) => chat._id)).toContain(
+      conversation._id
+    )
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
+    const headers = await headersForUser(basicUser)
+    const conversation = await createConversation("single conversation")
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations/${conversation._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body._id).toBe(conversation._id)
+  })
+
+  it("allows basic users to access POST /api/chatapps/:chatAppId/conversations", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId,
+        title: "basic user conversation",
+      })
+
+    expect(res.status).toBe(201)
+    expect(res.body.chatAppId).toBe(chatApp._id)
+    expect(res.body.agentId).toBe(agentId)
+  })
+
+  it("allows basic users to access DELETE /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
+    const headers = await headersForUser(basicUser)
+    const conversation = await createConversation("delete conversation")
+    const res = await config
+      .getRequest()!
+      .delete(`/api/chatapps/${chatApp._id}/conversations/${conversation._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(204)
+  })
+
+  it("allows basic users to access POST /api/chatapps/:chatAppId/conversations/:chatConversationId/stream", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        chatAppId: "mismatched-chat-app-id",
+        agentId,
+        messages: [],
+      })
+
+    expect(res.status).toBe(400)
   })
 })

@@ -6,6 +6,7 @@ export enum ToolType {
   EXTERNAL_TABLE = "EXTERNAL_TABLE",
   AUTOMATION = "AUTOMATION",
   REST_QUERY = "REST_QUERY",
+  DATASOURCE_QUERY = "DATASOURCE_QUERY",
   SEARCH = "SEARCH",
 }
 
@@ -16,6 +17,16 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+}
+
+export interface DiscordAgentIntegration {
+  applicationId?: string
+  publicKey?: string
+  botToken?: string
+  guildId?: string
+  chatAppId?: string
+  idleTimeoutMinutes?: number
+  interactionsEndpointUrl?: string
 }
 
 export interface Agent extends Document {
@@ -33,6 +44,7 @@ export interface Agent extends Document {
   vectorDb?: string
   ragMinDistance?: number
   ragTopK?: number
+  discordIntegration?: DiscordAgentIntegration
 }
 
 export interface AgentMessageRagSource {
@@ -66,6 +78,7 @@ export interface AgentFile extends Document {
   filename: string
   mimetype?: string
   size?: number
+  objectStoreKey: string
   ragSourceId: string
   status: AgentFileStatus
   chunkCount: number

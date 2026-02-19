@@ -24,11 +24,36 @@ export interface FetchAgentsResponse {
   agents: Agent[]
 }
 
+export interface FetchChatAppAgentsResponse {
+  agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
+}
+
+export interface SyncAgentDiscordCommandsRequest {
+  chatAppId?: string
+}
+
+export interface SyncAgentDiscordCommandsResponse {
+  success: true
+  chatAppId: string
+  interactionsEndpointUrl: string
+  inviteUrl: string
+}
+
+export interface ToggleAgentDiscordRequest {
+  enabled: boolean
+}
+
+export interface ToggleAgentDiscordResponse {
+  success: true
+  enabled: boolean
+}
+
 export type CreateAgentRequest = Optional<
   Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt">,
   "aiconfig"
 >
 export type CreateAgentResponse = Agent
+export type DuplicateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
   Agent,
