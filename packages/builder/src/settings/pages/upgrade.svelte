@@ -29,7 +29,7 @@
 
   // LICENSE KEY
 
-  $: activatingLicense = false
+  let activatingLicense = false
   $: activateDisabled = !licenseKey || licenseKeyDisabled || activatingLicense
   let licenseKeyDisabled = false
   let licenseKeyType = "text"
