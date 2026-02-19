@@ -55,6 +55,7 @@ export interface ChatCompletionRequestV2 {
   stream?: boolean
   tools?: OpenAIFunctionTool[]
   tool_choice?: OpenAIToolChoice
+  reasoning_effort?: "low" | "medium" | "high"
 }
 
 export interface ChatCompletionRequest {

@@ -95,32 +95,53 @@ const tryReadProviderErrorMessage = async (
   }
 }
 
-class UsageTrackingTransform extends Transform {
+class StreamTransform extends Transform {
   private buffer = ""
   private creditsSynced = false
+  private remapReasoning: boolean
 
-  private processLines(lines: string[]) {
-    for (const line of lines) {
-      if (!line.startsWith("data:")) {
-        continue
+  constructor(opts?: { remapReasoning?: boolean }) {
+    super()
+    this.remapReasoning = opts?.remapReasoning ?? false
+  }
+
+  private processLine(line: string): string {
+    if (!line.startsWith("data:")) {
+      return line
+    }
+    const payload = line.slice(5).trim()
+    if (!payload || payload === "[DONE]") {
+      return line
+    }
+    try {
+      const parsed = JSON.parse(payload)
+
+      if (parsed?.usage && !this.creditsSynced) {
+        this.creditsSynced = true
+        incrementBudibaseAICreditsFromTokenUsage(
+          toBudibaseUsage(parsed.usage)
+        ).catch(error =>
+          console.error("Failed to update credits from stream chunk", error)
+        )
       }
-      const payload = line.slice(5).trim()
-      if (!payload || payload === "[DONE]" || this.creditsSynced) {
-        continue
-      }
-      try {
-        const parsed = JSON.parse(payload)
-        if (parsed?.usage) {
-          this.creditsSynced = true
-          incrementBudibaseAICreditsFromTokenUsage(
-            toBudibaseUsage(parsed.usage)
-          ).catch(error =>
-            console.error("Failed to update credits from stream chunk", error)
-          )
+
+      if (this.remapReasoning && parsed?.choices) {
+        let modified = false
+        for (const choice of parsed.choices) {
+          if (choice.delta?.reasoning !== undefined) {
+            choice.delta.reasoning_content = choice.delta.reasoning
+            delete choice.delta.reasoning
+            modified = true
+          }
         }
-      } catch {
-        // Ignore non-json chunks.
+        if (modified) {
+          return `data: ${JSON.stringify(parsed)}`
+        }
       }
+
+      return line
+    } catch {
+      return line
     }
   }
 
@@ -134,16 +155,18 @@ class UsageTrackingTransform extends Transform {
     const lines = this.buffer.split("\n")
     this.buffer = lines.pop() ?? ""
 
-    this.processLines(lines)
-    callback(null, chunk)
+    const output = lines.map(line => this.processLine(line)).join("\n") + "\n"
+    callback(null, Buffer.from(output, "utf8"))
   }
 
   _flush(callback: TransformCallback) {
     if (this.buffer) {
-      this.processLines([this.buffer])
+      const output = this.processLine(this.buffer)
       this.buffer = ""
+      callback(null, Buffer.from(output, "utf8"))
+    } else {
+      callback()
     }
-    callback()
   }
 }
 
@@ -172,6 +195,8 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     ...body,
     model: providerRequest.model,
     stream,
+    include_reasoning: true,
+    reasoning_effort: body.reasoning_effort ?? "medium",
     ...(stream && { stream_options: { include_usage: true } }),
   }
   const providerResponse = await nodeFetch(providerUrl, {
@@ -200,14 +225,50 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     ctx.res.setHeader("X-Accel-Buffering", "no")
     ctx.respond = false
 
-    const usageTrackingStream = new UsageTrackingTransform()
-    await pipeline(providerResponse.body, usageTrackingStream, ctx.res)
+    const usageTrackingStream = new StreamTransform({
+      remapReasoning: providerRequest.provider === "openrouter",
+    })
+    try {
+      await pipeline(providerResponse.body, usageTrackingStream, ctx.res)
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code
+      if (
+        code === "ERR_STREAM_DESTROYED" ||
+        code === "ECONNRESET" ||
+        code === "EPIPE"
+      ) {
+        return
+      }
+      console.error("Stream pipeline error in chatCompletionV2", error)
+      if (!ctx.res.writableEnded) {
+        try {
+          ctx.res.write(
+            `data: ${JSON.stringify({ error: "Streaming failed" })}\n\n`
+          )
+          ctx.res.end()
+        } catch {
+          // Response already closed between check and write
+        }
+      }
+    }
     return
   }
 
   const json = (await providerResponse.json()) as {
     usage?: CompletionUsage
+    choices?: Array<{ message?: { reasoning?: string } }>
   }
   await incrementBudibaseAICreditsFromTokenUsage(toBudibaseUsage(json.usage))
+
+  if (providerRequest.provider === "openrouter" && json.choices) {
+    for (const choice of json.choices) {
+      if (choice.message?.reasoning !== undefined) {
+        ;(choice.message as Record<string, unknown>).reasoning_content =
+          choice.message.reasoning
+        delete choice.message.reasoning
+      }
+    }
+  }
+
   ctx.body = json
 }
