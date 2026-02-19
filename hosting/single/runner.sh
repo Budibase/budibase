@@ -48,6 +48,18 @@ if [[ -n "${FILESHARE_IP}" && -n "${FILESHARE_NAME}" ]]; then
     echo "Mounting result: $?"
 fi
 
+# Preserve runtime LiteLLM DB settings so they are not overridden by persisted .env values.
+runtime_database_url_set="false"
+runtime_litellm_internal_db_set="false"
+if [[ "${DATABASE_URL+x}" == "x" ]]; then
+    runtime_database_url_set="true"
+    runtime_database_url="${DATABASE_URL}"
+fi
+if [[ "${LITELLM_INTERNAL_DB+x}" == "x" ]]; then
+    runtime_litellm_internal_db_set="true"
+    runtime_litellm_internal_db="${LITELLM_INTERNAL_DB}"
+fi
+
 # Source environment variables from a .env file if it exists in DATA_DIR
 if [[ -f "${DATA_DIR}/.env" ]]; then
     set -a  # Automatically export all variables loaded from .env
@@ -100,6 +112,15 @@ ensure_env_var "LITELLM_DB_PORT" "${LITELLM_DB_PORT}"
 
 # Read in the .env file and export the variables
 for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
+
+# Runtime values should take precedence over persisted .env values.
+if [[ "${runtime_database_url_set}" == "true" ]]; then
+    export DATABASE_URL="${runtime_database_url}"
+fi
+if [[ "${runtime_litellm_internal_db_set}" == "true" ]]; then
+    export LITELLM_INTERNAL_DB="${runtime_litellm_internal_db}"
+fi
+
 ln -s ${DATA_DIR}/.env /app/.env
 ln -s ${DATA_DIR}/.env /worker/.env
 
@@ -199,8 +220,36 @@ if [[ -z "${LITELLM_MASTER_KEY}" || -z "${LITELLM_SALT_KEY}" ]]; then
     exit 1
 fi
 
-ensure_env_var "LITELLM_INTERNAL_DB" "${LITELLM_INTERNAL_DB}"
-ensure_env_var "DATABASE_URL" "${DATABASE_URL}"
+upsert_env_var() {
+    local name="$1"
+    local value="$2"
+    local env_file="${DATA_DIR}/.env"
+    local temp_file
+    temp_file="$(mktemp)"
+
+    awk -v name="$name" -v value="$value" '
+index($0, name "=") == 1 {
+    if (!updated) {
+        print name "=" value
+        updated = 1
+    }
+    next
+}
+{
+    print
+}
+END {
+    if (!updated) {
+        print name "=" value
+    }
+}
+' "${env_file}" > "${temp_file}"
+
+    mv "${temp_file}" "${env_file}"
+}
+
+upsert_env_var "LITELLM_INTERNAL_DB" "${LITELLM_INTERNAL_DB}"
+upsert_env_var "DATABASE_URL" "${DATABASE_URL}"
 
 # Wait for backend services to start
 sleep 10
