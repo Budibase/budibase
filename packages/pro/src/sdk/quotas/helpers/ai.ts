@@ -3,7 +3,6 @@ import { MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
 
 // BUDIBASE AI
 export const incrementBudibaseAICredits = async (count: number) => {
-  console.log("incrermenting credits: " + count)
   return quotas.incrementMany({
     change: count,
     name: MonthlyQuotaName.BUDIBASE_AI_CREDITS,
