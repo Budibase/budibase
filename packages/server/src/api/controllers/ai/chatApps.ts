@@ -11,12 +11,8 @@ import sdk from "../../../sdk"
 
 export const assertChatAppIsLiveForUser = (
   ctx: UserCtx,
-  chatApp?: ChatApp | null
+  chatApp: ChatApp
 ) => {
-  if (!chatApp) {
-    return
-  }
-
   const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(ctx.user)
   if (!isBuilderOrAdmin && chatApp.live !== true) {
     throw new HTTPError("Chat app is not live", 403)

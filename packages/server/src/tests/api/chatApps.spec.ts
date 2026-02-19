@@ -1,5 +1,10 @@
 import { context, docIds, roles } from "@budibase/backend-core"
-import type { Agent, ChatApp, ChatConversation, User } from "@budibase/types"
+import type {
+  Agent,
+  ChatApp,
+  ChatConversation,
+  User,
+} from "@budibase/types"
 import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 
@@ -285,6 +290,17 @@ describe("chat route auth split", () => {
 
     expect(res.status).toBe(200)
     expect(res.body?._id).toBe(chatApp._id)
+  })
+
+  it("returns 404 when GET /api/chatapps/:chatAppId targets a missing chat app", async () => {
+    const headers = await headersForUser(basicUser)
+    const missingChatAppId = docIds.generateChatAppID()
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${missingChatAppId}`)
+      .set(headers)
+
+    expect(res.status).toBe(404)
   })
 
   it("blocks basic users from GET /api/chatapps/:chatAppId when chat app is not live", async () => {
