@@ -44,6 +44,12 @@ const mockLiteLLMProviders = () =>
       },
     ])
 
+const mockLiteLLMTeam = () =>
+  nock(environment.LITELLM_URL)
+    .persist()
+    .post("/team/new")
+    .reply(200, { team_id: "tenant-team-default" })
+
 const passwordMatch = (plain: string, encoded: string) => {
   if (!encoded.startsWith("bbai_enc::")) {
     throw new Error("Encoded password not properly configured.")
@@ -93,6 +99,7 @@ describe("BudibaseAI", () => {
       nock.cleanAll()
 
       mockLiteLLMProviders()
+      mockLiteLLMTeam()
     })
 
     it("creates a custom config and sanitizes the API key", async () => {
@@ -562,6 +569,7 @@ describe("BudibaseAI", () => {
       nock.cleanAll()
 
       mockLiteLLMProviders()
+      mockLiteLLMTeam()
     })
 
     it("creates an embedding config", async () => {
@@ -708,6 +716,7 @@ describe("BudibaseAI", () => {
       await config.newTenant()
       nock.cleanAll()
       mockLiteLLMProviders()
+      mockLiteLLMTeam()
     })
 
     async function getLiteLLMKeyDoc(): Promise<LiteLLMKeyConfig | undefined> {
@@ -783,6 +792,107 @@ describe("BudibaseAI", () => {
       await config.api.ai.createConfig({ ...defaultRequest })
 
       expect(keyGenerateScope.isDone()).toBe(true)
+    })
+
+    it("creates a team per tenant and assigns keys to it", async () => {
+      nock.cleanAll()
+      mockLiteLLMProviders()
+      const expectedTeamAlias = `budibase-tenant-${config.getTenantId()}`
+      const expectedKeyAlias = config.getProdWorkspaceId()
+
+      const teamScope = nock(environment.LITELLM_URL)
+        .post("/team/new", body => {
+          expect(body.team_alias).toBe(expectedTeamAlias)
+          return true
+        })
+        .reply(200, { team_id: "tenant-team-1" })
+
+      const keyScope = nock(environment.LITELLM_URL)
+        .post("/key/generate", body => {
+          expect(body.key_alias).toBe(expectedKeyAlias)
+          expect(body.team_id).toBe("tenant-team-1")
+          return true
+        })
+        .reply(200, { token_id: "team-key-1", key: "team-secret-1" })
+
+      nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-team-1" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      await config.api.ai.createConfig({ ...defaultRequest })
+
+      expect(teamScope.isDone()).toBe(true)
+      expect(keyScope.isDone()).toBe(true)
+
+      const keyDoc = await getLiteLLMKeyDoc()
+      expect(keyDoc?.teamId).toBe("tenant-team-1")
+      expect(keyDoc?.teamAlias).toBe(expectedTeamAlias)
+    })
+
+    it("backfills team on existing keys without rotating the key", async () => {
+      nock.cleanAll()
+      mockLiteLLMProviders()
+
+      const existingKeyId = "legacy-key-id"
+      const existingSecret = "legacy-secret-key"
+      const expectedTeamAlias = `budibase-tenant-${config.getTenantId()}`
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const keyDocId = docIds.getLiteLLMKeyID()
+        await context.getWorkspaceDB().put<LiteLLMKeyConfig>({
+          _id: keyDocId,
+          keyId: existingKeyId,
+          secretKey: existingSecret,
+          teamId: undefined as any, // Force missing values
+          teamAlias: undefined as any,
+        })
+      })
+
+      const teamScope = nock(environment.LITELLM_URL)
+        .post("/team/new", body => {
+          expect(body.team_alias).toBe(expectedTeamAlias)
+          return true
+        })
+        .reply(200, { team_id: "tenant-team-backfill" })
+
+      const assignTeamScope = nock(environment.LITELLM_URL)
+        .post("/key/update", body => {
+          expect(body.key).toBe(existingKeyId)
+          expect(body.team_id).toBe("tenant-team-backfill")
+          expect(body.models).toBeUndefined()
+          return true
+        })
+        .reply(200, { status: "success" })
+
+      nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-backfill-1" })
+
+      const syncModelsScope = nock(environment.LITELLM_URL)
+        .post("/key/update", body => {
+          expect(body.key).toBe(existingKeyId)
+          expect(body.models).toContain("model-backfill-1")
+          return true
+        })
+        .reply(200, { status: "success" })
+
+      await config.api.ai.createConfig({ ...defaultRequest })
+
+      expect(teamScope.isDone()).toBe(true)
+      expect(assignTeamScope.isDone()).toBe(true)
+      expect(syncModelsScope.isDone()).toBe(true)
+
+      const keyDoc = await getLiteLLMKeyDoc()
+      expect(keyDoc?.keyId).toBe(existingKeyId)
+      expect(keyDoc?.secretKey).toBe(existingSecret)
+      expect(keyDoc?.teamId).toBe("tenant-team-backfill")
+      expect(keyDoc?.teamAlias).toBe(expectedTeamAlias)
     })
 
     it("syncs the key with model IDs from the workspace", async () => {
