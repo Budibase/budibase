@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 ARG BASEIMG=budibase/database:2.0.0
 FROM node:22-slim AS build
 
@@ -44,7 +45,20 @@ ENV TARGETBUILD=$TARGETBUILD
 
 # Install base dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server libaio1 gettext-base python3-pip python3-venv
+    apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server libaio1 gettext-base python3-pip python3-venv \
+        procps \
+        iproute2 \
+        curl \
+        dnsutils \
+        netcat-openbsd \
+        openssl \
+        lsof \
+        strace \
+        jq \
+        less \
+        coreutils \
+        tzdata \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install litellm
 RUN python3 -m venv /opt/venv/litellm
