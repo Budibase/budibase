@@ -45,6 +45,10 @@ const getKeyAlias = (workspaceId: string) => {
   return `${context.getTenantId()}:${workspaceId}`
 }
 
+const getModelAlias = (configId: string) => {
+  return `${context.getTenantId()}:${context.getProdWorkspaceId()}:${configId}`
+}
+
 async function createTeam(alias: string): Promise<LiteLLMTeam> {
   const response = await fetch(`${liteLLMUrl}/team/new`, {
     method: "POST",
@@ -150,20 +154,21 @@ async function generateKey(
 }
 
 export async function addModel({
+  configId,
   provider,
   model,
-  displayName,
   credentialFields,
   configType,
   reasoningEffort,
 }: {
+  configId?: string
   provider: string
   model: string
-  displayName?: string
   credentialFields: Record<string, string>
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
 }): Promise<string> {
+  configId ??= docIds.generateAIConfigID()
   const litellmParams = buildLiteLLMParams({
     provider: await mapToLiteLLMProvider(provider),
     name: model,
@@ -179,7 +184,7 @@ export async function addModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: displayName || model,
+      model_name: getModelAlias(configId),
       litellm_params: litellmParams,
       model_info: {
         created_at: new Date().toISOString(),
@@ -194,6 +199,7 @@ export async function addModel({
 }
 
 export async function updateModel({
+  configId,
   llmModelId,
   provider,
   name,
@@ -201,6 +207,7 @@ export async function updateModel({
   configType,
   reasoningEffort,
 }: {
+  configId: string
   llmModelId: string
   provider: string
   name: string
@@ -223,7 +230,7 @@ export async function updateModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: name,
+      model_name: getModelAlias(configId),
       litellm_params: litellmParams,
       model_info: {
         updated_at: new Date().toISOString(),
@@ -255,7 +262,6 @@ async function validateEmbeddingConfig(model: {
     modelId = await addModel({
       provider: model.provider,
       model: model.name,
-      displayName: `tmp-${model.name}`,
       credentialFields: model.credentialFields,
       configType: AIConfigType.EMBEDDINGS,
     })
