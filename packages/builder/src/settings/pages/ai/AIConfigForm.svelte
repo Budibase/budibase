@@ -28,8 +28,7 @@
     $aiConfigsStore.customConfigs.find(c => c._id === configId)
   )
 
-  const serialise = (value: unknown): string => JSON.stringify(value)
-  const clone = <T,>(value: T): T => JSON.parse(serialise(value))
+  const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value))
 
   const createDraft = (): AIConfigResponse =>
     config?._id && provider
@@ -90,8 +89,8 @@
   let selectedProvider = $derived(providersMap?.[draft.provider])
 
   let isSaving = $state(false)
-  let savedSnapshot = $state(serialise(draft))
-  let isModified = $derived(savedSnapshot !== serialise(draft))
+  let savedSnapshot = $state(JSON.stringify(draft))
+  let isModified = $derived(savedSnapshot !== JSON.stringify(draft))
   let canSave = $derived.by(() => {
     if (isSaving) {
       return false
@@ -138,7 +137,7 @@
         const updated = await aiConfigsStore.updateConfig(payload)
         draft._rev = updated._rev
         payload._rev = updated._rev
-        savedSnapshot = serialise(payload)
+        savedSnapshot = JSON.stringify(payload)
         notifications.success(
           `${typeLabel[0].toUpperCase()}${typeLabel.slice(
             1
@@ -159,7 +158,7 @@
         const created = await aiConfigsStore.createConfig(rest)
         draft._id = created._id
         draft._rev = created._rev
-        savedSnapshot = serialise({
+        savedSnapshot = JSON.stringify({
           ...rest,
           _id: created._id,
           _rev: created._rev,
