@@ -57,6 +57,16 @@
     yearTitleFormat && yearTitleFormat !== "hidden"
       ? { year: yearTitleFormat }
       : {}
+  $: monthTitleFormatProps =
+    monthTitleFormat && yearTitleFormat !== "hidden"
+      ? { month: monthTitleFormat }
+      : {}
+  $: dayTitleFormatProps =
+    dayTitleFormat && dayTitleFormat !== "hidden" ? { day: dayTitleFormat } : {}
+  $: weekdayTitleFormatProps =
+    weekdayTitleFormat && weekdayTitleFormat !== "hidden"
+      ? { weekday: weekdayTitleFormat }
+      : {}
 
   $: events =
     dataProvider?.rows?.map((row: Row) => ({
@@ -117,30 +127,30 @@
       dayGridMonth: {
         titleFormat: {
           ...yearTitleFormatProps,
-          month: monthTitleFormat,
+          ...monthTitleFormatProps,
         },
       },
       dayGridWeek: {
         titleFormat: {
           ...yearTitleFormatProps,
-          day: dayTitleFormat,
-          month: monthTitleFormat,
+          ...dayTitleFormatProps,
+          ...monthTitleFormatProps,
         },
       },
       timeGridDay: {
         titleFormat: {
           ...yearTitleFormatProps,
-          day: dayTitleFormat,
-          month: monthTitleFormat,
-          weekday: weekdayTitleFormat,
+          ...dayTitleFormatProps,
+          ...monthTitleFormatProps,
+          ...weekdayTitleFormatProps,
           omitCommas: true,
         },
       },
       listWeek: {
         titleFormat: {
           ...yearTitleFormatProps,
-          day: dayTitleFormat,
-          month: monthTitleFormat,
+          ...dayTitleFormatProps,
+          ...monthTitleFormatProps,
         },
         noEventsContent: emptyAgendaText,
       },

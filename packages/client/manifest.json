@@ -9645,7 +9645,7 @@
       },
       {
         "section": true,
-        "name": "title",
+        "name": "Title",
         "dependsOn": "showTitleDate",
         "settings": [
           {
@@ -9673,6 +9673,7 @@
             "label": "Month title format",
             "key": "monthTitleFormat",
             "options": [
+              { "label": "Hidden", "value": "hidden" },
               { "label": "Numeric", "value": "numeric" },
               { "label": "2-digit", "value": "2-digit" },
               { "label": "Short", "value": "short" },
@@ -9684,6 +9685,7 @@
             "label": "Day title format",
             "key": "dayTitleFormat",
             "options": [
+              { "label": "Hidden", "value": "hidden" },
               { "label": "Numeric", "value": "numeric" },
               { "label": "2-digit", "value": "2-digit" }
             ]
@@ -9693,9 +9695,10 @@
             "label": "Weekday title format",
             "key": "weekdayTitleFormat",
             "options": [
-              { "label": "short", "value": "short" },
-              { "label": "long", "value": "long" },
-              { "label": "narrow", "value": "narrow" }
+              { "label": "Hidden", "value": "hidden" },
+              { "label": "Short", "value": "short" },
+              { "label": "Long", "value": "long" },
+              { "label": "Narrow", "value": "narrow" }
             ]
           }
         ]
