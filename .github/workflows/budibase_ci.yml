@@ -39,7 +39,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: yarn
       - run: yarn --frozen-lockfile
       - run: yarn lint
@@ -56,7 +56,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: yarn
       - run: yarn --frozen-lockfile
 
@@ -96,7 +96,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: yarn
       - name: Pull testcontainers images
         run: |
@@ -129,7 +129,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test worker
@@ -173,7 +173,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: yarn
 
       - name: Load dotenv
@@ -263,7 +263,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: yarn
       - run: yarn install
       - name: Check for yarn.lock changes
@@ -286,7 +286,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: yarn
       - run: yarn --frozen-lockfile
 
@@ -315,7 +315,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: yarn
       - run: yarn --frozen-lockfile
 

@@ -9,7 +9,7 @@
     "@swc/core": "1.13.5",
     "@swc/jest": "0.2.39",
     "@types/jest": "^30.0.0",
-    "@types/node": "22.18.0",
+    "@types/node": "24.10.9",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/parser": "8.41.0",
     "@vitest/eslint-plugin": "^1.1.14",
@@ -130,6 +130,6 @@
     "@types/koa": "2.13.4"
   },
   "engines": {
-    "node": ">=22.0.0 <23.0.0"
+    "node": ">=24.0.0 <25.0.0"
   }
 }
