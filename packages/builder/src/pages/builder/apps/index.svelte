@@ -202,50 +202,48 @@
                 </Layout>
               </div>
             {/if}
-            {#if chatFeatureEnabled}
-              {#if userApps.length || !chatAppsLoaded || liveChatApps.length}
-                <Heading size="S">Chat</Heading>
-                <div class="group">
-                  <Layout gap="S" noPadding>
-                    {#if !chatAppsLoaded}
-                      <Body size="S">Loading chat apps...</Body>
-                    {:else if liveChatApps.length}
-                      {#each liveChatApps as chatApp (chatApp.chatAppId)}
-                        <a
-                          class="app"
-                          target="_blank"
-                          rel="noreferrer"
-                          href={`/app-chat${chatApp.url}`}
-                        >
-                          <div
-                            class="preview"
-                            use:gradient={{ seed: chatApp.name }}
-                          ></div>
-                          <div class="app-info">
-                            <Heading size="XS">{chatApp.name}</Heading>
-                            <Body size="S">
-                              {#if chatApp.updatedAt}
-                                {processStringSync(portalLabels.updatedAgo, {
-                                  time:
-                                    new Date().getTime() -
-                                    new Date(chatApp.updatedAt).getTime(),
-                                })}
-                              {:else}
-                                {portalLabels.neverUpdated}
-                              {/if}
-                            </Body>
-                          </div>
-                          <div class="icon-muted">
-                            <Icon name="caret-right" />
-                          </div>
-                        </a>
-                      {/each}
-                    {:else}
-                      <Body size="S">No live chat apps yet.</Body>
-                    {/if}
-                  </Layout>
-                </div>
-              {/if}
+            {#if chatFeatureEnabled && (userApps.length || !chatAppsLoaded || liveChatApps.length)}
+              <Heading size="S">Chat</Heading>
+              <div class="group">
+                <Layout gap="S" noPadding>
+                  {#if !chatAppsLoaded}
+                    <Body size="S">Loading chat apps...</Body>
+                  {:else if liveChatApps.length}
+                    {#each liveChatApps as chatApp (chatApp.chatAppId)}
+                      <a
+                        class="app"
+                        target="_blank"
+                        rel="noreferrer"
+                        href={`/app-chat${chatApp.url}`}
+                      >
+                        <div
+                          class="preview"
+                          use:gradient={{ seed: chatApp.name }}
+                        ></div>
+                        <div class="app-info">
+                          <Heading size="XS">{chatApp.name}</Heading>
+                          <Body size="S">
+                            {#if chatApp.updatedAt}
+                              {processStringSync(portalLabels.updatedAgo, {
+                                time:
+                                  new Date().getTime() -
+                                  new Date(chatApp.updatedAt).getTime(),
+                              })}
+                            {:else}
+                              {portalLabels.neverUpdated}
+                            {/if}
+                          </Body>
+                        </div>
+                        <div class="icon-muted">
+                          <Icon name="caret-right" />
+                        </div>
+                      </a>
+                    {/each}
+                  {:else}
+                    <Body size="S">No live chat apps yet.</Body>
+                  {/if}
+                </Layout>
+              </div>
             {/if}
             {#if !userApps.length && (!chatFeatureEnabled || (chatAppsLoaded && !liveChatApps.length))}
               <Layout gap="XS" noPadding>
