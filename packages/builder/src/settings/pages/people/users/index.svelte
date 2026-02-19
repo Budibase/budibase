@@ -368,10 +368,7 @@
 
     for (const user of userData?.users ?? []) {
       const email = user.email.toLowerCase()
-      if (
-        seenEmails.has(email) ||
-        currentUserEmails.includes(email)
-      ) {
+      if (seenEmails.has(email) || currentUserEmails.includes(email)) {
         continue
       }
       seenEmails.add(email)
@@ -432,9 +429,7 @@
 
     const successfulAssignments = assignmentResults
       .filter(
-        (
-          result
-        ): result is PromiseFulfilledResult<string> =>
+        (result): result is PromiseFulfilledResult<string> =>
           result.status === "fulfilled"
       )
       .map(result => result.value)
