@@ -1,8 +1,9 @@
 <script lang="ts">
   import { ActionButton } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
+  import type { UIWorkspaceConnection } from "@/types/workspaceConnections"
 
-  export let row: any
+  export let row: UIWorkspaceConnection
 </script>
 
 <ActionButton

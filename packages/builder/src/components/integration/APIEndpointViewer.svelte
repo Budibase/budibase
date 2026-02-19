@@ -828,15 +828,6 @@
             <AccessLevelSelect {query} label="Access" />
           </div>
         {/if}
-        {#if query && selectedEndpointOption}
-          <NewAuthPicker
-            bind:authSourceId={query.fields.authSourceId}
-            bind:authConfigId={query.fields.authConfigId}
-            bind:authConfigType={query.fields.authConfigType}
-            restTemplateId={datasource?.restTemplateId}
-            datasourceId={datasourceLookupId}
-          />
-        {/if}
         {#if endpointDocs}
           <ActionButton
             quiet
@@ -868,41 +859,54 @@
     </div>
   </div>
   <div class="request" style:--verb-color={endpointVerbColor}>
-    <div class="picker">
-      <Select
-        on:change={e => {
-          selectedEndpointOption = e.detail
-        }}
-        value={selectedEndpointOption}
-        options={endpointOptions}
-        getOptionValue={endpoint => endpoint}
-        getOptionLabel={endpoint => endpoint.name}
-        compare={compareEndpoints}
-        disabled={endpointsLoading}
-        readonly={!!query?._id}
-        hideChevron={!!query?._id}
-        loading={endpointsLoading}
-        autocomplete={true}
-      />
+    <div class="request-top">
+      {#if query}
+        <NewAuthPicker
+          bind:authSourceId={query.fields.authSourceId}
+          bind:authConfigId={query.fields.authConfigId}
+          bind:authConfigType={query.fields.authConfigType}
+          restTemplateId={datasource?.restTemplateId}
+          datasourceId={datasourceLookupId}
+        />
+      {/if}
+      <div class="picker">
+        <Select
+          on:change={e => {
+            selectedEndpointOption = e.detail
+          }}
+          value={selectedEndpointOption}
+          options={endpointOptions}
+          getOptionValue={endpoint => endpoint}
+          getOptionLabel={endpoint => endpoint.name}
+          compare={compareEndpoints}
+          disabled={endpointsLoading}
+          readonly={!!query?._id}
+          hideChevron={!!query?._id}
+          loading={endpointsLoading}
+          autocomplete={true}
+        />
+      </div>
     </div>
-    <div class="endpoint">
-      <CodeEditor
-        value={requestURL}
-        mode={EditorModes.Handlebars}
-        aiEnabled={false}
-        readonly
-        lineWrapping={false}
-      />
-    </div>
-    <div class="send" class:loaded={selectedEndpointOption}>
-      <Button
-        primary
-        disabled={!selectedEndpointOption || runningQuery}
-        icon="paper-plane-right"
-        on:click={previewQuery}
-      >
-        Send
-      </Button>
+    <div class="request-bottom">
+      <div class="endpoint">
+        <CodeEditor
+          value={requestURL}
+          mode={EditorModes.Handlebars}
+          aiEnabled={false}
+          readonly
+          lineWrapping={false}
+        />
+      </div>
+      <div class="send" class:loaded={selectedEndpointOption}>
+        <Button
+          primary
+          disabled={!selectedEndpointOption || runningQuery}
+          icon="paper-plane-right"
+          on:click={previewQuery}
+        >
+          Send
+        </Button>
+      </div>
     </div>
   </div>
 </div>
@@ -1234,14 +1238,16 @@
   }
   .request {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: var(--spacing-s);
-    align-items: center;
     min-width: 0;
   }
+  .request :global(.spectrum-ActionButton) {
+    height: 40px;
+    border-radius: 4px;
+  }
   .request .picker {
-    width: 30%;
-    min-width: 250px;
+    flex: 1;
   }
   .request .picker :global(.spectrum-Picker),
   .endpoint {
@@ -1311,5 +1317,11 @@
   .embed :global(.cm-gutters) {
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
+  }
+  .request-top,
+  .request-bottom {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
   }
 </style>

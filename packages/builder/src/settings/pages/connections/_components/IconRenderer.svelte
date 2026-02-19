@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
+  import type { UIWorkspaceConnection } from "@/types/workspaceConnections"
 
-  export let row
+  export let row: UIWorkspaceConnection
 
   $: icon = row?.icon
 </script>

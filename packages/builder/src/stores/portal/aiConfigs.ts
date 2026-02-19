@@ -1,23 +1,53 @@
 import { API } from "@/api"
 import {
   AIConfigResponse,
+  AIConfigType,
   CreateAIConfigRequest,
   LLMProvider,
   UpdateAIConfigRequest,
 } from "@budibase/types"
-import { BudiStore } from "../BudiStore"
+import { derived, Writable } from "svelte/store"
+import { DerivedBudiStore } from "../BudiStore"
 
 interface AIConfigState {
   customConfigs: AIConfigResponse[]
   providers?: LLMProvider[]
 }
 
-export class AIConfigStore extends BudiStore<AIConfigState> {
+interface DerivedAIConfigState extends AIConfigState {
+  customConfigsPerType: Record<AIConfigType, AIConfigResponse[]>
+}
+
+export class AIConfigStore extends DerivedBudiStore<
+  AIConfigState,
+  DerivedAIConfigState
+> {
   constructor() {
-    super({
-      customConfigs: [],
-      providers: undefined,
-    })
+    const makeDerivedStore = (store: Writable<AIConfigState>) => {
+      return derived(store, $state => ({
+        ...$state,
+        customConfigsPerType: $state.customConfigs.reduce<
+          DerivedAIConfigState["customConfigsPerType"]
+        >(
+          (acc, config) => {
+            acc[config.configType].push(config)
+            return acc
+          },
+          {
+            [AIConfigType.COMPLETIONS]: [],
+            [AIConfigType.EMBEDDINGS]: [],
+          }
+        ),
+      }))
+    }
+
+    super(
+      {
+        customConfigs: [],
+        providers: undefined,
+      },
+      makeDerivedStore
+    )
   }
 
   init = async () => {

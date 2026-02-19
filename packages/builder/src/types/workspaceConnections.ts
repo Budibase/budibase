@@ -6,8 +6,6 @@ export const AUTH_TYPE_OPTIONS: Array<{
 }> = [
   { label: "Basic Auth", value: RestAuthType.BASIC },
   { label: "Bearer Token", value: RestAuthType.BEARER },
-  // This should be added
-  // { label: "API Key", value: RestAuthType.API_KEY },
   { label: "OAuth2", value: RestAuthType.OAUTH2 },
 ]
 

@@ -40,7 +40,7 @@
     }
 
     if (config) {
-      data = cloneDeep(config) as FormData
+      data = cloneDeep(config)
     }
   })
 

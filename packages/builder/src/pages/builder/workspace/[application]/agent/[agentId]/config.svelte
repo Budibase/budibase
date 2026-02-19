@@ -42,6 +42,7 @@
   import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
+  import { shouldAutoSelectAgentModel } from "./configUtils"
 
   $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
@@ -267,15 +268,16 @@ Any constraints the agent must follow.
   })
 
   $effect(() => {
-    if (modelOptions.length > 0 && currentAgent) {
-      // Only auto-select if agent doesn't have an aiconfig set (undefined/null/empty)
-      const agentHasAiconfig =
-        currentAgent.aiconfig != null && currentAgent.aiconfig !== ""
-      const currentValue = draft.aiconfig || ""
-      // Only set default if agent never had a value and current draft is empty
-      if (!agentHasAiconfig && !currentValue) {
-        draft.aiconfig = modelOptions[0].value
-      }
+    if (
+      currentAgent &&
+      shouldAutoSelectAgentModel({
+        modelOptions,
+        agentAiconfig: currentAgent.aiconfig,
+        draftAiconfig: draft.aiconfig,
+      })
+    ) {
+      draft.aiconfig = modelOptions[0].value
+      scheduleSave(true)
     }
   })
 
@@ -693,7 +695,7 @@ Any constraints the agent must follow.
       Select which provider and model to use for the agent.{" "}
       <button
         class="link-button"
-        onclick={() => bb.settings("/ai-config/configs")}
+        onclick={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
       >
         View AI Connectors.
       </button>
@@ -708,7 +710,7 @@ Any constraints the agent must follow.
           icon="sparkle"
           iconWeight="fill"
           iconColor="#8777D1"
-          on:click={() => bb.settings("/ai-config/configs")}
+          on:click={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
         >
           Connect AI Model
         </Button>

@@ -72,7 +72,8 @@
       ? ownDatasource.name
       : "Select connection"
 
-  $: buttonIcon =
+  $: buttonIcon = selectedAuth?.connectionIcon ?? null
+  $: fallbackIcon =
     selectedAuth || isUsingOwnDatasource ? "lock" : "lock-simple-open"
 
   const focusSearch = async () => {
@@ -101,6 +102,13 @@
   const addNewConnection = () => {
     bb.settings("/connections/create")
     menuRef?.hide()
+  }
+
+  const editConnection = (e: MouseEvent) => {
+    e.stopPropagation()
+    if (authSourceId) {
+      bb.settings(`/connections/${authSourceId}`)
+    }
   }
 
   const sortAuthOptions = (
@@ -136,13 +144,33 @@
   align="right"
   roundedPopover
 >
-  <svelte:fragment slot="control">
-    <ActionButton icon={buttonIcon} quiet selected={!!selectedAuth}>
-      {buttonLabel}
+  <svelte:fragment slot="control" let:open>
+    <ActionButton
+      icon={buttonIcon ? undefined : fallbackIcon}
+      quiet
+      selected={!!selectedAuth}
+    >
+      <div class="drop-btns" class:faded={open}>
+        {#if buttonIcon?.type === "asset"}
+          <img src={buttonIcon.value} alt="icon" height={16} width={16} />
+        {:else if buttonIcon?.type === "icon"}
+          <Icon name={buttonIcon.value} size="S" />
+        {/if}
+        {buttonLabel}
+        {#if selectedAuth}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-static-element-interactions -->
+          <span class="edit-link" on:click={editConnection}>Edit</span>
+        {/if}
+        <Icon name={open ? "ChevronUp" : "ChevronDown"} size="S" />
+      </div>
     </ActionButton>
   </svelte:fragment>
 
-  <div class="auth-menu">
+  <div
+    class="auth-menu"
+    class:hide-checkmark={isUsingOwnDatasource && !selectedAuth}
+  >
     <div class="auth-menu-header">
       <input
         bind:this={searchInput}
@@ -152,18 +180,18 @@
         bind:value={searchQuery}
         aria-label="Filter connections"
       />
-      <div class="header-actions">
-        <Icon
-          name="plus"
-          size="M"
-          hoverable
-          tooltip="Add connection"
-          on:click={addNewConnection}
-        />
-      </div>
     </div>
 
     <div class="auth-menu-content">
+      <div class="auth-section">
+        <MenuItem on:click={addNewConnection}>
+          <div class="auth-item">
+            <Icon name="Add" size="S" />
+            <span class="auth-item-label">Add new connection</span>
+          </div>
+        </MenuItem>
+      </div>
+      <div class="auth-divider"></div>
       {#if ownDatasource && !authConfigId}
         <div class="auth-section">
           <MenuItem
@@ -255,18 +283,8 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
-
-  .header-actions > :global(*) {
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
+  .hide-checkmark :global(i.ph-check) {
+    display: none;
   }
 
   .auth-menu-content {
@@ -308,5 +326,31 @@
 
   .auth-item-label {
     font-size: var(--font-size-s);
+  }
+
+  .drop-btns {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
+    transition: opacity 130ms ease-out;
+  }
+
+  .drop-btns.faded {
+    opacity: 0.6;
+  }
+
+  .edit-link {
+    font-size: var(--font-size-xs);
+    color: var(--spectrum-global-color-gray-600);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-75);
+  }
+
+  .edit-link:hover {
+    color: var(--spectrum-global-color-gray-900);
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>

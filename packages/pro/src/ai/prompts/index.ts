@@ -149,7 +149,11 @@ export function generateCode(prompt: string) {
 
 export function generateCronExpression(text: string) {
   return new LLMRequest().addUserMessage(
-    `Generate a node-cron compatible expression based on the following prompt. Return only the cron expression (without backticks), and if not possible return only 'Error generating cron' with a short explanation:\n${text}`
+    `Generate a cron expression with exactly 5 fields (minute hour day-of-month month day-of-week) based on the following prompt.
+Do not include a seconds field.
+Return only the cron expression (without backticks or explanation).
+If not possible, return only 'Error generating cron:' followed by a short explanation.
+\n${text}`
   )
 }
 
@@ -391,13 +395,10 @@ export function composeAutomationAgentToolGuidelines(
 }
 
 export function agentSystemPrompt(user: ContextUser) {
+  const date = new Date().toISOString()
   return `You are a helpful support agent who uses workflows to resolve user issues efficiently.
-
-  - The user will ask support queries.
-  - Your replies MUST be short, concise, and directly answer the user's question as quickly and clearly as possible.
-  - Use Markdown formatting in your responses.
+  - The current date is: ${date}
   - When receiving truncated or paginated results, automatically make follow-up requests to retrieve all pages
-  - If you aren't entirely sure which tool to call, make sure to ask for confirmation rather than assume. If there's any ambiguity, get user confirmation.
   - When a tool call fails, show the detailed error status and message in the UI to provide the user further information as to how to debug.
   - When specifying a "limit" for a certain tool call related to the number of records, use at least 100. This helps prevent cutting off the list of results too short. If the number of results overflows the limit, make sure you tell the user there are more, and confirm if they want to fetch the rest before continuing.
 

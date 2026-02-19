@@ -49,6 +49,7 @@
   export let searchPlaceholder: string | undefined = undefined
   export let hideChevron: boolean = false
   export let required: boolean | undefined = false
+  export let description: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<any>) => {
@@ -64,7 +65,15 @@
   }
 </script>
 
-<Field {helpText} {label} {labelPosition} {error} {tooltip} {required}>
+<Field
+  {helpText}
+  {label}
+  {labelPosition}
+  {error}
+  {tooltip}
+  {required}
+  {description}
+>
   <Select
     {size}
     {bordered}
