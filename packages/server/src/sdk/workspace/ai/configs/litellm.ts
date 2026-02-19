@@ -41,6 +41,10 @@ const getTenantTeamAlias = () => {
   return tenantId
 }
 
+const getKeyAlias = (workspaceId: string) => {
+  return `${context.getTenantId()}:${workspaceId}`
+}
+
 async function createTeam(alias: string): Promise<LiteLLMTeam> {
   const response = await fetch(`${liteLLMUrl}/team/new`, {
     method: "POST",
@@ -395,7 +399,7 @@ export async function getKeySettings(): Promise<{
           return { ...updatedConfig, _rev: rev }
         }
 
-        const key = await generateKey(workspaceId, team.id)
+        const key = await generateKey(getKeyAlias(workspaceId), team.id)
         const config: LiteLLMKeyConfig = {
           _id: keyDocId,
           keyId: key.id,

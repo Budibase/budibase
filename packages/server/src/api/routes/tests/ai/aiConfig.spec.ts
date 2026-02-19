@@ -771,8 +771,8 @@ describe("BudibaseAI", () => {
       expect(keyDoc?.keyId).toBe("reused-key")
     })
 
-    it("uses the prod workspace ID as the key alias", async () => {
-      const expectedAlias = config.getProdWorkspaceId()
+    it("prefixes the key alias with tenant and workspace IDs", async () => {
+      const expectedAlias = `${config.getTenantId()}:${config.getProdWorkspaceId()}`
 
       const keyGenerateScope = nock(environment.LITELLM_URL)
         .post("/key/generate", body => {
@@ -797,8 +797,8 @@ describe("BudibaseAI", () => {
     it("creates a team per tenant and assigns keys to it", async () => {
       nock.cleanAll()
       mockLiteLLMProviders()
-      const expectedTeamAlias = `budibase-tenant-${config.getTenantId()}`
-      const expectedKeyAlias = config.getProdWorkspaceId()
+      const expectedTeamAlias = config.getTenantId()
+      const expectedKeyAlias = `${config.getTenantId()}:${config.getProdWorkspaceId()}`
 
       const teamScope = nock(environment.LITELLM_URL)
         .post("/team/new", body => {
@@ -838,7 +838,7 @@ describe("BudibaseAI", () => {
 
       const existingKeyId = "legacy-key-id"
       const existingSecret = "legacy-secret-key"
-      const expectedTeamAlias = `budibase-tenant-${config.getTenantId()}`
+      const expectedTeamAlias = config.getTenantId()
 
       await config.doInContext(config.getDevWorkspaceId(), async () => {
         const keyDocId = docIds.getLiteLLMKeyID()
