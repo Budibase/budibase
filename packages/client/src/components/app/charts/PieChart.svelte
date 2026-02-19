@@ -21,6 +21,7 @@
       : "category"
   $: series = getSeries(dataProvider, valueColumn)
   $: labels = getLabels(dataProvider, labelColumn, labelType)
+  $: hasClickAction = typeof onClick === "function"
 
   $: options = {
     series,
@@ -126,3 +127,9 @@
 </script>
 
 <ApexChart {options} />
+
+<style>
+  .apexcharts-canvas.hasClickAction :global(.apex-charts-radial-series) {
+    cursor: pointer;
+  }
+</style>
