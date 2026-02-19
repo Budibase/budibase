@@ -8,7 +8,7 @@
   import { admin } from "@/stores/portal"
   import PortalModal from "./PortalModal.svelte"
   import { bb } from "@/stores/bb"
-  import { aiLicenseStatus, ensureAILicenseStatus } from "./licenseStatus"
+  import { aiLicenseStatus } from "./licenseStatus"
 
   interface Props {
     row: AIConfigResponse
@@ -46,7 +46,6 @@
   }
 
   onMount(async () => {
-    await ensureAILicenseStatus()
     if (pendingOpen && licenseStatus === "has_key") {
       pendingOpen = false
       enableBBAIModal?.hide()

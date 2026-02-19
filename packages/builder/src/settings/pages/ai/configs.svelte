@@ -5,6 +5,7 @@
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
   import AIConfigList from "./AIConfigList.svelte"
+  import { ensureAILicenseStatus } from "./licenseStatus"
 
   let completionConfigs = $derived(
     [...$aiConfigsStore.customConfigsPerType.completions]
@@ -67,7 +68,7 @@
 
   onMount(async () => {
     try {
-      await aiConfigsStore.fetch()
+      await Promise.all([aiConfigsStore.fetch(), await ensureAILicenseStatus()])
     } catch {
       notifications.error("Error fetching AI settings")
     }
