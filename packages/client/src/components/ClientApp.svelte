@@ -9,10 +9,7 @@
     invalidationMessage,
     popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
-  import {
-    DefaultBuilderTheme,
-    getThemeClassNames,
-  } from "@budibase/shared-core"
+  import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
   import SDK from "@/sdk"
   import {
@@ -60,7 +57,9 @@
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
   import RecaptchaV2 from "./RecaptchaV2.svelte"
   import { ActionTypes } from "@/constants"
+  import { API } from "@/api"
   import AppChatbox from "./app/Chatbox.svelte"
+  import PausedChat from "./app/PausedChat.svelte"
 
   // Provide contexts
   const context = createContextStore()
@@ -76,6 +75,7 @@
   let dataLoaded = false
   let permissionError = false
   let embedNoScreens = false
+  let chatRoutePaused = false
 
   $: displayPreviewDevice =
     $builderStore.previewModalDevice || $builderStore.previewDevice
@@ -86,9 +86,7 @@
     typeof window !== "undefined" &&
     (window.location.pathname.replace(/\/$/, "").endsWith("/_chat") ||
       window.location.pathname.startsWith("/app-chat/"))
-  $: resolvedThemeClassNames = getThemeClassNames(
-    isChatOnlyRoute ? DefaultBuilderTheme : $themeStore.theme
-  )
+  $: resolvedThemeClassNames = getThemeClassNames($themeStore.theme)
 
   // Handle no matching route
   $: {
@@ -123,6 +121,28 @@
         window.location = "/builder/auth/login"
       }
     }
+  }
+
+  const refreshChatRoutePausedState = async () => {
+    if (!isChatOnlyRoute || $builderStore.inBuilder) {
+      chatRoutePaused = false
+      return
+    }
+
+    try {
+      const chatApp = await API.get({
+        url: "/api/chatapps",
+        suppressErrors: true,
+      })
+      chatRoutePaused = chatApp?.live === false
+    } catch (error) {
+      console.error(error)
+      chatRoutePaused = false
+    }
+  }
+
+  $: if (dataLoaded && isChatOnlyRoute) {
+    refreshChatRoutePausedState()
   }
 
   let fontsLoaded = false
@@ -260,7 +280,11 @@
                               <CustomThemeWrapper>
                                 <div class="chat-route-shell">
                                   <div class="chat-app-container">
-                                    <AppChatbox />
+                                    {#if chatRoutePaused && !$builderStore.inBuilder}
+                                      <PausedChat />
+                                    {:else}
+                                      <AppChatbox />
+                                    {/if}
                                   </div>
                                 </div>
 
@@ -441,7 +465,7 @@
     flex: 1 1 auto;
     display: flex;
     border-radius: 24px;
-    border: var(--border-dark);
+    border: var(--border-light);
     background: transparent;
     overflow: hidden;
     min-width: 0;
