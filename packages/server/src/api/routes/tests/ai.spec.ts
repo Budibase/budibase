@@ -156,7 +156,14 @@ const allProviders: TestSetup[] = [
   {
     name: "BudibaseAI",
     setup: budibaseAI(),
-    mockLLMResponse: mockAISDKChatGPTResponse,
+    mockLLMResponse: (
+      answer: string | ((prompt: string) => string),
+      opts?: MockLLMResponseOpts
+    ) =>
+      mockAISDKChatGPTResponse(answer, {
+        baseUrl: "http://test.litellm.com",
+        ...opts,
+      }),
   },
 ]
 
