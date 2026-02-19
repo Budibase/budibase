@@ -25,12 +25,46 @@ const toBudibaseUsage = (
   }
 }
 
-export async function createBBAIClient(model: string): Promise<LLMResponse> {
+function createBBAIFetch(sessionId?: string): typeof fetch {
+  const bbaiFetch = (async (
+    input: Parameters<typeof fetch>[0],
+    init?: Parameters<typeof fetch>[1]
+  ) => {
+    let modifiedInit = init
+
+    if (sessionId && typeof init?.body === "string") {
+      try {
+        const body = JSON.parse(init.body)
+        body.metadata = {
+          ...body.metadata,
+          session_id: sessionId,
+        }
+        modifiedInit = { ...init, body: JSON.stringify(body) }
+      } catch {
+        // Not JSON, pass through
+      }
+    }
+
+    return fetch(input, modifiedInit)
+  }) as typeof fetch
+
+  if (typeof (fetch as any).preconnect === "function") {
+    ;(bbaiFetch as any).preconnect = (fetch as any).preconnect.bind(fetch)
+  }
+
+  return bbaiFetch
+}
+
+export async function createBBAIClient(
+  model: string,
+  sessionId?: string
+): Promise<LLMResponse> {
   const providerRequest = resolveBudibaseAIProviderRequest(model)
 
   const client = createOpenAI({
     apiKey: providerRequest.apiKey,
     baseURL: providerRequest.baseUrl,
+    fetch: createBBAIFetch(sessionId),
   })
   const chat = wrapLanguageModel({
     model: client.chat(providerRequest.model),
