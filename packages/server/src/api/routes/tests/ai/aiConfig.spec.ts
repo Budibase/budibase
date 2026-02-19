@@ -331,6 +331,111 @@ describe("BudibaseAI", () => {
       ).toBeTrue()
     })
 
+    it("does not persist update changes when LiteLLM validation fails", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-validation-fail", key: "secret-vf" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-validation-fail" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        name: "Initial Config",
+      })
+      expect(creationScope.isDone()).toBe(true)
+
+      const persistedBefore = await getPersistedConfigAI(created._id)
+
+      const validationFailureScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, {
+          status: "error",
+          result: { error: "invalid credentials" },
+        })
+
+      const errorResponse: any = await config.api.ai.updateConfig(
+        {
+          ...created,
+          name: "Updated Config",
+          model: "gpt-4.1",
+          credentialsFields: {
+            ...created.credentialsFields,
+            api_key: PASSWORD_REPLACEMENT,
+          },
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(validationFailureScope.isDone()).toBe(true)
+      expect(errorResponse.message).toBe(
+        "Error validating configuration: invalid credentials"
+      )
+
+      const persistedAfter = await getPersistedConfigAI(created._id)
+      expect(persistedAfter._rev).toBe(persistedBefore._rev)
+      expect(persistedAfter.name).toBe("Initial Config")
+      expect(persistedAfter.model).toBe(defaultRequest.model)
+    })
+
+    it("rolls back update when LiteLLM model update fails", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-update-fail", key: "secret-uf" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-update-fail" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        name: "Initial Config",
+      })
+      expect(creationScope.isDone()).toBe(true)
+
+      const persistedBefore = await getPersistedConfigAI(created._id)
+
+      const updateFailureScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .patch(`/model/${created.liteLLMModelId}/update`)
+        .reply(200, {
+          status: "error",
+          result: { error: "litellm unavailable" },
+        })
+
+      const errorResponse: any = await config.api.ai.updateConfig(
+        {
+          ...created,
+          name: "Updated Config",
+          model: "gpt-4.1",
+          credentialsFields: {
+            ...created.credentialsFields,
+            api_key: PASSWORD_REPLACEMENT,
+          },
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(updateFailureScope.isDone()).toBe(true)
+      expect(errorResponse.message).toBe(
+        "Error updating configuration: litellm unavailable"
+      )
+
+      const persistedAfter = await getPersistedConfigAI(created._id)
+      expect(persistedAfter.name).toBe(persistedBefore.name)
+      expect(persistedAfter.model).toBe(persistedBefore.model)
+    })
+
     it("deletes a custom config and syncs LiteLLM models", async () => {
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
