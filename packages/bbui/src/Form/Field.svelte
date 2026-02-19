@@ -3,18 +3,32 @@
   import FieldLabel from "./FieldLabel.svelte"
   import Icon from "../Icon/Icon.svelte"
   import type { LabelPosition } from "../types"
+  import Label from "../Label/Label.svelte"
 
   export let id: string | undefined = undefined
   export let label: string | undefined = undefined
   export let labelPosition: LabelPosition = "above"
   export let error: string | undefined | false = undefined
+  export let description: string | undefined = undefined
   export let helpText: string | undefined = undefined
   export let tooltip: string | undefined = undefined
+  export let required: boolean = false
 </script>
 
 <div class="spectrum-Form-item" class:above={labelPosition === "above"}>
   {#if label}
-    <FieldLabel forId={id} {label} position={labelPosition} {tooltip} />
+    <FieldLabel
+      forId={id}
+      {label}
+      position={labelPosition}
+      {tooltip}
+      {required}
+    />
+  {/if}
+  {#if description}
+    <div class="description">
+      <Label muted>{description}</Label>
+    </div>
   {/if}
   <div class="spectrum-Form-itemField">
     <slot />
@@ -60,5 +74,8 @@
   .helpText span {
     color: var(--spectrum-global-color-gray-800);
     font-size: var(--spectrum-global-dimension-font-size-75);
+  }
+  .description {
+    margin-bottom: var(--spacing-xs);
   }
 </style>
