@@ -830,7 +830,6 @@ describe("BudibaseAI", () => {
 
       const keyDoc = await getLiteLLMKeyDoc()
       expect(keyDoc?.teamId).toBe("tenant-team-1")
-      expect(keyDoc?.teamAlias).toBe(expectedTeamAlias)
     })
 
     it("backfills team on existing keys without rotating the key", async () => {
@@ -848,7 +847,6 @@ describe("BudibaseAI", () => {
           keyId: existingKeyId,
           secretKey: existingSecret,
           teamId: undefined as any, // Force missing values
-          teamAlias: undefined as any,
         })
       })
 
@@ -892,7 +890,6 @@ describe("BudibaseAI", () => {
       expect(keyDoc?.keyId).toBe(existingKeyId)
       expect(keyDoc?.secretKey).toBe(existingSecret)
       expect(keyDoc?.teamId).toBe("tenant-team-backfill")
-      expect(keyDoc?.teamAlias).toBe(expectedTeamAlias)
     })
 
     it("syncs the key with model IDs from the workspace", async () => {

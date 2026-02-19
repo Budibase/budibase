@@ -32,7 +32,6 @@ interface LiteLLMTenantTeamConfig {
   _id: string
   _rev?: string
   teamId: string
-  teamAlias: string
 }
 
 const tenantTeamDocId = "litellmteam_config"
@@ -83,7 +82,7 @@ async function getOrCreateTenantTeam(): Promise<LiteLLMTeam> {
   if (existing) {
     return {
       id: existing.teamId,
-      alias: existing.teamAlias,
+      alias: getTenantTeamAlias(),
     }
   }
 
@@ -99,7 +98,7 @@ async function getOrCreateTenantTeam(): Promise<LiteLLMTeam> {
       if (maybeExisting) {
         return {
           id: maybeExisting.teamId,
-          alias: maybeExisting.teamAlias,
+          alias: getTenantTeamAlias(),
         }
       }
 
@@ -107,7 +106,6 @@ async function getOrCreateTenantTeam(): Promise<LiteLLMTeam> {
       await tenantDb.put({
         _id: tenantTeamDocId,
         teamId: team.id,
-        teamAlias: team.alias,
       })
       return team
     }
@@ -392,7 +390,6 @@ export async function getKeySettings(): Promise<{
           const updatedConfig: LiteLLMKeyConfig = {
             ...existingKeyConfig,
             teamId: team.id,
-            teamAlias: team.alias,
           }
           const { rev } = await db.put(updatedConfig)
           return { ...updatedConfig, _rev: rev }
@@ -404,12 +401,8 @@ export async function getKeySettings(): Promise<{
           keyId: key.id,
           secretKey: key.secret,
           teamId: team.id,
-          teamAlias: team.alias,
         }
-        const { rev } = await db.put({
-          ...config,
-          _rev: existingKeyConfig?._rev,
-        })
+        const { rev } = await db.put(config)
         return { ...config, _rev: rev }
       }
     )
