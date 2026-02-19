@@ -32,6 +32,24 @@ export interface SettingsBrandingConfig {
   platformTitle?: string
   loginHeading?: string
   loginButton?: string
+  loginBackgroundColor?: string
+  loginBackgroundImageUrl?: string
+  loginBackgroundImageUrlEtag?: string
+  loginFontFamily?: string
+  loginFontUrl?: string
+  loginInputBackgroundColor?: string
+  loginInputTextColor?: string
+  loginPrimaryColor?: string
+  loginTextColor?: string
+  portalBackgroundColor?: string
+  portalBackgroundImageUrl?: string
+  portalBackgroundImageUrlEtag?: string
+  portalFontFamily?: string
+  portalFontUrl?: string
+  portalPrimaryColor?: string
+  portalCardBackgroundColor?: string
+  portalCardTextColor?: string
+  portalTextColor?: string
   metaDescription?: string
   metaImageUrl?: string
   metaTitle?: string

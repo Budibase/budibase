@@ -106,10 +106,77 @@
   $: introText = processStringSync(portalLabels.intro, {
     company: $organisation.company || "Budibase",
   })
+
+  const buildContainerStyle = ({
+    backgroundColor,
+    backgroundImageUrl,
+    textColor,
+    fontFamily,
+    fontUrl,
+    cardBackgroundColor,
+    cardTextColor,
+    primaryColor,
+  }: {
+    backgroundColor?: string
+    backgroundImageUrl?: string
+    textColor?: string
+    fontFamily?: string
+    fontUrl?: string
+    cardBackgroundColor?: string
+    cardTextColor?: string
+    primaryColor?: string
+  }) => {
+    const styles = []
+    if (backgroundColor) {
+      styles.push(`background-color: ${backgroundColor}`)
+    }
+    if (backgroundImageUrl) {
+      styles.push(`background-image: url("${backgroundImageUrl}")`)
+      styles.push("background-size: cover")
+      styles.push("background-position: center")
+      styles.push("background-repeat: no-repeat")
+    }
+    if (textColor) {
+      styles.push(`color: ${textColor}`)
+      styles.push(`--portal-text-color: ${textColor}`)
+    }
+    if (fontFamily) {
+      styles.push(`font-family: ${fontFamily}`)
+      styles.push(`--portal-font-family: ${fontFamily}`)
+      styles.push(`--font-sans: ${fontFamily}`)
+    }
+    if (cardBackgroundColor) {
+      styles.push(`--portal-card-bg: ${cardBackgroundColor}`)
+    }
+    if (cardTextColor) {
+      styles.push(`--portal-card-text: ${cardTextColor}`)
+    }
+    if (primaryColor) {
+      styles.push(`--portal-primary-color: ${primaryColor}`)
+    }
+    return styles.join("; ")
+  }
+
+  $: portalContainerStyle = buildContainerStyle({
+    backgroundColor: $organisation.portalBackgroundColor,
+    backgroundImageUrl: $organisation.portalBackgroundImageUrl,
+    textColor: $organisation.portalTextColor,
+    fontFamily: $organisation.portalFontFamily,
+    fontUrl: $organisation.portalFontUrl,
+    cardBackgroundColor: $organisation.portalCardBackgroundColor,
+    cardTextColor: $organisation.portalCardTextColor,
+    primaryColor: $organisation.portalPrimaryColor,
+  })
 </script>
 
+<svelte:head>
+  {#if $organisation.portalFontUrl}
+    <link rel="stylesheet" href={$organisation.portalFontUrl} />
+  {/if}
+</svelte:head>
+
 {#if $auth.user && loaded}
-  <div class="container">
+  <div class="container" style={portalContainerStyle}>
     <Page narrow>
       <div class="content">
         <Layout noPadding>
@@ -280,9 +347,15 @@
     justify-content: flex-start;
     align-items: center;
     padding: 80px;
+    font-family: var(--portal-font-family, inherit);
   }
   .content {
     width: 100%;
+  }
+  :global(.spectrum-Heading),
+  :global(.spectrum-Body) {
+    color: var(--portal-text-color, inherit);
+    font-family: var(--portal-font-family, var(--font-sans));
   }
   .header {
     display: flex;
@@ -311,17 +384,24 @@
   .app {
     display: grid;
     grid-template-columns: auto 1fr auto;
-    background-color: var(--background);
+    background-color: var(--portal-card-bg, var(--background));
     padding: var(--spacing-xl);
     border-radius: var(--border-radius-s);
+    border: 1px solid var(--portal-primary-color, transparent);
     align-items: center;
     grid-gap: var(--spacing-xl);
-    color: inherit;
+    color: var(--portal-card-text, inherit);
   }
   .app:hover {
     cursor: pointer;
     background: var(--spectrum-global-color-gray-200);
     transition: background-color 130ms ease-in-out;
+    box-shadow: 0 0 0 2px var(--portal-primary-color, transparent);
+  }
+  .app :global(.spectrum-Heading),
+  .app :global(.spectrum-Body) {
+    color: var(--portal-card-text, inherit);
+    font-family: var(--portal-font-family, var(--font-sans));
   }
   .app.static {
     cursor: default;
