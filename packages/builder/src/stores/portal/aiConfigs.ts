@@ -6,24 +6,48 @@ import {
   LLMProvider,
   UpdateAIConfigRequest,
 } from "@budibase/types"
-import { BudiStore } from "../BudiStore"
+import { derived, Writable } from "svelte/store"
+import { DerivedBudiStore } from "../BudiStore"
 
 interface AIConfigState {
   customConfigs: AIConfigResponse[]
-  customConfigsPerType: Record<AIConfigType, AIConfigResponse[]>
   providers?: LLMProvider[]
 }
 
-export class AIConfigStore extends BudiStore<AIConfigState> {
+interface DerivedAIConfigState extends AIConfigState {
+  customConfigsPerType: Record<AIConfigType, AIConfigResponse[]>
+}
+
+export class AIConfigStore extends DerivedBudiStore<
+  AIConfigState,
+  DerivedAIConfigState
+> {
   constructor() {
-    super({
-      customConfigs: [],
-      customConfigsPerType: {
-        [AIConfigType.COMPLETIONS]: [],
-        [AIConfigType.EMBEDDINGS]: [],
+    const makeDerivedStore = (store: Writable<AIConfigState>) => {
+      return derived(store, $state => ({
+        ...$state,
+        customConfigsPerType: $state.customConfigs.reduce<
+          DerivedAIConfigState["customConfigsPerType"]
+        >(
+          (acc, config) => {
+            acc[config.configType].push(config)
+            return acc
+          },
+          {
+            [AIConfigType.COMPLETIONS]: [],
+            [AIConfigType.EMBEDDINGS]: [],
+          }
+        ),
+      }))
+    }
+
+    super(
+      {
+        customConfigs: [],
+        providers: undefined,
       },
-      providers: undefined,
-    })
+      makeDerivedStore
+    )
   }
 
   init = async () => {
@@ -34,20 +58,6 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
     const configs = await API.aiConfig.fetch()
     this.update(state => {
       state.customConfigs = configs
-
-      state.customConfigsPerType = configs.reduce<
-        typeof state.customConfigsPerType
-      >(
-        (acc, config) => {
-          acc[config.configType].push(config)
-          return acc
-        },
-        {
-          [AIConfigType.COMPLETIONS]: [],
-          [AIConfigType.EMBEDDINGS]: [],
-        }
-      )
-
       return state
     })
     return configs

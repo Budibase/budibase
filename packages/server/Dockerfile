@@ -23,7 +23,18 @@ RUN apk add --no-cache \
     jq \
     bash \
     postgresql-client \
-    git
+    git \
+    procps \
+    iproute2 \
+    curl \
+    bind-tools \
+    netcat-openbsd \
+    openssl \
+    lsof \
+    strace \
+    less \
+    coreutils \
+    tzdata
 
 RUN yarn global add pm2
 
@@ -44,7 +55,7 @@ RUN ./scripts/removeWorkspaceDependencies.sh package.json
 ARG TARGETPLATFORM
 RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production \
     && yarn cache clean \
-    && apk del g++ make python3 jq \
+    && apk del g++ make python3 \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
 
 COPY packages/server/dist/ dist/
