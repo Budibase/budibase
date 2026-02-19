@@ -27,6 +27,7 @@
   export let searchPlaceholder: string = "Search"
   export let showSelectAll = false
   export let selectAllText = "Select all"
+  export let wrapText: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -149,4 +150,5 @@
   {indeterminate}
   {allSelected}
   {toggleSelectAll}
+  {wrapText}
 />
