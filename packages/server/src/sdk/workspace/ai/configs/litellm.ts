@@ -363,7 +363,7 @@ export async function getKeySettings(): Promise<{
   const keyDocId = docIds.getLiteLLMKeyID()
 
   let keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
-  if (!keyConfig) {
+  if (!keyConfig || !keyConfig.teamId) {
     const workspaceId = context.getProdWorkspaceId()
     if (!workspaceId) {
       throw new HTTPError("Workspace ID is required to configure LiteLLM", 400)
@@ -383,6 +383,20 @@ export async function getKeySettings(): Promise<{
         }
 
         const team = await getOrCreateTenantTeam()
+
+        if (existingKeyConfig) {
+          await updateKey({
+            keyId: existingKeyConfig.keyId,
+            teamId: team.id,
+          })
+          const updatedConfig: LiteLLMKeyConfig = {
+            ...existingKeyConfig,
+            teamId: team.id,
+            teamAlias: team.alias,
+          }
+          const { rev } = await db.put(updatedConfig)
+          return { ...updatedConfig, _rev: rev }
+        }
 
         const key = await generateKey(workspaceId, team.id)
         const config: LiteLLMKeyConfig = {
@@ -408,14 +422,15 @@ export async function getKeySettings(): Promise<{
   }
 }
 
-export async function syncKeyModels() {
-  const { keyId } = await getKeySettings()
-
-  const aiConfigs = await configSdk.fetch()
-  const modelIds = aiConfigs
-    .map(c => c.liteLLMModelId)
-    .filter((id): id is string => !!id)
-
+async function updateKey({
+  keyId,
+  modelIds,
+  teamId,
+}: {
+  keyId: string
+  modelIds?: string[]
+  teamId?: string
+}) {
   const requestOptions = {
     method: "POST",
     headers: {
@@ -424,7 +439,8 @@ export async function syncKeyModels() {
     },
     body: JSON.stringify({
       key: keyId,
-      models: modelIds,
+      ...(modelIds ? { models: modelIds } : {}),
+      ...(teamId ? { team_id: teamId } : {}),
     }),
   }
 
@@ -435,6 +451,20 @@ export async function syncKeyModels() {
 
     throw new HTTPError(`Error syncing keys: ${trimmedError}`, 400)
   }
+}
+
+export async function syncKeyModels() {
+  const { keyId } = await getKeySettings()
+
+  const aiConfigs = await configSdk.fetch()
+  const modelIds = aiConfigs
+    .map(c => c.liteLLMModelId)
+    .filter((id): id is string => !!id)
+
+  await updateKey({
+    keyId,
+    modelIds,
+  })
 }
 
 type LiteLLMPublicProvider = {
