@@ -45,6 +45,7 @@
   export let emptyAgendaText: string = "No events found"
   export let openOnDate: string = "{{ now }}"
   export let calendarType: CalendarView = "dayGridMonth"
+  export let showDayNames: boolean = true
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -130,6 +131,7 @@
           ...yearTitleFormatProps,
           ...monthTitleFormatProps,
         },
+        dayHeaders: showDayNames,
       },
       dayGridWeek: {
         titleFormat: {
@@ -137,6 +139,9 @@
           ...dayTitleFormatProps,
           ...monthTitleFormatProps,
         },
+        dayHeaderFormat: showDayNames
+          ? { weekday: "short", day: "numeric", month: "numeric" }
+          : { day: "numeric", month: "numeric" },
       },
       timeGridDay: {
         titleFormat: {
@@ -146,6 +151,9 @@
           ...weekdayTitleFormatProps,
           omitCommas: true,
         },
+        dayHeaderFormat: showDayNames
+          ? { weekday: "short", day: "numeric", month: "numeric" }
+          : { day: "numeric", month: "numeric" },
       },
       listWeek: {
         titleFormat: {
@@ -153,6 +161,7 @@
           ...dayTitleFormatProps,
           ...monthTitleFormatProps,
         },
+        listDayFormat: showDayNames ? { weekday: "long" } : false,
         noEventsContent: emptyAgendaText,
       },
     },

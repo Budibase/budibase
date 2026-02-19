@@ -9644,6 +9644,12 @@
         "defaultValue": true
       },
       {
+        "type": "boolean",
+        "label": "Show day names",
+        "key": "showDayNames",
+        "defaultValue": true
+      },
+      {
         "section": true,
         "name": "Title",
         "dependsOn": "showTitleDate",
