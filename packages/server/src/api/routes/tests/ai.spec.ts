@@ -2,12 +2,12 @@ import { z } from "zod"
 import {
   mockAISDKChatGPTResponse,
   mockChatGPTResponse,
+  mockChatGPTStreamFailure,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, setEnv, withEnv } from "@budibase/backend-core"
-import { generateText, streamText } from "ai"
+import { configs, env, setEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
   AIOperationEnum,
@@ -31,15 +31,7 @@ import {
 import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
 import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
 import { resetHttpMocking } from "../../../tests/jestEnv"
-
-jest.mock("ai", () => {
-  const actual = jest.requireActual("ai")
-  return {
-    ...actual,
-    generateText: jest.fn(actual.generateText),
-    streamText: jest.fn(actual.streamText),
-  }
-})
+import { withEnv as serverWithEnv } from "../../../environment"
 
 function toResponseFormat(schema: any, name = "response") {
   return {
@@ -86,7 +78,6 @@ function budibaseAI(): SetupFn {
 
     return setEnv({
       OPENAI_API_KEY: "test-key",
-      BBAI_OPENAI_API_KEY: "test-key",
       SELF_HOSTED: false,
     })
   }
@@ -1165,17 +1156,10 @@ describe("BudibaseAI", () => {
     let envCleanup: () => void
     let cleanup: () => Promise<void> | void
 
-    const generateTextMock = generateText as jest.MockedFunction<
-      typeof generateText
-    >
-    const streamTextMock = streamText as jest.MockedFunction<typeof streamText>
-
     beforeAll(async () => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
         ACCOUNT_PORTAL_API_KEY: internalApiKey,
-        BBAI_OPENROUTER_API_KEY: "openrouter-key",
-        OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1",
       })
     })
 
@@ -1212,19 +1196,9 @@ describe("BudibaseAI", () => {
     })
 
     it("proxies the OpenAI response without reshaping", async () => {
-      generateTextMock.mockResolvedValue({
-        response: {
-          body: {
-            object: "chat.completion",
-            choices: [
-              {
-                message: { content: "hello from openai" },
-              },
-            ],
-            usage: { total_tokens: 10 },
-          },
-        },
-      } as unknown as ReturnType<typeof generateText>)
+      mockAISDKChatGPTResponse("hello from openai", {
+        baseUrl: "http://test.litellm.com",
+      })
 
       const response = await config.api.ai.openaiChatCompletions({
         model: "budibase/v1",
@@ -1237,38 +1211,31 @@ describe("BudibaseAI", () => {
       expect(response.usage?.total_tokens).toBeGreaterThan(0)
     })
 
-    it("ignores extra fields (e.g. response_format)", async () => {
+    it("forwards extra fields (e.g. response_format)", async () => {
       const format = toResponseFormat(z.object({ value: z.string() }))
-      generateTextMock.mockResolvedValue({
-        response: {
-          body: {
-            object: "chat.completion",
-            choices: [
-              {
-                message: { content: `{"value":"ok"}` },
-              },
-            ],
-          },
-        },
-      } as unknown as ReturnType<typeof generateText>)
+      mockAISDKChatGPTResponse(`{"value":"ok"}`, {
+        baseUrl: "http://test.litellm.com",
+        format,
+      })
 
       const response = await config.api.ai.openaiChatCompletions({
         model: "budibase/v1",
         messages: [{ role: "user", content: "return json" }],
         stream: false,
-        // @ts-expect-error extra field should be ignored
+        // @ts-expect-error extra fields should be proxied through
         response_format: format,
+        temperature: 0.1,
         licenseKey,
       })
 
       expect(response.choices[0].message.content).toBe(`{"value":"ok"}`)
     })
 
-    it("returns HTTP errors when stream initialization fails", async () => {
-      streamTextMock.mockImplementation(() => {
-        const error = new Error("Unauthorized") as Error & { status: number }
-        error.status = 401
-        throw error
+    it("returns HTTP errors from upstream", async () => {
+      mockChatGPTStreamFailure({
+        baseUrl: "http://test.litellm.com",
+        status: 401,
+        errorMessage: "Unauthorized",
       })
 
       await config.api.ai.openaiChatCompletions(
@@ -1285,6 +1252,24 @@ describe("BudibaseAI", () => {
           },
         }
       )
+    })
+
+    it("increments Budibase AI credits from usage", async () => {
+      let usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+
+      mockAISDKChatGPTResponse("charged now here", {
+        baseUrl: "http://test.litellm.com",
+      })
+
+      await config.api.ai.openaiChatCompletions({
+        model: "budibase/v1",
+        messages: [{ role: "user", content: "hello there" }],
+        licenseKey,
+      })
+
+      usage = await getQuotaUsage()
+      expect(usage.monthly.current.budibaseAICredits).toBe(11)
     })
 
     it("rejects requests missing required fields", async () => {
@@ -1312,8 +1297,8 @@ describe("BudibaseAI", () => {
       )
     })
 
-    it("errors when OpenRouter API key is missing", async () => {
-      await withEnv({ BBAI_OPENROUTER_API_KEY: "" }, async () => {
+    it("errors when LiteLLM API key is missing", async () => {
+      await serverWithEnv({ BBAI_LITELLM_KEY: "" }, async () => {
         await config.api.ai.openaiChatCompletions(
           {
             model: "budibase/v1",
