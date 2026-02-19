@@ -57,6 +57,8 @@ describe("agent files", () => {
       .reply(200, { data: [] })
 
     const liteLLMScope = nock(environment.LITELLM_URL)
+      .post("/team/new")
+      .reply(200, { team_id: "team-2" })
       .post("/key/generate")
       .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
       .post("/model/new")
