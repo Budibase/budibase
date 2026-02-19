@@ -5,10 +5,10 @@
   } from "@budibase/types"
   import { ActionButton, Modal, Body, ProgressCircle } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { admin, licensing } from "@/stores/portal"
-  import { API } from "@/api"
+  import { admin } from "@/stores/portal"
   import PortalModal from "./PortalModal.svelte"
   import { bb } from "@/stores/bb"
+  import { aiLicenseStatus, ensureAILicenseStatus } from "./licenseStatus"
 
   interface Props {
     row: AIConfigResponse
@@ -18,9 +18,9 @@
 
   let isEdit = $derived(!!row._id)
   let isBBAI = $derived(row.provider === BUDIBASE_AI_PROVIDER_ID)
+  let licenseStatus = $derived($aiLicenseStatus)
 
   let enableBBAIModal = $state<Modal | null>()
-  let licenseStatus = $state<"checking" | "has_key" | "missing_key">("checking")
   let pendingOpen = $state(false)
 
   function openConfig() {
@@ -46,24 +46,11 @@
   }
 
   onMount(async () => {
-    try {
-      const license = $licensing.license
-      const isOfflineLicense = () => license && "identifier" in license
-      if (isOfflineLicense()) {
-        licenseStatus = "has_key"
-      } else {
-        const licenseKeyResponse = await API.getLicenseKey()
-        licenseStatus = licenseKeyResponse?.licenseKey
-          ? "has_key"
-          : "missing_key"
-        if (pendingOpen && licenseStatus === "has_key") {
-          pendingOpen = false
-          enableBBAIModal?.hide()
-          openConfig()
-        }
-      }
-    } catch {
-      licenseStatus = "missing_key"
+    await ensureAILicenseStatus()
+    if (pendingOpen && licenseStatus === "has_key") {
+      pendingOpen = false
+      enableBBAIModal?.hide()
+      openConfig()
     }
   })
 </script>
