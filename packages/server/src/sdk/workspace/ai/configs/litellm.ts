@@ -46,7 +46,6 @@ export async function addModel({
   credentialFields,
   configType,
   reasoningEffort,
-  validate = true,
 }: {
   provider: string
   model: string
@@ -54,17 +53,7 @@ export async function addModel({
   credentialFields: Record<string, string>
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
-  validate?: boolean
 }): Promise<string> {
-  if (validate) {
-    await validateConfig({
-      provider,
-      name: model,
-      credentialFields,
-      configType,
-    })
-  }
-
   const litellmParams = buildLiteLLMParams({
     provider: await mapToLiteLLMProvider(provider),
     name: model,
@@ -111,8 +100,6 @@ export async function updateModel({
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
 }) {
-  await validateConfig({ provider, name, credentialFields, configType })
-
   const litellmParams = buildLiteLLMParams({
     provider: await mapToLiteLLMProvider(provider),
     name: name,
@@ -163,7 +150,6 @@ async function validateEmbeddingConfig(model: {
       displayName: `tmp-${model.name}`,
       credentialFields: model.credentialFields,
       configType: AIConfigType.EMBEDDINGS,
-      validate: false,
     })
 
     const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
@@ -246,7 +232,7 @@ async function validateCompletionsModel(model: {
   }
 }
 
-async function validateConfig(model: {
+export async function validateConfig(model: {
   provider: string
   name: string
   credentialFields: Record<string, string>

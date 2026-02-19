@@ -694,7 +694,7 @@ Any constraints the agent must follow.
       Select which provider and model to use for the agent.{" "}
       <button
         class="link-button"
-        onclick={() => bb.settings("/ai-config/configs")}
+        onclick={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
       >
         View AI Connectors.
       </button>
@@ -709,7 +709,7 @@ Any constraints the agent must follow.
           icon="sparkle"
           iconWeight="fill"
           iconColor="#8777D1"
-          on:click={() => bb.settings("/ai-config/configs")}
+          on:click={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
         >
           Connect AI Model
         </Button>
