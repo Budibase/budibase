@@ -99,6 +99,7 @@
 
   interface WorkspaceExistingUserResult {
     usersToInvite: UserInfo[]
+    addedToWorkspaceEmails: string[]
     assignedCount: number
     failedCount: number
   }
@@ -117,6 +118,7 @@
   let selectedRows: User[] = []
   let selectedWorkspaceUser: User | null = null
   let bulkSaveResponse: BulkUserCreated
+  let addedToWorkspaceEmails: string[] = []
 
   let currentWorkspaceId = ""
   let workspaceReady = false
@@ -388,6 +390,7 @@
     if (!currentWorkspaceId) {
       return {
         usersToInvite: userData.users,
+        addedToWorkspaceEmails: [],
         assignedCount: 0,
         failedCount: 0,
       }
@@ -398,7 +401,7 @@
       existingUsers.map(user => [user.email.toLowerCase(), user])
     )
     const usersToInvite: UserInfo[] = []
-    const usersToAssign: { user: UserDoc; role: string }[] = []
+    const usersToAssign: { user: UserDoc; role: string; email: string }[] = []
 
     for (const user of userData.users) {
       const existingUser = existingByEmail.get(user.email.toLowerCase())
@@ -408,12 +411,12 @@
       }
       const role = getWorkspaceRole(user.role, user.appRole)
       if (role && existingUser._id) {
-        usersToAssign.push({ user: existingUser, role })
+        usersToAssign.push({ user: existingUser, role, email: user.email })
       }
     }
 
     const assignmentResults = await Promise.allSettled(
-      usersToAssign.map(async ({ user, role }) => {
+      usersToAssign.map(async ({ user, role, email }) => {
         let rev = user._rev
         if (!rev && user._id) {
           const fullUser = await users.get(user._id)
@@ -423,14 +426,23 @@
           throw new Error("User ID or revision missing")
         }
         await users.addUserToWorkspace(user._id, role, rev)
+        return email
       })
     )
 
+    const successfulAssignments = assignmentResults
+      .filter(
+        (
+          result
+        ): result is PromiseFulfilledResult<string> =>
+          result.status === "fulfilled"
+      )
+      .map(result => result.value)
+
     return {
       usersToInvite,
-      assignedCount: assignmentResults.filter(
-        result => result.status === "fulfilled"
-      ).length,
+      addedToWorkspaceEmails: successfulAssignments,
+      assignedCount: successfulAssignments.length,
       failedCount: assignmentResults.filter(
         result => result.status === "rejected"
       ).length,
@@ -465,13 +477,15 @@
 
   async function createUsers() {
     try {
+      addedToWorkspaceEmails = []
       let usersForCreation = await removingDuplicities(userData)
 
       if (isWorkspaceOnly) {
         const result = await assignExistingUsersToWorkspace(usersForCreation)
         usersForCreation = { ...usersForCreation, users: result.usersToInvite }
+        addedToWorkspaceEmails = result.addedToWorkspaceEmails
 
-        if (result.assignedCount) {
+        if (result.assignedCount && !usersForCreation.users.length) {
           notifications.success("Users added to workspace")
         }
         if (result.failedCount) {
@@ -769,6 +783,7 @@
   <PasswordModal
     createUsersResponse={bulkSaveResponse}
     userData={userData.users}
+    {addedToWorkspaceEmails}
   />
 </Modal>
 
