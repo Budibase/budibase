@@ -155,6 +155,11 @@ class StreamTransform extends Transform {
     const lines = this.buffer.split("\n")
     this.buffer = lines.pop() ?? ""
 
+    if (lines.length === 0) {
+      callback()
+      return
+    }
+
     const output = lines.map(line => this.processLine(line)).join("\n") + "\n"
     callback(null, Buffer.from(output, "utf8"))
   }
