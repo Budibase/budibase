@@ -54,7 +54,7 @@
         <AIConfigList configs={embeddingConfigs}></AIConfigList>
       {:else}
         <div class="no-enabled">
-          <Body size="S">No embeddings configurations yet</Body>
+          <Body size="XS">No embeddings configurations yet</Body>
         </div>
       {/if}
     </div>
@@ -74,7 +74,7 @@
         </div>
       {:else}
         <div class="no-enabled">
-          <Body size="S">No vector databases configured yet</Body>
+          <Body size="XS">No vector databases configured yet</Body>
         </div>
       {/if}
     </div>
@@ -106,10 +106,8 @@
   }
 
   .section-title {
-    margin-bottom: var(--spacing-m);
-    font-weight: 600;
-    font-size: 16px;
-    color: var(--ink);
+    font-size: 13px;
+    color: var(--grey-7, #a2a2a2);
   }
 
   .section-header {
@@ -117,7 +115,6 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
-    margin-bottom: var(--spacing-m);
   }
 
   .section-header .section-title {
