@@ -148,8 +148,22 @@
     return appRole
   }
 
+  const getRoleFromWorkspaceRole = (workspaceRole?: string) => {
+    if (workspaceRole === Constants.Roles.CREATOR) {
+      return Constants.BudibaseRoles.Creator
+    }
+    if (workspaceRole) {
+      return Constants.BudibaseRoles.AppUser
+    }
+    return undefined
+  }
+
   const createDraft = (user: WorkspaceUser): UserDraft => {
-    const role = users.getUserRole(user)
+    const globalRole = users.getUserRole(user)
+    const role =
+      globalRole === Constants.BudibaseRoles.Owner
+        ? globalRole
+        : getRoleFromWorkspaceRole(user.workspaceRole) || globalRole
     const appRole =
       user.roles?.[workspaceId] ||
       (user.workspaceRole === Constants.Roles.GROUP
