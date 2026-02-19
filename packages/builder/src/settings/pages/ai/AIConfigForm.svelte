@@ -2,7 +2,7 @@
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
   import { aiConfigsStore } from "@/stores/portal"
-  import { Button, Input, notifications, Select } from "@budibase/bbui"
+  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
   import type {
     AIConfigResponse,
     CreateAIConfigRequest,
@@ -27,8 +27,6 @@
   let config = $derived(
     $aiConfigsStore.customConfigs.find(c => c._id === configId)
   )
-
-  const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value))
 
   const createDraft = (): AIConfigResponse =>
     config?._id && provider
@@ -133,7 +131,7 @@
     try {
       isSaving = true
       if (draft._id) {
-        const payload = clone(draft)
+        const payload = Helpers.cloneDeep(draft)
         const updated = await aiConfigsStore.updateConfig(payload)
         draft._rev = updated._rev
         payload._rev = updated._rev
@@ -144,7 +142,7 @@
           )} configuration updated`
         )
       } else {
-        const { _id, ...rest } = clone(draft)
+        const { _id, ...rest } = Helpers.cloneDeep(draft)
         if (
           rest.configType === AIConfigType.COMPLETIONS &&
           !$aiConfigsStore.customConfigs.some(
