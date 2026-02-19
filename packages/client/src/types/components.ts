@@ -7,5 +7,4 @@ export type Component = Readable<{
   editing: boolean
   errorState: boolean
   path: string[]
-  type?: string
 }>
