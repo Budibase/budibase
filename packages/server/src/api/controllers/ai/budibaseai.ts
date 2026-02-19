@@ -2,6 +2,7 @@ import { env } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   AIQuotaUsageResponse,
+  BUDIBASE_AI_MODEL_MAP,
   ChatCompletionRequestV2,
   type ChatCompletionRequest,
   type ChatCompletionResponse,
@@ -12,9 +13,9 @@ import {
 import nodeFetch from "node-fetch"
 import { Transform, type TransformCallback } from "stream"
 import { pipeline } from "stream/promises"
+import environment from "../../../environment"
 import {
   incrementBudibaseAICreditsFromTokenUsage,
-  resolveBudibaseAIProviderRequest,
 } from "../../../sdk/workspace/ai/llm/bbaiShared"
 
 export async function uploadFile(
@@ -98,12 +99,6 @@ const tryReadProviderErrorMessage = async (
 class StreamTransform extends Transform {
   private buffer = ""
   private creditsSynced = false
-  private remapReasoning: boolean
-
-  constructor(opts?: { remapReasoning?: boolean }) {
-    super()
-    this.remapReasoning = opts?.remapReasoning ?? false
-  }
 
   private processLine(line: string): string {
     if (!line.startsWith("data:")) {
@@ -123,20 +118,6 @@ class StreamTransform extends Transform {
         ).catch(error =>
           console.error("Failed to update credits from stream chunk", error)
         )
-      }
-
-      if (this.remapReasoning && parsed?.choices) {
-        let modified = false
-        for (const choice of parsed.choices) {
-          if (choice.delta?.reasoning !== undefined) {
-            choice.delta.reasoning_content = choice.delta.reasoning
-            delete choice.delta.reasoning
-            modified = true
-          }
-        }
-        if (modified) {
-          return `data: ${JSON.stringify(parsed)}`
-        }
       }
 
       return line
@@ -175,6 +156,17 @@ class StreamTransform extends Transform {
   }
 }
 
+const buildCompletionsUrl = (baseUrl: string) => {
+  const normalized = baseUrl.replace(/\/$/, "")
+  if (normalized.endsWith("/chat/completions")) {
+    return normalized
+  }
+  if (normalized.endsWith("/v1")) {
+    return `${normalized}/chat/completions`
+  }
+  return `${normalized}/v1/chat/completions`
+}
+
 export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
   const body = ctx.request.body
   const messages = body.messages
@@ -193,12 +185,21 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     ctx.throw(400, "Missing required field: model")
   }
 
-  const providerRequest = resolveBudibaseAIProviderRequest(model)
+  if (!(model in BUDIBASE_AI_MODEL_MAP)) {
+    ctx.throw(400, `Unsupported BBAI model: ${model}`)
+  }
 
-  const providerUrl = `${providerRequest.baseUrl.replace(/\/$/, "")}/chat/completions`
+  if (!environment.LITELLM_URL) {
+    ctx.throw(500, "LITELLM_URL not configured")
+  }
+  if (!environment.LITELLM_MASTER_KEY) {
+    ctx.throw(500, "LITELLM_MASTER_KEY not configured")
+  }
+
+  const providerUrl = buildCompletionsUrl(environment.LITELLM_URL)
   const providerBody = {
     ...body,
-    model: providerRequest.model,
+    model,
     stream,
     include_reasoning: true,
     reasoning_effort: body.reasoning_effort ?? "medium",
@@ -207,7 +208,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
   const providerResponse = await nodeFetch(providerUrl, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${providerRequest.apiKey}`,
+      Authorization: `Bearer ${environment.LITELLM_MASTER_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(providerBody),
@@ -230,9 +231,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     ctx.res.setHeader("X-Accel-Buffering", "no")
     ctx.respond = false
 
-    const usageTrackingStream = new StreamTransform({
-      remapReasoning: providerRequest.provider === "openrouter",
-    })
+    const usageTrackingStream = new StreamTransform()
     try {
       await pipeline(providerResponse.body, usageTrackingStream, ctx.res)
     } catch (error) {
@@ -261,19 +260,8 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
 
   const json = (await providerResponse.json()) as {
     usage?: CompletionUsage
-    choices?: Array<{ message?: { reasoning?: string } }>
   }
   await incrementBudibaseAICreditsFromTokenUsage(toBudibaseUsage(json.usage))
-
-  if (providerRequest.provider === "openrouter" && json.choices) {
-    for (const choice of json.choices) {
-      if (choice.message?.reasoning !== undefined) {
-        ;(choice.message as Record<string, unknown>).reasoning_content =
-          choice.message.reasoning
-        delete choice.message.reasoning
-      }
-    }
-  }
 
   ctx.body = json
 }

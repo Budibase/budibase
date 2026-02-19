@@ -4,9 +4,13 @@ import {
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
+import {
+  setEnv as setServerEnv,
+  withEnv as withServerEnv,
+} from "../../../environment"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { configs, env, setEnv, withEnv } from "@budibase/backend-core"
+import { configs, env, setEnv } from "@budibase/backend-core"
 import {
   AIInnerConfig,
   AIOperationEnum,
@@ -1153,19 +1157,23 @@ describe("BudibaseAI", () => {
     let licenseKey = "test-key"
     let internalApiKey = "api-key"
     let envCleanup: () => void
+    let serverEnvCleanup: () => void
     let cleanup: () => Promise<void> | void
 
     beforeAll(async () => {
       envCleanup = setEnv({
         SELF_HOSTED: false,
         ACCOUNT_PORTAL_API_KEY: internalApiKey,
-        BBAI_OPENROUTER_API_KEY: "openrouter-key",
-        OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1",
+      })
+      serverEnvCleanup = setServerEnv({
+        LITELLM_URL: "http://litellm.internal:4000",
+        LITELLM_MASTER_KEY: "litellm-key",
       })
     })
 
     afterAll(async () => {
       envCleanup()
+      serverEnvCleanup()
     })
 
     beforeEach(async () => {
@@ -1196,10 +1204,11 @@ describe("BudibaseAI", () => {
     })
 
     it("proxies provider responses without reshaping", async () => {
-      const providerScope = nock("https://openrouter.ai")
-        .post("/api/v1/chat/completions", body => {
+      const providerScope = nock("http://litellm.internal:4000")
+        .matchHeader("authorization", "Bearer litellm-key")
+        .post("/v1/chat/completions", body => {
           expect(body).toMatchObject({
-            model: "google/gemini-3-flash-preview",
+            model: "budibase/v1",
             messages: [{ role: "user", content: "hello" }],
           })
           return true
@@ -1228,10 +1237,11 @@ describe("BudibaseAI", () => {
 
     it("forwards extra OpenAI-compatible fields as-is", async () => {
       const format = toResponseFormat(z.object({ value: z.string() }))
-      const providerScope = nock("https://openrouter.ai")
-        .post("/api/v1/chat/completions", body => {
+      const providerScope = nock("http://litellm.internal:4000")
+        .matchHeader("authorization", "Bearer litellm-key")
+        .post("/v1/chat/completions", body => {
           expect(body).toMatchObject({
-            model: "google/gemini-3-flash-preview",
+            model: "budibase/v1",
             response_format: format,
             tools: [
               {
@@ -1298,8 +1308,9 @@ describe("BudibaseAI", () => {
     })
 
     it("returns provider HTTP errors for stream requests", async () => {
-      nock("https://openrouter.ai")
-        .post("/api/v1/chat/completions")
+      nock("http://litellm.internal:4000")
+        .matchHeader("authorization", "Bearer litellm-key")
+        .post("/v1/chat/completions")
         .reply(401, {
           error: {
             message: "Unauthorized",
@@ -1347,8 +1358,27 @@ describe("BudibaseAI", () => {
       )
     })
 
-    it("errors when OpenRouter API key is missing", async () => {
-      await withEnv({ BBAI_OPENROUTER_API_KEY: "" }, async () => {
+    it("errors when LiteLLM master key is missing", async () => {
+      await withServerEnv(
+        {
+          LITELLM_MASTER_KEY: "",
+        },
+        async () => {
+          await config.api.ai.openaiChatCompletions(
+            {
+              model: "budibase/v1",
+              messages: [{ role: "user", content: "hello" }],
+              stream: false,
+              licenseKey,
+            },
+            { status: 500 }
+          )
+        }
+      )
+    })
+
+    it("errors when LiteLLM URL is missing", async () => {
+      await withServerEnv({ LITELLM_URL: "" }, async () => {
         await config.api.ai.openaiChatCompletions(
           {
             model: "budibase/v1",
