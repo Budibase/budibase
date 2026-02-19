@@ -197,7 +197,7 @@
               1
             )} configuration deleted`
           )
-          bb.settings("/ai-config/configs")
+          bb.settings(`/ai-config/${draft.configType}`)
         } catch (err: any) {
           notifications.error(
             err.message || `Failed to delete ${typeLabel} configuration`
