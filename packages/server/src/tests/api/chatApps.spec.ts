@@ -1,10 +1,5 @@
 import { context, docIds, roles } from "@budibase/backend-core"
-import type {
-  Agent,
-  ChatApp,
-  ChatConversation,
-  User,
-} from "@budibase/types"
+import type { Agent, ChatApp, ChatConversation, User } from "@budibase/types"
 import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 

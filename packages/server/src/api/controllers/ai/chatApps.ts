@@ -9,10 +9,7 @@ import {
 import { sdk as usersSdk } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 
-export const assertChatAppIsLiveForUser = (
-  ctx: UserCtx,
-  chatApp: ChatApp
-) => {
+export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
   const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(ctx.user)
   if (!isBuilderOrAdmin && chatApp.live !== true) {
     throw new HTTPError("Chat app is not live", 403)
