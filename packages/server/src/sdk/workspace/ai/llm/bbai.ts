@@ -4,12 +4,13 @@ import type {
   LanguageModelV3StreamPart,
   LanguageModelV3Usage,
 } from "@ai-sdk/provider"
-import { env, HTTPError } from "@budibase/backend-core"
+import { HTTPError } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { BUDIBASE_AI_MODEL_MAP } from "@budibase/types"
 import { wrapLanguageModel } from "ai"
 import { TransformStream } from "node:stream/web"
 import { LLMResponse } from "."
+import environment from "../../../../environment"
 
 const calculateBudibaseAICredits = (usage?: LanguageModelV3Usage): number => {
   if (!usage) {
@@ -55,34 +56,16 @@ const availableBudibaseAIModels: typeof BUDIBASE_AI_MODEL_MAP = {
 }
 
 export async function createBBAIClient(model: string): Promise<LLMResponse> {
-  const bbaiModel = availableBudibaseAIModels[model]
-  if (!bbaiModel) {
+  if (!availableBudibaseAIModels[model]) {
     throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
   }
 
-  const { provider } = bbaiModel
-
-  let apiKey: string | undefined
-  let baseURL: string | undefined
-  if (provider === "openai") {
-    apiKey = env.BBAI_OPENAI_API_KEY
-  } else if (provider === "openrouter") {
-    apiKey = env.BBAI_OPENROUTER_API_KEY
-    baseURL = env.OPENROUTER_BASE_URL
-    if (!baseURL) {
-      throw new HTTPError("OPENROUTER_BASE_URL not configured", 500)
-    }
-  } else {
-    throw new HTTPError(`Unsupported BBAI provider: ${provider}`, 400)
-  }
-
-  if (!apiKey) {
-    throw new HTTPError(`${provider.toUpperCase()} API key not configured`, 500)
-  }
-
-  const client = createOpenAI({ apiKey, baseURL })
+  const client = createOpenAI({
+    apiKey: environment.BBAI_LITELLM_KEY,
+    baseURL: environment.LITELLM_URL,
+  })
   const chat = wrapLanguageModel({
-    model: client.chat(bbaiModel.model),
+    model: client.chat(model),
     middleware: {
       specificationVersion: "v3",
       async wrapGenerate({ doGenerate }) {
