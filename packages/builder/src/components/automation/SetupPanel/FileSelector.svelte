@@ -6,7 +6,6 @@
     DrawerBindableInput,
     ServerBindingPanel as AutomationBindingPanel,
   } from "@/components/common/bindings"
-  import { type KeyValuePair } from "@/types/automations"
 
   export let useAttachmentBinding
   export let buttonText
@@ -32,12 +31,14 @@
     return params
   }
 
-  const handleKeyValueChange = (e: CustomEvent<KeyValuePair[]>) => {
+  const handleKeyValueChange = (e: CustomEvent) => {
     const update = {
-      [key]: e.detail.map(({ name, value }) => ({
-        url: name,
-        filename: value,
-      })),
+      [key]: e.detail.fields.map(
+        ({ name, value }: { name: string; value: string }) => ({
+          url: name,
+          filename: value,
+        })
+      ),
     }
 
     dispatch("change", update)

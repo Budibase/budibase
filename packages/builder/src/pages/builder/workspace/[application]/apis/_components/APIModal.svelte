@@ -160,9 +160,9 @@
         integration: restIntegration,
         config,
         name: buildDatasourceName(selectedTemplate, targetSpec),
-        ...(template.restTemplateName && targetSpec?.version
+        ...(template.restTemplateId && targetSpec?.version
           ? {
-              restTemplate: template.restTemplateName,
+              restTemplateId: template.restTemplateId,
               restTemplateVersion: targetSpec.version,
             }
           : {}),
@@ -204,7 +204,7 @@
         description: event.detail.template.description,
         specs: event.detail.template.specs,
         icon: event.detail.template.icon,
-        restTemplateName: event.detail.template.name,
+        restTemplateId: event.detail.template.id,
       })
       return
     }
@@ -233,7 +233,7 @@
       description: selectedTemplate.description,
       specs: selectedTemplate.specs,
       icon: group.icon,
-      restTemplateName: selectedTemplate.name,
+      restTemplateId: selectedTemplate.id,
     })
   }
 </script>

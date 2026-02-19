@@ -6,11 +6,22 @@
 
   $: matched = $bb.settings.route
   $: route = matched?.entry
+
+  $: handleSectionClick = () => {
+    if (route?.crumbs?.length) {
+      const firstCrumb = route.crumbs[0]
+      if (firstCrumb?.path) {
+        bb.settings(firstCrumb.path)
+      }
+    }
+  }
 </script>
 
 <div class="route-header">
   {#if route?.nav?.length}
-    <div class="section-header">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div class="section-header" on:click={handleSectionClick}>
       {route?.section || ""}
     </div>
     <Divider noMargin size={"S"} />
@@ -48,14 +59,17 @@
         <div class="crumbs">
           <!-- Drill down -->
           <Breadcrumbs>
-            <Breadcrumb text={route?.section} />
-            {#each route?.crumbs || [] as crumb, idx}
-              {@const isLast = idx == route?.crumbs.length - 1}
-              <Breadcrumb
-                text={crumb.title}
-                {...!isLast && { onClick: () => bb.settings(crumb.path) }}
-              />
-            {/each}
+            {#if !route?.crumbs?.length}
+              <Breadcrumb text={route?.section} />
+            {:else}
+              {#each route.crumbs as crumb, idx}
+                {@const isLast = idx == route.crumbs.length - 1}
+                <Breadcrumb
+                  text={crumb.title}
+                  {...!isLast && { onClick: () => bb.settings(crumb.path) }}
+                />
+              {/each}
+            {/if}
           </Breadcrumbs>
         </div>
         <!-- Registered on the page itself -->

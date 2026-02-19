@@ -7,9 +7,11 @@ import {
 import {
   Datasource,
   DatasourcePlus,
+  DocumentType,
   Query,
   QueryVerb,
   Row,
+  SEPARATOR,
   SourceName,
   SSOUser,
 } from "@budibase/types"
@@ -313,12 +315,41 @@ class QueryRunner {
     return value
   }
 
+  async getAuthSourceStaticVariables(): Promise<Record<string, string>> {
+    const authSourceId = this.fields?.authSourceId
+    if (!authSourceId) {
+      return {}
+    }
+
+    const workspaceConnectionPrefix = `${DocumentType.WORKSPACE_CONNECTION}${SEPARATOR}`
+    const datasourcePrefix = `${DocumentType.DATASOURCE}${SEPARATOR}`
+
+    if (authSourceId.startsWith(workspaceConnectionPrefix)) {
+      const { connection } = await sdk.connections.getWithEnvVars(authSourceId)
+      return connection?.props?.staticVariables || {}
+    }
+
+    if (authSourceId.startsWith(datasourcePrefix)) {
+      const { datasource } = await sdk.datasources.getWithEnvVars(authSourceId)
+      return datasource?.config?.staticVariables || {}
+    }
+
+    return {}
+  }
+
   async addDatasourceVariables() {
     let { datasource, parameters, fields } = this
     if (!datasource || !datasource.config) {
       return parameters
     }
-    const staticVars = datasource.config.staticVariables || {}
+
+    // When a workspace connection is the auth source, use its static
+    // variables exclusively. Otherwise fall back to the datasource's.
+    const connectionStaticVars = await this.getAuthSourceStaticVariables()
+    const staticVars =
+      Object.keys(connectionStaticVars).length > 0
+        ? connectionStaticVars
+        : datasource.config.staticVariables || {}
     const dynamicVars = datasource.config.dynamicVariables || []
     for (let [staticBindingKey, staticBindingValue] of Object.entries(
       staticVars

@@ -2,6 +2,7 @@
   import { isActive, goto, params } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
   import { contextMenuStore, userSelectedResourceMap } from "@/stores/builder"
+  import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import NavItem from "@/components/common/NavItem.svelte"
   import { SourceName } from "@budibase/types"
@@ -19,8 +20,8 @@
   export let datasource
 
   $: templateIcon =
-    datasource?.restTemplate && $restTemplates
-      ? restTemplates.getByName(datasource.restTemplate)?.icon
+    getRestTemplateIdentifier(datasource) && $restTemplates
+      ? restTemplates.get(getRestTemplateIdentifier(datasource))?.icon
       : undefined
 
   let editModal

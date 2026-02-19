@@ -8,6 +8,7 @@ import * as common from "./workspace/common"
 import { default as datasources } from "./workspace/datasources"
 import { default as deployment } from "./workspace/deployment"
 import * as workspace from "./workspace/favourites"
+import * as connections from "./workspace/connections"
 import { default as links } from "./workspace/links"
 import * as navigation from "./workspace/navigation"
 import * as oauth2 from "./workspace/oauth2"
@@ -46,6 +47,7 @@ const sdk = {
   deployment,
   dev,
   workspace,
+  connections,
 }
 
 // default export for TS

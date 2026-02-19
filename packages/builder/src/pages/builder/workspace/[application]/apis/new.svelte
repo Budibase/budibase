@@ -303,7 +303,7 @@
             ? restIntegration.plus
             : undefined,
         isSQL: restIntegration.isSQL,
-        restTemplate: pendingTemplate.name,
+        restTemplateId: pendingTemplate.id,
         restTemplateVersion: pendingSpec.version,
       }
 
@@ -408,6 +408,7 @@
     }
     templateGroupModal?.hide()
     selectTemplate({
+      id: selectedTemplateGroupItem.id,
       name: selectedTemplateGroupItem.name,
       description: selectedTemplateGroupItem.description,
       specs: selectedTemplateGroupItem.specs,

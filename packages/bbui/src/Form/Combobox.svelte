@@ -14,6 +14,8 @@
   export let placeholder = "Choose an option or type"
   export let options: O[] = []
   export let helpText: string | undefined = undefined
+  export let required: boolean | undefined = false
+
   const extractProperty = (item: O, property: string): string => {
     if (item && typeof item === "object" && property in item) {
       const record = item as Record<string, unknown>
@@ -52,7 +54,7 @@
   }
 </script>
 
-<Field {helpText} {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error} {required}>
   <Combobox
     {disabled}
     {value}

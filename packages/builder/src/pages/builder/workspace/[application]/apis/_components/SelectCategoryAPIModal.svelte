@@ -230,7 +230,6 @@
     bind:this={scrollContainer}
     on:scroll={handleScroll}
   >
-    <div class="shadow"></div>
     <div class="contents">
       {#if activeGroup}
         <div class="group-step">
@@ -346,9 +345,11 @@
     opacity: 0.6;
   }
 
-  .api img {
-    width: 100%;
-    height: 100%;
+  .api-icon img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
   }
 
@@ -369,6 +370,7 @@
     align-items: center;
     flex-shrink: 0;
     margin-right: 10px;
+    overflow: hidden;
   }
 
   .api-icon.group-icon {

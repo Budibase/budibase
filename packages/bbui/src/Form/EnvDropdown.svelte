@@ -14,11 +14,15 @@
   export let error: string | undefined = undefined
   export let updateOnChange = true
   export let autofocus: boolean = false
+  export let autocomplete: HTMLInputElement["autocomplete"] | undefined =
+    undefined
   export let variables: { name: string }[] = []
   export let showModal: () => void
   export let helpText: string | undefined = undefined
   export let environmentVariablesEnabled: boolean = false
   export let handleUpgradePanel: () => void = () => {}
+  export let required: boolean | undefined = false
+
   const dispatch = createEventDispatcher()
   const onChange = (e: any) => {
     value = e.detail
@@ -26,7 +30,7 @@
   }
 </script>
 
-<Field {helpText} {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error} {required}>
   <EnvDropdown
     {updateOnChange}
     {disabled}
@@ -35,6 +39,7 @@
     {placeholder}
     {type}
     {autofocus}
+    {autocomplete}
     {variables}
     {showModal}
     {environmentVariablesEnabled}

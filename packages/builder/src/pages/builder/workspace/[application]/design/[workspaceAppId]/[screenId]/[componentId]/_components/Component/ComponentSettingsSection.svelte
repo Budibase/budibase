@@ -4,7 +4,7 @@
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "@/components/design/settings/controls/ResetFieldsButton.svelte"
   import EjectBlockButton from "@/components/design/settings/controls/EjectBlockButton.svelte"
-  import { getComponentForSetting } from "@/components/design/settings/componentSettings"
+  import { getComponentForSetting } from "@/components/design/settings/componentSettingsRegistry"
   import InfoDisplay from "./InfoDisplay.svelte"
   import analytics, { Events } from "@/analytics"
   import { shouldDisplaySetting } from "@budibase/frontend-core"

@@ -42,6 +42,7 @@ import "./view"
 import "./webhook"
 import "./workspace"
 import "./workspaceApp"
+import "./workspaceConnection"
 import "./workspaceHome"
 import "./workspaceFavourites"
 

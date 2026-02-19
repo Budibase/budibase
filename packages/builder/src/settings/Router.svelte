@@ -13,20 +13,20 @@
   const routing = writable<Routing>({})
   setContext("routing", routing)
 
-  // Load the comp
+  // Load the component
   let page: Component<Record<string, unknown>> | undefined
 
   $: memoRoute.set(route)
 
   $: entry = $memoRoute?.entry
   $: path = entry?.path
-  $: comp = entry?.comp
+  $: component = entry?.component
 
   $: params = { ...($memoRoute?.params || {}) }
   $: routing.update(state => ({ ...state, params: { ...params } }))
 
-  $: if (path && comp) {
-    page = comp
+  $: if (path && component) {
+    page = component
   }
 </script>
 

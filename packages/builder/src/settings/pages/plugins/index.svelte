@@ -19,9 +19,9 @@
   import AddPluginModal from "./_components/AddPluginModal.svelte"
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import UsedInAppsRenderer from "./_components/UsedInAppsRenderer.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { routeActions } from "@/settings/pages"
   import type { StoreApp } from "@/types"
 
   interface PluginTableRow extends Plugin {
@@ -269,49 +269,51 @@
     </Banner>
   {/if}
   <Layout noPadding gap="S">
-    <div use:routeActions class="controls">
-      <ActionButton
-        size="M"
-        quiet
-        on:click={() =>
-          window
-            ?.open("https://github.com/Budibase/plugins", "_blank")
-            ?.focus()}
-      >
-        <Icon
-          name={"github-logo"}
+    <RouteActions>
+      <div class="controls">
+        <ActionButton
           size="M"
-          weight="fill"
-          tooltip={"Github repo"}
-          tooltipPosition={TooltipPosition.Top}
-        />
-      </ActionButton>
-      {#if $plugins?.length}
-        <div class="filters">
-          <div class="select">
-            <Select
-              bind:value={filter}
-              placeholder={undefined}
-              options={filterOptions}
-              autoWidth
-            />
-          </div>
-        </div>
-      {/if}
-      <div class="actions">
-        {#if selectedRows.length}
-          <Button
+          quiet
+          on:click={() =>
+            window
+              ?.open("https://github.com/Budibase/plugins", "_blank")
+              ?.focus()}
+        >
+          <Icon
+            name={"github-logo"}
             size="M"
-            warning
-            on:click={bulkDeleteDialog.show}
-            disabled={deletingPlugins}
-          >
-            Delete selected ({selectedRows.length})
-          </Button>
+            weight="fill"
+            tooltip={"Github repo"}
+            tooltipPosition={TooltipPosition.Top}
+          />
+        </ActionButton>
+        {#if $plugins?.length}
+          <div class="filters">
+            <div class="select">
+              <Select
+                bind:value={filter}
+                placeholder={undefined}
+                options={filterOptions}
+                autoWidth
+              />
+            </div>
+          </div>
         {/if}
-        <Button size="M" on:click={modal.show} cta>Add plugin</Button>
+        <div class="actions">
+          {#if selectedRows.length}
+            <Button
+              size="M"
+              warning
+              on:click={bulkDeleteDialog.show}
+              disabled={deletingPlugins}
+            >
+              Delete selected ({selectedRows.length})
+            </Button>
+          {/if}
+          <Button size="M" on:click={modal.show} cta>Add plugin</Button>
+        </div>
       </div>
-    </div>
+    </RouteActions>
 
     {#if $plugins?.length}
       <Table

@@ -19,7 +19,7 @@
     type TranslationCategory,
   } from "@budibase/shared-core"
   import type { TranslationDetail } from "@budibase/types"
-  import { routeActions } from "@/settings/pages"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import TranslationValueCell from "./_components/TranslationValueCell.svelte"
 
@@ -211,7 +211,7 @@
         on:buttonclick={onButtonClick}
       />
       <div class="actions">
-        <div use:routeActions class="controls">
+        <RouteActions>
           <Button
             cta
             on:click={saveOverrides}
@@ -219,7 +219,7 @@
           >
             {saving ? "Saving..." : "Save"}
           </Button>
-        </div>
+        </RouteActions>
       </div>
     </div>
   </Layout>

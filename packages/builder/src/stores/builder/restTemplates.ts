@@ -1,7 +1,8 @@
-import {
+import type {
   RestTemplate,
   RestTemplateGroup,
   RestTemplateGroupName,
+  RestTemplateId,
   RestTemplateName,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
@@ -103,6 +104,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
   operationsCount: 1274,
   templates: [
     {
+      id: "hubspot-account-info",
       name: "HubSpot Account Info",
       description: "Get information about a HubSpot account and its API usage.",
       specs: [
@@ -114,6 +116,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-actions-v4",
       name: "HubSpot Actions V4",
       description: "HubSpot Automation Actions V4 API.",
       specs: [
@@ -125,6 +128,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 16,
     },
     {
+      id: "hubspot-app-uninstalls",
       name: "HubSpot App Uninstalls",
       description: "HubSpot CRM App Uninstalls API.",
       specs: [
@@ -136,6 +140,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 1,
     },
     {
+      id: "hubspot-appointments",
       name: "HubSpot Appointments",
       description: "HubSpot Appointments API.",
       specs: [
@@ -147,6 +152,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-associations",
       name: "HubSpot Associations",
       description: "HubSpot Associations API.",
       specs: [
@@ -158,6 +164,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 23,
     },
     {
+      id: "hubspot-associations-schema",
       name: "HubSpot Associations Schema",
       description: "HubSpot CRM Associations Schema API.",
       specs: [
@@ -169,6 +176,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 9,
     },
     {
+      id: "hubspot-audit-logs",
       name: "HubSpot Audit Logs",
       description: "Get information about a HubSpot account and its API usage.",
       specs: [
@@ -180,6 +188,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 3,
     },
     {
+      id: "hubspot-authors",
       name: "HubSpot Authors",
       description:
         "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
@@ -192,6 +201,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 14,
     },
     {
+      id: "hubspot-automation-v4",
       name: "HubSpot Automation V4",
       description: "HubSpot Automation V4 API.",
       specs: [
@@ -203,6 +213,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 8,
     },
     {
+      id: "hubspot-blog-settings",
       name: "HubSpot Blog Settings",
       description: "Use these endpoints for interacting with Blog objects",
       specs: [
@@ -214,6 +225,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 9,
     },
     {
+      id: "hubspot-bucket-test111",
       name: "HubSpot Bucket_Test111",
       description: "HubSpot Bucket_Test111 API.",
       specs: [
@@ -225,6 +237,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 10,
     },
     {
+      id: "hubspot-business-units",
       name: "HubSpot Business Units",
       description: "Retrieve Business Unit information.",
       specs: [
@@ -236,6 +249,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 1,
     },
     {
+      id: "hubspot-calling-extensions",
       name: "HubSpot Calling Extensions",
       description: "HubSpot CRM Calling Extensions API.",
       specs: [
@@ -247,6 +261,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 12,
     },
     {
+      id: "hubspot-calls",
       name: "HubSpot Calls",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -259,6 +274,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-campaigns-public-api",
       name: "HubSpot Campaigns Public Api",
       description: "HubSpot Marketing Campaigns Public Api API.",
       specs: [
@@ -270,6 +286,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 24,
     },
     {
+      id: "hubspot-carts",
       name: "HubSpot Carts",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -282,6 +299,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-cms-content-audit",
       name: "HubSpot Cms Content Audit",
       description:
         "Use this endpoint to query audit logs of CMS changes that occurred on your HubSpot account.",
@@ -294,6 +312,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 1,
     },
     {
+      id: "hubspot-commerce-payments",
       name: "HubSpot Commerce Payments",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -306,6 +325,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-commerce-subscriptions",
       name: "HubSpot Commerce Subscriptions",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -318,6 +338,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-communications",
       name: "HubSpot Communications",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -330,6 +351,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-companies",
       name: "HubSpot Companies",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -342,6 +364,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-contacts",
       name: "HubSpot Contacts",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -354,6 +377,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-contracts",
       name: "HubSpot Contracts",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -366,6 +390,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-conversations",
       name: "HubSpot Conversations",
       description: "HubSpot Conversations Inbox & Messages API.",
       specs: [
@@ -377,6 +402,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 16,
     },
     {
+      id: "hubspot-conversations-inbox-messages",
       name: "HubSpot Conversations Inbox & Messages",
       description: "HubSpot Conversations Inbox & Messages API.",
       specs: [
@@ -388,6 +414,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 16,
     },
     {
+      id: "hubspot-courses",
       name: "HubSpot Courses",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -400,6 +427,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-crm-meetings",
       name: "HubSpot CRM Meetings",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -412,6 +440,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-crm-owners",
       name: "HubSpot Crm Owners",
       description:
         "HubSpot uses **owners** to assign CRM objects to specific people in your organization. The endpoints described here are used to get a list of the owners that...",
@@ -424,6 +453,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-custom-channels",
       name: "HubSpot Custom Channels",
       description: "HubSpot Conversations Custom Channels API.",
       specs: [
@@ -435,6 +465,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 13,
     },
     {
+      id: "hubspot-custom-objects",
       name: "HubSpot Custom Objects",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -447,6 +478,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-deal-splits",
       name: "HubSpot Deal Splits",
       description: "HubSpot CRM Deal Splits API.",
       specs: [
@@ -458,6 +490,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-deals",
       name: "HubSpot Deals",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -470,6 +503,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 15,
     },
     {
+      id: "hubspot-discounts",
       name: "HubSpot Discounts",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -482,6 +516,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-domains",
       name: "HubSpot Domains",
       description: "HubSpot Domains API.",
       specs: [
@@ -493,6 +528,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-emails",
       name: "HubSpot Emails",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -505,6 +541,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-events",
       name: "HubSpot Events",
       description: "HubSpot Events Events API.",
       specs: [
@@ -516,6 +553,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-exports",
       name: "HubSpot Exports",
       description: "HubSpot CRM Exports API.",
       specs: [
@@ -527,6 +565,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 3,
     },
     {
+      id: "hubspot-feedback-submissions",
       name: "HubSpot Feedback Submissions",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -539,6 +578,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-fees",
       name: "HubSpot Fees",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -551,6 +591,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-files",
       name: "HubSpot Files",
       description: "Upload and manage files.",
       specs: [
@@ -562,6 +603,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 20,
     },
     {
+      id: "hubspot-forms",
       name: "HubSpot Forms",
       description: "HubSpot Forms API.",
       specs: [
@@ -573,6 +615,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 6,
     },
     {
+      id: "hubspot-goal-targets",
       name: "HubSpot Goal Targets",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -585,6 +628,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-hubdb",
       name: "HubSpot Hubdb",
       description: "HubSpot Hubdb API.",
       specs: [
@@ -596,6 +640,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 31,
     },
     {
+      id: "hubspot-imports",
       name: "HubSpot Imports",
       description: "HubSpot CRM Imports API.",
       specs: [
@@ -607,6 +652,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 5,
     },
     {
+      id: "hubspot-invoices",
       name: "HubSpot Invoices",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -619,6 +665,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-leads",
       name: "HubSpot Leads",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -631,6 +678,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-limits-tracking",
       name: "HubSpot Limits Tracking",
       description: "HubSpot Limits Tracking API.",
       specs: [
@@ -642,6 +690,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 9,
     },
     {
+      id: "hubspot-line-items",
       name: "HubSpot Line Items",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -654,6 +703,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-listings",
       name: "HubSpot Listings",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -666,6 +716,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-lists",
       name: "HubSpot Lists",
       description: "CRUD operations to manage lists and list memberships",
       specs: [
@@ -677,6 +728,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 28,
     },
     {
+      id: "hubspot-manage-event-definitions",
       name: "HubSpot Manage Event Definitions",
       description: "HubSpot Events Manage Event Definitions API.",
       specs: [
@@ -688,6 +740,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 9,
     },
     {
+      id: "hubspot-marketing-emails",
       name: "HubSpot Marketing Emails",
       description: "HubSpot Marketing Emails API.",
       specs: [
@@ -699,6 +752,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 19,
     },
     {
+      id: "hubspot-marketing-emails-v3",
       name: "HubSpot Marketing Emails V3",
       description: "HubSpot Marketing Emails V3 API.",
       specs: [
@@ -710,6 +764,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 19,
     },
     {
+      id: "hubspot-marketing-events",
       name: "HubSpot Marketing Events",
       description: "HubSpot Marketing Marketing Events API.",
       specs: [
@@ -721,6 +776,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 36,
     },
     {
+      id: "hubspot-media-bridge",
       name: "HubSpot Media Bridge",
       description: "HubSpot CMS Media Bridge API.",
       specs: [
@@ -732,6 +788,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 32,
     },
     {
+      id: "hubspot-multicurrency",
       name: "HubSpot Multicurrency",
       description: "HubSpot Settings Multicurrency API.",
       specs: [
@@ -743,6 +800,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 15,
     },
     {
+      id: "hubspot-notes",
       name: "HubSpot Notes",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -755,6 +813,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-oauth",
       name: "HubSpot Oauth",
       description: "HubSpot Auth Oauth API.",
       specs: [
@@ -766,6 +825,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 4,
     },
     {
+      id: "hubspot-object-library",
       name: "HubSpot Object Library",
       description: "HubSpot CRM Object Library API.",
       specs: [
@@ -777,6 +837,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-objects",
       name: "HubSpot Objects",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -789,6 +850,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 11,
     },
     {
+      id: "hubspot-orders",
       name: "HubSpot Orders",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -801,6 +863,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-origins",
       name: "HubSpot Origins",
       description: "HubSpot Meta Origins API.",
       specs: [
@@ -812,6 +875,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-pages",
       name: "HubSpot Pages",
       description:
         "Use these endpoints for interacting with Landing Pages and Site Pages",
@@ -824,6 +888,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 66,
     },
     {
+      id: "hubspot-partner-clients",
       name: "HubSpot Partner Clients",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -836,6 +901,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-partner-services",
       name: "HubSpot Partner Services",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -848,6 +914,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-payments",
       name: "HubSpot Payments",
       description: "HubSpot Payments API.",
       specs: [
@@ -859,6 +926,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 4,
     },
     {
+      id: "hubspot-pipelines",
       name: "HubSpot Pipelines",
       description:
         "Pipelines represent distinct stages in a workflow, like closing a deal or servicing a support ticket. These endpoints provide access to read and modify pipel...",
@@ -871,6 +939,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 14,
     },
     {
+      id: "hubspot-postal-mail",
       name: "HubSpot Postal Mail",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -883,6 +952,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-posts",
       name: "HubSpot Posts",
       description:
         "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
@@ -895,6 +965,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 24,
     },
     {
+      id: "hubspot-products",
       name: "HubSpot Products",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -907,6 +978,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-projects",
       name: "HubSpot Projects",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -919,6 +991,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 12,
     },
     {
+      id: "hubspot-properties",
       name: "HubSpot Properties",
       description:
         "All HubSpot objects store data in default and custom properties. These endpoints provide access to read and modify object properties in HubSpot.",
@@ -931,6 +1004,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 13,
     },
     {
+      id: "hubspot-property-validations",
       name: "HubSpot Property Validations",
       description: "HubSpot CRM Property Validations API.",
       specs: [
@@ -942,6 +1016,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 4,
     },
     {
+      id: "hubspot-public-app-crm-cards",
       name: "HubSpot Public App Crm Cards",
       description:
         "Allows an app to extend the CRM UI by surfacing custom cards in the sidebar of record pages. These cards are defined up-front as part of app configuration, t...",
@@ -954,6 +1029,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 6,
     },
     {
+      id: "hubspot-public-app-feature-flags-v3",
       name: "HubSpot Public App Feature Flags V3",
       description: "HubSpot CRM Public App Feature Flags V3 API.",
       specs: [
@@ -965,6 +1041,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 9,
     },
     {
+      id: "hubspot-quotes",
       name: "HubSpot Quotes",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -977,6 +1054,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-scheduler-meetings",
       name: "HubSpot Scheduler Meetings",
       description: "Meetings Service For HubSpot Sales",
       specs: [
@@ -988,6 +1066,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 5,
     },
     {
+      id: "hubspot-schemas",
       name: "HubSpot Schemas",
       description:
         "The CRM uses schemas to define how custom objects should store and represent information in the HubSpot CRM. Schemas define details about an object's type, p...",
@@ -1000,6 +1079,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 7,
     },
     {
+      id: "hubspot-send-event-completions",
       name: "HubSpot Send Event Completions",
       description: "HubSpot Events Send Event Completions API.",
       specs: [
@@ -1011,6 +1091,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-sequences",
       name: "HubSpot Sequences",
       description: "HubSpot Sequences API.",
       specs: [
@@ -1022,6 +1103,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 4,
     },
     {
+      id: "hubspot-services",
       name: "HubSpot Services",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -1034,6 +1116,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-single-send",
       name: "HubSpot Single-send",
       description: "HubSpot Single-send API.",
       specs: [
@@ -1045,6 +1128,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 1,
     },
     {
+      id: "hubspot-site-search",
       name: "HubSpot Site Search",
       description:
         "Use these endpoints for searching content on your HubSpot hosted CMS website(s).",
@@ -1057,6 +1141,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-source-code",
       name: "HubSpot Source Code",
       description:
         "API for managing and retrieving source code files and metadata",
@@ -1069,6 +1154,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 8,
     },
     {
+      id: "hubspot-subscription-lifecycle",
       name: "HubSpot Subscription Lifecycle",
       description: "HubSpot CRM Subscription Lifecycle API.",
       specs: [
@@ -1080,6 +1166,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 3,
     },
     {
+      id: "hubspot-subscriptions",
       name: "HubSpot Subscriptions",
       description: "HubSpot Communication Preferences Subscriptions API.",
       specs: [
@@ -1091,6 +1178,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 10,
     },
     {
+      id: "hubspot-tags",
       name: "HubSpot Tags",
       description:
         "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
@@ -1103,6 +1191,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 14,
     },
     {
+      id: "hubspot-tasks",
       name: "HubSpot Tasks",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -1115,6 +1204,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-tax-rates",
       name: "HubSpot Tax Rates",
       description: "HubSpot Settings Tax Rates API.",
       specs: [
@@ -1126,6 +1216,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 2,
     },
     {
+      id: "hubspot-taxes",
       name: "HubSpot Taxes",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -1138,6 +1229,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-test-child-api",
       name: "HubSpot Test Child Api",
       description: "Get information about a HubSpot account and its API usage.",
       specs: [
@@ -1149,6 +1241,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 4,
     },
     {
+      id: "hubspot-tickets",
       name: "HubSpot Tickets",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -1161,6 +1254,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-timeline",
       name: "HubSpot Timeline",
       description:
         "This feature allows an app to create and configure custom events that can show up in the timelines of certain CRM objects like contacts, companies, tickets,...",
@@ -1173,6 +1267,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 13,
     },
     {
+      id: "hubspot-transactional-single-send",
       name: "HubSpot Transactional Single Send",
       description: "HubSpot Transactional Single Send API.",
       specs: [
@@ -1184,6 +1279,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 6,
     },
     {
+      id: "hubspot-transcriptions",
       name: "HubSpot Transcriptions",
       description: "HubSpot Transcriptions API.",
       specs: [
@@ -1195,6 +1291,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 3,
     },
     {
+      id: "hubspot-url-redirects",
       name: "HubSpot Url Redirects",
       description: "URL redirect operations",
       specs: [
@@ -1206,6 +1303,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 5,
     },
     {
+      id: "hubspot-user-provisioning",
       name: "HubSpot User Provisioning",
       description: "Add, manage, and remove users from your account",
       specs: [
@@ -1217,6 +1315,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 7,
     },
     {
+      id: "hubspot-users",
       name: "HubSpot Users",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
@@ -1229,6 +1328,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 17,
     },
     {
+      id: "hubspot-video-conferencing-extension",
       name: "HubSpot Video Conferencing Extension",
       description:
         "These APIs allow you to specify URLs that can be used to interact with a video conferencing application, to allow HubSpot to add video conference links to me...",
@@ -1241,6 +1341,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 3,
     },
     {
+      id: "hubspot-visitor-identification",
       name: "HubSpot Visitor Identification",
       description:
         "The Visitor Identification API allows you to pass identification information to the HubSpot chat widget for otherwise unknown visitors that were verified by...",
@@ -1253,6 +1354,7 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
       operationsCount: 1,
     },
     {
+      id: "hubspot-webhooks",
       name: "HubSpot Webhooks",
       description:
         "Provides a way for apps to subscribe to certain change events in HubSpot. Once configured, apps will receive event payloads containing details about the chan...",
@@ -1276,6 +1378,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
   operationsCount: 795,
   templates: [
     {
+      id: "twilio-accounts",
       name: "Twilio Accounts",
       description:
         "Core account resources including usage, addresses, and credentials",
@@ -1288,6 +1391,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 20,
     },
     {
+      id: "twilio-assistants",
       name: "Twilio Assistants",
       description: "Autopilot assistants, tasks, samples, and field values",
       specs: [
@@ -1299,6 +1403,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 30,
     },
     {
+      id: "twilio-bulk-exports",
       name: "Twilio Bulk Exports",
       description:
         "BulkExports API for exporting messaging, voice, and usage data",
@@ -1311,6 +1416,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 9,
     },
     {
+      id: "twilio-chat",
       name: "Twilio Chat",
       description: "Programmable Chat channels, members, roles, and messages",
       specs: [
@@ -1322,6 +1428,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 1,
     },
     {
+      id: "twilio-content",
       name: "Twilio Content",
       description: "Reusable Content API for templates, variants, and media",
       specs: [
@@ -1333,6 +1440,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 2,
     },
     {
+      id: "twilio-conversations",
       name: "Twilio Conversations",
       description: "Conversations services, participants, and messages",
       specs: [
@@ -1344,6 +1452,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 103,
     },
     {
+      id: "twilio-events",
       name: "Twilio Events",
       description:
         "Event Streams resources for schema, sinks, and subscriptions",
@@ -1356,6 +1465,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 22,
     },
     {
+      id: "twilio-flex",
       name: "Twilio Flex",
       description: "Flex contact center configuration, users, and integrations",
       specs: [
@@ -1367,6 +1477,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 3,
     },
     {
+      id: "twilio-frontline",
       name: "Twilio Frontline",
       description:
         "Frontline mobile workforce accounts, users, and conversations",
@@ -1379,6 +1490,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 2,
     },
     {
+      id: "twilio-iam-organizations",
       name: "Twilio IAM Organizations",
       description: "IAM organization, invitation, and membership management",
       specs: [
@@ -1390,6 +1502,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 12,
     },
     {
+      id: "twilio-insights",
       name: "Twilio Insights",
       description: "Voice Insights calls, metrics, and summaries",
       specs: [
@@ -1401,6 +1514,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 17,
     },
     {
+      id: "twilio-intelligence",
       name: "Twilio Intelligence",
       description: "Voice Intelligence transcripts, participants, and insights",
       specs: [
@@ -1412,6 +1526,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 29,
     },
     {
+      id: "twilio-ip-messaging",
       name: "Twilio IP Messaging",
       description: "Programmable IP Messaging services, users, and messages",
       specs: [
@@ -1423,6 +1538,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 54,
     },
     {
+      id: "twilio-knowledge",
       name: "Twilio Knowledge",
       description: "Knowledge base content, categories, and documents",
       specs: [
@@ -1434,6 +1550,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 7,
     },
     {
+      id: "twilio-lookups",
       name: "Twilio Lookups",
       description: "Lookup API for phone carrier, caller name, and identity",
       specs: [
@@ -1445,6 +1562,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 10,
     },
     {
+      id: "twilio-marketplace",
       name: "Twilio Marketplace",
       description: "Marketplace listings, installations, and products",
       specs: [
@@ -1456,6 +1574,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 18,
     },
     {
+      id: "twilio-monitor",
       name: "Twilio Monitor",
       description: "Monitoring alerts, events, and triggers",
       specs: [
@@ -1467,6 +1586,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 6,
     },
     {
+      id: "twilio-notify",
       name: "Twilio Notify",
       description: "Notify bindings, credentials, and notifications",
       specs: [
@@ -1478,6 +1598,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 15,
     },
     {
+      id: "twilio-numbers",
       name: "Twilio Numbers",
       description: "Phone number inventory, orders, and configurations",
       specs: [
@@ -1489,6 +1610,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 1,
     },
     {
+      id: "twilio-oauth",
       name: "Twilio OAuth",
       description:
         "OAuth 2.0 API for authorization servers, clients, and tokens",
@@ -1501,6 +1623,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 1,
     },
     {
+      id: "twilio-preview",
       name: "Twilio Preview",
       description: "Preview API set for Twilio beta capabilities",
       specs: [
@@ -1512,6 +1635,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 34,
     },
     {
+      id: "twilio-pricing",
       name: "Twilio Pricing",
       description: "Pricing API for voice, SMS, and phone numbers",
       specs: [
@@ -1523,6 +1647,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 6,
     },
     {
+      id: "twilio-proxy",
       name: "Twilio Proxy",
       description: "Proxy sessions, phone numbers, and short codes",
       specs: [
@@ -1534,6 +1659,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 25,
     },
     {
+      id: "twilio-routes",
       name: "Twilio Routes",
       description: "Routes API for expertise routing and orchestration",
       specs: [
@@ -1545,6 +1671,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 6,
     },
     {
+      id: "twilio-serverless",
       name: "Twilio Serverless",
       description: "Serverless assets, environments, and deployments",
       specs: [
@@ -1556,6 +1683,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 39,
     },
     {
+      id: "twilio-studio",
       name: "Twilio Studio",
       description: "Studio flows, executions, and steps",
       specs: [
@@ -1567,6 +1695,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 19,
     },
     {
+      id: "twilio-super-sim",
       name: "Twilio Super SIM",
       description: "Super SIM fleets, commands, and networks",
       specs: [
@@ -1578,6 +1707,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 31,
     },
     {
+      id: "twilio-sync",
       name: "Twilio Sync",
       description: "Sync services, documents, lists, and maps",
       specs: [
@@ -1589,6 +1719,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 48,
     },
     {
+      id: "twilio-taskrouter",
       name: "Twilio TaskRouter",
       description: "TaskRouter workers, tasks, and workflows",
       specs: [
@@ -1600,6 +1731,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 61,
     },
     {
+      id: "twilio-trunking",
       name: "Twilio Trunking",
       description:
         "Elastic SIP Trunking trunks, phone numbers, and credentials",
@@ -1612,6 +1744,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 24,
     },
     {
+      id: "twilio-trusthub",
       name: "Twilio TrustHub",
       description: "TrustHub customer profiles and compliance items",
       specs: [
@@ -1623,6 +1756,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 53,
     },
     {
+      id: "twilio-video",
       name: "Twilio Video",
       description: "Programmable Video rooms, participants, and recordings",
       specs: [
@@ -1634,6 +1768,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 39,
     },
     {
+      id: "twilio-voice",
       name: "Twilio Voice",
       description: "Programmable voice calls, conferences, and recordings",
       specs: [
@@ -1645,6 +1780,7 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
       operationsCount: 32,
     },
     {
+      id: "twilio-wireless",
       name: "Twilio Wireless",
       description: "Programmable Wireless SIM cards, data sessions, and usage",
       specs: [
@@ -1666,6 +1802,7 @@ const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
   operationsCount: 68,
   templates: [
     {
+      id: "zendesk-sunshine-conversations",
       name: "Sunshine Conversations",
       description: "Messaging and conversation APIs for Zendesk Sunshine.",
       specs: [
@@ -1679,6 +1816,15 @@ const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
   ],
 }
 
+// Microsoft SharePoint templates were renamed from "SharePoint X" to "X"
+// to match the slugify pattern (group prefix + name = id). This alias map
+// maintains backwards compatibility for legacy datasources.
+const MICROSOFT_SHAREPOINT_NAME_ALIASES: Record<string, string> = {
+  "SharePoint Sites": "Sites",
+  "SharePoint Drives": "Drives",
+  "SharePoint Shares": "Shares",
+}
+
 const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePoint"> =
   {
     name: "Microsoft SharePoint",
@@ -1689,7 +1835,8 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
     operationsCount: 2826,
     templates: [
       {
-        name: "SharePoint Sites",
+        id: "microsoft-sharepoint-sites",
+        name: "Sites",
         description: "SharePoint sites, lists, and content types.",
         specs: [
           {
@@ -1700,7 +1847,8 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
         operationsCount: 650,
       },
       {
-        name: "SharePoint Drives",
+        id: "microsoft-sharepoint-drives",
+        name: "Drives",
         description: "Drive items and file operations for SharePoint.",
         specs: [
           {
@@ -1711,7 +1859,8 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
         operationsCount: 2024,
       },
       {
-        name: "SharePoint Shares",
+        id: "microsoft-sharepoint-shares",
+        name: "Shares",
         description: "Shared items and sharing operations for SharePoint.",
         specs: [
           {
@@ -1733,6 +1882,7 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
   operationsCount: 151,
   templates: [
     {
+      id: "splunk-admin-config-service",
       name: "Splunk Admin Config Service",
       description: "Admin Config Service (ACS) APIs for Splunk Cloud Platform.",
       specs: [
@@ -1744,6 +1894,7 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
       operationsCount: 98,
     },
     {
+      id: "splunk-enterprise-security",
       name: "Splunk Enterprise Security",
       description:
         "Enterprise Security API for managing detection and response data.",
@@ -1756,6 +1907,7 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
       operationsCount: 20,
     },
     {
+      id: "splunk-mission-control-automation",
       name: "Splunk Mission Control Automation",
       description:
         "Mission Control Automation API for SOAR playbook integrations.",
@@ -1773,6 +1925,7 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
+      id: "attio",
       name: "Attio",
       description:
         "CRM platform API for objects, records, lists, tasks, and webhooks",
@@ -1787,6 +1940,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "bamboohr",
       name: "BambooHR",
       description:
         "HRIS platform for employee records, time off, and performance management",
@@ -1801,6 +1955,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "confluence",
       name: "Confluence",
       description: "Atlassian Confluence API for content, spaces, and users",
       specs: [
@@ -1814,6 +1969,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "discord",
       name: "Discord",
       description: "Discord API for guilds, channels, messages, and webhooks",
       specs: [
@@ -1827,6 +1983,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "figma",
       name: "Figma",
       description:
         "Design platform API for files, projects, teams, and comments",
@@ -1841,6 +1998,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "github",
       name: "GitHub",
       description:
         "GitHub REST API for repositories, issues, pull requests, and actions",
@@ -1855,6 +2013,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "jira-cloud",
       name: "Jira Cloud",
       description:
         "Build apps, script interactions with Jira, or develop any other type of integration",
@@ -1869,6 +2028,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "okta-management",
       name: "Okta Management",
       description:
         "Configure and manage authorization servers and the security policies attached to them, enabling centralized control over API access",
@@ -1883,6 +2043,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "pagerduty",
       name: "PagerDuty",
       description:
         "PagerDuty REST resources for services, incidents, and incident automation",
@@ -1897,6 +2058,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "slack-web-api",
       name: "Slack Web API",
       description:
         "The Slack Web API is an interface for querying information from and enacting change in a Slack workspace.",
@@ -1911,6 +2073,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "servicenow",
       name: "ServiceNow",
       description:
         "Provisioning operations for users, groups, and supporting resources such as companies, cost centers, departments, and locations.",
@@ -1925,6 +2088,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "virustotal",
       name: "VirusTotal",
       description:
         "Analyze files, URLs, IPs, or domains and pull threat intelligence verdicts from VirusTotal",
@@ -1942,6 +2106,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
      * UNVERIFIED
      */
     {
+      id: "gitlab",
       name: "Gitlab",
       description: "The most comprehensive DevSecOps platform.",
       specs: [
@@ -1954,6 +2119,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: GitlabLogo,
     },
     {
+      id: "mastercard",
       name: "Mastercard",
       description:
         "Open Banking solutions in the US are provided by Finicity, a Mastercard company.",
@@ -1967,6 +2133,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: MastercardLogo,
     },
     {
+      id: "stripe",
       name: "Stripe",
       description:
         "Secure payment processing, subscriptions, billing, and reporting APIs",
@@ -1981,6 +2148,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "ansible-awx",
       name: "Ansible AWX",
       description:
         "Automation Controller (AWX) REST API for inventories, projects, jobs, and workflows",
@@ -1994,6 +2162,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: AnsibleLogo,
     },
     {
+      id: "ashby",
       name: "Ashby",
       description:
         "The public API for accessing resources in your Ashby instance.",
@@ -2007,6 +2176,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: AshbyLogo,
     },
     {
+      id: "banksapi",
       name: "Banksapi",
       description:
         "Comprehensive Data Access Access to hundreds of millions of accounts, securities accounts and financial products",
@@ -2020,6 +2190,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BanksapiLogo,
     },
     {
+      id: "baremetrics",
       name: "Baremetrics",
       description:
         "Baremetrics provides real-time subscription metrics for teams built with Stripe, Shopify Partners, Braintree, Recurly, Chargebee, Google Play, and...",
@@ -2033,6 +2204,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BaremetricsLogo,
     },
     {
+      id: "billsby",
       name: "Billsby",
       description:
         'Billsby is a feature-rich "Saas" recurring payment platform, ranked as the leading subscription billing software by G2.',
@@ -2046,6 +2218,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BillsbyLogo,
     },
     {
+      id: "breezy-hr",
       name: "Breezy HR",
       description:
         "We specialize in sourcing high quality pilots to meet the needs of 135 operators.",
@@ -2059,6 +2232,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BreezyHRLogo,
     },
     {
+      id: "brevo",
       name: "Brevo",
       description:
         "Brevo provide a RESTFul API that can be used with any languages.",
@@ -2072,6 +2246,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BrevoLogo,
     },
     {
+      id: "bulksms",
       name: "BulkSMS",
       description: "Allows you to submit and receive BulkSMS messages.",
       specs: [
@@ -2084,6 +2259,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BulksmsComLogo,
     },
     {
+      id: "buttondown",
       name: "Buttondown",
       description: "The last email platform you'll switch to.",
       specs: [
@@ -2096,6 +2272,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ButtondownLogo,
     },
     {
+      id: "clever",
       name: "Clever",
       description:
         "Offers one secure place for teachers and students to access the applications they love and depend on.",
@@ -2110,6 +2287,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "clickup",
       name: "Clickup",
       description:
         "This is the ClickUp API Reference where you can learn about specific endpoints and parameters in detail.",
@@ -2123,6 +2301,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ClickupLogo,
     },
     {
+      id: "deel",
       name: "Deel",
       description:
         "The only platform that allows you to combine payroll, HR, performance, and compliance for any type of worker in 150 countries into a single HR platform.",
@@ -2136,6 +2315,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DeelLogo,
     },
     {
+      id: "dixa",
       name: "Dixa",
       description:
         "Dixa enables companies to deliver customer service as it is meant to be.",
@@ -2149,6 +2329,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DixaLogo,
     },
     {
+      id: "dots",
       name: "Dots",
       description: "Scalable and Flexible Payouts Infrastructure",
       specs: [
@@ -2161,6 +2342,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DotsLogo,
     },
     {
+      id: "factorial",
       name: "Factorial",
       description:
         "The business management software that connects all you need to manage your team. It automates repetitive tasks, from hiring and holidays to performance reviews.",
@@ -2174,6 +2356,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: FactorialLogo,
     },
     {
+      id: "fastspring",
       name: "Fastspring",
       description:
         "The FastSpring API and its supported requests, data, endpoints, and rate limits.",
@@ -2187,6 +2370,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: FastspringLogo,
     },
     {
+      id: "fountain",
       name: "Fountain",
       description:
         "Fountain's all-in-one high volume hiring platform empowers the world's leading enterprises to find the right people through smart, fast, and seamle...",
@@ -2200,6 +2384,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: FountainLogo,
     },
     {
+      id: "goody",
       name: "Goody",
       description:
         "Goody is a new way to send personal and business gifts as easily as a text message.",
@@ -2213,6 +2398,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: GoodyLogo,
     },
     {
+      id: "helcim",
       name: "Helcim",
       description: "This API covers publicly accessible merchant actions",
       specs: [
@@ -2225,6 +2411,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: HelcimLogo,
     },
     {
+      id: "hibob",
       name: "Hibob",
       description: "Access your employees data with the Bob API",
       specs: [
@@ -2237,6 +2424,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: HibobLogo,
     },
     {
+      id: "homerun",
       name: "Homerun",
       description:
         "Applicant tracking and HR management made easy for growing teams. Beautiful job posts, leave tracking, employee data, and team insights—all in one place.",
@@ -2250,6 +2438,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: HomerunLogo,
     },
     {
+      id: "hypatos",
       name: "Hypatos",
       description:
         "Say goodbye to manual errors and cut the risk of do-overs. Hypatos AI agents increase processing efficiency and keep it consistent with correct decisions powered by knowledge...",
@@ -2263,6 +2452,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: HypatosLogo,
     },
     {
+      id: "intercom",
       name: "Intercom",
       description:
         "The leading AI Agent for customer service delivering the highest quality answers and handling the most complex queries",
@@ -2276,6 +2466,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: IntercomLogo,
     },
     {
+      id: "ironclad",
       name: "Ironclad",
       description:
         "Design and deploy any type of contract in minutes. Instantly surface insights from legal agreements; manage risk.",
@@ -2289,6 +2480,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: IroncladLogo,
     },
     {
+      id: "jina-ai",
       name: "Jina AI",
       description:
         "This is the UniversalAPI to access all the Jina embedding models",
@@ -2302,6 +2494,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: JinaAILogo,
     },
     {
+      id: "jobsoid",
       name: "Jobsoid",
       description:
         "Jobsoid is an Online Applicant Tracking System (ATS) which simplifies every step of the recruitment process in organizations, streamlining everythi...",
@@ -2315,6 +2508,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: JobsoidLogo,
     },
     {
+      id: "keatext-ai",
       name: "Keatext AI",
       description:
         "Keatext brings the voice of customer and employee into your day-to-day activities. Easily understand what drives engagement and get tailored AI-bas...",
@@ -2328,6 +2522,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: KeatextAILogo,
     },
     {
+      id: "kenjo",
       name: "Kenjo",
       description:
         "Before starting to use the Kenjo API, you have to request the API activation for a sandbox or production environment to the Kenjo Customer Success...",
@@ -2341,6 +2536,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: KenjoLogo,
     },
     {
+      id: "lambda",
       name: "Lambda",
       description: "API for interacting with the Lambda GPU Cloud",
       specs: [
@@ -2353,6 +2549,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: LambdaLogo,
     },
     {
+      id: "lob",
       name: "Lob",
       description:
         "The Lob API is organized around REST. Our API is designed to have predictable, resource-oriented URLs and uses HTTP response codes to indicate any...",
@@ -2366,6 +2563,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: LobLogo,
     },
     {
+      id: "localizely",
       name: "Localizely",
       description:
         "A translation management system that helps you organize your software translation projects.",
@@ -2379,6 +2577,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: LocalizelyLogo,
     },
     {
+      id: "logisticsos",
       name: "LogisticsOS",
       description:
         "Powered by world's most powerful route optimization engine.",
@@ -2392,6 +2591,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: LogisticsosLogo,
     },
     {
+      id: "measureone",
       name: "Measureone",
       description:
         "Automate your business workflows and lower your costs with MeasureOne, the most comprehensive and accurate platform for income, employment, educati...",
@@ -2405,6 +2605,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: MeasureoneLogo,
     },
     {
+      id: "microsoft-teams",
       name: "Microsoft Teams",
       description:
         "Use Microsoft Graph to manage teams, channels, chats, and messages.",
@@ -2419,6 +2620,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "nanonets",
       name: "Nanonets",
       description:
         "Break down data barriers with Nanonets AI—extract valuable information from documents, emails, tickets or databases.",
@@ -2432,6 +2634,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: NanonetsLogo,
     },
     {
+      id: "notion",
       name: "Notion",
       description:
         "Notion is a new tool that blends your everyday work apps into one. It's the all-in-one workspace for you and your team.",
@@ -2445,6 +2648,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: NotionLogo,
     },
     {
+      id: "openrouter",
       name: "OpenRouter",
       description: "OpenAI-compatible API with additional OpenRouter features",
       specs: [
@@ -2458,6 +2662,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       verified: true,
     },
     {
+      id: "oyster-hr",
       name: "Oyster HR",
       description:
         "Oyster HR uses OAuth2 to enable customers to grant access to their data to third party applications.",
@@ -2471,6 +2676,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: OysterLogo,
     },
     {
+      id: "peach-payments",
       name: "Peach Payments",
       description: "Reconciliation API",
       specs: [
@@ -2483,6 +2689,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: PeachPaymentsLogo,
     },
     {
+      id: "pinpoint",
       name: "Pinpoint",
       description: "Applicant tracking software that's ready for anything.",
       specs: [
@@ -2495,6 +2702,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: PinpointLogo,
     },
     {
+      id: "podium",
       name: "Podium",
       description: "AI that converts leads and makes you money.",
       specs: [
@@ -2507,6 +2715,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: PodiumLogo,
     },
     {
+      id: "remote",
       name: "Remote",
       description: "Talent is everywhere.",
       specs: [
@@ -2519,6 +2728,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: RemoteLogo,
     },
     {
+      id: "resend",
       name: "Resend",
       description: "Resend is the email platform for developers.",
       specs: [
@@ -2531,6 +2741,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ResendLogo,
     },
     {
+      id: "rivery",
       name: "Rivery",
       description:
         "Rivery API documentation Welcome to the Rivery API Documentation.",
@@ -2544,6 +2755,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: RiveryLogo,
     },
     {
+      id: "sage",
       name: "Sage",
       description: "All requests are required to be sent to your subdomain.",
       specs: [
@@ -2556,6 +2768,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SageLogo,
     },
     {
+      id: "secoda",
       name: "Secoda",
       description:
         "Use this API to programmatically use Secoda's data enablement features.",
@@ -2569,6 +2782,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SecodaLogo,
     },
     {
+      id: "shipengine",
       name: "Shipengine",
       description:
         "ShipEngine's easy-to-use REST API lets you manage all of your shipping needs without worrying about the complexities of different carrier APIs and...",
@@ -2582,6 +2796,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ShipengineLogo,
     },
     {
+      id: "shippo",
       name: "Shippo",
       description: "Use this API to integrate with the Shippo service",
       specs: [
@@ -2594,6 +2809,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ShippoLogo,
     },
     {
+      id: "shortcut",
       name: "Shortcut",
       description:
         "A fast, lightweight and enjoyable project management platform for product and engineering teams.",
@@ -2607,6 +2823,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ShortcutLogo,
     },
     {
+      id: "smartrecruiters",
       name: "Smartrecruiters",
       description: "SmartOnboard Public API",
       specs: [
@@ -2619,6 +2836,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SmartrecruitersLogo,
     },
     {
+      id: "softledger",
       name: "SoftLedger",
       description:
         "SoftLedger provides real-time visibility to critical financial data.",
@@ -2632,6 +2850,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SoftledgerLogo,
     },
     {
+      id: "spotdraft",
       name: "SpotDraft",
       description:
         "A contract lifecycle management solution built for fast growing businesses. Create, manage, sign and analyze your contracts all in one place.",
@@ -2645,6 +2864,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SpotdraftLogo,
     },
     {
+      id: "sumsub",
       name: "Sumsub",
       description:
         "Sumsub is the one verification platform to secure the whole user journey.",
@@ -2658,6 +2878,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SumsubLogo,
     },
     {
+      id: "suprsend",
       name: "SuprSend",
       description:
         "SuprSend is a central communication stack for easily creating, managing and delivering notifications to your end users on multiple channels.",
@@ -2671,6 +2892,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SuprsendLogo,
     },
     {
+      id: "terminal",
       name: "Terminal",
       description:
         "Terminal is a unified API that makes it easy to integrate with the leading telematics service providers.",
@@ -2684,6 +2906,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TerminalLogo,
     },
     {
+      id: "theirstack",
       name: "Theirstack",
       description: "Find your next customer",
       specs: [
@@ -2696,6 +2919,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TheirstackLogo,
     },
     {
+      id: "tilled",
       name: "Tilled",
       description:
         "PayFac-as-a-Service combines easy-to-integrate payment technology, full-service offerings...",
@@ -2709,6 +2933,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TilledLogo,
     },
     {
+      id: "trello",
       name: "Trello",
       description: "Capture, organize, and tackle your to-dos from anywhere.",
       specs: [
@@ -2721,6 +2946,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TrelloLogo,
     },
     {
+      id: "tremendous",
       name: "Tremendous",
       description:
         "Deliver monetary rewards and incentives to employees, customers, survey participants, and more.",
@@ -2734,6 +2960,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TremendousLogo,
     },
     {
+      id: "verifiable",
       name: "Verifiable",
       description:
         "Discover credentialing solutions designed to optimize provider networks, powered by industry-leading primary source verification technology.",
@@ -2747,6 +2974,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: VerifiableLogo,
     },
     {
+      id: "volt-io",
       name: "Volt IO",
       description: "One integration to a world of real-time payments",
       specs: [
@@ -2759,6 +2987,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: VoltIOLogo,
     },
     {
+      id: "workable",
       name: "Workable",
       description:
         "Workable develops a cloud-based recruitment platform for companies to post jobs, track applicants and schedule interviews.",
@@ -2772,6 +3001,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: WorkableLogo,
     },
     {
+      id: "x",
       name: "X",
       description: "Twitter API v2 available endpoints",
       specs: [
@@ -2814,17 +3044,20 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
     return templateGroups
   }
 
-  getByName(name?: RestTemplateName) {
+  getByName(name?: string) {
     if (!name) {
       return undefined
     }
-    const template = this.templates.find(template => template.name === name)
+    const actualName = MICROSOFT_SHAREPOINT_NAME_ALIASES[name] || name
+    const template = this.templates.find(
+      template => template.name === actualName
+    )
     if (template) {
       return template
     }
     for (const group of this.templateGroups) {
       const groupTemplate = group.templates.find(
-        template => template.name === name
+        template => template.name === actualName
       )
       if (groupTemplate) {
         return {
@@ -2834,6 +3067,54 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
       }
     }
     return undefined
+  }
+
+  private slugify(str: string): string {
+    return str
+      .toLowerCase()
+      .replace(/['"&]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+  }
+
+  getById(id: string, groupName?: string) {
+    const searchId = (targetId: string) => {
+      const template = this.templates.find(t => t.id === targetId)
+      if (template) {
+        return template
+      }
+
+      for (const group of this.templateGroups) {
+        const groupTemplate = group.templates.find(t => t.id === targetId)
+        if (groupTemplate) {
+          return { ...groupTemplate, icon: group.icon }
+        }
+      }
+      return undefined
+    }
+
+    // If group provided, try with group prefix first
+    if (groupName) {
+      const groupSlug = this.slugify(groupName)
+      const withPrefix = `${groupSlug}-${id}`
+      const found = searchId(withPrefix)
+      if (found) return found
+    }
+
+    // Fall back to just the id as-is
+    return searchId(id)
+  }
+
+  // getByName is legacy behaviour
+  // Makes no sense to have a lookup be the display value.
+  get(nameOrId?: RestTemplateName | RestTemplateId) {
+    if (!nameOrId) {
+      return undefined
+    }
+    return (
+      this.getById(nameOrId) || this.getByName(nameOrId as RestTemplateName)
+    )
   }
 }
 

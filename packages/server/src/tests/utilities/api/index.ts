@@ -33,6 +33,7 @@ import { ViewV2API } from "./viewV2"
 import { WebhookAPI } from "./webhook"
 import { WorkspaceAPI } from "./workspace"
 import { WorkspaceAppAPI } from "./workspaceApp"
+import { WorkspaceConnectionAPI } from "./workspaceConnection"
 import { WorkspaceFavouriteAPI } from "./workspaceFavourite"
 
 export default class API {
@@ -65,6 +66,7 @@ export default class API {
   navigation: NavigationAPI
   recaptcha: RecaptchaAPI
   routing: RoutingAPI
+  workspaceConnection: WorkspaceConnectionAPI
   workspaceFavourites: WorkspaceFavouriteAPI
   agent: AgentAPI
   vectorDb: VectorDbAPI
@@ -105,6 +107,7 @@ export default class API {
     this.navigation = new NavigationAPI(config)
     this.recaptcha = new RecaptchaAPI(config)
     this.routing = new RoutingAPI(config)
+    this.workspaceConnection = new WorkspaceConnectionAPI(config)
     this.workspaceFavourites = new WorkspaceFavouriteAPI(config)
     this.agent = new AgentAPI(config)
     this.vectorDb = new VectorDbAPI(config)

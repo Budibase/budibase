@@ -17,6 +17,7 @@
     automationStore,
     queries,
   } from "@/stores/builder"
+  import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { onDestroy, onMount, untrack } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
@@ -352,8 +353,8 @@ Any constraints the agent must follow.
 
     if (sourceType === ToolType.REST_QUERY) {
       const ds = $datasources.list.find(d => d.name === sourceLabel)
-      const templateIconUrl = ds?.restTemplate
-        ? restTemplates.getByName(ds.restTemplate)?.icon
+      const templateIconUrl = getRestTemplateIdentifier(ds)
+        ? restTemplates.get(getRestTemplateIdentifier(ds))?.icon
         : undefined
 
       if (templateIconUrl) {

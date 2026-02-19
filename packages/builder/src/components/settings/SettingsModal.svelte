@@ -111,7 +111,7 @@
   }
 
   const navItemClick = (route: Route) => {
-    const { routes } = route
+    const { routes, component } = route
     let path
 
     // Handle urls
@@ -125,7 +125,10 @@
       return
     }
 
-    if (routes?.length) {
+    if (component) {
+      // If there's a component at the section level, render it
+      path = route.path
+    } else if (routes?.length) {
       // Default to first route
       const landing = routes?.[0]
       // NOTE - route.path can be optional
@@ -214,7 +217,7 @@
                       {#if route.icon && isSettingIcon(route.icon)}
                         <div class="custom-icon">
                           <svelte:component
-                            this={route.icon.comp}
+                            this={route.icon.component}
                             {...route.icon.props}
                           />
                         </div>
@@ -268,7 +271,10 @@
     border: 0.5px solid #5645a1;
   }
 
-  .root-nav .status-indicator :global(.spectrum-StatusLight::before) {
+  .groups.full
+    .root-nav
+    .status-indicator
+    :global(.spectrum-StatusLight::before) {
     border: unset;
   }
 

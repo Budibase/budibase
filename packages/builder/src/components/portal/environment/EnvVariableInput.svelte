@@ -8,13 +8,18 @@
   import { environment, licensing } from "@/stores/portal"
   import CreateEditVariableModal from "./CreateEditVariableModal.svelte"
   import type { CreateEnvironmentVariableRequest } from "@budibase/types"
-  import { onMount } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   export let label: string = ""
   export let type: EnvDropdownType = "text"
   export let value: string | undefined = undefined
   export let error: string | undefined = undefined
   export let placeholder: string | undefined = undefined
+  export let autocomplete: HTMLInputElement["autocomplete"] | undefined =
+    undefined
+  export let required: boolean | undefined = false
 
   let modal: Modal
 
@@ -26,6 +31,7 @@
   async function saveVariable(data: CreateEnvironmentVariableRequest) {
     await environment.createVariable(data)
     value = `{{ env.${data.name} }}`
+    dispatch("change", value)
     modal.hide()
   }
 
@@ -47,6 +53,8 @@
   type={type === "port" ? "text" : type}
   {error}
   {placeholder}
+  {autocomplete}
+  {required}
   variables={$environment.variables}
   environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
   showModal={() => modal.show()}

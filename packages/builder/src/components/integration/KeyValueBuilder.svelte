@@ -102,7 +102,7 @@
       }
     }
     activity = newActivity
-    dispatch("change", fields)
+    dispatch("change", { fields, activity: newActivity })
   }
 
   function isJsonArray(value: any) {

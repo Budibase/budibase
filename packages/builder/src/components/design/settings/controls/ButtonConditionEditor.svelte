@@ -17,7 +17,7 @@
   import { flip } from "svelte/animate"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
   import { componentStore } from "@/stores/builder"
-  import { getComponentForSetting } from "@/components/design/settings/componentSettings"
+  import { getComponentForSetting } from "@/components/design/settings/componentSettingsRegistry"
   import { cloneDeep } from "lodash"
   import { createEventDispatcher } from "svelte"
   import { BasicOperator, FieldType } from "@budibase/types"

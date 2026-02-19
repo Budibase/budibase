@@ -1,10 +1,12 @@
 import {
   BodyType,
   ImportEndpoint,
+  OpenAPIServer,
   Query,
   QueryParameter,
   QueryVerb,
   RestTemplateQueryMetadata,
+  SecurityScheme,
 } from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 import { URL } from "url"
@@ -20,6 +22,8 @@ export interface ImportInfo {
   endpoints: ImportEndpoint[]
   securityHeaders?: string[]
   staticVariables?: Record<string, string>
+  securitySchemes?: Record<string, SecurityScheme>
+  servers?: OpenAPIServer[]
 }
 
 enum MethodToVerb {
