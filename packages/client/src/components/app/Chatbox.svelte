@@ -3,14 +3,19 @@
   import ChatConversationPanel from "@budibase/frontend-core/src/components/Chatbox/ChatConversationPanel.svelte"
   import ChatNavigationPanel from "@budibase/frontend-core/src/components/Chatbox/ChatNavigationPanel.svelte"
   import { Body, notifications } from "@budibase/bbui"
-  import { Header } from "@budibase/shared-core"
+  import {
+    Header,
+    ensureValidTheme,
+    getThemeClassNames,
+  } from "@budibase/shared-core"
   import type {
     ChatAppAgent,
     ChatConversation,
     DraftChatConversation,
+    Theme,
     WithoutDocMetadata,
   } from "@budibase/types"
-  import { appStore, authStore } from "@/stores"
+  import { appStore, authStore, themeStore } from "@/stores"
   import { onMount } from "svelte"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
@@ -63,6 +68,7 @@
   let chatAppId = ""
   let chatAgents: ChatAppAgent[] = []
   let agents: ChatAppAgentMetadata[] = []
+  let chatTheme: Theme | undefined
 
   const getUserLabel = (user?: ChatUser) => {
     if (!user) {
@@ -107,6 +113,8 @@
   $: conversationStarters =
     chatAgents.find(agent => agent.agentId === selectedAgentId)
       ?.conversationStarters || []
+  $: resolvedTheme = ensureValidTheme(chatTheme, $themeStore.theme)
+  $: resolvedThemeClassNames = getThemeClassNames(resolvedTheme)
   $: isAgentKnown = selectedAgentId
     ? agents.some(agent => agent._id === selectedAgentId)
     : false
@@ -143,6 +151,7 @@
       const chatApp = await API.fetchChatApp(workspaceId)
 
       chatAppId = chatApp?._id || ""
+      chatTheme = chatApp?.theme as Theme | undefined
       chatAgents = chatApp?.agents || []
       const agentsResponse = chatAppId
         ? await API.get<{ agents: ChatAppAgentMetadata[] }>({
@@ -293,7 +302,9 @@
   })
 </script>
 
-<div class="chat-app-shell">
+<div
+  class={`chat-app-shell spectrum spectrum--medium ${resolvedThemeClassNames}`}
+>
   {#if showEmptyState}
     <div class="chat-empty-state">
       <Body size="M">{emptyStateMessage}</Body>
