@@ -53,6 +53,7 @@
   let resizeObserver: ResizeObserver | null = null
   $: isTimeGridDay = calendarType === "timeGridDay"
   $: calendarButtonType = buttonType === "primary" ? "primary" : "action"
+  $: hasClickAction = typeof onClick === "function"
   $: yearTitleFormatProps =
     yearTitleFormat && yearTitleFormat !== "hidden"
       ? { year: yearTitleFormat }
@@ -178,6 +179,7 @@
 <div
   class="calendar"
   class:timeGridDay={isTimeGridDay}
+  class:hasClickAction
   data-button-type={calendarButtonType}
   bind:this={calendarContainer}
   use:styleable={$component.styles}
@@ -189,6 +191,10 @@
   .calendar :global(.fc-button-primary) {
     box-shadow: none;
     font-size: 13px;
+  }
+
+  .calendar.hasClickAction :global(.fc-event) {
+    cursor: pointer;
   }
 
   .calendar :global(.fc-today-button.fc-button-primary) {
