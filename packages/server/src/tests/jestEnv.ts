@@ -29,7 +29,7 @@ process.env.SYNC_MIGRATION_CHECKS_MS = "10"
 process.env.SKIP_WORKSPACE_MIGRATIONS = "1"
 
 process.env.BBAI_LITELLM_KEY = "sk-test-key"
-process.env.LITELLM_URL = "http://test.litellm.com/v1"
+process.env.LITELLM_URL = "https://api.openai.com/v1"
 
 let agent: MockAgent | null = null
 

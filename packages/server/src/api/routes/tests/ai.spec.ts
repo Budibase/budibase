@@ -156,14 +156,7 @@ const allProviders: TestSetup[] = [
   {
     name: "BudibaseAI",
     setup: budibaseAI(),
-    mockLLMResponse: (
-      answer: string | ((prompt: string) => string),
-      opts?: MockLLMResponseOpts
-    ) =>
-      mockAISDKChatGPTResponse(answer, {
-        baseUrl: "http://test.litellm.com",
-        ...opts,
-      }),
+    mockLLMResponse: mockAISDKChatGPTResponse,
   },
 ]
 
@@ -1203,9 +1196,7 @@ describe("BudibaseAI", () => {
     })
 
     it("proxies the OpenAI response without reshaping", async () => {
-      mockAISDKChatGPTResponse("hello from openai", {
-        baseUrl: "http://test.litellm.com",
-      })
+      mockAISDKChatGPTResponse("hello from openai")
 
       const response = await config.api.ai.openaiChatCompletions({
         model: "budibase/v1",
@@ -1221,7 +1212,6 @@ describe("BudibaseAI", () => {
     it("forwards extra fields (e.g. response_format)", async () => {
       const format = toResponseFormat(z.object({ value: z.string() }))
       mockAISDKChatGPTResponse(`{"value":"ok"}`, {
-        baseUrl: "http://test.litellm.com",
         format,
       })
 
@@ -1240,7 +1230,6 @@ describe("BudibaseAI", () => {
 
     it("returns HTTP errors from upstream", async () => {
       mockChatGPTStreamFailure({
-        baseUrl: "http://test.litellm.com",
         status: 401,
         errorMessage: "Unauthorized",
       })
@@ -1265,9 +1254,7 @@ describe("BudibaseAI", () => {
       let usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
-      mockAISDKChatGPTResponse("charged now here", {
-        baseUrl: "http://test.litellm.com",
-      })
+      mockAISDKChatGPTResponse("charged now here")
 
       await config.api.ai.openaiChatCompletions({
         model: "budibase/v1",
