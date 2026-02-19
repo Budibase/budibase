@@ -9537,5 +9537,231 @@
         "defaultValue": true
       }
     ]
+  },
+  "calendar": {
+    "name": "Calendar",
+    "description": "Calendar",
+    "icon": "calendar",
+    "size": {
+      "width": 600,
+      "height": 420
+    },
+    "styles": ["size"],
+    "grid": {
+      "hAlign": "stretch",
+      "vAlign": "center"
+    },
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Data provider",
+        "key": "dataProvider",
+        "required": true
+      },
+      {
+        "type": "field",
+        "label": "Event start",
+        "key": "eventStart",
+        "required": true,
+        "explanation": {
+          "typeSupport": {
+            "preset": "dateTimeLike"
+          }
+        }
+      },
+      {
+        "type": "field",
+        "label": "Event end",
+        "key": "eventEnd",
+        "required": true,
+        "explanation": {
+          "typeSupport": {
+            "preset": "dateTimeLike"
+          }
+        },
+        "info": "Event start and end should equate to date-times."
+      },
+      {
+        "type": "field",
+        "label": "Event title",
+        "key": "eventTitle",
+        "required": true
+      },
+      {
+        "type": "select",
+        "label": "Type",
+        "key": "calendarType",
+        "options": [
+          { "label": "Month", "value": "dayGridMonth" },
+          { "label": "Week", "value": "dayGridWeek" },
+          { "label": "Day", "value": "timeGridDay" },
+          { "label": "Agenda", "value": "listWeek" }
+        ],
+        "defaultValue": "dayGridMonth"
+      },
+      {
+        "type": "event",
+        "label": "On click event",
+        "key": "onClick",
+        "context": [
+          {
+            "label": "row_id",
+            "key": "row_id"
+          },
+          {
+            "label": "Event title",
+            "key": "title"
+          },
+          {
+            "label": "Event Start",
+            "key": "start"
+          },
+          {
+            "label": "Event End",
+            "key": "end"
+          }
+        ]
+      },
+
+      {
+        "type": "text",
+        "label": "Empty agenda text",
+        "key": "emptyAgendaText",
+        "defaultValue": "No events found"
+      },
+
+      {
+        "type": "text",
+        "label": "Open on date",
+        "key": "openOnDate",
+        "defaultValue": "{{ now }}",
+        "required": true
+      },
+      {
+        "type": "boolean",
+        "label": "Show title date",
+        "key": "showTitleDate",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Show day names",
+        "key": "showDayNames",
+        "defaultValue": true
+      },
+      {
+        "section": true,
+        "name": "Title",
+        "dependsOn": "showTitleDate",
+        "settings": [
+          {
+            "type": "select",
+            "label": "Date locale",
+            "key": "locale",
+            "options": [
+              { "label": "DD MM YYYY", "value": "en-gb" },
+              { "label": "MM DD YYYY", "value": "en-us" }
+            ],
+            "defaultValue": "en-gb"
+          },
+          {
+            "type": "select",
+            "label": "Year title format",
+            "key": "yearTitleFormat",
+            "options": [
+              { "label": "Hidden", "value": "hidden" },
+              { "label": "4-digit", "value": "numeric" },
+              { "label": "2-digit", "value": "2-digit" }
+            ]
+          },
+          {
+            "type": "select",
+            "label": "Month title format",
+            "key": "monthTitleFormat",
+            "options": [
+              { "label": "Hidden", "value": "hidden" },
+              { "label": "Numeric", "value": "numeric" },
+              { "label": "2-digit", "value": "2-digit" },
+              { "label": "Short", "value": "short" },
+              { "label": "Long", "value": "long" }
+            ]
+          },
+          {
+            "type": "select",
+            "label": "Day title format",
+            "key": "dayTitleFormat",
+            "options": [
+              { "label": "Hidden", "value": "hidden" },
+              { "label": "Numeric", "value": "numeric" },
+              { "label": "2-digit", "value": "2-digit" }
+            ]
+          },
+          {
+            "type": "select",
+            "label": "Weekday title format",
+            "key": "weekdayTitleFormat",
+            "options": [
+              { "label": "Hidden", "value": "hidden" },
+              { "label": "Short", "value": "short" },
+              { "label": "Long", "value": "long" },
+              { "label": "Narrow", "value": "narrow" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Show controls",
+        "key": "showButtons",
+        "defaultValue": true
+      },
+      {
+        "section": true,
+        "name": "Controls",
+        "dependsOn": "showButtons",
+        "settings": [
+          {
+            "type": "select",
+            "label": "Button type",
+            "key": "buttonType",
+            "options": [
+              { "label": "Action", "value": "action" },
+              { "label": "Primary", "value": "primary" }
+            ],
+            "defaultValue": "action"
+          },
+          {
+            "type": "text",
+            "label": "Month button Text",
+            "key": "monthText",
+            "defaultValue": "Month"
+          },
+          {
+            "type": "text",
+            "label": "Week button Text",
+            "key": "weekText",
+            "defaultValue": "Week"
+          },
+          {
+            "type": "text",
+            "label": "Day button Text",
+            "key": "dayText",
+            "defaultValue": "Day"
+          },
+          {
+            "type": "text",
+            "label": "Agenda button Text",
+            "key": "agendaText",
+            "defaultValue": "Agenda"
+          },
+          {
+            "type": "text",
+            "label": "Today button text",
+            "key": "todayText",
+            "defaultValue": "Today"
+          }
+        ]
+      }
+    ]
   }
 }
