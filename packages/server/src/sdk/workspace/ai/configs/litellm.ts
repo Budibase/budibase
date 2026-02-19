@@ -38,7 +38,7 @@ const tenantTeamDocId = "litellmteam_config"
 
 const getTenantTeamAlias = () => {
   const tenantId = context.getTenantId()
-  return `budibase-tenant-${tenantId}`
+  return tenantId
 }
 
 async function createTeam(alias: string): Promise<LiteLLMTeam> {
