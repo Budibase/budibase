@@ -52,7 +52,7 @@ export const createLiteLLMOpenAI = async (
   return {
     chat: llm.chat(modelId),
     embedding: llm.embedding(modelId),
-    providerOptions: hasTools => getLiteLLMProviderOptions(hasTools),
+    providerOptions: getLiteLLMProviderOptions,
   }
 }
 
