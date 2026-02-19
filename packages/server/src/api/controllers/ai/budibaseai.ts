@@ -99,17 +99,7 @@ class UsageTrackingTransform extends Transform {
   private buffer = ""
   private creditsSynced = false
 
-  _transform(
-    chunk: Buffer,
-    _encoding: NodeJS.BufferEncoding,
-    callback: TransformCallback
-  ) {
-    const text = chunk.toString("utf8")
-    this.buffer += text
-
-    const lines = this.buffer.split("\n")
-    this.buffer = lines.pop() ?? ""
-
+  private processLines(lines: string[]) {
     for (const line of lines) {
       if (!line.startsWith("data:")) {
         continue
@@ -132,8 +122,28 @@ class UsageTrackingTransform extends Transform {
         // Ignore non-json chunks.
       }
     }
+  }
 
+  _transform(
+    chunk: Buffer,
+    _encoding: NodeJS.BufferEncoding,
+    callback: TransformCallback
+  ) {
+    this.buffer += chunk.toString("utf8")
+
+    const lines = this.buffer.split("\n")
+    this.buffer = lines.pop() ?? ""
+
+    this.processLines(lines)
     callback(null, chunk)
+  }
+
+  _flush(callback: TransformCallback) {
+    if (this.buffer) {
+      this.processLines([this.buffer])
+      this.buffer = ""
+    }
+    callback()
   }
 }
 
@@ -162,6 +172,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     ...body,
     model: providerRequest.model,
     stream,
+    ...(stream && { stream_options: { include_usage: true } }),
   }
   const providerResponse = await nodeFetch(providerUrl, {
     method: "POST",
