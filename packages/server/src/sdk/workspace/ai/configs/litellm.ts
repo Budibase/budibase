@@ -1,4 +1,10 @@
-import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  HTTPError,
+  locks,
+  tenancy,
+} from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
@@ -17,11 +23,106 @@ import * as configSdk from "../configs"
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
+type LiteLLMTeam = {
+  id: string
+  alias: string
+}
+
+interface LiteLLMTenantTeamConfig {
+  _id: string
+  _rev?: string
+  teamId: string
+  teamAlias: string
+}
+
+const tenantTeamDocId = "litellmteam_config"
+
+const getTenantTeamAlias = () => {
+  const tenantId = context.getTenantId()
+  return `budibase-tenant-${tenantId}`
+}
+
+async function createTeam(alias: string): Promise<LiteLLMTeam> {
+  const response = await fetch(`${liteLLMUrl}/team/new`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: liteLLMAuthorizationHeader,
+    },
+    body: JSON.stringify({
+      team_alias: alias,
+    }),
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new HTTPError(
+      `Error creating LiteLLM team: ${text || response.statusText}`,
+      response.status
+    )
+  }
+
+  const json = await response.json()
+  const teamId = json.team_id || json.team_id_string || json?.team?.team_id
+  if (!teamId) {
+    throw new HTTPError("LiteLLM team creation did not return a team ID", 500)
+  }
+  return {
+    id: teamId,
+    alias,
+  }
+}
+
+async function getOrCreateTenantTeam(): Promise<LiteLLMTeam> {
+  const tenantId = context.getTenantId()
+  const teamAlias = getTenantTeamAlias()
+  const tenantDb = tenancy.getTenantDB(tenantId)
+
+  const existing =
+    await tenantDb.tryGet<LiteLLMTenantTeamConfig>(tenantTeamDocId)
+  if (existing) {
+    return {
+      id: existing.teamId,
+      alias: existing.teamAlias,
+    }
+  }
+
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.LITELLM_KEY,
+      type: LockType.AUTO_EXTEND,
+      resource: tenantId,
+    },
+    async () => {
+      const maybeExisting =
+        await tenantDb.tryGet<LiteLLMTenantTeamConfig>(tenantTeamDocId)
+      if (maybeExisting) {
+        return {
+          id: maybeExisting.teamId,
+          alias: maybeExisting.teamAlias,
+        }
+      }
+
+      const team = await createTeam(teamAlias)
+      await tenantDb.put({
+        _id: tenantTeamDocId,
+        teamId: team.id,
+        teamAlias: team.alias,
+      })
+      return team
+    }
+  )
+
+  return result
+}
+
 async function generateKey(
-  name: string
+  name: string,
+  teamId: string
 ): Promise<{ id: string; secret: string }> {
   const body = JSON.stringify({
     key_alias: name,
+    team_id: teamId,
   })
 
   const requestOptions = {
@@ -34,6 +135,13 @@ async function generateKey(
   }
 
   const response = await fetch(`${liteLLMUrl}/key/generate`, requestOptions)
+  if (!response.ok) {
+    const text = await response.text()
+    throw new HTTPError(
+      `Error generating LiteLLM key: ${text || response.statusText}`,
+      response.status
+    )
+  }
 
   const json = await response.json()
   return { id: json.token_id, secret: json.key }
@@ -249,6 +357,7 @@ export async function validateConfig(model: {
 export async function getKeySettings(): Promise<{
   keyId: string
   secretKey: string
+  teamId: string
 }> {
   const db = context.getWorkspaceDB()
   const keyDocId = docIds.getLiteLLMKeyID()
@@ -267,17 +376,26 @@ export async function getKeySettings(): Promise<{
       },
       async () => {
         let existingKeyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
-        if (existingKeyConfig) {
+        const shouldCreateTenantTeam = !existingKeyConfig?.teamId
+
+        if (existingKeyConfig && !shouldCreateTenantTeam) {
           return existingKeyConfig
         }
 
-        const key = await generateKey(workspaceId)
+        const team = await getOrCreateTenantTeam()
+
+        const key = await generateKey(workspaceId, team.id)
         const config: LiteLLMKeyConfig = {
           _id: keyDocId,
           keyId: key.id,
           secretKey: key.secret,
+          teamId: team.id,
+          teamAlias: team.alias,
         }
-        const { rev } = await db.put(config)
+        const { rev } = await db.put({
+          ...config,
+          _rev: existingKeyConfig?._rev,
+        })
         return { ...config, _rev: rev }
       }
     )
@@ -286,6 +404,7 @@ export async function getKeySettings(): Promise<{
   return {
     keyId: keyConfig.keyId,
     secretKey: keyConfig.secretKey,
+    teamId: keyConfig.teamId,
   }
 }
 
