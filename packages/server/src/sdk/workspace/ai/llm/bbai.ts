@@ -12,20 +12,44 @@ import { TransformStream } from "node:stream/web"
 import { LLMResponse } from "."
 import environment from "../../../../environment"
 
-const calculateBudibaseAICredits = (usage?: LanguageModelV3Usage): number => {
-  if (!usage) {
-    return 0
-  }
-
-  const inputTokens = usage.inputTokens.total ?? 0
-  const outputTokens = usage.outputTokens.total ?? 0
-  return outputTokens * 3 + inputTokens
+interface OpenAIUsage {
+  prompt_tokens?: number
+  completion_tokens?: number
+  input_tokens?: number
+  output_tokens?: number
 }
+
+const calculateBudibaseAICredits = (
+  inputTokens: number,
+  outputTokens: number
+): number => outputTokens * 3 + inputTokens
 
 const incrementBudibaseAICreditsFromUsage = async (
   usage?: LanguageModelV3Usage
 ) => {
-  const credits = calculateBudibaseAICredits(usage)
+  if (!usage) {
+    return
+  }
+
+  const inputTokens = usage.inputTokens.total ?? 0
+  const outputTokens = usage.outputTokens.total ?? 0
+  const credits = calculateBudibaseAICredits(inputTokens, outputTokens)
+  if (credits > 0) {
+    await quotas.incrementBudibaseAICredits(credits)
+  }
+}
+
+export async function incrementBudibaseAICreditsFromOpenAIUsage(
+  usage?: OpenAIUsage
+) {
+  if (!usage) {
+    return
+  }
+
+  const inputTokens = usage.prompt_tokens ?? usage.input_tokens ?? 0
+  const outputTokens = usage.completion_tokens ?? usage.output_tokens ?? 0
+  const credits = calculateBudibaseAICredits(inputTokens, outputTokens)
+
   if (credits > 0) {
     await quotas.incrementBudibaseAICredits(credits)
   }
@@ -55,10 +79,14 @@ const availableBudibaseAIModels: typeof BUDIBASE_AI_MODEL_MAP = {
   },
 }
 
-export async function createBBAIClient(model: string): Promise<LLMResponse> {
+export function assertSupportedBBAIModel(model: string) {
   if (!availableBudibaseAIModels[model]) {
     throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
   }
+}
+
+export async function createBBAIClient(model: string): Promise<LLMResponse> {
+  assertSupportedBBAIModel(model)
 
   const client = createOpenAI({
     apiKey: environment.BBAI_LITELLM_KEY,
