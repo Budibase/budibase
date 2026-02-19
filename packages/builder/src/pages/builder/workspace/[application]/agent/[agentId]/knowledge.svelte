@@ -143,7 +143,7 @@
       <ActionButton
         size="M"
         icon="sliders-horizontal"
-        on:click={() => bb.settings("/ai-config/embedding-settings")}
+        on:click={() => bb.settings(`/ai-config/${AIConfigType.EMBEDDINGS}`)}
       />
     </AbsTooltip>
   </div>
@@ -166,7 +166,7 @@
       <ActionButton
         size="M"
         icon="sliders-horizontal"
-        on:click={() => bb.settings("/ai-config/embedding-settings")}
+        on:click={() => bb.settings(`/ai-config/${AIConfigType.EMBEDDINGS}`)}
       />
     </AbsTooltip>
   </div>
