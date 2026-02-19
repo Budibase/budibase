@@ -21,7 +21,6 @@
   $: entry = $memoRoute?.entry
   $: path = entry?.path
   $: component = entry?.component
-  $: props = entry?.props || {}
 
   $: params = { ...($memoRoute?.params || {}) }
   $: routing.update(state => ({ ...state, params: { ...params } }))
