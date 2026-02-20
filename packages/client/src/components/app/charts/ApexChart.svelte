@@ -64,7 +64,7 @@
 {#key optionsCopy?.customColor}
   <div
     class:hide={noData}
-    class:hasClickAction={hasClickAction}
+    class:hasClickAction
     use:styleable={$component.styles}
     bind:this={chartElement}
   ></div>
@@ -151,7 +151,15 @@
   .component-placeholder :global(.spectrum-Link) {
     cursor: pointer;
   }
-  .hasClickAction {
+  .hasClickAction :global(.apexcharts-series path),
+  .hasClickAction :global(.apexcharts-series rect),
+  .hasClickAction :global(.apexcharts-series circle),
+  .hasClickAction :global(.apexcharts-heatmap-rect),
+  .hasClickAction :global(.apexcharts-line-series path),
+  .hasClickAction :global(.apexcharts-line-series circle),
+  .hasClickAction :global(.apexcharts-area-series path),
+  .hasClickAction :global(.apexcharts-area-series circle) {
     cursor: pointer;
+    pointer-events: auto;
   }
 </style>
