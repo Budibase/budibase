@@ -1,4 +1,4 @@
-import { env, HTTPError } from "@budibase/backend-core"
+import { context, env, HTTPError } from "@budibase/backend-core"
 import { ChatCompletionRequestV2, type Ctx } from "@budibase/types"
 import { bbai } from "../../../sdk/workspace/ai/llm"
 import environment from "../../../environment"
@@ -6,6 +6,23 @@ import environment from "../../../environment"
 interface StreamUsageState {
   sseBuffer: string
   usageCaptured: boolean
+}
+
+const getBBAITags = () => {
+  const tags = ["bbai-self"]
+  try {
+    const tenantId = context.getTenantId()
+    if (tenantId) {
+      tags.push(`tenant:${tenantId}`)
+    }
+  } catch {
+    //
+  }
+  const workspaceId = context.getWorkspaceId()
+  if (workspaceId) {
+    tags.push(`workspace:${workspaceId}`)
+  }
+  return tags
 }
 
 async function parseStreamUsageFromChunk(
@@ -66,6 +83,14 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     ctx.throw(500, "BBAI_LITELLM_KEY not configured")
   }
 
+  const requestBody = {
+    ...ctx.request.body,
+    metadata: {
+      ...ctx.request.body.metadata,
+      tags: getBBAITags(),
+    },
+  }
+
   const upstreamResponse = await fetch(
     `${environment.LITELLM_URL.replace(/\/$/, "")}/chat/completions`,
     {
@@ -74,7 +99,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${environment.BBAI_LITELLM_KEY}`,
       },
-      body: JSON.stringify(ctx.request.body),
+      body: JSON.stringify(requestBody),
     }
   )
 
