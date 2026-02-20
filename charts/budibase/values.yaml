@@ -624,9 +624,13 @@ services:
     # -- Resources for litellm pods.
     resources: {}
     # -- Extra environment variables for the litellm container.
+    # Budibase uses LiteLLM virtual keys/models and requires database-backed proxy mode.
+    # If `general_settings.store_model_in_db: true` (default), set DATABASE_URL here.
     extraEnv:
       - name: LITELLM_REASONING_AUTO_SUMMARY
         value: "true"
+      # - name: DATABASE_URL
+      #   value: postgresql://llmproxy:password@postgres-host:5432/litellm
     # -- Additional volumeMounts on the litellm container.
     extraVolumeMounts: []
     # -- Additional volumes on the litellm pod.

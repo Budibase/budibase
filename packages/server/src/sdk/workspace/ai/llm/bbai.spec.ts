@@ -3,7 +3,7 @@ import {
   mockChatGPTResponse,
   mockChatGPTStreamResponse,
 } from "../../../../tests/utilities/mocks/ai/openai"
-import { resetHttpMocking } from "../../../../tests/jestEnv"
+import { getPool, resetHttpMocking } from "../../../../tests/jestEnv"
 import { withEnv } from "../../../../environment"
 import { createBBAIClient } from "./bbai"
 
@@ -47,10 +47,28 @@ describe("createBBAIClient", () => {
     await resetHttpMocking()
   })
 
-  it("rejects unsupported models", async () => {
-    await expect(createBBAIClient("unsupported-model")).rejects.toMatchObject({
-      status: 400,
-    })
+  it("passes through model names to LiteLLM", async () => {
+    mockChatGPTResponse("hello world")
+
+    await withEnv(
+      {
+        BBAI_LITELLM_KEY: "sk-test-key",
+      },
+      async () => {
+        const { chat } = await createBBAIClient("unsupported-model")
+        await chat.doGenerate({
+          prompt: [
+            {
+              role: "user",
+              content: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+      }
+    )
+
+    expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
+    expect(incrementCreditsMock).toHaveBeenCalledWith(7)
   })
 
   it("increments credits for generate calls", async () => {
@@ -134,5 +152,40 @@ describe("createBBAIClient", () => {
 
     expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
     expect(incrementCreditsMock).toHaveBeenCalledWith(7)
+  })
+
+  it("surfaces authorization failures for non-budibase models", async () => {
+    const pool = getPool("https://api.openai.com")
+
+    pool
+      .intercept({
+        path: "/v1/chat/completions",
+        method: "POST",
+      })
+      .reply(403, {
+        error: {
+          message: "Not allowed to access model",
+          type: "permission_error",
+        },
+      })
+
+    await withEnv(
+      {
+        BBAI_LITELLM_KEY: "sk-test-key",
+      },
+      async () => {
+        const { chat } = await createBBAIClient("openai/gpt-5")
+        await expect(
+          chat.doGenerate({
+            prompt: [
+              {
+                role: "user",
+                content: [{ type: "text", text: "hello" }],
+              },
+            ],
+          })
+        ).rejects.toThrow("Not allowed to access model")
+      }
+    )
   })
 })

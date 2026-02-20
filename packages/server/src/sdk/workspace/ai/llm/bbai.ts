@@ -4,11 +4,11 @@ import type {
   LanguageModelV3StreamPart,
   LanguageModelV3Usage,
 } from "@ai-sdk/provider"
-import { HTTPError } from "@budibase/backend-core"
+import tracer from "dd-trace"
 import { quotas } from "@budibase/pro"
-import { BUDIBASE_AI_MODEL_MAP } from "@budibase/types"
 import { wrapLanguageModel } from "ai"
 import { TransformStream } from "node:stream/web"
+import { context } from "@budibase/backend-core"
 import { LLMResponse } from "."
 import environment from "../../../../environment"
 
@@ -55,42 +55,85 @@ export async function incrementBudibaseAICreditsFromOpenAIUsage(
   }
 }
 
-const availableBudibaseAIModels: typeof BUDIBASE_AI_MODEL_MAP = {
-  ...BUDIBASE_AI_MODEL_MAP,
-  "legacy/gpt-4o-mini": {
-    provider: "openai",
-    model: "gpt-4o-mini",
-  },
-  "legacy/gpt-4o": {
-    provider: "openai",
-    model: "gpt-4o",
-  },
-  "legacy/gpt-5": {
-    provider: "openai",
-    model: "gpt-5",
-  },
-  "legacy/gpt-5-mini": {
-    provider: "openai",
-    model: "gpt-5-mini",
-  },
-  "legacy/gpt-5-nano": {
-    provider: "openai",
-    model: "gpt-5-nano",
-  },
-}
+type BBAIFetch = (
+  input: Parameters<typeof fetch>[0],
+  init?: Parameters<typeof fetch>[1]
+) => ReturnType<typeof fetch>
 
-export function assertSupportedBBAIModel(model: string) {
-  if (!availableBudibaseAIModels[model]) {
-    throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
+const createBBAIFetch = (sessionId?: string): BBAIFetch => {
+  const bbaiFetch = (async (
+    input: Parameters<typeof fetch>[0],
+    init?: Parameters<typeof fetch>[1]
+  ) => {
+    let modifiedInit = init
+
+    if (typeof init?.body === "string") {
+      try {
+        const body = JSON.parse(init.body)
+        const span = tracer.scope().active()
+        if (span) {
+          body.metadata = {
+            ...body.metadata,
+            dd_trace_id: span.context().toTraceId(),
+            dd_span_id: span.context().toSpanId(),
+          }
+        }
+
+        if (sessionId) {
+          body.litellm_session_id = sessionId
+          body.metadata = {
+            ...body.metadata,
+            session_id: sessionId,
+          }
+        }
+
+        body.metadata = {
+          ...body.metadata,
+          tags: [
+            `bbai-cloud`,
+            `tenant:${context.getTenantId()}`,
+            `workspace:${context.getWorkspaceId()}`,
+          ],
+        }
+
+        modifiedInit = { ...init, body: JSON.stringify(body) }
+      } catch {
+        // Not JSON, pass through
+      }
+    }
+
+    return fetch(input, modifiedInit)
+  }) as BBAIFetch
+
+  // Preserve the preconnect helper required by the OpenAI client typings.
+  if (typeof (fetch as any).preconnect === "function") {
+    ;(bbaiFetch as any).preconnect = (fetch as any).preconnect.bind(fetch)
   }
+
+  return bbaiFetch
 }
 
-export async function createBBAIClient(model: string): Promise<LLMResponse> {
-  assertSupportedBBAIModel(model)
+export async function createBBAIClient(
+  model: string,
+  sessionId?: string,
+  span?: tracer.Span
+): Promise<LLMResponse> {
+  const baseUrl = environment.LITELLM_URL
+
+  if (span) {
+    tracer.llmobs.annotate(span, {
+      metadata: {
+        modelId: model,
+        modelName: model,
+        baseUrl,
+      },
+    })
+  }
 
   const client = createOpenAI({
     apiKey: environment.BBAI_LITELLM_KEY,
-    baseURL: environment.LITELLM_URL,
+    baseURL: baseUrl,
+    fetch: createBBAIFetch(sessionId),
   })
   const chat = wrapLanguageModel({
     model: client.chat(model),

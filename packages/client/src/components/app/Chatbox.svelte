@@ -3,14 +3,18 @@
   import ChatConversationPanel from "@budibase/frontend-core/src/components/Chatbox/ChatConversationPanel.svelte"
   import ChatNavigationPanel from "@budibase/frontend-core/src/components/Chatbox/ChatNavigationPanel.svelte"
   import { Body, notifications } from "@budibase/bbui"
-  import { Header } from "@budibase/shared-core"
+  import {
+    Header,
+    ensureValidTheme,
+    getThemeClassNames,
+  } from "@budibase/shared-core"
   import type {
     ChatAppAgent,
     ChatConversation,
     DraftChatConversation,
     WithoutDocMetadata,
   } from "@budibase/types"
-  import { appStore, authStore } from "@/stores"
+  import { appStore, authStore, themeStore } from "@/stores"
   import { onMount } from "svelte"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
@@ -107,6 +111,8 @@
   $: conversationStarters =
     chatAgents.find(agent => agent.agentId === selectedAgentId)
       ?.conversationStarters || []
+  $: resolvedTheme = ensureValidTheme($themeStore.theme)
+  $: resolvedThemeClassNames = getThemeClassNames(resolvedTheme)
   $: isAgentKnown = selectedAgentId
     ? agents.some(agent => agent._id === selectedAgentId)
     : false
@@ -293,7 +299,9 @@
   })
 </script>
 
-<div class="chat-app-shell">
+<div
+  class={`chat-app-shell spectrum spectrum--medium ${resolvedThemeClassNames}`}
+>
   {#if showEmptyState}
     <div class="chat-empty-state">
       <Body size="M">{emptyStateMessage}</Body>

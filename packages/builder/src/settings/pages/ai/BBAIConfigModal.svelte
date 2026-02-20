@@ -15,17 +15,15 @@
     LLMProvider,
     RequiredKeys,
   } from "@budibase/types"
-  import {
-    AIConfigType,
-    BUDIBASE_AI_MODELS,
-    BUDIBASE_AI_PROVIDER_ID,
-  } from "@budibase/types"
+  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
   export let config: AIConfigResponse | undefined
   export let type: AIConfigType
 
   const dispatch = createEventDispatcher<{ hide: void }>()
+
+  const BUDIBASE_AI_MODELS = [{ id: "budibase/v1", label: "v1" }]
 
   let draft: AIConfigResponse = config
     ? structuredClone(config)
