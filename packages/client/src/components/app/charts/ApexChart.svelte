@@ -7,6 +7,8 @@
   const component = getContext("component")
 
   export let options
+  export let hasClickAction = false
+  export let fullCursor = false
 
   // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone options here to provide a buffer.
   $: optionsCopy = cloneDeep(options)
@@ -63,6 +65,8 @@
 {#key optionsCopy?.customColor}
   <div
     class:hide={noData}
+    class:hasClickAction
+    class:hasClickActionFull={hasClickAction && fullCursor}
     use:styleable={$component.styles}
     bind:this={chartElement}
   ></div>
@@ -147,6 +151,21 @@
     border-radius: 2px;
   }
   .component-placeholder :global(.spectrum-Link) {
+    cursor: pointer;
+  }
+  .hasClickAction :global(.apexcharts-series path),
+  .hasClickAction :global(.apexcharts-series rect),
+  .hasClickAction :global(.apexcharts-series circle),
+  .hasClickAction :global(.apexcharts-heatmap-rect) {
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .hasClickActionFull {
+    cursor: pointer;
+  }
+  .hasClickActionFull :global(.apexcharts-canvas),
+  .hasClickActionFull :global(.apexcharts-inner),
+  .hasClickActionFull :global(svg) {
     cursor: pointer;
   }
 </style>
