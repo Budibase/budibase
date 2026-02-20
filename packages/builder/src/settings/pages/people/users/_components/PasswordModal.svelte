@@ -8,6 +8,7 @@
 
   export let userData: { email: string; password: string }[]
   export let createUsersResponse: BulkUserCreated
+  export let addedToWorkspaceEmails: string[] = []
 
   let hasSuccess: boolean
   let hasFailure: boolean
@@ -17,6 +18,7 @@
   let userDataIndex: Record<string, { password: string }>
   let successfulUsers: { email: string; password: string }[]
   let unsuccessfulUsers: { email: string; reason: string }[]
+  let addedToWorkspaceUsers: { email: string }[] = []
 
   const setTitle = () => {
     if (hasSuccess) {
@@ -53,6 +55,8 @@
         reason: user.reason,
       }
     })
+
+    addedToWorkspaceUsers = addedToWorkspaceEmails.map(email => ({ email }))
   }
 
   onMount(() => {
@@ -71,6 +75,10 @@
   const failedSchema = {
     email: {},
     reason: {},
+  }
+
+  const workspaceAddedSchema = {
+    email: {},
   }
 
   const downloadCsvFile = () => {
@@ -148,6 +156,19 @@
         { column: "password", component: PasswordCopyTableRenderer },
       ]}
     />
+
+    {#if addedToWorkspaceUsers.length}
+      <Body size="XS">
+        Existing organisation users added to this workspace:
+      </Body>
+      <Table
+        schema={workspaceAddedSchema}
+        data={addedToWorkspaceUsers}
+        allowEditColumns={false}
+        allowEditRows={false}
+        allowSelectRows={false}
+      />
+    {/if}
   {/if}
 </ModalContent>
 
