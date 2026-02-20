@@ -280,6 +280,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
+  const normalizedPath = ctx.path.replace(/\/$/, "")
+  const isChatRoute = normalizedPath.startsWith("/app-chat/")
   const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
     isWorkspaceFullyMigrated(workspaceId),
     configs.getSettingsConfigDoc(),
@@ -317,10 +319,11 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
-      const appName = workspaceApp?.name || `${appInfo.name}`
+      const appName = isChatRoute ? "Chat" : workspaceApp?.name || `${appInfo.name}`
+      const appTitle = isChatRoute ? "Chat" : branding?.platformTitle || appName
       const nonce = ctx.state.nonce || ""
       let props: BudibaseAppProps = {
-        title: branding?.platformTitle || appName,
+        title: appTitle,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
         sideNav,
@@ -329,7 +332,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
-        metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
+        metaTitle: isChatRoute
+          ? "Chat"
+          : branding?.metaTitle || `${appName} - built with Budibase`,
         clientCacheKey: await objectStore.getClientCacheKey(appInfo.version),
         usedPlugins: plugins,
         favicon:
