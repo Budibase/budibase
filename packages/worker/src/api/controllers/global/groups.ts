@@ -20,9 +20,11 @@ export async function save(ctx: UserCtx) {
 
   // don't allow updating the roles through this endpoint
   delete group.roles
+  delete group.builder
   if (group._id) {
     const oldGroup = await groups.get(group._id)
     group.roles = oldGroup.roles
+    group.builder = oldGroup.builder
     group.scimInfo = oldGroup.scimInfo
   }
   const response = await groups.save(group)

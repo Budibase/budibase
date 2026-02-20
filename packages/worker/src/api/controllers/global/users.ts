@@ -4,13 +4,12 @@ import {
   context,
   db,
   events,
-  HTTPError,
   locks,
   platform,
   tenancy,
   users,
 } from "@budibase/backend-core"
-import { features, groups as proGroups } from "@budibase/pro"
+import { groups as proGroups } from "@budibase/pro"
 import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
 import {
   AcceptUserInviteRequest,
@@ -798,10 +797,6 @@ async function handleUserWorkspacePermission(
     existingUser.roles[prodWorkspaceId] = role
   } else {
     delete existingUser.roles[prodWorkspaceId]
-  }
-
-  if (role === "CREATOR" && !(await features.isAppBuildersEnabled())) {
-    throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
   const creatorForApps = Object.entries(existingUser.roles)
