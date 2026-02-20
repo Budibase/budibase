@@ -63,12 +63,13 @@ RUN apt-get update && \
 # Install litellm
 RUN python3 -m venv /opt/venv/litellm
 RUN /opt/venv/litellm/bin/pip install 'litellm[proxy]'
+ENV PATH="/opt/venv/litellm/bin:${PATH}"
 RUN mkdir -p /litellm
 
 # This is the default litellm config file, users can mount their own
 COPY hosting/litellm_config.yaml /litellm/config.yaml
 
-# Install postgres client for pg_dump utils
+# Install postgres client/server for pg_dump and LiteLLM metadata storage
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -82,6 +83,7 @@ RUN set -eux; \
       > /etc/apt/sources.list.d/postgresql.list; \
     apt-get update; \
     apt-get install -y --no-install-recommends postgresql-client-15; \
+    apt-get install -y --no-install-recommends postgresql-15; \
     rm -rf /var/lib/apt/lists/*; \
     apt-get purge -y --auto-remove gnupg lsb-release; \
     rm -f /etc/apt/sources.list.d/postgresql.list
@@ -117,8 +119,15 @@ COPY hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
 COPY hosting/single/redis-runner.sh .
 RUN chmod +x ./redis-runner.sh
+COPY hosting/single/litellm-db-runner.sh .
+RUN chmod +x ./litellm-db-runner.sh
 COPY hosting/single/healthcheck.sh .
 RUN chmod +x ./healthcheck.sh
+RUN /opt/venv/litellm/bin/pip install prisma
+RUN LITELLM_SCHEMA_PATH=$(/opt/venv/litellm/bin/python -c "from importlib.util import find_spec; from pathlib import Path; spec = find_spec('litellm'); assert spec and spec.origin; print(Path(spec.origin).resolve().parent / 'proxy' / 'schema.prisma')") && \
+    PRISMA_HIDE_UPDATE_MESSAGE=true /opt/venv/litellm/bin/prisma generate --schema "${LITELLM_SCHEMA_PATH}"
+RUN LITELLM_PROXY_EXTRAS_SCHEMA_PATH=$(/opt/venv/litellm/bin/python -c "from importlib.util import find_spec; from pathlib import Path; spec = find_spec('litellm_proxy_extras'); assert spec and spec.origin; print(Path(spec.origin).resolve().parent / 'schema.prisma')") && \
+    PRISMA_HIDE_UPDATE_MESSAGE=true /opt/venv/litellm/bin/prisma generate --schema "${LITELLM_PROXY_EXTRAS_SCHEMA_PATH}"
 
 # Script below sets the path for storing data based on $DATA_DIR
 # For Azure App Service install SSH & point data locations to /home
