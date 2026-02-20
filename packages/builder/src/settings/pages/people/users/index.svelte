@@ -529,6 +529,9 @@
       passwordModal.show()
       await refreshUserList()
     } catch (error) {
+      if (addedToWorkspaceEmails.length > 0) {
+        await refreshUserList()
+      }
       console.error(error)
       notifications.error("Error creating user")
     }
