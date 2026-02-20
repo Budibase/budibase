@@ -65,9 +65,13 @@ describe("createLLM", () => {
       const expected = { chat: "chat" }
       createBBAIClientMock.mockResolvedValue(expected as any)
 
-      const result = await createLLM("config-1")
+      const result = await createLLM("config-1", "session-1")
 
-      expect(createBBAIClient).toHaveBeenCalledWith("budibase/gpt-5-mini")
+      expect(createBBAIClient).toHaveBeenCalledWith(
+        "budibase/gpt-5-mini",
+        "session-1",
+        undefined
+      )
       expect(createLiteLLMOpenAI).not.toHaveBeenCalled()
       expect(result).toBe(expected)
     })

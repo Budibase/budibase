@@ -211,9 +211,6 @@ class LicensingStore extends BudiStore<LicensingState> {
     const triggerAutomationRunEnabled = features.includes(
       Constants.Features.TRIGGER_AUTOMATION_RUN
     )
-    const perAppBuildersEnabled = features.includes(
-      Constants.Features.APP_BUILDERS
-    )
     const customAppScriptsEnabled = features.includes(
       Constants.Features.CUSTOM_APP_SCRIPTS
     )
@@ -241,7 +238,6 @@ class LicensingStore extends BudiStore<LicensingState> {
         enforceableSSO,
         syncAutomationsEnabled,
         triggerAutomationRunEnabled,
-        perAppBuildersEnabled,
         customAppScriptsEnabled,
         pdfEnabled,
         recaptchaEnabled,
