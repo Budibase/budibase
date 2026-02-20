@@ -156,13 +156,12 @@
   .hasClickAction :global(.apexcharts-series path),
   .hasClickAction :global(.apexcharts-series rect),
   .hasClickAction :global(.apexcharts-series circle),
-  .hasClickAction :global(.apexcharts-heatmap-rect),
-  .hasClickAction :global(.apexcharts-line-series path),
-  .hasClickAction :global(.apexcharts-line-series circle),
-  .hasClickAction :global(.apexcharts-area-series path),
-  .hasClickAction :global(.apexcharts-area-series circle) {
+  .hasClickAction :global(.apexcharts-heatmap-rect) {
     cursor: pointer;
     pointer-events: auto;
+  }
+  .hasClickActionFull {
+    cursor: pointer;
   }
   .hasClickActionFull :global(.apexcharts-canvas),
   .hasClickActionFull :global(.apexcharts-inner),

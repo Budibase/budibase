@@ -34,6 +34,7 @@
   $: yAxisFormatter = getFormatter(labelType, yAxisUnits, "y")
   $: fill = getFill(gradient)
   $: hasClickAction = typeof onClick === "function"
+  $: fullCursor = hasClickAction
 
   $: options = {
     series,
@@ -169,4 +170,4 @@
   }
 </script>
 
-<ApexChart {options} {hasClickAction} />
+<ApexChart {options} {hasClickAction} fullCursor={fullCursor} />
