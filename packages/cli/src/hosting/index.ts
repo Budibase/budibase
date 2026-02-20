@@ -45,4 +45,7 @@ export default new Command(`${CommandWord.HOSTING}`)
     "Create an admin user automatically as part of first start.",
     generateUser
   )
-  .addSubOption("--single", "Specify this with init to use the single image.")
+  .addSubOption(
+    "--single",
+    "Specify this with init or update to target a single-image deployment."
+  )
