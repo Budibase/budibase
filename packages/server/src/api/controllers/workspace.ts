@@ -483,8 +483,8 @@ export async function fetchAppPackage(
     // disabled workspace apps should appear to not exist
     // if the dev workspace is being served, allow the request regardless
     if (
-      (!matchedWorkspaceApp && !isChatRoute) ||
-      (matchedWorkspaceApp?.disabled && !isDev && !isChatRoute)
+      !isChatRoute &&
+      (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev))
     ) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
