@@ -1,4 +1,4 @@
-import { env } from "@budibase/backend-core"
+import { context, env, HTTPError } from "@budibase/backend-core"
 import { ChatCompletionRequestV2, type Ctx } from "@budibase/types"
 import { bbai } from "../../../sdk/workspace/ai/llm"
 import environment from "../../../environment"
@@ -6,6 +6,23 @@ import environment from "../../../environment"
 interface StreamUsageState {
   sseBuffer: string
   usageCaptured: boolean
+}
+
+const getBBAITags = () => {
+  const tags = ["bbai-self"]
+  try {
+    const tenantId = context.getTenantId()
+    if (tenantId) {
+      tags.push(`tenant:${tenantId}`)
+    }
+  } catch {
+    //
+  }
+  const workspaceId = context.getWorkspaceId()
+  if (workspaceId) {
+    tags.push(`workspace:${workspaceId}`)
+  }
+  return tags
 }
 
 async function parseStreamUsageFromChunk(
@@ -58,11 +75,20 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
   if (!model) {
     ctx.throw(400, "Missing required field: model")
   }
-
-  bbai.assertSupportedBBAIModel(model)
+  if (!model?.startsWith("budibase/")) {
+    throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
+  }
 
   if (!environment.BBAI_LITELLM_KEY) {
     ctx.throw(500, "BBAI_LITELLM_KEY not configured")
+  }
+
+  const requestBody = {
+    ...ctx.request.body,
+    metadata: {
+      ...ctx.request.body.metadata,
+      tags: getBBAITags(),
+    },
   }
 
   const upstreamResponse = await fetch(
@@ -73,7 +99,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${environment.BBAI_LITELLM_KEY}`,
       },
-      body: JSON.stringify(ctx.request.body),
+      body: JSON.stringify(requestBody),
     }
   )
 
