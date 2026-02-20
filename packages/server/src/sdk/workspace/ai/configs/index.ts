@@ -176,6 +176,11 @@ export async function create(
     config.credentialsFields.api_key = licenseKey
   }
 
+  const configId =
+    config.provider === BUDIBASE_AI_PROVIDER_ID
+      ? docIds.generateAIConfigID("bbai")
+      : docIds.generateAIConfigID()
+
   let modelId
   if (!isBBAI || isSelfhost) {
     await liteLLM.validateConfig({
@@ -186,6 +191,7 @@ export async function create(
     })
 
     modelId = await liteLLM.addModel({
+      configId,
       provider: config.provider,
       model: config.model,
       credentialFields: config.credentialsFields,
@@ -197,10 +203,7 @@ export async function create(
   }
 
   const newConfig: CustomAIProviderConfig = {
-    _id:
-      config.provider === BUDIBASE_AI_PROVIDER_ID
-        ? docIds.generateAIConfigID("bbai")
-        : docIds.generateAIConfigID(),
+    _id: configId,
     name: config.name,
     provider: config.provider,
     credentialsFields: config.credentialsFields,
@@ -325,6 +328,7 @@ export async function update(
   if (shouldUpdateLiteLLM) {
     try {
       await liteLLM.updateModel({
+        configId: id,
         llmModelId: updatedConfig.liteLLMModelId,
         provider: updatedConfig.provider,
         name: updatedConfig.model,

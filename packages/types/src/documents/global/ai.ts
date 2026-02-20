@@ -24,4 +24,5 @@ export interface CustomAIProviderConfig extends Document {
 export interface LiteLLMKeyConfig extends Document {
   keyId: string
   secretKey: string
+  teamId: string
 }
