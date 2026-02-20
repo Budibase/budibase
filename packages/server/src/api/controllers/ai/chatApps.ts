@@ -2,14 +2,24 @@ import { HTTPError } from "@budibase/backend-core"
 import {
   ChatApp,
   ChatAppAgent,
+  FetchChatAppAgentsResponse,
   UpdateChatAppRequest,
   UserCtx,
 } from "@budibase/types"
+import { sdk as usersSdk } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+
+export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
+  const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(ctx.user)
+  if (!isBuilderOrAdmin && chatApp.live !== true) {
+    throw new HTTPError("Chat app is not live", 403)
+  }
+}
 
 export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
   const chatApp = await sdk.ai.chatApps.getSingle()
   if (chatApp) {
+    assertChatAppIsLiveForUser(ctx, chatApp)
     ctx.body = chatApp
     return
   }
@@ -17,6 +27,7 @@ export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
   const created = await sdk.ai.chatApps.create({
     agents: [],
   })
+  assertChatAppIsLiveForUser(ctx, created)
   ctx.body = created
 }
 
@@ -42,7 +53,43 @@ export async function fetchChatAppById(
   }
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
   ctx.body = chatApp
+}
+
+export async function fetchChatAppAgents(
+  ctx: UserCtx<void, FetchChatAppAgentsResponse, { chatAppId: string }>
+) {
+  const chatAppId = ctx.params?.chatAppId
+  if (!chatAppId) {
+    throw new HTTPError("chatAppId is required", 400)
+  }
+
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
+  const configuredAgentIds = new Set(
+    (chatApp.agents || [])
+      .filter(agent => agent.isEnabled === true)
+      .map(agent => agent.agentId)
+  )
+
+  if (configuredAgentIds.size === 0) {
+    ctx.body = { agents: [] }
+    return
+  }
+
+  const workspaceAgents = await sdk.ai.agents.fetch()
+  const agents: FetchChatAppAgentsResponse["agents"] = workspaceAgents
+    .filter(agent => agent._id && configuredAgentIds.has(agent._id))
+    .map(agent => ({
+      _id: agent._id,
+      name: agent.name,
+      icon: agent.icon,
+      iconColor: agent.iconColor,
+      live: agent.live,
+    }))
+
+  ctx.body = { agents }
 }
 
 export async function setChatAppAgent(

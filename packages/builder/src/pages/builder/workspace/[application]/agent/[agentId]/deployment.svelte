@@ -5,14 +5,19 @@
     Modal,
     ModalContent,
     Toggle,
+    notifications,
   } from "@budibase/bbui"
   import type { Agent, DeploymentRow } from "@budibase/types"
-  import { selectedAgent } from "@/stores/portal"
+  import { selectedAgent, agentsStore } from "@/stores/portal"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
 
+  const AI_CONFIG_REQUIRED_MESSAGE =
+    "Select an AI model in Agent config before enabling Discord."
+
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
+  let toggling = $state(false)
 
   const discordConfigured = $derived.by(() => {
     const integration = currentAgent?.discordIntegration
@@ -24,12 +29,15 @@
     )
   })
 
+  const discordEnabled = $derived(
+    !!currentAgent?.discordIntegration?.interactionsEndpointUrl
+  )
+
   const channels = $derived.by<DeploymentRow[]>(() => [
     {
       id: "discord",
       name: "Discord",
       logo: DiscordLogo,
-      status: discordConfigured ? "Enabled" : "Disabled",
       details: "Allow this agent to respond in Discord channels and threads",
       configurable: true,
     },
@@ -41,17 +49,40 @@
       return
     }
   }
+    if (channel.id !== "discord" || !currentAgent?._id) {
+      return
+    }
+    const isCurrentlyEnabled = channel.status === "Enabled"
+      return
+    }
+    toggling = true
+    try {
+      if (isCurrentlyEnabled) {
+        await agentsStore.toggleDiscordDeployment(currentAgent._id, false)
+        notifications.success("Discord channel disabled")
+      } else if (discordConfigured) {
+        await agentsStore.toggleDiscordDeployment(currentAgent._id, true)
+        notifications.success("Discord channel enabled")
+      } else {
+        discordModal?.show()
+      }
+    } catch (e) {
+      notifications.error(
+        isCurrentlyEnabled
+          ? "Failed to disable Discord channel"
+          : "Failed to enable Discord channel"
+      )
+    } finally {
+      toggling = false
+    }
+  }
 </script>
 
 <div class="deployment-root">
   <section class="section">
     <div class="agent-node">
       <div>
-        <Body
-          color={"var(--spectrum-global-color-gray-900);"}
-          weight="500"
-          size="XS">Agent in automations</Body
-        >
+        <Body weight="500" size="XS">Agent in automations</Body>
         <Body color={"var(--spectrum-global-color-gray-700);"} size="XS"
           >This agent can be triggered from within Budibase Automations via the
           Agent node</Body
@@ -100,8 +131,11 @@
               accentColor="Blue"
               on:click={() => onConfigureChannel(channel)}>Manage</ActionButton
             >
-            <Toggle value={channel.status === "Enabled" ? true : false}
-            ></Toggle>
+            <Toggle
+              value={channel.status === "Enabled"}
+              disabled={toggling}
+              on:change={() => onToggleChannel(channel)}
+            />
           </div>
         </div>
       {/each}

@@ -1,7 +1,6 @@
 import {
   ImageContentTypes,
   LLMConfigOptions,
-  LLMStreamChunk,
   ResponseFormat,
 } from "@budibase/types"
 import { Readable } from "node:stream"
@@ -75,6 +74,8 @@ export class OpenAI extends LLM {
     super(opts)
     this.client = this.getClient(opts)
   }
+
+  override supportsFiles = true
 
   // Default verbosity preference for supported models. Subclasses
   // (e.g. AzureOpenAI) can override to align with provider limits.
@@ -152,66 +153,6 @@ export class OpenAI extends LLM {
       }
     } else {
       throw new Error("No response found")
-    }
-  }
-
-  protected async *chatCompletionStream(
-    request: LLMRequest
-  ): AsyncGenerator<LLMStreamChunk, void, unknown> {
-    const parameters: OpenAITypes.ChatCompletionCreateParamsStreaming = {
-      model: this.model,
-      messages: request.messages,
-      max_tokens: this.maxTokens,
-      response_format: parseResponseFormat(request.format),
-      stream: true,
-    }
-
-    try {
-      const stream = await this.client.chat.completions.create(parameters)
-
-      let contentBuffer = ""
-      let finalUsage: OpenAIClient.CompletionUsage | null = null
-
-      for await (const chunk of stream) {
-        const delta = chunk?.choices?.[0]?.delta
-        if (!delta) continue
-
-        // Handle content streaming
-        if (delta.content) {
-          contentBuffer += delta.content
-          yield {
-            type: "content",
-            content: delta.content,
-          }
-        }
-
-        if (chunk.usage) {
-          finalUsage = chunk.usage
-        }
-      }
-
-      const totalTokens = finalUsage
-        ? calculateBudibaseAICredits(finalUsage)
-        : 0
-
-      // Final response
-      if (contentBuffer) {
-        request.addMessage({
-          role: "assistant",
-          content: contentBuffer,
-        })
-      }
-
-      yield {
-        type: "done",
-        messages: request.messages,
-        tokensUsed: totalTokens,
-      }
-    } catch (error: any) {
-      yield {
-        type: "error",
-        content: error.message,
-      }
     }
   }
 }

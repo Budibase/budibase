@@ -36,6 +36,7 @@
   export let allowEditRows: boolean = true
   export let allowEditColumns: boolean = true
   export let allowClickRows: boolean = true
+  export let selectOnRowClick: boolean = true
   export let selectedRows: any[] = []
   export let customRenderers: any[] = []
   export let disableSorting: boolean = false
@@ -488,7 +489,9 @@
                   on:click={() => {
                     if (!schema[field]?.preventSelectRow) {
                       dispatch("click", row)
-                      toggleSelectRow(row)
+                      if (selectOnRowClick) {
+                        toggleSelectRow(row)
+                      }
                     }
                   }}
                 >

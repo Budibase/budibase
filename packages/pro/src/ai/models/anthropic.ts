@@ -1,5 +1,5 @@
 import AnthropicClient from "@anthropic-ai/sdk"
-import { LLMConfigOptions, LLMStreamChunk } from "@budibase/types"
+import { LLMConfigOptions } from "@budibase/types"
 import { LLMFullResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
 import { LLM } from "./base"
@@ -23,6 +23,8 @@ function calculateBudibaseAICredits(usage?: AnthropicClient.Usage): number {
 }
 
 export class Anthropic extends LLM {
+  override supportsFiles = false
+
   private client: AnthropicClient
 
   constructor(opts: LLMConfigOptions) {
@@ -100,38 +102,6 @@ export class Anthropic extends LLM {
         )
       }
       throw err
-    }
-  }
-
-  protected async *chatCompletionStream(
-    request: LLMRequest
-  ): AsyncGenerator<LLMStreamChunk, void, unknown> {
-    // TODO: Implement streaming for Anthropic
-    // For now, fall back to non-streaming and yield all at once
-    try {
-      const response = await this.chatCompletion(request)
-
-      // Yield the final message content if available
-      if (response.messages.length > 0) {
-        const lastMessage = response.messages[response.messages.length - 1]
-        if (lastMessage.content) {
-          yield {
-            type: "content",
-            content: lastMessage.content as string,
-          }
-        }
-      }
-
-      yield {
-        type: "done",
-        messages: response.messages,
-        tokensUsed: response.tokensUsed,
-      }
-    } catch (error: any) {
-      yield {
-        type: "error",
-        content: error.message,
-      }
     }
   }
 }

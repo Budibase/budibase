@@ -2,6 +2,7 @@ import * as ai from "../controllers/ai"
 import {
   createAgentValidator,
   syncAgentDiscordCommandsValidator,
+  toggleAgentDiscordDeploymentValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 import {
@@ -13,7 +14,9 @@ import {
   updateVectorDbValidator,
 } from "./utils/validators/vectorDb"
 import { middleware } from "@budibase/pro"
+import { aiRagEnabled } from "../../middleware/aiRagEnabled"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
+import { auth } from "@budibase/backend-core"
 
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
@@ -28,9 +31,11 @@ builderAdminRoutes
     syncAgentDiscordCommandsValidator(),
     ai.syncAgentDiscordCommands
   )
-  .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
-  .post("/api/agent/:agentId/files", ai.uploadAgentFile)
-  .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
+  .post(
+    "/api/agent/:agentId/discord/toggle",
+    toggleAgentDiscordDeploymentValidator(),
+    ai.toggleAgentDiscordDeployment
+  )
   .get("/api/agent/tools", ai.fetchTools)
 
 builderAdminRoutes
@@ -39,12 +44,30 @@ builderAdminRoutes
   .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)
   .put("/api/configs", updateAIConfigValidator(), ai.updateAIConfig)
   .delete("/api/configs/:id", ai.deleteAIConfig)
-  .get("/api/vectordb", ai.fetchVectorDbConfigs)
-  .post("/api/vectordb", createVectorDbValidator(), ai.createVectorDbConfig)
-  .put("/api/vectordb", updateVectorDbValidator(), ai.updateVectorDbConfig)
-  .delete("/api/vectordb/:id", ai.deleteVectorDbConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
+
+const aiRagBuilderAdminRoutes = endpointGroupList
+  .group(auth.builderOrAdmin)
+  .addGroupMiddleware(aiRagEnabled)
+aiRagBuilderAdminRoutes
+  .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
+  .post("/api/agent/:agentId/files", ai.uploadAgentFile)
+  .delete("/api/agent/:agentId/files/:fileId", aiRagEnabled, ai.deleteAgentFile)
+  .get("/api/vectordb", ai.fetchVectorDbConfigs)
+  .post(
+    "/api/vectordb",
+    aiRagEnabled,
+    createVectorDbValidator(),
+    ai.createVectorDbConfig
+  )
+  .put(
+    "/api/vectordb",
+    aiRagEnabled,
+    updateVectorDbValidator(),
+    ai.updateVectorDbConfig
+  )
+  .delete("/api/vectordb/:id", ai.deleteVectorDbConfig)
 
 builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
 
