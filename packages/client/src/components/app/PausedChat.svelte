@@ -1,26 +1,10 @@
 <script>
-  import { onMount } from "svelte"
   import { Heading, Body } from "@budibase/bbui"
   import { ensureValidTheme, getThemeClassNames } from "@budibase/shared-core"
-  import { API } from "@/api"
   import { themeStore } from "@/stores"
 
-  let chatTheme
-
-  $: resolvedTheme = ensureValidTheme(chatTheme, $themeStore.theme)
+  $: resolvedTheme = ensureValidTheme($themeStore.theme)
   $: resolvedThemeClassNames = getThemeClassNames(resolvedTheme)
-
-  onMount(async () => {
-    try {
-      const chatApp = await API.get({
-        url: "/api/chatapps",
-        suppressErrors: true,
-      })
-      chatTheme = chatApp?.theme
-    } catch (error) {
-      console.error(error)
-    }
-  })
 </script>
 
 <div
