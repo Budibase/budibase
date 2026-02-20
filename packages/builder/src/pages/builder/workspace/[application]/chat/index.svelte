@@ -194,7 +194,6 @@
       settingChatLive = false
     }
   }
-
 </script>
 
 <div class="wrapper">
