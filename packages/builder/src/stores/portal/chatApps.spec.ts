@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
-import { Theme, type ChatApp } from "@budibase/types"
+import type { ChatApp } from "@budibase/types"
 
 vi.mock("@/stores/builder", async () => {
   const { writable } = await import("svelte/store")
@@ -130,28 +130,28 @@ describe("chatAppsStore", () => {
     expect(result).toBeNull()
   })
 
-  it("updates chat app theme and keeps derived state in sync", async () => {
+  it("updates chat app and keeps derived state in sync", async () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
       agents: [],
-      theme: Theme.LIGHT,
+      live: false,
     }
     const updated: ChatApp = {
       ...chatApp,
       _rev: "2",
-      theme: Theme.NORD,
+      live: true,
     }
 
     fetchChatApp.mockResolvedValue(chatApp)
     updateChatApp.mockResolvedValue(updated)
 
     await chatAppsStore.ensureChatApp()
-    const result = await chatAppsStore.updateChatApp({ theme: Theme.NORD })
+    const result = await chatAppsStore.updateChatApp({ live: true })
 
     expect(updateChatApp).toHaveBeenCalledWith({
       ...chatApp,
-      theme: Theme.NORD,
+      live: true,
     })
     expect(result).toEqual(updated)
     expect(get(currentChatApp)).toEqual(updated)
