@@ -9278,6 +9278,37 @@
         "label": "Button text",
         "key": "buttonText",
         "defaultValue": "Download PDF"
+      },
+      {
+        "section": true,
+        "name": "Margins (pt)",
+        "collapsed": true,
+        "settings": [
+          {
+            "type": "number",
+            "label": "Top",
+            "key": "marginTop",
+            "placeholder": "Default"
+          },
+          {
+            "type": "number",
+            "label": "Bottom",
+            "key": "marginBottom",
+            "placeholder": "Default"
+          },
+          {
+            "type": "number",
+            "label": "Left",
+            "key": "marginLeft",
+            "placeholder": "Default"
+          },
+          {
+            "type": "number",
+            "label": "Right",
+            "key": "marginRight",
+            "placeholder": "Default"
+          }
+        ]
       }
     ]
   },

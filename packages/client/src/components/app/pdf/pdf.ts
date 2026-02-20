@@ -7,7 +7,7 @@ export const A4HeightPx = ptToPx(841.92) + 1
 
 export interface PDFOptions {
   fileName?: string
-  marginPt?: number
+  marginPt?: number | number[]
   orientation?: "portrait" | "landscape"
   htmlScale?: number
   footer?: boolean
@@ -53,20 +53,24 @@ export async function htmlToPdf(el: HTMLElement, opts: PDFOptions = {}) {
     if (opts.footer) {
       worker.get("pdf").then(pdf => {
         const totalPages = pdf.internal.getNumberOfPages()
+        const marginArr = Array.isArray(options.margin)
+          ? options.margin
+          : [options.margin, options.margin, options.margin, options.margin]
+        const [marginTop, marginRight, marginBottom, marginLeft] = marginArr
         for (let i = 1; i <= totalPages; i++) {
           pdf.setPage(i)
           pdf.setFontSize(10)
           pdf.setTextColor(200)
           pdf.text(
             `Page ${i} of ${totalPages}`,
-            pdf.internal.pageSize.getWidth() - options.margin,
-            pdf.internal.pageSize.getHeight() - options.margin / 2,
+            pdf.internal.pageSize.getWidth() - marginRight,
+            pdf.internal.pageSize.getHeight() - marginBottom / 2,
             "right"
           )
           pdf.text(
             options.filename.replace(".pdf", ""),
-            options.margin,
-            pdf.internal.pageSize.getHeight() - options.margin / 2
+            marginLeft,
+            pdf.internal.pageSize.getHeight() - marginBottom / 2
           )
         }
       })

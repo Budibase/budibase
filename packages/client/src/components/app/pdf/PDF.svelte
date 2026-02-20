@@ -10,12 +10,26 @@
 
   export let fileName: string | undefined
   export let buttonText: string | undefined
+  export let marginTop: number | undefined
+  export let marginBottom: number | undefined
+  export let marginLeft: number | undefined
+  export let marginRight: number | undefined
 
   // Derive dimension calculations
   const DesiredRows = 40
-  const innerPageHeightPx = GridRowHeight * DesiredRows
-  const doubleMarginPx = A4HeightPx - innerPageHeightPx
-  const marginPt = pxToPt(doubleMarginPx / 2)
+  const defaultInnerPageHeightPx = GridRowHeight * DesiredRows
+  const defaultDoubleMarginPx = A4HeightPx - defaultInnerPageHeightPx
+  const defaultMarginPt = pxToPt(defaultDoubleMarginPx / 2)
+
+  // Use custom margins if provided, otherwise fall back to defaults
+  $: topPt = marginTop != null ? marginTop : defaultMarginPt
+  $: bottomPt = marginBottom != null ? marginBottom : defaultMarginPt
+  $: leftPt = marginLeft != null ? marginLeft : defaultMarginPt
+  $: rightPt = marginRight != null ? marginRight : defaultMarginPt
+  $: marginPt = [topPt, rightPt, bottomPt, leftPt]
+  $: verticalMarginPx = ptToPx(topPt + bottomPt)
+  $: innerPageHeightPx = A4HeightPx - verticalMarginPx
+  $: doubleMarginPx = verticalMarginPx
 
   let rendering = false
   let pageCount = 1
@@ -25,8 +39,8 @@
   $: safeName = fileName || "Report"
   $: safeButtonText = buttonText || "Download PDF"
   $: heightPx = pageCount * innerPageHeightPx + doubleMarginPx
-  $: pageStyle = `--height:${heightPx}px; --margin:${marginPt}pt;`
-  $: gridMinHeight = pageCount * DesiredRows * GridRowHeight
+  $: pageStyle = `--height:${heightPx}px; --margin-top:${topPt}pt; --margin-right:${rightPt}pt; --margin-bottom:${bottomPt}pt; --margin-left:${leftPt}pt;`
+  $: gridMinHeight = pageCount * Math.floor(innerPageHeightPx / GridRowHeight) * GridRowHeight
 
   const generatePDF = async () => {
     rendering = true
@@ -35,7 +49,7 @@
     try {
       const opts: PDFOptions = {
         fileName: safeName,
-        marginPt,
+        marginPt: marginPt,
         footer: true,
       }
       await htmlToPdf(ref, opts)
@@ -59,7 +73,8 @@
   }
 
   const getDividerStyle = (idx: number) => {
-    const top = (idx + 1) * innerPageHeightPx + doubleMarginPx / 2
+    const topMarginPx = ptToPx(topPt)
+    const top = (idx + 1) * innerPageHeightPx + topMarginPx
     return `--idx:"${idx + 1}"; --top:${top}px;`
   }
 
@@ -110,7 +125,7 @@
 </script>
 
 <Block>
-  <div class="wrapper" style="--margin:{marginPt}pt;">
+  <div class="wrapper" style="--margin-top:{topPt}pt; --margin-left:{leftPt}pt;">
     <div class="container" use:styleable={$component.styles}>
       <div class="title">
         <Heading size="M">{safeName}</Heading>
@@ -180,7 +195,7 @@
   .page {
     width: 595.28pt;
     min-height: var(--height);
-    padding: var(--margin);
+    padding: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
     background-color: white;
     flex: 0 0 auto;
     display: flex;
@@ -208,7 +223,7 @@
     transform: translateY(-50%);
   }
   .divider.last {
-    top: calc(var(--top) + var(--margin));
+    top: calc(var(--top) + var(--margin-top));
     background: transparent;
   }
 </style>
