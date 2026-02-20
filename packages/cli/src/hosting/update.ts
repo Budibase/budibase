@@ -9,7 +9,7 @@ import {
 } from "./utils"
 import { confirmation } from "../questions"
 import compose from "docker-compose"
-import { COMPOSE_PATH } from "./makeFiles"
+import { COMPOSE_PATH, ensureLiteLLMEnvVars } from "./makeFiles"
 import { info, success } from "../utils"
 import { start } from "./start"
 
@@ -38,6 +38,14 @@ export async function update(opts?: unknown) {
 
   await checkDockerConfigured()
   checkInitComplete()
+  const addedEnvVars = ensureLiteLLMEnvVars()
+  if (addedEnvVars.length) {
+    console.log(
+      info(
+        `Added missing LiteLLM variables to .env: ${addedEnvVars.join(", ")}`
+      )
+    )
+  }
   if (
     !isSingle &&
     (await confirmation("Do you wish to update you docker-compose.yaml?"))

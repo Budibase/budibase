@@ -11,6 +11,16 @@ const SINGLE_IMAGE = "budibase/budibase:latest"
 const VOL_NAME = "budibase_data"
 export const COMPOSE_PATH = path.resolve("./docker-compose.yaml")
 export const ENV_PATH = path.resolve("./.env")
+const LITELLM_SECRET_VARS = [
+  "LITELLM_MASTER_KEY",
+  "LITELLM_SALT_KEY",
+  "LITELLM_DB_PASSWORD",
+]
+const LITELLM_DEFAULT_VARS: Record<string, string> = {
+  LITELLM_PORT: "4000",
+  LITELLM_DB_NAME: "litellm",
+  LITELLM_DB_USER: "llmproxy",
+}
 
 function getSecrets(opts = { single: false }) {
   const secrets = [
@@ -144,4 +154,54 @@ export function getComposeProperty(property: string) {
     return service.environment[property]
   }
   return null
+}
+
+function getExistingEnvKeys(contents: string) {
+  const keys = new Set<string>()
+  const lines = contents.split("\n")
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue
+    }
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=/)
+    if (match) {
+      keys.add(match[1])
+    }
+  }
+  return keys
+}
+
+export function ensureLiteLLMEnvVars() {
+  if (!fs.existsSync(ENV_PATH)) {
+    return []
+  }
+  const current = fs.readFileSync(ENV_PATH, "utf8")
+  const existingKeys = getExistingEnvKeys(current)
+  const additions: Record<string, string> = {}
+
+  for (const key of LITELLM_SECRET_VARS) {
+    if (!existingKeys.has(key)) {
+      additions[key] = randomString.generate()
+    }
+  }
+  for (const [key, value] of Object.entries(LITELLM_DEFAULT_VARS)) {
+    if (!existingKeys.has(key)) {
+      additions[key] = value
+    }
+  }
+
+  const addedKeys = Object.keys(additions)
+  if (!addedKeys.length) {
+    return []
+  }
+
+  let output = current
+  if (output.length && !output.endsWith("\n")) {
+    output += "\n"
+  }
+  output += stringifyToDotEnv(additions)
+  fs.writeFileSync(ENV_PATH, output)
+
+  return addedKeys
 }
