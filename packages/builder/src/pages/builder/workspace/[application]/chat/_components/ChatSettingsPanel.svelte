@@ -1,8 +1,7 @@
 <script lang="ts">
   import Panel from "@/components/design/Panel.svelte"
-  import { Body, Button, ActionMenu, MenuItem, Select } from "@budibase/bbui"
-  import type { Agent, ConversationStarter, Theme } from "@budibase/types"
-  import { ThemeOptions } from "@budibase/shared-core"
+  import { Body, Button, ActionMenu, MenuItem } from "@budibase/bbui"
+  import type { Agent, ConversationStarter } from "@budibase/types"
   import AgentList from "./AgentList.svelte"
   import AgentSettingsModal from "./AgentSettingsModal.svelte"
   import type { AgentListItem } from "./types"
@@ -23,8 +22,6 @@
   ) => void
   export let handleDefaultToggle: (_agentId: string) => void
   export let handleAddAgent: (_agentId: string) => void
-  export let selectedTheme: Theme
-  export let handleThemeChange: (_theme: Theme) => void
   export let handleUpdateConversationStarters: (
     _agentId: string,
     _starters: ConversationStarter[]
@@ -84,18 +81,6 @@
         <Body size="S" color="var(--spectrum-global-color-gray-800)"
           >Settings</Body
         >
-      </div>
-
-      <div class="settings-section">
-        <Body size="S" color="var(--spectrum-global-color-gray-700)">Theme</Body
-        >
-        <Select
-          options={ThemeOptions}
-          value={selectedTheme}
-          getOptionLabel={option => option.name}
-          getOptionValue={option => option.id}
-          on:change={event => handleThemeChange(event.detail)}
-        />
       </div>
 
       <div class="settings-section">

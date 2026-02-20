@@ -9,8 +9,6 @@
   } from "@/stores/portal"
   import { deploymentStore, themeStore } from "@/stores/builder"
   import { FeatureFlag } from "@budibase/types"
-  import type { Theme } from "@budibase/types"
-  import { ensureValidTheme } from "@budibase/shared-core"
   import { goto as gotoStore, params } from "@roxi/routify"
   import { onMount } from "svelte"
 
@@ -28,7 +26,6 @@
 
   let chatAgents: ChatAgentConfig[] = []
   let settingChatLive = false
-  let settingChatTheme = false
 
   $: chatEnabled =
     $featureFlags[FeatureFlag.AI_AGENTS] && $featureFlags[FeatureFlag.AI_CHAT]
@@ -52,10 +49,6 @@
   $: namedAgents = agents.filter(agent => Boolean(agent?.name))
   $: chatApp = $currentChatApp
   $: chatAgents = (chatApp?.agents || []) as ChatAgentConfig[]
-  $: selectedChatTheme = ensureValidTheme(
-    chatApp?.theme as Theme | undefined,
-    $themeStore.theme
-  )
 
   $: agents = [...$agentsStore.agents].sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
@@ -202,28 +195,6 @@
     }
   }
 
-  const handleThemeChange = async (theme: Theme) => {
-    const workspaceId = $params.application
-    if (!workspaceId || settingChatTheme || theme === selectedChatTheme) {
-      return
-    }
-
-    settingChatTheme = true
-    try {
-      const ensured = await chatAppsStore.ensureChatApp(undefined, workspaceId)
-      if (!ensured) {
-        notifications.error("Could not update chat theme")
-        return
-      }
-
-      await chatAppsStore.updateChatApp({ theme })
-    } catch (error) {
-      console.error(error)
-      notifications.error("Error updating chat theme")
-    } finally {
-      settingChatTheme = false
-    }
-  }
 </script>
 
 <div class="wrapper">
@@ -247,14 +218,12 @@
       {handleAvailabilityToggle}
       {handleDefaultToggle}
       {handleAddAgent}
-      selectedTheme={selectedChatTheme}
-      {handleThemeChange}
       {handleUpdateConversationStarters}
     />
 
     {#if $params.application}
       <div class="chat-app-container">
-        <ChatApp workspaceId={$params.application} theme={selectedChatTheme} />
+        <ChatApp workspaceId={$params.application} theme={$themeStore.theme} />
       </div>
     {/if}
   </div>

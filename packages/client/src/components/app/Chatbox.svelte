@@ -12,7 +12,6 @@
     ChatAppAgent,
     ChatConversation,
     DraftChatConversation,
-    Theme,
     WithoutDocMetadata,
   } from "@budibase/types"
   import { appStore, authStore, themeStore } from "@/stores"
@@ -68,7 +67,6 @@
   let chatAppId = ""
   let chatAgents: ChatAppAgent[] = []
   let agents: ChatAppAgentMetadata[] = []
-  let chatTheme: Theme | undefined
 
   const getUserLabel = (user?: ChatUser) => {
     if (!user) {
@@ -113,7 +111,7 @@
   $: conversationStarters =
     chatAgents.find(agent => agent.agentId === selectedAgentId)
       ?.conversationStarters || []
-  $: resolvedTheme = ensureValidTheme(chatTheme, $themeStore.theme)
+  $: resolvedTheme = ensureValidTheme($themeStore.theme)
   $: resolvedThemeClassNames = getThemeClassNames(resolvedTheme)
   $: isAgentKnown = selectedAgentId
     ? agents.some(agent => agent._id === selectedAgentId)
@@ -151,7 +149,6 @@
       const chatApp = await API.fetchChatApp(workspaceId)
 
       chatAppId = chatApp?._id || ""
-      chatTheme = chatApp?.theme as Theme | undefined
       chatAgents = chatApp?.agents || []
       const agentsResponse = chatAppId
         ? await API.get<{ agents: ChatAppAgentMetadata[] }>({
