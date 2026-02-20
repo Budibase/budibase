@@ -33,11 +33,14 @@
     !!currentAgent?.discordIntegration?.interactionsEndpointUrl
   )
 
+  const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
+
   const channels = $derived.by<DeploymentRow[]>(() => [
     {
       id: "discord",
       name: "Discord",
       logo: DiscordLogo,
+      status: discordEnabled ? "Enabled" : "Disabled",
       details: "Allow this agent to respond in Discord channels and threads",
       configurable: true,
     },
@@ -49,10 +52,14 @@
       return
     }
   }
+
+  const onToggleChannel = async (channel: DeploymentRow) => {
     if (channel.id !== "discord" || !currentAgent?._id) {
       return
     }
     const isCurrentlyEnabled = channel.status === "Enabled"
+    if (!isCurrentlyEnabled && !hasAiConfig) {
+      notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
       return
     }
     toggling = true
@@ -82,7 +89,11 @@
   <section class="section">
     <div class="agent-node">
       <div>
-        <Body weight="500" size="XS">Agent in automations</Body>
+        <Body
+          color={"var(--spectrum-global-color-gray-900);"}
+          weight="500"
+          size="XS">Agent in automations</Body
+        >
         <Body color={"var(--spectrum-global-color-gray-700);"} size="XS"
           >This agent can be triggered from within Budibase Automations via the
           Agent node</Body
