@@ -36,6 +36,7 @@ import {
 } from "../../../sdk/workspace/ai/agents/utils"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag/files"
+import { assertChatAppIsLiveForUser } from "./chatApps"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -279,6 +280,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     if (!chatApp) {
       throw new HTTPError("Chat app not found", 404)
     }
+    assertChatAppIsLiveForUser(ctx, chatApp)
   }
 
   let existingChat: ChatConversation | undefined
@@ -487,6 +489,7 @@ export async function createChatConversation(
   }
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
   if (
     !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
   ) {
@@ -530,7 +533,8 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (!chat || chat.chatAppId !== chatAppId) {
@@ -555,7 +559,8 @@ export async function fetchChatHistory(
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
 
   const allChats = await db.allDocs<ChatConversation>(
     docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
@@ -595,7 +600,8 @@ export async function fetchChatConversation(
     throw new HTTPError("chatConversationId is required", 400)
   }
 
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (!chat || chat.chatAppId !== chatAppId) {

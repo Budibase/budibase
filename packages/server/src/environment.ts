@@ -159,6 +159,7 @@ const environment = {
     process.env.LITELLM_URL ||
     `http://localhost:${process.env.LITELLM_PORT || "4000"}`,
   LITELLM_MASTER_KEY: process.env.LITELLM_MASTER_KEY,
+  BBAI_LITELLM_KEY: process.env.BBAI_LITELLM_KEY,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {
