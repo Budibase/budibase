@@ -281,7 +281,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
   const normalizedPath = ctx.path.replace(/\/$/, "")
-  const isChatRoute = normalizedPath.startsWith("/app-chat/")
+  const isChatRoute =
+    normalizedPath === "/app-chat" || normalizedPath.startsWith("/app-chat/")
   const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
     isWorkspaceFullyMigrated(workspaceId),
     configs.getSettingsConfigDoc(),
