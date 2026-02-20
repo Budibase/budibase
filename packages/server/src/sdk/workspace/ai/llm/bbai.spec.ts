@@ -47,10 +47,28 @@ describe("createBBAIClient", () => {
     await resetHttpMocking()
   })
 
-  it("rejects unsupported models", async () => {
-    await expect(createBBAIClient("unsupported-model")).rejects.toMatchObject({
-      status: 400,
-    })
+  it("passes through model names to LiteLLM", async () => {
+    mockChatGPTResponse("hello world")
+
+    await withEnv(
+      {
+        BBAI_LITELLM_KEY: "sk-test-key",
+      },
+      async () => {
+        const { chat } = await createBBAIClient("unsupported-model")
+        await chat.doGenerate({
+          prompt: [
+            {
+              role: "user",
+              content: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+      }
+    )
+
+    expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
+    expect(incrementCreditsMock).toHaveBeenCalledWith(7)
   })
 
   it("increments credits for generate calls", async () => {
