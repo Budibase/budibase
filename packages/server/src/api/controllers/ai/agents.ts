@@ -241,7 +241,7 @@ export async function syncAgentDiscordCommands(
   ctx.status = 200
 }
 
-export async function provisionAgentTeamsChannel(
+export async function provisionAgentMSTeamsChannel(
   ctx: UserCtx<
     ProvisionAgentTeamsChannelRequest,
     ProvisionAgentTeamsChannelResponse,

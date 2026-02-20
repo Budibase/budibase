@@ -57,7 +57,7 @@
     draftAgentId = currentAgent._id
   })
 
-  const provisionTeamsChannel = async () => {
+  const provisionMSTeamsChannel = async () => {
     if (!agent?._id || provisioning) {
       return
     }
@@ -75,7 +75,7 @@
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
         },
       })
-      provisionResult = await agentsStore.provisionTeamsChannel(agent._id)
+      provisionResult = await agentsStore.provisionMSTeamsChannel(agent._id)
       await agentsStore.fetchAgents()
       notifications.success("Microsoft Teams channel settings saved")
     } catch (error) {
@@ -97,7 +97,7 @@
       ? "Save changes"
       : "Save channel"}
   actionDisabled={provisioning || !hasRequiredCredentials}
-  onAction={provisionTeamsChannel}
+  onAction={provisionMSTeamsChannel}
 >
   {#snippet fields()}
     <Input label="App ID (client ID)" bind:value={draft.appId} />

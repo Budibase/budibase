@@ -29,7 +29,7 @@ export interface SyncAgentDiscordCommandsRequest {
 }
 
 export interface SyncAgentDiscordCommandsResponse {
-  success: true
+  success: boolean
   chatAppId: string
   interactionsEndpointUrl: string
   inviteUrl: string
@@ -40,7 +40,7 @@ export interface ProvisionAgentTeamsChannelRequest {
 }
 
 export interface ProvisionAgentTeamsChannelResponse {
-  success: true
+  success: boolean
   chatAppId: string
   messagingEndpointUrl: string
 }

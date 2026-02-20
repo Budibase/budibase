@@ -22,7 +22,7 @@ describe("agent teams integration provisioning", () => {
       },
     })
 
-    const result = await config.api.agent.provisionTeamsChannel(agent._id!)
+    const result = await config.api.agent.provisionMSTeamsChannel(agent._id!)
 
     expect(result.success).toBe(true)
     expect(result.chatAppId).toBeTruthy()
@@ -72,7 +72,7 @@ describe("agent teams integration provisioning", () => {
       name: "No Teams Settings",
     })
 
-    await config.api.agent.provisionTeamsChannel(agent._id!, undefined, {
+    await config.api.agent.provisionMSTeamsChannel(agent._id!, undefined, {
       status: 400,
     })
   })
@@ -85,7 +85,7 @@ describe("agent teams integration provisioning", () => {
       },
     })
 
-    await config.api.agent.provisionTeamsChannel(agent._id!, undefined, {
+    await config.api.agent.provisionMSTeamsChannel(agent._id!, undefined, {
       status: 400,
     })
   })

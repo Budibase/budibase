@@ -64,13 +64,13 @@ export class AgentAPI extends TestAPI {
     )
   }
 
-  provisionTeamsChannel = async (
+  provisionMSTeamsChannel = async (
     agentId: string,
     body?: ProvisionAgentTeamsChannelRequest,
     expectations?: Expectations
   ): Promise<ProvisionAgentTeamsChannelResponse> => {
     return await this._post<ProvisionAgentTeamsChannelResponse>(
-      `/api/agent/${agentId}/teams/provision`,
+      `/api/agent/${agentId}/ms-teams/provision`,
       {
         body,
         expectations,

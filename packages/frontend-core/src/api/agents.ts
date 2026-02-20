@@ -36,7 +36,7 @@ export interface AgentEndpoints {
     agentId: string,
     body?: SyncAgentDiscordCommandsRequest
   ) => Promise<SyncAgentDiscordCommandsResponse>
-  provisionAgentTeamsChannel: (
+  provisionAgentMSTeamsChannel: (
     agentId: string,
     body?: ProvisionAgentTeamsChannelRequest
   ) => Promise<ProvisionAgentTeamsChannelResponse>
@@ -115,12 +115,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  provisionAgentTeamsChannel: async (agentId: string, body) => {
+  provisionAgentMSTeamsChannel: async (agentId: string, body) => {
     return await API.post<
       ProvisionAgentTeamsChannelRequest | undefined,
       ProvisionAgentTeamsChannelResponse
     >({
-      url: `/api/agent/${agentId}/teams/provision`,
+      url: `/api/agent/${agentId}/ms-teams/provision`,
       body,
     })
   },

@@ -1,7 +1,7 @@
 import * as ai from "../controllers/ai"
 import {
   createAgentValidator,
-  provisionAgentTeamsChannelValidator,
+  provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
@@ -52,9 +52,9 @@ builderAdminRoutes
     ai.syncAgentDiscordCommands
   )
   .post(
-    "/api/agent/:agentId/teams/provision",
-    provisionAgentTeamsChannelValidator(),
-    ai.provisionAgentTeamsChannel
+    "/api/agent/:agentId/ms-teams/provision",
+    provisionAgentMSTeamsChannelValidator(),
+    ai.provisionAgentMSTeamsChannel
   )
 
 // these are Budibase AI routes

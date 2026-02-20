@@ -9,7 +9,7 @@
   import type { Agent, DeploymentRow } from "@budibase/types"
   import { selectedAgent } from "@/stores/portal"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
-  import TeamsConfig from "./DeploymentChannels/TeamsConfig.svelte"
+  import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
   import TeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
 
@@ -50,7 +50,8 @@
       name: "Microsoft Teams",
       logo: TeamsLogo,
       status: teamsConfigured ? "Enabled" : "Disabled",
-      details: "Configure this agent for Teams personal, group, and team chats",
+      details:
+        "Configure this agent for Microsoft Teams personal, group, and team chats",
       configurable: true,
     },
   ])
@@ -183,7 +184,7 @@
         </div>
       </div>
     </svelte:fragment>
-    <TeamsConfig agent={currentAgent} />
+    <MicrosoftTeamsConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
 

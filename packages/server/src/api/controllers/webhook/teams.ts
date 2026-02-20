@@ -37,10 +37,10 @@ import {
 
 const TEAMS_ASK_COMMAND = "ask"
 const TEAMS_NEW_COMMAND = "new"
-const TEAMS_DEFAULT_IDLE_TIMEOUT_MINUTES = 45
-const TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE = 5000
-const TEAMS_DEFAULT_RUNTIME_CACHE_SIZE = 500
-const TEAMS_DEFAULT_RUNTIME_CACHE_TTL_MINUTES = 60
+const TEAMS_DEFAULT_IDLE_TIMEOUT_MS = 45 * 60 * 1000
+const TEAMS_DEFAULT_CONVERSATION_CACHE_MAX_ENTRIES = 5000
+const TEAMS_DEFAULT_RUNTIME_CACHE_MAX_ENTRIES = 500
+const TEAMS_DEFAULT_RUNTIME_CACHE_TTL_MS = 60 * 60 * 1000
 const TEAMS_MAX_MESSAGE_LENGTH = 3500
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
@@ -147,7 +147,7 @@ const findTeamsConversation = async ({
         cache: teamsConversationCache,
         cacheKey,
         chatId: cachedChatId,
-        maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE,
+        maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_MAX_ENTRIES,
       })
       return cachedChat
     }
@@ -170,7 +170,7 @@ const findTeamsConversation = async ({
       cache: teamsConversationCache,
       cacheKey,
       chatId: picked._id,
-      maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE,
+      maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_MAX_ENTRIES,
     })
   }
   return picked
@@ -180,7 +180,7 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
   if (configMinutes && configMinutes > 0) {
     return configMinutes * 60 * 1000
   }
-  return TEAMS_DEFAULT_IDLE_TIMEOUT_MINUTES
+  return TEAMS_DEFAULT_IDLE_TIMEOUT_MS
 }
 
 const buildTeamsUserContext = (
@@ -284,8 +284,8 @@ const getTeamsRuntime = ({
   tenantId?: string
 }): TeamsRuntime => {
   const nowMs = Date.now()
-  const maxSize = TEAMS_DEFAULT_RUNTIME_CACHE_SIZE
-  const ttlMs = TEAMS_DEFAULT_RUNTIME_CACHE_TTL_MINUTES
+  const maxSize = TEAMS_DEFAULT_RUNTIME_CACHE_MAX_ENTRIES
+  const ttlMs = TEAMS_DEFAULT_RUNTIME_CACHE_TTL_MS
   const cacheKey = [agentId, appId, appPassword, tenantId || ""].join(":")
   evictExpiredTimedCache({
     cache: teamsRuntimeCache,
@@ -495,7 +495,7 @@ const handleTeamsMessage = async ({
           scope,
         }),
         chatId,
-        maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE,
+        maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_MAX_ENTRIES,
       })
       return await reply(
         "Started a new conversation. Send a message to continue."
@@ -565,7 +565,7 @@ const handleTeamsMessage = async ({
         scope,
       }),
       chatId,
-      maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_SIZE,
+      maxSize: TEAMS_DEFAULT_CONVERSATION_CACHE_MAX_ENTRIES,
     })
 
     await reply(result.assistantText || "No response generated.")

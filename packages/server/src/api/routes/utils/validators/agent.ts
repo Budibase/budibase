@@ -74,7 +74,7 @@ export function syncAgentDiscordCommandsValidator() {
   return chatAppIdBodyValidator()
 }
 
-export function provisionAgentTeamsChannelValidator() {
+export function provisionAgentMSTeamsChannelValidator() {
   return chatAppIdBodyValidator()
 }
 
