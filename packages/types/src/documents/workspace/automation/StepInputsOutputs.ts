@@ -359,6 +359,7 @@ export type GetRowStepOutputs = BaseAutomationOutputs & {
 export type SmtpEmailStepInputs = {
   to: string
   from: string
+  replyTo?: string
   subject: string
   contents: string
   cc: string
