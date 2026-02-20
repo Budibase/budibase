@@ -170,4 +170,4 @@
   }
 </script>
 
-<ApexChart {options} {hasClickAction} fullCursor={fullCursor} />
+<ApexChart {options} {hasClickAction} {fullCursor} />
