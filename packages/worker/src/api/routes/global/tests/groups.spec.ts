@@ -104,6 +104,40 @@ describe("/api/global/groups", () => {
       expect(events.group.permissionsEdited).not.toHaveBeenCalled()
     })
 
+    it("should accept builder in save payload but not allow changing it", async () => {
+      const appId = "app_test123"
+      const updatedName = generator.guid()
+      const group = structures.groups.UserGroup()
+      const { body: savedGroup } = await config.api.groups.saveGroup(group)
+
+      await config.api.groups.updateGroupApps(savedGroup._id, {
+        add: [{ appId, roleId: "CREATOR" }],
+        remove: [],
+      })
+
+      const { body: groupWithBuilder } = await config.api.groups.find(
+        savedGroup._id
+      )
+      expect(groupWithBuilder.builder.apps).toEqual([appId])
+
+      await config.api.groups.saveGroup(
+        {
+          ...groupWithBuilder,
+          name: updatedName,
+          builder: {
+            apps: ["app_different"],
+          },
+        },
+        { expect: 200 }
+      )
+
+      const { body: updatedGroup } = await config.api.groups.find(
+        savedGroup._id
+      )
+      expect(updatedGroup.name).toEqual(updatedName)
+      expect(updatedGroup.builder.apps).toEqual([appId])
+    })
+
     describe("scim", () => {
       async function createScimGroup() {
         mocks.licenses.useScimIntegration()
@@ -451,7 +485,6 @@ describe("/api/global/groups", () => {
     let group: UserGroup
 
     beforeEach(async () => {
-      mocks.licenses.useAppBuilders()
       const groupResponse = await config.api.groups.saveGroup(
         structures.groups.UserGroup()
       )
