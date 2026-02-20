@@ -340,10 +340,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           : branding?.metaTitle || `${appName} - built with Budibase`,
         clientCacheKey: await objectStore.getClientCacheKey(appInfo.version),
         usedPlugins: plugins,
-        favicon:
-          branding.faviconUrl
-            ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
-            : "",
+        favicon: branding.faviconUrl
+          ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
+          : "",
         appMigrating: !fullyMigrated,
         recaptchaKey: recaptchaConfig?.config.siteKey,
         nonce,
