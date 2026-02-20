@@ -30,6 +30,8 @@
   export let titleSize
   export let showPercentage
 
+  $: hasClickAction = typeof onClick === "function"
+
   const formatPercentage = value => {
     const numericValue = Number(value)
     if (!Number.isFinite(numericValue)) {
