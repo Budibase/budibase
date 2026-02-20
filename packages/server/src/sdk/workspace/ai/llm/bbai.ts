@@ -90,7 +90,7 @@ const createBBAIFetch = (sessionId?: string): BBAIFetch => {
         body.metadata = {
           ...body.metadata,
           tags: [
-            `bbai`,
+            `bbai-cloud`,
             `tenant:${context.getTenantId()}`,
             `workspace:${context.getWorkspaceId()}`,
           ],
