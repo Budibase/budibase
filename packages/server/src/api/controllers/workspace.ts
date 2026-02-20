@@ -483,14 +483,18 @@ export async function fetchAppPackage(
     // disabled workspace apps should appear to not exist
     // if the dev workspace is being served, allow the request regardless
     if (
-      !matchedWorkspaceApp ||
-      (matchedWorkspaceApp.disabled && !isDev && !isChatRoute)
+      (!matchedWorkspaceApp && !isChatRoute) ||
+      (matchedWorkspaceApp?.disabled && !isDev && !isChatRoute)
     ) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
-    screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
 
-    application.navigation = matchedWorkspaceApp.navigation
+    if (matchedWorkspaceApp) {
+      screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
+      application.navigation = matchedWorkspaceApp.navigation
+    } else {
+      screens = []
+    }
   }
 
   const clientLibPath = await objectStore.clientLibraryUrl(
