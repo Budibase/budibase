@@ -251,6 +251,8 @@
           workspaceRoleFromUser ||
           (workspaceRoleGroupRole ? Constants.Roles.GROUP : undefined)
         const isGroupUser = workspaceRole === Constants.Roles.GROUP
+        const isWorkspaceTenantAdmin =
+          isWorkspaceOnly && role.value === Constants.BudibaseRoles.Admin
         return {
           ...user,
           name: user.firstName ? user.firstName + " " + user.lastName : "",
@@ -262,7 +264,8 @@
           __selectable:
             role.value === Constants.BudibaseRoles.Owner ||
             $auth.user?.email === user.email ||
-            isGroupUser
+            isGroupUser ||
+            isWorkspaceTenantAdmin
               ? false
               : true,
           apps: sdk.users.userAppAccessList(user, allGroups),

@@ -15,11 +15,19 @@
     return undefined
   }
 
+  const canWorkspaceRoleOverrideGlobalRole = globalRole => {
+    return (
+      globalRole === Constants.BudibaseRoles.AppUser ||
+      globalRole === Constants.BudibaseRoles.Creator
+    )
+  }
+
   $: globalRoleValue = users.getUserRole(row)
+  $: workspaceRoleValue = getRoleFromWorkspaceRole(row?.workspaceRole)
   $: roleValue =
-    globalRoleValue === Constants.BudibaseRoles.Owner
-      ? globalRoleValue
-      : getRoleFromWorkspaceRole(row?.workspaceRole) || globalRoleValue
+    canWorkspaceRoleOverrideGlobalRole(globalRoleValue) && workspaceRoleValue
+      ? workspaceRoleValue
+      : globalRoleValue
   $: role = Constants.ExtendedBudibaseRoleOptions.find(
     x => x.value === roleValue
   )

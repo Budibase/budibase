@@ -110,9 +110,6 @@
       : Constants.BudibaseRoleOptions
   )
   const disableFields = $derived(readonly || !!user?.scimInfo?.isSync)
-  const disableRole = $derived(
-    disableFields || isTenantOwner || user?._id === $auth.user?._id
-  )
   const hasChanges = $derived(
     !!initialDraft &&
       (draft.firstName !== initialDraft.firstName ||
@@ -148,8 +145,39 @@
     return appRole
   }
 
+  const getRoleFromWorkspaceRole = (workspaceRole?: string) => {
+    if (workspaceRole === Constants.Roles.CREATOR) {
+      return Constants.BudibaseRoles.Creator
+    }
+    if (workspaceRole) {
+      return Constants.BudibaseRoles.AppUser
+    }
+    return undefined
+  }
+
+  const canWorkspaceRoleOverrideGlobalRole = (globalRole: string) => {
+    return (
+      globalRole === Constants.BudibaseRoles.AppUser ||
+      globalRole === Constants.BudibaseRoles.Creator
+    )
+  }
+  const canEditWorkspaceRole = $derived(
+    !user || canWorkspaceRoleOverrideGlobalRole(users.getUserRole(user))
+  )
+  const disableRole = $derived(
+    disableFields ||
+      isTenantOwner ||
+      user?._id === $auth.user?._id ||
+      !canEditWorkspaceRole
+  )
+
   const createDraft = (user: WorkspaceUser): UserDraft => {
-    const role = users.getUserRole(user)
+    const globalRole = users.getUserRole(user)
+    const workspaceMappedRole = getRoleFromWorkspaceRole(user.workspaceRole)
+    const role =
+      canWorkspaceRoleOverrideGlobalRole(globalRole) && workspaceMappedRole
+        ? workspaceMappedRole
+        : globalRole
     const appRole =
       user.roles?.[workspaceId] ||
       (user.workspaceRole === Constants.Roles.GROUP
