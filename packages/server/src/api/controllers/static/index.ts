@@ -338,7 +338,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         clientCacheKey: await objectStore.getClientCacheKey(appInfo.version),
         usedPlugins: plugins,
         favicon:
-          branding.faviconUrl !== ""
+          branding.faviconUrl && branding.faviconUrl !== ""
             ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
         appMigrating: !fullyMigrated,
