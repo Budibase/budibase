@@ -63,7 +63,7 @@ type CreateAdminUserOpts = {
   firstName?: string
   lastName?: string
 }
-type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
+type FeatureFns = { isSSOEnforced: FeatureFn }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
   const userId = dbUser._id as string
