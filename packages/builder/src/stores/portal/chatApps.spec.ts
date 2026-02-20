@@ -129,4 +129,31 @@ describe("chatAppsStore", () => {
 
     expect(result).toBeNull()
   })
+
+  it("updates chat app and keeps derived state in sync", async () => {
+    const chatApp: ChatApp = {
+      _id: "chatapp-1",
+      _rev: "1",
+      agents: [],
+      live: false,
+    }
+    const updated: ChatApp = {
+      ...chatApp,
+      _rev: "2",
+      live: true,
+    }
+
+    fetchChatApp.mockResolvedValue(chatApp)
+    updateChatApp.mockResolvedValue(updated)
+
+    await chatAppsStore.ensureChatApp()
+    const result = await chatAppsStore.updateChatApp({ live: true })
+
+    expect(updateChatApp).toHaveBeenCalledWith({
+      ...chatApp,
+      live: true,
+    })
+    expect(result).toEqual(updated)
+    expect(get(currentChatApp)).toEqual(updated)
+  })
 })

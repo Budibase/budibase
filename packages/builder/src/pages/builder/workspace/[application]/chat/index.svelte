@@ -7,7 +7,7 @@
     currentChatApp,
     featureFlags,
   } from "@/stores/portal"
-  import { deploymentStore } from "@/stores/builder"
+  import { deploymentStore, themeStore } from "@/stores/builder"
   import { FeatureFlag } from "@budibase/types"
   import { goto as gotoStore, params } from "@roxi/routify"
   import { onMount } from "svelte"
@@ -222,7 +222,7 @@
 
     {#if $params.application}
       <div class="chat-app-container">
-        <ChatApp workspaceId={$params.application} />
+        <ChatApp workspaceId={$params.application} theme={$themeStore.theme} />
       </div>
     {/if}
   </div>
