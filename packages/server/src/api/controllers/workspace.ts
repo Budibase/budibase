@@ -490,7 +490,9 @@ export async function fetchAppPackage(
     }
 
     if (matchedWorkspaceApp) {
-      screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
+      screens = screens.filter(
+        s => s.workspaceAppId === matchedWorkspaceApp._id
+      )
       application.navigation = matchedWorkspaceApp.navigation
     } else {
       screens = []

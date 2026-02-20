@@ -319,7 +319,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
-      const appName = isChatRoute ? "Chat" : workspaceApp?.name || `${appInfo.name}`
+      const appName = isChatRoute
+        ? "Chat"
+        : workspaceApp?.name || `${appInfo.name}`
       const appTitle = isChatRoute ? "Chat" : branding?.platformTitle || appName
       const nonce = ctx.state.nonce || ""
       let props: BudibaseAppProps = {

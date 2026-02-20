@@ -1142,12 +1142,18 @@ describe("/applications", () => {
         it("should allow chat route app package when no workspace apps exist", async () => {
           await config.publish()
 
-          await context.doInWorkspaceContext(config.getProdWorkspaceId(), async () => {
-            const workspaceApps = await sdk.workspaceApps.fetch()
-            for (const workspaceApp of workspaceApps) {
-              await sdk.workspaceApps.remove(workspaceApp._id!, workspaceApp._rev!)
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              const workspaceApps = await sdk.workspaceApps.fetch()
+              for (const workspaceApp of workspaceApps) {
+                await sdk.workspaceApps.remove(
+                  workspaceApp._id!,
+                  workspaceApp._rev!
+                )
+              }
             }
-          })
+          )
 
           await config.withProdApp(() =>
             config.withHeaders(
