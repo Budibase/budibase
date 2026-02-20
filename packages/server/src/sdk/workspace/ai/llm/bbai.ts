@@ -4,9 +4,7 @@ import type {
   LanguageModelV3StreamPart,
   LanguageModelV3Usage,
 } from "@ai-sdk/provider"
-import { HTTPError } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import { BUDIBASE_AI_MODEL_MAP } from "@budibase/types"
 import { wrapLanguageModel } from "ai"
 import { TransformStream } from "node:stream/web"
 import { LLMResponse } from "."
@@ -55,39 +53,7 @@ export async function incrementBudibaseAICreditsFromOpenAIUsage(
   }
 }
 
-const availableBudibaseAIModels: typeof BUDIBASE_AI_MODEL_MAP = {
-  ...BUDIBASE_AI_MODEL_MAP,
-  "legacy/gpt-4o-mini": {
-    provider: "openai",
-    model: "gpt-4o-mini",
-  },
-  "legacy/gpt-4o": {
-    provider: "openai",
-    model: "gpt-4o",
-  },
-  "legacy/gpt-5": {
-    provider: "openai",
-    model: "gpt-5",
-  },
-  "legacy/gpt-5-mini": {
-    provider: "openai",
-    model: "gpt-5-mini",
-  },
-  "legacy/gpt-5-nano": {
-    provider: "openai",
-    model: "gpt-5-nano",
-  },
-}
-
-export function assertSupportedBBAIModel(model: string) {
-  if (!availableBudibaseAIModels[model]) {
-    throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
-  }
-}
-
 export async function createBBAIClient(model: string): Promise<LLMResponse> {
-  assertSupportedBBAIModel(model)
-
   const client = createOpenAI({
     apiKey: environment.BBAI_LITELLM_KEY,
     baseURL: environment.LITELLM_URL,
