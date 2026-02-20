@@ -68,7 +68,7 @@ if [[ -f "${DATA_DIR}/.env" ]]; then
 fi
 
 # Randomize any unset sensitive environment variables using uuidgen
-env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_DB_PASSWORD)
+env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_MASTER_KEY LITELLM_SALT_KEY LITELLM_DB_PASSWORD)
 for var in "${env_vars[@]}"; do
     if [[ -z "${!var}" ]]; then
         export "$var"="$(uuidgen | tr -d '-')"
@@ -109,6 +109,8 @@ ensure_env_var "LITELLM_DB_NAME" "${LITELLM_DB_NAME}"
 ensure_env_var "LITELLM_DB_USER" "${LITELLM_DB_USER}"
 ensure_env_var "LITELLM_DB_PASSWORD" "${LITELLM_DB_PASSWORD}"
 ensure_env_var "LITELLM_DB_PORT" "${LITELLM_DB_PORT}"
+ensure_env_var "LITELLM_MASTER_KEY" "${LITELLM_MASTER_KEY}"
+ensure_env_var "LITELLM_SALT_KEY" "${LITELLM_SALT_KEY}"
 
 # Read in the .env file and export the variables
 for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
