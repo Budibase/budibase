@@ -17,7 +17,10 @@
   },
   "typeSupportPresets": {
     "numberLike": {
-      "supported": ["number", "boolean"],
+      "supported": [
+        "number",
+        "boolean"
+      ],
       "partialSupport": [
         {
           "type": "longform",
@@ -69,7 +72,9 @@
       ]
     },
     "datetimeLike": {
-      "supported": ["datetime"],
+      "supported": [
+        "datetime"
+      ],
       "partialSupport": [
         {
           "type": "longform",
@@ -109,7 +114,10 @@
     "description": "This component is specific only to layouts",
     "icon": "columns",
     "hasChildren": true,
-    "styles": ["padding", "background"],
+    "styles": [
+      "padding",
+      "background"
+    ],
     "settings": [
       {
         "type": "text",
@@ -125,14 +133,23 @@
         "type": "select",
         "label": "Navigation",
         "key": "navigation",
-        "options": ["Top", "Left", "None"],
+        "options": [
+          "Top",
+          "Left",
+          "None"
+        ],
         "defaultValue": "Top"
       },
       {
         "type": "select",
         "label": "Width",
         "key": "width",
-        "options": ["Small", "Medium", "Large", "Max"],
+        "options": [
+          "Small",
+          "Medium",
+          "Large",
+          "Max"
+        ],
         "defaultValue": "Large"
       },
       {
@@ -173,7 +190,13 @@
       "hAlign": "stretch",
       "vAlign": "stretch"
     },
-    "styles": ["padding", "size", "background", "border", "shadow"],
+    "styles": [
+      "padding",
+      "size",
+      "background",
+      "border",
+      "shadow"
+    ],
     "settings": [
       {
         "type": "select",
@@ -381,7 +404,9 @@
     "description": "Add a section to your application",
     "icon": "columns",
     "hasChildren": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "showEmptyState": false,
     "size": {
       "width": 600,
@@ -455,6 +480,31 @@
             "key": "collapsedText",
             "dependsOn": "collapsed",
             "placeholder": "Action"
+          },
+          {
+            "type": "select",
+            "label": "Collapsed size",
+            "key": "collapsedSize",
+            "dependsOn": "collapsed",
+            "options": [
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              },
+              {
+                "label": "Extra large",
+                "value": "XL"
+              }
+            ],
+            "defaultValue": "M"
           },
           {
             "type": "select",
@@ -635,7 +685,11 @@
       "hAlign": "center",
       "vAlign": "center"
     },
-    "styles": ["padding", "background", "font"],
+    "styles": [
+      "padding",
+      "background",
+      "font"
+    ],
     "settings": [
       {
         "type": "text",
@@ -772,7 +826,9 @@
     "name": "Divider",
     "description": "A basic divider",
     "icon": "line-segments",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "size": {
       "width": 400,
       "height": 10
@@ -809,7 +865,9 @@
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "list-dashes",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "hasChildren": true,
     "size": {
       "width": 500,
@@ -972,7 +1030,9 @@
     "name": "Stacked List",
     "icon": "list-checks",
     "description": "A basic card component that can contain content and actions.",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1002,7 +1062,9 @@
     "name": "Vertical Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "cards",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1046,14 +1108,24 @@
         "type": "select",
         "label": "Image height",
         "key": "imageHeight",
-        "options": ["auto", "12rem", "16rem", "20rem", "24rem"],
+        "options": [
+          "auto",
+          "12rem",
+          "16rem",
+          "20rem",
+          "24rem"
+        ],
         "defaultValue": "auto"
       },
       {
         "type": "select",
         "label": "Card width",
         "key": "cardWidth",
-        "options": ["16rem", "20rem", "24rem"],
+        "options": [
+          "16rem",
+          "20rem",
+          "24rem"
+        ],
         "defaultValue": "20rem"
       }
     ]
@@ -1063,7 +1135,9 @@
     "deprecated": true,
     "description": "A component for displaying paragraph text.",
     "icon": "text-t",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -1187,7 +1261,9 @@
     "deprecated": true,
     "description": "A component for displaying heading text",
     "icon": "text-b",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -1375,7 +1451,9 @@
     "name": "Image",
     "description": "A basic component for displaying images",
     "icon": "image",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 400,
       "height": 300
@@ -1394,7 +1472,9 @@
     "description": "A background image",
     "icon": "image-square",
     "hasChildren": true,
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "showEmptyState": false,
     "size": {
       "width": 400,
@@ -1630,7 +1710,9 @@
     "name": "Nav Bar",
     "description": "A component for handling the navigation within your app.",
     "icon": "BreadcrumbNavigation",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "hasChildren": true,
     "settings": [
       {
@@ -1831,14 +1913,25 @@
         "type": "select",
         "label": "Image width",
         "key": "imageWidth",
-        "options": ["auto", "8rem", "12rem", "16rem"],
+        "options": [
+          "auto",
+          "8rem",
+          "12rem",
+          "16rem"
+        ],
         "defaultValue": "8rem"
       },
       {
         "type": "select",
         "label": "Image height",
         "key": "imageHeight",
-        "options": ["auto", "8rem", "12rem", "16rem", "auto"],
+        "options": [
+          "auto",
+          "8rem",
+          "12rem",
+          "16rem",
+          "auto"
+        ],
         "defaultValue": "auto"
       }
     ]
@@ -1883,7 +1976,9 @@
     "name": "Embed",
     "icon": "code",
     "description": "Embed content from 3rd party sources",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 400,
       "height": 100
@@ -1966,7 +2061,11 @@
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": ["Default", "Thousands", "Millions"],
+        "options": [
+          "Default",
+          "Thousands",
+          "Millions"
+        ],
         "defaultValue": "Default"
       },
       {
@@ -2150,7 +2249,11 @@
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": ["Default", "Thousands", "Millions"],
+        "options": [
+          "Default",
+          "Thousands",
+          "Millions"
+        ],
         "defaultValue": "Default"
       },
       {
@@ -2242,7 +2345,11 @@
         "type": "select",
         "label": "Curve",
         "key": "curve",
-        "options": ["Smooth", "Straight", "Stepline"],
+        "options": [
+          "Smooth",
+          "Straight",
+          "Stepline"
+        ],
         "defaultValue": "Smooth"
       },
       {
@@ -2329,7 +2436,11 @@
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": ["Default", "Thousands", "Millions"],
+        "options": [
+          "Default",
+          "Thousands",
+          "Millions"
+        ],
         "defaultValue": "Default"
       },
       {
@@ -2421,7 +2532,11 @@
         "type": "select",
         "label": "Curve",
         "key": "curve",
-        "options": ["Smooth", "Straight", "Stepline"],
+        "options": [
+          "Smooth",
+          "Straight",
+          "Stepline"
+        ],
         "defaultValue": "Smooth"
       },
       {
@@ -2888,7 +3003,11 @@
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": ["Default", "Thousands", "Millions"],
+        "options": [
+          "Default",
+          "Thousands",
+          "Millions"
+        ],
         "defaultValue": "Default"
       },
       {
@@ -3094,7 +3213,11 @@
     "description": "This component is a form",
     "icon": "list",
     "hasChildren": true,
-    "illegalChildren": ["section", "form", "formblock"],
+    "illegalChildren": [
+      "section",
+      "form",
+      "formblock"
+    ],
     "actions": [
       "ValidateForm",
       "ClearForm",
@@ -3102,7 +3225,13 @@
       "UpdateFieldValue",
       "ScrollTo"
     ],
-    "styles": ["padding", "size", "background", "border", "shadow"],
+    "styles": [
+      "padding",
+      "size",
+      "background",
+      "border",
+      "shadow"
+    ],
     "size": {
       "width": 400,
       "height": 400
@@ -3116,7 +3245,10 @@
         "type": "select",
         "label": "Type",
         "key": "actionType",
-        "options": ["Create", "Update"],
+        "options": [
+          "Create",
+          "Update"
+        ],
         "defaultValue": "Create"
       },
       {
@@ -3203,9 +3335,18 @@
     "name": "Form Step",
     "icon": "steps",
     "hasChildren": true,
-    "requiredAncestors": ["form"],
-    "illegalChildren": ["section", "form", "formstep", "formblock"],
-    "styles": ["size"],
+    "requiredAncestors": [
+      "form"
+    ],
+    "illegalChildren": [
+      "section",
+      "form",
+      "formstep",
+      "formblock"
+    ],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 400,
       "height": 400
@@ -3223,9 +3364,15 @@
   "fieldgroup": {
     "name": "Field Group",
     "icon": "stack",
-    "requiredAncestors": ["form"],
-    "illegalChildren": ["section"],
-    "styles": ["size"],
+    "requiredAncestors": [
+      "form"
+    ],
+    "illegalChildren": [
+      "section"
+    ],
+    "styles": [
+      "size"
+    ],
     "hasChildren": true,
     "size": {
       "width": 400,
@@ -3306,7 +3453,9 @@
   "stringfield": {
     "name": "Text Field",
     "icon": "text-t",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -3458,7 +3607,9 @@
   "numberfield": {
     "name": "Number Field",
     "icon": "number-circle-nine",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -3576,7 +3727,9 @@
   "bigintfield": {
     "name": "BigInt Field",
     "icon": "hash-straight",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -3678,7 +3831,9 @@
   "passwordfield": {
     "name": "Password Field",
     "icon": "password",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -3780,7 +3935,9 @@
   "optionsfield": {
     "name": "Options Picker",
     "icon": "list-plus",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -4012,7 +4169,9 @@
   "multifieldselect": {
     "name": "Multi-select Picker",
     "icon": "list-checks",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -4387,7 +4546,9 @@
   "longformfield": {
     "name": "Long Form Field",
     "icon": "text-align-left",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -4519,7 +4680,9 @@
   "datetimefield": {
     "name": "Date Picker",
     "icon": "calendar",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -4565,13 +4728,34 @@
         "key": "startDayOfWeek",
         "placeholder": "Browser locale",
         "options": [
-          { "label": "Monday", "value": "Monday" },
-          { "label": "Tuesday", "value": "Tuesday" },
-          { "label": "Wednesday", "value": "Wednesday" },
-          { "label": "Thursday", "value": "Thursday" },
-          { "label": "Friday", "value": "Friday" },
-          { "label": "Saturday", "value": "Saturday" },
-          { "label": "Sunday", "value": "Sunday" }
+          {
+            "label": "Monday",
+            "value": "Monday"
+          },
+          {
+            "label": "Tuesday",
+            "value": "Tuesday"
+          },
+          {
+            "label": "Wednesday",
+            "value": "Wednesday"
+          },
+          {
+            "label": "Thursday",
+            "value": "Thursday"
+          },
+          {
+            "label": "Friday",
+            "value": "Friday"
+          },
+          {
+            "label": "Saturday",
+            "value": "Saturday"
+          },
+          {
+            "label": "Sunday",
+            "value": "Sunday"
+          }
         ],
         "dependsOn": {
           "setting": "timeOnly",
@@ -4666,7 +4850,9 @@
   "codescanner": {
     "name": "Barcode/QR Scanner",
     "icon": "barcode",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 400,
       "height": 60
@@ -4846,7 +5032,10 @@
         "type": "radio",
         "label": "Barcode/QR",
         "key": "codeType",
-        "options": ["QR Code", "Barcode"],
+        "options": [
+          "QR Code",
+          "Barcode"
+        ],
         "defaultValue": "QR Code"
       },
       {
@@ -4898,7 +5087,6 @@
         "label": "Display value",
         "defaultValue": true
       },
-
       {
         "section": true,
         "name": "Customisation",
@@ -4942,12 +5130,16 @@
   "signaturesinglefield": {
     "name": "Signature",
     "icon": "signature",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 400,
       "height": 60
     },
-    "requiredAncestors": ["form"],
+    "requiredAncestors": [
+      "form"
+    ],
     "settings": [
       {
         "type": "field/signature_single",
@@ -4999,7 +5191,9 @@
   "embeddedmap": {
     "name": "Embedded Map",
     "icon": "map-pin",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "draggable": false,
     "size": {
       "width": 400,
@@ -5115,8 +5309,12 @@
   "attachmentfield": {
     "name": "Attachment List",
     "icon": "files",
-    "styles": ["size"],
-    "requiredAncestors": ["form"],
+    "styles": [
+      "size"
+    ],
+    "requiredAncestors": [
+      "form"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -5247,8 +5445,12 @@
   "attachmentsinglefield": {
     "name": "Single Attachment",
     "icon": "file",
-    "styles": ["size"],
-    "requiredAncestors": ["form"],
+    "styles": [
+      "size"
+    ],
+    "requiredAncestors": [
+      "form"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -5373,8 +5575,12 @@
   "relationshipfield": {
     "name": "Relationship Picker",
     "icon": "git-fork",
-    "styles": ["size"],
-    "requiredAncestors": ["form"],
+    "styles": [
+      "size"
+    ],
+    "requiredAncestors": [
+      "form"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -5492,7 +5698,9 @@
   "jsonfield": {
     "name": "JSON Field",
     "icon": "brackets-curly",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -5597,7 +5805,9 @@
   "s3upload": {
     "name": "S3 File Upload",
     "icon": "cloud-arrow-up",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -5668,9 +5878,14 @@
   "dataprovider": {
     "name": "Data Provider",
     "icon": "database",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "hasChildren": true,
-    "actions": ["RefreshDatasource", "AddDataProviderQueryExtension"],
+    "actions": [
+      "RefreshDatasource",
+      "AddDataProviderQueryExtension"
+    ],
     "size": {
       "width": 500,
       "height": 200
@@ -5731,7 +5946,10 @@
         "type": "select",
         "label": "Sort order",
         "key": "sortOrder",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Ascending"
       },
       {
@@ -5783,10 +6001,14 @@
     "deprecated": true,
     "name": "Table",
     "icon": "table",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "hasChildren": true,
     "showEmptyState": false,
-    "actions": ["ClearRowSelection"],
+    "actions": [
+      "ClearRowSelection"
+    ],
     "size": {
       "width": 600,
       "height": 400
@@ -5887,7 +6109,9 @@
   "daterangepicker": {
     "name": "Date Range",
     "icon": "calendar-plus",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "hasChildren": false,
     "size": {
       "width": 200,
@@ -5926,7 +6150,9 @@
   "spectrumcard": {
     "name": "Card",
     "icon": "cards",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 300,
       "height": 120
@@ -5992,7 +6218,6 @@
       }
     ]
   },
-
   "filter": {
     "name": "Filter",
     "icon": "funnel",
@@ -6042,18 +6267,54 @@
         "key": "defaultOperator",
         "label": "Default filter type",
         "options": [
-          { "label": "Equals", "value": "equal" },
-          { "label": "Not equals", "value": "notEqual" },
-          { "label": "Starts with", "value": "string" },
-          { "label": "Like", "value": "fuzzy" },
-          { "label": "Is empty", "value": "empty" },
-          { "label": "Is not empty", "value": "notEmpty" },
-          { "label": "More than or equal to", "value": "rangeLow" },
-          { "label": "Less than or equal to", "value": "rangeHigh" },
-          { "label": "Contains", "value": "contains" },
-          { "label": "Does not contain", "value": "notContains" },
-          { "label": "Is in", "value": "oneOf" },
-          { "label": "Has any", "value": "containsAny" }
+          {
+            "label": "Equals",
+            "value": "equal"
+          },
+          {
+            "label": "Not equals",
+            "value": "notEqual"
+          },
+          {
+            "label": "Starts with",
+            "value": "string"
+          },
+          {
+            "label": "Like",
+            "value": "fuzzy"
+          },
+          {
+            "label": "Is empty",
+            "value": "empty"
+          },
+          {
+            "label": "Is not empty",
+            "value": "notEmpty"
+          },
+          {
+            "label": "More than or equal to",
+            "value": "rangeLow"
+          },
+          {
+            "label": "Less than or equal to",
+            "value": "rangeHigh"
+          },
+          {
+            "label": "Contains",
+            "value": "contains"
+          },
+          {
+            "label": "Does not contain",
+            "value": "notContains"
+          },
+          {
+            "label": "Is in",
+            "value": "oneOf"
+          },
+          {
+            "label": "Has any",
+            "value": "containsAny"
+          }
         ],
         "defaultValue": "equal",
         "wide": true
@@ -6254,7 +6515,10 @@
         "type": "select",
         "label": "Sort order",
         "key": "sortOrder",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Ascending"
       },
       {
@@ -6463,7 +6727,11 @@
             "type": "select",
             "label": "Format",
             "key": "yAxisUnits",
-            "options": ["Default", "Thousands", "Millions"],
+            "options": [
+              "Default",
+              "Thousands",
+              "Millions"
+            ],
             "defaultValue": "Default"
           },
           {
@@ -6573,7 +6841,11 @@
             "type": "select",
             "label": "Format",
             "key": "yAxisUnits",
-            "options": ["Default", "Thousands", "Millions"],
+            "options": [
+              "Default",
+              "Thousands",
+              "Millions"
+            ],
             "defaultValue": "Default"
           },
           {
@@ -6590,7 +6862,11 @@
             "type": "select",
             "label": "Curve",
             "key": "curve",
-            "options": ["Smooth", "Straight", "Stepline"],
+            "options": [
+              "Smooth",
+              "Straight",
+              "Stepline"
+            ],
             "defaultValue": "Smooth"
           }
         ]
@@ -6632,7 +6908,11 @@
             "type": "select",
             "label": "Format",
             "key": "yAxisUnits",
-            "options": ["Default", "Thousands", "Millions"],
+            "options": [
+              "Default",
+              "Thousands",
+              "Millions"
+            ],
             "defaultValue": "Default"
           },
           {
@@ -6649,7 +6929,11 @@
             "type": "select",
             "label": "Curve",
             "key": "curve",
-            "options": ["Smooth", "Straight", "Stepline"],
+            "options": [
+              "Smooth",
+              "Straight",
+              "Stepline"
+            ],
             "defaultValue": "Smooth"
           },
           {
@@ -6739,7 +7023,11 @@
             "type": "select",
             "label": "Format",
             "key": "yAxisUnits",
-            "options": ["Default", "Thousands", "Millions"],
+            "options": [
+              "Default",
+              "Thousands",
+              "Millions"
+            ],
             "defaultValue": "Default"
           },
           {
@@ -6829,7 +7117,11 @@
             "type": "select",
             "label": "Line Cap",
             "key": "lineCap",
-            "options": ["butt", "square", "round"],
+            "options": [
+              "butt",
+              "square",
+              "round"
+            ],
             "defaultValue": "square"
           },
           {
@@ -6903,7 +7195,9 @@
     "block": true,
     "name": "Table Block",
     "icon": "table",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 600,
       "height": 400
@@ -6971,7 +7265,10 @@
             "type": "select",
             "label": "Sort order",
             "key": "sortOrder",
-            "options": ["Ascending", "Descending"],
+            "options": [
+              "Ascending",
+              "Descending"
+            ],
             "defaultValue": "Ascending",
             "dependsOn": "sortColumn"
           },
@@ -7222,7 +7519,9 @@
     "block": true,
     "name": "Cards Block",
     "icon": "cards",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 600,
       "height": 400
@@ -7295,7 +7594,10 @@
         "type": "select",
         "label": "Sort order",
         "key": "sortOrder",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Descending"
       },
       {
@@ -7437,7 +7739,10 @@
     "block": true,
     "name": "Repeater Block",
     "icon": "list-dashes",
-    "illegalChildren": ["section", "rowexplorer"],
+    "illegalChildren": [
+      "section",
+      "rowexplorer"
+    ],
     "hasChildren": true,
     "size": {
       "width": 500,
@@ -7499,7 +7804,10 @@
         "type": "select",
         "label": "Sort order",
         "key": "sortOrder",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Descending"
       },
       {
@@ -7696,7 +8004,9 @@
     "deprecated": true,
     "name": "Markdown Viewer",
     "icon": "article",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 400,
       "height": 100
@@ -7728,7 +8038,13 @@
       "hAlign": "stretch",
       "vAlign": "start"
     },
-    "styles": ["padding", "size", "background", "border", "shadow"],
+    "styles": [
+      "padding",
+      "size",
+      "background",
+      "border",
+      "shadow"
+    ],
     "settings": [
       {
         "type": "table",
@@ -7739,7 +8055,11 @@
         "type": "radio",
         "label": "Type",
         "key": "actionType",
-        "options": ["Create", "Update", "View"],
+        "options": [
+          "Create",
+          "Update",
+          "View"
+        ],
         "defaultValue": "Create"
       },
       {
@@ -7776,8 +8096,13 @@
             "key": "steps",
             "nested": true,
             "labelHidden": true,
-            "resetOn": ["dataSource", "actionType"],
-            "defaultValue": [{}]
+            "resetOn": [
+              "dataSource",
+              "actionType"
+            ],
+            "defaultValue": [
+              {}
+            ]
           }
         ]
       },
@@ -7928,7 +8253,13 @@
   "formblock": {
     "name": "Form Block",
     "icon": "list",
-    "styles": ["padding", "size", "background", "border", "shadow"],
+    "styles": [
+      "padding",
+      "size",
+      "background",
+      "border",
+      "shadow"
+    ],
     "block": true,
     "info": "Form blocks are only compatible with internal or SQL tables",
     "size": {
@@ -7949,7 +8280,11 @@
         "type": "radio",
         "label": "Type",
         "key": "actionType",
-        "options": ["Create", "Update", "View"],
+        "options": [
+          "Create",
+          "Update",
+          "View"
+        ],
         "defaultValue": "Create"
       },
       {
@@ -8033,7 +8368,10 @@
             "type": "buttonConfiguration",
             "key": "buttons",
             "nested": true,
-            "resetOn": ["actionType", "dataSource"]
+            "resetOn": [
+              "actionType",
+              "dataSource"
+            ]
           },
           {
             "type": "boolean",
@@ -8105,7 +8443,11 @@
     "icon": "sidebar",
     "hasChildren": true,
     "ignoresLayout": true,
-    "illegalChildren": ["section", "sidepanel", "modal"],
+    "illegalChildren": [
+      "section",
+      "sidepanel",
+      "modal"
+    ],
     "showEmptyState": false,
     "draggable": false,
     "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
@@ -8127,7 +8469,11 @@
     "name": "Modal",
     "icon": "square",
     "hasChildren": true,
-    "illegalChildren": ["section", "modal", "sidepanel"],
+    "illegalChildren": [
+      "section",
+      "modal",
+      "sidepanel"
+    ],
     "ignoresLayout": true,
     "showEmptyState": false,
     "draggable": false,
@@ -8187,7 +8533,10 @@
     "friendlyName": "Accordion",
     "description": "A collapsible Budibase container component",
     "hasChildren": true,
-    "illegalChildren": ["modal", "sidepanel"],
+    "illegalChildren": [
+      "modal",
+      "sidepanel"
+    ],
     "showSettingsBar": true,
     "size": {
       "width": 500,
@@ -8358,7 +8707,9 @@
   "gridblock": {
     "name": "Table",
     "icon": "table",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "cssVariables": [
       {
         "label": "Header color",
@@ -8412,7 +8763,10 @@
         "type": "select",
         "label": "Sort order",
         "key": "initialSortOrder",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Ascending",
         "dependsOn": "initialSortColumn"
       },
@@ -8454,7 +8808,10 @@
         "defaultValue": true,
         "dependsOn": {
           "setting": "table.type",
-          "value": ["table", "viewV2"]
+          "value": [
+            "table",
+            "viewV2"
+          ]
         }
       },
       {
@@ -8464,7 +8821,10 @@
         "defaultValue": true,
         "dependsOn": {
           "setting": "table.type",
-          "value": ["table", "viewV2"]
+          "value": [
+            "table",
+            "viewV2"
+          ]
         }
       },
       {
@@ -8474,7 +8834,10 @@
         "defaultValue": true,
         "dependsOn": {
           "setting": "table.type",
-          "value": ["table", "viewV2"]
+          "value": [
+            "table",
+            "viewV2"
+          ]
         }
       },
       {
@@ -8557,7 +8920,9 @@
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
     "name": "User List Field",
     "icon": "users",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -8679,7 +9044,9 @@
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
     "name": "User Field",
     "icon": "user",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -8885,7 +9252,11 @@
     "icon": "file-pdf",
     "hasChildren": true,
     "showEmptyState": false,
-    "illegalChildren": ["sidepanel", "modal", "gridblock"],
+    "illegalChildren": [
+      "sidepanel",
+      "modal",
+      "gridblock"
+    ],
     "grid": {
       "hAlign": "center",
       "vAlign": "start"
@@ -8913,7 +9284,9 @@
   "pdftable": {
     "name": "PDF Table",
     "icon": "table",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "size": {
       "width": 600,
       "height": 304
@@ -8957,7 +9330,10 @@
         "label": "Sort order",
         "key": "sortOrder",
         "resetOn": "datasource",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Ascending",
         "dependsOn": "sortColumn"
       },
@@ -8980,7 +9356,9 @@
     "name": "Single Row Provider",
     "icon": "database",
     "hasChildren": true,
-    "actions": ["RefreshDatasource"],
+    "actions": [
+      "RefreshDatasource"
+    ],
     "size": {
       "width": 500,
       "height": 200
@@ -9017,7 +9395,9 @@
   "ratingfield": {
     "name": "Rating Field",
     "icon": "star",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -9046,21 +9426,37 @@
         "type": "select",
         "label": "Size",
         "key": "size",
-        "options": ["XS", "S", "M", "L", "XL"],
+        "options": [
+          "XS",
+          "S",
+          "M",
+          "L",
+          "XL"
+        ],
         "defaultValue": "L"
       },
       {
         "type": "select",
         "label": "Icon type",
         "key": "type",
-        "options": ["Star", "Heart"],
+        "options": [
+          "Star",
+          "Heart"
+        ],
         "defaultValue": "Star"
       },
       {
         "type": "select",
         "label": "Colour variant",
         "key": "variant",
-        "options": ["Primary", "Secondary", "Mono", "Gold", "Red", "Custom"],
+        "options": [
+          "Primary",
+          "Secondary",
+          "Mono",
+          "Gold",
+          "Red",
+          "Custom"
+        ],
         "defaultValue": "Primary"
       },
       {
@@ -9131,7 +9527,11 @@
       "hAlign": "stretch",
       "vAlign": "stretch"
     },
-    "styles": ["padding", "background", "border"],
+    "styles": [
+      "padding",
+      "background",
+      "border"
+    ],
     "settings": [
       {
         "type": "text",
@@ -9156,7 +9556,9 @@
   "slider": {
     "name": "Slider Field",
     "icon": "sliders-horizontal",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "size": {
       "width": 400,
@@ -9230,7 +9632,16 @@
             "type": "select",
             "label": "Left icon size",
             "key": "iconLeftSize",
-            "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+            "options": [
+              "XXS",
+              "XS",
+              "S",
+              "M",
+              "L",
+              "XL",
+              "XXL",
+              "XXXL"
+            ],
             "defaultValue": "M",
             "dependsOn": "iconLeft"
           },
@@ -9243,7 +9654,16 @@
             "type": "select",
             "label": "Right icon size",
             "key": "iconRightSize",
-            "options": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+            "options": [
+              "XXS",
+              "XS",
+              "S",
+              "M",
+              "L",
+              "XL",
+              "XXL",
+              "XXXL"
+            ],
             "defaultValue": "M",
             "dependsOn": "iconRight"
           },
@@ -9396,10 +9816,13 @@
             "type": "select",
             "label": "Line Cap",
             "key": "lineCap",
-            "options": ["butt", "square", "round"],
+            "options": [
+              "butt",
+              "square",
+              "round"
+            ],
             "defaultValue": "square"
           },
-
           {
             "type": "number",
             "label": "Text size",
@@ -9546,7 +9969,9 @@
       "width": 600,
       "height": 420
     },
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "grid": {
       "hAlign": "stretch",
       "vAlign": "center"
@@ -9592,10 +10017,22 @@
         "label": "Type",
         "key": "calendarType",
         "options": [
-          { "label": "Month", "value": "dayGridMonth" },
-          { "label": "Week", "value": "dayGridWeek" },
-          { "label": "Day", "value": "timeGridDay" },
-          { "label": "Agenda", "value": "listWeek" }
+          {
+            "label": "Month",
+            "value": "dayGridMonth"
+          },
+          {
+            "label": "Week",
+            "value": "dayGridWeek"
+          },
+          {
+            "label": "Day",
+            "value": "timeGridDay"
+          },
+          {
+            "label": "Agenda",
+            "value": "listWeek"
+          }
         ],
         "defaultValue": "dayGridMonth"
       },
@@ -9622,14 +10059,12 @@
           }
         ]
       },
-
       {
         "type": "text",
         "label": "Empty agenda text",
         "key": "emptyAgendaText",
         "defaultValue": "No events found"
       },
-
       {
         "type": "text",
         "label": "Open on date",
@@ -9659,8 +10094,14 @@
             "label": "Date locale",
             "key": "locale",
             "options": [
-              { "label": "DD MM YYYY", "value": "en-gb" },
-              { "label": "MM DD YYYY", "value": "en-us" }
+              {
+                "label": "DD MM YYYY",
+                "value": "en-gb"
+              },
+              {
+                "label": "MM DD YYYY",
+                "value": "en-us"
+              }
             ],
             "defaultValue": "en-gb"
           },
@@ -9669,9 +10110,18 @@
             "label": "Year title format",
             "key": "yearTitleFormat",
             "options": [
-              { "label": "Hidden", "value": "hidden" },
-              { "label": "4-digit", "value": "numeric" },
-              { "label": "2-digit", "value": "2-digit" }
+              {
+                "label": "Hidden",
+                "value": "hidden"
+              },
+              {
+                "label": "4-digit",
+                "value": "numeric"
+              },
+              {
+                "label": "2-digit",
+                "value": "2-digit"
+              }
             ]
           },
           {
@@ -9679,11 +10129,26 @@
             "label": "Month title format",
             "key": "monthTitleFormat",
             "options": [
-              { "label": "Hidden", "value": "hidden" },
-              { "label": "Numeric", "value": "numeric" },
-              { "label": "2-digit", "value": "2-digit" },
-              { "label": "Short", "value": "short" },
-              { "label": "Long", "value": "long" }
+              {
+                "label": "Hidden",
+                "value": "hidden"
+              },
+              {
+                "label": "Numeric",
+                "value": "numeric"
+              },
+              {
+                "label": "2-digit",
+                "value": "2-digit"
+              },
+              {
+                "label": "Short",
+                "value": "short"
+              },
+              {
+                "label": "Long",
+                "value": "long"
+              }
             ]
           },
           {
@@ -9691,9 +10156,18 @@
             "label": "Day title format",
             "key": "dayTitleFormat",
             "options": [
-              { "label": "Hidden", "value": "hidden" },
-              { "label": "Numeric", "value": "numeric" },
-              { "label": "2-digit", "value": "2-digit" }
+              {
+                "label": "Hidden",
+                "value": "hidden"
+              },
+              {
+                "label": "Numeric",
+                "value": "numeric"
+              },
+              {
+                "label": "2-digit",
+                "value": "2-digit"
+              }
             ]
           },
           {
@@ -9701,10 +10175,22 @@
             "label": "Weekday title format",
             "key": "weekdayTitleFormat",
             "options": [
-              { "label": "Hidden", "value": "hidden" },
-              { "label": "Short", "value": "short" },
-              { "label": "Long", "value": "long" },
-              { "label": "Narrow", "value": "narrow" }
+              {
+                "label": "Hidden",
+                "value": "hidden"
+              },
+              {
+                "label": "Short",
+                "value": "short"
+              },
+              {
+                "label": "Long",
+                "value": "long"
+              },
+              {
+                "label": "Narrow",
+                "value": "narrow"
+              }
             ]
           }
         ]
@@ -9725,8 +10211,14 @@
             "label": "Button type",
             "key": "buttonType",
             "options": [
-              { "label": "Action", "value": "action" },
-              { "label": "Primary", "value": "primary" }
+              {
+                "label": "Action",
+                "value": "action"
+              },
+              {
+                "label": "Primary",
+                "value": "primary"
+              }
             ],
             "defaultValue": "action"
           },
