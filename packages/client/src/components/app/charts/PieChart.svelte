@@ -21,6 +21,7 @@
       : "category"
   $: series = getSeries(dataProvider, valueColumn)
   $: labels = getLabels(dataProvider, labelColumn, labelType)
+
   $: hasClickAction = typeof onClick === "function"
 
   $: options = {

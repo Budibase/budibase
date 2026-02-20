@@ -33,6 +33,7 @@
   $: xAxisFormatter = getFormatter(labelType, yAxisUnits, "x")
   $: yAxisFormatter = getFormatter(labelType, yAxisUnits, "y")
   $: fill = getFill(gradient)
+  $: hasClickAction = typeof onClick === "function"
 
   $: options = {
     series,
@@ -168,4 +169,4 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {hasClickAction} />

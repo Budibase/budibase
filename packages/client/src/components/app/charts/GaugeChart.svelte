@@ -218,7 +218,7 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {hasClickAction} />
 
 <style>
 </style>
