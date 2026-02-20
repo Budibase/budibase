@@ -1,4 +1,4 @@
-import { env } from "@budibase/backend-core"
+import { env, HTTPError } from "@budibase/backend-core"
 import { ChatCompletionRequestV2, type Ctx } from "@budibase/types"
 import { bbai } from "../../../sdk/workspace/ai/llm"
 import environment from "../../../environment"
@@ -57,6 +57,9 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
 
   if (!model) {
     ctx.throw(400, "Missing required field: model")
+  }
+  if (!model?.startsWith("budibase/")) {
+    throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
   }
 
   if (!environment.BBAI_LITELLM_KEY) {
