@@ -7,6 +7,7 @@
   const component = getContext("component")
 
   export let options
+  export let hasClickAction = false
 
   // Apex charts directly modifies the options object with default properties and internal variables. These being present could unintentionally cause issues to the provider of this prop as the changes are reflected in that component as well. To prevent any issues we clone options here to provide a buffer.
   $: optionsCopy = cloneDeep(options)
@@ -63,6 +64,7 @@
 {#key optionsCopy?.customColor}
   <div
     class:hide={noData}
+    class:hasClickAction={hasClickAction}
     use:styleable={$component.styles}
     bind:this={chartElement}
   ></div>
@@ -147,6 +149,9 @@
     border-radius: 2px;
   }
   .component-placeholder :global(.spectrum-Link) {
+    cursor: pointer;
+  }
+  .hasClickAction {
     cursor: pointer;
   }
 </style>

@@ -126,10 +126,4 @@
   }
 </script>
 
-<ApexChart {options} />
-
-<style>
-  .apexcharts-canvas.hasClickAction :global(.apex-charts-radial-series) {
-    cursor: pointer;
-  }
-</style>
+<ApexChart {options} {hasClickAction} />
