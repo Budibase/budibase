@@ -15,6 +15,10 @@ import {
 import env from "../../../environment"
 import viewBuilder from "./viewBuilder"
 
+function getGroupByMulti(meta: any): boolean {
+  return meta?.groupByMulti ?? (meta?.schema?.group?.type === "array")
+}
+
 export async function getView(viewName: string) {
   const db = context.getWorkspaceDB()
   if (env.SELF_HOSTED) {
@@ -143,7 +147,7 @@ export async function migrateToInMemoryView(db: Database, viewName: string) {
     throw new Error("Unable to migrate view - no metadata")
   }
   // run the view back through the view builder to update it
-  const view = viewBuilder(meta)
+  const view = viewBuilder(meta, getGroupByMulti(meta))
   delete designDoc.views?.[viewName]
   await db.put(designDoc)
   await saveView(null, viewName, view)
@@ -159,7 +163,7 @@ export async function migrateToDesignView(db: Database, viewName: string) {
   if (!designDoc.views) {
     designDoc.views = {}
   }
-  designDoc.views[viewName] = viewBuilder(meta)
+  designDoc.views[viewName] = viewBuilder(meta, getGroupByMulti(meta))
   await db.put(designDoc)
   await db.remove(view._id!, view._rev)
 }

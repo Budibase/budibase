@@ -208,6 +208,7 @@ export default function (
       filters,
       schema,
       calculation,
+      ...(groupByMulti ? { groupByMulti } : {}),
     },
     map: `function (doc) {
       if (${coreExpression} ${filterExpression}) {

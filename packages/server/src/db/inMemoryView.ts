@@ -30,7 +30,9 @@ export async function runView(
     }
 
     // Rebuild map/reduce from metadata to avoid executing untrusted map strings.
-    const rebuiltView = viewBuilder(view.meta as any)
+    const groupByMulti =
+      view.meta.groupByMulti ?? (view.meta.schema?.group?.type === "array")
+    const rebuiltView = viewBuilder(view.meta as any, groupByMulti)
     let fn = (doc: Document, emit: any) => emit(doc._id)
     // BUDI-7060 -> indirect eval call appears to cause issues in cloud
     eval(
