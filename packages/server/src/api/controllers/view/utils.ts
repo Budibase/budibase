@@ -16,7 +16,7 @@ import env from "../../../environment"
 import viewBuilder from "./viewBuilder"
 
 function getGroupByMulti(meta: any): boolean {
-  return meta?.groupByMulti ?? (meta?.schema?.group?.type === "array")
+  return meta?.groupByMulti ?? meta?.schema?.group?.type === "array"
 }
 
 export async function getView(viewName: string) {
