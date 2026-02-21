@@ -118,9 +118,7 @@ function parseFilterExpression(filters: ViewFilter[]) {
       const condition = tokenOrThrow("condition", filter.condition)
       const value = JSON.stringify(filter.value)
 
-      expression.push(
-        `${docKeyExpression(filter.key)} ${condition} ${value}`
-      )
+      expression.push(`${docKeyExpression(filter.key)} ${condition} ${value}`)
     }
     first = false
   }

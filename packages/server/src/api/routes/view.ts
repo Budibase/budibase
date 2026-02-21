@@ -10,17 +10,16 @@ import { permissions } from "@budibase/backend-core"
 import { builderRoutes, publicRoutes } from "./endpointGroups"
 import env from "../../environment"
 
-publicRoutes
-  .get(
-    "/api/v2/views/:viewId",
-    recaptcha,
-    authorizedResource(
-      permissions.PermissionType.VIEW,
-      permissions.PermissionLevel.READ,
-      "viewId"
-    ),
-    viewController.v2.get
-  )
+publicRoutes.get(
+  "/api/v2/views/:viewId",
+  recaptcha,
+  authorizedResource(
+    permissions.PermissionType.VIEW,
+    permissions.PermissionLevel.READ,
+    "viewId"
+  ),
+  viewController.v2.get
+)
 
 builderRoutes
   .get("/api/v2/views", viewController.v2.fetch)
