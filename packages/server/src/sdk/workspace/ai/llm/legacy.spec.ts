@@ -71,7 +71,9 @@ describe("createLegacyLLM", () => {
     await withEnv({ SELF_HOSTED: false }, async () => {
       const result = await createLegacyLLM()
 
-      expect(createBBAIClientMock).toHaveBeenCalledWith("legacy/gpt-5-mini")
+      expect(createBBAIClientMock).toHaveBeenCalledWith(
+        "budibase/legacy/gpt-5-mini"
+      )
       expect(createOpenAIMock).not.toHaveBeenCalled()
       expect(createAzureMock).not.toHaveBeenCalled()
       expect(result).toBe(expected)
@@ -99,8 +101,8 @@ describe("createLegacyLLM", () => {
           baseURL: "https://budibase.app/api/ai",
           apiKey: "license-key",
         })
-        expect(chat).toHaveBeenCalledWith("legacy/gpt-5-mini")
-        expect(embedding).toHaveBeenCalledWith("legacy/gpt-5-mini")
+        expect(chat).toHaveBeenCalledWith("budibase/legacy/gpt-5-mini")
+        expect(embedding).toHaveBeenCalledWith("budibase/legacy/gpt-5-mini")
         expect(result).toEqual({
           chat: "chat-model",
           embedding: "embedding-model",

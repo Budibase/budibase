@@ -38,6 +38,7 @@ export interface ChatCompletionRequestV2 {
   messages: ModelMessage[]
   model: string
   stream?: boolean
+  metadata?: Record<string, string>
 }
 
 export interface ChatCompletionRequest {

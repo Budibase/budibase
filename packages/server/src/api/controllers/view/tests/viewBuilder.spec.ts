@@ -49,6 +49,43 @@ describe("viewBuilder", () => {
         },
       })
     })
+
+    it("escapes filter keys and values in generated expressions", () => {
+      const payload = `x" ); globalThis.pwned = true; ("`
+      const key = `Name"] ; globalThis.pwned = true; //`
+
+      const view = viewTemplate({
+        field: "myField",
+        tableId: "tableId",
+        filters: [
+          {
+            value: payload,
+            condition: "EQUALS",
+            key,
+          },
+        ],
+      })
+
+      expect(view.map).toContain(
+        `doc["Name\\"] ; globalThis.pwned = true; //"] === "x\\" ); globalThis.pwned = true; (\\""`
+      )
+    })
+
+    it("throws for unknown filter conditions", () => {
+      expect(() =>
+        viewTemplate({
+          field: "myField",
+          tableId: "tableId",
+          filters: [
+            {
+              value: "test",
+              condition: "BAD_TOKEN" as any,
+              key: "Name",
+            },
+          ],
+        })
+      ).toThrow("Invalid filter condition")
+    })
   })
 
   describe("Calculate", () => {

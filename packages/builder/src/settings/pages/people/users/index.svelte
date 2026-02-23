@@ -21,6 +21,7 @@
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import { roles } from "@/stores/builder"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
@@ -30,8 +31,14 @@
   import PasswordModal from "./_components/PasswordModal.svelte"
   import InvitedModal from "./_components/InvitedModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
+  import EditWorkspaceUserModal from "./_components/EditWorkspaceUserModal.svelte"
   import { get } from "svelte/store"
-  import { Constants, Utils, fetchData } from "@budibase/frontend-core"
+  import {
+    Constants,
+    RoleUtils,
+    Utils,
+    fetchData,
+  } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { OnboardingType } from "@/constants"
   import { sdk } from "@budibase/shared-core"
@@ -56,6 +63,8 @@
     userGroups: UserGroup[]
     apps: string[]
     access: number
+    workspaceRole?: string
+    workspaceRoleGroupRole?: string
   }
 
   export let workspaceOnly: boolean
@@ -96,9 +105,11 @@
     onboardingTypeModal: Modal,
     passwordModal: Modal,
     importUsersModal: Modal,
-    userLimitReachedModal: Modal
+    userLimitReachedModal: Modal,
+    editWorkspaceUserModal: Modal
   let searchEmail: string | undefined = undefined
   let selectedRows: User[] = []
+  let selectedWorkspaceUser: User | null = null
   let bulkSaveResponse: BulkUserCreated
 
   let currentWorkspaceId = ""
@@ -135,9 +146,9 @@
   $: debouncedUpdateFetch(searchEmail, currentWorkspaceId)
   $: schema = {
     email: {
-      displayName: isWorkspaceOnly ? "User" : "Email",
+      displayName: "Email",
       sortable: false,
-      width: "2fr",
+      width: "minmax(200px, max-content)",
       minWidth: "200px",
     },
     role: {
@@ -162,6 +173,7 @@
           workspaces: {
             sortable: false,
             width: "1fr",
+            preventSelectRow: false,
           },
         }),
   }
@@ -177,6 +189,13 @@
     tenantOwner,
     $groups
   )
+  $: shouldOpenWorkspaceInviteModal =
+    isWorkspaceOnly &&
+    $bb.settings.route?.entry?.path === "/people/workspace" &&
+    $bb.settings.route?.hash === "#invite"
+  $: if (shouldOpenWorkspaceInviteModal && createUserModal) {
+    createUserModal.show()
+  }
 
   const buildEnrichedUsers = (
     rows: User[],
@@ -201,13 +220,44 @@
         const role = Constants.ExtendedBudibaseRoleOptions.find(
           x => x.value === users.getUserRole(user)
         )!
+        const workspaceRoleFromUser = currentWorkspaceId
+          ? user.roles?.[currentWorkspaceId]
+          : undefined
+        const workspaceRoleGroupRoles =
+          isWorkspaceOnly && currentWorkspaceId
+            ? userGroups
+                .filter(group => group.roles?.[currentWorkspaceId])
+                .map(group => group.roles?.[currentWorkspaceId])
+                .filter(Boolean)
+                .sort((roleA, roleB) => {
+                  const priorityA = RoleUtils.getRolePriority(roleA)
+                  const priorityB = RoleUtils.getRolePriority(roleB)
+                  if (priorityA !== priorityB) {
+                    return priorityB - priorityA
+                  }
+                  return `${roleA}`.localeCompare(`${roleB}`)
+                })
+            : []
+        const workspaceRoleGroupRole = workspaceRoleGroupRoles[0]
+        const workspaceRole =
+          workspaceRoleFromUser ||
+          (workspaceRoleGroupRole ? Constants.Roles.GROUP : undefined)
+        const isGroupUser = workspaceRole === Constants.Roles.GROUP
+        const isWorkspaceTenantAdmin =
+          isWorkspaceOnly && role.value === Constants.BudibaseRoles.Admin
         return {
           ...user,
           name: user.firstName ? user.firstName + " " + user.lastName : "",
           userGroups,
+          workspaceRole: isWorkspaceOnly ? workspaceRole : undefined,
+          workspaceRoleGroupRole: isWorkspaceOnly
+            ? workspaceRoleGroupRole
+            : undefined,
           __selectable:
             role.value === Constants.BudibaseRoles.Owner ||
-            $auth.user?.email === user.email
+            $auth.user?.email === user.email ||
+            isGroupUser ||
+            isWorkspaceTenantAdmin
               ? false
               : true,
           apps: sdk.users.userAppAccessList(user, allGroups),
@@ -381,30 +431,73 @@
   const deleteUsers = async () => {
     try {
       let ids = selectedRows.map(user => user._id)
-      if (ids.includes(get(auth).user?._id)) {
-        notifications.error("You cannot delete yourself")
-        return
-      }
 
       if (selectedRows.some(u => u.scimInfo?.isSync)) {
         notifications.error("You cannot remove users created via your AD")
         return
       }
 
-      if (ids.length > 0) {
-        await users.bulkDelete(
-          selectedRows.map(user => ({
-            userId: user._id!,
-            email: user.email,
-          }))
+      if (isWorkspaceOnly) {
+        if (!currentWorkspaceId) {
+          notifications.error("Workspace not found")
+          return
+        }
+
+        const settled = await Promise.allSettled(
+          selectedRows.map(async user => {
+            if (!user._id) {
+              throw new Error("User ID missing")
+            }
+
+            let rev = user._rev
+            if (!rev) {
+              const fullUser = await users.get(user._id)
+              rev = fullUser?._rev
+            }
+            if (!rev) {
+              throw new Error("User revision missing")
+            }
+
+            await users.removeUserFromWorkspace(user._id, rev)
+          })
+        )
+        const failed = settled.filter(result => result.status === "rejected")
+        const removed = selectedRows.length - failed.length
+
+        if (removed > 0) {
+          notifications.success(`Successfully removed ${removed} users`)
+        }
+        if (failed.length > 0) {
+          notifications.error("Error removing some users from workspace")
+        }
+      } else {
+        if (ids.includes(get(auth).user?._id)) {
+          notifications.error("You cannot delete yourself")
+          return
+        }
+
+        if (ids.length > 0) {
+          await users.bulkDelete(
+            selectedRows.map(user => ({
+              userId: user._id!,
+              email: user.email,
+            }))
+          )
+        }
+
+        notifications.success(
+          `Successfully deleted ${selectedRows.length} users`
         )
       }
 
-      notifications.success(`Successfully deleted ${selectedRows.length} users`)
       selectedRows = []
       await refreshUserList()
     } catch (error) {
-      notifications.error("Error deleting users")
+      notifications.error(
+        isWorkspaceOnly
+          ? "Error removing users from workspace"
+          : "Error deleting users"
+      )
     }
   }
 
@@ -424,7 +517,7 @@
       return Constants.Roles.CREATOR
     }
     if (role === Constants.BudibaseRoles.Admin) {
-      return Constants.Roles.CREATOR
+      return Constants.Roles.ADMIN
     }
     if (role === Constants.BudibaseRoles.AppUser) {
       return appRole || Constants.Roles.BASIC
@@ -432,12 +525,29 @@
     return Constants.Roles.BASIC
   }
 
+  const onRowClick = ({ detail }: { detail: User }) => {
+    if (isWorkspaceOnly) {
+      selectedWorkspaceUser = detail
+      editWorkspaceUserModal.show()
+      return
+    }
+    bb.settings(`/people/users/${detail._id}`)
+  }
+
+  const onWorkspaceUserSaved = async () => {
+    await refreshUserList()
+  }
+
   onMount(async () => {
+    roles.fetch().catch(() => {
+      notifications.error("Error fetching role data")
+    })
     try {
       await groups.init()
-      groupsLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
+    } finally {
+      groupsLoaded = true
     }
     try {
       tenantOwner = await users.getAccountHolder()
@@ -473,6 +583,7 @@
         {#if selectedRows.length > 0}
           <DeleteRowsButton
             item="user"
+            action={isWorkspaceOnly ? "Remove" : "Delete"}
             on:updaterows
             selectedRows={[...selectedRows]}
             deleteRows={deleteUsers}
@@ -505,15 +616,14 @@
   </div>
   <div class="table-wrap" style={`min-height: ${TABLE_MIN_HEIGHT}px;`}>
     <Table
-      on:click={({ detail }) => {
-        bb.settings(`/people/users/${detail._id}`)
-      }}
+      on:click={onRowClick}
       {schema}
       bind:selectedRows
       data={tableLoading ? [] : enrichedUsers}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={!readonly}
+      selectOnRowClick={!isWorkspaceOnly}
       {customRenderers}
       loading={false}
       customPlaceholder={tableLoading}
@@ -567,6 +677,18 @@
 <Modal bind:this={userLimitReachedModal}>
   <UpgradeModal {isOwner} />
 </Modal>
+
+{#if isWorkspaceOnly}
+  <Modal bind:this={editWorkspaceUserModal} closeOnOutsideClick={false}>
+    <EditWorkspaceUserModal
+      user={selectedWorkspaceUser}
+      workspaceId={currentWorkspaceId}
+      {readonly}
+      isTenantOwner={selectedWorkspaceUser?.email === tenantOwner?.email}
+      onsaved={onWorkspaceUserSaved}
+    />
+  </Modal>
+{/if}
 
 <style>
   .buttons {
