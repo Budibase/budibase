@@ -6,6 +6,7 @@
     auth,
     clientAppsStore,
     clientChatAppsStore,
+    featureFlags,
     licensing,
     organisation,
     translations,
@@ -48,6 +49,7 @@
   $: userApps = $clientAppsStore.apps
   $: liveChatApps = $clientChatAppsStore.chatApps
   $: chatAppsLoaded = $clientChatAppsStore.loaded
+  $: chatFeatureEnabled = $featureFlags.AI_CHAT
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUrl(app: EnrichedApp | PublishedWorkspaceData) {
@@ -68,14 +70,15 @@
 
   onMount(async () => {
     try {
-      await Promise.all([
-        clientAppsStore.load(),
-        translations.init(),
-        clientChatAppsStore.load(),
-      ])
+      await Promise.all([clientAppsStore.load(), translations.init()])
     } catch (error) {
       notifications.error("Error loading apps")
     }
+
+    if (chatFeatureEnabled) {
+      await clientChatAppsStore.load()
+    }
+
     loaded = true
   })
 
@@ -199,7 +202,7 @@
                 </Layout>
               </div>
             {/if}
-            {#if userApps.length || !chatAppsLoaded || liveChatApps.length}
+            {#if chatFeatureEnabled && (userApps.length || !chatAppsLoaded || liveChatApps.length)}
               <Heading size="S">Chat</Heading>
               <div class="group">
                 <Layout gap="S" noPadding>
@@ -242,7 +245,7 @@
                 </Layout>
               </div>
             {/if}
-            {#if !userApps.length && chatAppsLoaded && !liveChatApps.length}
+            {#if !userApps.length && (!chatFeatureEnabled || (chatAppsLoaded && !liveChatApps.length))}
               <Layout gap="XS" noPadding>
                 <Heading size="S">{portalLabels.noAppsHeading}</Heading>
                 <Body size="S">{portalLabels.noAppsDescription}</Body>

@@ -1,9 +1,10 @@
-import { withEnv } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   mockChatGPTResponse,
   mockChatGPTStreamResponse,
 } from "../../../../tests/utilities/mocks/ai/openai"
+import { getPool, resetHttpMocking } from "../../../../tests/jestEnv"
+import { withEnv } from "../../../../environment"
 import { createBBAIClient } from "./bbai"
 
 jest.mock("@budibase/types", () => {
@@ -42,45 +43,32 @@ describe("createBBAIClient", () => {
     jest.clearAllMocks()
   })
 
-  it("rejects unsupported models", async () => {
-    await expect(createBBAIClient("unsupported-model")).rejects.toMatchObject({
-      status: 400,
-    })
+  beforeEach(async () => {
+    await resetHttpMocking()
   })
 
-  it("requires an OpenAI API key for OpenAI models", async () => {
-    await withEnv({ BBAI_OPENAI_API_KEY: "" }, async () => {
-      await expect(
-        createBBAIClient("budibase/gpt-5-mini")
-      ).rejects.toMatchObject({
-        status: 500,
-        message: "OPENAI API key not configured",
-      })
-    })
-  })
+  it("passes through model names to LiteLLM", async () => {
+    mockChatGPTResponse("hello world")
 
-  it("requires an OpenRouter API key for OpenRouter models", async () => {
-    await withEnv({ BBAI_OPENROUTER_API_KEY: "" }, async () => {
-      await expect(createBBAIClient("budibase/v1")).rejects.toMatchObject({
-        status: 500,
-        message: "OPENROUTER API key not configured",
-      })
-    })
-  })
-
-  it("requires OPENROUTER_BASE_URL for OpenRouter models", async () => {
     await withEnv(
       {
-        BBAI_OPENROUTER_API_KEY: "openrouter-key",
-        OPENROUTER_BASE_URL: "",
+        BBAI_LITELLM_KEY: "sk-test-key",
       },
       async () => {
-        await expect(createBBAIClient("budibase/v1")).rejects.toMatchObject({
-          status: 500,
-          message: "OPENROUTER_BASE_URL not configured",
+        const { chat } = await createBBAIClient("unsupported-model")
+        await chat.doGenerate({
+          prompt: [
+            {
+              role: "user",
+              content: [{ type: "text", text: "hello" }],
+            },
+          ],
         })
       }
     )
+
+    expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
+    expect(incrementCreditsMock).toHaveBeenCalledWith(7)
   })
 
   it("increments credits for generate calls", async () => {
@@ -88,8 +76,7 @@ describe("createBBAIClient", () => {
 
     await withEnv(
       {
-        BBAI_OPENROUTER_API_KEY: "openrouter-key",
-        OPENROUTER_BASE_URL: "https://api.openai.com/v1",
+        BBAI_LITELLM_KEY: "sk-test-key",
       },
       async () => {
         const { chat } = await createBBAIClient("budibase/v1")
@@ -113,8 +100,7 @@ describe("createBBAIClient", () => {
 
     await withEnv(
       {
-        BBAI_OPENROUTER_API_KEY: "openrouter-key",
-        OPENROUTER_BASE_URL: "https://api.openai.com/v1",
+        BBAI_LITELLM_KEY: "sk-test-key",
       },
       async () => {
         const { chat } = await createBBAIClient("budibase/v1")
@@ -147,19 +133,59 @@ describe("createBBAIClient", () => {
   it("increments credits for OpenAI models", async () => {
     mockChatGPTResponse("hello world")
 
-    await withEnv({ BBAI_OPENAI_API_KEY: "openai-key" }, async () => {
-      const { chat } = await createBBAIClient("budibase/gpt-5-mini")
-      await chat.doGenerate({
-        prompt: [
-          {
-            role: "user",
-            content: [{ type: "text", text: "hello" }],
-          },
-        ],
-      })
-    })
+    await withEnv(
+      {
+        BBAI_LITELLM_KEY: "sk-test-key",
+      },
+      async () => {
+        const { chat } = await createBBAIClient("budibase/gpt-5-mini")
+        await chat.doGenerate({
+          prompt: [
+            {
+              role: "user",
+              content: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+      }
+    )
 
     expect(incrementCreditsMock).toHaveBeenCalledTimes(1)
     expect(incrementCreditsMock).toHaveBeenCalledWith(7)
+  })
+
+  it("surfaces authorization failures for non-budibase models", async () => {
+    const pool = getPool("https://api.openai.com")
+
+    pool
+      .intercept({
+        path: "/v1/chat/completions",
+        method: "POST",
+      })
+      .reply(403, {
+        error: {
+          message: "Not allowed to access model",
+          type: "permission_error",
+        },
+      })
+
+    await withEnv(
+      {
+        BBAI_LITELLM_KEY: "sk-test-key",
+      },
+      async () => {
+        const { chat } = await createBBAIClient("openai/gpt-5")
+        await expect(
+          chat.doGenerate({
+            prompt: [
+              {
+                role: "user",
+                content: [{ type: "text", text: "hello" }],
+              },
+            ],
+          })
+        ).rejects.toThrow("Not allowed to access model")
+      }
+    )
   })
 })

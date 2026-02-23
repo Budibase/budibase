@@ -4,85 +4,139 @@ import type {
   LanguageModelV3StreamPart,
   LanguageModelV3Usage,
 } from "@ai-sdk/provider"
-import { env, HTTPError } from "@budibase/backend-core"
+import tracer from "dd-trace"
 import { quotas } from "@budibase/pro"
-import { BUDIBASE_AI_MODEL_MAP } from "@budibase/types"
 import { wrapLanguageModel } from "ai"
 import { TransformStream } from "node:stream/web"
+import { context } from "@budibase/backend-core"
 import { LLMResponse } from "."
+import environment from "../../../../environment"
 
-const calculateBudibaseAICredits = (usage?: LanguageModelV3Usage): number => {
-  if (!usage) {
-    return 0
-  }
-
-  const inputTokens = usage.inputTokens.total ?? 0
-  const outputTokens = usage.outputTokens.total ?? 0
-  return outputTokens * 3 + inputTokens
+interface OpenAIUsage {
+  prompt_tokens?: number
+  completion_tokens?: number
+  input_tokens?: number
+  output_tokens?: number
 }
+
+const calculateBudibaseAICredits = (
+  inputTokens: number,
+  outputTokens: number
+): number => outputTokens * 3 + inputTokens
 
 const incrementBudibaseAICreditsFromUsage = async (
   usage?: LanguageModelV3Usage
 ) => {
-  const credits = calculateBudibaseAICredits(usage)
+  if (!usage) {
+    return
+  }
+
+  const inputTokens = usage.inputTokens.total ?? 0
+  const outputTokens = usage.outputTokens.total ?? 0
+  const credits = calculateBudibaseAICredits(inputTokens, outputTokens)
   if (credits > 0) {
     await quotas.incrementBudibaseAICredits(credits)
   }
 }
 
-const availableBudibaseAIModels: typeof BUDIBASE_AI_MODEL_MAP = {
-  ...BUDIBASE_AI_MODEL_MAP,
-  "legacy/gpt-4o-mini": {
-    provider: "openai",
-    model: "gpt-4o-mini",
-  },
-  "legacy/gpt-4o": {
-    provider: "openai",
-    model: "gpt-4o",
-  },
-  "legacy/gpt-5": {
-    provider: "openai",
-    model: "gpt-5",
-  },
-  "legacy/gpt-5-mini": {
-    provider: "openai",
-    model: "gpt-5-mini",
-  },
-  "legacy/gpt-5-nano": {
-    provider: "openai",
-    model: "gpt-5-nano",
-  },
+export async function incrementBudibaseAICreditsFromOpenAIUsage(
+  usage?: OpenAIUsage
+) {
+  if (!usage) {
+    return
+  }
+
+  const inputTokens = usage.prompt_tokens ?? usage.input_tokens ?? 0
+  const outputTokens = usage.completion_tokens ?? usage.output_tokens ?? 0
+  const credits = calculateBudibaseAICredits(inputTokens, outputTokens)
+
+  if (credits > 0) {
+    await quotas.incrementBudibaseAICredits(credits)
+  }
 }
 
-export async function createBBAIClient(model: string): Promise<LLMResponse> {
-  const bbaiModel = availableBudibaseAIModels[model]
-  if (!bbaiModel) {
-    throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
-  }
+type BBAIFetch = (
+  input: Parameters<typeof fetch>[0],
+  init?: Parameters<typeof fetch>[1]
+) => ReturnType<typeof fetch>
 
-  const { provider } = bbaiModel
+const createBBAIFetch = (sessionId?: string): BBAIFetch => {
+  const bbaiFetch = (async (
+    input: Parameters<typeof fetch>[0],
+    init?: Parameters<typeof fetch>[1]
+  ) => {
+    let modifiedInit = init
 
-  let apiKey: string | undefined
-  let baseURL: string | undefined
-  if (provider === "openai") {
-    apiKey = env.BBAI_OPENAI_API_KEY
-  } else if (provider === "openrouter") {
-    apiKey = env.BBAI_OPENROUTER_API_KEY
-    baseURL = env.OPENROUTER_BASE_URL
-    if (!baseURL) {
-      throw new HTTPError("OPENROUTER_BASE_URL not configured", 500)
+    if (typeof init?.body === "string") {
+      try {
+        const body = JSON.parse(init.body)
+        const span = tracer.scope().active()
+        if (span) {
+          body.metadata = {
+            ...body.metadata,
+            dd_trace_id: span.context().toTraceId(),
+            dd_span_id: span.context().toSpanId(),
+          }
+        }
+
+        if (sessionId) {
+          body.litellm_session_id = sessionId
+          body.metadata = {
+            ...body.metadata,
+            session_id: sessionId,
+          }
+        }
+
+        body.metadata = {
+          ...body.metadata,
+          tags: [
+            `bbai-cloud`,
+            `tenant:${context.getTenantId()}`,
+            `workspace:${context.getWorkspaceId()}`,
+          ],
+        }
+
+        modifiedInit = { ...init, body: JSON.stringify(body) }
+      } catch {
+        // Not JSON, pass through
+      }
     }
-  } else {
-    throw new HTTPError(`Unsupported BBAI provider: ${provider}`, 400)
+
+    return fetch(input, modifiedInit)
+  }) as BBAIFetch
+
+  // Preserve the preconnect helper required by the OpenAI client typings.
+  if (typeof (fetch as any).preconnect === "function") {
+    ;(bbaiFetch as any).preconnect = (fetch as any).preconnect.bind(fetch)
   }
 
-  if (!apiKey) {
-    throw new HTTPError(`${provider.toUpperCase()} API key not configured`, 500)
+  return bbaiFetch
+}
+
+export async function createBBAIClient(
+  model: string,
+  sessionId?: string,
+  span?: tracer.Span
+): Promise<LLMResponse> {
+  const baseUrl = environment.LITELLM_URL
+
+  if (span) {
+    tracer.llmobs.annotate(span, {
+      metadata: {
+        modelId: model,
+        modelName: model,
+        baseUrl,
+      },
+    })
   }
 
-  const client = createOpenAI({ apiKey, baseURL })
+  const client = createOpenAI({
+    apiKey: environment.BBAI_LITELLM_KEY,
+    baseURL: baseUrl,
+    fetch: createBBAIFetch(sessionId),
+  })
   const chat = wrapLanguageModel({
-    model: client.chat(bbaiModel.model),
+    model: client.chat(model),
     middleware: {
       specificationVersion: "v3",
       async wrapGenerate({ doGenerate }) {

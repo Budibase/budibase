@@ -70,7 +70,9 @@ export const createLegacyLLM = async (
   }
 
   const model =
-    config.provider === "BudibaseAI" ? `legacy/${config.model}` : config.model
+    config.provider === "BudibaseAI"
+      ? `budibase/legacy/${config.model}`
+      : config.model
 
   if (config.provider === "BudibaseAI" && !env.SELF_HOSTED) {
     return createBBAIClient(model)

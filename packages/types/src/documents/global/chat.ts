@@ -16,7 +16,6 @@ export interface ChatApp extends Document {
   title?: string
   greeting?: string
   description?: string
-  theme?: string
   agents: ChatAppAgent[]
   live?: boolean
   settings?: Record<string, any>

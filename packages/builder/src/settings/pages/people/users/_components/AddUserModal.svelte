@@ -16,6 +16,7 @@
   import { licensing } from "@/stores/portal/licensing"
   import { admin } from "@/stores/portal/admin"
   import { organisation } from "@/stores/portal/organisation"
+  import { roles } from "@/stores/builder"
   import { Constants, emailValidator } from "@budibase/frontend-core"
   import { capitalise } from "@/helpers"
   import { OnboardingType } from "@/constants"
@@ -32,9 +33,40 @@
   let emailError = null
   const maxItems = 15
   let selectedRole = Constants.BudibaseRoles.AppUser
-  const endUserRoleOptions = [
-    { label: "End user: Basic", value: Constants.Roles.BASIC },
-    { label: "End user: Admin", value: Constants.Roles.ADMIN },
+  const builtInEndUserRoles = [Constants.Roles.BASIC, Constants.Roles.ADMIN]
+  const excludedRoleIds = [
+    ...builtInEndUserRoles,
+    Constants.Roles.PUBLIC,
+    Constants.Roles.POWER,
+    Constants.Roles.CREATOR,
+    Constants.Roles.GROUP,
+  ]
+  let roleColorLookup = {}
+  $: roleColorLookup = ($roles || []).reduce((acc, role) => {
+    acc[role._id] = role.uiMetadata?.color
+    return acc
+  }, {})
+  $: customEndUserRoleOptions = ($roles || [])
+    .filter(role => !excludedRoleIds.includes(role._id))
+    .map(role => ({
+      label: role.uiMetadata?.displayName || role.name || "Custom role",
+      value: role._id,
+      color:
+        role.uiMetadata?.color ||
+        "var(--spectrum-global-color-static-magenta-400)",
+    }))
+  $: endUserRoleOptions = [
+    {
+      label: "Basic user",
+      value: Constants.Roles.BASIC,
+      color: roleColorLookup[Constants.Roles.BASIC],
+    },
+    {
+      label: "Admin user",
+      value: Constants.Roles.ADMIN,
+      color: roleColorLookup[Constants.Roles.ADMIN],
+    },
+    ...customEndUserRoleOptions,
   ]
   let endUserRole = Constants.Roles.BASIC
   let onboardingType = OnboardingType.EMAIL
@@ -225,6 +257,7 @@
       <div class="role-select">
         <Select
           label="Select role"
+          placeholder={false}
           bind:value={selectedRole}
           options={Constants.BudibaseRoleOptions}
           getOptionLabel={option => option.label}
@@ -242,6 +275,7 @@
             options={endUserRoleOptions}
             getOptionLabel={option => option.label}
             getOptionValue={option => option.value}
+            getOptionColour={option => option.color}
             placeholder={false}
           />
         </div>
