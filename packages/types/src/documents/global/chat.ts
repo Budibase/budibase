@@ -37,6 +37,7 @@ export interface ChatConversationRequest extends Document {
   messages: UIMessage<AgentMessageMetadata>[]
   transient?: boolean
   isPreview?: boolean
+  sessionId?: string
   channel?: ChatConversationChannel
 }
 
