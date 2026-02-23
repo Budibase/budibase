@@ -13,6 +13,7 @@ export enum Feature {
   APP_BUILDERS = "appBuilders",
   OFFLINE = "offline",
   EXPANDED_PUBLIC_API = "expandedPublicApi",
+  WORKSPACE_IMPORT_EXPORT = "workspaceImportExport",
   CUSTOM_APP_SCRIPTS = "customAppScripts",
   PDF = "pdf",
   TRANSLATIONS = "translations",
