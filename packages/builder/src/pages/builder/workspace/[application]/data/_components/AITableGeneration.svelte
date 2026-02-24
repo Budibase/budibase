@@ -9,22 +9,31 @@
   $: goto = $gotoStore
 
   let promptText = ""
+  let progressMessage = ""
 
   async function submitPrompt(message: string) {
     try {
-      const { createdTables } = await API.generateTables({
-        prompt: message,
-      })
+      progressMessage = "Starting table generation..."
+      const { createdTables } = await API.generateTables(
+        {
+          prompt: message,
+        },
+        message => {
+          progressMessage = message
+        }
+      )
 
       const [tableToRedirect] = createdTables.sort((a, b) =>
         a.name.localeCompare(b.name)
       )
 
+      progressMessage = ""
       notifications.success(`Tables created successfully.`)
       await datasources.fetch()
       await tables.fetch()
       goto(`./table/${tableToRedirect.id}`)
     } catch (e: any) {
+      progressMessage = ""
       notifications.error(e.message)
     }
   }
@@ -44,6 +53,9 @@
       expandedOnly
     />
   </div>
+  {#if progressMessage}
+    <div class="ai-generation-progress">{progressMessage}</div>
+  {/if}
   <div class="ai-generation-examples">
     {#if $aiStore.aiEnabled}
       {#each examplePrompts as prompt}
@@ -72,6 +84,12 @@
     gap: 10px;
     width: 100%;
     grid-template-columns: 1fr;
+  }
+
+  .ai-generation-progress {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
+    padding: 0 8px;
   }
 
   @media (min-width: 833px) {

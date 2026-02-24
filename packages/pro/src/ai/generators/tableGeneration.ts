@@ -27,6 +27,8 @@ interface Delegates {
   ) => Promise<void>
 }
 
+type ProgressCallback = (message: string) => void
+
 export class TableGeneration {
   private aiModel: LLMResponse
 
@@ -44,9 +46,13 @@ export class TableGeneration {
     return new TableGeneration(aiModel, delegates)
   }
 
-  async generate(userPrompt: string, userId: string) {
+  async generate(
+    userPrompt: string,
+    userId: string,
+    onProgress?: ProgressCallback
+  ) {
     return tracer.trace("tableGeneration.generate", async span => {
-      const tables = await this.generateTables(userPrompt, userId)
+      const tables = await this.generateTables(userPrompt, userId, onProgress)
       span.addTags({ table_count: tables.length })
       return tables
     })
@@ -89,31 +95,38 @@ export class TableGeneration {
 
   private async generateTables(
     userPrompt: string,
-    userId: string
+    userId: string,
+    onProgress?: ProgressCallback
   ): Promise<{ id: string; name: string }[]> {
+    this.reportProgress(onProgress, "Generating table schema...")
     const tablesToCreate = await this.llmFunctions.getTableStructure(userPrompt)
 
+    this.reportProgress(onProgress, "Generating AI columns...")
     const aiColumnStructure = await this.llmFunctions.generateAIColumns(
       userPrompt,
       tablesToCreate
     )
 
+    this.reportProgress(onProgress, "Generating sample data...")
     const data = await this.llmFunctions.generateData(
       userPrompt,
       tablesToCreate
     )
 
+    this.reportProgress(onProgress, "Creating tables...")
     // We need to wait for the tables to be created before persisting the data
     const result = await this.delegates.generateTablesDelegate(
       appendAIColumns(tablesToCreate, aiColumnStructure)
     )
 
+    this.reportProgress(onProgress, "Populating rows...")
     await this.delegates.generateDataDelegate(
       data,
       userId,
       utils.toMap("name", tablesToCreate)
     )
 
+    this.reportProgress(onProgress, "Finalizing...")
     return result
   }
 
@@ -160,5 +173,12 @@ export class TableGeneration {
         content: message.content,
       } as ModelMessage
     })
+  }
+
+  private reportProgress(onProgress: ProgressCallback | undefined, message: string) {
+    if (!onProgress) {
+      return
+    }
+    onProgress(message)
   }
 }
