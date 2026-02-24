@@ -82,7 +82,9 @@ if [ ! -f "${DATA_DIR}/.env" ]; then
 fi
 
 # Read in the .env file and export the variables
-for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
+set -a
+source "${DATA_DIR}/.env"
+set +a
 ln -s ${DATA_DIR}/.env /app/.env
 ln -s ${DATA_DIR}/.env /worker/.env
 
