@@ -200,6 +200,7 @@
       <Table
         schema={appSchema}
         data={filteredGroupApps}
+        rowCount={5}
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}

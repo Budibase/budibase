@@ -12,7 +12,8 @@
   const dispatch = createEventDispatcher()
 
   $: enrichedList = enrich(list, selected)
-  $: sortedList = sort(enrichedList)
+  $: filteredList = filter(enrichedList, searchTerm)
+  $: sortedList = sort(filteredList)
 
   const enrich = (list, selected) => {
     return list.map(item => {
@@ -36,6 +37,21 @@
       return 0
     })
     return sortedList
+  }
+
+  const filter = (list, searchTerm) => {
+    if (!searchTerm) {
+      return list
+    }
+    const search = searchTerm.toLowerCase().trim()
+    if (!search) {
+      return list
+    }
+    return list.filter(item =>
+      String(item[labelKey] || "")
+        .toLowerCase()
+        .includes(search)
+    )
   }
 </script>
 

@@ -5,6 +5,7 @@
   import { sdk } from "@budibase/shared-core"
 
   export let value
+  export let row
 
   const userContext = getContext("users")
 
@@ -14,10 +15,12 @@
   }
 </script>
 
-<ActionButton
-  disabled={!sdk.users.isAdmin($auth.user)}
-  size="S"
-  on:click={onClick}
->
-  Remove
-</ActionButton>
+{#if !row?.__skeleton}
+  <ActionButton
+    disabled={!sdk.users.isAdmin($auth.user)}
+    size="S"
+    on:click={onClick}
+  >
+    Remove
+  </ActionButton>
+{/if}
