@@ -70,10 +70,32 @@ describe("createLLM", () => {
       expect(createBBAIClient).toHaveBeenCalledWith(
         "budibase/gpt-5-mini",
         "session-1",
+        undefined,
         undefined
       )
       expect(createLiteLLMOpenAI).not.toHaveBeenCalled()
       expect(result).toBe(expected)
+    })
+  })
+
+  it("passes reasoningEffort to Budibase AI client", async () => {
+    await withEnv({ SELF_HOSTED: false }, async () => {
+      findConfigMock.mockResolvedValue({
+        provider: BUDIBASE_AI_PROVIDER_ID,
+        model: "budibase/gpt-5-mini",
+        reasoningEffort: "high",
+      } as any)
+
+      createBBAIClientMock.mockResolvedValue({ chat: "chat" } as any)
+
+      await createLLM("config-1", "session-1")
+
+      expect(createBBAIClient).toHaveBeenCalledWith(
+        "budibase/gpt-5-mini",
+        "session-1",
+        undefined,
+        "high"
+      )
     })
   })
 

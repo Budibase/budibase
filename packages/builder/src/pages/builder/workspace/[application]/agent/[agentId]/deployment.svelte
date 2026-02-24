@@ -7,8 +7,9 @@
     Toggle,
     notifications,
   } from "@budibase/bbui"
-  import type { Agent, DeploymentRow } from "@budibase/types"
-  import { selectedAgent, agentsStore } from "@/stores/portal"
+  import { FeatureFlag, type Agent, type DeploymentRow } from "@budibase/types"
+  import { selectedAgent, agentsStore, featureFlags } from "@/stores/portal"
+  import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
 
@@ -34,6 +35,7 @@
   )
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
+  const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_CHAT])
 
   const channels = $derived.by<DeploymentRow[]>(() => [
     {
@@ -117,6 +119,9 @@
       >
     </div>
     <div class="integration-list">
+      {#if agentChatEnabled}
+        <AgentChatChannel />
+      {/if}
       {#each channels as channel (channel.id)}
         <div class="integration-row">
           <div class="channel-main">

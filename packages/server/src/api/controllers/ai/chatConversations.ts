@@ -181,11 +181,11 @@ export async function discordChat({
       baseSystemPrompt: ai.agentSystemPrompt(user),
       includeGoal: false,
     })
-  const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
-    agent.aiconfig
-  )
-
   const sessionId = chat._id || v4()
+  const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
+    agent.aiconfig,
+    sessionId
+  )
 
   const modelMessages = await convertToModelMessages(chat.messages)
   const messagesWithContext: ModelMessage[] =
@@ -353,7 +353,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
   try {
-    const sessionId = chat._id || v4()
+    const chatId = chat._id ?? docIds.generateChatConversationID()
+    const sessionId = chat._id || chat.sessionId || chatId
     const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
       agent.aiconfig,
       sessionId
@@ -444,7 +445,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           return
         }
 
-        const chatId = chat._id ?? docIds.generateChatConversationID()
         const existingChat = chat._id
           ? await db.tryGet<ChatConversation>(chat._id)
           : null
