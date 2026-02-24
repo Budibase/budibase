@@ -24,7 +24,7 @@ RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json pack
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
 ARG TARGETPLATFORM
 # Allow HTTPS when behind a corporate proxy that does SSL inspection (node-gyp fetches Node headers)
-RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} NODE_TLS_REJECT_UNAUTHORIZED=0 yarn install --production --frozen-lockfile
+RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production --frozen-lockfile
 
 # Copy the actual code
 COPY packages/server/dist packages/server/dist
