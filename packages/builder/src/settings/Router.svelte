@@ -32,6 +32,6 @@
 
 {#if page}
   {#key path}
-    <svelte:component this={page} {...params} />
+    <svelte:component this={page} />
   {/key}
 {/if}

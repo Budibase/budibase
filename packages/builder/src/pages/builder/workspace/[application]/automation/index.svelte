@@ -26,29 +26,18 @@
     Modal,
     type ModalAPI,
     notifications,
+    TooltipPosition,
     StatusLight,
   } from "@budibase/bbui"
   import type { UIAutomation } from "@budibase/types"
-  import {
-    FeatureFlag,
-    PublishResourceState,
-    WorkspaceResource,
-  } from "@budibase/types"
-  import { goto as gotoStore, url } from "@roxi/routify"
+  import { PublishResourceState, WorkspaceResource } from "@budibase/types"
+  import { url } from "@roxi/routify"
   import AppsHero from "assets/automation-hero-x1.png"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import NoResults from "../_components/NoResults.svelte"
-  import { appsStore, featureFlags } from "@/stores/portal"
-  import { onMount } from "svelte"
+  import { appsStore } from "@/stores/portal"
 
   $url
-  $: goto = $gotoStore
-
-  onMount(() => {
-    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
-      goto("../home?type=automation")
-    }
-  })
 
   let showHighlight = true
   let createModal: ModalAPI
@@ -290,7 +279,11 @@
             </div>
 
             <span class="favourite-btn">
-              <FavouriteResourceButton favourite={automation.favourite} />
+              <FavouriteResourceButton
+                favourite={automation.favourite}
+                position={TooltipPosition.Left}
+                noWrap
+              />
             </span>
           </div>
         </a>
@@ -392,42 +385,37 @@
     padding: 9px 12px;
     color: var(--text-color);
     transition: background 130ms ease-out;
-  }
 
-  .automation:hover,
-  .automation.active {
-    background: var(--spectrum-global-color-gray-200);
-  }
+    &:hover,
+    &.active {
+      background: var(--spectrum-global-color-gray-200);
 
-  .automation:hover .actions > *,
-  .automation.active .actions > *,
-  .automation:focus-within .actions > * {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .automation.favourite .actions .favourite-btn {
-    opacity: 1;
-    pointer-events: auto;
+      & .actions > * {
+        opacity: 1;
+        pointer-events: all;
+      }
+    }
+    &.favourite {
+      & .actions .favourite-btn {
+        opacity: 1;
+      }
+    }
   }
   .actions {
     justify-content: flex-end;
     display: flex;
     align-items: center;
+    pointer-events: none;
     gap: var(--spacing-xs);
   }
 
   .actions > * {
     opacity: 0;
-    pointer-events: none;
     transition: opacity 130ms ease-out;
   }
 
-  @media (hover: none), (pointer: coarse) {
-    .automation .actions > * {
-      opacity: 1;
-      pointer-events: auto;
-    }
+  .actions .favourite-btn {
+    pointer-events: all;
   }
 
   .table-wrapper {

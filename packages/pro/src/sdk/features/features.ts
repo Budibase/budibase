@@ -76,6 +76,12 @@ export async function isTriggerAutomationRunEnabled() {
   return areFeaturesEnabled(Feature.TRIGGER_AUTOMATION_RUN)
 }
 
+// APP BUILDERS
+
+export async function isAppBuildersEnabled() {
+  return areFeaturesEnabled(Feature.APP_BUILDERS)
+}
+
 // AUDIT LOGS
 
 export async function isAuditLogsEnabled() {

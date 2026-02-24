@@ -45,6 +45,8 @@ export interface FetchAppPackageResponse {
   hasLock: boolean
   recaptchaKey?: string
   clientCacheKey?: string
+  /** When true, embedded app shows live view (no Preview/DevTools bar) */
+  hideDevTools?: boolean
 }
 
 export interface AddWorkspaceSampleDataResponse {
@@ -65,18 +67,6 @@ export interface PublishedWorkspaceData {
 
 export interface FetchPublishedAppsResponse {
   apps: PublishedWorkspaceData[]
-}
-
-export interface PublishedChatAppData {
-  appId: string
-  chatAppId: string
-  name: string
-  url: string
-  updatedAt?: string
-}
-
-export interface FetchPublishedChatAppsResponse {
-  chatApps: PublishedChatAppData[]
 }
 
 export interface UpdateWorkspaceRequest extends Partial<Workspace> {}

@@ -4,10 +4,6 @@ import {
   Agent,
   AgentFile,
   CreateAgentRequest,
-  ProvisionAgentMSTeamsChannelRequest,
-  ProvisionAgentMSTeamsChannelResponse,
-  SyncAgentDiscordCommandsRequest,
-  SyncAgentDiscordCommandsResponse,
   UpdateAgentRequest,
   ToolMetadata,
 } from "@budibase/types"
@@ -95,15 +91,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return updated
   }
 
-  duplicateAgent = async (agentId: string) => {
-    const duplicated = await API.duplicateAgent(agentId)
-    this.update(state => {
-      state.agents = [...state.agents, duplicated]
-      return state
-    })
-    return duplicated
-  }
-
   deleteAgent = async (agentId: string) => {
     await API.deleteAgent(agentId)
     await this.fetchAgents()
@@ -149,29 +136,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       }
       return state
     })
-  }
-
-  syncDiscordCommands = async (
-    agentId: string,
-    body?: SyncAgentDiscordCommandsRequest
-  ): Promise<SyncAgentDiscordCommandsResponse> => {
-    const response = await API.syncAgentDiscordCommands(agentId, body)
-    await this.fetchAgents()
-    return response
-  }
-
-  provisionMSTeamsChannel = async (
-    agentId: string,
-    body?: ProvisionAgentMSTeamsChannelRequest
-  ): Promise<ProvisionAgentMSTeamsChannelResponse> => {
-    const response = await API.provisionAgentMSTeamsChannel(agentId, body)
-    await this.fetchAgents()
-    return response
-  }
-
-  toggleDiscordDeployment = async (agentId: string, enabled: boolean) => {
-    await API.toggleAgentDiscordDeployment(agentId, enabled)
-    await this.fetchAgents()
   }
 }
 export const agentsStore = new AgentsStore()

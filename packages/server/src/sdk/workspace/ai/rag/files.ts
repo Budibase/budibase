@@ -2,26 +2,29 @@ import { embedMany } from "ai"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
-import { features } from "@budibase/backend-core"
+import { HTTPError } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
 import {
   AgentFileStatus,
   AgentMessageRagSource,
-  FeatureFlag,
   type Agent,
   type AgentFile,
+  type VectorDb,
 } from "@budibase/types"
+import { getLiteLLMModelConfigOrThrow } from "../configs"
+import { find as findVectorDb } from "../vectorDb/crud"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
 import { agents } from ".."
-import { createLLM } from "../llm"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
 
-const ensureRagEnabled = async () => {
-  if (!(await features.isEnabled(FeatureFlag.AI_RAG))) {
-    throw new Error("RAG feature is disabled")
-  }
+interface ResolvedRagConfig {
+  embeddingModel: string
+  baseUrl: string
+  apiKey: string
+  vectorDb: VectorDb
 }
 
 const textFileExtensions = new Set([
@@ -36,6 +39,32 @@ const textFileExtensions = new Set([
 ])
 
 const yamlExtensions = new Set([".yaml", ".yml"])
+
+const buildRagConfig = async ({
+  embeddingModel,
+  vectorDb,
+}: {
+  embeddingModel?: string
+  vectorDb?: string
+}): Promise<ResolvedRagConfig> => {
+  if (!embeddingModel || !vectorDb) {
+    throw new HTTPError("RAG config not set", 422)
+  }
+
+  const vectorDbObj = await findVectorDb(vectorDb)
+  if (!vectorDbObj) {
+    throw new Error("Vector db not found")
+  }
+
+  const { apiKey, baseUrl, modelId } =
+    await getLiteLLMModelConfigOrThrow(embeddingModel)
+  return {
+    embeddingModel: modelId,
+    baseUrl,
+    apiKey,
+    vectorDb: vectorDbObj,
+  }
+}
 
 const hashChunk = (chunk: string) => {
   return crypto.createHash("sha256").update(chunk).digest("hex")
@@ -187,17 +216,20 @@ const createChunksFromContent = (content: string, filename?: string) => {
   return chunkDocument(content)
 }
 
-const getEmbeddingModel = async (configId: string) => {
-  const { embedding } = await createLLM(configId)
-  return embedding
+const getEmbeddingModel = async (config: ResolvedRagConfig) => {
+  const openai = ai.createLiteLLMOpenAI({
+    apiKey: config.apiKey,
+    baseUrl: config.baseUrl,
+  })
+  return openai.embedding(config.embeddingModel)
 }
 
 const embedChunks = async (
-  configId: string,
+  config: ResolvedRagConfig,
   chunks: string[],
   batchSize = DEFAULT_EMBEDDING_BATCH_SIZE
 ) => {
-  const model = await getEmbeddingModel(configId)
+  const model = await getEmbeddingModel(config)
   const embeddings: number[][] = []
 
   for (let i = 0; i < chunks.length; i += batchSize) {
@@ -249,22 +281,17 @@ export const ingestAgentFile = async (
   inserted: number
   total: number
 }> => {
-  await ensureRagEnabled()
   const { _id: agentId } = agent
   if (!agentId) {
     throw new Error("Agent id not set")
   }
 
-  if (!agent.embeddingModel) {
-    throw new Error("Embedding model is not set")
-  }
-
+  const config = await buildRagConfig(agent)
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
 
-  const vectorDb = await createVectorDb({
-    agentId: agent._id!,
-    vectorDbId: agent.vectorDb,
+  const vectorDb = createVectorDb(config.vectorDb, {
+    agentId,
   })
 
   if (chunks.length === 0) {
@@ -273,7 +300,7 @@ export const ingestAgentFile = async (
     return { inserted: 0, total: 0 }
   }
 
-  const embeddings = await embedChunks(agent.embeddingModel, chunks)
+  const embeddings = await embedChunks(config, chunks)
   if (embeddings.length !== chunks.length) {
     throw new Error("Embedding response size mismatch")
   }
@@ -291,14 +318,21 @@ export const deleteAgentFileChunks = async (
   agent: Agent,
   sourceIds: string[]
 ) => {
-  await ensureRagEnabled()
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
 
-  const vectorDb = await createVectorDb({
+  if (!agent.vectorDb) {
+    throw new Error("Agent does not have a vectordb configured")
+  }
+
+  const vectorDbDoc = await findVectorDb(agent.vectorDb)
+  if (!vectorDbDoc) {
+    throw new Error(`Vector db ${agent.vectorDb} not found`)
+  }
+
+  const vectorDb = createVectorDb(vectorDbDoc, {
     agentId: agent._id!,
-    vectorDbId: agent.vectorDb,
   })
   await vectorDb.deleteBySourceIds(sourceIds)
 }
@@ -319,7 +353,6 @@ export const retrieveContextForAgent = async (
   agent: Agent,
   question: string
 ): Promise<RetrievedContextResult> => {
-  await ensureRagEnabled()
   if (!question || question.trim().length === 0) {
     return { text: "", chunks: [], sources: [] }
   }
@@ -333,10 +366,6 @@ export const retrieveContextForAgent = async (
     throw new Error("RAG settings not properly configured")
   }
 
-  if (!agent.embeddingModel) {
-    throw new Error("Embedding model is not set")
-  }
-
   const agentFiles = await agents.listAgentFiles(agent._id!)
   const readyFileSources = agentFiles
     .filter(file => file.status === AgentFileStatus.READY && file.ragSourceId)
@@ -346,18 +375,17 @@ export const retrieveContextForAgent = async (
     return { text: "", chunks: [], sources: [] }
   }
 
-  const [queryEmbedding] = await embedChunks(
-    agent.embeddingModel,
-    [question],
-    1
-  )
+  const config = await buildRagConfig({
+    embeddingModel: agent.embeddingModel,
+    vectorDb: agent.vectorDb,
+  })
+  const [queryEmbedding] = await embedChunks(config, [question], 1)
   if (!queryEmbedding?.length) {
     throw new Error("Embedding response missing dimensions")
   }
 
-  const vectorDb = await createVectorDb({
+  const vectorDb = createVectorDb(config.vectorDb, {
     agentId,
-    vectorDbId: agent.vectorDb,
   })
   const rows = await vectorDb.queryNearest(
     queryEmbedding,

@@ -1,4 +1,5 @@
 import { context, docIds, roles } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
 import { DocumentType } from "@budibase/types"
 import type {
   Agent,
@@ -22,7 +23,6 @@ import {
   truncateTitle,
 } from "../../api/controllers/ai/chatConversations"
 import sdk from "../../sdk"
-import type { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -31,6 +31,7 @@ jest.mock("@budibase/pro", () => {
     ai: {
       ...actual.ai,
       agentSystemPrompt: jest.fn(() => "system"),
+      createLiteLLMOpenAI: jest.fn(),
     },
   }
 })
@@ -46,6 +47,14 @@ jest.mock("ai", () => {
   }
 })
 
+jest.mock("../../sdk/workspace/ai/configs", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/configs")
+  return {
+    ...actual,
+    getLiteLLMModelConfigOrThrow: jest.fn(),
+  }
+})
+
 jest.mock("../../sdk/workspace/ai/agents", () => {
   const actual = jest.requireActual("../../sdk/workspace/ai/agents")
   return {
@@ -53,14 +62,6 @@ jest.mock("../../sdk/workspace/ai/agents", () => {
     getOrThrow: jest.fn(),
     listAgentFiles: jest.fn(),
     buildPromptAndTools: jest.fn(),
-  }
-})
-
-jest.mock("../../sdk/workspace/ai/llm", () => {
-  const actual = jest.requireActual("../../sdk/workspace/ai/llm")
-  return {
-    ...actual,
-    createLLM: jest.fn(),
   }
 })
 
@@ -93,7 +94,6 @@ describe("chat conversations authorization", () => {
         chatApp = {
           _id: docIds.generateChatAppID(),
           agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
-          live: true,
           createdAt: now,
         }
         convoA = {
@@ -117,7 +117,6 @@ describe("chat conversations authorization", () => {
         otherChatApp = {
           _id: docIds.generateChatAppID(),
           agents: [{ agentId: "agent-2", isEnabled: true, isDefault: false }],
-          live: true,
           createdAt: now,
         }
         otherAppConvo = {
@@ -281,7 +280,6 @@ describe("chat conversation transient behavior", () => {
         chatApp = {
           _id: docIds.generateChatAppID(),
           agents: [{ agentId, isEnabled: true, isDefault: false }],
-          live: true,
           createdAt: now,
         }
         await db.put(chatApp)
@@ -318,12 +316,16 @@ describe("chat conversation transient behavior", () => {
   })
 
   const setupMocks = () => {
+    type ChatModel = ReturnType<
+      ReturnType<typeof ai.createLiteLLMOpenAI>["chat"]
+    >
+
     const mockAgent: Agent = {
       _id: agentId,
       name: "Mock Agent",
       aiconfig: "config-1",
     }
-    const mockModel = {}
+    const mockModel = {} as ChatModel
     const mockMiddleware = {} as unknown as ReturnType<
       typeof extractReasoningMiddleware
     >
@@ -345,12 +347,25 @@ describe("chat conversation transient behavior", () => {
       >
     ).mockResolvedValue({ systemPrompt: "system", tools })
     ;(
-      sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
+      sdk.ai.configs.getLiteLLMModelConfigOrThrow as jest.MockedFunction<
+        typeof sdk.ai.configs.getLiteLLMModelConfigOrThrow
+      >
     ).mockResolvedValue({
-      chat: mockModel as LanguageModelV3,
-      embedding: {} as EmbeddingModelV3,
-      providerOptions: jest.fn(),
+      modelName: "model-1",
+      modelId: "model-1",
+      apiKey: "api-key",
+      baseUrl: "http://localhost",
     })
+
+    const openAiMock = {
+      chat: () => mockModel,
+    } as unknown as ReturnType<typeof ai.createLiteLLMOpenAI>
+
+    ;(
+      ai.createLiteLLMOpenAI as jest.MockedFunction<
+        typeof ai.createLiteLLMOpenAI
+      >
+    ).mockReturnValue(openAiMock)
     ;(
       convertToModelMessages as jest.MockedFunction<
         typeof convertToModelMessages
@@ -459,34 +474,6 @@ describe("chat conversation transient behavior", () => {
         expect(docs.rows[0].doc?.chatAppId).toBe(chatApp._id)
         expect(docs.rows[0].doc?.messages).toEqual(mockMessages)
       }
-    )
-  })
-
-  it("disables tool calling when no tools are enabled", async () => {
-    setupMocks()
-    const headers = await config.defaultHeaders({}, true)
-
-    const res = await config
-      .getRequest()!
-      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
-      .set(headers)
-      .send({
-        agentId,
-        messages: [
-          {
-            id: "message-0",
-            role: "user",
-            parts: [{ type: "text", text: "hi" }],
-          },
-        ],
-      })
-
-    expect(res.status).toBe(200)
-    expect(streamText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tools: undefined,
-        toolChoice: "none",
-      })
     )
   })
 })

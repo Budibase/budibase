@@ -2,8 +2,11 @@ import { utils } from "@budibase/shared-core"
 import {
   AIFieldMetadata,
   AIOperationEnum,
+  EnrichedBinding,
   LLMConfigOptions,
+  LLMStreamChunk,
   Row,
+  Snippet,
 } from "@budibase/types"
 import tracer from "dd-trace"
 import { Readable } from "node:stream"
@@ -12,6 +15,8 @@ import { LLMRequest } from "../llm"
 import {
   classifyText,
   cleanData,
+  generateCronExpression,
+  generateJs,
   searchWeb,
   sentimentAnalysis,
   summarizeText,
@@ -44,11 +49,13 @@ export abstract class LLM {
     return this._maxTokens
   }
 
-  abstract supportsFiles: boolean
-
   protected abstract chatCompletion(
     request: LLMRequest
   ): Promise<LLMFullResponse>
+
+  protected abstract chatCompletionStream(
+    request: LLMRequest
+  ): AsyncGenerator<LLMStreamChunk, void, unknown>
 
   async prompt(
     requestOrString: string | LLMRequest
@@ -83,9 +90,21 @@ export abstract class LLM {
     })
   }
 
+  async *chatStream(
+    request: LLMRequest
+  ): AsyncGenerator<LLMStreamChunk, void, unknown> {
+    yield* this.chatCompletionStream(request)
+  }
+
   async summarizeText(prompt: string): Promise<LLMPromptResponse> {
     return tracer.trace("summarizeText", () =>
       this.prompt(summarizeText(prompt))
+    )
+  }
+
+  async generateCronExpression(prompt: string): Promise<LLMPromptResponse> {
+    return tracer.trace("generateCronExpression", () =>
+      this.prompt(generateCronExpression(prompt))
     )
   }
 
@@ -138,5 +157,17 @@ export abstract class LLM {
       default:
         throw utils.unreachable(operation)
     }
+  }
+
+  async generateJs(
+    prompt: string,
+    opts?: { bindings: EnrichedBinding[]; snippets: Snippet[] }
+  ): Promise<LLMPromptResponse> {
+    return await tracer.trace("generateJs", async () => {
+      const { bindings = [], snippets = [] } = opts || {}
+      return await this.prompt(
+        generateJs(bindings, snippets).addUserMessage(prompt)
+      )
+    })
   }
 }

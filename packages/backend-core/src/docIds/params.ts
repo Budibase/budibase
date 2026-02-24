@@ -98,10 +98,10 @@ export function getUserMetadataParams(
 }
 
 export function getUsersByWorkspaceParams(
-  workspaceId: string,
+  appId: any,
   otherProps: Partial<DatabaseQueryOpts> = {}
 ): DatabaseQueryOpts {
-  const prodWorkspaceId = getProdWorkspaceID(workspaceId)
+  const prodWorkspaceId = getProdWorkspaceID(appId)
   return {
     ...otherProps,
     startkey: prodWorkspaceId,

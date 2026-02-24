@@ -252,11 +252,6 @@
 </div>
 
 <style>
-  .settings-wrap {
-    --settings-nav-transition-ms: 160ms;
-    --settings-nav-transition-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
   .status-indicator {
     position: absolute;
     top: -10px;
@@ -334,8 +329,8 @@
     opacity: 0;
     visibility: hidden;
     transition:
-      opacity 120ms var(--settings-nav-transition-ease),
-      visibility 0ms linear 120ms;
+      opacity 0ms,
+      visibility 0ms;
     position: absolute;
   }
 
@@ -343,9 +338,8 @@
     opacity: 1;
     visibility: visible;
     transition:
-      opacity var(--settings-nav-transition-ms)
-        var(--settings-nav-transition-ease),
-      visibility 0ms linear 0ms;
+      opacity 200ms ease-in,
+      visibility 0ms;
     position: static;
   }
 
@@ -353,28 +347,17 @@
     opacity: 1;
     visibility: visible;
     transition:
-      opacity var(--settings-nav-transition-ms)
-        var(--settings-nav-transition-ease),
-      visibility 0ms linear 0ms;
+      opacity 200ms ease-in,
+      visibility 0ms;
   }
 
   .groups.full .group-title .placeholder {
     opacity: 0;
     visibility: hidden;
     transition:
-      opacity 120ms var(--settings-nav-transition-ease),
-      visibility 0ms linear 120ms;
+      opacity 0ms,
+      visibility 0ms;
     position: absolute;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .group-title .group-title-text,
-    .groups.full .group-title .group-title-text,
-    .placeholder,
-    .groups.full .group-title .placeholder,
-    .setting-main .setting-page {
-      transition: none;
-    }
   }
 
   .group-title :global(p) {
@@ -431,15 +414,14 @@
   }
 
   .custom-icon {
-    flex: 0 0 20px;
-    width: 20px;
+    flex: 0 0 24px;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
     color: var(--spectrum-global-color-gray-600);
     order: 1;
-    margin-right: 0;
+    margin-right: 2px;
   }
 
   .spectrum-Dialog-content :global(.modal_sidebar_wrapper .nav) {

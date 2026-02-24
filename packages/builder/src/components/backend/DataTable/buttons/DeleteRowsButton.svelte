@@ -1,24 +1,14 @@
-<script lang="ts">
+<script>
   import { createEventDispatcher } from "svelte"
   import { Button } from "@budibase/bbui"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
-  interface ModalRef {
-    show: () => void
-    hide: () => void
-  }
-
-  export let selectedRows: unknown[] = []
-  export let deleteRows: (_rows: unknown[]) => void | Promise<void>
-  export let item: string = "row"
-  export let action: string = "Delete"
+  export let selectedRows
+  export let deleteRows
+  export let item = "row"
 
   const dispatch = createEventDispatcher()
-  let modal: ModalRef | undefined
-
-  const showModal = () => {
-    modal?.show()
-  }
+  let modal
 
   async function confirmDeletion() {
     await deleteRows(selectedRows)
@@ -27,21 +17,20 @@
   }
 
   $: text = `${item}${selectedRows?.length === 1 ? "" : "s"}`
-  $: actionText = action.toLowerCase()
 </script>
 
-<Button icon="trash" warning quiet on:click={showModal}>
-  {action}
+<Button icon="trash" warning quiet on:click={modal.show}>
+  Delete
   {selectedRows.length}
   {text}
 </Button>
 <ConfirmDialog
   bind:this={modal}
-  okText={action}
+  okText="Delete"
   onOk={confirmDeletion}
-  title={`Confirm ${action}`}
+  title="Confirm Deletion"
 >
-  Are you sure you want to {actionText}
+  Are you sure you want to delete
   {selectedRows.length}
   {text}?
 </ConfirmDialog>

@@ -1,17 +1,9 @@
 import { getConfig } from "../configs"
-import { ConfigType, EndpointMatcher, SettingsConfig } from "@budibase/types"
+import { ConfigType, SettingsConfig } from "@budibase/types"
 import type { Next, Middleware, Context } from "koa"
-import { buildMatcherRegex, matches } from "./matchers"
 
-export function activeTenant(
-  noActivationPatterns: EndpointMatcher[] = []
-): Middleware {
-  const noActivationOptions = buildMatcherRegex(noActivationPatterns)
-
+export function activeTenant(): Middleware {
   return async function (ctx: Context, next: Next) {
-    if (matches(ctx as any, noActivationOptions)) {
-      return next()
-    }
     try {
       const settingsConfig = await getConfig<SettingsConfig>(
         ConfigType.SETTINGS

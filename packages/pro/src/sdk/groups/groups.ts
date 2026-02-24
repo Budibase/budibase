@@ -3,6 +3,7 @@ import {
   context,
   db as dbUtils,
   events,
+  HTTPError,
   logging,
   roles,
   tenancy,
@@ -15,7 +16,7 @@ import {
   User,
   UserGroup,
 } from "@budibase/types"
-import { GroupNameUnavailableError } from "../../errors"
+import { GroupNameUnavailableError } from "../../api/errors"
 import * as db from "../../db"
 import * as features from "../features"
 import * as quotas from "../quotas"
@@ -424,6 +425,10 @@ export async function updateGroupApps(
     apps: Object.entries(group.roles)
       .filter(([_groupId, role]) => role === "CREATOR")
       .map(([groupId]) => groupId),
+  }
+
+  if (group.builder.apps.length && !features.isAppBuildersEnabled()) {
+    throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
   return await save(group)

@@ -19,6 +19,8 @@ describe("buildLiteLLMParams", () => {
       use_litellm_proxy: false,
       merge_reasoning_content_in_choices: true,
       drop_params: true,
+      input_cost_per_token: 0,
+      output_cost_per_token: 0,
       guardrails: [],
       api_key: "secret",
     })
@@ -59,21 +61,6 @@ describe("buildLiteLLMParams", () => {
   it("adds openrouter reasoning extra_body", () => {
     const result = buildLiteLLMParams({
       provider: "openrouter",
-      name: "some-model",
-      credentialFields: {},
-      configType: AIConfigType.COMPLETIONS,
-      reasoningEffort: "medium",
-    })
-
-    expect(result).toMatchObject({
-      reasoning_effort: "medium",
-      extra_body: { include_reasoning: true },
-    })
-  })
-
-  it("adds custom_openai reasoning extra_body", () => {
-    const result = buildLiteLLMParams({
-      provider: "custom_openai",
       name: "some-model",
       credentialFields: {},
       configType: AIConfigType.COMPLETIONS,

@@ -1,32 +1,39 @@
 <script lang="ts">
-  import { bb } from "@/stores/bb"
   import { aiConfigsStore, featureFlags, vectorDbStore } from "@/stores/portal"
   import { Body, Button, Layout, Modal, notifications } from "@budibase/bbui"
+  import type { AIConfigResponse } from "@budibase/types"
   import { AIConfigType, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
+  import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
+  import CustomConfigModal from "./CustomConfigModal.svelte"
   import VectorDbModal from "./VectorDbModal.svelte"
   import VectorDbTile from "./VectorDbTile.svelte"
-  import AIConfigList from "./AIConfigList.svelte"
 
-  let vectorModal = $state<Modal | null>()
-  let vectorModalConfig: VectorDb | null = $state(null)
+  let configModal: { show: () => void; hide: () => void }
 
-  let embeddingConfigs = $derived(
-    [...$aiConfigsStore.customConfigsPerType.embeddings].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    )
+  let selectedModalConfig: AIConfigResponse | undefined
+  let selectedProvider: string | undefined
+  let vectorModal: { show: () => void; hide: () => void }
+  let vectorModalConfig: VectorDb | null = null
+
+  $: configs = $aiConfigsStore.customConfigs || []
+  $: embeddingConfigs = configs.filter(
+    config => config.configType === AIConfigType.EMBEDDINGS
   )
-  let vectorDbs = $derived($vectorDbStore.configs || [])
+  $: vectorDbs = $vectorDbStore.configs || []
 
-  function createAIConfig() {
-    bb.settings(`/ai-config/${AIConfigType.EMBEDDINGS}/new`, {
-      type: AIConfigType.EMBEDDINGS,
-    })
+  function createAIConfigModal() {
+    configModal.show()
+  }
+  function editAIConfigModal(config: AIConfigResponse) {
+    selectedModalConfig = config
+    selectedProvider = config.provider
+    configModal.show()
   }
 
   const openVectorDbModal = (config?: VectorDb) => {
     vectorModalConfig = config ?? null
-    vectorModal?.show()
+    vectorModal.show()
   }
 
   onMount(async () => {
@@ -41,20 +48,30 @@
 </script>
 
 <Layout noPadding gap="S">
-  {#if $featureFlags.AI_RAG}
+  {#if $featureFlags.AI_AGENTS}
     <div class="section">
       <div class="section-header">
         <div class="section-title">Embeddings models</div>
-        <Button size="S" icon="plus" on:click={() => createAIConfig()}>
+        <Button size="S" cta on:click={() => createAIConfigModal()}>
           Add configuration
         </Button>
       </div>
 
       {#if embeddingConfigs.length}
-        <AIConfigList configs={embeddingConfigs}></AIConfigList>
+        <div class="ai-list">
+          {#each embeddingConfigs as config (config._id)}
+            <CustomAIConfigTile
+              actionType="edit"
+              displayName={config.name}
+              provider={config.provider}
+              description={config.model}
+              editHandler={() => editAIConfigModal(config)}
+            />
+          {/each}
+        </div>
       {:else}
         <div class="no-enabled">
-          <Body size="XS">No embeddings configurations yet</Body>
+          <Body size="S">No embeddings configurations yet</Body>
         </div>
       {/if}
     </div>
@@ -62,7 +79,7 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">Vector databases</div>
-        <Button size="S" icon="plus" on:click={() => openVectorDbModal()}>
+        <Button size="S" cta on:click={() => openVectorDbModal()}>
           Add database
         </Button>
       </div>
@@ -74,7 +91,7 @@
         </div>
       {:else}
         <div class="no-enabled">
-          <Body size="XS">No vector databases configured yet</Body>
+          <Body size="S">No vector databases configured yet</Body>
         </div>
       {/if}
     </div>
@@ -84,8 +101,21 @@
 <Modal bind:this={vectorModal}>
   <VectorDbModal
     config={vectorModalConfig}
-    onDelete={() => vectorModal?.hide()}
-    on:hide={() => vectorModal?.hide()}
+    onDelete={() => vectorModal.hide()}
+    on:hide={() => vectorModal.hide()}
+  />
+</Modal>
+
+<Modal bind:this={configModal}>
+  <CustomConfigModal
+    config={selectedModalConfig}
+    provider={selectedProvider}
+    type={AIConfigType.EMBEDDINGS}
+    on:hide={() => {
+      selectedModalConfig = undefined
+      selectedProvider = undefined
+      configModal.hide()
+    }}
   />
 </Modal>
 
@@ -106,8 +136,10 @@
   }
 
   .section-title {
-    font-size: 13px;
-    color: var(--grey-7, #a2a2a2);
+    margin-bottom: var(--spacing-m);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--ink);
   }
 
   .section-header {
@@ -115,6 +147,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
+    margin-bottom: var(--spacing-m);
   }
 
   .section-header .section-title {

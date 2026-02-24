@@ -118,9 +118,7 @@
     {/if}
     <Body size="S">
       Find the changelog for the latest release
-      <span class="changelog-link-size">
-        <Link href={CHANGELOG_URL} target="_blank">here</Link>
-      </span>
+      <Link href={CHANGELOG_URL} target="_blank">here</Link>
     </Body>
     {#if revertAvailable}
       <Body size="S">
@@ -131,11 +129,3 @@
     {/if}
   </ModalContent>
 </Modal>
-
-<style>
-  .changelog-link-size {
-    --spectrum-link-primary-m-text-size: var(
-      --spectrum-alias-font-size-default
-    );
-  }
-</style>

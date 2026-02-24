@@ -36,12 +36,18 @@
   }>()
   let visible: boolean = fixed || inline
   let modal: HTMLElement | undefined
-  let previousVisible = visible
+  let portalTarget: string = "body"
 
-  $: if (previousVisible !== visible) {
-    previousVisible = visible
-    dispatch(visible ? "show" : "hide")
-  }
+  onMount(() => {
+    tick().then(() => {
+      portalTarget =
+        document.querySelector(".modal-container") != null
+          ? ".modal-container"
+          : "body"
+    })
+  })
+
+  $: dispatch(visible ? "show" : "hide")
 
   export function show(): void {
     if (visible) {
@@ -139,7 +145,7 @@
     screen.
   -->
   <div class="portal">
-    <Portal target=".modal-container">
+    <Portal target={portalTarget}>
       {#if visible}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div

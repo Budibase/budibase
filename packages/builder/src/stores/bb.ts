@@ -34,7 +34,7 @@ export class BBStore extends BudiStore<BBState> {
     this.store.set({ ...INITIAL_GLOBAL_STATE })
   }
 
-  settings(path?: string, params?: Record<string, any>) {
+  settings(path?: string) {
     if (!path) {
       this.update(state => ({
         ...state,
@@ -52,13 +52,7 @@ export class BBStore extends BudiStore<BBState> {
         ...state,
         settings: {
           ...state.settings,
-          route: {
-            ...matchedRoute,
-            params: {
-              ...matchedRoute.params,
-              ...(params || {}),
-            },
-          },
+          route: matchedRoute,
           open: true,
         },
       }))

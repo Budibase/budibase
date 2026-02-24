@@ -34,7 +34,6 @@ import {
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
   FetchPublishedAppsResponse,
-  FetchPublishedChatAppsResponse,
   FetchWorkspacesResponse,
   FieldType,
   ImportToUpdateWorkspaceRequest,
@@ -321,36 +320,6 @@ export async function fetchClientApps(
   ctx.body = { apps: result }
 }
 
-export async function fetchClientChatApps(
-  ctx: UserCtx<void, FetchPublishedChatAppsResponse>
-) {
-  const workspaces = await sdk.workspaces.fetch(
-    WorkspaceStatus.DEPLOYED,
-    ctx.user
-  )
-
-  const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
-  for (const workspace of workspaces) {
-    const chatApp = await context.doInWorkspaceContext(workspace.appId, () =>
-      sdk.ai.chatApps.getSingle()
-    )
-
-    if (!chatApp?.live || !chatApp._id) {
-      continue
-    }
-
-    chatApps.push({
-      appId: workspace.appId,
-      chatAppId: chatApp._id,
-      name: chatApp.title || workspace.name,
-      url: `${workspace.url}`.replace(/\/$/, ""),
-      updatedAt: chatApp.updatedAt || workspace.updatedAt,
-    })
-  }
-
-  ctx.body = { chatApps }
-}
-
 export async function fetchAppDefinition(
   ctx: UserCtx<void, FetchAppDefinitionResponse>
 ) {
@@ -465,38 +434,18 @@ export async function fetchAppPackage(
     const urlPath =
       embedPath ||
       (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
-    const normalizedUrlPath = urlPath.split("?")[0].replace(/\/$/, "")
-    const isChatRoute =
-      normalizedUrlPath.startsWith("/app-chat/") ||
-      /\/_chat(?:\/.*)?$/.test(normalizedUrlPath)
 
-    let matchedWorkspaceApp =
+    const matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
-    if (!matchedWorkspaceApp) {
-      const chatPath = urlPath.replace(/\/_chat(?:\/.*)?$/, "")
-      if (chatPath !== urlPath) {
-        matchedWorkspaceApp =
-          await sdk.workspaceApps.getMatchedWorkspaceApp(chatPath)
-      }
-    }
 
     // disabled workspace apps should appear to not exist
     // if the dev workspace is being served, allow the request regardless
-    if (
-      !isChatRoute &&
-      (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev))
-    ) {
+    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
+    screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
 
-    if (matchedWorkspaceApp) {
-      screens = screens.filter(
-        s => s.workspaceAppId === matchedWorkspaceApp._id
-      )
-      application.navigation = matchedWorkspaceApp.navigation
-    } else {
-      screens = []
-    }
+    application.navigation = matchedWorkspaceApp.navigation
   }
 
   const clientLibPath = await objectStore.clientLibraryUrl(
@@ -508,6 +457,18 @@ export async function fetchAppPackage(
     application.version
   )
 
+  const embedPathForHideDevTools: string | undefined = ctx.request.get(
+    "x-budibase-embed-location"
+  )
+  const urlPathForEmbed =
+    embedPathForHideDevTools ||
+    (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
+  const normalizedPathForEmbed =
+    (urlPathForEmbed || "").replace(/\/$/, "") || ""
+  const hideDevTools =
+    normalizedPathForEmbed === "/embed" ||
+    normalizedPathForEmbed.startsWith("/embed/")
+
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
@@ -517,6 +478,7 @@ export async function fetchAppPackage(
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
     recaptchaKey: recaptchaConfig?.config.siteKey,
     clientCacheKey,
+    ...(hideDevTools && { hideDevTools: true }),
   }
 }
 

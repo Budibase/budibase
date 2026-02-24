@@ -124,8 +124,8 @@ class UserStore extends BudiStore<UserState> {
     return API.removeUserFromWorkspace(userId, rev)
   }
 
-  async getUserCountByWorkspace(workspaceId: string) {
-    return await API.getUserCountByWorkspace(workspaceId)
+  async getUserCountByApp(appId: string) {
+    return await API.getUserCountByApp(appId)
   }
 
   async create(data: { users: UserInfo[]; groups: any[] }) {

@@ -1,4 +1,5 @@
-import { AIProvider } from "../documents"
+import { Message } from "../api"
+import { ChatConversation, AIProvider } from "../documents"
 
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",
@@ -103,4 +104,28 @@ export interface LLMConfigOptions {
 
 export interface LLMProviderConfig extends LLMConfigOptions {
   provider: AIProvider
+}
+
+export interface LLMStreamChunk {
+  type:
+    | "content"
+    | "tool_call_start"
+    | "tool_call_result"
+    | "done"
+    | "error"
+    | "chat_saved"
+  content?: string
+  toolCall?: {
+    id: string
+    name: string
+    arguments: string
+  }
+  toolResult?: {
+    id: string
+    result: string
+    error?: string
+  }
+  messages?: Message[]
+  chat?: ChatConversation
+  tokensUsed?: number
 }

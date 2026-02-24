@@ -1,6 +1,5 @@
 import {
   context,
-  features,
   docIds,
   getErrorMessage,
   HTTPError,
@@ -16,8 +15,6 @@ import {
   CreateChatConversationRequest,
   DocumentType,
   FetchAgentHistoryResponse,
-  ContextUser,
-  FeatureFlag,
   UserCtx,
 } from "@budibase/types"
 import {
@@ -36,7 +33,6 @@ import {
 } from "../../../sdk/workspace/ai/agents/utils"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag/files"
-import { assertChatAppIsLiveForUser } from "./chatApps"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -62,7 +58,6 @@ export const prepareChatConversationForSave = ({
   const updatedAt = now
   const rev = existingChat?._rev || chat._rev
   const agentId = existingChat?.agentId || chat.agentId
-  const channel = chat.channel || existingChat?.channel
 
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -78,7 +73,6 @@ export const prepareChatConversationForSave = ({
     messages,
     createdAt,
     updatedAt,
-    ...(channel && { channel }),
   }
 }
 
@@ -125,120 +119,6 @@ export const truncateTitle = (value: string, maxLength = 120) => {
   return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`
 }
 
-interface WebhookChatCompleteResult {
-  messages: ChatConversation["messages"]
-  assistantText: string
-  title?: string
-}
-
-export async function webhookChat({
-  chat,
-  user,
-}: {
-  chat: ChatConversationRequest
-  user: ContextUser
-}): Promise<WebhookChatCompleteResult> {
-  const db = context.getWorkspaceDB()
-  const chatAppId = chat.chatAppId
-
-  if (!chatAppId) {
-    throw new HTTPError("chatAppId is required", 400)
-  }
-
-  const chatApp = await db.tryGet<ChatApp>(chatAppId)
-  if (!chatApp) {
-    throw new HTTPError("Chat app not found", 404)
-  }
-
-  const agentId = chat.agentId
-  if (!agentId) {
-    throw new HTTPError("agentId is required", 400)
-  }
-
-  if (
-    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
-  ) {
-    throw new HTTPError("agentId is not enabled for this chat app", 400)
-  }
-
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const latestQuestion = findLatestUserQuestion(chat)
-  let retrievedContext = ""
-  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
-
-  const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
-  if (ragEnabled && hasRagConfig && latestQuestion) {
-    try {
-      const result = await retrieveContextForAgent(agent, latestQuestion)
-      retrievedContext = result.text
-    } catch (error) {
-      console.error("Failed to retrieve agent context", error)
-    }
-  }
-
-  const { systemPrompt: system, tools } =
-    await sdk.ai.agents.buildPromptAndTools(agent, {
-      baseSystemPrompt: ai.agentSystemPrompt(user),
-      includeGoal: false,
-    })
-  const sessionId = chat._id || v4()
-  const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
-    agent.aiconfig,
-    sessionId
-  )
-
-  const modelMessages = await convertToModelMessages(chat.messages)
-  const messagesWithContext: ModelMessage[] =
-    retrievedContext.trim().length > 0
-      ? [
-          {
-            role: "system",
-            content: `Relevant knowledge:\n${retrievedContext}\n\nUse this content when answering the user.`,
-          },
-          ...modelMessages,
-        ]
-      : modelMessages
-
-  const hasTools = Object.keys(tools).length > 0
-  const result = streamText({
-    model: wrapLanguageModel({
-      model: chatLLM,
-      middleware: extractReasoningMiddleware({
-        tagName: "think",
-      }),
-    }),
-    messages: messagesWithContext,
-    system,
-    tools: hasTools ? tools : undefined,
-    toolChoice: hasTools ? "auto" : "none",
-    stopWhen: stepCountIs(30),
-    providerOptions: providerOptions?.(hasTools),
-    onError({ error }) {
-      console.error("Agent streaming error", {
-        agentId,
-        chatAppId,
-        sessionId,
-        error,
-      })
-    },
-  })
-
-  const assistantText = await result.text
-  const assistantMessage: ChatConversation["messages"][number] = {
-    id: v4(),
-    role: "assistant",
-    parts: [{ type: "text", text: assistantText || "" }],
-  }
-
-  const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
-
-  return {
-    messages: [...chat.messages, assistantMessage],
-    assistantText: assistantText || "",
-    title,
-  }
-}
-
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const chat = ctx.request.body
   const chatAppIdFromPath = ctx.params?.chatAppId
@@ -280,7 +160,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     if (!chatApp) {
       throw new HTTPError("Chat app not found", 404)
     }
-    assertChatAppIsLiveForUser(ctx, chatApp)
   }
 
   let existingChat: ChatConversation | undefined
@@ -332,10 +211,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
-  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
 
   const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
-  if (ragEnabled && hasRagConfig && latestQuestion) {
+  if (hasRagConfig && latestQuestion) {
     try {
       const result = await retrieveContextForAgent(agent, latestQuestion)
       retrievedContext = result.text
@@ -353,12 +231,16 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
   try {
-    const chatId = chat._id ?? docIds.generateChatConversationID()
-    const sessionId = chat._id || chat.sessionId || chatId
-    const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
-      agent.aiconfig,
-      sessionId
-    )
+    const { modelId, apiKey, baseUrl } =
+      await sdk.ai.configs.getLiteLLMModelConfigOrThrow(agent.aiconfig)
+
+    const sessionId = chat._id || v4()
+    const openai = ai.createLiteLLMOpenAI({
+      apiKey,
+      baseUrl,
+      sessionId,
+    })
+    const model = openai.chat(modelId)
 
     const modelMessages = await convertToModelMessages(chat.messages)
     const messagesWithContext: ModelMessage[] =
@@ -377,7 +259,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const hasTools = Object.keys(tools).length > 0
     const result = streamText({
       model: wrapLanguageModel({
-        model: chatLLM,
+        model,
         middleware: extractReasoningMiddleware({
           tagName: "think",
         }),
@@ -385,17 +267,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       messages: messagesWithContext,
       system,
       tools: hasTools ? tools : undefined,
-      toolChoice: hasTools ? "auto" : "none",
       stopWhen: stepCountIs(30),
-      onStepFinish({ content, toolCalls, toolResults }) {
+      onStepFinish({ toolCalls, toolResults }) {
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
-        for (const part of content) {
-          if (part.type === "tool-error") {
-            pendingToolCalls.delete(part.toolCallId)
-          }
-        }
       },
-      providerOptions: providerOptions?.(hasTools),
+      providerOptions: ai.getLiteLLMProviderOptions(hasTools),
       onError({ error }) {
         console.error("Agent streaming error", {
           agentId,
@@ -445,6 +321,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           return
         }
 
+        const chatId = chat._id ?? docIds.generateChatConversationID()
         const existingChat = chat._id
           ? await db.tryGet<ChatConversation>(chat._id)
           : null
@@ -467,7 +344,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   } catch (error: any) {
     const message = error?.message || "Agent action failed"
     ctx.res.write(
-      `data: ${JSON.stringify({ type: "error", errorText: message })}\n\n`
+      `data: ${JSON.stringify({ type: "error", errorText: message, content: message })}\n\n`
     )
     ctx.res.end()
   }
@@ -489,7 +366,6 @@ export async function createChatConversation(
   }
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  assertChatAppIsLiveForUser(ctx, chatApp)
   if (
     !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
   ) {
@@ -533,8 +409,7 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  assertChatAppIsLiveForUser(ctx, chatApp)
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (!chat || chat.chatAppId !== chatAppId) {
@@ -559,8 +434,7 @@ export async function fetchChatHistory(
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  assertChatAppIsLiveForUser(ctx, chatApp)
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
 
   const allChats = await db.allDocs<ChatConversation>(
     docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
@@ -600,8 +474,7 @@ export async function fetchChatConversation(
     throw new HTTPError("chatConversationId is required", 400)
   }
 
-  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  assertChatAppIsLiveForUser(ctx, chatApp)
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (!chat || chat.chatAppId !== chatAppId) {

@@ -18,25 +18,12 @@ const CONDITIONS: Record<string, string> = {
   CONTAINS: "CONTAINS",
 }
 
-function tokenOrThrow(type: "condition" | "conjunction", token?: string) {
-  const mappedToken = token ? TOKEN_MAP[token] : undefined
-  if (!mappedToken) {
-    throw new Error(`Invalid filter ${type}: ${token}`)
-  }
-  return mappedToken
-}
-
-function docKeyExpression(key: string) {
-  return `doc[${JSON.stringify(key)}]`
-}
-
 function isEmptyExpression(key: string) {
-  const docExpression = docKeyExpression(key)
   return `(
-      ${docExpression} === undefined ||
-      ${docExpression} === null ||
-      ${docExpression} === "" ||
-      (Array.isArray(${docExpression}) && ${docExpression}.length === 0)
+      doc["${key}"] === undefined ||
+      doc["${key}"] === null ||
+      doc["${key}"] === "" ||
+      (Array.isArray(doc["${key}"]) && doc["${key}"].length === 0)
   )`
 }
 
@@ -101,24 +88,24 @@ function parseFilterExpression(filters: ViewFilter[]) {
   let first = true
   for (let filter of filters) {
     if (!first && filter.conjunction) {
-      expression.push(tokenOrThrow("conjunction", filter.conjunction))
+      expression.push(TOKEN_MAP[filter.conjunction])
     }
 
     if (filter.condition === CONDITIONS.CONTAINS) {
-      const condition = tokenOrThrow("condition", filter.condition)
-      const valueLiteral = JSON.stringify(filter.value)
       expression.push(
-        `${docKeyExpression(filter.key)}.${condition}(${valueLiteral})`
+        `doc["${filter.key}"].${TOKEN_MAP[filter.condition]}("${filter.value}")`
       )
     } else if (filter.condition === CONDITIONS.EMPTY) {
       expression.push(isEmptyExpression(filter.key))
     } else if (filter.condition === CONDITIONS.NOT_EMPTY) {
       expression.push(`!${isEmptyExpression(filter.key)}`)
     } else {
-      const condition = tokenOrThrow("condition", filter.condition)
-      const value = JSON.stringify(filter.value)
+      const value =
+        typeof filter.value == "string" ? `"${filter.value}"` : filter.value
 
-      expression.push(`${docKeyExpression(filter.key)} ${condition} ${value}`)
+      expression.push(
+        `doc["${filter.key}"] ${TOKEN_MAP[filter.condition]} ${value}`
+      )
     }
     first = false
   }
@@ -133,7 +120,7 @@ function parseFilterExpression(filters: ViewFilter[]) {
  * @param groupBy - field to group calculation results on, if any
  */
 function parseEmitExpression(field: string, groupBy: string) {
-  return `emit(${docKeyExpression(groupBy)}, ${docKeyExpression(field)});`
+  return `emit(doc["${groupBy}"], doc["${field}"]);`
 }
 
 /**
@@ -194,7 +181,7 @@ export default function (
   const filterExpression = parsedFilters ? `&& (${parsedFilters})` : ""
 
   const emitExpression = parseEmitExpression(field, groupBy || "_id")
-  const tableExpression = `doc.tableId === ${JSON.stringify(tableId)}`
+  const tableExpression = `doc.tableId === "${tableId}"`
   const coreExpression = statFilter
     ? `(${tableExpression} && ${statFilter})`
     : tableExpression
@@ -208,7 +195,6 @@ export default function (
       filters,
       schema,
       calculation,
-      ...(groupByMulti ? { groupByMulti } : {}),
     },
     map: `function (doc) {
       if (${coreExpression} ${filterExpression}) {

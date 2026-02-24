@@ -27,7 +27,6 @@ const WEB_SEARCH_CONFIG = Joi.object({
 })
   .optional()
   .allow(null)
-const IS_DEFAULT = Joi.boolean().optional()
 
 export function createAIConfigValidator() {
   return auth.joiValidator.body(
@@ -39,7 +38,6 @@ export function createAIConfigValidator() {
       webSearchConfig: WEB_SEARCH_CONFIG,
       configType: CONFIG_TYPE,
       reasoningEffort: REASONING_EFFORT,
-      isDefault: IS_DEFAULT,
       liteLLMModelId: OPTIONAL_STRING,
     }).unknown(true)
   )
@@ -57,7 +55,6 @@ export function updateAIConfigValidator() {
       webSearchConfig: WEB_SEARCH_CONFIG,
       configType: CONFIG_TYPE,
       reasoningEffort: REASONING_EFFORT,
-      isDefault: IS_DEFAULT,
       liteLLMModelId: OPTIONAL_STRING,
     }).unknown(true)
   )

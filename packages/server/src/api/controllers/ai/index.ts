@@ -1,6 +1,5 @@
 export * from "./agents"
 export * from "./budibaseai"
-export * from "./budibaseai-v2"
 export * from "./cron"
 export * from "./js"
 export * from "./tables"

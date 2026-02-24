@@ -18,16 +18,6 @@ import {
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 
-const HELPER_TOOL_NAMES = new Set([
-  "list_tables",
-  "get_table",
-  "list_automations",
-  "get_automation",
-])
-
-const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
-  HELPER_TOOL_NAMES.has(tool.name)
-
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
     name: tool.name,
@@ -115,7 +105,7 @@ export async function getAvailableToolsMetadata(
   aiconfigId?: string
 ): Promise<ToolMetadata[]> {
   const tools = await getAvailableTools(aiconfigId)
-  return tools.filter(tool => !isHelperTool(tool)).map(toToolMetadata)
+  return tools.map(toToolMetadata)
 }
 
 export interface BuildPromptAndToolsOptions {
@@ -135,9 +125,7 @@ export async function buildPromptAndTools(
   const allTools = await getAvailableTools(agent.aiconfig)
   const enabledToolNames = new Set(agent.enabledTools || [])
   const enabledTools = addHelperTools(
-    allTools.filter(
-      tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
-    ),
+    allTools.filter(tool => enabledToolNames.has(tool.name)),
     allTools
   )
 

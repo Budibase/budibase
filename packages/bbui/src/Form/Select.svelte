@@ -48,8 +48,6 @@
   export let loading: boolean | undefined = false
   export let searchPlaceholder: string | undefined = undefined
   export let hideChevron: boolean = false
-  export let required: boolean = false
-  export let description: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<any>) => {
@@ -65,15 +63,7 @@
   }
 </script>
 
-<Field
-  {helpText}
-  {label}
-  {labelPosition}
-  {error}
-  {tooltip}
-  {required}
-  {description}
->
+<Field {helpText} {label} {labelPosition} {error} {tooltip}>
   <Select
     {size}
     {bordered}

@@ -47,6 +47,7 @@ const schema = z.array(
         .object({
           presence: z.boolean(),
         })
+        .optional()
         .nullable(),
     }),
     baseRelationshipSchema

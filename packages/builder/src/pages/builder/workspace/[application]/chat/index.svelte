@@ -1,16 +1,7 @@
 <script lang="ts">
-  import { Button, notifications } from "@budibase/bbui"
   import TopBar from "@/components/common/TopBar.svelte"
-  import {
-    agentsStore,
-    chatAppsStore,
-    currentChatApp,
-    featureFlags,
-  } from "@/stores/portal"
-  import { deploymentStore, themeStore } from "@/stores/builder"
-  import { FeatureFlag } from "@budibase/types"
-  import { goto as gotoStore, params } from "@roxi/routify"
-  import { onMount } from "svelte"
+  import { agentsStore, chatAppsStore, currentChatApp } from "@/stores/portal"
+  import { params } from "@roxi/routify"
 
   import ChatApp from "./_components/ChatApp.svelte"
   import ChatSettingsPanel from "./_components/ChatSettingsPanel.svelte"
@@ -22,29 +13,7 @@
     conversationStarters?: { prompt: string }[]
   }
 
-  $: goto = $gotoStore
-
   let chatAgents: ChatAgentConfig[] = []
-  let settingChatLive = false
-
-  $: chatEnabled =
-    $featureFlags[FeatureFlag.AI_AGENTS] && $featureFlags[FeatureFlag.AI_CHAT]
-
-  onMount(() => {
-    if (chatEnabled) {
-      return
-    }
-
-    const workspaceHomeEnabled = $featureFlags[FeatureFlag.WORKSPACE_HOME]
-    const agentsEnabled = $featureFlags[FeatureFlag.AI_AGENTS]
-
-    if (workspaceHomeEnabled) {
-      goto(agentsEnabled ? "../home?type=agent" : "../home")
-      return
-    }
-
-    goto(agentsEnabled ? "../agent" : "../")
-  })
 
   $: namedAgents = agents.filter(agent => Boolean(agent?.name))
   $: chatApp = $currentChatApp
@@ -158,57 +127,10 @@
 
     await chatAppsStore.updateAgents(nextAgents)
   }
-
-  const toggleChatLive = async () => {
-    const workspaceId = $params.application
-    if (!workspaceId || settingChatLive) {
-      return
-    }
-
-    settingChatLive = true
-    let nextLive: boolean | undefined
-
-    try {
-      const ensured = await chatAppsStore.ensureChatApp(undefined, workspaceId)
-      if (!ensured) {
-        notifications.error("Could not update chat")
-        return
-      }
-
-      nextLive = !ensured.live
-      await chatAppsStore.updateChatApp({ live: nextLive })
-      await deploymentStore.publishApp()
-      notifications.success(
-        nextLive ? "Chat is now live" : "Chat has been paused"
-      )
-    } catch (error) {
-      console.error(error)
-      if (nextLive === false) {
-        notifications.error("Error pausing chat")
-      } else if (nextLive === true) {
-        notifications.error("Error setting chat live")
-      } else {
-        notifications.error("Error updating chat")
-      }
-    } finally {
-      settingChatLive = false
-    }
-  }
 </script>
 
 <div class="wrapper">
-  <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false}>
-    <Button
-      primary={!chatApp?.live}
-      secondary={chatApp?.live}
-      icon={chatApp?.live ? undefined : "play"}
-      iconColor={chatApp?.live ? "" : "var(--bb-blue)"}
-      iconWeight="fill"
-      on:click={toggleChatLive}
-      disabled={settingChatLive}
-      >{chatApp?.live ? "Pause chat" : "Set your chat live"}</Button
-    >
-  </TopBar>
+  <TopBar breadcrumbs={[{ text: "Chat" }]} icon="chat" showPublish={false} />
   <div class="page">
     <ChatSettingsPanel
       {namedAgents}
@@ -222,7 +144,7 @@
 
     {#if $params.application}
       <div class="chat-app-container">
-        <ChatApp workspaceId={$params.application} theme={$themeStore.theme} />
+        <ChatApp workspaceId={$params.application} />
       </div>
     {/if}
   </div>

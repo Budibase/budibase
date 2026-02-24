@@ -5,7 +5,6 @@
 
   export let label: string | undefined = undefined
   export let value: string | undefined = undefined
-  export let disabled: boolean = false
 
   const copyToClipboard = (val: string | undefined) => {
     if (val) {
@@ -23,7 +22,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div>
-  <Input readonly {disabled} {value} {label} />
+  <Input readonly {value} {label} />
   <div class="icon" on:click={() => copyToClipboard(value)}>
     <Icon size="S" name="copy" />
   </div>

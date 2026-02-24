@@ -9,7 +9,6 @@ export interface AIConfigResponse
     | "name"
     | "provider"
     | "model"
-    | "isDefault"
     | "webSearchConfig"
     | "configType"
     | "reasoningEffort"

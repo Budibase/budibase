@@ -5,7 +5,6 @@
     Label,
     Input,
     notifications,
-    ProgressCircle,
     Toggle,
   } from "@budibase/bbui"
   import { organisation } from "@/stores/portal/organisation"
@@ -67,15 +66,7 @@
     {/if}
   </div>
   <div>
-    <Button disabled={loading} on:click={saveConfig} cta>
-      {#if loading}
-        <div class="save-loading">
-          <ProgressCircle overBackground={true} size="S" />
-        </div>
-      {:else}
-        Save
-      {/if}
-    </Button>
+    <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
   </div>
 </Layout>
 
@@ -90,11 +81,5 @@
     grid-template-columns: 120px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
-  }
-  .save-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 52px;
   }
 </style>

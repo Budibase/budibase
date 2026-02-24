@@ -37,9 +37,6 @@ import ScriptsPage from "@/settings/pages/scripts.svelte"
 import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
 import Recaptcha from "@/settings/pages/recaptcha.svelte"
 
-// AI config
-import AIConfigForm from "@/settings/pages/ai/AIConfigForm.svelte"
-
 const componentMap = {
   profile: ProfilePage,
   users: OrganisationUsersPage,
@@ -55,7 +52,6 @@ const componentMap = {
   audit_logs: AuditLogsPage,
   ai: AIPage,
   ai_configs: AIConfigsPage,
-  ai_config: AIConfigForm,
   embeddings: EmbeddingsPage,
   auth: AuthPage,
   org: OrgPage,

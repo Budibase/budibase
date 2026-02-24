@@ -18,28 +18,21 @@ export default function createKoaApp() {
   if (!mbNumber || isNaN(mbNumber)) {
     mbNumber = 10
   }
-  const defaultBodyParser = koaBody({
-    multipart: true,
-    formLimit: `${mbNumber}mb`,
-    jsonLimit: `${mbNumber}mb`,
-    textLimit: `${mbNumber}mb`,
-    // @ts-ignore
-    enableTypes: ["json", "form", "text"],
-    parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
-    formidable: {
-      maxFileSize: parseInt(env.MAX_IMPORT_SIZE_MB || "100") * 1024 * 1024,
-    },
-  })
-
-  app.use(async (ctx, next) => {
-    if (
-      ctx.path.startsWith("/api/webhooks/discord/") ||
-      ctx.path.startsWith("/api/webhooks/ms-teams/")
-    ) {
-      return await next()
-    }
-    return await defaultBodyParser(ctx, next)
-  })
+  // set up top level koa middleware
+  app.use(
+    koaBody({
+      multipart: true,
+      formLimit: `${mbNumber}mb`,
+      jsonLimit: `${mbNumber}mb`,
+      textLimit: `${mbNumber}mb`,
+      // @ts-ignore
+      enableTypes: ["json", "form", "text"],
+      parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
+      formidable: {
+        maxFileSize: parseInt(env.MAX_IMPORT_SIZE_MB || "100") * 1024 * 1024,
+      },
+    })
+  )
 
   app.use(middleware.correlation)
   app.use(middleware.pino)

@@ -3,7 +3,6 @@ import { Row, Document, DBView } from "@budibase/types"
 // bypass the main application db config
 // use in memory pouchdb directly
 import { db as dbCore, utils } from "@budibase/backend-core"
-import viewBuilder from "../api/controllers/view/viewBuilder"
 
 const Pouch = dbCore.getPouch({ inMemory: true })
 
@@ -25,26 +24,15 @@ export async function runView(
         _rev: undefined,
       }))
     )
-    if (!view.meta) {
-      throw new Error("Legacy view metadata is missing")
-    }
-
-    // Rebuild map/reduce from metadata to avoid executing untrusted map strings.
-    const groupByMulti =
-      view.meta.groupByMulti ?? view.meta.schema?.group?.type === "array"
-    const rebuiltView = viewBuilder(view.meta as any, groupByMulti)
     let fn = (doc: Document, emit: any) => emit(doc._id)
     // BUDI-7060 -> indirect eval call appears to cause issues in cloud
-    eval(
-      "fn = " +
-        rebuiltView?.map?.replace("function (doc)", "function (doc, emit)")
-    )
+    eval("fn = " + view?.map?.replace("function (doc)", "function (doc, emit)"))
     const queryFns: any = {
-      meta: rebuiltView.meta,
+      meta: view.meta,
       map: fn,
     }
-    if (rebuiltView.reduce) {
-      queryFns.reduce = rebuiltView.reduce
+    if (view.reduce) {
+      queryFns.reduce = view.reduce
     }
     const response: { rows: Row[] } = await db.query(queryFns, {
       include_docs: !calculation,

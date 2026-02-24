@@ -668,7 +668,7 @@
                       allowPublic={false}
                       quiet={true}
                       bordered={false}
-                      allowCreator={true}
+                      allowCreator={group.role === Constants.Roles.CREATOR}
                       on:change={e => {
                         onUpdateGroup(group, e.detail)
                       }}

@@ -36,7 +36,6 @@
   export let allowEditRows: boolean = true
   export let allowEditColumns: boolean = true
   export let allowClickRows: boolean = true
-  export let selectOnRowClick: boolean = true
   export let selectedRows: any[] = []
   export let customRenderers: any[] = []
   export let disableSorting: boolean = false
@@ -44,12 +43,10 @@
   export let compact: boolean = false
   export let customPlaceholder: boolean = false
   export let showHeaderBorder: boolean = true
-  export let hideHeader: boolean = false
   export let placeholderText: string = "No rows found"
   export let snippets: any[] = []
   export let defaultSortColumn: string | undefined = undefined
   export let defaultSortOrder: "Ascending" | "Descending" = "Ascending"
-  export let rounded: boolean = false
   export let stickyHeader: boolean = true
 
   const dispatch = createEventDispatcher()
@@ -81,14 +78,12 @@
     rowCount,
     rowHeight
   )
-  $: effectiveHeaderHeight = hideHeader ? 0 : headerHeight
   $: heightStyle = getHeightStyle(
     visibleRowCount,
     rowCount,
     totalRowCount,
     rowHeight,
-    loading,
-    effectiveHeaderHeight
+    loading
   )
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
@@ -151,16 +146,15 @@
     rowCount: number,
     totalRowCount: number,
     rowHeight: number,
-    loading: boolean,
-    effectiveHeaderHeight: number
+    loading: boolean
   ): string => {
     if (loading) {
-      return `height: ${effectiveHeaderHeight + visibleRowCount * rowHeight}px;`
+      return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
     }
     if (!rowCount || !visibleRowCount || totalRowCount <= rowCount) {
       return ""
     }
-    return `height: ${effectiveHeaderHeight + visibleRowCount * rowHeight}px;`
+    return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
   }
 
   const getGridStyle = (
@@ -376,7 +370,7 @@
     class:wrapper--quiet={quiet}
     class:wrapper--compact={compact}
     class:wrapper--sticky-header={stickyHeader}
-    style={`--row-height: ${rowHeight}px; --header-height: ${hideHeader ? 0 : headerHeight}px;`}
+    style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
   >
     {#if loading}
       <div class="loading" style={heightStyle}>
@@ -388,11 +382,9 @@
       <div
         class="spectrum-Table"
         class:no-scroll={!rowCount}
-        class:rounded
         style={`${heightStyle}${gridStyle}`}
-        class:show-header={!hideHeader}
       >
-        {#if fields.length && !hideHeader}
+        {#if fields.length}
           <div class="spectrum-Table-head">
             {#if showEditColumn}
               <div
@@ -489,9 +481,7 @@
                   on:click={() => {
                     if (!schema[field]?.preventSelectRow) {
                       dispatch("click", row)
-                      if (selectOnRowClick) {
-                        toggleSelectRow(row)
-                      }
+                      toggleSelectRow(row)
                     }
                   }}
                 >
@@ -720,17 +710,11 @@
     justify-content: center;
     align-items: center;
     border: var(--table-border);
+    border-top: none;
     grid-column: 1 / -1;
     background-color: var(--table-bg);
     padding: 40px;
   }
-  .spectrum-Table.show-header .placeholder {
-    border-top: none;
-  }
-  .spectrum-Table:not(.show-header) {
-    border-top: var(--table-border);
-  }
-
   .placeholder--no-fields {
     border-top: var(--table-border);
   }
@@ -758,24 +742,5 @@
       var(--spectrum-alias-font-size-default)
     );
     text-align: center;
-  }
-
-  /* Rounded corners */
-  .spectrum-Table.rounded {
-    border-radius: 6px;
-  }
-  .rounded.show-header .spectrum-Table-head > :first-child,
-  .rounded:not(.show-header) .spectrum-Table-row:first-child > :first-child {
-    border-top-left-radius: 6px;
-  }
-  .rounded.show-header .spectrum-Table-head > :last-child,
-  .rounded:not(.show-header) .spectrum-Table-row:first-child > :last-child {
-    border-top-right-radius: 6px;
-  }
-  .rounded .spectrum-Table-row:last-child > :first-child {
-    border-bottom-left-radius: 6px;
-  }
-  .rounded .spectrum-Table-row:last-child > :last-child {
-    border-bottom-right-radius: 6px;
   }
 </style>

@@ -1,6 +1,7 @@
 import { API } from "@/api"
 import { Layout, Screen, Workspace } from "@budibase/types"
 import { derived, get, writable } from "svelte/store"
+import { builderStore } from "./builder"
 
 interface AppStoreState {
   appId: string | null
@@ -14,6 +15,8 @@ interface AppStoreState {
   pageWidth?: string
   recaptchaKey?: string
   clientCacheKey?: string
+  /** When true, show live view (no Preview/DevTools bar) */
+  hideDevTools?: boolean
 }
 
 const initialState: AppStoreState = {
@@ -46,8 +49,12 @@ const createAppStore = () => {
         ...appDefinition,
         appId: appDefinition?.application?.appId,
       })
+      // So plugin script tags in ClientApp (svelte:head) are rendered when not in builder
+      const usedPlugins = appDefinition?.application?.usedPlugins ?? null
+      builderStore.update(state => ({ ...state, usedPlugins }))
     } catch (error) {
       store.set(initialState)
+      builderStore.update(state => ({ ...state, usedPlugins: null }))
     }
   }
 

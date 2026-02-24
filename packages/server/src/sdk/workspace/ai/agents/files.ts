@@ -1,10 +1,4 @@
-import {
-  context,
-  db,
-  docIds,
-  HTTPError,
-  objectStore,
-} from "@budibase/backend-core"
+import { context, db, docIds, HTTPError } from "@budibase/backend-core"
 import {
   Agent,
   AgentFile,
@@ -14,28 +8,21 @@ import {
   ToDocCreateMetadata,
 } from "@budibase/types"
 import { deleteAgentFileChunks } from "../rag/files"
-import { ObjectStoreBuckets } from "../../../../constants"
 
 interface CreateAgentFileOptions {
-  id: string
   agentId: string
   filename: string
   mimetype?: string
   size?: number
   uploadedBy: string
-  objectStoreKey: string
 }
 
 export const createAgentFile = async (
   options: CreateAgentFileOptions
 ): Promise<AgentFile> => {
   const db = context.getWorkspaceDB()
-  const { id, agentId, filename, mimetype, size, uploadedBy, objectStoreKey } =
-    options
-  const _id = id || docIds.generateAgentFileID(agentId)
-  if (!docIds.isAgentFileID(_id)) {
-    throw new Error(`Id ${_id} is not valid for an agent file`)
-  }
+  const { agentId, filename, mimetype, size, uploadedBy } = options
+  const _id = docIds.generateAgentFileID(agentId)
 
   const doc: RequiredKeys<ToDocCreateMetadata<AgentFile>> = {
     _id,
@@ -43,7 +30,6 @@ export const createAgentFile = async (
     filename,
     mimetype,
     size,
-    objectStoreKey,
     ragSourceId: _id,
     status: AgentFileStatus.PROCESSING,
     uploadedBy,
@@ -116,14 +102,6 @@ export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
   }
   if (!isFileInProduction) {
     await deleteAgentFileChunks(agent, [file.ragSourceId])
-  }
-
-  if (file.objectStoreKey) {
-    try {
-      await objectStore.deleteFile(ObjectStoreBuckets.APPS, file.objectStoreKey)
-    } catch (error) {
-      console.log("Failed to delete agent file from object store", error)
-    }
   }
 
   await context.getWorkspaceDB().remove(file)

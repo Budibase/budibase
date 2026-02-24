@@ -33,7 +33,6 @@ creatorRoutes.post(
 // Client only endpoints
 publicRoutes
   .get("/api/client/applications", controller.fetchClientApps)
-  .get("/api/client/chatapps", controller.fetchClientChatApps)
   .get("/api/applications/:appId/definition", controller.fetchAppDefinition)
   .get("/api/applications", controller.fetch)
   .get("/api/applications/:appId/appPackage", controller.fetchAppPackage)

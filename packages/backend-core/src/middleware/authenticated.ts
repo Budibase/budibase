@@ -133,10 +133,6 @@ export function authenticated(
         openJwt<SessionCookie>(headerToken)
       let apiKey = getHeader(ctx, Header.API_KEY)
 
-      if (!apiKey && ctx.request.headers[Header.AUTHORIZATION]) {
-        apiKey = ctx.request.headers[Header.AUTHORIZATION].split(" ")[1]
-      }
-
       const tenantId = getHeader(ctx, Header.TENANT_ID)
       let authenticated = false,
         user: User | { tenantId: string } | undefined = undefined,

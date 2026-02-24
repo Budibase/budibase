@@ -12,10 +12,8 @@
     ChatConversation,
     ConversationStarter,
     DraftChatConversation,
-    Theme,
     WithoutDocMetadata,
   } from "@budibase/types"
-  import { getThemeClassNames } from "@budibase/shared-core"
   import { onMount } from "svelte"
 
   import ChatConversationPanel from "./ChatConversationPanel.svelte"
@@ -38,7 +36,6 @@
   }
 
   export let workspaceId: string
-  export let theme: Theme
 
   let chat: ChatConversationLike = { ...INITIAL_CHAT }
   let deletingChat: boolean = false
@@ -318,7 +315,7 @@
   })
 </script>
 
-<div class={`chat-app spectrum spectrum--medium ${getThemeClassNames(theme)}`}>
+<div class="chat-app">
   {#if showEmptyState}
     <div class="chat-empty-state">
       <Body size="M">{emptyStateMessage}</Body>

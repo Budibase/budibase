@@ -17,6 +17,8 @@ router
   .get("/apple-touch-icon.png", async ctx => {
     ctx.redirect("/builder/bblogo.png")
   })
+  .get("/remoteEntry.js", controller.serveRemoteEntry)
+  .get("/assets/*file", controller.serveRemoteAsset)
   .get("/api/assets/:appId/client", controller.serveClientLibrary)
   .get("/api/assets/:appId/*file", controller.serve3rdPartyFile)
   .get("/api/apps/:appId/manifest.json", controller.servePwaManifest)
@@ -37,8 +39,6 @@ router
   .get("/app/service-worker.js", controller.serveServiceWorker)
   .get("/app/:appUrl", controller.serveApp)
   .get("/app/:appUrl/*path", controller.serveApp)
-  .get("/app-chat/:appUrl", controller.serveApp)
-  .get("/app-chat/:appUrl/*path", controller.serveApp)
   .get(`/${devAppIdPath}`, controller.serveApp)
   .get(`/${devAppIdPath}/*path`, controller.serveApp)
   .post(

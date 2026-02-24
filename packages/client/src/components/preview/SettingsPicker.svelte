@@ -14,7 +14,6 @@
 <div>
   <Select
     quiet
-    bordered={false}
     autoWidth
     placeholder={label}
     {options}

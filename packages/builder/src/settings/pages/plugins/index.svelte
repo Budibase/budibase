@@ -12,66 +12,40 @@
     notifications,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import type { Plugin } from "@budibase/types"
   import { admin } from "@/stores/portal/admin"
-  import { appsStore } from "@/stores/portal/apps"
   import { plugins } from "@/stores/portal/plugins"
   import AddPluginModal from "./_components/AddPluginModal.svelte"
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
-  import UsedInAppsRenderer from "./_components/UsedInAppsRenderer.svelte"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { routeActions } from "@/settings/pages"
-  import type { StoreApp } from "@/types"
-
-  interface PluginTableRow extends Plugin {
-    usedInApps: string[]
-    usedInAppsLabel: string
-  }
 
   const schema = {
     name: {
       width: "2fr",
       minWidth: "200px",
-      preventSelectRow: true,
     },
     version: {
       width: "1fr",
-      preventSelectRow: true,
     },
     "schema.type": {
       width: "1fr",
       displayName: "Type",
       capitalise: true,
       minWidth: "120px",
-      preventSelectRow: true,
-    },
-    usedInAppsLabel: {
-      width: "1.5fr",
-      displayName: "Used in apps",
-      minWidth: "180px",
-      sortable: false,
-      preventSelectRow: true,
     },
     edit: {
       width: "auto",
       displayName: "",
-      sortable: false,
-      preventSelectRow: true,
     },
   }
   const customRenderers = [
     { column: "name", component: PluginNameRenderer },
-    { column: "usedInAppsLabel", component: UsedInAppsRenderer },
     { column: "edit", component: EditPluginRenderer },
   ]
 
   let modal: any
-  let bulkDeleteDialog: ConfirmDialog
-  let searchTerm = ""
-  let filter = "all"
-  let selectedRows: PluginTableRow[] = []
-  let deletingPlugins = false
+  let searchTerm: any = ""
+  let filter: any = "all"
   let filterOptions = [
     { label: "All plugins", value: "all" },
     { label: "Components", value: "component" },
@@ -85,47 +59,7 @@
     filterOptions.push({ label: "Automation", value: "automation" })
   }
 
-  const buildPluginUsageMap = (apps: StoreApp[]): Map<string, string[]> => {
-    const usage = new Map<string, Set<string>>()
-    for (const app of apps || []) {
-      if (!app?.name || !Array.isArray(app.usedPlugins)) {
-        continue
-      }
-      for (const plugin of app.usedPlugins) {
-        if (!plugin?._id) {
-          continue
-        }
-        if (!usage.has(plugin._id)) {
-          usage.set(plugin._id, new Set())
-        }
-        usage.get(plugin._id)?.add(app.name)
-      }
-    }
-
-    const usageMap = new Map<string, string[]>()
-    for (const [pluginId, appNames] of usage.entries()) {
-      usageMap.set(
-        pluginId,
-        [...appNames].sort((a, b) => a.localeCompare(b))
-      )
-    }
-    return usageMap
-  }
-
-  $: pluginUsageById = buildPluginUsageMap($appsStore.apps)
-
-  $: enrichedPlugins = ($plugins || []).map(plugin => {
-    const usedInApps = plugin._id ? pluginUsageById.get(plugin._id) || [] : []
-    return {
-      ...plugin,
-      usedInApps,
-      usedInAppsLabel: usedInApps.length
-        ? `${usedInApps.length} app${usedInApps.length === 1 ? "" : "s"}`
-        : "Not used",
-    }
-  }) as PluginTableRow[]
-
-  $: filteredPlugins = enrichedPlugins
+  $: filteredPlugins = $plugins
     .filter((plugin: any) => {
       return filter === "all" || plugin.schema.type === filter
     })
@@ -137,7 +71,7 @@
     })
 
   onMount(async () => {
-    await Promise.all([plugins.load(), appsStore.load()])
+    await plugins.load()
     try {
       await plugins.checkUpdates()
     } catch (err: any) {
@@ -148,65 +82,6 @@
       )
     }
   })
-
-  async function bulkDeletePlugins() {
-    if (deletingPlugins || selectedRows.length === 0) {
-      return
-    }
-    deletingPlugins = true
-    const pluginsToDelete = [...selectedRows]
-    try {
-      const deletionResults = await Promise.allSettled(
-        pluginsToDelete.map(async plugin => {
-          if (!plugin._id) {
-            throw new Error("Plugin ID missing")
-          }
-          await plugins.deletePlugin(plugin._id)
-          return plugin._id
-        })
-      )
-
-      const deletedPluginIds = new Set<string>()
-      const failedPluginIds = new Set<string>()
-      const failedMessages: string[] = []
-      for (let index = 0; index < deletionResults.length; index++) {
-        const result = deletionResults[index]
-        const plugin = pluginsToDelete[index]
-        if (!plugin?._id) {
-          continue
-        }
-        if (result.status === "fulfilled") {
-          deletedPluginIds.add(result.value)
-          continue
-        }
-        failedPluginIds.add(plugin._id)
-        const reason =
-          result.reason?.message ||
-          result.reason?.error ||
-          JSON.stringify(result.reason)
-        failedMessages.push(`${plugin.name}: ${reason}`)
-      }
-
-      if (deletedPluginIds.size > 0) {
-        notifications.success(
-          deletedPluginIds.size === 1
-            ? "Deleted 1 plugin"
-            : `Deleted ${deletedPluginIds.size} plugins`
-        )
-      }
-      if (failedMessages.length > 0) {
-        notifications.error(
-          `Failed to delete plugins:\n${failedMessages.join("\n")}`
-        )
-      }
-
-      selectedRows = selectedRows.filter(
-        row => row._id && failedPluginIds.has(row._id)
-      )
-    } finally {
-      deletingPlugins = false
-    }
-  }
 
   async function applyAllUpdates() {
     if (applyingUpdates) {
@@ -298,19 +173,7 @@
           </div>
         </div>
       {/if}
-      <div class="actions">
-        {#if selectedRows.length}
-          <Button
-            size="M"
-            warning
-            on:click={bulkDeleteDialog.show}
-            disabled={deletingPlugins}
-          >
-            Delete selected ({selectedRows.length})
-          </Button>
-        {/if}
-        <Button size="M" on:click={modal.show} cta>Add plugin</Button>
-      </div>
+      <Button size="M" on:click={modal.show} cta>Add plugin</Button>
     </div>
 
     {#if $plugins?.length}
@@ -319,10 +182,9 @@
         data={filteredPlugins}
         allowEditColumns={false}
         allowEditRows={false}
-        allowSelectRows={true}
+        allowSelectRows={false}
         allowClickRows={false}
         {customRenderers}
-        bind:selectedRows
       />
     {/if}
   </Layout>
@@ -331,31 +193,6 @@
 <Modal bind:this={modal}>
   <AddPluginModal />
 </Modal>
-
-<ConfirmDialog
-  bind:this={bulkDeleteDialog}
-  title="Delete selected plugins"
-  okText={deletingPlugins ? "Deleting..." : "Delete plugins"}
-  onOk={bulkDeletePlugins}
-  disabled={deletingPlugins}
->
-  Are you sure you want to delete {selectedRows.length} selected plugin{selectedRows.length ===
-  1
-    ? ""
-    : "s"}?
-  {#if selectedRows.some(row => row.usedInApps?.length)}
-    <div class="usage-warning">
-      The following plugins are currently used in apps:
-      <ul>
-        {#each selectedRows.filter(row => row.usedInApps?.length) as row}
-          <li>
-            <strong>{row.name}</strong> — {row.usedInApps.join(", ")}
-          </li>
-        {/each}
-      </ul>
-    </div>
-  {/if}
-</ConfirmDialog>
 
 <style>
   .filters {
@@ -372,11 +209,6 @@
   .controls :global(.spectrum-Search) {
     width: 200px;
   }
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-  }
 
   @media (max-width: 640px) {
     .filters {
@@ -386,17 +218,6 @@
     .controls :global(.spectrum-Search) {
       width: auto;
     }
-    .actions {
-      width: 100%;
-      justify-content: flex-end;
-    }
-  }
-  .usage-warning {
-    margin-top: var(--spacing-m);
-  }
-  .usage-warning ul {
-    margin: var(--spacing-xs) 0 0 0;
-    padding-left: var(--spacing-l);
   }
   .updates-banner {
     display: flex;

@@ -7,35 +7,52 @@
   const statusDisplayName: Record<PublishResourceState, string> = {
     [PublishResourceState.PUBLISHED]: "Live",
 
-    [PublishResourceState.DISABLED]: "Draft",
+    [PublishResourceState.DISABLED]: "Off",
   }
 </script>
 
-<span
+<div
   class="status"
   class:published={status === PublishResourceState.PUBLISHED}
   class:disabled={status === PublishResourceState.DISABLED}
   class:loading
 >
   {statusDisplayName[status]}
-</span>
+</div>
 
 <style>
   .status {
+    padding: 2px 6px 2px 18px;
+    border-radius: 8px;
     display: inline;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 17px;
-    font-weight: 400;
-    color: var(--color);
-  }
+    color: white;
+    position: relative;
+    text-transform: capitalize;
+    background: var(--color);
 
-  .status.published {
-    --color: #8ca171;
-  }
+    &.published {
+      --color: #004c2e;
+      border: 1px solid #005d39;
+    }
 
-  .status.disabled {
-    --color: var(--spectrum-global-color-gray-600);
+    &.disabled {
+      --color: var(--spectrum-global-color-gray-300);
+      border: 1px solid var(--spectrum-global-color-gray-400);
+    }
+
+    &::after {
+      content: " ";
+      display: block;
+      width: 8px;
+      height: 8px;
+      background: var(--color);
+      filter: brightness(3);
+      border-radius: 50%;
+      position: absolute;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
   }
   .loading {
     opacity: 0.5;

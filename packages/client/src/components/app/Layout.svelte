@@ -22,7 +22,6 @@
   } = sdk
   const context = getContext("context")
   const navStateStore = writable({})
-  let navStateBeforeCollapse = {}
 
   // Legacy props which must remain unchanged for backwards compatibility
   export let title
@@ -44,7 +43,6 @@
   export let openLogoLinkInNewTab
   export let textAlign
   export let embedded = false
-  export let banner
 
   export let collapsible = false
 
@@ -89,12 +87,6 @@
     $context.device.width,
     $context.device.height
   )
-  $: bannerStyle = getBannerStyle(
-    banner?.background,
-    banner?.textColor,
-    banner?.textSize
-  )
-  $: showBanner = !!banner?.text?.trim?.() && typeClass !== "none"
   $: autoCloseSidePanel =
     !$builderStore.inBuilder &&
     $sidePanelStore.open &&
@@ -225,20 +217,6 @@
     return style
   }
 
-  const getBannerStyle = (backgroundColor, textColor, textSize) => {
-    let style = ""
-    if (backgroundColor) {
-      style += `--bannerBackground:${backgroundColor};`
-    }
-    if (textColor) {
-      style += `--bannerTextColor:${textColor};`
-    }
-    if (textSize) {
-      style += `--bannerTextSize:${textSize}px;`
-    }
-    return style
-  }
-
   const getSanitizedUrl = (url, openInNewTab) => {
     if (!isInternal(url)) {
       return ensureExternal(url)
@@ -267,80 +245,66 @@
   data-icon="browser"
 >
   <div class="screen-wrapper layout-body">
-    {#if showBanner && (typeClass !== "left" || mobile)}
-      <div class="banner" style={bannerStyle}>
-        <div class="banner-content">{banner?.text}</div>
-      </div>
-    {/if}
-    <div class="layout-content">
-      {#if typeClass !== "none"}
+    {#if typeClass !== "none"}
+      <div
+        class="interactive component {navigationId}"
+        data-id={navigationId}
+        data-name="Navigation"
+        data-icon="eye"
+      >
         <div
-          class="interactive component {navigationId}"
-          data-id={navigationId}
-          data-name="Navigation"
-          data-icon="eye"
+          class="nav-wrapper {navigationId}-dom"
+          class:sticky
+          class:hidden={$routeStore.queryParams?.peek}
+          class:clickable={$builderStore.inBuilder}
+          on:click={$builderStore.inBuilder
+            ? builderStore.actions.selectComponent(navigationId)
+            : null}
+          style={navStyle}
         >
           <div
-            class="nav-wrapper {navigationId}-dom"
-            class:sticky
-            class:hidden={$routeStore.queryParams?.peek}
-            class:clickable={$builderStore.inBuilder}
-            on:click={$builderStore.inBuilder
-              ? builderStore.actions.selectComponent(navigationId)
-              : null}
-            style={navStyle}
+            class="nav nav--{typeClass} size--{navWidthClass}"
+            class:collapsed={navCollapsed}
+            on:click={() => {
+              if (navCollapsed) {
+                navCollapsed = false
+              }
+            }}
           >
-            <div
-              class="nav nav--{typeClass} size--{navWidthClass}"
-              class:collapsed={navCollapsed}
-              on:click={() => {
-                if (navCollapsed) {
-                  // Restore dropdown state when expanding
-                  navStateStore.set(navStateBeforeCollapse)
-                  navStateBeforeCollapse = {}
-                  navCollapsed = false
-                }
-              }}
-            >
-              <div class="nav-header">
-                {#if enrichedNavItems.length}
-                  <div class="burger">
-                    <Icon
-                      hoverable
-                      name="list"
-                      color="var(--navTextColor)"
-                      on:click={() => (mobileOpen = !mobileOpen)}
-                    />
-                  </div>
-                {/if}
-                <div class="logo" class:collapsed-logo={navCollapsed}>
-                  {#if logoPosition === "top"}
-                    <Logo
-                      {logoUrl}
-                      {logoLinkUrl}
-                      {openLogoLinkInNewTab}
-                      hideLogo={hideLogo && !navCollapsed}
-                      {title}
-                      {linkable}
-                      {isInternal}
-                      {getSanitizedUrl}
-                    />
-                  {/if}
-                  {#if !hideTitle && title && !navCollapsed}
-                    <Heading size={titleSize} {textAlign} color={titleColor}>
-                      {title}
-                    </Heading>
-                  {/if}
+            <div class="nav-header">
+              {#if enrichedNavItems.length}
+                <div class="burger">
+                  <Icon
+                    hoverable
+                    name="list"
+                    color="var(--navTextColor)"
+                    on:click={() => (mobileOpen = !mobileOpen)}
+                  />
                 </div>
-                {#if navigation === "Left" && collapsible && !mobile && !navCollapsed}
+              {/if}
+              <div class="logo" class:collapsed-logo={navCollapsed}>
+                {#if logoPosition === "top"}
+                  <Logo
+                    {logoUrl}
+                    {logoLinkUrl}
+                    {openLogoLinkInNewTab}
+                    hideLogo={hideLogo && !navCollapsed}
+                    {title}
+                    {linkable}
+                    {isInternal}
+                    {getSanitizedUrl}
+                  />
+                {/if}
+                {#if !hideTitle && title && !navCollapsed}
+                  <Heading size={titleSize} {textAlign} color={titleColor}>
+                    {title}
+                  </Heading>
+                {/if}
+                {#if navigation === "Left" && collapsible && !navCollapsed && !mobile}
                   <div
                     class="nav-toggle"
-                    on:click|stopPropagation={() => {
-                      // Save current dropdown state before collapsing
-                      navStateBeforeCollapse = $navStateStore
-                      navStateStore.set({})
-                      navCollapsed = !navCollapsed
-                    }}
+                    on:click|stopPropagation={() =>
+                      (navCollapsed = !navCollapsed)}
                   >
                     <i
                       class="ph ph-sidebar-simple"
@@ -348,82 +312,75 @@
                     ></i>
                   </div>
                 {/if}
-                {#if !embedded}
-                  <div class="user top">
-                    <UserMenu compact />
-                  </div>
-                {/if}
               </div>
-              <div
-                class="mobile-click-handler"
-                class:visible={mobileOpen}
-                on:click={() => (mobileOpen = false)}
-              ></div>
-
-              <div class="links" class:visible={mobileOpen}>
-                {#if enrichedNavItems.length}
-                  {#each enrichedNavItems as navItem}
-                    {#if evaluateNavItemConditions(navItem._conditions)}
-                      <NavItem
-                        type={navItem.type}
-                        text={navItem.text}
-                        url={navItem.url}
-                        subLinks={navItem.subLinks}
-                        icon={navItem.icon}
-                        internalLink={navItem.internalLink}
-                        customStyles={navItem._styles?.custom}
-                        on:clickLink={handleClickLink}
-                        leftNav={navigation === "Left"}
-                        {mobile}
-                        {navStateStore}
-                        collapsed={navCollapsed}
-                      />
-                    {/if}
-                  {/each}
-                {/if}
-              </div>
-
               {#if !embedded}
-                <div class="user left" class:collapsed={navCollapsed}>
-                  <UserMenu collapsed={navCollapsed} />
-                  {#if logoPosition === "bottom"}
-                    <div>
-                      <Logo
-                        {logoUrl}
-                        {logoLinkUrl}
-                        {openLogoLinkInNewTab}
-                        {hideLogo}
-                        {title}
-                        {linkable}
-                        {isInternal}
-                        {getSanitizedUrl}
-                      />
-                    </div>
-                  {/if}
+                <div class="user top">
+                  <UserMenu compact />
                 </div>
               {/if}
             </div>
-          </div>
-        </div>
-      {/if}
-      <div
-        class="main-wrapper"
-        on:click={() => {
-          if ($builderStore.inBuilder) {
-            builderStore.actions.selectComponent(screenId)
-          }
-        }}
-      >
-        <div class="main-content-area">
-          {#if showBanner && typeClass === "left" && !mobile}
-            <div class="banner" style={bannerStyle}>
-              <div class="banner-content">{banner?.text}</div>
+            <div
+              class="mobile-click-handler"
+              class:visible={mobileOpen}
+              on:click={() => (mobileOpen = false)}
+            ></div>
+
+            <div class="links" class:visible={mobileOpen}>
+              {#if enrichedNavItems.length}
+                {#each enrichedNavItems as navItem}
+                  {#if evaluateNavItemConditions(navItem._conditions)}
+                    <NavItem
+                      type={navItem.type}
+                      text={navItem.text}
+                      url={navItem.url}
+                      subLinks={navItem.subLinks}
+                      icon={navItem.icon}
+                      internalLink={navItem.internalLink}
+                      customStyles={navItem._styles?.custom}
+                      on:clickLink={handleClickLink}
+                      leftNav={navigation === "Left"}
+                      {mobile}
+                      {navStateStore}
+                      collapsed={navCollapsed}
+                    />
+                  {/if}
+                {/each}
+              {/if}
             </div>
-          {/if}
-          <div class="main size--{pageWidthClass}">
-            <slot />
+
+            {#if !embedded}
+              <div class="user left" class:collapsed={navCollapsed}>
+                <UserMenu collapsed={navCollapsed} />
+                {#if logoPosition === "bottom"}
+                  <div>
+                    <Logo
+                      {logoUrl}
+                      {logoLinkUrl}
+                      {openLogoLinkInNewTab}
+                      {hideLogo}
+                      {title}
+                      {linkable}
+                      {isInternal}
+                      {getSanitizedUrl}
+                    />
+                  </div>
+                {/if}
+              </div>
+            {/if}
           </div>
         </div>
+      </div>
+    {/if}
+    <div
+      class="main-wrapper"
+      on:click={() => {
+        if ($builderStore.inBuilder) {
+          builderStore.actions.selectComponent(screenId)
+        }
+      }}
+    >
+      <div class="main size--{pageWidthClass}">
+        <slot />
       </div>
     </div>
   </div>
@@ -474,30 +431,6 @@
     overflow-x: hidden;
     position: relative;
     background: var(--spectrum-alias-background-color-secondary);
-  }
-  .layout-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-
-  .banner {
-    width: 100%;
-    background: var(--bannerBackground, var(--spectrum-global-color-gray-100));
-    color: var(--bannerTextColor, var(--spectrum-global-color-gray-800));
-    text-align: center;
-    padding: 8px 16px;
-    font-size: var(--bannerTextSize, 12px);
-    line-height: 1.4;
-    z-index: 3;
-  }
-  .banner-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    word-break: break-word;
   }
 
   .nav-wrapper {
@@ -596,12 +529,6 @@
     flex: 1 1 auto;
     z-index: 1;
   }
-  .main-content-area {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    min-width: 0;
-  }
   .main {
     display: flex;
     flex-direction: column;
@@ -610,8 +537,6 @@
     max-width: 100%;
     position: relative;
     padding: 32px;
-    align-self: center;
-    flex: 1;
   }
   .main:not(.size--max):has(.screenslot-dom > .component > .grid) {
     padding: calc(32px - var(--grid-spacing) * 2px);
@@ -648,25 +573,12 @@
     padding: var(--spacing-s);
     border-radius: 4px;
     transition: background-color 0.2s ease;
-    flex-shrink: 0;
-    align-self: flex-start;
   }
   .nav-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.1);
   }
   .collapsed-logo {
     cursor: pointer;
-  }
-  .logo.collapsed-logo {
-    width: 34px;
-    height: 34px;
-    flex-shrink: 0;
-    border-radius: 4px;
-  }
-  .logo.collapsed-logo :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
   }
   .burger {
     display: none;
@@ -675,14 +587,9 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--spacing-m);
     flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-  }
-  .logo :global(img) {
-    flex-shrink: 0;
   }
   .logo :global(h1) {
     font-weight: 600;
@@ -712,9 +619,6 @@
 
   /* Desktop nav overrides */
   .desktop.layout--left .layout-body {
-    overflow: hidden;
-  }
-  .desktop.layout--left .layout-content {
     flex-direction: row;
     overflow: hidden;
   }
@@ -740,10 +644,6 @@
     padding: var(--spacing-xs);
     justify-content: center;
     width: 100%;
-  }
-  .desktop .nav--left.collapsed .links :global(.link:hover),
-  .desktop .nav--left.collapsed .links :global(.dropdown .text:hover) {
-    background-color: rgba(255, 255, 255, 0.25);
   }
   .desktop .nav--left .links {
     margin-top: var(--spacing-m);

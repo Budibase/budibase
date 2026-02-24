@@ -10,7 +10,6 @@
   export let secondary: boolean = false
   export let overBackground: boolean = false
   export let target: string | undefined = undefined
-  export let rel: string | null = null
   export let download: string | undefined = undefined
   export let disabled: boolean = false
   export let tooltip: string | null = null
@@ -28,7 +27,6 @@
   on:click={onClick}
   {href}
   {target}
-  {rel}
   {download}
   class:disabled
   class:spectrum-Link--primary={primary}

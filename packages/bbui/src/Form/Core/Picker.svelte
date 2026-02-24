@@ -76,7 +76,6 @@
   export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
   export let hideChevron: boolean = false
-  export let wrapText: boolean = false
 
   const maxHeight = 360
   const VIRTUALIZATION_THRESHOLD = 200
@@ -116,8 +115,7 @@
     searchTerm,
     getOptionLabel
   )
-  $: virtualizationEnabled =
-    !wrapText && filteredOptions.length > VIRTUALIZATION_THRESHOLD
+  $: virtualizationEnabled = filteredOptions.length > VIRTUALIZATION_THRESHOLD
   $: {
     if (!virtualizationEnabled) {
       virtualizedOptions = filteredOptions.map((option, idx) => ({
@@ -256,7 +254,6 @@
     class:is-placeholder={isPlaceholder}
     class:auto-width={autoWidth}
     class:has-subtitle={!!fieldSubtitle}
-    class:wrap-text={wrapText}
   >
     <span class="picker-label-text">{fieldText}</span>
     {#if fieldSubtitle}
@@ -282,7 +279,6 @@
   <div
     class="popover-content"
     class:auto-width={autoWidth}
-    class:wrap-text={wrapText}
     use:clickOutside={() => {
       open = false
     }}
@@ -488,30 +484,6 @@
   }
   .spectrum-Menu-item.is-disabled {
     pointer-events: none;
-  }
-
-  .spectrum-Picker-label.wrap-text {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    width: auto;
-  }
-  .spectrum-Picker-label.wrap-text .picker-label-text {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-  .popover-content.wrap-text .spectrum-Menu-item {
-    height: auto;
-    min-height: var(--spectrum-menu-item-height);
-    align-items: flex-start;
-  }
-  .popover-content.wrap-text .spectrum-Menu-itemLabel {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    overflow-wrap: anywhere;
-    width: auto;
-    flex: 1 1 auto;
   }
 
   /* Search styles inside popover */

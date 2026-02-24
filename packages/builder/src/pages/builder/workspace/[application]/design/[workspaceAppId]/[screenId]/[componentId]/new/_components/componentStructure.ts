@@ -50,7 +50,6 @@ export function getComponentStructure({ chatbox } = { chatbox: false }) {
         "backgroundimage",
         "embeddedmap",
         "codegenerator",
-        "calendar",
       ],
     },
     {

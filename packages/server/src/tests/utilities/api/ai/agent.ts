@@ -2,12 +2,6 @@ import {
   Agent,
   CreateAgentRequest,
   CreateAgentResponse,
-  ProvisionAgentMSTeamsChannelRequest,
-  ProvisionAgentMSTeamsChannelResponse,
-  SyncAgentDiscordCommandsRequest,
-  SyncAgentDiscordCommandsResponse,
-  ToggleAgentDiscordRequest,
-  ToggleAgentDiscordResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -50,62 +44,5 @@ export class AgentAPI extends TestAPI {
     return await this._delete<{ deleted: true }>(`/api/agent/${agentId}`, {
       expectations,
     })
-  }
-
-  syncDiscordCommands = async (
-    agentId: string,
-    body?: SyncAgentDiscordCommandsRequest,
-    expectations?: Expectations
-  ): Promise<SyncAgentDiscordCommandsResponse> => {
-    return await this._post<SyncAgentDiscordCommandsResponse>(
-      `/api/agent/${agentId}/discord/sync`,
-      {
-        body,
-        expectations,
-      }
-    )
-  }
-
-  provisionMSTeamsChannel = async (
-    agentId: string,
-    body?: ProvisionAgentMSTeamsChannelRequest,
-    expectations?: Expectations
-  ): Promise<ProvisionAgentMSTeamsChannelResponse> => {
-    return await this._post<ProvisionAgentMSTeamsChannelResponse>(
-      `/api/agent/${agentId}/ms-teams/provision`,
-      {
-        body,
-        expectations,
-      }
-    )
-  }
-
-  toggleDiscordDeployment = async (
-    agentId: string,
-    body?: ToggleAgentDiscordRequest | Record<string, unknown>,
-    expectations?: Expectations
-  ): Promise<ToggleAgentDiscordResponse> => {
-    return await this._post<ToggleAgentDiscordResponse>(
-      `/api/agent/${agentId}/discord/toggle`,
-      {
-        body,
-        expectations,
-      }
-    )
-  }
-
-  duplicate = async (
-    agentId: string,
-    expectations?: Expectations
-  ): Promise<CreateAgentResponse> => {
-    return await this._post<CreateAgentResponse>(
-      `/api/agent/${agentId}/duplicate`,
-      {
-        expectations: {
-          ...expectations,
-          status: expectations?.status || 201,
-        },
-      }
-    )
   }
 }

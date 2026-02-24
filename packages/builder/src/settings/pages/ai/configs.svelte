@@ -1,74 +1,103 @@
 <script lang="ts">
-  import { bb } from "@/stores/bb"
-  import { aiConfigsStore } from "@/stores/portal"
-  import { Button, Layout, notifications } from "@budibase/bbui"
+  import { admin, aiConfigsStore, licensing } from "@/stores/portal"
+  import { Button, Layout, Modal, notifications } from "@budibase/bbui"
+  import type { AIConfigResponse } from "@budibase/types"
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
-  import AIConfigList from "./AIConfigList.svelte"
-  import { ensureAILicenseStatus } from "./licenseStatus"
+  import CustomAIConfigTile from "./CustomAIConfigTile.svelte"
+  import CustomConfigModal from "./CustomConfigModal.svelte"
+  import BBAIConfigModal from "./BBAIConfigModal.svelte"
+  import PortalModal from "./PortalModal.svelte"
+  import { API } from "@/api"
 
-  let completionConfigs = $derived(
-    [...$aiConfigsStore.customConfigsPerType.completions]
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
+  let configModal: { show: () => void; hide: () => void }
+  let portalModal: { show: () => void; hide: () => void }
+  let selectedModalConfig: AIConfigResponse | undefined
+  let selectedProvider: string | undefined
+
+  let hasLicenseKey: boolean
+
+  $: completionConfigs = ($aiConfigsStore.customConfigs || []).filter(
+    config => config.configType === AIConfigType.COMPLETIONS
   )
 
-  let hasBBAI = $derived(
-    $aiConfigsStore.customConfigsPerType.completions.some(
-      c => c.provider === BUDIBASE_AI_PROVIDER_ID
-    )
+  $: hasBBAI = completionConfigs.some(
+    c => c.provider === BUDIBASE_AI_PROVIDER_ID
   )
-  let modelProviders = $derived([
+  $: modelProviders = [
     ...(hasBBAI
       ? []
       : [
           {
             name: "Budibase AI",
             provider: BUDIBASE_AI_PROVIDER_ID,
-            model: "Budibase managed",
+            description: "Budibase managed",
           },
         ]),
     {
       name: "Anthropic",
       provider: "Anthropic",
-      model: "Connect to Claude models directly from Anthropic",
+      description: "Connect to Claude models directly from Anthropic",
     },
     {
       name: "Google",
       provider: "Google_AI_Studio",
-      model: "Connect to Gemini models directly from Google",
+      description: "Connect to Gemini models directly from Google",
     },
     {
       name: "Mistral",
       provider: "MistralAI",
-      model: "Connect to Mistral models directly from Mistral",
+      description: "Connect to Mistral models directly from Mistral",
     },
     {
       name: "OpenAI",
       provider: "OpenAI",
-      model: "Connect to ChatGPT models directly from OpenAI",
+      description: "Connect to ChatGPT models directly from OpenAI",
     },
     {
       name: "OpenRouter",
       provider: "Openrouter",
-      model: "Connect to 100s of text, image, embedding models",
+      description: "Connect to 100s of text, image, embedding models",
     },
     {
       name: "Groq",
       provider: "Groq",
-      model: "Connect to 100s of text, image, embedding models",
+      description: "Connect to 100s of text, image, embedding models",
     },
-  ])
+  ]
 
-  function createAIConfig() {
-    bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}/new`, {
-      type: AIConfigType.COMPLETIONS,
-    })
+  function createAIConfig(provider?: string) {
+    if (
+      provider === BUDIBASE_AI_PROVIDER_ID &&
+      !$admin.cloud &&
+      !hasLicenseKey
+    ) {
+      portalModal.show()
+      return
+    }
+
+    selectedModalConfig = undefined
+    selectedProvider = provider
+    configModal?.show()
+  }
+  function editAIConfig(config: AIConfigResponse) {
+    selectedModalConfig = config
+    selectedProvider = config.provider
+    configModal?.show()
   }
 
   onMount(async () => {
     try {
-      await Promise.all([aiConfigsStore.fetch(), await ensureAILicenseStatus()])
+      await aiConfigsStore.fetch()
+
+      const license = $licensing.license
+      const isOfflineLicense = () => license && "identifier" in license
+      if (isOfflineLicense()) {
+        hasLicenseKey = true
+      } else {
+        const licenseKeyResponse = await API.getLicenseKey()
+        hasLicenseKey = !!licenseKeyResponse?.licenseKey
+      }
     } catch {
       notifications.error("Error fetching AI settings")
     }
@@ -81,7 +110,15 @@
       <div class="section-title">Connected models</div>
     </div>
     <div class="model-list">
-      <AIConfigList configs={completionConfigs}></AIConfigList>
+      {#each completionConfigs as config (config._id)}
+        <CustomAIConfigTile
+          actionType="edit"
+          displayName={config.name}
+          provider={config.provider}
+          description={config.model}
+          editHandler={() => editAIConfig(config)}
+        ></CustomAIConfigTile>
+      {/each}
     </div>
   {/if}
   <div class="section-header new-provider-section">
@@ -93,14 +130,48 @@
     </div>
   </div>
   <div class="model-list">
-    <AIConfigList
-      configs={modelProviders.map(provider => ({
-        ...provider,
-        configType: AIConfigType.COMPLETIONS,
-      }))}
-    ></AIConfigList>
+    {#each modelProviders as config (config.name)}
+      <CustomAIConfigTile
+        actionType="create"
+        displayName={config.name}
+        provider={config.provider}
+        description={config.description}
+        editHandler={() => createAIConfig(config.provider)}
+      ></CustomAIConfigTile>
+    {/each}
   </div>
 </Layout>
+
+<Modal bind:this={configModal}>
+  {#if selectedProvider !== BUDIBASE_AI_PROVIDER_ID}
+    <CustomConfigModal
+      config={selectedModalConfig}
+      provider={selectedProvider}
+      type={AIConfigType.COMPLETIONS}
+      on:hide={() => {
+        configModal.hide()
+      }}
+    />
+  {:else}
+    <BBAIConfigModal
+      config={selectedModalConfig}
+      type={AIConfigType.COMPLETIONS}
+      on:hide={() => {
+        configModal.hide()
+      }}
+    />
+  {/if}
+</Modal>
+
+<Modal bind:this={portalModal}>
+  <PortalModal
+    confirmHandler={() => {
+      window.open($admin.accountPortalUrl, "_blank")
+      portalModal.hide()
+    }}
+    cancelHandler={() => portalModal.hide()}
+  />
+</Modal>
 
 <style>
   .section-header {

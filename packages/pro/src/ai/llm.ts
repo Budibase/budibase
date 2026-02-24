@@ -8,6 +8,7 @@ import {
   LLMProviderConfig,
   Message,
   ResponseFormat,
+  WithRequired,
 } from "@budibase/types"
 import { tracer } from "dd-trace"
 import openai from "openai"
@@ -18,6 +19,7 @@ import { AzureOpenAI } from "./models/azureOpenai"
 import { LLM } from "./models/base"
 import { BudibaseAI } from "./models/budibaseai"
 import { OpenAI, OpenAIModel } from "./models/openai"
+import { LiteLLMAI } from "./models/litellm"
 
 // Provider-specific default models. If a provider's saved config does not
 // include a default model, we fall back to these. Azure defaults to gpt-4.1
@@ -124,7 +126,7 @@ export async function getLLMConfig(): Promise<LLMProviderConfig | undefined> {
 // the user has no LLM configuration it will return undefined. It's the caller's
 // responsibility to handle this case.
 export async function getLLM(
-  options?: Omit<LLMConfigOptions, "model"> & { model?: string }
+  options?: LLMConfigOptions
 ): Promise<LLM | undefined> {
   return await tracer.trace("getLLM", async span => {
     const { model, maxTokens } = options || {}
@@ -162,6 +164,14 @@ export async function getLLMOrThrow(): Promise<LLM> {
     throw new HTTPError("No available LLM configurations", 500)
   }
   return llm
+}
+
+export async function getChatLLM(
+  config: WithRequired<LLMConfigOptions, "baseUrl">
+): Promise<OpenAI> {
+  return await tracer.trace("getChatLLM", async () => {
+    return new LiteLLMAI(config)
+  })
 }
 
 // This function is intended to be used in the local development environment

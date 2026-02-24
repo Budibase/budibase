@@ -31,6 +31,7 @@
     notificationStore,
     recaptchaStore,
   } from "@/stores"
+  import { embedHideDevToolsStore } from "@/stores/embedHideDevTools"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
   import PeekScreenDisplay from "./overlay/PeekScreenDisplay.svelte"
@@ -57,9 +58,6 @@
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
   import RecaptchaV2 from "./RecaptchaV2.svelte"
   import { ActionTypes } from "@/constants"
-  import { API } from "@/api"
-  import AppChatbox from "./app/Chatbox.svelte"
-  import PausedChat from "./app/PausedChat.svelte"
 
   // Provide contexts
   const context = createContextStore()
@@ -75,27 +73,16 @@
   let dataLoaded = false
   let permissionError = false
   let embedNoScreens = false
-  let chatRoutePaused = false
 
   $: displayPreviewDevice =
     $builderStore.previewModalDevice || $builderStore.previewDevice
 
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
-  $: isChatOnlyRoute =
-    typeof window !== "undefined" &&
-    (window.location.pathname.replace(/\/$/, "").endsWith("/_chat") ||
-      window.location.pathname.startsWith("/app-chat/"))
-  $: resolvedThemeClassNames = getThemeClassNames($themeStore.theme)
 
   // Handle no matching route
   $: {
-    if (
-      !isChatOnlyRoute &&
-      dataLoaded &&
-      $routeStore.routerLoaded &&
-      !$routeStore.activeRoute
-    ) {
+    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
       if ($screenStore.screens.length) {
         // If we have some available screens, use the first screen which
         // represents the best route based on rank
@@ -121,28 +108,6 @@
         window.location = "/builder/auth/login"
       }
     }
-  }
-
-  const refreshChatRoutePausedState = async () => {
-    if (!isChatOnlyRoute || $builderStore.inBuilder) {
-      chatRoutePaused = false
-      return
-    }
-
-    try {
-      const chatApp = await API.get({
-        url: "/api/chatapps",
-        suppressErrors: true,
-      })
-      chatRoutePaused = chatApp?.live === false
-    } catch (error) {
-      console.error(error)
-      chatRoutePaused = false
-    }
-  }
-
-  $: if (dataLoaded && isChatOnlyRoute) {
-    refreshChatRoutePausedState()
   }
 
   let fontsLoaded = false
@@ -222,7 +187,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {resolvedThemeClassNames}"
+    class="spectrum spectrum--medium {getThemeClassNames($themeStore.theme)}"
     class:builder={$builderStore.inBuilder}
     class:show={fontsLoaded && dataLoaded}
   >
@@ -258,6 +223,8 @@
                       >
                         <!-- Actual app -->
                         <div id="app-root">
+                          <!-- Stable portal target so modals/notifications work during route changes -->
+                          <div class="modal-container"></div>
                           {#if showDevTools}
                             <DevToolsHeader />
                           {/if}
@@ -276,24 +243,6 @@
                                   </Body>
                                 </Layout>
                               </div>
-                            {:else if isChatOnlyRoute}
-                              <CustomThemeWrapper>
-                                <div class="chat-route-shell">
-                                  <div class="chat-app-container">
-                                    {#if chatRoutePaused && !$builderStore.inBuilder}
-                                      <PausedChat />
-                                    {:else}
-                                      <AppChatbox />
-                                    {/if}
-                                  </div>
-                                </div>
-
-                                <!-- Layers on top of app -->
-                                <NotificationDisplay />
-                                <ConfirmationDisplay />
-                                <PeekScreenDisplay />
-                                <InstallPrompt />
-                              </CustomThemeWrapper>
                             {:else if !$screenStore.activeLayout}
                               <div class="error">
                                 <Layout justifyItems="center" gap="S">
@@ -346,7 +295,7 @@
                         </div>
 
                         <!-- Preview and dev tools utilities  -->
-                        {#if $appStore.isDevApp}
+                        {#if $appStore.isDevApp && !$appStore.hideDevTools && !$embedHideDevToolsStore}
                           <SelectionIndicator />
                         {/if}
                         {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
@@ -413,6 +362,19 @@
     align-items: stretch;
   }
 
+  .modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+  }
+  .modal-container :global(*) {
+    pointer-events: auto;
+  }
+
   #app-body {
     flex: 1 1 auto;
     display: flex;
@@ -449,29 +411,6 @@
     font-weight: 400;
   }
 
-  .chat-route-shell {
-    display: flex;
-    flex: 1 1 auto;
-    width: 100%;
-    height: 100%;
-    min-width: 0;
-    min-height: 0;
-    padding: var(--spacing-xl);
-    background: var(--background-alt);
-    box-sizing: border-box;
-  }
-
-  .chat-app-container {
-    flex: 1 1 auto;
-    display: flex;
-    border-radius: 24px;
-    border: var(--border-light);
-    background: transparent;
-    overflow: hidden;
-    min-width: 0;
-    min-height: 0;
-  }
-
   /* Preview styles */
   #clip-root.preview {
     padding: 6px;
@@ -490,16 +429,6 @@
   #clip-root.modal-mobile-preview.mobile-preview {
     width: 100%;
     height: 100%;
-  }
-
-  @media (max-width: 1000px) {
-    .chat-route-shell {
-      padding: var(--spacing-m);
-    }
-
-    .chat-app-container {
-      border-radius: 16px;
-    }
   }
 
   /* Print styles */

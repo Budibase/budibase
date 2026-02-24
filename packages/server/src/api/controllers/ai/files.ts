@@ -1,11 +1,13 @@
-import { readFile, unlink } from "node:fs/promises"
 import { HTTPError } from "@budibase/backend-core"
 import {
+  AgentFileStatus,
   AgentFileUploadResponse,
   FetchAgentFilesResponse,
   UserCtx,
 } from "@budibase/types"
+import { readFile, unlink } from "node:fs/promises"
 import sdk from "../../../sdk"
+import { ingestAgentFile } from "../../../sdk/workspace/ai/rag/files"
 
 const normalizeUpload = (fileInput: any) => {
   if (!fileInput) {
@@ -67,24 +69,30 @@ export async function uploadAgentFile(
       : Number(upload.size) || undefined
 
   const buffer = await readFile(filePath)
+  const agentFile = await sdk.ai.agents.createAgentFile({
+    agentId: agentId,
+    filename,
+    mimetype,
+    size: fileSize ?? buffer.byteLength,
+    uploadedBy: ctx.user?._id!,
+  })
 
   try {
-    const updated = await sdk.ai.agents.uploadAgentFile({
-      agentId: agent._id!,
-      filename,
-      mimetype,
-      size: fileSize ?? buffer.byteLength,
-      buffer,
-      uploadedBy: ctx.user?._id!,
-    })
+    const result = await ingestAgentFile(agent, agentFile, buffer)
+    agentFile.status = AgentFileStatus.READY
+    agentFile.chunkCount = result.total
+    agentFile.processedAt = new Date().toISOString()
+    agentFile.errorMessage = undefined
+    const updated = await sdk.ai.agents.updateAgentFile(agentFile)
     ctx.body = { file: updated }
     ctx.status = 201
   } catch (error: any) {
-    console.error("Failed to upload agent file", error)
-    throw new HTTPError(
-      error?.message || "Failed to process uploaded file",
-      400
-    )
+    console.error("Failed to ingest agent file", error)
+    agentFile.status = AgentFileStatus.FAILED
+    agentFile.errorMessage = error?.message || "Failed to process uploaded file"
+    agentFile.chunkCount = 0
+    await sdk.ai.agents.updateAgentFile(agentFile)
+    throw new HTTPError(agentFile.errorMessage || "", 400)
   } finally {
     await unlinkSafe(filePath)
   }

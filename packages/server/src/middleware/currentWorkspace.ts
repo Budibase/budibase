@@ -13,7 +13,7 @@ import type { Middleware, Next } from "koa"
 import { generateUserMetadataID, isDevWorkspaceID } from "../db/utils"
 import env from "../environment"
 import { getCachedSelf } from "../utilities/global"
-import { isApiKey, isBrowser, isWebhookEndpoint } from "./utils"
+import { isApiKey, isBrowser, isClientLibraryRequest, isWebhookEndpoint } from "./utils"
 
 export const currentWorkspaceMiddleware = (async (ctx: UserCtx, next: Next) => {
   // try to get the workspaceID from the request
@@ -27,8 +27,8 @@ export const currentWorkspaceMiddleware = (async (ctx: UserCtx, next: Next) => {
     span?.setTag("appId", requestWorkspaceId)
   }
 
-  // deny access to application preview
-  if (isBrowser(ctx) && !isApiKey(ctx)) {
+  // deny access to application preview (skip redirect for /api/assets/:appId/* – microfrontend loads these cross-origin)
+  if (isBrowser(ctx) && !isApiKey(ctx) && !isClientLibraryRequest(ctx)) {
     if (
       isDevWorkspaceID(requestWorkspaceId) &&
       !isWebhookEndpoint(ctx) &&

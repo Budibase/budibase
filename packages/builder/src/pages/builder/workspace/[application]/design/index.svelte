@@ -25,28 +25,17 @@
     Icon,
     notifications,
     StatusLight,
+    TooltipPosition,
   } from "@budibase/bbui"
   import {
-    FeatureFlag,
     PublishResourceState,
     WorkspaceResource,
     type UIWorkspaceApp,
   } from "@budibase/types"
   import AppsHero from "assets/apps-hero-x1.png"
   import NoResults from "../_components/NoResults.svelte"
-  import { goto as gotoStore } from "@roxi/routify"
-  import { featureFlags } from "@/stores/portal"
-  import { onMount } from "svelte"
 
   type ShowUI = { show: () => void }
-
-  $: goto = $gotoStore
-
-  onMount(() => {
-    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
-      goto("../home?type=app")
-    }
-  })
 
   let showHighlight = false
   let filter: PublishResourceState | undefined
@@ -358,7 +347,11 @@
             </div>
 
             <span class="favourite-btn">
-              <FavouriteResourceButton favourite={app.favourite} />
+              <FavouriteResourceButton
+                favourite={app.favourite}
+                position={TooltipPosition.Left}
+                noWrap
+              />
             </span>
           </div>
         </a>
@@ -442,42 +435,37 @@
     padding: 9px 12px;
     color: var(--text-color);
     transition: background 130ms ease-out;
-  }
 
-  .app:hover,
-  .app.active {
-    background: var(--spectrum-global-color-gray-200);
-  }
+    &:hover,
+    &.active {
+      background: var(--spectrum-global-color-gray-200);
 
-  .app:hover .actions > *,
-  .app.active .actions > *,
-  .app:focus-within .actions > * {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .app.favourite .actions .favourite-btn {
-    opacity: 1;
-    pointer-events: auto;
+      & .actions > * {
+        opacity: 1;
+        pointer-events: all;
+      }
+    }
+    &.favourite {
+      & .actions .favourite-btn {
+        opacity: 1;
+      }
+    }
   }
   .actions {
     justify-content: flex-end;
     display: flex;
     align-items: center;
+    pointer-events: none;
     gap: var(--spacing-xs);
   }
 
   .actions > * {
     opacity: 0;
-    pointer-events: none;
     transition: opacity 130ms ease-out;
   }
 
-  @media (hover: none), (pointer: coarse) {
-    .app .actions > * {
-      opacity: 1;
-      pointer-events: auto;
-    }
+  .actions .favourite-btn {
+    pointer-events: all;
   }
 
   .update-version :global(.spectrum-ActionButton-label) {

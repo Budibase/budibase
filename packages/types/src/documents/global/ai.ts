@@ -15,7 +15,6 @@ export interface CustomAIProviderConfig extends Document {
   credentialsFields: Record<string, string>
   model: string
   liteLLMModelId: string
-  isDefault?: boolean
   webSearchConfig?: WebSearchConfig
   configType: AIConfigType
   reasoningEffort?: ReasoningEffort
@@ -24,5 +23,4 @@ export interface CustomAIProviderConfig extends Document {
 export interface LiteLLMKeyConfig extends Document {
   keyId: string
   secretKey: string
-  teamId: string
 }

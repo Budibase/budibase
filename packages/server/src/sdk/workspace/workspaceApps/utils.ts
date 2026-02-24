@@ -6,62 +6,41 @@ export async function getMatchedWorkspaceApp(
   fromUrl: string
 ): Promise<WorkspaceApp | undefined> {
   const workspace = await sdk.workspaces.metadata.get()
-  const normalizedFromUrl = fromUrl.split("?")[0]
   const baseUrl = db.isProdWorkspaceID(workspace.appId)
     ? `/app/${workspace.url}`.replace("//", "/")
     : `/${workspace.appId}`
-
-  const chatUrl = db.isProdWorkspaceID(workspace.appId)
-    ? `/app-chat/${workspace.url}`.replace("//", "/")
-    : `/app-chat/${workspace.appId}`
 
   const embedUrl = db.isProdWorkspaceID(workspace.appId)
     ? `/embed/${workspace.url}`.replace("//", "/")
     : null
 
   const allWorkspaceApps = await sdk.workspaceApps.fetch()
-  const enabledWorkspaceApps = allWorkspaceApps.filter(app => !app.disabled)
 
-  const getDefaultWorkspaceApp = () =>
-    enabledWorkspaceApps.find(app => app.isDefault) ||
-    enabledWorkspaceApps[0] ||
-    allWorkspaceApps.find(app => app.isDefault) ||
-    allWorkspaceApps[0]
+  const normalizedPath = fromUrl.replace(/\/$/, "") || ""
+  const isRootPath =
+    !fromUrl || fromUrl === "/" || normalizedPath === ""
+  const isHostEmbedPath =
+    normalizedPath === "/embed" || normalizedPath.startsWith("/embed/")
 
-  function isWorkspaceAppMatch(
-    urlPath: string,
-    { url, isDefault }: WorkspaceApp
-  ) {
+  function isWorkspaceAppMatch({ url, isDefault }: WorkspaceApp) {
     return (
-      urlPath.replace(/\/$/, "") === `${baseUrl}${url.replace(/\/$/, "")}` ||
+      fromUrl.replace(/\/$/, "") === `${baseUrl}${url.replace(/\/$/, "")}` ||
       (embedUrl &&
-        urlPath.replace(/\/$/, "") ===
+        fromUrl.replace(/\/$/, "") ===
           `${embedUrl}${url.replace(/\/$/, "")}`) ||
-      (!urlPath && isDefault) // Support getMatchedWorkspaceApp without url referrer
+      (isRootPath && isDefault) ||
+      (isHostEmbedPath && isDefault) // Host app embed route (e.g. /embed) uses default workspace app
     )
   }
 
-  const findWorkspaceApp = (urlPath: string) =>
-    allWorkspaceApps.find(workspaceApp =>
-      isWorkspaceAppMatch(urlPath, workspaceApp)
-    )
-
+  let matchedWorkspaceApp = allWorkspaceApps.find(isWorkspaceAppMatch)
   if (
-    normalizedFromUrl.replace(/\/$/, "") === chatUrl.replace(/\/$/, "") ||
-    normalizedFromUrl.startsWith(`${chatUrl.replace(/\/$/, "")}/`)
+    !matchedWorkspaceApp &&
+    (isRootPath || isHostEmbedPath) &&
+    allWorkspaceApps.length > 0
   ) {
-    return getDefaultWorkspaceApp()
+    matchedWorkspaceApp =
+      allWorkspaceApps.find(w => w.isDefault) ?? allWorkspaceApps[0]
   }
-
-  const matchedWorkspaceApp = findWorkspaceApp(normalizedFromUrl)
-  if (matchedWorkspaceApp) {
-    return matchedWorkspaceApp
-  }
-
-  const chatPath = normalizedFromUrl.replace(/\/_chat(?:\/.*)?$/, "")
-  if (chatPath !== normalizedFromUrl) {
-    return findWorkspaceApp(chatPath)
-  }
-
   return matchedWorkspaceApp
 }
