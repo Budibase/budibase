@@ -266,6 +266,8 @@ export async function getExistingInvites(
   emails: string[]
 ): Promise<InviteWithCode[]> {
   return (await getInviteCodes()).filter(invite =>
-    emails.includes(invite.email)
+  const lcEmails = new Set(emails.map(email => email.toLowerCase()))
+  return (await getInviteCodes()).filter(invite =>
+    lcEmails.has(invite.email.toLowerCase())
   )
 }
