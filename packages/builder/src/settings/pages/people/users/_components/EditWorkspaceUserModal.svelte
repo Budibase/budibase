@@ -13,6 +13,7 @@
   import { roles } from "@/stores/builder"
   import { auth, users } from "@/stores/portal"
   import type { User } from "@budibase/types"
+  import { getRoleFlags } from "../roleUtils"
 
   interface UserDraft {
     firstName: string
@@ -189,29 +190,6 @@
       email: user.email || "",
       role: isTenantOwner ? "owner" : role,
       appRole: sanitizeAppRole(appRole),
-    }
-  }
-
-  const getRoleFlags = (role: string, currentUser: User) => {
-    if (role === Constants.BudibaseRoles.Developer) {
-      return { admin: { global: false }, builder: { global: true } }
-    }
-    if (role === Constants.BudibaseRoles.Admin) {
-      return { admin: { global: true }, builder: { global: true } }
-    }
-    if (role === Constants.BudibaseRoles.Creator) {
-      return {
-        admin: { global: false },
-        builder: {
-          global: false,
-          creator: true,
-          apps: currentUser?.builder?.apps || [],
-        },
-      }
-    }
-    return {
-      admin: { global: false },
-      builder: { global: false, creator: false, apps: [] },
     }
   }
 
