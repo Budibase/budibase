@@ -10,7 +10,6 @@ export enum Feature {
   SCIM = "scim",
   SYNC_AUTOMATIONS = "syncAutomations",
   TRIGGER_AUTOMATION_RUN = "triggerAutomationRun",
-  APP_BUILDERS = "appBuilders",
   OFFLINE = "offline",
   EXPANDED_PUBLIC_API = "expandedPublicApi",
   CUSTOM_APP_SCRIPTS = "customAppScripts",

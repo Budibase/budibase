@@ -132,7 +132,7 @@
           <Icon hoverable name="dots-three" />
         </span>
         <MenuItem
-          icon="arrow-clockwise"
+          icon="pencil"
           on:click={() => editModal.show()}
           disabled={!isAdmin}
         >
