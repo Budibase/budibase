@@ -13,7 +13,7 @@ const exaSearchParams = z.object({
 })
 
 export const createExaTool = (apiKey: string): BudibaseToolDefinition => ({
-  name: "exa_search",
+  name: "search_web_search",
   sourceType: ToolType.SEARCH,
   sourceLabel: "Exa",
   description: "Search the web using Exa",

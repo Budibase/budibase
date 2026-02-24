@@ -16,7 +16,7 @@ const parallelSearchParams = z.object({
 })
 
 export const createParallelTool = (apiKey: string): BudibaseToolDefinition => ({
-  name: "parallel_search",
+  name: "search_web_search",
   description: "Search the web using Parallel AI",
   sourceType: ToolType.SEARCH,
   sourceLabel: "Parallel Search",
