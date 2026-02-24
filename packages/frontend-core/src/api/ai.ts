@@ -74,9 +74,7 @@ export const buildAIEndpoints = (API: BaseAPIClient): AIEndpoints => ({
                   finalResponse = { createdTables: event.createdTables || [] }
                 }
                 if (event?.type === "error") {
-                  throw new Error(
-                    event.message || "Error generating tables"
-                  )
+                  throw new Error(event.message || "Error generating tables")
                 }
               }
 
