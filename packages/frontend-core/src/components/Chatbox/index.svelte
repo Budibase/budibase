@@ -216,7 +216,16 @@
     },
     onError: error => {
       console.error(error)
-      notifications.error(error.message || "Failed to send message")
+      let message = error.message || "Failed to send message"
+      try {
+        const parsed = JSON.parse(message)
+        if (parsed?.message) {
+          message = parsed.message
+        }
+      } catch {
+        // not JSON, use as-is
+      }
+      notifications.error(message)
     },
   })
 

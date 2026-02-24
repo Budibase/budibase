@@ -151,11 +151,13 @@ export async function createBBAIClient(
     middleware: {
       specificationVersion: "v3",
       async wrapGenerate({ doGenerate }) {
+        await quotas.throwIfBudibaseAICreditsExceeded()
         const result = await doGenerate()
         await incrementBudibaseAICreditsFromUsage(result.usage).catch(() => {})
         return result
       },
       async wrapStream({ doStream }) {
+        await quotas.throwIfBudibaseAICreditsExceeded()
         const result = await doStream()
         const transformStream = new TransformStream<
           LanguageModelV3StreamPart,
