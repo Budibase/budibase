@@ -3,6 +3,7 @@ import {
   buildImportFn,
 } from "../../../src/sdk/publicApi/applications"
 import { context } from "@budibase/backend-core"
+import { UserCtx } from "@budibase/types"
 import { isWorkspaceImportExportPublicApiEnabled } from "../../../src/sdk/features"
 
 jest.mock("@budibase/backend-core", () => ({
@@ -16,6 +17,21 @@ jest.mock("../../../src/sdk/features", () => ({
 }))
 
 type Mocked<T> = jest.Mocked<T>
+type ThrowFn = (status: number, message: string) => never
+
+interface TestCtx {
+  request: {
+    files?: Record<string, unknown>
+    body: Record<string, unknown>
+  }
+  params: {
+    appId: string
+  }
+  query: Record<string, unknown>
+  body?: unknown
+  status?: number
+  throw: ThrowFn
+}
 
 describe("applications public API import", () => {
   const mockedContext = context as Mocked<typeof context>
@@ -105,7 +121,7 @@ describe("applications public API import", () => {
 
     const importFn = jest.fn().mockResolvedValue(undefined)
     const handler = buildImportFn(importFn)
-    const ctx: any = {
+    const ctx: TestCtx = {
       request: {
         files: {
           file: {
@@ -117,13 +133,14 @@ describe("applications public API import", () => {
       params: {
         appId: "app-789",
       },
+      query: {},
       throw: jest.fn((status: number, message: string) => {
         throw new Error(`${status}: ${message}`)
       }),
     }
     const next = jest.fn()
 
-    await expect(handler(ctx, next)).rejects.toThrow(
+    await expect(handler(ctx as UserCtx, next)).rejects.toThrow(
       "403: Endpoint unavailable, enterprise license required."
     )
     expect(mockedContext.doInWorkspaceContext).not.toHaveBeenCalled()
@@ -152,7 +169,7 @@ describe("applications public API export", () => {
 
     const exportFn = jest.fn().mockResolvedValue(undefined)
     const handler = buildExportFn(exportFn)
-    const ctx: any = {
+    const ctx: TestCtx = {
       request: {
         body: {
           encryptPassword: "secret",
@@ -169,7 +186,7 @@ describe("applications public API export", () => {
     }
     const next = jest.fn()
 
-    await expect(handler(ctx, next)).rejects.toThrow(
+    await expect(handler(ctx as UserCtx, next)).rejects.toThrow(
       "403: Endpoint unavailable, enterprise license required."
     )
     expect(mockedContext.doInWorkspaceContext).not.toHaveBeenCalled()
