@@ -514,32 +514,18 @@ describe("BudibaseAI", () => {
     const mockAIGenerationStructure = (
       generationStructure: ai.GenerationStructure
     ) => {
-      mockChatGPTResponse(JSON.stringify(generationStructure), {
-        format: toResponseFormat(ai.generationStructure),
-      })
+      mockAISDKChatGPTResponse(JSON.stringify(generationStructure), { times: 1 })
     }
 
-    const mockAIColumnGeneration = (
-      generationStructure: ai.GenerationStructure,
-      aiColumnGeneration: ai.AIColumnSchemas
-    ) =>
-      mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
-        format: toResponseFormat(
-          ai.aiColumnSchemas(
-            ai.aiTableResponseToTableSchema(generationStructure)
-          )
-        ),
-      })
+    const mockAIColumnGeneration = (aiColumnGeneration: ai.AIColumnSchemas) =>
+      mockAISDKChatGPTResponse(JSON.stringify(aiColumnGeneration), { times: 1 })
 
     const mockDataGeneration = (
       dataGeneration: Record<string, Record<string, any>[]>
-    ) =>
-      mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: toResponseFormat(ai.tableDataStructuredOutput([])),
-      })
+    ) => mockAISDKChatGPTResponse(JSON.stringify(dataGeneration), { times: 1 })
 
     const mockProcessAIColumn = (response: string) =>
-      mockChatGPTResponse(response)
+      mockChatGPTResponse(response, { times: 3 })
 
     it("handles correct chat response", async () => {
       const prompt = "Create me a table for managing IT tickets"
@@ -681,64 +667,72 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockAIColumnGeneration(generationStructure, aiColumnGeneration)
+      mockAIColumnGeneration(aiColumnGeneration)
 
       // Use nock for image downloads since it intercepts before undici
-      nock("https://photourl.com")
-        .get("/any.png")
+      nock("https://picsum.photos")
+        .get("/600/600")
         .times(5) // 5 employee photos
         .reply(200, Buffer.from("fake image data"))
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Tickets: [
           {
+            _id: "ticket_1",
             Title: "System slow performance",
             Description:
               "User reports significant slowdowns when using multiple applications simultaneously on their PC.",
             Priority: "Medium",
             Status: "Closed",
             "Created Date": "2025-04-17",
+            Assignee: [],
             Attachment: {
-              name: "performance_logs.txt",
+              fileName: "performance_logs.txt",
               extension: ".txt",
               content: "performance logs",
             },
           },
           {
+            _id: "ticket_2",
             Title: "Email delivery failure",
             Description:
               "Emails sent to external clients are bouncing back. Bounce back message: '550: Recipient address rejected'.",
             Priority: "Medium",
             Status: "In Progress",
             "Created Date": "2025-04-19",
+            Assignee: [],
             Attachment: {
-              name: "email_bounce_back.txt",
+              fileName: "email_bounce_back.txt",
               extension: ".txt",
               content: "Email delivery failure",
             },
           },
           {
+            _id: "ticket_3",
             Title: "Software installation request",
             Description:
               "Request to install Adobe Photoshop on user’s workstation for design work.",
             Priority: "Low",
             Status: "In Progress",
             "Created Date": "2025-04-18",
+            Assignee: [],
             Attachment: {
-              name: "software_request_form.pdf",
+              fileName: "software_request_form.pdf",
               extension: ".pdf",
               content: "Software installation request",
             },
           },
           {
+            _id: "ticket_4",
             Title: "Unable to connect to VPN",
             Description:
               "User is experiencing issues when trying to connect to the VPN. Error message: 'VPN connection failed due to incorrect credentials'.",
             Priority: "High",
             Status: "Open",
             "Created Date": "2025-04-20",
+            Assignee: [],
             Attachment: {
-              name: "vpn_error_screenshot.pdf",
+              fileName: "vpn_error_screenshot.pdf",
               extension: ".pdf",
               content: "vpn error",
             },
@@ -746,95 +740,100 @@ describe("BudibaseAI", () => {
         ],
         Employees: [
           {
+            _id: "employee_1",
             "First Name": "Joshua",
             "Last Name": "Lee",
             Position: "Application Developer",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "development_guidelines.pdf",
+                fileName: "development_guidelines.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "project_documents.txt",
+                fileName: "project_documents.txt",
                 extension: ".txt",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_2",
             "First Name": "Emily",
             "Last Name": "Davis",
             Position: "Software Deployment Technician",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "software_license_list.txt",
+                fileName: "software_license_list.txt",
                 extension: ".txt",
                 content: "any content",
               },
               {
-                name: "deployment_guide.pdf",
+                fileName: "deployment_guide.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "installation_logs.txt",
+                fileName: "installation_logs.txt",
                 extension: ".txt",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_3",
             "First Name": "James",
             "Last Name": "Smith",
             Position: "IT Support Specialist",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "certificates.pdf",
+                fileName: "certificates.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "employment_contract.pdf",
+                fileName: "employment_contract.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_4",
             "First Name": "Jessica",
             "Last Name": "Taylor",
             Position: "Cybersecurity Analyst",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "security_audit_report.pdf",
+                fileName: "security_audit_report.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "incident_response_plan.pdf",
+                fileName: "incident_response_plan.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_5",
             "First Name": "Ashley",
             "Last Name": "Harris",
             Position: "Database Administrator",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "database_backup.txt",
+                fileName: "database_backup.txt",
                 extension: ".txt",
                 content: "any content",
               },
               {
-                name: "permission_settings.pdf",
+                fileName: "permission_settings.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
@@ -913,7 +912,6 @@ describe("BudibaseAI", () => {
               name: "Created Date",
               type: "datetime",
               ignoreTimezones: false,
-              dateOnly: true,
               aiGenerated: true,
             },
             "Resolution Time (Days)": {
@@ -1048,7 +1046,7 @@ describe("BudibaseAI", () => {
       const aiColumnGeneration: ai.AIColumnSchemas = {
         Employees: [],
       }
-      mockAIColumnGeneration(generationStructure, aiColumnGeneration)
+      mockAIColumnGeneration(aiColumnGeneration)
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Employees: [],

@@ -75,7 +75,6 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
         response_format: ai.parseResponseFormat(opts.format as ResponseFormat),
       })
     : null
-  const rejectFormat = opts?.rejectFormat
 
   const interceptor = pool.intercept({
     path: "/v1/chat/completions",
@@ -89,12 +88,6 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
         error: { message: "Unexpected response_format in request body" },
       }
     }
-    if (rejectFormat && "response_format" in reqBody) {
-      return {
-        error: { message: "Unexpected response_format in request body" },
-      }
-    }
-
     let prompt
     const messageContent = reqBody.messages[0].content
     if (typeof messageContent === "string") {
@@ -170,16 +163,12 @@ export const mockAISDKChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
         response_format: ai.parseResponseFormat(opts.format as ResponseFormat),
       })
     : null
-  const rejectFormat = opts?.rejectFormat
   const bodyMatcher = (body: string) => {
     const reqBody = parseJsonBody(body)
     if (expectedFormat) {
       return expectedFormat(reqBody)
     }
-    if (rejectFormat) {
-      return true
-    }
-    return !("response_format" in reqBody)
+    return true
   }
 
   const interceptor = pool.intercept({
@@ -190,15 +179,6 @@ export const mockAISDKChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
   const scope = interceptor.reply<object>(reqOpts => {
     const reqBody = parseJsonBody(reqOpts.body)
-    if (rejectFormat && "response_format" in reqBody) {
-      return {
-        statusCode: 400,
-        data: {
-          error: { message: "Unexpected response_format in request body" },
-        },
-      }
-    }
-
     let prompt
     const messageContent = reqBody.messages[0].content
     if (typeof messageContent === "string") {
