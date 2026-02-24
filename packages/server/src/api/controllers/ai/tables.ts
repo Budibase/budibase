@@ -10,17 +10,16 @@ export async function generateTables(
   ctx: UserCtx<GenerateTablesRequest, GenerateTablesResponse>
 ) {
   const { prompt } = ctx.request.body
+  let heartbeat: NodeJS.Timeout | undefined
 
   const sendEvent = (event: Record<string, any>) => {
     ctx.res.write(`data: ${JSON.stringify(event)}\n\n`)
   }
 
   try {
-    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
-    const tableGenerator = await ai.TableGeneration.init(llm, {
-      generateTablesDelegate: sdk.ai.helpers.generateTables,
-      generateDataDelegate: sdk.ai.helpers.generateRows,
-    })
+    // Keep long-running stream requests alive.
+    ctx.req.setTimeout(0)
+    ctx.res.setTimeout(0)
 
     ctx.status = 200
     ctx.set("Content-Type", "text/event-stream")
@@ -30,6 +29,19 @@ export async function generateTables(
     ctx.res.setHeader("Transfer-Encoding", "chunked")
     ctx.respond = false
 
+    // Send periodic SSE comments to prevent idle socket timeouts.
+    heartbeat = setInterval(() => {
+      if (!ctx.res.writableEnded) {
+        ctx.res.write(":\n\n")
+      }
+    }, 15000)
+
+    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+    const tableGenerator = await ai.TableGeneration.init(llm, {
+      generateTablesDelegate: sdk.ai.helpers.generateTables,
+      generateDataDelegate: sdk.ai.helpers.generateRows,
+    })
+
     sendEvent({ type: "progress", message: "Starting table generation..." })
     const createdTables = await tableGenerator.generate(
       prompt,
@@ -38,8 +50,14 @@ export async function generateTables(
     )
     sendEvent({ type: "result", createdTables })
     sendEvent({ type: "done" })
+    if (heartbeat) {
+      clearInterval(heartbeat)
+    }
     ctx.res.end()
   } catch (error: any) {
+    if (heartbeat) {
+      clearInterval(heartbeat)
+    }
     if (ctx.res.headersSent) {
       sendEvent({
         type: "error",
