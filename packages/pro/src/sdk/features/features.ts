@@ -116,6 +116,17 @@ export async function isExpandedPublicApiEnabled() {
   return areFeaturesEnabled(Feature.EXPANDED_PUBLIC_API)
 }
 
+export async function isWorkspaceImportExportEnabled() {
+  return areFeaturesEnabled(Feature.WORKSPACE_IMPORT_EXPORT)
+}
+
+export async function isWorkspaceImportExportPublicApiEnabled() {
+  return areFeaturesEnabled([
+    Feature.EXPANDED_PUBLIC_API,
+    Feature.WORKSPACE_IMPORT_EXPORT,
+  ])
+}
+
 export async function isSSOEnforced(opts?: {
   config: SettingsInnerConfig
 }): Promise<boolean> {

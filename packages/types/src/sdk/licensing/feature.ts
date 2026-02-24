@@ -12,6 +12,7 @@ export enum Feature {
   TRIGGER_AUTOMATION_RUN = "triggerAutomationRun",
   OFFLINE = "offline",
   EXPANDED_PUBLIC_API = "expandedPublicApi",
+  WORKSPACE_IMPORT_EXPORT = "workspaceImportExport",
   CUSTOM_APP_SCRIPTS = "customAppScripts",
   PDF = "pdf",
   TRANSLATIONS = "translations",
