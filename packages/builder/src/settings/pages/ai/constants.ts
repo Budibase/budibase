@@ -29,7 +29,7 @@ export const ProviderDetails: Partial<Record<AIProvider, AIProviderDetails>> = {
       provider: "OpenAI",
       active: false,
       isDefault: false,
-      baseUrl: "https://api.openai.com",
+      baseUrl: "https://api.openai.com/v1",
     },
     models: Models,
   },
@@ -47,7 +47,7 @@ export const ProviderDetails: Partial<Record<AIProvider, AIProviderDetails>> = {
 export const ConfigMap = {
   OpenAI: {
     name: "OpenAI",
-    baseUrl: "https://api.openai.com",
+    baseUrl: "https://api.openai.com/v1",
   },
   Anthropic: {
     name: "Anthropic",
