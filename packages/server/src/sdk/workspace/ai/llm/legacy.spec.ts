@@ -60,6 +60,52 @@ describe("createLegacyLLM", () => {
     await expect(createLegacyLLM()).resolves.toBeUndefined()
   })
 
+  it("normalizes OpenAI base URL to include /v1", async () => {
+    getLLMConfigMock.mockResolvedValue({
+      provider: "OpenAI",
+      model: "gpt-5-mini",
+      apiKey: "test-key",
+      baseUrl: "https://api.openai.com",
+    })
+
+    const chat = jest.fn().mockReturnValue("chat-model")
+    const embedding = jest.fn().mockReturnValue("embedding-model")
+    createOpenAIMock.mockReturnValue({ chat, embedding } as any)
+
+    const result = await createLegacyLLM()
+
+    expect(createOpenAIMock).toHaveBeenCalledWith({
+      baseURL: "https://api.openai.com/v1",
+      apiKey: "test-key",
+    })
+    expect(chat).toHaveBeenCalledWith("gpt-5-mini")
+    expect(embedding).toHaveBeenCalledWith("gpt-5-mini")
+    expect(result).toEqual({
+      chat: "chat-model",
+      embedding: "embedding-model",
+    })
+  })
+
+  it("does not modify OpenAI base URL when /v1 already exists", async () => {
+    getLLMConfigMock.mockResolvedValue({
+      provider: "OpenAI",
+      model: "gpt-5-mini",
+      apiKey: "test-key",
+      baseUrl: "https://api.openai.com/v1",
+    })
+
+    const chat = jest.fn().mockReturnValue("chat-model")
+    const embedding = jest.fn().mockReturnValue("embedding-model")
+    createOpenAIMock.mockReturnValue({ chat, embedding } as any)
+
+    await createLegacyLLM()
+
+    expect(createOpenAIMock).toHaveBeenCalledWith({
+      baseURL: "https://api.openai.com/v1",
+      apiKey: "test-key",
+    })
+  })
+
   it("uses local BBAI in cloud for BudibaseAI", async () => {
     getLLMConfigMock.mockResolvedValue({
       provider: "BudibaseAI",
