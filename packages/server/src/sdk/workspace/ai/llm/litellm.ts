@@ -8,8 +8,8 @@ import {
   AIQuotaUsageResponse,
   BUDIBASE_AI_PROVIDER_ID,
   CustomAIProviderConfig,
+  LLMResponse,
 } from "@budibase/types"
-import { LLMResponse } from "."
 import nodeFetch from "node-fetch"
 
 type LiteLLMFetch = (
