@@ -327,7 +327,7 @@
       notifications.error("Could not resolve live workspace app URL")
       return
     }
-    window.open(liveUrl, "_blank")
+    window.open(liveUrl, "_blank", "noopener,noreferrer")
   }
 
   const unPin = () => {
