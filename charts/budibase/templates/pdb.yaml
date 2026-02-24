@@ -9,7 +9,7 @@ spec:
   minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: budibase-proxy
+      app.kubernetes.io/name: proxy-service
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
