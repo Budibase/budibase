@@ -2,7 +2,7 @@ import { context } from "@budibase/backend-core"
 import { UserCtx } from "@budibase/types"
 import { Next } from "koa"
 import type { File, Files } from "formidable"
-import { isExpandedPublicApiEnabled } from "../features"
+import { isWorkspaceImportExportPublicApiEnabled } from "../features"
 
 type AppImportFiles = Files & {
   appExport?: File | File[]
@@ -24,8 +24,8 @@ const ensureAppExportFile = (files?: AppImportFiles) => {
 
 export function buildImportFn(importFn: (ctx: UserCtx) => Promise<any>) {
   return async (ctx: UserCtx, next: Next) => {
-    if (!(await isExpandedPublicApiEnabled())) {
-      ctx.throw(403, "Endpoint unavailable, license required.")
+    if (!(await isWorkspaceImportExportPublicApiEnabled())) {
+      ctx.throw(403, "Endpoint unavailable, enterprise license required.")
     }
     const appExport = ensureAppExportFile(
       ctx.request.files as AppImportFiles | undefined
@@ -44,8 +44,8 @@ export function buildImportFn(importFn: (ctx: UserCtx) => Promise<any>) {
 
 export function buildExportFn(exportFn: (ctx: UserCtx) => Promise<any>) {
   return async (ctx: UserCtx, next: Next) => {
-    if (!(await isExpandedPublicApiEnabled())) {
-      ctx.throw(403, "Endpoint unavailable, license required.")
+    if (!(await isWorkspaceImportExportPublicApiEnabled())) {
+      ctx.throw(403, "Endpoint unavailable, enterprise license required.")
     }
     const { encryptPassword, excludeRows } = ctx.request.body
     await context.doInWorkspaceContext(ctx.params.appId, async () => {
