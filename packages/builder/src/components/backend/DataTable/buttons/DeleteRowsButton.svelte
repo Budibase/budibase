@@ -12,6 +12,9 @@
   export let deleteRows: (_rows: unknown[]) => void | Promise<void>
   export let item: string = "row"
   export let action: string = "Delete"
+  export let confirmationAction: string | undefined
+  export let confirmationTitle: string | undefined
+  export let confirmationButtonText: string | undefined
 
   const dispatch = createEventDispatcher()
   let modal: ModalRef | undefined
@@ -27,7 +30,7 @@
   }
 
   $: text = `${item}${selectedRows?.length === 1 ? "" : "s"}`
-  $: actionText = action.toLowerCase()
+  $: actionText = confirmationAction || action.toLowerCase()
 </script>
 
 <Button icon="trash" warning quiet on:click={showModal}>
@@ -37,9 +40,9 @@
 </Button>
 <ConfirmDialog
   bind:this={modal}
-  okText={action}
+  okText={confirmationButtonText || action}
   onOk={confirmDeletion}
-  title={`Confirm ${action}`}
+  title={confirmationTitle || `Confirm ${action}`}
 >
   Are you sure you want to {actionText}
   {selectedRows.length}

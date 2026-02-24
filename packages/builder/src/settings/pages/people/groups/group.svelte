@@ -6,6 +6,7 @@
     Layout,
     MenuItem,
     Modal,
+    Search,
     Table,
     notifications,
   } from "@budibase/bbui"
@@ -21,6 +22,8 @@
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
+  import AssignWorkspacePicker from "./_components/AssignWorkspacePicker.svelte"
+  import RemoveWorkspaceTableRenderer from "./_components/RemoveWorkspaceTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
@@ -38,13 +41,30 @@
     groupId = params.groupId
   }
 
-  const appSchema = {
+  let loaded = false
+  let editModal, deleteModal
+  let workspaceSearch
+
+  $: group = $groups.find(x => x._id === groupId)
+  $: isScimGroup = group?.scimInfo?.isSync
+  $: isAdmin = sdk.users.isAdmin($auth.user)
+  $: readonly = !isAdmin || isScimGroup
+  $: appSchema = {
     name: {
       width: "2fr",
     },
     role: {
       width: "1fr",
     },
+    ...(readonly
+      ? {}
+      : {
+          prodAppId: {
+            displayName: "",
+            width: "auto",
+            borderLeft: true,
+          },
+        }),
   }
   const customAppTableRenderers = [
     {
@@ -55,25 +75,33 @@
       column: "role",
       component: AppRoleTableRenderer,
     },
+    {
+      column: "prodAppId",
+      component: RemoveWorkspaceTableRenderer,
+    },
   ]
-
-  let loaded = false
-  let editModal, deleteModal
-
-  $: group = $groups.find(x => x._id === groupId)
-  $: isScimGroup = group?.scimInfo?.isSync
-  $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: readonly = !isAdmin || isScimGroup
   $: groupApps = $appsStore.apps
-    .filter(app =>
-      groups.getGroupAppIds(group).includes(appsStore.getProdAppID(app.devId))
-    )
-    .map(app => ({
-      ...app,
-      role: group?.builder?.apps.includes(appsStore.getProdAppID(app.devId))
-        ? Constants.Roles.CREATOR
-        : group?.roles?.[appsStore.getProdAppID(app.devId)],
-    }))
+    .filter(app => {
+      const prodAppId = appsStore.getProdAppID(app.devId)
+      return groups.getGroupAppIds(group).includes(prodAppId)
+    })
+    .map(app => {
+      const prodAppId = appsStore.getProdAppID(app.devId)
+      return {
+        ...app,
+        _id: prodAppId,
+        prodAppId,
+        readonly,
+        role: group?.builder?.apps.includes(prodAppId)
+          ? Constants.Roles.CREATOR
+          : group?.roles?.[prodAppId],
+      }
+    })
+  $: filteredGroupApps = workspaceSearch
+    ? groupApps.filter(app =>
+        app.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
+      )
+    : groupApps
 
   // Need to ensure the redirect isn't retriggered
   $: {
@@ -105,11 +133,16 @@
   }
 
   const removeApp = async app => {
-    await groups.removeApp(groupId, appsStore.getProdAppID(app.devId))
+    try {
+      await groups.removeApp(groupId, app)
+    } catch (error) {
+      notifications.error("Error removing workspace")
+    }
   }
-  setContext("roles", {
-    updateRole: () => {},
-    removeRole: removeApp,
+
+  setContext("groupApps", {
+    removeApp,
+    getReadonly: () => readonly,
   })
 
   onMount(async () => {
@@ -156,9 +189,17 @@
 
     <Layout noPadding gap="S">
       <Heading size="S">Workspaces</Heading>
+      <div class="workspace-controls">
+        {#if !readonly}
+          <AssignWorkspacePicker {groupId} />
+        {/if}
+        <div class="workspace-controls-right">
+          <Search bind:value={workspaceSearch} placeholder="Search workspace" />
+        </div>
+      </div>
       <Table
         schema={appSchema}
-        data={groupApps}
+        data={filteredGroupApps}
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
@@ -166,9 +207,11 @@
         allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">
-          <Heading size="S"
-            >This group doesn't have access to any workspaces</Heading
-          >
+          <Heading size="S">
+            {workspaceSearch
+              ? `No workspaces found matching "${workspaceSearch}"`
+              : "This group doesn't have access to any workspaces"}
+          </Heading>
         </div>
       </Table>
     </Layout>
@@ -202,5 +245,18 @@
   .placeholder {
     width: 100%;
     text-align: center;
+  }
+  .workspace-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .workspace-controls-right {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .workspace-controls :global(.spectrum-Search) {
+    width: 200px;
   }
 </style>

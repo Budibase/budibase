@@ -6,14 +6,24 @@
 
   export let group
 
-  $: appOptions = $appsStore.apps.map(app => ({
-    label: app.name,
-    value: app,
-  }))
+  $: assignedAppIds = groups.getGroupAppIds(group)
+  $: appOptions = $appsStore.apps
+    .filter(app => !assignedAppIds.includes(appsStore.getProdAppID(app.devId)))
+    .map(app => ({
+      label: app.name,
+      value: app,
+    }))
   $: confirmDisabled =
     (!selectingRole && !selectedApp) || (selectingRole && !selectedRoleId)
   let selectedApp, selectedRoleId
   let selectingRole = false
+
+  $: if (
+    selectedApp &&
+    !appOptions.some(option => option.value.devId === selectedApp.devId)
+  ) {
+    selectedApp = undefined
+  }
 
   async function appSelected() {
     const prodAppId = appsStore.getProdAppID(selectedApp.devId)
@@ -31,8 +41,8 @@
 <ModalContent
   onConfirm={appSelected}
   size="M"
-  title="Add app to group"
-  confirmText={selectingRole ? "Confirm" : "Next"}
+  title="Assign workspace"
+  confirmText={selectingRole ? "Assign" : "Next"}
   showSecondaryButton={selectingRole}
   secondaryButtonText="Back"
   secondaryAction={() => (selectingRole = false)}
@@ -40,7 +50,8 @@
 >
   {#if !selectingRole}
     <Body
-      >Select an app to assign roles for members of <i>"{group.name}"</i></Body
+      >Select a workspace to assign roles for members of <i>"{group.name}"</i
+      ></Body
     >
     <Select bind:value={selectedApp} options={appOptions} />
   {:else}

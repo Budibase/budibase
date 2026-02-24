@@ -76,6 +76,14 @@ class GroupStore extends BudiStore<UserGroup[]> {
     await this.refreshGroup(groupId)
   }
 
+  async removeApps(groupId: string, appIds: string[]) {
+    await API.removeAppsFromGroup(
+      groupId,
+      appIds.map(appId => ({ appId }))
+    )
+    await this.refreshGroup(groupId)
+  }
+
   getGroupAppIds(group: UserGroup) {
     let groupAppIds = Object.keys(group?.roles || {})
     if (group?.builder?.apps) {
