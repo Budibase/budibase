@@ -183,6 +183,7 @@ export async function sendEmail(
     to: email,
     cc: opts?.cc,
     bcc: opts?.bcc,
+    replyTo: opts?.replyTo,
   }
 
   if (opts?.subject || config?.subject) {
