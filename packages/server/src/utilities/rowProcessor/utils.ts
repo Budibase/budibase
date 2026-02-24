@@ -2,6 +2,8 @@ import { context } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import { OperationFields } from "@budibase/shared-core"
 import { processStringSync } from "@budibase/string-templates"
+import { LLMResponse, AIOperationEnum, AIFieldMetadata } from "@budibase/types"
+import { generateText, type ModelMessage } from "ai"
 import {
   AutoColumnFieldMetadata,
   AutoFieldSubType,
@@ -15,11 +17,77 @@ import {
 import tracer from "dd-trace"
 import { AutoFieldDefaultNames } from "../../constants"
 import { isAIColumn } from "../../db/utils"
+import sdk from "../../sdk"
 import { coerce } from "./index"
 
 interface FormulaOpts {
   dynamic?: boolean
   contextRows?: Row[]
+}
+
+function extractTextFromColumns(row: Row, columns: string[]) {
+  return columns.map(column => row[column]).join(" ")
+}
+
+function promptForAIOperation(schema: AIFieldMetadata, row: Row) {
+  const { operation, column, columns, language, categories, prompt } = schema
+  switch (operation) {
+    case AIOperationEnum.SUMMARISE_TEXT:
+      return ai.summarizeText(extractTextFromColumns(row, columns!))
+    case AIOperationEnum.CLEAN_DATA:
+      return ai.cleanData(row[column!])
+    case AIOperationEnum.TRANSLATE:
+      return ai.translate(row[column!], language!)
+    case AIOperationEnum.CATEGORISE_TEXT:
+      if (!categories) {
+        throw new Error(
+          "No categories provided for categorise text operation. Please provide categories."
+        )
+      }
+      return ai.classifyText(
+        extractTextFromColumns(row, columns!),
+        categories.split(",")
+      )
+    case AIOperationEnum.SENTIMENT_ANALYSIS:
+      return ai.sentimentAnalysis(row[column!])
+    case AIOperationEnum.PROMPT:
+      return new ai.LLMRequest().addUserMessage(prompt!)
+    case AIOperationEnum.SEARCH_WEB:
+      return ai.searchWeb(extractTextFromColumns(row, columns!))
+    default:
+      throw new Error(`Unsupported AI operation: ${operation}`)
+  }
+}
+
+function toModelMessages(
+  messages: { role: string; content: any }[]
+): ModelMessage[] {
+  return messages.map<ModelMessage>(message => {
+    if (typeof message.content !== "string") {
+      throw new Error("AI message content must be a string")
+    }
+    if (message.role === "tool") {
+      throw new Error("AI tool messages are not supported in row AI operations")
+    }
+    return {
+      role: message.role as Exclude<ModelMessage["role"], "tool">,
+      content: message.content,
+    }
+  })
+}
+
+async function runAIOperation(
+  llm: LLMResponse,
+  schema: AIFieldMetadata,
+  row: Row
+) {
+  const request = promptForAIOperation(schema, row)
+  const result = await generateText({
+    model: llm.chat,
+    messages: toModelMessages(request.messages),
+    providerOptions: llm.providerOptions?.(false),
+  })
+  return result.text
 }
 
 /**
@@ -131,7 +199,7 @@ export async function processAIColumns<T extends Row | Row[]>(
     span?.addTags({ table_id: table._id, numRows })
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
 
-    const llm = await ai.getLLM()
+    const llm = await sdk.ai.llm.getDefaultLLM()
     if (rows && llm) {
       // Ensure we have snippet context
       await context.ensureSnippetContext()
@@ -156,11 +224,11 @@ export async function processAIColumns<T extends Row | Row[]>(
 
           return tracer.trace("processAIColumn", {}, async span => {
             span?.addTags({ table_id: table._id, column })
-            const llmResponse = await llm.operation(aiColumn, row)
+            const llmResponse = await runAIOperation(llm, aiColumn, row)
             return {
               rowIndex: i,
               columnName: column,
-              value: llmResponse.message,
+              value: llmResponse,
             }
           })
         })
