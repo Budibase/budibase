@@ -35,7 +35,12 @@ export async function createLLM(
   }
 
   if (aiConfig.provider === BUDIBASE_AI_PROVIDER_ID && !env.SELF_HOSTED) {
-    return createBBAIClient(aiConfig.model, sessionId, span)
+    return createBBAIClient(
+      aiConfig.model,
+      sessionId,
+      span,
+      aiConfig.reasoningEffort
+    )
   }
 
   return createLiteLLMOpenAI(aiConfig, sessionId, span)

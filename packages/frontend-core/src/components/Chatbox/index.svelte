@@ -5,6 +5,7 @@
     Icon,
     ProgressCircle,
     Body,
+    Helpers,
   } from "@budibase/bbui"
   import type {
     ChatConversation,
@@ -62,6 +63,7 @@
     })
   )
 
+  let stableSessionId = $state(Helpers.uuid())
   let chatAreaElement = $state<HTMLDivElement>()
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
@@ -178,6 +180,7 @@
             agentId: chat?.agentId,
             transient: !persistConversation,
             isPreview: isAgentPreviewChat,
+            sessionId: stableSessionId,
             title: chat?.title,
             messages,
           },
@@ -242,6 +245,7 @@
   $effect(() => {
     if (chat?._id !== lastChatId) {
       lastChatId = chat?._id
+      stableSessionId = Helpers.uuid()
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
     }

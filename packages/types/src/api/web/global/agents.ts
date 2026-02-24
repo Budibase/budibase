@@ -33,10 +33,20 @@ export interface SyncAgentDiscordCommandsRequest {
 }
 
 export interface SyncAgentDiscordCommandsResponse {
-  success: true
+  success: boolean
   chatAppId: string
   interactionsEndpointUrl: string
   inviteUrl: string
+}
+
+export interface ProvisionAgentMSTeamsChannelRequest {
+  chatAppId?: string
+}
+
+export interface ProvisionAgentMSTeamsChannelResponse {
+  success: boolean
+  chatAppId: string
+  messagingEndpointUrl: string
 }
 
 export interface ToggleAgentDiscordRequest {

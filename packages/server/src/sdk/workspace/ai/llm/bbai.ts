@@ -9,6 +9,7 @@ import { quotas } from "@budibase/pro"
 import { wrapLanguageModel } from "ai"
 import { TransformStream } from "node:stream/web"
 import { context } from "@budibase/backend-core"
+import { ReasoningEffort } from "@budibase/types"
 import { LLMResponse } from "."
 import environment from "../../../../environment"
 
@@ -60,7 +61,10 @@ type BBAIFetch = (
   init?: Parameters<typeof fetch>[1]
 ) => ReturnType<typeof fetch>
 
-const createBBAIFetch = (sessionId?: string): BBAIFetch => {
+const createBBAIFetch = (
+  sessionId?: string,
+  reasoningEffort?: ReasoningEffort
+): BBAIFetch => {
   const bbaiFetch = (async (
     input: Parameters<typeof fetch>[0],
     init?: Parameters<typeof fetch>[1]
@@ -95,6 +99,13 @@ const createBBAIFetch = (sessionId?: string): BBAIFetch => {
             `workspace:${context.getWorkspaceId()}`,
           ],
         }
+        if (reasoningEffort) {
+          body.reasoning_effort = reasoningEffort
+          body.extra_body = {
+            ...(body.extra_body || {}),
+            include_reasoning: true,
+          }
+        }
 
         modifiedInit = { ...init, body: JSON.stringify(body) }
       } catch {
@@ -116,7 +127,8 @@ const createBBAIFetch = (sessionId?: string): BBAIFetch => {
 export async function createBBAIClient(
   model: string,
   sessionId?: string,
-  span?: tracer.Span
+  span?: tracer.Span,
+  reasoningEffort?: ReasoningEffort
 ): Promise<LLMResponse> {
   const baseUrl = environment.LITELLM_URL
 
@@ -133,7 +145,7 @@ export async function createBBAIClient(
   const client = createOpenAI({
     apiKey: environment.BBAI_LITELLM_KEY,
     baseURL: baseUrl,
-    fetch: createBBAIFetch(sessionId),
+    fetch: createBBAIFetch(sessionId, reasoningEffort),
   })
   const chat = wrapLanguageModel({
     model: client.chat(model),
