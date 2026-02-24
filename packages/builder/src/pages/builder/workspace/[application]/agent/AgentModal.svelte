@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { featureFlag } from "@/helpers"
   import { appStore } from "@/stores/builder"
   import { agentsStore, aiConfigsStore, vectorDbStore } from "@/stores/portal"
   import { Input, Modal, ModalContent } from "@budibase/bbui"
+  import { FeatureFlag } from "@budibase/types"
   import { goto as gotoStore } from "@roxi/routify"
   import { onMount } from "svelte"
 
@@ -32,8 +34,12 @@
 
   onMount(() => {
     aiConfigsStore.fetch()
-    vectorDbStore.fetch()
+    if (featureFlag.isEnabled(FeatureFlag.AI_RAG)) {
+      vectorDbStore.fetch()
+    }
   })
+
+  $: featureFlag.isEnabled(FeatureFlag.AI_RAG) && vectorDbStore.fetch()
 </script>
 
 <Modal bind:this={modal}>
