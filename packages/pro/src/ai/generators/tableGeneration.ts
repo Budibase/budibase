@@ -101,17 +101,11 @@ export class TableGeneration {
     onProgress?.("Generating table schema...")
     const tablesToCreate = await this.llmFunctions.getTableStructure(userPrompt)
 
-    onProgress?.("Generating AI columns...")
-    const aiColumnStructure = await this.llmFunctions.generateAIColumns(
-      userPrompt,
-      tablesToCreate
-    )
-
-    onProgress?.("Generating sample data...")
-    const data = await this.llmFunctions.generateData(
-      userPrompt,
-      tablesToCreate
-    )
+    onProgress?.("Generating AI columns and sample data...")
+    const [aiColumnStructure, data] = await Promise.all([
+      this.llmFunctions.generateAIColumns(userPrompt, tablesToCreate),
+      this.llmFunctions.generateData(userPrompt, tablesToCreate),
+    ])
 
     onProgress?.("Creating tables...")
     // We need to wait for the tables to be created before persisting the data
