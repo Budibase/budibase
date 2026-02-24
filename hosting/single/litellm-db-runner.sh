@@ -20,6 +20,7 @@ fi
 
 mkdir -p "${POSTGRES_DATA_DIR}"
 chown -R postgres:postgres "${POSTGRES_DATA_DIR}"
+chmod 700 "${POSTGRES_DATA_DIR}"
 
 if [[ ! -f "${POSTGRES_DATA_DIR}/PG_VERSION" ]]; then
     echo "Initializing LiteLLM postgres data directory at ${POSTGRES_DATA_DIR}..."

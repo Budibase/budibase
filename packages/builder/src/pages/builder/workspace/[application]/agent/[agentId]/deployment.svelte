@@ -7,16 +7,20 @@
     Toggle,
     notifications,
   } from "@budibase/bbui"
-  import type { Agent, DeploymentRow } from "@budibase/types"
-  import { selectedAgent, agentsStore } from "@/stores/portal"
+  import { FeatureFlag, type Agent, type DeploymentRow } from "@budibase/types"
+  import { selectedAgent, agentsStore, featureFlags } from "@/stores/portal"
+  import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
+  import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
+  import MSTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
 
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling Discord."
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
+  let MSTeamsModal: Modal
   let toggling = $state(false)
 
   const discordConfigured = $derived.by(() => {
@@ -33,7 +37,17 @@
     !!currentAgent?.discordIntegration?.interactionsEndpointUrl
   )
 
+  const MSTeamsConfigured = $derived.by(() => {
+    const integration = currentAgent?.MSTeamsIntegration
+    return !!(
+      integration?.appId?.trim() &&
+      integration?.appPassword?.trim() &&
+      integration?.messagingEndpointUrl?.trim()
+    )
+  })
+
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
+  const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_CHAT])
 
   const channels = $derived.by<DeploymentRow[]>(() => [
     {
@@ -44,11 +58,24 @@
       details: "Allow this agent to respond in Discord channels and threads",
       configurable: true,
     },
+    {
+      id: "MSTeams",
+      name: "Microsoft Teams",
+      logo: MSTeamsLogo,
+      status: MSTeamsConfigured ? "Enabled" : "Disabled",
+      details:
+        "Configure this agent for Microsoft Teams personal, group, and team chats",
+      configurable: true,
+    },
   ])
 
   const onConfigureChannel = (channel: DeploymentRow) => {
     if (channel.id === "discord") {
       discordModal?.show()
+      return
+    }
+    if (channel.id === "MSTeams") {
+      MSTeamsModal?.show()
       return
     }
   }
@@ -117,6 +144,9 @@
       >
     </div>
     <div class="integration-list">
+      {#if agentChatEnabled}
+        <AgentChatChannel />
+      {/if}
       {#each channels as channel (channel.id)}
         <div class="integration-row">
           <div class="channel-main">
@@ -144,7 +174,7 @@
             >
             <Toggle
               value={channel.status === "Enabled"}
-              disabled={toggling}
+              disabled={toggling || channel.id !== "discord"}
               on:change={() => onToggleChannel(channel)}
             />
           </div>
@@ -178,6 +208,33 @@
       </div>
     </svelte:fragment>
     <DiscordConfig agent={currentAgent} />
+  </ModalContent>
+</Modal>
+
+<Modal bind:this={MSTeamsModal}>
+  <ModalContent
+    size="L"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <svelte:fragment slot="header">
+      <div class="modal-header">
+        <img
+          alt="Microsoft Teams"
+          width="24px"
+          height="24px"
+          src={MSTeamsLogo}
+          class="modal-header-logo"
+        />
+        <div class="modal-header-copy">
+          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
+            >Microsoft Teams</Body
+          >
+        </div>
+      </div>
+    </svelte:fragment>
+    <MicrosoftTeamsConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
 
