@@ -373,7 +373,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         : modelMessages
 
     const pendingToolCalls = new Set<string>()
-
+    console.log(JSON.stringify(tools))
     const hasTools = Object.keys(tools).length > 0
     const result = streamText({
       model: wrapLanguageModel({
