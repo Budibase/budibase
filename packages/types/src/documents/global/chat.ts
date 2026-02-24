@@ -23,7 +23,11 @@ export interface ChatApp extends Document {
 
 export interface ChatConversationChannel {
   provider: string
+  conversationId?: string
+  conversationType?: string
   guildId?: string
+  teamId?: string
+  tenantId?: string
   channelId?: string
   threadId?: string
   externalUserId?: string

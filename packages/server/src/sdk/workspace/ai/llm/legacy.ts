@@ -7,6 +7,26 @@ import { LLMResponse } from "."
 import { ai, licensing } from "@budibase/pro"
 import { createBBAIClient } from "./bbai"
 
+function normaliseBaseUrl(baseUrl?: string) {
+  if (!baseUrl) {
+    return baseUrl
+  }
+
+  try {
+    const parsed = new URL(baseUrl)
+    if (!parsed.pathname || parsed.pathname === "/") {
+      parsed.pathname = "/v1"
+    }
+    return parsed.toString().replace(/\/$/, "")
+  } catch {
+    const normalised = baseUrl.replace(/\/$/, "")
+    if (!normalised || normalised.endsWith("/v1")) {
+      return normalised
+    }
+    return `${normalised}/v1`
+  }
+}
+
 const getLegacyProviderClient = async (
   provider: AIProvider,
   config: LLMProviderConfig
@@ -20,7 +40,7 @@ const getLegacyProviderClient = async (
     case "TogetherAI":
     case "Custom":
       return createOpenAI({
-        baseURL: config.baseUrl,
+        baseURL: normaliseBaseUrl(config.baseUrl),
         apiKey: config.apiKey,
       })
     case "BudibaseAI": {
@@ -36,7 +56,8 @@ const getLegacyProviderClient = async (
 
     case "Anthropic":
       return createOpenAI({
-        baseURL: config.baseUrl || "https://api.anthropic.com/v1",
+        baseURL:
+          normaliseBaseUrl(config.baseUrl) || "https://api.anthropic.com/v1",
         apiKey: config.apiKey,
       })
     case "AzureOpenAI":
