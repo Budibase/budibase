@@ -33,11 +33,11 @@ import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azure
 import { resetHttpMocking } from "../../../tests/jestEnv"
 import { withEnv as serverWithEnv } from "../../../environment"
 
-function toResponseFormat(schema: any, name = "response") {
+function toResponseFormat(schema: z.ZodObject) {
   return {
     type: "json_schema" as const,
     json_schema: {
-      name,
+      name: "response",
       strict: false,
       schema: schema.toJSONSchema({ target: "draft-7" }),
     },
@@ -421,7 +421,7 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.word()
-      mockChatGPTResponse(gptResponse, { format: "text" })
+      mockChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "text",
@@ -450,7 +450,7 @@ describe("BudibaseAI", () => {
       const gptResponse = JSON.stringify({
         [generator.word()]: generator.word(),
       })
-      mockChatGPTResponse(gptResponse, { format: "json" })
+      mockChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "json",
@@ -480,8 +480,7 @@ describe("BudibaseAI", () => {
       const structuredOutput = toResponseFormat(
         z.object({
           [generator.word()]: z.string(),
-        }),
-        "key"
+        })
       )
       mockChatGPTResponse(gptResponse, { format: structuredOutput })
       const { messages } = await config.api.ai.chat({
@@ -514,15 +513,34 @@ describe("BudibaseAI", () => {
     const mockAIGenerationStructure = (
       generationStructure: ai.GenerationStructure
     ) => {
-      mockAISDKChatGPTResponse(JSON.stringify(generationStructure), { times: 1 })
+      mockAISDKChatGPTResponse(JSON.stringify(generationStructure), {
+        format: toResponseFormat(ai.generationStructure),
+      })
     }
 
-    const mockAIColumnGeneration = (aiColumnGeneration: ai.AIColumnSchemas) =>
-      mockAISDKChatGPTResponse(JSON.stringify(aiColumnGeneration), { times: 1 })
+    const mockAIColumnGeneration = (
+      generationStructure: ai.GenerationStructure,
+      aiColumnGeneration: ai.AIColumnSchemas
+    ) =>
+      mockAISDKChatGPTResponse(JSON.stringify(aiColumnGeneration), {
+        format: toResponseFormat(
+          ai.aiColumnSchemas(
+            ai.aiTableResponseToTableSchema(generationStructure)
+          )
+        ),
+      })
 
     const mockDataGeneration = (
+      generationStructure: ai.GenerationStructure,
       dataGeneration: Record<string, Record<string, any>[]>
-    ) => mockAISDKChatGPTResponse(JSON.stringify(dataGeneration), { times: 1 })
+    ) =>
+      mockAISDKChatGPTResponse(JSON.stringify(dataGeneration), {
+        format: toResponseFormat(
+          ai.tableDataStructuredOutput(
+            ai.aiTableResponseToTableSchema(generationStructure)
+          )
+        ),
+      })
 
     const mockProcessAIColumn = (response: string) =>
       mockChatGPTResponse(response, { times: 3 })
@@ -667,7 +685,7 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockAIColumnGeneration(aiColumnGeneration)
+      mockAIColumnGeneration(generationStructure, aiColumnGeneration)
 
       // Use nock for image downloads since it intercepts before undici
       nock("https://picsum.photos")
@@ -841,7 +859,7 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockDataGeneration(dataGeneration)
+      mockDataGeneration(generationStructure, dataGeneration)
 
       // Set up interceptors for AI column processing
       // Tickets: 4 rows × 2 AI columns = 8 calls
@@ -1046,12 +1064,12 @@ describe("BudibaseAI", () => {
       const aiColumnGeneration: ai.AIColumnSchemas = {
         Employees: [],
       }
-      mockAIColumnGeneration(aiColumnGeneration)
+      mockAIColumnGeneration(generationStructure, aiColumnGeneration)
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Employees: [],
       }
-      mockDataGeneration(dataGeneration)
+      mockDataGeneration(generationStructure, dataGeneration)
 
       await expect(config.api.ai.generateTables({ prompt })).rejects.toThrow(
         "Self-referential relationships are not supported. Table Employees cannot link to itself."
