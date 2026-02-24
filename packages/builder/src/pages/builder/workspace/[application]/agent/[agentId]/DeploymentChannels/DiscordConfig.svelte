@@ -1,16 +1,10 @@
 <script lang="ts">
-  import {
-    Body,
-    Button,
-    CopyInput,
-    Input,
-    Label,
-    StatusLight,
-    notifications,
-  } from "@budibase/bbui"
+  import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
   import { DiscordCommands } from "@budibase/shared-core"
   import type { Agent, SyncAgentDiscordCommandsResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
+  import { toOptionalIdleTimeout, toOptionalValue } from "./utils"
 
   const DISCORD_ASK_COMMAND = DiscordCommands.ASK
   const DISCORD_NEW_COMMAND = DiscordCommands.NEW
@@ -33,19 +27,19 @@
   let saving = $state(false)
   let syncResult = $state<SyncAgentDiscordCommandsResponse | undefined>()
 
-  const hasConfig = $derived.by(() => {
-    const integration = agent?.discordIntegration
-    return !!(
-      integration?.applicationId &&
-      integration?.publicKey &&
-      integration?.botToken &&
-      integration?.guildId
-    )
-  })
+  const hasRequiredConfig = $derived.by(
+    () =>
+      !!(
+        draft.applicationId.trim() &&
+        draft.publicKey.trim() &&
+        draft.botToken.trim() &&
+        draft.guildId.trim()
+      )
+  )
 
   const hasAiConfig = $derived.by(() => !!agent?.aiconfig?.trim())
 
-  const isEnabled = $derived.by(() => {
+  const isConnected = $derived.by(() => {
     if (syncResult?.success) {
       return true
     }
@@ -88,19 +82,6 @@
     draftAgentId = currentAgent._id
   })
 
-  const toOptionalValue = (value: string) => {
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : undefined
-  }
-
-  const toOptionalIdleTimeout = (value: number) => {
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return undefined
-    }
-    return Math.floor(parsed)
-  }
-
   const saveDiscordIntegration = async () => {
     if (!agent?._id || saving) {
       return
@@ -130,22 +111,19 @@
     }
   }
 
-  const connect = async () => {
-    try {
-      await saveDiscordIntegration()
-      notifications.success("Discord configuration saved")
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to save Discord configuration")
-    }
-  }
-
-  const enableChannel = async () => {
-    if (!agent?._id || syncing) {
+  const syncCommands = async () => {
+    if (!agent?._id || syncing || !hasRequiredConfig) {
       return
     }
+
     if (!hasAiConfig) {
-      notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
+      try {
+        await saveDiscordIntegration()
+        notifications.success("Discord configuration saved")
+      } catch (error) {
+        console.error(error)
+        notifications.error("Failed to save Discord configuration")
+      }
       return
     }
 
@@ -163,8 +141,23 @@
   }
 </script>
 
-<div class="discord-config">
-  <div class="field-grid">
+<ChannelConfigLayout
+  statusPositive={isConnected}
+  positiveStatusLabel="Connected"
+  negativeStatusLabel="Not connected"
+  actionLabel={!hasAiConfig
+    ? saving
+      ? "Saving..."
+      : "Save configuration"
+    : syncing
+      ? "Enabling..."
+      : isConnected
+        ? "Update channel"
+        : "Enable channel"}
+  actionDisabled={saving || syncing || !hasRequiredConfig}
+  onAction={syncCommands}
+>
+  {#snippet fields()}
     <Input label="Application ID" bind:value={draft.applicationId} />
     <div class="secret-input">
       <Input
@@ -188,31 +181,18 @@
       type="number"
       bind:value={draft.idleTimeoutMinutes}
     />
-  </div>
+  {/snippet}
 
-  <div class="response-section">
-    <Label size="L">Response</Label>
-    <div class="status-light">
-      <StatusLight positive={isEnabled} neutral={!isEnabled}>
-        {isEnabled ? "Connected" : "Not connected"}
-      </StatusLight>
-    </div>
+  {#snippet response()}
+    {#if !hasAiConfig}
+      <Body size="S">{AI_CONFIG_REQUIRED_MESSAGE}</Body>
+    {/if}
 
-    {#if hasConfig}
+    {#if inviteUrl}
       <CopyInput label="Discord invite URL" value={inviteUrl} disabled />
     {/if}
 
-    {#if hasConfig && !isEnabled}
-      <Body size="S">
-        Invite the bot to your server using the URL above, then enable the
-        channel below.
-      </Body>
-      {#if !hasAiConfig}
-        <Body size="S">{AI_CONFIG_REQUIRED_MESSAGE}</Body>
-      {/if}
-    {/if}
-
-    {#if isEnabled}
+    {#if isConnected}
       <div class="synced-info">
         <Body size="S"
           >Commands synced: /{DISCORD_ASK_COMMAND} and /{DISCORD_NEW_COMMAND}</Body
@@ -220,70 +200,11 @@
       </div>
       <CopyInput label="Webhook URL" value={webhookUrl} disabled />
     {/if}
-  </div>
-
-  <div class="actions">
-    {#if !hasConfig}
-      <Button cta on:click={connect} disabled={saving}>
-        {saving ? "Connecting..." : "Connect"}
-      </Button>
-    {:else}
-      <Button secondary on:click={connect} disabled={saving || syncing}>
-        {saving ? "Saving..." : "Save"}
-      </Button>
-      <Button
-        cta
-        on:click={enableChannel}
-        disabled={saving || syncing || !hasAiConfig}
-      >
-        {syncing
-          ? "Enabling..."
-          : isEnabled
-            ? "Update channel"
-            : "Enable channel"}
-      </Button>
-    {/if}
-  </div>
-</div>
+  {/snippet}
+</ChannelConfigLayout>
 
 <style>
-  .discord-config {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-  }
-
-  .field-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-s) var(--spacing-m);
-  }
-
-  .response-section {
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    padding-top: var(--spacing-m);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .status-light :global(.spectrum-StatusLight) {
-    justify-content: flex-start;
-  }
-
   .synced-info {
     color: var(--spectrum-global-color-gray-700);
-  }
-
-  .actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-m);
-  }
-
-  @media (max-width: 900px) {
-    .field-grid {
-      grid-template-columns: 1fr;
-    }
   }
 </style>

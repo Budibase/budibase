@@ -8,7 +8,7 @@ import type {
 import { helpers } from "@budibase/shared-core"
 import { listAgentFiles, removeAgentFile } from "./files"
 
-const DISCORD_SECRET_MASK = "********"
+const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
 const encodeSecret = (value?: string): string | undefined => {
@@ -79,12 +79,38 @@ const mergeDiscordIntegration = ({
     ...incoming,
   }
 
-  if (incoming.publicKey === DISCORD_SECRET_MASK && existing?.publicKey) {
+  if (incoming.publicKey === SECRET_MASK && existing?.publicKey) {
     merged.publicKey = existing.publicKey
   }
 
-  if (incoming.botToken === DISCORD_SECRET_MASK && existing?.botToken) {
+  if (incoming.botToken === SECRET_MASK && existing?.botToken) {
     merged.botToken = existing.botToken
+  }
+
+  return merged
+}
+
+const mergeMSTeamsIntegration = ({
+  existing,
+  incoming,
+}: {
+  existing?: Agent["MSTeamsIntegration"]
+  incoming?: Agent["MSTeamsIntegration"]
+}) => {
+  if (incoming === undefined) {
+    return existing
+  }
+  if (!incoming) {
+    return incoming
+  }
+
+  const merged = {
+    ...(existing || {}),
+    ...incoming,
+  }
+
+  if (incoming.appPassword === SECRET_MASK && existing?.appPassword) {
+    merged.appPassword = existing.appPassword
   }
 
   return merged
@@ -141,6 +167,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     ragMinDistance: request.ragMinDistance,
     ragTopK: request.ragTopK,
     discordIntegration: request.discordIntegration,
+    MSTeamsIntegration: request.MSTeamsIntegration,
   }
 
   const { rev } = await db.put({
@@ -200,6 +227,10 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,
+    }),
+    MSTeamsIntegration: mergeMSTeamsIntegration({
+      existing: existing?.MSTeamsIntegration,
+      incoming: agent.MSTeamsIntegration,
     }),
   }
 
