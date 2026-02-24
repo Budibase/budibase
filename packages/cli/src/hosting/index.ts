@@ -12,7 +12,7 @@ export default new Command(`${CommandWord.HOSTING}`)
   .addHelp("Controls self hosting on the Budibase platform.")
   .addSubOption(
     "--init [type]",
-    "Configure a self hosted platform in current directory, type can be unspecified, 'quick' or 'single'.",
+    "Configure a self hosted platform in current directory, type can be unspecified, 'quick' or 'do'. Use --single for a single-image deployment.",
     init
   )
   .addSubOption(
@@ -47,5 +47,5 @@ export default new Command(`${CommandWord.HOSTING}`)
   )
   .addSubOption(
     "--single",
-    "Specify this with init or update to target a single-image deployment."
+    "Specify this with init or update to target a single-image deployment (also supports --init single)."
   )
