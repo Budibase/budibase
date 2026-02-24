@@ -34,7 +34,9 @@
       goto(`./table/${tableToRedirect.id}`)
     } catch (e: any) {
       progressMessage = ""
-      notifications.error(e.message)
+      notifications.error(
+        e?.message || e?.json?.message || "Error generating tables"
+      )
     }
   }
 
@@ -54,21 +56,24 @@
     />
   </div>
   {#if progressMessage}
-    <div class="ai-generation-progress">{progressMessage}</div>
-  {/if}
-  <div class="ai-generation-examples">
-    {#if $aiStore.aiEnabled}
-      {#each examplePrompts as prompt}
-        <ActionButton on:click={() => (promptText = prompt)}
-          >{prompt}</ActionButton
-        >
-      {/each}
-    {/if}
-  </div>
+    <div class="ai-generation-secondary ai-generation-progress">
+      {progressMessage}
+    </div>
+  {:else}
+    <div class="ai-generation-secondary ai-generation-examples">
+      {#if $aiStore.aiEnabled}
+        {#each examplePrompts as prompt}
+          <ActionButton on:click={() => (promptText = prompt)}
+            >{prompt}</ActionButton
+          >
+        {/each}
+      {/if}
+    </div>{/if}
 </div>
 
 <style>
   .ai-generation {
+    --ai-generation-secondary-height: 90px;
     margin-bottom: 24px;
     display: flex;
     flex-direction: column;
@@ -79,6 +84,10 @@
     width: 100%;
   }
 
+  .ai-generation-secondary {
+    min-height: var(--ai-generation-secondary-height);
+  }
+
   .ai-generation-examples {
     display: grid;
     gap: 10px;
@@ -87,12 +96,18 @@
   }
 
   .ai-generation-progress {
+    display: flex;
+    align-items: center;
     color: var(--spectrum-global-color-gray-700);
     font-size: 12px;
     padding: 0 8px;
   }
 
   @media (min-width: 833px) {
+    .ai-generation {
+      --ai-generation-secondary-height: 40px;
+    }
+
     .ai-generation-examples {
       grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     }

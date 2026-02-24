@@ -175,7 +175,10 @@ export class TableGeneration {
     })
   }
 
-  private reportProgress(onProgress: ProgressCallback | undefined, message: string) {
+  private reportProgress(
+    onProgress: ProgressCallback | undefined,
+    message: string
+  ) {
     if (!onProgress) {
       return
     }
