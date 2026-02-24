@@ -34,7 +34,7 @@ const capBudibaseAICreditsAtLimit = async () => {
     QuotaUsageType.MONTHLY
   )
   // value === -1 means UNLIMITED, nothing to cap
-  if (licensedQuota.value > 0) {
+  if (licensedQuota.value >= 0) {
     await setBudibaseAICredits(licensedQuota.value)
   }
 }
