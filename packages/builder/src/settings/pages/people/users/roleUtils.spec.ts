@@ -24,6 +24,18 @@ describe("roleUtils", () => {
     )
   })
 
+  it.each([
+    Constants.BudibaseRoles.Developer,
+    Constants.BudibaseRoles.Creator,
+  ])("does not sync global role for %s invites", role => {
+    const user: User = {
+      admin: { global: false },
+      builder: { global: false },
+    } as User
+
+    expect(shouldSyncGlobalRole(role, user)).toBe(false)
+  })
+
   it("returns global admin and builder flags for tenant admin", () => {
     expect(getRoleFlags(Constants.BudibaseRoles.Admin)).toEqual({
       admin: { global: true },
