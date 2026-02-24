@@ -8,7 +8,7 @@ import { tracer } from "dd-trace"
 import { Readable } from "node:stream"
 import { getLicenseKey } from "../../sdk/licensing/licenses/keys"
 import {
-  checkBudibaseAICreditsExceeded,
+  throwIfBudibaseAICreditsExceeded,
   incrementBudibaseAICredits,
 } from "../../sdk/quotas"
 import { LLMFullResponse, LLMPromptResponse } from "../../types"
@@ -21,7 +21,7 @@ export class BudibaseAI extends LLM {
   override supportsFiles = true
 
   async prompt(prompt: string | LLMRequest): Promise<LLMPromptResponse> {
-    await checkBudibaseAICreditsExceeded()
+    await throwIfBudibaseAICreditsExceeded()
     const response = await super.prompt(prompt)
     if (response.tokensUsed) {
       await incrementBudibaseAICredits(response.tokensUsed)
@@ -30,7 +30,7 @@ export class BudibaseAI extends LLM {
   }
 
   async chat(prompt: LLMRequest): Promise<LLMFullResponse> {
-    await checkBudibaseAICreditsExceeded()
+    await throwIfBudibaseAICreditsExceeded()
     const response = await super.chat(prompt)
     if (response.tokensUsed) {
       await incrementBudibaseAICredits(response.tokensUsed)

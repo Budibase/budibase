@@ -84,7 +84,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     ctx.throw(500, "BBAI_LITELLM_KEY not configured")
   }
 
-  await quotas.checkBudibaseAICreditsExceeded()
+  await quotas.throwIfBudibaseAICreditsExceeded()
 
   const requestBody = {
     ...ctx.request.body,

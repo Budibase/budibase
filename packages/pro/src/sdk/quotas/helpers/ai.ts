@@ -19,7 +19,7 @@ export const incrementBudibaseAICredits = async (count: number) => {
     if (e.code === APIWarningCode.USAGE_LIMIT_EXCEEDED) {
       // tryIncrement does a dry-run before saving, so when it throws the counter
       // is never updated. Cap it at the quota limit so the next pre-flight
-      // checkBudibaseAICreditsExceeded() call (usageChange: 1) sees
+      // throwIfBudibaseAICreditsExceeded() call (usageChange: 1) sees
       // limit + 1 > limit = true and correctly blocks the request.
       await capBudibaseAICreditsAtLimit().catch(() => {})
     }
@@ -39,7 +39,7 @@ const capBudibaseAICreditsAtLimit = async () => {
   }
 }
 
-export const checkBudibaseAICreditsExceeded = async () => {
+export const throwIfBudibaseAICreditsExceeded = async () => {
   const exceeded = await quotas.usageLimitIsExceeded({
     name: MonthlyQuotaName.BUDIBASE_AI_CREDITS,
     type: QuotaUsageType.MONTHLY,

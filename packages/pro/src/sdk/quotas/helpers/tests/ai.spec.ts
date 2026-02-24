@@ -2,7 +2,7 @@ jest.mock("../../quotas")
 
 const quotasMock = require("../../quotas")
 
-import { checkBudibaseAICreditsExceeded } from "../ai"
+import { throwIfBudibaseAICreditsExceeded } from "../ai"
 import { APIWarningCode, MonthlyQuotaName } from "@budibase/types"
 
 describe("AI quota helpers", () => {
@@ -15,10 +15,10 @@ describe("AI quota helpers", () => {
     jest.resetAllMocks()
   })
 
-  describe("checkBudibaseAICreditsExceeded", () => {
+  describe("throwIfBudibaseAICreditsExceeded", () => {
     it("does not throw when credits are available", async () => {
       usageLimitIsExceededMock.mockResolvedValue(false)
-      await expect(checkBudibaseAICreditsExceeded()).resolves.toBeUndefined()
+      await expect(throwIfBudibaseAICreditsExceeded()).resolves.toBeUndefined()
     })
 
     it("throws with status 402 and USAGE_LIMIT_EXCEEDED code when credits are exhausted", async () => {
@@ -26,7 +26,7 @@ describe("AI quota helpers", () => {
 
       let error: any
       try {
-        await checkBudibaseAICreditsExceeded()
+        await throwIfBudibaseAICreditsExceeded()
       } catch (e) {
         error = e
       }
@@ -41,7 +41,7 @@ describe("AI quota helpers", () => {
 
     it("passes the correct quota name and type to usageLimitIsExceeded", async () => {
       usageLimitIsExceededMock.mockResolvedValue(false)
-      await checkBudibaseAICreditsExceeded()
+      await throwIfBudibaseAICreditsExceeded()
       expect(usageLimitIsExceededMock).toHaveBeenCalledWith(
         expect.objectContaining({
           name: MonthlyQuotaName.BUDIBASE_AI_CREDITS,
@@ -53,7 +53,7 @@ describe("AI quota helpers", () => {
       const unexpectedError = new Error("DB connection failed")
       usageLimitIsExceededMock.mockRejectedValue(unexpectedError)
 
-      await expect(checkBudibaseAICreditsExceeded()).rejects.toThrow(
+      await expect(throwIfBudibaseAICreditsExceeded()).rejects.toThrow(
         "DB connection failed"
       )
     })

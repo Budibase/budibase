@@ -319,7 +319,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     chat.agentId = agentId
   }
 
-  await quotas.checkBudibaseAICreditsExceeded()
+  await quotas.throwIfBudibaseAICreditsExceeded()
 
   ctx.status = 200
   ctx.set("Content-Type", "text/event-stream")
