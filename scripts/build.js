@@ -108,6 +108,7 @@ async function runBuild(entry, outfile) {
       "pg",
       "pg-query-stream",
       "pg-native",
+      "lru-cache",
     ],
   }
 

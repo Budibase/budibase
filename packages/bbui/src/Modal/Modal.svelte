@@ -36,6 +36,17 @@
   }>()
   let visible: boolean = fixed || inline
   let modal: HTMLElement | undefined
+  let portalTarget: string = "body"
+
+  onMount(() => {
+    tick().then(() => {
+      portalTarget =
+        document.querySelector(".modal-container") != null
+          ? ".modal-container"
+          : "body"
+    })
+  })
+
   let previousVisible = visible
 
   $: if (previousVisible !== visible) {
@@ -139,7 +150,7 @@
     screen.
   -->
   <div class="portal">
-    <Portal target=".modal-container">
+    <Portal target={portalTarget}>
       {#if visible}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div

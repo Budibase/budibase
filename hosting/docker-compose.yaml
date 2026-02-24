@@ -5,7 +5,7 @@ version: "3"
 services:
   app-service:
     restart: unless-stopped
-    image: budibase/apps
+    image: 633874203883.dkr.ecr.eu-west-1.amazonaws.com/budibase:apps-latest
     container_name: bbapps
     environment:
       SELF_HOSTED: 1
@@ -39,7 +39,7 @@ services:
 
   worker-service:
     restart: unless-stopped
-    image: budibase/worker
+    image: 633874203883.dkr.ecr.eu-west-1.amazonaws.com/budibase:worker-latest
     container_name: bbworker
     environment:
       SELF_HOSTED: 1
@@ -87,7 +87,7 @@ services:
     ports:
       - "${MAIN_PORT}:10000"
     container_name: bbproxy
-    image: budibase/proxy
+    image: 633874203883.dkr.ecr.eu-west-1.amazonaws.com/budibase:proxy-latest
     environment:
       - PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
       - PROXY_RATE_LIMIT_API_PER_SECOND=50

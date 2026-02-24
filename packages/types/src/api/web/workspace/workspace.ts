@@ -45,6 +45,8 @@ export interface FetchAppPackageResponse {
   hasLock: boolean
   recaptchaKey?: string
   clientCacheKey?: string
+  /** When true, embedded app shows live view (no Preview/DevTools bar) */
+  hideDevTools?: boolean
 }
 
 export interface AddWorkspaceSampleDataResponse {

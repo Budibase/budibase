@@ -14,6 +14,7 @@ import {
   routeStore,
   notificationStore,
 } from "@/stores"
+import { embedHideDevToolsStore } from "@/stores/embedHideDevTools"
 import { mount } from "svelte"
 import { get } from "svelte/store"
 import { initWebsocket } from "@/websocket"
@@ -60,6 +61,8 @@ declare global {
     "##BUDIBASE_PREVIEW_DEVICE##"?: PreviewDevice
     "##BUDIBASE_PREVIEW_MODAL_DEVICE##"?: PreviewDevice
     "##BUDIBASE_APP_EMBEDDED##"?: string // This is a bool wrapped in a string
+    "##BUDIBASE_MOUNT_TARGET##"?: string // When embedded: CSS selector for mount container (e.g. "#budibase-app-container")
+    "##BUDIBASE_HIDE_DEV_TOOLS##"?: string // When "true", show live view (no Preview/DevTools bar)
     "##BUDIBASE_PREVIEW_NAVIGATION##"?: AppNavigation
     "##BUDIBASE_HIDDEN_COMPONENT_IDS##"?: string[]
     "##BUDIBASE_USED_PLUGINS##"?: Plugin[]
@@ -104,6 +107,12 @@ export interface SDK {
 let app: Record<string, unknown> | undefined
 
 const loadBudibase = async () => {
+  // Capture embed-hide-devtools flag at script load so devToolsEnabled reacts reliably (no timing race)
+  embedHideDevToolsStore.set(
+    typeof window !== "undefined" &&
+      window["##BUDIBASE_HIDE_DEV_TOOLS##"] === "true"
+  )
+
   // Update builder store with any builder flags
   builderStore.set({
     ...get(builderStore),
@@ -133,9 +142,13 @@ const loadBudibase = async () => {
 
   if (window.MIGRATING_APP) {
     if (!app) {
-      app = mount(UpdatingApp, {
-        target: window.document.body,
-      })
+      const migrateTarget =
+        window["##BUDIBASE_APP_EMBEDDED##"] === "true" &&
+        window["##BUDIBASE_MOUNT_TARGET##"]
+          ? document.querySelector(window["##BUDIBASE_MOUNT_TARGET##"])
+          : null
+      const target = (migrateTarget as HTMLElement) || window.document.body
+      app = mount(UpdatingApp, { target })
     }
     return
   }
@@ -206,8 +219,14 @@ const loadBudibase = async () => {
 
   // Create app if one hasn't been created yet
   if (!app) {
+    const mountTarget =
+      window["##BUDIBASE_APP_EMBEDDED##"] === "true" &&
+      window["##BUDIBASE_MOUNT_TARGET##"]
+        ? document.querySelector(window["##BUDIBASE_MOUNT_TARGET##"])
+        : null
+    const target = (mountTarget as HTMLElement) || window.document.body
     app = mount(ClientApp, {
-      target: window.document.body,
+      target,
     })
   }
 }

@@ -25,7 +25,8 @@ COPY nginx.prod.conf /etc/nginx/templates/nginx.conf.template
 # IPv6 removal needs to happen after envsubst
 RUN rm -rf /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
 COPY 80-listen-on-ipv6-by-default.sh /docker-entrypoint.d/80-listen-on-ipv6-by-default.sh
-RUN chmod +x /docker-entrypoint.d/80-listen-on-ipv6-by-default.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.d/80-listen-on-ipv6-by-default.sh && \
+    chmod +x /docker-entrypoint.d/80-listen-on-ipv6-by-default.sh
 
 # Error handling
 COPY error.html /usr/share/nginx/html/error.html

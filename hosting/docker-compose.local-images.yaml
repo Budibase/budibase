@@ -1,0 +1,18 @@
+# Override for locally-built images (apps, worker, proxy).
+# Database uses Docker Hub's pre-built budibase/database:2.0.0 (from docker-compose.yaml).
+#
+# Usage (from repo root):
+#   podman compose -f hosting/docker-compose.yaml -f hosting/docker-compose.local-images.yaml --env-file hosting/.env up -d
+
+services:
+  app-service:
+    image: budibase/apps:local
+    pull_policy: never
+
+  worker-service:
+    image: budibase/worker:local
+    pull_policy: never
+
+  proxy-service:
+    image: budibase/proxy:local
+    pull_policy: never

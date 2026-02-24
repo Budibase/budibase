@@ -58,7 +58,7 @@
 
 <script>
   import { generate } from "shortid"
-  import { createEventDispatcher, onDestroy, setContext } from "svelte"
+  import { createEventDispatcher, onDestroy, onMount, setContext, tick } from "svelte"
   import Portal from "svelte-portal"
   import ActionButton from "../ActionButton/ActionButton.svelte"
   import Button from "../Button/Button.svelte"
@@ -72,6 +72,16 @@
 
   let visible = false
   let drawerId = generate()
+  let portalTarget = "body"
+
+  onMount(() => {
+    tick().then(() => {
+      portalTarget =
+        document.querySelector(".modal-container") != null
+          ? ".modal-container"
+          : "body"
+    })
+  })
 
   $: depth = $openDrawers.length - $openDrawers.indexOf(drawerId) - 1
   $: style = getStyle(depth, $drawerLeft, $drawerWidth, $modal)
@@ -171,7 +181,7 @@
 </script>
 
 {#if visible}
-  <Portal target=".modal-container">
+  <Portal target={portalTarget}>
     <!-- This class is unstyled, but needed by clickOutside -->
     <div class="drawer-wrapper">
       <div

@@ -4,7 +4,7 @@
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
-    "build": "routify -b && NODE_OPTIONS=\"--max_old_space_size=4096\" vite build --emptyOutDir",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 routify -b && cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --emptyOutDir",
     "start": "routify -c rollup",
     "dev": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0 --mode=dev",
@@ -86,6 +86,7 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "@types/to-json-schema": "^0.2.4",
     "@babel/plugin-transform-runtime": "^7.13.10",
     "@babel/preset-env": "^7.13.12",

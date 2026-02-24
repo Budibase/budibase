@@ -14,6 +14,8 @@ interface AppStoreState {
   pageWidth?: string
   recaptchaKey?: string
   clientCacheKey?: string
+  /** When true, show live view (no Preview/DevTools bar) */
+  hideDevTools?: boolean
 }
 
 const initialState: AppStoreState = {
