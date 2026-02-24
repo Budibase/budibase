@@ -6,6 +6,7 @@
     Layout,
     MenuItem,
     Modal,
+    Pagination,
     Search,
     Table,
     notifications,
@@ -44,6 +45,9 @@
   let loaded = false
   let editModal, deleteModal
   let workspaceSearch
+  let workspacePageNumber = 0
+  let previousWorkspaceSearch
+  const WORKSPACE_PAGE_SIZE = 3
 
   $: group = $groups.find(x => x._id === groupId)
   $: isScimGroup = group?.scimInfo?.isSync
@@ -102,6 +106,23 @@
         app.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
       )
     : groupApps
+  $: showWorkspacePagination = filteredGroupApps.length > WORKSPACE_PAGE_SIZE
+  $: workspacePageCount = Math.max(
+    1,
+    Math.ceil(filteredGroupApps.length / WORKSPACE_PAGE_SIZE)
+  )
+  $: if (workspaceSearch !== previousWorkspaceSearch) {
+    workspacePageNumber = 0
+    previousWorkspaceSearch = workspaceSearch
+  }
+  $: if (workspacePageNumber > workspacePageCount - 1) {
+    workspacePageNumber = Math.max(workspacePageCount - 1, 0)
+  }
+  $: workspacePageRows = filteredGroupApps.slice(
+    workspacePageNumber * WORKSPACE_PAGE_SIZE,
+    (workspacePageNumber + 1) * WORKSPACE_PAGE_SIZE
+  )
+  $: paginatedGroupApps = workspacePageRows
 
   // Need to ensure the redirect isn't retriggered
   $: {
@@ -199,8 +220,8 @@
       </div>
       <Table
         schema={appSchema}
-        data={filteredGroupApps}
-        rowCount={5}
+        data={paginatedGroupApps}
+        rowCount={WORKSPACE_PAGE_SIZE}
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
@@ -215,6 +236,24 @@
           </Heading>
         </div>
       </Table>
+      {#if showWorkspacePagination}
+        <div class="pagination">
+          <Pagination
+            page={workspacePageNumber + 1}
+            hasPrevPage={workspacePageNumber > 0}
+            hasNextPage={workspacePageNumber < workspacePageCount - 1}
+            goToPrevPage={() => {
+              workspacePageNumber = Math.max(0, workspacePageNumber - 1)
+            }}
+            goToNextPage={() => {
+              workspacePageNumber = Math.min(
+                workspacePageCount - 1,
+                workspacePageNumber + 1
+              )
+            }}
+          />
+        </div>
+      {/if}
     </Layout>
   </Layout>
 {/if}
@@ -259,5 +298,8 @@
   }
   .workspace-controls :global(.spectrum-Search) {
     width: 200px;
+  }
+  .pagination {
+    margin-bottom: 32px;
   }
 </style>
