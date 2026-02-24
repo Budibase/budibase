@@ -53,6 +53,7 @@
   import { InternalTable } from "@budibase/types"
   import type { UserInfo } from "@/types"
   import { routeActions } from "@/settings/pages"
+  import { getRoleFlags, shouldSyncGlobalRole } from "./roleUtils"
 
   interface User extends UserDoc {
     tenantOwnerEmail?: string
@@ -401,7 +402,12 @@
       existingUsers.map(user => [user.email.toLowerCase(), user])
     )
     const usersToInvite: UserInfo[] = []
-    const usersToAssign: { user: UserDoc; role: string; email: string }[] = []
+    const usersToAssign: {
+      user: UserDoc
+      role: string
+      selectedRole: string
+      email: string
+    }[] = []
 
     for (const user of userData.users) {
       const existingUser = existingByEmail.get(user.email.toLowerCase())
@@ -411,16 +417,34 @@
       }
       const role = getWorkspaceRole(user.role, user.appRole)
       if (role && existingUser._id) {
-        usersToAssign.push({ user: existingUser, role, email: user.email })
+        usersToAssign.push({
+          user: existingUser,
+          role,
+          selectedRole: user.role,
+          email: user.email,
+        })
       }
     }
 
     const assignmentResults = await Promise.allSettled(
-      usersToAssign.map(async ({ user, role, email }) => {
+      usersToAssign.map(async ({ user, role, selectedRole, email }) => {
         let rev = user._rev
-        if (!rev && user._id) {
-          const fullUser = await users.get(user._id)
-          rev = fullUser?._rev
+        let fullUser = user
+        if (user._id && (!rev || shouldSyncGlobalRole(selectedRole, user))) {
+          const loaded = await users.get(user._id)
+          if (loaded) {
+            fullUser = loaded
+            rev = loaded._rev
+          }
+        }
+        if (
+          user._id &&
+          fullUser &&
+          shouldSyncGlobalRole(selectedRole, fullUser)
+        ) {
+          const roleUpdates = getRoleFlags(selectedRole, fullUser)
+          const saved = await users.save({ ...fullUser, ...roleUpdates })
+          rev = saved?._rev || rev
         }
         if (!user._id || !rev) {
           throw new Error("User ID or revision missing")
