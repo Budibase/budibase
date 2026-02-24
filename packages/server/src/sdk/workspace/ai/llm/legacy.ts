@@ -1,9 +1,8 @@
 import { createAzure } from "@ai-sdk/azure"
 import { createOpenAI } from "@ai-sdk/openai"
 import { env, HTTPError } from "@budibase/backend-core"
-import { AIProvider, LLMProviderConfig } from "@budibase/types"
+import { AIProvider, LLMProviderConfig, LLMResponse } from "@budibase/types"
 import tracer from "dd-trace"
-import { LLMResponse } from "."
 import { ai, licensing } from "@budibase/pro"
 import { createBBAIClient } from "./bbai"
 
