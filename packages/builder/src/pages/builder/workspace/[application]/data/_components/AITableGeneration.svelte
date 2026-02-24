@@ -97,7 +97,6 @@
 
   .ai-generation-progress {
     display: flex;
-    align-items: center;
     color: var(--spectrum-global-color-gray-700);
     font-size: 12px;
     padding: 0 8px;
