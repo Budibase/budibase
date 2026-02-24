@@ -6,7 +6,7 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
-import { ai } from "@budibase/pro"
+import { ai, quotas } from "@budibase/pro"
 import {
   AgentMessageMetadata,
   ChatAgentRequest,
@@ -33,9 +33,9 @@ import sdk from "../../../sdk"
 import {
   formatIncompleteToolCallError,
   updatePendingToolCalls,
-} from "../../../sdk/workspace/ai/agents/utils"
+} from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
-import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag/files"
+import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag"
 import { assertChatAppIsLiveForUser } from "./chatApps"
 
 interface PrepareChatConversationForSaveParams {
@@ -318,6 +318,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   if (!chat.agentId) {
     chat.agentId = agentId
   }
+
+  await quotas.checkBudibaseAICreditsExceeded()
 
   ctx.status = 200
   ctx.set("Content-Type", "text/event-stream")
