@@ -191,7 +191,10 @@
     onFinish: async () => {
       if (persistConversation && !chat._id && chat.chatAppId) {
         try {
-          const history = await API.fetchChatHistory(chat.chatAppId)
+          const history = await API.fetchChatHistory(
+            chat.chatAppId,
+            chat.agentId
+          )
           const msgs = chatInstance.messages
           const lastMessageId = msgs[msgs.length - 1]?.id
           const savedConversation =

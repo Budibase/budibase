@@ -1,6 +1,14 @@
 <script lang="ts">
   import { Body } from "@budibase/bbui"
+  import { appStore } from "@/stores/builder"
   import BBAILogo from "assets/bb-ai.svg"
+
+  export let agentId: string | undefined
+
+  $: chatUrl =
+    agentId && $appStore.url
+      ? `/app-chat${$appStore.url}/agent/${encodeURIComponent(agentId)}`
+      : ""
 </script>
 
 <div class="integration-row">
@@ -15,7 +23,13 @@
       >
     </div>
   </div>
-  <div class="row-action"></div>
+  <div class="row-action">
+    {#if chatUrl}
+      <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
+        Open chat
+      </a>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -49,5 +63,16 @@
     min-width: 110px;
     gap: 10px;
     margin-left: 0px;
+  }
+
+  .chat-link {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-700);
+    text-decoration: none;
+  }
+
+  .chat-link:hover {
+    color: var(--spectrum-global-color-gray-900);
+    text-decoration: underline;
   }
 </style>

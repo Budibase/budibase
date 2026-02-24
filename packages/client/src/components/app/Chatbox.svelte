@@ -56,11 +56,30 @@
     },
   })
 
-  let chat: ChatConversationLike = { ...INITIAL_CHAT }
+  const getLockedAgentIdFromPath = () => {
+    if (typeof window === "undefined") {
+      return undefined
+    }
+
+    const normalizedPath = window.location.pathname.replace(/\/+$/, "")
+    const pathParts = normalizedPath.split("/").filter(Boolean)
+    const agentSegmentIndex = pathParts.findIndex(part => part === "agent")
+    const rawAgentId =
+      agentSegmentIndex >= 0 ? pathParts[agentSegmentIndex + 1] : undefined
+
+    return rawAgentId ? decodeURIComponent(rawAgentId) : undefined
+  }
+
+  let lockedAgentId: string | undefined = getLockedAgentIdFromPath()
+
+  let chat: ChatConversationLike = {
+    ...INITIAL_CHAT,
+    ...(lockedAgentId ? { agentId: lockedAgentId } : {}),
+  }
   let deletingChat = false
   let loading = true
   let initialPrompt = ""
-  let selectedAgentId: string | null = null
+  let selectedAgentId: string | null = lockedAgentId || null
   let enabledAgentList: EnabledAgentListItem[] = []
   let conversationHistory: ChatConversation[] = []
   let selectedConversationId: string | undefined
@@ -99,10 +118,14 @@
   })
   $: hasAnyAgents = agents.length > 0
   $: hasEnabledAgents = enabledAgentList.length > 0
+  $: isLockedAgentMode = Boolean(lockedAgentId)
+  $: conversationScopeAgentId = lockedAgentId || selectedAgentId || undefined
   $: showEmptyState = !loading && !hasEnabledAgents
-  $: emptyStateMessage = hasAnyAgents
-    ? "No agents enabled for this chat app. Ask your administrator to enable one to start chatting."
-    : "No agents have been configured for this chat app yet."
+  $: emptyStateMessage = isLockedAgentMode
+    ? "This agent is not available for chat right now."
+    : hasAnyAgents
+      ? "No agents enabled for this chat app. Ask your administrator to enable one to start chatting."
+      : "No agents have been configured for this chat app yet."
   $: selectedAgentName = selectedAgentId
     ? enabledAgentList.find(agent => agent.agentId === selectedAgentId)?.name ||
       agents.find(agent => agent._id === selectedAgentId)?.name ||
@@ -128,12 +151,30 @@
     "#EF4444",
   ]
 
-  const refreshConversations = async () => {
+  const buildConversationsUrl = (
+    baseChatAppId: string,
+    agentId?: string,
+    conversationId?: string
+  ) => {
+    const baseUrl = conversationId
+      ? `/api/chatapps/${baseChatAppId}/conversations/${conversationId}`
+      : `/api/chatapps/${baseChatAppId}/conversations`
+    if (!agentId) {
+      return baseUrl
+    }
+
+    const query = new URLSearchParams({ agentId })
+    return `${baseUrl}?${query.toString()}`
+  }
+
+  const refreshConversations = async (agentId?: string) => {
     if (!chatAppId) {
       conversationHistory = []
       return []
     }
-    const conversations = await API.fetchChatHistory(chatAppId)
+    const conversations = await API.get<ChatConversation[]>({
+      url: buildConversationsUrl(chatAppId, agentId),
+    })
     conversationHistory = conversations || []
     return conversationHistory
   }
@@ -178,14 +219,28 @@
         .filter(agent => !agent.isDefault)
         .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
 
-      enabledAgentList = defaultAgent
+      const orderedAgentList = defaultAgent
         ? [defaultAgent, ...sortedAgents]
         : sortedAgents
 
-      await refreshConversations()
+      enabledAgentList = lockedAgentId
+        ? orderedAgentList.filter(agent => agent.agentId === lockedAgentId)
+        : orderedAgentList
+
+      await refreshConversations(lockedAgentId)
+
+      if (lockedAgentId && enabledAgentList.length > 0) {
+        await selectAgent(lockedAgentId)
+      }
     } catch (err) {
       console.error(err)
-      notifications.error("Failed to load chat")
+      const isLockedAgentUnavailable =
+        lockedAgentId &&
+        err instanceof Error &&
+        err.message.includes("agentId is not enabled for this chat app")
+      if (!isLockedAgentUnavailable) {
+        notifications.error("Failed to load chat")
+      }
       enabledAgentList = []
       conversationHistory = []
     } finally {
@@ -194,6 +249,10 @@
   }
 
   const selectAgent = async (agentId: string) => {
+    if (lockedAgentId && agentId !== lockedAgentId) {
+      return
+    }
+
     selectedAgentId = agentId
     selectedConversationId = undefined
     chat = {
@@ -223,14 +282,26 @@
 
     deletingChat = true
     try {
-      await API.deleteChatConversation(chat._id, chatAppId)
-      const updatedConversations = await refreshConversations()
+      await API.delete({
+        url: buildConversationsUrl(
+          chatAppId,
+          conversationScopeAgentId,
+          chat._id
+        ),
+      })
+      const updatedConversations = await refreshConversations(
+        conversationScopeAgentId
+      )
       if (updatedConversations.length) {
         await selectChat(updatedConversations[0])
       } else {
-        selectedAgentId = null
+        selectedAgentId = lockedAgentId || null
         selectedConversationId = undefined
-        chat = { ...INITIAL_CHAT, chatAppId }
+        chat = {
+          ...INITIAL_CHAT,
+          chatAppId,
+          ...(lockedAgentId ? { agentId: lockedAgentId } : {}),
+        }
       }
     } catch (err) {
       const message =
@@ -245,7 +316,9 @@
     event: CustomEvent<{ chatId?: string; chat: ChatConversationLike }>
   ) => {
     const { chatId, chat: savedChat } = event.detail
-    const updatedConversations = await refreshConversations()
+    const updatedConversations = await refreshConversations(
+      lockedAgentId || selectedAgentId || savedChat.agentId
+    )
     const lastMessageId = savedChat.messages[savedChat.messages.length - 1]?.id
 
     const newCurrentChat =
@@ -272,6 +345,10 @@
   }
 
   const handleAgentSelected = (event: CustomEvent<{ agentId: string }>) => {
+    if (lockedAgentId && event.detail.agentId !== lockedAgentId) {
+      return
+    }
+
     selectAgent(event.detail.agentId)
   }
 
@@ -290,11 +367,13 @@
   const handleStartChat = async (
     event: CustomEvent<{ agentId: string; prompt: string }>
   ) => {
-    await selectAgent(event.detail.agentId)
+    const nextAgentId = lockedAgentId || event.detail.agentId
+    await selectAgent(nextAgentId)
     initialPrompt = event.detail.prompt
   }
 
   onMount(async () => {
+    lockedAgentId = getLockedAgentIdFromPath()
     await refreshChatData()
   })
 </script>
@@ -311,6 +390,7 @@
       {enabledAgentList}
       conversationHistory={filteredConversationHistory}
       {selectedConversationId}
+      hideAgents={isLockedAgentMode}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
     />
@@ -328,6 +408,7 @@
       {isAgentLive}
       {initialPrompt}
       {loading}
+      suppressAgentPicker={isLockedAgentMode && loading && !selectedAgentId}
       on:deleteChat={deleteCurrentChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}

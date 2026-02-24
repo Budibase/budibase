@@ -209,7 +209,7 @@
                   {#if !chatAppsLoaded}
                     <Body size="S">Loading chat apps...</Body>
                   {:else if liveChatApps.length}
-                    {#each liveChatApps as chatApp (chatApp.chatAppId)}
+                    {#each liveChatApps as chatApp (`${chatApp.chatAppId}_${chatApp.agentId || "chat"}`)}
                       <a
                         class="app"
                         target="_blank"

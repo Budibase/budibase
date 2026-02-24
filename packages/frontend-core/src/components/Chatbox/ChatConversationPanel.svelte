@@ -22,6 +22,7 @@
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
+  export let suppressAgentPicker: boolean = false
   export let deletingChat: boolean = false
   export let workspaceId: string
   export let initialPrompt: string = ""
@@ -136,7 +137,7 @@
     <div class="chat-header">
       <div class="chat-header-agent">
         <Body size="S">
-          {selectedAgentName || "Unknown agent"}
+          {selectedAgentName || (loading ? "" : "Unknown agent")}
         </Body>
       </div>
 
@@ -169,7 +170,7 @@
       {readOnlyReason}
       onchatsaved={event => dispatch("chatSaved", event.detail)}
     />
-  {:else}
+  {:else if !suppressAgentPicker}
     <div class="chat-empty">
       <div class="chat-empty-greeting">
         <Body size="XL" weight="600" serif>
