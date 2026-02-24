@@ -41,7 +41,7 @@
 </script>
 
 <div bind:this={popoverAnchor}>
-  <Button on:click={popover.show()} cta>Assign workspace</Button>
+  <Button on:click={() => popover?.show()} cta>Assign workspace</Button>
 </div>
 <Popover align="left" bind:this={popover} anchor={popoverAnchor}>
   <UserGroupPicker
