@@ -6,7 +6,7 @@ metadata:
 {{- toYaml .Values.services.proxy.deploymentAnnotations | indent 4 -}}
 {{ end }}
   labels:
-    app.kubernetes.io/name: proxy-service
+    app.kubernetes.io/name: budibase-proxy
 {{ if .Values.services.proxy.deploymentLabels }}
 {{- toYaml .Values.services.proxy.deploymentLabels | indent 4 -}}
 {{ end }}
@@ -15,7 +15,7 @@ spec:
   replicas: {{ .Values.services.proxy.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: proxy-service
+      app.kubernetes.io/name: budibase-proxy
   minReadySeconds: 10
   strategy:
     type: RollingUpdate
@@ -25,12 +25,12 @@ spec:
   template:
     metadata:
       annotations:
-        ad.datadoghq.com/proxy-service.logs: '[{"source":"nginx","service":"proxy-service"}]'
+        ad.datadoghq.com/proxy-service.logs: '[{"source":"nginx","service":"budibase-proxy"}]'
 {{ if .Values.services.proxy.templateAnnotations }}
 {{- toYaml .Values.services.proxy.templateAnnotations | indent 8 -}}
 {{ end }}
       labels:
-        app.kubernetes.io/name: proxy-service
+        app.kubernetes.io/name: budibase-proxy
 {{ if .Values.services.proxy.templateLabels }}
 {{- toYaml .Values.services.proxy.templateLabels | indent 8 -}}
 {{ end }}

@@ -3,6 +3,7 @@ name: budibase
 description: >-
   Budibase is an open source low-code platform, helping thousands of teams build
   apps for their workplace in minutes.
+icon: https://budibase.com/img/budibase-logo.png
 keywords:
   - low-code
   - database
