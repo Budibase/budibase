@@ -54,6 +54,52 @@ normalize_env_file() {
     fi
 }
 
+export_env_file() {
+    local env_file="$1"
+
+    if [[ ! -f "${env_file}" ]]; then
+        return
+    fi
+
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+        if [[ -z "${line}" || "${line}" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+        export "${line}"
+    done < "${env_file}"
+}
+
+sync_and_repair_couch_env() {
+    if [[ -z "${COUCH_DB_USER}" && -n "${COUCHDB_USER}" ]]; then
+        export COUCH_DB_USER="${COUCHDB_USER}"
+    elif [[ -z "${COUCHDB_USER}" && -n "${COUCH_DB_USER}" ]]; then
+        export COUCHDB_USER="${COUCH_DB_USER}"
+    fi
+
+    if [[ -z "${COUCH_DB_PASSWORD}" && -n "${COUCHDB_PASSWORD}" ]]; then
+        export COUCH_DB_PASSWORD="${COUCHDB_PASSWORD}"
+    elif [[ -z "${COUCHDB_PASSWORD}" && -n "${COUCH_DB_PASSWORD}" ]]; then
+        export COUCHDB_PASSWORD="${COUCH_DB_PASSWORD}"
+    fi
+
+    if [[ -z "${COUCH_DB_URL}" ]]; then
+        export COUCH_DB_URL="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
+        return
+    fi
+
+    if [[ "${COUCH_DB_URL}" == *'$'* ]]; then
+        export COUCH_DB_URL="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
+        return
+    fi
+
+    if [[ "${COUCH_DB_URL}" =~ ^https?://([^@]*)@ ]]; then
+        local auth="${BASH_REMATCH[1]}"
+        if [[ ! "${auth}" =~ .+:.+ ]]; then
+            export COUCH_DB_URL="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
+        fi
+    fi
+}
+
 # Mount NFS or GCP Filestore if FILESHARE_IP and FILESHARE_NAME are set
 if [[ -n "${FILESHARE_IP}" && -n "${FILESHARE_NAME}" ]]; then
     echo "Mounting NFS share"
@@ -78,9 +124,7 @@ fi
 # Source environment variables from a .env file if it exists in DATA_DIR
 if [[ -f "${DATA_DIR}/.env" ]]; then
     normalize_env_file "${DATA_DIR}/.env"
-    set -a  # Automatically export all variables loaded from .env
-    source "${DATA_DIR}/.env"
-    set +a
+    export_env_file "${DATA_DIR}/.env"
 fi
 
 # Randomize any unset sensitive environment variables using uuidgen
@@ -91,9 +135,7 @@ for var in "${env_vars[@]}"; do
     fi
 done
 
-if [[ -z "${COUCH_DB_URL}" ]]; then
-    export COUCH_DB_URL=http://$COUCHDB_USER:$COUCHDB_PASSWORD@127.0.0.1:5984
-fi
+sync_and_repair_couch_env
 
 if [[ -z "${COUCH_DB_SQL_URL}" ]]; then
     export COUCH_DB_SQL_URL=http://127.0.0.1:4984
@@ -127,11 +169,12 @@ ensure_env_var "LITELLM_DB_PASSWORD" "${LITELLM_DB_PASSWORD}"
 ensure_env_var "LITELLM_DB_PORT" "${LITELLM_DB_PORT}"
 ensure_env_var "LITELLM_MASTER_KEY" "${LITELLM_MASTER_KEY}"
 ensure_env_var "LITELLM_SALT_KEY" "${LITELLM_SALT_KEY}"
+ensure_env_var "COUCH_DB_USER" "${COUCH_DB_USER}"
+ensure_env_var "COUCH_DB_PASSWORD" "${COUCH_DB_PASSWORD}"
 
 # Read in the .env file and export the variables
-set -a
-source "${DATA_DIR}/.env"
-set +a
+export_env_file "${DATA_DIR}/.env"
+sync_and_repair_couch_env
 
 # Runtime values should take precedence over persisted .env values.
 if [[ "${runtime_database_url_set}" == "true" ]]; then
@@ -141,8 +184,8 @@ if [[ "${runtime_litellm_internal_db_set}" == "true" ]]; then
     export LITELLM_INTERNAL_DB="${runtime_litellm_internal_db}"
 fi
 
-ln -s ${DATA_DIR}/.env /app/.env
-ln -s ${DATA_DIR}/.env /worker/.env
+ln -sfn ${DATA_DIR}/.env /app/.env
+ln -sfn ${DATA_DIR}/.env /worker/.env
 
 # Make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
