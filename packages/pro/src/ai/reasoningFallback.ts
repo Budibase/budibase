@@ -2,7 +2,7 @@ import type { LLMProviderOptions } from "@budibase/types"
 
 const unsupportedReasoningByModel = new WeakMap<object, true>()
 
-export function hasReasoningEffort(providerOptions?: LLMProviderOptions) {
+function hasReasoningEffort(providerOptions?: LLMProviderOptions) {
   if (!providerOptions) {
     return false
   }
@@ -13,7 +13,7 @@ export function hasReasoningEffort(providerOptions?: LLMProviderOptions) {
   )
 }
 
-export function withoutReasoningEffort(providerOptions?: LLMProviderOptions) {
+function withoutReasoningEffort(providerOptions?: LLMProviderOptions) {
   if (!providerOptions) {
     return providerOptions
   }
@@ -32,7 +32,7 @@ export function withoutReasoningEffort(providerOptions?: LLMProviderOptions) {
   return next
 }
 
-export function isUnsupportedReasoningError(err: unknown) {
+function isUnsupportedReasoningError(err: unknown) {
   const error = err as any
   const status =
     error?.statusCode ||
