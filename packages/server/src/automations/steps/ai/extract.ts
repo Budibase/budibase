@@ -48,10 +48,10 @@ function buildExtractPrompt() {
     "You are a data extraction assistant.",
     "Extract structured data from the attached document or image.",
     "Follow the provided schema exactly. Values like 'string', 'number', and 'boolean' indicate the expected type.",
-    "Return ONLY valid JSON with this shape: {\"data\": [<object>]}.",
+    'Return ONLY valid JSON with this shape: {"data": [<object>]}.',
     "The data array must contain at most 1 object.",
     "Do not include markdown, explanations, or extra keys.",
-    "If no matching data is found, return {\"data\": []}.",
+    'If no matching data is found, return {"data": []}.',
   ].join("\n\n")
 }
 
@@ -146,7 +146,9 @@ export async function run({
   }
 
   try {
-    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+    const llm = await sdk.ai.llm.getDefaultLLMOrThrow({
+      reasoningEffort: "low",
+    })
 
     let fileIdOrDataUrl: string
 
