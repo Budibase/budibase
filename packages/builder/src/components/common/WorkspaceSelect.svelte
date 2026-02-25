@@ -1,7 +1,14 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import { ActionMenu, MenuItem, Icon, StatusLight } from "@budibase/bbui"
+  import {
+    ActionMenu,
+    MenuItem,
+    Icon,
+    StatusLight,
+    Tags,
+    Tag,
+  } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import { appStore } from "@/stores/builder"
@@ -190,7 +197,12 @@
           }}
         />
       {:else}
-        <span class="header-actions-spacer" aria-hidden="true"></span>
+        <Icon
+          name="plus"
+          size="M"
+          hoverable
+          tooltip="Upgrade to unlock multiple workspaces"
+        />
       {/if}
       <WorkspaceSortMenu
         {currentSort}
@@ -387,12 +399,13 @@
     outline: none;
     background: transparent;
     color: var(--spectrum-global-color-gray-900);
+    width: 100px;
   }
 
   .header-actions {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-s);
   }
   .header-actions > :global(*),
   .header-actions-spacer {
@@ -401,10 +414,5 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
-  }
-
-  .menu-item-error-status {
-    width: 16px !important;
-    height: 18px;
   }
 </style>
