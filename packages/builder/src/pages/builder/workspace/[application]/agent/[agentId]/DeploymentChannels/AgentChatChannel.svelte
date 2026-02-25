@@ -9,6 +9,8 @@
 
   let toggling = false
   let loadingChatApp = false
+  let attemptedWorkspaceId: string | undefined
+  let currentWorkspaceId: string | undefined
 
   $: workspaceId = $params.application
   $: enabled =
@@ -23,7 +25,18 @@
       ? `/app-chat${$appStore.url}/agent/${encodeURIComponent(agentId)}`
       : ""
 
-  $: if (workspaceId && !$currentChatApp && !loadingChatApp) {
+  $: if (workspaceId !== currentWorkspaceId) {
+    currentWorkspaceId = workspaceId
+    attemptedWorkspaceId = undefined
+  }
+
+  $: if (
+    workspaceId &&
+    workspaceId !== attemptedWorkspaceId &&
+    !$currentChatApp &&
+    !loadingChatApp
+  ) {
+    attemptedWorkspaceId = workspaceId
     loadingChatApp = true
     chatAppsStore
       .ensureChatApp(undefined, workspaceId)
