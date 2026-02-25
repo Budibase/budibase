@@ -9,6 +9,7 @@ import {
 } from "@budibase/types"
 import { generateText, Output, type ModelMessage, type UserContent } from "ai"
 import fetch from "node-fetch"
+import { PDFParse } from "pdf-parse"
 import { Readable } from "stream"
 import { buffer } from "stream/consumers"
 import * as automationUtils from "../../automationUtils"
@@ -44,6 +45,19 @@ function toImageDataUrl(data: Buffer, value: ExtractFileDataFileTypes): string {
   return `data:${mimeType};base64,${data.toString("base64")}`
 }
 
+async function extractPdfText(data: Buffer): Promise<string> {
+  const parser = new PDFParse({ data: data as any })
+  const parsed = await parser.getText()
+  return (parsed.text || "").trim()
+}
+
+const MAX_INLINE_DOC_TEXT_LENGTH = 20000
+
+type ExtractInput =
+  | { kind: "image"; value: string }
+  | { kind: "file"; value: string }
+  | { kind: "text"; value: string }
+
 function buildExtractPrompt() {
   return [
     "You are a data extraction assistant.",
@@ -56,30 +70,36 @@ function buildExtractPrompt() {
   ].join("\n\n")
 }
 
-function buildExtractModelMessages(fileIdOrDataUrl: string): ModelMessage[] {
+function buildExtractModelMessages(input: ExtractInput): ModelMessage[] {
   const prompt = buildExtractPrompt()
-  const userContent: UserContent = fileIdOrDataUrl.startsWith("data:")
-    ? [
-        {
-          type: "image",
-          image: new URL(fileIdOrDataUrl),
-        },
-        {
-          type: "text",
-          text: prompt,
-        },
-      ]
-    : [
-        {
-          type: "file",
-          data: fileIdOrDataUrl,
-          mediaType: "application/pdf",
-        },
-        {
-          type: "text",
-          text: prompt,
-        },
-      ]
+  const userContent: UserContent =
+    input.kind === "image"
+      ? [
+          {
+            type: "image",
+            image: new URL(input.value),
+          },
+          {
+            type: "text",
+            text: prompt,
+          },
+        ]
+      : input.kind === "file"
+      ? [
+          {
+            type: "file",
+            data: input.value,
+            mediaType: "application/pdf",
+          },
+          {
+            type: "text",
+            text: prompt,
+          },
+        ]
+      : `${prompt}\n\nDocument text:\n${input.value.slice(
+          0,
+          MAX_INLINE_DOC_TEXT_LENGTH
+        )}`
 
   return [
     {
@@ -93,7 +113,7 @@ async function processUrlFile(
   fileUrl: string,
   fileType: ExtractFileDataFileTypes,
   llm: LLMResponse
-): Promise<string> {
+): Promise<ExtractInput> {
   const response = await fetch(fileUrl)
   if (!response.ok) {
     throw new Error(`Failed to fetch file from URL: ${response.statusText}`)
@@ -101,35 +121,42 @@ async function processUrlFile(
 
   if (isImageType(fileType)) {
     const data = await response.buffer()
-    return toImageDataUrl(data, fileType)
+    return { kind: "image", value: toImageDataUrl(data, fileType) }
   }
 
   if (!llm.uploadFile) {
-    throw new Error("File uploads are not supported by the configured LLM")
+    const data = await response.buffer()
+    const text = await extractPdfText(data)
+    return { kind: "text", value: text }
   }
   const stream = response.body as Readable
   const filename = `document.${fileType || "pdf"}`
-  return await llm.uploadFile(stream, filename, fileType)
+  return { kind: "file", value: await llm.uploadFile(stream, filename, fileType) }
 }
 
 async function processAttachmentFile(
   attachment: any,
   llm: LLMResponse
-): Promise<string> {
+): Promise<ExtractInput> {
   const bucket = objectStore.ObjectStoreBuckets.APPS
   const { stream } = await objectStore.getReadStream(bucket, attachment.key!)
   const contentType = attachment.extension
 
   if (isImageType(contentType)) {
     const data = await buffer(stream)
-    return toImageDataUrl(data, contentType)
+    return { kind: "image", value: toImageDataUrl(data, contentType) }
   }
 
   if (!llm.uploadFile) {
-    throw new Error("File uploads are not supported by the configured LLM")
+    const data = await buffer(stream)
+    const text = await extractPdfText(data)
+    return { kind: "text", value: text }
   }
   const filename = attachment.name || "document"
-  return await llm.uploadFile(stream, filename, contentType)
+  return {
+    kind: "file",
+    value: await llm.uploadFile(stream, filename, contentType),
+  }
 }
 
 export async function run({
@@ -151,7 +178,7 @@ export async function run({
       reasoningEffort: "low",
     })
 
-    let fileIdOrDataUrl: string
+    let extractInput: ExtractInput
 
     function tryParse(value: any) {
       if (typeof value !== "string") {
@@ -171,18 +198,18 @@ export async function run({
         : tryParse(inputs.file)
 
     if (inputs.source === DocumentSourceType.URL && typeof file === "string") {
-      fileIdOrDataUrl = await processUrlFile(file, inputs.fileType, llm)
+      extractInput = await processUrlFile(file, inputs.fileType, llm)
     } else if (
       inputs.source === DocumentSourceType.ATTACHMENT &&
       typeof file !== "string"
     ) {
-      fileIdOrDataUrl = await processAttachmentFile(file, llm)
+      extractInput = await processAttachmentFile(file, llm)
     } else {
       throw new Error("Invalid file input – source and file type do not match")
     }
 
     const output = getOutputFromSchema(inputs.schema)
-    const modelMessages = buildExtractModelMessages(fileIdOrDataUrl)
+    const modelMessages = buildExtractModelMessages(extractInput)
     const providerOptions = llm.providerOptions?.(false)
     const response = await ai.runWithReasoningEffortFallback({
       model: llm.chat as unknown as object,
