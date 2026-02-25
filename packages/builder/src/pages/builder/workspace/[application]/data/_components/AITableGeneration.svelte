@@ -2,15 +2,13 @@
   import { API } from "@/api"
   import AiInput from "@/components/common/ai/AIInput.svelte"
   import { datasources, tables } from "@/stores/builder"
-  import { auth, licensing } from "@/stores/portal"
+  import { aiStore } from "@/stores/portal"
   import { ActionButton, notifications } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
 
   $: goto = $gotoStore
 
   let promptText = ""
-
-  $: isEnabled = $auth?.user?.llm && !$licensing.aiCreditsExceeded
 
   async function submitPrompt(message: string) {
     try {
@@ -47,7 +45,7 @@
     />
   </div>
   <div class="ai-generation-examples">
-    {#if isEnabled}
+    {#if $aiStore.aiEnabled}
       {#each examplePrompts as prompt}
         <ActionButton on:click={() => (promptText = prompt)}
           >{prompt}</ActionButton
