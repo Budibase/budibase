@@ -40,7 +40,10 @@ if [[ $(redis-cli -a $REDIS_PASSWORD --no-auth-warning  ping) != 'PONG' ]]; then
 fi
 
 if [[ "${LITELLM_INTERNAL_DB}" == "true" ]]; then
-    if ! pg_isready -p "${LITELLM_DB_PORT:-5432}" -U postgres >/dev/null 2>&1; then
+    if ! command -v pg_isready >/dev/null 2>&1; then
+        echo 'ERROR: LiteLLM internal DB requested but pg_isready not found (Postgres not installed in image).';
+        healthy=false
+    elif ! pg_isready -p "${LITELLM_DB_PORT:-5432}" -U postgres >/dev/null 2>&1; then
         echo 'ERROR: LiteLLM Postgres is down';
         healthy=false
     fi

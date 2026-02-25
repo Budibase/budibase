@@ -1,11 +1,14 @@
 version: "3"
 
-# optional ports are specified throughout for more advanced use cases.
+# Default images are on Docker Hub; no login required for docker-compose up.
+# For AWS ECR or locally-built images, use an override:
+#   ECR:  -f docker-compose.yaml -f docker-compose.ecr.yaml  (requires docker login to ECR first)
+#   Local: -f docker-compose.yaml -f docker-compose.local-images.yaml
 
 services:
   app-service:
     restart: unless-stopped
-    image: 633874203883.dkr.ecr.eu-west-1.amazonaws.com/budibase:apps-latest
+    image: budibase/apps
     container_name: bbapps
     environment:
       SELF_HOSTED: 1
@@ -39,7 +42,7 @@ services:
 
   worker-service:
     restart: unless-stopped
-    image: 633874203883.dkr.ecr.eu-west-1.amazonaws.com/budibase:worker-latest
+    image: budibase/worker
     container_name: bbworker
     environment:
       SELF_HOSTED: 1
@@ -87,7 +90,7 @@ services:
     ports:
       - "${MAIN_PORT}:10000"
     container_name: bbproxy
-    image: 633874203883.dkr.ecr.eu-west-1.amazonaws.com/budibase:proxy-latest
+    image: budibase/proxy
     environment:
       - PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
       - PROXY_RATE_LIMIT_API_PER_SECOND=50

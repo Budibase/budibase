@@ -6,8 +6,8 @@
 #   .\scripts\build-multi-images.ps1 -SkipBuild   # images only (monorepo already built)
 #   .\scripts\build-multi-images.ps1 -UseDocker    # use Docker instead of Podman
 #
-# Then run 6 containers:
-#   podman compose -f hosting/docker-compose.yaml -f hosting/docker-compose.local-images.yaml --env-file hosting/.env up -d
+# Then run 6 containers (use the same engine you built with, e.g. podman compose or docker compose):
+#   <engine> compose -f hosting/docker-compose.yaml -f hosting/docker-compose.local-images.yaml --env-file hosting/.env up -d
 
 param([switch]$UseDocker, [switch]$SkipBuild)
 
@@ -97,7 +97,7 @@ Write-Host " Database: budibase/database:2.0.0 (pulled at compose time)" -Foregr
 Write-Host "==========================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Run 6 containers:" -ForegroundColor Cyan
-Write-Host "  podman compose -f hosting/docker-compose.yaml -f hosting/docker-compose.local-images.yaml --env-file hosting/.env up -d" -ForegroundColor White
+Write-Host "  $engine compose -f hosting/docker-compose.yaml -f hosting/docker-compose.local-images.yaml --env-file hosting/.env up -d" -ForegroundColor White
 Write-Host ""
 Write-Host "Open: http://localhost:10000" -ForegroundColor Cyan
 Write-Host ""

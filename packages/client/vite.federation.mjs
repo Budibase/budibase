@@ -7,11 +7,11 @@ import { defineConfig } from "vite"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Base URL for remote chunks so the host loads them from Budibase, not from host origin
-const budibasePublicUrl =
-  (process.env.BUDIBASE_PUBLIC_URL || process.env.PLATFORM_URL || "").replace(
-    /\/?$/,
-    "/"
-  ) || "http://localhost:10000/"
+const budibasePublicUrl = (
+  process.env.BUDIBASE_PUBLIC_URL ||
+  process.env.PLATFORM_URL ||
+  "http://localhost:10000"
+).replace(/\/?$/, "/")
 
 export default defineConfig({
   root: __dirname,

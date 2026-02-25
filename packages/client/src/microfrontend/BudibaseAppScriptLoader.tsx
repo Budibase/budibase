@@ -111,8 +111,35 @@ export const BudibaseAppScriptLoader: React.FC<
 
     if (existingScript && existingScript.src === clientLibUrl) {
       scriptLoadedRef.current = true
-      runLoadBudibase()
-      return
+      if (
+        typeof (window as unknown as { loadBudibase?: () => Promise<void> })
+          .loadBudibase === "function"
+      ) {
+        runLoadBudibase()
+        return
+      }
+      // Script still loading (e.g. another instance added it): poll for loadBudibase then run
+      const start = Date.now()
+      const poll = () => {
+        if (
+          typeof (window as unknown as { loadBudibase?: () => Promise<void> })
+            .loadBudibase === "function"
+        ) {
+          runLoadBudibase()
+          return
+        }
+        if (Date.now() - start > POLL_TIMEOUT_MS) {
+          handleError(
+            new Error(
+              "loadBudibase() was not available after 10 seconds. Check clientLibUrl and console for script errors."
+            )
+          )
+          return
+        }
+        pollTimeoutRef.current = setTimeout(poll, POLL_INTERVAL_MS)
+      }
+      poll()
+      return () => clearPoll()
     }
 
     if (existingScript) {
@@ -124,6 +151,8 @@ export const BudibaseAppScriptLoader: React.FC<
         runLoadBudibase()
         return
       }
+      // Different src and loadBudibase not ready: remove stale script to avoid duplicate IDs and conflicting globals
+      existingScript.remove()
     }
 
     // Load script

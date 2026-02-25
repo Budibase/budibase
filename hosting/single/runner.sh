@@ -151,8 +151,11 @@ mkdir -p ${DATA_DIR}/couch
 mkdir -p ${DATA_DIR}/litellm
 mkdir -p ${DATA_DIR}/litellm/postgres
 chown -R couchdb:couchdb ${DATA_DIR}/couch
-chown -R postgres:postgres ${DATA_DIR}/litellm
-chmod 700 ${DATA_DIR}/litellm/postgres
+# Only chown litellm to postgres when postgres is installed (optional in Dockerfile when GPG key fetch fails)
+if getent passwd postgres >/dev/null 2>&1; then
+    chown -R postgres:postgres ${DATA_DIR}/litellm
+    chmod 700 ${DATA_DIR}/litellm/postgres
+fi
 
 echo "Starting Redis runner..."
 ./redis-runner.sh &
@@ -201,6 +204,11 @@ if [[ "${LITELLM_INTERNAL_DB}" == "true" && -z "${DATABASE_URL}" ]]; then
 fi
 
 if [[ "${LITELLM_INTERNAL_DB}" == "true" ]]; then
+    # Internal LiteLLM Postgres requires postgres binaries (optional in image when GPG key fetch fails)
+    if ! command -v pg_isready >/dev/null 2>&1 || ! command -v pg_config >/dev/null 2>&1; then
+        echo "Internal LiteLLM Postgres is requested but Postgres is not installed in this image (e.g. build skipped due to GPG key failure). Set DATABASE_URL to an external Postgres or build the image with Postgres."
+        exit 1
+    fi
     echo "Starting internal LiteLLM postgres runner..."
     pm2 start ./litellm-db-runner.sh --name litellm-postgres --interpreter bash
 

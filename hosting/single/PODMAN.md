@@ -82,3 +82,4 @@ podman run -d --network slirp4netns -p 10000:80 -p 443:443 -v budibase_data:/dat
 - The Dockerfile **HEALTHCHECK** is not OCI-compliant; Podman ignores it. The container still runs normally.
 - You may be prompted for the registry when pulling the CouchDB base image (`budibase/database:2.0.0`); Docker Hub is the default.
 - The script uses `--include-dependencies` so the **client** (and builder) are built; the single image needs `packages/server/client` and `packages/server/builder` for the app and Module Federation.
+- **Build behind corporate proxy (SSL inspection):** if `yarn install` in the Docker build fails due to TLS/certificate errors, you can pass `--build-arg ALLOW_INSECURE_TLS_BUILD=1`. This disables TLS verification during the install step only and is a security risk (MITM/dependency injection); use only in trusted environments when necessary.

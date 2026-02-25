@@ -24,8 +24,12 @@ RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
 ARG TARGETPLATFORM
-# Allow HTTPS when behind a corporate proxy that does SSL inspection (node-gyp fetches Node headers)
-RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} NODE_TLS_REJECT_UNAUTHORIZED=0 yarn install --production --frozen-lockfile
+# Optional: set ALLOW_INSECURE_TLS_BUILD=1 only when building behind a corporate proxy that does SSL
+# inspection (e.g. node-gyp fetches). Disabling TLS verification is a security risk (MITM/dependency
+# injection); use only when necessary and in trusted environments.
+ARG ALLOW_INSECURE_TLS_BUILD=0
+RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} \
+    sh -c 'if [ "${ALLOW_INSECURE_TLS_BUILD}" = "1" ]; then export NODE_TLS_REJECT_UNAUTHORIZED=0; fi; yarn install --production --frozen-lockfile'
 
 # Copy the actual code
 COPY packages/server/dist packages/server/dist

@@ -45,7 +45,6 @@ podman run --rm `
     -e YARN_IGNORE_ENGINES=1 `
     -e DISABLE_V8_COMPILE_CACHE=1 `
     -e NODE_OPTIONS="--max-old-space-size=4096" `
-    -e NODE_TLS_REJECT_UNAUTHORIZED=0 `
     -e npm_config_fetch_retries=5 `
     -e npm_config_fetch_timeout=300000 `
     -e npm_config_fetch_retry_mintimeout=20000 `
