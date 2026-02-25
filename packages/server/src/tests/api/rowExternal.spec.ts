@@ -6,7 +6,7 @@ import {
   patchAsAutomation,
   save,
   saveAsAutomation,
-} from "./index"
+} from "../../api/controllers/row"
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -33,11 +33,11 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-jest.mock("../../../integrations/utils", () => ({
+jest.mock("../../integrations/utils", () => ({
   isExternalTableID: jest.fn().mockReturnValue(true),
 }))
 
-jest.mock("./external", () => ({
+jest.mock("../../api/controllers/row/external", () => ({
   patch: jest.fn().mockResolvedValue({
     row: { _id: "row1" },
     table: { name: "T", _id: "table1" },
@@ -50,14 +50,14 @@ jest.mock("./external", () => ({
   fetchEnrichedRow: jest.fn(),
 }))
 
-jest.mock("./internal", () => ({
+jest.mock("../../api/controllers/row/internal", () => ({
   patch: jest.fn(),
   destroy: jest.fn(),
   bulkDestroy: jest.fn(),
   fetchEnrichedRow: jest.fn(),
 }))
 
-jest.mock("../../../sdk", () => ({
+jest.mock("../../sdk", () => ({
   __esModule: true,
   default: {
     rows: {
@@ -75,23 +75,26 @@ jest.mock("../../../sdk", () => ({
   },
 }))
 
-jest.mock("../../../websockets", () => ({
+jest.mock("../../websockets", () => ({
   gridSocket: { emitRowUpdate: jest.fn(), emitRowDeletion: jest.fn() },
 }))
 
-jest.mock("../public/rows", () => ({
+jest.mock("../../api/controllers/public/rows", () => ({
   fixRow: jest.fn().mockImplementation((row: any) => row),
 }))
 
-jest.mock("../public/utils", () => ({
+jest.mock("../../api/controllers/public/utils", () => ({
   addRev: jest
     .fn()
     .mockResolvedValue({ _id: "row1", tableId: "datasource_plus_xxx" }),
 }))
 
-jest.mock("../view/exporters", () => ({ Format: {}, isFormat: jest.fn() }))
+jest.mock("../../api/controllers/view/exporters", () => ({
+  Format: {},
+  isFormat: jest.fn(),
+}))
 
-jest.mock("./utils", () => ({
+jest.mock("../../api/controllers/row/utils", () => ({
   getSourceId: jest
     .fn()
     .mockReturnValue({ tableId: "datasource_plus_xxx", viewId: undefined }),
