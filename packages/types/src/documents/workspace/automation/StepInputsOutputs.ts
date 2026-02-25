@@ -251,13 +251,19 @@ export type GenerateTextStepOutputs = {
   response?: string
 }
 
-export type ExtractFileDataStepInputs = {
-  file: RowAttachment | string
-  source: "URL" | "Attachment"
-  fileType: SupportedFileType
-  schema: Record<string, any>
-}
-
+export type ExtractFileDataStepInputs =
+  | {
+      file: string
+      source: "URL"
+      fileType: SupportedFileType
+      schema: Record<string, any>
+    }
+  | {
+      file: RowAttachment | string
+      source: "Attachment"
+      fileType?: SupportedFileType
+      schema: Record<string, any>
+    }
 export type ExtractFileDataStepOutputs = {
   success: boolean
   data: Record<string, any>
