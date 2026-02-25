@@ -55,6 +55,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.SYNC_AUTOMATIONS,
     Feature.OFFLINE,
     Feature.EXPANDED_PUBLIC_API,
+    Feature.WORKSPACE_IMPORT_EXPORT,
     Feature.VIEW_PERMISSIONS,
     Feature.TRIGGER_AUTOMATION_RUN,
     Feature.SCIM,
@@ -78,6 +79,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.SYNC_AUTOMATIONS,
     //Feature.OFFLINE, // This feature is not available in the trial version
     Feature.EXPANDED_PUBLIC_API,
+    Feature.WORKSPACE_IMPORT_EXPORT,
     Feature.VIEW_PERMISSIONS,
     Feature.TRIGGER_AUTOMATION_RUN,
     Feature.SCIM,
@@ -101,6 +103,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.SYNC_AUTOMATIONS,
     Feature.OFFLINE,
     Feature.EXPANDED_PUBLIC_API,
+    Feature.WORKSPACE_IMPORT_EXPORT,
     Feature.VIEW_PERMISSIONS,
     Feature.TRIGGER_AUTOMATION_RUN,
     Feature.SCIM,

@@ -28,6 +28,7 @@ jest.mock("@budibase/pro", () => {
     quotas: {
       ...actual.quotas,
       incrementBudibaseAICredits: jest.fn(),
+      throwIfBudibaseAICreditsExceeded: jest.fn().mockResolvedValue(undefined),
     },
   }
 })
