@@ -246,7 +246,7 @@
       description="Human readable name for the model"
       required
       bind:value={draft.name}
-      placeholder="Latest Chat GPT"
+      placeholder="Latest ChatGPT"
     />
   {/if}
 
