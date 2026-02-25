@@ -700,6 +700,7 @@ function extractCreatedTablesFromResponse(
   // Parse SSE payload:
   // data: {"type":"progress","message":"..."}
   // data: {"type":"result","createdTables":[...]}
+  // data: {"type":"error","message":"..."}
   const lines = response.split(/\r?\n/)
   for (const line of lines) {
     if (!line.startsWith("data: ")) {
@@ -709,13 +710,23 @@ function extractCreatedTablesFromResponse(
     if (!payload) {
       continue
     }
+    let event: any
     try {
-      const event = JSON.parse(payload)
-      if (event?.type === "result" && Array.isArray(event?.createdTables)) {
-        return event.createdTables as CreatedTable[]
-      }
+      event = JSON.parse(payload)
     } catch {
       // ignore malformed/partial event lines
+      continue
+    }
+
+    if (event?.type === "result" && Array.isArray(event?.createdTables)) {
+      return event.createdTables as CreatedTable[]
+    }
+    if (event?.type === "error") {
+      const message =
+        typeof event?.message === "string" && event.message.trim().length > 0
+          ? event.message
+          : "Table generation failed"
+      throw new Error(message)
     }
   }
 
