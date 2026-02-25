@@ -38,7 +38,8 @@
     value: string
     color: string
   }[] = []
-  let endUserRoleOptions: { label: string; value: string; color?: string }[] = []
+  let endUserRoleOptions: { label: string; value: string; color?: string }[] =
+    []
   const builtInEndUserRoles = [Constants.Roles.BASIC, Constants.Roles.ADMIN]
   const excludedRoleIds = [
     ...builtInEndUserRoles,

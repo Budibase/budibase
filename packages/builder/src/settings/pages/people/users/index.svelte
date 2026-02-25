@@ -472,8 +472,12 @@
   }
 
   const createUsersFromCsv = async (userCsvData: any) => {
-    const { userEmails, usersRole, usersAppRole, userGroups: groups } =
-      userCsvData
+    const {
+      userEmails,
+      usersRole,
+      usersAppRole,
+      userGroups: groups,
+    } = userCsvData
 
     const users: UserInfo[] = []
     for (const email of userEmails) {
@@ -818,10 +822,7 @@
 </Modal>
 
 <Modal bind:this={importUsersModal}>
-  <ImportUsersModal
-    {createUsersFromCsv}
-    workspaceOnly={isWorkspaceOnly}
-  />
+  <ImportUsersModal {createUsersFromCsv} workspaceOnly={isWorkspaceOnly} />
 </Modal>
 
 <Modal bind:this={userLimitReachedModal}>
