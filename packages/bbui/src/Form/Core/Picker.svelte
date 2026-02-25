@@ -260,7 +260,7 @@
     class:auto-width={autoWidth}
     class:has-subtitle={!!fieldSubtitle}
     class:wrap-text={wrapText}
-    title={fieldTooltip ?? undefined}
+    title={fieldTooltip}
   >
     <span class="picker-label-text">{fieldText}</span>
     {#if fieldSubtitle}
