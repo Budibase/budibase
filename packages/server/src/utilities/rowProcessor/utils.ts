@@ -3,7 +3,7 @@ import { ai } from "@budibase/pro"
 import { OperationFields } from "@budibase/shared-core"
 import { processStringSync } from "@budibase/string-templates"
 import { LLMResponse, AIOperationEnum, AIFieldMetadata } from "@budibase/types"
-import { generateText, type ModelMessage } from "ai"
+import { generateText } from "ai"
 import {
   AutoColumnFieldMetadata,
   AutoFieldSubType,
@@ -18,6 +18,7 @@ import tracer from "dd-trace"
 import { AutoFieldDefaultNames } from "../../constants"
 import { isAIColumn } from "../../db/utils"
 import sdk from "../../sdk"
+import { toModelMessages } from "../../sdk/workspace/ai/llm/messages"
 import { coerce } from "./index"
 
 interface FormulaOpts {
@@ -57,23 +58,6 @@ function promptForAIOperation(schema: AIFieldMetadata, row: Row) {
     default:
       throw new Error(`Unsupported AI operation: ${operation}`)
   }
-}
-
-function toModelMessages(
-  messages: { role: string; content: any }[]
-): ModelMessage[] {
-  return messages.map<ModelMessage>(message => {
-    if (typeof message.content !== "string") {
-      throw new Error("AI message content must be a string")
-    }
-    if (message.role === "tool") {
-      throw new Error("AI tool messages are not supported in row AI operations")
-    }
-    return {
-      role: message.role as Exclude<ModelMessage["role"], "tool">,
-      content: message.content,
-    }
-  })
 }
 
 async function runAIOperation(

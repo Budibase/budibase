@@ -4,6 +4,7 @@ import {
   ClassifyContentStepInputs,
   ClassifyContentStepOutputs,
 } from "@budibase/types"
+import { promptWithDefaultLLM } from "./llm"
 
 export async function run({
   inputs,
@@ -23,14 +24,11 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
-
-    const categories = inputs.categoryItems!.map(item => item.category)
+    const categories = inputs.categoryItems.map(item => item.category)
 
     const request = ai.classifyText(inputs.textInput, categories)
-
-    const llmResponse = await llm.prompt(request)
-    const determinedCategory = llmResponse?.message?.trim()
+    const llmResponse = await promptWithDefaultLLM(request.messages)
+    const determinedCategory = llmResponse?.trim()
 
     if (determinedCategory && categories.includes(determinedCategory)) {
       return {

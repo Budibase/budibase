@@ -6,6 +6,7 @@ import {
   ContentType,
 } from "@budibase/types"
 import { utils } from "@budibase/shared-core"
+import { promptWithDefaultLLM } from "./llm"
 
 export async function run({
   inputs,
@@ -21,8 +22,6 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
-
     const contentTypePrompt = getContentTypePrompt(
       inputs.contentType as ContentType
     )
@@ -35,8 +34,8 @@ Instructions: ${inputs.instructions}
 Generate the content based on these instructions. Format appropriately for a ${inputs.contentType}.`
     )
 
-    const llmResponse = await llm.prompt(request)
-    const generatedText = llmResponse?.message?.trim()
+    const llmResponse = await promptWithDefaultLLM(request.messages)
+    const generatedText = llmResponse?.trim()
 
     if (generatedText) {
       return {
