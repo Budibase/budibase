@@ -1,17 +1,25 @@
+import { ai } from "@budibase/pro"
 import {
   GenerateTablesRequest,
   GenerateTablesResponse,
   UserCtx,
 } from "@budibase/types"
-import { ai } from "@budibase/pro"
+import environment from "../../../environment"
 import sdk from "../../../sdk"
 
 export async function generateTables(
   ctx: UserCtx<GenerateTablesRequest, GenerateTablesResponse>
 ) {
-  const { prompt } = ctx.request.body
+  const timeoutMs = parseInt(environment.TABLE_GENERATION_TIMEOUT_MS, 10)
+  if (!isNaN(timeoutMs) && timeoutMs > 0) {
+    ctx.req.setTimeout(timeoutMs)
+    ctx.res.setTimeout(timeoutMs)
+  }
 
-  const tableGenerator = await ai.TableGeneration.init({
+  const { prompt } = ctx.request.body
+  const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+
+  const tableGenerator = await ai.TableGeneration.init(llm, {
     generateTablesDelegate: sdk.ai.helpers.generateTables,
     generateDataDelegate: sdk.ai.helpers.generateRows,
   })

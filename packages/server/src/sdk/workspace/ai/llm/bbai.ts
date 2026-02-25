@@ -9,8 +9,7 @@ import { quotas } from "@budibase/pro"
 import { wrapLanguageModel } from "ai"
 import { TransformStream } from "node:stream/web"
 import { context } from "@budibase/backend-core"
-import { ReasoningEffort } from "@budibase/types"
-import { LLMResponse } from "."
+import { LLMResponse, ReasoningEffort } from "@budibase/types"
 import environment from "../../../../environment"
 
 interface OpenAIUsage {
@@ -152,11 +151,13 @@ export async function createBBAIClient(
     middleware: {
       specificationVersion: "v3",
       async wrapGenerate({ doGenerate }) {
+        await quotas.throwIfBudibaseAICreditsExceeded()
         const result = await doGenerate()
         await incrementBudibaseAICreditsFromUsage(result.usage).catch(() => {})
         return result
       },
       async wrapStream({ doStream }) {
+        await quotas.throwIfBudibaseAICreditsExceeded()
         const result = await doStream()
         const transformStream = new TransformStream<
           LanguageModelV3StreamPart,

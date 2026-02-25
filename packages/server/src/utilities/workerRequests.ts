@@ -98,6 +98,7 @@ async function checkResponse(
 export async function sendSmtpEmail({
   to,
   from,
+  replyTo,
   subject,
   contents,
   cc,
@@ -108,6 +109,7 @@ export async function sendSmtpEmail({
 }: {
   to: string
   from: string
+  replyTo?: string
   subject: string
   contents: string
   cc?: string
@@ -120,6 +122,7 @@ export async function sendSmtpEmail({
   const request: SendEmailRequest = {
     email: to,
     from,
+    replyTo,
     contents,
     subject,
     cc,
