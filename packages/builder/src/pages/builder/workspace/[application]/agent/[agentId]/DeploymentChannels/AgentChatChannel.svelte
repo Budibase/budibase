@@ -25,7 +25,7 @@
 
   $: if (workspaceId && !$currentChatApp && !loadingChatApp) {
     loadingChatApp = true
-    void chatAppsStore
+    chatAppsStore
       .ensureChatApp(undefined, workspaceId)
       .catch(error => {
         console.error(error)
