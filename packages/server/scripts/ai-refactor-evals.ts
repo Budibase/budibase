@@ -1162,11 +1162,15 @@ async function main() {
         continue
       }
 
-      switchBudibaseMode(mode)
-      activeMode = mode
-      console.log(yellow(`Waiting for server readiness after mode:${mode}...`))
-      await waitForServerReady(baseUrl)
-      await client.init()
+      if (activeMode === mode) {
+        console.log(yellow(`Budibase mode already set to: ${mode}`))
+      } else {
+        switchBudibaseMode(mode)
+        activeMode = mode
+        console.log(yellow(`Waiting for server readiness after mode:${mode}...`))
+        await waitForServerReady(baseUrl)
+        await client.init()
+      }
 
       for (const scenario of modeScenarios) {
         const enabledFeatures = resolveFeatures(globalFeatures)
