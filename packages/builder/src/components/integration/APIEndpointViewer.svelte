@@ -847,7 +847,9 @@
         value={selectedEndpointOption}
         options={endpointOptions}
         getOptionValue={endpoint => endpoint}
-        getOptionLabel={endpoint => endpoint.path}
+        getOptionLabel={endpoint => endpoint.name}
+        getOptionSubtitle={endpoint => endpoint.path}
+        getOptionTooltip={endpoint => endpoint.path}
         compare={compareEndpoints}
         disabled={endpointsLoading}
         readonly={!!query?._id}
