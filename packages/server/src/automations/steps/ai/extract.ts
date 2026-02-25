@@ -184,7 +184,7 @@ export async function run({
       model: llm.chat,
       messages: modelMessages,
       providerOptions: llm.providerOptions?.(false),
-      ...(output ? { output } : {}),
+      output,
     })
     const data = response.output.data
 
