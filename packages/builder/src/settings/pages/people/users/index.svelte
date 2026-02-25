@@ -725,7 +725,6 @@
           <DeleteRowsButton
             item="user"
             action={isWorkspaceOnly ? "Remove" : "Delete"}
-            confirmationAction={isWorkspaceOnly ? "remove" : "delete"}
             confirmationTitle={isWorkspaceOnly
               ? "Confirm user removal"
               : "Confirm user deletion"}

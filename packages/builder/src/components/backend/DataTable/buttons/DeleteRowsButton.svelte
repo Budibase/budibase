@@ -12,7 +12,6 @@
   export let deleteRows: (_rows: unknown[]) => void | Promise<void>
   export let item: string = "row"
   export let action: string = "Delete"
-  export let confirmationAction: string | undefined
   export let confirmationTitle: string | undefined
   export let confirmationButtonText: string | undefined
 
@@ -30,7 +29,6 @@
   }
 
   $: text = `${item}${selectedRows?.length === 1 ? "" : "s"}`
-  $: actionText = confirmationAction || action.toLowerCase()
 </script>
 
 <Button icon="trash" warning quiet on:click={showModal}>
@@ -44,7 +42,7 @@
   onOk={confirmDeletion}
   title={confirmationTitle || `Confirm ${action}`}
 >
-  Are you sure you want to {actionText}
+  Are you sure you want to {action.toLowerCase()}
   {selectedRows.length}
   {text}?
 </ConfirmDialog>

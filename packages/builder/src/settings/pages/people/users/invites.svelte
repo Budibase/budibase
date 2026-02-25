@@ -121,7 +121,6 @@
     <div use:routeActions class="delete-btn">
       <DeleteRowsButton
         item="user"
-        confirmationAction="delete"
         confirmationTitle="Confirm Deletion"
         confirmationButtonText="Delete invites"
         on:updaterows
