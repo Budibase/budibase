@@ -1805,11 +1805,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       description: "Atlassian Confluence API for content, spaces, and users",
       specs: [
         {
-          version: "1.0.0",
-          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/confluence/openapi.json",
+          version: "2.0.0",
+          url: "https://dac-static.atlassian.com/cloud/confluence/openapi-v2.v3.json?_v=1.8327.0",
         },
       ],
-      operationsCount: 616,
+      operationsCount: 212,
       icon: ConfluenceLogo,
       verified: true,
     },

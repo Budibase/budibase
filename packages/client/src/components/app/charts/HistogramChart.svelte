@@ -23,6 +23,8 @@
   $: xAxisFormatter = getFormatter(horizontal, "x")
   $: yAxisFormatter = getFormatter(horizontal, "y")
 
+  $: hasClickAction = typeof onClick === "function"
+
   $: options = {
     series,
     colors: palette === "Custom" ? [c1, c2, c3, c4, c5] : [],
@@ -180,4 +182,4 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {hasClickAction} />

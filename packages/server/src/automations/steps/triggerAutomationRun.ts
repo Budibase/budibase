@@ -45,8 +45,11 @@ export async function run({
       )
 
       if (triggers.isAutomationResults(response)) {
+        const isSuccessStatus =
+          response.status === AutomationStatus.SUCCESS ||
+          response.status === AutomationStatus.STOPPED
         return {
-          success: response.status === AutomationStatus.SUCCESS,
+          success: isSuccessStatus,
           value: response.steps,
           status: response.status,
         }

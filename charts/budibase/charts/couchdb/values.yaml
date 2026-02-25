@@ -74,6 +74,7 @@ persistentVolume:
   accessModes:
     - ReadWriteOnce
   size: 10Gi
+  mountPath: /data
   # storageClass: "-"
 
 # Experimental - FEATURE STATE: Kubernetes v1.27 [beta]
@@ -112,7 +113,8 @@ podManagementPolicy: Parallel
 
 ## To better tolerate Node failures, we can prevent Kubernetes scheduler from
 ## assigning more than one Pod of CouchDB StatefulSet per Node using podAntiAffinity.
-affinity: {}
+affinity:
+  {}
   # podAntiAffinity:
   #   requiredDuringSchedulingIgnoredDuringExecution:
   #     - labelSelector:
@@ -125,7 +127,8 @@ affinity: {}
 
 ## To control how Pods are spread across your cluster among failure-domains such as regions,
 ## zones, nodes, and other user-defined topology domains use topologySpreadConstraints.
-topologySpreadConstraints: {}
+topologySpreadConstraints:
+  {}
   # topologySpreadConstraints:
   #   - maxSkew: 1
   #     topologyKey: "topology.kubernetes.io/zone"
@@ -163,7 +166,8 @@ service:
 ## If you need to expose any additional ports on the CouchDB container, for example
 ## if you're running CouchDB container with additional processes that need to
 ## be accessible outside of the pod, you can define them here.
-extraPorts: []
+extraPorts:
+  []
   # - name: sqs
   #   containerPort: 4984
 
@@ -177,7 +181,8 @@ ingress:
   hosts:
     - chart-example.local
   path: /
-  annotations: {}
+  annotations:
+    {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   tls:
@@ -188,7 +193,8 @@ ingress:
 
 ## Optional resource requests and limits for the CouchDB container
 ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-resources: {}
+resources:
+  {}
   # requests:
   #  cpu: 100m
   #  memory: 128Mi
@@ -198,7 +204,8 @@ resources: {}
 
 ## Optional resource requests and limits for the CouchDB init container
 ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-initResources: {}
+initResources:
+  {}
   # requests:
   #  cpu: 100m
   #  memory: 128Mi
@@ -273,7 +280,8 @@ prometheusPort:
 
 # Configure arbitrary sidecar containers for CouchDB pods created by the
 # StatefulSet
-sidecars: {}
+sidecars:
+  {}
   # - name: foo
   #   image: "busybox"
   #   imagePullPolicy: IfNotPresent

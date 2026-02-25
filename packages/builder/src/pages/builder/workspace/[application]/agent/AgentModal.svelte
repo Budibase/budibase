@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { agentsStore, aiConfigsStore, vectorDbStore } from "@/stores/portal"
+  import { appStore } from "@/stores/builder"
+  import { agentsStore, aiConfigsStore } from "@/stores/portal"
   import { Input, Modal, ModalContent } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
   import { onMount } from "svelte"
@@ -20,17 +21,17 @@
   let modal: Modal
 
   async function createAgent() {
+    const workspaceId = $appStore.appId
     const newAgent = await agentsStore.createAgent({
       name: draft.name,
       live: false,
     })
     modal.hide()
-    goto(`./${newAgent._id}/config`)
+    goto(`/builder/workspace/${workspaceId}/agent/${newAgent._id}/config`)
   }
 
   onMount(() => {
     aiConfigsStore.fetch()
-    vectorDbStore.fetch()
   })
 </script>
 

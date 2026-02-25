@@ -1,6 +1,20 @@
 <script>
   import { confirmationStore } from "@/stores"
-  import { Modal, ModalContent } from "@budibase/bbui"
+  import { Modal, ModalContent, MarkdownViewer } from "@budibase/bbui"
+
+  const stringify = text => {
+    if (text == null) {
+      return ""
+    }
+    if (typeof text !== "string") {
+      try {
+        return JSON.stringify(text)
+      } catch (e) {
+        return ""
+      }
+    }
+    return text
+  }
 </script>
 
 {#if $confirmationStore.showConfirmation}
@@ -11,7 +25,7 @@
       confirmText={$confirmationStore.confirmButtonText}
       cancelText={$confirmationStore.cancelButtonText}
     >
-      {$confirmationStore.text}
+      <MarkdownViewer value={stringify($confirmationStore.text)} />
     </ModalContent>
   </Modal>
 {/if}

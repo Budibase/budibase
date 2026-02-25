@@ -1,8 +1,9 @@
-import { getPool } from "../../../../tests/jestEnv"
-import _ from "lodash"
 import { ai } from "@budibase/pro"
 import { ResponseFormat } from "@budibase/types"
+import _ from "lodash"
+import { Readable } from "stream"
 import { MockLLMResponseOpts } from "."
+import { getPool } from "../../../../tests/jestEnv"
 
 let chatID = 1
 const SPACE_REGEX = /\s+/g
@@ -35,6 +36,7 @@ interface Usage {
 interface ChatCompletionRequest {
   messages: Message[]
   model: string
+  response_format?: ResponseFormat
 }
 
 interface ChatCompletionResponse {
@@ -46,6 +48,8 @@ interface ChatCompletionResponse {
   choices: Choice[]
   usage: Usage
 }
+
+type ParsedResponseFormat = ReturnType<typeof ai.parseResponseFormat>
 
 function parseJsonBody(body: unknown): ChatCompletionRequest {
   if (typeof body === "string") return JSON.parse(body)
@@ -60,6 +64,53 @@ function parseJsonBody(body: unknown): ChatCompletionRequest {
   return { messages: [], model: "" }
 }
 
+function stripJsonSchemaDescriptions(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(stripJsonSchemaDescriptions)
+  }
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => key !== "description")
+      .map(
+        ([key, nested]) => [key, stripJsonSchemaDescriptions(nested)] as const
+      )
+    return Object.fromEntries(entries)
+  }
+  return value
+}
+
+function matchesResponseFormat(
+  actual: ChatCompletionRequest,
+  expected: ParsedResponseFormat
+): boolean {
+  if (!actual?.response_format || typeof actual?.response_format !== "object") {
+    return false
+  }
+
+  const actualFormat = actual.response_format
+  if (actualFormat.type !== expected?.type) {
+    return false
+  }
+
+  if (expected?.type !== "json_schema") {
+    return _.isEqual(actualFormat, expected)
+  }
+
+  const expectedJson = expected.json_schema
+  const actualJson = actualFormat.json_schema
+  if (!actualJson || typeof actualJson !== "object") {
+    return false
+  }
+  if (actualJson.name !== expectedJson.name) {
+    return false
+  }
+
+  return _.isEqual(
+    stripJsonSchemaDescriptions(actualJson.schema),
+    stripJsonSchemaDescriptions(expectedJson.schema)
+  )
+}
+
 export type MockLLMResponseFn = (
   answer: string | ((prompt: string) => string),
   opts?: MockLLMResponseOpts
@@ -68,11 +119,8 @@ export type MockLLMResponseFn = (
 export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   const origin = opts?.baseUrl || "https://api.openai.com"
   const pool = getPool(origin)
-
   const expectedFormat = opts?.format
-    ? _.matches({
-        response_format: ai.parseResponseFormat(opts.format as ResponseFormat),
-      })
+    ? ai.parseResponseFormat(opts.format as ResponseFormat)
     : null
 
   const interceptor = pool.intercept({
@@ -80,14 +128,13 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
     method: "POST",
   })
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
-  interceptor.reply(200, (reqOpts: any) => {
+  const scope = interceptor.reply(200, (reqOpts: any) => {
     const reqBody = parseJsonBody(reqOpts.body)
-    if (expectedFormat && !expectedFormat(reqBody)) {
+    if (expectedFormat && !matchesResponseFormat(reqBody, expectedFormat)) {
       return {
         error: { message: "Unexpected response_format in request body" },
       }
     }
-
     let prompt
     const messageContent = reqBody.messages[0].content
     if (typeof messageContent === "string") {
@@ -148,6 +195,229 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
 
     return response
   }) // Each mock call handles one request
+
+  if (opts?.times != null) {
+    scope.times(opts.times)
+  }
+}
+
+export const mockAISDKChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
+  const origin = opts?.baseUrl || "https://api.openai.com"
+  const pool = getPool(origin)
+  const expectedFormat = opts?.format
+    ? ai.parseResponseFormat(opts.format as ResponseFormat)
+    : null
+
+  const interceptor = pool.intercept({
+    path: "/v1/chat/completions",
+    method: "POST",
+    body: body => {
+      const reqBody = parseJsonBody(body)
+      if (expectedFormat) {
+        return matchesResponseFormat(reqBody, expectedFormat)
+      }
+      return !("response_format" in reqBody)
+    },
+  })
+  interceptor.defaultReplyHeaders({ "content-type": "application/json" })
+  const scope = interceptor.reply<object>(reqOpts => {
+    const reqBody = parseJsonBody(reqOpts.body)
+    let prompt
+    const messageContent = reqBody.messages[0].content
+    if (typeof messageContent === "string") {
+      prompt = messageContent
+    } else if (Array.isArray(messageContent)) {
+      const textParts = messageContent
+        .filter((part: any) => part.type === "text")
+        .map((part: any) => part.text)
+      prompt = textParts.join(" ")
+    } else {
+      prompt = ""
+    }
+
+    let content
+    if (typeof answer === "function") {
+      try {
+        content = answer(prompt)
+      } catch (e) {
+        return {
+          statusCode: 500,
+          data: {
+            error: { message: "Internal Server Error" },
+          },
+        }
+      }
+    } else {
+      content = answer
+    }
+
+    chatID++
+
+    // We mock token usage because we use it to calculate Budibase AI quota
+    // usage when Budibase AI is enabled, and some tests assert against quota
+    // usage to make sure we're tracking correctly.
+    const prompt_tokens = prompt.split(SPACE_REGEX).length
+    const completion_tokens = content.split(SPACE_REGEX).length
+
+    const response: ChatCompletionResponse = {
+      id: `chatcmpl-${chatID}`,
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model: reqBody.model,
+      system_fingerprint: `fp_${chatID}`,
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content },
+          logprobs: null,
+          finish_reason: "stop",
+        },
+      ],
+      usage: {
+        prompt_tokens,
+        completion_tokens,
+        total_tokens: prompt_tokens + completion_tokens,
+        completion_tokens_details: {
+          reasoning_tokens: 0,
+          accepted_prediction_tokens: 0,
+          rejected_prediction_tokens: 0,
+        },
+      },
+    }
+
+    return {
+      statusCode: 200,
+      data: response,
+    }
+  }) // Each mock call handles one request
+
+  if (opts?.times != null) {
+    scope.times(opts.times)
+  }
+}
+
+export const mockChatGPTStreamResponse = (content = "hi") => {
+  const origin = "https://api.openai.com"
+  const pool = getPool(origin)
+
+  const interceptor = pool.intercept({
+    path: "/v1/chat/completions",
+    method: "POST",
+  })
+  interceptor.defaultReplyHeaders({
+    "content-type": "text/event-stream",
+    "cache-control": "no-cache",
+    connection: "keep-alive",
+  })
+  interceptor.reply(200, (reqOpts: any) => {
+    const prompt = getPromptFromRequest(reqOpts.body)
+
+    // We mock token usage because we use it to calculate Budibase AI quota
+    // usage when Budibase AI is enabled, and some tests assert against quota
+    // usage to make sure we're tracking correctly.
+    const prompt_tokens = prompt.split(SPACE_REGEX).length
+    const completion_tokens = content.split(SPACE_REGEX).length
+
+    const chunks = [
+      `data: ${JSON.stringify({
+        id: "chatcmpl-test",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "gpt-5-mini",
+        choices: [{ index: 0, delta: { content } }],
+      })}\n\n`,
+      `data: ${JSON.stringify({
+        id: "chatcmpl-test",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "gpt-5-mini",
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+        usage: {
+          prompt_tokens: prompt_tokens,
+          completion_tokens: completion_tokens,
+          total_tokens: prompt_tokens + completion_tokens,
+          completion_tokens_details: {
+            reasoning_tokens: 0,
+            accepted_prediction_tokens: 0,
+            rejected_prediction_tokens: 0,
+          },
+        },
+      })}\n\n`,
+      "data: [DONE]\n\n",
+    ]
+
+    return chunks.join("")
+  })
+}
+
+const getPromptFromRequest = (body: unknown): string => {
+  const reqBody = parseJsonBody(body)
+  const messageContent = reqBody.messages?.[0]?.content
+  if (typeof messageContent === "string") {
+    return messageContent
+  }
+  if (Array.isArray(messageContent)) {
+    return messageContent
+      .filter((part: any) => part.type === "text")
+      .map((part: any) => part.text)
+      .join(" ")
+  }
+  return ""
+}
+
+export const mockChatGPTStreamFailure = (opts?: {
+  baseUrl?: string
+  status?: number
+  errorMessage?: string
+  afterFirstChunk?: boolean
+}) => {
+  const origin = opts?.baseUrl || "https://api.openai.com"
+  const pool = getPool(origin)
+
+  const interceptor = pool.intercept({
+    path: "/v1/chat/completions",
+    method: "POST",
+  })
+
+  if (!opts?.afterFirstChunk) {
+    interceptor.defaultReplyHeaders({ "content-type": "application/json" })
+    interceptor.reply(opts?.status || 401, {
+      error: {
+        message: opts?.errorMessage || "Unauthorized",
+        type: "invalid_request_error",
+      },
+    })
+    return
+  }
+
+  let pushed = false
+  const stream = new Readable({
+    read() {
+      if (pushed) {
+        return
+      }
+      pushed = true
+      this.push(
+        `data: ${JSON.stringify({
+          id: "chatcmpl-test",
+          object: "chat.completion.chunk",
+          created: Math.floor(Date.now() / 1000),
+          model: "gpt-5-mini",
+          choices: [{ index: 0, delta: { content: "hi" } }],
+        })}\n\n`
+      )
+      setImmediate(() => {
+        this.destroy(new Error(opts?.errorMessage || "stream failure"))
+      })
+    },
+  })
+
+  interceptor.defaultReplyHeaders({
+    "content-type": "text/event-stream",
+    "cache-control": "no-cache",
+    connection: "keep-alive",
+  })
+  interceptor.reply(200, stream as any)
 }
 
 interface FileUploadResponse {

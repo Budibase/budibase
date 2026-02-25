@@ -610,7 +610,7 @@ export interface paths {
         put?: never;
         /**
          * Import a workspace to an existing workspace 🔒
-         * @description This endpoint is only available on a business or enterprise license.
+         * @description This endpoint is only available on an enterprise license.
          */
         post: operations["workspaceImport"];
         delete?: never;
@@ -630,7 +630,7 @@ export interface paths {
         put?: never;
         /**
          * Export a workspace 🔒
-         * @description This endpoint is only available on a business or enterprise license.
+         * @description This endpoint is only available on an enterprise license.
          */
         post: operations["workspaceExport"];
         delete?: never;

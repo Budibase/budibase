@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "sourceMap": true,
+    "paths": {
+      "@budibase/types": ["./packages/types/src"],
+      "@budibase/backend-core": ["./packages/backend-core/src"],
+      "@budibase/backend-core/*": ["./packages/backend-core/*"],
+      "@budibase/shared-core": ["./packages/shared-core/src"],
+      "@budibase/string-templates": ["./packages/string-templates/src"]
+    }
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

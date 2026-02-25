@@ -87,6 +87,24 @@ describe("/api/global/users", () => {
       expect(events.user.invited).toHaveBeenCalledTimes(0)
     })
 
+    it("should not invite the same user twice when email casing differs", async () => {
+      const email = structures.users.newEmail().toLowerCase()
+      await config.api.users.sendUserInvite(sendMailMock, email)
+
+      jest.clearAllMocks()
+
+      const { code, res } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email.toUpperCase(),
+        400
+      )
+
+      expect(res.body.message).toBe(`Unavailable`)
+      expect(sendMailMock).toHaveBeenCalledTimes(0)
+      expect(code).toBeUndefined()
+      expect(events.user.invited).toHaveBeenCalledTimes(0)
+    })
+
     it("should not allow creator users to access single invite endpoint", async () => {
       const user = await createBuilderUser()
 
@@ -868,6 +886,52 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(email)
     })
 
+    it("should filter by workspace access when workspaceId is provided", async () => {
+      const workspaceId = "app_workspace_filter"
+      const email = structures.users.newEmail()
+      await config.createUser({
+        email,
+        roles: { [workspaceId]: "BASIC" },
+      })
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        query: { string: { email } },
+      })
+
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(email)
+    })
+
+    it("should exclude users without workspace access", async () => {
+      const workspaceId = "app_workspace_filter_exclude"
+      const email = structures.users.newEmail()
+      await config.createUser({
+        email,
+        roles: { app_other: "BASIC" },
+      })
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        query: { string: { email } },
+      })
+
+      expect(response.body.data.length).toBe(0)
+    })
+
+    it("should return no users when workspaceId is empty", async () => {
+      const email = structures.users.newEmail()
+      await config.createUser({ email })
+
+      const response = await config.api.users.searchUsers({
+        workspaceId: "",
+        query: { string: { email } },
+      })
+
+      expect(response.body.data.length).toBe(0)
+      expect(response.body.hasNextPage).toBe(false)
+    })
+
     it("should be able to search by email with numeric prefixing", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
@@ -996,24 +1060,7 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users/:userId/permission/:role", () => {
-    it("should fail to assign CREATOR role when feature is not enabled", async () => {
-      const user = await config.createUser()
-      const workspaceId = "app_123456789"
-
-      const res = await config.withApp(workspaceId, () =>
-        config.api.users.addUserToWorkspace(
-          user._id!,
-          user._rev!,
-          "CREATOR",
-          400
-        )
-      )
-      expect(res.body.message).toBe("Feature not enabled, please check license")
-    })
-
     it("should assign CREATOR role and set builder properties", async () => {
-      featureMocks.licenses.useAppBuilders()
-
       const user = await config.createUser()
       const workspaceId = "app_123456789"
 
@@ -1049,8 +1096,6 @@ describe("/api/global/users", () => {
     })
 
     it("should keep builder creator flag when assigning CREATOR roles", async () => {
-      featureMocks.licenses.useAppBuilders()
-
       const builderUser = await config.createUser({
         builder: {
           creator: true,
@@ -1073,7 +1118,6 @@ describe("/api/global/users", () => {
     })
 
     it("should maintain builder properties when user has multiple CREATOR roles", async () => {
-      mocks.licenses.useAppBuilders()
       const user = await config.createUser()
       const workspaceId1 = "app_111111111"
       const workspaceId2 = "app_222222222"

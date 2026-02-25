@@ -13,6 +13,7 @@
   } from "@/stores/builder"
   import NavItem from "@/components/common/NavItem.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
+  import EditQueryModal from "./EditQueryModal.svelte"
   import { notifications, Icon } from "@budibase/bbui"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import { WorkspaceResource } from "@budibase/types"
@@ -27,6 +28,7 @@
   const favourites = workspaceFavouriteStore.lookup
 
   let confirmDeleteModal
+  let editQueryModal
 
   $: favourite = query?._id ? $favourites[query?._id] : undefined
   $: isRestDatasource = datasource?.source === IntegrationTypes.REST
@@ -38,6 +40,14 @@
 
   const getContextMenuItems = () => {
     return [
+      {
+        icon: "pencil",
+        name: "Edit",
+        keyBind: null,
+        visible: isRestDatasource,
+        disabled: false,
+        callback: editQueryModal.show,
+      },
       {
         icon: "trash",
         name: "Delete",
@@ -98,6 +108,7 @@
 </NavItem>
 
 <DeleteDataConfirmModal source={query} bind:this={confirmDeleteModal} />
+<EditQueryModal {query} bind:this={editQueryModal} />
 
 <style>
   .buttons {

@@ -1,23 +1,53 @@
 import { API } from "@/api"
 import {
+  AIConfigResponse,
+  AIConfigType,
   CreateAIConfigRequest,
-  CustomAIProviderConfig,
   LLMProvider,
   UpdateAIConfigRequest,
 } from "@budibase/types"
-import { BudiStore } from "../BudiStore"
+import { derived, Writable } from "svelte/store"
+import { DerivedBudiStore } from "../BudiStore"
 
 interface AIConfigState {
-  customConfigs: CustomAIProviderConfig[]
+  customConfigs: AIConfigResponse[]
   providers?: LLMProvider[]
 }
 
-export class AIConfigStore extends BudiStore<AIConfigState> {
+interface DerivedAIConfigState extends AIConfigState {
+  customConfigsPerType: Record<AIConfigType, AIConfigResponse[]>
+}
+
+export class AIConfigStore extends DerivedBudiStore<
+  AIConfigState,
+  DerivedAIConfigState
+> {
   constructor() {
-    super({
-      customConfigs: [],
-      providers: undefined,
-    })
+    const makeDerivedStore = (store: Writable<AIConfigState>) => {
+      return derived(store, $state => ({
+        ...$state,
+        customConfigsPerType: $state.customConfigs.reduce<
+          DerivedAIConfigState["customConfigsPerType"]
+        >(
+          (acc, config) => {
+            acc[config.configType].push(config)
+            return acc
+          },
+          {
+            [AIConfigType.COMPLETIONS]: [],
+            [AIConfigType.EMBEDDINGS]: [],
+          }
+        ),
+      }))
+    }
+
+    super(
+      {
+        customConfigs: [],
+        providers: undefined,
+      },
+      makeDerivedStore
+    )
   }
 
   init = async () => {
@@ -44,7 +74,7 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
 
   createConfig = async (
     config: CreateAIConfigRequest
-  ): Promise<CustomAIProviderConfig> => {
+  ): Promise<AIConfigResponse> => {
     const created = await API.aiConfig.create(config)
     this.update(state => {
       state.customConfigs = [...state.customConfigs, created]
@@ -56,7 +86,7 @@ export class AIConfigStore extends BudiStore<AIConfigState> {
 
   updateConfig = async (
     config: UpdateAIConfigRequest
-  ): Promise<CustomAIProviderConfig> => {
+  ): Promise<AIConfigResponse> => {
     const updated = await API.aiConfig.update(config)
     this.update(state => {
       const idx = state.customConfigs.findIndex(c => c._id === updated._id)

@@ -70,7 +70,7 @@
     toggledDatasources[datasource._id] = !datasource.open
   }
 
-  const appUsersTableName = "App users"
+  const appUsersTableName = "End users"
   $: showAppUsersTable =
     showAppUsers &&
     (!searchTerm ||

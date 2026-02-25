@@ -613,6 +613,7 @@
                       allowPublic={false}
                       allowCreator={true}
                       quiet={true}
+                      bordered={false}
                       on:change={e => {
                         onUpdateUserInvite(invite, e.detail)
                       }}
@@ -666,7 +667,8 @@
                       allowRemove={!!group.role}
                       allowPublic={false}
                       quiet={true}
-                      allowCreator={group.role === Constants.Roles.CREATOR}
+                      bordered={false}
+                      allowCreator={true}
                       on:change={e => {
                         onUpdateGroup(group, e.detail)
                       }}
@@ -722,6 +724,7 @@
                       allowPublic={false}
                       allowCreator={true}
                       quiet={true}
+                      bordered={false}
                       on:addcreator={() => {}}
                       on:change={e => {
                         onUpdateUser(user, e.detail)

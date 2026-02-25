@@ -8,6 +8,7 @@
     ViewMode,
   } from "@/types/automations"
   import {
+    AutomationStatus,
     type AutomationStep,
     type AutomationStepResult,
     type AutomationTrigger,
@@ -161,6 +162,22 @@
         outputs &&
         "result" in outputs &&
         outputs.result === false)
+    ) {
+      return {
+        message: "Stopped",
+        icon: "warning",
+        type: FlowStatusType.WARN,
+      }
+    }
+
+    const outputStatus =
+      outputs && "status" in outputs && typeof outputs.status === "string"
+        ? outputs.status.toLowerCase()
+        : undefined
+
+    if (
+      outputStatus === AutomationStatus.STOPPED ||
+      outputStatus === AutomationStatus.STOPPED_ERROR
     ) {
       return {
         message: "Stopped",

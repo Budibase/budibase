@@ -1,7 +1,16 @@
-export interface VectorDbConfig {
-  databaseUrl: string
-  embeddingDimensions: number
+import { VectorDbProvider } from "@budibase/types"
+
+interface BaseVectorDbConfig {
+  provider: VectorDbProvider
 }
+
+export interface PgVectorDbConfig extends BaseVectorDbConfig {
+  provider: VectorDbProvider.PGVECTOR
+  databaseUrl: string
+  tableName: string
+}
+
+export type VectorDbConfig = PgVectorDbConfig
 
 export interface ChunkInput {
   hash: string

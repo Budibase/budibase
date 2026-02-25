@@ -1,10 +1,21 @@
-import { context, docIds, HTTPError, locks } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  HTTPError,
+  locks,
+  tenancy,
+} from "@budibase/backend-core"
+import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
   LiteLLMKeyConfig,
+  ReasoningEffort,
   LockName,
   LockType,
+  UserContext,
 } from "@budibase/types"
+import { buildLiteLLMParams } from "../helpers/litellm"
 import fetch from "node-fetch"
 import env from "../../../../environment"
 import * as configSdk from "../configs"
@@ -12,11 +23,112 @@ import * as configSdk from "../configs"
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
+type LiteLLMTeam = {
+  id: string
+  alias: string
+}
+
+interface LiteLLMTenantTeamConfig {
+  _id: string
+  _rev?: string
+  teamId: string
+}
+
+const tenantTeamDocId = "litellmteam_config"
+
+const getTenantTeamAlias = () => {
+  const tenantId = context.getTenantId()
+  return tenantId
+}
+
+const getKeyAlias = (workspaceId: string) => {
+  return `${context.getTenantId()}:${workspaceId}`
+}
+
+const getModelAlias = (configId: string) => {
+  return `${context.getTenantId()}:${context.getProdWorkspaceId()}:${configId}`
+}
+
+async function createTeam(alias: string): Promise<LiteLLMTeam> {
+  const response = await fetch(`${liteLLMUrl}/team/new`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: liteLLMAuthorizationHeader,
+    },
+    body: JSON.stringify({
+      team_alias: alias,
+    }),
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new HTTPError(
+      `Error creating LiteLLM team: ${text || response.statusText}`,
+      response.status
+    )
+  }
+
+  const json = await response.json()
+  const teamId = json.team_id || json.team_id_string || json?.team?.team_id
+  if (!teamId) {
+    throw new HTTPError("LiteLLM team creation did not return a team ID", 500)
+  }
+  return {
+    id: teamId,
+    alias,
+  }
+}
+
+async function getOrCreateTenantTeam(): Promise<LiteLLMTeam> {
+  const tenantId = context.getTenantId()
+  const teamAlias = getTenantTeamAlias()
+  const tenantDb = tenancy.getTenantDB(tenantId)
+
+  const existing =
+    await tenantDb.tryGet<LiteLLMTenantTeamConfig>(tenantTeamDocId)
+  if (existing) {
+    return {
+      id: existing.teamId,
+      alias: getTenantTeamAlias(),
+    }
+  }
+
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.LITELLM_KEY,
+      type: LockType.AUTO_EXTEND,
+      resource: tenantId,
+    },
+    async () => {
+      const maybeExisting =
+        await tenantDb.tryGet<LiteLLMTenantTeamConfig>(tenantTeamDocId)
+      if (maybeExisting) {
+        return {
+          id: maybeExisting.teamId,
+          alias: getTenantTeamAlias(),
+        }
+      }
+
+      const team = await createTeam(teamAlias)
+      await tenantDb.put({
+        _id: tenantTeamDocId,
+        teamId: team.id,
+      })
+      return team
+    }
+  )
+
+  return result
+}
+
 async function generateKey(
-  name: string
+  name: string,
+  teamId: string
 ): Promise<{ id: string; secret: string }> {
   const body = JSON.stringify({
     key_alias: name,
+    team_id: teamId,
   })
 
   const requestOptions = {
@@ -29,25 +141,41 @@ async function generateKey(
   }
 
   const response = await fetch(`${liteLLMUrl}/key/generate`, requestOptions)
+  if (!response.ok) {
+    const text = await response.text()
+    throw new HTTPError(
+      `Error generating LiteLLM key: ${text || response.statusText}`,
+      response.status
+    )
+  }
 
   const json = await response.json()
   return { id: json.token_id, secret: json.key }
 }
 
 export async function addModel({
+  configId,
   provider,
-  name,
+  model,
   credentialFields,
   configType,
+  reasoningEffort,
 }: {
+  configId?: string
   provider: string
-  name: string
+  model: string
   credentialFields: Record<string, string>
   configType: AIConfigType
+  reasoningEffort?: ReasoningEffort
 }): Promise<string> {
-  provider = await mapToLiteLLMProvider(provider)
-
-  await validateConfig({ provider, name, credentialFields, configType })
+  configId ??= docIds.generateAIConfigID()
+  const litellmParams = buildLiteLLMParams({
+    provider: await mapToLiteLLMProvider(provider),
+    name: model,
+    credentialFields,
+    configType,
+    reasoningEffort,
+  })
 
   const requestOptions = {
     method: "POST",
@@ -56,21 +184,11 @@ export async function addModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: name,
-      litellm_params: {
-        custom_llm_provider: provider,
-        model: `${provider}/${name}`,
-        use_in_pass_through: false,
-        use_litellm_proxy: false,
-        merge_reasoning_content_in_choices: true,
-        input_cost_per_token: 0,
-        output_cost_per_token: 0,
-        guardrails: [],
-        ...credentialFields,
-      },
+      model_name: getModelAlias(configId),
+      litellm_params: litellmParams,
       model_info: {
         created_at: new Date().toISOString(),
-        created_by: (context.getIdentity() as any)?.email,
+        created_by: (context.getIdentity() as UserContext)?.email,
       },
     }),
   }
@@ -81,20 +199,29 @@ export async function addModel({
 }
 
 export async function updateModel({
+  configId,
   llmModelId,
   provider,
   name,
   credentialFields,
   configType,
+  reasoningEffort,
 }: {
+  configId: string
   llmModelId: string
   provider: string
   name: string
   credentialFields: Record<string, string>
   configType: AIConfigType
+  reasoningEffort?: ReasoningEffort
 }) {
-  provider = await mapToLiteLLMProvider(provider)
-  await validateConfig({ provider, name, credentialFields, configType })
+  const litellmParams = buildLiteLLMParams({
+    provider: await mapToLiteLLMProvider(provider),
+    name: name,
+    credentialFields,
+    configType,
+    reasoningEffort,
+  })
 
   const requestOptions = {
     method: "PATCH",
@@ -103,21 +230,11 @@ export async function updateModel({
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      model_name: name,
-      litellm_params: {
-        custom_llm_provider: provider,
-        model: `${provider}/${name}`,
-        use_in_pass_through: false,
-        use_litellm_proxy: false,
-        merge_reasoning_content_in_choices: true,
-        input_cost_per_token: 0,
-        output_cost_per_token: 0,
-        guardrails: [],
-        ...credentialFields,
-      },
+      model_name: getModelAlias(configId),
+      litellm_params: litellmParams,
       model_info: {
         updated_at: new Date().toISOString(),
-        updated_by: (context.getIdentity() as any)?.email,
+        updated_by: (context.getIdentity() as UserContext)?.email,
       },
     }),
   }
@@ -134,98 +251,69 @@ export async function updateModel({
   }
 }
 
-export async function validateConfig(model: {
+async function validateEmbeddingConfig(model: {
   provider: string
   name: string
   credentialFields: Record<string, string>
-  configType: AIConfigType
 }) {
-  const { name, provider, credentialFields, configType } = model
+  let modelId: string | undefined
 
-  if (configType === AIConfigType.EMBEDDINGS) {
-    let modelId: string | undefined
+  try {
+    modelId = await addModel({
+      provider: model.provider,
+      model: model.name,
+      credentialFields: model.credentialFields,
+      configType: AIConfigType.EMBEDDINGS,
+    })
 
-    try {
-      const createModelResponse = await fetch(`${liteLLMUrl}/model/new`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: liteLLMAuthorizationHeader,
-        },
-        body: JSON.stringify({
-          model_name: name,
-          litellm_params: {
-            custom_llm_provider: provider,
-            model: `${provider}/${name}`,
-            use_in_pass_through: false,
-            use_litellm_proxy: false,
-            merge_reasoning_content_in_choices: true,
-            input_cost_per_token: 0,
-            output_cost_per_token: 0,
-            guardrails: [],
-            ...credentialFields,
+    const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: liteLLMAuthorizationHeader,
+      },
+      body: JSON.stringify({
+        model: modelId,
+        input: "Budibase embedding validation",
+      }),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new HTTPError(text || "Embedding validation failed", 500)
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new HTTPError(`Error validating configuration: ${message}`, 400)
+  } finally {
+    if (modelId) {
+      try {
+        await fetch(`${liteLLMUrl}/model/delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: liteLLMAuthorizationHeader,
           },
-          model_info: {
-            created_at: new Date().toISOString(),
-            created_by: (context.getIdentity() as any)?.email,
-          },
-        }),
-      })
-
-      const createModelJson = await createModelResponse.json()
-      if (!createModelResponse.ok || createModelJson.status === "error") {
-        const errorMessage =
-          createModelJson?.result?.error ||
-          createModelJson?.error ||
-          createModelResponse.statusText
-        throw new HTTPError(
-          `Error validating configuration: ${errorMessage}`,
-          400
+          body: JSON.stringify({ id: modelId }),
+        })
+      } catch (e) {
+        console.error(
+          "Error deleting the temporary model for validating embeddings",
+          { e }
         )
-      }
-
-      modelId = createModelJson.model_id
-
-      const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: liteLLMAuthorizationHeader,
-        },
-        body: JSON.stringify({
-          model: name,
-          input: "Budibase embedding validation",
-        }),
-      })
-
-      if (!response.ok) {
-        const text = await response.text()
-        throw new HTTPError(
-          `Error validating configuration: ${text || response.statusText}`,
-          400
-        )
-      }
-    } finally {
-      if (modelId) {
-        try {
-          await fetch(`${liteLLMUrl}/model/delete`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: liteLLMAuthorizationHeader,
-            },
-            body: JSON.stringify({ id: modelId }),
-          })
-        } catch (e) {
-          console.error(
-            "Error deleting the temporary model for validating embeddings",
-            { e }
-          )
-        }
       }
     }
-    return
   }
+  return
+}
+
+async function validateCompletionsModel(model: {
+  provider: string
+  name: string
+  credentialFields: Record<string, string>
+}) {
+  let { name, provider, credentialFields } = model
+  const mappedProvider = await mapToLiteLLMProvider(provider)
 
   const requestOptions = {
     method: "POST",
@@ -234,10 +322,9 @@ export async function validateConfig(model: {
       Authorization: liteLLMAuthorizationHeader,
     },
     body: JSON.stringify({
-      // mode: "chat",
       litellm_params: {
-        model: `${provider}/${name}`,
-        custom_llm_provider: provider,
+        model: `${mappedProvider}/${name}`,
+        custom_llm_provider: mappedProvider,
         ...credentialFields,
       },
     }),
@@ -249,6 +336,12 @@ export async function validateConfig(model: {
   )
   if (res.status !== 200) {
     const text = await res.text()
+    if (text.includes("DB not connected")) {
+      throw new HTTPError(
+        "LiteLLM requires a database connection. Set DATABASE_URL on LiteLLM when store_model_in_db is enabled.",
+        400
+      )
+    }
     throw new HTTPError(text, 500)
   }
   const json = await res.json()
@@ -259,15 +352,32 @@ export async function validateConfig(model: {
   }
 }
 
+export async function validateConfig(model: {
+  provider: string
+  name: string
+  credentialFields: Record<string, string>
+  configType: AIConfigType
+}) {
+  switch (model.configType) {
+    case AIConfigType.EMBEDDINGS:
+      return validateEmbeddingConfig(model)
+    case AIConfigType.COMPLETIONS:
+      return validateCompletionsModel(model)
+    default:
+      throw utils.unreachable(model.configType)
+  }
+}
+
 export async function getKeySettings(): Promise<{
   keyId: string
   secretKey: string
+  teamId: string
 }> {
   const db = context.getWorkspaceDB()
   const keyDocId = docIds.getLiteLLMKeyID()
 
   let keyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
-  if (!keyConfig) {
+  if (!keyConfig || !keyConfig.teamId) {
     const workspaceId = context.getProdWorkspaceId()
     if (!workspaceId) {
       throw new HTTPError("Workspace ID is required to configure LiteLLM", 400)
@@ -280,15 +390,33 @@ export async function getKeySettings(): Promise<{
       },
       async () => {
         let existingKeyConfig = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
-        if (existingKeyConfig) {
+        const shouldCreateTenantTeam = !existingKeyConfig?.teamId
+
+        if (existingKeyConfig && !shouldCreateTenantTeam) {
           return existingKeyConfig
         }
 
-        const key = await generateKey(workspaceId)
+        const team = await getOrCreateTenantTeam()
+
+        if (existingKeyConfig) {
+          await updateKey({
+            keyId: existingKeyConfig.keyId,
+            teamId: team.id,
+          })
+          const updatedConfig: LiteLLMKeyConfig = {
+            ...existingKeyConfig,
+            teamId: team.id,
+          }
+          const { rev } = await db.put(updatedConfig)
+          return { ...updatedConfig, _rev: rev }
+        }
+
+        const key = await generateKey(getKeyAlias(workspaceId), team.id)
         const config: LiteLLMKeyConfig = {
           _id: keyDocId,
           keyId: key.id,
           secretKey: key.secret,
+          teamId: team.id,
         }
         const { rev } = await db.put(config)
         return { ...config, _rev: rev }
@@ -299,6 +427,38 @@ export async function getKeySettings(): Promise<{
   return {
     keyId: keyConfig.keyId,
     secretKey: keyConfig.secretKey,
+    teamId: keyConfig.teamId,
+  }
+}
+
+async function updateKey({
+  keyId,
+  modelIds,
+  teamId,
+}: {
+  keyId: string
+  modelIds?: string[]
+  teamId?: string
+}) {
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: liteLLMAuthorizationHeader,
+    },
+    body: JSON.stringify({
+      key: keyId,
+      ...(modelIds ? { models: modelIds } : {}),
+      ...(teamId ? { team_id: teamId } : {}),
+    }),
+  }
+
+  const res = await fetch(`${liteLLMUrl}/key/update`, requestOptions)
+  const json = await res.json()
+  if (json.status === "error") {
+    const trimmedError = json.result.error.split("\n")[0] || json.result.error
+
+    throw new HTTPError(`Error syncing keys: ${trimmedError}`, 400)
   }
 }
 
@@ -310,25 +470,10 @@ export async function syncKeyModels() {
     .map(c => c.liteLLMModelId)
     .filter((id): id is string => !!id)
 
-  const requestOptions = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: liteLLMAuthorizationHeader,
-    },
-    body: JSON.stringify({
-      key: keyId,
-      models: modelIds,
-    }),
-  }
-
-  const res = await fetch(`${liteLLMUrl}/key/update`, requestOptions)
-  const json = await res.json()
-  if (json.status === "error") {
-    const trimmedError = json.result.error.split("\n")[0] || json.result.error
-
-    throw new HTTPError(`Error syncing keys: ${trimmedError}`, 400)
-  }
+  await updateKey({
+    keyId,
+    modelIds,
+  })
 }
 
 type LiteLLMPublicProvider = {
@@ -363,8 +508,13 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
 }
 
 async function mapToLiteLLMProvider(provider: string) {
+  if (provider === BUDIBASE_AI_PROVIDER_ID) {
+    return "custom_openai"
+  }
+
   const providers = await fetchPublicProviders()
   const result = providers.find(p => p.provider === provider)?.litellm_provider
+
   if (!result) {
     throw new Error(`Provider ${provider} not found in LiteLLM`)
   }

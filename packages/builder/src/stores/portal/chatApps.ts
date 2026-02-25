@@ -1,4 +1,5 @@
 import { API } from "@/api"
+import { agentsStore } from "./agents"
 import { BudiStore } from "../BudiStore"
 import { ChatApp, ChatConversation } from "@budibase/types"
 import { derived, get } from "svelte/store"
@@ -100,7 +101,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return chatApp
   }
 
-  updateAgents = async (agents: ChatApp["agents"]) => {
+  updateChatApp = async (updates: Partial<ChatApp>) => {
     const { chatAppId, chatAppsById } = get(this.store)
     const chatApp = chatAppId ? chatAppsById[chatAppId] : undefined
     if (!chatAppId || !chatApp) {
@@ -109,7 +110,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
 
     const updated = await API.updateChatApp({
       ...chatApp,
-      agents,
+      ...updates,
     })
 
     this.update(state => {
@@ -118,6 +119,10 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     })
 
     return updated
+  }
+
+  updateAgents = async (agents: ChatApp["agents"]) => {
+    return await this.updateChatApp({ agents })
   }
 
   fetchConversations = async (chatAppId?: string) => {
@@ -185,4 +190,20 @@ export const currentChatApp = derived(chatAppsStore, state =>
 
 export const currentConversations = derived(chatAppsStore, state =>
   state.chatAppId ? state.conversationsByAppId[state.chatAppId] || [] : []
+)
+
+type ChatAppAgent = NonNullable<ChatApp["agents"]>[number]
+
+const getSelectedChatAgent = (
+  chatApp: ChatApp | undefined,
+  agentId?: string
+): ChatAppAgent | undefined =>
+  agentId
+    ? chatApp?.agents?.find(agent => agent.agentId === agentId)
+    : undefined
+
+export const selectedChatAgent = derived(
+  [currentChatApp, agentsStore],
+  ([$currentChatApp, $agentsStore]) =>
+    getSelectedChatAgent($currentChatApp, $agentsStore.currentAgentId)
 )

@@ -197,6 +197,7 @@
     gap: var(--spacing-s);
     align-items: center;
     font-size: var(--font-size-m);
+    font-weight: 500;
   }
   .publish-menu:hover,
   .publish-menu:focus-visible {

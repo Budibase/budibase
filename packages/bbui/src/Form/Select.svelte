@@ -19,6 +19,7 @@
     extractProperty(option, "value")
   export let getOptionSubtitle = (option: O, _index?: number) =>
     (option as any)?.subtitle
+  export let showSelectedSubtitle = false
   export let getOptionIcon = (option: O, _index?: number) =>
     (option as any)?.icon
   export let getOptionColour = (option: O, _index?: number) =>
@@ -29,6 +30,7 @@
     | undefined = undefined
   export let quiet: boolean = false
   export let size: "S" | "M" | "L" = "M"
+  export let bordered: boolean = true
   export let autoWidth: boolean = false
   export let sort: boolean = false
   export let tooltip: string | undefined = undefined
@@ -46,6 +48,8 @@
   export let loading: boolean | undefined = false
   export let searchPlaceholder: string | undefined = undefined
   export let hideChevron: boolean = false
+  export let required: boolean = false
+  export let description: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<any>) => {
@@ -61,9 +65,18 @@
   }
 </script>
 
-<Field {helpText} {label} {labelPosition} {error} {tooltip}>
+<Field
+  {helpText}
+  {label}
+  {labelPosition}
+  {error}
+  {tooltip}
+  {required}
+  {description}
+>
   <Select
     {size}
+    {bordered}
     {quiet}
     {loading}
     {disabled}
@@ -81,6 +94,7 @@
     {getOptionIcon}
     {getOptionColour}
     {getOptionSubtitle}
+    {showSelectedSubtitle}
     {useOptionIconImage}
     {isOptionEnabled}
     {autocomplete}

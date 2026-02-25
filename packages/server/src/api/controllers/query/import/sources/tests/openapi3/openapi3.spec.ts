@@ -222,6 +222,33 @@ describe("OpenAPI3 Import", () => {
       }
     }
 
+    it("sanitizes invalid characters in query names", async () => {
+      const spec = JSON.stringify({
+        openapi: "3.0.0",
+        info: {
+          title: "Name Sanitizer",
+        },
+        paths: {
+          "/entries": {
+            post: {
+              summary: "Create an entry (add info)",
+              responses: {
+                default: {
+                  description: "ok",
+                },
+              },
+            },
+          },
+        },
+      })
+
+      const supported = await openapi3.tryLoad(spec)
+      expect(supported).toBe(true)
+
+      const [query] = openapi3.getQueries("datasourceId")
+      expect(query.name).toBe("Create an entry add info")
+    })
+
     it("populates verb", async () => {
       const assertions = {
         createEntity: "create",

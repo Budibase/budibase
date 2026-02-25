@@ -38,6 +38,8 @@ async function init() {
     BUDICLOUD_URL: "https://budibaseqa.app",
     BB_ADMIN_USER_EMAIL: "local@budibase.com",
     BB_ADMIN_USER_PASSWORD: "cheekychuckles",
+    LITELLM_MASTER_KEY: "budibase",
+    LITELLM_SALT_KEY: "budibase",
   }
 
   config = { ...config, ...existingConfig }

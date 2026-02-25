@@ -105,12 +105,14 @@ export class OpenAPI2 extends OpenAPISource {
 
   private buildRestTemplateMetadata = (
     operation: OpenAPIV2.OperationObject,
+    endpointName: string,
     path: string,
     requestBody: GeneratedRequestBody | undefined,
     parameters: QueryParameter[],
     bodyType?: BodyType
   ): RestTemplateQueryMetadata => {
     const metadata: RestTemplateQueryMetadata = {
+      originalName: endpointName,
       operationId: operation.operationId,
       docsUrl: this.getDocsUrl(operation),
       description: operation.summary || operation.description,
@@ -401,6 +403,7 @@ export class OpenAPI2 extends OpenAPISource {
 
         const restTemplateMetadata = this.buildRestTemplateMetadata(
           operation,
+          name,
           path,
           requestBody,
           parameters,

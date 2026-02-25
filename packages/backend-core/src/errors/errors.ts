@@ -113,6 +113,12 @@ export class BadRequestError extends HTTPError {
   }
 }
 
+export class ActiveContentFileError extends BadRequestError {
+  constructor(fileName: string) {
+    super(`File "${fileName}" contains active content which is not permitted`)
+  }
+}
+
 export class ForbiddenError extends HTTPError {
   constructor(message: string) {
     super(message, 403)

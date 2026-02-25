@@ -8,7 +8,7 @@
     ModalContent,
     notifications,
   } from "@budibase/bbui"
-  import type { VectorDb } from "@budibase/types"
+  import { VectorDbProvider, type VectorDb } from "@budibase/types"
 
   export let config: VectorDb | null
   export let onDelete: (() => void) | null = null
@@ -17,7 +17,7 @@
     ? { ...config }
     : {
         name: "",
-        provider: "pgvector",
+        provider: VectorDbProvider.PGVECTOR,
         host: "",
         port: 5432,
         database: "",
@@ -35,16 +35,10 @@
   async function confirm() {
     try {
       if (draft._id) {
-        await vectorDbStore.edit({
-          ...draft,
-          provider: "pgvector",
-        })
+        await vectorDbStore.edit(draft)
         notifications.success("Vector database updated")
       } else {
-        await vectorDbStore.create({
-          ...draft,
-          provider: "pgvector",
-        })
+        await vectorDbStore.create(draft)
         notifications.success("Vector database created")
       }
     } catch (err: any) {
@@ -90,7 +84,7 @@
   </div>
   <div class="row">
     <Label size="M">Provider</Label>
-    <Input value="pgvector" disabled />
+    <Input bind:value={draft.provider} disabled />
   </div>
   <div class="row">
     <Label size="M">Host</Label>

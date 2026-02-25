@@ -1,5 +1,11 @@
-import { encrypt, decrypt, SecretOption, getSecret } from "../encryption"
-import env from "../../environment"
+import {
+  compare,
+  decrypt,
+  encrypt,
+  getSecret,
+  SecretOption,
+} from "../encryption"
+import env, { withEnv } from "../../environment"
 
 describe("encryption", () => {
   it("should throw an error if API encryption key is not set", () => {
@@ -14,18 +20,29 @@ describe("encryption", () => {
   })
 
   it("should encrypt and decrypt a string using API encryption key", () => {
-    env._set("API_ENCRYPTION_KEY", "api_secret")
-    const plaintext = "budibase"
-    const apiEncrypted = encrypt(plaintext, SecretOption.API)
-    const decrypted = decrypt(apiEncrypted, SecretOption.API)
-    expect(decrypted).toEqual(plaintext)
+    withEnv({ API_ENCRYPTION_KEY: "api_secret" }, () => {
+      const plaintext = "budibase"
+      const apiEncrypted = encrypt(plaintext, SecretOption.API)
+      const decrypted = decrypt(apiEncrypted, SecretOption.API)
+      expect(decrypted).toEqual(plaintext)
+    })
   })
 
   it("should encrypt and decrypt a string using encryption key", () => {
-    env._set("ENCRYPTION_KEY", "normal_secret")
-    const plaintext = "budibase"
-    const encryptionEncrypted = encrypt(plaintext, SecretOption.ENCRYPTION)
-    const decrypted = decrypt(encryptionEncrypted, SecretOption.ENCRYPTION)
-    expect(decrypted).toEqual(plaintext)
+    withEnv({ ENCRYPTION_KEY: "normal_secret" }, () => {
+      const plaintext = "budibase"
+      const encryptionEncrypted = encrypt(plaintext, SecretOption.ENCRYPTION)
+      const decrypted = decrypt(encryptionEncrypted, SecretOption.ENCRYPTION)
+      expect(decrypted).toEqual(plaintext)
+    })
+  })
+
+  it("should compare plaintext against encrypted values", () => {
+    withEnv({ API_ENCRYPTION_KEY: "api_secret" }, () => {
+      const plaintext = "budibase"
+      const encrypted = encrypt(plaintext, SecretOption.API)
+      expect(compare(plaintext, encrypted, SecretOption.API)).toBe(true)
+      expect(compare("not-budibase", encrypted, SecretOption.API)).toBe(false)
+    })
   })
 })

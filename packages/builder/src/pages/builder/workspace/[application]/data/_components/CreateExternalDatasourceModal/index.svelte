@@ -19,6 +19,8 @@
   const onGoogleAuth = createOnGoogleAuthStore()
   let modal
 
+  let modalVisible = false
+
   const handleStoreChanges = (store, modal, goto) => {
     store.stage === null ? modal?.hide() : modal?.show()
 
@@ -80,7 +82,18 @@
   }
 </script>
 
-<Modal on:hide={store.cancel} bind:this={modal}>
+<Modal
+  on:show={() => {
+    modalVisible = true
+  }}
+  on:hide={() => {
+    if (modalVisible) {
+      modalVisible = false
+      store.cancel()
+    }
+  }}
+  bind:this={modal}
+>
   {#if $store.stage === "googleAuth"}
     <GoogleAuthPrompt
       on:close={() => {

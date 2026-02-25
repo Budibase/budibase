@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte"
   import { fade, fly } from "svelte/transition"
   import { previewStore, selectedAppUrls, themeStore } from "@/stores/builder"

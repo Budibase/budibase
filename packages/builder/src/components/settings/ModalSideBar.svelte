@@ -10,6 +10,7 @@
   const dispatch = createEventDispatcher()
 
   const pinned = createLocalStorageStore("settings-nav-pinned", true)
+  const navTransitionMs = 160
 
   let ignoreFocus = false
   let focused = false
@@ -35,7 +36,7 @@
     focused = false
     timeout = setTimeout(() => {
       ignoreFocus = false
-    }, 130)
+    }, navTransitionMs)
   }
 
   export const setFocused = (nextFocused: boolean) => {
@@ -61,7 +62,7 @@
   })
 </script>
 
-<div class="nav_wrapper">
+<div class="modal_sidebar_wrapper">
   <div class="nav_spacer" class:pinned={$pinned}></div>
   <div
     class="nav"
@@ -97,10 +98,12 @@
 </div>
 
 <style>
-  .nav_wrapper {
+  .modal_sidebar_wrapper {
     display: contents;
     --nav-logo-width: 20px;
     --nav-padding: 12px;
+    --nav-transition-ms: 160ms;
+    --nav-transition-ease: cubic-bezier(0.22, 1, 0.36, 1);
     --nav-collapsed-width: calc(
       var(--nav-logo-width) + var(--nav-padding) * 2 + 2px
     );
@@ -128,7 +131,7 @@
     justify-content: flex-start;
     align-items: stretch;
     border-right: var(--nav-border);
-    transition: width 130ms ease-out;
+    transition: width var(--nav-transition-ms) var(--nav-transition-ease);
     overflow: hidden;
     container-type: inline-size;
   }
@@ -161,6 +164,19 @@
     align-items: center;
     gap: 4px;
     color: var(--spectrum-global-color-gray-800);
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity var(--nav-transition-ms) var(--nav-transition-ease),
+      visibility 0ms linear 0ms;
+  }
+
+  .collapse_icon {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity var(--nav-transition-ms) var(--nav-transition-ease),
+      visibility 0ms linear 0ms;
   }
   .nav_title h1 {
     font-size: 16px;
@@ -213,6 +229,21 @@
 
   .nav:not(.pinned):not(.focused) .nav_title,
   .nav:not(.pinned):not(.focused) .collapse_icon {
-    display: none;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 120ms var(--nav-transition-ease),
+      visibility 0ms linear 120ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav,
+    .nav_title,
+    .collapse_icon,
+    .nav:not(.pinned):not(.focused) .nav_title,
+    .nav:not(.pinned):not(.focused) .collapse_icon {
+      transition: none;
+    }
   }
 </style>

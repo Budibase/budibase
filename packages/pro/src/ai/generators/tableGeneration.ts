@@ -1,0 +1,164 @@
+import { HTTPError } from "@budibase/backend-core"
+import { utils } from "@budibase/shared-core"
+import type { LLMResponse, Message } from "@budibase/types"
+import { generateText, Output, type ModelMessage } from "ai"
+import { LLMRequest } from "../llm"
+
+import tracer from "dd-trace"
+import { z } from "zod"
+import { generateAIColumns, generateData, generateTables } from "../prompts"
+import {
+  aiColumnSchemas,
+  aiTableResponseToTableSchema,
+  appendAIColumns,
+  generationStructure,
+  tableDataStructuredOutput,
+} from "../structuredOutputs"
+import { TableSchemaFromAI } from "../types"
+
+interface Delegates {
+  generateTablesDelegate: (
+    tables: TableSchemaFromAI[]
+  ) => Promise<{ id: string; name: string }[]>
+  generateDataDelegate: (
+    data: Record<string, Record<string, any>[]>,
+    userId: string,
+    tables: Record<string, TableSchemaFromAI>
+  ) => Promise<void>
+}
+
+export class TableGeneration {
+  private aiModel: LLMResponse
+
+  private delegates: Delegates
+
+  private constructor(aiModel: LLMResponse, delegates: Delegates) {
+    this.aiModel = aiModel
+    this.delegates = delegates
+  }
+
+  static async init(aiModel: LLMResponse, delegates: Delegates) {
+    if (!aiModel) {
+      throw new HTTPError("LLM not available", 422)
+    }
+    return new TableGeneration(aiModel, delegates)
+  }
+
+  async generate(userPrompt: string, userId: string) {
+    return tracer.trace("tableGeneration.generate", async span => {
+      const tables = await this.generateTables(userPrompt, userId)
+      span.addTags({ table_count: tables.length })
+      return tables
+    })
+  }
+
+  private llmFunctions = {
+    getTableStructure: async (
+      userPrompt: string
+    ): Promise<TableSchemaFromAI[]> => {
+      return tracer.trace("llm.getTableStructure", async () => {
+        const parsedResponse = await this.promptForStructuredOutput(
+          generateTables().addUserMessage(userPrompt),
+          generationStructure,
+          "Error generating tables"
+        )
+        return aiTableResponseToTableSchema(parsedResponse)
+      })
+    },
+    generateAIColumns: (
+      userPrompt: string,
+      fromTables: TableSchemaFromAI[]
+    ) => {
+      return tracer.trace("llm.generateAIColumns", async () => {
+        return this.generateAIColumns(userPrompt, fromTables)
+      })
+    },
+    generateData: async (
+      userPrompt: string,
+      forTables: TableSchemaFromAI[]
+    ) => {
+      return tracer.trace("llm.generateData", async () => {
+        return this.promptForStructuredOutput(
+          generateData().addUserMessage(userPrompt),
+          tableDataStructuredOutput(forTables),
+          "Error generating data"
+        )
+      })
+    },
+  }
+
+  private async generateTables(
+    userPrompt: string,
+    userId: string
+  ): Promise<{ id: string; name: string }[]> {
+    const tablesToCreate = await this.llmFunctions.getTableStructure(userPrompt)
+
+    const aiColumnStructure = await this.llmFunctions.generateAIColumns(
+      userPrompt,
+      tablesToCreate
+    )
+
+    const data = await this.llmFunctions.generateData(
+      userPrompt,
+      tablesToCreate
+    )
+
+    // We need to wait for the tables to be created before persisting the data
+    const result = await this.delegates.generateTablesDelegate(
+      appendAIColumns(tablesToCreate, aiColumnStructure)
+    )
+
+    await this.delegates.generateDataDelegate(
+      data,
+      userId,
+      utils.toMap("name", tablesToCreate)
+    )
+
+    return result
+  }
+
+  private async generateAIColumns(
+    userPrompt: string,
+    tables: TableSchemaFromAI[]
+  ) {
+    return this.promptForStructuredOutput(
+      generateAIColumns().addUserMessage(
+        `This is the initial user prompt that generated the given schema:
+            "${userPrompt}"`
+      ),
+      aiColumnSchemas(tables),
+      "Error generating columns"
+    )
+  }
+
+  private async promptForStructuredOutput<T>(
+    request: LLMRequest,
+    schema: z.ZodType<T>,
+    errorMessage: string
+  ): Promise<T> {
+    try {
+      const result = await generateText({
+        model: this.aiModel.chat,
+        messages: this.toModelMessages(request.messages),
+        output: Output.object({ schema }),
+        providerOptions: this.aiModel.providerOptions?.(false),
+      })
+      return result.output
+    } catch (err: any) {
+      const message = [errorMessage, err?.message].filter(Boolean).join(": ")
+      throw new HTTPError(message, 500)
+    }
+  }
+
+  private toModelMessages(messages: Message[]): ModelMessage[] {
+    return messages.map(message => {
+      if (typeof message.content !== "string") {
+        throw new HTTPError("AI message content must be a string", 422)
+      }
+      return {
+        role: message.role,
+        content: message.content,
+      } as ModelMessage
+    })
+  }
+}

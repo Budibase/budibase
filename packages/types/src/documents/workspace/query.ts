@@ -142,6 +142,7 @@ export enum HttpMethod {
 }
 
 export interface RestTemplateQueryMetadata {
+  originalName?: string
   operationId?: string
   docsUrl?: string
   description?: string

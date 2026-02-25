@@ -15,6 +15,7 @@
   export let quiet = false
   export let icon = undefined
   export let iconColor = undefined
+  export let iconWeight = "regular"
   export let active = false
   export let tooltip = undefined
   export let newStyles = true
@@ -51,7 +52,12 @@
     {/if}
     {#if icon}
       <span class="icon">
-        <Icon name={icon} size={size.toUpperCase()} color={iconColor} />
+        <Icon
+          name={icon}
+          size={size.toUpperCase()}
+          color={iconColor}
+          weight={iconWeight}
+        />
       </span>
     {/if}
     {#if $$slots && !reverse}
@@ -76,7 +82,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 600 !important;
+    font-weight: 500;
     line-height: 20px;
     letter-spacing: -0.02em;
   }

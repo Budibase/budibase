@@ -3,6 +3,7 @@ import { ResponseFormat } from "@budibase/types"
 export interface MockLLMResponseOpts {
   baseUrl?: string
   format?: ResponseFormat
+  times?: number
 }
 
 export type MockLLMResponseFn = (

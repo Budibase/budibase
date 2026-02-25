@@ -1,35 +1,27 @@
-import { HTTPError } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
-import type { Agent, AgentFile, VectorDb } from "@budibase/types"
 import { embedMany } from "ai"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
-import { getLiteLLMModelConfigOrThrow } from "../configs"
-import { find as findVectorDb } from "../vectorDb/crud"
+import { features } from "@budibase/backend-core"
+import {
+  AgentFileStatus,
+  AgentMessageRagSource,
+  FeatureFlag,
+  type Agent,
+  type AgentFile,
+} from "@budibase/types"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
+import { agents } from ".."
+import { createLLM } from "../llm"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
 
-interface AgentRagConfig {
-  embeddingModel: string
-  vectorDb: string
-  ragMinDistance: number
-  ragTopK: number
-}
-
-interface ResolvedRagConfig {
-  databaseUrl: string
-  embeddingModel: string
-  baseUrl: string
-  apiKey: string
-}
-
-interface ChunkResult {
-  inserted: number
-  total: number
+const ensureRagEnabled = async () => {
+  if (!(await features.isEnabled(FeatureFlag.AI_RAG))) {
+    throw new Error("RAG feature is disabled")
+  }
 }
 
 const textFileExtensions = new Set([
@@ -44,52 +36,6 @@ const textFileExtensions = new Set([
 ])
 
 const yamlExtensions = new Set([".yaml", ".yml"])
-
-const buildRagConfig = async (
-  ragConfig: AgentRagConfig
-): Promise<ResolvedRagConfig> => {
-  const databaseUrl = await resolveVectorDatabaseConfig(ragConfig.vectorDb)
-
-  const { apiKey, baseUrl, modelId } = await getLiteLLMModelConfigOrThrow(
-    ragConfig.embeddingModel
-  )
-  return {
-    databaseUrl,
-    embeddingModel: modelId,
-    baseUrl,
-    apiKey,
-  }
-}
-
-const resolveVectorDatabaseConfig = async (
-  vectorDbId: string
-): Promise<string> => {
-  const vectorDb = await findVectorDb(vectorDbId)
-  if (!vectorDb) {
-    throw new Error("Vector db not found")
-  }
-
-  // TODO: support other vector db types
-  const connectionString = buildPgConnectionString(vectorDb)
-  return connectionString
-}
-
-const getVectorDb = (config: ResolvedRagConfig, embeddingDimensions: number) =>
-  createVectorDb({
-    databaseUrl: config.databaseUrl,
-    embeddingDimensions,
-  })
-
-const buildPgConnectionString = (config: VectorDb) => {
-  const userPart = config.user ? encodeURIComponent(config.user) : ""
-  const passwordPart = config.password
-    ? `:${encodeURIComponent(config.password)}`
-    : ""
-  const auth = userPart || passwordPart ? `${userPart}${passwordPart}@` : ""
-  return `postgresql://${auth}${config.host}:${config.port}/${config.database}`
-}
-
-const embeddingDimensionsCache = new Map<string, number>()
 
 const hashChunk = (chunk: string) => {
   return crypto.createHash("sha256").update(chunk).digest("hex")
@@ -241,20 +187,17 @@ const createChunksFromContent = (content: string, filename?: string) => {
   return chunkDocument(content)
 }
 
-const getEmbeddingModel = async (config: ResolvedRagConfig) => {
-  const openai = ai.createLiteLLMOpenAI({
-    apiKey: config.apiKey,
-    baseUrl: config.baseUrl,
-  })
-  return openai.embedding(config.embeddingModel)
+const getEmbeddingModel = async (configId: string) => {
+  const { embedding } = await createLLM(configId)
+  return embedding
 }
 
 const embedChunks = async (
-  config: ResolvedRagConfig,
+  configId: string,
   chunks: string[],
   batchSize = DEFAULT_EMBEDDING_BATCH_SIZE
 ) => {
-  const model = await getEmbeddingModel(config)
+  const model = await getEmbeddingModel(configId)
   const embeddings: number[][] = []
 
   for (let i = 0; i < chunks.length; i += batchSize) {
@@ -267,20 +210,6 @@ const embedChunks = async (
   }
 
   return embeddings
-}
-
-const getEmbeddingDimensions = async (config: ResolvedRagConfig) => {
-  const cached = embeddingDimensionsCache.get(config.embeddingModel)
-  if (cached) {
-    return cached
-  }
-  const [embedding] = await embedChunks(config, ["dimension-check"], 1)
-  const dimensions = embedding?.length || 0
-  if (!dimensions) {
-    throw new Error("Failed to resolve embedding dimensions")
-  }
-  embeddingDimensionsCache.set(config.embeddingModel, dimensions)
-  return dimensions
 }
 
 const isPdfFile = (file?: AgentFile) => {
@@ -312,56 +241,44 @@ const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
   return buffer.toString("utf-8")
 }
 
-export const getAgentRagConfig = async (
-  agent: Agent
-): Promise<AgentRagConfig> => {
-  if (
-    !agent.embeddingModel ||
-    !agent.vectorDb ||
-    agent.ragMinDistance == null ||
-    agent.ragTopK == null
-  ) {
-    throw new HTTPError("RAG config not set", 422)
-  }
-
-  return {
-    embeddingModel: agent.embeddingModel,
-    vectorDb: agent.vectorDb,
-    ragMinDistance: agent.ragMinDistance,
-    ragTopK: agent.ragTopK,
-  }
-}
-
 export const ingestAgentFile = async (
   agent: Agent,
   agentFile: AgentFile,
   fileBuffer: Buffer
-): Promise<ChunkResult> => {
-  const ragConfig = await getAgentRagConfig(agent)
-  const config = await buildRagConfig(ragConfig)
+): Promise<{
+  inserted: number
+  total: number
+}> => {
+  await ensureRagEnabled()
+  const { _id: agentId } = agent
+  if (!agentId) {
+    throw new Error("Agent id not set")
+  }
+
+  if (!agent.embeddingModel) {
+    throw new Error("Embedding model is not set")
+  }
+
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
 
+  const vectorDb = await createVectorDb({
+    agentId: agent._id!,
+    vectorDbId: agent.vectorDb,
+  })
+
   if (chunks.length === 0) {
-    const embeddingDimensions = await getEmbeddingDimensions(config)
-    const vectorDb = getVectorDb(config, embeddingDimensions)
     // This will ensure any existing chunks for the source are removed
-    await vectorDb.upsertSourceChunks(agentFile.ragSourceId, [])
+    await vectorDb.deleteBySourceIds([agentFile.ragSourceId])
     return { inserted: 0, total: 0 }
   }
 
-  const embeddings = await embedChunks(config, chunks)
+  const embeddings = await embedChunks(agent.embeddingModel, chunks)
   if (embeddings.length !== chunks.length) {
     throw new Error("Embedding response size mismatch")
   }
-  const embeddingDimensions = embeddings[0]?.length || 0
-  if (!embeddingDimensions) {
-    throw new Error("Embedding response missing dimensions")
-  }
-  embeddingDimensionsCache.set(config.embeddingModel, embeddingDimensions)
-  const vectorDb = getVectorDb(config, embeddingDimensions)
 
-  const payloads: ChunkInput[] = chunks.map((chunk, index) => ({
+  const payloads = chunks.map<ChunkInput>((chunk, index) => ({
     hash: hashChunk(chunk),
     text: chunk,
     embedding: embeddings[index],
@@ -371,15 +288,18 @@ export const ingestAgentFile = async (
 }
 
 export const deleteAgentFileChunks = async (
-  ragConfig: AgentRagConfig,
+  agent: Agent,
   sourceIds: string[]
 ) => {
+  await ensureRagEnabled()
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
-  const config = await buildRagConfig(ragConfig)
-  const embeddingDimensions = await getEmbeddingDimensions(config)
-  const vectorDb = getVectorDb(config, embeddingDimensions)
+
+  const vectorDb = await createVectorDb({
+    agentId: agent._id!,
+    vectorDbId: agent.vectorDb,
+  })
   await vectorDb.deleteBySourceIds(sourceIds)
 }
 
@@ -392,39 +312,66 @@ export interface RetrievedContextChunk {
 interface RetrievedContextResult {
   text: string
   chunks: RetrievedContextChunk[]
+  sources: AgentMessageRagSource[]
 }
 
-export const retrieveContextForSources = async (
-  ragConfig: AgentRagConfig,
-  question: string,
-  sourceIds: string[]
+export const retrieveContextForAgent = async (
+  agent: Agent,
+  question: string
 ): Promise<RetrievedContextResult> => {
-  if (!question || question.trim().length === 0 || sourceIds.length === 0) {
-    return { text: "", chunks: [] }
+  await ensureRagEnabled()
+  if (!question || question.trim().length === 0) {
+    return { text: "", chunks: [], sources: [] }
   }
 
-  const config = await buildRagConfig(ragConfig)
-  const [queryEmbedding] = await embedChunks(config, [question], 1)
-  const embeddingDimensions = queryEmbedding?.length || 0
-  if (!embeddingDimensions) {
+  const agentId = agent._id
+  if (!agentId) {
+    throw new Error("Agent id not set")
+  }
+
+  if (!agent.ragTopK || !agent.ragMinDistance) {
+    throw new Error("RAG settings not properly configured")
+  }
+
+  if (!agent.embeddingModel) {
+    throw new Error("Embedding model is not set")
+  }
+
+  const agentFiles = await agents.listAgentFiles(agent._id!)
+  const readyFileSources = agentFiles
+    .filter(file => file.status === AgentFileStatus.READY && file.ragSourceId)
+    .map(file => file.ragSourceId)
+
+  if (readyFileSources.length === 0) {
+    return { text: "", chunks: [], sources: [] }
+  }
+
+  const [queryEmbedding] = await embedChunks(
+    agent.embeddingModel,
+    [question],
+    1
+  )
+  if (!queryEmbedding?.length) {
     throw new Error("Embedding response missing dimensions")
   }
-  embeddingDimensionsCache.set(config.embeddingModel, embeddingDimensions)
-  const vectorDb = getVectorDb(config, embeddingDimensions)
+
+  const vectorDb = await createVectorDb({
+    agentId,
+    vectorDbId: agent.vectorDb,
+  })
   const rows = await vectorDb.queryNearest(
     queryEmbedding,
-    sourceIds,
-    ragConfig.ragTopK
+    readyFileSources,
+    agent.ragTopK
   )
   if (rows.length === 0) {
-    return { text: "", chunks: [] }
+    return { text: "", chunks: [], sources: [] }
   }
 
-  const maxDistance =
-    ragConfig.ragMinDistance === 0 ? 1 : 1 - ragConfig.ragMinDistance
+  const maxDistance = 1 - agent.ragMinDistance
   const filtered = rows.filter(row => row.distance <= maxDistance)
   if (filtered.length === 0) {
-    return { text: "", chunks: [] }
+    return { text: "", chunks: [], sources: [] }
   }
 
   const chunks: RetrievedContextChunk[] = filtered.map(row => ({
@@ -436,5 +383,29 @@ export const retrieveContextForSources = async (
   return {
     text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
     chunks,
+    sources: toSourceMetadata(chunks, agentFiles),
   }
+}
+
+const toSourceMetadata = (
+  chunks: RetrievedContextChunk[],
+  files: AgentFile[]
+): AgentMessageRagSource[] => {
+  const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
+  const summary = new Map<string, AgentMessageRagSource>()
+
+  for (const chunk of chunks) {
+    const file = fileBySourceId.get(chunk.sourceId)
+    if (!summary.has(chunk.sourceId)) {
+      summary.set(chunk.sourceId, {
+        sourceId: chunk.sourceId,
+        fileId: file?._id,
+        filename: file?.filename ?? chunk.sourceId,
+        chunkCount: 0,
+      })
+    }
+    const entry = summary.get(chunk.sourceId)!
+    entry.chunkCount += 1
+  }
+  return Array.from(summary.values())
 }

@@ -43,7 +43,10 @@ export interface UserEndpoints {
   deleteUser: (userId: string) => Promise<DeleteUserResponse>
   deleteUsers: (users: UserIdentifier[]) => Promise<BulkUserDeleted | undefined>
   onboardUsers: (data: InviteUsersRequest) => Promise<InviteUsersResponse>
-  getUserInvite: (code: string) => Promise<CheckInviteResponse>
+  getUserInvite: (
+    code: string,
+    tenantId?: string
+  ) => Promise<CheckInviteResponse>
   getUserInvites: () => Promise<GetUserInvitesResponse>
   inviteUsers: (users: InviteUsersRequest) => Promise<InviteUsersResponse>
   removeUserInvites: (
@@ -52,7 +55,7 @@ export interface UserEndpoints {
   acceptInvite: (
     data: AcceptUserInviteRequest
   ) => Promise<AcceptUserInviteResponse>
-  getUserCountByApp: (appId: string) => Promise<number>
+  getUserCountByWorkspace: (workspaceId: string) => Promise<number>
   getAccountHolder: () => Promise<LookupAccountHolderResponse>
   searchUsers: (data: SearchUsersRequest) => Promise<SearchUsersResponse>
   createUsers: (
@@ -223,9 +226,10 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
    * Retrieves the invitation associated with a provided code.
    * @param code The unique code for the target invite
    */
-  getUserInvite: async code => {
+  getUserInvite: async (code, tenantId) => {
+    const query = tenantId ? `?tenantId=${encodeURIComponent(tenantId)}` : ""
     return await API.get({
-      url: `/api/global/users/invite/${code}`,
+      url: `/api/global/users/invite/${code}${query}`,
     })
   },
 
@@ -270,11 +274,11 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
   },
 
   /**
-   * Counts the number of users in an app
+   * Counts the number of users in a workspace
    */
-  getUserCountByApp: async appId => {
+  getUserCountByWorkspace: async workspaceId => {
     const res = await API.get<CountUserResponse>({
-      url: `/api/global/users/count/${appId}`,
+      url: `/api/global/users/count/${workspaceId}`,
     })
     return res.userCount
   },

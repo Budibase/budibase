@@ -1,16 +1,19 @@
-import { AgentFileStatus, AIConfigType } from "@budibase/types"
 import nock from "nock"
+import { features } from "@budibase/backend-core"
+import { utils } from "@budibase/backend-core/tests"
+import {
+  AgentFileStatus,
+  AIConfigType,
+  FeatureFlag,
+  VectorDbProvider,
+} from "@budibase/types"
 import environment from "../../../../environment"
-import * as ragSdk from "../../../../sdk/workspace/ai/rag/files"
+import * as ragSdk from "../../../../sdk/workspace/ai/rag"
+import { getQueue } from "../../../../sdk/workspace/ai/rag/queue"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
-  const originalModule = jest.requireActual(
-    "../../../../sdk/workspace/ai/rag/files"
-  )
   return {
-    __esModule: true,
-    ...originalModule,
     ingestAgentFile: jest.fn(),
     deleteAgentFileChunks: jest.fn(),
   }
@@ -18,6 +21,13 @@ jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
 
 describe("agent files", () => {
   const config = new TestConfiguration()
+  const withRagEnabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.AI_RAG]: true },
+      f
+    )
+  }
   const mockLiteLLMProviders = () =>
     nock(environment.LITELLM_URL)
       .persist()
@@ -47,6 +57,8 @@ describe("agent files", () => {
       .reply(200, { data: [] })
 
     const liteLLMScope = nock(environment.LITELLM_URL)
+      .post("/team/new")
+      .reply(200, { team_id: "team-2" })
       .post("/key/generate")
       .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
       .post("/model/new")
@@ -66,12 +78,11 @@ describe("agent files", () => {
         api_key: "test",
         api_base: "https://example.com",
       },
-      liteLLMModelId: "test",
       configType: AIConfigType.EMBEDDINGS,
     })
     const vectorDb = await config.api.vectorDb.create({
       name: "Agent Vector DB",
-      provider: "pgvector",
+      provider: VectorDbProvider.PGVECTOR,
       host: "localhost",
       port: 5432,
       database: "budibase",
@@ -101,59 +112,100 @@ describe("agent files", () => {
   })
 
   it("uploads and lists agent files", async () => {
-    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
-      typeof ragSdk.ingestAgentFile
-    >
-    ingestSpy.mockResolvedValue({ inserted: 1, total: 2 })
+    await withRagEnabled(async () => {
+      const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+        typeof ragSdk.ingestAgentFile
+      >
+      ingestSpy.mockResolvedValue({ inserted: 1, total: 2 })
 
-    const { agent } = await createAgentWithRag()
+      const { agent } = await createAgentWithRag()
 
-    const upload = await config.api.agentFiles.upload(agent._id!, {
-      file: fileBuffer,
-      name: "notes.txt",
+      const upload = await config.api.agentFiles.upload(agent._id!, {
+        file: fileBuffer,
+        name: "notes.txt",
+      })
+
+      expect(upload.file.status).toBe(AgentFileStatus.PROCESSING)
+      expect(upload.file.chunkCount).toBe(0)
+      expect(upload.file.filename).toBe("notes.txt")
+
+      await utils.queue.processMessages(getQueue().getBullQueue())
+
+      expect(ingestSpy).toHaveBeenCalled()
+      const { files } = await config.api.agentFiles.fetch(agent._id!)
+      expect(files).toHaveLength(1)
+      expect(files[0]._id).toBe(upload.file._id)
+      expect(files[0].status).toBe(AgentFileStatus.READY)
+      expect(files[0].chunkCount).toBe(2)
     })
-
-    expect(upload.file.status).toBe(AgentFileStatus.READY)
-    expect(upload.file.chunkCount).toBe(2)
-    expect(upload.file.filename).toBe("notes.txt")
-    expect(ingestSpy).toHaveBeenCalled()
-
-    const { files } = await config.api.agentFiles.fetch(agent._id!)
-    expect(files).toHaveLength(1)
-    expect(files[0]._id).toBe(upload.file._id)
   })
 
-  it("deletes agent files and clears chunks", async () => {
-    const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
-      typeof ragSdk.ingestAgentFile
-    >
-    ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
-    const deleteSpy = ragSdk.deleteAgentFileChunks as jest.MockedFunction<
-      typeof ragSdk.deleteAgentFileChunks
-    >
-    deleteSpy.mockResolvedValue()
+  it("deletes agent files (but not the embeddings)", async () => {
+    await withRagEnabled(async () => {
+      const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+        typeof ragSdk.ingestAgentFile
+      >
+      ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
 
-    const { agent } = await createAgentWithRag()
+      const { agent } = await createAgentWithRag()
 
-    const upload = await config.api.agentFiles.upload(agent._id!, {
-      file: fileBuffer,
-      name: "docs.txt",
+      const upload = await config.api.agentFiles.upload(agent._id!, {
+        file: fileBuffer,
+        name: "docs.txt",
+      })
+      await config.publish()
+
+      const response = await config.api.agentFiles.remove(
+        agent._id!,
+        upload.file._id!
+      )
+      expect(response.deleted).toBe(true)
+
+      const { files } = await config.api.agentFiles.fetch(agent._id!)
+      expect(files).toHaveLength(0)
+
+      const deleteAgentFileChunksSpy =
+        ragSdk.deleteAgentFileChunks as jest.MockedFunction<
+          typeof ragSdk.deleteAgentFileChunks
+        >
+      expect(deleteAgentFileChunksSpy).not.toHaveBeenCalled()
     })
+  })
 
-    const response = await config.api.agentFiles.remove(
-      agent._id!,
-      upload.file._id!
-    )
-    expect(response.deleted).toBe(true)
+  it("hard deletes agent files that were never in prod", async () => {
+    await withRagEnabled(async () => {
+      const ingestSpy = ragSdk.ingestAgentFile as jest.MockedFunction<
+        typeof ragSdk.ingestAgentFile
+      >
+      ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
 
-    const { files } = await config.api.agentFiles.fetch(agent._id!)
-    expect(files).toHaveLength(0)
-    expect(deleteSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        embeddingModel: expect.any(String),
-        vectorDb: expect.any(String),
-      }),
-      [upload.file.ragSourceId]
-    )
+      const { agent } = await createAgentWithRag()
+
+      const upload = await config.api.agentFiles.upload(agent._id!, {
+        file: fileBuffer,
+        name: "docs.txt",
+      })
+
+      await utils.queue.processMessages(ragSdk.queue.getQueue().getBullQueue())
+
+      const response = await config.api.agentFiles.remove(
+        agent._id!,
+        upload.file._id!
+      )
+      expect(response.deleted).toBe(true)
+
+      const { files } = await config.api.agentFiles.fetch(agent._id!)
+      expect(files).toHaveLength(0)
+
+      const deleteAgentFileChunksSpy =
+        ragSdk.deleteAgentFileChunks as jest.MockedFunction<
+          typeof ragSdk.deleteAgentFileChunks
+        >
+      expect(deleteAgentFileChunksSpy).toHaveBeenCalledTimes(1)
+      expect(deleteAgentFileChunksSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ _id: agent._id }),
+        [upload.file._id]
+      )
+    })
   })
 })

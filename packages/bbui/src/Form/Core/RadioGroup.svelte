@@ -11,6 +11,8 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionTitle = option => option
+  export let getOptionSubtitle = option => option?.subtitle ?? undefined
+  export let getOptionDisabled = option => option?.disabled ?? false
   export let sort = false
 
   const dispatch = createEventDispatcher()
@@ -36,6 +38,9 @@
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
   {#if parsedOptions && Array.isArray(parsedOptions)}
     {#each parsedOptions as option}
+      {@const isOptionDisabled = disabled || getOptionDisabled(option)}
+      {@const optionLabel = getOptionLabel(option)}
+      {@const optionSubtitle = getOptionSubtitle(option)}
       <div
         title={getOptionTitle(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"
@@ -47,11 +52,16 @@
           value={getOptionValue(option)}
           type="radio"
           class="spectrum-Radio-input"
-          {disabled}
+          disabled={isOptionDisabled}
         />
         <span class="spectrum-Radio-button"></span>
-        <label for="" class="spectrum-Radio-label">
-          {getOptionLabel(option)}
+        <label for="" class="spectrum-Radio-label radio-label">
+          <span class="radio-label-text">{optionLabel}</span>
+          {#if optionSubtitle && optionSubtitle !== optionLabel}
+            <span class="radio-label-subtitle">
+              {optionSubtitle}
+            </span>
+          {/if}
         </label>
       </div>
     {/each}
@@ -64,5 +74,9 @@
   }
   .readonly {
     pointer-events: none;
+  }
+  .radio-label-subtitle {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

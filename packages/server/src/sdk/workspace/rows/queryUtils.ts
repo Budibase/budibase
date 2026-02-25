@@ -68,6 +68,7 @@ export const getQueryableFields = async (
         continue
       }
       if (isRelationship) {
+        result.push(field)
         try {
           const relatedTable = await sdk.tables.getTable(subSchema.tableId)
           const relatedFields = await extractTableFields(

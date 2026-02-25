@@ -11,7 +11,11 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface RowEndpoints {
-  fetchRow: (tableId: string, rowId: string) => Promise<FindRowResponse>
+  fetchRow: (
+    tableId: string,
+    rowId: string,
+    suppressErrors?: boolean
+  ) => Promise<FindRowResponse>
   saveRow: (
     row: SaveRowRequest,
     suppressErrors?: boolean
@@ -34,10 +38,12 @@ export const buildRowEndpoints = (API: BaseAPIClient): RowEndpoints => ({
    * Fetches data about a certain row in a data source.
    * @param sourceId the ID of the table or view to fetch from
    * @param rowId the ID of the row to fetch
+   * @param suppressErrors whether or not to suppress error notifications
    */
-  fetchRow: async (sourceId, rowId) => {
+  fetchRow: async (sourceId, rowId, suppressErrors = false) => {
     return await API.get({
       url: `/api/${sourceId}/rows/${rowId}`,
+      suppressErrors,
     })
   },
 

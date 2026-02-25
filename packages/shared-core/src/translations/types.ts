@@ -7,6 +7,7 @@ export type TranslationCategory =
   | "portal"
   | "login"
   | "forgotPassword"
+  | "validation"
 
 export interface TranslationDefinitionInput {
   key: string

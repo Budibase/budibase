@@ -4,6 +4,7 @@
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
+  import { loadTranslationsByGroup } from "@budibase/frontend-core"
   import {
     type DataFetchDatasource,
     type FieldSchema,
@@ -56,6 +57,7 @@
 
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
+  const validationLabels = loadTranslationsByGroup("validation")
 
   let fields: Writable<FieldInfo>[] = []
   const formState = writable({
@@ -216,7 +218,8 @@
         schemaConstraints,
         validationRules,
         field,
-        definition
+        definition,
+        validationLabels.required
       )
 
       // Sanitise the default value to ensure it doesn't contain invalid data

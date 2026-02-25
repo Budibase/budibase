@@ -24,9 +24,11 @@
   export let id: string | undefined = undefined
   export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = false
+  export let bordered: boolean = true
   export let fieldText: string = ""
   export let fieldIcon: PickerIconInput = undefined
   export let fieldColour: string = ""
+  export let fieldSubtitle: string | null = null
   export let isPlaceholder: boolean = false
   export let placeholderOption: string | undefined | boolean = undefined
   export let options: O[] = []
@@ -74,6 +76,7 @@
   export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
   export let hideChevron: boolean = false
+  export let wrapText: boolean = false
 
   const maxHeight = 360
   const VIRTUALIZATION_THRESHOLD = 200
@@ -113,7 +116,8 @@
     searchTerm,
     getOptionLabel
   )
-  $: virtualizationEnabled = filteredOptions.length > VIRTUALIZATION_THRESHOLD
+  $: virtualizationEnabled =
+    !wrapText && filteredOptions.length > VIRTUALIZATION_THRESHOLD
   $: {
     if (!virtualizationEnabled) {
       virtualizedOptions = filteredOptions.map((option, idx) => ({
@@ -225,6 +229,7 @@
 <button
   {id}
   class="spectrum-Picker spectrum-Picker--size{size}"
+  class:has-border={bordered}
   class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-open={open}
@@ -250,8 +255,13 @@
     class="spectrum-Picker-label"
     class:is-placeholder={isPlaceholder}
     class:auto-width={autoWidth}
+    class:has-subtitle={!!fieldSubtitle}
+    class:wrap-text={wrapText}
   >
-    {fieldText}
+    <span class="picker-label-text">{fieldText}</span>
+    {#if fieldSubtitle}
+      <span class="picker-label-subtitle">{fieldSubtitle}</span>
+    {/if}
   </span>
   {#if !hideChevron}
     <Icon name="caret-down" size="S" />
@@ -272,6 +282,7 @@
   <div
     class="popover-content"
     class:auto-width={autoWidth}
+    class:wrap-text={wrapText}
     use:clickOutside={() => {
       open = false
     }}
@@ -420,6 +431,8 @@
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
+  }
+  .spectrum-Picker.has-border {
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
   }
@@ -475,6 +488,30 @@
   }
   .spectrum-Menu-item.is-disabled {
     pointer-events: none;
+  }
+
+  .spectrum-Picker-label.wrap-text {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    width: auto;
+  }
+  .spectrum-Picker-label.wrap-text .picker-label-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .popover-content.wrap-text .spectrum-Menu-item {
+    height: auto;
+    min-height: var(--spectrum-menu-item-height);
+    align-items: flex-start;
+  }
+  .popover-content.wrap-text .spectrum-Menu-itemLabel {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    width: auto;
+    flex: 1 1 auto;
   }
 
   /* Search styles inside popover */
@@ -533,6 +570,26 @@
     color: var(--spectrum-global-color-gray-600);
     display: block;
     margin-top: var(--spacing-s);
+  }
+  .spectrum-Picker-label.has-subtitle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    white-space: normal;
+    overflow: visible;
+    height: auto;
+    line-height: normal;
+  }
+  .spectrum-Picker-label.has-subtitle .picker-label-text {
+    font-size: 12px;
+    line-height: 15px;
+  }
+  .picker-label-subtitle {
+    font-size: 12px;
+    line-height: 15px;
+    color: var(--spectrum-global-color-gray-600);
+    font-weight: 500;
   }
 
   .select-all-item {

@@ -2,6 +2,10 @@
   import { ActionButton, Button, Body, notifications } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import ExistingTableDataImport from "@/components/backend/TableNavigator/ExistingTableDataImport.svelte"
+  import {
+    chunkRows,
+    IMPORT_ROWS_PER_CHUNK,
+  } from "@/components/backend/TableNavigator/utils"
   import { dataAPI } from "@/stores/builder"
   import { createEventDispatcher } from "svelte"
 
@@ -30,7 +34,10 @@
   const importData = async () => {
     try {
       loading = true
-      await $dataAPI.importTableData(tableId, rows, identifierFields)
+      const chunks = chunkRows(rows, IMPORT_ROWS_PER_CHUNK)
+      for (const chunk of chunks) {
+        await $dataAPI.importTableData(tableId, chunk, identifierFields)
+      }
       notifications.success("Rows successfully imported")
       popover.hide()
     } catch (error) {

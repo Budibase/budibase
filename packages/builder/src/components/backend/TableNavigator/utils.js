@@ -2,7 +2,8 @@ import { API } from "@/api"
 import { FIELDS } from "@/constants/backend"
 
 const BYTES_IN_MB = 1000000
-const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
+const FILE_SIZE_LIMIT = BYTES_IN_MB * 10
+export const IMPORT_ROWS_PER_CHUNK = 5000
 
 const getDefaultSchema = rows => {
   const newSchema = {}
@@ -65,6 +66,31 @@ export const parseFile = e => {
 
     reader.readAsText(file)
   })
+}
+
+export const getValidationRows = rows => {
+  if (!Array.isArray(rows)) {
+    return []
+  }
+
+  if (rows.length <= IMPORT_ROWS_PER_CHUNK) {
+    return rows
+  }
+
+  return rows.slice(0, IMPORT_ROWS_PER_CHUNK)
+}
+
+export const chunkRows = (rows, size = IMPORT_ROWS_PER_CHUNK) => {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return []
+  }
+
+  const chunkSize = size > 0 ? size : IMPORT_ROWS_PER_CHUNK
+  const chunks = []
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    chunks.push(rows.slice(i, i + chunkSize))
+  }
+  return chunks
 }
 
 export const alphabetical = (a, b) => {

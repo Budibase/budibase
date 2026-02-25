@@ -2,7 +2,8 @@ import type { Component } from "svelte"
 
 // General
 import ProfilePage from "@/settings/pages/profile.svelte"
-import UsersPage from "@/settings/pages/people/users/index.svelte"
+import OrganisationUsersPage from "@/settings/pages/people/users/organisation.svelte"
+import WorkspaceUsersPage from "@/settings/pages/people/users/workspace.svelte"
 import UserPage from "@/settings/pages/people/users/user.svelte"
 import UserInvitesPage from "@/settings/pages/people/users/invites.svelte"
 import GroupPage from "@/settings/pages/people/groups/group.svelte"
@@ -36,9 +37,13 @@ import ScriptsPage from "@/settings/pages/scripts.svelte"
 import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
 import Recaptcha from "@/settings/pages/recaptcha.svelte"
 
+// AI config
+import AIConfigForm from "@/settings/pages/ai/AIConfigForm.svelte"
+
 const componentMap = {
   profile: ProfilePage,
-  users: UsersPage,
+  users: OrganisationUsersPage,
+  workspace_users: WorkspaceUsersPage,
   user: UserPage,
   user_invites: UserInvitesPage,
   group: GroupPage,
@@ -50,6 +55,7 @@ const componentMap = {
   audit_logs: AuditLogsPage,
   ai: AIPage,
   ai_configs: AIConfigsPage,
+  ai_config: AIConfigForm,
   embeddings: EmbeddingsPage,
   auth: AuthPage,
   org: OrgPage,

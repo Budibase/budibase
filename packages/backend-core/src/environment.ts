@@ -271,6 +271,8 @@ const environment = {
   CUSTOM_CSP_IMG_SRC: process.env.CUSTOM_CSP_IMG_SRC,
   CUSTOM_CSP_FONT_SRC: process.env.CUSTOM_CSP_FONT_SRC,
   CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
+  OPENROUTER_BASE_URL:
+    process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {

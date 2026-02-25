@@ -26,7 +26,7 @@ afterAll(() => {
   }
 })
 
-describe("/builder/:file*", () => {
+describe("/builder/*file", () => {
   it("should be able to retrieve the builder file", async () => {
     const res = await config.api.assets.get("index.html")
     expect(res.text).toContain("<html")

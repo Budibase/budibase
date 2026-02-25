@@ -7,7 +7,7 @@
   import { Select, Toggle, Multiselect, Label, Layout } from "@budibase/bbui"
   import { DB_TYPE_INTERNAL } from "@/constants/backend"
   import { API } from "@/api"
-  import { parseFile } from "./utils"
+  import { getValidationRows, parseFile } from "./utils"
   import { tables, datasources } from "@/stores/builder"
 
   let error = null
@@ -108,11 +108,12 @@
       rows = response.rows
       fileName = response.fileName
 
-      const newValidateHash = JSON.stringify(rows)
+      const validationRows = getValidationRows(rows)
+      const newValidateHash = JSON.stringify(validationRows)
       if (newValidateHash === validateHash) {
         validation = previousValidation
       } else {
-        await validate(rows)
+        await validate(validationRows)
         validateHash = newValidateHash
       }
     } catch (e) {
@@ -122,13 +123,16 @@
     }
   }
 
-  async function validate(rows) {
+  async function validate(rowsToValidate) {
     error = null
     validation = {}
     allValid = false
 
-    if (rows.length > 0) {
-      const response = await API.validateExistingTableImport(rows, tableId)
+    if (rowsToValidate.length > 0) {
+      const response = await API.validateExistingTableImport(
+        rowsToValidate,
+        tableId
+      )
       validation = response.schemaValidation
       invalidColumns = response.invalidColumns
       allValid = response.allValid

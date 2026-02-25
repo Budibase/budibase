@@ -107,20 +107,23 @@
 
   .item {
     cursor: pointer;
-    border: none;
+    border: 0.5px solid var(--spectrum-global-color-gray-300);
     border-radius: 12px;
     padding: var(--spacing-s) var(--spacing-m);
     font: inherit;
     text-align: left;
     color: inherit;
-    background: #0f1116;
+    background: var(--spectrum-global-color-gray-50);
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-    border: 1px solid rgba(255, 255, 255, 0.1);
     transition:
       border 0.2s,
       background 0.2s;
+  }
+
+  .item:hover {
+    background: var(--spectrum-global-color-gray-75);
   }
 
   .item:focus-visible {
@@ -130,7 +133,7 @@
 
   .item.selected {
     border-color: var(--spectrum-global-color-blue-600);
-    background: #1a1e27;
+    background: var(--spectrum-global-color-gray-75);
   }
 
   .icon-container {

@@ -691,7 +691,7 @@ describe("scim", () => {
           groups = []
 
           const groupNames = generator.unique(
-            () => generator.word(),
+            () => structures.uuid(),
             groupCount
           )
 
@@ -807,7 +807,7 @@ describe("scim", () => {
 
           const groupData = {
             externalId: structures.uuid(),
-            displayName: structures.generator.word(),
+            displayName: structures.uuid(),
           }
           const body = structures.scim.createGroupRequest(groupData)
 
@@ -962,7 +962,7 @@ describe("scim", () => {
       unauthorisedTests(patchScimGroup)
 
       it("an existing group can be updated", async () => {
-        const newDisplayName = structures.generator.word()
+        const newDisplayName = structures.uuid()
 
         const body: ScimUpdateRequest = {
           schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
@@ -1165,7 +1165,7 @@ describe("scim", () => {
         })
 
         it("adding members and updating fields can performed in a single operation", async () => {
-          const newDisplayName = structures.generator.word()
+          const newDisplayName = structures.uuid()
 
           const body: ScimUpdateRequest = {
             schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],

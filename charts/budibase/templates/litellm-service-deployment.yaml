@@ -30,6 +30,8 @@ spec:
               value: {{ .Values.services.litellm.masterKey | quote }}
             - name: LITELLM_SALT_KEY
               value: {{ .Values.services.litellm.saltKey | quote }}
+            - name: LITELLM_REASONING_AUTO_SUMMARY
+              value: "true"
           {{- if .Values.services.litellm.uiUsername }}
             - name: UI_USERNAME
               value: {{ .Values.services.litellm.uiUsername | quote }}

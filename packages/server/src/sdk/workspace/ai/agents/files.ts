@@ -1,4 +1,10 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  db,
+  docIds,
+  HTTPError,
+  objectStore,
+} from "@budibase/backend-core"
 import {
   Agent,
   AgentFile,
@@ -7,22 +13,29 @@ import {
   RequiredKeys,
   ToDocCreateMetadata,
 } from "@budibase/types"
-import { deleteAgentFileChunks, getAgentRagConfig } from "../rag/files"
+import { deleteAgentFileChunks } from "../rag/files"
+import { ObjectStoreBuckets } from "../../../../constants"
 
 interface CreateAgentFileOptions {
+  id: string
   agentId: string
   filename: string
   mimetype?: string
   size?: number
   uploadedBy: string
+  objectStoreKey: string
 }
 
 export const createAgentFile = async (
   options: CreateAgentFileOptions
 ): Promise<AgentFile> => {
   const db = context.getWorkspaceDB()
-  const { agentId, filename, mimetype, size, uploadedBy } = options
-  const _id = docIds.generateAgentFileID(agentId)
+  const { id, agentId, filename, mimetype, size, uploadedBy, objectStoreKey } =
+    options
+  const _id = id || docIds.generateAgentFileID(agentId)
+  if (!docIds.isAgentFileID(_id)) {
+    throw new Error(`Id ${_id} is not valid for an agent file`)
+  }
 
   const doc: RequiredKeys<ToDocCreateMetadata<AgentFile>> = {
     _id,
@@ -30,11 +43,11 @@ export const createAgentFile = async (
     filename,
     mimetype,
     size,
+    objectStoreKey,
     ragSourceId: _id,
     status: AgentFileStatus.PROCESSING,
     uploadedBy,
     chunkCount: 0,
-
     errorMessage: undefined,
     processedAt: undefined,
   }
@@ -83,8 +96,35 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
 }
 
 export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
-  const ragConfig = await getAgentRagConfig(agent)
-  await deleteAgentFileChunks(ragConfig, [file.ragSourceId])
-  const db = context.getWorkspaceDB()
-  await db.remove(file)
+  let isFileInProduction = false
+
+  try {
+    const prodWorkspaceId = db.getProdWorkspaceID(
+      context.getOrThrowWorkspaceId()
+    )
+    await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+      await getAgentFileOrThrow(file._id!)
+
+      isFileInProduction = true
+    })
+  } catch (error: any) {
+    if (error?.status === 404) {
+      // ignore if prod version does not exist yet
+    } else {
+      throw error
+    }
+  }
+  if (!isFileInProduction) {
+    await deleteAgentFileChunks(agent, [file.ragSourceId])
+  }
+
+  if (file.objectStoreKey) {
+    try {
+      await objectStore.deleteFile(ObjectStoreBuckets.APPS, file.objectStoreKey)
+    } catch (error) {
+      console.log("Failed to delete agent file from object store", error)
+    }
+  }
+
+  await context.getWorkspaceDB().remove(file)
 }

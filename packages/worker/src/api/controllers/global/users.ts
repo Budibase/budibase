@@ -4,13 +4,12 @@ import {
   context,
   db,
   events,
-  HTTPError,
   locks,
   platform,
   tenancy,
   users,
 } from "@budibase/backend-core"
-import { features } from "@budibase/pro"
+import { groups as proGroups } from "@budibase/pro"
 import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
 import {
   AcceptUserInviteRequest,
@@ -268,10 +267,12 @@ export const adminUser = async (
   })
 }
 
-export const countByApp = async (ctx: UserCtx<void, CountUserResponse>) => {
-  const appId = ctx.params.appId
+export const countByWorkspace = async (
+  ctx: UserCtx<void, CountUserResponse>
+) => {
+  const workspaceId = ctx.params.workspaceId
   try {
-    ctx.body = await userSdk.db.countUsersByApp(appId)
+    ctx.body = await userSdk.db.countUsersByWorkspace(workspaceId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -318,6 +319,18 @@ export const search = async (
     }
   }
 
+  const hasWorkspaceId =
+    body && Object.prototype.hasOwnProperty.call(body, "workspaceId")
+
+  if (hasWorkspaceId) {
+    let response = await searchWorkspaceUsers(body)
+    if (!users.hasBuilderPermissions(ctx.user)) {
+      response.data = stripUsers(response.data)
+    }
+    ctx.body = response
+    return
+  }
+
   let response: SearchUsersResponse = { data: [] }
 
   if (body.paginate === false) {
@@ -345,6 +358,111 @@ export const search = async (
   }
 
   ctx.body = response
+}
+
+const DEFAULT_USER_LIMIT = 8
+
+const searchWorkspaceUsers = async (
+  body: SearchUsersRequest
+): Promise<SearchUsersResponse> => {
+  const workspaceId = body.workspaceId
+  if (!workspaceId) {
+    return { data: [], hasNextPage: false }
+  }
+
+  const limit = body.limit ?? DEFAULT_USER_LIMIT
+  const query = body.query
+  const filtered: User[] = []
+  let cursor = body.bookmark
+  let nextPage: string | undefined
+  const groupAccessCache = new Map<string, boolean>()
+
+  const getBookmarkValue = (user: User) => {
+    if (query?.string?.email && user.email) {
+      return user.email.toLowerCase()
+    }
+    return user._id
+  }
+
+  const hydrateGroupAccess = async (usersToCheck: User[]) => {
+    const missingGroupIds = new Set<string>()
+    for (const user of usersToCheck) {
+      for (const groupId of user.userGroups || []) {
+        if (!groupAccessCache.has(groupId)) {
+          missingGroupIds.add(groupId)
+        }
+      }
+    }
+
+    if (!missingGroupIds.size) {
+      return
+    }
+
+    const groupIdList = [...missingGroupIds]
+    const groups = await proGroups.getBulk(groupIdList, { enriched: false })
+    groups.forEach((group, index) => {
+      const groupId = group?._id || groupIdList[index]
+      const hasAccess = !!group?.roles?.[workspaceId]
+      groupAccessCache.set(groupId, hasAccess)
+    })
+  }
+
+  const hasWorkspaceAccess = (user: User) => {
+    if (users.isAdminOrBuilder(user, workspaceId)) {
+      return true
+    }
+    if (user.roles?.[workspaceId]) {
+      return true
+    }
+    return (user.userGroups || []).some(groupId =>
+      groupAccessCache.get(groupId)
+    )
+  }
+
+  while (filtered.length <= limit) {
+    const page = await userSdk.core.paginatedUsers({
+      bookmark: cursor,
+      query,
+      limit,
+    })
+
+    if (!page.data?.length) {
+      break
+    }
+
+    await hydrateGroupAccess(page.data)
+
+    for (const user of page.data) {
+      if (!hasWorkspaceAccess(user)) {
+        continue
+      }
+      filtered.push(user)
+      if (filtered.length === limit + 1) {
+        nextPage = getBookmarkValue(user)
+        break
+      }
+    }
+
+    if (filtered.length === limit + 1 || !page.hasNextPage) {
+      break
+    }
+    cursor = page.nextPage
+  }
+
+  const hasNextPage = filtered.length > limit
+  const data = hasNextPage ? filtered.slice(0, limit) : filtered
+
+  for (let user of data) {
+    if (user) {
+      delete user.password
+    }
+  }
+
+  return {
+    data,
+    hasNextPage,
+    nextPage: hasNextPage ? nextPage : undefined,
+  }
 }
 
 // called internally by app server user fetch
@@ -472,11 +590,12 @@ export const inviteMultiple = async (
 export const removeMultipleInvites = async (
   ctx: Ctx<DeleteInviteUsersRequest, DeleteInviteUsersResponse>
 ) => {
+  const tenantId = context.getTenantId()
   const inviteCodesToRemove = ctx.request.body.map(
     (invite: DeleteInviteUserRequest) => invite.code
   )
   for (const code of inviteCodesToRemove) {
-    await cache.invite.deleteCode(code)
+    await cache.invite.deleteCode(code, tenantId)
   }
   ctx.body = {
     message: "User invites successfully removed.",
@@ -485,9 +604,13 @@ export const removeMultipleInvites = async (
 
 export const checkInvite = async (ctx: UserCtx<void, CheckInviteResponse>) => {
   const { code } = ctx.params
+  const tenantId =
+    typeof ctx.request.query.tenantId === "string"
+      ? ctx.request.query.tenantId
+      : undefined
   let invite
   try {
-    invite = await cache.invite.getCode(code)
+    invite = await cache.invite.getCode(code, tenantId)
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
@@ -520,7 +643,8 @@ export const addWorkspaceIdToInvite = async (
   const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
 
   try {
-    const invite = await cache.invite.getCode(code)
+    const tenantId = context.getTenantId()
+    const invite = await cache.invite.getCode(code, tenantId)
     invite.info.apps ??= {}
     invite.info.apps[prodWorkspaceId] = role
 
@@ -543,7 +667,8 @@ export const removeWorkspaceIdFromInvite = async (
   const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
 
   try {
-    const invite = await cache.invite.getCode(code)
+    const tenantId = context.getTenantId()
+    const invite = await cache.invite.getCode(code, tenantId)
     invite.info.apps ??= {}
     delete invite.info.apps[prodWorkspaceId]
 
@@ -557,7 +682,13 @@ export const removeWorkspaceIdFromInvite = async (
 export const inviteAccept = async (
   ctx: Ctx<AcceptUserInviteRequest, AcceptUserInviteResponse>
 ) => {
-  const { inviteCode, password, firstName, lastName } = ctx.request.body
+  const { inviteCode, password, firstName, lastName, tenantId } =
+    ctx.request.body
+  const queryTenantId =
+    typeof ctx.request.query.tenantId === "string"
+      ? ctx.request.query.tenantId
+      : undefined
+  const resolvedTenantId = tenantId || queryTenantId
   try {
     await locks.doWithLock(
       {
@@ -568,7 +699,10 @@ export const inviteAccept = async (
       },
       async () => {
         // info is an extension of the user object that was stored by global
-        const { email, info } = await cache.invite.getCode(inviteCode)
+        const { email, info } = await cache.invite.getCode(
+          inviteCode,
+          resolvedTenantId
+        )
         const user = await tenancy.doInTenant(info.tenantId, async () => {
           let request: any = {
             firstName,
@@ -598,7 +732,7 @@ export const inviteAccept = async (
           return saved
         })
 
-        await cache.invite.deleteCode(inviteCode)
+        await cache.invite.deleteCode(inviteCode, resolvedTenantId)
 
         // make sure onboarding flow is cleared
         ctx.cookies.set(BpmStatusKey.ONBOARDING, BpmStatusValue.COMPLETED, {
@@ -663,10 +797,6 @@ async function handleUserWorkspacePermission(
     existingUser.roles[prodWorkspaceId] = role
   } else {
     delete existingUser.roles[prodWorkspaceId]
-  }
-
-  if (role === "CREATOR" && !(await features.isAppBuildersEnabled())) {
-    throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
   const creatorForApps = Object.entries(existingUser.roles)

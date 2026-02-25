@@ -1,5 +1,6 @@
 import { QueryUtils } from "@budibase/frontend-core"
 import { EmptyFilterOption } from "@budibase/types"
+import { processStringSync } from "@budibase/string-templates"
 
 export const getActiveConditions = conditions => {
   if (!conditions?.length) {
@@ -56,4 +57,17 @@ export const reduceConditionActions = conditions => {
   })
 
   return { settingUpdates, visible }
+}
+
+export const enrichGridConditions = (conditions, context) => {
+  return conditions?.map(condition => {
+    return {
+      ...condition,
+      referenceValue: processStringSync(
+        condition.referenceValue || "",
+        context
+      ),
+      newValue: processStringSync(condition.newValue || "", context),
+    }
+  })
 }

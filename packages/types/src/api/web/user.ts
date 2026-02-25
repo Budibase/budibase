@@ -107,6 +107,7 @@ export interface SearchUsersRequest {
   bookmark?: string
   query?: SearchFilters
   appId?: string
+  workspaceId?: string
   limit?: number
   paginate?: boolean
 }
@@ -149,6 +150,7 @@ export interface AcceptUserInviteRequest {
   password: string
   firstName: string
   lastName?: string
+  tenantId?: string
 }
 export interface AcceptUserInviteResponse {
   _id: string

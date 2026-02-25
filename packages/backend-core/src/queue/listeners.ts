@@ -91,6 +91,7 @@ enum QueueEventType {
   DOC_WRITETHROUGH = "doc-writethrough",
   DEV_REVERT_EVENT = "dev-revert-event",
   BATCH_USER_SYNC_PROCESSOR = "batch-user-sync-processor",
+  RAG_INGESTION_PROCESSOR = "rag-ingestion-processor",
 }
 
 const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
@@ -103,6 +104,7 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
   [JobQueue.DEV_REVERT_PROCESSOR]: QueueEventType.DEV_REVERT_EVENT,
   [JobQueue.BATCH_USER_SYNC_PROCESSOR]:
     QueueEventType.BATCH_USER_SYNC_PROCESSOR,
+  [JobQueue.RAG_INGESTION]: QueueEventType.RAG_INGESTION_PROCESSOR,
 }
 
 function logging(queue: Queue, jobQueue: JobQueue) {

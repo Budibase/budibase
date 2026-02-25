@@ -5,9 +5,13 @@ import {
   AgentStepOutputs,
   AutomationStepInputBase,
 } from "@budibase/types"
-import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+import {
+  findIncompleteToolCalls,
+  formatIncompleteToolCallError,
+  updatePendingToolCalls,
+} from "../../../sdk/workspace/ai/agents/utils"
 import {
   ToolLoopAgent,
   stepCountIs,
@@ -15,6 +19,8 @@ import {
   UIMessage,
   Output,
   jsonSchema,
+  wrapLanguageModel,
+  extractReasoningMiddleware,
 } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
@@ -77,26 +83,17 @@ export async function run({
         const { systemPrompt, tools } =
           await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
-        const { modelId, apiKey, baseUrl, modelName } =
-          await sdk.ai.configs.getLiteLLMModelConfigOrThrow(
-            agentConfig.aiconfig
-          )
-
         tracer.llmobs.annotate(agentSpan, {
           metadata: {
-            modelId,
-            modelName,
-            baseUrl,
-            envLiteLLMUrl: env.LITELLM_URL,
             toolCount: Object.keys(tools).length,
           },
         })
 
-        const litellm = ai.createLiteLLMOpenAI({
-          apiKey,
-          baseUrl,
-          fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
-        })
+        const { chat, providerOptions } = await sdk.ai.llm.createLLM(
+          agentConfig.aiconfig,
+          sessionId,
+          agentSpan
+        )
 
         let outputOption = undefined
         if (
@@ -111,13 +108,29 @@ export async function run({
           outputOption = Output.object({ schema: jsonSchema(normalizedSchema) })
         }
 
+        const pendingToolCalls = new Set<string>()
+        const hasTools = Object.keys(tools).length > 0
         const agent = new ToolLoopAgent({
-          model: litellm.chat(modelId),
+          model: wrapLanguageModel({
+            model: chat,
+            middleware: extractReasoningMiddleware({
+              tagName: "think",
+            }),
+          }),
           instructions: systemPrompt || undefined,
-          tools,
+          tools: hasTools ? tools : undefined,
+          toolChoice: hasTools ? "auto" : "none",
           stopWhen: stepCountIs(30),
-          providerOptions: ai.getLiteLLMProviderOptions(),
+          providerOptions: providerOptions?.(hasTools),
           output: outputOption,
+          onStepFinish({ content, toolCalls, toolResults }) {
+            updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+            for (const part of content) {
+              if (part.type === "tool-error") {
+                pendingToolCalls.delete(part.toolCallId)
+              }
+            }
+          },
         })
 
         const streamResult = await agent.stream({ prompt })
@@ -138,6 +151,22 @@ export async function run({
           assistantMessage = uiMessage
         }
 
+        const incompleteTools = assistantMessage
+          ? findIncompleteToolCalls([assistantMessage])
+          : []
+        if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
+          const errorMessage = formatIncompleteToolCallError(incompleteTools)
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: errorMessage,
+            tags: { error: "1", "error.type": "IncompleteToolCall" },
+          })
+          return {
+            success: false,
+            response: errorMessage,
+            message: assistantMessage,
+          }
+        }
+
         let responseText: string | undefined
         let textExtractionError: string | undefined
         try {
@@ -155,6 +184,7 @@ export async function run({
           return {
             success: false,
             response: error,
+            message: assistantMessage,
           }
         }
         const usage = await streamResult.usage

@@ -50,6 +50,11 @@
       let status: ChainStep["status"]
       if (part.state === "output-error") {
         status = "error"
+      } else if (
+        part.state === "output-available" &&
+        hasOutputError(part.output)
+      ) {
+        status = "error"
       } else if (part.state === "output-available") {
         status = "completed"
       } else if (
@@ -94,6 +99,18 @@
       return undefined
     }
     return reasoningParts.map(p => p.text).join("\n\n") || undefined
+  }
+
+  function hasOutputError(output: unknown): boolean {
+    if (typeof output !== "object" || output === null) {
+      return false
+    }
+    if (!("error" in output)) {
+      return false
+    }
+
+    const error = (output as Record<string, unknown>).error
+    return error !== null && error !== undefined && error !== false
   }
 
   function copyToClipboard(text: string) {

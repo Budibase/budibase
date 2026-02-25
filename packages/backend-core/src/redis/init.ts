@@ -9,7 +9,7 @@ let userClient: Client,
   writethroughClient: Client,
   lockClient: Client,
   socketClient: Client,
-  inviteClient: Client,
+  inviteListClient: Client,
   passwordResetClient: Client,
   docWritethroughClient: Client
 
@@ -24,7 +24,7 @@ export async function init() {
   )
   lockClient = await Client.init(utils.Databases.LOCKS)
   writethroughClient = await Client.init(utils.Databases.WRITE_THROUGH)
-  inviteClient = await Client.init(utils.Databases.INVITATIONS)
+  inviteListClient = await Client.init(utils.Databases.INVITATIONS_LIST)
   passwordResetClient = await Client.init(utils.Databases.PW_RESETS)
   socketClient = await Client.init(
     utils.Databases.SOCKET_IO,
@@ -41,7 +41,7 @@ export async function shutdown() {
   await openapiImportSpecsClient?.finish()
   await writethroughClient?.finish()
   await lockClient?.finish()
-  await inviteClient?.finish()
+  await inviteListClient?.finish()
   await passwordResetClient?.finish()
   await socketClient?.finish()
   await docWritethroughClient?.finish()
@@ -107,11 +107,11 @@ export async function getSocketClient() {
   return socketClient
 }
 
-export async function getInviteClient() {
-  if (!inviteClient) {
+export async function getInviteListClient() {
+  if (!inviteListClient) {
     await init()
   }
-  return inviteClient
+  return inviteListClient
 }
 
 export async function getPasswordResetClient() {

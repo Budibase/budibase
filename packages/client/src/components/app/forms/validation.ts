@@ -15,7 +15,8 @@ export const createValidatorFromConstraints = (
   schemaConstraints: FieldConstraints | null | undefined,
   customRules: UIFieldValidationRule[],
   field: string,
-  definition: Table | undefined
+  definition: Table | undefined,
+  requiredError?: string
 ) => {
   let rules: UIFieldValidationRule[] = []
 
@@ -33,7 +34,7 @@ export const createValidatorFromConstraints = (
             ? FieldType.ARRAY
             : FieldType.STRING,
         constraint: "required",
-        error: "Required",
+        error: requiredError || "Required",
       })
     }
 

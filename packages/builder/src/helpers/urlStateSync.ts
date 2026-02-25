@@ -73,10 +73,12 @@ export const syncURLToState = <State extends Record<string, any>>(
   let cachedGoto = get(routify.goto)
   let cachedRedirect = get(routify.redirect)
   let cachedPage = get(routify.page)
+  const initialPage = cachedPage
   let previousParamsHash: string | null = null
   let debug = false
   const log = (...params: unknown[]) =>
     debug && console.debug(`[${urlParam}]`, ...params)
+  const isExitingPage = () => get(routify.page)?.path !== initialPage?.path
 
   // Navigate to a certain URL
   const gotoUrl = (url: string, params: Record<string, unknown>) => {
@@ -118,7 +120,7 @@ export const syncURLToState = <State extends Record<string, any>>(
     }
 
     // Check if new value is valid
-    if (validate && fallbackUrl) {
+    if (validate && fallbackUrl && !isExitingPage()) {
       if (!validate(urlValue)) {
         log("Invalid URL param!", urlValue)
         redirectUrl(fallbackUrl)
@@ -148,7 +150,7 @@ export const syncURLToState = <State extends Record<string, any>>(
     const stateValue = state?.[stateKey]
 
     // As the store updated, validate that the current state value is valid
-    if (validate && fallbackUrl) {
+    if (validate && fallbackUrl && !isExitingPage()) {
       if (!validate(stateValue)) {
         log("Invalid state param!", stateValue)
         redirectUrl(fallbackUrl)

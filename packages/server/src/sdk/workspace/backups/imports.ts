@@ -12,7 +12,7 @@ import {
 import fs from "fs"
 import fsp from "fs/promises"
 import { join } from "path"
-import tar from "tar"
+import * as tar from "tar"
 import { v4 as uuid } from "uuid"
 import sdk from "../.."
 import { ObjectStoreBuckets } from "../../../constants"

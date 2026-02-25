@@ -1,5 +1,7 @@
 import { BulkUserCreated, User, UserStatus } from "@budibase/types"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
+import * as accounts from "../../accounts"
+import { withEnv } from "../../environment"
 import { UserDB } from "../db"
 import { searchExistingEmails } from "../lookup"
 
@@ -26,7 +28,7 @@ const groups = {
   getBulk: jest.fn(),
   getGroupBuilderAppIds: jest.fn(),
 }
-const features = { isSSOEnforced: jest.fn(), isAppBuildersEnabled: jest.fn() }
+const features = { isSSOEnforced: jest.fn() }
 
 describe("UserDB", () => {
   beforeAll(() => {
@@ -186,6 +188,29 @@ describe("UserDB", () => {
             [previousEmail, newEmail]
           )
         })
+      })
+
+      it("does not check account portal when email is unchanged", async () => {
+        const getAccountSpy = jest
+          .spyOn(accounts, "getAccount")
+          .mockResolvedValue(undefined)
+
+        await withEnv(
+          {
+            SELF_HOSTED: false,
+            DISABLE_ACCOUNT_PORTAL: "",
+            MULTI_TENANCY: "",
+          },
+          async () => {
+            await config.doInTenant(async () => {
+              const updatedName = generator.first()
+              await db.save({ ...user, firstName: updatedName })
+              expect(getAccountSpy).not.toHaveBeenCalled()
+            })
+          }
+        )
+
+        getAccountSpy.mockRestore()
       })
     })
   })
@@ -398,6 +423,36 @@ describe("UserDB", () => {
       ).rejects.toThrow("Password change is disabled for this user")
 
       expect(preventSpy).toHaveBeenCalled()
+    })
+  })
+
+  describe("countUsersByWorkspace", () => {
+    const errorMessage = "Must provide a string based workspace ID"
+    const assertInvalidWorkspaceId = async (workspaceId: unknown) => {
+      await config.doInTenant(() =>
+        expect(db.countUsersByWorkspace(workspaceId as string)).rejects.toThrow(
+          errorMessage
+        )
+      )
+    }
+
+    it("returns zero when the workspace has no users", async () => {
+      const workspaceId = `app_${generator.guid()}`
+
+      await config.doInTenant(() =>
+        expect(db.countUsersByWorkspace(workspaceId)).resolves.toEqual({
+          userCount: 0,
+        })
+      )
+    })
+
+    it.each<[string, unknown]>([
+      ["undefined", undefined],
+      ["null", null],
+      ["number", 123],
+      ["empty string", ""],
+    ])("throws when workspaceId is %s", async (_label, workspaceId) => {
+      await assertInvalidWorkspaceId(workspaceId)
     })
   })
 })

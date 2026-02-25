@@ -6,7 +6,11 @@ import Router from "@koa/router"
 export function addFileManagement(router: Router) {
   /* istanbul ignore next */
   router.param("file", async (file: any, ctx: any, next: () => void) => {
-    ctx.file = file && file.includes(".") ? file : "index.html"
+    const normalizedFile = Array.isArray(file) ? file.join("/") : file
+    ctx.file =
+      normalizedFile && normalizedFile.includes(".")
+        ? normalizedFile
+        : "index.html"
     if (!ctx.file.startsWith("budibase-client")) {
       return next()
     }
