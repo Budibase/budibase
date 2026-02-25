@@ -252,8 +252,15 @@ export type GenerateTextStepOutputs = {
 export type ExtractFileDataStepInputs = {
   file: RowAttachment | string
   source: "URL" | "Attachment"
-  fileType?: string
+  fileType: ExtractFileDataFileTypes
   schema: Record<string, any>
+}
+
+export enum ExtractFileDataFileTypes {
+  pdf = "pdf",
+  jpg = "jpg",
+  png = "png",
+  jpeg = "jpeg",
 }
 
 export type ExtractFileDataStepOutputs = {
