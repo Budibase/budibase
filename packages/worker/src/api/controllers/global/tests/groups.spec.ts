@@ -12,9 +12,7 @@ jest.mock("@budibase/pro", () => ({
 import { db } from "@budibase/pro"
 import { searchUsers } from "../groups"
 
-const createCtx = (
-  pageSize: string
-): Parameters<typeof searchUsers>[0] =>
+const createCtx = (pageSize: string): Parameters<typeof searchUsers>[0] =>
   ({
     request: {
       query: {
