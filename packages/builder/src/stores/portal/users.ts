@@ -133,7 +133,7 @@ class UserStore extends BudiStore<UserState> {
       const body: UnsavedUser = {
         email: user.email,
         password: user.password,
-        roles: {},
+        roles: user.roles || {},
       }
       if (user.forceResetPassword) {
         body.forceResetPassword = user.forceResetPassword

@@ -9,11 +9,13 @@
   export let userData: { email: string; password: string }[]
   export let createUsersResponse: BulkUserCreated
   export let addedToWorkspaceEmails: string[] = []
+  const MAX_VISIBLE_PASSWORD_ROWS = 10
 
   let hasSuccess: boolean
   let hasFailure: boolean
   let title: string
   let failureMessage: string
+  let shouldShowPasswordsTable: boolean
 
   let userDataIndex: Record<string, { password: string }>
   let successfulUsers: { email: string; password: string }[]
@@ -62,6 +64,8 @@
   onMount(() => {
     hasSuccess = createUsersResponse.successful.length > 0
     hasFailure = createUsersResponse.unsuccessful.length > 0
+    shouldShowPasswordsTable =
+      createUsersResponse.successful.length <= MAX_VISIBLE_PASSWORD_ROWS
     setTitle()
     setFailureMessage()
     setUsers()
@@ -146,16 +150,20 @@
       </div>
     </div>
 
-    <Table
-      schema={successSchema}
-      data={successfulUsers}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={false}
-      customRenderers={[
-        { column: "password", component: PasswordCopyTableRenderer },
-      ]}
-    />
+    {#if shouldShowPasswordsTable}
+      <Table
+        schema={successSchema}
+        data={successfulUsers}
+        allowEditColumns={false}
+        allowEditRows={false}
+        allowSelectRows={false}
+        customRenderers={[
+          { column: "password", component: PasswordCopyTableRenderer },
+        ]}
+      />
+    {:else}
+      <Body size="S">{successfulUsers.length} users added</Body>
+    {/if}
 
     {#if addedToWorkspaceUsers.length}
       <Body size="XS">

@@ -510,6 +510,7 @@
     try {
       addedToWorkspaceEmails = []
       let usersForCreation = await removingDuplicities(userData)
+      const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
 
       if (isWorkspaceOnly) {
         const result = await assignExistingUsersToWorkspace(usersForCreation)
@@ -528,37 +529,29 @@
         }
       }
 
-      bulkSaveResponse = (await users.create(usersForCreation)) || {
+      const usersForCreatePayload =
+        assignToWorkspace && currentWorkspaceId
+          ? {
+              ...usersForCreation,
+              users: usersForCreation.users.map(user => {
+                const workspaceRole = getWorkspaceRole(user.role, user.appRole)
+                if (!workspaceRole) {
+                  return user
+                }
+                return {
+                  ...user,
+                  roles: {
+                    ...(user.roles || {}),
+                    [currentWorkspaceId]: workspaceRole,
+                  },
+                }
+              }),
+            }
+          : usersForCreation
+
+      bulkSaveResponse = (await users.create(usersForCreatePayload)) || {
         successful: [],
         unsuccessful: [],
-      }
-      const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
-      if (
-        assignToWorkspace &&
-        currentWorkspaceId &&
-        bulkSaveResponse.successful
-      ) {
-        const createdUsersByEmail = new Map(
-          usersForCreation.users.map(user => [user.email.toLowerCase(), user])
-        )
-        await Promise.all(
-          bulkSaveResponse.successful.map(async user => {
-            const matchingUser = createdUsersByEmail.get(
-              user.email.toLowerCase()
-            )
-            const role = getWorkspaceRole(
-              matchingUser?.role,
-              matchingUser?.appRole
-            )
-            if (!role) {
-              return
-            }
-            const fullUser = await users.get(user._id)
-            if (fullUser?._rev) {
-              await users.addUserToWorkspace(user._id, role, fullUser._rev)
-            }
-          })
-        )
       }
       notifications.success("Successfully created user")
       await groups.init()
