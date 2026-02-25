@@ -288,12 +288,12 @@
   }
   .workspace-controls {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: var(--spacing-l);
   }
   .workspace-controls-right {
     display: flex;
+    margin-left: auto;
     justify-content: flex-end;
   }
   .workspace-controls :global(.spectrum-Search) {
