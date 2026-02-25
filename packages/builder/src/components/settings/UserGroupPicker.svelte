@@ -94,7 +94,10 @@
           class="item"
         >
           {#if iconComponent}
-            <svelte:component this={iconComponent} {...extractIconProps(item)} />
+            <svelte:component
+              this={iconComponent}
+              {...extractIconProps(item)}
+            />
           {/if}
           <div class="text">
             {item[labelKey]}
