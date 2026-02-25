@@ -799,15 +799,26 @@ async function runFeatureEvals(
 
   async function run(name: string, fn: () => Promise<void>) {
     const startedAt = Date.now()
-    const runningLabel = yellow(`RUNNING: ${name}`)
     const canRewriteLine = Boolean(process.stdout.isTTY)
+    const renderRunning = () => {
+      const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000)
+      const runningLabel = yellow(`RUNNING: ${name} (${elapsedSeconds}s)`)
+      if (canRewriteLine) {
+        process.stdout.write(`\r${runningLabel}`)
+      } else {
+        console.log(runningLabel)
+      }
+    }
+
+    renderRunning()
+    const timer = setInterval(renderRunning, 1000)
+
     if (canRewriteLine) {
-      process.stdout.write(runningLabel)
-    } else {
-      console.log(runningLabel)
+      timer.unref()
     }
 
     const clearRunningLine = () => {
+      clearInterval(timer)
       if (canRewriteLine) {
         process.stdout.write("\r\x1b[2K")
       }
