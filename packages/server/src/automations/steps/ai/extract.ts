@@ -14,13 +14,6 @@ import * as automationUtils from "../../automationUtils"
 import sdk from "../../../sdk"
 import z from "zod"
 
-const EXTRACT_RETRY_ATTEMPTS = 5
-const EXTRACT_RETRY_DELAY_MS = 100
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
 function isImageType(type: ExtractFileDataFileTypes): boolean {
   const isImageTypeByFileType: Record<ExtractFileDataFileTypes, boolean> = {
     [ExtractFileDataFileTypes.pdf]: false,
@@ -53,11 +46,12 @@ function toImageDataUrl(data: Buffer, value: ExtractFileDataFileTypes): string {
 function buildExtractPrompt() {
   return [
     "You are a data extraction assistant.",
-    "Extract data from the attached document/image that matches the provided schema.",
-    "The schema defines the structure where values like 'string', 'number', 'boolean' indicate the expected data types.",
-    "Extract all items that match the schema from the document.",
-    "Return the data in json format. This array should never have more than 1 element.",
-    "If no matching data is found, return an empty data array.",
+    "Extract structured data from the attached document or image.",
+    "Follow the provided schema exactly. Values like 'string', 'number', and 'boolean' indicate the expected type.",
+    "Return ONLY valid JSON with this shape: {\"data\": [<object>]}.",
+    "The data array must contain at most 1 object.",
+    "Do not include markdown, explanations, or extra keys.",
+    "If no matching data is found, return {\"data\": []}.",
   ].join("\n\n")
 }
 
@@ -186,50 +180,13 @@ export async function run({
 
     const output = getOutputFromSchema(inputs.schema)
     const modelMessages = buildExtractModelMessages(fileIdOrDataUrl)
-    let data: Record<string, any> | any[] = []
-    let lastError: unknown
-
-    for (let attempt = 1; attempt <= EXTRACT_RETRY_ATTEMPTS; attempt++) {
-      try {
-        const response = await generateText({
-          model: llm.chat,
-          messages: modelMessages,
-          providerOptions: llm.providerOptions?.(false),
-          ...(output ? { output } : {}),
-        })
-
-        data = response.output.data
-
-        const isEmptyArray = Array.isArray(data) && data.length === 0
-        if (!isEmptyArray || attempt === EXTRACT_RETRY_ATTEMPTS) {
-          break
-        }
-
-        console.warn(
-          `[Extract AI] Empty extraction result on attempt ${attempt}/${EXTRACT_RETRY_ATTEMPTS}, retrying...`
-        )
-      } catch (err) {
-        lastError = err
-        if (attempt === EXTRACT_RETRY_ATTEMPTS) {
-          console.error(
-            `[Extract AI] Final extraction attempt ${attempt}/${EXTRACT_RETRY_ATTEMPTS} failed:`,
-            err
-          )
-          throw err
-        }
-
-        console.warn(
-          `[Extract AI] Extraction attempt ${attempt}/${EXTRACT_RETRY_ATTEMPTS} failed, retrying...`,
-          err
-        )
-      }
-
-      await sleep(EXTRACT_RETRY_DELAY_MS)
-    }
-
-    if (lastError && Array.isArray(data) && data.length === 0) {
-      throw lastError
-    }
+    const response = await generateText({
+      model: llm.chat,
+      messages: modelMessages,
+      providerOptions: llm.providerOptions?.(false),
+      ...(output ? { output } : {}),
+    })
+    const data = response.output.data
 
     return {
       data,
