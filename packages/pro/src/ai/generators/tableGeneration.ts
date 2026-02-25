@@ -185,9 +185,9 @@ export class TableGeneration {
     if (!providerOptions) {
       return false
     }
-    return Boolean(
-      !!providerOptions?.openai?.reasoningEffort ||
-        !!providerOptions?.azure?.reasoningEffort
+    return (
+      !!providerOptions.openai?.reasoningEffort ||
+      !!providerOptions.azure?.reasoningEffort
     )
   }
 

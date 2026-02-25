@@ -6,6 +6,37 @@ import {
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
+const SSE_EVENT_DELIMITER = "\n\n"
+const SSE_DATA_PREFIX = "data:"
+
+type TablesStreamEvent =
+  | {
+      type: "progress"
+      message: string
+    }
+  | {
+      type: "result"
+      createdTables?: GenerateTablesResponse["createdTables"]
+    }
+  | {
+      type: "error"
+      message?: string
+    }
+
+const parseSSEEventChunk = (chunk: string): TablesStreamEvent | null => {
+  const dataLines = chunk
+    .split("\n")
+    .map(line => line.trimEnd())
+    .filter(line => line.startsWith(SSE_DATA_PREFIX))
+    .map(line => line.slice(SSE_DATA_PREFIX.length).trim())
+
+  if (dataLines.length === 0) {
+    return null
+  }
+
+  return JSON.parse(dataLines.join("\n")) as TablesStreamEvent
+}
+
 export interface AIEndpoints {
   generateCronExpression: (prompt: string) => Promise<{ message: string }>
   generateJs: (req: GenerateJsRequest) => Promise<GenerateJsResponse>
@@ -55,30 +86,23 @@ export const buildAIEndpoints = (API: BaseAPIClient): AIEndpoints => ({
             }
             buffer += decoder.decode(value, { stream: true })
 
-            let boundary = buffer.indexOf("\n\n")
+            let boundary = buffer.indexOf(SSE_EVENT_DELIMITER)
             while (boundary !== -1) {
               const eventChunk = buffer.slice(0, boundary)
-              buffer = buffer.slice(boundary + 2)
+              buffer = buffer.slice(boundary + SSE_EVENT_DELIMITER.length)
 
-              const dataLines = eventChunk
-                .split("\n")
-                .filter(line => line.startsWith("data:"))
-                .map(line => line.slice(5).trim())
-
-              if (dataLines.length) {
-                const event = JSON.parse(dataLines.join("\n"))
-                if (event?.type === "progress" && onProgress) {
-                  onProgress(event.message)
-                }
-                if (event?.type === "result") {
-                  finalResponse = { createdTables: event.createdTables || [] }
-                }
-                if (event?.type === "error") {
-                  throw new Error(event.message || "Error generating tables")
-                }
+              const event = parseSSEEventChunk(eventChunk)
+              if (event?.type === "progress" && onProgress) {
+                onProgress(event.message)
+              }
+              if (event?.type === "result") {
+                finalResponse = { createdTables: event.createdTables || [] }
+              }
+              if (event?.type === "error") {
+                throw new Error(event.message || "Error generating tables")
               }
 
-              boundary = buffer.indexOf("\n\n")
+              boundary = buffer.indexOf(SSE_EVENT_DELIMITER)
             }
           }
 
