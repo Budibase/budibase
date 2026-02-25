@@ -38,13 +38,11 @@ jest.mock("../../../integrations/utils", () => ({
 }))
 
 jest.mock("./external", () => ({
-  patch: jest
-    .fn()
-    .mockResolvedValue({
-      row: { _id: "row1" },
-      table: { name: "T", _id: "table1" },
-      oldRow: {},
-    }),
+  patch: jest.fn().mockResolvedValue({
+    row: { _id: "row1" },
+    table: { name: "T", _id: "table1" },
+    oldRow: {},
+  }),
   destroy: jest
     .fn()
     .mockResolvedValue({ response: "ok", row: { _id: "row1" } }),
@@ -63,13 +61,11 @@ jest.mock("../../../sdk", () => ({
   __esModule: true,
   default: {
     rows: {
-      save: jest
-        .fn()
-        .mockResolvedValue({
-          row: { _id: "row1" },
-          table: { name: "T" },
-          squashed: undefined,
-        }),
+      save: jest.fn().mockResolvedValue({
+        row: { _id: "row1" },
+        table: { name: "T" },
+        squashed: undefined,
+      }),
     },
     users: { getUserContextBindings: jest.fn().mockReturnValue({}) },
     tables: {
@@ -105,7 +101,10 @@ jest.mock("./utils", () => ({
   getTableFromSource: jest.fn(),
 }))
 
-function makeCtx(body: Record<string, any> = {}, params: Record<string, any> = {}) {
+function makeCtx(
+  body: Record<string, any> = {},
+  params: Record<string, any> = {}
+) {
   return {
     request: { body },
     params,

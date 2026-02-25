@@ -133,10 +133,18 @@ async function _save(
   let saveResult: { row: Row; table: Table; squashed?: Row }
   if (tableId.includes("datasource_plus")) {
     if (isAutomation) {
-      saveResult = await sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+      saveResult = await sdk.rows.save(
+        sourceId,
+        ctx.request.body,
+        ctx.user?._id
+      )
     } else {
       saveResult = await quotas.addAction(async () => {
-        const response = await sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+        const response = await sdk.rows.save(
+          sourceId,
+          ctx.request.body,
+          ctx.user?._id
+        )
         events.action.crudExecuted({ type: "create" })
         return response
       })
@@ -291,10 +299,7 @@ async function deleteRow(
   return resp
 }
 
-async function _destroy(
-  ctx: UserCtx<DeleteRowRequest>,
-  isAutomation: boolean
-) {
+async function _destroy(ctx: UserCtx<DeleteRowRequest>, isAutomation: boolean) {
   let response, row
 
   if (isDeleteRows(ctx.request.body)) {
