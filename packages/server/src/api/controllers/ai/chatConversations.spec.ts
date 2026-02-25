@@ -37,7 +37,10 @@ jest.mock("@budibase/backend-core", () => {
       }),
     },
     features: { isEnabled: jest.fn().mockResolvedValue(false) },
-    docIds: { ...actual.docIds, generateChatConversationID: jest.fn().mockReturnValue("chat-id") },
+    docIds: {
+      ...actual.docIds,
+      generateChatConversationID: jest.fn().mockReturnValue("chat-id"),
+    },
     getErrorMessage: jest.fn().mockReturnValue("error"),
   }
 })
@@ -48,7 +51,10 @@ jest.mock("@budibase/shared-core", () => {
     ...actual,
     sdk: {
       ...actual.sdk,
-      users: { ...actual.sdk?.users, isAdminOrBuilder: jest.fn().mockReturnValue(true) },
+      users: {
+        ...actual.sdk?.users,
+        isAdminOrBuilder: jest.fn().mockReturnValue(true),
+      },
     },
   }
 })
@@ -84,7 +90,9 @@ jest.mock("../../../sdk/workspace/ai/agents", () => ({
 }))
 
 jest.mock("../../../sdk/workspace/ai/rag", () => ({
-  retrieveContextForAgent: jest.fn().mockResolvedValue({ text: "", sources: [] }),
+  retrieveContextForAgent: jest
+    .fn()
+    .mockResolvedValue({ text: "", sources: [] }),
 }))
 
 jest.mock("./chatApps", () => ({
@@ -102,8 +110,9 @@ jest.mock("ai", () => ({
 
 function makeStreamTextMock(toolResults: { toolCallId: string }[]) {
   return (options: any) => ({
-    pipeUIMessageStreamToResponse: jest.fn().mockImplementation(
-      async (res: any, pipeOptions: any) => {
+    pipeUIMessageStreamToResponse: jest
+      .fn()
+      .mockImplementation(async (res: any, pipeOptions: any) => {
         if (options.onStepFinish) {
           await options.onStepFinish({
             content: [],
@@ -115,8 +124,7 @@ function makeStreamTextMock(toolResults: { toolCallId: string }[]) {
           await pipeOptions.onFinish({ messages: [] })
         }
         res.end()
-      }
-    ),
+      }),
   })
 }
 
@@ -173,7 +181,10 @@ describe("Agent chat tool call tracking", () => {
       jest
         .mocked(streamText)
         .mockImplementation(
-          makeStreamTextMock([{ toolCallId: "c1" }, { toolCallId: "c2" }]) as any
+          makeStreamTextMock([
+            { toolCallId: "c1" },
+            { toolCallId: "c2" },
+          ]) as any
         )
 
       await agentChatStream(makeCtx() as any)
@@ -182,9 +193,7 @@ describe("Agent chat tool call tracking", () => {
     })
 
     it("counts zero actions when the agent makes no tool calls", async () => {
-      jest
-        .mocked(streamText)
-        .mockImplementation(makeStreamTextMock([]) as any)
+      jest.mocked(streamText).mockImplementation(makeStreamTextMock([]) as any)
 
       await agentChatStream(makeCtx() as any)
 
