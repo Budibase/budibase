@@ -5,7 +5,6 @@ import {
   SummariseLength,
 } from "@budibase/types"
 import { LLMRequest } from "../llm"
-import { z } from "zod"
 import { AgentPromptOptions } from "../../types"
 
 export interface AutomationAgentToolGuideline {
