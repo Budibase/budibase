@@ -54,8 +54,37 @@ normalize_env_file() {
     fi
 }
 
+trim_env_whitespace() {
+    local value="$1"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    printf "%s" "${value}"
+}
+
+parse_env_value() {
+    local value
+    local escaped_backslash="__BB_ESCAPED_BACKSLASH__"
+
+    value="$(trim_env_whitespace "$1")"
+
+    if [[ ${#value} -ge 2 && "${value}" == \"*\" && "${value}" == *\" ]]; then
+        value="${value:1:${#value}-2}"
+        value="${value//\\\\/${escaped_backslash}}"
+        value="${value//\\\"/\"}"
+        value="${value//\\\$/\$}"
+        value="${value//\\\`/\`}"
+        value="${value//${escaped_backslash}/\\}"
+    elif [[ ${#value} -ge 2 && "${value}" == \'*\' && "${value}" == *\' ]]; then
+        value="${value:1:${#value}-2}"
+    fi
+
+    printf "%s" "${value}"
+}
+
 export_env_file() {
     local env_file="$1"
+    local key
+    local value
 
     if [[ ! -f "${env_file}" ]]; then
         return
@@ -65,7 +94,25 @@ export_env_file() {
         if [[ -z "${line}" || "${line}" =~ ^[[:space:]]*# ]]; then
             continue
         fi
-        export "${line}"
+
+        if [[ "${line}" =~ ^[[:space:]]*export[[:space:]]+ ]]; then
+            line="${line#"${line%%[![:space:]]*}"}"
+            line="${line#export}"
+        fi
+
+        if [[ "${line}" != *"="* ]]; then
+            continue
+        fi
+
+        key="$(trim_env_whitespace "${line%%=*}")"
+        value="$(parse_env_value "${line#*=}")"
+
+        if [[ ! "${key}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+            continue
+        fi
+
+        printf -v "${key}" "%s" "${value}"
+        export "${key}"
     done < "${env_file}"
 }
 
