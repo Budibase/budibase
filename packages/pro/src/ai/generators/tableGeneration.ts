@@ -1,20 +1,20 @@
 import { HTTPError } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import { getLLM } from "../llm"
-import { LLM } from "../models/base"
+import type { LLMResponse, Message } from "@budibase/types"
+import { generateText, Output, type ModelMessage } from "ai"
+import { LLMRequest } from "../llm"
 
+import tracer from "dd-trace"
+import { z } from "zod"
 import { generateAIColumns, generateData, generateTables } from "../prompts"
 import {
   aiColumnSchemas,
-  AIColumnSchemas,
   aiTableResponseToTableSchema,
   appendAIColumns,
-  GenerationStructure,
   generationStructure,
   tableDataStructuredOutput,
 } from "../structuredOutputs"
 import { TableSchemaFromAI } from "../types"
-import tracer from "dd-trace"
 
 interface Delegates {
   generateTablesDelegate: (
@@ -28,21 +28,20 @@ interface Delegates {
 }
 
 export class TableGeneration {
-  private llm: LLM
+  private aiModel: LLMResponse
 
   private delegates: Delegates
 
-  private constructor(llm: LLM, delegates: Delegates) {
-    this.llm = llm
+  private constructor(aiModel: LLMResponse, delegates: Delegates) {
+    this.aiModel = aiModel
     this.delegates = delegates
   }
 
-  static async init(delegates: Delegates) {
-    const llm = await getLLM({ maxTokens: 5000 })
-    if (!llm) {
+  static async init(aiModel: LLMResponse, delegates: Delegates) {
+    if (!aiModel) {
       throw new HTTPError("LLM not available", 422)
     }
-    return new TableGeneration(llm, delegates)
+    return new TableGeneration(aiModel, delegates)
   }
 
   async generate(userPrompt: string, userId: string) {
@@ -58,19 +57,12 @@ export class TableGeneration {
       userPrompt: string
     ): Promise<TableSchemaFromAI[]> => {
       return tracer.trace("llm.getTableStructure", async () => {
-        const response = await this.llm.prompt(
-          generateTables()
-            .addUserMessage(userPrompt)
-            .withFormat(generationStructure)
+        const parsedResponse = await this.promptForStructuredOutput(
+          generateTables().addUserMessage(userPrompt),
+          generationStructure,
+          "Error generating tables"
         )
-        try {
-          const parsedResponse = JSON.parse(
-            response.message!
-          ) as GenerationStructure
-          return aiTableResponseToTableSchema(parsedResponse)
-        } catch (e) {
-          throw new HTTPError("Error generating tables", 500)
-        }
+        return aiTableResponseToTableSchema(parsedResponse)
       })
     },
     generateAIColumns: (
@@ -86,20 +78,11 @@ export class TableGeneration {
       forTables: TableSchemaFromAI[]
     ) => {
       return tracer.trace("llm.generateData", async () => {
-        const llmResponse = await this.llm.prompt(
-          generateData()
-            .addUserMessage(userPrompt)
-            .withFormat(tableDataStructuredOutput(forTables))
+        return this.promptForStructuredOutput(
+          generateData().addUserMessage(userPrompt),
+          tableDataStructuredOutput(forTables),
+          "Error generating data"
         )
-        try {
-          const json = JSON.parse(llmResponse.message!) as Record<
-            string,
-            Record<string, any>[]
-          >
-          return json
-        } catch (e) {
-          throw new HTTPError("Error generating data", 500)
-        }
       })
     },
   }
@@ -138,20 +121,44 @@ export class TableGeneration {
     userPrompt: string,
     tables: TableSchemaFromAI[]
   ) {
-    const response = await this.llm.prompt(
-      generateAIColumns()
-        .addUserMessage(
-          `This is the initial user prompt that generated the given schema:
+    return this.promptForStructuredOutput(
+      generateAIColumns().addUserMessage(
+        `This is the initial user prompt that generated the given schema:
             "${userPrompt}"`
-        )
-        .withFormat(aiColumnSchemas(tables))
+      ),
+      aiColumnSchemas(tables),
+      "Error generating columns"
     )
+  }
 
+  private async promptForStructuredOutput<T>(
+    request: LLMRequest,
+    schema: z.ZodType<T>,
+    errorMessage: string
+  ): Promise<T> {
     try {
-      const aiColumns = JSON.parse(response.message!) as AIColumnSchemas
-      return aiColumns
-    } catch (e) {
-      throw new HTTPError("Error generating columns", 500)
+      const result = await generateText({
+        model: this.aiModel.chat,
+        messages: this.toModelMessages(request.messages),
+        output: Output.object({ schema }),
+        providerOptions: this.aiModel.providerOptions?.(false),
+      })
+      return result.output
+    } catch (err: any) {
+      const message = [errorMessage, err?.message].filter(Boolean).join(": ")
+      throw new HTTPError(message, 500)
     }
+  }
+
+  private toModelMessages(messages: Message[]): ModelMessage[] {
+    return messages.map(message => {
+      if (typeof message.content !== "string") {
+        throw new HTTPError("AI message content must be a string", 422)
+      }
+      return {
+        role: message.role,
+        content: message.content,
+      } as ModelMessage
+    })
   }
 }
