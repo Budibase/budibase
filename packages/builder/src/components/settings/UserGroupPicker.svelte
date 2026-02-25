@@ -17,6 +17,9 @@
   export let list: PickerItem[] = []
   export let labelKey: string
   export let iconComponent: ComponentType | null = null
+  export let extractIconProps: (
+    _item: EnrichedPickerItem
+  ) => Record<string, unknown> = item => item
 
   const dispatch = createEventDispatcher<{
     select: string
@@ -91,7 +94,7 @@
           class="item"
         >
           {#if iconComponent}
-            <svelte:component this={iconComponent} {...item} />
+            <svelte:component this={iconComponent} {...extractIconProps(item)} />
           {/if}
           <div class="text">
             {item[labelKey]}
