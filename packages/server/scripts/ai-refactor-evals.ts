@@ -63,6 +63,11 @@ interface AutomationTestResponse {
   }>
 }
 
+interface CreatedTable {
+  id: string
+  name?: string
+}
+
 class ApiClient {
   private baseUrl: string
   private token = ""
@@ -678,6 +683,56 @@ function looksBlueColor(value: string) {
   return b > 0 && b >= r && b >= g
 }
 
+function extractCreatedTablesFromResponse(
+  response: unknown
+): CreatedTable[] | undefined {
+  if (response && typeof response === "object") {
+    const createdTables = (response as any).createdTables
+    if (Array.isArray(createdTables)) {
+      return createdTables as CreatedTable[]
+    }
+  }
+
+  if (typeof response !== "string") {
+    return undefined
+  }
+
+  // Parse SSE payload:
+  // data: {"type":"progress","message":"..."}
+  // data: {"type":"result","createdTables":[...]}
+  // data: {"type":"error","message":"..."}
+  const lines = response.split(/\r?\n/)
+  for (const line of lines) {
+    if (!line.startsWith("data: ")) {
+      continue
+    }
+    const payload = line.slice(6).trim()
+    if (!payload) {
+      continue
+    }
+    let event: any
+    try {
+      event = JSON.parse(payload)
+    } catch {
+      // ignore malformed/partial event lines
+      continue
+    }
+
+    if (event?.type === "result" && Array.isArray(event?.createdTables)) {
+      return event.createdTables as CreatedTable[]
+    }
+    if (event?.type === "error") {
+      const message =
+        typeof event?.message === "string" && event.message.trim().length > 0
+          ? event.message
+          : "Table generation failed"
+      throw new Error(message)
+    }
+  }
+
+  return undefined
+}
+
 async function runFeatureEvals(
   client: ApiClient,
   enabledFeatures: Set<EvalFeature>
@@ -712,18 +767,17 @@ async function runFeatureEvals(
   }
 
   await runIf("table-generation", "Table generation", async () => {
-    const response = await client.request<{
-      createdTables: Array<{ id: string }>
-    }>("POST", "/api/ai/tables", {
+    const response = await client.request<unknown>("POST", "/api/ai/tables", {
       prompt:
         "Create exactly one table named EvalTasks with exactly two string fields named title and status. Use title as primary display.",
     })
 
-    if (!response.createdTables || response.createdTables.length < 1) {
+    const createdTables = extractCreatedTablesFromResponse(response)
+    if (!createdTables || createdTables.length < 1) {
       throw new Error("No tables were created")
     }
 
-    const created = response.createdTables[0]
+    const created = createdTables[0]
     const table = await client.request<{ schema: Record<string, any> }>(
       "GET",
       `/api/tables/${created.id}`
@@ -1108,11 +1162,17 @@ async function main() {
         continue
       }
 
-      switchBudibaseMode(mode)
-      activeMode = mode
-      console.log(yellow(`Waiting for server readiness after mode:${mode}...`))
-      await waitForServerReady(baseUrl)
-      await client.init()
+      if (activeMode === mode) {
+        console.log(yellow(`Budibase mode already set to: ${mode}`))
+      } else {
+        switchBudibaseMode(mode)
+        activeMode = mode
+        console.log(
+          yellow(`Waiting for server readiness after mode:${mode}...`)
+        )
+        await waitForServerReady(baseUrl)
+        await client.init()
+      }
 
       for (const scenario of modeScenarios) {
         const enabledFeatures = resolveFeatures(globalFeatures)
