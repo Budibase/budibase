@@ -496,7 +496,11 @@
       users.push(newUser)
     }
 
-    userData = await removingDuplicities({ groups, users })
+    userData = await removingDuplicities({
+      groups,
+      users,
+      assignToWorkspace: isWorkspaceOnly,
+    })
     if (!userData.users.length) return
 
     return createUsers()
@@ -534,10 +538,13 @@
         currentWorkspaceId &&
         bulkSaveResponse.successful
       ) {
+        const createdUsersByEmail = new Map(
+          usersForCreation.users.map(user => [user.email.toLowerCase(), user])
+        )
         await Promise.all(
           bulkSaveResponse.successful.map(async user => {
-            const matchingUser = userData.users.find(
-              created => created.email === user.email
+            const matchingUser = createdUsersByEmail.get(
+              user.email.toLowerCase()
             )
             const role = getWorkspaceRole(
               matchingUser?.role,

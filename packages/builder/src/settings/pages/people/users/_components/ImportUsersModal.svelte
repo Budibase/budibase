@@ -138,7 +138,7 @@
 
 <ModalContent
   size="M"
-  title="Import users"
+  title={workspaceOnly ? "Import users to workspace" : "Import users"}
   confirmText="Done"
   cancelText="Cancel"
   showCloseIcon={false}
