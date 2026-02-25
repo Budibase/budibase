@@ -1,4 +1,4 @@
-import { save } from "../../api/controllers/row"
+import { saveAsAutomation } from "../../api/controllers/row"
 import {
   cleanUpRow,
   getError,
@@ -41,7 +41,7 @@ export async function run({
       inputs.row.tableId!,
       inputs.row
     )
-    await save(ctx)
+    await saveAsAutomation(ctx)
     return {
       row: inputs.row,
       response: ctx.body,
