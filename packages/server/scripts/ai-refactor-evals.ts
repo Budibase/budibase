@@ -68,6 +68,14 @@ interface CreatedTable {
   name?: string
 }
 
+interface UploadedAttachment {
+  size: number
+  name: string
+  url: string
+  extension: string
+  key: string
+}
+
 class ApiClient {
   private baseUrl: string
   private token = ""
@@ -237,6 +245,51 @@ class ApiClient {
     }
 
     return payload as T
+  }
+
+  async uploadAttachment(
+    filename: string,
+    data: Buffer,
+    contentType: string
+  ): Promise<UploadedAttachment> {
+    const headers: Record<string, string> = {
+      "x-budibase-token": this.token,
+      "x-budibase-app-id": this.appId,
+      "x-csrf-token": this.csrfToken,
+    }
+
+    const formData = new FormData()
+    formData.append("file", new Blob([data], { type: contentType }), filename)
+
+    const response = await fetch(`${this.baseUrl}/api/attachments/process`, {
+      method: "POST",
+      headers,
+      body: formData,
+    })
+
+    const text = await response.text()
+    let payload: any = undefined
+    if (text) {
+      try {
+        payload = JSON.parse(text)
+      } catch {
+        payload = text
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `POST /api/attachments/process failed (${response.status}): ${text || "<empty>"}`
+      )
+    }
+
+    if (!Array.isArray(payload) || payload.length === 0) {
+      throw new Error(
+        `Unexpected upload attachment response: ${JSON.stringify(payload)}`
+      )
+    }
+
+    return payload[0] as UploadedAttachment
   }
 }
 
@@ -966,7 +1019,7 @@ async function runFeatureEvals(
       "EXTRACT_FILE_DATA",
       {
         source: DocumentSourceType.URL,
-        file: "https://pdfobject.com/pdf/sample.pdf",
+        file: "https://sample-files.com/downloads/documents/pdf/basic-text.pdf",
         fileType: "pdf",
         schema: {
           language: "text",
@@ -1061,6 +1114,145 @@ async function runFeatureEvals(
       )
     }
   })
+
+  await runIf(
+    "extract-document",
+    "Extract document step (PDF attachment)",
+    async () => {
+      const pdfFileResponse = await fetch(
+        "https://sample-files.com/downloads/documents/pdf/basic-text.pdf"
+      )
+      if (!pdfFileResponse.ok) {
+        throw new Error(
+          `Failed to fetch sample PDF (${pdfFileResponse.status})`
+        )
+      }
+      const pdfBuffer = Buffer.from(await pdfFileResponse.arrayBuffer())
+      const attachment = await client.uploadAttachment(
+        "sample.pdf",
+        pdfBuffer,
+        "application/pdf"
+      )
+
+      const result = await runAutomationStepEval(
+        client,
+        definitions,
+        "EXTRACT_FILE_DATA",
+        {
+          source: DocumentSourceType.ATTACHMENT,
+          file: attachment,
+          schema: {
+            language: "text",
+            words: "number",
+            lines: "number",
+          },
+        }
+      )
+
+      const output = getActionOutput(result, "EXTRACT_FILE_DATA")
+      if (!output?.success || !output?.data) {
+        throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+      }
+      if (!Array.isArray(output.data) || output.data.length === 0) {
+        throw new Error(
+          `Extract output should be a non-empty array: ${JSON.stringify(output.data)}`
+        )
+      }
+
+      const first = output.data[0]
+      if (typeof first?.language !== "string" || !first.language.trim()) {
+        throw new Error(
+          `Extract output wrong language: ${JSON.stringify(output.data)}`
+        )
+      }
+      const language = normalizeText(first.language)
+      if (language !== "english") {
+        throw new Error(
+          `Extract output language should be English: ${JSON.stringify(output.data)}`
+        )
+      }
+      if (typeof first.words !== "number" || first.words <= 0) {
+        throw new Error(
+          `Extract output words should be > 0: ${JSON.stringify(output.data)}`
+        )
+      }
+      if (typeof first.lines !== "number" || first.lines <= 0) {
+        throw new Error(
+          `Extract output lines should be > 0: ${JSON.stringify(output.data)}`
+        )
+      }
+    }
+  )
+
+  await runIf(
+    "extract-document",
+    "Extract document step (image attachment)",
+    async () => {
+      const imageFileResponse = await fetch(
+        "https://dummyimage.com/600x400/0000ff/fff.png&text=Budibase+Eval"
+      )
+      if (!imageFileResponse.ok) {
+        throw new Error(
+          `Failed to fetch sample image (${imageFileResponse.status})`
+        )
+      }
+      const imageBuffer = Buffer.from(await imageFileResponse.arrayBuffer())
+      const attachment = await client.uploadAttachment(
+        "sample.png",
+        imageBuffer,
+        "image/png"
+      )
+
+      const result = await runAutomationStepEval(
+        client,
+        definitions,
+        "EXTRACT_FILE_DATA",
+        {
+          source: DocumentSourceType.ATTACHMENT,
+          file: attachment,
+          schema: {
+            text: "string",
+            backgroundColor: "string",
+          },
+        }
+      )
+
+      const output = getActionOutput(result, "EXTRACT_FILE_DATA")
+      if (!output?.success || !output?.data) {
+        throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+      }
+      if (
+        !Array.isArray(output.data) ||
+        output.data.length === 0 ||
+        output.data.length > 1
+      ) {
+        throw new Error(
+          `Image extract output should be non-empty array: ${JSON.stringify(output.data)}`
+        )
+      }
+
+      const data = output.data[0]
+      if (!data || typeof data !== "object") {
+        throw new Error(
+          `Image extract output is invalid: ${JSON.stringify(output.data)}`
+        )
+      }
+
+      const text = String(data.text || "")
+      if (!normalizeText(text).includes("budibase")) {
+        throw new Error(
+          `Image extract output text missing 'Budibase': ${JSON.stringify(output.data)}`
+        )
+      }
+
+      const color = String(data.backgroundColor || "")
+      if (!looksBlueColor(color)) {
+        throw new Error(
+          `Image extract backgroundColor is not recognizably blue: ${JSON.stringify(output.data)}`
+        )
+      }
+    }
+  )
 
   return results
 }
