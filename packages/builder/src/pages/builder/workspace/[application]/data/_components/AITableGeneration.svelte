@@ -59,16 +59,15 @@
     <div class="ai-generation-secondary ai-generation-progress">
       {progressMessage}
     </div>
-  {:else}
+  {:else if $aiStore.aiEnabled}
     <div class="ai-generation-secondary ai-generation-examples">
-      {#if $aiStore.aiEnabled}
-        {#each examplePrompts as prompt}
-          <ActionButton on:click={() => (promptText = prompt)}
-            >{prompt}</ActionButton
-          >
-        {/each}
-      {/if}
-    </div>{/if}
+      {#each examplePrompts as prompt}
+        <ActionButton on:click={() => (promptText = prompt)}
+          >{prompt}</ActionButton
+        >
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>
