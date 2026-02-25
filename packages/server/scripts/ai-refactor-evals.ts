@@ -259,7 +259,11 @@ class ApiClient {
     }
 
     const formData = new FormData()
-    formData.append("file", new Blob([data], { type: contentType }), filename)
+    formData.append(
+      "file",
+      new Blob([data as any], { type: contentType }),
+      filename
+    )
 
     const response = await fetch(`${this.baseUrl}/api/attachments/process`, {
       method: "POST",
@@ -795,16 +799,36 @@ async function runFeatureEvals(
 
   async function run(name: string, fn: () => Promise<void>) {
     const startedAt = Date.now()
+    const runningLabel = yellow(`RUNNING: ${name}`)
+    const canRewriteLine = Boolean(process.stdout.isTTY)
+    if (canRewriteLine) {
+      process.stdout.write(runningLabel)
+    } else {
+      console.log(runningLabel)
+    }
+
+    const clearRunningLine = () => {
+      if (canRewriteLine) {
+        process.stdout.write("\r\x1b[2K")
+      }
+    }
+
     try {
       await fn()
-      results.push({ name, ok: true, elapsedMs: Date.now() - startedAt })
+      const elapsedMs = Date.now() - startedAt
+      results.push({ name, ok: true, elapsedMs })
+      clearRunningLine()
+      console.log(green(`PASS: ${name} (${elapsedMs}ms)`))
     } catch (err: any) {
+      const elapsedMs = Date.now() - startedAt
       results.push({
         name,
         ok: false,
         detail: err?.message || String(err),
-        elapsedMs: Date.now() - startedAt,
+        elapsedMs,
       })
+      clearRunningLine()
+      console.log(red(`FAIL: ${name} (${elapsedMs}ms)`))
     }
   }
 
@@ -1046,7 +1070,7 @@ async function runFeatureEvals(
       )
     }
     const language = normalizeText(first.language)
-    if (language !== "english") {
+    if (!["english", "en"].includes(language)) {
       throw new Error(
         `Extract output language should be English: ${JSON.stringify(output.data)}`
       )
@@ -1280,30 +1304,6 @@ async function runScenario(
   }
 }
 
-function printScenarioResult(result: {
-  skipped?: string
-  elapsedMs?: number
-  results: EvalResult[]
-}) {
-  if (result.skipped) {
-    console.log(yellow(`SKIPPED: ${result.skipped}`))
-    return
-  }
-
-  for (const item of result.results) {
-    const itemElapsedLabel =
-      typeof item.elapsedMs === "number" ? ` (${item.elapsedMs}ms)` : ""
-    if (item.ok) {
-      console.log(green(`PASS: ${item.name}${itemElapsedLabel}`))
-    } else {
-      console.log(red(`FAIL: ${item.name}${itemElapsedLabel}`))
-      if (item.detail) {
-        console.log(red(`  ${item.detail}`))
-      }
-    }
-  }
-}
-
 async function executeScenarioAndLog(
   client: ApiClient,
   scenario: Scenario,
@@ -1320,7 +1320,6 @@ async function executeScenarioAndLog(
   console.log(section(`Provider: ${displayName}`))
   const result = await runScenario(client, scenario, enabledFeatures)
   summary.push({ name: displayName, ...result })
-  printScenarioResult(result)
 }
 
 async function main() {
