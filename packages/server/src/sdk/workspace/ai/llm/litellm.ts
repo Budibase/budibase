@@ -207,7 +207,7 @@ async function uploadFile({
   apiKey: string
 }): Promise<string> {
   const liteLLMAuthorizationHeader = `Bearer ${apiKey}`
-  const fileBlob = await blob(stream)
+  const fileBlob = (await blob(stream)) as Blob
 
   const formdata = new FormData()
   formdata.append("purpose", purpose)
