@@ -225,7 +225,14 @@ export async function run({
           output,
         }),
     })
+    if (!response.output || response.output.data == null) {
+      throw new Error("Could not parse AI response as valid JSON.")
+    }
     const data = response.output.data
+
+    if (!data.length) {
+      throw new Error("Could not extract the requested data.")
+    }
 
     return {
       data,
