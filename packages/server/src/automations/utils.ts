@@ -157,7 +157,7 @@ export async function processEvent(job: AutomationJob) {
         })
       } catch (err) {
         span.addTags({ error: true })
-        console.error(`automation was unable to run`, err, ...loggingArgs(job))
+        console.warn(`automation was unable to run`, err, ...loggingArgs(job))
         if (job.opts.repeat && job.id && isWorkspaceDatabaseMissing(err)) {
           await disableCronById(job.id)
         }
