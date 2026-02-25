@@ -1,5 +1,5 @@
 import { quotas } from "@budibase/pro"
-import { run } from "./agent"
+import { run } from "../../automations/steps/ai/agent"
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -12,7 +12,7 @@ jest.mock("@budibase/pro", () => {
   }
 })
 
-jest.mock("../../../sdk", () => ({
+jest.mock("../../sdk", () => ({
   __esModule: true,
   default: {
     ai: {
