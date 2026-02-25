@@ -57,9 +57,10 @@
   $: fieldSubtitle = showSelectedSubtitle
     ? getFieldAttribute(getOptionSubtitle, value, options)
     : null
-  $: fieldTooltip = value
-    ? getFieldAttribute(getOptionTooltip, value, options)
-    : null
+  $: fieldTooltip =
+    value == null || value === ""
+      ? null
+      : getFieldAttribute(getOptionTooltip, value, options)
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
