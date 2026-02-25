@@ -1,9 +1,12 @@
 <script lang="ts">
-  import { Body } from "@budibase/bbui"
+  import { Body, Toggle } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
   import BBAILogo from "assets/bb-ai.svg"
 
   export let agentId: string | undefined
+  export let enabled = false
+  export let disabled = false
+  export let onToggle = () => {}
 
   $: chatUrl =
     agentId && $appStore.url
@@ -24,11 +27,12 @@
     </div>
   </div>
   <div class="row-action">
-    {#if chatUrl}
+    {#if enabled && chatUrl}
       <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
         Open chat
       </a>
     {/if}
+    <Toggle value={enabled} {disabled} on:change={onToggle} />
   </div>
 </div>
 
@@ -60,7 +64,7 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    min-width: 110px;
+    min-width: 150px;
     gap: 10px;
     margin-left: 0px;
   }

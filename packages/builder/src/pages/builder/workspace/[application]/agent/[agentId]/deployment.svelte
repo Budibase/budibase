@@ -7,8 +7,21 @@
     Toggle,
     notifications,
   } from "@budibase/bbui"
-  import { FeatureFlag, type Agent, type DeploymentRow } from "@budibase/types"
-  import { selectedAgent, agentsStore, featureFlags } from "@/stores/portal"
+  import {
+    FeatureFlag,
+    type Agent,
+    type ChatApp,
+    type DeploymentRow,
+  } from "@budibase/types"
+  import {
+    selectedAgent,
+    agentsStore,
+    chatAppsStore,
+    currentChatApp,
+    featureFlags,
+  } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
+  import { params } from "@roxi/routify"
   import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
@@ -19,6 +32,8 @@
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
   let toggling = $state(false)
+  let togglingChat = $state(false)
+  let loadingChatApp = $state(false)
 
   const discordConfigured = $derived.by(() => {
     const integration = currentAgent?.discordIntegration
@@ -36,6 +51,60 @@
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
   const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_CHAT])
+  const chatAgentEnabled = $derived.by(() => {
+    const agentId = currentAgent?._id
+    if (!agentId) {
+      return false
+    }
+
+    const chatAgent = ($currentChatApp?.agents || []).find(
+      agent => agent.agentId === agentId
+    )
+    return !!chatAgent?.isEnabled
+  })
+
+  type ChatAppAgent = NonNullable<ChatApp["agents"]>[number]
+
+  const pickDefaultEnabledAgentId = (agents: ChatAppAgent[]) => {
+    const existingDefault = agents.find(
+      agent => agent.isEnabled && agent.isDefault
+    )
+    if (existingDefault) {
+      return existingDefault.agentId
+    }
+
+    return agents.find(agent => agent.isEnabled)?.agentId
+  }
+
+  const normalizeDefaultAgent = (agents: ChatAppAgent[]) => {
+    const defaultAgentId = pickDefaultEnabledAgentId(agents)
+    return agents.map(agent => ({
+      ...agent,
+      isDefault: !!defaultAgentId && agent.agentId === defaultAgentId,
+    }))
+  }
+
+  $effect(() => {
+    const workspaceId = $params.application
+    if (
+      !agentChatEnabled ||
+      !workspaceId ||
+      !!$currentChatApp ||
+      loadingChatApp
+    ) {
+      return
+    }
+
+    loadingChatApp = true
+    void chatAppsStore
+      .ensureChatApp(undefined, workspaceId)
+      .catch(error => {
+        console.error(error)
+      })
+      .finally(() => {
+        loadingChatApp = false
+      })
+  })
 
   const channels = $derived.by<DeploymentRow[]>(() => [
     {
@@ -85,6 +154,92 @@
       toggling = false
     }
   }
+
+  const toggleAgentChatDeployment = async () => {
+    const workspaceId = $params.application
+    const agentId = currentAgent?._id
+    if (!workspaceId || !agentId || togglingChat) {
+      return
+    }
+
+    togglingChat = true
+    let isCurrentlyEnabled = false
+
+    try {
+      const ensuredChatApp = await chatAppsStore.ensureChatApp(
+        undefined,
+        workspaceId
+      )
+      if (!ensuredChatApp) {
+        notifications.error("Could not update chat")
+        return
+      }
+
+      const chatAgents = ensuredChatApp.agents || []
+      isCurrentlyEnabled = chatAgents.some(
+        agent => agent.agentId === agentId && agent.isEnabled
+      )
+
+      if (isCurrentlyEnabled) {
+        const nextAgents = normalizeDefaultAgent(
+          chatAgents.map(agent =>
+            agent.agentId === agentId
+              ? {
+                  ...agent,
+                  isEnabled: false,
+                  isDefault: false,
+                }
+              : agent
+          )
+        )
+
+        await chatAppsStore.updateChatApp({
+          agents: nextAgents,
+        })
+        await deploymentStore.publishApp()
+        notifications.success("Agent chat disabled")
+      } else {
+        const existingEntry = chatAgents.find(
+          agent => agent.agentId === agentId
+        )
+        const nextAgents = normalizeDefaultAgent(
+          existingEntry
+            ? chatAgents.map(agent =>
+                agent.agentId === agentId
+                  ? {
+                      ...agent,
+                      isEnabled: true,
+                    }
+                  : agent
+              )
+            : [
+                ...chatAgents,
+                {
+                  agentId,
+                  isEnabled: true,
+                  isDefault: false,
+                },
+              ]
+        )
+
+        await chatAppsStore.updateChatApp({
+          agents: nextAgents,
+          live: true,
+        })
+        await deploymentStore.publishApp()
+        notifications.success("Agent chat enabled")
+      }
+    } catch (error) {
+      console.error(error)
+      notifications.error(
+        isCurrentlyEnabled
+          ? "Failed to disable agent chat"
+          : "Failed to enable agent chat"
+      )
+    } finally {
+      togglingChat = false
+    }
+  }
 </script>
 
 <div class="deployment-root">
@@ -120,7 +275,12 @@
     </div>
     <div class="integration-list">
       {#if agentChatEnabled}
-        <AgentChatChannel agentId={currentAgent?._id} />
+        <AgentChatChannel
+          agentId={currentAgent?._id}
+          enabled={chatAgentEnabled}
+          disabled={togglingChat || loadingChatApp || !currentAgent?._id}
+          onToggle={toggleAgentChatDeployment}
+        />
       {/if}
       {#each channels as channel (channel.id)}
         <div class="integration-row">
