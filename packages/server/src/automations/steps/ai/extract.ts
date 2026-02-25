@@ -1,4 +1,5 @@
 import { objectStore } from "@budibase/backend-core"
+import { ai } from "@budibase/pro"
 import {
   DocumentSourceType,
   ExtractFileDataFileTypes,
@@ -182,11 +183,17 @@ export async function run({
 
     const output = getOutputFromSchema(inputs.schema)
     const modelMessages = buildExtractModelMessages(fileIdOrDataUrl)
-    const response = await generateText({
-      model: llm.chat,
-      messages: modelMessages,
-      providerOptions: llm.providerOptions?.(false),
-      output,
+    const providerOptions = llm.providerOptions?.(false)
+    const response = await ai.runWithReasoningEffortFallback({
+      model: llm.chat as unknown as object,
+      providerOptions,
+      run: opts =>
+        generateText({
+          model: llm.chat,
+          messages: modelMessages,
+          providerOptions: opts,
+          output,
+        }),
     })
     const data = response.output.data
 
