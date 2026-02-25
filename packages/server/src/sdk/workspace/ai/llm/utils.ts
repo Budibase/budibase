@@ -1,12 +1,49 @@
 import { features, HTTPError } from "@budibase/backend-core"
-import { AIConfigType, FeatureFlag, LLMResponse } from "@budibase/types"
+import {
+  AIConfigType,
+  FeatureFlag,
+  LLMResponse,
+  ReasoningEffort,
+} from "@budibase/types"
 import { createLLM } from "."
 import { configs } from ".."
 import { createLegacyLLM } from "./legacy"
 
-export async function getDefaultLLM(): Promise<LLMResponse | undefined> {
+interface GetDefaultLLMOptions {
+  reasoningEffort?: ReasoningEffort
+}
+
+const applyReasoningEffort = (
+  llm: LLMResponse,
+  reasoningEffort?: ReasoningEffort
+): LLMResponse => {
+  if (!reasoningEffort) {
+    return llm
+  }
+
+  return {
+    ...llm,
+    providerOptions: hasTools => {
+      const baseProviderOptions = llm.providerOptions?.(hasTools)
+      return {
+        ...baseProviderOptions,
+        openai: {
+          ...baseProviderOptions?.openai,
+          reasoningEffort,
+        },
+        azure: {
+          ...baseProviderOptions?.azure,
+          reasoningEffort,
+        },
+      }
+    },
+  }
+}
+
+async function getDefaultLLMObject(): Promise<LLMResponse | undefined> {
   if (!(await features.isEnabled(FeatureFlag.USE_NEW_AICONFIGS))) {
-    return await createLegacyLLM()
+    const llm = await createLegacyLLM()
+    return llm
   }
 
   const allConfigs = await configs.fetch()
@@ -14,14 +51,25 @@ export async function getDefaultLLM(): Promise<LLMResponse | undefined> {
     c => c.configType === AIConfigType.COMPLETIONS && c.isDefault === true
   )
   if (!configToUse?._id) {
-    return await createLegacyLLM()
+    const llm = await createLegacyLLM()
+    return llm
   }
 
-  return createLLM(configToUse._id)
+  const llm = await createLLM(configToUse._id)
+  return llm
 }
 
-export async function getDefaultLLMOrThrow(): Promise<LLMResponse> {
-  const llm = await getDefaultLLM()
+export async function getDefaultLLM(
+  options?: GetDefaultLLMOptions
+): Promise<LLMResponse | undefined> {
+  const llm = await getDefaultLLMObject()
+  return llm ? applyReasoningEffort(llm, options?.reasoningEffort) : llm
+}
+
+export async function getDefaultLLMOrThrow(
+  options?: GetDefaultLLMOptions
+): Promise<LLMResponse> {
+  const llm = await getDefaultLLM(options)
   if (!llm) {
     throw new HTTPError("No available LLM configurations", 500)
   }

@@ -43,7 +43,9 @@ export async function generateTables(
       }
     }, 15000)
 
-    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+    const llm = await sdk.ai.llm.getDefaultLLMOrThrow({
+      reasoningEffort: "low",
+    })
     const tableGenerator = await ai.TableGeneration.init(llm, {
       generateTablesDelegate: sdk.ai.helpers.generateTables,
       generateDataDelegate: sdk.ai.helpers.generateRows,
