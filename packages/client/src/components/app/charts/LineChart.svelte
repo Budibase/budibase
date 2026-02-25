@@ -29,6 +29,9 @@
   $: xAxisFormatter = getFormatter(labelType, yAxisUnits, "x")
   $: yAxisFormatter = getFormatter(labelType, yAxisUnits, "y")
 
+  $: hasClickAction = typeof onClick === "function"
+  $: fullCursor = hasClickAction
+
   $: options = {
     series,
     stroke: {
@@ -145,4 +148,4 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {hasClickAction} {fullCursor} />
