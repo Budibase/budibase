@@ -148,6 +148,6 @@
   {customPopoverHeight}
   {searchPlaceholder}
   {hideChevron}
-  fieldTooltip={fieldTooltip}
+  {fieldTooltip}
   {wrapText}
 />
