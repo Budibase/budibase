@@ -45,10 +45,12 @@ describe("test the extract file data action", () => {
   it("should successfully extract data from a file attachment", async () => {
     mockChatGPTResponse(
       JSON.stringify({
-        data: {
-          name: "John Doe",
-          email: "john@example.com",
-        },
+        data: [
+          {
+            name: "John Doe",
+            email: "john@example.com",
+          },
+        ],
       })
     )
 
@@ -82,13 +84,14 @@ describe("test the extract file data action", () => {
         { stepName: "ExtractStep" }
       )
       .serverLog(
-        { text: "Extracted name: {{ stepsByName.ExtractStep.data.name }}" },
+        { text: "Extracted name: {{ stepsByName.ExtractStep.data.0.name }}" },
         { stepName: "NameLog" }
       )
       .test({ fields: { status: "success" } })
 
     expect(result.steps[1].outputs.success).toBe(true)
-    expect(result.steps[1].outputs.data).toEqual({
+    expect(result.steps[1].outputs.data).toHaveLength(1)
+    expect(result.steps[1].outputs.data[0]).toEqual({
       name: "John Doe",
       email: "john@example.com",
     })
@@ -100,10 +103,12 @@ describe("test the extract file data action", () => {
   it("should successfully extract data from a URL", async () => {
     mockChatGPTResponse(
       JSON.stringify({
-        data: {
-          product: "Widget",
-          price: 29.99,
-        },
+        data: [
+          {
+            product: "Widget",
+            price: 29.99,
+          },
+        ],
       })
     )
 
@@ -137,14 +142,15 @@ describe("test the extract file data action", () => {
       )
       .serverLog(
         {
-          text: "Extracted product: {{ stepsByName.ExtractStep.data.product }}",
+          text: "Extracted product: {{ stepsByName.ExtractStep.data.0.product }}",
         },
         { stepName: "ProductLog" }
       )
       .test({ fields: { status: "url-success" } })
 
     expect(result.steps[1].outputs.success).toBe(true)
-    expect(result.steps[1].outputs.data).toEqual({
+    expect(result.steps[1].outputs.data).toHaveLength(1)
+    expect(result.steps[1].outputs.data[0]).toEqual({
       product: "Widget",
       price: 29.99,
     })
@@ -241,9 +247,7 @@ describe("test the extract file data action", () => {
   })
 
   it("should handle invalid JSON response from AI", async () => {
-    mockChatGPTResponse("This is not valid JSON - should cause parsing error", {
-      times: 5,
-    })
+    mockChatGPTResponse("This is not valid JSON - should cause parsing error")
     mockOpenAIFileUpload("file-id-789")
 
     let filename = await uploadTestFile("test-document.pdf")
@@ -275,8 +279,8 @@ describe("test the extract file data action", () => {
       .test({ fields: { status: "json-error" } })
 
     expect(result.steps[1].outputs.success).toBe(false)
-    expect(result.steps[1].outputs.response).toContain(
-      "Could not parse AI response as valid JSON"
+    expect(result.steps[1].outputs.response).toEqual(
+      "AI_NoObjectGeneratedError: No object generated: could not parse the response."
     )
   })
 
