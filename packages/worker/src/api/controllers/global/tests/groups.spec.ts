@@ -23,7 +23,7 @@ const createCtx = (pageSize: string): Parameters<typeof searchUsers>[0] =>
       groupId: "group_1",
     },
     body: undefined,
-  }) as Parameters<typeof searchUsers>[0]
+  }) as unknown as Parameters<typeof searchUsers>[0]
 
 describe("Global groups controller", () => {
   beforeEach(() => {
