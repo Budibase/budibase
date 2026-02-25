@@ -42,8 +42,7 @@ const applyReasoningEffort = (
 
 async function getDefaultLLMObject(): Promise<LLMResponse | undefined> {
   if (!(await features.isEnabled(FeatureFlag.USE_NEW_AICONFIGS))) {
-    const llm = await createLegacyLLM()
-    return llm
+    return await createLegacyLLM()
   }
 
   const allConfigs = await configs.fetch()
@@ -51,12 +50,10 @@ async function getDefaultLLMObject(): Promise<LLMResponse | undefined> {
     c => c.configType === AIConfigType.COMPLETIONS && c.isDefault === true
   )
   if (!configToUse?._id) {
-    const llm = await createLegacyLLM()
-    return llm
+    return await createLegacyLLM()
   }
 
-  const llm = await createLLM(configToUse._id)
-  return llm
+  return await createLLM(configToUse._id)
 }
 
 export async function getDefaultLLM(
