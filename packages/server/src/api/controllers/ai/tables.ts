@@ -67,6 +67,10 @@ export async function generateTables(
     if (heartbeat) {
       clearInterval(heartbeat)
     }
+    console.error("Error generating tables", {
+      message: error?.message,
+      stack: error?.stack,
+    })
     if (ctx.res.headersSent) {
       sendEvent({
         type: "error",
