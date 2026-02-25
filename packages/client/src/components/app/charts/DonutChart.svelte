@@ -22,6 +22,8 @@
   $: series = getSeries(dataProvider, valueColumn)
   $: labels = getLabels(dataProvider, labelColumn, labelType)
 
+  $: hasClickAction = typeof onClick === "function"
+
   $: options = {
     series,
     labels,
@@ -125,4 +127,4 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {hasClickAction} />
