@@ -1167,7 +1167,9 @@ async function main() {
       } else {
         switchBudibaseMode(mode)
         activeMode = mode
-        console.log(yellow(`Waiting for server readiness after mode:${mode}...`))
+        console.log(
+          yellow(`Waiting for server readiness after mode:${mode}...`)
+        )
         await waitForServerReady(baseUrl)
         await client.init()
       }
