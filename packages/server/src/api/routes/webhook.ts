@@ -25,3 +25,16 @@ publicRoutes.post(
   discordWebhookBodyParser,
   controller.discord
 )
+
+const MSTeamsWebhookBodyParser = koaBody({
+  multipart: true,
+  // @ts-ignore
+  enableTypes: ["json", "form", "text"],
+  parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
+})
+
+publicRoutes.post(
+  "/api/webhooks/ms-teams/:instance/:chatAppId/:agentId",
+  MSTeamsWebhookBodyParser,
+  controller.MSTeams
+)

@@ -39,6 +39,21 @@ else
 fi
 mkdir -p "${DATA_DIR}"
 
+normalize_env_file() {
+    local env_file="$1"
+    if [[ ! -f "${env_file}" ]]; then
+        return
+    fi
+
+    # Convert Windows CRLF line endings to LF for consistent shell parsing.
+    sed -i 's/\r$//' "${env_file}"
+
+    # Ensure trailing newline so appended keys don't concatenate to last value.
+    if [[ -n "$(tail -c1 "${env_file}" 2>/dev/null)" ]]; then
+        echo >> "${env_file}"
+    fi
+}
+
 # Mount NFS or GCP Filestore if FILESHARE_IP and FILESHARE_NAME are set
 if [[ -n "${FILESHARE_IP}" && -n "${FILESHARE_NAME}" ]]; then
     echo "Mounting NFS share"
@@ -62,6 +77,7 @@ fi
 
 # Source environment variables from a .env file if it exists in DATA_DIR
 if [[ -f "${DATA_DIR}/.env" ]]; then
+    normalize_env_file "${DATA_DIR}/.env"
     set -a  # Automatically export all variables loaded from .env
     source "${DATA_DIR}/.env"
     set +a
@@ -113,7 +129,9 @@ ensure_env_var "LITELLM_MASTER_KEY" "${LITELLM_MASTER_KEY}"
 ensure_env_var "LITELLM_SALT_KEY" "${LITELLM_SALT_KEY}"
 
 # Read in the .env file and export the variables
-for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
+set -a
+source "${DATA_DIR}/.env"
+set +a
 
 # Runtime values should take precedence over persisted .env values.
 if [[ "${runtime_database_url_set}" == "true" ]]; then
@@ -131,8 +149,10 @@ mkdir -p ${DATA_DIR}/minio
 mkdir -p ${DATA_DIR}/redis
 mkdir -p ${DATA_DIR}/couch
 mkdir -p ${DATA_DIR}/litellm
+mkdir -p ${DATA_DIR}/litellm/postgres
 chown -R couchdb:couchdb ${DATA_DIR}/couch
 chown -R postgres:postgres ${DATA_DIR}/litellm
+chmod 700 ${DATA_DIR}/litellm/postgres
 
 echo "Starting Redis runner..."
 ./redis-runner.sh &

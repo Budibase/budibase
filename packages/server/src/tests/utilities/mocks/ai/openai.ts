@@ -1,9 +1,9 @@
-import { getPool } from "../../../../tests/jestEnv"
-import _ from "lodash"
 import { ai } from "@budibase/pro"
 import { ResponseFormat } from "@budibase/types"
-import { MockLLMResponseOpts } from "."
+import _ from "lodash"
 import { Readable } from "stream"
+import { MockLLMResponseOpts } from "."
+import { getPool } from "../../../../tests/jestEnv"
 
 let chatID = 1
 const SPACE_REGEX = /\s+/g
@@ -36,6 +36,7 @@ interface Usage {
 interface ChatCompletionRequest {
   messages: Message[]
   model: string
+  response_format?: ResponseFormat
 }
 
 interface ChatCompletionResponse {
@@ -47,6 +48,8 @@ interface ChatCompletionResponse {
   choices: Choice[]
   usage: Usage
 }
+
+type ParsedResponseFormat = ReturnType<typeof ai.parseResponseFormat>
 
 function parseJsonBody(body: unknown): ChatCompletionRequest {
   if (typeof body === "string") return JSON.parse(body)
@@ -61,6 +64,53 @@ function parseJsonBody(body: unknown): ChatCompletionRequest {
   return { messages: [], model: "" }
 }
 
+function stripJsonSchemaDescriptions(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(stripJsonSchemaDescriptions)
+  }
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => key !== "description")
+      .map(
+        ([key, nested]) => [key, stripJsonSchemaDescriptions(nested)] as const
+      )
+    return Object.fromEntries(entries)
+  }
+  return value
+}
+
+function matchesResponseFormat(
+  actual: ChatCompletionRequest,
+  expected: ParsedResponseFormat
+): boolean {
+  if (!actual?.response_format || typeof actual?.response_format !== "object") {
+    return false
+  }
+
+  const actualFormat = actual.response_format
+  if (actualFormat.type !== expected?.type) {
+    return false
+  }
+
+  if (expected?.type !== "json_schema") {
+    return _.isEqual(actualFormat, expected)
+  }
+
+  const expectedJson = expected.json_schema
+  const actualJson = actualFormat.json_schema
+  if (!actualJson || typeof actualJson !== "object") {
+    return false
+  }
+  if (actualJson.name !== expectedJson.name) {
+    return false
+  }
+
+  return _.isEqual(
+    stripJsonSchemaDescriptions(actualJson.schema),
+    stripJsonSchemaDescriptions(expectedJson.schema)
+  )
+}
+
 export type MockLLMResponseFn = (
   answer: string | ((prompt: string) => string),
   opts?: MockLLMResponseOpts
@@ -69,13 +119,9 @@ export type MockLLMResponseFn = (
 export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   const origin = opts?.baseUrl || "https://api.openai.com"
   const pool = getPool(origin)
-
   const expectedFormat = opts?.format
-    ? _.matches({
-        response_format: ai.parseResponseFormat(opts.format as ResponseFormat),
-      })
+    ? ai.parseResponseFormat(opts.format as ResponseFormat)
     : null
-  const rejectFormat = opts?.rejectFormat
 
   const interceptor = pool.intercept({
     path: "/v1/chat/completions",
@@ -84,17 +130,11 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
   const scope = interceptor.reply(200, (reqOpts: any) => {
     const reqBody = parseJsonBody(reqOpts.body)
-    if (expectedFormat && !expectedFormat(reqBody)) {
+    if (expectedFormat && !matchesResponseFormat(reqBody, expectedFormat)) {
       return {
         error: { message: "Unexpected response_format in request body" },
       }
     }
-    if (rejectFormat && "response_format" in reqBody) {
-      return {
-        error: { message: "Unexpected response_format in request body" },
-      }
-    }
-
     let prompt
     const messageContent = reqBody.messages[0].content
     if (typeof messageContent === "string") {
@@ -164,41 +204,24 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
 export const mockAISDKChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   const origin = opts?.baseUrl || "https://api.openai.com"
   const pool = getPool(origin)
-
   const expectedFormat = opts?.format
-    ? _.matches({
-        response_format: ai.parseResponseFormat(opts.format as ResponseFormat),
-      })
+    ? ai.parseResponseFormat(opts.format as ResponseFormat)
     : null
-  const rejectFormat = opts?.rejectFormat
-  const bodyMatcher = (body: string) => {
-    const reqBody = parseJsonBody(body)
-    if (expectedFormat) {
-      return expectedFormat(reqBody)
-    }
-    if (rejectFormat) {
-      return true
-    }
-    return !("response_format" in reqBody)
-  }
 
   const interceptor = pool.intercept({
     path: "/v1/chat/completions",
     method: "POST",
-    body: bodyMatcher,
+    body: body => {
+      const reqBody = parseJsonBody(body)
+      if (expectedFormat) {
+        return matchesResponseFormat(reqBody, expectedFormat)
+      }
+      return !("response_format" in reqBody)
+    },
   })
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
   const scope = interceptor.reply<object>(reqOpts => {
     const reqBody = parseJsonBody(reqOpts.body)
-    if (rejectFormat && "response_format" in reqBody) {
-      return {
-        statusCode: 400,
-        data: {
-          error: { message: "Unexpected response_format in request body" },
-        },
-      }
-    }
-
     let prompt
     const messageContent = reqBody.messages[0].content
     if (typeof messageContent === "string") {
@@ -268,8 +291,9 @@ export const mockAISDKChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
     }
   }) // Each mock call handles one request
 
-  // ai-sdk retries 3 times
-  scope.times(opts?.times ?? 3)
+  if (opts?.times != null) {
+    scope.times(opts.times)
+  }
 }
 
 export const mockChatGPTStreamResponse = (content = "hi") => {

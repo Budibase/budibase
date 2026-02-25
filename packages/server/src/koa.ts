@@ -32,7 +32,10 @@ export default function createKoaApp() {
   })
 
   app.use(async (ctx, next) => {
-    if (ctx.path.startsWith("/api/webhooks/discord/")) {
+    if (
+      ctx.path.startsWith("/api/webhooks/discord/") ||
+      ctx.path.startsWith("/api/webhooks/ms-teams/")
+    ) {
       return await next()
     }
     return await defaultBodyParser(ctx, next)
