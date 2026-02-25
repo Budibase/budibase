@@ -7,12 +7,7 @@
     Toggle,
     notifications,
   } from "@budibase/bbui"
-  import {
-    FeatureFlag,
-    type Agent,
-    type ChatApp,
-    type DeploymentRow,
-  } from "@budibase/types"
+  import { FeatureFlag, type Agent, type DeploymentRow } from "@budibase/types"
   import {
     selectedAgent,
     agentsStore,
@@ -23,6 +18,7 @@
   import { deploymentStore } from "@/stores/builder"
   import { params } from "@roxi/routify"
   import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
+  import { buildAgentChatUpdate } from "./DeploymentChannels/agentChatDeployment"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
 
@@ -62,27 +58,6 @@
     )
     return !!chatAgent?.isEnabled
   })
-
-  type ChatAppAgent = NonNullable<ChatApp["agents"]>[number]
-
-  const pickDefaultEnabledAgentId = (agents: ChatAppAgent[]) => {
-    const existingDefault = agents.find(
-      agent => agent.isEnabled && agent.isDefault
-    )
-    if (existingDefault) {
-      return existingDefault.agentId
-    }
-
-    return agents.find(agent => agent.isEnabled)?.agentId
-  }
-
-  const normalizeDefaultAgent = (agents: ChatAppAgent[]) => {
-    const defaultAgentId = pickDefaultEnabledAgentId(agents)
-    return agents.map(agent => ({
-      ...agent,
-      isDefault: !!defaultAgentId && agent.agentId === defaultAgentId,
-    }))
-  }
 
   $effect(() => {
     const workspaceId = $params.application
@@ -179,56 +154,17 @@
       isCurrentlyEnabled = chatAgents.some(
         agent => agent.agentId === agentId && agent.isEnabled
       )
+      const update = buildAgentChatUpdate({
+        agents: chatAgents,
+        agentId,
+        enable: !isCurrentlyEnabled,
+      })
 
-      if (isCurrentlyEnabled) {
-        const nextAgents = normalizeDefaultAgent(
-          chatAgents.map(agent =>
-            agent.agentId === agentId
-              ? {
-                  ...agent,
-                  isEnabled: false,
-                  isDefault: false,
-                }
-              : agent
-          )
-        )
-
-        await chatAppsStore.updateChatApp({
-          agents: nextAgents,
-        })
-        await deploymentStore.publishApp()
-        notifications.success("Agent chat disabled")
-      } else {
-        const existingEntry = chatAgents.find(
-          agent => agent.agentId === agentId
-        )
-        const nextAgents = normalizeDefaultAgent(
-          existingEntry
-            ? chatAgents.map(agent =>
-                agent.agentId === agentId
-                  ? {
-                      ...agent,
-                      isEnabled: true,
-                    }
-                  : agent
-              )
-            : [
-                ...chatAgents,
-                {
-                  agentId,
-                  isEnabled: true,
-                  isDefault: false,
-                },
-              ]
-        )
-
-        await chatAppsStore.updateChatApp({
-          agents: nextAgents,
-          live: true,
-        })
-        await deploymentStore.publishApp()
-        notifications.success("Agent chat enabled")
-      }
+      await chatAppsStore.updateChatApp(update)
+      await deploymentStore.publishApp()
+      notifications.success(
+        isCurrentlyEnabled ? "Agent chat disabled" : "Agent chat enabled"
+      )
     } catch (error) {
       console.error(error)
       notifications.error(
