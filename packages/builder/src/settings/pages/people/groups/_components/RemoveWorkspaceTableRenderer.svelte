@@ -3,6 +3,7 @@
   import { getContext } from "svelte"
 
   export let value
+  export let row
 
   const groupAppsContext = getContext("groupApps")
   let removing = false
@@ -21,18 +22,20 @@
   }
 </script>
 
-{#if removing}
-  <div class="spinner-wrap">
-    <ProgressCircle size="S" />
-  </div>
-{:else}
-  <ActionButton
-    disabled={groupAppsContext.getReadonly?.()}
-    size="S"
-    on:click={onClick}
-  >
-    Remove
-  </ActionButton>
+{#if !row?.__skeleton}
+  {#if removing}
+    <div class="spinner-wrap">
+      <ProgressCircle size="S" />
+    </div>
+  {:else}
+    <ActionButton
+      disabled={groupAppsContext.getReadonly?.()}
+      size="S"
+      on:click={onClick}
+    >
+      Remove
+    </ActionButton>
+  {/if}
 {/if}
 
 <style>

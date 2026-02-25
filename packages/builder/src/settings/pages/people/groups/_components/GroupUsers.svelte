@@ -11,7 +11,7 @@
     Table,
     Search,
   } from "@budibase/bbui"
-  import { fetchData } from "@budibase/frontend-core"
+  import { fetchData, Utils } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { groups } from "@/stores/portal/groups"
   import { setContext } from "svelte"
@@ -25,9 +25,14 @@
   export let isScimGroup
 
   const PAGE_SIZE = 5
+  let emailSearchInput
   let emailSearch
   let fetchGroupUsers
   let bulkAddModal
+  const debouncedUpdateEmailSearch = Utils.debounce(value => {
+    emailSearch = value || undefined
+  }, 200)
+  $: debouncedUpdateEmailSearch(emailSearchInput)
   $: fetchGroupUsers = fetchData({
     API,
     datasource: {
@@ -115,7 +120,7 @@
           <ProgressCircle size="S" />
         {/if}
       </div>
-      <Search bind:value={emailSearch} placeholder="Search email" />
+      <Search bind:value={emailSearchInput} placeholder="Search email" />
     </div>
   </div>
 </div>
@@ -137,8 +142,8 @@
 >
   <div class="placeholder" slot="placeholder">
     <Heading size="S"
-      >{emailSearch
-        ? `No users found matching the email "${emailSearch}"`
+      >{emailSearchInput
+        ? `No users found matching the email "${emailSearchInput}"`
         : "This user group doesn't have any users"}
     </Heading>
   </div>

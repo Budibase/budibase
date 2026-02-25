@@ -122,7 +122,17 @@
     workspacePageNumber * WORKSPACE_PAGE_SIZE,
     (workspacePageNumber + 1) * WORKSPACE_PAGE_SIZE
   )
-  $: paginatedGroupApps = workspacePageRows
+  $: workspaceFillerRows =
+    showWorkspacePagination && workspacePageRows.length < WORKSPACE_PAGE_SIZE
+      ? [...Array(WORKSPACE_PAGE_SIZE - workspacePageRows.length)].map(
+          (_, index) => ({
+            _id: `workspace-filler-${workspacePageNumber}-${index}`,
+            __skeleton: true,
+            __selectable: false,
+          })
+        )
+      : []
+  $: paginatedGroupApps = [...workspacePageRows, ...workspaceFillerRows]
 
   // Need to ensure the redirect isn't retriggered
   $: {
@@ -225,7 +235,12 @@
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
-        on:click={e => $goto(`/builder/workspace/${e.detail.devId}`)}
+        on:click={e => {
+          if (e.detail?.__skeleton) {
+            return
+          }
+          $goto(`/builder/workspace/${e.detail.devId}`)
+        }}
         allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">
