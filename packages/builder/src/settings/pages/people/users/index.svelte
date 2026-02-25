@@ -472,7 +472,8 @@
   }
 
   const createUsersFromCsv = async (userCsvData: any) => {
-    const { userEmails, usersRole, userGroups: groups } = userCsvData
+    const { userEmails, usersRole, usersAppRole, userGroups: groups } =
+      userCsvData
 
     const users: UserInfo[] = []
     for (const email of userEmails) {
@@ -484,6 +485,10 @@
       const newUser = {
         email: email.trim(),
         role: usersRole,
+        appRole:
+          usersRole === Constants.BudibaseRoles.AppUser
+            ? usersAppRole || Constants.Roles.BASIC
+            : undefined,
         password: generatePassword(12),
         forceResetPassword: true,
       }
@@ -813,7 +818,10 @@
 </Modal>
 
 <Modal bind:this={importUsersModal}>
-  <ImportUsersModal {createUsersFromCsv} />
+  <ImportUsersModal
+    {createUsersFromCsv}
+    workspaceOnly={isWorkspaceOnly}
+  />
 </Modal>
 
 <Modal bind:this={userLimitReachedModal}>

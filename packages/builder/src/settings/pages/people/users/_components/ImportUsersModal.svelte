@@ -2,7 +2,7 @@
   import {
     Body,
     ModalContent,
-    RadioGroup,
+    Select,
     Multiselect,
     notifications,
     Icon,
@@ -10,15 +10,18 @@
   import { groups } from "@/stores/portal/groups"
   import { licensing } from "@/stores/portal/licensing"
   import { admin } from "@/stores/portal/admin"
+  import { roles } from "@/stores/builder"
   import { emailValidator, Constants } from "@budibase/frontend-core"
   import { capitalise, parseUserEmailsFromCSV } from "@/helpers"
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
   const MAX_USERS_UPLOAD_LIMIT = 1000
 
+  export let workspaceOnly = false
   export let createUsersFromCsv: (_data: {
     userEmails: string[]
     usersRole: string
+    usersAppRole?: string
     userGroups: string[]
   }) => void
 
@@ -26,17 +29,59 @@
   let csvString: string | undefined = undefined
   let userEmails: string[] = []
   let userGroups: string[] = []
-  let usersRole: string | undefined = undefined
+  let usersRole: string | undefined = Constants.BudibaseRoles.AppUser
+  let usersAppRole: string = Constants.Roles.BASIC
   let invalidEmails: string[] = []
+  let roleColorLookup: Record<string, string | undefined> = {}
+  let customEndUserRoleOptions: {
+    label: string
+    value: string
+    color: string
+  }[] = []
+  let endUserRoleOptions: { label: string; value: string; color?: string }[] = []
+  const builtInEndUserRoles = [Constants.Roles.BASIC, Constants.Roles.ADMIN]
+  const excludedRoleIds = [
+    ...builtInEndUserRoles,
+    Constants.Roles.PUBLIC,
+    Constants.Roles.POWER,
+    Constants.Roles.CREATOR,
+    Constants.Roles.GROUP,
+  ]
+
+  $: roleColorLookup = ($roles || []).reduce(
+    (acc: Record<string, string | undefined>, role) => {
+      acc[role._id] = role.uiMetadata?.color
+      return acc
+    },
+    {}
+  )
+  $: customEndUserRoleOptions = ($roles || [])
+    .filter(role => !excludedRoleIds.includes(role._id))
+    .map(role => ({
+      label: role.uiMetadata?.displayName || role.name || "Custom role",
+      value: role._id,
+      color:
+        role.uiMetadata?.color ||
+        "var(--spectrum-global-color-static-magenta-400)",
+    }))
+  $: endUserRoleOptions = [
+    {
+      label: "Basic user",
+      value: Constants.Roles.BASIC,
+      color: roleColorLookup[Constants.Roles.BASIC],
+    },
+    {
+      label: "Admin user",
+      value: Constants.Roles.ADMIN,
+      color: roleColorLookup[Constants.Roles.ADMIN],
+    },
+    ...customEndUserRoleOptions,
+  ]
 
   $: userCount = ($licensing?.userCount || 0) + userEmails.length
   $: exceed = licensing.usersLimitExceeded(userCount)
   $: importDisabled =
     !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
-  $: roleOptions = Constants.BudibaseRoleOptions.map(option => ({
-    ...option,
-    label: `${option.label} - ${option.subtitle}`,
-  }))
 
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
 
@@ -98,7 +143,15 @@
   cancelText="Cancel"
   showCloseIcon={false}
   onConfirm={() =>
-    createUsersFromCsv({ userEmails, usersRole: usersRole || "", userGroups })}
+    createUsersFromCsv({
+      userEmails,
+      usersRole: usersRole || "",
+      usersAppRole:
+        workspaceOnly && usersRole === Constants.BudibaseRoles.AppUser
+          ? usersAppRole
+          : undefined,
+      userGroups,
+    })}
   disabled={importDisabled}
 >
   <Body size="S">Import your users email addresses from a CSV file</Body>
@@ -117,9 +170,33 @@
       users. Upgrade your plan to add more users
     </div>
   {/if}
-  <RadioGroup bind:value={usersRole} options={roleOptions} />
+  <div class="role-select">
+    <Select
+      label="Select role"
+      placeholder={false}
+      bind:value={usersRole}
+      options={Constants.BudibaseRoleOptions}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.value}
+      getOptionSubtitle={option => option.subtitle}
+      showSelectedSubtitle={true}
+    />
+  </div>
+  {#if workspaceOnly && usersRole === Constants.BudibaseRoles.AppUser}
+    <div class="role-select-compact">
+      <Select
+        label="Select end user role"
+        bind:value={usersAppRole}
+        options={endUserRoleOptions}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        getOptionColour={option => option.color}
+        placeholder={false}
+      />
+    </div>
+  {/if}
 
-  {#if $licensing?.groupsEnabled && internalGroups?.length}
+  {#if !workspaceOnly && $licensing?.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"
@@ -185,5 +262,12 @@
 
   input[type="file"] {
     display: none;
+  }
+
+  .role-select :global(.spectrum-Picker) {
+    height: auto;
+    align-items: center;
+    padding-top: var(--spacing-m);
+    padding-bottom: var(--spacing-m);
   }
 </style>
