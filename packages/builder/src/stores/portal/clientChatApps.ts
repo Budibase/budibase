@@ -8,6 +8,47 @@ interface ClientChatAppsStoreState {
   loaded: boolean
 }
 
+interface PublishedChatAppAgent {
+  agentId?: string
+  agentName?: string
+  name?: string
+  isEnabled?: boolean
+}
+
+interface PublishedChatAppWithAgents extends PublishedChatAppData {
+  agents?: PublishedChatAppAgent[]
+}
+
+const normalizePublishedChatApps = (
+  chatApps: PublishedChatAppWithAgents[]
+): PublishedChatAppData[] =>
+  chatApps.flatMap(chatApp => {
+    const agents = chatApp.agents || []
+    if (!agents.length) {
+      return [chatApp]
+    }
+
+    const enabledAgents = agents.filter(agent => agent.isEnabled !== false)
+    if (!enabledAgents.length) {
+      return []
+    }
+
+    return enabledAgents.map(agent => {
+      const agentId = agent.agentId
+      const baseUrl = chatApp.url.replace(/\/$/, "")
+      return {
+        ...chatApp,
+        agentId,
+        agentName: agent.agentName || agent.name,
+        name: agent.agentName || agent.name || chatApp.name,
+        url:
+          agentId && !baseUrl.endsWith(`/agent/${encodeURIComponent(agentId)}`)
+            ? `${baseUrl}/agent/${encodeURIComponent(agentId)}`
+            : baseUrl,
+      }
+    })
+  })
+
 export class ClientChatAppsStore extends BudiStore<ClientChatAppsStoreState> {
   constructor() {
     super({
@@ -23,7 +64,9 @@ export class ClientChatAppsStore extends BudiStore<ClientChatAppsStoreState> {
     }))
 
     try {
-      const chatApps = await API.getPublishedChatApps()
+      const chatApps = normalizePublishedChatApps(
+        (await API.getPublishedChatApps()) as PublishedChatAppWithAgents[]
+      )
       this.update(state => ({
         ...state,
         chatApps,
