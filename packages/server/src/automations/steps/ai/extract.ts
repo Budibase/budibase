@@ -2,10 +2,10 @@ import { objectStore } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import {
   DocumentSourceType,
-  ExtractFileDataFileTypes,
   ExtractFileDataStepInputs,
   ExtractFileDataStepOutputs,
   LLMResponse,
+  SupportedFileType,
 } from "@budibase/types"
 import { generateText, Output, type ModelMessage, type UserContent } from "ai"
 import fetch from "node-fetch"
@@ -16,28 +16,28 @@ import * as automationUtils from "../../automationUtils"
 import sdk from "../../../sdk"
 import z from "zod"
 
-function isImageType(type: ExtractFileDataFileTypes): boolean {
-  const isImageTypeByFileType: Record<ExtractFileDataFileTypes, boolean> = {
-    [ExtractFileDataFileTypes.pdf]: false,
-    [ExtractFileDataFileTypes.jpg]: true,
-    [ExtractFileDataFileTypes.png]: true,
-    [ExtractFileDataFileTypes.jpeg]: true,
+function isImageType(type: SupportedFileType): boolean {
+  const isImageTypeByFileType: Record<SupportedFileType, boolean> = {
+    [SupportedFileType.PDF]: false,
+    [SupportedFileType.JPG]: true,
+    [SupportedFileType.PNG]: true,
+    [SupportedFileType.JPEG]: true,
   }
 
   return isImageTypeByFileType[type]
 }
 
-function getMimeType(type: ExtractFileDataFileTypes): string {
-  const mimeTypeByFileType: Record<ExtractFileDataFileTypes, string> = {
-    [ExtractFileDataFileTypes.pdf]: "application/pdf",
-    [ExtractFileDataFileTypes.jpg]: "image/jpeg",
-    [ExtractFileDataFileTypes.png]: "image/png",
-    [ExtractFileDataFileTypes.jpeg]: "image/jpeg",
+function getMimeType(type: SupportedFileType): string {
+  const mimeTypeByFileType: Record<SupportedFileType, string> = {
+    [SupportedFileType.PDF]: "application/pdf",
+    [SupportedFileType.JPG]: "image/jpeg",
+    [SupportedFileType.PNG]: "image/png",
+    [SupportedFileType.JPEG]: "image/jpeg",
   }
   return mimeTypeByFileType[type]
 }
 
-function toImageDataUrl(data: Buffer, value: ExtractFileDataFileTypes): string {
+function toImageDataUrl(data: Buffer, value: SupportedFileType): string {
   const mimeType = getMimeType(value)
   if (!mimeType) {
     throw new Error("Unsupported image MIME type")
@@ -85,21 +85,21 @@ function buildExtractModelMessages(input: ExtractInput): ModelMessage[] {
           },
         ]
       : input.kind === "file"
-      ? [
-          {
-            type: "file",
-            data: input.value,
-            mediaType: "application/pdf",
-          },
-          {
-            type: "text",
-            text: prompt,
-          },
-        ]
-      : `${prompt}\n\nDocument text:\n${input.value.slice(
-          0,
-          MAX_INLINE_DOC_TEXT_LENGTH
-        )}`
+        ? [
+            {
+              type: "file",
+              data: input.value,
+              mediaType: "application/pdf",
+            },
+            {
+              type: "text",
+              text: prompt,
+            },
+          ]
+        : `${prompt}\n\nDocument text:\n${input.value.slice(
+            0,
+            MAX_INLINE_DOC_TEXT_LENGTH
+          )}`
 
   return [
     {
@@ -111,7 +111,7 @@ function buildExtractModelMessages(input: ExtractInput): ModelMessage[] {
 
 async function processUrlFile(
   fileUrl: string,
-  fileType: ExtractFileDataFileTypes,
+  fileType: SupportedFileType,
   llm: LLMResponse
 ): Promise<ExtractInput> {
   const response = await fetch(fileUrl)
@@ -131,7 +131,10 @@ async function processUrlFile(
   }
   const stream = response.body as Readable
   const filename = `document.${fileType || "pdf"}`
-  return { kind: "file", value: await llm.uploadFile(stream, filename, fileType) }
+  return {
+    kind: "file",
+    value: await llm.uploadFile(stream, filename, fileType),
+  }
 }
 
 async function processAttachmentFile(

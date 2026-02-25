@@ -14,6 +14,7 @@ import {
   EmailAttachment,
   AutomationResults,
   AutomationStepResult,
+  SupportedFileType,
 } from "./automation"
 import { AutomationStep } from "./schema"
 
@@ -249,18 +250,12 @@ export type GenerateTextStepOutputs = {
   success: boolean
   response?: string
 }
+
 export type ExtractFileDataStepInputs = {
   file: RowAttachment | string
   source: "URL" | "Attachment"
-  fileType: ExtractFileDataFileTypes
+  fileType: SupportedFileType
   schema: Record<string, any>
-}
-
-export enum ExtractFileDataFileTypes {
-  pdf = "pdf",
-  jpg = "jpg",
-  png = "png",
-  jpeg = "jpeg",
 }
 
 export type ExtractFileDataStepOutputs = {
