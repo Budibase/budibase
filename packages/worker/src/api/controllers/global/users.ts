@@ -361,7 +361,7 @@ export const search = async (
 }
 
 const DEFAULT_USER_LIMIT = 8
-const WORKSPACE_SEARCH_CHUNK_SIZE = 80
+const WORKSPACE_USER_SEARCH_CHUNK_SIZE = 1000
 
 const searchWorkspaceUsers = async (
   body: SearchUsersRequest
@@ -374,7 +374,7 @@ const searchWorkspaceUsers = async (
   const limit = body.limit ?? DEFAULT_USER_LIMIT
   // Workspace filtering is applied post-query, so fetch in fixed-size chunks
   // to reduce round trips when only a subset of tenant users has access.
-  const scanLimit = Math.max(WORKSPACE_SEARCH_CHUNK_SIZE, limit)
+  const scanLimit = Math.max(WORKSPACE_USER_SEARCH_CHUNK_SIZE, limit)
   const query = body.query
   const filtered: User[] = []
   let cursor = body.bookmark
