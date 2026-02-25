@@ -135,18 +135,6 @@ export function cleanData(text: string) {
   )
 }
 
-export function generateSQL(prompt: string, tableSchema: string) {
-  return new LLMRequest().addUserMessage(
-    `Given the table schema:\n${tableSchema}\n\nGenerate a SQL query for the following request:\n${prompt}.\n Only provide the SQL.`
-  )
-}
-
-export function generateCode(prompt: string) {
-  return new LLMRequest().addUserMessage(
-    `Generate JavaScript code for the following request:\n${prompt}.\n Only provide the JS and nothing else.`
-  )
-}
-
 export function generateCronExpression(text: string) {
   return new LLMRequest().addUserMessage(
     `Generate a cron expression with exactly 5 fields (minute hour day-of-month month day-of-week) based on the following prompt.

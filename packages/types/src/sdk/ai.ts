@@ -1,3 +1,4 @@
+import type { EmbeddingModelV3, LanguageModelV3 } from "@ai-sdk/provider"
 import { AIProvider } from "../documents"
 
 export enum AIOperationEnum {
@@ -103,4 +104,16 @@ export interface LLMConfigOptions {
 
 export interface LLMProviderConfig extends LLMConfigOptions {
   provider: AIProvider
+}
+
+export interface LLMResponse {
+  chat: LanguageModelV3
+  embedding: EmbeddingModelV3
+  providerOptions?: (hasTools: boolean) =>
+    | {
+        openai: {
+          parallelToolCalls: boolean
+        }
+      }
+    | undefined
 }

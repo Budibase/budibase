@@ -6,7 +6,7 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
-import { ai } from "@budibase/pro"
+import { ai, quotas } from "@budibase/pro"
 import {
   AgentMessageMetadata,
   ChatAgentRequest,
@@ -33,9 +33,10 @@ import sdk from "../../../sdk"
 import {
   formatIncompleteToolCallError,
   updatePendingToolCalls,
-} from "../../../sdk/workspace/ai/agents/utils"
+} from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
-import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag/files"
+import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag"
+import { assertChatAppIsLiveForUser } from "./chatApps"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -124,19 +125,19 @@ export const truncateTitle = (value: string, maxLength = 120) => {
   return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`
 }
 
-interface DiscordChatCompleteResult {
+interface WebhookChatCompleteResult {
   messages: ChatConversation["messages"]
   assistantText: string
   title?: string
 }
 
-export async function discordChat({
+export async function webhookChat({
   chat,
   user,
 }: {
   chat: ChatConversationRequest
   user: ContextUser
-}): Promise<DiscordChatCompleteResult> {
+}): Promise<WebhookChatCompleteResult> {
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
 
@@ -180,11 +181,11 @@ export async function discordChat({
       baseSystemPrompt: ai.agentSystemPrompt(user),
       includeGoal: false,
     })
-  const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
-    agent.aiconfig
-  )
-
   const sessionId = chat._id || v4()
+  const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
+    agent.aiconfig,
+    sessionId
+  )
 
   const modelMessages = await convertToModelMessages(chat.messages)
   const messagesWithContext: ModelMessage[] =
@@ -279,6 +280,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     if (!chatApp) {
       throw new HTTPError("Chat app not found", 404)
     }
+    assertChatAppIsLiveForUser(ctx, chatApp)
   }
 
   let existingChat: ChatConversation | undefined
@@ -317,6 +319,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     chat.agentId = agentId
   }
 
+  await quotas.throwIfBudibaseAICreditsExceeded()
+
   ctx.status = 200
   ctx.set("Content-Type", "text/event-stream")
   ctx.set("Cache-Control", "no-cache")
@@ -351,7 +355,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
   try {
-    const sessionId = chat._id || v4()
+    const chatId = chat._id ?? docIds.generateChatConversationID()
+    const sessionId = chat._id || chat.sessionId || chatId
     const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
       agent.aiconfig,
       sessionId
@@ -442,7 +447,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           return
         }
 
-        const chatId = chat._id ?? docIds.generateChatConversationID()
         const existingChat = chat._id
           ? await db.tryGet<ChatConversation>(chat._id)
           : null
@@ -487,6 +491,7 @@ export async function createChatConversation(
   }
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
   if (
     !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
   ) {
@@ -530,7 +535,8 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (!chat || chat.chatAppId !== chatAppId) {
@@ -555,7 +561,8 @@ export async function fetchChatHistory(
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
 
   const allChats = await db.allDocs<ChatConversation>(
     docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
@@ -595,7 +602,8 @@ export async function fetchChatConversation(
     throw new HTTPError("chatConversationId is required", 400)
   }
 
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+  assertChatAppIsLiveForUser(ctx, chatApp)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (!chat || chat.chatAppId !== chatAppId) {

@@ -18,6 +18,13 @@ Edit the Dockerfile in this directory amending the environment variables to suit
 The CUSTOM_DOMAIN variable will be used to request a certificate from LetsEncrypt and if successful you can point traffic to port 443. If you choose to use the CUSTOM_DOMAIN variable ensure that the DNS for your custom domain points to the public IP address where you are running Budibase - otherwise the certificate issuance will fail.
 If you have other arrangements for a proxy in front of the single image container you can omit the CUSTOM_DOMAIN environment variable and the request to LetsEncrypt will be skipped. You can then point traffic to port 80.
 
+The single image now runs LiteLLM with `store_model_in_db: true` by default, so a Postgres database is required. If `DATABASE_URL` is not supplied, the container starts an internal Postgres instance and persists it under `${DATA_DIR}/litellm/postgres`.
+
+To use an external Postgres instance for LiteLLM, set:
+
+- `DATABASE_URL`
+- `LITELLM_INTERNAL_DB=false`
+
 ### Build Requirements
 
 We would suggest building the image with 6GB of RAM and 20GB of free disk space for build artifacts. The resulting image size will use approx 2GB of disk space.

@@ -5,6 +5,7 @@
     Icon,
     ProgressCircle,
     Body,
+    Helpers,
   } from "@budibase/bbui"
   import type {
     ChatConversation,
@@ -62,6 +63,7 @@
     })
   )
 
+  let stableSessionId = $state(Helpers.uuid())
   let chatAreaElement = $state<HTMLDivElement>()
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
@@ -178,6 +180,7 @@
             agentId: chat?.agentId,
             transient: !persistConversation,
             isPreview: isAgentPreviewChat,
+            sessionId: stableSessionId,
             title: chat?.title,
             messages,
           },
@@ -213,7 +216,16 @@
     },
     onError: error => {
       console.error(error)
-      notifications.error(error.message || "Failed to send message")
+      let message = error.message || "Failed to send message"
+      try {
+        const parsed = JSON.parse(message)
+        if (parsed?.message) {
+          message = parsed.message
+        }
+      } catch {
+        // not JSON, use as-is
+      }
+      notifications.error(message)
     },
   })
 
@@ -242,6 +254,7 @@
   $effect(() => {
     if (chat?._id !== lastChatId) {
       lastChatId = chat?._id
+      stableSessionId = Helpers.uuid()
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
     }

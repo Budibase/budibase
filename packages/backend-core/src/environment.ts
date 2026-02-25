@@ -271,8 +271,6 @@ const environment = {
   CUSTOM_CSP_IMG_SRC: process.env.CUSTOM_CSP_IMG_SRC,
   CUSTOM_CSP_FONT_SRC: process.env.CUSTOM_CSP_FONT_SRC,
   CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
-  BBAI_OPENAI_API_KEY: process.env.BBAI_OPENAI_API_KEY,
-  BBAI_OPENROUTER_API_KEY: process.env.BBAI_OPENROUTER_API_KEY,
   OPENROUTER_BASE_URL:
     process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
 }
@@ -319,8 +317,6 @@ export const SECRETS: EnvironmentKey[] = [
   "OPENAI_API_KEY",
   "REDIS_PASSWORD",
   "REDIS_USERNAME",
-  "BBAI_OPENAI_API_KEY",
-  "BBAI_OPENROUTER_API_KEY",
 ]
 
 // clean up any environment variable edge cases

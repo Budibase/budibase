@@ -93,6 +93,7 @@ describe("chat conversations authorization", () => {
         chatApp = {
           _id: docIds.generateChatAppID(),
           agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
+          live: true,
           createdAt: now,
         }
         convoA = {
@@ -116,6 +117,7 @@ describe("chat conversations authorization", () => {
         otherChatApp = {
           _id: docIds.generateChatAppID(),
           agents: [{ agentId: "agent-2", isEnabled: true, isDefault: false }],
+          live: true,
           createdAt: now,
         }
         otherAppConvo = {
@@ -279,6 +281,7 @@ describe("chat conversation transient behavior", () => {
         chatApp = {
           _id: docIds.generateChatAppID(),
           agents: [{ agentId, isEnabled: true, isDefault: false }],
+          live: true,
           createdAt: now,
         }
         await db.put(chatApp)

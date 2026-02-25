@@ -29,6 +29,7 @@ interface EvalResult {
   name: string
   ok: boolean
   detail?: string
+  elapsedMs?: number
 }
 
 type BudibaseMode = "self" | "cloud"
@@ -685,11 +686,17 @@ async function runFeatureEvals(
   const definitions = await getAutomationDefinitions(client)
 
   async function run(name: string, fn: () => Promise<void>) {
+    const startedAt = Date.now()
     try {
       await fn()
-      results.push({ name, ok: true })
+      results.push({ name, ok: true, elapsedMs: Date.now() - startedAt })
     } catch (err: any) {
-      results.push({ name, ok: false, detail: err?.message || String(err) })
+      results.push({
+        name,
+        ok: false,
+        detail: err?.message || String(err),
+        elapsedMs: Date.now() - startedAt,
+      })
     }
   }
 
@@ -1018,15 +1025,18 @@ async function runScenario(
   }
 
   await configureAIProvider(client, scenario.config)
+  const startedAt = Date.now()
   const results = await runFeatureEvals(client, enabledFeatures)
   return {
     ok: results.every(r => r.ok),
+    elapsedMs: Date.now() - startedAt,
     results,
   }
 }
 
 function printScenarioResult(result: {
   skipped?: string
+  elapsedMs?: number
   results: EvalResult[]
 }) {
   if (result.skipped) {
@@ -1035,10 +1045,12 @@ function printScenarioResult(result: {
   }
 
   for (const item of result.results) {
+    const itemElapsedLabel =
+      typeof item.elapsedMs === "number" ? ` (${item.elapsedMs}ms)` : ""
     if (item.ok) {
-      console.log(green(`PASS: ${item.name}`))
+      console.log(green(`PASS: ${item.name}${itemElapsedLabel}`))
     } else {
-      console.log(red(`FAIL: ${item.name}`))
+      console.log(red(`FAIL: ${item.name}${itemElapsedLabel}`))
       if (item.detail) {
         console.log(red(`  ${item.detail}`))
       }
@@ -1055,6 +1067,7 @@ async function executeScenarioAndLog(
     name: string
     ok: boolean
     skipped?: string
+    elapsedMs?: number
     results: EvalResult[]
   }>
 ) {
@@ -1082,6 +1095,7 @@ async function main() {
     name: string
     ok: boolean
     skipped?: string
+    elapsedMs?: number
     results: EvalResult[]
   }> = []
 
@@ -1127,12 +1141,14 @@ async function main() {
 
   console.log(section("Summary"))
   for (const row of summary) {
+    const elapsedLabel =
+      typeof row.elapsedMs === "number" ? ` (${row.elapsedMs}ms)` : ""
     if (row.skipped) {
       console.log(yellow(`SKIPPED: ${row.name} (${row.skipped})`))
     } else if (row.ok) {
-      console.log(green(`PASS: ${row.name}`))
+      console.log(green(`PASS: ${row.name}${elapsedLabel}`))
     } else {
-      console.log(red(`FAIL: ${row.name}`))
+      console.log(red(`FAIL: ${row.name}${elapsedLabel}`))
     }
   }
 

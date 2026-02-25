@@ -29,6 +29,9 @@ const reasoningRules: Record<string, ReasoningRule> = {
   openrouter: {
     extraBody: () => ({ include_reasoning: true }),
   },
+  custom_openai: {
+    extraBody: () => ({ include_reasoning: true }),
+  },
 }
 
 const normalizeReasoningEffort = (args: BuildLiteLLMParamsArgs) => {
