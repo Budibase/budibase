@@ -11,6 +11,86 @@ interface ChatAppsStoreState {
   currentConversationId?: string
 }
 
+type ChatAppAgent = NonNullable<ChatApp["agents"]>[number]
+
+interface BuildAgentChatUpdateInput {
+  agents: ChatAppAgent[]
+  agentId: string
+  enable: boolean
+}
+
+interface BuildAgentChatUpdateResult {
+  agents: ChatAppAgent[]
+  live?: true
+}
+
+const pickDefaultEnabledAgentId = (agents: ChatAppAgent[]) => {
+  const existingDefault = agents.find(
+    agent => agent.isEnabled && agent.isDefault
+  )
+  if (existingDefault) {
+    return existingDefault.agentId
+  }
+
+  return agents.find(agent => agent.isEnabled)?.agentId
+}
+
+const normalizeDefaultAgent = (agents: ChatAppAgent[]) => {
+  const defaultAgentId = pickDefaultEnabledAgentId(agents)
+  return agents.map(agent => ({
+    ...agent,
+    isDefault: !!defaultAgentId && agent.agentId === defaultAgentId,
+  }))
+}
+
+const buildAgentChatUpdate = ({
+  agents,
+  agentId,
+  enable,
+}: BuildAgentChatUpdateInput): BuildAgentChatUpdateResult => {
+  if (enable) {
+    const existingEntry = agents.find(agent => agent.agentId === agentId)
+    const nextAgents = normalizeDefaultAgent(
+      existingEntry
+        ? agents.map(agent =>
+            agent.agentId === agentId
+              ? {
+                  ...agent,
+                  isEnabled: true,
+                }
+              : agent
+          )
+        : [
+            ...agents,
+            {
+              agentId,
+              isEnabled: true,
+              isDefault: false,
+            },
+          ]
+    )
+
+    return {
+      agents: nextAgents,
+      live: true,
+    }
+  }
+
+  return {
+    agents: normalizeDefaultAgent(
+      agents.map(agent =>
+        agent.agentId === agentId
+          ? {
+              ...agent,
+              isEnabled: false,
+              isDefault: false,
+            }
+          : agent
+      )
+    ),
+  }
+}
+
 export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
   constructor() {
     super({
@@ -125,6 +205,36 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return await this.updateChatApp({ agents })
   }
 
+  toggleAgentDeploymentInChat = async (
+    agentId: string,
+    workspaceId: string
+  ): Promise<{ enabled: boolean } | null> => {
+    if (!agentId || !workspaceId) {
+      return null
+    }
+
+    const chatApp = await this.ensureChatApp(undefined, workspaceId)
+    if (!chatApp) {
+      return null
+    }
+
+    const agents = chatApp.agents || []
+    const isCurrentlyEnabled = agents.some(
+      agent => agent.agentId === agentId && agent.isEnabled
+    )
+    const update = buildAgentChatUpdate({
+      agents,
+      agentId,
+      enable: !isCurrentlyEnabled,
+    })
+
+    await this.updateChatApp(update)
+
+    return {
+      enabled: !isCurrentlyEnabled,
+    }
+  }
+
   fetchConversations = async (chatAppId?: string) => {
     const targetChatAppId = chatAppId || get(this.store).chatAppId
     if (!targetChatAppId) {
@@ -191,8 +301,6 @@ export const currentChatApp = derived(chatAppsStore, state =>
 export const currentConversations = derived(chatAppsStore, state =>
   state.chatAppId ? state.conversationsByAppId[state.chatAppId] || [] : []
 )
-
-type ChatAppAgent = NonNullable<ChatApp["agents"]>[number]
 
 const getSelectedChatAgent = (
   chatApp: ChatApp | undefined,

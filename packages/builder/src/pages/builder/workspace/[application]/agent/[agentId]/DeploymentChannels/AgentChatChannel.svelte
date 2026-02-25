@@ -1,17 +1,72 @@
 <script lang="ts">
-  import { Body, Toggle } from "@budibase/bbui"
-  import { appStore } from "@/stores/builder"
+  import { Body, Toggle, notifications } from "@budibase/bbui"
+  import { appStore, deploymentStore } from "@/stores/builder"
+  import { chatAppsStore, currentChatApp } from "@/stores/portal"
+  import { params } from "@roxi/routify"
   import BBAILogo from "assets/bb-ai.svg"
 
   export let agentId: string | undefined
-  export let enabled = false
-  export let disabled = false
-  export let onToggle = () => {}
+
+  let toggling = false
+  let loadingChatApp = false
+
+  $: workspaceId = $params.application
+  $: enabled =
+    !!agentId &&
+    !!($currentChatApp?.agents || []).find(
+      agent => agent.agentId === agentId && agent.isEnabled
+    )
+  $: disabled = toggling || loadingChatApp || !agentId || !workspaceId
 
   $: chatUrl =
     agentId && $appStore.url
       ? `/app-chat${$appStore.url}/agent/${encodeURIComponent(agentId)}`
       : ""
+
+  $: if (workspaceId && !$currentChatApp && !loadingChatApp) {
+    loadingChatApp = true
+    void chatAppsStore
+      .ensureChatApp(undefined, workspaceId)
+      .catch(error => {
+        console.error(error)
+      })
+      .finally(() => {
+        loadingChatApp = false
+      })
+  }
+
+  const onToggle = async () => {
+    if (!agentId || !workspaceId || toggling) {
+      return
+    }
+
+    toggling = true
+    const wasEnabled = enabled
+    try {
+      const result = await chatAppsStore.toggleAgentDeploymentInChat(
+        agentId,
+        workspaceId
+      )
+      if (!result) {
+        notifications.error("Could not update chat")
+        return
+      }
+
+      await deploymentStore.publishApp()
+      notifications.success(
+        result.enabled ? "Agent chat enabled" : "Agent chat disabled"
+      )
+    } catch (error) {
+      console.error(error)
+      notifications.error(
+        wasEnabled
+          ? "Failed to disable agent chat"
+          : "Failed to enable agent chat"
+      )
+    } finally {
+      toggling = false
+    }
+  }
 </script>
 
 <div class="integration-row">
