@@ -1,59 +1,38 @@
 <script>
-  import { Button, Popover, notifications } from "@budibase/bbui"
-  import UserGroupPicker from "@/components/settings/UserGroupPicker.svelte"
+  import { Button, Modal } from "@budibase/bbui"
   import { appsStore } from "@/stores/portal/apps"
   import { groups } from "@/stores/portal/groups"
-  import { Constants } from "@budibase/frontend-core"
+  import AppAddModal from "./AppAddModal.svelte"
 
   export let groupId
 
-  let popoverAnchor
-  let popover
-  let searchTerm = ""
+  let assignWorkspaceModal
+  let appAddModal
 
   $: group = $groups.find(x => x._id === groupId)
-  $: appList = Object.values(
+  $: assignedWorkspaceIds = groups.getGroupAppIds(group)
+  $: availableWorkspaceIds = Object.keys(
     $appsStore.apps.reduce((acc, app) => {
-      const appId = appsStore.getProdAppID(app.devId)
-      if (!acc[appId]) {
-        acc[appId] = { _id: appId, name: app.name }
+      const prodAppId = appsStore.getProdAppID(app.devId)
+      if (assignedWorkspaceIds.includes(prodAppId) || acc[prodAppId]) {
+        return acc
       }
+      acc[prodAppId] = true
       return acc
     }, {})
   )
-  $: selectedApps = groups.getGroupAppIds(group)
+  $: canAssignWorkspace = availableWorkspaceIds.length > 0
 
-  const assignWorkspace = async appId => {
-    try {
-      await groups.addApp(groupId, appId, Constants.Roles.BASIC)
-    } catch (error) {
-      notifications.error("Error assigning workspace")
-    }
-  }
-
-  const unassignWorkspace = async appId => {
-    try {
-      await groups.removeApp(groupId, appId)
-    } catch (error) {
-      notifications.error("Error removing workspace")
-    }
+  const openAssignWorkspaceModal = () => {
+    appAddModal?.reset()
+    assignWorkspaceModal?.show()
   }
 </script>
 
-<div bind:this={popoverAnchor}>
-  <Button on:click={() => popover?.show()} cta>Assign workspace</Button>
-</div>
-<Popover align="left" bind:this={popover} anchor={popoverAnchor}>
-  <UserGroupPicker
-    bind:searchTerm
-    labelKey="name"
-    selected={selectedApps}
-    list={appList}
-    on:select={async e => {
-      await assignWorkspace(e.detail)
-    }}
-    on:deselect={async e => {
-      await unassignWorkspace(e.detail)
-    }}
-  />
-</Popover>
+{#if canAssignWorkspace}
+  <Button on:click={openAssignWorkspaceModal} cta>Assign workspace</Button>
+{/if}
+
+<Modal bind:this={assignWorkspaceModal} closeOnOutsideClick={false}>
+  <AppAddModal bind:this={appAddModal} {groupId} />
+</Modal>

@@ -71,6 +71,17 @@ class GroupStore extends BudiStore<UserGroup[]> {
     await this.refreshGroup(groupId)
   }
 
+  async addApps(groupId: string, appIds: string[], roleId: string) {
+    if (!appIds.length) {
+      return
+    }
+    await API.addAppsToGroup(
+      groupId,
+      appIds.map(appId => ({ appId, roleId }))
+    )
+    await this.refreshGroup(groupId)
+  }
+
   async removeApp(groupId: string, appId: string) {
     await API.removeAppsFromGroup(groupId, [{ appId }])
     await this.refreshGroup(groupId)
