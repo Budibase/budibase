@@ -15,14 +15,6 @@
 
   export let groupId
 
-  const builtInEndUserRoles = [Constants.Roles.BASIC, Constants.Roles.ADMIN]
-  const excludedRoleIds = [
-    ...builtInEndUserRoles,
-    Constants.Roles.PUBLIC,
-    Constants.Roles.POWER,
-    Constants.Roles.CREATOR,
-    Constants.Roles.GROUP,
-  ]
   const workspaceRoleOptions = Constants.BudibaseRoleOptions.filter(
     option =>
       option.value === Constants.BudibaseRoles.Creator ||
@@ -39,15 +31,6 @@
     acc[role._id] = role.uiMetadata?.color
     return acc
   }, {})
-  $: customEndUserRoleOptions = ($roles || [])
-    .filter(role => !excludedRoleIds.includes(role._id))
-    .map(role => ({
-      label: role.uiMetadata?.displayName || role.name || "Custom role",
-      value: role._id,
-      color:
-        role.uiMetadata?.color ||
-        "var(--spectrum-global-color-static-magenta-400)",
-    }))
   $: endUserRoleOptions = [
     {
       label: "Basic user",
@@ -59,7 +42,6 @@
       value: Constants.Roles.ADMIN,
       color: roleColorLookup[Constants.Roles.ADMIN],
     },
-    ...customEndUserRoleOptions,
   ]
   $: assignedWorkspaceIds = groups.getGroupAppIds(group)
   $: workspaceOptions = Object.values(
