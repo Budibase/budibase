@@ -116,7 +116,7 @@ export_env_file() {
     done < "${env_file}"
 }
 
-sync_and_repair_couch_env() {
+sync_couch_env_aliases() {
     if [[ -z "${COUCH_DB_USER}" && -n "${COUCHDB_USER}" ]]; then
         export COUCH_DB_USER="${COUCHDB_USER}"
     elif [[ -z "${COUCHDB_USER}" && -n "${COUCH_DB_USER}" ]]; then
@@ -128,19 +128,46 @@ sync_and_repair_couch_env() {
     elif [[ -z "${COUCHDB_PASSWORD}" && -n "${COUCH_DB_PASSWORD}" ]]; then
         export COUCHDB_PASSWORD="${COUCH_DB_PASSWORD}"
     fi
+}
+
+sync_and_repair_couch_env() {
+    is_couch_placeholder_token() {
+        local token="$1"
+        case "${token}" in
+            '$COUCH_DB_USER'|'${COUCH_DB_USER}'|'$COUCHDB_USER'|'${COUCHDB_USER}'|'$COUCH_DB_PASSWORD'|'${COUCH_DB_PASSWORD}'|'$COUCHDB_PASSWORD'|'${COUCHDB_PASSWORD}')
+                return 0
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    }
+
+    sync_couch_env_aliases
 
     if [[ -z "${COUCH_DB_URL}" ]]; then
         export COUCH_DB_URL="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
         return
     fi
 
-    if [[ "${COUCH_DB_URL}" == *'$'* ]]; then
-        export COUCH_DB_URL="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
-        return
-    fi
-
     if [[ "${COUCH_DB_URL}" =~ ^https?://([^@]*)@ ]]; then
         local auth="${BASH_REMATCH[1]}"
+        local auth_user
+        local auth_password
+
+        if [[ "${auth}" =~ ^([^:]+):(.*)$ ]]; then
+            auth_user="${BASH_REMATCH[1]}"
+            auth_password="${BASH_REMATCH[2]}"
+
+            if is_couch_placeholder_token "${auth_user}" || is_couch_placeholder_token "${auth_password}"; then
+                export COUCH_DB_URL="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
+                return
+            fi
+        elif is_couch_placeholder_token "${auth}"; then
+            export COUCH_DB_URL="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
+            return
+        fi
+
         if [[ ! "${auth}" =~ .+:.+ ]]; then
             export COUCH_DB_URL="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
         fi
@@ -173,6 +200,9 @@ if [[ -f "${DATA_DIR}/.env" ]]; then
     normalize_env_file "${DATA_DIR}/.env"
     export_env_file "${DATA_DIR}/.env"
 fi
+
+# Sync underscore/non-underscore couch env aliases before randomization.
+sync_couch_env_aliases
 
 # Randomize any unset sensitive environment variables using uuidgen
 env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_MASTER_KEY LITELLM_SALT_KEY LITELLM_DB_PASSWORD)
