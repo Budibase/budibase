@@ -281,6 +281,7 @@ Exclude id, created_at, and updated_at (Budibase adds them).
 Include a variety of column types: text, dropdown, date, number.
 Add at least one formula column, one attachment, and one multi-attachment column across the tables.
 Budibase handles reverse relationships and many-to-many links — never define join tables or reverse fields.
+Never reference pre-existing/internal Budibase tables in relationships. Relationships must only reference table names generated in this same response.
 You may specify foreignColumnName, but do not create that field manually.
 `
 
@@ -297,6 +298,7 @@ export function generateData() {
   const dataMessage = `
 For each table, populate the data field with realistic-looking sample records.
 Avoid placeholder values like "foo" or "bar". Use real names, emails, etc., and ensure values are unique across rows.
+Keep the dataset compact for speed: target 2-6 rows per table unless the prompt explicitly asks for more.
 `
 
   return new LLMRequest().addSystemMessage(dataMessage)
