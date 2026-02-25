@@ -110,7 +110,7 @@ export interface LLMProviderConfig extends LLMConfigOptions {
 export interface LLMResponse {
   chat: LanguageModelV3
   embedding: EmbeddingModelV3
-  providerOptions?: (hasTools: boolean) => LLMProviderOptions
+  providerOptions?: (hasTools: boolean) => LLMProviderOptions | undefined
 }
 
 export type LLMProviderOptions = ProviderOptions
