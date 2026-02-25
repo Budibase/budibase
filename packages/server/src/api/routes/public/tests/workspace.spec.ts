@@ -10,7 +10,8 @@ import {
 } from "./utils"
 
 const PASSWORD = "testtest"
-const NO_LICENSE_MSG = "Endpoint unavailable, license required."
+const ENTERPRISE_LICENSE_MSG =
+  "Endpoint unavailable, enterprise license required."
 
 let config = setup.getConfig()
 let apiKey: string,
@@ -62,17 +63,18 @@ describe("check export/import", () => {
   it("check licensing for export", async () => {
     const res = await runExport()
     expect(res.status).toBe(403)
-    expect(res.body.message).toBe(NO_LICENSE_MSG)
+    expect(res.body.message).toBe(ENTERPRISE_LICENSE_MSG)
   })
 
   it("check licensing for import", async () => {
     const res = await runImport()
     expect(res.status).toBe(403)
-    expect(res.body.message).toBe(NO_LICENSE_MSG)
+    expect(res.body.message).toBe(ENTERPRISE_LICENSE_MSG)
   })
 
   it("should be able to export app", async () => {
     mocks.licenses.useExpandedPublicApi()
+    mocks.licenses.useWorkspaceImportExport()
     const res = await runExport()
     expect(res.headers["content-disposition"]).toMatch(
       /attachment; filename=".*-export-.*\.tar.gz"/g
@@ -83,6 +85,7 @@ describe("check export/import", () => {
 
   it("should be able to import app", async () => {
     mocks.licenses.useExpandedPublicApi()
+    mocks.licenses.useWorkspaceImportExport()
     const res = await runImport()
     expect(Object.keys(res.body).length).toBe(0)
     // check screens imported correctly
