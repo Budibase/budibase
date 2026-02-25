@@ -40,6 +40,9 @@
     if (roleId === Constants.Roles.ADMIN) {
       return "Admin"
     }
+    if (roleId === Constants.Roles.CREATOR) {
+      return "Can edit"
+    }
     const customRole = availableRoles.find(x => x._id === roleId)
     return customRole?.uiMetadata?.displayName || customRole?.name || roleId
   }

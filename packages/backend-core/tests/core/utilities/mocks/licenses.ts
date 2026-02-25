@@ -95,6 +95,10 @@ export const useExpandedPublicApi = () => {
   return useFeature(Feature.EXPANDED_PUBLIC_API)
 }
 
+export const useWorkspaceImportExport = () => {
+  return useFeature(Feature.WORKSPACE_IMPORT_EXPORT)
+}
+
 export const useScimIntegration = () => {
   return useFeature(Feature.SCIM)
 }
