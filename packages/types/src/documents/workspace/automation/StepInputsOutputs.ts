@@ -14,6 +14,7 @@ import {
   EmailAttachment,
   AutomationResults,
   AutomationStepResult,
+  SupportedFileType,
 } from "./automation"
 import { AutomationStep } from "./schema"
 
@@ -249,13 +250,20 @@ export type GenerateTextStepOutputs = {
   success: boolean
   response?: string
 }
-export type ExtractFileDataStepInputs = {
-  file: RowAttachment | string
-  source: "URL" | "Attachment"
-  fileType?: string
-  schema: Record<string, any>
-}
 
+export type ExtractFileDataStepInputs =
+  | {
+      file: string
+      source: "URL"
+      fileType: SupportedFileType
+      schema: Record<string, unknown>
+    }
+  | {
+      file: RowAttachment | string
+      source: "Attachment"
+      fileType?: SupportedFileType
+      schema: Record<string, unknown>
+    }
 export type ExtractFileDataStepOutputs = {
   success: boolean
   data: Record<string, any>
@@ -359,6 +367,7 @@ export type GetRowStepOutputs = BaseAutomationOutputs & {
 export type SmtpEmailStepInputs = {
   to: string
   from: string
+  replyTo?: string
   subject: string
   contents: string
   cc: string

@@ -1,6 +1,11 @@
+import { auth } from "@budibase/backend-core"
+import { middleware } from "@budibase/pro"
+import { aiRagEnabled } from "../../middleware/aiRagEnabled"
 import * as ai from "../controllers/ai"
+import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 import {
   createAgentValidator,
+  provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   toggleAgentDiscordDeploymentValidator,
   updateAgentValidator,
@@ -13,10 +18,6 @@ import {
   createVectorDbValidator,
   updateVectorDbValidator,
 } from "./utils/validators/vectorDb"
-import { middleware } from "@budibase/pro"
-import { aiRagEnabled } from "../../middleware/aiRagEnabled"
-import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
-import { auth } from "@budibase/backend-core"
 
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
@@ -35,6 +36,11 @@ builderAdminRoutes
     "/api/agent/:agentId/discord/toggle",
     toggleAgentDiscordDeploymentValidator(),
     ai.toggleAgentDiscordDeployment
+  )
+  .post(
+    "/api/agent/:agentId/ms-teams/provision",
+    provisionAgentMSTeamsChannelValidator(),
+    ai.provisionAgentMSTeamsChannel
   )
   .get("/api/agent/tools", ai.fetchTools)
 

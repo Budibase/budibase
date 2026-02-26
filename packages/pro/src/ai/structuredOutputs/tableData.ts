@@ -60,7 +60,7 @@ export function tableDataStructuredOutput(tables: TableSchemaFromAI[]) {
             tableStructure[field.name] = z.array(attachmentType)
           }
           tableStructure[field.name] = tableStructure[field.name].describe(
-            "Between 2 and 5 items."
+            "Between 1 and 2 items."
           )
           break
         case FieldType.OPTIONS:
@@ -118,7 +118,7 @@ export function tableDataStructuredOutput(tables: TableSchemaFromAI[]) {
         [table.name]: z.array(z.object(tableStructure)),
       })
       .describe(
-        `Each table should include at least a few items (min 3, max 18). The number of items should not be evenly distributed. Instead, follow natural relationships and usage patterns based on the tables nature. For example:
+        `Each table should include a compact number of items (min 2, max 6). The number of items should not be evenly distributed. Instead, follow natural relationships and usage patterns based on the tables nature. For example:
                 1. If we have posts and comments, there should be more posts than users, and more comments than posts.
                 2. If it's a ticketing system, there may be more tickets than users, and some users may have submitted several tickets.
                 3. In a CRM, there are fewer users than customers, and customers may have many deals.

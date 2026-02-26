@@ -1,5 +1,6 @@
 import { context, env, HTTPError } from "@budibase/backend-core"
 import { ChatCompletionRequestV2, type Ctx } from "@budibase/types"
+import { quotas } from "@budibase/pro"
 import { bbai } from "../../../sdk/workspace/ai/llm"
 import environment from "../../../environment"
 
@@ -82,6 +83,8 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
   if (!environment.BBAI_LITELLM_KEY) {
     ctx.throw(500, "BBAI_LITELLM_KEY not configured")
   }
+
+  await quotas.throwIfBudibaseAICreditsExceeded()
 
   const requestBody = {
     ...ctx.request.body,

@@ -238,7 +238,7 @@
       description="The model you would like to connect to"
       required
       bind:value={draft.model}
-      placeholder="Support chat"
+      placeholder="GPT-5.2"
     />
 
     <Input
@@ -246,7 +246,7 @@
       description="Human readable name for the model"
       required
       bind:value={draft.name}
-      placeholder="e.g. Meta"
+      placeholder="Latest ChatGPT"
     />
   {/if}
 

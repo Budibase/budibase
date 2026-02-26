@@ -421,7 +421,7 @@ export const updateUsage = async (
           }
         } catch (err) {
           if (!action.opts?.suppressErrorLog) {
-            console.error(`Error updating usage quotas for ${action.name}`, err)
+            console.warn(`Error updating usage quotas for ${action.name}`, err)
           }
           // re-throw any error - if the error was caused by a usage limit being exceeded
           // this will prevent the subsequent operation e.g. create app, from running
