@@ -272,7 +272,7 @@ class ApiClient {
     })
 
     const text = await response.text()
-    let payload: any = undefined
+    let payload: unknown = undefined
     if (text) {
       try {
         payload = JSON.parse(text)

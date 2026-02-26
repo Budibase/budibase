@@ -183,7 +183,7 @@ export async function run({
 
     let extractInput: ExtractInput
 
-    function tryParse(value: any) {
+    function tryParse(value: unknown) {
       if (typeof value !== "string") {
         return value
       }
@@ -254,15 +254,13 @@ function createZodSchemaFromRecord(schema: Record<string, any>) {
   for (const [key, type] of Object.entries(schema)) {
     if (typeof type === "string") {
       switch (type.toLowerCase()) {
-        case "string":
-          zodFields[key] = z.string()
-          break
         case "number":
           zodFields[key] = z.number()
           break
         case "boolean":
           zodFields[key] = z.boolean()
           break
+        case "string":
         default:
           zodFields[key] = z.string()
       }

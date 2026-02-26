@@ -3,10 +3,6 @@ import type { LLMProviderOptions } from "@budibase/types"
 const unsupportedReasoningByModel = new WeakMap<object, true>()
 
 function hasReasoningEffort(providerOptions?: LLMProviderOptions) {
-  if (!providerOptions) {
-    return false
-  }
-
   return Boolean(
     providerOptions?.openai?.reasoningEffort ||
       providerOptions?.azure?.reasoningEffort
