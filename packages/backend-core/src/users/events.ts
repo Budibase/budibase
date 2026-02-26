@@ -60,7 +60,11 @@ export const handleSaveEvents = async (
   tenantAccount?: CloudAccount
 ) => {
   let resolvedTenantAccount = tenantAccount
-  if (!resolvedTenantAccount && !env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+  if (
+    !resolvedTenantAccount &&
+    !env.SELF_HOSTED &&
+    !env.DISABLE_ACCOUNT_PORTAL
+  ) {
     resolvedTenantAccount = await accounts.getAccountByTenantId(getTenantId())
   }
 
