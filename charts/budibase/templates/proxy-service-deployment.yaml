@@ -25,6 +25,7 @@ spec:
   template:
     metadata:
       annotations:
+        ad.datadoghq.com/proxy-service.logs: '[{"source":"nginx","service":"budibase-proxy"}]'
 {{ if .Values.services.proxy.templateAnnotations }}
 {{- toYaml .Values.services.proxy.templateAnnotations | indent 8 -}}
 {{ end }}
