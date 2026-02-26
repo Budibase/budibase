@@ -2,6 +2,30 @@ apiVersion: v1
 entries:
   budibase:
   - apiVersion: v2
+    appVersion: 3.31.1
+    created: "2026-02-26T10:20:29.896355927Z"
+    dependencies:
+    - condition: services.couchdb.enabled
+      name: couchdb
+      repository: https://apache.github.io/couchdb-helm
+      version: 4.5.6
+    description: Budibase is an open source low-code platform, helping thousands of
+      teams build apps for their workplace in minutes.
+    digest: 31df5fb3c8b8a46b6c74621e2ec088e9b3e8deca93f374e5e5dca2eaf1ba6817
+    icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - budibase-3.0.544.tgz
+    version: 3.0.544
+  - apiVersion: v2
     appVersion: 3.31.0
     created: "2026-02-25T12:31:38.303612988Z"
     dependencies:
@@ -15428,8 +15452,8 @@ entries:
     - budibase-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v2
-    appVersion: 3.31.0
-    created: "2026-02-25T12:31:39.947268233Z"
+    appVersion: 3.31.1
+    created: "2026-02-26T10:20:31.478202795Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -15437,7 +15461,8 @@ entries:
       version: 4.5.6
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: a752075b6d5f5aed2f8f0cd6d29be171d052ece6970a681709906e904ea19743
+    digest: f15f1cb426558c2f0745f93cd7d24069d808d83fa05e141a5b7de550b79c3a61
+    icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
     keywords:
     - low-code
     - database
@@ -27415,4 +27440,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2026-02-26T10:16:06.286533256Z"
+generated: "2026-02-26T10:20:31.472956916Z"
