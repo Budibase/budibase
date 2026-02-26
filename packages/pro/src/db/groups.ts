@@ -193,18 +193,22 @@ export async function getBulk(
   opts: { enriched?: boolean } = { enriched: true }
 ): Promise<UserGroup[] | EnrichedUserGroup[]> {
   const db = tenancy.getGlobalDB()
-  const groups = await db.getMultiple<UserGroup>(groupIds, {
-    allowMissing: true,
-  })
   if (opts?.enriched) {
-    const appIds = await getAppIDs()
+    const [groups, appIds] = await Promise.all([
+      db.getMultiple<UserGroup>(groupIds, {
+        allowMissing: true,
+      }),
+      getAppIDs(),
+    ])
     const enrichedGroups: Promise<EnrichedUserGroup>[] = []
     for (let group of groups) {
       enrichedGroups.push(enrichGroup(group, appIds))
     }
     return await Promise.all(enrichedGroups)
   } else {
-    return groups
+    return await db.getMultiple<UserGroup>(groupIds, {
+      allowMissing: true,
+    })
   }
 }
 
