@@ -173,27 +173,6 @@ export async function getLLMOrThrow(): Promise<LLM> {
   return llm
 }
 
-// This function is intended to be used in the local development environment
-// and for running local AI testing. It should not be used in production code
-// paths.
-export async function getOpenAIUsingLocalAPIKey(): Promise<LLM | undefined> {
-  if (
-    env.BUDIBASE_ENVIRONMENT === "production" ||
-    env.BUDIBASE_ENVIRONMENT === "qa"
-  ) {
-    return
-  }
-
-  if (!env.OPENAI_API_KEY) {
-    return
-  }
-
-  return new OpenAI({
-    model: DefaultModelByProvider.OpenAI,
-    apiKey: env.OPENAI_API_KEY,
-  })
-}
-
 export class LLMRequest {
   messages: Message[] = []
   format?: ResponseFormat
