@@ -5,7 +5,7 @@
   import { params } from "@roxi/routify"
   import BBAILogo from "assets/bb-ai.svg"
 
-  export let agentId: string | undefined
+  export let agentId: string
 
   let toggling = false
   let loadingChatApp = false
@@ -19,12 +19,8 @@
 
   const isAgentEnabledInChat = (
     chatAppAgents: ChatAppAgentConfig[],
-    targetAgentId?: string
+    targetAgentId: string
   ) => {
-    if (!targetAgentId) {
-      return false
-    }
-
     return Boolean(
       chatAppAgents.find(
         agent => agent.agentId === targetAgentId && agent.isEnabled
@@ -51,24 +47,21 @@
     )
 
   const canToggleAgentChat = ({
-    agentId,
     workspaceId,
     toggling,
   }: {
-    agentId?: string
     workspaceId?: string
     toggling: boolean
-  }) => Boolean(agentId && workspaceId && !toggling)
+  }) => Boolean(workspaceId && !toggling)
 
   $: workspaceId = $params.application
   $: currentChatAgents = $currentChatApp?.agents || []
   $: enabled = isAgentEnabledInChat(currentChatAgents, agentId)
-  $: disabled = toggling || loadingChatApp || !agentId || !workspaceId
+  $: disabled = toggling || loadingChatApp || !workspaceId
 
-  $: chatUrl =
-    agentId && $appStore.url
-      ? `/app-chat${$appStore.url}/agent/${encodeURIComponent(agentId)}`
-      : ""
+  $: chatUrl = $appStore.url
+    ? `/app-chat${$appStore.url}/agent/${encodeURIComponent(agentId)}`
+    : ""
 
   $: if (workspaceId !== currentWorkspaceId) {
     currentWorkspaceId = workspaceId
@@ -96,13 +89,12 @@
   }
 
   const onToggle = async () => {
-    if (!canToggleAgentChat({ agentId, workspaceId, toggling })) {
+    if (!canToggleAgentChat({ workspaceId, toggling })) {
       return
     }
 
-    const targetAgentId = agentId
     const targetWorkspaceId = workspaceId
-    if (!targetAgentId || !targetWorkspaceId) {
+    if (!targetWorkspaceId) {
       return
     }
 
@@ -110,7 +102,7 @@
     const wasEnabled = enabled
     try {
       const result = await chatAppsStore.toggleAgentDeploymentInChat(
-        targetAgentId,
+        agentId,
         targetWorkspaceId
       )
       if (!result) {

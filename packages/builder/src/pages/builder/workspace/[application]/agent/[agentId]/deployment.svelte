@@ -119,8 +119,8 @@
       >
     </div>
     <div class="integration-list">
-      {#if agentChatEnabled}
-        <AgentChatChannel agentId={currentAgent?._id} />
+      {#if agentChatEnabled && currentAgent?._id}
+        <AgentChatChannel agentId={currentAgent._id} />
       {/if}
       {#each channels as channel (channel.id)}
         <div class="integration-row">
