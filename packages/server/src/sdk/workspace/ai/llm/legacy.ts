@@ -1,6 +1,6 @@
 import { createAzure } from "@ai-sdk/azure"
 import { createOpenAI } from "@ai-sdk/openai"
-import { env, HTTPError } from "@budibase/backend-core"
+import { constants, env, HTTPError } from "@budibase/backend-core"
 import { AIProvider, LLMProviderConfig, LLMResponse } from "@budibase/types"
 import tracer from "dd-trace"
 import { ai, licensing } from "@budibase/pro"
@@ -150,11 +150,56 @@ export const createLegacyLLM = async (
   const uploadFile = supportsLegacyFileUploads(config.provider)
     ? (stream: Readable, filename: string) =>
         uploadLegacyFile({ stream, filename, config })
-    : undefined
+    : config.provider === "BudibaseAI"
+      ? (stream: Readable, filename: string) =>
+          uploadFileSelfHost({ stream, filename })
+      : undefined
 
   return {
     chat: llm.chat(model),
     embedding: llm.embedding(model),
     uploadFile,
   }
+}
+
+async function uploadFileSelfHost({
+  stream,
+  filename,
+}: {
+  stream: Readable
+  filename: string
+}): Promise<string> {
+  const licenseKey = await licensing.keys.getLicenseKey()
+  if (!licenseKey) {
+    throw new HTTPError("No license key found", 422)
+  }
+
+  if (!env.BUDICLOUD_URL) {
+    throw new Error("No Budibase URL found")
+  }
+
+  const fileBlob = (await blob(stream)) as Blob
+  const data = Buffer.from(await fileBlob.arrayBuffer()).toString("base64")
+  const requestUrl = `${env.BUDICLOUD_URL}/api/ai/upload-file`
+
+  const response = await fetch(requestUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [constants.Header.LICENSE_KEY]: licenseKey,
+    },
+    body: JSON.stringify({
+      data,
+      filename,
+    }),
+  })
+  if (!response.ok) {
+    throw await HTTPError.fromResponse(response)
+  }
+
+  const json = await response.json()
+  if (typeof json.file !== "string") {
+    throw new Error("File id not found")
+  }
+  return json.file
 }

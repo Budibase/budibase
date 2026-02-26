@@ -153,6 +153,7 @@ describe("createLegacyLLM", () => {
         expect(result).toEqual({
           chat: "chat-model",
           embedding: "embedding-model",
+          uploadFile: expect.toBeFunction(),
         })
       }
     )
