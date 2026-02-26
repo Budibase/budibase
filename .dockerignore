@@ -7,7 +7,7 @@ packages/server/scripts/
 !nx.json
 !/hosting/single/
 !/hosting/litellm_config.yaml
-!/hosting/letsencrypt /
+!/hosting/letsencrypt//
 
 !package.json
 !yarn.lock

@@ -33,5 +33,6 @@
     "typescript",
     "svelte"
   ],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "snyk.advanced.autoSelectOrganization": true
 }

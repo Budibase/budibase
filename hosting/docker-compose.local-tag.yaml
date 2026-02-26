@@ -1,0 +1,16 @@
+# Pin all services to the same release tag (see hosting/PODMAN-LOCAL-MULTI-IMAGE.md).
+# Build with one tag, e.g. $RELEASE_TAG=v1.2.3, then use that tag here for all three.
+services:
+  app-service:
+    image: budibase/apps:v1.2.3
+    pull_policy: never
+
+  worker-service:
+    image: budibase/worker:v1.2.3
+    pull_policy: never
+
+  proxy-service:
+    image: budibase/proxy:v1.2.3
+    pull_policy: never
+    environment:
+      - RESOLVER=10.89.0.1

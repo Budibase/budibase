@@ -1,0 +1,106 @@
+##############################################
+# Build stage -- modeled on hosting/single/Dockerfile build stage.
+# Uses the root yarn.lock for correct transitive dependency resolution.
+##############################################
+FROM node:22-slim AS build
+
+RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
+
+WORKDIR /app
+COPY package.json .
+COPY yarn.lock .
+COPY lerna.json .
+COPY .yarnrc .
+
+# Copy BOTH server and worker package.json -- the single-image installs both
+# together so all transitive deps (e.g. undici from worker) are resolved.
+COPY packages/server/package.json packages/server/package.json
+COPY packages/worker/package.json packages/worker/package.json
+
+COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
+RUN sed -i 's/\r$//' ./scripts/removeWorkspaceDependencies.sh && chmod +x ./scripts/removeWorkspaceDependencies.sh
+RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
+RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
+
+RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
+RUN ./scripts/removeWorkspaceDependencies.sh package.json
+
+ARG TARGETPLATFORM
+RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} \
+    YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} \
+    NODE_TLS_REJECT_UNAUTHORIZED=0 \
+    yarn install --production --frozen-lockfile
+
+# lru-cache v10+ has no default export; bundled code uses both
+# __toESM(require("lru-cache")).default and direct require("lru-cache") as constructor.
+# Patch: make module.exports the class and add default/LRUCache so both patterns work.
+RUN node -e "\
+  const fs = require('fs');\
+  const p = require.resolve('lru-cache').replace(/\\\\/g,'/');\
+  let code = fs.readFileSync(p,'utf8');\
+  if (!code.includes('module.exports = exports.LRUCache')) {\
+    code += '\\nObject.defineProperty(exports, \"default\", { value: exports.LRUCache });\\n';\
+    code += 'module.exports = exports.LRUCache;\\n';\
+    code += 'module.exports.LRUCache = module.exports;\\n';\
+    code += 'module.exports.default = module.exports;\\n';\
+    fs.writeFileSync(p, code);\
+  }\
+  console.log('Patched lru-cache for constructor and default export');\
+"
+
+# Copy built artifacts into the build stage so they travel with COPY --from=build
+COPY packages/server/dist packages/server/dist
+COPY packages/server/pm2.config.js packages/server/pm2.config.js
+COPY packages/server/client packages/server/client
+COPY packages/server/builder packages/server/builder
+COPY packages/server/docker_run.sh packages/server/docker_run.sh
+
+##############################################
+# Runner stage
+##############################################
+FROM node:22-slim AS runner
+
+# Install postgres client (optional, for pg_dump) and bash
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends bash ca-certificates curl gnupg lsb-release && \
+    (curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc 2>/dev/null \
+      | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg 2>/dev/null && \
+     chmod 644 /usr/share/keyrings/postgresql.gpg && \
+     echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+       > /etc/apt/sources.list.d/postgresql.list && \
+     apt-get update && \
+     apt-get install -y --no-install-recommends postgresql-client-15) || \
+    echo "PostgreSQL client installation skipped (GPG key unavailable)"; \
+    rm -rf /var/lib/apt/lists/*; \
+    apt-get purge -y --auto-remove gnupg lsb-release 2>/dev/null || true; \
+    rm -f /etc/apt/sources.list.d/postgresql.list 2>/dev/null || true
+
+RUN npm install --global pm2
+
+# node_modules at root level -- same layout as the single-image
+COPY --from=build /app/node_modules /node_modules
+COPY --from=build /app/package.json /package.json
+
+# App code
+COPY --from=build /app/packages/server /app
+WORKDIR /app
+RUN sed -i 's/\r$//' ./docker_run.sh && chmod +x ./docker_run.sh
+
+ARG BUDIBASE_VERSION
+RUN test -n "$BUDIBASE_VERSION"
+
+ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
+ENV PORT=4002
+ENV BUDIBASE_ENVIRONMENT=PRODUCTION
+ENV SERVICE=app-service
+ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
+ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
+ENV TOP_LEVEL_PATH=/app
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--no-node-snapshot"
+ENV CLUSTER_MODE=${CLUSTER_MODE}
+ENV SELF_HOSTED=1
+
+EXPOSE 4002
+
+CMD ["./docker_run.sh"]

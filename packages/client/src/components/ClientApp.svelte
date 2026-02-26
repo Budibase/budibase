@@ -31,6 +31,7 @@
     notificationStore,
     recaptchaStore,
   } from "@/stores"
+  import { embedHideDevToolsStore } from "@/stores/embedHideDevTools"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
   import PeekScreenDisplay from "./overlay/PeekScreenDisplay.svelte"
@@ -258,6 +259,8 @@
                       >
                         <!-- Actual app -->
                         <div id="app-root">
+                          <!-- Stable portal target so modals/notifications work during route changes -->
+                          <div class="modal-container"></div>
                           {#if showDevTools}
                             <DevToolsHeader />
                           {/if}
@@ -346,7 +349,7 @@
                         </div>
 
                         <!-- Preview and dev tools utilities  -->
-                        {#if $appStore.isDevApp}
+                        {#if $appStore.isDevApp && !$appStore.hideDevTools && !$embedHideDevToolsStore}
                           <SelectionIndicator />
                         {/if}
                         {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
@@ -411,6 +414,19 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+  }
+
+  .modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+  }
+  .modal-container :global(*) {
+    pointer-events: auto;
   }
 
   #app-body {

@@ -1,6 +1,9 @@
 version: "3"
 
-# optional ports are specified throughout for more advanced use cases.
+# Default images are on Docker Hub; no login required for docker-compose up.
+# For AWS ECR or locally-built images, use an override:
+#   ECR:  -f docker-compose.yaml -f docker-compose.ecr.yaml  (requires docker login to ECR first)
+#   Local: -f docker-compose.yaml -f docker-compose.local-images.yaml
 
 services:
   app-service:

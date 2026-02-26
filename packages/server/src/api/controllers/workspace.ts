@@ -508,6 +508,18 @@ export async function fetchAppPackage(
     application.version
   )
 
+  const embedPathForHideDevTools: string | undefined = ctx.request.get(
+    "x-budibase-embed-location"
+  )
+  const urlPathForEmbed =
+    embedPathForHideDevTools ||
+    (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
+  const normalizedPathForEmbed =
+    (urlPathForEmbed || "").replace(/\/$/, "") || ""
+  const hideDevTools =
+    normalizedPathForEmbed === "/embed" ||
+    normalizedPathForEmbed.startsWith("/embed/")
+
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
     licenseType: license?.plan.type || PlanType.FREE,
@@ -517,6 +529,7 @@ export async function fetchAppPackage(
     hasLock: await doesUserHaveLock(application.appId, ctx.user),
     recaptchaKey: recaptchaConfig?.config.siteKey,
     clientCacheKey,
+    ...(hideDevTools && { hideDevTools: true }),
   }
 }
 

@@ -17,14 +17,19 @@ COPY packages/worker/package.json packages/worker/package.json
 
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
-RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
+RUN sed -i 's/\r$//' ./scripts/removeWorkspaceDependencies.sh && chmod +x ./scripts/removeWorkspaceDependencies.sh
 RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
 RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
 ARG TARGETPLATFORM
-RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} yarn install --production --frozen-lockfile
+# Optional: set ALLOW_INSECURE_TLS_BUILD=1 only when building behind a corporate proxy that does SSL
+# inspection (e.g. node-gyp fetches). Disabling TLS verification is a security risk (MITM/dependency
+# injection); use only when necessary and in trusted environments.
+ARG ALLOW_INSECURE_TLS_BUILD=0
+RUN --mount=type=cache,target=/root/.yarn/${TARGETPLATFORM} YARN_CACHE_FOLDER=/root/.yarn/${TARGETPLATFORM} \
+    sh -c 'if [ "${ALLOW_INSECURE_TLS_BUILD}" = "1" ]; then export NODE_TLS_REJECT_UNAUTHORIZED=0; fi; yarn install --production --frozen-lockfile'
 
 # Copy the actual code
 COPY packages/server/dist packages/server/dist
@@ -69,24 +74,20 @@ RUN mkdir -p /litellm
 # This is the default litellm config file, users can mount their own
 COPY hosting/litellm_config.yaml /litellm/config.yaml
 
-# Install postgres client/server for pg_dump and LiteLLM metadata storage
+# Install postgres client/server for pg_dump and LiteLLM metadata storage (optional; skip if GPG key download fails behind proxy)
 RUN set -eux; \
     apt-get update; \
-    apt-get install -y --no-install-recommends \
-        ca-certificates \
-        curl \
-        gnupg \
-        lsb-release; \
-    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-      | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg; \
-    echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
-      > /etc/apt/sources.list.d/postgresql.list; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends postgresql-client-15; \
-    apt-get install -y --no-install-recommends postgresql-15; \
+    apt-get install -y --no-install-recommends ca-certificates curl gnupg lsb-release; \
+    (curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc 2>/dev/null | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg 2>/dev/null && \
+     chmod 644 /usr/share/keyrings/postgresql.gpg && \
+     echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/postgresql.list && \
+     apt-get update && \
+     apt-get install -y --no-install-recommends postgresql-client-15 && \
+     apt-get install -y --no-install-recommends postgresql-15) || \
+    echo "PostgreSQL client installation skipped (GPG key unavailable)"; \
     rm -rf /var/lib/apt/lists/*; \
-    apt-get purge -y --auto-remove gnupg lsb-release; \
-    rm -f /etc/apt/sources.list.d/postgresql.list
+    apt-get purge -y --auto-remove gnupg lsb-release 2>/dev/null || true; \
+    rm -f /etc/apt/sources.list.d/postgresql.list 2>/dev/null || true
 
 # We use pm2 in order to run multiple node processes in a single container
 RUN npm install --global pm2
@@ -108,7 +109,7 @@ RUN chmod +x minio
 
 # Handles the installation of minio in non-aas environments
 COPY scripts/install-minio.sh ./install.sh
-RUN chmod +x install.sh && ./install.sh
+RUN sed -i 's/\r$//' install.sh && chmod +x install.sh && ./install.sh
 
 # Setup redis
 COPY hosting/single/redis.conf /etc/redis/redis.conf
@@ -116,13 +117,13 @@ COPY hosting/single/redis.conf /etc/redis/redis.conf
 # Setup runner file
 WORKDIR /
 COPY hosting/single/runner.sh .
-RUN chmod +x ./runner.sh
+RUN sed -i 's/\r$//' runner.sh && chmod +x ./runner.sh
 COPY hosting/single/redis-runner.sh .
-RUN chmod +x ./redis-runner.sh
+RUN sed -i 's/\r$//' redis-runner.sh && chmod +x ./redis-runner.sh
 COPY hosting/single/litellm-db-runner.sh .
-RUN chmod +x ./litellm-db-runner.sh
+RUN sed -i 's/\r$//' litellm-db-runner.sh && chmod +x ./litellm-db-runner.sh
 COPY hosting/single/healthcheck.sh .
-RUN chmod +x ./healthcheck.sh
+RUN sed -i 's/\r$//' healthcheck.sh && chmod +x ./healthcheck.sh
 RUN /opt/venv/litellm/bin/pip install prisma
 RUN LITELLM_SCHEMA_PATH=$(/opt/venv/litellm/bin/python -c "from importlib.util import find_spec; from pathlib import Path; spec = find_spec('litellm'); assert spec and spec.origin; print(Path(spec.origin).resolve().parent / 'proxy' / 'schema.prisma')") && \
     PRISMA_HIDE_UPDATE_MESSAGE=true /opt/venv/litellm/bin/prisma generate --schema "${LITELLM_SCHEMA_PATH}"

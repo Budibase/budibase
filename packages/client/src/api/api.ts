@@ -7,6 +7,7 @@ import {
   recaptchaStore,
   appStore,
 } from "../stores"
+import { embedHideDevToolsStore } from "../stores/embedHideDevTools"
 import { get } from "svelte/store"
 
 export const API = createAPIClient({
@@ -20,10 +21,11 @@ export const API = createAPIClient({
       headers["x-budibase-app-id"] = window["##BUDIBASE_APP_ID##"]
     }
 
-    // Attach the iframe location pathname to ensure the app url is fully preserved.
-    // Needed for workspace app resolution and client routing in an embed
+    // Attach the embed location pathname so the server returns hideDevTools and workspace app resolution works.
+    // Send when embedded OR when host asked to hide dev tools (both mean we're in the React embed).
     const appData = get(appStore)
-    if (appData.embedded) {
+    const hideDevToolsByEmbed = get(embedHideDevToolsStore)
+    if (appData.embedded || hideDevToolsByEmbed) {
       headers["x-budibase-embed-location"] = window.location.pathname
     }
 

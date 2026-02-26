@@ -22,6 +22,11 @@ export async function getMatchedWorkspaceApp(
   const allWorkspaceApps = await sdk.workspaceApps.fetch()
   const enabledWorkspaceApps = allWorkspaceApps.filter(app => !app.disabled)
 
+  const normalizedPath = normalizedFromUrl.replace(/\/$/, "") || ""
+  const isRootPath =
+    !normalizedFromUrl || normalizedFromUrl === "/" || normalizedPath === ""
+  const isEmbedRoot = normalizedPath === "/embed"
+
   const getDefaultWorkspaceApp = () =>
     enabledWorkspaceApps.find(app => app.isDefault) ||
     enabledWorkspaceApps[0] ||
@@ -37,7 +42,9 @@ export async function getMatchedWorkspaceApp(
       (embedUrl &&
         urlPath.replace(/\/$/, "") ===
           `${embedUrl}${url.replace(/\/$/, "")}`) ||
-      (!urlPath && isDefault) // Support getMatchedWorkspaceApp without url referrer
+      (!urlPath && isDefault) || // Support getMatchedWorkspaceApp without url referrer
+      (isRootPath && isDefault) ||
+      (isEmbedRoot && isDefault) // Embed root (exactly /embed) uses default workspace app
     )
   }
 
@@ -53,7 +60,14 @@ export async function getMatchedWorkspaceApp(
     return getDefaultWorkspaceApp()
   }
 
-  const matchedWorkspaceApp = findWorkspaceApp(normalizedFromUrl)
+  let matchedWorkspaceApp = findWorkspaceApp(normalizedFromUrl)
+  if (
+    !matchedWorkspaceApp &&
+    (isRootPath || isEmbedRoot) &&
+    allWorkspaceApps.length > 0
+  ) {
+    matchedWorkspaceApp = getDefaultWorkspaceApp()
+  }
   if (matchedWorkspaceApp) {
     return matchedWorkspaceApp
   }

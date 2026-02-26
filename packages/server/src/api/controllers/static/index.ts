@@ -454,15 +454,58 @@ export const serveBuilderPreview = async function (
 }
 
 function serveLocalFile(ctx: Ctx, fileName: string) {
-  // Resolve via the package.json to avoid ESM/CJS export resolution issues
-  // with require.resolve on packages that mark "type":"module".
-  const pkgJsonPath = require.resolve("@budibase/client/package.json")
-  const pkgDir = path.dirname(pkgJsonPath)
-  const distFromPkg = join(pkgDir, "dist")
-  //normal fallback
-  const nodeModulesDist = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
-  const root = nodeModulesDist || distFromPkg
+  let root: string
+  try {
+    // Resolve via the package.json to avoid ESM/CJS export resolution issues
+    const pkgJsonPath = require.resolve("@budibase/client/package.json")
+    const pkgDir = path.dirname(pkgJsonPath)
+    const distFromPkg = join(pkgDir, "dist")
+    const nodeModulesDist = join(
+      NODE_MODULES_PATH,
+      "@budibase",
+      "client",
+      "dist"
+    )
+    root = nodeModulesDist || distFromPkg
+  } catch {
+    // Container/single image: server runs from /app, client is at /app/client
+    root = join(process.cwd(), "client")
+  }
+  const filePath = path.join(root, fileName)
+  if (!fs.existsSync(filePath)) {
+    ctx.throw(
+      503,
+      `Budibase client asset not found: ${fileName} (looked in ${root}). ` +
+        "From repo root run: yarn build --scope @budibase/client"
+    )
+  }
   return send(ctx, fileName, { root })
+}
+
+/** Serves Module Federation remoteEntry.js for microfrontend hosts (with CORS). */
+export const serveRemoteEntry = async function (ctx: Ctx) {
+  // Ensure only one value: avoid "*, *" when a proxy (e.g. nginx) also adds CORS
+  ctx.response.remove("Access-Control-Allow-Origin")
+  ctx.set("Access-Control-Allow-Origin", "*")
+  ctx.set("Access-Control-Allow-Methods", "GET, OPTIONS")
+  ctx.set("Access-Control-Allow-Headers", "Content-Type")
+  return serveLocalFile(ctx, "remoteEntry.js")
+}
+
+/** Serves Module Federation chunk assets (e.g. /assets/*.js) for microfrontend hosts (with CORS). */
+export const serveRemoteAsset = async function (ctx: Ctx) {
+  const file = Array.isArray(ctx.params.file)
+    ? ctx.params.file.join("/")
+    : ctx.params.file
+  if (!file || typeof file !== "string") {
+    ctx.throw(404, "Asset not found")
+  }
+  const fileName = `assets/${file}`
+  ctx.response.remove("Access-Control-Allow-Origin")
+  ctx.set("Access-Control-Allow-Origin", "*")
+  ctx.set("Access-Control-Allow-Methods", "GET, OPTIONS")
+  ctx.set("Access-Control-Allow-Headers", "Content-Type")
+  return serveLocalFile(ctx, fileName)
 }
 
 export const serveClientLibrary = async function (
@@ -473,6 +516,12 @@ export const serveClientLibrary = async function (
   if (!workspaceId) {
     ctx.throw(400, "No workspace ID provided - cannot fetch client library.")
   }
+
+  // CORS so microfrontend hosts (e.g. localhost:5173) can load this script
+  ctx.response.remove("Access-Control-Allow-Origin")
+  ctx.set("Access-Control-Allow-Origin", "*")
+  ctx.set("Access-Control-Allow-Methods", "GET, OPTIONS")
+  ctx.set("Access-Control-Allow-Headers", "Content-Type")
 
   const serveLocally = await shouldServeLocally()
   if (!serveLocally) {
@@ -496,6 +545,12 @@ export const serve3rdPartyFile = async function (ctx: Ctx) {
   if (!workspaceId) {
     ctx.throw(400, "No workspace ID provided - cannot fetch client library.")
   }
+
+  // CORS so microfrontend hosts can load chunks (e.g. /api/assets/:appId/chunks/*.js)
+  ctx.response.remove("Access-Control-Allow-Origin")
+  ctx.set("Access-Control-Allow-Origin", "*")
+  ctx.set("Access-Control-Allow-Methods", "GET, OPTIONS")
+  ctx.set("Access-Control-Allow-Headers", "Content-Type")
 
   const serveLocally = await shouldServeLocally()
   if (!serveLocally) {
