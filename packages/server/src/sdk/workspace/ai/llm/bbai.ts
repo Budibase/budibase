@@ -5,7 +5,11 @@ import type {
   LanguageModelV3Usage,
 } from "@ai-sdk/provider"
 import { constants, context, env, HTTPError } from "@budibase/backend-core"
-import { ImageContentTypes, LLMResponse, ReasoningEffort } from "@budibase/types"
+import {
+  ImageContentTypes,
+  LLMResponse,
+  ReasoningEffort,
+} from "@budibase/types"
 import tracer from "dd-trace"
 import { licensing, quotas } from "@budibase/pro"
 import { wrapLanguageModel } from "ai"
@@ -240,18 +244,21 @@ export async function createBBAIClient(
           throw new Error("No license key found")
         }
 
-        const response = await fetch(`${env.BUDICLOUD_URL}/api/ai/upload-file`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            [constants.Header.LICENSE_KEY]: licenseKey,
-          },
-          body: JSON.stringify({
-            data: base64,
-            filename,
-            contentType: type,
-          }),
-        })
+        const response = await fetch(
+          `${env.BUDICLOUD_URL}/api/ai/upload-file`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              [constants.Header.LICENSE_KEY]: licenseKey,
+            },
+            body: JSON.stringify({
+              data: base64,
+              filename,
+              contentType: type,
+            }),
+          }
+        )
 
         if (!response.ok) {
           throw await HTTPError.fromResponse(response)

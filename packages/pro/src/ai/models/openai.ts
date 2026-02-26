@@ -1,7 +1,4 @@
-import {
-  LLMConfigOptions,
-  ResponseFormat,
-} from "@budibase/types"
+import { LLMConfigOptions, ResponseFormat } from "@budibase/types"
 import {
   default as openai,
   default as OpenAIClient,

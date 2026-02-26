@@ -1,8 +1,5 @@
 import { constants, env, HTTPError } from "@budibase/backend-core"
-import {
-  ChatCompletionRequest,
-  ChatCompletionResponse,
-} from "@budibase/types"
+import { ChatCompletionRequest, ChatCompletionResponse } from "@budibase/types"
 import { tracer } from "dd-trace"
 import { getLicenseKey } from "../../sdk/licensing/licenses/keys"
 import {
