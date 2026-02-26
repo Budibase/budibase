@@ -10,14 +10,27 @@ export const createDraftChat = (
   agentId: agentId || "",
 })
 
-const parseLockedAgentIdFromPath = (pathname: string) => {
+export const getLockedAgentIdFromPathname = (pathname: string) => {
   const normalizedPath = pathname.replace(/\/+$/, "")
   const pathParts = normalizedPath.split("/").filter(Boolean)
+
+  if (pathParts[0] !== "app-chat") {
+    return undefined
+  }
+
   const agentSegmentIndex = pathParts.findIndex(part => part === "agent")
   const rawAgentId =
     agentSegmentIndex >= 0 ? pathParts[agentSegmentIndex + 1] : undefined
 
-  return rawAgentId ? decodeURIComponent(rawAgentId) : undefined
+  if (!rawAgentId) {
+    return undefined
+  }
+
+  try {
+    return decodeURIComponent(rawAgentId)
+  } catch {
+    return undefined
+  }
 }
 
 export const getLockedAgentIdFromCurrentPath = () => {
@@ -25,7 +38,7 @@ export const getLockedAgentIdFromCurrentPath = () => {
     return undefined
   }
 
-  return parseLockedAgentIdFromPath(window.location.pathname)
+  return getLockedAgentIdFromPathname(window.location.pathname)
 }
 
 const AGENT_NOT_ENABLED_ERROR = "agentId is not enabled for this chat app"

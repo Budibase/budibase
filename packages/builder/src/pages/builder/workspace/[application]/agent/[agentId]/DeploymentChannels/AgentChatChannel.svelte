@@ -100,12 +100,18 @@
       return
     }
 
+    const targetAgentId = agentId
+    const targetWorkspaceId = workspaceId
+    if (!targetAgentId || !targetWorkspaceId) {
+      return
+    }
+
     toggling = true
     const wasEnabled = enabled
     try {
       const result = await chatAppsStore.toggleAgentDeploymentInChat(
-        agentId,
-        workspaceId
+        targetAgentId,
+        targetWorkspaceId
       )
       if (!result) {
         notifications.error("Could not update chat")
