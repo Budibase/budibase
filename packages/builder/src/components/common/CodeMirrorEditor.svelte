@@ -28,7 +28,7 @@
   import { Label } from "@budibase/bbui"
   import CodeMirror from "@/components/integration/codemirror"
   import { themeStore } from "@/stores/portal"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher, onMount, tick } from "svelte"
 
   export let mode = EditorModes.JS
   export let value = ""
@@ -91,6 +91,10 @@
 
     // Construct CM instance
     editor = CodeMirror.fromTextArea(textarea, options)
+
+    // Allow layout to settle before forcing a refresh so gutters are measured
+    await tick()
+    editor?.refresh()
 
     // Use a blur handler to update the value
     editor.on("blur", instance => {
