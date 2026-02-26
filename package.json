@@ -113,6 +113,7 @@
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
     "@budibase/types": "*",
+    "@types/node": "22.18.0",
     "tough-cookie": "4.1.3",
     "node-fetch": "2.6.7",
     "semver": "7.5.3",
