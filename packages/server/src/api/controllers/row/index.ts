@@ -58,7 +58,7 @@ function pickApi(tableId: string) {
 async function _patch(
   ctx: UserCtx<PatchRowRequest, PatchRowResponse>,
   isAutomation: boolean
-): Promise<any> {
+): Promise<void> {
   const appId = ctx.appId
   const { tableId } = utils.getSourceId(ctx)
   const body = ctx.request.body
@@ -99,13 +99,13 @@ async function _patch(
 
 export async function patch(
   ctx: UserCtx<PatchRowRequest, PatchRowResponse>
-): Promise<any> {
+): Promise<void> {
   return _patch(ctx, false)
 }
 
 export async function patchAsAutomation(
   ctx: UserCtx<PatchRowRequest, PatchRowResponse>
-): Promise<any> {
+): Promise<void> {
   return _patch(ctx, true)
 }
 
