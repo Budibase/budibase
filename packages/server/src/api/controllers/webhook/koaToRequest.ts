@@ -24,10 +24,7 @@ export const tryParseJson = (rawBody: string): unknown => {
   }
 }
 
-export const rawBodyToRequest = (
-  ctx: WebhookCtx,
-  rawBody: string
-): Request => {
+export const rawBodyToRequest = (ctx: WebhookCtx, rawBody: string): Request => {
   const protocol = ctx.protocol || "http"
   const host = ctx.host || "localhost"
   const url = `${protocol}://${host}${ctx.originalUrl || ctx.url}`

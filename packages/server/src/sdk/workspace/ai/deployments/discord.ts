@@ -61,14 +61,12 @@ export const disableAgentOnChatApp = async (
 export const resolveChatAppForAgent = async (
   agentId: string,
   chatAppId?: string
-) =>
-  await shared.resolveProviderChatAppForAgent(agentId, chatAppId)
+) => await shared.resolveProviderChatAppForAgent(agentId, chatAppId)
 
 export const buildDiscordWebhookUrl = async (
   chatAppId: string,
   agentId: string
-) =>
-  await shared.buildProviderWebhookUrl("discord", chatAppId, agentId)
+) => await shared.buildProviderWebhookUrl("discord", chatAppId, agentId)
 
 export const buildDiscordInviteUrl = (applicationId: string) =>
   `https://discord.com/oauth2/authorize?client_id=${applicationId}&scope=bot+applications.commands&permissions=0`

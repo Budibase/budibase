@@ -396,6 +396,5 @@ describe("agent teams integration provisioning", () => {
       expect(conversations).toHaveLength(1)
       expect(conversations[0]?.messages).toHaveLength(0)
     })
-
   })
 })

@@ -15,11 +15,7 @@ import {
   isConversationExpired,
   pickLatestConversation,
 } from "./utils"
-import {
-  rawBodyToRequest,
-  readRawBody,
-  responseToKoa,
-} from "./koaToRequest"
+import { rawBodyToRequest, readRawBody, responseToKoa } from "./koaToRequest"
 import { handleChatMessage } from "./chatHandler"
 import { discordState } from "./chatState"
 
@@ -171,7 +167,11 @@ const handleDiscordSlashCommand = async ({
 // --- Main webhook handler ---
 
 export async function discordWebhook(
-  ctx: Ctx<unknown, unknown, { instance: string; chatAppId: string; agentId: string }>
+  ctx: Ctx<
+    unknown,
+    unknown,
+    { instance: string; chatAppId: string; agentId: string }
+  >
 ) {
   const prodAppId = ensureProdWorkspaceWebhookRoute({
     ctx,

@@ -9,7 +9,6 @@ import type {
   ContextUser,
 } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
-import sdk from "../../../sdk"
 import {
   webhookChat,
   prepareChatConversationForSave,

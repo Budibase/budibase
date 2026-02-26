@@ -199,5 +199,4 @@ describe("teams webhook helpers", () => {
 
     expect(picked?._id).toEqual("latest")
   })
-
 })

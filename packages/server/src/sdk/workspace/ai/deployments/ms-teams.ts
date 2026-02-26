@@ -34,11 +34,9 @@ export const validateMSTeamsIntegration = (
 export const resolveChatAppForAgent = async (
   agentId: string,
   chatAppId?: string
-) =>
-  await shared.resolveProviderChatAppForAgent(agentId, chatAppId)
+) => await shared.resolveProviderChatAppForAgent(agentId, chatAppId)
 
 export const buildMSTeamsWebhookUrl = async (
   chatAppId: string,
   agentId: string
-) =>
-  await shared.buildProviderWebhookUrl("ms-teams", chatAppId, agentId)
+) => await shared.buildProviderWebhookUrl("ms-teams", chatAppId, agentId)

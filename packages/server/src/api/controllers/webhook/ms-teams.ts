@@ -15,11 +15,7 @@ import {
   isConversationExpired,
   pickLatestConversation,
 } from "./utils"
-import {
-  rawBodyToRequest,
-  readRawBody,
-  responseToKoa,
-} from "./koaToRequest"
+import { rawBodyToRequest, readRawBody, responseToKoa } from "./koaToRequest"
 import { handleChatMessage } from "./chatHandler"
 import { teamsState } from "./chatState"
 
@@ -91,9 +87,7 @@ export const stripTeamsMentions = (
     if (!mentionText) {
       continue
     }
-    withoutMentionEntities = withoutMentionEntities
-      .split(mentionText)
-      .join(" ")
+    withoutMentionEntities = withoutMentionEntities.split(mentionText).join(" ")
   }
   return withoutMentionEntities.replace(/\s+/g, " ").trim()
 }
@@ -191,15 +185,12 @@ const createTeamsMessageHandler = ({
       raw?.from?.aadObjectId?.trim() ||
       raw?.from?.id?.trim() ||
       message.author.userId
-    const displayName =
-      raw?.from?.name?.trim() || message.author.fullName
+    const displayName = raw?.from?.name?.trim() || message.author.fullName
     const channelId = raw?.channelData?.channel?.id?.trim()
     const teamId = raw?.channelData?.team?.id?.trim()
     const tenantId =
-      raw?.channelData?.tenant?.id?.trim() ||
-      raw?.from?.tenantId?.trim()
-    const conversationType =
-      raw?.conversation?.conversationType?.trim()
+      raw?.channelData?.tenant?.id?.trim() || raw?.from?.tenantId?.trim()
+    const conversationType = raw?.conversation?.conversationType?.trim()
 
     if (!conversationId) {
       await thread.post("Missing Teams conversation information.")
@@ -286,9 +277,8 @@ export async function MSTeamsWebhook(
     const result = await context.doInWorkspaceContext(prodAppId, async () => {
       const agent = await sdk.ai.agents.getOrThrow(agentId)
       return {
-        integration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(
-          agent
-        ),
+        integration:
+          sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
         idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
       }
     })
