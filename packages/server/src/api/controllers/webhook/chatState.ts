@@ -1,5 +1,6 @@
-import { createIORedisState } from "@chat-adapter/state-ioredis"
+import { createIoRedisState } from "@chat-adapter/state-ioredis"
 import { createMemoryState } from "@chat-adapter/state-memory"
+import { ConsoleLogger } from "chat"
 
 const CHAT_SDK_KEY_PREFIX = "budibase:chat-sdk"
 
@@ -20,9 +21,10 @@ const createWebhookState = (provider: "discord" | "msteams") => {
     return createMemoryState()
   }
 
-  return createIORedisState({
+  return createIoRedisState({
     url: redisUrl,
     keyPrefix: `${CHAT_SDK_KEY_PREFIX}:${provider}`,
+    logger: new ConsoleLogger("silent"),
   })
 }
 

@@ -1,8 +1,5 @@
-import { DiscordCommands } from "@budibase/shared-core"
-import type { ChatConversation, DiscordInteraction } from "@budibase/types"
+import type { ChatConversation } from "@budibase/types"
 import {
-  extractDiscordContent,
-  getDiscordInteractionCommand,
   matchesDiscordConversationScope,
   pickDiscordConversation,
 } from "./discord"
@@ -26,48 +23,7 @@ const makeChat = (
   ...overrides,
 })
 
-const makeInteraction = (
-  overrides: Partial<DiscordInteraction> = {}
-): DiscordInteraction => ({
-  id: "interaction-default",
-  type: 2,
-  token: "token",
-  application_id: "app",
-  ...overrides,
-})
-
 describe("discord webhook helpers", () => {
-  it("extracts slash-command and modal text content", () => {
-    const content = extractDiscordContent(
-      makeInteraction({
-        data: {
-          options: [{ name: "message", value: "hello" }, { value: 123 }],
-          components: [
-            {
-              components: [{ value: "from modal" }],
-            },
-          ],
-        },
-      })
-    )
-
-    expect(content).toEqual("hello 123 from modal")
-  })
-
-  it.each([
-    [{ type: 2, data: { name: "ask" } }, DiscordCommands.ASK],
-    [{ type: 2, data: { name: "new" } }, DiscordCommands.NEW],
-    [{ type: 5, data: {} }, DiscordCommands.ASK],
-    [{ type: 2, data: { name: "status" } }, DiscordCommands.UNSUPPORTED],
-  ] as [Partial<DiscordInteraction>, string][])(
-    "maps interaction %j to command %s",
-    (overrides, expected) => {
-      expect(getDiscordInteractionCommand(makeInteraction(overrides))).toEqual(
-        expected
-      )
-    }
-  )
-
   it("scopes conversations by chat app, agent, channel, thread, and user", () => {
     const scope = {
       chatAppId: "chat-app-1",
