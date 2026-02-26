@@ -476,26 +476,6 @@ describe("/api/global/users", () => {
       expect(events.user.permissionAdminAssigned).toHaveBeenCalledTimes(1)
       expect(events.user.permissionBuilderAssigned).toHaveBeenCalledTimes(2)
     })
-
-    it("should sync builder apps when bulk creating a creator with workspace roles", async () => {
-      const workspaceId = "app_123456789"
-      const creator = structures.users.user({
-        roles: {
-          [workspaceId]: "CREATOR",
-        },
-        builder: {
-          creator: true,
-        },
-      })
-
-      const response = await config.api.users.bulkCreateUsers([creator])
-
-      expect(response.created?.successful.length).toBe(1)
-      const createdUser = await config.getUser(creator.email)
-      expect(createdUser.roles[workspaceId]).toBe("CREATOR")
-      expect(createdUser.builder?.creator).toBe(true)
-      expect(createdUser.builder?.apps).toEqual([workspaceId])
-    })
   })
 
   describe("POST /api/global/users", () => {

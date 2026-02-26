@@ -192,25 +192,6 @@ const bulkCreate = async (users: User[], groupIds: string[]) => {
   return await userSdk.db.bulkCreate(users, groupIds)
 }
 
-const syncCreatorBuilderApps = (user: User): User => {
-  const creatorForApps = Object.entries(user.roles || {})
-    .filter(([_appId, role]) => role === "CREATOR")
-    .map(([appId]) => appId)
-
-  if (!creatorForApps.length) {
-    return user
-  }
-
-  return {
-    ...user,
-    builder: {
-      ...(user.builder || {}),
-      creator: true,
-      apps: creatorForApps,
-    },
-  }
-}
-
 export const bulkUpdate = async (
   ctx: Ctx<BulkUserRequest, BulkUserResponse>
 ) => {
@@ -221,7 +202,7 @@ export const bulkUpdate = async (
     if (input.create) {
       const tenantId = context.getTenantId()
       const users: User[] = input.create.users.map(user => ({
-        ...syncCreatorBuilderApps(user),
+        ...user,
         tenantId,
       }))
       created = await bulkCreate(users, input.create.groups)
