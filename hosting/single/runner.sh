@@ -39,6 +39,44 @@ else
 fi
 mkdir -p "${DATA_DIR}"
 
+sync_couch_env_aliases() {
+    if [[ -z "${COUCH_DB_USER}" && -n "${COUCHDB_USER}" ]]; then
+        export COUCH_DB_USER="${COUCHDB_USER}"
+    elif [[ -z "${COUCHDB_USER}" && -n "${COUCH_DB_USER}" ]]; then
+        export COUCHDB_USER="${COUCH_DB_USER}"
+    fi
+
+    if [[ -z "${COUCH_DB_PASSWORD}" && -n "${COUCHDB_PASSWORD}" ]]; then
+        export COUCH_DB_PASSWORD="${COUCHDB_PASSWORD}"
+    elif [[ -z "${COUCHDB_PASSWORD}" && -n "${COUCH_DB_PASSWORD}" ]]; then
+        export COUCHDB_PASSWORD="${COUCH_DB_PASSWORD}"
+    fi
+}
+
+repair_internal_couch_url() {
+    local internal_url="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
+    local auth
+
+    sync_couch_env_aliases
+
+    if [[ -z "${COUCH_DB_URL}" ]]; then
+        export COUCH_DB_URL="${internal_url}"
+        return
+    fi
+
+    if [[ "${COUCH_DB_URL}" == *'$COUCH'* || "${COUCH_DB_URL}" == *'${COUCH'* ]]; then
+        export COUCH_DB_URL="${internal_url}"
+        return
+    fi
+
+    if [[ "${COUCH_DB_URL}" =~ ^https?://([^@]*)@ ]]; then
+        auth="${BASH_REMATCH[1]}"
+        if [[ "${auth}" != "${COUCHDB_USER}:${COUCHDB_PASSWORD}" ]]; then
+            export COUCH_DB_URL="${internal_url}"
+        fi
+    fi
+}
+
 # Mount NFS or GCP Filestore if FILESHARE_IP and FILESHARE_NAME are set
 if [[ -n "${FILESHARE_IP}" && -n "${FILESHARE_NAME}" ]]; then
     echo "Mounting NFS share"
@@ -67,6 +105,9 @@ if [[ -f "${DATA_DIR}/.env" ]]; then
     set +a
 fi
 
+# Sync aliases before randomizing to avoid overwriting user-provided underscore vars.
+sync_couch_env_aliases
+
 # Randomize any unset sensitive environment variables using uuidgen
 env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_MASTER_KEY LITELLM_SALT_KEY LITELLM_DB_PASSWORD)
 for var in "${env_vars[@]}"; do
@@ -75,9 +116,7 @@ for var in "${env_vars[@]}"; do
     fi
 done
 
-if [[ -z "${COUCH_DB_URL}" ]]; then
-    export COUCH_DB_URL=http://$COUCHDB_USER:$COUCHDB_PASSWORD@127.0.0.1:5984
-fi
+repair_internal_couch_url
 
 if [[ -z "${COUCH_DB_SQL_URL}" ]]; then
     export COUCH_DB_SQL_URL=http://127.0.0.1:4984
@@ -114,6 +153,7 @@ ensure_env_var "LITELLM_SALT_KEY" "${LITELLM_SALT_KEY}"
 
 # Read in the .env file and export the variables
 for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
+repair_internal_couch_url
 
 # Runtime values should take precedence over persisted .env values.
 if [[ "${runtime_database_url_set}" == "true" ]]; then
@@ -254,6 +294,7 @@ END {
 
 upsert_env_var "LITELLM_INTERNAL_DB" "${LITELLM_INTERNAL_DB}"
 upsert_env_var "DATABASE_URL" "${DATABASE_URL}"
+upsert_env_var "COUCH_DB_URL" "${COUCH_DB_URL}"
 
 # Wait for backend services to start
 sleep 10
