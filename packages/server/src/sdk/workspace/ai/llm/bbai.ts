@@ -215,6 +215,11 @@ export async function createBBAIClient(
           },
           body: formdata,
         })
+
+        if (!response.ok) {
+          throw await HTTPError.fromResponse(response)
+        }
+
         const result = await response.json()
         if (typeof result.id !== "string") {
           throw new Error("File id not found")
