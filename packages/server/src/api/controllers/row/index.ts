@@ -122,7 +122,9 @@ async function _save(
   // if it has an ID already then it's a patch
   if (body && body._id) {
     return isAutomation
-      ? patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>, { isAutomation: true })
+      ? patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>, {
+          isAutomation: true,
+        })
       : patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   let saveResult: { row: Row; table: Table; squashed?: Row }
