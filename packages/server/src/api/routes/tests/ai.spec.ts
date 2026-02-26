@@ -543,7 +543,7 @@ describe("BudibaseAI", () => {
       })
 
     const mockProcessAIColumn = (response: string) =>
-      mockChatGPTResponse(response, { times: 3 })
+      mockChatGPTResponse(response)
 
     it("handles correct chat response", async () => {
       const prompt = "Create me a table for managing IT tickets"

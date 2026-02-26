@@ -15,6 +15,7 @@ import {
   tableDataStructuredOutput,
 } from "../structuredOutputs"
 import { TableSchemaFromAI } from "../types"
+import { runWithReasoningEffortFallback } from "../reasoningFallback"
 
 interface Delegates {
   generateTablesDelegate: (
@@ -155,88 +156,17 @@ export class TableGeneration {
     }
 
     try {
-      const result = await run(providerOptions)
+      const result = await runWithReasoningEffortFallback({
+        providerOptions,
+        run,
+      })
       return result.output
     } catch (err: unknown) {
-      if (
-        this.shouldRetryWithoutReasoningEffort(err) &&
-        this.hasReasoningEffort(providerOptions)
-      ) {
-        const fallbackProviderOptions =
-          this.withoutReasoningEffort(providerOptions)
-        try {
-          const result = await run(fallbackProviderOptions)
-          return result.output
-        } catch (retryErr: unknown) {
-          const message = [errorMessage, this.getErrorMessage(retryErr)]
-            .filter(Boolean)
-            .join(": ")
-          throw new HTTPError(message, 500)
-        }
-      }
       const message = [errorMessage, this.getErrorMessage(err)]
         .filter(Boolean)
         .join(": ")
       throw new HTTPError(message, 500)
     }
-  }
-
-  private hasReasoningEffort(providerOptions?: LLMProviderOptions): boolean {
-    if (!providerOptions) {
-      return false
-    }
-    return (
-      !!providerOptions.openai?.reasoningEffort ||
-      !!providerOptions.azure?.reasoningEffort
-    )
-  }
-
-  private withoutReasoningEffort(providerOptions?: LLMProviderOptions) {
-    if (!providerOptions) {
-      return providerOptions
-    }
-
-    const next = { ...providerOptions }
-    if (next.openai) {
-      const openai = { ...next.openai }
-      delete openai.reasoningEffort
-      next.openai = openai
-    }
-    if (next.azure) {
-      const azure = { ...next.azure }
-      delete azure.reasoningEffort
-      next.azure = azure
-    }
-    return next
-  }
-
-  private shouldRetryWithoutReasoningEffort(err: unknown): boolean {
-    const error = err as any
-    const status =
-      error?.statusCode ||
-      error?.status ||
-      error?.cause?.status ||
-      error?.response?.status
-    if (status && status !== 400) {
-      return false
-    }
-
-    const message = [
-      error?.message,
-      error?.cause?.message,
-      error?.responseBody,
-      error?.response?.body,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase()
-
-    return (
-      message.includes("reasoning") &&
-      (message.includes("unsupported") ||
-        message.includes("unknown") ||
-        message.includes("invalid"))
-    )
   }
 
   private getErrorMessage(err: unknown): string {
