@@ -12,7 +12,6 @@ import {
 import { tracer } from "dd-trace"
 import openai from "openai"
 import { z } from "zod"
-import { enrichAIConfig } from "../sdk/ai"
 import { Anthropic, AnthropicModel } from "./models"
 import { AzureOpenAI } from "./models/azureOpenai"
 import { LLM } from "./models/base"
@@ -50,16 +49,13 @@ async function getAIConfig(): Promise<LLMProviderConfig | undefined> {
 
     // We can't look up AIConfigs in the database if this is a self-host user
     // calling into Budibase AI in the cloud because self-host users don't have
-    // global DBs, that's why this check is here. The call to enrichAIConfig
-    // below will add in the Budibase AI config for self-host users using cloud.
+    // global DBs, that's why this check is here.
     if (!context.isSelfHostUsingCloud()) {
       const storedConfig = await configs.getAIConfig()
       if (storedConfig) {
         aiConfigs = storedConfig
       }
     }
-
-    await enrichAIConfig(aiConfigs)
 
     const provider = Object.values(aiConfigs.config).find(
       config => config.active && config.isDefault
@@ -83,9 +79,7 @@ async function getAIConfig(): Promise<LLMProviderConfig | undefined> {
 // Support for self-host users that want to bring their own API key. We didn't
 // want to force self-host users to have to use Budibase AI because that would
 // be against the ethos of offering Budibase as an open source product.
-async function getSelfHostOpenAIKeyConfig(): Promise<
-  LLMProviderConfig | undefined
-> {
+function getSelfHostOpenAIKeyConfig(): LLMProviderConfig | undefined {
   return tracer.trace("getSelfHostOpenAIKeyConfig", span => {
     if (!env.SELF_HOSTED) {
       span.addTags({ enabled: false, reason: "not self host" })
@@ -107,6 +101,27 @@ async function getSelfHostOpenAIKeyConfig(): Promise<
   })
 }
 
+function getBudibaseAIKeyConfig(): LLMProviderConfig | undefined {
+  return tracer.trace("getSelfHostOpenAIKeyConfig", span => {
+    if (env.SELF_HOSTED) {
+      span.addTags({ enabled: false, reason: "not cloud" })
+      return
+    }
+
+    if (!env.BUDIBASE_AI_DEFAULT_MODEL) {
+      span.addTags({ enabled: false, reason: "no BUDIBASE_AI_DEFAULT_MODEL" })
+      return
+    }
+
+    span.addTags({ enabled: true })
+
+    return {
+      provider: "BudibaseAI",
+      model: env.BUDIBASE_AI_DEFAULT_MODEL,
+    }
+  })
+}
+
 /**
  * @deprecated use the new `ai.sdk` instead
  */
@@ -117,7 +132,9 @@ export async function getLLMConfig(): Promise<LLMProviderConfig | undefined> {
       // Always priorise saved AI config.
       (await getAIConfig()) ||
       // Next check for self-hosters that have their own API key.
-      (await getSelfHostOpenAIKeyConfig())
+      (env.SELF_HOSTED
+        ? getSelfHostOpenAIKeyConfig()
+        : getBudibaseAIKeyConfig())
   )
 }
 

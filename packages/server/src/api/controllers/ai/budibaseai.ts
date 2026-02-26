@@ -12,6 +12,11 @@ import { Readable } from "stream"
 import sdk from "../../../sdk"
 import { generateText } from "ai"
 
+const calculateBudibaseAICredits = (
+  inputTokens: number,
+  outputTokens: number
+): number => outputTokens * 3 + inputTokens
+
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
 ) {
@@ -57,8 +62,21 @@ export async function chatCompletion(
     providerOptions: providerOptions?.(false),
   })
 
+  if (!result.text) {
+    throw new Error("No response found")
+  }
+
+  const inputTokens =
+    result.usage?.inputTokens ?? result.totalUsage.inputTokens ?? 0
+  const outputTokens =
+    result.usage?.outputTokens ?? result.totalUsage.outputTokens ?? 0
+  const tokensUsed = calculateBudibaseAICredits(inputTokens, outputTokens)
+
   ctx.body = {
-    messages: result.response.messages,
-    tokensUsed: result.totalUsage.totalTokens,
+    messages: [
+      ...ctx.request.body.messages,
+      { role: "assistant", content: result.text },
+    ],
+    tokensUsed: tokensUsed || result.totalUsage.totalTokens || 0,
   }
 }
