@@ -8,6 +8,11 @@ import { createLiteLLMOpenAI } from "./litellm"
 export * as bbai from "./bbai"
 export * from "./utils"
 
+export async function isBBAIConfig(configId: string): Promise<boolean> {
+  const aiConfig = await sdk.ai.configs.find(configId)
+  return aiConfig?.provider === BUDIBASE_AI_PROVIDER_ID
+}
+
 export async function createLLM(
   configId: string,
   sessionId?: string,

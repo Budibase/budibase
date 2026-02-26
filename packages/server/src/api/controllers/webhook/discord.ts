@@ -1,6 +1,7 @@
 import fetch from "node-fetch"
 import { v4 } from "uuid"
 import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import { DiscordCommands } from "@budibase/shared-core"
 import type {
   ChatApp,
@@ -360,6 +361,11 @@ const handleDiscordInteraction = async ({
     }
 
     const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
+
+    if (await sdk.ai.llm.isBBAIConfig(agentConfig.aiconfig)) {
+      await quotas.throwIfBudibaseAICreditsExceeded()
+    }
+
     const discord = agentConfig.discordIntegration
     const askName = DiscordCommands.ASK
     const newName = DiscordCommands.NEW
