@@ -22507,7 +22507,7 @@ rollup-pluginutils@^2.8.2:
   dependencies:
     estree-walker "^0.6.1"
 
-rollup@^4.43.0, rollup@^4.9.4, rollup@^4.9.6:
+rollup@4.59.0, rollup@^4.43.0, rollup@^4.9.4:
   version "4.59.0"
   resolved "https://registry.yarnpkg.com/rollup/-/rollup-4.59.0.tgz#cf74edac17c1486f562d728a4d923a694abdf06f"
   integrity sha512-2oMpl67a3zCH9H79LeMcbDhXW/UmWG/y2zuqnF2jQq5uq9TbM9TVyXvA4+t+ne2IIkBdrLpAaRQAvo7YI/Yyeg==
@@ -23812,9 +23812,9 @@ supports-preserve-symlinks-flag@^1.0.0:
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
 
 svelte-check@^4.3.1:
-  version "4.4.3"
-  resolved "https://registry.yarnpkg.com/svelte-check/-/svelte-check-4.4.3.tgz#70b7c9e00d2edaade33433fb80385b3d1fe404ab"
-  integrity sha512-4HtdEv2hOoLCEsSXI+RDELk9okP/4sImWa7X02OjMFFOWeSdFF3NFy3vqpw0z+eH9C88J9vxZfUXz/Uv2A1ANw==
+  version "4.4.4"
+  resolved "https://registry.yarnpkg.com/svelte-check/-/svelte-check-4.4.4.tgz#600dfa2146d5f446341f524d5e20fa64675d64cf"
+  integrity sha512-F1pGqXc710Oi/wTI4d/x7d6lgPwwfx1U6w3Q35n4xsC2e8C/yN2sM1+mWxjlMcpAfWucjlq4vPi+P4FZ8a14sQ==
   dependencies:
     "@jridgewell/trace-mapping" "^0.3.25"
     chokidar "^4.0.1"
