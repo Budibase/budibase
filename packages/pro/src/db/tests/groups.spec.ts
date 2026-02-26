@@ -25,7 +25,9 @@ describe("groups", () => {
           Promise<UserGroup[]>,
           [string[], { allowMissing: boolean }]
         >()
-        const getAllWorkspacesMock = jest.fn().mockReturnValue(workspaceIdsPromise)
+        const getAllWorkspacesMock = jest
+          .fn()
+          .mockReturnValue(workspaceIdsPromise)
         const getGlobalDBMock = jest.fn().mockReturnValue({
           getMultiple: getMultipleMock,
         })
@@ -89,9 +91,9 @@ describe("groups", () => {
 
         getMultipleMock.mockResolvedValue([])
 
-        await expect(getBulk(["group_1"], { enriched: false })).resolves.toEqual(
-          []
-        )
+        await expect(
+          getBulk(["group_1"], { enriched: false })
+        ).resolves.toEqual([])
         expect(getAllWorkspacesMock).not.toHaveBeenCalled()
       })
     })
