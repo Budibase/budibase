@@ -154,7 +154,6 @@ describe("createLiteLLMOpenAI", () => {
       const fileId = await llm.uploadFile!(stream, "doc.txt")
       expect(fileId).toBe(innerFileId)
     })
-
   })
 
   it("throws when LiteLLM file upload response has no id", async () => {
@@ -191,7 +190,6 @@ describe("createLiteLLMOpenAI", () => {
         llm.uploadFile!(Readable.from(Buffer.from("hello")), "doc.txt")
       ).rejects.toThrow("File id not found")
     })
-
   })
 
   it("uploads files through shared OpenAI mock helper", async () => {

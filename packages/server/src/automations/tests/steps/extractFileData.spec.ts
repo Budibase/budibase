@@ -191,11 +191,11 @@ describe("test the extract file data action", () => {
         { stepName: "StartLog" }
       )
       .extractFileData(
-        ({
+        {
           file: "https://example.com/test-file-no-type.pdf",
           source: DocumentSourceType.URL,
           schema,
-        } as any),
+        } as any,
         { stepName: "ExtractStep" }
       )
       .test({ fields: { status: "url-success-default-type" } })
