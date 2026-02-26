@@ -407,10 +407,11 @@ const searchWorkspaceUsers = async (
             include_docs: true,
           })
         )
-        .then(response =>
-          response.rows
-            .map(row => row.doc)
-            .filter(group => !!group?.roles?.[prodWorkspaceId]) as UserGroup[]
+        .then(
+          response =>
+            response.rows
+              .map(row => row.doc)
+              .filter(group => !!group?.roles?.[prodWorkspaceId]) as UserGroup[]
         ),
     ])
 
@@ -423,7 +424,12 @@ const searchWorkspaceUsers = async (
       workspaceGroupIds.map(groupId => proDb.groups.getGroupUsers(groupId))
     )
     const groupUserIds = [
-      ...new Set(usersByGroup.flat().map(user => user._id).filter(Boolean)),
+      ...new Set(
+        usersByGroup
+          .flat()
+          .map(user => user._id)
+          .filter(Boolean)
+      ),
     ] as string[]
 
     if (groupUserIds.length) {
@@ -451,7 +457,11 @@ const searchWorkspaceUsers = async (
   }
 
   const dedupedUsers = new Map<string, User>()
-  for (const user of [...workspaceUsers, ...globalPermissionUsers, ...groupUsers]) {
+  for (const user of [
+    ...workspaceUsers,
+    ...globalPermissionUsers,
+    ...groupUsers,
+  ]) {
     if (user?._id) {
       dedupedUsers.set(user._id, user)
     }
