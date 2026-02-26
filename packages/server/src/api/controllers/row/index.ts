@@ -65,7 +65,7 @@ async function _patch(
 
   // if it doesn't have an _id then its save
   if (body && !body._id) {
-    return isAutomation ? save(ctx, { isAutomation: true }) : save(ctx)
+    return save(ctx, { isAutomation })
   }
   try {
     const api = pickApi(tableId)
