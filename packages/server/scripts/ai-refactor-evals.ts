@@ -1201,7 +1201,7 @@ async function runFeatureEvals(
         )
       }
       const language = normalizeText(first.language)
-      if (language !== "english") {
+      if (!["english", "en"].includes(language)) {
         throw new Error(
           `Extract output language should be English: ${JSON.stringify(output.data)}`
         )
