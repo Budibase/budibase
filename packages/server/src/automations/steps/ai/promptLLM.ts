@@ -1,6 +1,7 @@
 import { PromptLLMStepInputs, PromptLLMStepOutputs } from "@budibase/types"
 import * as automationUtils from "../../automationUtils"
 import { ai } from "@budibase/pro"
+import { promptWithDefaultLLM } from "./llm"
 
 export async function run({
   inputs,
@@ -15,10 +16,10 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLM()
-    const response = await llm?.prompt(inputs.prompt)
+    const request = new ai.LLMRequest().addUserMessage(inputs.prompt)
+    const response = await promptWithDefaultLLM(request.messages)
     return {
-      response: response?.message,
+      response,
       success: true,
     }
   } catch (err) {

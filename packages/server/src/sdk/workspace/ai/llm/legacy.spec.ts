@@ -2,6 +2,7 @@ import { withEnv } from "@budibase/backend-core"
 import { ai, licensing } from "@budibase/pro"
 import { createAzure } from "@ai-sdk/azure"
 import { createOpenAI } from "@ai-sdk/openai"
+import { Readable } from "stream"
 import { createBBAIClient } from "./bbai"
 import { createLegacyLLM } from "./legacy"
 
@@ -51,6 +52,7 @@ describe("createLegacyLLM", () => {
   const createAzureMock = createAzure as jest.MockedFunction<typeof createAzure>
 
   afterEach(() => {
+    jest.restoreAllMocks()
     jest.clearAllMocks()
   })
 
@@ -83,6 +85,7 @@ describe("createLegacyLLM", () => {
     expect(result).toEqual({
       chat: "chat-model",
       embedding: "embedding-model",
+      uploadFile: expect.toBeFunction(),
     })
   })
 
@@ -152,6 +155,7 @@ describe("createLegacyLLM", () => {
         expect(result).toEqual({
           chat: "chat-model",
           embedding: "embedding-model",
+          uploadFile: expect.toBeFunction(),
         })
       }
     )
@@ -172,6 +176,100 @@ describe("createLegacyLLM", () => {
           message: "No license key found",
         })
       }
+    )
+  })
+
+  it("does not provide uploadFile for Azure", async () => {
+    getLLMConfigMock.mockResolvedValue({
+      provider: "AzureOpenAI",
+      model: "gpt-5-mini",
+      apiKey: "test-key",
+      baseUrl: "https://azure.openai.test",
+    })
+
+    const chat = jest.fn().mockReturnValue("chat-model")
+    const embedding = jest.fn().mockReturnValue("embedding-model")
+    createAzureMock.mockReturnValue({ chat, embedding } as any)
+
+    const result = await createLegacyLLM()
+
+    expect(result).toEqual({
+      chat: "chat-model",
+      embedding: "embedding-model",
+      uploadFile: undefined,
+    })
+  })
+
+  it("uploads files to /files for OpenAI legacy providers", async () => {
+    getLLMConfigMock.mockResolvedValue({
+      provider: "OpenAI",
+      model: "gpt-5-mini",
+      apiKey: "test-key",
+      baseUrl: "https://api.openai.com",
+    })
+
+    const chat = jest.fn().mockReturnValue("chat-model")
+    const embedding = jest.fn().mockReturnValue("embedding-model")
+    createOpenAIMock.mockReturnValue({ chat, embedding } as any)
+
+    const fetchSpy = jest.spyOn(global, "fetch").mockResolvedValue({
+      json: async () => ({ id: "file-123" }),
+    } as any)
+
+    const result = await createLegacyLLM()
+    const fileId = await result!.uploadFile!(
+      Readable.from(Buffer.from("test")),
+      "doc.pdf"
+    )
+
+    expect(fileId).toBe("file-123")
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://api.openai.com/v1/files",
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          Authorization: "Bearer test-key",
+        },
+      })
+    )
+  })
+
+  it("uploads files through Budibase cloud endpoint in self-host mode", async () => {
+    getLLMConfigMock.mockResolvedValue({
+      provider: "BudibaseAI",
+      model: "gpt-5-mini",
+    })
+    getLicenseKeyMock.mockResolvedValue("license-key")
+
+    const chat = jest.fn().mockReturnValue("chat-model")
+    const embedding = jest.fn().mockReturnValue("embedding-model")
+    createOpenAIMock.mockReturnValue({ chat, embedding } as any)
+
+    const fetchSpy = jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () => ({ file: "file-123" }),
+    } as any)
+
+    await withEnv(
+      { SELF_HOSTED: true, BUDICLOUD_URL: "https://budibase.app" },
+      async () => {
+        const result = await createLegacyLLM()
+        const fileId = await result!.uploadFile!(
+          Readable.from(Buffer.from("test")),
+          "doc.pdf"
+        )
+        expect(fileId).toBe("file-123")
+      }
+    )
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://budibase.app/api/ai/upload-file",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+        }),
+      })
     )
   })
 })

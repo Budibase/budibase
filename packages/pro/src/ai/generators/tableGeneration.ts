@@ -1,6 +1,6 @@
 import { HTTPError } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import type { LLMResponse, Message } from "@budibase/types"
+import type { LLMProviderOptions, LLMResponse, Message } from "@budibase/types"
 import { generateText, Output, type ModelMessage } from "ai"
 import { LLMRequest } from "../llm"
 
@@ -15,6 +15,7 @@ import {
   tableDataStructuredOutput,
 } from "../structuredOutputs"
 import { TableSchemaFromAI } from "../types"
+import { runWithReasoningEffortFallback } from "../reasoningFallback"
 
 interface Delegates {
   generateTablesDelegate: (
@@ -26,6 +27,8 @@ interface Delegates {
     tables: Record<string, TableSchemaFromAI>
   ) => Promise<void>
 }
+
+type ProgressCallback = (message: string) => void
 
 export class TableGeneration {
   private aiModel: LLMResponse
@@ -44,9 +47,13 @@ export class TableGeneration {
     return new TableGeneration(aiModel, delegates)
   }
 
-  async generate(userPrompt: string, userId: string) {
+  async generate(
+    userPrompt: string,
+    userId: string,
+    onProgress?: ProgressCallback
+  ) {
     return tracer.trace("tableGeneration.generate", async span => {
-      const tables = await this.generateTables(userPrompt, userId)
+      const tables = await this.generateTables(userPrompt, userId, onProgress)
       span.addTags({ table_count: tables.length })
       return tables
     })
@@ -89,31 +96,32 @@ export class TableGeneration {
 
   private async generateTables(
     userPrompt: string,
-    userId: string
+    userId: string,
+    onProgress?: ProgressCallback
   ): Promise<{ id: string; name: string }[]> {
+    onProgress?.("Generating table schema...")
     const tablesToCreate = await this.llmFunctions.getTableStructure(userPrompt)
 
-    const aiColumnStructure = await this.llmFunctions.generateAIColumns(
-      userPrompt,
-      tablesToCreate
-    )
+    onProgress?.("Generating AI columns and sample data...")
+    const [aiColumnStructure, data] = await Promise.all([
+      this.llmFunctions.generateAIColumns(userPrompt, tablesToCreate),
+      this.llmFunctions.generateData(userPrompt, tablesToCreate),
+    ])
 
-    const data = await this.llmFunctions.generateData(
-      userPrompt,
-      tablesToCreate
-    )
-
+    onProgress?.("Creating tables...")
     // We need to wait for the tables to be created before persisting the data
     const result = await this.delegates.generateTablesDelegate(
       appendAIColumns(tablesToCreate, aiColumnStructure)
     )
 
+    onProgress?.("Populating rows...")
     await this.delegates.generateDataDelegate(
       data,
       userId,
       utils.toMap("name", tablesToCreate)
     )
 
+    onProgress?.("Finalizing...")
     return result
   }
 
@@ -136,18 +144,37 @@ export class TableGeneration {
     schema: z.ZodType<T>,
     errorMessage: string
   ): Promise<T> {
-    try {
-      const result = await generateText({
+    const providerOptions = this.aiModel.providerOptions?.(false)
+
+    const run = async (opts?: LLMProviderOptions) => {
+      return generateText({
         model: this.aiModel.chat,
         messages: this.toModelMessages(request.messages),
         output: Output.object({ schema }),
-        providerOptions: this.aiModel.providerOptions?.(false),
+        providerOptions: opts,
+      })
+    }
+
+    try {
+      const result = await runWithReasoningEffortFallback({
+        providerOptions,
+        run,
       })
       return result.output
-    } catch (err: any) {
-      const message = [errorMessage, err?.message].filter(Boolean).join(": ")
+    } catch (err: unknown) {
+      const message = [errorMessage, this.getErrorMessage(err)]
+        .filter(Boolean)
+        .join(": ")
       throw new HTTPError(message, 500)
     }
+  }
+
+  private getErrorMessage(err: unknown): string {
+    if (!err || typeof err !== "object") {
+      return String(err)
+    }
+    const error = err as Record<string, unknown>
+    return typeof error.message === "string" ? error.message : String(err)
   }
 
   private toModelMessages(messages: Message[]): ModelMessage[] {
