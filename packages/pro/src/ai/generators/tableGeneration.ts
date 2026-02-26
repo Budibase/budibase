@@ -157,7 +157,6 @@ export class TableGeneration {
 
     try {
       const result = await runWithReasoningEffortFallback({
-        model: this.aiModel.chat,
         providerOptions,
         run,
       })

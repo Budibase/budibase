@@ -152,7 +152,7 @@ export const createLegacyLLM = async (
         uploadLegacyFile({ stream, filename, config })
     : config.provider === "BudibaseAI"
       ? (stream: Readable, filename: string) =>
-          uploadFileSelfHost({ stream, filename })
+          uploadFileToBBSelfHost({ stream, filename })
       : undefined
 
   return {
@@ -162,7 +162,7 @@ export const createLegacyLLM = async (
   }
 }
 
-async function uploadFileSelfHost({
+async function uploadFileToBBSelfHost({
   stream,
   filename,
 }: {

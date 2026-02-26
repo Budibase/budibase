@@ -256,13 +256,13 @@ export type ExtractFileDataStepInputs =
       file: string
       source: "URL"
       fileType: SupportedFileType
-      schema: Record<string, any>
+      schema: Record<string, unknown>
     }
   | {
       file: RowAttachment | string
       source: "Attachment"
       fileType?: SupportedFileType
-      schema: Record<string, any>
+      schema: Record<string, unknown>
     }
 export type ExtractFileDataStepOutputs = {
   success: boolean
