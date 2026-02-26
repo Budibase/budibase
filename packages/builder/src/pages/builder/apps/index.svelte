@@ -44,7 +44,7 @@
   let userInfoModal: Modal
   let changePasswordModal: Modal
 
-  const { accountPortalAccountUrl } = helpers
+  const { accountPortalAccountUrl, appChatUrl } = helpers
 
   $: userApps = $clientAppsStore.apps
   $: liveChatApps = $clientChatAppsStore.chatApps
@@ -214,7 +214,7 @@
                         class="app"
                         target="_blank"
                         rel="noreferrer"
-                        href={`/app-chat${chatApp.url}`}
+                        href={appChatUrl(chatApp.url)}
                       >
                         <div
                           class="preview"

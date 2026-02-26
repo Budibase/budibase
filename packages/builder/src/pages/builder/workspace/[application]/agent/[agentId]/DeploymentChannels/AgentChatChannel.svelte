@@ -2,6 +2,7 @@
   import { Body, Toggle, notifications } from "@budibase/bbui"
   import { appStore, deploymentStore } from "@/stores/builder"
   import { chatAppsStore, currentChatApp } from "@/stores/portal"
+  import { helpers } from "@budibase/shared-core"
   import { params } from "@roxi/routify"
   import BBAILogo from "assets/bb-ai.svg"
 
@@ -59,9 +60,7 @@
   $: enabled = isAgentEnabledInChat(currentChatAgents, agentId)
   $: disabled = toggling || loadingChatApp || !workspaceId
 
-  $: chatUrl = $appStore.url
-    ? `/app-chat${$appStore.url}/agent/${encodeURIComponent(agentId)}`
-    : ""
+  $: chatUrl = $appStore.url ? helpers.agentChatUrl($appStore.url, agentId) : ""
 
   $: if (workspaceId !== currentWorkspaceId) {
     currentWorkspaceId = workspaceId

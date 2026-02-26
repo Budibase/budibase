@@ -1,5 +1,6 @@
 import { API } from "@/api"
 import { notifications } from "@budibase/bbui"
+import { helpers } from "@budibase/shared-core"
 import type { PublishedChatAppData } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
@@ -36,14 +37,19 @@ const normalizePublishedChatApps = (
     return enabledAgents.map(agent => {
       const agentId = agent.agentId
       const baseUrl = chatApp.url.replace(/\/$/, "")
+      const targetAgentPathSuffix = agentId
+        ? helpers.appAgentUrl("", agentId)
+        : undefined
       return {
         ...chatApp,
         agentId,
         agentName: agent.agentName || agent.name,
         name: agent.agentName || agent.name || chatApp.name,
         url:
-          agentId && !baseUrl.endsWith(`/agent/${encodeURIComponent(agentId)}`)
-            ? `${baseUrl}/agent/${encodeURIComponent(agentId)}`
+          agentId &&
+          targetAgentPathSuffix &&
+          !baseUrl.endsWith(targetAgentPathSuffix)
+            ? helpers.appAgentUrl(baseUrl, agentId)
             : baseUrl,
       }
     })
