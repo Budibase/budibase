@@ -7,8 +7,12 @@ import {
   CustomAIProviderConfig,
 } from "@budibase/types"
 import nock from "nock"
+import { Readable } from "stream"
 import { withEnv as serverWithEnv } from "../../../../environment"
-import { mockChatGPTResponse } from "../../../../tests/utilities/mocks/ai/openai"
+import {
+  mockChatGPTResponse,
+  mockOpenAIFileUpload,
+} from "../../../../tests/utilities/mocks/ai/openai"
 import { getKeySettings } from "../configs/litellm"
 import { createLiteLLMOpenAI } from "./litellm"
 
@@ -35,6 +39,11 @@ jest.mock("@budibase/pro", () => {
 })
 
 describe("createLiteLLMOpenAI", () => {
+  afterEach(() => {
+    jest.restoreAllMocks()
+    nock.cleanAll()
+  })
+
   it("syncs quota usage after BBAI responses in self host", async () => {
     const setBudibaseAICreditsMock =
       quotas.setBudibaseAICredits as jest.MockedFunction<
@@ -106,5 +115,116 @@ describe("createLiteLLMOpenAI", () => {
     expect(quotaNock.isDone()).toBe(true)
     expect(setBudibaseAICreditsMock).toHaveBeenCalledTimes(1)
     expect(setBudibaseAICreditsMock).toHaveBeenCalledWith(monthlyCredits)
+  })
+
+  it("uploads files and unwraps encoded LiteLLM file ids", async () => {
+    const getKeySettingsMock = getKeySettings as jest.MockedFunction<
+      typeof getKeySettings
+    >
+    getKeySettingsMock.mockResolvedValue({
+      keyId: "key-id",
+      secretKey: "secret-key",
+      teamId: "team-id",
+    })
+
+    const aiConfig: CustomAIProviderConfig = {
+      _id: "config-2",
+      name: "BBAI",
+      provider: BUDIBASE_AI_PROVIDER_ID,
+      model: "gpt-5-mini",
+      configType: AIConfigType.COMPLETIONS,
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      liteLLMModelId: "litellm-model-id",
+      credentialsFields: {},
+    }
+
+    const innerFileId = "file-real-id"
+    const encodedFileId = `file-${Buffer.from(
+      `litellm:${innerFileId};meta`
+    ).toString("base64")}`
+
+    mockOpenAIFileUpload(encodedFileId, {
+      baseUrl: "http://litellm.local",
+    })
+
+    await serverWithEnv({ LITELLM_URL: "http://litellm.local" }, async () => {
+      const llm = await createLiteLLMOpenAI(aiConfig)
+      const stream = Readable.from(Buffer.from("hello"))
+      const fileId = await llm.uploadFile!(stream, "doc.txt")
+      expect(fileId).toBe(innerFileId)
+    })
+  })
+
+  it("throws when LiteLLM file upload response has no id", async () => {
+    const getKeySettingsMock = getKeySettings as jest.MockedFunction<
+      typeof getKeySettings
+    >
+    getKeySettingsMock.mockResolvedValue({
+      keyId: "key-id",
+      secretKey: "secret-key",
+      teamId: "team-id",
+    })
+
+    const aiConfig: CustomAIProviderConfig = {
+      _id: "config-3",
+      name: "BBAI",
+      provider: BUDIBASE_AI_PROVIDER_ID,
+      model: "gpt-5-mini",
+      configType: AIConfigType.COMPLETIONS,
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      liteLLMModelId: "litellm-model-id",
+      credentialsFields: {},
+    }
+
+    mockOpenAIFileUpload("unused", {
+      baseUrl: "http://litellm.local",
+      status: 200,
+      error: {},
+    })
+
+    await serverWithEnv({ LITELLM_URL: "http://litellm.local" }, async () => {
+      const llm = await createLiteLLMOpenAI(aiConfig)
+      await expect(
+        llm.uploadFile!(Readable.from(Buffer.from("hello")), "doc.txt")
+      ).rejects.toThrow("File id not found")
+    })
+  })
+
+  it("uploads files through shared OpenAI mock helper", async () => {
+    const getKeySettingsMock = getKeySettings as jest.MockedFunction<
+      typeof getKeySettings
+    >
+    getKeySettingsMock.mockResolvedValue({
+      keyId: "key-id",
+      secretKey: "secret-key",
+      teamId: "team-id",
+    })
+
+    const aiConfig: CustomAIProviderConfig = {
+      _id: "config-4",
+      name: "BBAI",
+      provider: BUDIBASE_AI_PROVIDER_ID,
+      model: "gpt-5-mini",
+      configType: AIConfigType.COMPLETIONS,
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      liteLLMModelId: "litellm-model-id",
+      credentialsFields: {},
+    }
+
+    mockOpenAIFileUpload("file-openai-mock", {
+      baseUrl: "http://litellm.local",
+    })
+
+    await serverWithEnv({ LITELLM_URL: "http://litellm.local" }, async () => {
+      const llm = await createLiteLLMOpenAI(aiConfig)
+      const fileId = await llm.uploadFile!(
+        Readable.from(Buffer.from("hello")),
+        "doc.txt"
+      )
+      expect(fileId).toBe("file-openai-mock")
+    })
   })
 })
