@@ -744,16 +744,18 @@
           />
         {:else}
           <Search bind:value={searchEmail} placeholder="Search" />
-          <ActionButton
-            size="M"
-            quiet
-            on:click={$licensing.userLimitReached
-              ? userLimitReachedModal.show
-              : importUsersModal.show}
-            disabled={readonly}
-          >
-            <Icon name={"upload-simple"} size="M" />
-          </ActionButton>
+          {#if !isWorkspaceOnly}
+            <ActionButton
+              size="M"
+              quiet
+              on:click={$licensing.userLimitReached
+                ? userLimitReachedModal.show
+                : importUsersModal.show}
+              disabled={readonly}
+            >
+              <Icon name={"upload-simple"} size="M" />
+            </ActionButton>
+          {/if}
           <Button
             size="M"
             disabled={readonly}
@@ -825,9 +827,11 @@
   />
 </Modal>
 
-<Modal bind:this={importUsersModal}>
-  <ImportUsersModal {createUsersFromCsv} workspaceOnly={isWorkspaceOnly} />
-</Modal>
+{#if !isWorkspaceOnly}
+  <Modal bind:this={importUsersModal}>
+    <ImportUsersModal {createUsersFromCsv} />
+  </Modal>
+{/if}
 
 <Modal bind:this={userLimitReachedModal}>
   <UpgradeModal {isOwner} />
