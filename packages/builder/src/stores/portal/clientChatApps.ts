@@ -12,7 +12,6 @@ interface ClientChatAppsStoreState {
 interface PublishedChatAppAgent {
   agentId?: string
   agentName?: string
-  name?: string
   isEnabled?: boolean
 }
 
@@ -43,8 +42,8 @@ const normalizePublishedChatApps = (
       return {
         ...chatApp,
         agentId,
-        agentName: agent.agentName || agent.name,
-        name: agent.agentName || agent.name || chatApp.name,
+        agentName: agent.agentName,
+        name: agent.agentName || chatApp.name,
         url:
           agentId &&
           targetAgentPathSuffix &&
