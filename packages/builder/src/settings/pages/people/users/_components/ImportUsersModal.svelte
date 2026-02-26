@@ -2,7 +2,7 @@
   import {
     Body,
     ModalContent,
-    RolePicker,
+    Select,
     Multiselect,
     notifications,
     Icon,
@@ -90,7 +90,7 @@
 <ModalContent
   size="M"
   title="Import users"
-  confirmText="Import"
+  confirmText="Done"
   cancelText="Cancel"
   showCloseIcon={false}
   onConfirm={() =>
@@ -117,11 +117,18 @@
       users. Upgrade your plan to add more users
     </div>
   {/if}
-  <RolePicker
-    label="Select role"
-    bind:value={usersRole}
-    options={Constants.BudibaseRoleOptions}
-  />
+  <div class="role-select">
+    <Select
+      label="Select role"
+      placeholder={false}
+      bind:value={usersRole}
+      options={Constants.BudibaseRoleOptions}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.value}
+      getOptionSubtitle={option => option.subtitle}
+      showSelectedSubtitle={true}
+    />
+  </div>
   {#if $licensing?.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}
@@ -188,5 +195,12 @@
 
   input[type="file"] {
     display: none;
+  }
+
+  .role-select :global(.spectrum-Picker) {
+    height: auto;
+    align-items: center;
+    padding-top: var(--spacing-m);
+    padding-bottom: var(--spacing-m);
   }
 </style>
