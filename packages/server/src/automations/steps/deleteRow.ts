@@ -1,4 +1,4 @@
-import { destroyAsAutomation } from "../../api/controllers/row"
+import { destroy } from "../../api/controllers/row"
 import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
 import {
@@ -36,7 +36,7 @@ export async function run({
   })
 
   try {
-    await destroyAsAutomation(ctx)
+    await destroy(ctx, { isAutomation: true })
     return {
       response: ctx.body,
       row: ctx.row,

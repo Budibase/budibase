@@ -1,12 +1,5 @@
 import { quotas } from "@budibase/pro"
-import {
-  destroy,
-  destroyAsAutomation,
-  patch,
-  patchAsAutomation,
-  save,
-  saveAsAutomation,
-} from "../../api/controllers/row"
+import { destroy, patch, save } from "../../api/controllers/row"
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -166,25 +159,25 @@ describe("External table row operations quota tracking", () => {
   describe("Automation scope — addAction is not called", () => {
     it("does not call addAction on patch from an automation step", async () => {
       const ctx = makeCtx({ _id: "row1" })
-      await patchAsAutomation(ctx as any)
+      await patch(ctx as any, { isAutomation: true })
       expect(addActionMock).not.toHaveBeenCalled()
     })
 
     it("does not call addAction on save from an automation step", async () => {
       const ctx = makeCtx({ name: "new row" })
-      await saveAsAutomation(ctx as any)
+      await save(ctx as any, { isAutomation: true })
       expect(addActionMock).not.toHaveBeenCalled()
     })
 
     it("does not call addAction on single-row delete from an automation step", async () => {
       const ctx = makeCtx({ _id: "row1" })
-      await destroyAsAutomation(ctx as any)
+      await destroy(ctx as any, { isAutomation: true })
       expect(addActionMock).not.toHaveBeenCalled()
     })
 
     it("does not call addAction on bulk delete from an automation step", async () => {
       const ctx = makeCtx({ rows: [{ _id: "row1" }, { _id: "row2" }] })
-      await destroyAsAutomation(ctx as any)
+      await destroy(ctx as any, { isAutomation: true })
       expect(addActionMock).not.toHaveBeenCalled()
     })
   })

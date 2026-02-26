@@ -57,7 +57,7 @@ function pickApi(tableId: string) {
 
 async function _patch(
   ctx: UserCtx<PatchRowRequest, PatchRowResponse>,
-  isAutomation: boolean
+  { isAutomation = false }: { isAutomation?: boolean } = {}
 ): Promise<void> {
   const appId = ctx.appId
   const { tableId } = utils.getSourceId(ctx)
@@ -65,7 +65,7 @@ async function _patch(
 
   // if it doesn't have an _id then its save
   if (body && !body._id) {
-    return isAutomation ? saveAsAutomation(ctx) : save(ctx)
+    return isAutomation ? save(ctx, { isAutomation: true }) : save(ctx)
   }
   try {
     const api = pickApi(tableId)
@@ -98,20 +98,15 @@ async function _patch(
 }
 
 export async function patch(
-  ctx: UserCtx<PatchRowRequest, PatchRowResponse>
+  ctx: UserCtx<PatchRowRequest, PatchRowResponse>,
+  opts: { isAutomation?: boolean } = {}
 ): Promise<void> {
-  return _patch(ctx, false)
-}
-
-export async function patchAsAutomation(
-  ctx: UserCtx<PatchRowRequest, PatchRowResponse>
-): Promise<void> {
-  return _patch(ctx, true)
+  return _patch(ctx, opts)
 }
 
 async function _save(
   ctx: UserCtx<SaveRowRequest, SaveRowResponse>,
-  isAutomation: boolean
+  { isAutomation = false }: { isAutomation?: boolean } = {}
 ) {
   const { tableId, viewId } = utils.getSourceId(ctx)
   const sourceId = viewId || tableId
@@ -127,7 +122,7 @@ async function _save(
   // if it has an ID already then it's a patch
   if (body && body._id) {
     return isAutomation
-      ? patchAsAutomation(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
+      ? patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>, { isAutomation: true })
       : patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   let saveResult: { row: Row; table: Table; squashed?: Row }
@@ -177,12 +172,10 @@ async function _save(
   gridSocket?.emitRowUpdate(ctx, row || squashed)
 }
 
-export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) =>
-  _save(ctx, false)
-
-export const saveAsAutomation = async (
-  ctx: UserCtx<SaveRowRequest, SaveRowResponse>
-) => _save(ctx, true)
+export const save = async (
+  ctx: UserCtx<SaveRowRequest, SaveRowResponse>,
+  opts: { isAutomation?: boolean } = {}
+) => _save(ctx, opts)
 
 export async function fetchLegacyView(ctx: any) {
   const viewName = decodeURIComponent(ctx.params.viewName)
@@ -239,7 +232,7 @@ async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
 
 async function deleteRows(
   ctx: UserCtx<DeleteRowRequest>,
-  isAutomation: boolean
+  { isAutomation = false }: { isAutomation?: boolean } = {}
 ) {
   const { tableId } = utils.getSourceId(ctx)
   const appId = ctx.appId
@@ -273,7 +266,7 @@ async function deleteRows(
 
 async function deleteRow(
   ctx: UserCtx<DeleteRowRequest>,
-  isAutomation: boolean
+  { isAutomation = false }: { isAutomation?: boolean } = {}
 ) {
   const appId = ctx.appId
   const { tableId } = utils.getSourceId(ctx)
@@ -299,13 +292,16 @@ async function deleteRow(
   return resp
 }
 
-async function _destroy(ctx: UserCtx<DeleteRowRequest>, isAutomation: boolean) {
+async function _destroy(
+  ctx: UserCtx<DeleteRowRequest>,
+  { isAutomation = false }: { isAutomation?: boolean } = {}
+) {
   let response, row
 
   if (isDeleteRows(ctx.request.body)) {
-    response = await deleteRows(ctx, isAutomation)
+    response = await deleteRows(ctx, { isAutomation })
   } else if (isDeleteRow(ctx.request.body)) {
-    const deleteResp = await deleteRow(ctx, isAutomation)
+    const deleteResp = await deleteRow(ctx, { isAutomation })
     response = deleteResp.response
     row = deleteResp.row
   } else {
@@ -318,12 +314,11 @@ async function _destroy(ctx: UserCtx<DeleteRowRequest>, isAutomation: boolean) {
   ctx.body = response
 }
 
-export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
-  return _destroy(ctx, false)
-}
-
-export async function destroyAsAutomation(ctx: UserCtx<DeleteRowRequest>) {
-  return _destroy(ctx, true)
+export async function destroy(
+  ctx: UserCtx<DeleteRowRequest>,
+  opts: { isAutomation?: boolean } = {}
+) {
+  return _destroy(ctx, opts)
 }
 
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
