@@ -6,7 +6,7 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
-import { ai, quotas } from "@budibase/pro"
+import { ai } from "@budibase/pro"
 import {
   AgentMessageMetadata,
   ChatAgentRequest,
@@ -162,10 +162,6 @@ export async function webhookChat({
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-
-  if (await sdk.ai.llm.isBBAIConfig(agent.aiconfig)) {
-    await quotas.throwIfBudibaseAICreditsExceeded()
-  }
 
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
@@ -333,10 +329,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-
-  if (await sdk.ai.llm.isBBAIConfig(agent.aiconfig)) {
-    await quotas.throwIfBudibaseAICreditsExceeded()
-  }
 
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
