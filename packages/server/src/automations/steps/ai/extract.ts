@@ -215,7 +215,6 @@ export async function run({
     const modelMessages = buildExtractModelMessages(extractInput)
     const providerOptions = llm.providerOptions?.(false)
     const response = await ai.runWithReasoningEffortFallback({
-      model: llm.chat as unknown as object,
       providerOptions,
       run: opts =>
         generateText({
