@@ -1,6 +1,5 @@
 import { API } from "@/api"
 import { notifications } from "@budibase/bbui"
-import { helpers } from "@budibase/shared-core"
 import type { PublishedChatAppData } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
@@ -8,51 +7,6 @@ interface ClientChatAppsStoreState {
   chatApps: PublishedChatAppData[]
   loaded: boolean
 }
-
-interface PublishedChatAppAgent {
-  agentId?: string
-  agentName?: string
-  isEnabled?: boolean
-}
-
-interface PublishedChatAppWithAgents extends PublishedChatAppData {
-  agents?: PublishedChatAppAgent[]
-}
-
-const normalizePublishedChatApps = (
-  chatApps: PublishedChatAppWithAgents[]
-): PublishedChatAppData[] =>
-  chatApps.flatMap(chatApp => {
-    const agents = chatApp.agents || []
-    if (!agents.length) {
-      return [chatApp]
-    }
-
-    const enabledAgents = agents.filter(agent => agent.isEnabled !== false)
-    if (!enabledAgents.length) {
-      return []
-    }
-
-    return enabledAgents.map(agent => {
-      const agentId = agent.agentId
-      const baseUrl = chatApp.url.replace(/\/$/, "")
-      const targetAgentPathSuffix = agentId
-        ? helpers.appAgentUrl("", agentId)
-        : undefined
-      return {
-        ...chatApp,
-        agentId,
-        agentName: agent.agentName,
-        name: agent.agentName || chatApp.name,
-        url:
-          agentId &&
-          targetAgentPathSuffix &&
-          !baseUrl.endsWith(targetAgentPathSuffix)
-            ? helpers.appAgentUrl(baseUrl, agentId)
-            : baseUrl,
-      }
-    })
-  })
 
 export class ClientChatAppsStore extends BudiStore<ClientChatAppsStoreState> {
   constructor() {
@@ -69,9 +23,7 @@ export class ClientChatAppsStore extends BudiStore<ClientChatAppsStoreState> {
     }))
 
     try {
-      const chatApps = normalizePublishedChatApps(
-        (await API.getPublishedChatApps()) as PublishedChatAppWithAgents[]
-      )
+      const chatApps = await API.getPublishedChatApps()
       this.update(state => ({
         ...state,
         chatApps,
