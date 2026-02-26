@@ -10,6 +10,7 @@ import {
 } from "@budibase/types"
 import { Readable } from "stream"
 import sdk from "../../../sdk"
+import { generateText } from "ai"
 
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
@@ -47,6 +48,17 @@ export async function chatCompletion(
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
 
-  const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
-  ctx.body = await llm.chat(ctx.request.body)
+  const messages = sdk.ai.llm.toModelMessages(ctx.request.body.messages)
+
+  const { chat, providerOptions } = await sdk.ai.llm.getDefaultLLMOrThrow()
+  const result = await generateText({
+    model: chat,
+    messages: messages,
+    providerOptions: providerOptions?.(false),
+  })
+
+  ctx.body = {
+    messages: result.response.messages,
+    tokensUsed: result.totalUsage.totalTokens,
+  }
 }
