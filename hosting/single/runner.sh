@@ -177,7 +177,7 @@ chown -R postgres:postgres ${DATA_DIR}/litellm
 chmod 700 ${DATA_DIR}/litellm/postgres
 
 echo "Starting Redis runner..."
-./redis-runner.sh &
+./redis-runner.sh
 
 echo "Starting callback CouchDB runner..."
 ./bbcouch-runner.sh &
