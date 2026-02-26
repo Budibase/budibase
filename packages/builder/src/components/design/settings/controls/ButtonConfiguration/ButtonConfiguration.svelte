@@ -38,6 +38,7 @@
     bindings: allBindings,
     removeButton,
     nested,
+    parentComponent: componentInstance,
   }
   $: canAddButtons = max == null || buttonList.length < max
 
