@@ -88,7 +88,7 @@
     loadingChatApp = true
     chatAppsStore
       .ensureChatApp(undefined, workspaceId)
-      .catch(error => {
+      .catch(_error => {
         notifications.error(CHAT_LOAD_ERROR_MESSAGE)
       })
       .finally(() => {
