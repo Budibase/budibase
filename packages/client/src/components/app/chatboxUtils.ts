@@ -28,12 +28,18 @@ export const getLockedAgentIdFromCurrentPath = () => {
   return parseLockedAgentIdFromPath(window.location.pathname)
 }
 
+const AGENT_NOT_ENABLED_ERROR = "agentId is not enabled for this chat app"
+
+const isAgentNotEnabledError = (error: Error) =>
+  error.message.includes(AGENT_NOT_ENABLED_ERROR)
+
 export const isLockedAgentUnavailableError = (
   error: unknown,
   lockedAgentId?: string
-) =>
-  Boolean(
-    lockedAgentId &&
-      error instanceof Error &&
-      error.message.includes("agentId is not enabled for this chat app")
-  )
+) => {
+  if (!lockedAgentId || !(error instanceof Error)) {
+    return false
+  }
+
+  return isAgentNotEnabledError(error)
+}

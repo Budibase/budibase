@@ -96,6 +96,81 @@ const INITIAL_STATE = (lockedAgentId?: string): ChatboxState => ({
   suppressAgentPicker: false,
 })
 
+const getEmptyStateMessage = ({
+  isLockedAgentMode,
+  hasAnyAgents,
+}: {
+  isLockedAgentMode: boolean
+  hasAnyAgents: boolean
+}) => {
+  if (isLockedAgentMode) {
+    return "This agent is not available for chat right now."
+  }
+
+  if (hasAnyAgents) {
+    return "No agents enabled for this chat app. Ask your administrator to enable one to start chatting."
+  }
+
+  return "No agents have been configured for this chat app yet."
+}
+
+const resolveSelectedAgentName = (state: ChatboxState) => {
+  if (!state.selectedAgentId) {
+    return ""
+  }
+
+  const selectedEnabledAgent = state.enabledAgentList.find(
+    agent => agent.agentId === state.selectedAgentId
+  )
+  if (selectedEnabledAgent?.name) {
+    return selectedEnabledAgent.name
+  }
+
+  const selectedAgent = state.agents.find(
+    agent => agent._id === state.selectedAgentId
+  )
+  if (selectedAgent?.name) {
+    return selectedAgent.name
+  }
+
+  return "Unknown agent"
+}
+
+const resolveConversationScopeAgentId = ({
+  lockedAgentId,
+  selectedAgentId,
+  fallbackAgentId,
+}: {
+  lockedAgentId?: string
+  selectedAgentId: string | null
+  fallbackAgentId?: string
+}) => lockedAgentId || selectedAgentId || fallbackAgentId
+
+const findSavedConversation = ({
+  conversations,
+  chatId,
+  lastMessageId,
+}: {
+  conversations: ChatConversation[]
+  chatId?: string
+  lastMessageId?: string
+}) => {
+  const matchedById = conversations.find(
+    conversation => conversation._id === chatId
+  )
+  if (matchedById) {
+    return matchedById
+  }
+
+  if (!lastMessageId) {
+    return undefined
+  }
+
+  return conversations.find(conversation =>
+    conversation.messages?.some(message => message.id === lastMessageId)
+  )
+}
+
 const withDerivedState = (state: ChatboxState): ChatboxState => {
   const filteredConversationHistory = state.conversationHistory.filter(
     conversation => {
@@ -111,19 +186,12 @@ const withDerivedState = (state: ChatboxState): ChatboxState => {
   const hasEnabledAgents = state.enabledAgentList.length > 0
   const isLockedAgentMode = Boolean(state.lockedAgentId)
   const showEmptyState = !state.loading && !hasEnabledAgents
-  const emptyStateMessage = isLockedAgentMode
-    ? "This agent is not available for chat right now."
-    : hasAnyAgents
-      ? "No agents enabled for this chat app. Ask your administrator to enable one to start chatting."
-      : "No agents have been configured for this chat app yet."
+  const emptyStateMessage = getEmptyStateMessage({
+    isLockedAgentMode,
+    hasAnyAgents,
+  })
 
-  const selectedAgentName = state.selectedAgentId
-    ? state.enabledAgentList.find(
-        agent => agent.agentId === state.selectedAgentId
-      )?.name ||
-      state.agents.find(agent => agent._id === state.selectedAgentId)?.name ||
-      "Unknown agent"
-    : ""
+  const selectedAgentName = resolveSelectedAgentName(state)
 
   const conversationStarters =
     state.chatAgents.find(agent => agent.agentId === state.selectedAgentId)
@@ -296,8 +364,10 @@ export class ChatboxController {
 
     this.patch({ deletingChat: true })
     try {
-      const conversationScopeAgentId =
-        this.state.lockedAgentId || this.state.selectedAgentId || undefined
+      const conversationScopeAgentId = resolveConversationScopeAgentId({
+        lockedAgentId: this.state.lockedAgentId,
+        selectedAgentId: this.state.selectedAgentId,
+      })
 
       await this.api.deleteChatConversation(
         chat._id,
@@ -333,18 +403,21 @@ export class ChatboxController {
     chatId?: string
     chat: ChatConversationLike
   }) {
+    const conversationScopeAgentId = resolveConversationScopeAgentId({
+      lockedAgentId: this.state.lockedAgentId,
+      selectedAgentId: this.state.selectedAgentId,
+      fallbackAgentId: chat.agentId,
+    })
     const updatedConversations = await this.refreshConversations(
-      this.state.lockedAgentId || this.state.selectedAgentId || chat.agentId
+      conversationScopeAgentId
     )
     const lastMessageId = chat.messages[chat.messages.length - 1]?.id
 
-    const newCurrentChat =
-      updatedConversations.find(conversation => conversation._id === chatId) ||
-      (lastMessageId
-        ? updatedConversations.find(conversation =>
-            conversation.messages?.some(message => message.id === lastMessageId)
-          )
-        : undefined)
+    const newCurrentChat = findSavedConversation({
+      conversations: updatedConversations,
+      chatId,
+      lastMessageId,
+    })
 
     if (!newCurrentChat?._id) {
       return

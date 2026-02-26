@@ -120,6 +120,38 @@ export const findLatestUserQuestion = (chat: ChatConversationRequest) => {
 const isAgentEnabledForChatApp = (chatApp: ChatApp, agentId: string) =>
   chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
 
+const matchesRequestedAgentScope = (
+  chat: Pick<ChatConversation, "agentId">,
+  requestedAgentId?: string
+) => !requestedAgentId || chat.agentId === requestedAgentId
+
+const isChatOutsideRequestedScope = ({
+  chat,
+  chatAppId,
+  requestedAgentId,
+}: {
+  chat: ChatConversation
+  chatAppId: string
+  requestedAgentId?: string
+}) =>
+  chat.chatAppId !== chatAppId ||
+  !matchesRequestedAgentScope(chat, requestedAgentId)
+
+const matchesChatHistoryScope = ({
+  chat,
+  chatAppId,
+  userId,
+  requestedAgentId,
+}: {
+  chat: ChatConversation
+  chatAppId: string
+  userId: string
+  requestedAgentId?: string
+}) =>
+  chat.chatAppId === chatAppId &&
+  (!chat.userId || chat.userId === userId) &&
+  matchesRequestedAgentScope(chat, requestedAgentId)
+
 const resolveRequestedAgentId = (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
   if (rawAgentId === undefined) {
@@ -556,8 +588,11 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (
     !chat ||
-    chat.chatAppId !== chatAppId ||
-    (requestedAgentId && chat.agentId !== requestedAgentId)
+    isChatOutsideRequestedScope({
+      chat,
+      chatAppId,
+      requestedAgentId,
+    })
   ) {
     throw new HTTPError("chat not found", 404)
   }
@@ -592,11 +627,13 @@ export async function fetchChatHistory(
 
   ctx.body = allChats.rows
     .map(row => row.doc!)
-    .filter(
-      chat =>
-        chat.chatAppId === chatAppId &&
-        (!chat.userId || chat.userId === userId) &&
-        (!requestedAgentId || chat.agentId === requestedAgentId)
+    .filter(chat =>
+      matchesChatHistoryScope({
+        chat,
+        chatAppId,
+        userId,
+        requestedAgentId,
+      })
     )
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
@@ -631,8 +668,11 @@ export async function fetchChatConversation(
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (
     !chat ||
-    chat.chatAppId !== chatAppId ||
-    (requestedAgentId && chat.agentId !== requestedAgentId)
+    isChatOutsideRequestedScope({
+      chat,
+      chatAppId,
+      requestedAgentId,
+    })
   ) {
     throw new HTTPError("chat not found", 404)
   }

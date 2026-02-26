@@ -12,12 +12,57 @@
   let attemptedWorkspaceId: string | undefined
   let currentWorkspaceId: string | undefined
 
-  $: workspaceId = $params.application
-  $: enabled =
-    !!agentId &&
-    !!($currentChatApp?.agents || []).find(
-      agent => agent.agentId === agentId && agent.isEnabled
+  interface ChatAppAgentConfig {
+    agentId: string
+    isEnabled?: boolean
+  }
+
+  const isAgentEnabledInChat = (
+    chatAppAgents: ChatAppAgentConfig[],
+    targetAgentId?: string
+  ) => {
+    if (!targetAgentId) {
+      return false
+    }
+
+    return Boolean(
+      chatAppAgents.find(
+        agent => agent.agentId === targetAgentId && agent.isEnabled
+      )
     )
+  }
+
+  const shouldEnsureChatApp = ({
+    workspaceId,
+    attemptedWorkspaceId,
+    hasCurrentChatApp,
+    loadingChatApp,
+  }: {
+    workspaceId?: string
+    attemptedWorkspaceId?: string
+    hasCurrentChatApp: boolean
+    loadingChatApp: boolean
+  }) =>
+    Boolean(
+      workspaceId &&
+        workspaceId !== attemptedWorkspaceId &&
+        !hasCurrentChatApp &&
+        !loadingChatApp
+    )
+
+  const canToggleAgentChat = ({
+    agentId,
+    workspaceId,
+    toggling,
+  }: {
+    agentId?: string
+    workspaceId?: string
+    toggling: boolean
+  }) => Boolean(agentId && workspaceId && !toggling)
+
+  $: workspaceId = $params.application
+  $: currentChatAgents = $currentChatApp?.agents || []
+  $: enabled = isAgentEnabledInChat(currentChatAgents, agentId)
   $: disabled = toggling || loadingChatApp || !agentId || !workspaceId
 
   $: chatUrl =
@@ -31,10 +76,12 @@
   }
 
   $: if (
-    workspaceId &&
-    workspaceId !== attemptedWorkspaceId &&
-    !$currentChatApp &&
-    !loadingChatApp
+    shouldEnsureChatApp({
+      workspaceId,
+      attemptedWorkspaceId,
+      hasCurrentChatApp: Boolean($currentChatApp),
+      loadingChatApp,
+    })
   ) {
     attemptedWorkspaceId = workspaceId
     loadingChatApp = true
@@ -49,7 +96,7 @@
   }
 
   const onToggle = async () => {
-    if (!agentId || !workspaceId || toggling) {
+    if (!canToggleAgentChat({ agentId, workspaceId, toggling })) {
       return
     }
 
