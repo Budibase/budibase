@@ -6,6 +6,12 @@
   import { params } from "@roxi/routify"
   import BBAILogo from "assets/bb-ai.svg"
 
+  const CHAT_UPDATE_ERROR_MESSAGE = "Could not update chat"
+  const AGENT_CHAT_ENABLED_MESSAGE = "Agent chat enabled"
+  const AGENT_CHAT_DISABLED_MESSAGE = "Agent chat disabled"
+  const AGENT_CHAT_ENABLE_ERROR_MESSAGE = "Failed to enable agent chat"
+  const AGENT_CHAT_DISABLE_ERROR_MESSAGE = "Failed to disable agent chat"
+
   export let agentId: string
 
   let toggling = false
@@ -60,7 +66,9 @@
   $: enabled = isAgentEnabledInChat(currentChatAgents, agentId)
   $: disabled = toggling || loadingChatApp || !workspaceId
 
-  $: chatUrl = $appStore.url ? helpers.agentChatUrl($appStore.url, agentId) : ""
+  $: chatUrl = $appStore.url
+    ? `${helpers.appChatUrl($appStore.url)}/agent/${encodeURIComponent(agentId)}`
+    : ""
 
   $: if (workspaceId !== currentWorkspaceId) {
     currentWorkspaceId = workspaceId
@@ -105,20 +113,22 @@
         targetWorkspaceId
       )
       if (!result) {
-        notifications.error("Could not update chat")
+        notifications.error(CHAT_UPDATE_ERROR_MESSAGE)
         return
       }
 
       await deploymentStore.publishApp()
       notifications.success(
-        result.enabled ? "Agent chat enabled" : "Agent chat disabled"
+        result.enabled
+          ? AGENT_CHAT_ENABLED_MESSAGE
+          : AGENT_CHAT_DISABLED_MESSAGE
       )
     } catch (error) {
       console.error(error)
       notifications.error(
         wasEnabled
-          ? "Failed to disable agent chat"
-          : "Failed to enable agent chat"
+          ? AGENT_CHAT_DISABLE_ERROR_MESSAGE
+          : AGENT_CHAT_ENABLE_ERROR_MESSAGE
       )
     } finally {
       toggling = false
