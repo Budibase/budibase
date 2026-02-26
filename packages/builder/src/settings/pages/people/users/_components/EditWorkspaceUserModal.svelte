@@ -5,6 +5,7 @@
     Input,
     Layout,
     ModalContent,
+    RolePicker,
     Select,
     keepOpen,
     notifications,
@@ -286,19 +287,12 @@
       bind:value={draft.lastName}
       disabled={disableFields}
     />
-    <div class="role-select">
-      <Select
-        label="Select role"
-        placeholder={false}
-        bind:value={draft.role}
-        options={roleOptions}
-        getOptionLabel={option => option.label}
-        getOptionValue={option => option.value}
-        getOptionSubtitle={(option: any) => option.subtitle}
-        showSelectedSubtitle={true}
-        disabled={disableRole}
-      />
-    </div>
+    <RolePicker
+      label="Select role"
+      bind:value={draft.role}
+      options={roleOptions}
+      disabled={disableRole}
+    />
     {#if draft.role === Constants.BudibaseRoles.AppUser}
       <div class="role-select-compact">
         <Select
@@ -322,11 +316,5 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
-  }
-  .role-select :global(.spectrum-Picker) {
-    height: auto;
-    align-items: center;
-    padding-top: var(--spacing-m);
-    padding-bottom: var(--spacing-m);
   }
 </style>
