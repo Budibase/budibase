@@ -159,6 +159,54 @@ describe("test the extract file data action", () => {
     )
   })
 
+  it("should default URL fileType to pdf when omitted", async () => {
+    mockChatGPTResponse(
+      JSON.stringify({
+        data: [
+          {
+            product: "Widget",
+            price: 29.99,
+          },
+        ],
+      })
+    )
+
+    mockOpenAIFileUpload("file-id-default-pdf")
+
+    nock("https://example.com")
+      .get("/test-file-no-type.pdf")
+      .reply(200, "PDF content from URL", {
+        "content-type": "application/pdf",
+      })
+
+    const schema = {
+      product: "string",
+      price: "number",
+    }
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .serverLog(
+        { text: "Starting URL extraction default fileType test" },
+        { stepName: "StartLog" }
+      )
+      .extractFileData(
+        ({
+          file: "https://example.com/test-file-no-type.pdf",
+          source: DocumentSourceType.URL,
+          schema,
+        } as any),
+        { stepName: "ExtractStep" }
+      )
+      .test({ fields: { status: "url-success-default-type" } })
+
+    expect(result.steps[1].outputs.success).toBe(true)
+    expect(result.steps[1].outputs.data[0]).toEqual({
+      product: "Widget",
+      price: 29.99,
+    })
+  })
+
   it("should return error when file is missing", async () => {
     const schema = {
       name: "string",
