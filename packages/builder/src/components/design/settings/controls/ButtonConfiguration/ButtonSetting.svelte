@@ -10,6 +10,7 @@
   export let anchor
   export let removeButton
   export let nested
+  export let parentComponent
 
   $: readableText = isJSBinding(item.text)
     ? "(JavaScript function)"
@@ -33,6 +34,9 @@
     let name = newSettings.find(x => x.key === "text")
     if (name) {
       name.disableBindings = true
+    }
+    if (parentComponent?._component?.endsWith("/gridblock")) {
+      newSettings = newSettings.filter(setting => setting.key !== "size")
     }
     return newSettings
   }
