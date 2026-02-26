@@ -1,5 +1,5 @@
 import { quotas } from "@budibase/pro"
-import { destroy, patch, save } from "../../api/controllers/row"
+import { destroy, find, patch, save } from "../../api/controllers/row"
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -59,6 +59,7 @@ jest.mock("../../sdk", () => ({
         table: { name: "T" },
         squashed: undefined,
       }),
+      find: jest.fn().mockResolvedValue({ _id: "row1" }),
     },
     users: { getUserContextBindings: jest.fn().mockReturnValue({}) },
     tables: {
@@ -153,6 +154,14 @@ describe("External table row operations quota tracking", () => {
       const ctx = makeCtx({ rows: [{ _id: "row1" }, { _id: "row2" }] })
       await destroy(ctx as any)
       expect(addActionMock).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe("Read operations — addAction is never called", () => {
+    it("does not call addAction when reading a row", async () => {
+      const ctx = makeCtx({}, { rowId: "row1" })
+      await find(ctx as any)
+      expect(addActionMock).not.toHaveBeenCalled()
     })
   })
 
