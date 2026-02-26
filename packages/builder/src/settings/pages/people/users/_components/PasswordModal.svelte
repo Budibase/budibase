@@ -10,12 +10,14 @@
   export let createUsersResponse: BulkUserCreated
   export let addedToWorkspaceEmails: string[] = []
   const MAX_VISIBLE_PASSWORD_ROWS = 10
+  const MAX_VISIBLE_FAILURE_ROWS = 10
 
   let hasSuccess: boolean
   let hasFailure: boolean
   let title: string
   let failureMessage: string
   let shouldShowPasswordsTable: boolean
+  let shouldShowFailuresTable: boolean
 
   let userDataIndex: Record<string, { password: string }>
   let successfulUsers: { email: string; password: string }[]
@@ -31,10 +33,14 @@
   }
 
   const setFailureMessage = () => {
+    const failureCount = createUsersResponse.unsuccessful.length
+    const includeFailureCount = failureCount > MAX_VISIBLE_FAILURE_ROWS
+    const countSuffix = includeFailureCount ? ` (${failureCount}).` : "."
+
     if (hasSuccess) {
-      failureMessage = "However there was a problem creating some users."
+      failureMessage = `However there was a problem creating some users${countSuffix}`
     } else {
-      failureMessage = "There was a problem creating some users."
+      failureMessage = `There was a problem creating some users${countSuffix}`
     }
   }
 
@@ -66,6 +72,8 @@
     hasFailure = createUsersResponse.unsuccessful.length > 0
     shouldShowPasswordsTable =
       createUsersResponse.successful.length <= MAX_VISIBLE_PASSWORD_ROWS
+    shouldShowFailuresTable =
+      createUsersResponse.unsuccessful.length <= MAX_VISIBLE_FAILURE_ROWS
     setTitle()
     setFailureMessage()
     setUsers()
@@ -120,19 +128,21 @@
   showCloseIcon={false}
 >
   {#if hasFailure}
-    <Body size="XS">
+    <Body size="S">
       {failureMessage}
     </Body>
-    <Table
-      schema={failedSchema}
-      data={unsuccessfulUsers}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={false}
-      customRenderers={[
-        { column: "reason", component: InviteResponseRenderer },
-      ]}
-    />
+    {#if shouldShowFailuresTable}
+      <Table
+        schema={failedSchema}
+        data={unsuccessfulUsers}
+        allowEditColumns={false}
+        allowEditRows={false}
+        allowSelectRows={false}
+        customRenderers={[
+          { column: "reason", component: InviteResponseRenderer },
+        ]}
+      />
+    {/if}
   {/if}
   {#if hasSuccess}
     <Body size="XS">
