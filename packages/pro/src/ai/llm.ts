@@ -107,6 +107,9 @@ async function getSelfHostOpenAIKeyConfig(): Promise<
   })
 }
 
+/**
+ * @deprecated use the new `ai.sdk` instead
+ */
 export async function getLLMConfig(): Promise<LLMProviderConfig | undefined> {
   return tracer.trace(
     "getLLMConfig",
@@ -118,6 +121,9 @@ export async function getLLMConfig(): Promise<LLMProviderConfig | undefined> {
   )
 }
 
+/**
+ * @deprecated use the new `ai.sdk` instead
+ */
 // This is the entrypoint for all LLM functionality in Budibase. If you're
 // making a feature that uses LLMs, you should call this function to get an LLM
 // instance. This function takes care of figuring out what LLM to use, and if
@@ -156,6 +162,9 @@ export async function getLLM(
   })
 }
 
+/**
+ * @deprecated use the new `ai.sdk` instead
+ */
 export async function getLLMOrThrow(): Promise<LLM> {
   const llm = await getLLM()
   if (!llm) {
