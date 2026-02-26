@@ -318,6 +318,9 @@
     pointer-events: none;
     gap: var(--spacing-s);
   }
+  .nav-item.bodyInteractive .nav-item-body {
+    pointer-events: auto;
+  }
   .nav-item-body span {
     white-space: nowrap;
     overflow: hidden;
