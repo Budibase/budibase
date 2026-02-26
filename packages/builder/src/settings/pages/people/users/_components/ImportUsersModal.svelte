@@ -26,7 +26,7 @@
   let csvString: string | undefined = undefined
   let userEmails: string[] = []
   let userGroups: string[] = []
-  let usersRole: string | undefined = Constants.BudibaseRoles.AppUser
+  let usersRole: string = Constants.BudibaseRoles.AppUser
   let invalidEmails: string[] = []
 
   $: userCount = ($licensing?.userCount || 0) + userEmails.length
