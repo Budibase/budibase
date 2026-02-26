@@ -1,7 +1,5 @@
 import type { LLMProviderOptions } from "@budibase/types"
 
-const unsupportedReasoningByModel = new WeakMap<object, true>()
-
 function hasReasoningEffort(providerOptions?: LLMProviderOptions) {
   return Boolean(
     providerOptions?.openai?.reasoningEffort ||
@@ -59,20 +57,14 @@ function isUnsupportedReasoningError(err: unknown) {
 }
 
 export async function runWithReasoningEffortFallback<T>({
-  model,
   providerOptions,
   run,
 }: {
-  model: object
   providerOptions: LLMProviderOptions | undefined
   run: (opts?: LLMProviderOptions) => Promise<T>
 }): Promise<T> {
   if (!hasReasoningEffort(providerOptions)) {
     return run(providerOptions)
-  }
-
-  if (unsupportedReasoningByModel.has(model)) {
-    return run(withoutReasoningEffort(providerOptions))
   }
 
   try {
@@ -82,7 +74,6 @@ export async function runWithReasoningEffortFallback<T>({
       throw err
     }
 
-    unsupportedReasoningByModel.set(model, true)
     return run(withoutReasoningEffort(providerOptions))
   }
 }
