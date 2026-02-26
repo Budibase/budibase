@@ -1,4 +1,4 @@
-import { configs, context, env, HTTPError } from "@budibase/backend-core"
+import { configs, context, env } from "@budibase/backend-core"
 import {
   AIConfig,
   AIProvider,
@@ -160,17 +160,6 @@ export async function getLLM(
 
     return new LLMProvider(config)
   })
-}
-
-/**
- * @deprecated use the new `ai.sdk` instead
- */
-export async function getLLMOrThrow(): Promise<LLM> {
-  const llm = await getLLM()
-  if (!llm) {
-    throw new HTTPError("No available LLM configurations", 500)
-  }
-  return llm
 }
 
 export class LLMRequest {
