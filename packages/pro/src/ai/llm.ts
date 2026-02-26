@@ -102,7 +102,7 @@ function getSelfHostOpenAIKeyConfig(): LLMProviderConfig | undefined {
 }
 
 function getBudibaseAIKeyConfig(): LLMProviderConfig | undefined {
-  return tracer.trace("getSelfHostOpenAIKeyConfig", span => {
+  return tracer.trace("getBudibaseAIKeyConfig", span => {
     if (env.SELF_HOSTED) {
       span.addTags({ enabled: false, reason: "not cloud" })
       return

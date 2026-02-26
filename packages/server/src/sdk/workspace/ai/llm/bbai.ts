@@ -230,7 +230,7 @@ export async function createBBAIClient(
         const base64 = fileBuffer.toString("base64")
 
         if (isImage) {
-          return `data:image/jpeg;base64,${base64}`
+          return `data:${type};base64,${base64}`
         }
         if (!env.BUDICLOUD_URL) {
           throw new Error("No Budibase URL found")

@@ -303,10 +303,9 @@ describe("BudibaseAI", () => {
 
   afterAll(async () => {
     for (const fn of cleanup) {
-      if ("then" in cleanup) {
-        await fn()
-      } else {
-        fn()
+      const result = fn()
+      if (result && "then" in result) {
+        await result
       }
     }
     config.end()

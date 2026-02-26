@@ -25,7 +25,7 @@ export async function uploadFile(
   }
   const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
   if (!llm.uploadFile) {
-    ctx.throw("The used LLM does not support uploading files", 422)
+    ctx.throw(422, "The used LLM does not support uploading files")
   }
 
   const data = Buffer.from(ctx.request.body.data, "base64")
