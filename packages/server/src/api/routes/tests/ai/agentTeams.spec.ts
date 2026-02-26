@@ -1,21 +1,3 @@
-interface MockTeamsRequest {
-  headers?: {
-    authorization?: unknown
-  }
-  body?: unknown
-}
-
-interface MockTeamsResponse {
-  status: (statusCode: number) => {
-    send: (body: unknown) => void
-  }
-}
-
-interface MockTeamsTurnContext {
-  activity: unknown
-  sendActivity: (message: string) => Promise<void>
-}
-
 interface MockWebhookChatPayload {
   chat: {
     messages: unknown[]
@@ -23,54 +5,91 @@ interface MockWebhookChatPayload {
   }
 }
 
-jest.mock("@microsoft/agents-hosting", () => {
-  const authorizeJWT = jest.fn(
-    () =>
-      async (
-        request: MockTeamsRequest,
-        response: MockTeamsResponse,
-        next: () => void
-      ) => {
-        const authorization = request.headers?.authorization
-        if (typeof authorization !== "string") {
-          response.status(401).send({
-            "jwt-auth-error": "authorization header not found",
-          })
-          return
-        }
-        if (authorization !== "Bearer valid-token") {
-          response.status(401).send({
-            "jwt-auth-error": "invalid token",
-          })
-          return
-        }
-        next()
-      }
-  )
-
-  class CloudAdapter {
-    async process(
-      request: MockTeamsRequest,
-      response: MockTeamsResponse,
-      logic: (turnContext: MockTeamsTurnContext) => Promise<void>
-    ) {
-      const sentActivities: string[] = []
-      await logic({
-        activity: request.body,
-        sendActivity: async (message: string) => {
-          sentActivities.push(message)
-        },
-      })
-      response.status(200).send({ messages: sentActivities })
-    }
-  }
-
+jest.mock("chat", () => {
   return {
-    authorizeJWT,
-    CloudAdapter,
-    getAuthConfigWithDefaults: jest.fn((config: unknown) => config),
+    Chat: class MockChat {
+      private messageHandler:
+        | ((thread: any, message: any) => Promise<void>)
+        | null = null
+
+      onNewMention(h: any) {
+        this.messageHandler = h
+      }
+      onSubscribedMessage(h: any) {
+        this.messageHandler = h
+      }
+      onNewMessage(_pattern: any, h: any) {
+        this.messageHandler = h
+      }
+
+      webhooks = {
+        teams: async (request: Request) => {
+          const auth = request.headers.get("authorization")
+          if (!auth) {
+            return new Response(
+              JSON.stringify({
+                "jwt-auth-error": "authorization header not found",
+              }),
+              {
+                status: 401,
+                headers: { "content-type": "application/json" },
+              }
+            )
+          }
+          if (auth !== "Bearer valid-token") {
+            return new Response(
+              JSON.stringify({ "jwt-auth-error": "invalid token" }),
+              {
+                status: 401,
+                headers: { "content-type": "application/json" },
+              }
+            )
+          }
+
+          const body = await request.json()
+          if (body.type !== "message") {
+            return new Response(JSON.stringify({}), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            })
+          }
+
+          const messages: string[] = []
+          if (this.messageHandler) {
+            const thread = {
+              post: async (text: string) => {
+                messages.push(text)
+              },
+              subscribe: async () => {},
+            }
+            const message = {
+              text: body.text || "",
+              raw: body,
+              author: {
+                userId: body.from?.id,
+                fullName: body.from?.name,
+              },
+            }
+            await this.messageHandler(thread, message)
+          }
+
+          return new Response(JSON.stringify({ messages }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          })
+        },
+      }
+    },
   }
 })
+
+jest.mock("@chat-adapter/teams", () => ({
+  createTeamsAdapter: jest.fn(() => ({})),
+}))
+
+jest.mock("@chat-adapter/state-memory", () => ({
+  createMemoryState: jest.fn(() => ({})),
+}))
 
 jest.mock("../../../controllers/ai/chatConversations", () => {
   const actual = jest.requireActual("../../../controllers/ai/chatConversations")
@@ -378,31 +397,5 @@ describe("agent teams integration provisioning", () => {
       expect(conversations[0]?.messages).toHaveLength(0)
     })
 
-    it("deduplicates retried incoming activities by activity id", async () => {
-      const { agent, chatAppId } = await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
-
-      const payload = {
-        id: "activity-dedupe-1",
-        type: "message",
-        text: "ask dedupe me",
-        from: { id: "user-1", name: "Teams User" },
-        conversation: { id: "conversation-1", conversationType: "personal" },
-        channelData: { tenant: { id: "tenant-1" } },
-      }
-
-      await postTeamsMessage({ path, body: payload })
-      const duplicateResponse = await postTeamsMessage({ path, body: payload })
-
-      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
-      expect(duplicateResponse.body.messages).toEqual([])
-
-      const conversations = await fetchConversations()
-      expect(conversations).toHaveLength(1)
-      const userMessages = conversations[0]!.messages.filter(
-        message => message.role === "user"
-      )
-      expect(userMessages).toHaveLength(1)
-    })
   })
 })

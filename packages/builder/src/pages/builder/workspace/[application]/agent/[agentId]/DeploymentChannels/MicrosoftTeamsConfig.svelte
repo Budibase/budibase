@@ -6,12 +6,14 @@
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
-  import { toOptionalIdleTimeout, toOptionalValue } from "./utils"
+  import {
+    DEFAULT_IDLE_TIMEOUT_MINUTES,
+    toOptionalIdleTimeout,
+    toOptionalValue,
+  } from "./utils"
 
   const MS_TEAMS_NEW_COMMAND = "new"
   const MS_TEAMS_ASK_COMMAND = "ask"
-  const DEFAULT_IDLE_TIMEOUT_MINUTES = 45
-
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()
@@ -78,7 +80,6 @@
         },
       })
       provisionResult = await agentsStore.provisionMSTeamsChannel(agent._id)
-      await agentsStore.fetchAgents()
       notifications.success("Microsoft Teams channel settings saved")
     } catch (error) {
       console.error(error)

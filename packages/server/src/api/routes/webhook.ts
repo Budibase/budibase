@@ -1,7 +1,6 @@
 import * as controller from "../controllers/webhook"
 import { webhookValidator } from "./utils/validators"
 import { builderRoutes, publicRoutes } from "./endpointGroups"
-import koaBody from "koa-body"
 
 builderRoutes
   .get("/api/webhooks", controller.fetch)
@@ -12,29 +11,14 @@ builderRoutes
 // this shouldn't have authorisation, right now its always public
 publicRoutes.post("/api/webhooks/trigger/:instance/:id", controller.trigger)
 
-const discordWebhookBodyParser = koaBody({
-  multipart: true,
-  // @ts-expect-error
-  enableTypes: ["json", "form", "text"],
-  parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
-  includeUnparsed: true,
-})
-
+// No body parser — handlers read the raw body directly so the Chat SDK
+// can verify signatures / JWT against the untouched request.
 publicRoutes.post(
   "/api/webhooks/discord/:instance/:chatAppId/:agentId",
-  discordWebhookBodyParser,
   controller.discord
 )
 
-const MSTeamsWebhookBodyParser = koaBody({
-  multipart: true,
-  // @ts-ignore
-  enableTypes: ["json", "form", "text"],
-  parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
-})
-
 publicRoutes.post(
   "/api/webhooks/ms-teams/:instance/:chatAppId/:agentId",
-  MSTeamsWebhookBodyParser,
   controller.MSTeams
 )

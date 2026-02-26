@@ -1,59 +1,39 @@
 import fetch from "node-fetch"
-import { v4 } from "uuid"
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import { DiscordCommands } from "@budibase/shared-core"
 import type {
-  ChatApp,
   ChatConversation,
   ChatConversationChannel,
-  ChatConversationRequest,
-  ContextUser,
   Ctx,
   DiscordCommand,
   DiscordConversationScope,
   DiscordInteraction,
   DiscordInteractionComponent,
 } from "@budibase/types"
-import { DocumentType } from "@budibase/types"
+import { Chat } from "chat"
+import { createDiscordAdapter } from "@chat-adapter/discord"
 import sdk from "../../../sdk"
-import {
-  webhookChat,
-  prepareChatConversationForSave,
-  truncateTitle,
-} from "../ai/chatConversations"
 import {
   ensureProdWorkspaceWebhookRoute,
   isConversationExpired,
   pickLatestConversation,
-  touchConversationCache,
 } from "./utils"
+import {
+  rawBodyToRequest,
+  readRawBody,
+  responseToKoa,
+  tryParseJson,
+} from "./koaToRequest"
+import { handleChatMessage } from "./chatHandler"
+import { discordState } from "./chatState"
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10"
-const DISCORD_SIGNATURE_HEADER = "x-signature-ed25519"
-const DISCORD_TIMESTAMP_HEADER = "x-signature-timestamp"
-const DISCORD_INTERACTION_PING = 1
 const DISCORD_INTERACTION_APPLICATION_COMMAND = 2
 const DISCORD_INTERACTION_MODAL_SUBMIT = 5
-const DISCORD_INTERACTION_CALLBACK_MESSAGE = 4
-const DISCORD_INTERACTION_CALLBACK_DEFERRED_MESSAGE = 5
-const DISCORD_DEFAULT_IDLE_TIMEOUT_MINUTES = 45
-const DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 const DISCORD_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
 
-const discordConversationCache = new Map<string, string>()
-
-const getRawBody = (ctx: Ctx<any, any>) => {
-  const body = ctx.request.body as Record<string, any>
-  const unparsedBody = body?.[Symbol.for("unparsedBody") as any]
-  if (Buffer.isBuffer(unparsedBody)) {
-    return unparsedBody.toString("utf8")
-  }
-  if (typeof unparsedBody === "string") {
-    return unparsedBody
-  }
-  return JSON.stringify(ctx.request.body ?? {})
-}
+// --- Exported helpers (used by tests) ---
 
 const extractModalComponentValues = (
   components: DiscordInteractionComponent[] = []
@@ -67,9 +47,7 @@ export const extractDiscordContent = (interaction: DiscordInteraction) => {
   const optionValues = (interaction.data?.options || [])
     .map(o => (o.value != null ? String(o.value) : ""))
     .filter(Boolean)
-
   const modalValues = extractModalComponentValues(interaction.data?.components)
-
   return [...optionValues, ...modalValues].join(" ").trim()
 }
 
@@ -77,105 +55,12 @@ export const getDiscordInteractionCommand = (
   interaction: DiscordInteraction
 ): DiscordCommand => {
   const rawName = interaction.data?.name?.trim().toLowerCase() || ""
-
   if (rawName === DiscordCommands.NEW) return DiscordCommands.NEW
   if (rawName === DiscordCommands.ASK) return DiscordCommands.ASK
   if (interaction.type === DISCORD_INTERACTION_MODAL_SUBMIT || !rawName) {
     return DiscordCommands.ASK
   }
   return DiscordCommands.UNSUPPORTED
-}
-
-const buildDiscordUserContext = (
-  userId: string,
-  displayName?: string
-): ContextUser => ({
-  _id: `discord:${userId}`,
-  tenantId: context.getTenantId(),
-  email: `discord+${userId}@example.invalid`,
-  roles: {},
-  userId,
-  firstName: displayName,
-})
-
-const splitDiscordMessage = (content: string, maxLength = 2000): string[] => {
-  if (content.length <= maxLength) return [content]
-  const chunks: string[] = []
-  for (let i = 0; i < content.length; i += maxLength) {
-    chunks.push(content.slice(i, i + maxLength))
-  }
-  return chunks
-}
-
-const sendDiscordRequest = async ({
-  method,
-  url,
-  content,
-}: {
-  method: "PATCH" | "POST"
-  url: string
-  content: string
-}) => {
-  const response = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      content,
-      allowed_mentions: { parse: [] },
-    }),
-  })
-  if (!response.ok) {
-    throw new Error(
-      `Discord followup failed (${response.status}): ${response.statusText}`
-    )
-  }
-}
-
-const sendDiscordResponse = async (
-  applicationId: string,
-  token: string,
-  content: string
-) => {
-  const chunks = splitDiscordMessage(content || "No response generated.")
-  const originalUrl = `${DISCORD_API_BASE_URL}/webhooks/${applicationId}/${token}/messages/@original`
-  const followupUrl = `${DISCORD_API_BASE_URL}/webhooks/${applicationId}/${token}`
-  const firstChunk = chunks[0] || "No response generated."
-  const remainingChunks = chunks.slice(1)
-
-  await sendDiscordRequest({
-    method: "PATCH",
-    url: originalUrl,
-    content: firstChunk,
-  })
-
-  for (const chunk of remainingChunks) {
-    await sendDiscordRequest({
-      method: "POST",
-      url: followupUrl,
-      content: chunk,
-    })
-  }
-}
-
-const getDiscordErrorMessage = (error: unknown) =>
-  error instanceof HTTPError ? error.message : DISCORD_FALLBACK_ERROR_MESSAGE
-
-const sendDiscordErrorResponse = async ({
-  interaction,
-  error,
-}: {
-  interaction: DiscordInteraction
-  error: unknown
-}) => {
-  try {
-    await sendDiscordResponse(
-      interaction.application_id,
-      interaction.token,
-      getDiscordErrorMessage(error)
-    )
-  } catch (responseError) {
-    console.error("Failed to send Discord fallback response", responseError)
-  }
 }
 
 export const isDiscordConversationExpired = ({
@@ -193,32 +78,9 @@ export const getDiscordIdleTimeoutMs = () => {
     process.env.DISCORD_CONVERSATION_IDLE_TIMEOUT_MINUTES
   )
   const minutes =
-    Number.isFinite(configured) && configured > 0
-      ? configured
-      : DISCORD_DEFAULT_IDLE_TIMEOUT_MINUTES
+    Number.isFinite(configured) && configured > 0 ? configured : 45
   return minutes * 60 * 1000
 }
-
-export const isDiscordTimestampFresh = (
-  timestamp: string,
-  nowMs = Date.now()
-) => sdk.ai.deployments.discord.isDiscordTimestampFresh(timestamp, nowMs)
-
-const getDiscordConversationCacheKey = ({
-  workspaceId,
-  scope,
-}: {
-  workspaceId: string
-  scope: DiscordConversationScope
-}) =>
-  [
-    workspaceId,
-    scope.chatAppId,
-    scope.agentId,
-    scope.channelId,
-    scope.threadId || "",
-    scope.externalUserId,
-  ].join(":")
 
 export const matchesDiscordConversationScope = ({
   chat,
@@ -237,7 +99,6 @@ export const matchesDiscordConversationScope = ({
   ) {
     return false
   }
-
   if (ch?.externalUserId) {
     return ch.externalUserId === scope.externalUserId
   }
@@ -263,242 +124,156 @@ export const pickDiscordConversation = ({
     nowMs,
   })
 
-const findDiscordConversation = async ({
-  db,
-  workspaceId,
-  scope,
-  idleTimeoutMs,
+// --- Discord response helpers ---
+
+const sendDiscordRequest = async ({
+  method,
+  url,
+  content,
 }: {
-  db: ReturnType<typeof context.getWorkspaceDB>
-  workspaceId: string
-  scope: DiscordConversationScope
-  idleTimeoutMs: number
+  method: "PATCH" | "POST"
+  url: string
+  content: string
 }) => {
-  const cacheKey = getDiscordConversationCacheKey({ workspaceId, scope })
-  const cachedChatId = discordConversationCache.get(cacheKey)
-  if (cachedChatId) {
-    const cachedChat = await db.tryGet<ChatConversation>(cachedChatId)
-    if (
-      cachedChat &&
-      matchesDiscordConversationScope({ chat: cachedChat, scope }) &&
-      !isDiscordConversationExpired({ chat: cachedChat, idleTimeoutMs })
-    ) {
-      touchConversationCache({
-        cache: discordConversationCache,
-        cacheKey,
-        chatId: cachedChatId,
-        maxSize: DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE,
-      })
-      return cachedChat
-    }
-    discordConversationCache.delete(cacheKey)
+  const response = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content, allowed_mentions: { parse: [] } }),
+  })
+  if (!response.ok) {
+    throw new Error(
+      `Discord followup failed (${response.status}): ${response.statusText}`
+    )
   }
-
-  /*
-  Concerned about this, but will revisit when more channels get added,
-  How many chat convos could a workspace end up having? 09/02/2026
-  Also a problem in general chat convo fetching
-  */
-  const response = await db.allDocs<ChatConversation>(
-    docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
-      include_docs: true,
-    })
-  )
-
-  const chats = response.rows
-    .map(row => row.doc)
-    .filter((chat): chat is ChatConversation => !!chat)
-
-  const picked = pickDiscordConversation({ chats, scope, idleTimeoutMs })
-  if (picked?._id) {
-    touchConversationCache({
-      cache: discordConversationCache,
-      cacheKey,
-      chatId: picked._id,
-      maxSize: DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE,
-    })
-  }
-  return picked
 }
 
-const getIdleTimeoutMs = (configMinutes?: number) => {
-  if (configMinutes && configMinutes > 0) {
-    return configMinutes * 60 * 1000
+const sendDiscordResponse = async (
+  applicationId: string,
+  token: string,
+  content: string
+) => {
+  const maxLength = 2000
+  const text = content || "No response generated."
+  const chunks: string[] = []
+  for (let i = 0; i < text.length; i += maxLength) {
+    chunks.push(text.slice(i, i + maxLength))
   }
-  return getDiscordIdleTimeoutMs()
+
+  await sendDiscordRequest({
+    method: "PATCH",
+    url: `${DISCORD_API_BASE_URL}/webhooks/${applicationId}/${token}/messages/@original`,
+    content: chunks[0] || "No response generated.",
+  })
+  for (const chunk of chunks.slice(1)) {
+    await sendDiscordRequest({
+      method: "POST",
+      url: `${DISCORD_API_BASE_URL}/webhooks/${applicationId}/${token}`,
+      content: chunk,
+    })
+  }
 }
+
+const getDiscordErrorMessage = (error: unknown) =>
+  error instanceof HTTPError ? error.message : DISCORD_FALLBACK_ERROR_MESSAGE
+
+const toDiscordInteraction = (
+  value: unknown
+): DiscordInteraction | undefined => {
+  if (!value || typeof value !== "object") {
+    return undefined
+  }
+  const interaction = value as {
+    type?: unknown
+    application_id?: unknown
+    token?: unknown
+  }
+  if (
+    typeof interaction.type !== "number" ||
+    typeof interaction.application_id !== "string" ||
+    typeof interaction.token !== "string"
+  ) {
+    return undefined
+  }
+  return value as DiscordInteraction
+}
+
+// --- Interaction processing ---
 
 const handleDiscordInteraction = async ({
   interaction,
   workspaceId,
   chatAppId,
   agentId,
+  idleTimeoutMinutes,
 }: {
   interaction: DiscordInteraction
   workspaceId: string
   chatAppId: string
   agentId: string
+  idleTimeoutMinutes?: number
 }) => {
   const { application_id, token } = interaction
+  const reply = (text: string) =>
+    sendDiscordResponse(application_id, token, text)
 
-  const reply = (content: string) =>
-    sendDiscordResponse(application_id, token, content)
-
-  await context.doInWorkspaceContext(workspaceId, async () => {
-    const db = context.getWorkspaceDB()
-    const chatApp = await db.tryGet<ChatApp>(chatAppId)
-    if (!chatApp) {
-      return reply("Chat app not found.")
-    }
-
-    if (
-      !chatApp.agents?.some(
-        agent => agent.agentId === agentId && agent.isEnabled
-      )
-    ) {
-      return reply("Agent is not enabled for this chat app.")
-    }
-
-    const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
-    const discord = agentConfig.discordIntegration
-    const askName = DiscordCommands.ASK
-    const newName = DiscordCommands.NEW
-    const command = getDiscordInteractionCommand(interaction)
-    if (command === DiscordCommands.UNSUPPORTED) {
-      return reply(
-        `Use /${askName} with a message to chat, or /${newName} to start a new conversation.`
-      )
-    }
-
-    const user = interaction.member?.user || interaction.user
-    const userId = user?.id || "unknown"
-    const displayName = user?.global_name || user?.username
-    const channelId = interaction.channel_id
-    if (!channelId) {
-      return reply("Missing Discord channel information.")
-    }
-
-    const threadId = interaction.thread_id
-    const content = extractDiscordContent(interaction)
-
-    const channel: ChatConversationChannel = {
-      provider: "discord",
-      channelId,
-      threadId,
-      guildId: interaction.guild_id,
-      externalUserId: userId,
-      externalUserName: displayName,
-    }
-
-    const scope: DiscordConversationScope = {
-      chatAppId,
-      agentId,
-      channelId,
-      threadId,
-      externalUserId: userId,
-    }
-
-    if (command === DiscordCommands.NEW && !content) {
-      const chatId = docIds.generateChatConversationID()
-      await db.put(
-        prepareChatConversationForSave({
-          chatId,
-          chatAppId,
-          userId: `discord:${userId}`,
-          title: "New conversation",
-          messages: [],
-          chat: {
-            _id: chatId,
-            chatAppId,
-            agentId,
-            title: "New conversation",
-            messages: [],
-            channel,
-          },
-        })
-      )
-      touchConversationCache({
-        cache: discordConversationCache,
-        cacheKey: getDiscordConversationCacheKey({
-          workspaceId,
-          scope,
-        }),
-        chatId,
-        maxSize: DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE,
-      })
-      return reply(
-        `Started a new conversation. Use /${askName} with a message.`
-      )
-    }
-
-    if (!content) {
-      return reply(`Please provide a message after /${askName}.`)
-    }
-
-    const existingChat =
-      command === DiscordCommands.NEW
-        ? undefined
-        : await findDiscordConversation({
-            db,
-            workspaceId,
-            scope,
-            idleTimeoutMs: getIdleTimeoutMs(discord?.idleTimeoutMinutes),
-          })
-
-    const userMessage: ChatConversationRequest["messages"][number] = {
-      id: v4(),
-      role: "user",
-      parts: [{ type: "text", text: content }],
-    }
-
-    const draftChat: ChatConversationRequest = {
-      _id: existingChat?._id,
-      chatAppId,
-      agentId,
-      title: existingChat?.title || truncateTitle(content),
-      messages: [...(existingChat?.messages || []), userMessage],
-      channel,
-    }
-
-    let result: Awaited<ReturnType<typeof webhookChat>>
-    try {
-      result = await webhookChat({
-        chat: draftChat,
-        user: buildDiscordUserContext(userId, displayName),
-      })
-    } catch (error) {
-      const message = getDiscordErrorMessage(error)
-      return reply(message)
-    }
-
-    const chatId = existingChat?._id ?? docIds.generateChatConversationID()
-    await db.put(
-      prepareChatConversationForSave({
-        chatId,
-        chatAppId,
-        userId: `discord:${userId}`,
-        title: existingChat?.title || result.title,
-        messages: result.messages,
-        chat: { ...draftChat, _id: chatId },
-        existingChat,
-      })
+  const command = getDiscordInteractionCommand(interaction)
+  if (command === DiscordCommands.UNSUPPORTED) {
+    await reply(
+      `Use /ask with a message to chat, or /new to start a new conversation.`
     )
-    touchConversationCache({
-      cache: discordConversationCache,
-      cacheKey: getDiscordConversationCacheKey({
-        workspaceId,
-        scope,
-      }),
-      chatId,
-      maxSize: DISCORD_DEFAULT_CONVERSATION_CACHE_SIZE,
-    })
+    return
+  }
 
-    await reply(result.assistantText || "No response generated.")
+  const user = interaction.member?.user || interaction.user
+  const userId = user?.id || "unknown"
+  const displayName = user?.global_name || user?.username
+  const channelId = interaction.channel_id
+  if (!channelId) {
+    await reply("Missing Discord channel information.")
+    return
+  }
+
+  const content = extractDiscordContent(interaction)
+  const threadId = interaction.thread_id
+
+  const channel: ChatConversationChannel = {
+    provider: "discord",
+    channelId,
+    threadId,
+    guildId: interaction.guild_id,
+    externalUserId: userId,
+    externalUserName: displayName,
+  }
+
+  const scope: DiscordConversationScope = {
+    chatAppId,
+    agentId,
+    channelId,
+    threadId,
+    externalUserId: userId,
+  }
+
+  await handleChatMessage({
+    reply: async (text: string) => {
+      await reply(text)
+    },
+    workspaceId,
+    chatAppId,
+    agentId,
+    provider: "discord",
+    command: command === DiscordCommands.NEW ? "new" : "ask",
+    content,
+    user: { externalUserId: userId, displayName },
+    channel,
+    scope,
+    idleTimeoutMinutes,
   })
 }
 
+// --- Main webhook handler ---
+
 export async function discordWebhook(
-  ctx: Ctx<any, any, { instance: string; chatAppId: string; agentId: string }>
+  ctx: Ctx<unknown, unknown, { instance: string; chatAppId: string; agentId: string }>
 ) {
   const prodAppId = ensureProdWorkspaceWebhookRoute({
     ctx,
@@ -509,33 +284,32 @@ export async function discordWebhook(
     return
   }
 
-  const signature = ctx.headers[DISCORD_SIGNATURE_HEADER]
-  const timestamp = ctx.headers[DISCORD_TIMESTAMP_HEADER]
-
-  if (
-    !signature ||
-    !timestamp ||
-    Array.isArray(signature) ||
-    Array.isArray(timestamp)
-  ) {
-    ctx.status = 401
-    ctx.body = { error: "Missing Discord signature headers" }
-    return
-  }
-
-  const rawBody = getRawBody(ctx)
-  if (!isDiscordTimestampFresh(timestamp)) {
-    ctx.status = 401
-    ctx.body = { error: "Invalid Discord signature timestamp" }
-    return
-  }
-
   let publicKey: string
+  let botToken: string
+  let applicationId: string
+  let idleTimeoutMinutes: number | undefined
   try {
-    publicKey = await sdk.ai.deployments.discord.getDiscordPublicKeyForRoute({
-      instance: prodAppId,
-      agentId: ctx.params.agentId,
+    const result = await context.doInWorkspaceContext(prodAppId, async () => {
+      const agent = await sdk.ai.agents.getOrThrow(ctx.params.agentId)
+      const integration =
+        sdk.ai.deployments.discord.validateDiscordIntegration(agent)
+      const pk = agent.discordIntegration?.publicKey?.trim()
+      if (!pk) {
+        throw new HTTPError(
+          "Discord public key is not configured for this agent",
+          400
+        )
+      }
+      return {
+        ...integration,
+        publicKey: pk,
+        idleTimeoutMinutes: agent.discordIntegration?.idleTimeoutMinutes,
+      }
     })
+    publicKey = result.publicKey
+    botToken = result.botToken
+    applicationId = result.applicationId
+    idleTimeoutMinutes = result.idleTimeoutMinutes
   } catch (error) {
     if (error instanceof HTTPError) {
       ctx.status = error.status
@@ -545,54 +319,59 @@ export async function discordWebhook(
     throw error
   }
 
-  if (
-    !sdk.ai.deployments.discord.verifyDiscordSignature({
-      publicKey,
-      signature,
-      timestamp,
-      rawBody,
-    })
-  ) {
-    ctx.status = 401
-    ctx.body = { error: "Invalid Discord signature" }
-    return
-  }
+  // Read raw body before any parsing — Chat SDK needs it for signature verification
+  const rawBody = await readRawBody(ctx.req)
 
-  const interaction = ctx.request.body as DiscordInteraction
-  if (interaction?.type === DISCORD_INTERACTION_PING) {
-    ctx.status = 200
-    ctx.body = { type: DISCORD_INTERACTION_PING }
-    return
-  }
-
-  if (
-    interaction?.type !== DISCORD_INTERACTION_APPLICATION_COMMAND &&
-    interaction?.type !== DISCORD_INTERACTION_MODAL_SUBMIT
-  ) {
-    ctx.status = 200
-    ctx.body = {
-      type: DISCORD_INTERACTION_CALLBACK_MESSAGE,
-      data: {
-        content: "Unsupported interaction type.",
-      },
-    }
-    return
-  }
-
-  ctx.status = 200
-  ctx.body = { type: DISCORD_INTERACTION_CALLBACK_DEFERRED_MESSAGE }
-
-  setImmediate(async () => {
-    try {
-      await handleDiscordInteraction({
-        interaction,
-        workspaceId: prodAppId,
-        chatAppId: ctx.params.chatAppId,
-        agentId: ctx.params.agentId,
-      })
-    } catch (error) {
-      console.error("Discord webhook processing failed", error)
-      await sendDiscordErrorResponse({ interaction, error })
-    }
+  const chat = new Chat({
+    userName: "Budibase",
+    adapters: {
+      discord: createDiscordAdapter({ applicationId, publicKey, botToken }),
+    },
+    state: discordState,
+    logger: "silent",
   })
+
+  const request = rawBodyToRequest(ctx, rawBody)
+  const response = await chat.webhooks.discord(request)
+  await responseToKoa(ctx, response)
+  if (!response.ok) {
+    return
+  }
+
+  // Chat SDK returns deferred response for ApplicationCommand/ModalSubmit.
+  // We process the interaction in the background.
+  const interaction = toDiscordInteraction(tryParseJson(rawBody))
+  if (!interaction) {
+    return
+  }
+  if (
+    interaction?.type === DISCORD_INTERACTION_APPLICATION_COMMAND ||
+    interaction?.type === DISCORD_INTERACTION_MODAL_SUBMIT
+  ) {
+    setImmediate(async () => {
+      try {
+        await handleDiscordInteraction({
+          interaction,
+          workspaceId: prodAppId,
+          chatAppId: ctx.params.chatAppId,
+          agentId: ctx.params.agentId,
+          idleTimeoutMinutes,
+        })
+      } catch (error) {
+        console.error("Discord webhook processing failed", error)
+        try {
+          await sendDiscordResponse(
+            interaction.application_id,
+            interaction.token,
+            getDiscordErrorMessage(error)
+          )
+        } catch (responseError) {
+          console.error(
+            "Failed to send Discord fallback response",
+            responseError
+          )
+        }
+      }
+    })
+  }
 }

@@ -35,18 +35,10 @@ export const resolveChatAppForAgent = async (
   agentId: string,
   chatAppId?: string
 ) =>
-  await shared.resolveChatAppForAgent({
-    agentId,
-    chatAppId,
-  })
+  await shared.resolveProviderChatAppForAgent(agentId, chatAppId)
 
 export const buildMSTeamsWebhookUrl = async (
   chatAppId: string,
   agentId: string
 ) =>
-  await shared.buildWebhookUrl({
-    provider: "ms-teams",
-    chatAppId,
-    agentId,
-    useProdWorkspaceId: true,
-  })
+  await shared.buildProviderWebhookUrl("ms-teams", chatAppId, agentId)

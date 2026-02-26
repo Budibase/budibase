@@ -3,7 +3,6 @@ import type { ChatConversation, DiscordInteraction } from "@budibase/types"
 import {
   extractDiscordContent,
   getDiscordInteractionCommand,
-  isDiscordTimestampFresh,
   matchesDiscordConversationScope,
   pickDiscordConversation,
 } from "./discord"
@@ -172,22 +171,5 @@ describe("discord webhook helpers", () => {
     })
 
     expect(picked?._id).toEqual("latest")
-  })
-
-  describe("isDiscordTimestampFresh", () => {
-    it("returns true for current timestamps", () => {
-      const nowSec = Math.floor(Date.now() / 1000).toString()
-      expect(isDiscordTimestampFresh(nowSec)).toBe(true)
-    })
-
-    it("returns false for stale timestamps", () => {
-      // 3600 = 1 hour, just old enough to be staler than the 45min default timeout
-      const staleSec = Math.floor(Date.now() / 1000 - 3600).toString()
-      expect(isDiscordTimestampFresh(staleSec)).toBe(false)
-    })
-
-    it("returns false for invalid timestamps", () => {
-      expect(isDiscordTimestampFresh("not-a-timestamp")).toBe(false)
-    })
   })
 })
