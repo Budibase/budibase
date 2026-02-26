@@ -371,7 +371,7 @@ export async function fetchClientChatApps(
         chatAppId: chatApp._id,
         agentId: chatAgent.agentId,
         agentName: workspaceAgent.name,
-        name: workspaceAgent.name || chatApp.title || workspace.name,
+        name: workspaceAgent.name,
         url: `${workspace.url}/agent/${encodeURIComponent(chatAgent.agentId)}`.replace(
           /\/$/,
           ""
