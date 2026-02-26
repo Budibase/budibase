@@ -35,10 +35,10 @@ describe("createLLM", () => {
   const findConfigMock = sdk.ai.configs.find as jest.MockedFunction<
     typeof sdk.ai.configs.find
   >
-  const throwIfBudibaseAICreditsExceededMock = quotas
-    .throwIfBudibaseAICreditsExceeded as jest.MockedFunction<
-    typeof quotas.throwIfBudibaseAICreditsExceeded
-  >
+  const throwIfBudibaseAICreditsExceededMock =
+    quotas.throwIfBudibaseAICreditsExceeded as jest.MockedFunction<
+      typeof quotas.throwIfBudibaseAICreditsExceeded
+    >
   const createBBAIClientMock = createBBAIClient as jest.MockedFunction<
     typeof createBBAIClient
   >
