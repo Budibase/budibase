@@ -1,8 +1,7 @@
-import { ai } from "@budibase/pro"
 import { ResponseFormat } from "@budibase/types"
 import _ from "lodash"
 import { Readable } from "stream"
-import { MockLLMResponseOpts } from "."
+import { MockLLMResponseOpts, parseResponseFormat } from "."
 import { getPool } from "../../../../tests/jestEnv"
 
 let chatID = 1
@@ -49,7 +48,7 @@ interface ChatCompletionResponse {
   usage: Usage
 }
 
-type ParsedResponseFormat = ReturnType<typeof ai.parseResponseFormat>
+type ParsedResponseFormat = ReturnType<typeof parseResponseFormat>
 
 function parseJsonBody(body: unknown): ChatCompletionRequest {
   if (typeof body === "string") return JSON.parse(body)
@@ -120,7 +119,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   const origin = opts?.baseUrl || "https://api.openai.com"
   const pool = getPool(origin)
   const expectedFormat = opts?.format
-    ? ai.parseResponseFormat(opts.format as ResponseFormat)
+    ? parseResponseFormat(opts.format as ResponseFormat)
     : null
 
   const interceptor = pool.intercept({
@@ -205,7 +204,7 @@ export const mockAISDKChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   const origin = opts?.baseUrl || "https://api.openai.com"
   const pool = getPool(origin)
   const expectedFormat = opts?.format
-    ? ai.parseResponseFormat(opts.format as ResponseFormat)
+    ? parseResponseFormat(opts.format as ResponseFormat)
     : null
 
   const interceptor = pool.intercept({

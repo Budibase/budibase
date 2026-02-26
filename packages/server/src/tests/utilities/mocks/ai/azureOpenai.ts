@@ -1,6 +1,5 @@
 import _ from "lodash"
-import { ai } from "@budibase/pro"
-import { MockLLMResponseFn, MockLLMResponseOpts } from "."
+import { MockLLMResponseFn, MockLLMResponseOpts, parseResponseFormat } from "."
 import { getPool } from "../../../../tests/jestEnv"
 
 let chatID = 1
@@ -63,7 +62,7 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
 
   const expectedFormat = opts?.format
     ? _.matches({
-        response_format: ai.parseResponseFormat(opts.format as any),
+        response_format: parseResponseFormat(opts.format as any),
       })
     : null
 
