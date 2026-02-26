@@ -7,6 +7,7 @@
   import BBAILogo from "assets/bb-ai.svg"
 
   const CHAT_UPDATE_ERROR_MESSAGE = "Could not update chat"
+  const CHAT_LOAD_ERROR_MESSAGE = "Failed to load agent chat status"
   const AGENT_CHAT_ENABLED_MESSAGE = "Agent chat enabled"
   const AGENT_CHAT_DISABLED_MESSAGE = "Agent chat disabled"
   const AGENT_CHAT_ENABLE_ERROR_MESSAGE = "Failed to enable agent chat"
@@ -88,7 +89,7 @@
     chatAppsStore
       .ensureChatApp(undefined, workspaceId)
       .catch(error => {
-        console.error(error)
+        notifications.error(CHAT_LOAD_ERROR_MESSAGE)
       })
       .finally(() => {
         loadingChatApp = false
@@ -124,7 +125,6 @@
           : AGENT_CHAT_DISABLED_MESSAGE
       )
     } catch (error) {
-      console.error(error)
       notifications.error(
         wasEnabled
           ? AGENT_CHAT_DISABLE_ERROR_MESSAGE
