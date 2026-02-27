@@ -115,7 +115,10 @@ export const getDiscordApplicationCommand = (
   }
 
   const commandName = interaction.data?.name?.toLowerCase()
-  if (commandName === DiscordCommands.ASK || commandName === DiscordCommands.NEW) {
+  if (
+    commandName === DiscordCommands.ASK ||
+    commandName === DiscordCommands.NEW
+  ) {
     return commandName
   }
 }
@@ -331,7 +334,7 @@ export async function discordWebhook(
           channelId,
         })
 
-        void (async () => {
+        const processDiscordCommand = async () => {
           const fallbackReply = async (text: string) => {
             await adapter.postMessage(replyThreadId, text)
           }
@@ -365,7 +368,11 @@ export async function discordWebhook(
               )
             }
           }
-        })()
+        }
+
+        processDiscordCommand().catch(error => {
+          console.error("Unexpected Discord command task failure", error)
+        })
 
         return response
       }
