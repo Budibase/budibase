@@ -11,7 +11,6 @@
     Table,
     notifications,
   } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { roles } from "@/stores/builder"
   import { appsStore } from "@/stores/portal/apps"
@@ -24,12 +23,11 @@
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
   import AssignWorkspacePicker from "./_components/AssignWorkspacePicker.svelte"
+  import EditWorkspaceRoleModal from "./_components/EditWorkspaceRoleModal.svelte"
   import RemoveWorkspaceTableRenderer from "./_components/RemoveWorkspaceTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
-
-  $goto
 
   export let groupId
 
@@ -43,7 +41,9 @@
   }
 
   let loaded = false
-  let editModal, deleteModal
+  let editModal, deleteModal, editWorkspaceRoleModal
+  let selectedWorkspace
+  let editWorkspaceRoleModalToken = 0
   let workspaceSearch
   let workspacePageNumber = 0
   let previousWorkspaceSearch
@@ -171,6 +171,15 @@
     }
   }
 
+  const openWorkspaceRoleModal = workspace => {
+    if (readonly || workspace?.__skeleton) {
+      return
+    }
+    selectedWorkspace = workspace
+    editWorkspaceRoleModalToken += 1
+    editWorkspaceRoleModal?.show()
+  }
+
   setContext("groupApps", {
     removeApp,
     getReadonly: () => readonly,
@@ -235,12 +244,7 @@
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
-        on:click={e => {
-          if (e.detail?.__skeleton) {
-            return
-          }
-          $goto(`/builder/workspace/${e.detail.devId}`)
-        }}
+        on:click={e => openWorkspaceRoleModal(e.detail)}
         allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">
@@ -275,6 +279,14 @@
 
 <Modal bind:this={editModal}>
   <CreateEditGroupModal {group} {saveGroup} />
+</Modal>
+
+<Modal bind:this={editWorkspaceRoleModal} closeOnOutsideClick={false}>
+  <EditWorkspaceRoleModal
+    {groupId}
+    workspace={selectedWorkspace}
+    openToken={editWorkspaceRoleModalToken}
+  />
 </Modal>
 
 <ConfirmDialog
