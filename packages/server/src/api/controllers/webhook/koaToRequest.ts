@@ -7,11 +7,32 @@ type WebhookCtx<
 
 export const readRawBody = (req: IncomingMessage): Promise<string> =>
   new Promise((resolve, reject) => {
-    let rawBody = ""
+    const chunks: Uint8Array[] = []
+    let totalBytes = 0
+
     req.on("data", (chunk: Buffer | string) => {
-      rawBody += typeof chunk === "string" ? chunk : chunk.toString("utf8")
+      const bytes =
+        typeof chunk === "string"
+          ? new Uint8Array(Buffer.from(chunk, "utf8"))
+          : new Uint8Array(chunk)
+      chunks.push(bytes)
+      totalBytes += bytes.byteLength
     })
-    req.on("end", () => resolve(rawBody))
+
+    req.on("end", () => {
+      if (totalBytes === 0) {
+        resolve("")
+        return
+      }
+
+      const allBytes = new Uint8Array(totalBytes)
+      let offset = 0
+      for (const chunk of chunks) {
+        allBytes.set(chunk, offset)
+        offset += chunk.byteLength
+      }
+      resolve(Buffer.from(allBytes).toString("utf8"))
+    })
     req.on("error", reject)
   })
 

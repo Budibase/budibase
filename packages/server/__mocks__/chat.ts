@@ -9,8 +9,11 @@ interface ChatOptions {
   logger?: string
 }
 
+// @ts-ignore no-useless-constructor
 export class ConsoleLogger {
-  constructor(_level: string) {}
+  constructor(_level: string) {
+    // no-op
+  }
 }
 
 export class Chat {
@@ -64,10 +67,13 @@ export class Chat {
           new Uint8Array(Buffer.from(signature, "hex"))
         )
         if (!verified) {
-          return new Response(JSON.stringify({ error: "Invalid Discord signature" }), {
-            status: 401,
-            headers: { "content-type": "application/json" },
-          })
+          return new Response(
+            JSON.stringify({ error: "Invalid Discord signature" }),
+            {
+              status: 401,
+              headers: { "content-type": "application/json" },
+            }
+          )
         }
 
         let parsed: Record<string, unknown> | undefined
