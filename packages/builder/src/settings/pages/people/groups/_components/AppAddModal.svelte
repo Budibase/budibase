@@ -13,6 +13,7 @@
   import { appsStore } from "@/stores/portal/apps"
   import { groups } from "@/stores/portal/groups"
   import { Constants } from "@budibase/frontend-core"
+  import GroupIcon from "./GroupIcon.svelte"
 
   export let groupId
 
@@ -106,7 +107,10 @@
   disabled={confirmDisabled}
 >
   <Layout noPadding gap="S">
-    <Body><b>{group?.name}</b></Body>
+    <div class="group-name">
+      <GroupIcon {group} size="S" />
+      <Body><b>{group?.name}</b></Body>
+    </div>
     <Multiselect
       bind:value={selectedWorkspaceIds}
       bind:searchTerm={workspaceSearchTerm}
@@ -137,3 +141,11 @@
     {/if}
   </Layout>
 </ModalContent>
+
+<style>
+  .group-name {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+</style>
