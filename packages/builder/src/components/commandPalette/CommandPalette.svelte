@@ -43,7 +43,7 @@
       name: "Invite users and manage app access",
       description: "",
       icon: "user",
-      action: () => bb.settings("/people/users"),
+      action: () => bb.settings("/people/workspace"),
       requiresApp: true,
     },
     ...navigationCommands(),
