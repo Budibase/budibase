@@ -190,22 +190,8 @@
     "yargs": "^17.7.2",
     "zod": "^4.2.1"
   },
-  "resolutions": {
-    "@budibase/pro": "npm:@budibase/pro@latest"
-  },
   "nx": {
     "targets": {
-      "dev": {
-        "dependsOn": [
-          {
-            "comment": "Required for pro usage when submodule not loaded",
-            "projects": [
-              "@budibase/backend-core"
-            ],
-            "target": "build:oss"
-          }
-        ]
-      },
       "build": {
         "inputs": [
           "default",

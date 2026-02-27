@@ -8,6 +8,7 @@ import { createLiteLLMOpenAI } from "./litellm"
 
 export * as bbai from "./bbai"
 export * from "./utils"
+export * from "./messages"
 
 export async function createLLM(
   configId: string,

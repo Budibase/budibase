@@ -86,7 +86,6 @@ async function runBuild(entry, outfile) {
       nodeExternalsPlugin({
         allowList: [
           "@budibase/frontend-core",
-          "@budibase/pro",
           "svelte",
           "chat",
           "@chat-adapter/discord",

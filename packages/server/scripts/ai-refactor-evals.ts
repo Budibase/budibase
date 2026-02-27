@@ -313,6 +313,14 @@ function section(text: string) {
   return `\n=== ${text} ===`
 }
 
+function formatFailureReason(error: unknown): string {
+  const message =
+    typeof error === "string"
+      ? error
+      : (error as any)?.message || String(error || "Unknown error")
+  return message.replace(/\s+/g, " ").trim()
+}
+
 function loadEvalEnvFile() {
   const configuredPath = process.env.AI_EVAL_ENV_FILE
   const envFilePath = configuredPath
@@ -832,14 +840,15 @@ async function runFeatureEvals(
       console.log(green(`PASS: ${name} (${elapsedMs}ms)`))
     } catch (err: any) {
       const elapsedMs = Date.now() - startedAt
+      const detail = formatFailureReason(err)
       results.push({
         name,
         ok: false,
-        detail: err?.message || String(err),
+        detail,
         elapsedMs,
       })
       clearRunningLine()
-      console.log(red(`FAIL: ${name} (${elapsedMs}ms)`))
+      console.log(red(`FAIL: ${name} (${elapsedMs}ms) - ${detail}`))
     }
   }
 
@@ -1411,6 +1420,11 @@ async function main() {
       console.log(green(`PASS: ${row.name}${elapsedLabel}`))
     } else {
       console.log(red(`FAIL: ${row.name}${elapsedLabel}`))
+      const failedSteps = row.results.filter(r => !r.ok)
+      for (const failedStep of failedSteps) {
+        const reason = failedStep.detail || "Unknown error"
+        console.log(red(`  - ${failedStep.name}: ${reason}`))
+      }
     }
   }
 

@@ -1,6 +1,4 @@
 import { Config } from "jest"
-
-import * as fs from "fs"
 import { join } from "path"
 
 const baseConfig: Config = {
@@ -39,12 +37,8 @@ const baseConfig: Config = {
       "<rootDir>/__mocks__/chat-adapter-state-memory.ts",
     "^@chat-adapter/state-ioredis$":
       "<rootDir>/__mocks__/chat-adapter-state-ioredis.ts",
+    "@budibase/pro": "<rootDir>/../pro/src",
   },
-}
-
-// add pro sources if they exist
-if (fs.existsSync("../pro/src")) {
-  baseConfig.moduleNameMapper!["@budibase/pro"] = "<rootDir>/../pro/src"
 }
 
 const config: Config = {
