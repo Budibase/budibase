@@ -1,4 +1,5 @@
 import { withEnv } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import { BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
 import sdk from "../../.."
 import { createLLM } from "./index"
@@ -24,10 +25,20 @@ jest.mock("./litellm", () => ({
   createLiteLLMOpenAI: jest.fn(),
 }))
 
+jest.mock("@budibase/pro", () => ({
+  quotas: {
+    throwIfBudibaseAICreditsExceeded: jest.fn().mockResolvedValue(undefined),
+  },
+}))
+
 describe("createLLM", () => {
   const findConfigMock = sdk.ai.configs.find as jest.MockedFunction<
     typeof sdk.ai.configs.find
   >
+  const throwIfBudibaseAICreditsExceededMock =
+    quotas.throwIfBudibaseAICreditsExceeded as jest.MockedFunction<
+      typeof quotas.throwIfBudibaseAICreditsExceeded
+    >
   const createBBAIClientMock = createBBAIClient as jest.MockedFunction<
     typeof createBBAIClient
   >
@@ -65,11 +76,39 @@ describe("createLLM", () => {
       const expected = { chat: "chat" }
       createBBAIClientMock.mockResolvedValue(expected as any)
 
-      const result = await createLLM("config-1")
+      const result = await createLLM("config-1", "session-1")
 
-      expect(createBBAIClient).toHaveBeenCalledWith("budibase/gpt-5-mini")
+      expect(createBBAIClient).toHaveBeenCalledWith(
+        "budibase/gpt-5-mini",
+        "session-1",
+        undefined,
+        undefined
+      )
       expect(createLiteLLMOpenAI).not.toHaveBeenCalled()
+      expect(throwIfBudibaseAICreditsExceededMock).toHaveBeenCalledTimes(1)
       expect(result).toBe(expected)
+    })
+  })
+
+  it("passes reasoningEffort to Budibase AI client", async () => {
+    await withEnv({ SELF_HOSTED: false }, async () => {
+      findConfigMock.mockResolvedValue({
+        provider: BUDIBASE_AI_PROVIDER_ID,
+        model: "budibase/gpt-5-mini",
+        reasoningEffort: "high",
+      } as any)
+
+      createBBAIClientMock.mockResolvedValue({ chat: "chat" } as any)
+
+      await createLLM("config-1", "session-1")
+
+      expect(createBBAIClient).toHaveBeenCalledWith(
+        "budibase/gpt-5-mini",
+        "session-1",
+        undefined,
+        "high"
+      )
+      expect(throwIfBudibaseAICreditsExceededMock).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -91,6 +130,7 @@ describe("createLLM", () => {
       undefined
     )
     expect(createBBAIClient).not.toHaveBeenCalled()
+    expect(throwIfBudibaseAICreditsExceededMock).not.toHaveBeenCalled()
     expect(result).toBe(expected)
   })
 })

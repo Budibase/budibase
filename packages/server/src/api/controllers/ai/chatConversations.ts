@@ -33,9 +33,9 @@ import sdk from "../../../sdk"
 import {
   formatIncompleteToolCallError,
   updatePendingToolCalls,
-} from "../../../sdk/workspace/ai/agents/utils"
+} from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
-import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag/files"
+import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag"
 import { assertChatAppIsLiveForUser } from "./chatApps"
 
 interface PrepareChatConversationForSaveParams {
@@ -125,19 +125,19 @@ export const truncateTitle = (value: string, maxLength = 120) => {
   return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`
 }
 
-interface DiscordChatCompleteResult {
+interface WebhookChatCompleteResult {
   messages: ChatConversation["messages"]
   assistantText: string
   title?: string
 }
 
-export async function discordChat({
+export async function webhookChat({
   chat,
   user,
 }: {
   chat: ChatConversationRequest
   user: ContextUser
-}): Promise<DiscordChatCompleteResult> {
+}): Promise<WebhookChatCompleteResult> {
   const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
 
@@ -162,6 +162,7 @@ export async function discordChat({
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
   const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
@@ -181,11 +182,11 @@ export async function discordChat({
       baseSystemPrompt: ai.agentSystemPrompt(user),
       includeGoal: false,
     })
-  const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
-    agent.aiconfig
-  )
-
   const sessionId = chat._id || v4()
+  const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
+    agent.aiconfig,
+    sessionId
+  )
 
   const modelMessages = await convertToModelMessages(chat.messages)
   const messagesWithContext: ModelMessage[] =
@@ -353,7 +354,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
   try {
-    const sessionId = chat._id || v4()
+    const chatId = chat._id ?? docIds.generateChatConversationID()
+    const sessionId = chat._id || chat.sessionId || chatId
     const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
       agent.aiconfig,
       sessionId
@@ -444,7 +446,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           return
         }
 
-        const chatId = chat._id ?? docIds.generateChatConversationID()
         const existingChat = chat._id
           ? await db.tryGet<ChatConversation>(chat._id)
           : null

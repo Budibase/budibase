@@ -33,11 +33,11 @@ import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azure
 import { resetHttpMocking } from "../../../tests/jestEnv"
 import { withEnv as serverWithEnv } from "../../../environment"
 
-function toResponseFormat(schema: any, name = "response") {
+function toResponseFormat(schema: z.ZodObject) {
   return {
     type: "json_schema" as const,
     json_schema: {
-      name,
+      name: "response",
       strict: false,
       schema: schema.toJSONSchema({ target: "draft-7" }),
     },
@@ -288,10 +288,13 @@ describe("AI", () => {
 
 describe("BudibaseAI", () => {
   const config = new TestConfiguration()
-  let cleanup: () => void | Promise<void>
+  let cleanup: (() => void | Promise<void>)[] = []
   beforeAll(async () => {
     await config.init()
-    cleanup = await budibaseAI()(config)
+    cleanup.push(await budibaseAI()(config))
+    cleanup.push(
+      setEnv({ SELF_HOSTED: false, BUDIBASE_AI_DEFAULT_MODEL: "gpt-4o" })
+    )
   })
 
   beforeEach(async () => {
@@ -299,10 +302,11 @@ describe("BudibaseAI", () => {
   })
 
   afterAll(async () => {
-    if ("then" in cleanup) {
-      await cleanup()
-    } else {
-      cleanup()
+    for (const fn of cleanup) {
+      const result = fn()
+      if (result && "then" in result) {
+        await result
+      }
     }
     config.end()
   })
@@ -350,12 +354,14 @@ describe("BudibaseAI", () => {
         .reply(200, license)
     })
 
+    afterEach(() => {})
+
     it("handles correct chat response", async () => {
       let usage = await getQuotaUsage()
       expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
-      mockChatGPTResponse("Hi there!")
+      mockAISDKChatGPTResponse("Hi there!")
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         licenseKey: licenseKey,
@@ -376,7 +382,7 @@ describe("BudibaseAI", () => {
     })
 
     it("handles chat response error", async () => {
-      mockChatGPTResponse(() => {
+      mockAISDKChatGPTResponse(() => {
         throw new Error("LLM error")
       })
       await config.api.ai.chat(
@@ -421,7 +427,7 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.word()
-      mockChatGPTResponse(gptResponse, { format: "text" })
+      mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "text",
@@ -450,7 +456,7 @@ describe("BudibaseAI", () => {
       const gptResponse = JSON.stringify({
         [generator.word()]: generator.word(),
       })
-      mockChatGPTResponse(gptResponse, { format: "json" })
+      mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "json",
@@ -480,10 +486,9 @@ describe("BudibaseAI", () => {
       const structuredOutput = toResponseFormat(
         z.object({
           [generator.word()]: z.string(),
-        }),
-        "key"
+        })
       )
-      mockChatGPTResponse(gptResponse, { format: structuredOutput })
+      mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: structuredOutput,
@@ -514,7 +519,7 @@ describe("BudibaseAI", () => {
     const mockAIGenerationStructure = (
       generationStructure: ai.GenerationStructure
     ) => {
-      mockChatGPTResponse(JSON.stringify(generationStructure), {
+      mockAISDKChatGPTResponse(JSON.stringify(generationStructure), {
         format: toResponseFormat(ai.generationStructure),
       })
     }
@@ -523,7 +528,7 @@ describe("BudibaseAI", () => {
       generationStructure: ai.GenerationStructure,
       aiColumnGeneration: ai.AIColumnSchemas
     ) =>
-      mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
+      mockAISDKChatGPTResponse(JSON.stringify(aiColumnGeneration), {
         format: toResponseFormat(
           ai.aiColumnSchemas(
             ai.aiTableResponseToTableSchema(generationStructure)
@@ -532,10 +537,15 @@ describe("BudibaseAI", () => {
       })
 
     const mockDataGeneration = (
+      generationStructure: ai.GenerationStructure,
       dataGeneration: Record<string, Record<string, any>[]>
     ) =>
-      mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: toResponseFormat(ai.tableDataStructuredOutput([])),
+      mockAISDKChatGPTResponse(JSON.stringify(dataGeneration), {
+        format: toResponseFormat(
+          ai.tableDataStructuredOutput(
+            ai.aiTableResponseToTableSchema(generationStructure)
+          )
+        ),
       })
 
     const mockProcessAIColumn = (response: string) =>
@@ -684,61 +694,69 @@ describe("BudibaseAI", () => {
       mockAIColumnGeneration(generationStructure, aiColumnGeneration)
 
       // Use nock for image downloads since it intercepts before undici
-      nock("https://photourl.com")
-        .get("/any.png")
+      nock("https://picsum.photos")
+        .get("/600/600")
         .times(5) // 5 employee photos
         .reply(200, Buffer.from("fake image data"))
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Tickets: [
           {
+            _id: "ticket_1",
             Title: "System slow performance",
             Description:
               "User reports significant slowdowns when using multiple applications simultaneously on their PC.",
             Priority: "Medium",
             Status: "Closed",
             "Created Date": "2025-04-17",
+            Assignee: [],
             Attachment: {
-              name: "performance_logs.txt",
+              fileName: "performance_logs.txt",
               extension: ".txt",
               content: "performance logs",
             },
           },
           {
+            _id: "ticket_2",
             Title: "Email delivery failure",
             Description:
               "Emails sent to external clients are bouncing back. Bounce back message: '550: Recipient address rejected'.",
             Priority: "Medium",
             Status: "In Progress",
             "Created Date": "2025-04-19",
+            Assignee: [],
             Attachment: {
-              name: "email_bounce_back.txt",
+              fileName: "email_bounce_back.txt",
               extension: ".txt",
               content: "Email delivery failure",
             },
           },
           {
+            _id: "ticket_3",
             Title: "Software installation request",
             Description:
               "Request to install Adobe Photoshop on user’s workstation for design work.",
             Priority: "Low",
             Status: "In Progress",
             "Created Date": "2025-04-18",
+            Assignee: [],
             Attachment: {
-              name: "software_request_form.pdf",
+              fileName: "software_request_form.pdf",
               extension: ".pdf",
               content: "Software installation request",
             },
           },
           {
+            _id: "ticket_4",
             Title: "Unable to connect to VPN",
             Description:
               "User is experiencing issues when trying to connect to the VPN. Error message: 'VPN connection failed due to incorrect credentials'.",
             Priority: "High",
             Status: "Open",
             "Created Date": "2025-04-20",
+            Assignee: [],
             Attachment: {
-              name: "vpn_error_screenshot.pdf",
+              fileName: "vpn_error_screenshot.pdf",
               extension: ".pdf",
               content: "vpn error",
             },
@@ -746,95 +764,100 @@ describe("BudibaseAI", () => {
         ],
         Employees: [
           {
+            _id: "employee_1",
             "First Name": "Joshua",
             "Last Name": "Lee",
             Position: "Application Developer",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "development_guidelines.pdf",
+                fileName: "development_guidelines.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "project_documents.txt",
+                fileName: "project_documents.txt",
                 extension: ".txt",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_2",
             "First Name": "Emily",
             "Last Name": "Davis",
             Position: "Software Deployment Technician",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "software_license_list.txt",
+                fileName: "software_license_list.txt",
                 extension: ".txt",
                 content: "any content",
               },
               {
-                name: "deployment_guide.pdf",
+                fileName: "deployment_guide.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "installation_logs.txt",
+                fileName: "installation_logs.txt",
                 extension: ".txt",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_3",
             "First Name": "James",
             "Last Name": "Smith",
             Position: "IT Support Specialist",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "certificates.pdf",
+                fileName: "certificates.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "employment_contract.pdf",
+                fileName: "employment_contract.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_4",
             "First Name": "Jessica",
             "Last Name": "Taylor",
             Position: "Cybersecurity Analyst",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "security_audit_report.pdf",
+                fileName: "security_audit_report.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "incident_response_plan.pdf",
+                fileName: "incident_response_plan.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_5",
             "First Name": "Ashley",
             "Last Name": "Harris",
             Position: "Database Administrator",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "database_backup.txt",
+                fileName: "database_backup.txt",
                 extension: ".txt",
                 content: "any content",
               },
               {
-                name: "permission_settings.pdf",
+                fileName: "permission_settings.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
@@ -842,7 +865,7 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockDataGeneration(dataGeneration)
+      mockDataGeneration(generationStructure, dataGeneration)
 
       // Set up interceptors for AI column processing
       // Tickets: 4 rows × 2 AI columns = 8 calls
@@ -913,7 +936,6 @@ describe("BudibaseAI", () => {
               name: "Created Date",
               type: "datetime",
               ignoreTimezones: false,
-              dateOnly: true,
               aiGenerated: true,
             },
             "Resolution Time (Days)": {
@@ -1053,7 +1075,7 @@ describe("BudibaseAI", () => {
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Employees: [],
       }
-      mockDataGeneration(dataGeneration)
+      mockDataGeneration(generationStructure, dataGeneration)
 
       await expect(config.api.ai.generateTables({ prompt })).rejects.toThrow(
         "Self-referential relationships are not supported. Table Employees cannot link to itself."

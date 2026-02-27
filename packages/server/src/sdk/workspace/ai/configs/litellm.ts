@@ -336,6 +336,12 @@ async function validateCompletionsModel(model: {
   )
   if (res.status !== 200) {
     const text = await res.text()
+    if (text.includes("DB not connected")) {
+      throw new HTTPError(
+        "LiteLLM requires a database connection. Set DATABASE_URL on LiteLLM when store_model_in_db is enabled.",
+        400
+      )
+    }
     throw new HTTPError(text, 500)
   }
   const json = await res.json()

@@ -1,26 +1,8 @@
-import { utils } from "@budibase/shared-core"
-import {
-  AIFieldMetadata,
-  AIOperationEnum,
-  LLMConfigOptions,
-  Row,
-} from "@budibase/types"
+import { LLMConfigOptions } from "@budibase/types"
 import tracer from "dd-trace"
-import { Readable } from "node:stream"
 import { LLMFullResponse, LLMPromptResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
-import {
-  classifyText,
-  cleanData,
-  searchWeb,
-  sentimentAnalysis,
-  summarizeText,
-  translate,
-} from "../prompts"
-
-function extractTextFromColumns(row: Row, columns: string[]) {
-  return columns.map(column => row[column]).join(" ")
-}
+import { summarizeText } from "../prompts"
 
 export abstract class LLM {
   protected _model: string
@@ -70,12 +52,6 @@ export abstract class LLM {
     })
   }
 
-  abstract uploadFile(
-    data: Readable | Buffer,
-    filename: string,
-    contentType?: string
-  ): Promise<string>
-
   async chat(request: LLMRequest): Promise<LLMFullResponse> {
     return await tracer.trace("chat", async () => {
       const response = await this.chatCompletion(request)
@@ -87,56 +63,5 @@ export abstract class LLM {
     return tracer.trace("summarizeText", () =>
       this.prompt(summarizeText(prompt))
     )
-  }
-
-  async operation(
-    schema: AIFieldMetadata,
-    row: Row
-  ): Promise<LLMPromptResponse> {
-    return tracer.trace("operation", span => {
-      span.addTags({
-        operation: schema.operation,
-        rowId: row.id,
-      })
-      const prompt = this.promptForOperation(schema, row)
-      return this.prompt(prompt)
-    })
-  }
-
-  private promptForOperation(schema: AIFieldMetadata, row: Row) {
-    const { operation, column, columns, language, categories, prompt } = schema
-    switch (operation) {
-      case AIOperationEnum.SUMMARISE_TEXT:
-        return summarizeText(extractTextFromColumns(row, columns!))
-
-      case AIOperationEnum.CLEAN_DATA:
-        return cleanData(row[column!])
-
-      case AIOperationEnum.TRANSLATE:
-        return translate(row[column!], language!)
-
-      case AIOperationEnum.CATEGORISE_TEXT:
-        if (!categories) {
-          throw Error(
-            "No categories provided for categorise text operation. Please provide categories."
-          )
-        }
-        return classifyText(
-          extractTextFromColumns(row, columns!),
-          categories.split(",")
-        )
-
-      case AIOperationEnum.SENTIMENT_ANALYSIS:
-        return sentimentAnalysis(row[column!])
-
-      case AIOperationEnum.PROMPT:
-        return prompt!
-
-      case AIOperationEnum.SEARCH_WEB:
-        return searchWeb(extractTextFromColumns(row, columns!))
-
-      default:
-        throw utils.unreachable(operation)
-    }
   }
 }

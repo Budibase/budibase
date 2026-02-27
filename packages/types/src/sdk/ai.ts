@@ -1,4 +1,7 @@
+import type { EmbeddingModelV3, LanguageModelV3 } from "@ai-sdk/provider"
+import { ProviderOptions } from "@ai-sdk/provider-utils"
 import { AIProvider } from "../documents"
+import { Readable } from "stream"
 
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",
@@ -104,3 +107,16 @@ export interface LLMConfigOptions {
 export interface LLMProviderConfig extends LLMConfigOptions {
   provider: AIProvider
 }
+
+export interface LLMResponse {
+  chat: LanguageModelV3
+  embedding: EmbeddingModelV3
+  providerOptions?: (hasTools: boolean) => LLMProviderOptions | undefined
+  uploadFile?: (
+    stream: Readable,
+    filename: string,
+    contentType?: string
+  ) => Promise<string>
+}
+
+export type LLMProviderOptions = ProviderOptions
