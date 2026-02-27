@@ -8,44 +8,20 @@
     ensureValidTheme,
     getThemeClassNames,
   } from "@budibase/shared-core"
-  import type {
-    ChatAppAgent,
-    ChatConversation,
-    DraftChatConversation,
-    WithoutDocMetadata,
-  } from "@budibase/types"
+  import type { ChatConversation } from "@budibase/types"
   import { appStore, authStore, themeStore } from "@/stores"
-  import { onMount } from "svelte"
-
-  type ChatConversationLike = ChatConversation | DraftChatConversation
-
-  type EnabledAgentListItem = {
-    agentId: string
-    name?: string
-    isDefault?: boolean
-    icon?: string
-    iconColor?: string
-  }
+  import {
+    ChatboxController,
+    type ChatboxState,
+    type ChatConversationLike,
+  } from "./chatboxController"
+  import { getLockedAgentIdFromCurrentPath } from "./chatboxUtils"
+  import { onDestroy, onMount } from "svelte"
 
   type ChatUser = {
     firstName?: string
     lastName?: string
     email?: string
-  }
-
-  type ChatAppAgentMetadata = {
-    _id?: string
-    name: string
-    icon?: string
-    iconColor?: string
-    live?: boolean
-  }
-
-  const INITIAL_CHAT: WithoutDocMetadata<DraftChatConversation> = {
-    title: "",
-    messages: [],
-    chatAppId: "",
-    agentId: "",
   }
 
   const API = createAPIClient({
@@ -56,17 +32,28 @@
     },
   })
 
-  let chat: ChatConversationLike = { ...INITIAL_CHAT }
+  let lockedAgentId: string | undefined = getLockedAgentIdFromCurrentPath()
+
+  let chat: ChatConversationLike = {
+    title: "",
+    messages: [],
+    chatAppId: "",
+    agentId: lockedAgentId || "",
+  }
   let deletingChat = false
   let loading = true
   let initialPrompt = ""
-  let selectedAgentId: string | null = null
-  let enabledAgentList: EnabledAgentListItem[] = []
-  let conversationHistory: ChatConversation[] = []
+  let selectedAgentId: string | null = lockedAgentId || null
+  let enabledAgentList: ChatboxState["enabledAgentList"] = []
+  let filteredConversationHistory: ChatConversation[] = []
   let selectedConversationId: string | undefined
-  let chatAppId = ""
-  let chatAgents: ChatAppAgent[] = []
-  let agents: ChatAppAgentMetadata[] = []
+  let isLockedAgentMode = Boolean(lockedAgentId)
+  let showEmptyState = false
+  let emptyStateMessage = ""
+  let selectedAgentName = ""
+  let conversationStarters: { prompt: string }[] = []
+  let agentAvailability: ChatboxState["agentAvailability"] = "no_selection"
+  let suppressAgentPicker = false
 
   const getUserLabel = (user?: ChatUser) => {
     if (!user) {
@@ -90,35 +77,8 @@
 
   $: workspaceId = $appStore?.appId ?? ""
   $: userName = getUserLabel($authStore)
-  $: filteredConversationHistory = conversationHistory.filter(conversation => {
-    if (!conversation?.agentId) {
-      return false
-    }
-    const agent = agents.find(item => item._id === conversation.agentId)
-    return Boolean(agent?.live)
-  })
-  $: hasAnyAgents = agents.length > 0
-  $: hasEnabledAgents = enabledAgentList.length > 0
-  $: showEmptyState = !loading && !hasEnabledAgents
-  $: emptyStateMessage = hasAnyAgents
-    ? "No agents enabled for this chat app. Ask your administrator to enable one to start chatting."
-    : "No agents have been configured for this chat app yet."
-  $: selectedAgentName = selectedAgentId
-    ? enabledAgentList.find(agent => agent.agentId === selectedAgentId)?.name ||
-      agents.find(agent => agent._id === selectedAgentId)?.name ||
-      "Unknown agent"
-    : ""
-  $: conversationStarters =
-    chatAgents.find(agent => agent.agentId === selectedAgentId)
-      ?.conversationStarters || []
   $: resolvedTheme = ensureValidTheme($themeStore.theme)
   $: resolvedThemeClassNames = getThemeClassNames(resolvedTheme)
-  $: isAgentKnown = selectedAgentId
-    ? agents.some(agent => agent._id === selectedAgentId)
-    : false
-  $: isAgentLive = selectedAgentId
-    ? agents.some(agent => agent._id === selectedAgentId && agent.live)
-    : false
 
   const agentIconColors = [
     "#6366F1",
@@ -128,151 +88,63 @@
     "#EF4444",
   ]
 
-  const refreshConversations = async () => {
-    if (!chatAppId) {
-      conversationHistory = []
-      return []
+  const controller = new ChatboxController({
+    api: API,
+    lockedAgentId,
+    notifyError: message => notifications.error(message),
+    agentIconColors,
+  })
+
+  const applyState = (state: ChatboxState) => {
+    const next = state as ChatboxState & {
+      filteredConversationHistory: ChatConversation[]
+      isLockedAgentMode: boolean
+      showEmptyState: boolean
+      emptyStateMessage: string
+      selectedAgentName: string
+      conversationStarters: { prompt: string }[]
+      agentAvailability: ChatboxState["agentAvailability"]
+      suppressAgentPicker: boolean
     }
-    const conversations = await API.fetchChatHistory(chatAppId)
-    conversationHistory = conversations || []
-    return conversationHistory
+
+    lockedAgentId = next.lockedAgentId
+    chat = next.chat
+    deletingChat = next.deletingChat
+    loading = next.loading
+    initialPrompt = next.initialPrompt
+    selectedAgentId = next.selectedAgentId
+    enabledAgentList = next.enabledAgentList
+    filteredConversationHistory = next.filteredConversationHistory
+    selectedConversationId = next.selectedConversationId
+    isLockedAgentMode = next.isLockedAgentMode
+    showEmptyState = next.showEmptyState
+    emptyStateMessage = next.emptyStateMessage
+    selectedAgentName = next.selectedAgentName
+    conversationStarters = next.conversationStarters
+    agentAvailability = next.agentAvailability
+    suppressAgentPicker = next.suppressAgentPicker
   }
 
-  const refreshChatData = async () => {
-    if (!workspaceId) {
-      loading = false
-      return
-    }
+  const unsubscribe = controller.subscribe(applyState)
 
-    loading = true
-    try {
-      const chatApp = await API.fetchChatApp(workspaceId)
-
-      chatAppId = chatApp?._id || ""
-      chatAgents = chatApp?.agents || []
-      const agentsResponse = chatAppId
-        ? await API.get<{ agents: ChatAppAgentMetadata[] }>({
-            url: `/api/chatapps/${chatAppId}/agents`,
-          })
-        : { agents: [] }
-      agents = agentsResponse?.agents || []
-
-      const baseAgentList = chatAgents
-        .filter(agent => agent.isEnabled)
-        .map((agent, index) => {
-          const resolvedAgent = agents.find(item => item._id === agent.agentId)
-          return {
-            agentId: agent.agentId,
-            name: resolvedAgent?.name,
-            isDefault: agent.isDefault,
-            icon: resolvedAgent?.icon || "SideKick",
-            iconColor:
-              resolvedAgent?.iconColor ||
-              agentIconColors[index % agentIconColors.length],
-          }
-        })
-        .filter(agent => Boolean(agent.name))
-
-      const defaultAgent = baseAgentList.find(agent => agent.isDefault)
-      const sortedAgents = baseAgentList
-        .filter(agent => !agent.isDefault)
-        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
-
-      enabledAgentList = defaultAgent
-        ? [defaultAgent, ...sortedAgents]
-        : sortedAgents
-
-      await refreshConversations()
-    } catch (err) {
-      console.error(err)
-      notifications.error("Failed to load chat")
-      enabledAgentList = []
-      conversationHistory = []
-    } finally {
-      loading = false
-    }
-  }
-
-  const selectAgent = async (agentId: string) => {
-    selectedAgentId = agentId
-    selectedConversationId = undefined
-    chat = {
-      ...INITIAL_CHAT,
-      chatAppId,
-      agentId,
-    }
-  }
-
-  const selectChat = async (selectedChat: ChatConversation) => {
-    if (!selectedChat.agentId) {
-      return
-    }
-    selectedAgentId = selectedChat.agentId
-    selectedConversationId = selectedChat._id
-    chat = {
-      ...selectedChat,
-      agentId: selectedChat.agentId,
-      chatAppId: selectedChat.chatAppId || chatAppId,
-    }
-  }
-
-  const deleteCurrentChat = async () => {
-    if (!chat?._id || deletingChat || !chatAppId) {
-      return
-    }
-
-    deletingChat = true
-    try {
-      await API.deleteChatConversation(chat._id, chatAppId)
-      const updatedConversations = await refreshConversations()
-      if (updatedConversations.length) {
-        await selectChat(updatedConversations[0])
-      } else {
-        selectedAgentId = null
-        selectedConversationId = undefined
-        chat = { ...INITIAL_CHAT, chatAppId }
-      }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to delete chat"
-      notifications.error(message)
-    } finally {
-      deletingChat = false
-    }
+  const handleDeleteChat = async () => {
+    await controller.deleteCurrentChat()
   }
 
   const handleChatSaved = async (
     event: CustomEvent<{ chatId?: string; chat: ChatConversationLike }>
   ) => {
-    const { chatId, chat: savedChat } = event.detail
-    const updatedConversations = await refreshConversations()
-    const lastMessageId = savedChat.messages[savedChat.messages.length - 1]?.id
+    await controller.handleChatSaved(event.detail)
+  }
 
-    const newCurrentChat =
-      updatedConversations.find(conversation => conversation._id === chatId) ||
-      (lastMessageId
-        ? updatedConversations.find(conversation =>
-            conversation.messages?.some(message => message.id === lastMessageId)
-          )
-        : undefined)
-
-    if (!newCurrentChat?._id) {
+  const handleAgentSelected = async (
+    event: CustomEvent<{ agentId: string }>
+  ) => {
+    if (lockedAgentId && event.detail.agentId !== lockedAgentId) {
       return
     }
 
-    selectedConversationId = newCurrentChat._id
-    chat = {
-      ...newCurrentChat,
-      chatAppId: newCurrentChat.chatAppId || chatAppId,
-    }
-
-    if (initialPrompt) {
-      initialPrompt = ""
-    }
-  }
-
-  const handleAgentSelected = (event: CustomEvent<{ agentId: string }>) => {
-    selectAgent(event.detail.agentId)
+    await controller.selectAgent(event.detail.agentId)
   }
 
   const handleConversationSelected = (
@@ -283,19 +155,23 @@
     )
 
     if (conversation) {
-      selectChat(conversation)
+      controller.selectConversation(conversation)
     }
   }
 
   const handleStartChat = async (
     event: CustomEvent<{ agentId: string; prompt: string }>
   ) => {
-    await selectAgent(event.detail.agentId)
-    initialPrompt = event.detail.prompt
+    await controller.startChat(event.detail.agentId, event.detail.prompt)
   }
 
   onMount(async () => {
-    await refreshChatData()
+    controller.setLockedAgentId(getLockedAgentIdFromCurrentPath())
+    await controller.init(workspaceId)
+  })
+
+  onDestroy(() => {
+    unsubscribe()
   })
 </script>
 
@@ -311,6 +187,7 @@
       {enabledAgentList}
       conversationHistory={filteredConversationHistory}
       {selectedConversationId}
+      hideAgents={isLockedAgentMode}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
     />
@@ -324,11 +201,11 @@
       {workspaceId}
       {userName}
       {conversationStarters}
-      {isAgentKnown}
-      {isAgentLive}
+      {agentAvailability}
       {initialPrompt}
       {loading}
-      on:deleteChat={deleteCurrentChat}
+      {suppressAgentPicker}
+      on:deleteChat={handleDeleteChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}
       on:startChat={handleStartChat}

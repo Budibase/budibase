@@ -17,8 +17,12 @@
   export let selectedAgentName: string = ""
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationStarters: { prompt: string }[] = []
-  export let isAgentKnown: boolean = true
-  export let isAgentLive: boolean = true
+  export let agentAvailability:
+    | "no_selection"
+    | "deleted"
+    | "offline"
+    | "disabled"
+    | "ready" = "ready"
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
@@ -35,8 +39,7 @@
   {selectedAgentName}
   {enabledAgentList}
   {conversationStarters}
-  {isAgentKnown}
-  {isAgentLive}
+  {agentAvailability}
   {loading}
   {deletingChat}
   {workspaceId}

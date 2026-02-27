@@ -23,14 +23,19 @@ export interface ChatAppEndpoints {
   ) => Promise<AsyncIterable<UIMessage<AgentMessageMetadata>>>
   deleteChatConversation: (
     chatConversationId: string,
-    chatAppId: string
+    chatAppId: string,
+    agentId?: string
   ) => Promise<void>
   fetchChatConversation: (
     chatAppId: string,
-    chatConversationId: string
+    chatConversationId: string,
+    agentId?: string
   ) => Promise<ChatConversation>
   fetchChatAppAgents: (chatAppId: string) => Promise<FetchChatAppAgentsResponse>
-  fetchChatHistory: (chatAppId: string) => Promise<FetchAgentHistoryResponse>
+  fetchChatHistory: (
+    chatAppId: string,
+    agentId?: string
+  ) => Promise<FetchAgentHistoryResponse>
   fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
   setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatAppAgent>
   createChatConversation: (
@@ -52,6 +57,15 @@ const throwOnErrorChunk = () =>
       controller.enqueue(chunk)
     },
   })
+
+const withAgentIdQuery = (url: string, agentId?: string) => {
+  if (!agentId) {
+    return url
+  }
+
+  const query = new URLSearchParams({ agentId })
+  return `${url}?${query.toString()}`
+}
 
 export const buildChatAppEndpoints = (
   API: BaseAPIClient
@@ -102,19 +116,27 @@ export const buildChatAppEndpoints = (
 
   deleteChatConversation: async (
     chatConversationId: string,
-    chatAppId: string
+    chatAppId: string,
+    agentId?: string
   ) => {
     return await API.delete({
-      url: `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+      url: withAgentIdQuery(
+        `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+        agentId
+      ),
     })
   },
 
   fetchChatConversation: async (
     chatAppId: string,
-    chatConversationId: string
+    chatConversationId: string,
+    agentId?: string
   ) => {
     return await API.get({
-      url: `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+      url: withAgentIdQuery(
+        `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+        agentId
+      ),
     })
   },
 
@@ -124,9 +146,12 @@ export const buildChatAppEndpoints = (
     })
   },
 
-  fetchChatHistory: async (chatAppId: string) => {
+  fetchChatHistory: async (chatAppId: string, agentId?: string) => {
     return await API.get({
-      url: `/api/chatapps/${chatAppId}/conversations`,
+      url: withAgentIdQuery(
+        `/api/chatapps/${chatAppId}/conversations`,
+        agentId
+      ),
     })
   },
 
