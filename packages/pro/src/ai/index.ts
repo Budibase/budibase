@@ -1,6 +1,6 @@
 export * from "./utils"
 export * from "./prompts"
-export { getLLMConfig, LLMRequest } from "./llm"
+export { getLLMConfig, LLMRequest, parseResponseFormat } from "./llm"
 export * from "./prompts"
 export * from "./reasoningFallback"
 export * from "./generators"

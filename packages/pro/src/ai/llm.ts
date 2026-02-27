@@ -119,6 +119,27 @@ export async function getLLMConfig(): Promise<LLMProviderConfig | undefined> {
   )
 }
 
+export function parseResponseFormat(
+  responseFormat?: ResponseFormat
+):
+  | openai.ResponseFormatText
+  | openai.ResponseFormatJSONObject
+  | openai.ResponseFormatJSONSchema
+  | undefined {
+  if (!responseFormat) {
+    return
+  }
+
+  if (responseFormat === "text") {
+    return { type: "text" }
+  }
+  if (responseFormat === "json") {
+    return { type: "json_object" }
+  }
+
+  return responseFormat
+}
+
 export class LLMRequest {
   messages: Message[] = []
   format?: ResponseFormat
