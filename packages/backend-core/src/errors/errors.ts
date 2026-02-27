@@ -85,15 +85,9 @@ export class HTTPError extends BudibaseError {
     let code = ErrorCode.HTTP
     try {
       const error = JSON.parse(body)
-      if ("error" in error) {
-        message = error.error.message
-        httpStatus = resp.status
-        code = resp.statusText as ErrorCode
-      } else {
-        message = error.message
-        httpStatus = error.status
-        code = error.error?.code
-      }
+      message = error.error?.message || error.message
+      httpStatus = error.error?.code ?? resp.status
+      code = error.status ?? resp.statusText
     } catch (e) {
       // ignore
     }
