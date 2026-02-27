@@ -10,14 +10,10 @@ import type {
 import { Chat, type Thread, type Message } from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
-import {
-  ensureProdWorkspaceWebhookRoute,
-  isConversationExpired,
-  pickLatestConversation,
-} from "./utils"
-import { rawBodyToRequest, readRawBody, responseToKoa } from "./koaToRequest"
+import { isConversationExpired, pickLatestConversation } from "./utils"
 import { handleChatMessage } from "./chatHandler"
 import { teamsState } from "./chatState"
+import { runChatWebhook } from "./runChatWebhook"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
@@ -259,67 +255,45 @@ export async function MSTeamsWebhook(
     { instance: string; chatAppId: string; agentId: string }
   >
 ) {
-  const { instance, chatAppId, agentId } = ctx.params
-  const prodAppId = ensureProdWorkspaceWebhookRoute({
+  await runChatWebhook({
     ctx,
-    instance,
     providerName: "Teams",
-  })
-  if (!prodAppId) {
-    return
-  }
+    createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
+      const { integration, idleTimeoutMinutes } =
+        await context.doInWorkspaceContext(workspaceId, async () => {
+          const agent = await sdk.ai.agents.getOrThrow(agentId)
+          return {
+            integration:
+              sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
+            idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
+          }
+        })
 
-  let integration: ReturnType<
-    typeof sdk.ai.deployments.MSTeams.validateMSTeamsIntegration
-  >
-  let idleTimeoutMinutes: number | undefined
-  try {
-    const result = await context.doInWorkspaceContext(prodAppId, async () => {
-      const agent = await sdk.ai.agents.getOrThrow(agentId)
-      return {
-        integration:
-          sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
-        idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
-      }
-    })
-    integration = result.integration
-    idleTimeoutMinutes = result.idleTimeoutMinutes
-  } catch (error) {
-    if (error instanceof HTTPError) {
-      ctx.status = error.status
-      ctx.body = { error: error.message }
-      return
-    }
-    throw error
-  }
+      const chat = new Chat({
+        userName: "Budibase",
+        adapters: {
+          teams: createTeamsAdapter({
+            appId: integration.appId,
+            appPassword: integration.appPassword,
+            appTenantId: integration.tenantId,
+            appType: integration.tenantId ? "SingleTenant" : "MultiTenant",
+          }),
+        },
+        state: teamsState,
+        logger: "silent",
+      })
 
-  // Chat SDK handles JWT auth, Bot Framework routing, and message delivery
-  const chat = new Chat({
-    userName: "Budibase",
-    adapters: {
-      teams: createTeamsAdapter({
-        appId: integration.appId,
-        appPassword: integration.appPassword,
-        appTenantId: integration.tenantId,
-        appType: integration.tenantId ? "SingleTenant" : "MultiTenant",
-      }),
+      const handler = createTeamsMessageHandler({
+        workspaceId,
+        chatAppId,
+        agentId,
+        idleTimeoutMinutes,
+      })
+      chat.onNewMention(handler)
+      chat.onSubscribedMessage(handler)
+      chat.onNewMessage(/./, handler)
+
+      return request => chat.webhooks.teams(request)
     },
-    state: teamsState,
-    logger: "silent",
   })
-
-  const handler = createTeamsMessageHandler({
-    workspaceId: prodAppId,
-    chatAppId,
-    agentId,
-    idleTimeoutMinutes,
-  })
-  chat.onNewMention(handler)
-  chat.onSubscribedMessage(handler)
-  chat.onNewMessage(/./, handler)
-
-  const rawBody = await readRawBody(ctx.req)
-  const request = rawBodyToRequest(ctx, rawBody)
-  const response = await chat.webhooks.teams(request)
-  await responseToKoa(ctx, response)
 }

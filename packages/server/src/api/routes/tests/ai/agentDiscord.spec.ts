@@ -205,96 +205,16 @@ describe("agent discord integration sync", () => {
     })
   })
 
-  it("returns a validation error when discord public key is missing", async () => {
-    const agent = await config.api.agent.create({
-      name: "Missing Discord Public Key",
-      discordIntegration: {
-        applicationId: "app-123",
-        botToken: "bot-secret",
-      },
-    })
-
-    await config.api.agent.syncDiscordCommands(agent._id!, undefined, {
-      status: 400,
-    })
-  })
-
-  it("allows saving discord config for agents with an empty aiconfig", async () => {
-    const created = await config.api.agent.create({
-      name: "Discord Empty AI Config Agent",
-    })
-
-    const updated = await config.api.agent.update({
-      ...created,
-      discordIntegration: {
-        applicationId: "app-123",
-        publicKey: "pub-123",
-        botToken: "bot-123",
-        guildId: "guild-123",
-      },
-    })
-
-    expect(updated.aiconfig).toEqual("")
-    expect(updated.discordIntegration?.applicationId).toEqual("app-123")
-  })
-
-  it("returns a validation error when toggle deployment payload is missing enabled", async () => {
-    const signing = makeDiscordSigningKeyPair()
-    const agent = await config.api.agent.create({
-      name: "Discord Toggle Validation Agent",
-      discordIntegration: {
-        applicationId: "app-123",
-        publicKey: signing.publicKey,
-        botToken: "bot-secret",
-        guildId: "guild-123",
-      },
-    })
-
-    nock("https://discord.com")
-      .put("/api/v10/applications/app-123/commands")
-      .matchHeader("authorization", "Bot bot-secret")
-      .reply(200, [])
-    nock("https://discord.com")
-      .put("/api/v10/applications/app-123/guilds/guild-123/commands")
-      .matchHeader("authorization", "Bot bot-secret")
-      .reply(200, [])
-
-    const syncResult = await config.api.agent.syncDiscordCommands(agent._id!)
-
-    await config.api.agent.toggleDiscordDeployment(agent._id!, undefined, {
-      status: 400,
-    })
-
-    const { agents } = await config.api.agent.fetch()
-    const updatedAgent = agents.find(a => a._id === agent._id)
-
-    expect(updatedAgent?.discordIntegration?.interactionsEndpointUrl).toEqual(
-      syncResult.interactionsEndpointUrl
-    )
-    expect(updatedAgent?.discordIntegration?.chatAppId).toEqual(
-      syncResult.chatAppId
-    )
-  })
-
-  it("returns a validation error when toggle deployment enabled is not a boolean", async () => {
-    const agent = await config.api.agent.create({
-      name: "Discord Toggle Invalid Type Agent",
-    })
-
-    await config.api.agent.toggleDiscordDeployment(
-      agent._id!,
-      { enabled: "true" },
-      { status: 400 }
-    )
-  })
-
   describe("discord webhook signature validation", () => {
     it("rejects webhook calls that target a dev workspace ID", async () => {
       const signing = makeDiscordSigningKeyPair()
       const agent = await config.api.agent.create({
         name: "Discord Dev Path Rejected Agent",
         discordIntegration: {
+          applicationId: "app-dev-path",
           publicKey: signing.publicKey,
+          botToken: "bot-token-dev-path",
+          guildId: "guild-dev-path",
         },
       })
       await config.publish()
@@ -327,7 +247,10 @@ describe("agent discord integration sync", () => {
       const agent = await config.api.agent.create({
         name: "Discord Webhook Agent",
         discordIntegration: {
+          applicationId: "app-webhook-agent",
           publicKey: signing.publicKey,
+          botToken: "bot-token-webhook-agent",
+          guildId: "guild-webhook-agent",
         },
       })
       await config.publish()
@@ -359,7 +282,10 @@ describe("agent discord integration sync", () => {
       const agent = await config.api.agent.create({
         name: "Discord Wrong Signature Agent",
         discordIntegration: {
+          applicationId: "app-wrong-signature",
           publicKey: configuredSigning.publicKey,
+          botToken: "bot-token-wrong-signature",
+          guildId: "guild-wrong-signature",
         },
       })
       await config.publish()

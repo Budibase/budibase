@@ -23,10 +23,12 @@ import {
 const DEFAULT_IDLE_TIMEOUT_MS = 45 * 60 * 1000
 const DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 const CONVERSATION_SCOPE_CACHE_KEY_PREFIX = "chatConversationScope"
+const REDIS_CACHE_INIT_RETRY_MS = 30 * 1000
 
 const conversationCache = new Map<string, string>()
 let conversationCacheClient: RedisClient | undefined
-let conversationCacheClientInitialized = false
+let conversationCacheClientInitInFlight: Promise<RedisClient | undefined> | undefined
+let conversationCacheClientLastFailureAt = 0
 
 interface ConversationScope {
   chatAppId: string
@@ -60,25 +62,42 @@ const getRedisScopeCacheKey = (cacheKey: string) =>
 const getConversationCacheClient = async (): Promise<
   RedisClient | undefined
 > => {
-  if (conversationCacheClientInitialized) {
+  if (conversationCacheClient) {
     return conversationCacheClient
   }
-
-  conversationCacheClientInitialized = true
 
   const redisUrl = process.env.REDIS_URL?.trim()
   if (!redisUrl) {
     return undefined
   }
 
-  try {
-    conversationCacheClient = await redis.clients.getCacheClient()
-  } catch (error) {
-    console.error("Failed to initialize chat conversation cache client", error)
-    conversationCacheClient = undefined
+  if (conversationCacheClientInitInFlight) {
+    return await conversationCacheClientInitInFlight
   }
 
-  return conversationCacheClient
+  if (
+    conversationCacheClientLastFailureAt > 0 &&
+    Date.now() - conversationCacheClientLastFailureAt < REDIS_CACHE_INIT_RETRY_MS
+  ) {
+    return undefined
+  }
+
+  conversationCacheClientInitInFlight = (async () => {
+    try {
+      conversationCacheClient = await redis.clients.getCacheClient()
+      conversationCacheClientLastFailureAt = 0
+      return conversationCacheClient
+    } catch (error) {
+      console.error("Failed to initialize chat conversation cache client", error)
+      conversationCacheClient = undefined
+      conversationCacheClientLastFailureAt = Date.now()
+      return undefined
+    } finally {
+      conversationCacheClientInitInFlight = undefined
+    }
+  })()
+
+  return await conversationCacheClientInitInFlight
 }
 
 const cacheConversationIdInMemory = ({
@@ -120,7 +139,11 @@ const cacheConversationId = async ({
   }
 
   const ttlSeconds = Math.max(1, Math.floor(idleTimeoutMs / 1000))
-  await client.store(getRedisScopeCacheKey(cacheKey), chatId, ttlSeconds)
+  try {
+    await client.store(getRedisScopeCacheKey(cacheKey), chatId, ttlSeconds)
+  } catch (error) {
+    console.error("Failed to write chat conversation cache entry", error)
+  }
 }
 
 const clearCachedConversationId = async (cacheKey: string) => {
@@ -130,7 +153,11 @@ const clearCachedConversationId = async (cacheKey: string) => {
   if (!client) {
     return
   }
-  await client.delete(getRedisScopeCacheKey(cacheKey))
+  try {
+    await client.delete(getRedisScopeCacheKey(cacheKey))
+  } catch (error) {
+    console.error("Failed to clear chat conversation cache entry", error)
+  }
 }
 
 const findCachedConversationById = async ({
@@ -238,7 +265,13 @@ const findConversation = async ({
 
   const client = await getConversationCacheClient()
   if (client) {
-    const redisChatId = await client.get(getRedisScopeCacheKey(cacheKey))
+    let redisChatId: unknown
+    try {
+      redisChatId = await client.get(getRedisScopeCacheKey(cacheKey))
+    } catch (error) {
+      console.error("Failed to read chat conversation cache entry", error)
+      redisChatId = undefined
+    }
     if (typeof redisChatId === "string" && redisChatId.trim()) {
       const cachedConversation = await findCachedConversationById({
         db,

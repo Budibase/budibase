@@ -10,14 +10,10 @@ import type {
 import { Chat, type SlashCommandEvent } from "chat"
 import { createDiscordAdapter } from "@chat-adapter/discord"
 import sdk from "../../../sdk"
-import {
-  ensureProdWorkspaceWebhookRoute,
-  isConversationExpired,
-  pickLatestConversation,
-} from "./utils"
-import { rawBodyToRequest, readRawBody, responseToKoa } from "./koaToRequest"
+import { isConversationExpired, pickLatestConversation } from "./utils"
 import { handleChatMessage } from "./chatHandler"
 import { discordState } from "./chatState"
+import { runChatWebhook } from "./runChatWebhook"
 
 const DISCORD_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
@@ -173,93 +169,72 @@ export async function discordWebhook(
     { instance: string; chatAppId: string; agentId: string }
   >
 ) {
-  const prodAppId = ensureProdWorkspaceWebhookRoute({
+  await runChatWebhook({
     ctx,
-    instance: ctx.params.instance,
     providerName: "Discord",
-  })
-  if (!prodAppId) {
-    return
-  }
+    createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
+      const { publicKey, botToken, applicationId, idleTimeoutMinutes } =
+        await context.doInWorkspaceContext(workspaceId, async () => {
+          const agent = await sdk.ai.agents.getOrThrow(agentId)
+          const integration =
+            sdk.ai.deployments.discord.validateDiscordIntegration(agent)
+          const pk = agent.discordIntegration?.publicKey?.trim()
+          if (!pk) {
+            throw new HTTPError(
+              "Discord public key is not configured for this agent",
+              400
+            )
+          }
+          return {
+            ...integration,
+            publicKey: pk,
+            idleTimeoutMinutes: agent.discordIntegration?.idleTimeoutMinutes,
+          }
+        })
 
-  let publicKey: string
-  let botToken: string
-  let applicationId: string
-  let idleTimeoutMinutes: number | undefined
-  try {
-    const result = await context.doInWorkspaceContext(prodAppId, async () => {
-      const agent = await sdk.ai.agents.getOrThrow(ctx.params.agentId)
-      const integration =
-        sdk.ai.deployments.discord.validateDiscordIntegration(agent)
-      const pk = agent.discordIntegration?.publicKey?.trim()
-      if (!pk) {
-        throw new HTTPError(
-          "Discord public key is not configured for this agent",
-          400
-        )
-      }
-      return {
-        ...integration,
-        publicKey: pk,
-        idleTimeoutMinutes: agent.discordIntegration?.idleTimeoutMinutes,
-      }
-    })
-    publicKey = result.publicKey
-    botToken = result.botToken
-    applicationId = result.applicationId
-    idleTimeoutMinutes = result.idleTimeoutMinutes
-  } catch (error) {
-    if (error instanceof HTTPError) {
-      ctx.status = error.status
-      ctx.body = { error: error.message }
-      return
-    }
-    throw error
-  }
-
-  // Read raw body before any parsing — Chat SDK needs it for signature verification
-  const rawBody = await readRawBody(ctx.req)
-
-  const chat = new Chat({
-    userName: "Budibase",
-    adapters: {
-      discord: createDiscordAdapter({ applicationId, publicKey, botToken }),
-    },
-    state: discordState,
-    logger: "silent",
-  })
-
-  const runSlashCommand = async (
-    command: "ask" | "new",
-    event: SlashCommandEvent
-  ) => {
-    try {
-      await handleDiscordSlashCommand({
-        event,
-        command,
-        workspaceId: prodAppId,
-        chatAppId: ctx.params.chatAppId,
-        agentId: ctx.params.agentId,
-        idleTimeoutMinutes,
+      const chat = new Chat({
+        userName: "Budibase",
+        adapters: {
+          discord: createDiscordAdapter({ applicationId, publicKey, botToken }),
+        },
+        state: discordState,
+        logger: "silent",
       })
-    } catch (error) {
-      console.error("Discord webhook processing failed", error)
-      try {
-        await event.channel.post(getDiscordErrorMessage(error))
-      } catch (responseError) {
-        console.error("Failed to send Discord fallback response", responseError)
+
+      const runSlashCommand = async (
+        command: "ask" | "new",
+        event: SlashCommandEvent
+      ) => {
+        try {
+          await handleDiscordSlashCommand({
+            event,
+            command,
+            workspaceId,
+            chatAppId,
+            agentId,
+            idleTimeoutMinutes,
+          })
+        } catch (error) {
+          console.error("Discord webhook processing failed", error)
+          try {
+            await event.channel.post(getDiscordErrorMessage(error))
+          } catch (responseError) {
+            console.error(
+              "Failed to send Discord fallback response",
+              responseError
+            )
+          }
+        }
       }
-    }
-  }
 
-  chat.onSlashCommand(`/${DiscordCommands.ASK}`, async event => {
-    await runSlashCommand("ask", event)
-  })
-  chat.onSlashCommand(`/${DiscordCommands.NEW}`, async event => {
-    await runSlashCommand("new", event)
-  })
+      chat.onSlashCommand(`/${DiscordCommands.ASK}`, async event => {
+        await runSlashCommand("ask", event)
+      })
+      chat.onSlashCommand(`/${DiscordCommands.NEW}`, async event => {
+        await runSlashCommand("new", event)
+      })
 
-  const request = rawBodyToRequest(ctx, rawBody)
-  const response = await chat.webhooks.discord(request)
-  await responseToKoa(ctx, response)
+      return request => chat.webhooks.discord(request)
+    },
+  })
 }

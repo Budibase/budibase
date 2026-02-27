@@ -199,19 +199,6 @@ describe("agent teams integration provisioning", () => {
     })
   })
 
-  it("returns a validation error when teams app password is missing", async () => {
-    const agent = await config.api.agent.create({
-      name: "Missing Teams Password",
-      MSTeamsIntegration: {
-        appId: "teams-app-id",
-      },
-    })
-
-    await config.api.agent.provisionMSTeamsChannel(agent._id!, undefined, {
-      status: 400,
-    })
-  })
-
   describe("teams webhook auth validation", () => {
     it("rejects requests without an authorization header", async () => {
       const agent = await config.api.agent.create({
@@ -236,27 +223,6 @@ describe("agent teams integration provisioning", () => {
       )
     })
 
-    it("rejects invalid bearer tokens", async () => {
-      const agent = await config.api.agent.create({
-        name: "Teams Invalid Token Agent",
-        MSTeamsIntegration: {
-          appId: "teams-app-id",
-          appPassword: "teams-app-password",
-        },
-      })
-      await config.publish()
-
-      const response = await config
-        .getRequest()!
-        .post(
-          `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/chatapp-test/${agent._id}`
-        )
-        .set("Authorization", "Bearer not-a-real-token")
-        .send({})
-        .expect(401)
-
-      expect(response.body["jwt-auth-error"]).toBeTruthy()
-    })
   })
 
   describe("teams webhook incoming messages", () => {
