@@ -8,6 +8,7 @@
     keepOpen,
     notifications,
   } from "@budibase/bbui"
+  import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { roles } from "@/stores/builder"
   import { appsStore } from "@/stores/portal/apps"
   import { groups } from "@/stores/portal/groups"
@@ -119,18 +120,10 @@
       searchPlaceholder="Search workspace"
       autocomplete
     />
-    <div class="role-select">
-      <Select
-        label="Select role"
-        placeholder={false}
-        bind:value={selectedRole}
-        options={workspaceRoleOptions}
-        getOptionLabel={option => option.label}
-        getOptionValue={option => option.value}
-        getOptionSubtitle={option => option.subtitle}
-        showSelectedSubtitle={true}
-      />
-    </div>
+    <GlobalRoleSelect
+      bind:value={selectedRole}
+      options={workspaceRoleOptions}
+    />
     {#if selectedRole === Constants.BudibaseRoles.AppUser}
       <Select
         label="Select end user role"
@@ -144,12 +137,3 @@
     {/if}
   </Layout>
 </ModalContent>
-
-<style>
-  .role-select :global(.spectrum-Picker) {
-    height: auto;
-    align-items: center;
-    padding-top: var(--spacing-m);
-    padding-bottom: var(--spacing-m);
-  }
-</style>

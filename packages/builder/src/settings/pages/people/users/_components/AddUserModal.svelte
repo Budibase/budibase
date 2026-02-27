@@ -13,6 +13,7 @@
     Icon,
   } from "@budibase/bbui"
   import { groups } from "@/stores/portal/groups"
+  import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { licensing } from "@/stores/portal/licensing"
   import { admin } from "@/stores/portal/admin"
   import { organisation } from "@/stores/portal/organisation"
@@ -254,18 +255,10 @@
         on:change={handleEmailsChange}
       />
 
-      <div class="role-select">
-        <Select
-          label="Select role"
-          placeholder={false}
-          bind:value={selectedRole}
-          options={Constants.BudibaseRoleOptions}
-          getOptionLabel={option => option.label}
-          getOptionValue={option => option.value}
-          getOptionSubtitle={option => option.subtitle}
-          showSelectedSubtitle={true}
-        />
-      </div>
+      <GlobalRoleSelect
+        bind:value={selectedRole}
+        options={Constants.BudibaseRoleOptions}
+      />
 
       {#if workspaceOnly && selectedRole === Constants.BudibaseRoles.AppUser}
         <Select
@@ -422,11 +415,5 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
-  }
-  .role-select :global(.spectrum-Picker) {
-    height: auto;
-    align-items: center;
-    padding-top: var(--spacing-m);
-    padding-bottom: var(--spacing-m);
   }
 </style>

@@ -10,6 +10,7 @@
     notifications,
   } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
+  import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { roles } from "@/stores/builder"
   import { auth, users } from "@/stores/portal"
   import type { User } from "@budibase/types"
@@ -286,19 +287,11 @@
       bind:value={draft.lastName}
       disabled={disableFields}
     />
-    <div class="role-select">
-      <Select
-        label="Select role"
-        placeholder={false}
-        bind:value={draft.role}
-        options={roleOptions}
-        getOptionLabel={option => option.label}
-        getOptionValue={option => option.value}
-        getOptionSubtitle={(option: any) => option.subtitle}
-        showSelectedSubtitle={true}
-        disabled={disableRole}
-      />
-    </div>
+    <GlobalRoleSelect
+      bind:value={draft.role}
+      options={roleOptions}
+      disabled={disableRole}
+    />
     {#if draft.role === Constants.BudibaseRoles.AppUser}
       <Select
         label="Select end user role"
@@ -320,11 +313,5 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
-  }
-  .role-select :global(.spectrum-Picker) {
-    height: auto;
-    align-items: center;
-    padding-top: var(--spacing-m);
-    padding-bottom: var(--spacing-m);
   }
 </style>
