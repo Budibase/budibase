@@ -88,21 +88,17 @@
 
   const deleteUsers = async () => {
     try {
-      if (selectedInvites.length > 0) {
-        await users.removeInvites(
-          selectedInvites.map(invite => ({
-            code: invite._id,
-          }))
-        )
-        selectedInvites = []
-        pendingInvites = await users.getInvites()
-      }
-
-      notifications.success(
-        `Successfully deleted ${selectedInvites.length} users`
+      const deletedCount = selectedInvites.length
+      await users.removeInvites(
+        selectedInvites.map(invite => ({
+          code: invite._id,
+        }))
       )
+      selectedInvites = []
+      pendingInvites = await users.getInvites()
+      notifications.success(`Successfully deleted ${deletedCount} invites`)
     } catch (error) {
-      notifications.error("Error deleting users")
+      notifications.error("Error deleting invites")
     }
   }
 
@@ -120,7 +116,9 @@
   {#if selectedInvites.length > 0}
     <div use:routeActions class="delete-btn">
       <DeleteRowsButton
-        item="user"
+        item="invite"
+        confirmationTitle="Confirm Deletion"
+        confirmationButtonText="Delete invites"
         on:updaterows
         selectedRows={[...selectedInvites]}
         deleteRows={deleteUsers}

@@ -1,5 +1,4 @@
 import { Config } from "jest"
-import * as fs from "fs"
 
 const config: Config = {
   globalSetup: "./../../globalSetup.ts",
@@ -16,13 +15,9 @@ const config: Config = {
     "@budibase/types": "<rootDir>/../types/src",
     "@budibase/shared-core": ["<rootDir>/../shared-core/src"],
     "@budibase/string-templates": ["<rootDir>/../string-templates/src"],
+    "@budibase/pro/(.*)": "<rootDir>/../pro/$1",
+    "@budibase/pro": "<rootDir>/../pro/src",
   },
-}
-
-// add pro sources if they exist
-if (fs.existsSync("../pro/src")) {
-  config.moduleNameMapper!["@budibase/pro/(.*)"] = "<rootDir>/../pro/$1"
-  config.moduleNameMapper!["@budibase/pro"] = "<rootDir>/../pro/src"
 }
 
 export default config

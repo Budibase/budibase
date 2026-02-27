@@ -39,18 +39,41 @@ else
 fi
 mkdir -p "${DATA_DIR}"
 
-normalize_env_file() {
-    local env_file="$1"
-    if [[ ! -f "${env_file}" ]]; then
+sync_couch_env_aliases() {
+    if [[ -z "${COUCH_DB_USER}" && -n "${COUCHDB_USER}" ]]; then
+        export COUCH_DB_USER="${COUCHDB_USER}"
+    elif [[ -z "${COUCHDB_USER}" && -n "${COUCH_DB_USER}" ]]; then
+        export COUCHDB_USER="${COUCH_DB_USER}"
+    fi
+
+    if [[ -z "${COUCH_DB_PASSWORD}" && -n "${COUCHDB_PASSWORD}" ]]; then
+        export COUCH_DB_PASSWORD="${COUCHDB_PASSWORD}"
+    elif [[ -z "${COUCHDB_PASSWORD}" && -n "${COUCH_DB_PASSWORD}" ]]; then
+        export COUCHDB_PASSWORD="${COUCH_DB_PASSWORD}"
+    fi
+}
+
+repair_internal_couch_url() {
+    local internal_url="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984"
+    local auth
+
+    sync_couch_env_aliases
+
+    if [[ -z "${COUCH_DB_URL}" ]]; then
+        export COUCH_DB_URL="${internal_url}"
         return
     fi
 
-    # Convert Windows CRLF line endings to LF for consistent shell parsing.
-    sed -i 's/\r$//' "${env_file}"
+    if [[ "${COUCH_DB_URL}" == *'$COUCH'* || "${COUCH_DB_URL}" == *'${COUCH'* ]]; then
+        export COUCH_DB_URL="${internal_url}"
+        return
+    fi
 
-    # Ensure trailing newline so appended keys don't concatenate to last value.
-    if [[ -n "$(tail -c1 "${env_file}" 2>/dev/null)" ]]; then
-        echo >> "${env_file}"
+    if [[ "${COUCH_DB_URL}" =~ ^https?://([^@]*)@ ]]; then
+        auth="${BASH_REMATCH[1]}"
+        if [[ "${auth}" != "${COUCHDB_USER}:${COUCHDB_PASSWORD}" ]]; then
+            export COUCH_DB_URL="${internal_url}"
+        fi
     fi
 }
 
@@ -77,11 +100,13 @@ fi
 
 # Source environment variables from a .env file if it exists in DATA_DIR
 if [[ -f "${DATA_DIR}/.env" ]]; then
-    normalize_env_file "${DATA_DIR}/.env"
     set -a  # Automatically export all variables loaded from .env
     source "${DATA_DIR}/.env"
     set +a
 fi
+
+# Sync aliases before randomizing to avoid overwriting user-provided underscore vars.
+sync_couch_env_aliases
 
 # Randomize any unset sensitive environment variables using uuidgen
 env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_MASTER_KEY LITELLM_SALT_KEY LITELLM_DB_PASSWORD)
@@ -91,9 +116,7 @@ for var in "${env_vars[@]}"; do
     fi
 done
 
-if [[ -z "${COUCH_DB_URL}" ]]; then
-    export COUCH_DB_URL=http://$COUCHDB_USER:$COUCHDB_PASSWORD@127.0.0.1:5984
-fi
+repair_internal_couch_url
 
 if [[ -z "${COUCH_DB_SQL_URL}" ]]; then
     export COUCH_DB_SQL_URL=http://127.0.0.1:4984
@@ -129,9 +152,8 @@ ensure_env_var "LITELLM_MASTER_KEY" "${LITELLM_MASTER_KEY}"
 ensure_env_var "LITELLM_SALT_KEY" "${LITELLM_SALT_KEY}"
 
 # Read in the .env file and export the variables
-set -a
-source "${DATA_DIR}/.env"
-set +a
+for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
+repair_internal_couch_url
 
 # Runtime values should take precedence over persisted .env values.
 if [[ "${runtime_database_url_set}" == "true" ]]; then
@@ -141,8 +163,8 @@ if [[ "${runtime_litellm_internal_db_set}" == "true" ]]; then
     export LITELLM_INTERNAL_DB="${runtime_litellm_internal_db}"
 fi
 
-ln -s ${DATA_DIR}/.env /app/.env
-ln -s ${DATA_DIR}/.env /worker/.env
+ln -sfn ${DATA_DIR}/.env /app/.env
+ln -sfn ${DATA_DIR}/.env /worker/.env
 
 # Make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
@@ -155,7 +177,7 @@ chown -R postgres:postgres ${DATA_DIR}/litellm
 chmod 700 ${DATA_DIR}/litellm/postgres
 
 echo "Starting Redis runner..."
-./redis-runner.sh &
+./redis-runner.sh
 
 echo "Starting callback CouchDB runner..."
 ./bbcouch-runner.sh &
@@ -272,6 +294,7 @@ END {
 
 upsert_env_var "LITELLM_INTERNAL_DB" "${LITELLM_INTERNAL_DB}"
 upsert_env_var "DATABASE_URL" "${DATABASE_URL}"
+upsert_env_var "COUCH_DB_URL" "${COUCH_DB_URL}"
 
 # Wait for backend services to start
 sleep 10

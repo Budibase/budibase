@@ -6,10 +6,11 @@
     Layout,
     MenuItem,
     Modal,
+    Pagination,
+    Search,
     Table,
     notifications,
   } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { roles } from "@/stores/builder"
   import { appsStore } from "@/stores/portal/apps"
@@ -21,11 +22,12 @@
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
+  import AssignWorkspacePicker from "./_components/AssignWorkspacePicker.svelte"
+  import EditWorkspaceRoleModal from "./_components/EditWorkspaceRoleModal.svelte"
+  import RemoveWorkspaceTableRenderer from "./_components/RemoveWorkspaceTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
-
-  $goto
 
   export let groupId
 
@@ -38,13 +40,35 @@
     groupId = params.groupId
   }
 
-  const appSchema = {
+  let loaded = false
+  let editModal, deleteModal, editWorkspaceRoleModal
+  let selectedWorkspace
+  let editWorkspaceRoleModalToken = 0
+  let workspaceSearch
+  let workspacePageNumber = 0
+  let previousWorkspaceSearch
+  const WORKSPACE_PAGE_SIZE = 3
+
+  $: group = $groups.find(x => x._id === groupId)
+  $: isScimGroup = group?.scimInfo?.isSync
+  $: isAdmin = sdk.users.isAdmin($auth.user)
+  $: readonly = !isAdmin || isScimGroup
+  $: appSchema = {
     name: {
-      width: "2fr",
+      width: "1fr",
     },
     role: {
       width: "1fr",
     },
+    ...(readonly
+      ? {}
+      : {
+          prodAppId: {
+            displayName: "",
+            width: "auto",
+            borderLeft: true,
+          },
+        }),
   }
   const customAppTableRenderers = [
     {
@@ -55,25 +79,60 @@
       column: "role",
       component: AppRoleTableRenderer,
     },
+    {
+      column: "prodAppId",
+      component: RemoveWorkspaceTableRenderer,
+    },
   ]
-
-  let loaded = false
-  let editModal, deleteModal
-
-  $: group = $groups.find(x => x._id === groupId)
-  $: isScimGroup = group?.scimInfo?.isSync
-  $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: readonly = !isAdmin || isScimGroup
   $: groupApps = $appsStore.apps
-    .filter(app =>
-      groups.getGroupAppIds(group).includes(appsStore.getProdAppID(app.devId))
-    )
-    .map(app => ({
-      ...app,
-      role: group?.builder?.apps.includes(appsStore.getProdAppID(app.devId))
-        ? Constants.Roles.CREATOR
-        : group?.roles?.[appsStore.getProdAppID(app.devId)],
-    }))
+    .filter(app => {
+      const prodAppId = appsStore.getProdAppID(app.devId)
+      return groups.getGroupAppIds(group).includes(prodAppId)
+    })
+    .map(app => {
+      const prodAppId = appsStore.getProdAppID(app.devId)
+      return {
+        ...app,
+        _id: prodAppId,
+        prodAppId,
+        readonly,
+        role: group?.builder?.apps.includes(prodAppId)
+          ? Constants.Roles.CREATOR
+          : group?.roles?.[prodAppId],
+      }
+    })
+  $: filteredGroupApps = workspaceSearch
+    ? groupApps.filter(app =>
+        app.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
+      )
+    : groupApps
+  $: showWorkspacePagination = filteredGroupApps.length > WORKSPACE_PAGE_SIZE
+  $: workspacePageCount = Math.max(
+    1,
+    Math.ceil(filteredGroupApps.length / WORKSPACE_PAGE_SIZE)
+  )
+  $: if (workspaceSearch !== previousWorkspaceSearch) {
+    workspacePageNumber = 0
+    previousWorkspaceSearch = workspaceSearch
+  }
+  $: if (workspacePageNumber > workspacePageCount - 1) {
+    workspacePageNumber = Math.max(workspacePageCount - 1, 0)
+  }
+  $: workspacePageRows = filteredGroupApps.slice(
+    workspacePageNumber * WORKSPACE_PAGE_SIZE,
+    (workspacePageNumber + 1) * WORKSPACE_PAGE_SIZE
+  )
+  $: workspaceFillerRows =
+    showWorkspacePagination && workspacePageRows.length < WORKSPACE_PAGE_SIZE
+      ? [...Array(WORKSPACE_PAGE_SIZE - workspacePageRows.length)].map(
+          (_, index) => ({
+            _id: `workspace-filler-${workspacePageNumber}-${index}`,
+            __skeleton: true,
+            __selectable: false,
+          })
+        )
+      : []
+  $: paginatedGroupApps = [...workspacePageRows, ...workspaceFillerRows]
 
   // Need to ensure the redirect isn't retriggered
   $: {
@@ -105,11 +164,25 @@
   }
 
   const removeApp = async app => {
-    await groups.removeApp(groupId, appsStore.getProdAppID(app.devId))
+    try {
+      await groups.removeApp(groupId, app)
+    } catch (error) {
+      notifications.error("Error removing workspace")
+    }
   }
-  setContext("roles", {
-    updateRole: () => {},
-    removeRole: removeApp,
+
+  const openWorkspaceRoleModal = workspace => {
+    if (readonly || workspace?.__skeleton) {
+      return
+    }
+    selectedWorkspace = workspace
+    editWorkspaceRoleModalToken += 1
+    editWorkspaceRoleModal?.show()
+  }
+
+  setContext("groupApps", {
+    removeApp,
+    getReadonly: () => readonly,
   })
 
   onMount(async () => {
@@ -156,27 +229,64 @@
 
     <Layout noPadding gap="S">
       <Heading size="S">Workspaces</Heading>
+      <div class="workspace-controls">
+        {#if !readonly}
+          <AssignWorkspacePicker {groupId} />
+        {/if}
+        <div class="workspace-controls-right">
+          <Search bind:value={workspaceSearch} placeholder="Search workspace" />
+        </div>
+      </div>
       <Table
         schema={appSchema}
-        data={groupApps}
+        data={paginatedGroupApps}
+        rowCount={WORKSPACE_PAGE_SIZE}
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
-        on:click={e => $goto(`/builder/workspace/${e.detail.devId}`)}
+        on:click={e => openWorkspaceRoleModal(e.detail)}
         allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">
-          <Heading size="S"
-            >This group doesn't have access to any workspaces</Heading
-          >
+          <Heading size="S">
+            {workspaceSearch
+              ? `No workspaces found matching "${workspaceSearch}"`
+              : "This group doesn't have access to any workspaces"}
+          </Heading>
         </div>
       </Table>
+      {#if showWorkspacePagination}
+        <div class="pagination">
+          <Pagination
+            page={workspacePageNumber + 1}
+            hasPrevPage={workspacePageNumber > 0}
+            hasNextPage={workspacePageNumber < workspacePageCount - 1}
+            goToPrevPage={() => {
+              workspacePageNumber = Math.max(0, workspacePageNumber - 1)
+            }}
+            goToNextPage={() => {
+              workspacePageNumber = Math.min(
+                workspacePageCount - 1,
+                workspacePageNumber + 1
+              )
+            }}
+          />
+        </div>
+      {/if}
     </Layout>
   </Layout>
 {/if}
 
 <Modal bind:this={editModal}>
   <CreateEditGroupModal {group} {saveGroup} />
+</Modal>
+
+<Modal bind:this={editWorkspaceRoleModal} closeOnOutsideClick={false}>
+  <EditWorkspaceRoleModal
+    {groupId}
+    workspace={selectedWorkspace}
+    openToken={editWorkspaceRoleModalToken}
+  />
 </Modal>
 
 <ConfirmDialog
@@ -202,5 +312,21 @@
   .placeholder {
     width: 100%;
     text-align: center;
+  }
+  .workspace-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .workspace-controls-right {
+    display: flex;
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+  .workspace-controls :global(.spectrum-Search) {
+    width: 200px;
+  }
+  .pagination {
+    margin-bottom: 32px;
   }
 </style>
