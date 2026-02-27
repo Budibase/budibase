@@ -55,7 +55,7 @@
   $: readonly = !isAdmin || isScimGroup
   $: appSchema = {
     name: {
-      width: "2fr",
+      width: "1fr",
     },
     role: {
       width: "1fr",
