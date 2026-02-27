@@ -27,7 +27,9 @@ const REDIS_CACHE_INIT_RETRY_MS = 30 * 1000
 
 const conversationCache = new Map<string, string>()
 let conversationCacheClient: RedisClient | undefined
-let conversationCacheClientInitInFlight: Promise<RedisClient | undefined> | undefined
+let conversationCacheClientInitInFlight:
+  | Promise<RedisClient | undefined>
+  | undefined
 let conversationCacheClientLastFailureAt = 0
 
 interface ConversationScope {
@@ -77,7 +79,8 @@ const getConversationCacheClient = async (): Promise<
 
   if (
     conversationCacheClientLastFailureAt > 0 &&
-    Date.now() - conversationCacheClientLastFailureAt < REDIS_CACHE_INIT_RETRY_MS
+    Date.now() - conversationCacheClientLastFailureAt <
+      REDIS_CACHE_INIT_RETRY_MS
   ) {
     return undefined
   }
@@ -88,7 +91,10 @@ const getConversationCacheClient = async (): Promise<
       conversationCacheClientLastFailureAt = 0
       return conversationCacheClient
     } catch (error) {
-      console.error("Failed to initialize chat conversation cache client", error)
+      console.error(
+        "Failed to initialize chat conversation cache client",
+        error
+      )
       conversationCacheClient = undefined
       conversationCacheClientLastFailureAt = Date.now()
       return undefined

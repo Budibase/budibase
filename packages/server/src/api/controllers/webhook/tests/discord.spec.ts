@@ -2,7 +2,7 @@ import type { ChatConversation } from "@budibase/types"
 import {
   matchesDiscordConversationScope,
   pickDiscordConversation,
-} from "./discord"
+} from "../discord"
 
 const makeChat = (
   overrides: Partial<ChatConversation> = {}

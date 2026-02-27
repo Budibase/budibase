@@ -1,12 +1,54 @@
-import type { ChatConversation } from "@budibase/types"
+import type {
+  ChatConversation,
+  MSTeamsConversationScope,
+} from "@budibase/types"
 import {
   isTeamsLifecycleActivity,
-  matchesTeamsConversationScope,
   parseTeamsCommand,
-  pickTeamsConversation,
   splitTeamsMessage,
   stripTeamsMentions,
-} from "./ms-teams"
+} from "../ms-teams"
+import { pickLatestConversation } from "../utils"
+
+const matchesTeamsConversationScope = ({
+  chat,
+  scope,
+}: {
+  chat: ChatConversation
+  scope: MSTeamsConversationScope
+}) => {
+  const ch = chat.channel
+  if (
+    chat.chatAppId !== scope.chatAppId ||
+    chat.agentId !== scope.agentId ||
+    ch?.provider !== "msteams" ||
+    ch?.conversationId !== scope.conversationId ||
+    (ch?.channelId || undefined) !== scope.channelId ||
+    ch.externalUserId !== scope.externalUserId
+  ) {
+    return false
+  }
+  return true
+}
+
+const pickTeamsConversation = ({
+  chats,
+  scope,
+  idleTimeoutMs,
+  nowMs = Date.now(),
+}: {
+  chats: ChatConversation[]
+  scope: MSTeamsConversationScope
+  idleTimeoutMs: number
+  nowMs?: number
+}) =>
+  pickLatestConversation({
+    chats,
+    scope,
+    idleTimeoutMs,
+    matchesConversationScope: matchesTeamsConversationScope,
+    nowMs,
+  })
 
 const makeChat = (
   overrides: Partial<ChatConversation> = {}

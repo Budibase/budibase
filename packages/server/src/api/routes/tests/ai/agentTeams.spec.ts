@@ -139,6 +139,7 @@ describe("agent teams integration provisioning", () => {
       MSTeamsIntegration: {
         appId: "teams-app-id",
         appPassword: "teams-app-password",
+        tenantId: "azure-tenant-id",
       },
     })
 
@@ -165,6 +166,7 @@ describe("agent teams integration provisioning", () => {
       MSTeamsIntegration: {
         appId: "teams-app-id",
         appPassword: "teams-app-password",
+        tenantId: "azure-tenant-id",
       },
     })
 
@@ -206,6 +208,7 @@ describe("agent teams integration provisioning", () => {
         MSTeamsIntegration: {
           appId: "teams-app-id",
           appPassword: "teams-app-password",
+          tenantId: "azure-tenant-id",
         },
       })
       await config.publish()
@@ -222,7 +225,6 @@ describe("agent teams integration provisioning", () => {
         "authorization header not found"
       )
     })
-
   })
 
   describe("teams webhook incoming messages", () => {
@@ -259,6 +261,7 @@ describe("agent teams integration provisioning", () => {
         MSTeamsIntegration: {
           appId: "teams-app-id",
           appPassword: "teams-app-password",
+          tenantId: "azure-tenant-id",
         },
       })
       const channel = await config.api.agent.provisionMSTeamsChannel(agent._id!)

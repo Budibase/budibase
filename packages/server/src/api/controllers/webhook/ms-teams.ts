@@ -1,6 +1,5 @@
 import { context, HTTPError } from "@budibase/backend-core"
 import type {
-  ChatConversation,
   ChatConversationChannel,
   Ctx,
   MSTeamsActivity,
@@ -10,65 +9,12 @@ import type {
 import { Chat, type Thread, type Message } from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
-import { isConversationExpired, pickLatestConversation } from "./utils"
 import { handleChatMessage } from "./chatHandler"
 import { teamsState } from "./chatState"
 import { runChatWebhook } from "./runChatWebhook"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
-
-// --- Exported helpers (used by tests) ---
-
-export const isTeamsConversationExpired = ({
-  chat,
-  idleTimeoutMs,
-  nowMs = Date.now(),
-}: {
-  chat: ChatConversation
-  idleTimeoutMs: number
-  nowMs?: number
-}) => isConversationExpired({ chat, idleTimeoutMs, nowMs })
-
-export const matchesTeamsConversationScope = ({
-  chat,
-  scope,
-}: {
-  chat: ChatConversation
-  scope: MSTeamsConversationScope
-}) => {
-  const ch = chat.channel
-  if (
-    chat.chatAppId !== scope.chatAppId ||
-    chat.agentId !== scope.agentId ||
-    ch?.provider !== "msteams" ||
-    ch?.conversationId !== scope.conversationId ||
-    (ch?.channelId || undefined) !== scope.channelId ||
-    ch.externalUserId !== scope.externalUserId
-  ) {
-    return false
-  }
-  return true
-}
-
-export const pickTeamsConversation = ({
-  chats,
-  scope,
-  idleTimeoutMs,
-  nowMs = Date.now(),
-}: {
-  chats: ChatConversation[]
-  scope: MSTeamsConversationScope
-  idleTimeoutMs: number
-  nowMs?: number
-}) =>
-  pickLatestConversation({
-    chats,
-    scope,
-    idleTimeoutMs,
-    matchesConversationScope: matchesTeamsConversationScope,
-    nowMs,
-  })
 
 export const stripTeamsMentions = (
   text: string,
@@ -276,7 +222,7 @@ export async function MSTeamsWebhook(
             appId: integration.appId,
             appPassword: integration.appPassword,
             appTenantId: integration.tenantId,
-            appType: integration.tenantId ? "SingleTenant" : "MultiTenant",
+            appType: "SingleTenant",
           }),
         },
         state: teamsState,

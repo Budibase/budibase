@@ -36,7 +36,12 @@
   )
 
   const hasRequiredCredentials = $derived.by(
-    () => !!(draft.appId.trim() && draft.appPassword.trim())
+    () =>
+      !!(
+        draft.appId.trim() &&
+        draft.appPassword.trim() &&
+        draft.tenantId.trim()
+      )
   )
 
   const isProvisioned = $derived.by(
@@ -110,7 +115,7 @@
       bind:value={draft.appPassword}
     />
     <Input
-      label="Directory (tenant) ID (optional)"
+      label="Directory (tenant) ID (Azure AD tenant ID)"
       bind:value={draft.tenantId}
     />
     <Input

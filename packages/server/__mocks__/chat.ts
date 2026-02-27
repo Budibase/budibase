@@ -9,10 +9,11 @@ interface ChatOptions {
   logger?: string
 }
 
-// @ts-ignore no-useless-constructor
 export class ConsoleLogger {
-  constructor(_level: string) {
-    // no-op
+  level: string
+
+  constructor(level: string) {
+    this.level = level
   }
 }
 

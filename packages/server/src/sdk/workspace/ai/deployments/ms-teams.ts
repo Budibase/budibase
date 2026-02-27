@@ -15,8 +15,9 @@ export const validateMSTeamsIntegration = (
 
   const appId = integration.appId?.trim()
   const appPassword = integration.appPassword?.trim()
+  const tenantId = integration.tenantId?.trim()
 
-  if (!appId || !appPassword) {
+  if (!appId || !appPassword || !tenantId) {
     throw new HTTPError(
       "Teams integration requires appId (client ID) and appPassword (client secret value)",
       400
@@ -26,7 +27,7 @@ export const validateMSTeamsIntegration = (
   return {
     appId,
     appPassword,
-    tenantId: integration.tenantId?.trim() || undefined,
+    tenantId,
     chatAppId: integration.chatAppId?.trim() || undefined,
   }
 }

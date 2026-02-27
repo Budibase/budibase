@@ -10,7 +10,7 @@ import type {
 import { Chat, type SlashCommandEvent } from "chat"
 import { createDiscordAdapter } from "@chat-adapter/discord"
 import sdk from "../../../sdk"
-import { isConversationExpired, pickLatestConversation } from "./utils"
+import { pickLatestConversation } from "./utils"
 import { handleChatMessage } from "./chatHandler"
 import { discordState } from "./chatState"
 import { runChatWebhook } from "./runChatWebhook"
@@ -19,25 +19,6 @@ const DISCORD_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
 
 // --- Exported helpers (used by tests) ---
-
-export const isDiscordConversationExpired = ({
-  chat,
-  idleTimeoutMs,
-  nowMs = Date.now(),
-}: {
-  chat: ChatConversation
-  idleTimeoutMs: number
-  nowMs?: number
-}) => isConversationExpired({ chat, idleTimeoutMs, nowMs })
-
-export const getDiscordIdleTimeoutMs = () => {
-  const configured = Number(
-    process.env.DISCORD_CONVERSATION_IDLE_TIMEOUT_MINUTES
-  )
-  const minutes =
-    Number.isFinite(configured) && configured > 0 ? configured : 45
-  return minutes * 60 * 1000
-}
 
 export const matchesDiscordConversationScope = ({
   chat,
