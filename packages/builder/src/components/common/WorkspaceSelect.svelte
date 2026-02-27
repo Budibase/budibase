@@ -202,6 +202,7 @@
           size="M"
           hoverable
           tooltip="Upgrade to unlock multiple workspaces"
+          on:click={licensing.goToUpgradePage}
         />
       {/if}
       <WorkspaceSortMenu
