@@ -8,7 +8,7 @@ export async function run({
 }: {
   inputs: OpenAIStepInputs
 }): Promise<OpenAIStepOutputs> {
-  if (inputs.prompt == null || inputs.prompt.trim()) {
+  if (!inputs.prompt?.trim()) {
     return {
       success: false,
       response: "Budibase OpenAI Automation Failed: No prompt supplied",
