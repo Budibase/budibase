@@ -238,7 +238,7 @@ async function uploadFile({
   }
 }
 
-function unwrapLiteLLMFileId(fileId: string): string {
+export function unwrapLiteLLMFileId(fileId: string): string {
   if (!fileId.startsWith("file-")) {
     return fileId
   }

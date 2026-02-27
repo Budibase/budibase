@@ -292,12 +292,16 @@ export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
 
 export function withEnv<T>(envVars: Partial<typeof environment>, f: () => T) {
   const cleanup = setEnv(envVars)
-  const result = f()
-  if (result instanceof Promise) {
-    return result.finally(cleanup)
-  } else {
+  try {
+    const result = f()
+    if (result instanceof Promise) {
+      return result.finally(cleanup)
+    }
     cleanup()
     return result
+  } catch (err) {
+    cleanup()
+    throw err
   }
 }
 

@@ -1,6 +1,139 @@
 <script lang="ts">
-  import { Body } from "@budibase/bbui"
+  import { Body, Toggle, notifications } from "@budibase/bbui"
+  import { appStore, deploymentStore } from "@/stores/builder"
+  import { chatAppsStore, currentChatApp } from "@/stores/portal"
+  import { helpers } from "@budibase/shared-core"
+  import { params } from "@roxi/routify"
   import BBAILogo from "assets/bb-ai.svg"
+
+  const CHAT_UPDATE_ERROR_MESSAGE = "Could not update chat"
+  const CHAT_LOAD_ERROR_MESSAGE = "Failed to load agent chat status"
+  const AGENT_CHAT_ENABLED_MESSAGE = "Agent chat enabled"
+  const AGENT_CHAT_DISABLED_MESSAGE = "Agent chat disabled"
+  const AGENT_CHAT_ENABLE_ERROR_MESSAGE = "Failed to enable agent chat"
+  const AGENT_CHAT_DISABLE_ERROR_MESSAGE = "Failed to disable agent chat"
+
+  export let agentId: string
+
+  let toggling = false
+  let loadingChatApp = false
+  let attemptedWorkspaceId: string | undefined
+  let currentWorkspaceId: string | undefined
+
+  interface ChatAppAgentConfig {
+    agentId: string
+    isEnabled?: boolean
+  }
+
+  const isAgentEnabledInChat = (
+    chatAppAgents: ChatAppAgentConfig[],
+    targetAgentId: string
+  ) => {
+    return Boolean(
+      chatAppAgents.find(
+        agent => agent.agentId === targetAgentId && agent.isEnabled
+      )
+    )
+  }
+
+  const shouldEnsureChatApp = ({
+    workspaceId,
+    attemptedWorkspaceId,
+    hasCurrentChatApp,
+    loadingChatApp,
+  }: {
+    workspaceId?: string
+    attemptedWorkspaceId?: string
+    hasCurrentChatApp: boolean
+    loadingChatApp: boolean
+  }) =>
+    Boolean(
+      workspaceId &&
+        workspaceId !== attemptedWorkspaceId &&
+        !hasCurrentChatApp &&
+        !loadingChatApp
+    )
+
+  const canToggleAgentChat = ({
+    workspaceId,
+    toggling,
+  }: {
+    workspaceId?: string
+    toggling: boolean
+  }) => Boolean(workspaceId && !toggling)
+
+  $: workspaceId = $params.application
+  $: currentChatAgents = $currentChatApp?.agents || []
+  $: enabled = isAgentEnabledInChat(currentChatAgents, agentId)
+  $: disabled = toggling || loadingChatApp || !workspaceId
+
+  $: chatUrl = $appStore.url
+    ? `${helpers.appChatUrl($appStore.url)}/agent/${encodeURIComponent(agentId)}`
+    : ""
+
+  $: if (workspaceId !== currentWorkspaceId) {
+    currentWorkspaceId = workspaceId
+    attemptedWorkspaceId = undefined
+  }
+
+  $: if (
+    shouldEnsureChatApp({
+      workspaceId,
+      attemptedWorkspaceId,
+      hasCurrentChatApp: Boolean($currentChatApp),
+      loadingChatApp,
+    })
+  ) {
+    attemptedWorkspaceId = workspaceId
+    loadingChatApp = true
+    chatAppsStore
+      .ensureChatApp(undefined, workspaceId)
+      .catch(_error => {
+        notifications.error(CHAT_LOAD_ERROR_MESSAGE)
+      })
+      .finally(() => {
+        loadingChatApp = false
+      })
+  }
+
+  const onToggle = async () => {
+    if (!canToggleAgentChat({ workspaceId, toggling })) {
+      return
+    }
+
+    const targetWorkspaceId = workspaceId
+    if (!targetWorkspaceId) {
+      return
+    }
+
+    toggling = true
+    const wasEnabled = enabled
+    try {
+      const result = await chatAppsStore.toggleAgentDeploymentInChat(
+        agentId,
+        targetWorkspaceId
+      )
+      if (!result) {
+        notifications.error(CHAT_UPDATE_ERROR_MESSAGE)
+        return
+      }
+
+      await deploymentStore.publishApp()
+      notifications.success(
+        result.enabled
+          ? AGENT_CHAT_ENABLED_MESSAGE
+          : AGENT_CHAT_DISABLED_MESSAGE
+      )
+    } catch (error) {
+      notifications.error(
+        wasEnabled
+          ? AGENT_CHAT_DISABLE_ERROR_MESSAGE
+          : AGENT_CHAT_ENABLE_ERROR_MESSAGE
+      )
+    } finally {
+      toggling = false
+    }
+  }
 </script>
 
 <div class="integration-row">
@@ -15,7 +148,14 @@
       >
     </div>
   </div>
-  <div class="row-action"></div>
+  <div class="row-action">
+    {#if enabled && chatUrl}
+      <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
+        Open chat
+      </a>
+    {/if}
+    <Toggle value={enabled} {disabled} on:change={onToggle} />
+  </div>
 </div>
 
 <style>
@@ -46,8 +186,19 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    min-width: 110px;
+    min-width: 150px;
     gap: 10px;
     margin-left: 0px;
+  }
+
+  .chat-link {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-700);
+    text-decoration: none;
+  }
+
+  .chat-link:hover {
+    color: var(--spectrum-global-color-gray-900);
+    text-decoration: underline;
   }
 </style>

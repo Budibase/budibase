@@ -331,21 +331,51 @@ export async function fetchClientChatApps(
 
   const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
   for (const workspace of workspaces) {
-    const chatApp = await context.doInWorkspaceContext(workspace.appId, () =>
-      sdk.ai.chatApps.getSingle()
+    const { chatApp, workspaceAgents } = await context.doInWorkspaceContext(
+      workspace.appId,
+      async () => {
+        const [chatApp, workspaceAgents] = await Promise.all([
+          sdk.ai.chatApps.getSingle(),
+          sdk.ai.agents.fetch(),
+        ])
+
+        return {
+          chatApp,
+          workspaceAgents,
+        }
+      }
     )
 
     if (!chatApp?.live || !chatApp._id) {
       continue
     }
 
-    chatApps.push({
-      appId: workspace.appId,
-      chatAppId: chatApp._id,
-      name: chatApp.title || workspace.name,
-      url: `${workspace.url}`.replace(/\/$/, ""),
-      updatedAt: chatApp.updatedAt || workspace.updatedAt,
-    })
+    const workspaceAgentsById = new Map(
+      workspaceAgents
+        .filter(agent => agent._id)
+        .map(agent => [agent._id!, agent])
+    )
+
+    const enabledChatAgents = (chatApp.agents || []).filter(
+      agent => agent.isEnabled
+    )
+
+    for (const chatAgent of enabledChatAgents) {
+      const workspaceAgent = workspaceAgentsById.get(chatAgent.agentId)
+      if (!workspaceAgent?.live) {
+        continue
+      }
+
+      chatApps.push({
+        appId: workspace.appId,
+        chatAppId: chatApp._id,
+        agentId: chatAgent.agentId,
+        agentName: workspaceAgent.name,
+        name: workspaceAgent.name,
+        url: `${workspace.url}/agent/${chatAgent.agentId}`.replace(/\/$/, ""),
+        updatedAt: chatApp.updatedAt || workspace.updatedAt,
+      })
+    }
   }
 
   ctx.body = { chatApps }

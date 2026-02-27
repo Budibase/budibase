@@ -4,14 +4,20 @@ import type {
   LanguageModelV3StreamPart,
   LanguageModelV3Usage,
 } from "@ai-sdk/provider"
+import { constants, context, env, HTTPError } from "@budibase/backend-core"
+import {
+  ImageContentTypes,
+  LLMResponse,
+  ReasoningEffort,
+} from "@budibase/types"
 import tracer from "dd-trace"
-import { ai, quotas } from "@budibase/pro"
+import { licensing, quotas } from "@budibase/pro"
 import { wrapLanguageModel } from "ai"
 import { TransformStream } from "node:stream/web"
-import { context } from "@budibase/backend-core"
-import { LLMResponse, ReasoningEffort } from "@budibase/types"
 import environment from "../../../../environment"
 import { Readable } from "stream"
+import { blob } from "stream/consumers"
+import { unwrapLiteLLMFileId } from "./litellm"
 
 interface OpenAIUsage {
   prompt_tokens?: number
@@ -195,14 +201,76 @@ export async function createBBAIClient(
       filename: string,
       contentType?: string
     ) => {
-      // Reuse the legacy Budibase AI upload implementation (same path used by
-      // the /api/ai/upload-file controller) for compatibility.
-      const legacyLLM = await ai.getLLMOrThrow()
-      return legacyLLM.uploadFile(
-        stream,
-        filename,
-        contentType || "application/pdf"
-      )
+      const type = (contentType || "application/pdf").toLowerCase()
+      const fileBlob = (await blob(stream)) as Blob
+      const isImage = ImageContentTypes.includes(type)
+
+      if (!env.SELF_HOSTED) {
+        if (isImage) {
+          const fileBuffer = Buffer.from(await fileBlob.arrayBuffer())
+          return `data:${type};base64,${fileBuffer.toString("base64")}`
+        }
+        const formdata = new FormData()
+        formdata.append("purpose", "assistants")
+        formdata.append("file", fileBlob, filename)
+        formdata.append("model", model)
+
+        const liteLLMBaseUrl = environment.LITELLM_URL.replace(/\/v1\/?$/, "")
+        const response = await fetch(`${liteLLMBaseUrl}/v1/files`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${environment.BBAI_LITELLM_KEY}`,
+          },
+          body: formdata,
+        })
+
+        if (!response.ok) {
+          throw await HTTPError.fromResponse(response)
+        }
+
+        const result = await response.json()
+        if (typeof result.id !== "string") {
+          throw new Error("File id not found")
+        }
+        return unwrapLiteLLMFileId(result.id)
+      } else {
+        const fileBuffer = Buffer.from(await fileBlob.arrayBuffer())
+        const base64 = fileBuffer.toString("base64")
+
+        if (isImage) {
+          return `data:${type};base64,${base64}`
+        }
+        if (!env.BUDICLOUD_URL) {
+          throw new Error("No Budibase URL found")
+        }
+        const licenseKey = await licensing.keys.getLicenseKey()
+        if (!licenseKey) {
+          throw new Error("No license key found")
+        }
+
+        const response = await fetch(
+          `${env.BUDICLOUD_URL}/api/ai/upload-file`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              [constants.Header.LICENSE_KEY]: licenseKey,
+            },
+            body: JSON.stringify({
+              data: base64,
+              filename,
+              contentType: type,
+            }),
+          }
+        )
+
+        if (!response.ok) {
+          throw await HTTPError.fromResponse(response)
+        }
+
+        const result = await response.json()
+        return result.file
+      }
     },
   }
 }
