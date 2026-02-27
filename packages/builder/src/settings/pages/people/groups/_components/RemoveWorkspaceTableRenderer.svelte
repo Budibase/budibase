@@ -1,13 +1,11 @@
 <script>
   import { ActionButton, ProgressCircle } from "@budibase/bbui"
   import { getContext } from "svelte"
-  import { auth } from "@/stores/portal/auth"
-  import { sdk } from "@budibase/shared-core"
 
   export let value
   export let row
 
-  const userContext = getContext("users")
+  const groupAppsContext = getContext("groupApps")
   let removing = false
 
   const onClick = async e => {
@@ -17,7 +15,7 @@
     }
     removing = true
     try {
-      await userContext.removeUser(value)
+      await groupAppsContext.removeApp(value)
     } finally {
       removing = false
     }
@@ -31,7 +29,7 @@
     </div>
   {:else}
     <ActionButton
-      disabled={!sdk.users.isAdmin($auth.user)}
+      disabled={groupAppsContext.getReadonly?.()}
       size="S"
       on:click={onClick}
     >

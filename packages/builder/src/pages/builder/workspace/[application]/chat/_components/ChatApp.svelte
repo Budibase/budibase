@@ -57,6 +57,12 @@
     icon?: string
     iconColor?: string
   }[] = []
+  let agentAvailability:
+    | "no_selection"
+    | "deleted"
+    | "offline"
+    | "disabled"
+    | "ready" = "no_selection"
 
   let chatAgents: ChatAgentConfig[] = []
   let agents: Agent[] = []
@@ -82,13 +88,17 @@
     ? "No agents enabled for this chat app. Add one in Settings to start chatting."
     : "No agents yet. Add one from the settings panel to start chatting."
   $: conversationStarters = $selectedChatAgent?.conversationStarters || []
-  $: isAgentKnown = selectedAgentId
-    ? !agentsLoaded || agents.some(agent => agent._id === selectedAgentId)
-    : false
-  $: isAgentLive = selectedAgentId
-    ? !agentsLoaded ||
-      agents.some(agent => agent._id === selectedAgentId && agent.live)
-    : false
+  $: agentAvailability = !selectedAgentId
+    ? "no_selection"
+    : !agentsLoaded
+      ? "ready"
+      : !agents.some(agent => agent._id === selectedAgentId)
+        ? "deleted"
+        : !agents.some(agent => agent._id === selectedAgentId && agent.live)
+          ? "offline"
+          : !enabledAgentList.some(agent => agent.agentId === selectedAgentId)
+            ? "disabled"
+            : "ready"
 
   const agentIconColors = [
     "#6366F1",
@@ -340,8 +350,7 @@
       {selectedAgentName}
       {workspaceId}
       {conversationStarters}
-      {isAgentKnown}
-      {isAgentLive}
+      {agentAvailability}
       {initialPrompt}
       on:deleteChat={deleteCurrentChat}
       on:chatSaved={handleChatSaved}
