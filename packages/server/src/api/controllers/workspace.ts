@@ -372,10 +372,7 @@ export async function fetchClientChatApps(
         agentId: chatAgent.agentId,
         agentName: workspaceAgent.name,
         name: workspaceAgent.name,
-        url: `${workspace.url}/agent/${encodeURIComponent(chatAgent.agentId)}`.replace(
-          /\/$/,
-          ""
-        ),
+        url: `${workspace.url}/agent/${chatAgent.agentId}`.replace(/\/$/, ""),
         updatedAt: chatApp.updatedAt || workspace.updatedAt,
       })
     }
