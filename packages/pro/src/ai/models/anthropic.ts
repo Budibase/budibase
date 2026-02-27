@@ -41,14 +41,6 @@ export class Anthropic extends LLM {
     }
     return undefined
   }
-  async uploadFile(
-    _data?: any,
-    _filename?: string,
-    _contentType?: string
-  ): Promise<string> {
-    throw new Error("File upload not supported for this LLM provider")
-  }
-
   protected async chatCompletion(
     request: LLMRequest
   ): Promise<LLMFullResponse> {

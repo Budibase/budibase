@@ -514,9 +514,6 @@ export async function find(ctx: UserCtx<void, FindConfigResponse>) {
     case ConfigType.OIDC_LOGOS:
       await enrichOIDCLogos(config)
       break
-    case ConfigType.AI:
-      await pro.sdk.ai.enrichAIConfig(config)
-      break
   }
 
   stripSecrets(config, ctx)

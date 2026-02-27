@@ -288,10 +288,13 @@ describe("AI", () => {
 
 describe("BudibaseAI", () => {
   const config = new TestConfiguration()
-  let cleanup: () => void | Promise<void>
+  let cleanup: (() => void | Promise<void>)[] = []
   beforeAll(async () => {
     await config.init()
-    cleanup = await budibaseAI()(config)
+    cleanup.push(await budibaseAI()(config))
+    cleanup.push(
+      setEnv({ SELF_HOSTED: false, BUDIBASE_AI_DEFAULT_MODEL: "gpt-4o" })
+    )
   })
 
   beforeEach(async () => {
@@ -299,10 +302,11 @@ describe("BudibaseAI", () => {
   })
 
   afterAll(async () => {
-    if ("then" in cleanup) {
-      await cleanup()
-    } else {
-      cleanup()
+    for (const fn of cleanup) {
+      const result = fn()
+      if (result && "then" in result) {
+        await result
+      }
     }
     config.end()
   })
@@ -350,12 +354,14 @@ describe("BudibaseAI", () => {
         .reply(200, license)
     })
 
+    afterEach(() => {})
+
     it("handles correct chat response", async () => {
       let usage = await getQuotaUsage()
       expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
-      mockChatGPTResponse("Hi there!")
+      mockAISDKChatGPTResponse("Hi there!")
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         licenseKey: licenseKey,
@@ -376,7 +382,7 @@ describe("BudibaseAI", () => {
     })
 
     it("handles chat response error", async () => {
-      mockChatGPTResponse(() => {
+      mockAISDKChatGPTResponse(() => {
         throw new Error("LLM error")
       })
       await config.api.ai.chat(
@@ -421,7 +427,7 @@ describe("BudibaseAI", () => {
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
 
       const gptResponse = generator.word()
-      mockChatGPTResponse(gptResponse)
+      mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "text",
@@ -450,7 +456,7 @@ describe("BudibaseAI", () => {
       const gptResponse = JSON.stringify({
         [generator.word()]: generator.word(),
       })
-      mockChatGPTResponse(gptResponse)
+      mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "json",
@@ -482,7 +488,7 @@ describe("BudibaseAI", () => {
           [generator.word()]: z.string(),
         })
       )
-      mockChatGPTResponse(gptResponse, { format: structuredOutput })
+      mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: structuredOutput,
