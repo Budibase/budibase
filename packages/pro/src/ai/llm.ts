@@ -92,16 +92,11 @@ function getBudibaseAIKeyConfig(): LLMProviderConfig | undefined {
       return
     }
 
-    if (!env.BUDIBASE_AI_DEFAULT_MODEL) {
-      span.addTags({ enabled: false, reason: "no BUDIBASE_AI_DEFAULT_MODEL" })
-      return
-    }
-
     span.addTags({ enabled: true })
 
     return {
       provider: "BudibaseAI",
-      model: env.BUDIBASE_AI_DEFAULT_MODEL,
+      model: DefaultModelByProvider.BudibaseAI,
     }
   })
 }
