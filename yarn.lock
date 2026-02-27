@@ -22808,7 +22808,7 @@ svelte-spa-router@^4.0.1:
   dependencies:
     regexparam "2.0.2"
 
-svelte@^5.38.2:
+svelte@^5.53.2:
   version "5.53.5"
   resolved "https://registry.yarnpkg.com/svelte/-/svelte-5.53.5.tgz#9472539a0152d5e02e2c933cb8eb9918d71b21de"
   integrity sha512-YkqERnF05g8KLdDZwZrF8/i1eSbj6Eoat8Jjr2IfruZz9StLuBqo8sfCSzjosNKd+ZrQ8DkKZDjpO5y3ht1Pow==
