@@ -806,7 +806,8 @@ function extractCreatedTablesFromResponse(
 async function runFeatureEvals(
   client: ApiClient,
   enabledFeatures: Set<EvalFeature>,
-  mode: BudibaseMode
+  mode: BudibaseMode,
+  scenarioConfig: AIProviderConfig
 ): Promise<EvalResult[]> {
   const results: EvalResult[] = []
   const definitions = await getAutomationDefinitions(client)
@@ -952,13 +953,14 @@ async function runFeatureEvals(
     "automation-openai",
     "Automation OpenAI step",
     async () => {
+      const automationModel = scenarioConfig.defaultModel || "gpt-4o-mini"
       const result = await runAutomationStepEval(
         client,
         definitions,
         "OPENAI",
         {
           prompt: "Reply with exactly EVAL_OPENAI_OK",
-          model: "gpt-4o-mini",
+          model: automationModel,
         }
       )
 
@@ -1368,7 +1370,12 @@ async function runScenario(
 
   await configureAIProvider(client, scenario.config)
   const startedAt = Date.now()
-  const results = await runFeatureEvals(client, enabledFeatures, scenario.mode)
+  const results = await runFeatureEvals(
+    client,
+    enabledFeatures,
+    scenario.mode,
+    scenario.config
+  )
   return {
     ok: results.every(r => r.ok),
     elapsedMs: Date.now() - startedAt,
