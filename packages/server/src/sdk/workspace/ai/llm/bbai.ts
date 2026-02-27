@@ -214,7 +214,9 @@ export async function createBBAIClient(
         formdata.append("purpose", "assistants")
         formdata.append("file", fileBlob, filename)
         formdata.append("model", model)
-        const response = await fetch(`${environment.LITELLM_URL}/v1/files`, {
+
+        const liteLLMBaseUrl = environment.LITELLM_URL.replace(/\/v1\/?$/, "")
+        const response = await fetch(`${liteLLMBaseUrl}/v1/files`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${environment.BBAI_LITELLM_KEY}`,
