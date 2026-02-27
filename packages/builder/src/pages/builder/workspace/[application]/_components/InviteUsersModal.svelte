@@ -1,18 +1,18 @@
 <script lang="ts">
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
-  import { Constants } from "@budibase/frontend-core"
   import type { BulkUserCreated } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
   import { OnboardingType } from "@/constants"
   import AddUserModal from "@/settings/pages/people/users/_components/AddUserModal.svelte"
   import {
+    assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
-    getWorkspaceRole,
+    buildWorkspaceInvitePayload,
+    dedupeUsersByEmail,
     type UserData,
   } from "@/settings/pages/people/users/workspaceInviteUtils"
   import { appStore, roles } from "@/stores/builder"
   import { users } from "@/stores/portal"
-  import type { UserInfo } from "@/types"
   import { sdk } from "@budibase/shared-core"
 
   let createUserModal: Modal
@@ -24,19 +24,7 @@
     : ""
 
   const removingDuplicities = async (userData: UserData): Promise<UserData> => {
-    const newUsers: UserInfo[] = []
-    const seenEmails = new Set<string>()
-
-    for (const user of userData?.users ?? []) {
-      const email = user.email.toLowerCase()
-      if (seenEmails.has(email)) {
-        continue
-      }
-      seenEmails.add(email)
-      newUsers.push(user)
-    }
-
-    return { ...userData, users: newUsers }
+    return dedupeUsersByEmail(userData)
   }
 
   const inviteUsers = async (userData: UserData) => {
@@ -57,24 +45,12 @@
     }
 
     const assignToWorkspace = userData.assignToWorkspace ?? true
-    const payload = usersForInvite.map(user => {
-      const workspaceRole = getWorkspaceRole(
-        currentWorkspaceId,
-        user.role,
-        user.appRole
-      )
-      return {
-        email: user.email,
-        builder: user.role === Constants.BudibaseRoles.Developer,
-        creator: user.role === Constants.BudibaseRoles.Creator,
-        admin: user.role === Constants.BudibaseRoles.Admin,
-        groups: userData.groups,
-        apps:
-          assignToWorkspace && currentWorkspaceId && workspaceRole
-            ? { [currentWorkspaceId]: workspaceRole }
-            : undefined,
-      }
-    })
+    const payload = buildWorkspaceInvitePayload(
+      usersForInvite,
+      userData.groups,
+      currentWorkspaceId,
+      assignToWorkspace
+    )
 
     await users.invite(payload)
     notifications.success("User invite successful")
@@ -110,25 +86,14 @@
       return
     }
 
-    await Promise.all(
-      response.successful.map(async user => {
-        const matchingUser = usersForCreation.users.find(
-          created => created.email === user.email
-        )
-        const role = getWorkspaceRole(
-          currentWorkspaceId,
-          matchingUser?.role,
-          matchingUser?.appRole
-        )
-        if (!role) {
-          return
-        }
-        const fullUser = await users.get(user._id)
-        if (fullUser?._rev) {
-          await users.addUserToWorkspace(user._id, role, fullUser._rev)
-        }
-      })
+    const assignmentResult = await assignCreatedUsersToWorkspace(
+      response.successful,
+      usersForCreation.users,
+      currentWorkspaceId
     )
+    if (assignmentResult.failedCount) {
+      notifications.error("Error adding some users to workspace")
+    }
 
     notifications.success("Successfully created user")
   }

@@ -54,8 +54,10 @@
   import type { UserInfo } from "@/types"
   import { routeActions } from "@/settings/pages"
   import {
+    assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
-    getWorkspaceRole,
+    buildWorkspaceInvitePayload,
+    dedupeUsersByEmail,
     type UserData,
   } from "./workspaceInviteUtils"
 
@@ -332,24 +334,12 @@
     }
 
     const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
-    const payload = usersForInvite.map(user => {
-      const workspaceRole = getWorkspaceRole(
-        currentWorkspaceId,
-        user.role,
-        user.appRole
-      )
-      return {
-        email: user.email,
-        builder: user.role === Constants.BudibaseRoles.Developer,
-        creator: user.role === Constants.BudibaseRoles.Creator,
-        admin: user.role === Constants.BudibaseRoles.Admin,
-        groups: userData.groups,
-        apps:
-          assignToWorkspace && currentWorkspaceId && workspaceRole
-            ? { [currentWorkspaceId]: workspaceRole }
-            : undefined,
-      }
-    })
+    const payload = buildWorkspaceInvitePayload(
+      usersForInvite,
+      userData.groups,
+      currentWorkspaceId,
+      assignToWorkspace
+    )
     try {
       inviteUsersResponse = await users.invite(payload)
       await refreshUserList()
@@ -363,20 +353,13 @@
   }
 
   const removingDuplicities = async (userData: UserData): Promise<UserData> => {
+    const dedupedUserData = dedupeUsersByEmail(userData)
     const currentUserEmails = isWorkspaceOnly
       ? []
       : (await users.fetch())?.map(x => x.email.toLowerCase()) || []
-    const newUsers: UserInfo[] = []
-    const seenEmails = new Set<string>()
-
-    for (const user of userData?.users ?? []) {
-      const email = user.email.toLowerCase()
-      if (seenEmails.has(email) || currentUserEmails.includes(email)) {
-        continue
-      }
-      seenEmails.add(email)
-      newUsers.push(user)
-    }
+    const newUsers: UserInfo[] = dedupedUserData.users.filter(
+      user => !currentUserEmails.includes(user.email.toLowerCase())
+    )
 
     if (!newUsers.length && !isWorkspaceOnly) {
       notifications.info("Duplicated! There is no new users to add.")
@@ -456,27 +439,16 @@
       if (
         assignToWorkspace &&
         currentWorkspaceId &&
-        bulkSaveResponse.successful
+        bulkSaveResponse.successful?.length
       ) {
-        await Promise.all(
-          bulkSaveResponse.successful.map(async user => {
-            const matchingUser = userData.users.find(
-              created => created.email === user.email
-            )
-            const role = getWorkspaceRole(
-              currentWorkspaceId,
-              matchingUser?.role,
-              matchingUser?.appRole
-            )
-            if (!role) {
-              return
-            }
-            const fullUser = await users.get(user._id)
-            if (fullUser?._rev) {
-              await users.addUserToWorkspace(user._id, role, fullUser._rev)
-            }
-          })
+        const assignmentResult = await assignCreatedUsersToWorkspace(
+          bulkSaveResponse.successful,
+          usersForCreation.users,
+          currentWorkspaceId
         )
+        if (assignmentResult.failedCount) {
+          notifications.error("Error adding some users to workspace")
+        }
       }
       notifications.success("Successfully created user")
       await groups.init()
