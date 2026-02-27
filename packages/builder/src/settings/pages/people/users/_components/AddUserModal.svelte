@@ -268,17 +268,15 @@
       </div>
 
       {#if workspaceOnly && selectedRole === Constants.BudibaseRoles.AppUser}
-        <div class="role-select-compact">
-          <Select
-            label="Select end user role"
-            bind:value={endUserRole}
-            options={endUserRoleOptions}
-            getOptionLabel={option => option.label}
-            getOptionValue={option => option.value}
-            getOptionColour={option => option.color}
-            placeholder={false}
-          />
-        </div>
+        <Select
+          label="Select end user role"
+          bind:value={endUserRole}
+          options={endUserRoleOptions}
+          getOptionLabel={option => option.label}
+          getOptionValue={option => option.value}
+          getOptionColour={option => option.color}
+          placeholder={false}
+        />
       {/if}
 
       <div class="onboarding">

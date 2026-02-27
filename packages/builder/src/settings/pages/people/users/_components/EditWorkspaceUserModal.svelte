@@ -300,18 +300,16 @@
       />
     </div>
     {#if draft.role === Constants.BudibaseRoles.AppUser}
-      <div class="role-select-compact">
-        <Select
-          label="Select end user role"
-          bind:value={draft.appRole}
-          options={endUserRoleOptions}
-          getOptionLabel={option => option.label}
-          getOptionValue={option => option.value}
-          getOptionColour={option => option.color}
-          placeholder={false}
-          disabled={disableRole}
-        />
-      </div>
+      <Select
+        label="Select end user role"
+        bind:value={draft.appRole}
+        options={endUserRoleOptions}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        getOptionColour={option => option.color}
+        placeholder={false}
+        disabled={disableRole}
+      />
     {/if}
   </Layout>
 </ModalContent>
