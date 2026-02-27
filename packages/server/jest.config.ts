@@ -21,7 +21,7 @@ const baseConfig: Config = {
     "^.+\\.js?$": "@swc/jest",
     "^.+\\.svelte?$": "<rootDir>/scripts/svelteTransformer.js",
   },
-  transformIgnorePatterns: ["/node_modules/(?!svelte/|esm-env/).*"],
+  transformIgnorePatterns: ["/node_modules/(?!svelte/|esm-env/|devalue/).*"],
   moduleNameMapper: {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/shared-core/(.*)": "<rootDir>/../shared-core/$1",
