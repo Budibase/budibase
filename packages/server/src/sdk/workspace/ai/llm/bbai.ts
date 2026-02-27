@@ -17,6 +17,7 @@ import { TransformStream } from "node:stream/web"
 import environment from "../../../../environment"
 import { Readable } from "stream"
 import { blob } from "stream/consumers"
+import { unwrapLiteLLMFileId } from "./litellm"
 
 interface OpenAIUsage {
   prompt_tokens?: number
@@ -212,10 +213,11 @@ export async function createBBAIClient(
         const formdata = new FormData()
         formdata.append("purpose", "assistants")
         formdata.append("file", fileBlob, filename)
-        const response = await fetch("https://api.openai.com/v1/files", {
+        formdata.append("model", model)
+        const response = await fetch(`${environment.LITELLM_URL}/v1/files`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            Authorization: `Bearer ${environment.BBAI_LITELLM_KEY}`,
           },
           body: formdata,
         })
@@ -228,7 +230,7 @@ export async function createBBAIClient(
         if (typeof result.id !== "string") {
           throw new Error("File id not found")
         }
-        return result.id
+        return unwrapLiteLLMFileId(result.id)
       } else {
         const fileBuffer = Buffer.from(await fileBlob.arrayBuffer())
         const base64 = fileBuffer.toString("base64")

@@ -1,4 +1,4 @@
-import { env } from "@budibase/backend-core"
+import { env, withEnv } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AIQuotaUsageResponse,
@@ -20,24 +20,29 @@ const calculateBudibaseAICredits = (
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
 ) {
-  if (env.SELF_HOSTED && !env.isDev()) {
-    ctx.throw(500, "Budibase AI endpoints are not available in self-host")
-  }
-  const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
-  if (!llm.uploadFile) {
-    ctx.throw(422, "The used LLM does not support uploading files")
-  }
+  await withEnv(
+    { SELF_HOSTED: env.isDev() ? false : env.SELF_HOSTED },
+    async () => {
+      if (env.SELF_HOSTED) {
+        ctx.throw(500, "Budibase AI endpoints are not available in self-host")
+      }
+      const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+      if (!llm.uploadFile) {
+        ctx.throw(422, "The used LLM does not support uploading files")
+      }
 
-  const data = Buffer.from(ctx.request.body.data, "base64")
+      const data = Buffer.from(ctx.request.body.data, "base64")
 
-  const response = await llm.uploadFile(
-    Readable.from(data),
-    ctx.request.body.filename,
-    ctx.request.body.contentType
+      const response = await llm.uploadFile(
+        Readable.from(data),
+        ctx.request.body.filename,
+        ctx.request.body.contentType
+      )
+      ctx.body = {
+        file: response,
+      }
+    }
   )
-  ctx.body = {
-    file: response,
-  }
 }
 
 export async function getAIQuotaUsage(ctx: Ctx<void, AIQuotaUsageResponse>) {
