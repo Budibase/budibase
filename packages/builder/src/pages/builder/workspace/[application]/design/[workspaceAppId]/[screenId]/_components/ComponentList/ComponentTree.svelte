@@ -16,6 +16,7 @@
     getComponentName,
   } from "@/helpers/components"
   import { get } from "svelte/store"
+  import { tick } from "svelte"
   import { dndStore } from "./dndStore"
   import getComponentContextMenuItems from "./getComponentContextMenuItems"
 
@@ -98,6 +99,45 @@
     )
     contextMenuStore.open(component._id, items, { x: e.clientX, y: e.clientY })
   }
+
+  let renamingId = null
+  let renameValue = ""
+  let renameInput
+
+  const startRename = async component => {
+    renamingId = component._id
+    renameValue = component?._instanceName || getComponentText(component)
+    await tick()
+    renameInput?.focus()
+    renameInput?.select()
+  }
+
+  const cancelRename = () => {
+    renamingId = null
+    renameValue = ""
+  }
+
+  const commitRename = async component => {
+    const trimmed = renameValue.trim()
+    renamingId = null
+    if (!trimmed) {
+      return
+    }
+    const current = component?._instanceName || ""
+    const defaultText = getComponentText(component)
+    if (trimmed === current || (current === "" && trimmed === defaultText)) {
+      return
+    }
+    try {
+      await componentStore.patch(updated => {
+        updated._instanceName = trimmed
+        return true
+      }, component._id)
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error renaming component")
+    }
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions-->
@@ -107,6 +147,7 @@
     {@const opened = isOpen(component, openNodes)}
     <li
       on:contextmenu={e => openContextMenu(e, component, opened)}
+      on:dblclick|stopPropagation={() => startRename(component)}
       on:click|stopPropagation={() => {
         componentStore.select(component._id)
       }}
@@ -115,7 +156,8 @@
       <NavItem
         compact
         scrollable
-        draggable
+        draggable={renamingId !== component._id}
+        bodyInteractive={renamingId === component._id}
         on:dragend={dndStore.actions.reset}
         on:dragstart={() => dndStore.actions.dragstart(component)}
         on:dragover={dragover(component, index)}
@@ -135,6 +177,33 @@
         highlighted={isChildOfSelectedComponent(component)}
         selectedBy={$userSelectedResourceMap[component._id]}
       >
+        <svelte:fragment slot="text">
+          {#if renamingId === component._id}
+            <input
+              class="rename-input"
+              bind:this={renameInput}
+              bind:value={renameValue}
+              on:click|stopPropagation
+              on:keydown={e => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  commitRename(component)
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault()
+                  cancelRename()
+                }
+              }}
+              on:blur={() => commitRename(component)}
+            />
+          {:else}
+            <div class="text">
+              <span title={getComponentText(component)}>
+                {getComponentText(component)}
+              </span>
+            </div>
+          {/if}
+        </svelte:fragment>
         <Icon
           size="M"
           hoverable
@@ -163,5 +232,19 @@
   ul,
   li {
     min-width: max-content;
+  }
+  .rename-input {
+    width: 100%;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 2px;
+    padding: 2px 6px;
+    font: inherit;
+    color: inherit;
+    background: var(--spectrum-global-color-gray-50);
+  }
+  .rename-input:focus {
+    outline: none;
+    border-color: var(--spectrum-global-color-gray-600);
+    background: var(--spectrum-global-color-gray-100);
   }
 </style>
