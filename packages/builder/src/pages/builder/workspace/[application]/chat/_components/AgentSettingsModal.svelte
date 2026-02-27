@@ -20,6 +20,7 @@
   export let selectedAgent: AgentListItem | undefined
   export let selectedAgentConfig: ChatAppAgent | undefined
   export let defaultAgentId: string | undefined
+  export let showDefaultControls = true
   export let isAgentAvailable: (_agentId: string) => boolean
   export let onSetDefault: (_agentId: string) => void
   export let onUpdateConversationStarters: (
@@ -125,7 +126,7 @@
     showConfirmButton={false}
     showCancelButton={false}
   >
-    {#if !isDefault}
+    {#if showDefaultControls && !isDefault}
       <div class="agent-settings">
         <div class="agent-settings-default">
           <Button size="S" disabled={isDisabled} on:click={handleSetDefault}>

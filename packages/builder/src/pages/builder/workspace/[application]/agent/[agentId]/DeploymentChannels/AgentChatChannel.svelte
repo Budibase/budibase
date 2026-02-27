@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { Body, Toggle, notifications } from "@budibase/bbui"
+  import { ActionButton, Body, Toggle, notifications } from "@budibase/bbui"
+  import type { ConversationStarter } from "@budibase/types"
   import { appStore, deploymentStore } from "@/stores/builder"
   import { chatAppsStore, currentChatApp } from "@/stores/portal"
   import { helpers } from "@budibase/shared-core"
   import { params } from "@roxi/routify"
+  import AgentSettingsModal from "../../../chat/_components/AgentSettingsModal.svelte"
   import BBAILogo from "assets/bb-ai.svg"
 
   const CHAT_UPDATE_ERROR_MESSAGE = "Could not update chat"
@@ -12,13 +14,21 @@
   const AGENT_CHAT_DISABLED_MESSAGE = "Agent chat disabled"
   const AGENT_CHAT_ENABLE_ERROR_MESSAGE = "Failed to enable agent chat"
   const AGENT_CHAT_DISABLE_ERROR_MESSAGE = "Failed to disable agent chat"
+  const AGENT_CHAT_SETTINGS_SAVED_MESSAGE = "Agent chat settings saved"
+  const AGENT_CHAT_SETTINGS_PUBLISHED_MESSAGE =
+    "Agent chat settings saved and published"
+  const AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE =
+    "Failed to save agent chat settings"
 
   export let agentId: string
+  export let agentName: string
+  export let agentLive: boolean
 
   let toggling = false
   let loadingChatApp = false
   let attemptedWorkspaceId: string | undefined
   let currentWorkspaceId: string | undefined
+  let settingsOpen = false
 
   interface ChatAppAgentConfig {
     agentId: string
@@ -63,7 +73,14 @@
   }) => Boolean(workspaceId && !toggling)
 
   $: workspaceId = $params.application
+  $: selectedAgent = { agentId, name: agentName }
   $: currentChatAgents = $currentChatApp?.agents || []
+  $: selectedAgentConfig = currentChatAgents.find(
+    config => config.agentId === agentId
+  )
+  $: defaultAgentId = currentChatAgents.find(
+    config => config.isEnabled && config.isDefault
+  )?.agentId
   $: enabled = isAgentEnabledInChat(currentChatAgents, agentId)
   $: disabled = toggling || loadingChatApp || !workspaceId
 
@@ -96,6 +113,14 @@
       })
   }
 
+  const maybePublishAgentChange = async () => {
+    if (!agentLive) {
+      return false
+    }
+    await deploymentStore.publishApp()
+    return true
+  }
+
   const onToggle = async () => {
     if (!canToggleAgentChat({ workspaceId, toggling })) {
       return
@@ -118,7 +143,7 @@
         return
       }
 
-      await deploymentStore.publishApp()
+      await maybePublishAgentChange()
       notifications.success(
         result.enabled
           ? AGENT_CHAT_ENABLED_MESSAGE
@@ -132,6 +157,55 @@
       )
     } finally {
       toggling = false
+    }
+  }
+
+  const handleSetDefault = (_agentId: string) => {
+    void _agentId
+  }
+
+  const handleUpdateConversationStarters = async (
+    _agentId: string,
+    starters: ConversationStarter[]
+  ) => {
+    if (!workspaceId) {
+      return
+    }
+
+    try {
+      const chatApp = await chatAppsStore.ensureChatApp(undefined, workspaceId)
+      if (!chatApp) {
+        notifications.error(CHAT_UPDATE_ERROR_MESSAGE)
+        return
+      }
+
+      const currentAgents = chatApp.agents || []
+      const hasAgent = currentAgents.some(agent => agent.agentId === agentId)
+      const nextAgents = hasAgent
+        ? currentAgents.map(agent =>
+            agent.agentId === agentId
+              ? { ...agent, conversationStarters: starters }
+              : agent
+          )
+        : [
+            ...currentAgents,
+            {
+              agentId,
+              isEnabled: false,
+              isDefault: false,
+              conversationStarters: starters,
+            },
+          ]
+
+      await chatAppsStore.updateAgents(nextAgents)
+      const published = await maybePublishAgentChange()
+      notifications.success(
+        published
+          ? AGENT_CHAT_SETTINGS_PUBLISHED_MESSAGE
+          : AGENT_CHAT_SETTINGS_SAVED_MESSAGE
+      )
+    } catch (error) {
+      notifications.error(AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE)
     }
   }
 </script>
@@ -149,6 +223,15 @@
     </div>
   </div>
   <div class="row-action">
+    <ActionButton
+      size="S"
+      icon="gear"
+      accentColor="Blue"
+      disabled={loadingChatApp || !workspaceId}
+      on:click={() => (settingsOpen = true)}
+    >
+      Manage
+    </ActionButton>
     {#if enabled && chatUrl}
       <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
         Open chat
@@ -157,6 +240,20 @@
     <Toggle value={enabled} {disabled} on:change={onToggle} />
   </div>
 </div>
+
+<AgentSettingsModal
+  open={settingsOpen}
+  {selectedAgent}
+  {selectedAgentConfig}
+  {defaultAgentId}
+  showDefaultControls={false}
+  isAgentAvailable={() => true}
+  onSetDefault={handleSetDefault}
+  onUpdateConversationStarters={handleUpdateConversationStarters}
+  onClose={() => {
+    settingsOpen = false
+  }}
+/>
 
 <style>
   .integration-row {
@@ -186,7 +283,7 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    min-width: 150px;
+    min-width: 220px;
     gap: 10px;
     margin-left: 0px;
   }
