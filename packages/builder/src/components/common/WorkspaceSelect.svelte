@@ -1,14 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte"
   import { goto } from "@roxi/routify"
-  import {
-    ActionMenu,
-    MenuItem,
-    Icon,
-    StatusLight,
-    Tags,
-    Tag,
-  } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, StatusLight } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import { appStore } from "@/stores/builder"
