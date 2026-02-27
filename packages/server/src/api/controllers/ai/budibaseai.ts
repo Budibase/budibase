@@ -17,32 +17,45 @@ const calculateBudibaseAICredits = (
   outputTokens: number
 ): number => outputTokens * 3 + inputTokens
 
+async function allowSelfhostWhileInDev<T>(fn: () => T) {
+  if (!env.isDev()) {
+    return fn()
+  }
+
+  if (!env.SELF_HOSTED) {
+    console.log("Is already set as cloud")
+    return fn()
+  }
+
+  return await withEnv(
+    { SELF_HOSTED: env.isDev() ? false : env.SELF_HOSTED },
+    fn
+  )
+}
+
 export async function uploadFile(
   ctx: Ctx<UploadFileRequest, UploadFileResponse>
 ) {
-  await withEnv(
-    { SELF_HOSTED: env.isDev() ? false : env.SELF_HOSTED },
-    async () => {
-      if (env.SELF_HOSTED) {
-        ctx.throw(500, "Budibase AI endpoints are not available in self-host")
-      }
-      const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
-      if (!llm.uploadFile) {
-        ctx.throw(422, "The used LLM does not support uploading files")
-      }
-
-      const data = Buffer.from(ctx.request.body.data, "base64")
-
-      const response = await llm.uploadFile(
-        Readable.from(data),
-        ctx.request.body.filename,
-        ctx.request.body.contentType
-      )
-      ctx.body = {
-        file: response,
-      }
+  await allowSelfhostWhileInDev(async () => {
+    if (env.SELF_HOSTED) {
+      ctx.throw(500, "Budibase AI endpoints are not available in self-host")
     }
-  )
+    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+    if (!llm.uploadFile) {
+      ctx.throw(422, "The used LLM does not support uploading files")
+    }
+
+    const data = Buffer.from(ctx.request.body.data, "base64")
+
+    const response = await llm.uploadFile(
+      Readable.from(data),
+      ctx.request.body.filename,
+      ctx.request.body.contentType
+    )
+    ctx.body = {
+      file: response,
+    }
+  })
 }
 
 export async function getAIQuotaUsage(ctx: Ctx<void, AIQuotaUsageResponse>) {
