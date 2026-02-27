@@ -2,11 +2,11 @@
   import {
     Body,
     ModalContent,
-    Select,
     Multiselect,
     notifications,
     Icon,
   } from "@budibase/bbui"
+  import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { groups } from "@/stores/portal/groups"
   import { licensing } from "@/stores/portal/licensing"
   import { admin } from "@/stores/portal/admin"
@@ -117,18 +117,10 @@
       users. Upgrade your plan to add more users
     </div>
   {/if}
-  <div class="role-select">
-    <Select
-      label="Select role"
-      placeholder={false}
-      bind:value={usersRole}
-      options={Constants.BudibaseRoleOptions}
-      getOptionLabel={option => option.label}
-      getOptionValue={option => option.value}
-      getOptionSubtitle={option => option.subtitle}
-      showSelectedSubtitle={true}
-    />
-  </div>
+  <GlobalRoleSelect
+    bind:value={usersRole}
+    options={Constants.BudibaseRoleOptions}
+  />
   {#if $licensing?.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}
@@ -195,12 +187,5 @@
 
   input[type="file"] {
     display: none;
-  }
-
-  .role-select :global(.spectrum-Picker) {
-    height: auto;
-    align-items: center;
-    padding-top: var(--spacing-m);
-    padding-bottom: var(--spacing-m);
   }
 </style>
