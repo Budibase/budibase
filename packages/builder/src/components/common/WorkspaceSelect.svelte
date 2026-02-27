@@ -416,4 +416,12 @@
     justify-content: center;
     align-items: center;
   }
+
+  .premium-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    width: auto;
+    height: auto;
+  }
 </style>
