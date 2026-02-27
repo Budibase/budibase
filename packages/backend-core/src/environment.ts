@@ -273,6 +273,7 @@ const environment = {
   CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
   OPENROUTER_BASE_URL:
     process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
+  BUDIBASE_AI_DEFAULT_MODEL: process.env.BUDIBASE_AI_DEFAULT_MODEL,
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
@@ -292,12 +293,16 @@ export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
 
 export function withEnv<T>(envVars: Partial<typeof environment>, f: () => T) {
   const cleanup = setEnv(envVars)
-  const result = f()
-  if (result instanceof Promise) {
-    return result.finally(cleanup)
-  } else {
+  try {
+    const result = f()
+    if (result instanceof Promise) {
+      return result.finally(cleanup)
+    }
     cleanup()
     return result
+  } catch (err) {
+    cleanup()
+    throw err
   }
 }
 

@@ -1,6 +1,5 @@
 import { LLMConfigOptions } from "@budibase/types"
 import tracer from "dd-trace"
-import { Readable } from "node:stream"
 import { LLMFullResponse, LLMPromptResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
 import { summarizeText } from "../prompts"
@@ -52,12 +51,6 @@ export abstract class LLM {
       return { message: (lastMessage.content as string) || "", tokensUsed }
     })
   }
-
-  abstract uploadFile(
-    data: Readable | Buffer,
-    filename: string,
-    contentType?: string
-  ): Promise<string>
 
   async chat(request: LLMRequest): Promise<LLMFullResponse> {
     return await tracer.trace("chat", async () => {
