@@ -90,7 +90,11 @@ export const assignExistingUsersToWorkspace = async (
           rev = loaded._rev
         }
       }
-      if (user._id && fullUser && shouldSyncGlobalRole(selectedRole, fullUser)) {
+      if (
+        user._id &&
+        fullUser &&
+        shouldSyncGlobalRole(selectedRole, fullUser)
+      ) {
         const roleUpdates = getRoleFlags(selectedRole, fullUser)
         const saved = await users.save({ ...fullUser, ...roleUpdates })
         rev = saved?._rev || rev
@@ -114,7 +118,8 @@ export const assignExistingUsersToWorkspace = async (
     usersToInvite,
     addedToWorkspaceEmails,
     assignedCount: addedToWorkspaceEmails.length,
-    failedCount: assignmentResults.filter(result => result.status === "rejected")
-      .length,
+    failedCount: assignmentResults.filter(
+      result => result.status === "rejected"
+    ).length,
   }
 }
