@@ -21,7 +21,6 @@
   import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
-    builderStore,
     workspaceFavouriteStore,
     workspaceAppStore,
     automationStore,
@@ -40,7 +39,7 @@
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
-  import { onDestroy, setContext } from "svelte"
+  import { createEventDispatcher, onDestroy, setContext } from "svelte"
   import {
     FeatureFlag,
     type Datasource,
@@ -124,6 +123,7 @@
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
   const navLogoSize = 18
   const navTransitionMs = 160
+  const dispatch = createEventDispatcher()
 
   let ignoreFocus = false
   let focused = false
@@ -166,6 +166,11 @@
       : `${prefix}/${target.replace(/^\.\//, "")}`
 
     $goto(normalisedTarget)
+    keepCollapsed()
+  }
+
+  const openInviteUser = () => {
+    dispatch("inviteUser")
     keepCollapsed()
   }
 
@@ -646,10 +651,7 @@
               <SideNavLink
                 icon="user-plus"
                 text="Invite user"
-                on:click={() => {
-                  builderStore.showBuilderSidePanel()
-                  keepCollapsed()
-                }}
+                on:click={openInviteUser}
                 {collapsed}
               />
               <span class="root-nav" class:error={backupErrorCount}>
