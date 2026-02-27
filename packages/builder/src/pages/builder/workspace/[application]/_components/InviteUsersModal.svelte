@@ -1,20 +1,19 @@
 <script lang="ts">
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
-  import { sdk } from "@budibase/shared-core"
   import type { BulkUserCreated } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
   import { OnboardingType } from "@/constants"
   import AddUserModal from "@/settings/pages/people/users/_components/AddUserModal.svelte"
+  import {
+    assignExistingUsersToWorkspace,
+    getWorkspaceRole,
+    type UserData,
+  } from "@/settings/pages/people/users/workspaceInviteUtils"
   import { appStore, roles } from "@/stores/builder"
   import { users } from "@/stores/portal"
   import type { UserInfo } from "@/types"
-
-  interface UserData {
-    users: UserInfo[]
-    groups: string[]
-    assignToWorkspace?: boolean
-  }
+  import { sdk } from "@budibase/shared-core"
 
   let createUserModal: Modal
   const dispatch = createEventDispatcher()
@@ -24,47 +23,46 @@
     ? sdk.applications.getProdAppID($appStore.appId)
     : ""
 
-  const getWorkspaceRole = (role?: string, appRole?: string) => {
-    if (!currentWorkspaceId || !role) {
-      return undefined
-    }
-    if (role === Constants.BudibaseRoles.Creator) {
-      return Constants.Roles.CREATOR
-    }
-    if (role === Constants.BudibaseRoles.Admin) {
-      return Constants.Roles.ADMIN
-    }
-    if (role === Constants.BudibaseRoles.AppUser) {
-      return appRole || Constants.Roles.BASIC
-    }
-    return Constants.Roles.BASIC
-  }
-
   const removingDuplicities = async (userData: UserData): Promise<UserData> => {
-    const currentUserEmails = (await users.fetch())?.map(x => x.email) || []
     const newUsers: UserInfo[] = []
+    const seenEmails = new Set<string>()
 
     for (const user of userData?.users ?? []) {
-      const { email } = user
-      if (
-        newUsers.find(x => x.email === email) ||
-        currentUserEmails.includes(email)
-      ) {
+      const email = user.email.toLowerCase()
+      if (seenEmails.has(email)) {
         continue
       }
+      seenEmails.add(email)
       newUsers.push(user)
     }
 
-    if (!newUsers.length) {
-      notifications.info("No new users to add.")
-    }
     return { ...userData, users: newUsers }
   }
 
   const inviteUsers = async (userData: UserData) => {
+    const result = await assignExistingUsersToWorkspace(
+      userData,
+      currentWorkspaceId
+    )
+    const usersForInvite = result.usersToInvite
+
+    if (result.assignedCount && !usersForInvite.length) {
+      notifications.success("Users added to workspace")
+    }
+    if (result.failedCount) {
+      notifications.error("Error adding some users to workspace")
+    }
+    if (!usersForInvite.length) {
+      return
+    }
+
     const assignToWorkspace = userData.assignToWorkspace ?? true
-    const payload = (userData.users ?? []).map(user => {
-      const workspaceRole = getWorkspaceRole(user.role, user.appRole)
+    const payload = usersForInvite.map(user => {
+      const workspaceRole = getWorkspaceRole(
+        currentWorkspaceId,
+        user.role,
+        user.appRole
+      )
       return {
         email: user.email,
         builder: user.role === Constants.BudibaseRoles.Developer,
@@ -83,9 +81,25 @@
   }
 
   const createUsers = async (userData: UserData) => {
+    const result = await assignExistingUsersToWorkspace(
+      userData,
+      currentWorkspaceId
+    )
+    const usersForCreation = { ...userData, users: result.usersToInvite }
+
+    if (result.assignedCount && !usersForCreation.users.length) {
+      notifications.success("Users added to workspace")
+    }
+    if (result.failedCount) {
+      notifications.error("Error adding some users to workspace")
+    }
+    if (!usersForCreation.users.length) {
+      return
+    }
+
     const assignToWorkspace = userData.assignToWorkspace ?? true
     let response: BulkUserCreated = { successful: [], unsuccessful: [] }
-    response = (await users.create(userData)) || response
+    response = (await users.create(usersForCreation)) || response
 
     if (
       !assignToWorkspace ||
@@ -98,10 +112,14 @@
 
     await Promise.all(
       response.successful.map(async user => {
-        const matchingUser = userData.users.find(
+        const matchingUser = usersForCreation.users.find(
           created => created.email === user.email
         )
-        const role = getWorkspaceRole(matchingUser?.role, matchingUser?.appRole)
+        const role = getWorkspaceRole(
+          currentWorkspaceId,
+          matchingUser?.role,
+          matchingUser?.appRole
+        )
         if (!role) {
           return
         }

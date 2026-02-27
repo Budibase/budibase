@@ -53,7 +53,11 @@
   import { InternalTable } from "@budibase/types"
   import type { UserInfo } from "@/types"
   import { routeActions } from "@/settings/pages"
-  import { getRoleFlags, shouldSyncGlobalRole } from "./roleUtils"
+  import {
+    assignExistingUsersToWorkspace,
+    getWorkspaceRole,
+    type UserData,
+  } from "./workspaceInviteUtils"
 
   interface User extends UserDoc {
     tenantOwnerEmail?: string
@@ -91,19 +95,6 @@
       query: isWorkspaceOnly ? { workspaceId: initialWorkspaceId } : {},
     },
   })
-
-  interface UserData {
-    users: UserInfo[]
-    groups: string[]
-    assignToWorkspace?: boolean
-  }
-
-  interface WorkspaceExistingUserResult {
-    usersToInvite: UserInfo[]
-    addedToWorkspaceEmails: string[]
-    assignedCount: number
-    failedCount: number
-  }
 
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
   let enrichedUsers: EnrichedUser[] = []
@@ -204,6 +195,7 @@
     $bb.settings.route?.hash === "#invite"
   $: if (shouldOpenWorkspaceInviteModal && createUserModal) {
     createUserModal.show()
+    bb.settings("/people/workspace")
   }
 
   const buildEnrichedUsers = (
@@ -319,7 +311,10 @@
     let usersForInvite = userData?.users ?? []
     let assignedExistingUsers = false
     if (isWorkspaceOnly) {
-      const result = await assignExistingUsersToWorkspace(userData)
+      const result = await assignExistingUsersToWorkspace(
+        userData,
+        currentWorkspaceId
+      )
       usersForInvite = result.usersToInvite
       const shouldShowInviteModal = usersForInvite.length > 0
       assignedExistingUsers = result.assignedCount > 0
@@ -338,7 +333,11 @@
 
     const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
     const payload = usersForInvite.map(user => {
-      const workspaceRole = getWorkspaceRole(user.role, user.appRole)
+      const workspaceRole = getWorkspaceRole(
+        currentWorkspaceId,
+        user.role,
+        user.appRole
+      )
       return {
         email: user.email,
         builder: user.role === Constants.BudibaseRoles.Developer,
@@ -383,92 +382,6 @@
       notifications.info("Duplicated! There is no new users to add.")
     }
     return { ...userData, users: newUsers }
-  }
-
-  const assignExistingUsersToWorkspace = async (
-    userData: UserData
-  ): Promise<WorkspaceExistingUserResult> => {
-    if (!currentWorkspaceId) {
-      return {
-        usersToInvite: userData.users,
-        addedToWorkspaceEmails: [],
-        assignedCount: 0,
-        failedCount: 0,
-      }
-    }
-
-    const existingUsers = (await users.fetch()) || []
-    const existingByEmail = new Map(
-      existingUsers.map(user => [user.email.toLowerCase(), user])
-    )
-    const usersToInvite: UserInfo[] = []
-    const usersToAssign: {
-      user: UserDoc
-      role: string
-      selectedRole: string
-      email: string
-    }[] = []
-
-    for (const user of userData.users) {
-      const existingUser = existingByEmail.get(user.email.toLowerCase())
-      if (!existingUser) {
-        usersToInvite.push(user)
-        continue
-      }
-      const role = getWorkspaceRole(user.role, user.appRole)
-      if (role && existingUser._id) {
-        usersToAssign.push({
-          user: existingUser,
-          role,
-          selectedRole: user.role,
-          email: user.email,
-        })
-      }
-    }
-
-    const assignmentResults = await Promise.allSettled(
-      usersToAssign.map(async ({ user, role, selectedRole, email }) => {
-        let rev = user._rev
-        let fullUser = user
-        if (user._id && (!rev || shouldSyncGlobalRole(selectedRole, user))) {
-          const loaded = await users.get(user._id)
-          if (loaded) {
-            fullUser = loaded
-            rev = loaded._rev
-          }
-        }
-        if (
-          user._id &&
-          fullUser &&
-          shouldSyncGlobalRole(selectedRole, fullUser)
-        ) {
-          const roleUpdates = getRoleFlags(selectedRole, fullUser)
-          const saved = await users.save({ ...fullUser, ...roleUpdates })
-          rev = saved?._rev || rev
-        }
-        if (!user._id || !rev) {
-          throw new Error("User ID or revision missing")
-        }
-        await users.addUserToWorkspace(user._id, role, rev)
-        return email
-      })
-    )
-
-    const successfulAssignments = assignmentResults
-      .filter(
-        (result): result is PromiseFulfilledResult<string> =>
-          result.status === "fulfilled"
-      )
-      .map(result => result.value)
-
-    return {
-      usersToInvite,
-      addedToWorkspaceEmails: successfulAssignments,
-      assignedCount: successfulAssignments.length,
-      failedCount: assignmentResults.filter(
-        result => result.status === "rejected"
-      ).length,
-    }
   }
 
   const createUsersFromCsv = async (userCsvData: any) => {
@@ -516,7 +429,10 @@
       let usersForCreation = await removingDuplicities(userData)
 
       if (isWorkspaceOnly) {
-        const result = await assignExistingUsersToWorkspace(usersForCreation)
+        const result = await assignExistingUsersToWorkspace(
+          usersForCreation,
+          currentWorkspaceId
+        )
         usersForCreation = { ...usersForCreation, users: result.usersToInvite }
         addedToWorkspaceEmails = result.addedToWorkspaceEmails
 
@@ -548,6 +464,7 @@
               created => created.email === user.email
             )
             const role = getWorkspaceRole(
+              currentWorkspaceId,
               matchingUser?.role,
               matchingUser?.appRole
             )
@@ -661,22 +578,6 @@
     return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
       .join("")
       .slice(0, length)
-  }
-
-  const getWorkspaceRole = (role?: string, appRole?: string) => {
-    if (!isWorkspaceOnly || !currentWorkspaceId || !role) {
-      return undefined
-    }
-    if (role === Constants.BudibaseRoles.Creator) {
-      return Constants.Roles.CREATOR
-    }
-    if (role === Constants.BudibaseRoles.Admin) {
-      return Constants.Roles.ADMIN
-    }
-    if (role === Constants.BudibaseRoles.AppUser) {
-      return appRole || Constants.Roles.BASIC
-    }
-    return Constants.Roles.BASIC
   }
 
   const onRowClick = ({ detail }: { detail: User }) => {

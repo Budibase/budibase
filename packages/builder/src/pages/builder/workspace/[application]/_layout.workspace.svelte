@@ -8,6 +8,7 @@
     appStore,
   } from "@/stores/builder"
   import { appsStore, admin } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
   import { Heading, Layout, Body } from "@budibase/bbui"
   import { API } from "@/api"
   import InviteUsersModal from "./_components/InviteUsersModal.svelte"
@@ -19,6 +20,9 @@
   let promise = getPackage(application)
   let sideNav: SideNav
   let showInviteUsersModal = false
+  $: if ($bb.settings.open && showInviteUsersModal) {
+    showInviteUsersModal = false
+  }
 
   async function getPackage(appId: string) {
     try {
