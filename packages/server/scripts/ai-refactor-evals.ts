@@ -28,6 +28,7 @@ interface Scenario {
 interface EvalResult {
   name: string
   ok: boolean
+  skipped?: boolean
   detail?: string
   elapsedMs?: number
 }
@@ -38,6 +39,7 @@ type EvalFeature =
   | "table-generation"
   | "js-generation"
   | "cron-generation"
+  | "automation-openai"
   | "automation-translate"
   | "automation-classify"
   | "automation-prompt-llm"
@@ -449,6 +451,7 @@ const ALL_FEATURES: EvalFeature[] = [
   "table-generation",
   "js-generation",
   "cron-generation",
+  "automation-openai",
   "automation-translate",
   "automation-classify",
   "automation-prompt-llm",
@@ -467,6 +470,8 @@ function normalizeFeatureToken(value: string): EvalFeature | undefined {
     "js-generation": "js-generation",
     cron: "cron-generation",
     "cron-generation": "cron-generation",
+    openai: "automation-openai",
+    "automation-openai": "automation-openai",
     translate: "automation-translate",
     "automation-translate": "automation-translate",
     classify: "automation-classify",
@@ -800,7 +805,8 @@ function extractCreatedTablesFromResponse(
 
 async function runFeatureEvals(
   client: ApiClient,
-  enabledFeatures: Set<EvalFeature>
+  enabledFeatures: Set<EvalFeature>,
+  mode: BudibaseMode
 ): Promise<EvalResult[]> {
   const results: EvalResult[] = []
   const definitions = await getAutomationDefinitions(client)
@@ -855,9 +861,22 @@ async function runFeatureEvals(
   const runIf = async (
     feature: EvalFeature,
     name: string,
-    fn: () => Promise<void>
+    fn: () => Promise<void>,
+    opts?: { when?: boolean; skipReason?: string }
   ) => {
     if (!enabledFeatures.has(feature)) {
+      return
+    }
+    if (opts?.when === false) {
+      results.push({
+        name,
+        ok: true,
+        skipped: true,
+        detail: opts.skipReason || "Condition not met",
+      })
+      console.log(
+        yellow(`SKIPPED: ${name} - ${opts.skipReason || "Condition not met"}`)
+      )
       return
     }
     await run(name, fn)
@@ -928,6 +947,39 @@ async function runFeatureEvals(
       )
     }
   })
+
+  await runIf(
+    "automation-openai",
+    "Automation OpenAI step",
+    async () => {
+      const result = await runAutomationStepEval(
+        client,
+        definitions,
+        "OPENAI",
+        {
+          prompt: "Reply with exactly EVAL_OPENAI_OK",
+          model: "gpt-4o-mini",
+        }
+      )
+
+      const output = getActionOutput(result, "OPENAI")
+      if (!output?.success || !output?.response) {
+        throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+      }
+      if (!String(output.response).toUpperCase().includes("EVAL_OPENAI_OK")) {
+        throw new Error(
+          `OpenAI step output missing EVAL_OPENAI_OK: ${output.response}`
+        )
+      }
+    },
+    {
+      when: mode === "self" && Boolean(definitions.actions.OPENAI),
+      skipReason:
+        mode !== "self"
+          ? "OPENAI action is only available in self mode"
+          : "Action definition not found for OPENAI in current mode",
+    }
+  )
 
   await runIf("automation-translate", "Automation translate step", async () => {
     const result = await runAutomationStepEval(
@@ -1316,7 +1368,7 @@ async function runScenario(
 
   await configureAIProvider(client, scenario.config)
   const startedAt = Date.now()
-  const results = await runFeatureEvals(client, enabledFeatures)
+  const results = await runFeatureEvals(client, enabledFeatures, scenario.mode)
   return {
     ok: results.every(r => r.ok),
     elapsedMs: Date.now() - startedAt,
