@@ -6,7 +6,7 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
-import { ai, quotas } from "@budibase/pro"
+import { ai } from "@budibase/pro"
 import {
   AgentMessageMetadata,
   ChatAgentRequest,
@@ -212,6 +212,7 @@ export async function webhookChat({
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
   const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
@@ -368,8 +369,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   if (!chat.agentId) {
     chat.agentId = agentId
   }
-
-  await quotas.throwIfBudibaseAICreditsExceeded()
 
   ctx.status = 200
   ctx.set("Content-Type", "text/event-stream")
