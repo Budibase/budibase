@@ -273,6 +273,7 @@ const environment = {
   CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
   OPENROUTER_BASE_URL:
     process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
+  BUDIBASE_AI_DEFAULT_MODEL: process.env.BUDIBASE_AI_DEFAULT_MODEL,
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
