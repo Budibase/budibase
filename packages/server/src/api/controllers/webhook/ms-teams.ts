@@ -10,7 +10,7 @@ import { Chat, type Thread, type Message } from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
 import { handleChatMessage } from "./chatHandler"
-import { teamsState } from "./chatState"
+import { getTeamsState } from "./chatState"
 import { runChatWebhook } from "./runChatWebhook"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
@@ -214,7 +214,11 @@ export async function MSTeamsWebhook(
             idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
           }
         })
+      const teamsState = await getTeamsState()
 
+      if (!teamsState) {
+        throw new HTTPError("Unable to connect to redis for Teams webhook", 500)
+      }
       const chat = new Chat({
         userName: "Budibase",
         adapters: {

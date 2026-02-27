@@ -357,6 +357,15 @@ export const handleChatMessage = async ({
   scope,
   idleTimeoutMinutes,
 }: HandleChatMessageParams): Promise<void> => {
+  console.log("handleChatMessage", {
+    reply,
+    workspaceId,
+    chatAppId,
+    agentId,
+    provider,
+    command,
+    content,
+  })
   const userPrefix = provider === "discord" ? "discord" : "msteams"
   const userId = `${userPrefix}:${user.externalUserId}`
 
@@ -453,7 +462,7 @@ export const handleChatMessage = async ({
       userId: user.externalUserId,
       firstName: user.displayName,
     }
-
+    console.log("test?")
     let result: Awaited<ReturnType<typeof webhookChat>>
     try {
       result = await webhookChat({ chat: draftChat, user: contextUser })

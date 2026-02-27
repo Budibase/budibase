@@ -11,8 +11,6 @@ builderRoutes
 // this shouldn't have authorisation, right now its always public
 publicRoutes.post("/api/webhooks/trigger/:instance/:id", controller.trigger)
 
-// No body parser — handlers read the raw body directly so the Chat SDK
-// can verify signatures / JWT against the untouched request.
 publicRoutes.post(
   "/api/webhooks/discord/:instance/:chatAppId/:agentId",
   controller.discord
