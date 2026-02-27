@@ -52,8 +52,7 @@
   let emptyStateMessage = ""
   let selectedAgentName = ""
   let conversationStarters: { prompt: string }[] = []
-  let isAgentKnown = false
-  let isAgentLive = false
+  let agentAvailability: ChatboxState["agentAvailability"] = "no_selection"
   let suppressAgentPicker = false
 
   const getUserLabel = (user?: ChatUser) => {
@@ -104,8 +103,7 @@
       emptyStateMessage: string
       selectedAgentName: string
       conversationStarters: { prompt: string }[]
-      isAgentKnown: boolean
-      isAgentLive: boolean
+      agentAvailability: ChatboxState["agentAvailability"]
       suppressAgentPicker: boolean
     }
 
@@ -123,8 +121,7 @@
     emptyStateMessage = next.emptyStateMessage
     selectedAgentName = next.selectedAgentName
     conversationStarters = next.conversationStarters
-    isAgentKnown = next.isAgentKnown
-    isAgentLive = next.isAgentLive
+    agentAvailability = next.agentAvailability
     suppressAgentPicker = next.suppressAgentPicker
   }
 
@@ -204,8 +201,7 @@
       {workspaceId}
       {userName}
       {conversationStarters}
-      {isAgentKnown}
-      {isAgentLive}
+      {agentAvailability}
       {initialPrompt}
       {loading}
       {suppressAgentPicker}

@@ -6,6 +6,12 @@ import type {
 import { createDraftChat, isLockedAgentUnavailableError } from "./chatboxUtils"
 
 export type ChatConversationLike = ChatConversation | DraftChatConversation
+export type AgentAvailability =
+  | "no_selection"
+  | "deleted"
+  | "offline"
+  | "disabled"
+  | "ready"
 
 export interface EnabledAgentListItem {
   agentId: string
@@ -66,8 +72,7 @@ export interface ChatboxState {
   emptyStateMessage: string
   selectedAgentName: string
   conversationStarters: { prompt: string }[]
-  isAgentKnown: boolean
-  isAgentLive: boolean
+  agentAvailability: AgentAvailability
   suppressAgentPicker: boolean
 }
 
@@ -91,8 +96,7 @@ const INITIAL_STATE = (lockedAgentId?: string): ChatboxState => ({
   emptyStateMessage: "",
   selectedAgentName: "",
   conversationStarters: [],
-  isAgentKnown: false,
-  isAgentLive: false,
+  agentAvailability: "no_selection",
   suppressAgentPicker: false,
 })
 
@@ -134,6 +138,38 @@ const resolveSelectedAgentName = (state: ChatboxState) => {
   }
 
   return "Unknown agent"
+}
+
+const resolveAgentAvailability = ({
+  selectedAgentId,
+  agents,
+  enabledAgentList,
+}: {
+  selectedAgentId: string | null
+  agents: ChatAppAgentMetadata[]
+  enabledAgentList: EnabledAgentListItem[]
+}): AgentAvailability => {
+  if (!selectedAgentId) {
+    return "no_selection"
+  }
+
+  const selectedAgent = agents.find(agent => agent._id === selectedAgentId)
+  if (!selectedAgent) {
+    return "deleted"
+  }
+
+  if (!selectedAgent.live) {
+    return "offline"
+  }
+
+  const isEnabled = enabledAgentList.some(
+    agent => agent.agentId === selectedAgentId
+  )
+  if (!isEnabled) {
+    return "disabled"
+  }
+
+  return "ready"
 }
 
 const resolveConversationScopeAgentId = ({
@@ -197,15 +233,11 @@ const withDerivedState = (state: ChatboxState): ChatboxState => {
     state.chatAgents.find(agent => agent.agentId === state.selectedAgentId)
       ?.conversationStarters || []
 
-  const isAgentKnown = state.selectedAgentId
-    ? state.agents.some(agent => agent._id === state.selectedAgentId)
-    : false
-
-  const isAgentLive = state.selectedAgentId
-    ? state.agents.some(
-        agent => agent._id === state.selectedAgentId && agent.live
-      )
-    : false
+  const agentAvailability = resolveAgentAvailability({
+    selectedAgentId: state.selectedAgentId,
+    agents: state.agents,
+    enabledAgentList: state.enabledAgentList,
+  })
 
   const suppressAgentPicker =
     isLockedAgentMode && state.loading && !state.selectedAgentId
@@ -219,8 +251,7 @@ const withDerivedState = (state: ChatboxState): ChatboxState => {
     emptyStateMessage,
     selectedAgentName,
     conversationStarters,
-    isAgentKnown,
-    isAgentLive,
+    agentAvailability,
     suppressAgentPicker,
   }
 }
