@@ -53,19 +53,19 @@ export default migration
     .map(m => m.substring(0, m.length - 3))
 
   let migrationFileContent =
-    '// This file should never be manually modified, use `yarn add-app-migration` in order to add a new one\n\nimport { AppMigration } from "."\n\n'
+    '// This file should never be manually modified, use `yarn add-app-migration` in order to add a new one\n\nimport { WorkspaceMigration } from "."\n\n'
 
   for (const migration of migrations) {
     migrationFileContent += `import m${migration} from "./migrations/${migration}"\n`
   }
 
-  migrationFileContent += `\nexport const MIGRATIONS: AppMigration[] = [
+  migrationFileContent += `\nexport const MIGRATIONS: WorkspaceMigration[] = [
   // Migrations will be executed sorted by id\n`
 
   for (const migration of migrations) {
     migrationFileContent += `  {
     id: "${migration}",
-    func: m${migration}
+    func: m${migration},
   },\n`
   }
 
