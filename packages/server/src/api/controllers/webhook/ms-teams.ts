@@ -215,10 +215,6 @@ export async function MSTeamsWebhook(
           }
         })
       const teamsState = await getTeamsState()
-
-      if (!teamsState) {
-        throw new HTTPError("Unable to connect to redis for Teams webhook", 500)
-      }
       const chat = new Chat({
         userName: "Budibase",
         adapters: {

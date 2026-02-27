@@ -357,15 +357,6 @@ export const handleChatMessage = async ({
   scope,
   idleTimeoutMinutes,
 }: HandleChatMessageParams): Promise<void> => {
-  console.log("handleChatMessage", {
-    reply,
-    workspaceId,
-    chatAppId,
-    agentId,
-    provider,
-    command,
-    content,
-  })
   const userPrefix = provider === "discord" ? "discord" : "msteams"
   const userId = `${userPrefix}:${user.externalUserId}`
 
