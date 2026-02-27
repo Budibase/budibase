@@ -23,9 +23,14 @@ export async function run({
       success: true,
     }
   } catch (err) {
+    const error = automationUtils.getError(err)
+    const response = error.includes("Invalid JSON response")
+      ? "Error: No response found"
+      : error
+
     return {
       success: false,
-      response: automationUtils.getError(err),
+      response,
     }
   }
 }
