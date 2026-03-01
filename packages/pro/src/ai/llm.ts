@@ -15,7 +15,7 @@ import { z } from "zod"
 // Provider-specific default models. If a provider's saved config does not
 // include a default model, we fall back to these. Azure defaults to gpt-4.1
 // so we avoid GPT-5-only parameters like verbosity/reasoning_effort.
-const DefaultModelByProvider: Record<AIProvider, string> = {
+export const DEFAULT_MODEL_BY_PROVIDER: Record<AIProvider, string> = {
   OpenAI: "gpt-5-mini",
   TogetherAI: "gpt-5-mini",
   AzureOpenAI: "gpt-4.1",
@@ -53,7 +53,8 @@ async function getAIConfig(): Promise<LLMProviderConfig | undefined> {
 
     return {
       provider: provider.provider,
-      model: provider.defaultModel || DefaultModelByProvider[provider.provider],
+      model:
+        provider.defaultModel || DEFAULT_MODEL_BY_PROVIDER[provider.provider],
       apiKey: provider.apiKey,
       baseUrl: provider.baseUrl,
     }
@@ -79,7 +80,7 @@ function getSelfHostOpenAIKeyConfig(): LLMProviderConfig | undefined {
 
     return {
       provider: "OpenAI",
-      model: DefaultModelByProvider.OpenAI,
+      model: DEFAULT_MODEL_BY_PROVIDER.OpenAI,
       apiKey: env.OPENAI_API_KEY,
     }
   })
@@ -96,7 +97,7 @@ function getBudibaseAIKeyConfig(): LLMProviderConfig | undefined {
 
     return {
       provider: "BudibaseAI",
-      model: DefaultModelByProvider.BudibaseAI,
+      model: DEFAULT_MODEL_BY_PROVIDER.BudibaseAI,
     }
   })
 }

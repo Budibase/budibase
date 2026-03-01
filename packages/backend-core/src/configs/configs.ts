@@ -323,7 +323,7 @@ export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
 }
 
 // AI
-
+/** @deprecated use the new ai sdk */
 export async function getAIConfig(): Promise<AIConfig | undefined> {
   return getConfig<AIConfig>(ConfigType.AI)
 }
