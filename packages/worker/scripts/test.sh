@@ -3,11 +3,14 @@ set -e
 
 if [[ -n $CI ]]
 then
-  # Running in ci, where resources are limited
-  echo "jest --coverage --maxWorkers=2 --forceExit --bail $@"
-  jest --coverage --maxWorkers=2 --forceExit --bail $@
+  max_workers="${JEST_MAX_WORKERS:-2}"
+  jest_args=(
+    --maxWorkers=$max_workers
+    --bail
+  )
 else
-  # --maxWorkers performs better in development
-  echo "jest --coverage --detectOpenHandles $@"
-  jest --coverage --detectOpenHandles $@
+  max_workers="${JEST_MAX_WORKERS:-50%}"
+  jest_args=(--maxWorkers=$max_workers)
 fi
+
+jest "${jest_args[@]}" "$@"
