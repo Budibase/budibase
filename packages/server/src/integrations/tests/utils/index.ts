@@ -134,10 +134,7 @@ export type DatasourceDescribeOpts = OnlyOpts | PlusOpts
 export function datasourceDescribe(opts: DatasourceDescribeOpts) {
   // tests that call this need a lot longer timeouts
   jest.setTimeout(240000)
-
-  if (process.env.DATASOURCE === "none") {
-    createDummyTest()
-  }
+  const datasourceEnv = process.env.DATASOURCE?.toLowerCase()
 
   let databases: DatabaseName[] = []
   if ("only" in opts) {
@@ -150,8 +147,10 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
     throw new Error("invalid options")
   }
 
-  if (process.env.DATASOURCE) {
-    databases = databases.filter(db => db === process.env.DATASOURCE)
+  if (!datasourceEnv || datasourceEnv === "none") {
+    databases = []
+  } else if (datasourceEnv !== "all") {
+    databases = databases.filter(db => db === datasourceEnv)
   }
 
   if (databases.length === 0) {
