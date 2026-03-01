@@ -11,7 +11,7 @@ describe("row deleted trigger", () => {
 
   beforeAll(async () => {
     await config.init()
-    await config.api.automation.deleteAll()
+    await config.publish()
     table = await config.api.table.save(basicTable())
     automation = await createAutomationBuilder(config)
       .onRowDeleted({ tableId: table._id! })

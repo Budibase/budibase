@@ -14,6 +14,7 @@ describe("devRevertProcessor", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    await config.publish()
   })
 
   it("should always return singleton instance", () => {

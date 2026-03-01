@@ -39,6 +39,8 @@ describe.each([
 
   beforeEach(async () => {
     await config.newTenant()
+    await config.createDefaultWorkspaceApp()
+    await config.publish()
     for (const workspaceId of [
       config.getDevWorkspaceId(),
       config.getProdWorkspaceId(),

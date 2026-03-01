@@ -47,10 +47,6 @@ describe("/recaptcha", () => {
   let config = setup.getConfig()
   let workspace: Workspace
 
-  beforeAll(async () => {
-    await config.init()
-  })
-
   afterAll(async () => {
     setup.afterAll()
   })

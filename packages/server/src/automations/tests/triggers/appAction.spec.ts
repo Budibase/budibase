@@ -9,7 +9,7 @@ describe("app action trigger", () => {
 
   beforeAll(async () => {
     await config.init()
-    await config.api.automation.deleteAll()
+    await config.publish()
 
     automation = await createAutomationBuilder(config)
       .onAppAction()

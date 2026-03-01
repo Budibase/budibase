@@ -17,7 +17,6 @@ describe("test the openai action", () => {
 
   beforeAll(async () => {
     await config.init()
-    await config.api.automation.deleteAll()
   })
 
   beforeEach(() => {

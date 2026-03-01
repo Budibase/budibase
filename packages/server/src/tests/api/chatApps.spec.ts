@@ -8,8 +8,7 @@ describe("chat apps validation", () => {
   let chatApp: ChatApp
 
   beforeAll(async () => {
-    await config.init("chat-app-validation")
-
+    await config.init()
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
@@ -133,7 +132,7 @@ describe("chat apps create validation", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
-    await config.init("chat-app-create-validation")
+    await config.init()
   })
 
   afterAll(() => {
@@ -164,7 +163,7 @@ describe("chat route auth split", () => {
   let disabledAgentId: string
 
   beforeAll(async () => {
-    await config.init("chat-route-auth-split")
+    await config.init()
     basicUser = await config.createUser({
       roles: {
         [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,

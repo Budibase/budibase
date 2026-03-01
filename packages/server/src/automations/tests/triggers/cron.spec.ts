@@ -16,6 +16,7 @@ describe("cron trigger", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.publish()
     await config.api.automation.deleteAll()
   })
 
@@ -24,10 +25,7 @@ describe("cron trigger", () => {
   })
 
   beforeEach(async () => {
-    const { automations } = await config.api.automation.fetch()
-    for (const automation of automations) {
-      await config.api.automation.delete(automation)
-    }
+    await config.api.automation.deleteAll()
   })
 
   it("should queue a Bull cron job", async () => {

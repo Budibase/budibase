@@ -12,7 +12,7 @@ export class ScreenAPI extends TestAPI {
     expectations?: Expectations
   ): Promise<Screen> => {
     if (screen.workspaceAppId === TEST_WORKSPACEAPPID_PLACEHOLDER) {
-      screen.workspaceAppId = this.config.getDefaultWorkspaceAppId()
+      screen.workspaceAppId = await this.config.ensureDefaultWorkspaceAppId()
     }
 
     return await this._post<Screen>(`/api/screens`, {

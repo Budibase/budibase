@@ -76,7 +76,7 @@ describe("chat conversations authorization", () => {
   let otherAppConvo: ChatConversation
 
   beforeAll(async () => {
-    await config.init("chat-conversation-scope")
+    await config.init()
     userA = config.getUser()
     userB = await config.createUser({
       roles: {
@@ -340,7 +340,7 @@ describe("chat conversation transient behavior", () => {
   ]
 
   beforeAll(async () => {
-    await config.init("chat-conversation-transient")
+    await config.init()
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
@@ -603,7 +603,7 @@ describe("chat conversation path validation", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
-    await config.init("chat-conversation-validation")
+    await config.init()
   })
 
   afterAll(() => {

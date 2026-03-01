@@ -23,7 +23,6 @@ const {
 } = setup.structures
 
 describe("/screens", () => {
-  let screen: Screen
   let config = setup.getConfig()
 
   afterAll(setup.afterAll)
@@ -34,9 +33,6 @@ describe("/screens", () => {
 
   beforeEach(async () => {
     await config.newTenant()
-    // Replace the regular app with an onboarding app to get sample data
-    await config.createWorkspaceWithOnboarding("test-app-with-sample")
-    screen = await config.createScreen()
   })
 
   function popRandomScreen(screens: Screen[]) {
@@ -50,9 +46,12 @@ describe("/screens", () => {
 
   describe("fetch", () => {
     it("should be able to create a screen", async () => {
+      const screen1 = await config.createScreen()
+      const screen2 = await config.createScreen()
       const screens = await config.api.screen.list()
       expect(screens.length).toEqual(2)
-      expect(screens.some(s => s._id === screen._id)).toEqual(true)
+      expect(screens.some(s => s._id === screen1._id)).toEqual(true)
+      expect(screens.some(s => s._id === screen2._id)).toEqual(true)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -65,10 +64,11 @@ describe("/screens", () => {
   })
 
   describe("permissions", () => {
-    let screen1: Screen, screen2: Screen
+    let screen: Screen, screen1: Screen, screen2: Screen
     let role1: Role, role2: Role, multiRole: Role
 
     beforeEach(async () => {
+      screen = await config.createScreen()
       role1 = await config.api.roles.save({
         name: "role1",
         inherits: roles.BUILTIN_ROLE_IDS.BASIC,
@@ -195,12 +195,11 @@ describe("/screens", () => {
     })
 
     it("should be able to delete the screen", async () => {
-      const [{ _id: workspaceAppId }] = (await config.api.workspaceApp.fetch())
-        .workspaceApps
+      const { _id: workspaceAppId } = await config.createWorkspace()
 
       const screen = await config.api.screen.save({
         ...basicScreen(),
-        workspaceAppId,
+        workspaceAppId: workspaceAppId!,
       })
 
       const response = await config.api.screen.destroy(
@@ -212,6 +211,7 @@ describe("/screens", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
+      const screen = await config.createScreen()
       await checkBuilderEndpoint({
         config,
         method: "DELETE",

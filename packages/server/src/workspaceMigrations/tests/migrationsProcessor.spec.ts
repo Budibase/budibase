@@ -29,6 +29,7 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
   beforeEach(async () => {
     jest.clearAllMocks()
     await config.newTenant()
+    await config.publish()
   })
 
   async function runMigrations(migrations: WorkspaceMigration[]) {

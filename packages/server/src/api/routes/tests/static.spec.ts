@@ -16,6 +16,7 @@ describe("/static", () => {
   beforeAll(async () => {
     cleanupEnv = setEnv({ SELF_HOSTED: "true" })
     await config.init()
+    await config.publish()
   })
 
   describe("/app", () => {

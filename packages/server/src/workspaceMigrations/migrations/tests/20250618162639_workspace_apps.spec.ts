@@ -22,6 +22,7 @@ describe.each([
 ])("Workspace apps (%s)", (_, getWorkspaceId) => {
   beforeAll(async () => {
     await config.init()
+    await config.publish()
   })
 
   beforeEach(async () => {

@@ -21,8 +21,6 @@ import {
   BasicRestAuthConfig,
   BearerRestAuthConfig,
   BodyType,
-  OAuth2CredentialsMethod,
-  OAuth2GrantType,
   RestAuthType,
 } from "@budibase/types"
 import { createServer } from "http"
@@ -145,15 +143,6 @@ describe("REST Integration", () => {
       })
     })
   }
-  const config = new TestConfiguration()
-
-  beforeAll(async () => {
-    await config.init()
-  })
-
-  afterAll(async () => {
-    config.end()
-  })
 
   beforeEach(() => {
     pendingFetches.length = 0
@@ -514,16 +503,7 @@ describe("REST Integration", () => {
     })
 
     it("adds OAuth2 auth (via header)", async () => {
-      const oauth2Url = generator.url()
-      const secret = generator.hash()
-      const { config: oauthConfig } = await config.api.oauth2.create({
-        name: generator.guid(),
-        url: oauth2Url,
-        clientId: generator.guid(),
-        clientSecret: secret,
-        method: OAuth2CredentialsMethod.HEADER,
-        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-      })
+      const oauthConfigId = generator.guid()
 
       const token = `Bearer ${generator.guid()}`
       getTokenMock.mockResolvedValueOnce(token)
@@ -536,30 +516,17 @@ describe("REST Integration", () => {
         })
       })
 
-      const { data, info } = await config.doInContext(
-        config.devWorkspaceId,
-        async () =>
-          await integration.read({
-            authConfigId: oauthConfig._id,
-            authConfigType: RestAuthType.OAUTH2,
-          })
-      )
+      const { data, info } = await integration.read({
+        authConfigId: oauthConfigId,
+        authConfigType: RestAuthType.OAUTH2,
+      })
       expect(data).toEqual({ foo: "bar" })
       expect(info.code).toEqual(200)
-      expect(getTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(getTokenMock).toHaveBeenCalledWith(oauthConfigId)
     })
 
     it("adds OAuth2 auth (via body)", async () => {
-      const oauth2Url = generator.url()
-      const secret = generator.hash()
-      const { config: oauthConfig } = await config.api.oauth2.create({
-        name: generator.guid(),
-        url: oauth2Url,
-        clientId: generator.guid(),
-        clientSecret: secret,
-        method: OAuth2CredentialsMethod.BODY,
-        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-      })
+      const oauthConfigId = generator.guid()
 
       const token = `Bearer ${generator.guid()}`
       getTokenMock.mockResolvedValueOnce(token)
@@ -572,30 +539,17 @@ describe("REST Integration", () => {
         })
       })
 
-      const { data, info } = await config.doInContext(
-        config.devWorkspaceId,
-        async () =>
-          await integration.read({
-            authConfigId: oauthConfig._id,
-            authConfigType: RestAuthType.OAUTH2,
-          })
-      )
+      const { data, info } = await integration.read({
+        authConfigId: oauthConfigId,
+        authConfigType: RestAuthType.OAUTH2,
+      })
       expect(data).toEqual({ foo: "bar" })
       expect(info.code).toEqual(200)
-      expect(getTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(getTokenMock).toHaveBeenCalledWith(oauthConfigId)
     })
 
     it("handles OAuth2 auth cached expired token", async () => {
-      const oauth2Url = generator.url()
-      const secret = generator.hash()
-      const { config: oauthConfig } = await config.api.oauth2.create({
-        name: generator.guid(),
-        url: oauth2Url,
-        clientId: generator.guid(),
-        clientSecret: secret,
-        method: OAuth2CredentialsMethod.HEADER,
-        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-      })
+      const oauthConfigId = generator.guid()
 
       const token1 = `Bearer ${generator.guid()}`
       const token2 = `Bearer ${generator.guid()}`
@@ -617,33 +571,20 @@ describe("REST Integration", () => {
         })
       })
 
-      const { data, info } = await config.doInContext(
-        config.devWorkspaceId,
-        async () =>
-          await integration.read({
-            authConfigId: oauthConfig._id,
-            authConfigType: RestAuthType.OAUTH2,
-          })
-      )
+      const { data, info } = await integration.read({
+        authConfigId: oauthConfigId,
+        authConfigType: RestAuthType.OAUTH2,
+      })
 
       expect(data).toEqual({ foo: "bar" })
       expect(info.code).toEqual(200)
       expect(cleanStoredTokenMock).toHaveBeenCalledTimes(1)
-      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfigId)
       expect(getTokenMock).toHaveBeenCalledTimes(2)
     })
 
     it("does not loop when handling OAuth2 auth cached expired token", async () => {
-      const oauth2Url = generator.url()
-      const secret = generator.hash()
-      const { config: oauthConfig } = await config.api.oauth2.create({
-        name: generator.guid(),
-        url: oauth2Url,
-        clientId: generator.guid(),
-        clientSecret: secret,
-        method: OAuth2CredentialsMethod.HEADER,
-        grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-      })
+      const oauthConfigId = generator.guid()
 
       const token1 = `Bearer ${generator.guid()}`
       const token2 = `Bearer ${generator.guid()}`
@@ -665,19 +606,15 @@ describe("REST Integration", () => {
         })
       })
 
-      const { data, info } = await config.doInContext(
-        config.devWorkspaceId,
-        async () =>
-          await integration.read({
-            authConfigId: oauthConfig._id,
-            authConfigType: RestAuthType.OAUTH2,
-          })
-      )
+      const { data, info } = await integration.read({
+        authConfigId: oauthConfigId,
+        authConfigType: RestAuthType.OAUTH2,
+      })
 
       expect(info.code).toEqual(401)
       expect(data).toEqual({})
       expect(cleanStoredTokenMock).toHaveBeenCalledTimes(1)
-      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfigId)
       expect(getTokenMock).toHaveBeenCalledTimes(2)
     })
   })
@@ -1135,6 +1072,16 @@ describe("REST Integration", () => {
   })
 
   describe("File Handling", () => {
+    const config = new TestConfiguration()
+
+    beforeAll(async () => {
+      await config.init()
+    })
+
+    afterAll(() => {
+      config.end()
+    })
+
     it("uploads file to object store and returns signed URL", async () => {
       await config.doInContext(config.getDevWorkspaceId(), async () => {
         const content = "test file content"

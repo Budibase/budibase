@@ -82,7 +82,7 @@ describe("rehydrateScheduledTriggers (integration)", () => {
     const config = new TestConfiguration()
     try {
       await config.init()
-
+      await config.publish()
       env._set("SELF_HOSTED", "1")
       env._set("MULTI_TENANCY", 0)
       delete process.env.FORKED_PROCESS

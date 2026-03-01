@@ -15,6 +15,7 @@ describe("/authenticate", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.publish()
   })
 
   describe("fetch self", () => {

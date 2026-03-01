@@ -8,7 +8,7 @@ describe("listEmptyProductionTables", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
-    await config.init("listEmptyProductionTables")
+    await config.init()
   })
 
   afterAll(() => config.end())

@@ -547,6 +547,11 @@ describe("/applications", () => {
   })
 
   describe("fetchClientApps", () => {
+    beforeEach(async () => {
+      await config.createDefaultWorkspaceApp(workspace.name)
+      await config.publish()
+    })
+
     it("should return apps when workspace app are published", async () => {
       const response = await config.api.workspace.fetchClientApps()
       expect(response.apps).toHaveLength(1)
