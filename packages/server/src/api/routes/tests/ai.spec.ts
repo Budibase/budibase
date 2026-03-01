@@ -292,9 +292,7 @@ describe("BudibaseAI", () => {
   beforeAll(async () => {
     await config.init()
     cleanup.push(await budibaseAI()(config))
-    cleanup.push(
-      setEnv({ SELF_HOSTED: false, BUDIBASE_AI_DEFAULT_MODEL: "gpt-4o" })
-    )
+    cleanup.push(setEnv({ SELF_HOSTED: false }))
   })
 
   beforeEach(async () => {
