@@ -145,7 +145,11 @@
     </div>
     <div class="integration-list">
       {#if agentChatEnabled && currentAgent?._id}
-        <AgentChatChannel agentId={currentAgent._id} />
+        <AgentChatChannel
+          agentId={currentAgent._id}
+          agentName={currentAgent.name || "Agent"}
+          agentLive={!!currentAgent.live}
+        />
       {/if}
       {#each channels as channel (channel.id)}
         <div class="integration-row">
