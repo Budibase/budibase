@@ -36,7 +36,10 @@ import {
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag"
-import { assertChatAppIsLiveForUser } from "./chatApps"
+import {
+  assertChatAppIsLiveForUser,
+  canAccessChatAppAgentForUser,
+} from "./chatApps"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -152,7 +155,7 @@ const matchesChatHistoryScope = ({
   (!chat.userId || chat.userId === userId) &&
   matchesRequestedAgentScope(chat, requestedAgentId)
 
-const resolveRequestedAgentId = (ctx: UserCtx, chatApp: ChatApp) => {
+const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
   const rawAgentId = ctx.query.agentId
   if (rawAgentId === undefined) {
     return undefined
@@ -162,8 +165,15 @@ const resolveRequestedAgentId = (ctx: UserCtx, chatApp: ChatApp) => {
   }
 
   const agentId = rawAgentId.trim()
-  if (!isAgentEnabledForChatApp(chatApp, agentId)) {
+  const chatAgentConfig = chatApp.agents?.find(
+    agent => agent.agentId === agentId
+  )
+  if (!chatAgentConfig?.isEnabled) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
+  }
+
+  if (!(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))) {
+    throw new HTTPError("Forbidden", 403)
   }
 
   return agentId
@@ -366,6 +376,18 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
 
+  if (!canUsePreview && chatApp) {
+    const chatAgentConfig = chatApp.agents?.find(
+      agent => agent.agentId === agentId
+    )
+    if (!chatAgentConfig) {
+      throw new HTTPError("agentId is not enabled for this chat app", 400)
+    }
+    if (!(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))) {
+      throw new HTTPError("Forbidden", 403)
+    }
+  }
+
   if (!chat.agentId) {
     chat.agentId = agentId
   }
@@ -541,8 +563,12 @@ export async function createChatConversation(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
-  if (!isAgentEnabledForChatApp(chatApp, agentId)) {
+  const chatAgentConfig = chatApp.agents?.find(a => a.agentId === agentId)
+  if (!chatAgentConfig?.isEnabled) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
+  }
+  if (!(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))) {
+    throw new HTTPError("Forbidden", 403)
   }
 
   const db = context.getWorkspaceDB()
@@ -584,7 +610,7 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
-  const requestedAgentId = resolveRequestedAgentId(ctx, chatApp)
+  const requestedAgentId = await resolveRequestedAgentId(ctx, chatApp)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (
@@ -599,6 +625,16 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
   }
   if (chat.userId && chat.userId !== userId) {
     throw new HTTPError("Forbidden", 403)
+  }
+
+  const chatAgentConfig = chatApp.agents?.find(
+    agent => agent.agentId === chat.agentId
+  )
+  if (
+    !chatAgentConfig ||
+    !(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))
+  ) {
+    throw new HTTPError("chat not found", 404)
   }
 
   await db.remove(chat)
@@ -618,7 +654,16 @@ export async function fetchChatHistory(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
-  const requestedAgentId = resolveRequestedAgentId(ctx, chatApp)
+  const requestedAgentId = await resolveRequestedAgentId(ctx, chatApp)
+  const accessibleAgentIds = new Set<string>()
+  for (const chatAgent of chatApp.agents || []) {
+    if (!chatAgent.isEnabled) {
+      continue
+    }
+    if (await canAccessChatAppAgentForUser(ctx, chatAgent)) {
+      accessibleAgentIds.add(chatAgent.agentId)
+    }
+  }
 
   const allChats = await db.allDocs<ChatConversation>(
     docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
@@ -636,6 +681,7 @@ export async function fetchChatHistory(
         requestedAgentId,
       })
     )
+    .filter(chat => accessibleAgentIds.has(chat.agentId))
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
@@ -664,7 +710,7 @@ export async function fetchChatConversation(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
-  const requestedAgentId = resolveRequestedAgentId(ctx, chatApp)
+  const requestedAgentId = await resolveRequestedAgentId(ctx, chatApp)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (
@@ -679,6 +725,16 @@ export async function fetchChatConversation(
   }
   if (chat.userId && chat.userId !== userId) {
     throw new HTTPError("Forbidden", 403)
+  }
+
+  const chatAgentConfig = chatApp.agents?.find(
+    agent => agent.agentId === chat.agentId
+  )
+  if (
+    !chatAgentConfig ||
+    !(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))
+  ) {
+    throw new HTTPError("chat not found", 404)
   }
 
   ctx.body = chat
