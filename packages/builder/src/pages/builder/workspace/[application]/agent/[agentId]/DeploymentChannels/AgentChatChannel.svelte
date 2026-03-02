@@ -113,7 +113,7 @@
       })
   }
 
-  const maybePublishAgentChange = async () => {
+  const publishIfAgentLive = async () => {
     if (!agentLive) {
       return false
     }
@@ -143,7 +143,7 @@
         return
       }
 
-      await maybePublishAgentChange()
+      await publishIfAgentLive()
       notifications.success(
         result.enabled
           ? AGENT_CHAT_ENABLED_MESSAGE
@@ -180,7 +180,7 @@
         notifications.error(CHAT_UPDATE_ERROR_MESSAGE)
         return
       }
-      const published = await maybePublishAgentChange()
+      const published = await publishIfAgentLive()
       notifications.success(
         published
           ? AGENT_CHAT_SETTINGS_PUBLISHED_MESSAGE
