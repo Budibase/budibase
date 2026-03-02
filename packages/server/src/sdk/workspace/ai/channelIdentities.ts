@@ -67,6 +67,7 @@ const getLookupIds = ({
       })
     )
   }
+  console.log("ids", ids)
   return ids
 }
 
