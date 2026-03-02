@@ -303,4 +303,83 @@ describe("chatAppsStore", () => {
     expect(result).toEqual(updated)
     expect(get(currentChatApp)).toEqual(updated)
   })
+
+  it("persists roleId updates for an existing agent config", async () => {
+    const chatApp: ChatApp = {
+      _id: "chatapp-1",
+      _rev: "1",
+      agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+    }
+    const expectedAgents = [
+      {
+        agentId: "agent-1",
+        isEnabled: true,
+        isDefault: true,
+        roleId: "BASIC",
+      },
+    ]
+    const updated: ChatApp = {
+      ...chatApp,
+      _rev: "2",
+      agents: expectedAgents,
+    }
+
+    fetchChatApp.mockResolvedValue(chatApp)
+    updateChatApp.mockResolvedValue(updated)
+
+    const result = await chatAppsStore.upsertAgentConfig({
+      agentId: "agent-1",
+      updates: { roleId: "BASIC" },
+    })
+
+    expect(updateChatApp).toHaveBeenCalledWith({
+      ...chatApp,
+      agents: expectedAgents,
+    })
+    expect(result).toEqual(updated)
+    expect(get(currentChatApp)).toEqual(updated)
+  })
+
+  it("clears roleId when upserted as undefined", async () => {
+    const chatApp: ChatApp = {
+      _id: "chatapp-1",
+      _rev: "1",
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: true,
+          roleId: "BASIC",
+        },
+      ],
+    }
+    const expectedAgents = [
+      {
+        agentId: "agent-1",
+        isEnabled: true,
+        isDefault: true,
+        roleId: undefined,
+      },
+    ]
+    const updated: ChatApp = {
+      ...chatApp,
+      _rev: "2",
+      agents: expectedAgents,
+    }
+
+    fetchChatApp.mockResolvedValue(chatApp)
+    updateChatApp.mockResolvedValue(updated)
+
+    const result = await chatAppsStore.upsertAgentConfig({
+      agentId: "agent-1",
+      updates: { roleId: undefined },
+    })
+
+    expect(updateChatApp).toHaveBeenCalledWith({
+      ...chatApp,
+      agents: expectedAgents,
+    })
+    expect(result).toEqual(updated)
+    expect(get(currentChatApp)).toEqual(updated)
+  })
 })
