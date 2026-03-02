@@ -63,7 +63,8 @@
   $: isDisabled = !selectedAgent || !isAvailable || isDefault
 
   const saveConversationStarters = () => {
-    if (!selectedAgentConfig?.agentId) {
+    const targetAgentId = selectedAgent?.agentId || selectedAgentConfig?.agentId
+    if (!targetAgentId) {
       return
     }
 
@@ -72,7 +73,7 @@
       .filter(starter => starter.prompt.length)
       .slice(0, 3)
 
-    onUpdateConversationStarters(selectedAgentConfig.agentId, trimmedStarters)
+    onUpdateConversationStarters(targetAgentId, trimmedStarters)
   }
 
   const debouncedSave = Utils.debounce(() => {

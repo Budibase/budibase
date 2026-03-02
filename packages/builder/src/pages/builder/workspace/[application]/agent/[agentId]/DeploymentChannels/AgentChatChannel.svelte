@@ -161,39 +161,25 @@
   }
 
   const handleUpdateConversationStarters = async (
-    _agentId: string,
+    targetAgentId: string,
     starters: ConversationStarter[]
   ) => {
-    if (!workspaceId) {
+    if (!workspaceId || !targetAgentId) {
       return
     }
 
     try {
-      const chatApp = await chatAppsStore.ensureChatApp(undefined, workspaceId)
-      if (!chatApp) {
+      const updated = await chatAppsStore.upsertAgentConfig({
+        agentId: targetAgentId,
+        updates: {
+          conversationStarters: starters,
+        },
+        workspaceId,
+      })
+      if (!updated) {
         notifications.error(CHAT_UPDATE_ERROR_MESSAGE)
         return
       }
-
-      const currentAgents = chatApp.agents || []
-      const hasAgent = currentAgents.some(agent => agent.agentId === agentId)
-      const nextAgents = hasAgent
-        ? currentAgents.map(agent =>
-            agent.agentId === agentId
-              ? { ...agent, conversationStarters: starters }
-              : agent
-          )
-        : [
-            ...currentAgents,
-            {
-              agentId,
-              isEnabled: false,
-              isDefault: false,
-              conversationStarters: starters,
-            },
-          ]
-
-      await chatAppsStore.updateAgents(nextAgents)
       const published = await maybePublishAgentChange()
       notifications.success(
         published
