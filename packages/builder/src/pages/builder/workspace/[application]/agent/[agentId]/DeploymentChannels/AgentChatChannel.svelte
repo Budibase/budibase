@@ -205,6 +205,11 @@
     </div>
   </div>
   <div class="row-action">
+    {#if enabled && chatUrl}
+      <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
+        Open chat
+      </a>
+    {/if}
     <ActionButton
       size="S"
       icon="gear"
@@ -214,11 +219,6 @@
     >
       Manage
     </ActionButton>
-    {#if enabled && chatUrl}
-      <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
-        Open chat
-      </a>
-    {/if}
     <Toggle value={enabled} {disabled} on:change={onToggle} />
   </div>
 </div>
