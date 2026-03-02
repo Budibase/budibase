@@ -127,6 +127,59 @@ describe("chat apps validation", () => {
 
     expect(res.status).toBe(400)
   })
+
+  it("persists roleId for agents", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        },
+      ],
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.agents[0].roleId).toBe(roles.BUILTIN_ROLE_IDS.BASIC)
+  })
+
+  it("normalizes empty roleId to unrestricted", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          roleId: "   ",
+        },
+      ],
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.agents[0].roleId).toBeUndefined()
+  })
+
+  it("rejects non-string roleId", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          roleId: 123,
+        },
+      ],
+    })
+
+    expect(res.status).toBe(400)
+  })
 })
 
 describe("chat apps create validation", () => {

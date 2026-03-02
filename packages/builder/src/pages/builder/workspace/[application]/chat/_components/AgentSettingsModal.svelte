@@ -36,6 +36,10 @@
     _agentId: string,
     _starters: ConversationStarter[]
   ) => void
+  export let onUpdateAccessRole: (
+    _agentId: string,
+    _roleId?: string
+  ) => void = () => {}
   export let onClose: () => void
 
   let modal: Modal | undefined
@@ -71,7 +75,8 @@
       id: Helpers.uuid(),
       prompt: starter.prompt,
     }))
-    selectedAccessRole = ALL_AUTHENTICATED_USERS_VALUE
+    selectedAccessRole =
+      selectedAgentConfig?.roleId || ALL_AUTHENTICATED_USERS_VALUE
     newStarter = ""
   }
 
@@ -139,6 +144,20 @@
 
   const getAccessRoleLabel = (option: AccessRoleOption) => option.label
   const getAccessRoleValue = (option: AccessRoleOption) => option.value
+
+  const handleAccessRoleChange = (value: string) => {
+    selectedAccessRole = value
+
+    const targetAgentId = selectedAgent?.agentId || selectedAgentConfig?.agentId
+    if (!targetAgentId) {
+      return
+    }
+
+    onUpdateAccessRole(
+      targetAgentId,
+      value === ALL_AUTHENTICATED_USERS_VALUE ? undefined : value
+    )
+  }
 </script>
 
 <Modal
@@ -170,7 +189,8 @@
         Access role
       </Body>
       <Select
-        bind:value={selectedAccessRole}
+        value={selectedAccessRole}
+        on:change={event => handleAccessRoleChange(event.detail)}
         options={accessRoleOptions}
         getOptionLabel={getAccessRoleLabel}
         getOptionValue={getAccessRoleValue}
