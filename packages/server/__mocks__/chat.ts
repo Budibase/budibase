@@ -22,6 +22,7 @@ export class Chat {
   mentionHandlers: AnyFn[] = []
   subscribedHandlers: AnyFn[] = []
   installationHandlers = new Map<string, AnyFn>()
+  adapters: Record<string, unknown>
 
   webhooks: {
     discord: (request: Request) => Promise<Response>
@@ -29,6 +30,7 @@ export class Chat {
   }
 
   constructor(_options: ChatOptions) {
+    this.adapters = _options.adapters || {}
     const discordPublicKey = String(
       (_options.adapters?.discord as { publicKey?: string } | undefined)
         ?.publicKey || ""
@@ -111,6 +113,10 @@ export class Chat {
 
   onInstallationUpdate(action: string, handler: AnyFn) {
     this.installationHandlers.set(action, handler)
+  }
+
+  getAdapter(name: string) {
+    return this.adapters[name]
   }
 }
 
