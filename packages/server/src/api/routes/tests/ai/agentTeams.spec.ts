@@ -110,14 +110,16 @@ jest.mock("../../../controllers/ai/chatConversations", () => {
   }
 })
 
-import { context, docIds } from "@budibase/backend-core"
+import { context, docIds, roles } from "@budibase/backend-core"
 import {
   DocumentType,
   type Agent,
+  type ChatApp,
   type ChatConversation,
 } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
+import sdk from "../../../../sdk"
 
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 
@@ -255,6 +257,16 @@ describe("agent teams integration provisioning", () => {
           .filter((chat): chat is ChatConversation => !!chat)
       })
 
+    const setChatAppLive = async (chatAppId: string) =>
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const chatApp = await db.get<ChatApp>(chatAppId)
+        await db.put({
+          ...chatApp,
+          live: true,
+        })
+      })
+
     const setupProvisionedTeamsAgent = async () => {
       const agent = await config.api.agent.create({
         name: "Teams Incoming Messages Agent",
@@ -266,6 +278,16 @@ describe("agent teams integration provisioning", () => {
       })
       const channel = await config.api.agent.provisionMSTeamsChannel(agent._id!)
       await config.publish()
+      await setChatAppLive(channel.chatAppId)
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await sdk.ai.channelIdentities.upsert({
+          provider: "msteams",
+          externalUserId: "user-1",
+          tenantId: "tenant-1",
+          globalUserId: config.getUser()._id!,
+          displayName: "Teams User",
+        })
+      })
       return { agent, chatAppId: channel.chatAppId }
     }
 
@@ -364,6 +386,91 @@ describe("agent teams integration provisioning", () => {
       const conversations = await fetchConversations()
       expect(conversations).toHaveLength(1)
       expect(conversations[0]?.messages).toHaveLength(0)
+    })
+
+    it("rejects unmapped Teams users", async () => {
+      const agent = await config.api.agent.create({
+        name: "Teams Mapped User Agent",
+        MSTeamsIntegration: {
+          appId: "teams-app-id",
+          appPassword: "teams-app-password",
+          tenantId: "azure-tenant-id",
+        },
+      })
+      const channel = await config.api.agent.provisionMSTeamsChannel(agent._id!)
+      await config.publish()
+      await setChatAppLive(channel.chatAppId)
+
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${channel.chatAppId}/${agent._id}`
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-mapped-unlinked",
+          type: "message",
+          text: "ask hello teams",
+          from: { id: "teams-unmapped-user", name: "Unmapped User" },
+          conversation: { id: "conversation-mapped-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "This channel user is not linked to a Budibase user"
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+    })
+
+    it("stores mapped Budibase user IDs for Teams conversations", async () => {
+      const agent = await config.api.agent.create({
+        name: "Teams Mapped User Agent",
+        MSTeamsIntegration: {
+          appId: "teams-app-id",
+          appPassword: "teams-app-password",
+          tenantId: "azure-tenant-id",
+        },
+      })
+      const channel = await config.api.agent.provisionMSTeamsChannel(agent._id!)
+      await config.publish()
+      await setChatAppLive(channel.chatAppId)
+
+      const mappedUser = await config.createUser({
+        email: "teams-mapped@budibase.com",
+        builder: { global: false },
+        admin: { global: false },
+        roles: {
+          [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+        },
+      })
+
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await sdk.ai.channelIdentities.upsert({
+          provider: "msteams",
+          externalUserId: "teams-mapped-user",
+          tenantId: "tenant-1",
+          globalUserId: mappedUser._id!,
+          displayName: "Mapped Teams User",
+        })
+      })
+
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${channel.chatAppId}/${agent._id}`
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-mapped-linked",
+          type: "message",
+          text: "ask hello mapped teams",
+          from: { id: "teams-mapped-user", name: "Mapped Teams User" },
+          conversation: { id: "conversation-mapped-2", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(response.body.messages).toContain("Mock assistant response")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
+
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.userId).toEqual(mappedUser._id)
     })
   })
 })

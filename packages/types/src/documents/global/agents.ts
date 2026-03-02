@@ -29,6 +29,8 @@ export interface DiscordAgentIntegration extends ChatAgentIntegration {
   publicKey?: string
   botToken?: string
   guildId?: string
+  allowedGuildIds?: string[]
+  allowedChannelIds?: string[]
   interactionsEndpointUrl?: string
 }
 
@@ -36,6 +38,9 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
   appId?: string
   appPassword?: string
   tenantId?: string
+  allowedTenantIds?: string[]
+  allowedTeamIds?: string[]
+  allowedChannelIds?: string[]
   messagingEndpointUrl?: string
 }
 

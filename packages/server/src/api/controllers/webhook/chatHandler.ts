@@ -9,6 +9,7 @@ import type {
   ContextUser,
 } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
+import { sdk as usersSdk } from "@budibase/shared-core"
 import {
   webhookChat,
   prepareChatConversationForSave,
@@ -223,10 +224,7 @@ const matchesScope = ({
     ) {
       return false
     }
-    if (ch?.externalUserId) {
-      return ch.externalUserId === scope.externalUserId
-    }
-    return chat.userId === `discord:${scope.externalUserId}`
+    return ch?.externalUserId === scope.externalUserId
   }
 
   if (provider === "msteams") {
@@ -335,10 +333,8 @@ export interface HandleChatMessageParams {
   provider: "discord" | "msteams"
   command: "ask" | "new"
   content: string
-  user: {
-    externalUserId: string
-    displayName?: string
-  }
+  chatUserId: string
+  contextUser: ContextUser
   channel: ChatConversationChannel
   scope: ConversationScope
   idleTimeoutMinutes?: number
@@ -352,20 +348,23 @@ export const handleChatMessage = async ({
   provider,
   command,
   content,
-  user,
+  chatUserId,
+  contextUser,
   channel,
   scope,
   idleTimeoutMinutes,
 }: HandleChatMessageParams): Promise<void> => {
-  const userPrefix = provider === "discord" ? "discord" : "msteams"
-  const userId = `${userPrefix}:${user.externalUserId}`
-
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
     const db = context.getWorkspaceDB()
     const chatApp = await db.tryGet<ChatApp>(chatAppId)
     if (!chatApp) {
       await reply("Chat app not found.")
+      return
+    }
+
+    if (!usersSdk.users.isAdminOrBuilder(contextUser) && chatApp.live !== true) {
+      await reply("Chat app is not live")
       return
     }
 
@@ -384,7 +383,7 @@ export const handleChatMessage = async ({
         prepareChatConversationForSave({
           chatId,
           chatAppId,
-          userId,
+          userId: chatUserId,
           title: "New conversation",
           messages: [],
           chat: {
@@ -445,15 +444,6 @@ export const handleChatMessage = async ({
       channel,
     }
 
-    const contextUser: ContextUser = {
-      _id: userId,
-      tenantId: context.getTenantId(),
-      email: `${userPrefix}+${user.externalUserId}@example.invalid`,
-      roles: {},
-      userId: user.externalUserId,
-      firstName: user.displayName,
-    }
-    console.log("test?")
     let result: Awaited<ReturnType<typeof webhookChat>>
     try {
       result = await webhookChat({ chat: draftChat, user: contextUser })
@@ -471,7 +461,7 @@ export const handleChatMessage = async ({
       prepareChatConversationForSave({
         chatId,
         chatAppId,
-        userId,
+        userId: chatUserId,
         title: existingChat?.title || result.title,
         messages: result.messages,
         chat: { ...draftChat, _id: chatId },

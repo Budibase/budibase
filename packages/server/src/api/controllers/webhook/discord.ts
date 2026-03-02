@@ -15,6 +15,7 @@ import { pickLatestConversation } from "./utils"
 import { handleChatMessage } from "./chatHandler"
 import { getDiscordState } from "./chatState"
 import { runChatWebhook } from "./runChatWebhook"
+import { resolveWebhookAuthorization } from "./authorization"
 
 const DISCORD_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
@@ -45,10 +46,7 @@ export const matchesDiscordConversationScope = ({
   ) {
     return false
   }
-  if (ch?.externalUserId) {
-    return ch.externalUserId === scope.externalUserId
-  }
-  return chat.userId === `discord:${scope.externalUserId}`
+  return ch?.externalUserId === scope.externalUserId
 }
 
 export const pickDiscordConversation = ({
@@ -248,6 +246,16 @@ const handleDiscordCommand = async ({
     externalUserId: userId,
   }
 
+  const authorization = await resolveWebhookAuthorization({
+    workspaceId,
+    chatAppId,
+    agentId,
+    provider: "discord",
+    externalUserId: userId,
+    externalUserName: displayName,
+    channel,
+  })
+
   await handleChatMessage({
     reply,
     workspaceId,
@@ -256,7 +264,8 @@ const handleDiscordCommand = async ({
     provider: "discord",
     command,
     content,
-    user: { externalUserId: userId, displayName },
+    chatUserId: authorization.chatUserId,
+    contextUser: authorization.contextUser,
     channel,
     scope,
     idleTimeoutMinutes,

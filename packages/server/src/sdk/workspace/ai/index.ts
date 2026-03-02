@@ -1,4 +1,5 @@
 export * as agents from "./agents"
+export * as channelIdentities from "./channelIdentities"
 export * as chatApps from "./chatApps"
 export * as configs from "./configs"
 export * as deployments from "./deployments"

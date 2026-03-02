@@ -12,6 +12,7 @@ import sdk from "../../../sdk"
 import { handleChatMessage } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { runChatWebhook } from "./runChatWebhook"
+import { resolveWebhookAuthorization } from "./authorization"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
@@ -143,6 +144,18 @@ const createTeamsMessageHandler = ({
       return
     }
 
+    console.log("Teams webhook identity candidate", {
+      workspaceId,
+      chatAppId,
+      agentId,
+      externalUserId,
+      displayName,
+      tenantId,
+      teamId,
+      channelId,
+      conversationId,
+    })
+
     const channel: ChatConversationChannel = {
       provider: "msteams",
       conversationId,
@@ -163,6 +176,16 @@ const createTeamsMessageHandler = ({
     }
 
     try {
+      const authorization = await resolveWebhookAuthorization({
+        workspaceId,
+        chatAppId,
+        agentId,
+        provider: "msteams",
+        externalUserId,
+        externalUserName: displayName,
+        channel,
+      })
+
       await handleChatMessage({
         reply: async (text: string) => {
           const chunks = splitTeamsMessage(text)
@@ -176,7 +199,8 @@ const createTeamsMessageHandler = ({
         provider: "msteams",
         command,
         content,
-        user: { externalUserId, displayName },
+        chatUserId: authorization.chatUserId,
+        contextUser: authorization.contextUser,
         channel,
         scope,
         idleTimeoutMinutes,

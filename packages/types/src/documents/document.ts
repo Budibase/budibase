@@ -42,6 +42,7 @@ export enum DocumentType {
   AGENT = "agent",
   CHAT_APP = "chatapp",
   CHAT_CONVERSATION = "chatconvo",
+  CHANNEL_IDENTITY = "channelidentity",
   AGENT_TOOL_SOURCE = "agenttoolsource",
   AGENT_FILE = "agentfile",
   AI_CONFIG = "aiconfig",

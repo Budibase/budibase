@@ -183,7 +183,7 @@ describe("teams webhook helpers", () => {
 
   it("requires channel external user id to match conversation scope", () => {
     const chat = makeChat({
-      userId: "msteams:user-legacy",
+      userId: "msteams:user-without-channel-id",
       channel: {
         provider: "msteams",
         conversationId: "conversation-1",
@@ -196,7 +196,7 @@ describe("teams webhook helpers", () => {
       agentId: "agent-1",
       conversationId: "conversation-1",
       channelId: "channel-1",
-      externalUserId: "user-legacy",
+      externalUserId: "user-without-channel-id",
     }
 
     expect(matchesTeamsConversationScope({ chat, scope })).toBe(false)

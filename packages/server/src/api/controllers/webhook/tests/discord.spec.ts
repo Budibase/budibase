@@ -116,9 +116,9 @@ describe("discord webhook helpers", () => {
     )
   })
 
-  it("falls back to legacy userId matching when channel external user is missing", () => {
+  it("requires channel external user id to match conversation scope", () => {
     const chat = makeChat({
-      userId: "discord:user-legacy",
+      userId: "discord:user-without-channel-id",
       channel: {
         provider: "discord",
         channelId: "channel-1",
@@ -130,10 +130,10 @@ describe("discord webhook helpers", () => {
       agentId: "agent-1",
       channelId: "channel-1",
       threadId: undefined,
-      externalUserId: "user-legacy",
+      externalUserId: "user-without-channel-id",
     }
 
-    expect(matchesDiscordConversationScope({ chat, scope })).toBe(true)
+    expect(matchesDiscordConversationScope({ chat, scope })).toBe(false)
   })
 
   it("selects latest non-expired conversation", () => {

@@ -4,12 +4,18 @@ import Joi from "joi"
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_AICONFIG = Joi.string().optional().allow("")
+const OPTIONAL_STRING_ARRAY = Joi.array()
+  .items(Joi.string().trim().disallow(""))
+  .optional()
+  .allow(null)
 
 const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   applicationId: OPTIONAL_STRING,
   publicKey: OPTIONAL_STRING,
   botToken: OPTIONAL_STRING,
   guildId: OPTIONAL_STRING,
+  allowedGuildIds: OPTIONAL_STRING_ARRAY,
+  allowedChannelIds: OPTIONAL_STRING_ARRAY,
   chatAppId: OPTIONAL_STRING,
   interactionsEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
@@ -21,6 +27,9 @@ const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   appId: OPTIONAL_STRING,
   appPassword: OPTIONAL_STRING,
   tenantId: Joi.string().required().trim().disallow(""),
+  allowedTenantIds: OPTIONAL_STRING_ARRAY,
+  allowedTeamIds: OPTIONAL_STRING_ARRAY,
+  allowedChannelIds: OPTIONAL_STRING_ARRAY,
   chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
