@@ -160,10 +160,6 @@
     }
   }
 
-  const handleSetDefault = (_agentId: string) => {
-    _agentId
-  }
-
   const handleUpdateConversationStarters = async (
     _agentId: string,
     starters: ConversationStarter[]
@@ -248,7 +244,6 @@
   {defaultAgentId}
   showDefaultControls={false}
   isAgentAvailable={() => true}
-  onSetDefault={handleSetDefault}
   onUpdateConversationStarters={handleUpdateConversationStarters}
   onClose={() => {
     settingsOpen = false

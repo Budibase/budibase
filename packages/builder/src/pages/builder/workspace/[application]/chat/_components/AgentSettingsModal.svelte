@@ -22,7 +22,7 @@
   export let defaultAgentId: string | undefined
   export let showDefaultControls = true
   export let isAgentAvailable: (_agentId: string) => boolean
-  export let onSetDefault: (_agentId: string) => void
+  export let onSetDefault: ((_agentId: string) => void) | undefined = undefined
   export let onUpdateConversationStarters: (
     _agentId: string,
     _starters: ConversationStarter[]
@@ -80,7 +80,7 @@
   }, 400)
 
   const handleSetDefault = () => {
-    if (selectedAgent) {
+    if (selectedAgent && onSetDefault) {
       onSetDefault(selectedAgent.agentId)
     }
   }
