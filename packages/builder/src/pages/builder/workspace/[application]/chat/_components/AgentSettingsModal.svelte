@@ -7,14 +7,23 @@
     Input,
     Modal,
     ModalContent,
+    Select,
   } from "@budibase/bbui"
   import { Utils } from "@budibase/frontend-core"
   import type { ChatAppAgent, ConversationStarter } from "@budibase/types"
+  import { roles } from "@/stores/builder"
   import type { AgentListItem } from "./types"
 
   type ConversationStarterItem = ConversationStarter & {
     id: string
   }
+
+  interface AccessRoleOption {
+    value: string
+    label: string
+  }
+
+  const ALL_AUTHENTICATED_USERS_VALUE = "all-authenticated-users"
 
   export let open = false
   export let selectedAgent: AgentListItem | undefined
@@ -31,8 +40,20 @@
 
   let modal: Modal | undefined
   let conversationStarters: ConversationStarterItem[] = []
+  let selectedAccessRole = ALL_AUTHENTICATED_USERS_VALUE
   let newStarter = ""
   let lastAgentId: string | undefined
+
+  $: accessRoleOptions = [
+    {
+      value: ALL_AUTHENTICATED_USERS_VALUE,
+      label: "All authenticated users",
+    },
+    ...$roles.map(role => ({
+      value: role._id,
+      label: role.uiMetadata?.displayName || role.name,
+    })),
+  ]
 
   $: if (modal) {
     if (open) {
@@ -50,6 +71,7 @@
       id: Helpers.uuid(),
       prompt: starter.prompt,
     }))
+    selectedAccessRole = ALL_AUTHENTICATED_USERS_VALUE
     newStarter = ""
   }
 
@@ -114,6 +136,9 @@
     newStarter = ""
     debouncedSave()
   }
+
+  const getAccessRoleLabel = (option: AccessRoleOption) => option.label
+  const getAccessRoleValue = (option: AccessRoleOption) => option.value
 </script>
 
 <Modal
@@ -139,6 +164,18 @@
         {/if}
       </div>
     {/if}
+
+    <div class="agent-settings-section">
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        Access role
+      </Body>
+      <Select
+        bind:value={selectedAccessRole}
+        options={accessRoleOptions}
+        getOptionLabel={getAccessRoleLabel}
+        getOptionValue={getAccessRoleValue}
+      />
+    </div>
 
     <div class="agent-settings-section">
       <Body size="XS" color="var(--spectrum-global-color-gray-600)">
