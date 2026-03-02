@@ -150,6 +150,11 @@ ensure_env_var "LITELLM_DB_PASSWORD" "${LITELLM_DB_PASSWORD}"
 ensure_env_var "LITELLM_DB_PORT" "${LITELLM_DB_PORT}"
 ensure_env_var "LITELLM_MASTER_KEY" "${LITELLM_MASTER_KEY}"
 ensure_env_var "LITELLM_SALT_KEY" "${LITELLM_SALT_KEY}"
+ensure_env_var "REDIS_URL" "${REDIS_URL}"
+ensure_env_var "REDIS_PASSWORD" "${REDIS_PASSWORD}"
+if [[ -n "${REDIS_USERNAME}" ]]; then
+    ensure_env_var "REDIS_USERNAME" "${REDIS_USERNAME}"
+fi
 
 # Read in the .env file and export the variables
 for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
