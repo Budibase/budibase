@@ -182,7 +182,7 @@
     <Background variant={BackgroundVariant.Dots} />
     <Controls />
     <div class="title">
-      <Heading size="S">Manage roles</Heading>
+      <Heading size="S">Custom roles</Heading>
     </div>
     <div class="footer">Roles inherit permissions from each other</div>
   </SvelteFlow>

@@ -6,7 +6,7 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
-import { ai, quotas } from "@budibase/pro"
+import { ai } from "@budibase/pro"
 import {
   AgentMessageMetadata,
   ChatAgentRequest,
@@ -117,6 +117,58 @@ export const findLatestUserQuestion = (chat: ChatConversationRequest) => {
   return ""
 }
 
+const isAgentEnabledForChatApp = (chatApp: ChatApp, agentId: string) =>
+  chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
+
+const matchesRequestedAgentScope = (
+  chat: Pick<ChatConversation, "agentId">,
+  requestedAgentId?: string
+) => !requestedAgentId || chat.agentId === requestedAgentId
+
+const isChatOutsideRequestedScope = ({
+  chat,
+  chatAppId,
+  requestedAgentId,
+}: {
+  chat: ChatConversation
+  chatAppId: string
+  requestedAgentId?: string
+}) =>
+  chat.chatAppId !== chatAppId ||
+  !matchesRequestedAgentScope(chat, requestedAgentId)
+
+const matchesChatHistoryScope = ({
+  chat,
+  chatAppId,
+  userId,
+  requestedAgentId,
+}: {
+  chat: ChatConversation
+  chatAppId: string
+  userId: string
+  requestedAgentId?: string
+}) =>
+  chat.chatAppId === chatAppId &&
+  (!chat.userId || chat.userId === userId) &&
+  matchesRequestedAgentScope(chat, requestedAgentId)
+
+const resolveRequestedAgentId = (ctx: UserCtx, chatApp: ChatApp) => {
+  const rawAgentId = ctx.query.agentId
+  if (rawAgentId === undefined) {
+    return undefined
+  }
+  if (typeof rawAgentId !== "string" || rawAgentId.trim().length === 0) {
+    throw new HTTPError("agentId must be a non-empty string", 400)
+  }
+
+  const agentId = rawAgentId.trim()
+  if (!isAgentEnabledForChatApp(chatApp, agentId)) {
+    throw new HTTPError("agentId is not enabled for this chat app", 400)
+  }
+
+  return agentId
+}
+
 export const truncateTitle = (value: string, maxLength = 120) => {
   const trimmed = value.trim()
   if (trimmed.length <= maxLength) {
@@ -155,13 +207,12 @@ export async function webhookChat({
     throw new HTTPError("agentId is required", 400)
   }
 
-  if (
-    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
-  ) {
+  if (!isAgentEnabledForChatApp(chatApp, agentId)) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
+
   const latestQuestion = findLatestUserQuestion(chat)
   let retrievedContext = ""
   const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
@@ -323,8 +374,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   if (!chat.agentId) {
     chat.agentId = agentId
   }
-
-  await quotas.throwIfBudibaseAICreditsExceeded()
 
   ctx.status = 200
   ctx.set("Content-Type", "text/event-stream")
@@ -500,9 +549,7 @@ export async function createChatConversation(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
-  if (
-    !chatApp.agents?.some(agent => agent.agentId === agentId && agent.isEnabled)
-  ) {
+  if (!isAgentEnabledForChatApp(chatApp, agentId)) {
     throw new HTTPError("agentId is not enabled for this chat app", 400)
   }
 
@@ -545,9 +592,17 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
+  const requestedAgentId = resolveRequestedAgentId(ctx, chatApp)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
-  if (!chat || chat.chatAppId !== chatAppId) {
+  if (
+    !chat ||
+    isChatOutsideRequestedScope({
+      chat,
+      chatAppId,
+      requestedAgentId,
+    })
+  ) {
     throw new HTTPError("chat not found", 404)
   }
   if (chat.userId && chat.userId !== userId) {
@@ -571,6 +626,7 @@ export async function fetchChatHistory(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
+  const requestedAgentId = resolveRequestedAgentId(ctx, chatApp)
 
   const allChats = await db.allDocs<ChatConversation>(
     docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
@@ -580,9 +636,13 @@ export async function fetchChatHistory(
 
   ctx.body = allChats.rows
     .map(row => row.doc!)
-    .filter(
-      chat =>
-        chat.chatAppId === chatAppId && (!chat.userId || chat.userId === userId)
+    .filter(chat =>
+      matchesChatHistoryScope({
+        chat,
+        chatAppId,
+        userId,
+        requestedAgentId,
+      })
     )
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
@@ -612,9 +672,17 @@ export async function fetchChatConversation(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
+  const requestedAgentId = resolveRequestedAgentId(ctx, chatApp)
 
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
-  if (!chat || chat.chatAppId !== chatAppId) {
+  if (
+    !chat ||
+    isChatOutsideRequestedScope({
+      chat,
+      chatAppId,
+      requestedAgentId,
+    })
+  ) {
     throw new HTTPError("chat not found", 404)
   }
   if (chat.userId && chat.userId !== userId) {

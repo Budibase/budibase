@@ -1,4 +1,4 @@
-import { configs, context, env, HTTPError } from "@budibase/backend-core"
+import { configs, context, env } from "@budibase/backend-core"
 import {
   AIConfig,
   AIProvider,
@@ -12,7 +12,6 @@ import {
 import { tracer } from "dd-trace"
 import openai from "openai"
 import { z } from "zod"
-import { enrichAIConfig } from "../sdk/ai"
 import { Anthropic, AnthropicModel } from "./models"
 import { AzureOpenAI } from "./models/azureOpenai"
 import { LLM } from "./models/base"
@@ -50,16 +49,13 @@ async function getAIConfig(): Promise<LLMProviderConfig | undefined> {
 
     // We can't look up AIConfigs in the database if this is a self-host user
     // calling into Budibase AI in the cloud because self-host users don't have
-    // global DBs, that's why this check is here. The call to enrichAIConfig
-    // below will add in the Budibase AI config for self-host users using cloud.
+    // global DBs, that's why this check is here.
     if (!context.isSelfHostUsingCloud()) {
       const storedConfig = await configs.getAIConfig()
       if (storedConfig) {
         aiConfigs = storedConfig
       }
     }
-
-    await enrichAIConfig(aiConfigs)
 
     const provider = Object.values(aiConfigs.config).find(
       config => config.active && config.isDefault
@@ -83,9 +79,7 @@ async function getAIConfig(): Promise<LLMProviderConfig | undefined> {
 // Support for self-host users that want to bring their own API key. We didn't
 // want to force self-host users to have to use Budibase AI because that would
 // be against the ethos of offering Budibase as an open source product.
-async function getSelfHostOpenAIKeyConfig(): Promise<
-  LLMProviderConfig | undefined
-> {
+function getSelfHostOpenAIKeyConfig(): LLMProviderConfig | undefined {
   return tracer.trace("getSelfHostOpenAIKeyConfig", span => {
     if (!env.SELF_HOSTED) {
       span.addTags({ enabled: false, reason: "not self host" })
@@ -107,6 +101,25 @@ async function getSelfHostOpenAIKeyConfig(): Promise<
   })
 }
 
+function getBudibaseAIKeyConfig(): LLMProviderConfig | undefined {
+  return tracer.trace("getBudibaseAIKeyConfig", span => {
+    if (env.SELF_HOSTED) {
+      span.addTags({ enabled: false, reason: "not cloud" })
+      return
+    }
+
+    span.addTags({ enabled: true })
+
+    return {
+      provider: "BudibaseAI",
+      model: DefaultModelByProvider.BudibaseAI,
+    }
+  })
+}
+
+/**
+ * @deprecated use the new `ai.sdk` instead
+ */
 export async function getLLMConfig(): Promise<LLMProviderConfig | undefined> {
   return tracer.trace(
     "getLLMConfig",
@@ -114,10 +127,15 @@ export async function getLLMConfig(): Promise<LLMProviderConfig | undefined> {
       // Always priorise saved AI config.
       (await getAIConfig()) ||
       // Next check for self-hosters that have their own API key.
-      (await getSelfHostOpenAIKeyConfig())
+      (env.SELF_HOSTED
+        ? getSelfHostOpenAIKeyConfig()
+        : getBudibaseAIKeyConfig())
   )
 }
 
+/**
+ * @deprecated use the new `ai.sdk` instead
+ */
 // This is the entrypoint for all LLM functionality in Budibase. If you're
 // making a feature that uses LLMs, you should call this function to get an LLM
 // instance. This function takes care of figuring out what LLM to use, and if
@@ -153,35 +171,6 @@ export async function getLLM(
     }
 
     return new LLMProvider(config)
-  })
-}
-
-export async function getLLMOrThrow(): Promise<LLM> {
-  const llm = await getLLM()
-  if (!llm) {
-    throw new HTTPError("No available LLM configurations", 500)
-  }
-  return llm
-}
-
-// This function is intended to be used in the local development environment
-// and for running local AI testing. It should not be used in production code
-// paths.
-export async function getOpenAIUsingLocalAPIKey(): Promise<LLM | undefined> {
-  if (
-    env.BUDIBASE_ENVIRONMENT === "production" ||
-    env.BUDIBASE_ENVIRONMENT === "qa"
-  ) {
-    return
-  }
-
-  if (!env.OPENAI_API_KEY) {
-    return
-  }
-
-  return new OpenAI({
-    model: DefaultModelByProvider.OpenAI,
-    apiKey: env.OPENAI_API_KEY,
   })
 }
 

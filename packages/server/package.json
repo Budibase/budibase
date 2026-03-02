@@ -59,9 +59,12 @@
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
     "@budibase/types": "*",
-    "@microsoft/agents-hosting": "^1.2.3",
     "@bull-board/api": "5.10.2",
     "@bull-board/koa": "5.10.2",
+    "@chat-adapter/discord": "^4.14.0",
+    "@chat-adapter/state-ioredis": "^4.14.0",
+    "@chat-adapter/state-memory": "^4.14.0",
+    "@chat-adapter/teams": "^4.14.0",
     "@elastic/elasticsearch": "7.10.0",
     "@google-cloud/firestore": "7.8.0",
     "@koa/cors": "5.0.0",
@@ -77,6 +80,7 @@
     "bson": "^6.9.0",
     "buffer": "6.0.3",
     "bull": "4.10.1",
+    "chat": "^4.14.0",
     "chokidar": "3.5.3",
     "content-disposition": "^0.5.4",
     "cookies": "0.9.1",
@@ -129,7 +133,7 @@
     "server-destroy": "1.0.1",
     "snowflake-sdk": "^1.15.0",
     "socket.io": "4.8.1",
-    "svelte": "^5.38.2",
+    "svelte": "^5.53.5",
     "tar": "7.5.8",
     "tmp": "0.2.3",
     "to-json-schema": "0.2.5",
@@ -186,22 +190,8 @@
     "yargs": "^17.7.2",
     "zod": "^4.2.1"
   },
-  "resolutions": {
-    "@budibase/pro": "npm:@budibase/pro@latest"
-  },
   "nx": {
     "targets": {
-      "dev": {
-        "dependsOn": [
-          {
-            "comment": "Required for pro usage when submodule not loaded",
-            "projects": [
-              "@budibase/backend-core"
-            ],
-            "target": "build:oss"
-          }
-        ]
-      },
       "build": {
         "inputs": [
           "default",

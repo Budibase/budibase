@@ -39,6 +39,7 @@ type GetGroupUsersRequest = {
   id: string
   bookmark?: string
   emailSearch?: string
+  pageSize?: number
 }
 
 export const buildGroupsEndpoints = (API: BaseAPIClient): GroupEndpoints => {
@@ -101,13 +102,16 @@ export const buildGroupsEndpoints = (API: BaseAPIClient): GroupEndpoints => {
     /**
      * Gets a group users by the group id
      */
-    getGroupUsers: async ({ id, bookmark, emailSearch }) => {
+    getGroupUsers: async ({ id, bookmark, emailSearch, pageSize }) => {
       let url = `/api/global/groups/${id}/users?`
       if (bookmark) {
         url += `bookmark=${bookmark}&`
       }
       if (emailSearch) {
-        url += `emailSearch=${emailSearch}`
+        url += `emailSearch=${emailSearch}&`
+      }
+      if (pageSize != null) {
+        url += `pageSize=${pageSize}`
       }
       return await API.get({
         url,

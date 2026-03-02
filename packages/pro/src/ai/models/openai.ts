@@ -1,18 +1,11 @@
-import {
-  ImageContentTypes,
-  LLMConfigOptions,
-  ResponseFormat,
-} from "@budibase/types"
-import { Readable } from "node:stream"
+import { LLMConfigOptions, ResponseFormat } from "@budibase/types"
 import {
   default as openai,
   default as OpenAIClient,
   OpenAI as OpenAITypes,
-  toFile,
 } from "openai"
 import { LLMFullResponse } from "../../types/ai"
 import { LLMRequest } from "../llm"
-import { normalizeContentType } from "../utils"
 import { LLM } from "./base"
 
 export type OpenAIModel =
@@ -91,35 +84,6 @@ export class OpenAI extends LLM {
       throw new Error("No OpenAI API key found")
     }
     return new OpenAIClient({ apiKey: opts.apiKey })
-  }
-
-  async uploadFile(
-    data: Readable | Buffer,
-    filename: string,
-    contentType?: string
-  ): Promise<string> {
-    const normalizedContentType = normalizeContentType(contentType)
-
-    // If it's an image we need to convert it to a base64 string.
-    if (ImageContentTypes.includes(normalizedContentType.toLowerCase())) {
-      let buffer: Buffer
-      if (Buffer.isBuffer(data)) {
-        buffer = data
-      } else {
-        const chunks: Uint8Array[] = []
-        for await (const chunk of data as Readable) {
-          chunks.push(new Uint8Array(chunk))
-        }
-        buffer = Buffer.concat(chunks)
-      }
-      const base64 = buffer.toString("base64")
-      return `data:${normalizedContentType};base64,${base64}`
-    }
-
-    // For documents, use the files API
-    const file = await toFile(data, filename)
-    const res = await this.client.files.create({ file, purpose: "assistants" })
-    return res.id
   }
 
   protected async chatCompletion(

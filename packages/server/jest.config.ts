@@ -1,6 +1,4 @@
 import { Config } from "jest"
-
-import * as fs from "fs"
 import { join } from "path"
 
 const baseConfig: Config = {
@@ -23,7 +21,7 @@ const baseConfig: Config = {
     "^.+\\.js?$": "@swc/jest",
     "^.+\\.svelte?$": "<rootDir>/scripts/svelteTransformer.js",
   },
-  transformIgnorePatterns: ["/node_modules/(?!svelte/|esm-env/).*"],
+  transformIgnorePatterns: ["/node_modules/(?!svelte/|esm-env/|devalue/).*"],
   moduleNameMapper: {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/shared-core/(.*)": "<rootDir>/../shared-core/$1",
@@ -32,12 +30,15 @@ const baseConfig: Config = {
     "@budibase/types": "<rootDir>/../types/src",
     "@budibase/string-templates/(.*)": ["<rootDir>/../string-templates/$1"],
     "@budibase/string-templates": ["<rootDir>/../string-templates/src"],
+    "^chat$": "<rootDir>/__mocks__/chat.ts",
+    "^@chat-adapter/discord$": "<rootDir>/__mocks__/chat-adapter-discord.ts",
+    "^@chat-adapter/teams$": "<rootDir>/__mocks__/chat-adapter-teams.ts",
+    "^@chat-adapter/state-memory$":
+      "<rootDir>/__mocks__/chat-adapter-state-memory.ts",
+    "^@chat-adapter/state-ioredis$":
+      "<rootDir>/__mocks__/chat-adapter-state-ioredis.ts",
+    "@budibase/pro": "<rootDir>/../pro/src",
   },
-}
-
-// add pro sources if they exist
-if (fs.existsSync("../pro/src")) {
-  baseConfig.moduleNameMapper!["@budibase/pro"] = "<rootDir>/../pro/src"
 }
 
 const config: Config = {

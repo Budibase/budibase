@@ -78,6 +78,7 @@ describe("chat conversations authorization", () => {
   let chatApp: ChatApp
   let otherChatApp: ChatApp
   let convoA: ChatConversation
+  let convoAAgent2: ChatConversation
   let convoB: ChatConversation
   let otherAppConvo: ChatConversation
 
@@ -99,7 +100,11 @@ describe("chat conversations authorization", () => {
         const now = new Date().toISOString()
         chatApp = {
           _id: docIds.generateChatAppID(),
-          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
+          agents: [
+            { agentId: "agent-1", isEnabled: true, isDefault: false },
+            { agentId: "agent-2", isEnabled: true, isDefault: false },
+            { agentId: "agent-3", isEnabled: false, isDefault: false },
+          ],
           live: true,
           createdAt: now,
         }
@@ -121,6 +126,15 @@ describe("chat conversations authorization", () => {
           title: "user B conversation",
           createdAt: now,
         }
+        convoAAgent2 = {
+          _id: docIds.generateChatConversationID(),
+          chatAppId: chatApp._id!,
+          agentId: "agent-2",
+          userId: userA._id!,
+          messages: [],
+          title: "user A conversation on agent 2",
+          createdAt: now,
+        }
         otherChatApp = {
           _id: docIds.generateChatAppID(),
           agents: [{ agentId: "agent-2", isEnabled: true, isDefault: false }],
@@ -138,6 +152,7 @@ describe("chat conversations authorization", () => {
         }
         await db.put(chatApp)
         await db.put(convoA)
+        await db.put(convoAAgent2)
         await db.put(convoB)
         await db.put(otherChatApp)
         await db.put(otherAppConvo)
@@ -161,9 +176,62 @@ describe("chat conversations authorization", () => {
       .set(headers)
 
     expect(res.status).toBe(200)
+    expect(res.body).toHaveLength(2)
+    expect(res.body.map((chat: ChatConversation) => chat._id)).toEqual(
+      expect.arrayContaining([convoA._id, convoAAgent2._id])
+    )
+  })
+
+  it("filters history to the requested enabled agent", async () => {
+    const headers = await headersForUser(userA)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations?agentId=agent-2`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
     expect(res.body.map((chat: ChatConversation) => chat._id)).toEqual([
-      convoA._id,
+      convoAAgent2._id,
     ])
+  })
+
+  it("rejects history filtering by non-enabled agents", async () => {
+    const headers = await headersForUser(userA)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations?agentId=agent-3`)
+      .set(headers)
+
+    expect(res.status).toBe(400)
+    expect(res.body.message).toBe("agentId is not enabled for this chat app")
+  })
+
+  it("hides conversations from other agents when filtered", async () => {
+    const headers = await headersForUser(userA)
+
+    const res = await config
+      .getRequest()!
+      .get(
+        `/api/chatapps/${chatApp._id}/conversations/${convoA._id}?agentId=agent-2`
+      )
+      .set(headers)
+
+    expect(res.status).toBe(404)
+  })
+
+  it("blocks deleting a conversation when filtered to a different agent", async () => {
+    const headers = await headersForUser(userA)
+
+    const res = await config
+      .getRequest()!
+      .delete(
+        `/api/chatapps/${chatApp._id}/conversations/${convoA._id}?agentId=agent-2`
+      )
+      .set(headers)
+
+    expect(res.status).toBe(404)
   })
 
   it("blocks access to another user's conversation", async () => {

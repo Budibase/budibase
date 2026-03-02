@@ -28,24 +28,29 @@ export interface FetchChatAppAgentsResponse {
   agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
 }
 
-export interface SyncAgentDiscordCommandsRequest {
+interface ConfigureAgentDeploymentChannelRequest {
   chatAppId?: string
 }
 
-export interface SyncAgentDiscordCommandsResponse {
+interface ConfigureAgentDeploymentChannelResponse {
   success: boolean
   chatAppId: string
+}
+
+export type SyncAgentDiscordCommandsRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface SyncAgentDiscordCommandsResponse
+  extends ConfigureAgentDeploymentChannelResponse {
   interactionsEndpointUrl: string
   inviteUrl: string
 }
 
-export interface ProvisionAgentMSTeamsChannelRequest {
-  chatAppId?: string
-}
+export type ProvisionAgentMSTeamsChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
 
-export interface ProvisionAgentMSTeamsChannelResponse {
-  success: boolean
-  chatAppId: string
+export interface ProvisionAgentMSTeamsChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
   messagingEndpointUrl: string
 }
 

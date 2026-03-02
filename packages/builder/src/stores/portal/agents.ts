@@ -151,28 +151,34 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     })
   }
 
+  private runAndRefreshAgents = async <T>(
+    action: () => Promise<T>
+  ): Promise<T> => {
+    const result = await action()
+    await this.fetchAgents()
+    return result
+  }
+
   syncDiscordCommands = async (
     agentId: string,
     body?: SyncAgentDiscordCommandsRequest
-  ): Promise<SyncAgentDiscordCommandsResponse> => {
-    const response = await API.syncAgentDiscordCommands(agentId, body)
-    await this.fetchAgents()
-    return response
-  }
+  ): Promise<SyncAgentDiscordCommandsResponse> =>
+    await this.runAndRefreshAgents(() =>
+      API.syncAgentDiscordCommands(agentId, body)
+    )
 
   provisionMSTeamsChannel = async (
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
-  ): Promise<ProvisionAgentMSTeamsChannelResponse> => {
-    const response = await API.provisionAgentMSTeamsChannel(agentId, body)
-    await this.fetchAgents()
-    return response
-  }
+  ): Promise<ProvisionAgentMSTeamsChannelResponse> =>
+    await this.runAndRefreshAgents(() =>
+      API.provisionAgentMSTeamsChannel(agentId, body)
+    )
 
-  toggleDiscordDeployment = async (agentId: string, enabled: boolean) => {
-    await API.toggleAgentDiscordDeployment(agentId, enabled)
-    await this.fetchAgents()
-  }
+  toggleDiscordDeployment = async (agentId: string, enabled: boolean) =>
+    await this.runAndRefreshAgents(() =>
+      API.toggleAgentDiscordDeployment(agentId, enabled)
+    )
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state =>

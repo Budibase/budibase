@@ -412,7 +412,7 @@ export class UserDB {
           // TODO: Refactor to bulk insert users into the info db
           // instead of relying on looping tenant creation
           await platform.users.addUser(tenantId, user._id!, user.email)
-          await eventHelpers.handleSaveEvents(user, undefined)
+          await eventHelpers.handleSaveEvents(user, undefined, account)
         }
 
         const saved = usersToBulkSave.map(user => {
