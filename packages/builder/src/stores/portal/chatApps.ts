@@ -242,7 +242,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
       ? agents.map(agent => (agent.agentId === agentId ? nextAgent : agent))
       : [...agents, nextAgent]
 
-    return await this.updateAgents(nextAgents)
+    return await this.updateAgents(normalizeDefaultAgent(nextAgents))
   }
 
   toggleAgentDeploymentInChat = async (
