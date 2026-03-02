@@ -161,7 +161,7 @@
   }
 
   const handleSetDefault = (_agentId: string) => {
-    void _agentId
+    _agentId
   }
 
   const handleUpdateConversationStarters = async (
