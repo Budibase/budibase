@@ -42,9 +42,13 @@
     return !!(
       integration?.appId?.trim() &&
       integration?.appPassword?.trim() &&
-      integration?.messagingEndpointUrl?.trim()
+      integration?.tenantId?.trim()
     )
   })
+
+  const MSTeamsEnabled = $derived(
+    !!currentAgent?.MSTeamsIntegration?.messagingEndpointUrl?.trim()
+  )
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
   const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_CHAT])
@@ -62,7 +66,7 @@
       id: "MSTeams",
       name: "Microsoft Teams",
       logo: MSTeamsLogo,
-      status: MSTeamsConfigured ? "Enabled" : "Disabled",
+      status: MSTeamsEnabled ? "Enabled" : "Disabled",
       details:
         "Configure this agent for Microsoft Teams personal, group, and team chats",
       configurable: true,
@@ -81,33 +85,58 @@
   }
 
   const onToggleChannel = async (channel: DeploymentRow) => {
-    if (channel.id !== "discord" || !currentAgent?._id) {
+    if (!currentAgent?._id) {
       return
     }
     const isCurrentlyEnabled = channel.status === "Enabled"
-    if (!isCurrentlyEnabled && !hasAiConfig) {
-      notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
+    if (channel.id === "discord") {
+      if (!isCurrentlyEnabled && !hasAiConfig) {
+        notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
+        return
+      }
+      toggling = true
+      try {
+        if (isCurrentlyEnabled) {
+          await agentsStore.toggleDiscordDeployment(currentAgent._id, false)
+          notifications.success("Discord channel disabled")
+        } else if (discordConfigured) {
+          await agentsStore.toggleDiscordDeployment(currentAgent._id, true)
+          notifications.success("Discord channel enabled")
+        } else {
+          discordModal?.show()
+        }
+      } catch (e) {
+        notifications.error(
+          isCurrentlyEnabled
+            ? "Failed to disable Discord channel"
+            : "Failed to enable Discord channel"
+        )
+      } finally {
+        toggling = false
+      }
       return
     }
-    toggling = true
-    try {
-      if (isCurrentlyEnabled) {
-        await agentsStore.toggleDiscordDeployment(currentAgent._id, false)
-        notifications.success("Discord channel disabled")
-      } else if (discordConfigured) {
-        await agentsStore.toggleDiscordDeployment(currentAgent._id, true)
-        notifications.success("Discord channel enabled")
-      } else {
-        discordModal?.show()
+    if (channel.id === "MSTeams") {
+      toggling = true
+      try {
+        if (isCurrentlyEnabled) {
+          await agentsStore.toggleMSTeamsDeployment(currentAgent._id, false)
+          notifications.success("Microsoft Teams channel disabled")
+        } else if (MSTeamsConfigured) {
+          await agentsStore.toggleMSTeamsDeployment(currentAgent._id, true)
+          notifications.success("Microsoft Teams channel enabled")
+        } else {
+          MSTeamsModal?.show()
+        }
+      } catch (e) {
+        notifications.error(
+          isCurrentlyEnabled
+            ? "Failed to disable Microsoft Teams channel"
+            : "Failed to enable Microsoft Teams channel"
+        )
+      } finally {
+        toggling = false
       }
-    } catch (e) {
-      notifications.error(
-        isCurrentlyEnabled
-          ? "Failed to disable Discord channel"
-          : "Failed to enable Discord channel"
-      )
-    } finally {
-      toggling = false
     }
   }
 </script>
@@ -178,7 +207,7 @@
             >
             <Toggle
               value={channel.status === "Enabled"}
-              disabled={toggling || channel.id !== "discord"}
+              disabled={toggling}
               on:change={() => onToggleChannel(channel)}
             />
           </div>

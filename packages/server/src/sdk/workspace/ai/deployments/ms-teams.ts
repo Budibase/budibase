@@ -2,6 +2,11 @@ import { HTTPError } from "@budibase/backend-core"
 import type { Agent, ResolvedMSTeamsIntegration } from "@budibase/types"
 import * as shared from "./shared"
 
+export const disableAgentOnChatApp = async (
+  chatAppId: string,
+  agentId: string
+) => await shared.disableAgentOnChatApp({ chatAppId, agentId })
+
 export const validateMSTeamsIntegration = (
   agent: Agent
 ): ResolvedMSTeamsIntegration => {

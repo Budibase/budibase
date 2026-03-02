@@ -63,6 +63,15 @@ export interface ToggleAgentDiscordResponse {
   enabled: boolean
 }
 
+export interface ToggleAgentMSTeamsRequest {
+  enabled: boolean
+}
+
+export interface ToggleAgentMSTeamsResponse {
+  success: true
+  enabled: boolean
+}
+
 export type CreateAgentRequest = Optional<
   Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt">,
   "aiconfig"
