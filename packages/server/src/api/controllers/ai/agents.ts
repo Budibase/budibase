@@ -393,7 +393,8 @@ export async function toggleAgentMSTeamsDeployment(
       agent,
       agentId,
       requestedChatAppId,
-      validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
+      validateIntegration:
+        sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
       resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
       buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
       persistIntegration: async (chatAppId, messagingEndpointUrl) =>
