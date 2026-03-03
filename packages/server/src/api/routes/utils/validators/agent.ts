@@ -121,3 +121,11 @@ export function toggleAgentMSTeamsDeploymentValidator() {
     }).required()
   )
 }
+
+export function toggleAgentSlackDeploymentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      enabled: Joi.boolean().required(),
+    }).required()
+  )
+}

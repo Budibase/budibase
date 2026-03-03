@@ -10,6 +10,7 @@ import {
   syncAgentDiscordCommandsValidator,
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
+  toggleAgentSlackDeploymentValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 import {
@@ -46,7 +47,13 @@ builderAdminRoutes
   )
   .post(
     "/api/agent/:agentId/ms-teams/toggle",
-    toggleAgentMSTeamsDeploymentValidator()
+    toggleAgentMSTeamsDeploymentValidator(),
+    ai.toggleAgentMSTeamsDeployment
+  )
+  .post(
+    "/api/agent/:agentId/slack/toggle",
+    toggleAgentSlackDeploymentValidator(),
+    ai.toggleAgentSlackDeployment
   )
   .post(
     "/api/agent/:agentId/slack/provision",

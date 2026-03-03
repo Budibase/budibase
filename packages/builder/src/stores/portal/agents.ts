@@ -194,6 +194,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await this.runAndRefreshAgents(() =>
       API.toggleAgentMSTeamsDeployment(agentId, enabled)
     )
+
+  toggleSlackDeployment = async (agentId: string, enabled: boolean) =>
+    await this.runAndRefreshAgents(() =>
+      API.toggleAgentSlackDeployment(agentId, enabled)
+    )
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state =>

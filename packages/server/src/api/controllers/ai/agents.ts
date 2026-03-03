@@ -9,10 +9,8 @@ import {
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   RequiredKeys,
-  ToggleAgentDiscordRequest,
-  ToggleAgentDiscordResponse,
-  ToggleAgentMSTeamsRequest,
-  ToggleAgentMSTeamsResponse,
+  ToggleAgentDeploymentRequest,
+  ToggleAgentDeploymentResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   FeatureFlag,
@@ -400,8 +398,8 @@ export async function provisionAgentSlackChannel(
 
 export async function toggleAgentDiscordDeployment(
   ctx: UserCtx<
-    ToggleAgentDiscordRequest,
-    ToggleAgentDiscordResponse,
+    ToggleAgentDeploymentRequest,
+    ToggleAgentDeploymentResponse,
     { agentId: string }
   >
 ) {
@@ -437,8 +435,8 @@ export async function toggleAgentDiscordDeployment(
 
 export async function toggleAgentMSTeamsDeployment(
   ctx: UserCtx<
-    ToggleAgentMSTeamsRequest,
-    ToggleAgentMSTeamsResponse,
+    ToggleAgentDeploymentRequest,
+    ToggleAgentDeploymentResponse,
     { agentId: string }
   >
 ) {
@@ -479,6 +477,58 @@ export async function toggleAgentMSTeamsDeployment(
       ...agent,
       MSTeamsIntegration: {
         ...agent.MSTeamsIntegration,
+        messagingEndpointUrl: undefined,
+      },
+    })
+  }
+
+  ctx.body = { success: true, enabled }
+  ctx.status = 200
+}
+
+export async function toggleAgentSlackDeployment(
+  ctx: UserCtx<
+    ToggleAgentDeploymentRequest,
+    ToggleAgentDeploymentResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const { enabled } = ctx.request.body
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+
+  if (enabled) {
+    const requestedChatAppId = parseOptionalChatAppId(
+      agent.slackIntegration?.chatAppId?.trim() || undefined
+    )
+    await configureDeploymentChannel({
+      agent,
+      agentId,
+      requestedChatAppId,
+      validateIntegration: sdk.ai.deployments.slack.validateSlackIntegration,
+      resolveChatAppForAgent: sdk.ai.deployments.slack.resolveChatAppForAgent,
+      buildEndpointUrl: sdk.ai.deployments.slack.buildSlackWebhookUrl,
+      persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+        await persistSlackDeployment({
+          agent,
+          chatAppId,
+          messagingEndpointUrl,
+        }),
+    })
+  } else {
+    const chatAppId = agent.slackIntegration?.chatAppId?.trim()
+
+    if (chatAppId) {
+      await sdk.ai.deployments.shared.disableAgentOnChatApp({
+        chatAppId,
+        agentId,
+      })
+    }
+
+    await sdk.ai.agents.update({
+      ...agent,
+      slackIntegration: {
+        ...agent.slackIntegration,
         messagingEndpointUrl: undefined,
       },
     })

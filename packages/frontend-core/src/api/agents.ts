@@ -11,10 +11,8 @@ import {
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
-  ToggleAgentDiscordRequest,
-  ToggleAgentDiscordResponse,
-  ToggleAgentMSTeamsRequest,
-  ToggleAgentMSTeamsResponse,
+  ToggleAgentDeploymentRequest,
+  ToggleAgentDeploymentResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -53,11 +51,15 @@ export interface AgentEndpoints {
   toggleAgentDiscordDeployment: (
     agentId: string,
     enabled: boolean
-  ) => Promise<ToggleAgentDiscordResponse>
+  ) => Promise<ToggleAgentDeploymentResponse>
   toggleAgentMSTeamsDeployment: (
     agentId: string,
     enabled: boolean
-  ) => Promise<ToggleAgentMSTeamsResponse>
+  ) => Promise<ToggleAgentDeploymentResponse>
+  toggleAgentSlackDeployment: (
+    agentId: string,
+    enabled: boolean
+  ) => Promise<ToggleAgentDeploymentResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -155,8 +157,8 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
 
   toggleAgentDiscordDeployment: async (agentId: string, enabled: boolean) => {
     return await API.post<
-      ToggleAgentDiscordRequest,
-      ToggleAgentDiscordResponse
+      ToggleAgentDeploymentRequest,
+      ToggleAgentDeploymentResponse
     >({
       url: `/api/agent/${agentId}/discord/toggle`,
       body: { enabled },
@@ -165,10 +167,20 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
 
   toggleAgentMSTeamsDeployment: async (agentId: string, enabled: boolean) => {
     return await API.post<
-      ToggleAgentMSTeamsRequest,
-      ToggleAgentMSTeamsResponse
+      ToggleAgentDeploymentRequest,
+      ToggleAgentDeploymentResponse
     >({
       url: `/api/agent/${agentId}/ms-teams/toggle`,
+      body: { enabled },
+    })
+  },
+
+  toggleAgentSlackDeployment: async (agentId: string, enabled: boolean) => {
+    return await API.post<
+      ToggleAgentDeploymentRequest,
+      ToggleAgentDeploymentResponse
+    >({
+      url: `/api/agent/${agentId}/slack/toggle`,
       body: { enabled },
     })
   },

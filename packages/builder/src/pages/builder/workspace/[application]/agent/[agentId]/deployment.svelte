@@ -36,10 +36,6 @@
     )
   })
 
-  const discordEnabled = $derived(
-    !!currentAgent?.discordIntegration?.interactionsEndpointUrl
-  )
-
   const MSTeamsConfigured = $derived.by(() => {
     const integration = currentAgent?.MSTeamsIntegration
     return !!(
@@ -49,18 +45,24 @@
     )
   })
 
+  const slackConfigured = $derived.by(() => {
+    const integration = currentAgent?.slackIntegration
+    return !!(
+      integration?.botToken?.trim() && integration?.signingSecret?.trim()
+    )
+  })
+
   const MSTeamsEnabled = $derived(
     !!currentAgent?.MSTeamsIntegration?.messagingEndpointUrl?.trim()
   )
 
-  const slackConfigured = $derived.by(() => {
-    const integration = currentAgent?.slackIntegration
-    return !!(
-      integration?.botToken?.trim() &&
-      integration?.signingSecret?.trim() &&
-      integration?.messagingEndpointUrl?.trim()
-    )
-  })
+  const discordEnabled = $derived(
+    !!currentAgent?.discordIntegration?.interactionsEndpointUrl
+  )
+
+  const slackEnabled = $derived(
+    !!currentAgent?.slackIntegration?.messagingEndpointUrl?.trim()
+  )
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
   const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_CHAT])
@@ -87,7 +89,7 @@
       id: "slack",
       name: "Slack",
       logo: SlackLogo,
-      status: slackConfigured ? "Enabled" : "Disabled",
+      status: slackEnabled ? "Enabled" : "Disabled",
       details:
         "Allow this agent to respond in Slack channels, threads, and DMs",
       configurable: true,
@@ -139,6 +141,16 @@
           notifications.success("Microsoft Teams channel enabled")
         } else {
           MSTeamsModal?.show()
+        }
+      } else if (channel.id === "slack") {
+        if (isChannelEnabled) {
+          await agentsStore.toggleSlackDeployment(currentAgent._id, false)
+          notifications.success("Slack channel disabled")
+        } else if (slackConfigured) {
+          await agentsStore.toggleSlackDeployment(currentAgent._id, true)
+          notifications.success("Slack channel enabled")
+        } else {
+          slackModal?.show()
         }
       }
     } catch (e) {
