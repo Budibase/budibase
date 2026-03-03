@@ -11,6 +11,8 @@ import {
   SyncAgentDiscordCommandsResponse,
   ToggleAgentDiscordRequest,
   ToggleAgentDiscordResponse,
+  ToggleAgentMSTeamsRequest,
+  ToggleAgentMSTeamsResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -46,6 +48,10 @@ export interface AgentEndpoints {
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDiscordResponse>
+  toggleAgentMSTeamsDeployment: (
+    agentId: string,
+    enabled: boolean
+  ) => Promise<ToggleAgentMSTeamsResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -137,6 +143,16 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       ToggleAgentDiscordResponse
     >({
       url: `/api/agent/${agentId}/discord/toggle`,
+      body: { enabled },
+    })
+  },
+
+  toggleAgentMSTeamsDeployment: async (agentId: string, enabled: boolean) => {
+    return await API.post<
+      ToggleAgentMSTeamsRequest,
+      ToggleAgentMSTeamsResponse
+    >({
+      url: `/api/agent/${agentId}/ms-teams/toggle`,
       body: { enabled },
     })
   },
