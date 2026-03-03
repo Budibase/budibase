@@ -4,6 +4,7 @@
     ImportRestQueryInfoResponse,
     Datasource,
     UIInternalDatasource,
+    DynamicVariable,
   } from "@budibase/types"
   import { type UIWorkspaceConnection, AUTH_TYPE_OPTIONS } from "@/types"
   import { appStore } from "@/stores/builder/app"
@@ -12,9 +13,11 @@
     hasRestTemplate,
     getRestTemplateIdentifier,
   } from "@/stores/builder/datasources"
+  import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
+  import { IntegrationTypes } from "@/constants/backend"
   import { queries } from "@/stores/builder/queries"
-  import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { oauth2 } from "@/stores/builder/oauth2"
+  import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { licensing } from "@/stores/portal/licensing"
   import { bb } from "@/stores/bb"
@@ -35,39 +38,47 @@
     TooltipPosition,
     Label,
     Select,
+    Toggle,
     notifications,
   } from "@budibase/bbui"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { cloneDeep, isEqual } from "lodash"
   import { API } from "@/api"
   import HTTPAuthEditor from "./HTTPAuthEditor.svelte"
   import OAuth2Editor from "./OAuth2Editor.svelte"
+  import ServerUrlInput from "./ServerUrlInput.svelte"
   import {
     RestAuthType,
-    type WorkspaceAuthConfig,
-    WorkspaceConnectionType,
-    ApiKeyLocation,
+    type RestAuthConfig,
+    type BasicRestAuthConfig,
+    type BearerRestAuthConfig,
+    type RestTemplateId,
     OAuth2CredentialsMethod,
     OAuth2GrantType,
   } from "@budibase/types"
+
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import { keyValueArrayToRecord } from "@/components/integration/query"
+  import ViewDynamicVariables from "@/pages/builder/workspace/[application]/data/datasource/[datasourceId]/_components/panels/Variables/ViewDynamicVariables.svelte"
+  import DeleteDataConfirmationModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
+
+  export let selected: UIWorkspaceConnection | undefined
 
   $goto
   $isActive
 
-  type Mode = "auth" | "creds"
-
-  export let selected: UIWorkspaceConnection | undefined
-  export let create: boolean = false
+  type HTTPRestAuthConfig = BasicRestAuthConfig | BearerRestAuthConfig
+  type Mode = "auth" | "creds" | "advanced"
 
   // Form data
   interface ConnectionFormData {
     name: string
-    authConfigs: WorkspaceAuthConfig[]
+    baseUrl: string
+    authConfigs: RestAuthConfig[]
     defaultHeaders: Record<string, string>
     staticVariables: Record<string, string>
     queryParams: Record<string, string>
+    rejectUnauthorized: boolean
+    downloadImages: boolean
   }
 
   let data: Partial<ConnectionFormData> = {}
@@ -84,36 +95,47 @@
   let headerFieldsCount = 0
   let variableFieldsCount = 0
   let queryParamFieldsCount = 0
-  let deleteConfirmDialog: ConfirmDialog
-  let httpAuthEditor: HTTPAuthEditor
-  let oauth2Editor: OAuth2Editor
+  let authEditors: Array<HTTPAuthEditor | OAuth2Editor> = []
+  let canAddConfig = true
+  let deleteModal: DeleteDataConfirmationModal
 
-  // Resolve datasource from selected if it's a datasource source type
   $: datasource =
     selected?.source === "datasource"
       ? $datasources.list.find(ds => ds._id === selected.sourceId)
       : undefined
+
+  $: if (
+    isDatasource &&
+    !isNewConnection &&
+    datasource === undefined &&
+    initialised
+  ) {
+    bb.settings("/connections")
+  }
 
   $: templateStaticVariableKeys = getTemplateStaticVariableKeys(
     datasource,
     openApiInfo
   )
 
-  $: hasChanges = initialised && !isEqual(data, originalData)
+  $: restIntegration = ($integrations || []).find(
+    i => i.name === IntegrationTypes.REST
+  )
   $: isDatasource = selected?.source === "datasource"
-  $: isWorkspaceConnection = selected?.source === "workspace_connection"
+  $: isNewConnection = isDatasource && !datasource
+  $: hasChanges =
+    isNewConnection || (initialised && !isEqual(data, originalData))
+
   $: isOAuth2 = selected?.source === "oauth2"
   $: oauth2Cfg = isOAuth2
     ? $oauth2.configs.find(c => c._id === selected?.sourceId)
     : undefined
-  $: isCreation = create || !selected?._id
 
   $: template =
     restTemplates.get(getRestTemplateIdentifier(datasource)) ||
     (selected?.templateId
       ? restTemplates.getById(selected.templateId)
       : undefined)
-
   $: isRestTemplate = !!template
   $: spec = template?.specs?.[0]
 
@@ -128,11 +150,12 @@
 
   // Unified auth config list and type options based on source
   $: authConfigs = data.authConfigs || []
-  $: authTypeOptions = isDatasource
-    ? AUTH_TYPE_OPTIONS.filter(
-        o => o.value === RestAuthType.BASIC || o.value === RestAuthType.BEARER
-      )
-    : AUTH_TYPE_OPTIONS.filter(o => o.value !== RestAuthType.API_KEY)
+  $: authTypeOptions = AUTH_TYPE_OPTIONS.filter(
+    o => o.value !== RestAuthType.API_KEY
+  )
+  $: if (authConfigs.length === 0) {
+    canAddConfig = true
+  }
 
   $: parsedHeaders = runtimeToReadableMap(restBindings, data.defaultHeaders)
   $: parsedQueryParams = runtimeToReadableMap(restBindings, data.queryParams)
@@ -146,7 +169,7 @@
     }
     initialised = true
 
-    let authConfigs: WorkspaceAuthConfig[]
+    let authConfigs: RestAuthConfig[]
     if (connection.source === "oauth2") {
       const cfg = $oauth2.configs.find(c => c._id === connection.sourceId)
       authConfigs = cfg
@@ -154,26 +177,28 @@
             cloneDeep({
               ...cfg,
               type: RestAuthType.OAUTH2,
-            }) as WorkspaceAuthConfig,
+            }) as RestAuthConfig,
           ]
         : []
     } else {
-      const existingAuth = cloneDeep(
-        connection.auth || []
-      ) as WorkspaceAuthConfig[]
-      authConfigs =
-        existingAuth.length === 0 &&
-        connection.source === "workspace_connection"
-          ? [createAuthConfig(RestAuthType.BASIC)]
-          : existingAuth
+      const existingAuth = cloneDeep(connection.auth || []) as RestAuthConfig[]
+      authConfigs = existingAuth
     }
+
+    const ds =
+      connection.source === "datasource"
+        ? $datasources.list.find(d => d._id === connection.sourceId)
+        : undefined
 
     const initial: Partial<ConnectionFormData> = {
       name: connection.name || "",
+      baseUrl: ds?.config?.url || "",
       authConfigs,
       defaultHeaders: cloneDeep(connection.props?.headers || {}),
       staticVariables: cloneDeep(connection.props?.staticVariables || {}),
       queryParams: cloneDeep(connection.props?.query || {}),
+      rejectUnauthorized: ds?.config?.rejectUnauthorized ?? true,
+      downloadImages: ds?.config?.downloadImages ?? true,
     }
     data = { ...initial }
     originalData = cloneDeep(initial)
@@ -188,12 +213,15 @@
     }
   }
 
+  const asHTTPAuth = (auth: RestAuthConfig): HTTPRestAuthConfig =>
+    auth as HTTPRestAuthConfig
+
   // This ensures that api template variables make it into the
   // list as locked keys
   const seedTemplateStaticVariables = (
     apiInfo: ImportRestQueryInfoResponse | undefined
   ) => {
-    if (!apiInfo?.staticVariables || !isWorkspaceConnection) {
+    if (!apiInfo?.staticVariables) {
       return
     }
     const existing = data.staticVariables || {}
@@ -210,27 +238,53 @@
     }
   }
 
-  const onAuthConfigUpdate = (updated: WorkspaceAuthConfig) => {
+  const onAuthConfigUpdate = (updated: RestAuthConfig) => {
     const index = (data.authConfigs || []).findIndex(c => c._id === updated._id)
     if (index >= 0 && data.authConfigs) {
       data.authConfigs[index] = updated
       data = { ...data }
     }
+    if (!canAddConfig) {
+      canAddConfig = authEditors
+        .filter(Boolean)
+        .every(e => e.getConfig() !== null)
+    }
   }
 
-  const onAuthTypeChange = (authType: RestAuthType) => {
+  const onAuthTypeChange = (authType: RestAuthType, existingId: string) => {
     if (!authType) return
-    data.authConfigs = [createAuthConfig(authType)]
+    const newCfg = createAuthConfig(authType)
+    if (!newCfg) {
+      notifications.error(`Invalid auth type: ${authType}`)
+      return
+    }
+    newCfg._id = existingId
+    data.authConfigs = (data.authConfigs || []).map(c =>
+      c._id === existingId ? newCfg : c
+    )
     data = { ...data }
   }
 
   const addAuthConfig = (authType: RestAuthType) => {
     if (!authType) return
-    data.authConfigs = [...(data.authConfigs || []), createAuthConfig(authType)]
+    if (!validateAuth()) {
+      canAddConfig = false
+      return
+    }
+    canAddConfig = true
+
+    let newConfig = createAuthConfig(authType)
+    if (!newConfig) {
+      notifications.error(`Invalid auth type: ${authType}`)
+      return
+    }
+    data.authConfigs = [...(data.authConfigs || []), newConfig]
     data = { ...data }
   }
 
-  const createAuthConfig = (authType: RestAuthType): WorkspaceAuthConfig => {
+  const createAuthConfig = (
+    authType: RestAuthType
+  ): RestAuthConfig | undefined => {
     const _id = crypto.randomUUID()
     const name = ""
 
@@ -248,13 +302,6 @@
           name,
           type: RestAuthType.BEARER,
           config: { token: "" },
-        }
-      case RestAuthType.API_KEY:
-        return {
-          _id,
-          name,
-          type: RestAuthType.API_KEY,
-          config: { location: ApiKeyLocation.HEADER, key: "", value: "" },
         }
       case RestAuthType.OAUTH2:
         return {
@@ -276,7 +323,29 @@
     data = { ...data }
   }
 
-  // Legacy datasource save
+  const createNewDatasource = async () => {
+    if (!restIntegration) {
+      throw new Error("REST integration unavailable")
+    }
+    const ds = await datasources.create({
+      integration: restIntegration,
+      config: {
+        url: data.baseUrl || "",
+        authConfigs: data.authConfigs || [],
+        staticVariables: data.staticVariables || {},
+        defaultHeaders: data.defaultHeaders || {},
+        defaultQueryParameters: data.queryParams || {},
+        rejectUnauthorized: data.rejectUnauthorized ?? true,
+        downloadImages: data.downloadImages ?? true,
+      },
+      name: data.name,
+      restTemplateId: selected?.templateId as RestTemplateId | undefined,
+    })
+    originalData = cloneDeep(data)
+    notifications.success("Connection created")
+    workspaceConnections.select(ds._id!)
+  }
+
   const updateDatasource = async () => {
     if (!datasource?._id || !datasource?._rev) {
       return
@@ -284,11 +353,16 @@
     const { entities, ...rest } = datasource
     const updatedDatasource: Datasource = {
       ...rest,
+      name: data.name!,
       config: {
         ...datasource.config,
+        url: data.baseUrl,
         authConfigs: data.authConfigs,
         staticVariables: data.staticVariables,
         defaultHeaders: data.defaultHeaders,
+        defaultQueryParameters: data.queryParams,
+        rejectUnauthorized: data.rejectUnauthorized,
+        downloadImages: data.downloadImages,
       },
     }
 
@@ -298,42 +372,19 @@
     notifications.success("API updated")
   }
 
-  // Workspace connection save
-  const updateWorkspaceConnection = async () => {
-    const payload = {
-      name: data.name!,
-      type: WorkspaceConnectionType.WORKSPACE_CONNECTION,
-      templateId: selected?.templateId,
-      templateVersion: selected?.templateVersion,
-      auth: data.authConfigs || [],
-      props: {
-        headers: data.defaultHeaders || {},
-        staticVariables: data.staticVariables || {},
-        query: data.queryParams || {},
-      },
-    }
-    if (isCreation) {
-      const created = await workspaceConnections.create(payload)
-      notifications.success("Connection created")
-      bb.settings(`/connections/${created._id}`)
-    } else {
-      await workspaceConnections.edit({
-        ...payload,
-        _id: selected!._id!,
-        _rev: selected!._rev!,
-      })
-      originalData = cloneDeep(data)
-      notifications.success("Connection saved")
-    }
-  }
-
   const validateAuth = (): boolean => {
-    const editor = httpAuthEditor || oauth2Editor
-    return !editor || editor.getConfig({ showErrors: true }) !== null
+    return authEditors
+      .filter(Boolean)
+      .every(e => e.getConfig({ showErrors: true }) !== null)
   }
 
   // Legacy oauth2 doc updates
   const updateOAuth2 = async () => {
+    const oauth2Index = (data.authConfigs || []).findIndex(
+      c => c.type === RestAuthType.OAUTH2
+    )
+    const oauth2Editor =
+      oauth2Index >= 0 ? (authEditors[oauth2Index] as OAuth2Editor) : undefined
     const config = oauth2Editor?.getConfig({ showErrors: true })
     if (!config || !oauth2Cfg?._id) {
       return
@@ -347,16 +398,34 @@
     notifications.success("Settings saved")
   }
 
+  const validateName = () => {
+    const newErrors = { ...errors }
+    if (!data.name) {
+      newErrors.name = "Name is required"
+    } else if (
+      $datasources.list.some(
+        ds => ds.name === data.name && ds._id !== datasource?._id
+      )
+    ) {
+      newErrors.name = "A connection with this name already exists"
+    } else {
+      delete newErrors.name
+    }
+    errors = newErrors
+  }
+
   const onSave = async () => {
-    if (!validateAuth()) {
+    validateName()
+    errors = { ...errors }
+    if (Object.keys(errors).length > 0 || !validateAuth()) {
       return
     }
     saving = true
     try {
-      if (isDatasource) {
+      if (isDatasource && !datasource) {
+        await createNewDatasource()
+      } else if (isDatasource) {
         await updateDatasource()
-      } else if (isWorkspaceConnection) {
-        await updateWorkspaceConnection()
       } else if (isOAuth2) {
         await updateOAuth2()
       }
@@ -364,19 +433,6 @@
       notifications.error("Failed to save connection")
     } finally {
       saving = false
-    }
-  }
-
-  const onDelete = async () => {
-    if (!selected?._id || !selected?._rev) {
-      return
-    }
-    try {
-      await workspaceConnections.delete(selected._id, selected._rev)
-      notifications.success("Connection deleted")
-      bb.settings("/connections")
-    } catch (e: any) {
-      notifications.error("Failed to delete connection")
     }
   }
 
@@ -448,20 +504,12 @@
   <Layout gap="S" noPadding>
     <RouteActions>
       <div class="route-buttons">
-        {#if isDatasource}
+        {#if isDatasource && !isNewConnection}
+          <Button on:click={() => deleteModal.show()} quiet overBackground
+            >Delete</Button
+          >
           <Button size="M" on:click={openInApiEditor} secondary>
             Open in API Editor
-          </Button>
-        {/if}
-        <!-- Maybe a cancel button too for non-create?-->
-        {#if isWorkspaceConnection && !isCreation}
-          <Button
-            size="M"
-            quiet
-            secondary
-            on:click={() => deleteConfirmDialog.show()}
-          >
-            Delete
           </Button>
         {/if}
         <Button size="M" disabled={!hasChanges || saving} on:click={onSave} cta>
@@ -469,18 +517,22 @@
         </Button>
       </div>
     </RouteActions>
-    <Input
-      label="Display name"
-      placeholder="Type here..."
-      value={data.name}
-      on:change={e => {
-        data.name = e.detail
-        data = { ...data }
-      }}
-      error={errors.name}
-      required={!isDatasource && !isOAuth2}
-      disabled={isDatasource || isOAuth2}
-    />
+    <div class="details-box">
+      <div class="details-box-name">
+        <Input
+          label="Display name"
+          placeholder="Type here..."
+          value={data.name}
+          on:change={e => {
+            data.name = e.detail
+            data = { ...data }
+          }}
+          on:blur={validateName}
+          error={errors.name}
+          required
+        />
+      </div>
+    </div>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="nav">
@@ -501,89 +553,137 @@
           Credentials
         </div>
       {/if}
+      {#if isDatasource}
+        <div
+          class="nav-tab"
+          class:match={mode === "advanced"}
+          on:click={() => (mode = "advanced")}
+        >
+          Advanced
+        </div>
+      {/if}
     </div>
     <div>
       {#if mode === "auth"}
         <Layout gap="S" noPadding>
-          <Divider noMargin noGrid size="S" />
-          {#each authConfigs as auth (auth._id)}
-            <Layout gap="S" noPadding>
-              <Select
-                label="Type"
-                value={auth.type || null}
-                placeholder="Select authentication type..."
-                on:change={e => {
-                  if (e.detail) {
-                    if (isWorkspaceConnection) {
-                      onAuthTypeChange(e.detail)
-                    } else {
-                      addAuthConfig(e.detail)
-                    }
-                  }
-                }}
-                options={authTypeOptions}
-                disabled={isOAuth2 ||
-                  (isWorkspaceConnection &&
-                    !isCreation &&
-                    authConfigs.length > 0)}
-                required
-              />
-              {#if auth.type === RestAuthType.BASIC || auth.type === RestAuthType.BEARER}
-                <HTTPAuthEditor
-                  bind:this={httpAuthEditor}
-                  config={auth}
-                  existingConfigs={authConfigs.filter(
-                    c =>
-                      c.type === RestAuthType.BASIC ||
-                      c.type === RestAuthType.BEARER
-                  )}
-                  on:update={e => onAuthConfigUpdate(e.detail)}
-                />
-              {:else if auth.type === RestAuthType.OAUTH2}
-                <OAuth2Editor
-                  bind:this={oauth2Editor}
-                  config={auth}
-                  existingConfigs={authConfigs.filter(
-                    c => c.type === RestAuthType.OAUTH2
-                  )}
-                  on:update={e => onAuthConfigUpdate(e.detail)}
-                />
-              {/if}
-              {#if isDatasource}
-                <div>
-                  <Button
-                    quiet
-                    secondary
-                    on:click={() => auth._id && deleteAuthConfig(auth._id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-                <Divider noMargin noGrid size="S" />
-              {/if}
-            </Layout>
-          {/each}
+          <div class="auth-box">
+            {#each authConfigs as auth, i (auth._id + auth.type)}
+              <div class="auth-box-item" class:first={i === 0}>
+                <Layout gap="S" noPadding>
+                  <Select
+                    label="Type"
+                    value={auth.type}
+                    placeholder={false}
+                    on:change={e => onAuthTypeChange(e.detail, auth._id!)}
+                    options={authTypeOptions}
+                    required
+                  />
+                  {#if auth.type === RestAuthType.BASIC || auth.type === RestAuthType.BEARER}
+                    <HTTPAuthEditor
+                      bind:this={authEditors[i]}
+                      config={asHTTPAuth(auth)}
+                      existingConfigs={authConfigs
+                        .filter(
+                          c =>
+                            c.type === RestAuthType.BASIC ||
+                            c.type === RestAuthType.BEARER
+                        )
+                        .map(asHTTPAuth)}
+                      on:update={e => onAuthConfigUpdate(e.detail)}
+                    />
+                  {:else if auth.type === RestAuthType.OAUTH2}
+                    <OAuth2Editor
+                      bind:this={authEditors[i]}
+                      config={auth}
+                      existingConfigs={authConfigs.filter(
+                        c => c.type === RestAuthType.OAUTH2
+                      )}
+                      on:update={e => onAuthConfigUpdate(e.detail)}
+                    />
+                  {/if}
+                  {#if isDatasource}
+                    <div>
+                      <Button
+                        quiet
+                        overBackground
+                        on:click={() => auth._id && deleteAuthConfig(auth._id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  {/if}
+                </Layout>
+              </div>
+            {/each}
+          </div>
 
           {#if isDatasource}
             <div>
               <Button
                 quiet
                 secondary
+                disabled={!canAddConfig}
                 on:click={() => addAuthConfig(RestAuthType.BASIC)}
               >
-                Add config
+                Add authentication
               </Button>
             </div>
           {/if}
         </Layout>
+      {:else if mode === "advanced"}
+        <div class="details-box">
+          <div class="settings-item first">
+            <div class="settings-item-text">
+              <span>Reject Unauthorized</span>
+              <span class="settings-item-blurb"
+                >Reject requests to servers with invalid or self-signed SSL
+                certificates.</span
+              >
+            </div>
+            <Toggle
+              value={data.rejectUnauthorized ?? true}
+              on:change={e => {
+                data.rejectUnauthorized = e.detail
+                data = { ...data }
+              }}
+            />
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-text">
+              <span>Download images</span>
+              <span class="settings-item-blurb"
+                >Download and return image responses as base64 data.</span
+              >
+            </div>
+            <Toggle
+              value={data.downloadImages ?? true}
+              on:change={e => {
+                data.downloadImages = e.detail
+                data = { ...data }
+              }}
+            />
+          </div>
+        </div>
       {:else}
         <Layout gap="M" noPadding>
           <Divider noMargin noGrid size="S" />
           {#if isRestTemplate}
-            <Input
+            <!-- <Input
               label="Base URL"
-              value={openApiInfo?.url ?? ""}
-              disabled={!!openApiInfo}
+              value={data.baseUrl ?? ""}
+              on:change={e => {
+                data.baseUrl = e.detail
+                data = { ...data }
+              }}
+            /> -->
+            <ServerUrlInput
+              label="Base URL (new)"
+              value={data.baseUrl ?? ""}
+              servers={openApiInfo?.servers ?? []}
+              on:change={e => {
+                data.baseUrl = e.detail
+                data = { ...data }
+              }}
             />
           {/if}
           <Layout gap="XXS" noPadding>
@@ -668,21 +768,29 @@
                 : []}
             />
           </Layout>
+          {#if isDatasource && datasource}
+            <Layout gap="XXS" noPadding>
+              <div class="prop-table-header">
+                <Label>Dynamic Variables</Label>
+              </div>
+              <ViewDynamicVariables
+                {datasource}
+                onRowClick={(dv: DynamicVariable) => {
+                  bb.hideSettings()
+                  $goto(
+                    `/builder/workspace/${$appStore.appId}/apis/query/${dv.queryId}`
+                  )
+                }}
+              />
+            </Layout>
+          {/if}
         </Layout>
       {/if}
     </div>
   </Layout>
 </Layout>
 
-<ConfirmDialog
-  bind:this={deleteConfirmDialog}
-  title="Delete connection"
-  okText="Delete"
-  onOk={onDelete}
-  warning
->
-  Are you sure you want to delete the connection <b>{data.name}</b>?
-</ConfirmDialog>
+<DeleteDataConfirmationModal bind:this={deleteModal} source={datasource} />
 
 <style>
   .icon-wrap {
@@ -718,6 +826,68 @@
   .route-buttons {
     display: flex;
     gap: var(--spacing-xl);
+  }
+
+  .auth-box {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--border-radius-m);
+  }
+
+  .auth-box-item {
+    padding: var(--spacing-l);
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .auth-box-item.first {
+    border-top: none;
+  }
+
+  .details-box {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--border-radius-m);
+    overflow: hidden;
+  }
+
+  .details-box-name {
+    padding: var(--spacing-l);
+  }
+
+  .details-box-name :global(label) {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-m) var(--spacing-l);
+    gap: var(--spacing-xl);
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .settings-item.first {
+    border-top: none;
+  }
+
+  .settings-item-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-s);
+  }
+
+  .settings-item-blurb {
+    font-size: var(--font-size-xs);
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .settings-item :global(.spectrum-Switch) {
+    margin-right: 0;
   }
 
   .add-entry-placeholder {

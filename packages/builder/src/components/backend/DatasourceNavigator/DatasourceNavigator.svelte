@@ -50,7 +50,9 @@
 
   function selectDatasource(datasource) {
     openNode(datasource)
-    $goto(`./datasource/${datasource._id}`)
+    if (datasource.source !== "REST") {
+      $goto(`./datasource/${datasource._id}`)
+    }
   }
 
   const selectTable = tableId => {

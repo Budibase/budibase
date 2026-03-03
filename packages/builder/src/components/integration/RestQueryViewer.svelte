@@ -52,7 +52,7 @@
     toBindingsArray,
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
-  import NewAuthPicker from "./rest/NewAuthPicker.svelte"
+  import ConnectionSelect from "./rest/ConnectionSelect.svelte"
   import {
     getBindingContext,
     getDefaultRestAuthConfig,
@@ -750,12 +750,17 @@
           <div class="auth-container">
             <div></div>
             <!-- spacer -->
-            <NewAuthPicker
-              bind:authSourceId={query.fields.authSourceId}
-              bind:authConfigId={query.fields.authConfigId}
-              bind:authConfigType={query.fields.authConfigType}
+            <ConnectionSelect
+              authConfigId={query.fields.authConfigId}
               restTemplateId={datasource.restTemplateId}
               datasourceId={datasource._id}
+              on:change={e => {
+                const { authConfigId, authConfigType } = e.detail
+                query = {
+                  ...query,
+                  fields: { ...query.fields, authConfigId, authConfigType },
+                }
+              }}
             />
           </div>
         </Tabs>
