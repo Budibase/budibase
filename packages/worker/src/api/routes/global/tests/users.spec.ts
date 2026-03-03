@@ -820,6 +820,19 @@ describe("/api/global/users", () => {
           .expect(403)
       })
 
+      it("sso support cannot be used without internal key on self-hosted", async () => {
+        config.selfHosted()
+        try {
+          const user = await createPasswordUser()
+          const ssoId = "fake-ssoId"
+          await config.api.users
+            .addSsoSupportDefaultAuth(ssoId, user.email)
+            .expect(403)
+        } finally {
+          config.cloudHosted()
+        }
+      })
+
       it("if user email doesn't exist, SSO support couldn't be added. Not found error returned", async () => {
         const ssoId = "fake-ssoId"
         const email = "fake-email@budibase.com"
