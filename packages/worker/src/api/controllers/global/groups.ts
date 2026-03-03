@@ -14,6 +14,19 @@ import {
 } from "@budibase/types"
 import { db, groups, users as usersSdk } from "@budibase/pro"
 
+const DEFAULT_PAGE_SIZE = 10
+
+function parsePageSize(pageSize: unknown) {
+  if (pageSize === undefined || pageSize === null) {
+    return DEFAULT_PAGE_SIZE
+  }
+  const parsedPageSize = Number(pageSize)
+  if (!Number.isFinite(parsedPageSize) || parsedPageSize < 1) {
+    return DEFAULT_PAGE_SIZE
+  }
+  return Math.floor(parsedPageSize)
+}
+
 export async function save(ctx: UserCtx) {
   const group: UserGroup = ctx.request.body
   group.name = group.name.trim()
@@ -101,7 +114,8 @@ export async function find(ctx: UserCtx) {
 }
 
 export async function searchUsers(ctx: Ctx<{}, SearchUserGroupResponse>) {
-  const { pageSize = 10, bookmark, emailSearch } = ctx.request.query as any
+  const { bookmark, emailSearch } = ctx.request.query as any
+  const pageSize = parsePageSize((ctx.request.query as any).pageSize)
   const groupId = ctx.params.groupId
 
   const params: DatabaseQueryOpts = { limit: pageSize + 1 }

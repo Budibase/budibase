@@ -27,7 +27,6 @@
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import DateAddedRenderer from "./_components/DateAddedRenderer.svelte"
-  import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
   import InvitedModal from "./_components/InvitedModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
@@ -110,7 +109,6 @@
   let tenantOwner: AccountMetadata | null
   let createUserModal: Modal,
     inviteConfirmationModal: Modal,
-    onboardingTypeModal: Modal,
     passwordModal: Modal,
     importUsersModal: Modal,
     userLimitReachedModal: Modal,
@@ -190,9 +188,6 @@
     successful: [],
     unsuccessful: [],
   }
-  $: inviteTitle = isWorkspaceOnly
-    ? "Invite users to workspace"
-    : "Invite users to organisation"
   $: enrichedUsers = buildEnrichedUsers(
     $fetch.rows as User[],
     tenantOwner,
@@ -306,16 +301,17 @@
     }
 
     if ($organisation.isSSOEnforced) {
-      // bypass the onboarding type selection of sso is enforced
+      // bypass the onboarding type selection if sso is enforced
       await chooseCreationType(OnboardingType.EMAIL)
     } else if (onboardingType) {
       await chooseCreationType(onboardingType)
-    } else {
-      onboardingTypeModal.show()
     }
   }
 
   async function createUserFlow() {
+    if (!isWorkspaceOnly) {
+      return
+    }
     let usersForInvite = userData?.users ?? []
     let assignedExistingUsers = false
     if (isWorkspaceOnly) {
@@ -472,7 +468,12 @@
   }
 
   const createUsersFromCsv = async (userCsvData: any) => {
-    const { userEmails, usersRole, userGroups: groups } = userCsvData
+    const {
+      userEmails,
+      usersRole,
+      usersAppRole,
+      userGroups: groups,
+    } = userCsvData
 
     const users: UserInfo[] = []
     for (const email of userEmails) {
@@ -484,6 +485,10 @@
       const newUser = {
         email: email.trim(),
         role: usersRole,
+        appRole:
+          usersRole === Constants.BudibaseRoles.AppUser
+            ? usersAppRole || Constants.Roles.BASIC
+            : undefined,
         password: generatePassword(12),
         forceResetPassword: true,
       }
@@ -491,7 +496,11 @@
       users.push(newUser)
     }
 
-    userData = await removingDuplicities({ groups, users })
+    userData = await removingDuplicities({
+      groups,
+      users,
+      assignToWorkspace: isWorkspaceOnly,
+    })
     if (!userData.users.length) return
 
     return createUsers()
@@ -562,7 +571,7 @@
   }
 
   async function chooseCreationType(onboardingType: string) {
-    if (onboardingType === OnboardingType.EMAIL) {
+    if (onboardingType === OnboardingType.EMAIL && isWorkspaceOnly) {
       await createUserFlow()
     } else {
       await createUsers()
@@ -726,32 +735,42 @@
             <DeleteRowsButton
               item="user"
               action={isWorkspaceOnly ? "Remove" : "Delete"}
+              confirmationTitle={isWorkspaceOnly
+                ? "Confirm user removal"
+                : "Confirm user deletion"}
+              confirmationButtonText={isWorkspaceOnly
+                ? "Remove users"
+                : "Delete users"}
               on:updaterows
               selectedRows={[...selectedRows]}
               deleteRows={deleteUsers}
             />
           {:else}
             <Search bind:value={searchEmail} placeholder="Search" />
-            <ActionButton
-              size="M"
-              quiet
-              on:click={$licensing.userLimitReached
-                ? userLimitReachedModal.show
-                : importUsersModal.show}
-              disabled={readonly}
-            >
-              <Icon name={"upload-simple"} size="M" />
-            </ActionButton>
-            <Button
-              size="M"
-              disabled={readonly}
-              on:click={$licensing.userLimitReached
-                ? userLimitReachedModal.show
-                : createUserModal.show}
-              cta
-            >
-              {isWorkspaceOnly ? "Invite to workspace" : "Invite users"}
-            </Button>
+            {#if !isWorkspaceOnly}
+              <ActionButton
+                size="M"
+                quiet
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : importUsersModal.show}
+                disabled={readonly}
+              >
+                <Icon name={"upload-simple"} size="M" />
+              </ActionButton>
+            {/if}
+            {#if isWorkspaceOnly}
+              <Button
+                size="M"
+                disabled={readonly}
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : createUserModal.show}
+                cta
+              >
+                Invite to workspace
+              </Button>
+            {/if}
           {/if}
         </div>
       {/if}
@@ -788,23 +807,21 @@
   </div>
 </div>
 
-<Modal bind:this={createUserModal} closeOnOutsideClick={false}>
-  <AddUserModal
-    {showOnboardingTypeModal}
-    workspaceOnly={isWorkspaceOnly}
-    useWorkspaceInviteModal={true}
-    assignToWorkspace={isWorkspaceOnly}
-    {inviteTitle}
-  />
-</Modal>
+{#if isWorkspaceOnly}
+  <Modal bind:this={createUserModal} closeOnOutsideClick={false}>
+    <AddUserModal
+      {showOnboardingTypeModal}
+      workspaceOnly={isWorkspaceOnly}
+      useWorkspaceInviteModal={isWorkspaceOnly}
+      assignToWorkspace={isWorkspaceOnly}
+      inviteTitle="Invite users to workspace"
+    />
+  </Modal>
 
-<Modal bind:this={inviteConfirmationModal}>
-  <InvitedModal {inviteUsersResponse} />
-</Modal>
-
-<Modal bind:this={onboardingTypeModal}>
-  <OnboardingTypeModal {chooseCreationType} />
-</Modal>
+  <Modal bind:this={inviteConfirmationModal}>
+    <InvitedModal {inviteUsersResponse} />
+  </Modal>
+{/if}
 
 <Modal bind:this={passwordModal} disableCancel={true}>
   <PasswordModal
@@ -814,9 +831,11 @@
   />
 </Modal>
 
-<Modal bind:this={importUsersModal}>
-  <ImportUsersModal {createUsersFromCsv} />
-</Modal>
+{#if !isWorkspaceOnly}
+  <Modal bind:this={importUsersModal}>
+    <ImportUsersModal {createUsersFromCsv} />
+  </Modal>
+{/if}
 
 <Modal bind:this={userLimitReachedModal}>
   <UpgradeModal {isOwner} />

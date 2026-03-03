@@ -98,7 +98,6 @@ interface RestTemplatesState {
 const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
   name: "HubSpot",
   icon: HubSpotLogo,
-  verified: true,
   description:
     "CRM, marketing, CMS, and automation APIs for HubSpot's platform.",
   operationsCount: 1274,
@@ -1372,7 +1371,6 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
 const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
   name: "Twilio",
   icon: TwilioLogo,
-  verified: true,
   description:
     "Combines powerful communications APIs with AI and first-party data.",
   operationsCount: 795,
@@ -1797,7 +1795,6 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
 const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
   name: "Zendesk",
   icon: ZendeskLogo,
-  verified: true,
   description: "Customer support and messaging APIs from Zendesk.",
   operationsCount: 68,
   templates: [
@@ -1829,7 +1826,6 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
   {
     name: "Microsoft SharePoint",
     icon: MicrosoftSharepointLogo,
-    verified: true,
     description:
       "Microsoft Graph SharePoint APIs for sites, drives, and shared items.",
     operationsCount: 2826,
@@ -1876,7 +1872,6 @@ const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePo
 const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
   name: "Splunk",
   icon: SplunkLogo,
-  verified: true,
   description:
     "Official OpenAPI specifications for Splunk Cloud and Splunk Enterprise Security.",
   operationsCount: 151,
@@ -1937,7 +1932,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 66,
       icon: AttioLogo,
-      verified: true,
     },
     {
       id: "bamboohr",
@@ -1952,7 +1946,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 134,
       icon: BambooHRLogo,
-      verified: true,
     },
     {
       id: "confluence",
@@ -1961,12 +1954,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       specs: [
         {
           version: "2.0.0",
-          url: "https://dac-static.atlassian.com/cloud/confluence/openapi-v2.v3.json?_v=1.8327.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/refs/heads/main/confluence/openapi.json",
         },
       ],
       operationsCount: 212,
       icon: ConfluenceLogo,
-      verified: true,
     },
     {
       id: "discord",
@@ -1980,7 +1972,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 227,
       icon: DiscordLogo,
-      verified: true,
     },
     {
       id: "figma",
@@ -1995,7 +1986,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 46,
       icon: FigmaLogo,
-      verified: true,
     },
     {
       id: "github",
@@ -2010,7 +2000,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 1078,
       icon: GitHubLogo,
-      verified: true,
     },
     {
       id: "jira-cloud",
@@ -2025,7 +2014,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 616,
       icon: JiraLogo,
-      verified: true,
     },
     {
       id: "okta-management",
@@ -2040,7 +2028,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 694,
       icon: OktaLogo,
-      verified: true,
     },
     {
       id: "pagerduty",
@@ -2055,7 +2042,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 390,
       icon: PagerDutyLogo,
-      verified: true,
     },
     {
       id: "slack-web-api",
@@ -2070,7 +2056,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 172,
       icon: SlackLogo,
-      verified: true,
     },
     {
       id: "servicenow",
@@ -2085,7 +2070,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 25,
       icon: ServiceNowLogo,
-      verified: true,
     },
     {
       id: "virustotal",
@@ -2100,11 +2084,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 159,
       icon: VirusTotalLogo,
-      verified: true,
     },
-    /**
-     * UNVERIFIED
-     */
     {
       id: "gitlab",
       name: "Gitlab",
@@ -2145,7 +2125,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 587,
       icon: StripeLogo,
-      verified: true,
     },
     {
       id: "ansible-awx",
@@ -2284,7 +2263,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 42,
       icon: CleverLogo,
-      verified: true,
     },
     {
       id: "clickup",
@@ -2617,7 +2595,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 552,
       icon: MicrosoftTeamsLogo,
-      verified: true,
     },
     {
       id: "nanonets",
@@ -2659,7 +2636,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       ],
       operationsCount: 57,
       icon: OpenRouterLogo,
-      verified: true,
     },
     {
       id: "oyster-hr",

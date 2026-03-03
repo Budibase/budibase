@@ -7,6 +7,8 @@ import {
 import type { ChatApp } from "@budibase/types"
 import * as chatApps from "../chatApps"
 
+export type ChatWebhookProvider = "discord" | "ms-teams"
+
 const enableAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
   const existingAgents = chatApp.agents || []
   const existing = existingAgents.find(agent => agent.agentId === agentId)
@@ -66,13 +68,22 @@ export const resolveChatAppForAgent = async ({
   })
 }
 
+export const resolveProviderChatAppForAgent = async (
+  agentId: string,
+  chatAppId?: string
+) =>
+  await resolveChatAppForAgent({
+    agentId,
+    chatAppId,
+  })
+
 export const buildWebhookUrl = async ({
   provider,
   chatAppId,
   agentId,
   useProdWorkspaceId = false,
 }: {
-  provider: "discord" | "ms-teams"
+  provider: ChatWebhookProvider
   chatAppId: string
   agentId: string
   useProdWorkspaceId?: boolean
@@ -87,3 +98,15 @@ export const buildWebhookUrl = async ({
     : workspaceId
   return `${platformUrl.replace(/\/$/, "")}/api/webhooks/${provider}/${targetWorkspaceId}/${chatAppId}/${agentId}`
 }
+
+export const buildProviderWebhookUrl = async (
+  provider: ChatWebhookProvider,
+  chatAppId: string,
+  agentId: string
+) =>
+  await buildWebhookUrl({
+    provider,
+    chatAppId,
+    agentId,
+    useProdWorkspaceId: true,
+  })

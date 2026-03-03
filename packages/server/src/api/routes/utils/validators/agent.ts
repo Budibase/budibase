@@ -20,7 +20,7 @@ const DISCORD_INTEGRATION_SCHEMA = Joi.object({
 const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   appId: OPTIONAL_STRING,
   appPassword: OPTIONAL_STRING,
-  tenantId: OPTIONAL_STRING,
+  tenantId: Joi.string().required().trim().disallow(""),
   chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
@@ -91,6 +91,14 @@ function chatAppIdBodyValidator() {
 }
 
 export function toggleAgentDiscordDeploymentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      enabled: Joi.boolean().required(),
+    }).required()
+  )
+}
+
+export function toggleAgentMSTeamsDeploymentValidator() {
   return auth.joiValidator.body(
     Joi.object({
       enabled: Joi.boolean().required(),

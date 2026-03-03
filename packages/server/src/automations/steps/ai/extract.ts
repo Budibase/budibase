@@ -1,55 +1,164 @@
 import { objectStore } from "@budibase/backend-core"
-import { ai, LLMPromptResponse } from "@budibase/pro"
+import { ai } from "@budibase/pro"
 import {
   DocumentSourceType,
   ExtractFileDataStepInputs,
   ExtractFileDataStepOutputs,
+  LLMResponse,
+  SupportedFileType,
 } from "@budibase/types"
+import { generateText, Output, type ModelMessage, type UserContent } from "ai"
 import fetch from "node-fetch"
+import { PDFParse } from "pdf-parse"
 import { Readable } from "stream"
+import { buffer } from "stream/consumers"
 import * as automationUtils from "../../automationUtils"
+import sdk from "../../../sdk"
+import z from "zod"
 
-const EXTRACT_RETRY_ATTEMPTS = 5
-const EXTRACT_RETRY_DELAY_MS = 100
+function isImageType(type: SupportedFileType): boolean {
+  const isImageTypeByFileType: Record<SupportedFileType, boolean> = {
+    [SupportedFileType.PDF]: false,
+    [SupportedFileType.JPG]: true,
+    [SupportedFileType.PNG]: true,
+    [SupportedFileType.JPEG]: true,
+  }
 
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return isImageTypeByFileType[type]
+}
+
+function getMimeType(type: SupportedFileType): string {
+  const mimeTypeByFileType: Record<SupportedFileType, string> = {
+    [SupportedFileType.PDF]: "application/pdf",
+    [SupportedFileType.JPG]: "image/jpeg",
+    [SupportedFileType.PNG]: "image/png",
+    [SupportedFileType.JPEG]: "image/jpeg",
+  }
+  return mimeTypeByFileType[type]
+}
+
+function toImageDataUrl(data: Buffer, value: SupportedFileType): string {
+  const mimeType = getMimeType(value)
+  if (!mimeType) {
+    throw new Error("Unsupported image MIME type")
+  }
+  return `data:${mimeType};base64,${data.toString("base64")}`
+}
+
+async function extractPdfText(data: Buffer): Promise<string> {
+  const parser = new PDFParse({ data: data as any })
+  const parsed = await parser.getText()
+  return (parsed.text || "").trim()
+}
+
+const MAX_INLINE_DOC_TEXT_LENGTH = 20000
+
+type ExtractInput =
+  | { kind: "image"; value: string }
+  | { kind: "file"; value: string }
+  | { kind: "text"; value: string }
+
+function buildExtractPrompt() {
+  return [
+    "You are a data extraction assistant.",
+    "Extract structured data from the attached document or image.",
+    "Follow the provided schema exactly. Values like 'string', 'number', and 'boolean' indicate the expected type.",
+    'Return ONLY valid JSON with this shape: {"data": [<object>]}.',
+    "The data array must contain at most 1 object.",
+    "Do not include markdown, explanations, or extra keys.",
+    'If no matching data is found, return {"data": []}.',
+  ].join("\n\n")
+}
+
+function buildExtractModelMessages(input: ExtractInput): ModelMessage[] {
+  const prompt = buildExtractPrompt()
+  const userContent: UserContent =
+    input.kind === "image"
+      ? [
+          {
+            type: "image",
+            image: new URL(input.value),
+          },
+          {
+            type: "text",
+            text: prompt,
+          },
+        ]
+      : input.kind === "file"
+        ? [
+            {
+              type: "file",
+              data: input.value,
+              mediaType: "application/pdf",
+            },
+            {
+              type: "text",
+              text: prompt,
+            },
+          ]
+        : `${prompt}\n\nDocument text:\n${input.value.slice(
+            0,
+            MAX_INLINE_DOC_TEXT_LENGTH
+          )}`
+
+  return [
+    {
+      role: "user",
+      content: userContent,
+    },
+  ]
 }
 
 async function processUrlFile(
   fileUrl: string,
-  fileType: string | undefined,
-  llm: ai.LLM
-): Promise<string> {
+  fileType: SupportedFileType,
+  llm: LLMResponse
+): Promise<ExtractInput> {
   const response = await fetch(fileUrl)
   if (!response.ok) {
     throw new Error(`Failed to fetch file from URL: ${response.statusText}`)
   }
+
+  if (isImageType(fileType)) {
+    const data = await response.buffer()
+    return { kind: "image", value: toImageDataUrl(data, fileType) }
+  }
+
+  if (!llm.uploadFile) {
+    const data = await response.buffer()
+    const text = await extractPdfText(data)
+    return { kind: "text", value: text }
+  }
   const stream = response.body as Readable
-  const contentType = response.headers.get("content-type") || fileType
-  const filename = `document.${fileType}`
-  return await llm.uploadFile(stream, filename, contentType)
+  const filename = `document.${fileType || "pdf"}`
+  return {
+    kind: "file",
+    value: await llm.uploadFile(stream, filename, fileType),
+  }
 }
 
 async function processAttachmentFile(
   attachment: any,
-  llm: ai.LLM
-): Promise<string> {
+  llm: LLMResponse
+): Promise<ExtractInput> {
   const bucket = objectStore.ObjectStoreBuckets.APPS
   const { stream } = await objectStore.getReadStream(bucket, attachment.key!)
-  const filename = attachment.name || "document"
-  return await llm.uploadFile(stream, filename, attachment.extension)
-}
+  const contentType = attachment.extension
 
-async function parseAIResponse(
-  llmResponse: LLMPromptResponse
-): Promise<Record<string, any>> {
-  try {
-    const data = JSON.parse(llmResponse.message)
-    return data.data
-  } catch (err: any) {
-    console.error("Error parsing JSON response:", err)
-    throw new Error("Could not parse AI response as valid JSON.")
+  if (isImageType(contentType)) {
+    const data = await buffer(stream)
+    return { kind: "image", value: toImageDataUrl(data, contentType) }
+  }
+
+  if (!llm.uploadFile) {
+    const data = await buffer(stream)
+    const text = await extractPdfText(data)
+    return { kind: "text", value: text }
+  }
+  const filename = attachment.name || "document"
+  return {
+    kind: "file",
+    value: await llm.uploadFile(stream, filename, contentType),
   }
 }
 
@@ -68,66 +177,60 @@ export async function run({
   }
 
   try {
-    const llm = await ai.getLLMOrThrow()
+    const llm = await sdk.ai.llm.getDefaultLLMOrThrow({
+      reasoningEffort: "low",
+    })
 
-    let fileIdOrDataUrl: string
+    let extractInput: ExtractInput
 
-    if (
-      inputs.source === DocumentSourceType.URL &&
-      typeof inputs.file === "string"
-    ) {
-      fileIdOrDataUrl = await processUrlFile(inputs.file, inputs.fileType, llm)
+    function tryParse(value: unknown) {
+      if (typeof value !== "string") {
+        return value
+      }
+      try {
+        const parsed = JSON.parse(value)
+        return parsed
+      } catch {
+        return value
+      }
+    }
+
+    const file =
+      inputs.source === DocumentSourceType.URL
+        ? inputs.file
+        : tryParse(inputs.file)
+
+    if (inputs.source === DocumentSourceType.URL && typeof file === "string") {
+      extractInput = await processUrlFile(file, inputs.fileType, llm)
     } else if (
       inputs.source === DocumentSourceType.ATTACHMENT &&
-      typeof inputs.file !== "string"
+      typeof file !== "string"
     ) {
-      fileIdOrDataUrl = await processAttachmentFile(inputs.file, llm)
+      extractInput = await processAttachmentFile(file, llm)
     } else {
       throw new Error("Invalid file input – source and file type do not match")
     }
 
-    const request = ai.extractFileData(
-      inputs.schema,
-      fileIdOrDataUrl,
-      llm.supportsFiles
-    )
-    let data: Record<string, any> | any[] = []
-    let lastError: unknown
-
-    for (let attempt = 1; attempt <= EXTRACT_RETRY_ATTEMPTS; attempt++) {
-      try {
-        const llmResponse = await llm.prompt(request)
-        data = await parseAIResponse(llmResponse)
-
-        const isEmptyArray = Array.isArray(data) && data.length === 0
-        if (!isEmptyArray || attempt === EXTRACT_RETRY_ATTEMPTS) {
-          break
-        }
-
-        console.warn(
-          `[Extract AI] Empty extraction result on attempt ${attempt}/${EXTRACT_RETRY_ATTEMPTS}, retrying...`
-        )
-      } catch (err) {
-        lastError = err
-        if (attempt === EXTRACT_RETRY_ATTEMPTS) {
-          console.error(
-            `[Extract AI] Final extraction attempt ${attempt}/${EXTRACT_RETRY_ATTEMPTS} failed:`,
-            err
-          )
-          throw err
-        }
-
-        console.warn(
-          `[Extract AI] Extraction attempt ${attempt}/${EXTRACT_RETRY_ATTEMPTS} failed, retrying...`,
-          err
-        )
-      }
-
-      await sleep(EXTRACT_RETRY_DELAY_MS)
+    const output = getOutputFromSchema(inputs.schema)
+    const modelMessages = buildExtractModelMessages(extractInput)
+    const providerOptions = llm.providerOptions?.(false)
+    const response = await ai.runWithReasoningEffortFallback({
+      providerOptions,
+      run: opts =>
+        generateText({
+          model: llm.chat,
+          messages: modelMessages,
+          providerOptions: opts,
+          output,
+        }),
+    })
+    if (!response.output || response.output.data == null) {
+      throw new Error("Could not parse AI response as valid JSON.")
     }
+    const data = response.output.data
 
-    if (lastError && Array.isArray(data) && data.length === 0) {
-      throw lastError
+    if (!data.length) {
+      throw new Error("Could not extract the requested data.")
     }
 
     return {
@@ -142,4 +245,38 @@ export async function run({
       response: automationUtils.getError(err),
     }
   }
+}
+
+function createZodSchemaFromRecord(schema: Record<string, any>) {
+  const zodFields: Record<string, z.ZodType<any>> = {}
+
+  for (const [key, type] of Object.entries(schema)) {
+    if (typeof type === "string") {
+      switch (type.toLowerCase()) {
+        case "number":
+          zodFields[key] = z.number()
+          break
+        case "boolean":
+          zodFields[key] = z.boolean()
+          break
+        case "string":
+        default:
+          zodFields[key] = z.string()
+      }
+    } else {
+      zodFields[key] = z.string()
+    }
+  }
+
+  return z.object(zodFields)
+}
+
+function getOutputFromSchema(schema: Record<string, any>) {
+  const zodSchema = createZodSchemaFromRecord(schema)
+
+  return Output.object<{ data: Record<string, any> }>({
+    schema: z.object({
+      data: z.array(zodSchema).max(1),
+    }),
+  })
 }

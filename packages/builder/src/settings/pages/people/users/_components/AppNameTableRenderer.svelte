@@ -5,15 +5,17 @@
   export let row
 </script>
 
-<div class="align">
-  <IconAvatar
-    icon={row?.icon?.name || "squares-four"}
-    color={row?.icon?.color}
-  />
-  <div class="text">
-    {value}
+{#if !row?.__skeleton}
+  <div class="align">
+    <IconAvatar
+      icon={row?.icon?.name || "squares-four"}
+      color={row?.icon?.color}
+    />
+    <div class="text">
+      {value}
+    </div>
   </div>
-</div>
+{/if}
 
 <style>
   .align {

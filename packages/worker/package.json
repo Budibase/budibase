@@ -90,23 +90,5 @@
     "superagent": "^10.1.1",
     "supertest": "6.3.3",
     "timekeeper": "2.2.0"
-  },
-  "resolutions": {
-    "@budibase/pro": "npm:@budibase/pro@latest"
-  },
-  "nx": {
-    "targets": {
-      "dev": {
-        "dependsOn": [
-          {
-            "comment": "Required for pro usage when submodule not loaded",
-            "projects": [
-              "@budibase/backend-core"
-            ],
-            "target": "build:oss"
-          }
-        ]
-      }
-    }
   }
 }

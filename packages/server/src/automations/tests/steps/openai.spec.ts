@@ -1,6 +1,11 @@
-import { setEnv as setCoreEnv, withEnv } from "@budibase/backend-core"
+import { configs, setEnv as setCoreEnv, withEnv } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import { Model, MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
+import {
+  ConfigType,
+  Model,
+  MonthlyQuotaName,
+  QuotaUsageType,
+} from "@budibase/types"
 import nock from "nock"
 import TestConfiguration from "../../..//tests/utilities/TestConfiguration"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
@@ -98,6 +103,20 @@ describe("test the openai action", () => {
 
   it("should ensure that the pro AI module is called when the budibase AI features are enabled", async () => {
     mockChatGPTResponse("This is a test")
+
+    await config.doInTenant(async () => {
+      await configs.save({
+        type: ConfigType.AI,
+        config: {
+          budibaseAI: {
+            provider: "BudibaseAI",
+            name: "Budibase AI",
+            active: true,
+            isDefault: true,
+          },
+        },
+      })
+    })
 
     // We expect a non-0 AI usage here because it goes through the @budibase/pro
     // path, because we've enabled Budibase AI. The exact value depends on a

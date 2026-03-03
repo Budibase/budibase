@@ -1,3 +1,5 @@
+export const DEFAULT_IDLE_TIMEOUT_MINUTES = 45
+
 export const toOptionalValue = (value: string) => {
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : undefined
