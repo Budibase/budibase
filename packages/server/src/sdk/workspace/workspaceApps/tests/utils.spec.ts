@@ -9,6 +9,7 @@ describe("workspaceApps utils", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.ensureDefaultWorkspaceAppId()
 
     workspaceApps = (await config.api.workspaceApp.fetch()).workspaceApps
     expect(workspaceApps).toHaveLength(1)

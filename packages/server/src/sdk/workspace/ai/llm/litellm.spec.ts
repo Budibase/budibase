@@ -16,6 +16,16 @@ import {
 import { getKeySettings } from "../configs/litellm"
 import { createLiteLLMOpenAI } from "./litellm"
 
+const waitFor = async (condition: () => boolean, timeoutMs = 3000) => {
+  const start = Date.now()
+  while (!condition()) {
+    if (Date.now() - start > timeoutMs) {
+      throw new Error(`Condition was not met within ${timeoutMs}ms`)
+    }
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+}
+
 jest.mock("../configs/litellm", () => ({
   getKeySettings: jest.fn(),
 }))
@@ -109,8 +119,7 @@ describe("createLiteLLMOpenAI", () => {
       }
     )
 
-    // Await to allow the background setBudibaseAICredits to execute
-    await new Promise(r => setTimeout(r, 500))
+    await waitFor(() => setBudibaseAICreditsMock.mock.calls.length > 0)
 
     expect(quotaNock.isDone()).toBe(true)
     expect(setBudibaseAICreditsMock).toHaveBeenCalledTimes(1)
