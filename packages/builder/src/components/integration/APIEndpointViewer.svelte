@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto as gotoStore } from "@roxi/routify"
-  import { flags, workspaceConnections } from "@/stores/builder"
+  import { flags, workspaceConnections, appStore } from "@/stores/builder"
   import {
     datasources,
     hasRestTemplate,
@@ -32,7 +32,6 @@
     type Query,
     type Datasource,
     type ImportEndpoint,
-    type RestTemplate,
     type RestTemplateSpec,
     type PreviewQueryResponse,
     type UIInternalDatasource,
@@ -68,12 +67,13 @@
   import { EditorModes } from "../common/CodeEditor"
   import { readableToRuntimeMap, runtimeToReadableMap } from "@/dataBinding"
   import ResponsePanel from "./ResponsePanel.svelte"
-  import NewAuthPicker from "./rest/NewAuthPicker.svelte"
+  import ConnectionSelect from "./rest/ConnectionSelect.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
   import { getErrorMessage } from "@/helpers/errors"
 
   export let queryId
-  export let datasourceId
+  export let datasourceId: string | undefined = undefined
+  export let initialDatasourceId: string | undefined = undefined
 
   $: goto = $gotoStore
 
@@ -83,13 +83,15 @@
       props: { verb?: string; color?: string }
     }
   }
-  const sidebarExpanded = writable(false)
-  let sidebarElement: HTMLDivElement
-  let isTransitioning = false
-
   // Expanded sidebar dimensions
   const EXPANDED_MARGIN = 0.15 // 15vh/15vw margins
   const EXPANDED_SIZE = 0.7 // 70vh/70vw size
+  const sidebarExpanded = writable(false)
+
+  let _pickedDatasourceId: string | undefined =
+    datasourceId || initialDatasourceId
+  let sidebarElement: HTMLDivElement
+  let isTransitioning = false
 
   let selectedEndpointOption: EndpointWithIcon | undefined
   let endpoints: ImportEndpoint[] | undefined
@@ -101,22 +103,20 @@
   let originalBuiltQuery: Query | undefined = undefined
   let baseUrl: string | undefined = undefined
   let response: PreviewQueryResponse
-  let query: Query | undefined
-  let template: RestTemplate | undefined
+  let editableQuery: Query | undefined
   let datasource: Datasource | UIInternalDatasource | undefined
-  let defaultAuthApplied = false
-  let defaultAuthKey: string | undefined = undefined
   let enabledHeaders: Record<string, boolean> = {}
 
+  // DATASOURCE/CONNECTION
   $: availableConnections = $workspaceConnections.list
-  $: ({ authSourceId } = query?.fields || {})
-  $: selectedConnection = availableConnections.find(
-    c => c.sourceId === authSourceId
+  $: selectedConnection = availableConnections.find(c =>
+    c.auth?.some(a => a._id === editableQuery?.fields?.authConfigId)
   )
   $: staticVariables = selectedConnection?.props?.staticVariables ?? {}
+  $: selectedDatasourceId = datasourceId || _pickedDatasourceId
 
-  // Reset when datasourceId changes
-  $: if (datasourceId) {
+  // Reset endpoints when the effective datasource changes
+  $: if (selectedDatasourceId) {
     selectedEndpointOption = undefined
     endpoints = undefined
     queryParams = undefined
@@ -124,96 +124,67 @@
   }
 
   // Build selectedEndpointOption from query metadata or fetch endpoints if needed
-  $: if (query) {
-    ensureQueryDefaults(query)
-    syncEndpointFromQuery(query, endpoints)
+  $: if (editableQuery) {
+    ensureQueryDefaults(editableQuery)
+    syncEndpointFromQuery(editableQuery, endpoints)
   }
 
-  let queryKey: string | undefined
-  let appliedEndpointKey: string | undefined
-  let lastSyncedQueryId: string | undefined
-  let lastSyncedQueryName: string | undefined
-  let isNewQuery = false
-
-  // Depend on $queries.list to ensure storeQuery updates when the store changes (e.g. after save)
-  $: storeQuery = $queries.list && getSelectedQuery(queryId, datasourceId)
-  $: isNewQuery = !storeQuery?._id
-  $: {
-    const key = storeQuery?._id || `new::${datasourceId || ""}`
-    if (!query || key !== queryKey) {
-      query = structuredClone(storeQuery)
-      queryKey = key
-      queryParams = undefined
-      originalBuiltQuery = undefined
-      if (query?._id) {
-        appliedEndpointKey = undefined
-      }
+  // Bootstrap _pickedDatasourceId
+  $: if (!datasourceId && queryId) {
+    const dsId = $queries.list.find(q => q._id === queryId)?.datasourceId
+    if (dsId && dsId !== _pickedDatasourceId) {
+      _pickedDatasourceId = dsId
     }
   }
-  $: if (query && query._id && query._id !== lastSyncedQueryId) {
-    lastSyncedQueryId = query._id
-    lastSyncedQueryName = query.name
+
+  $: storeQuery = queryId
+    ? resolveStoreQuery($queries.list, queryId, undefined)
+    : resolveStoreQuery($queries.list, undefined, selectedDatasourceId)
+  $: isNewQuery = !storeQuery?._id
+
+  $: if (!editableQuery || storeQuery?._id !== editableQuery._id) {
+    editableQuery = structuredClone(storeQuery)
+    queryParams = undefined
+    originalBuiltQuery = undefined
   }
-  $: if (query && storeQuery && query._id && query._id === storeQuery._id) {
-    syncQueryFromStore(query, storeQuery)
-  }
-  $: datasourceLookupId = datasourceId || storeQuery?.datasourceId
+
+  $: datasourceLookupId = selectedDatasourceId || storeQuery?.datasourceId
   $: datasource = structuredClone(
     $datasources.list.find(d => d._id === datasourceLookupId)
   )
-  $: {
-    const key = query?._id || `new::${datasourceId || ""}`
-    if (key !== defaultAuthKey) {
-      defaultAuthKey = key
-      defaultAuthApplied = false
-    }
-  }
-  $: if (!defaultAuthApplied && query && datasource && isNewQuery) {
-    const defaultAuth = getDefaultRestAuthConfig(datasource)
-    if (
-      defaultAuth &&
-      !query.fields?.authConfigId &&
-      !query.fields?.authConfigType
-    ) {
-      query = {
-        ...query,
-        fields: {
-          ...query.fields,
-          authConfigId: defaultAuth.authConfigId,
-          authConfigType: defaultAuth.authConfigType,
-        },
-      }
-      defaultAuthApplied = true
-    } else if (
-      defaultAuth &&
-      (query.fields?.authConfigId || query.fields?.authConfigType)
-    ) {
-      defaultAuthApplied = true
-    }
+
+  $: if (editableQuery && datasource && isNewQuery) {
+    applyDefaultAuth(editableQuery, datasource)
   }
 
   // QUERY DATA
-  $: queryString = query?.fields.queryString
+  $: queryString = editableQuery?.fields.queryString
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, queryParams)
-  $: isGet = query?.queryVerb === "read"
-  $: schema = query?.schema
-  $: nestedSchemaFields = query?.nestedSchemaFields
-  $: requestBindings = query
-    ? restUtils.queryParametersToKeyValue(query.parameters)
+  $: isGet = editableQuery?.queryVerb === "read"
+  $: schema = editableQuery?.schema
+  $: nestedSchemaFields = editableQuery?.nestedSchemaFields
+  $: requestBindings = editableQuery
+    ? restUtils.queryParametersToKeyValue(editableQuery.parameters)
     : {}
+
   // Initialize enabledHeaders when query changes
-  $: if (query) {
+  $: if (editableQuery) {
     enabledHeaders = restUtils.flipHeaderState(
-      query.fields.disabledHeaders || {}
+      editableQuery.fields.disabledHeaders || {}
     )
   }
 
   // Init and build full API path if the query is new
-  $: if (selectedEndpointOption && baseUrl && query && !query._id) {
-    query = {
-      ...query,
+  $: if (
+    selectedEndpointOption &&
+    baseUrl &&
+    editableQuery &&
+    !editableQuery._id
+  ) {
+    editableQuery = {
+      ...editableQuery,
       fields: {
-        ...query.fields,
+        ...editableQuery.fields,
         path: constructFullPath(baseUrl, selectedEndpointOption.path || ""),
       },
     }
@@ -221,8 +192,8 @@
 
   // Build dynamic variables from the datasource and query
   $: ({ dynamicVariables: computedDynamicVariables, globalDynamicBindings } =
-    datasource && query
-      ? buildDynamicVariables(datasource, query._id)
+    datasource && editableQuery
+      ? buildDynamicVariables(datasource, editableQuery._id)
       : { dynamicVariables: {}, globalDynamicBindings: {} })
 
   // Use local override if available, otherwise use computed variables
@@ -253,15 +224,19 @@
   }
 
   // Fully qualified display url
-  $: requestURL = buildUrl(query?.fields?.path, queryParams, mergedBindings)
+  $: requestURL = buildUrl(
+    editableQuery?.fields?.path,
+    queryParams,
+    mergedBindings
+  )
 
   // Generates a complete runtime-ready version of the query used to monitor the
   // current edit state.
   $: builtQuery =
-    query &&
+    editableQuery &&
     schema &&
     buildQuery(
-      query,
+      editableQuery,
       runtimeUrlQueries,
       requestBindings,
       mergedBindings,
@@ -279,8 +254,8 @@
     (!!originalBuiltQuery && !isEqual(builtQuery, originalBuiltQuery)) ||
     !!localDynamicVariables
 
-  $: prettyBody = query?.fields?.requestBody
-    ? prettifyQueryRequestBody(query, mergedBindings)
+  $: prettyBody = editableQuery?.fields?.requestBody
+    ? prettifyQueryRequestBody(editableQuery, mergedBindings)
     : undefined
 
   // BB Rest template specs
@@ -296,7 +271,7 @@
     spec &&
     !endpoints &&
     !endpointsLoading &&
-    !(query?._id && query?.restTemplateMetadata)
+    !(editableQuery?._id && editableQuery?.restTemplateMetadata)
   ) {
     loadEndpoints(spec)
   }
@@ -317,21 +292,53 @@
   })()
   $: endpointVerbColor = selectedEndpointOption?.icon?.props?.color
   $: endpointDocs = selectedEndpointOption?.docsUrl
-  $: endpointTemplateKey =
-    isNewQuery && selectedEndpointOption
-      ? `${selectedEndpointOption.id || selectedEndpointOption.path || ""}::${
-          baseUrl || ""
-        }`
-      : undefined
   $: if (
-    query &&
+    editableQuery &&
     isNewQuery &&
     selectedEndpointOption &&
-    endpointTemplateKey &&
-    endpointTemplateKey !== appliedEndpointKey
+    selectedEndpointOption.id !==
+      editableQuery.restTemplateMetadata?.operationId
   ) {
-    query = applyEndpointDefaults(query, selectedEndpointOption, baseUrl)
-    appliedEndpointKey = endpointTemplateKey
+    editableQuery = applyEndpointDefaults(
+      editableQuery,
+      selectedEndpointOption,
+      baseUrl
+    )
+  }
+
+  const resolveStoreQuery = (
+    list: Query[] | undefined,
+    qId: string | undefined,
+    dsId: string | undefined
+  ) => {
+    if (!list) return undefined
+    const existingDsId = qId
+      ? list.find(q => q._id === qId)?.datasourceId
+      : undefined
+    const effectiveDsId = existingDsId || dsId
+    return effectiveDsId
+      ? getSelectedQuery(qId ?? "", effectiveDsId)
+      : undefined
+  }
+
+  const applyDefaultAuth = (
+    q: Query,
+    ds: Datasource | UIInternalDatasource
+  ) => {
+    const defaultAuth = getDefaultRestAuthConfig(ds)
+    if (!defaultAuth) {
+      return
+    }
+    if (!q.fields?.authConfigId && !q.fields?.authConfigType) {
+      editableQuery = {
+        ...q,
+        fields: {
+          ...q.fields,
+          authConfigId: defaultAuth.authConfigId,
+          authConfigType: defaultAuth.authConfigType,
+        },
+      }
+    }
   }
 
   const loadEndpoints = async (spec?: RestTemplateSpec) => {
@@ -469,14 +476,18 @@
     if (!builtQuery || !datasource) {
       return
     }
+    // Fall back to the endpoint operation name only if the query has no name set
+    const effectiveName =
+      builtQuery.name || selectedEndpointOption?.name || "Untitled request"
     savingQuery = true
     try {
-      const queryToSave =
+      const baseQuery =
         builtQuery._id &&
         storeQuery?._rev &&
         storeQuery._rev !== builtQuery._rev
           ? { ...builtQuery, _rev: storeQuery._rev }
           : builtQuery
+      const queryToSave = { ...baseQuery, name: effectiveName }
       const isNew = !queryToSave._rev
 
       const datasourceType = datasource?.source
@@ -507,7 +518,8 @@
       notifications.success(`Request saved successfully`)
 
       if (isNew && redirectIfNew) {
-        goto(`../../${_id}`)
+        goto(`/builder/workspace/${$appStore.appId}/apis/query/${_id}`)
+        return { ok: true }
       }
 
       const updatedQuery = getSelectedQuery(_id!, builtQuery.datasourceId)
@@ -515,9 +527,7 @@
         throw new Error("Could not refresh query")
       }
 
-      query = structuredClone(updatedQuery)
-      queryKey = updatedQuery._id || queryKey
-      appliedEndpointKey = undefined
+      editableQuery = structuredClone(updatedQuery)
       originalBuiltQuery = undefined
       localDynamicVariables = undefined
 
@@ -532,13 +542,13 @@
   }
 
   async function previewQuery() {
-    if (!selectedEndpointOption || !query || !builtQuery) return
+    if (!selectedEndpointOption || !editableQuery || !builtQuery) return
     try {
       validateQuery(
         requestURL,
-        query.fields.requestBody,
+        editableQuery.fields.requestBody,
         requestBindings,
-        query?.fields?.headers || {}
+        editableQuery?.fields?.headers || {}
       )
       runningQuery = true
 
@@ -546,8 +556,11 @@
       response = result.response
 
       // Update query object with schema from preview
-      query.schema = result.schema
-      query.nestedSchemaFields = result.nestedSchemaFields
+      editableQuery = {
+        ...editableQuery,
+        schema: result.schema,
+        nestedSchemaFields: result.nestedSchemaFields,
+      }
 
       if (result.response.rows.length === 0) {
         notifications.info("Request did not return any data")
@@ -578,7 +591,7 @@
   ) => {
     const newBindings = keyValueArrayToRecord(e.detail.fields)
     requestBindings = newBindings
-    query!.parameters = restUtils.keyValueToQueryParameters(newBindings)
+    editableQuery!.parameters = restUtils.keyValueToQueryParameters(newBindings)
   }
 
   const onUpdateHeaders = (
@@ -587,23 +600,23 @@
       activity: Record<string, boolean>
     }>
   ) => {
-    if (query) {
-      query.fields.headers = keyValueArrayToRecord(e.detail.fields)
-      query.fields.disabledHeaders = restUtils.flipHeaderState(
+    if (editableQuery) {
+      editableQuery.fields.headers = keyValueArrayToRecord(e.detail.fields)
+      editableQuery.fields.disabledHeaders = restUtils.flipHeaderState(
         e.detail.activity
       )
     }
   }
 
   const onUpdateBody = (e: CustomEvent<{ requestBody: any }>) => {
-    if (query) {
-      query.fields.requestBody = e.detail.requestBody
+    if (editableQuery) {
+      editableQuery.fields.requestBody = e.detail.requestBody
     }
   }
 
   const onUpdateBodyType = (e: CustomEvent<BodyType>) => {
-    if (query) {
-      query.fields.bodyType = e.detail
+    if (editableQuery) {
+      editableQuery.fields.bodyType = e.detail
     }
   }
 
@@ -704,23 +717,6 @@
     }
   }
 
-  const syncQueryFromStore = (localQuery: Query, storeQuery: Query) => {
-    let updatedQuery = localQuery
-
-    if (
-      lastSyncedQueryName !== undefined &&
-      storeQuery.name !== lastSyncedQueryName &&
-      localQuery.name === lastSyncedQueryName
-    ) {
-      updatedQuery = { ...updatedQuery, name: storeQuery.name }
-    }
-
-    if (updatedQuery !== localQuery) {
-      query = updatedQuery
-    }
-
-    lastSyncedQueryName = storeQuery.name
-  }
 
   const ensureQueryDefaults = (target: Query) => {
     if (!target.fields?.disabledHeaders) {
@@ -777,8 +773,17 @@
     for (const header of Object.keys(headers)) {
       disabledHeaders[header] = false
     }
-    updated.datasourceId = datasourceId
-    updated.name = endpoint?.name || updated.name
+    updated.datasourceId = selectedDatasourceId!
+    // Only apply the endpoint name if no custom name has been set.
+    // A name is considered custom if it differs from the previous endpoint's operation name.
+    const previousOperationName = sourceQuery.restTemplateMetadata?.originalName
+    const hasCustomName =
+      updated.name &&
+      previousOperationName &&
+      updated.name !== previousOperationName
+    if (!hasCustomName) {
+      updated.name = endpoint?.name || updated.name
+    }
     updated.queryVerb = endpoint?.queryVerb || updated.queryVerb
     if (!updated.fields?.disabledHeaders) {
       updated.fields.disabledHeaders = {}
@@ -818,14 +823,36 @@
 <div class="request-heading">
   <div class="heading">
     <div class="api-details">
-      <img src={template?.icon} alt={`${template?.name} logo`} width="24" />
-      <Heading>{template?.name}</Heading>{spec?.version}
+      {#if editableQuery}
+        {#key builtQuery?.name}
+          <!-- svelte-ignore a11y-interactive-supports-focus -->
+          <span
+            class="query-name-input"
+            role="textbox"
+            contenteditable="plaintext-only"
+            data-placeholder="Untitled request"
+            on:keydown={e => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                e.currentTarget.blur()
+              }
+            }}
+            on:blur={e => {
+              const name = e.currentTarget.textContent || ""
+              e.currentTarget.textContent = name
+              if (editableQuery) {
+                editableQuery = { ...editableQuery, name }
+              }
+            }}>{editableQuery.name}</span
+          >
+        {/key}
+      {/if}
     </div>
     <div class="actions">
       <div class="grouped">
-        {#if query}
+        {#if editableQuery}
           <div class="access">
-            <AccessLevelSelect {query} label="Access" />
+            <AccessLevelSelect query={editableQuery} label="Access" />
           </div>
         {/if}
         {#if endpointDocs}
@@ -839,10 +866,10 @@
             Docs
           </ActionButton>
         {/if}
-        {#if query?._id}
+        {#if editableQuery?._id}
           <ConnectedQueryScreens
             icon={"link-simple-horizontal-break"}
-            sourceId={query._id}
+            sourceId={editableQuery._id}
             buttonText="Usage"
           />
         {/if}
@@ -850,7 +877,9 @@
       <div class="save-btn">
         <Button
           cta
-          disabled={!queryDirty || savingQuery}
+          disabled={!queryDirty ||
+            savingQuery ||
+            (isNewQuery && !selectedEndpointOption)}
           on:click={() => saveQuery()}
         >
           Save
@@ -860,15 +889,36 @@
   </div>
   <div class="request" style:--verb-color={endpointVerbColor}>
     <div class="request-top">
-      {#if query}
-        <NewAuthPicker
-          bind:authSourceId={query.fields.authSourceId}
-          bind:authConfigId={query.fields.authConfigId}
-          bind:authConfigType={query.fields.authConfigType}
-          restTemplateId={datasource?.restTemplateId}
-          datasourceId={datasourceLookupId}
-        />
-      {/if}
+      <ConnectionSelect
+        authConfigId={editableQuery?.fields?.authConfigId}
+        restTemplateId={datasource?.restTemplateId}
+        datasourceId={datasourceLookupId}
+        disabled={!isNewQuery}
+        on:change={e => {
+          const {
+            authConfigId,
+            authConfigType,
+            datasourceId: selectedDatasourceId,
+          } = e.detail
+          if (
+            isNewQuery &&
+            selectedDatasourceId &&
+            selectedDatasourceId !== _pickedDatasourceId
+          ) {
+            _pickedDatasourceId = selectedDatasourceId
+            editableQuery = getSelectedQuery("", selectedDatasourceId) as Query
+          } else if (editableQuery) {
+            editableQuery = {
+              ...editableQuery,
+              fields: {
+                ...editableQuery.fields,
+                authConfigId,
+                authConfigType,
+              },
+            } as Query
+          }
+        }}
+      />
       <div class="picker">
         <Select
           on:change={e => {
@@ -879,9 +929,9 @@
           getOptionValue={endpoint => endpoint}
           getOptionLabel={endpoint => endpoint.name}
           compare={compareEndpoints}
-          disabled={endpointsLoading}
-          readonly={!!query?._id}
-          hideChevron={!!query?._id}
+          disabled={endpointsLoading || !selectedDatasourceId}
+          readonly={!!editableQuery?._id}
+          hideChevron={!!editableQuery?._id}
           loading={endpointsLoading}
           autocomplete={true}
         />
@@ -971,7 +1021,7 @@
                 </Tab>
                 <Tab title="Headers">
                   <KeyValueBuilder
-                    defaults={query?.fields.headers}
+                    defaults={editableQuery?.fields.headers}
                     activity={enabledHeaders}
                     toggle
                     name="header"
@@ -984,7 +1034,7 @@
                 <Tab title="Body">
                   <span class="bodyType-radio-group">
                     <RadioGroup
-                      value={query?.fields?.bodyType}
+                      value={editableQuery?.fields?.bodyType}
                       options={isGet ? [RestBodyTypes[0]] : RestBodyTypes}
                       direction="horizontal"
                       getOptionLabel={option => option.name}
@@ -993,7 +1043,7 @@
                     />
                   </span>
                   <RestBodyInput
-                    bodyType={query?.fields.bodyType}
+                    bodyType={editableQuery?.fields.bodyType}
                     requestBody={prettyBody}
                     on:change={onUpdateBody}
                   />
@@ -1015,12 +1065,12 @@
                     {/if}
                     <div class="embed">
                       <CodeEditor
-                        value={query?.transformer}
+                        value={editableQuery?.transformer}
                         mode={EditorModes.JS}
                         aiEnabled={false}
                         on:change={e => {
-                          if (!query) return
-                          query.transformer = e.detail
+                          if (!editableQuery) return
+                          editableQuery.transformer = e.detail
                         }}
                       />
                     </div>
@@ -1130,7 +1180,7 @@
   .request-heading {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-l);
+    gap: var(--spacing-s);
     padding-bottom: var(--spacing-l);
   }
   .wrap-divider {
@@ -1298,6 +1348,35 @@
     flex-direction: row;
     align-items: center;
     gap: var(--spacing-m);
+  }
+  .query-name-input {
+    min-width: 300px;
+    color: var(--spectrum-global-color-gray-900);
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: -0.02em;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 4px 6px;
+    margin-left: -6px;
+    white-space: nowrap;
+    cursor: text;
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+  .query-name-input:empty::before {
+    content: attr(data-placeholder);
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .query-name-input:focus {
+    outline: none;
+    margin-left: 0;
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-global-color-gray-400);
   }
   .actions {
     display: flex;
