@@ -1,5 +1,25 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { DocumentType, KnowledgeBase } from "@budibase/types"
+import { AIConfigType, DocumentType, KnowledgeBase } from "@budibase/types"
+import * as configSdk from "../configs"
+import * as vectorDbSdk from "../vectorDb"
+
+const validateReferences = async ({
+  embeddingModel,
+  vectorDb,
+}: Pick<KnowledgeBase, "embeddingModel" | "vectorDb">) => {
+  const embeddingConfig = await configSdk.find(embeddingModel)
+  if (!embeddingConfig) {
+    throw new HTTPError("Embedding model not found", 404)
+  }
+  if (embeddingConfig.configType !== AIConfigType.EMBEDDINGS) {
+    throw new HTTPError("Embedding model must be an embeddings config", 400)
+  }
+
+  const vectorDbConfig = await vectorDbSdk.find(vectorDb)
+  if (!vectorDbConfig) {
+    throw new HTTPError("Vector store config not found", 404)
+  }
+}
 
 export async function fetch(): Promise<KnowledgeBase[]> {
   const db = context.getWorkspaceDB()
@@ -25,6 +45,7 @@ export async function find(id: string): Promise<KnowledgeBase | undefined> {
 
 export async function create(config: KnowledgeBase): Promise<KnowledgeBase> {
   const db = context.getWorkspaceDB()
+  await validateReferences(config)
 
   const newConfig: KnowledgeBase = {
     _id: docIds.generateKnowledgeBaseID(),
@@ -54,6 +75,7 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
     ...existing,
     ...config,
   }
+  await validateReferences(updated)
 
   const { rev } = await db.put(updated)
   updated._rev = rev
