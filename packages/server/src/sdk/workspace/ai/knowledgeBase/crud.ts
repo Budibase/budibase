@@ -75,6 +75,17 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
     ...existing,
     ...config,
   }
+
+  if (
+    existing.embeddingModel !== updated.embeddingModel ||
+    existing.vectorDb !== updated.vectorDb
+  ) {
+    throw new HTTPError(
+      "Embedding model and vector database cannot be changed after creation",
+      400
+    )
+  }
+
   await validateReferences(updated)
 
   const { rev } = await db.put(updated)

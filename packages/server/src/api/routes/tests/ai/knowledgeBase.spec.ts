@@ -179,6 +179,35 @@ describe("knowledge base configs", () => {
         expect(updated.name).toBe("Updated Knowledge Base")
       })
     })
+
+    it("rejects changing embedding model or vector db", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId, vectorDb } = await buildDependencies()
+        const created = await config.api.knowledgeBase.create({
+          name: "Support Docs",
+          embeddingModel: embeddingModelId,
+          vectorDb: vectorDb._id!,
+        })
+
+        const otherVectorDb = await config.api.vectorDb.create({
+          name: "Secondary Vector DB",
+          provider: VectorDbProvider.PGVECTOR,
+          host: "localhost",
+          port: 5432,
+          database: "budibase",
+          user: "bb_user",
+          password: "secret",
+        })
+
+        await config.api.knowledgeBase.update(
+          {
+            ...created,
+            vectorDb: otherVectorDb._id!,
+          },
+          { status: 400 }
+        )
+      })
+    })
   })
 
   describe("delete", () => {
