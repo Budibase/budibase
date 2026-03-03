@@ -140,9 +140,7 @@
   }
 
   onMount(() => {
-    roles.fetch().catch(error => {
-      console.error(error)
-    })
+    roles.fetch()
     createUserModal.show()
   })
 </script>

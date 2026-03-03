@@ -22,7 +22,7 @@ const createMockWebsocket = () => ({
   disconnect: vi.fn(),
 })
 
-const buildWorkspace = (appId?: string): Workspace => ({ appId } as Workspace)
+const buildWorkspace = (appId?: string): Workspace => ({ appId }) as Workspace
 
 describe("Builder store", () => {
   let builderStore: BuilderStore
