@@ -1,5 +1,6 @@
 export * from "./generators"
 export { DEFAULT_MODEL_BY_PROVIDER, getLLMConfig, LLMRequest } from "./llm"
+export { parseResponseFormat } from "./models"
 export { LLM } from "./models/base"
 export * from "./prompts"
 export * from "./reasoningFallback"

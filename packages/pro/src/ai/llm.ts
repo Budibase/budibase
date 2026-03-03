@@ -12,11 +12,11 @@ import {
 import { tracer } from "dd-trace"
 import openai from "openai"
 import { z } from "zod"
-import { Anthropic, AnthropicModel } from "./models"
+import { Anthropic } from "./models"
 import { AzureOpenAI } from "./models/azureOpenai"
 import { LLM } from "./models/base"
 import { BudibaseAI } from "./models/budibaseai"
-import { OpenAI, OpenAIModel } from "./models/openai"
+import { OpenAI } from "./models/openai"
 
 // Provider-specific default models. If a provider's saved config does not
 // include a default model, we fall back to these. Azure defaults to gpt-4.1
