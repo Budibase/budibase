@@ -96,6 +96,7 @@
   let selectedEndpointOption: EndpointWithIcon | undefined
   let endpoints: ImportEndpoint[] | undefined
   let endpointsLoading = false
+  let endpointLoadError: string | undefined
   let queryParams: Record<string, string> | undefined = undefined
   let localDynamicVariables: Record<string, string> | undefined = undefined
   let savingQuery = false,
@@ -205,6 +206,7 @@
   $: if (datasourceId) {
     selectedEndpointOption = undefined
     endpoints = undefined
+    endpointLoadError = undefined
     queryParams = undefined
     originalBuiltQuery = undefined
   }
@@ -394,6 +396,7 @@
     spec &&
     !endpoints &&
     !endpointsLoading &&
+    !endpointLoadError &&
     !(query?._id && query?.restTemplateMetadata)
   ) {
     loadEndpoints(spec)
@@ -441,6 +444,7 @@
       endpointsLoading = true
       const resp = await queries.fetchImportInfo(request)
       const { endpoints: respEndpoints, url } = resp || {}
+      endpointLoadError = undefined
       if (respEndpoints) {
         endpoints = respEndpoints
       }
@@ -448,9 +452,11 @@
         baseUrl = url
       }
     } catch (err) {
-      console.error("could not fetch endpoints", err)
+      endpointLoadError = getErrorMessage(err)
+      notifications.error(`Error importing template - ${endpointLoadError}`)
+    } finally {
+      endpointsLoading = false
     }
-    endpointsLoading = false
   }
 
   const getEndpointOptions = (
