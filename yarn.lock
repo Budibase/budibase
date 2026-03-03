@@ -17488,6 +17488,13 @@ koa-mount@^4.0.0:
     debug "^4.0.1"
     koa-compose "^4.1.0"
 
+koa-passport@4.1.4:
+  version "4.1.4"
+  resolved "https://registry.yarnpkg.com/koa-passport/-/koa-passport-4.1.4.tgz#5f1665c1c2a37ace79af9f970b770885ca30ccfa"
+  integrity sha512-dJBCkl4X+zdYxbI2V2OtoGy0PUenpvp2ZLLWObc8UJhsId0iQpTFT8RVcuA0709AL2txGwRHnSPoT1bYNGa6Kg==
+  dependencies:
+    passport "^0.4.0"
+
 koa-passport@^6.0.0:
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/koa-passport/-/koa-passport-6.0.0.tgz#c30d2b859eaff8349c553eb479f365244188df53"
@@ -17542,7 +17549,7 @@ koa-session@5.13.1:
     is-type-of "^1.0.0"
     uuid "^3.3.2"
 
-koa-static@^5.0.0:
+koa-static@5.0.0, koa-static@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/koa-static/-/koa-static-5.0.0.tgz#5e92fc96b537ad5219f425319c95b64772776943"
   integrity sha512-UqyYyH5YEXaJrf9S8E23GoJFQZXkBVJ9zYYMPGz919MSX1KuvAcycIuS0ci150HCoPf4XQVhQ84Qf8xRPWxFaQ==
@@ -20643,7 +20650,7 @@ passport-strategy@1.x.x, passport-strategy@^1.0.0:
   resolved "https://registry.yarnpkg.com/passport-strategy/-/passport-strategy-1.0.0.tgz#b5539aa8fc225a3d1ad179476ddf236b440f52e4"
   integrity sha512-CB97UUvDKJde2V0KDWWB3lyf6PC3FaZP7YxZ2G8OAtn9p4HI9j9JLP9qjOGZFvyl8uwNT8qM+hGnz/n16NI7oA==
 
-passport@0.6.0, passport@^0.6.0:
+passport@0.6.0, passport@^0.4.0, passport@^0.6.0:
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/passport/-/passport-0.6.0.tgz#e869579fab465b5c0b291e841e6cc95c005fac9d"
   integrity sha512-0fe+p3ZnrWRW74fe8+SvCyf4a3Pb2/h7gFkQ8yTJpAO50gDzlfjZUZTO1k5Eg9kUct22OxHLqDZoKUWRHOh9ug==
