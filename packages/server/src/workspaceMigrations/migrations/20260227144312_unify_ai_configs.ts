@@ -65,7 +65,7 @@ const migration = async () => {
 
     const model =
       legacyProvider.defaultModel ||
-      ai.DEFAULT_MODEL_BY_PROVIDER[legacyProvider.provider]
+      ai.DefaultModelByProvider[legacyProvider.provider]
     if (!model) {
       continue
     }

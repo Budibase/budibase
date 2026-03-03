@@ -1,6 +1,6 @@
 export * from "./generators"
 export {
-  DEFAULT_MODEL_BY_PROVIDER,
+  DefaultModelByProvider,
   getLLMConfig,
   LLMRequest,
   parseResponseFormat,

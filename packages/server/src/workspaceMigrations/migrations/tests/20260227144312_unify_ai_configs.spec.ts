@@ -76,7 +76,7 @@ describe("20260227144312_unify_ai_configs", () => {
     expect(createMock).toHaveBeenCalledWith({
       name: "OpenAI",
       provider: "OpenAI",
-      model: ai.DEFAULT_MODEL_BY_PROVIDER.OpenAI,
+      model: ai.DefaultModelByProvider.OpenAI,
       credentialsFields: {
         api_key: "sk-test",
         api_base: "https://api.openai.com/v1",
@@ -156,7 +156,7 @@ describe("20260227144312_unify_ai_configs", () => {
     expect(createMock).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: BUDIBASE_AI_PROVIDER_ID,
-        model: `budibase/legacy/${ai.DEFAULT_MODEL_BY_PROVIDER.BudibaseAI}`,
+        model: `budibase/legacy/${ai.DefaultModelByProvider.BudibaseAI}`,
         credentialsFields: {},
       })
     )
