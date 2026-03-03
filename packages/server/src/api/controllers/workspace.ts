@@ -516,7 +516,7 @@ export async function fetchAppPackage(
       !isChatRoute &&
       (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev))
     ) {
-      ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
+      ctx.throw(404, "No matching workspace app found for URL path: " + urlPath)
     }
 
     if (matchedWorkspaceApp) {
