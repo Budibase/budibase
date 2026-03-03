@@ -857,6 +857,7 @@ describe("/applications", () => {
     })
 
     it("should retrieve all the screens for public calls", async () => {
+      await config.ensureDefaultWorkspaceAppId()
       const [_screen1, screen2, _screen3] = await Promise.all([
         config.api.screen.save(basicScreen()),
         config.api.screen.save(
