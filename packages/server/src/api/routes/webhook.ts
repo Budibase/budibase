@@ -20,3 +20,8 @@ publicRoutes.post(
   "/api/webhooks/ms-teams/:instance/:chatAppId/:agentId",
   controller.MSTeams
 )
+
+publicRoutes.post(
+  "/api/webhooks/slack/:instance/:chatAppId/:agentId",
+  controller.slack
+)

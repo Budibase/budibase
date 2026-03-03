@@ -12,8 +12,10 @@
   import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
+  import SlackConfig from "./DeploymentChannels/SlackConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
   import MSTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
+  import SlackLogo from "assets/slack.svg"
 
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling this channel."
@@ -21,6 +23,7 @@
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
   let MSTeamsModal: Modal
+  let slackModal: Modal
   let toggling = $state(false)
 
   const discordConfigured = $derived.by(() => {
@@ -33,10 +36,6 @@
     )
   })
 
-  const discordEnabled = $derived(
-    !!currentAgent?.discordIntegration?.interactionsEndpointUrl
-  )
-
   const MSTeamsConfigured = $derived.by(() => {
     const integration = currentAgent?.MSTeamsIntegration
     return !!(
@@ -46,8 +45,23 @@
     )
   })
 
+  const slackConfigured = $derived.by(() => {
+    const integration = currentAgent?.slackIntegration
+    return !!(
+      integration?.botToken?.trim() && integration?.signingSecret?.trim()
+    )
+  })
+
   const MSTeamsEnabled = $derived(
     !!currentAgent?.MSTeamsIntegration?.messagingEndpointUrl?.trim()
+  )
+
+  const discordEnabled = $derived(
+    !!currentAgent?.discordIntegration?.interactionsEndpointUrl
+  )
+
+  const slackEnabled = $derived(
+    !!currentAgent?.slackIntegration?.messagingEndpointUrl?.trim()
   )
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
@@ -71,6 +85,15 @@
         "Configure this agent for Microsoft Teams personal, group, and team chats",
       configurable: true,
     },
+    {
+      id: "slack",
+      name: "Slack",
+      logo: SlackLogo,
+      status: slackEnabled ? "Enabled" : "Disabled",
+      details:
+        "Allow this agent to respond in Slack channels, threads, and DMs",
+      configurable: true,
+    },
   ])
 
   const onConfigureChannel = (channel: DeploymentRow) => {
@@ -80,6 +103,10 @@
     }
     if (channel.id === "MSTeams") {
       MSTeamsModal?.show()
+      return
+    }
+    if (channel.id === "slack") {
+      slackModal?.show()
       return
     }
   }
@@ -114,6 +141,16 @@
           notifications.success("Microsoft Teams channel enabled")
         } else {
           MSTeamsModal?.show()
+        }
+      } else if (channel.id === "slack") {
+        if (isChannelEnabled) {
+          await agentsStore.toggleSlackDeployment(currentAgent._id, false)
+          notifications.success("Slack channel disabled")
+        } else if (slackConfigured) {
+          await agentsStore.toggleSlackDeployment(currentAgent._id, true)
+          notifications.success("Slack channel enabled")
+        } else {
+          slackModal?.show()
         }
       }
     } catch (e) {
@@ -255,6 +292,33 @@
       </div>
     </svelte:fragment>
     <MicrosoftTeamsConfig agent={currentAgent} />
+  </ModalContent>
+</Modal>
+
+<Modal bind:this={slackModal}>
+  <ModalContent
+    size="L"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <svelte:fragment slot="header">
+      <div class="modal-header">
+        <img
+          alt="Slack"
+          width="24px"
+          height="24px"
+          src={SlackLogo}
+          class="modal-header-logo"
+        />
+        <div class="modal-header-copy">
+          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
+            >Slack</Body
+          >
+        </div>
+      </div>
+    </svelte:fragment>
+    <SlackConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
 
