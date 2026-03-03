@@ -205,6 +205,46 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
     return await this.updateChatApp({ agents })
   }
 
+  upsertAgentConfig = async ({
+    agentId,
+    updates,
+    workspaceId,
+  }: {
+    agentId: string
+    updates: Partial<Omit<ChatAppAgent, "agentId">>
+    workspaceId?: string
+  }): Promise<ChatApp | null> => {
+    if (!agentId) {
+      return null
+    }
+
+    const chatApp = await this.ensureChatApp(undefined, workspaceId)
+    if (!chatApp) {
+      return null
+    }
+
+    const agents = chatApp.agents || []
+    const matched = agents.find(agent => agent.agentId === agentId)
+    const nextAgent: ChatAppAgent = matched
+      ? {
+          ...matched,
+          ...updates,
+          agentId: matched.agentId,
+        }
+      : {
+          agentId,
+          isEnabled: false,
+          isDefault: false,
+          ...updates,
+        }
+
+    const nextAgents = matched
+      ? agents.map(agent => (agent.agentId === agentId ? nextAgent : agent))
+      : [...agents, nextAgent]
+
+    return await this.updateAgents(normalizeDefaultAgent(nextAgents))
+  }
+
   toggleAgentDeploymentInChat = async (
     agentId: string,
     workspaceId: string
