@@ -4,6 +4,8 @@ import {
   Agent,
   AgentFile,
   CreateAgentRequest,
+  ProvisionAgentSlackChannelRequest,
+  ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
@@ -173,6 +175,14 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   ): Promise<ProvisionAgentMSTeamsChannelResponse> =>
     await this.runAndRefreshAgents(() =>
       API.provisionAgentMSTeamsChannel(agentId, body)
+    )
+
+  provisionSlackChannel = async (
+    agentId: string,
+    body?: ProvisionAgentSlackChannelRequest
+  ): Promise<ProvisionAgentSlackChannelResponse> =>
+    await this.runAndRefreshAgents(() =>
+      API.provisionAgentSlackChannel(agentId, body)
     )
 
   toggleDiscordDeployment = async (agentId: string, enabled: boolean) =>

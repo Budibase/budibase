@@ -7,7 +7,7 @@ import {
 import type { ChatApp } from "@budibase/types"
 import * as chatApps from "../chatApps"
 
-export type ChatWebhookProvider = "discord" | "ms-teams"
+export type ChatWebhookProvider = "discord" | "ms-teams" | "slack"
 
 const enableAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
   const existingAgents = chatApp.agents || []

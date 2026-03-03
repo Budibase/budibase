@@ -5,6 +5,7 @@ import * as ai from "../controllers/ai"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 import {
   createAgentValidator,
+  provisionAgentSlackChannelValidator,
   provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   toggleAgentDiscordDeploymentValidator,
@@ -41,6 +42,11 @@ builderAdminRoutes
     "/api/agent/:agentId/ms-teams/provision",
     provisionAgentMSTeamsChannelValidator(),
     ai.provisionAgentMSTeamsChannel
+  )
+  .post(
+    "/api/agent/:agentId/slack/provision",
+    provisionAgentSlackChannelValidator(),
+    ai.provisionAgentSlackChannel
   )
   .get("/api/agent/tools", ai.fetchTools)
 

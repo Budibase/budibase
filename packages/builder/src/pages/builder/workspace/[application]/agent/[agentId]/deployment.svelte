@@ -12,8 +12,10 @@
   import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
+  import SlackConfig from "./DeploymentChannels/SlackConfig.svelte"
   import DiscordLogo from "assets/discord.svg"
   import MSTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
+  import SlackLogo from "assets/slack.svg"
 
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling Discord."
@@ -21,6 +23,7 @@
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
   let MSTeamsModal: Modal
+  let slackModal: Modal
   let toggling = $state(false)
 
   const discordConfigured = $derived.by(() => {
@@ -46,6 +49,15 @@
     )
   })
 
+  const slackConfigured = $derived.by(() => {
+    const integration = currentAgent?.slackIntegration
+    return !!(
+      integration?.botToken?.trim() &&
+      integration?.signingSecret?.trim() &&
+      integration?.messagingEndpointUrl?.trim()
+    )
+  })
+
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
   const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_CHAT])
 
@@ -67,6 +79,14 @@
         "Configure this agent for Microsoft Teams personal, group, and team chats",
       configurable: true,
     },
+    {
+      id: "slack",
+      name: "Slack",
+      logo: SlackLogo,
+      status: slackConfigured ? "Enabled" : "Disabled",
+      details: "Allow this agent to respond in Slack channels, threads, and DMs",
+      configurable: true,
+    },
   ])
 
   const onConfigureChannel = (channel: DeploymentRow) => {
@@ -76,6 +96,10 @@
     }
     if (channel.id === "MSTeams") {
       MSTeamsModal?.show()
+      return
+    }
+    if (channel.id === "slack") {
+      slackModal?.show()
       return
     }
   }
@@ -239,6 +263,33 @@
       </div>
     </svelte:fragment>
     <MicrosoftTeamsConfig agent={currentAgent} />
+  </ModalContent>
+</Modal>
+
+<Modal bind:this={slackModal}>
+  <ModalContent
+    size="L"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <svelte:fragment slot="header">
+      <div class="modal-header">
+        <img
+          alt="Slack"
+          width="24px"
+          height="24px"
+          src={SlackLogo}
+          class="modal-header-logo"
+        />
+        <div class="modal-header-copy">
+          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
+            >Slack</Body
+          >
+        </div>
+      </div>
+    </svelte:fragment>
+    <SlackConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
 

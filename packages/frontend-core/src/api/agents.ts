@@ -5,6 +5,8 @@ import {
   DuplicateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
+  ProvisionAgentSlackChannelRequest,
+  ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
@@ -42,6 +44,10 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
   ) => Promise<ProvisionAgentMSTeamsChannelResponse>
+  provisionAgentSlackChannel: (
+    agentId: string,
+    body?: ProvisionAgentSlackChannelRequest
+  ) => Promise<ProvisionAgentSlackChannelResponse>
   toggleAgentDiscordDeployment: (
     agentId: string,
     enabled: boolean
@@ -127,6 +133,16 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       ProvisionAgentMSTeamsChannelResponse
     >({
       url: `/api/agent/${agentId}/ms-teams/provision`,
+      body,
+    })
+  },
+
+  provisionAgentSlackChannel: async (agentId: string, body) => {
+    return await API.post<
+      ProvisionAgentSlackChannelRequest | undefined,
+      ProvisionAgentSlackChannelResponse
+    >({
+      url: `/api/agent/${agentId}/slack/provision`,
       body,
     })
   },

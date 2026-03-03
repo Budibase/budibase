@@ -4,6 +4,8 @@ import {
   CreateAgentRequest,
   CreateAgentResponse,
   FetchAgentsResponse,
+  ProvisionAgentSlackChannelRequest,
+  ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   RequiredKeys,
@@ -21,6 +23,7 @@ import sdk from "../../../sdk"
 
 const DISCORD_SECRET_MASK = "********"
 const TEAMS_SECRET_MASK = "********"
+const SLACK_SECRET_MASK = "********"
 
 const obfuscateAgentSecrets = (agent: Agent): Agent => {
   return {
@@ -44,6 +47,19 @@ const obfuscateAgentSecrets = (agent: Agent): Agent => {
             ...agent.MSTeamsIntegration,
             ...(agent.MSTeamsIntegration.appPassword
               ? { appPassword: TEAMS_SECRET_MASK }
+              : {}),
+          },
+        }
+      : {}),
+    ...(agent.slackIntegration
+      ? {
+          slackIntegration: {
+            ...agent.slackIntegration,
+            ...(agent.slackIntegration.botToken
+              ? { botToken: SLACK_SECRET_MASK }
+              : {}),
+            ...(agent.slackIntegration.signingSecret
+              ? { signingSecret: SLACK_SECRET_MASK }
               : {}),
           },
         }
@@ -155,6 +171,25 @@ const persistMSTeamsDeployment = async ({
   })
 }
 
+const persistSlackDeployment = async ({
+  agent,
+  chatAppId,
+  messagingEndpointUrl,
+}: {
+  agent: Agent
+  chatAppId: string
+  messagingEndpointUrl: string
+}) => {
+  await sdk.ai.agents.update({
+    ...agent,
+    slackIntegration: {
+      ...agent.slackIntegration,
+      chatAppId,
+      messagingEndpointUrl,
+    },
+  })
+}
+
 const configureDiscordDeployment = async ({
   agent,
   agentId,
@@ -226,6 +261,7 @@ export async function createAgent(
     ragTopK: ragEnabled ? body.ragTopK : undefined,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
+    slackIntegration: body.slackIntegration,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -258,6 +294,7 @@ export async function updateAgent(
     ragTopK: ragEnabled ? body.ragTopK : undefined,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
+    slackIntegration: body.slackIntegration,
   }
 
   const agent = await sdk.ai.agents.update(updateRequest)
@@ -314,6 +351,39 @@ export async function provisionAgentMSTeamsChannel(
     buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
     persistIntegration: async (chatAppId, messagingEndpointUrl) =>
       await persistMSTeamsDeployment({
+        agent,
+        chatAppId,
+        messagingEndpointUrl,
+      }),
+  })
+
+  ctx.body = {
+    success: true,
+    chatAppId,
+    messagingEndpointUrl: endpointUrl,
+  }
+  ctx.status = 200
+}
+
+export async function provisionAgentSlackChannel(
+  ctx: UserCtx<
+    ProvisionAgentSlackChannelRequest,
+    ProvisionAgentSlackChannelResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
+  const { chatAppId, endpointUrl } = await configureDeploymentChannel({
+    agent,
+    agentId,
+    requestedChatAppId,
+    validateIntegration: sdk.ai.deployments.slack.validateSlackIntegration,
+    resolveChatAppForAgent: sdk.ai.deployments.slack.resolveChatAppForAgent,
+    buildEndpointUrl: sdk.ai.deployments.slack.buildSlackWebhookUrl,
+    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+      await persistSlackDeployment({
         agent,
         chatAppId,
         messagingEndpointUrl,

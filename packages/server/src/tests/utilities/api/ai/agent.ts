@@ -2,6 +2,8 @@ import {
   Agent,
   CreateAgentRequest,
   CreateAgentResponse,
+  ProvisionAgentSlackChannelRequest,
+  ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
@@ -73,6 +75,20 @@ export class AgentAPI extends TestAPI {
   ): Promise<ProvisionAgentMSTeamsChannelResponse> => {
     return await this._post<ProvisionAgentMSTeamsChannelResponse>(
       `/api/agent/${agentId}/ms-teams/provision`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  provisionSlackChannel = async (
+    agentId: string,
+    body?: ProvisionAgentSlackChannelRequest,
+    expectations?: Expectations
+  ): Promise<ProvisionAgentSlackChannelResponse> => {
+    return await this._post<ProvisionAgentSlackChannelResponse>(
+      `/api/agent/${agentId}/slack/provision`,
       {
         body,
         expectations,
