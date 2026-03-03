@@ -1,4 +1,5 @@
 import { type GetWorkspaceHomeMetricsResponse } from "@budibase/types"
+import { getQuotaMonthWindow } from "../../utilities/quotaMonthWindow"
 
 describe("workspace home metrics caching", () => {
   let cacheGet: jest.Mock
@@ -105,15 +106,14 @@ describe("workspace home metrics caching", () => {
     find.mockRejectedValue(new Error("failed"))
 
     const res = await getWorkspaceHomeMetrics("dev_workspace")
+    const { periodStart, periodEnd } = getQuotaMonthWindow(
+      new Date("2026-01-20T12:00:00.000Z")
+    )
 
     expect(res.totalUsers).toEqual(0)
     expect(res.automationRunsThisMonth).toEqual(0)
     expect(res.agentActionsThisMonth).toEqual(0)
-    expect(new Date(res.periodStart)).toEqual(
-      new Date("2026-01-01T00:00:00.000Z")
-    )
-    expect(new Date(res.periodEnd)).toEqual(
-      new Date("2026-02-01T00:00:00.000Z")
-    )
+    expect(res.periodStart).toEqual(periodStart)
+    expect(res.periodEnd).toEqual(periodEnd)
   })
 })
