@@ -65,6 +65,10 @@ interface ConfiguredDeployment<TValidatedIntegration> {
   integration: TValidatedIntegration
 }
 
+type DiscordDeployment = ConfiguredDeployment<
+  ReturnType<typeof sdk.ai.deployments.discord.validateDiscordIntegration>
+>
+
 const configureDeploymentChannel = async <
   TValidatedIntegration extends { chatAppId?: string },
 >({
@@ -112,6 +116,75 @@ const configureDeploymentChannel = async <
     integration,
   }
 }
+
+const persistDiscordDeployment = async ({
+  agent,
+  chatAppId,
+  interactionsEndpointUrl,
+}: {
+  agent: Agent
+  chatAppId?: string
+  interactionsEndpointUrl?: string
+}) => {
+  await sdk.ai.agents.update({
+    ...agent,
+    discordIntegration: {
+      ...agent.discordIntegration,
+      chatAppId,
+      interactionsEndpointUrl,
+    },
+  })
+}
+
+const persistMSTeamsDeployment = async ({
+  agent,
+  chatAppId,
+  messagingEndpointUrl,
+}: {
+  agent: Agent
+  chatAppId: string
+  messagingEndpointUrl: string
+}) => {
+  await sdk.ai.agents.update({
+    ...agent,
+    MSTeamsIntegration: {
+      ...agent.MSTeamsIntegration,
+      chatAppId,
+      messagingEndpointUrl,
+    },
+  })
+}
+
+const configureDiscordDeployment = async ({
+  agent,
+  agentId,
+  requestedChatAppId,
+}: {
+  agent: Agent
+  agentId: string
+  requestedChatAppId?: string
+}): Promise<DiscordDeployment> =>
+  await configureDeploymentChannel({
+    agent,
+    agentId,
+    requestedChatAppId,
+    validateIntegration: sdk.ai.deployments.discord.validateDiscordIntegration,
+    resolveChatAppForAgent: sdk.ai.deployments.discord.resolveChatAppForAgent,
+    buildEndpointUrl: sdk.ai.deployments.discord.buildDiscordWebhookUrl,
+    beforeBuildEndpoint: async ({ applicationId, botToken, guildId }) => {
+      await sdk.ai.deployments.discord.syncApplicationCommands(
+        applicationId,
+        botToken,
+        guildId
+      )
+    },
+    persistIntegration: async (chatAppId, interactionsEndpointUrl) =>
+      await persistDiscordDeployment({
+        agent,
+        chatAppId,
+        interactionsEndpointUrl,
+      }),
+  })
 
 export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
   const rawAiconfigId = ctx.query.aiconfigId
@@ -205,34 +278,10 @@ export async function syncAgentDiscordCommands(
   const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
 
   const { chatAppId, endpointUrl, integration } =
-    await configureDeploymentChannel({
+    await configureDiscordDeployment({
       agent,
       agentId,
       requestedChatAppId,
-      validateIntegration:
-        sdk.ai.deployments.discord.validateDiscordIntegration,
-      resolveChatAppForAgent: sdk.ai.deployments.discord.resolveChatAppForAgent,
-      buildEndpointUrl: sdk.ai.deployments.discord.buildDiscordWebhookUrl,
-      beforeBuildEndpoint: async ({ applicationId, botToken, guildId }) => {
-        await sdk.ai.deployments.discord.syncApplicationCommands(
-          applicationId,
-          botToken,
-          guildId
-        )
-      },
-      persistIntegration: async (
-        resolvedChatAppId,
-        interactionsEndpointUrl
-      ) => {
-        await sdk.ai.agents.update({
-          ...agent,
-          discordIntegration: {
-            ...agent.discordIntegration,
-            chatAppId: resolvedChatAppId,
-            interactionsEndpointUrl,
-          },
-        })
-      },
     })
 
   ctx.body = {
@@ -263,16 +312,12 @@ export async function provisionAgentMSTeamsChannel(
     validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
     resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
     buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
-    persistIntegration: async (resolvedChatAppId, messagingEndpointUrl) => {
-      await sdk.ai.agents.update({
-        ...agent,
-        MSTeamsIntegration: {
-          ...agent.MSTeamsIntegration,
-          chatAppId: resolvedChatAppId,
-          messagingEndpointUrl,
-        },
-      })
-    },
+    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+      await persistMSTeamsDeployment({
+        agent,
+        chatAppId,
+        messagingEndpointUrl,
+      }),
   })
 
   ctx.body = {
@@ -300,33 +345,9 @@ export async function toggleAgentDiscordDeployment(
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   if (enabled) {
-    await configureDeploymentChannel({
+    await configureDiscordDeployment({
       agent,
       agentId,
-      validateIntegration:
-        sdk.ai.deployments.discord.validateDiscordIntegration,
-      resolveChatAppForAgent: sdk.ai.deployments.discord.resolveChatAppForAgent,
-      buildEndpointUrl: sdk.ai.deployments.discord.buildDiscordWebhookUrl,
-      beforeBuildEndpoint: async ({ applicationId, botToken, guildId }) => {
-        await sdk.ai.deployments.discord.syncApplicationCommands(
-          applicationId,
-          botToken,
-          guildId
-        )
-      },
-      persistIntegration: async (
-        resolvedChatAppId,
-        interactionsEndpointUrl
-      ) => {
-        await sdk.ai.agents.update({
-          ...agent,
-          discordIntegration: {
-            ...agent.discordIntegration,
-            chatAppId: resolvedChatAppId,
-            interactionsEndpointUrl,
-          },
-        })
-      },
     })
   } else {
     const chatAppId = agent.discordIntegration?.chatAppId?.trim()
@@ -335,13 +356,10 @@ export async function toggleAgentDiscordDeployment(
       await sdk.ai.deployments.discord.disableAgentOnChatApp(chatAppId, agentId)
     }
 
-    await sdk.ai.agents.update({
-      ...agent,
-      discordIntegration: {
-        ...agent.discordIntegration,
-        interactionsEndpointUrl: undefined,
-        chatAppId: undefined,
-      },
+    await persistDiscordDeployment({
+      agent,
+      interactionsEndpointUrl: undefined,
+      chatAppId: undefined,
     })
   }
 
