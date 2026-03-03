@@ -117,11 +117,11 @@
     <div class="agent-node">
       <div>
         <Body
-          color={"var(--spectrum-global-color-gray-900);"}
+          color={"var(--spectrum-global-color-gray-900)"}
           weight="500"
           size="XS">Agent in automations</Body
         >
-        <Body color={"var(--spectrum-global-color-gray-700);"} size="XS"
+        <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
           >This agent can be triggered from within Budibase Automations via the
           Agent node</Body
         >
@@ -144,8 +144,12 @@
       >
     </div>
     <div class="integration-list">
-      {#if agentChatEnabled}
-        <AgentChatChannel />
+      {#if agentChatEnabled && currentAgent?._id}
+        <AgentChatChannel
+          agentId={currentAgent._id}
+          agentName={currentAgent.name || "Agent"}
+          agentLive={!!currentAgent.live}
+        />
       {/if}
       {#each channels as channel (channel.id)}
         <div class="integration-row">

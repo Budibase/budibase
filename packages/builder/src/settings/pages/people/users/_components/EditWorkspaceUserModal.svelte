@@ -10,6 +10,7 @@
     notifications,
   } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
+  import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { roles } from "@/stores/builder"
   import { auth, users } from "@/stores/portal"
   import type { User } from "@budibase/types"
@@ -286,32 +287,22 @@
       bind:value={draft.lastName}
       disabled={disableFields}
     />
-    <div class="role-select">
+    <GlobalRoleSelect
+      bind:value={draft.role}
+      options={roleOptions}
+      disabled={disableRole}
+    />
+    {#if draft.role === Constants.BudibaseRoles.AppUser}
       <Select
-        label="Select role"
-        placeholder={false}
-        bind:value={draft.role}
-        options={roleOptions}
+        label="Select end user role"
+        bind:value={draft.appRole}
+        options={endUserRoleOptions}
         getOptionLabel={option => option.label}
         getOptionValue={option => option.value}
-        getOptionSubtitle={(option: any) => option.subtitle}
-        showSelectedSubtitle={true}
+        getOptionColour={option => option.color}
+        placeholder={false}
         disabled={disableRole}
       />
-    </div>
-    {#if draft.role === Constants.BudibaseRoles.AppUser}
-      <div class="role-select-compact">
-        <Select
-          label="Select end user role"
-          bind:value={draft.appRole}
-          options={endUserRoleOptions}
-          getOptionLabel={option => option.label}
-          getOptionValue={option => option.value}
-          getOptionColour={option => option.color}
-          placeholder={false}
-          disabled={disableRole}
-        />
-      </div>
     {/if}
   </Layout>
 </ModalContent>
@@ -322,11 +313,5 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
-  }
-  .role-select :global(.spectrum-Picker) {
-    height: auto;
-    align-items: center;
-    padding-top: var(--spacing-m);
-    padding-bottom: var(--spacing-m);
   }
 </style>

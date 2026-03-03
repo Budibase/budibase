@@ -28,6 +28,7 @@
   export let hovering: boolean = false
   export let disabled: boolean = false
   export let nonSelectable: boolean = false
+  export let bodyInteractive: boolean = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -75,6 +76,7 @@
   class:selectedBy
   class:disabled
   class:nonSelectable
+  class:bodyInteractive
   class:multiline={subtext}
   on:dragend
   on:dragstart
@@ -126,14 +128,18 @@
       </div>
     {/if}
     <div class="nav-item-body" title={showTooltip ? text : null}>
-      <div class="text">
-        <span title={text}>{text}</span>
-        {#if subtext}
-          <span class="subtext">
-            {subtext}
-          </span>
-        {/if}
-      </div>
+      {#if $$slots.text}
+        <slot name="text" />
+      {:else}
+        <div class="text">
+          <span title={text}>{text}</span>
+          {#if subtext}
+            <span class="subtext">
+              {subtext}
+            </span>
+          {/if}
+        </div>
+      {/if}
       {#if selectedBy}
         <UserAvatars size="XS" users={selectedBy} />
       {/if}
@@ -311,6 +317,9 @@
     overflow: hidden;
     pointer-events: none;
     gap: var(--spacing-s);
+  }
+  .nav-item.bodyInteractive .nav-item-body {
+    pointer-events: auto;
   }
   .nav-item-body span {
     white-space: nowrap;

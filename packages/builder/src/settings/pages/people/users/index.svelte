@@ -738,6 +738,12 @@
           <DeleteRowsButton
             item="user"
             action={isWorkspaceOnly ? "Remove" : "Delete"}
+            confirmationTitle={isWorkspaceOnly
+              ? "Confirm user removal"
+              : "Confirm user deletion"}
+            confirmationButtonText={isWorkspaceOnly
+              ? "Remove users"
+              : "Delete users"}
             on:updaterows
             selectedRows={[...selectedRows]}
             deleteRows={deleteUsers}

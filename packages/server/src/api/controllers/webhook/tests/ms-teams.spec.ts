@@ -1,13 +1,54 @@
-import type { ChatConversation } from "@budibase/types"
+import type {
+  ChatConversation,
+  MSTeamsConversationScope,
+} from "@budibase/types"
 import {
   isTeamsLifecycleActivity,
-  matchesTeamsConversationScope,
   parseTeamsCommand,
-  pickTeamsConversation,
   splitTeamsMessage,
   stripTeamsMentions,
-} from "./ms-teams"
-import { evictExpiredTimedCache, touchTimedCache } from "./utils"
+} from "../ms-teams"
+import { pickLatestConversation } from "../utils"
+
+const matchesTeamsConversationScope = ({
+  chat,
+  scope,
+}: {
+  chat: ChatConversation
+  scope: MSTeamsConversationScope
+}) => {
+  const ch = chat.channel
+  if (
+    chat.chatAppId !== scope.chatAppId ||
+    chat.agentId !== scope.agentId ||
+    ch?.provider !== "msteams" ||
+    ch?.conversationId !== scope.conversationId ||
+    (ch?.channelId || undefined) !== scope.channelId ||
+    ch.externalUserId !== scope.externalUserId
+  ) {
+    return false
+  }
+  return true
+}
+
+const pickTeamsConversation = ({
+  chats,
+  scope,
+  idleTimeoutMs,
+  nowMs = Date.now(),
+}: {
+  chats: ChatConversation[]
+  scope: MSTeamsConversationScope
+  idleTimeoutMs: number
+  nowMs?: number
+}) =>
+  pickLatestConversation({
+    chats,
+    scope,
+    idleTimeoutMs,
+    matchesConversationScope: matchesTeamsConversationScope,
+    nowMs,
+  })
 
 const makeChat = (
   overrides: Partial<ChatConversation> = {}
@@ -199,79 +240,5 @@ describe("teams webhook helpers", () => {
     })
 
     expect(picked?._id).toEqual("latest")
-  })
-
-  it("evicts least recently used runtime entries when max size is exceeded", () => {
-    const cache = new Map<
-      string,
-      {
-        value: string
-        lastAccessedAt: number
-      }
-    >()
-
-    touchTimedCache({
-      cache,
-      cacheKey: "agent-a",
-      value: "runtime-a",
-      maxSize: 2,
-      nowMs: 1,
-    })
-    touchTimedCache({
-      cache,
-      cacheKey: "agent-b",
-      value: "runtime-b",
-      maxSize: 2,
-      nowMs: 2,
-    })
-    touchTimedCache({
-      cache,
-      cacheKey: "agent-a",
-      value: "runtime-a",
-      maxSize: 2,
-      nowMs: 3,
-    })
-    touchTimedCache({
-      cache,
-      cacheKey: "agent-c",
-      value: "runtime-c",
-      maxSize: 2,
-      nowMs: 4,
-    })
-
-    expect([...cache.keys()]).toEqual(["agent-a", "agent-c"])
-  })
-
-  it("evicts expired runtime entries by ttl", () => {
-    const cache = new Map<
-      string,
-      {
-        value: string
-        lastAccessedAt: number
-      }
-    >()
-
-    touchTimedCache({
-      cache,
-      cacheKey: "agent-a",
-      value: "runtime-a",
-      maxSize: 10,
-      nowMs: 1,
-    })
-    touchTimedCache({
-      cache,
-      cacheKey: "agent-b",
-      value: "runtime-b",
-      maxSize: 10,
-      nowMs: 50,
-    })
-
-    evictExpiredTimedCache({
-      cache,
-      ttlMs: 60,
-      nowMs: 100,
-    })
-
-    expect([...cache.keys()]).toEqual(["agent-b"])
   })
 })
