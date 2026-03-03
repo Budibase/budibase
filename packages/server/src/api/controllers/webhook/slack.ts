@@ -22,8 +22,7 @@ export const isSlackDirectMessage = (event?: SlackEvent) =>
 
 export const stripSlackMentions = (text: string) =>
   text
-    .replace(/<@[A-Z0-9]+>/gi, " ")
-    .replace(/@\S+/g, " ")
+    .replace(/<@[A-Z0-9]+(?:\|[^>]+)?>/gi, " ")
     .replace(/\s+/g, " ")
     .trim()
 

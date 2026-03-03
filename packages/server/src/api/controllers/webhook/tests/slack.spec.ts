@@ -37,6 +37,9 @@ describe("slack webhook helpers", () => {
     ["ask hello there", "ask hello there"],
     ["/new start fresh", "/new start fresh"],
     ["<@U123> follow up", "follow up"],
+    ["<@U123|budibase> follow up", "follow up"],
+    ["contact me at alice@example.com", "contact me at alice@example.com"],
+    ["compare foo@bar and @alice", "compare foo@bar and @alice"],
     ["<@U123>   ", ""],
   ] as const)("extracts message content %s", (text, expected) => {
     expect(extractSlackMessageContent(text)).toEqual(expected)
