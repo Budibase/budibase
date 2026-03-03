@@ -109,7 +109,7 @@ export const checkBuilderEndpoint = async ({
     prodApp: true,
   })
   await exports
-    .createRequest(config.request, method, url, body)
+    .createRequest(config.getRequest(), method, url, body)
     .set(headers)
     .expect(403)
 }
