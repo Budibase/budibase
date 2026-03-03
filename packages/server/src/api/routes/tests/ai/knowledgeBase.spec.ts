@@ -1,5 +1,5 @@
-import { features } from "@budibase/backend-core"
-import { FeatureFlag, VectorDbProvider } from "@budibase/types"
+import { context, docIds, features } from "@budibase/backend-core"
+import { AIConfigType, FeatureFlag, VectorDbProvider } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe("knowledge base configs", () => {
@@ -22,7 +22,19 @@ describe("knowledge base configs", () => {
   })
 
   const buildDependencies = async () => {
-    const embeddingModelId = "aiconfig_embedding_test"
+    const embeddingModelId = docIds.generateAIConfigID("embedding_test")
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      await db.put({
+        _id: embeddingModelId,
+        name: "Embeddings",
+        provider: "OpenAI",
+        credentialsFields: {},
+        model: "text-embedding-3-small",
+        liteLLMModelId: "embedding-model",
+        configType: AIConfigType.EMBEDDINGS,
+      })
+    })
 
     const vectorDb = await config.api.vectorDb.create({
       name: "Primary Vector DB",
@@ -37,60 +49,154 @@ describe("knowledge base configs", () => {
     return { embeddingModelId, vectorDb }
   }
 
-  it("creates and lists knowledge bases", async () => {
-    await withRagEnabled(async () => {
-      const { embeddingModelId, vectorDb } = await buildDependencies()
+  describe("create", () => {
+    it("creates a knowledge base", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId, vectorDb } = await buildDependencies()
 
-      const created = await config.api.knowledgeBase.create({
-        name: "Support Docs",
-        embeddingModel: embeddingModelId,
-        vectorDb: vectorDb._id!,
+        const created = await config.api.knowledgeBase.create({
+          name: "Support Docs",
+          embeddingModel: embeddingModelId,
+          vectorDb: vectorDb._id!,
+        })
+
+        expect(created._id).toBeDefined()
+        expect(created.name).toBe("Support Docs")
       })
+    })
 
-      expect(created._id).toBeDefined()
-      expect(created.name).toBe("Support Docs")
+    it("rejects missing fields", async () => {
+      await withRagEnabled(async () => {
+        await config.api.knowledgeBase.create(
+          {
+            name: "Incomplete",
+            embeddingModel: "",
+            vectorDb: "",
+          },
+          { status: 400 }
+        )
+      })
+    })
 
-      const knowledgeBases = await config.api.knowledgeBase.fetch()
-      expect(knowledgeBases).toHaveLength(1)
-      expect(knowledgeBases[0].embeddingModel).toBe(embeddingModelId)
-      expect(knowledgeBases[0].vectorDb).toBe(vectorDb._id)
+    it("rejects unknown vector db", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId } = await buildDependencies()
+        await config.api.knowledgeBase.create(
+          {
+            name: "Invalid Vector DB",
+            embeddingModel: embeddingModelId,
+            vectorDb: "vectordb_missing",
+          },
+          { status: 404 }
+        )
+      })
+    })
+
+    it("rejects unknown embedding model", async () => {
+      await withRagEnabled(async () => {
+        const { vectorDb } = await buildDependencies()
+        await config.api.knowledgeBase.create(
+          {
+            name: "Invalid Embedding",
+            embeddingModel: "aiconfig_missing",
+            vectorDb: vectorDb._id!,
+          },
+          { status: 404 }
+        )
+      })
+    })
+
+    it("rejects non-embedding model configs", async () => {
+      await withRagEnabled(async () => {
+        const completionsModelId = docIds.generateAIConfigID("completions_test")
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const db = context.getWorkspaceDB()
+          await db.put({
+            _id: completionsModelId,
+            name: "Completions",
+            provider: "OpenAI",
+            credentialsFields: {},
+            model: "gpt-4o-mini",
+            liteLLMModelId: "completions-model",
+            configType: AIConfigType.COMPLETIONS,
+          })
+        })
+
+        const vectorDb = await config.api.vectorDb.create({
+          name: "Primary Vector DB",
+          provider: VectorDbProvider.PGVECTOR,
+          host: "localhost",
+          port: 5432,
+          database: "budibase",
+          user: "bb_user",
+          password: "secret",
+        })
+
+        await config.api.knowledgeBase.create(
+          {
+            name: "Invalid Embedding Type",
+            embeddingModel: completionsModelId,
+            vectorDb: vectorDb._id!,
+          },
+          { status: 400 }
+        )
+      })
     })
   })
 
-  it("updates and deletes knowledge bases", async () => {
-    await withRagEnabled(async () => {
-      const { embeddingModelId, vectorDb } = await buildDependencies()
+  describe("fetch", () => {
+    it("lists knowledge bases", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId, vectorDb } = await buildDependencies()
+        await config.api.knowledgeBase.create({
+          name: "Support Docs",
+          embeddingModel: embeddingModelId,
+          vectorDb: vectorDb._id!,
+        })
 
-      const created = await config.api.knowledgeBase.create({
-        name: "Support Docs",
-        embeddingModel: embeddingModelId,
-        vectorDb: vectorDb._id!,
+        const knowledgeBases = await config.api.knowledgeBase.fetch()
+        expect(knowledgeBases).toHaveLength(1)
+        expect(knowledgeBases[0].embeddingModel).toBe(embeddingModelId)
+        expect(knowledgeBases[0].vectorDb).toBe(vectorDb._id)
       })
-
-      const updated = await config.api.knowledgeBase.update({
-        ...created,
-        name: "Updated Knowledge Base",
-      })
-      expect(updated.name).toBe("Updated Knowledge Base")
-
-      const { deleted } = await config.api.knowledgeBase.remove(created._id!)
-      expect(deleted).toBe(true)
-
-      const knowledgeBases = await config.api.knowledgeBase.fetch()
-      expect(knowledgeBases).toHaveLength(0)
     })
   })
 
-  it("rejects missing fields", async () => {
-    await withRagEnabled(async () => {
-      await config.api.knowledgeBase.create(
-        {
-          name: "Incomplete",
-          embeddingModel: "",
-          vectorDb: "",
-        },
-        { status: 400 }
-      )
+  describe("update", () => {
+    it("updates knowledge bases", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId, vectorDb } = await buildDependencies()
+        const created = await config.api.knowledgeBase.create({
+          name: "Support Docs",
+          embeddingModel: embeddingModelId,
+          vectorDb: vectorDb._id!,
+        })
+
+        const updated = await config.api.knowledgeBase.update({
+          ...created,
+          name: "Updated Knowledge Base",
+        })
+        expect(updated.name).toBe("Updated Knowledge Base")
+      })
+    })
+  })
+
+  describe("delete", () => {
+    it("deletes knowledge bases", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId, vectorDb } = await buildDependencies()
+        const created = await config.api.knowledgeBase.create({
+          name: "Support Docs",
+          embeddingModel: embeddingModelId,
+          vectorDb: vectorDb._id!,
+        })
+
+        const { deleted } = await config.api.knowledgeBase.remove(created._id!)
+        expect(deleted).toBe(true)
+
+        const knowledgeBases = await config.api.knowledgeBase.fetch()
+        expect(knowledgeBases).toHaveLength(0)
+      })
     })
   })
 })
