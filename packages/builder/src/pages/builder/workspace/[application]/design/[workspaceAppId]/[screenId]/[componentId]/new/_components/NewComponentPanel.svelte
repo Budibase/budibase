@@ -261,9 +261,6 @@
         on:change={e => (searchString = e.detail)}
         bind:inputRef={searchRef}
       />
-      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-        Tip: Press Cmd/Ctrl + Enter to open or close this panel
-      </Body>
       {#if filteredStructure.length}
         {#each filteredStructure as category}
           <Layout noPadding gap="XS">
