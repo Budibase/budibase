@@ -1,5 +1,9 @@
 import { configs } from "@budibase/backend-core"
-import { AIConfigType, type ProviderConfig } from "@budibase/types"
+import {
+  AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
+  type ProviderConfig,
+} from "@budibase/types"
 import sdk from "../../sdk"
 import { ai } from "@budibase/pro"
 
@@ -16,6 +20,22 @@ const mapCredentials = (config: ProviderConfig): Record<string, string> => {
     credentials.api_base = config.baseUrl
   }
   return credentials
+}
+
+const normalizeProvider = (provider: string) => {
+  return provider === "BudibaseAI" ? BUDIBASE_AI_PROVIDER_ID : provider
+}
+
+const normalizeModel = (provider: string, model: string) => {
+  if (provider !== BUDIBASE_AI_PROVIDER_ID) {
+    return model
+  }
+
+  if (model.startsWith("budibase/legacy/")) {
+    return model
+  }
+
+  return `budibase/legacy/${model}`
 }
 
 const migration = async () => {
@@ -50,15 +70,17 @@ const migration = async () => {
       continue
     }
 
-    const signature = `${legacyProvider.provider}:${model}:${AIConfigType.COMPLETIONS}`
+    const provider = normalizeProvider(legacyProvider.provider)
+    const normalizedModel = normalizeModel(provider, model)
+    const signature = `${provider}:${normalizedModel}:${AIConfigType.COMPLETIONS}`
     if (existingBySignature.has(signature)) {
       continue
     }
 
     await sdk.ai.configs.create({
       name: legacyProvider.name || legacyProvider.provider,
-      provider: legacyProvider.provider,
-      model,
+      provider,
+      model: normalizedModel,
       credentialsFields: mapCredentials(legacyProvider),
       configType: AIConfigType.COMPLETIONS,
       isDefault: !defaultAlreadyAssigned && legacyProvider.isDefault === true,

@@ -3,6 +3,7 @@ import { ai } from "@budibase/pro"
 import {
   AIConfig,
   AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
   ConfigType,
   ProviderConfig,
 } from "@budibase/types"
@@ -126,5 +127,38 @@ describe("20260227144312_unify_ai_configs", () => {
     await config.doInContext(config.getDevWorkspaceId(), migration)
 
     expect(createMock).not.toHaveBeenCalled()
+  })
+
+  it("maps legacy BudibaseAI provider to the new Budibase provider ID", async () => {
+    const legacyConfig: AIConfig = {
+      type: ConfigType.AI,
+      config: {
+        bbai: {
+          provider: "BudibaseAI",
+          name: "Budibase AI",
+          active: true,
+          isDefault: true,
+        },
+      },
+    }
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock.mockResolvedValue({} as any)
+
+    await config.doInContext(config.getDevWorkspaceId(), migration)
+
+    expect(createMock).toHaveBeenCalledTimes(1)
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: BUDIBASE_AI_PROVIDER_ID,
+        model: `budibase/legacy/${ai.DEFAULT_MODEL_BY_PROVIDER.BudibaseAI}`,
+        credentialsFields: {},
+      })
+    )
   })
 })
