@@ -296,15 +296,15 @@ export const appRoutes = (
           ],
         },
         {
-          path: AIConfigType.EMBEDDINGS,
-          title: "Embeddings",
+          path: "knowledge-bases",
+          title: "Knowledge bases",
           access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
-          comp: Pages.get("embeddings"),
+          comp: Pages.get("knowledgeBases"),
           routes: [
             {
               path: ":configId",
-              comp: Pages.get("ai_config"),
-              title: "AI config",
+              comp: Pages.get("knowledgeBase"),
+              title: "Knowledge base",
             },
           ],
         },
