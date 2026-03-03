@@ -27,7 +27,6 @@
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import DateAddedRenderer from "./_components/DateAddedRenderer.svelte"
-  import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
   import InvitedModal from "./_components/InvitedModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
@@ -103,7 +102,6 @@
   let tenantOwner: AccountMetadata | null
   let createUserModal: Modal,
     inviteConfirmationModal: Modal,
-    onboardingTypeModal: Modal,
     passwordModal: Modal,
     importUsersModal: Modal,
     userLimitReachedModal: Modal,
@@ -183,9 +181,6 @@
     successful: [],
     unsuccessful: [],
   }
-  $: inviteTitle = isWorkspaceOnly
-    ? "Invite users to workspace"
-    : "Invite users to organisation"
   $: enrichedUsers = buildEnrichedUsers(
     $fetch.rows as User[],
     tenantOwner,
@@ -300,16 +295,17 @@
     }
 
     if ($organisation.isSSOEnforced) {
-      // bypass the onboarding type selection of sso is enforced
+      // bypass the onboarding type selection if sso is enforced
       await chooseCreationType(OnboardingType.EMAIL)
     } else if (onboardingType) {
       await chooseCreationType(onboardingType)
-    } else {
-      onboardingTypeModal.show()
     }
   }
 
   async function createUserFlow() {
+    if (!isWorkspaceOnly) {
+      return
+    }
     let usersForInvite = userData?.users ?? []
     let assignedExistingUsers = false
     if (isWorkspaceOnly) {
@@ -464,7 +460,7 @@
   }
 
   async function chooseCreationType(onboardingType: string) {
-    if (onboardingType === OnboardingType.EMAIL) {
+    if (onboardingType === OnboardingType.EMAIL && isWorkspaceOnly) {
       await createUserFlow()
     } else {
       await createUsers()
@@ -635,16 +631,18 @@
               <Icon name={"upload-simple"} size="M" />
             </ActionButton>
           {/if}
-          <Button
-            size="M"
-            disabled={readonly}
-            on:click={$licensing.userLimitReached
-              ? userLimitReachedModal.show
-              : createUserModal.show}
-            cta
-          >
-            {isWorkspaceOnly ? "Invite to workspace" : "Invite users"}
-          </Button>
+          {#if isWorkspaceOnly}
+            <Button
+              size="M"
+              disabled={readonly}
+              on:click={$licensing.userLimitReached
+                ? userLimitReachedModal.show
+                : createUserModal.show}
+              cta
+            >
+              Invite to workspace
+            </Button>
+          {/if}
         {/if}
       </div>
     {/if}
@@ -680,23 +678,21 @@
   </div>
 </div>
 
-<Modal bind:this={createUserModal} closeOnOutsideClick={false}>
-  <AddUserModal
-    {showOnboardingTypeModal}
-    workspaceOnly={isWorkspaceOnly}
-    useWorkspaceInviteModal={true}
-    assignToWorkspace={isWorkspaceOnly}
-    {inviteTitle}
-  />
-</Modal>
+{#if isWorkspaceOnly}
+  <Modal bind:this={createUserModal} closeOnOutsideClick={false}>
+    <AddUserModal
+      {showOnboardingTypeModal}
+      workspaceOnly={isWorkspaceOnly}
+      useWorkspaceInviteModal={isWorkspaceOnly}
+      assignToWorkspace={isWorkspaceOnly}
+      inviteTitle="Invite users to workspace"
+    />
+  </Modal>
 
-<Modal bind:this={inviteConfirmationModal}>
-  <InvitedModal {inviteUsersResponse} />
-</Modal>
-
-<Modal bind:this={onboardingTypeModal}>
-  <OnboardingTypeModal {chooseCreationType} />
-</Modal>
+  <Modal bind:this={inviteConfirmationModal}>
+    <InvitedModal {inviteUsersResponse} />
+  </Modal>
+{/if}
 
 <Modal bind:this={passwordModal} disableCancel={true}>
   <PasswordModal
