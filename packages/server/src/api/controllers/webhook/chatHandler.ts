@@ -365,13 +365,7 @@ export const handleChatMessage = async ({
   scope,
   idleTimeoutMinutes,
 }: HandleChatMessageParams): Promise<void> => {
-  const userPrefix =
-    provider === "discord"
-      ? "discord"
-      : provider === "msteams"
-        ? "msteams"
-        : "slack"
-  const userId = `${userPrefix}:${user.externalUserId}`
+  const userId = `${provider}:${user.externalUserId}`
 
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
@@ -461,7 +455,7 @@ export const handleChatMessage = async ({
     const contextUser: ContextUser = {
       _id: userId,
       tenantId: context.getTenantId(),
-      email: `${userPrefix}+${user.externalUserId}@example.invalid`,
+      email: `${provider}+${user.externalUserId}@example.invalid`,
       roles: {},
       userId: user.externalUserId,
       firstName: user.displayName,

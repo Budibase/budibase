@@ -21,9 +21,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-const DISCORD_SECRET_MASK = "********"
-const TEAMS_SECRET_MASK = "********"
-const SLACK_SECRET_MASK = "********"
+const SECRET_MASK = "********"
 
 const obfuscateAgentSecrets = (agent: Agent): Agent => {
   return {
@@ -33,10 +31,10 @@ const obfuscateAgentSecrets = (agent: Agent): Agent => {
           discordIntegration: {
             ...agent.discordIntegration,
             ...(agent.discordIntegration.publicKey
-              ? { publicKey: DISCORD_SECRET_MASK }
+              ? { publicKey: SECRET_MASK }
               : {}),
             ...(agent.discordIntegration.botToken
-              ? { botToken: DISCORD_SECRET_MASK }
+              ? { botToken: SECRET_MASK }
               : {}),
           },
         }
@@ -46,7 +44,7 @@ const obfuscateAgentSecrets = (agent: Agent): Agent => {
           MSTeamsIntegration: {
             ...agent.MSTeamsIntegration,
             ...(agent.MSTeamsIntegration.appPassword
-              ? { appPassword: TEAMS_SECRET_MASK }
+              ? { appPassword: SECRET_MASK }
               : {}),
           },
         }
@@ -56,10 +54,10 @@ const obfuscateAgentSecrets = (agent: Agent): Agent => {
           slackIntegration: {
             ...agent.slackIntegration,
             ...(agent.slackIntegration.botToken
-              ? { botToken: SLACK_SECRET_MASK }
+              ? { botToken: SECRET_MASK }
               : {}),
             ...(agent.slackIntegration.signingSecret
-              ? { signingSecret: SLACK_SECRET_MASK }
+              ? { signingSecret: SECRET_MASK }
               : {}),
           },
         }
