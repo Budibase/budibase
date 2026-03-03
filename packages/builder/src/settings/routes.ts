@@ -144,13 +144,6 @@ export const orgRoutes = (
       routes: emailRoutes,
     },
     {
-      section: "AI",
-      access: () => false,
-      path: "ai",
-      icon: "sparkle",
-      comp: Pages.get("ai"),
-    },
-    {
       section: "Auth",
       access: () => isAdmin,
       path: "auth",
