@@ -11,6 +11,8 @@ import {
   RequiredKeys,
   ToggleAgentDiscordRequest,
   ToggleAgentDiscordResponse,
+  ToggleAgentMSTeamsRequest,
+  ToggleAgentMSTeamsResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   FeatureFlag,
@@ -404,12 +406,7 @@ export async function toggleAgentDiscordDeployment(
   >
 ) {
   const { agentId } = ctx.params
-  const enabledResponse = ctx.request.body?.enabled
-  if (typeof enabledResponse !== "boolean") {
-    ctx.throw(400, "enabled must be a boolean")
-  }
-
-  const enabled = enabledResponse
+  const { enabled } = ctx.request.body
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   if (enabled) {
@@ -421,13 +418,69 @@ export async function toggleAgentDiscordDeployment(
     const chatAppId = agent.discordIntegration?.chatAppId?.trim()
 
     if (chatAppId) {
-      await sdk.ai.deployments.discord.disableAgentOnChatApp(chatAppId, agentId)
+      await sdk.ai.deployments.shared.disableAgentOnChatApp({
+        chatAppId,
+        agentId,
+      })
     }
 
     await persistDiscordDeployment({
       agent,
       interactionsEndpointUrl: undefined,
       chatAppId: undefined,
+    })
+  }
+
+  ctx.body = { success: true, enabled }
+  ctx.status = 200
+}
+
+export async function toggleAgentMSTeamsDeployment(
+  ctx: UserCtx<
+    ToggleAgentMSTeamsRequest,
+    ToggleAgentMSTeamsResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const { enabled } = ctx.request.body
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+
+  if (enabled) {
+    const requestedChatAppId = parseOptionalChatAppId(
+      agent.MSTeamsIntegration?.chatAppId?.trim() || undefined
+    )
+    await configureDeploymentChannel({
+      agent,
+      agentId,
+      requestedChatAppId,
+      validateIntegration:
+        sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
+      resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
+      buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
+      persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+        await persistMSTeamsDeployment({
+          agent,
+          chatAppId,
+          messagingEndpointUrl,
+        }),
+    })
+  } else {
+    const chatAppId = agent.MSTeamsIntegration?.chatAppId?.trim()
+
+    if (chatAppId) {
+      await sdk.ai.deployments.shared.disableAgentOnChatApp({
+        chatAppId,
+        agentId,
+      })
+    }
+
+    await sdk.ai.agents.update({
+      ...agent,
+      MSTeamsIntegration: {
+        ...agent.MSTeamsIntegration,
+        messagingEndpointUrl: undefined,
+      },
     })
   }
 

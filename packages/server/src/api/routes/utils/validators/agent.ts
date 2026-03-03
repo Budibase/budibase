@@ -113,3 +113,11 @@ export function toggleAgentDiscordDeploymentValidator() {
     }).required()
   )
 }
+
+export function toggleAgentMSTeamsDeploymentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      enabled: Joi.boolean().required(),
+    }).required()
+  )
+}
