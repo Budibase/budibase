@@ -225,12 +225,7 @@ describe("agent slack integration provisioning", () => {
     }: {
       path: string
       body: Record<string, unknown>
-    }) =>
-      await config
-        .getRequest()!
-        .post(path)
-        .send(body)
-        .expect(200)
+    }) => await config.getRequest()!.post(path).send(body).expect(200)
 
     const fetchConversations = async () =>
       await config.doInContext(config.getProdWorkspaceId(), async () => {

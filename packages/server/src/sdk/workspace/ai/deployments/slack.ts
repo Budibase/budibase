@@ -35,5 +35,7 @@ export const resolveChatAppForAgent = async (
   chatAppId?: string
 ) => await shared.resolveProviderChatAppForAgent(agentId, chatAppId)
 
-export const buildSlackWebhookUrl = async (chatAppId: string, agentId: string) =>
-  await shared.buildProviderWebhookUrl("slack", chatAppId, agentId)
+export const buildSlackWebhookUrl = async (
+  chatAppId: string,
+  agentId: string
+) => await shared.buildProviderWebhookUrl("slack", chatAppId, agentId)

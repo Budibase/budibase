@@ -160,9 +160,8 @@ export async function slackWebhook(
         await context.doInWorkspaceContext(workspaceId, async () => {
           const agent = await sdk.ai.agents.getOrThrow(agentId)
           return {
-            integration: sdk.ai.deployments.slack.validateSlackIntegration(
-              agent
-            ),
+            integration:
+              sdk.ai.deployments.slack.validateSlackIntegration(agent),
             idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
           }
         })

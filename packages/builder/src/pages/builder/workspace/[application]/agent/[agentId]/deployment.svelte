@@ -84,7 +84,8 @@
       name: "Slack",
       logo: SlackLogo,
       status: slackConfigured ? "Enabled" : "Disabled",
-      details: "Allow this agent to respond in Slack channels, threads, and DMs",
+      details:
+        "Allow this agent to respond in Slack channels, threads, and DMs",
       configurable: true,
     },
   ])
