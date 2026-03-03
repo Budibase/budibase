@@ -36,7 +36,7 @@ function jobToJobInformation(job: Job): JobInformation {
 export interface TestQueueMessage<T = any>
   extends Pick<
     Job<T>,
-    "id" | "timestamp" | "queue" | "data" | "opts" | "discard"
+    "id" | "timestamp" | "queue" | "data" | "opts" | "discard" | "remove"
   > {
   manualTrigger?: boolean
   _isDiscarded?: boolean
@@ -196,6 +196,13 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         discard: async () => {
           message._isDiscarded = true
         },
+        remove: async () => {
+          const index = this._messages.indexOf(message)
+          if (index !== -1) {
+            this._messages.splice(index, 1)
+            this._emitter.emit("removed", message)
+          }
+        },
       }
       this._messages.push(message)
       if (this._messages.length > 1000) {
@@ -272,6 +279,10 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       }
     }
     return null
+  }
+
+  async getWaiting(start = 0, end = this._messages.length - 1) {
+    return this._messages.slice(start, end + 1) as Job[]
   }
 
   manualTrigger(id: JobId) {

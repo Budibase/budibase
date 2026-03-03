@@ -67,7 +67,12 @@ import {
 } from "@budibase/types"
 import supertest from "supertest"
 import { generateUserMetadataID } from "../../db/utils"
-import { startup } from "../../startup"
+import {
+  getState,
+  initQueues,
+  startup,
+  type QueueInitOptions,
+} from "../../startup"
 import { cleanup } from "../../utilities/fileSystem"
 
 import { Server } from "http"
@@ -109,17 +114,14 @@ export default class TestConfiguration {
   private csrfToken?: string
   private temporaryHeaders?: Record<string, string | string[]>
 
-  constructor(openServer = true) {
-    if (openServer) {
-      // use a random port because it doesn't matter
-      env.PORT = "0"
-      this.server = require("../../app").getServer()
-      // we need the request for logging in, involves cookies, hard to fake
-      this.request = supertest(this.server)
-      this.started = true
-    } else {
-      this.started = false
-    }
+  constructor() {
+    // use a random port because it doesn't matter
+    env.PORT = "0"
+    this.server = require("../../app").getServer()
+    // we need the request for logging in, involves cookies, hard to fake
+    this.request = supertest(this.server)
+    this.started = true
+
     this.devWorkspaceId = undefined
     this.allWorkspaces = []
 
@@ -211,10 +213,25 @@ export default class TestConfiguration {
 
   // use a new id as the name to avoid name collisions
   async init() {
-    if (!this.started) {
-      await startup()
+    if (this.started) {
+      let attempts = 0
+      while (getState() !== "ready" && attempts < 500) {
+        attempts++
+        await new Promise(resolve => setTimeout(resolve, 10))
+      }
+      if (getState() !== "ready") {
+        throw new Error("Server did not reach ready state")
+      }
+    } else {
+      await startup({
+        initQueues: false,
+      })
     }
     return this.newTenant()
+  }
+
+  initQueues(opts?: QueueInitOptions) {
+    initQueues(opts)
   }
 
   end() {
