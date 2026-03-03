@@ -50,13 +50,13 @@
 </script>
 
 {#if showInviteUsersModal}
-  <InviteUsersModal on:hide={() => (showInviteUsersModal = false)} />
+  <InviteUsersModal onHide={() => (showInviteUsersModal = false)} />
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
   <SideNav
     bind:this={sideNav}
-    on:inviteUser={() => (showInviteUsersModal = true)}
+    onInviteUser={() => (showInviteUsersModal = true)}
   />
   {#await promise}
     <div class="loading"></div>

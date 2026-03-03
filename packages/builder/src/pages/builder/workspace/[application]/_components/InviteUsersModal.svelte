@@ -1,7 +1,7 @@
 <script lang="ts">
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
   import type { BulkUserCreated } from "@budibase/types"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { onMount } from "svelte"
   import { OnboardingType } from "@/constants"
   import AddUserModal from "@/settings/pages/people/users/_components/AddUserModal.svelte"
   import {
@@ -15,15 +15,16 @@
   import { users } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
 
+  export let onHide: () => void = () => {}
+
   let createUserModal: Modal
-  const dispatch = createEventDispatcher()
-  let hasOpened = false
+  let isOpened = false
 
   $: currentWorkspaceId = $appStore.appId
     ? sdk.applications.getProdAppID($appStore.appId)
     : ""
 
-  const removingDuplicities = async (userData: UserData): Promise<UserData> => {
+  const removeDuplicates = (userData: UserData): UserData => {
     return dedupeUsersByEmail(userData)
   }
 
@@ -41,6 +42,9 @@
       notifications.error("Error adding some users to workspace")
     }
     if (!usersForInvite.length) {
+      if (!result.assignedCount && !result.failedCount) {
+        notifications.info("No users available to invite")
+      }
       return
     }
 
@@ -70,6 +74,9 @@
       notifications.error("Error adding some users to workspace")
     }
     if (!usersForCreation.users.length) {
+      if (!result.assignedCount && !result.failedCount) {
+        notifications.info("No users available to create")
+      }
       return
     }
 
@@ -77,11 +84,11 @@
     let response: BulkUserCreated = { successful: [], unsuccessful: [] }
     response = (await users.create(usersForCreation)) || response
 
-    if (
-      !assignToWorkspace ||
-      !currentWorkspaceId ||
-      !response.successful?.length
-    ) {
+    if (!response.successful?.length) {
+      throw new Error("No users were created")
+    }
+
+    if (!assignToWorkspace || !currentWorkspaceId) {
       notifications.success("Successfully created user")
       return
     }
@@ -102,7 +109,7 @@
     addUsersData: UserData,
     onboardingType?: string
   ) => {
-    const userData = await removingDuplicities(addUsersData)
+    const userData = removeDuplicates(addUsersData)
     if (!userData?.users?.length) {
       return keepOpen
     }
@@ -115,24 +122,27 @@
       }
     } catch (error) {
       console.error(error)
-      notifications.error("Error inviting user")
+      notifications.error("Error processing users")
       return keepOpen
     }
   }
 
   const hideModal = () => {
-    if (!hasOpened) {
+    if (!isOpened) {
       return
     }
-    dispatch("hide")
+    isOpened = false
+    onHide()
   }
 
   const showModal = () => {
-    hasOpened = true
+    isOpened = true
   }
 
   onMount(() => {
-    roles.fetch().catch(() => {})
+    roles.fetch().catch(error => {
+      console.error(error)
+    })
     createUserModal.show()
   })
 </script>

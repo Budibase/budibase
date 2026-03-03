@@ -39,7 +39,7 @@
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
-  import { createEventDispatcher, onDestroy, setContext } from "svelte"
+  import { onDestroy, setContext } from "svelte"
   import {
     FeatureFlag,
     type Datasource,
@@ -70,6 +70,7 @@
   export const show = () => {
     pinned.set(true)
   }
+  export let onInviteUser: () => void = () => {}
 
   $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
   $: automationErrorCount = Object.keys(automationErrors).length
@@ -123,7 +124,6 @@
   const pinned = createLocalStorageStore("builder-nav-pinned", true)
   const navLogoSize = 18
   const navTransitionMs = 160
-  const dispatch = createEventDispatcher()
 
   let ignoreFocus = false
   let focused = false
@@ -170,7 +170,7 @@
   }
 
   const openInviteUser = () => {
-    dispatch("inviteUser")
+    onInviteUser()
     keepCollapsed()
   }
 
