@@ -166,3 +166,7 @@ export const generateWorkspaceFavouriteID = () => {
 export const generateVectorDbID = () => {
   return `${DocumentType.VECTOR_STORE}${SEPARATOR}${newid()}`
 }
+
+export const generateKnowledgeBaseID = () => {
+  return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
+}
