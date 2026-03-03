@@ -4,11 +4,14 @@
   import type { Agent, SyncAgentDiscordCommandsResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
-  import { toOptionalIdleTimeout, toOptionalValue } from "./utils"
+  import {
+    DEFAULT_IDLE_TIMEOUT_MINUTES,
+    toOptionalIdleTimeout,
+    toOptionalValue,
+  } from "./utils"
 
   const DISCORD_ASK_COMMAND = DiscordCommands.ASK
   const DISCORD_NEW_COMMAND = DiscordCommands.NEW
-  const DEFAULT_IDLE_TIMEOUT_MINUTES = 45
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling Discord."
 
@@ -102,7 +105,6 @@
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
         },
       })
-      await agentsStore.fetchAgents()
     } catch (error) {
       console.error(error)
       throw error

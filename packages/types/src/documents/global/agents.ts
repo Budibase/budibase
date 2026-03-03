@@ -19,23 +19,24 @@ export interface ToolMetadata {
   sourceIconType?: string
 }
 
-export interface DiscordAgentIntegration {
+interface ChatAgentIntegration {
+  chatAppId?: string
+  idleTimeoutMinutes?: number
+}
+
+export interface DiscordAgentIntegration extends ChatAgentIntegration {
   applicationId?: string
   publicKey?: string
   botToken?: string
   guildId?: string
-  chatAppId?: string
-  idleTimeoutMinutes?: number
   interactionsEndpointUrl?: string
 }
 
-export interface MSTeamsAgentIntegration {
+export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
   appId?: string
   appPassword?: string
   tenantId?: string
-  chatAppId?: string
   messagingEndpointUrl?: string
-  idleTimeoutMinutes?: number
 }
 
 export interface Agent extends Document {
