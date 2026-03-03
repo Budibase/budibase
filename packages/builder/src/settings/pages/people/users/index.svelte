@@ -300,9 +300,7 @@
       return
     }
 
-    if (!isWorkspaceOnly) {
-      await chooseCreationType(OnboardingType.PASSWORD)
-    } else if ($organisation.isSSOEnforced) {
+    if ($organisation.isSSOEnforced) {
       // bypass the onboarding type selection if sso is enforced
       await chooseCreationType(OnboardingType.EMAIL)
     } else if (onboardingType) {
