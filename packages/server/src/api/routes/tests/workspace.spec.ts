@@ -1497,6 +1497,14 @@ describe("/applications", () => {
 
     it("should remove MIGRATING_APP header if present during deletion", async () => {
       setEnv({ DISABLE_WORKSPACE_MIGRATIONS: false })
+      config.initQueues({
+        workspaceMigrations: true,
+        events: false,
+        rag: false,
+        automations: false,
+        pro: false,
+        dev: false,
+      })
 
       const migrationsModule = await import(
         "../../../workspaceMigrations/migrations"
