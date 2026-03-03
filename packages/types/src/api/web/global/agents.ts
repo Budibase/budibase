@@ -59,7 +59,7 @@ export interface ToggleAgentDiscordRequest {
 }
 
 export interface ToggleAgentDiscordResponse {
-  success: true
+  success: boolean
   enabled: boolean
 }
 
@@ -68,7 +68,7 @@ export interface ToggleAgentMSTeamsRequest {
 }
 
 export interface ToggleAgentMSTeamsResponse {
-  success: true
+  success: boolean
   enabled: boolean
 }
 

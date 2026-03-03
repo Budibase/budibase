@@ -16,7 +16,7 @@
   import MSTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
 
   const AI_CONFIG_REQUIRED_MESSAGE =
-    "Select an AI model in Agent config before enabling Discord."
+    "Select an AI model in Agent config before enabling this channel."
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
@@ -88,15 +88,15 @@
     if (!currentAgent?._id) {
       return
     }
-    const isCurrentlyEnabled = channel.status === "Enabled"
-    if (channel.id === "discord") {
-      if (!isCurrentlyEnabled && !hasAiConfig) {
-        notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
-        return
-      }
-      toggling = true
-      try {
-        if (isCurrentlyEnabled) {
+    const isChannelEnabled = channel.status === "Enabled"
+    if (!isChannelEnabled && !hasAiConfig) {
+      notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
+      return
+    }
+    toggling = true
+    try {
+      if (channel.id === "discord") {
+        if (isChannelEnabled) {
           await agentsStore.toggleDiscordDeployment(currentAgent._id, false)
           notifications.success("Discord channel disabled")
         } else if (discordConfigured) {
@@ -105,21 +105,8 @@
         } else {
           discordModal?.show()
         }
-      } catch (e) {
-        notifications.error(
-          isCurrentlyEnabled
-            ? "Failed to disable Discord channel"
-            : "Failed to enable Discord channel"
-        )
-      } finally {
-        toggling = false
-      }
-      return
-    }
-    if (channel.id === "MSTeams") {
-      toggling = true
-      try {
-        if (isCurrentlyEnabled) {
+      } else if (channel.id === "MSTeams") {
+        if (isChannelEnabled) {
           await agentsStore.toggleMSTeamsDeployment(currentAgent._id, false)
           notifications.success("Microsoft Teams channel disabled")
         } else if (MSTeamsConfigured) {
@@ -128,15 +115,15 @@
         } else {
           MSTeamsModal?.show()
         }
-      } catch (e) {
-        notifications.error(
-          isCurrentlyEnabled
-            ? "Failed to disable Microsoft Teams channel"
-            : "Failed to enable Microsoft Teams channel"
-        )
-      } finally {
-        toggling = false
       }
+    } catch (e) {
+      notifications.error(
+        isChannelEnabled
+          ? `Failed to disable ${channel.name} channel`
+          : `Failed to enable ${channel.name} channel`
+      )
+    } finally {
+      toggling = false
     }
   }
 </script>

@@ -338,12 +338,7 @@ export async function toggleAgentDiscordDeployment(
   >
 ) {
   const { agentId } = ctx.params
-  const enabledResponse = ctx.request.body?.enabled
-  if (typeof enabledResponse !== "boolean") {
-    ctx.throw(400, "enabled must be a boolean")
-  }
-
-  const enabled = enabledResponse
+  const { enabled } = ctx.request.body
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   if (enabled) {
@@ -355,7 +350,10 @@ export async function toggleAgentDiscordDeployment(
     const chatAppId = agent.discordIntegration?.chatAppId?.trim()
 
     if (chatAppId) {
-      await sdk.ai.deployments.discord.disableAgentOnChatApp(chatAppId, agentId)
+      await sdk.ai.deployments.shared.disableAgentOnChatApp({
+        chatAppId,
+        agentId,
+      })
     }
 
     await persistDiscordDeployment({
@@ -377,12 +375,7 @@ export async function toggleAgentMSTeamsDeployment(
   >
 ) {
   const { agentId } = ctx.params
-  const enabledResponse = ctx.request.body?.enabled
-  if (typeof enabledResponse !== "boolean") {
-    ctx.throw(400, "enabled must be a boolean")
-  }
-
-  const enabled = enabledResponse
+  const { enabled } = ctx.request.body
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   if (enabled) {
@@ -408,7 +401,10 @@ export async function toggleAgentMSTeamsDeployment(
     const chatAppId = agent.MSTeamsIntegration?.chatAppId?.trim()
 
     if (chatAppId) {
-      await sdk.ai.deployments.MSTeams.disableAgentOnChatApp(chatAppId, agentId)
+      await sdk.ai.deployments.shared.disableAgentOnChatApp({
+        chatAppId,
+        agentId,
+      })
     }
 
     await sdk.ai.agents.update({
