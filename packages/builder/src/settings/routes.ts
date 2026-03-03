@@ -279,7 +279,7 @@ export const appRoutes = (
       ],
     },
     {
-      section: "AI config",
+      section: "AI",
       path: "ai-config",
       icon: "sparkle",
       routes: [
