@@ -8,6 +8,7 @@ import {
   provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   toggleAgentDiscordDeploymentValidator,
+  toggleAgentMSTeamsDeploymentValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 import {
@@ -41,6 +42,11 @@ builderAdminRoutes
     "/api/agent/:agentId/ms-teams/provision",
     provisionAgentMSTeamsChannelValidator(),
     ai.provisionAgentMSTeamsChannel
+  )
+  .post(
+    "/api/agent/:agentId/ms-teams/toggle",
+    toggleAgentMSTeamsDeploymentValidator(),
+    ai.toggleAgentMSTeamsDeployment
   )
   .get("/api/agent/tools", ai.fetchTools)
 

@@ -59,7 +59,16 @@ export interface ToggleAgentDiscordRequest {
 }
 
 export interface ToggleAgentDiscordResponse {
-  success: true
+  success: boolean
+  enabled: boolean
+}
+
+export interface ToggleAgentMSTeamsRequest {
+  enabled: boolean
+}
+
+export interface ToggleAgentMSTeamsResponse {
+  success: boolean
   enabled: boolean
 }
 
