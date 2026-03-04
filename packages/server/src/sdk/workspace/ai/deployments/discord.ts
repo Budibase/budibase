@@ -53,11 +53,6 @@ export const validateDiscordIntegration = (
   }
 }
 
-export const disableAgentOnChatApp = async (
-  chatAppId: string,
-  agentId: string
-) => await shared.disableAgentOnChatApp({ chatAppId, agentId })
-
 export const resolveChatAppForAgent = async (
   agentId: string,
   chatAppId?: string
