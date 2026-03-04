@@ -43,7 +43,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.BUDIBASE_AI,
   ],
   [PlanType.PRO]: [Feature.BUDIBASE_AI, Feature.SYNC_AUTOMATIONS],
-  [PlanType.PRO_MAX]: [Feature.USER_GROUPS, Feature.WORKSPACE_BACKUPS],
+  [PlanType.PRO_MAX]: [Feature.BUDIBASE_AI, Feature.SYNC_AUTOMATIONS],
   [PlanType.TEAM]: [Feature.USER_GROUPS, Feature.WORKSPACE_BACKUPS],
   [PlanType.BUSINESS]: [
     Feature.USER_GROUPS,
