@@ -153,6 +153,9 @@ export const changeTenantOwnerEmail = async (
 export const addSsoSupport = async (
   ctx: Ctx<AddSSoUserRequest, AddSSoUserResponse>
 ) => {
+  if (!ctx.internal) {
+    ctx.throw(403, "Unauthorized")
+  }
   const { email, ssoId } = ctx.request.body
   try {
     const [userByEmail] = await users.getExistingPlatformUsers([email])
@@ -367,6 +370,44 @@ export const search = async (
 }
 
 const DEFAULT_USER_LIMIT = 8
+const GLOBAL_PERMISSION_USER_PAGE_LIMIT = 1000
+
+const getGlobalPermissionUsers = async () => {
+  const globalDb = context.getGlobalDB()
+  const globalPermissionUsers = new Map<string, User>()
+  let bookmark: string | undefined
+  let nextBookmark: string | undefined
+
+  do {
+    const response = await globalDb.find<User>({
+      selector: {
+        _id: {
+          $regex: `^${db.DocumentType.USER}${db.SEPARATOR}`,
+        },
+        $or: [{ "admin.global": true }, { "builder.global": true }],
+      },
+      limit: GLOBAL_PERMISSION_USER_PAGE_LIMIT,
+      ...(bookmark ? { bookmark } : {}),
+    })
+
+    for (const user of response.docs) {
+      if (user?._id) {
+        globalPermissionUsers.set(user._id, user)
+      }
+    }
+
+    nextBookmark =
+      response.docs.length === GLOBAL_PERMISSION_USER_PAGE_LIMIT
+        ? response.bookmark
+        : undefined
+    if (!nextBookmark || nextBookmark === bookmark) {
+      break
+    }
+    bookmark = nextBookmark
+  } while (bookmark)
+
+  return [...globalPermissionUsers.values()]
+}
 
 const searchWorkspaceUsers = async (
   body: SearchUsersRequest
@@ -391,16 +432,7 @@ const searchWorkspaceUsers = async (
         undefined,
         { arrayResponse: true }
       ) as Promise<User[]>,
-      globalDb
-        .find<User>({
-          selector: {
-            _id: {
-              $regex: `^${db.DocumentType.USER}${db.SEPARATOR}`,
-            },
-            $or: [{ "admin.global": true }, { "builder.global": true }],
-          },
-        })
-        .then(response => response.docs),
+      getGlobalPermissionUsers(),
       globalDb
         .allDocs<UserGroup>(
           db.getDocParams(db.DocumentType.GROUP, null, {

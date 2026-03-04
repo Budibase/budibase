@@ -27,6 +27,7 @@ export class Chat {
   webhooks: {
     discord: (request: Request) => Promise<Response>
     teams: (request: Request) => Promise<Response>
+    slack: (request: Request) => Promise<Response>
   }
 
   constructor(_options: ChatOptions) {
@@ -96,6 +97,7 @@ export class Chat {
         return new Response("", { status: 200 })
       },
       teams: async () => new Response("", { status: 200 }),
+      slack: async () => new Response("", { status: 200 }),
     }
   }
 

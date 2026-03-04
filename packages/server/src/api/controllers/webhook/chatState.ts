@@ -4,7 +4,7 @@ import { createMemoryState } from "@chat-adapter/state-memory"
 import { ConsoleLogger, type StateAdapter } from "chat"
 
 const CHAT_SDK_KEY_PREFIX = "budibase:chat-sdk"
-type WebhookProvider = "discord" | "msteams"
+type WebhookProvider = "discord" | "msteams" | "slack"
 type IoRedisClient = Extract<
   Parameters<typeof createIoRedisState>[0],
   { client: unknown }
@@ -51,3 +51,4 @@ const getWebhookState = async (provider: WebhookProvider) => {
 
 export const getDiscordState = () => getWebhookState("discord")
 export const getTeamsState = () => getWebhookState("msteams")
+export const getSlackState = () => getWebhookState("slack")
