@@ -98,7 +98,7 @@
 | CouchDB SQS | 4006 | |
 | Redis | 6379 | Cache, sessions, queues |
 | MinIO | 4004 | S3-compatible object storage |
-| LiteLLM (optional) | 4000 | AI proxy, requires `sk-1234` auth token |
+| LiteLLM (optional) | 4000 | AI proxy; see `## LiteLLM` section above for auth token |
 
 ### Starting the dev environment
 
