@@ -325,6 +325,17 @@ export const appRoutes = (
                     },
                   ],
                 },
+                {
+                  path: "vector-database",
+                  title: "Vector database",
+                  routes: [
+                    {
+                      path: ":configId",
+                      title: "Vector database",
+                      comp: Pages.get("vector_database"),
+                    },
+                  ],
+                },
               ],
             },
           ],

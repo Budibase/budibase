@@ -6,8 +6,7 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import VectorDbModal from "@/settings/pages/ai/VectorDbModal.svelte"
-  import { Button, Input, Modal, notifications, Select } from "@budibase/bbui"
+  import { Button, Input, notifications, Select } from "@budibase/bbui"
   import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
   import { routeActions } from "../.."
@@ -72,7 +71,6 @@
   const CREATE_NEW_VECTOR_DB = "__create_new_vector_db__"
   let lastEmbeddingModelSelection = $state("")
   let lastVectorDbSelection = $state("")
-  let createVectorDbModal = $state<Modal | null>()
 
   let embeddingModelSelectOptions = $derived([
     { label: "Create new", value: CREATE_NEW_EMBEDDING_MODEL },
@@ -181,8 +179,12 @@
 
   function handleVectorDbChange() {
     if (draft.vectorDb === CREATE_NEW_VECTOR_DB) {
+      knowledgeBaseStore.setFormDraft(draft)
       draft.vectorDb = lastVectorDbSelection
-      createVectorDbModal?.show()
+      const currentKnowledgeBaseId = knowledgeBaseId || "new"
+      bb.settings(
+        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vector-database/new`
+      )
       return
     }
     lastVectorDbSelection = draft.vectorDb || ""
@@ -263,10 +265,6 @@
     on:change={handleVectorDbChange}
   />
 </div>
-
-<Modal bind:this={createVectorDbModal} on:hide={() => vectorDbStore.fetch()}>
-  <VectorDbModal config={null} />
-</Modal>
 
 <style>
   .form {
