@@ -5,7 +5,6 @@
     componentStore,
     selectedComponent,
     componentTreeNodesStore,
-    previewStore,
   } from "@/stores/builder"
   import { findComponent, getChildIdsForComponent } from "@/helpers/components"
   import { goto, isActive } from "@roxi/routify"
@@ -137,11 +136,6 @@
   }
 
   const handleKeyPress = async e => {
-    // Disable builder shortcuts while preview mode is open.
-    if ($previewStore.showPreview) {
-      return
-    }
-
     // Ignore repeating events
     if (e.repeat) {
       return
@@ -174,11 +168,6 @@
   }
 
   const handleComponentMenu = async e => {
-    // Disable keyboard-driven component menu actions while preview mode is open.
-    if ($previewStore.showPreview) {
-      return
-    }
-
     // Menu events can be for any component
     const { id, key, ctrlKey, shiftKey } = e.detail
     const component = findComponent($selectedScreen.props, id)
