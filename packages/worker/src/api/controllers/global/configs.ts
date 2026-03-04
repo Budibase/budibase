@@ -483,7 +483,13 @@ export async function find(ctx: UserCtx<void, FindConfigResponse>) {
 }
 
 function stripSecrets(config: Config, ctx?: UserCtx) {
-  if (isSMTPConfig(config)) {
+  if (config.type === ConfigType.AI) {
+    for (const key in config.config) {
+      if (config.config[key].apiKey) {
+        config.config[key].apiKey = PASSWORD_REPLACEMENT
+      }
+    }
+  } else if (isSMTPConfig(config)) {
     if (config.config.auth?.pass) {
       config.config.auth.pass = PASSWORD_REPLACEMENT
     }
