@@ -17,7 +17,10 @@ export const definition: AutomationStepDefinition = {
     "Extracts structured data from PDF or image according to provided schema.",
   stepId: AutomationActionStepId.EXTRACT_FILE_DATA,
   internal: true,
-  inputs: {},
+  inputs: {
+    source: DocumentSourceType.URL,
+    fileType: SupportedFileType.PDF,
+  },
   features: {
     [AutomationFeature.LOOPING]: true,
   },

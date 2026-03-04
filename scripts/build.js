@@ -84,7 +84,16 @@ async function runBuild(entry, outfile) {
       svelteCompilePlugin,
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin({
-        allowList: ["@budibase/frontend-core", "@budibase/pro", "svelte"],
+        allowList: [
+          "@budibase/frontend-core",
+          "svelte",
+          "chat",
+          "@chat-adapter/discord",
+          "@chat-adapter/slack",
+          "@chat-adapter/teams",
+          "@chat-adapter/state-ioredis",
+          "@chat-adapter/state-memory",
+        ],
       }),
     ],
     preserveSymlinks: true,
@@ -108,6 +117,7 @@ async function runBuild(entry, outfile) {
       "pg",
       "pg-query-stream",
       "pg-native",
+      "botbuilder",
     ],
   }
 

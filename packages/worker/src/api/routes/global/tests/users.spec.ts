@@ -1,7 +1,13 @@
 import { InviteUsersResponse, OIDCUser, User } from "@budibase/types"
 
-import { accounts as _accounts, events, tenancy } from "@budibase/backend-core"
+import {
+  accounts as _accounts,
+  events,
+  tenancy,
+  withEnv,
+} from "@budibase/backend-core"
 import { mocks as featureMocks } from "@budibase/backend-core/tests"
+import { sdk as proSdk } from "@budibase/pro"
 import * as userSdk from "../../../../sdk/users"
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 
@@ -819,6 +825,16 @@ describe("/api/global/users", () => {
           .expect(403)
       })
 
+      it("sso support cannot be used without internal key on self-hosted", async () => {
+        const user = await createPasswordUser()
+        const ssoId = "fake-ssoId"
+        await withEnv({ SELF_HOSTED: true }, () =>
+          config.api.users
+            .addSsoSupportDefaultAuth(ssoId, user.email)
+            .expect(403)
+        )
+      })
+
       it("if user email doesn't exist, SSO support couldn't be added. Not found error returned", async () => {
         const ssoId = "fake-ssoId"
         const email = "fake-email@budibase.com"
@@ -917,6 +933,77 @@ describe("/api/global/users", () => {
       })
 
       expect(response.body.data.length).toBe(0)
+    })
+
+    it("should include users with workspace access via groups", async () => {
+      const workspaceId = "app_workspace_filter_group"
+      const email = structures.users.newEmail()
+      featureMocks.licenses.useUnlimited()
+      const group = await config.doInTenant(() =>
+        proSdk.groups.save({
+          ...structures.groups.UserGroup(),
+          roles: { [workspaceId]: "BASIC" },
+        })
+      )
+
+      await config.createUser({
+        email,
+        userGroups: [group.id],
+      })
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        query: { string: { email } },
+      })
+
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(email)
+    })
+
+    it("should include global admins in workspace search", async () => {
+      const workspaceId = "app_workspace_filter_global_admin"
+      const email = structures.users.newEmail()
+      await config.createUser({
+        email,
+        admin: { global: true },
+        builder: { global: true },
+      })
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        query: { string: { email } },
+      })
+
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(email)
+    })
+
+    it("should include all global admins in workspace search when there are more than 25", async () => {
+      const workspaceId = "app_workspace_filter_global_admin_many"
+      const globalAdminUsers = await Promise.all(
+        Array.from({ length: 30 }).map((_, index) =>
+          config.createUser({
+            email: `workspace-global-admin-${index}-${structures.users.newEmail()}`,
+            admin: { global: true },
+            builder: { global: true },
+          })
+        )
+      )
+      const globalAdminIds = globalAdminUsers
+        .map(user => user._id)
+        .filter(Boolean) as string[]
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        query: { oneOf: { _id: globalAdminIds } },
+        limit: 100,
+      })
+
+      const returnedIds = response.body.data
+        .map((user: User) => user._id)
+        .filter(Boolean)
+      expect(returnedIds).toHaveLength(globalAdminIds.length)
+      expect(returnedIds).toEqual(expect.arrayContaining(globalAdminIds))
     })
 
     it("should return no users when workspaceId is empty", async () => {

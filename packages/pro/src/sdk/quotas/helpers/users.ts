@@ -9,6 +9,12 @@ export const addUsers = async <T>(
   changeCreator: number,
   addUsersFn?: () => Promise<T>
 ): Promise<T> => {
+  // Skip quota and license sync when user and creator counts do not change.
+  // This keeps role-only updates from triggering expensive license refreshes.
+  if (change === 0 && changeCreator === 0) {
+    return addUsersFn ? await addUsersFn() : (undefined as T)
+  }
+
   const quotasToChange: IncrementManyParams[] = [
     {
       change,
@@ -34,8 +40,10 @@ export const addUsers = async <T>(
 
   const res = await quotas.incrementMany(quotasToChange)
 
-  // send a get license request to sync the user count to the account
-  await licenseClient.getLicense()
+  // Run license sync in the background so user operations are not blocked.
+  Promise.resolve(licenseClient.getLicense()).catch(err => {
+    console.log("Failed to sync license after adding users", err)
+  })
 
   return res
 }
@@ -65,6 +73,8 @@ export const removeUsers = async (change: number, changeCreator: number) => {
 
   await quotas.decrementMany(quotasToChange)
 
-  // send a get license request to sync the user count to the account
-  await licenseClient.getLicense()
+  // Run license sync in the background so user operations are not blocked.
+  Promise.resolve(licenseClient.getLicense()).catch(err => {
+    console.log("Failed to sync license after removing users", err)
+  })
 }

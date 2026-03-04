@@ -70,6 +70,8 @@ export interface FetchPublishedAppsResponse {
 export interface PublishedChatAppData {
   appId: string
   chatAppId: string
+  agentId: string
+  agentName: string
   name: string
   url: string
   updatedAt?: string

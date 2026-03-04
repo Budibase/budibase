@@ -28,6 +28,7 @@ interface Scenario {
 interface EvalResult {
   name: string
   ok: boolean
+  skipped?: boolean
   detail?: string
   elapsedMs?: number
 }
@@ -38,6 +39,7 @@ type EvalFeature =
   | "table-generation"
   | "js-generation"
   | "cron-generation"
+  | "automation-openai"
   | "automation-translate"
   | "automation-classify"
   | "automation-prompt-llm"
@@ -61,6 +63,19 @@ interface AutomationTestResponse {
     stepId?: string
     outputs?: Record<string, any>
   }>
+}
+
+interface CreatedTable {
+  id: string
+  name?: string
+}
+
+interface UploadedAttachment {
+  size: number
+  name: string
+  url: string
+  extension: string
+  key: string
 }
 
 class ApiClient {
@@ -233,6 +248,55 @@ class ApiClient {
 
     return payload as T
   }
+
+  async uploadAttachment(
+    filename: string,
+    data: Buffer,
+    contentType: string
+  ): Promise<UploadedAttachment> {
+    const headers: Record<string, string> = {
+      "x-budibase-token": this.token,
+      "x-budibase-app-id": this.appId,
+      "x-csrf-token": this.csrfToken,
+    }
+
+    const formData = new FormData()
+    formData.append(
+      "file",
+      new Blob([data as any], { type: contentType }),
+      filename
+    )
+
+    const response = await fetch(`${this.baseUrl}/api/attachments/process`, {
+      method: "POST",
+      headers,
+      body: formData,
+    })
+
+    const text = await response.text()
+    let payload: unknown = undefined
+    if (text) {
+      try {
+        payload = JSON.parse(text)
+      } catch {
+        payload = text
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `POST /api/attachments/process failed (${response.status}): ${text || "<empty>"}`
+      )
+    }
+
+    if (!Array.isArray(payload) || payload.length === 0) {
+      throw new Error(
+        `Unexpected upload attachment response: ${JSON.stringify(payload)}`
+      )
+    }
+
+    return payload[0] as UploadedAttachment
+  }
 }
 
 function green(text: string) {
@@ -249,6 +313,14 @@ function yellow(text: string) {
 
 function section(text: string) {
   return `\n=== ${text} ===`
+}
+
+function formatFailureReason(error: unknown): string {
+  const message =
+    typeof error === "string"
+      ? error
+      : (error as any)?.message || String(error || "Unknown error")
+  return message.replace(/\s+/g, " ").trim()
 }
 
 function loadEvalEnvFile() {
@@ -379,6 +451,7 @@ const ALL_FEATURES: EvalFeature[] = [
   "table-generation",
   "js-generation",
   "cron-generation",
+  "automation-openai",
   "automation-translate",
   "automation-classify",
   "automation-prompt-llm",
@@ -397,6 +470,8 @@ function normalizeFeatureToken(value: string): EvalFeature | undefined {
     "js-generation": "js-generation",
     cron: "cron-generation",
     "cron-generation": "cron-generation",
+    openai: "automation-openai",
+    "automation-openai": "automation-openai",
     translate: "automation-translate",
     "automation-translate": "automation-translate",
     classify: "automation-classify",
@@ -678,52 +753,148 @@ function looksBlueColor(value: string) {
   return b > 0 && b >= r && b >= g
 }
 
+function extractCreatedTablesFromResponse(
+  response: unknown
+): CreatedTable[] | undefined {
+  if (response && typeof response === "object") {
+    const createdTables = (response as any).createdTables
+    if (Array.isArray(createdTables)) {
+      return createdTables as CreatedTable[]
+    }
+  }
+
+  if (typeof response !== "string") {
+    return undefined
+  }
+
+  // Parse SSE payload:
+  // data: {"type":"progress","message":"..."}
+  // data: {"type":"result","createdTables":[...]}
+  // data: {"type":"error","message":"..."}
+  const lines = response.split(/\r?\n/)
+  for (const line of lines) {
+    if (!line.startsWith("data: ")) {
+      continue
+    }
+    const payload = line.slice(6).trim()
+    if (!payload) {
+      continue
+    }
+    let event: any
+    try {
+      event = JSON.parse(payload)
+    } catch {
+      // ignore malformed/partial event lines
+      continue
+    }
+
+    if (event?.type === "result" && Array.isArray(event?.createdTables)) {
+      return event.createdTables as CreatedTable[]
+    }
+    if (event?.type === "error") {
+      const message =
+        typeof event?.message === "string" && event.message.trim().length > 0
+          ? event.message
+          : "Table generation failed"
+      throw new Error(message)
+    }
+  }
+
+  return undefined
+}
+
 async function runFeatureEvals(
   client: ApiClient,
-  enabledFeatures: Set<EvalFeature>
+  enabledFeatures: Set<EvalFeature>,
+  mode: BudibaseMode,
+  scenarioConfig: AIProviderConfig
 ): Promise<EvalResult[]> {
   const results: EvalResult[] = []
   const definitions = await getAutomationDefinitions(client)
 
   async function run(name: string, fn: () => Promise<void>) {
     const startedAt = Date.now()
+    const canRewriteLine = Boolean(process.stdout.isTTY)
+    const renderRunning = () => {
+      const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000)
+      const runningLabel = yellow(`RUNNING: ${name} (${elapsedSeconds}s)`)
+      if (canRewriteLine) {
+        process.stdout.write(`\r${runningLabel}`)
+      } else {
+        console.log(runningLabel)
+      }
+    }
+
+    renderRunning()
+    const timer = setInterval(renderRunning, 1000)
+
+    if (canRewriteLine) {
+      timer.unref()
+    }
+
+    const clearRunningLine = () => {
+      clearInterval(timer)
+      if (canRewriteLine) {
+        process.stdout.write("\r\x1b[2K")
+      }
+    }
+
     try {
       await fn()
-      results.push({ name, ok: true, elapsedMs: Date.now() - startedAt })
+      const elapsedMs = Date.now() - startedAt
+      results.push({ name, ok: true, elapsedMs })
+      clearRunningLine()
+      console.log(green(`PASS: ${name} (${elapsedMs}ms)`))
     } catch (err: any) {
+      const elapsedMs = Date.now() - startedAt
+      const detail = formatFailureReason(err)
       results.push({
         name,
         ok: false,
-        detail: err?.message || String(err),
-        elapsedMs: Date.now() - startedAt,
+        detail,
+        elapsedMs,
       })
+      clearRunningLine()
+      console.log(red(`FAIL: ${name} (${elapsedMs}ms) - ${detail}`))
     }
   }
 
   const runIf = async (
     feature: EvalFeature,
     name: string,
-    fn: () => Promise<void>
+    fn: () => Promise<void>,
+    opts?: { when?: boolean; skipReason?: string }
   ) => {
     if (!enabledFeatures.has(feature)) {
+      return
+    }
+    if (opts?.when === false) {
+      results.push({
+        name,
+        ok: true,
+        skipped: true,
+        detail: opts.skipReason || "Condition not met",
+      })
+      console.log(
+        yellow(`SKIPPED: ${name} - ${opts.skipReason || "Condition not met"}`)
+      )
       return
     }
     await run(name, fn)
   }
 
   await runIf("table-generation", "Table generation", async () => {
-    const response = await client.request<{
-      createdTables: Array<{ id: string }>
-    }>("POST", "/api/ai/tables", {
+    const response = await client.request<unknown>("POST", "/api/ai/tables", {
       prompt:
         "Create exactly one table named EvalTasks with exactly two string fields named title and status. Use title as primary display.",
     })
 
-    if (!response.createdTables || response.createdTables.length < 1) {
+    const createdTables = extractCreatedTablesFromResponse(response)
+    if (!createdTables || createdTables.length < 1) {
       throw new Error("No tables were created")
     }
 
-    const created = response.createdTables[0]
+    const created = createdTables[0]
     const table = await client.request<{ schema: Record<string, any> }>(
       "GET",
       `/api/tables/${created.id}`
@@ -777,6 +948,40 @@ async function runFeatureEvals(
       )
     }
   })
+
+  await runIf(
+    "automation-openai",
+    "Automation OpenAI step",
+    async () => {
+      const automationModel = scenarioConfig.defaultModel || "gpt-4o-mini"
+      const result = await runAutomationStepEval(
+        client,
+        definitions,
+        "OPENAI",
+        {
+          prompt: "Reply with exactly EVAL_OPENAI_OK",
+          model: automationModel,
+        }
+      )
+
+      const output = getActionOutput(result, "OPENAI")
+      if (!output?.success || !output?.response) {
+        throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+      }
+      if (!String(output.response).toUpperCase().includes("EVAL_OPENAI_OK")) {
+        throw new Error(
+          `OpenAI step output missing EVAL_OPENAI_OK: ${output.response}`
+        )
+      }
+    },
+    {
+      when: mode === "self" && Boolean(definitions.actions.OPENAI),
+      skipReason:
+        mode !== "self"
+          ? "OPENAI action is only available in self mode"
+          : "Action definition not found for OPENAI in current mode",
+    }
+  )
 
   await runIf("automation-translate", "Automation translate step", async () => {
     const result = await runAutomationStepEval(
@@ -912,7 +1117,7 @@ async function runFeatureEvals(
       "EXTRACT_FILE_DATA",
       {
         source: DocumentSourceType.URL,
-        file: "https://pdfobject.com/pdf/sample.pdf",
+        file: "https://sample-files.com/downloads/documents/pdf/basic-text.pdf",
         fileType: "pdf",
         schema: {
           language: "text",
@@ -939,7 +1144,7 @@ async function runFeatureEvals(
       )
     }
     const language = normalizeText(first.language)
-    if (language !== "english") {
+    if (!["english", "en"].includes(language)) {
       throw new Error(
         `Extract output language should be English: ${JSON.stringify(output.data)}`
       )
@@ -1008,6 +1213,145 @@ async function runFeatureEvals(
     }
   })
 
+  await runIf(
+    "extract-document",
+    "Extract document step (PDF attachment)",
+    async () => {
+      const pdfFileResponse = await fetch(
+        "https://sample-files.com/downloads/documents/pdf/basic-text.pdf"
+      )
+      if (!pdfFileResponse.ok) {
+        throw new Error(
+          `Failed to fetch sample PDF (${pdfFileResponse.status})`
+        )
+      }
+      const pdfBuffer = Buffer.from(await pdfFileResponse.arrayBuffer())
+      const attachment = await client.uploadAttachment(
+        "sample.pdf",
+        pdfBuffer,
+        "application/pdf"
+      )
+
+      const result = await runAutomationStepEval(
+        client,
+        definitions,
+        "EXTRACT_FILE_DATA",
+        {
+          source: DocumentSourceType.ATTACHMENT,
+          file: attachment,
+          schema: {
+            language: "text",
+            words: "number",
+            lines: "number",
+          },
+        }
+      )
+
+      const output = getActionOutput(result, "EXTRACT_FILE_DATA")
+      if (!output?.success || !output?.data) {
+        throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+      }
+      if (!Array.isArray(output.data) || output.data.length === 0) {
+        throw new Error(
+          `Extract output should be a non-empty array: ${JSON.stringify(output.data)}`
+        )
+      }
+
+      const first = output.data[0]
+      if (typeof first?.language !== "string" || !first.language.trim()) {
+        throw new Error(
+          `Extract output wrong language: ${JSON.stringify(output.data)}`
+        )
+      }
+      const language = normalizeText(first.language)
+      if (!["english", "en"].includes(language)) {
+        throw new Error(
+          `Extract output language should be English: ${JSON.stringify(output.data)}`
+        )
+      }
+      if (typeof first.words !== "number" || first.words <= 0) {
+        throw new Error(
+          `Extract output words should be > 0: ${JSON.stringify(output.data)}`
+        )
+      }
+      if (typeof first.lines !== "number" || first.lines <= 0) {
+        throw new Error(
+          `Extract output lines should be > 0: ${JSON.stringify(output.data)}`
+        )
+      }
+    }
+  )
+
+  await runIf(
+    "extract-document",
+    "Extract document step (image attachment)",
+    async () => {
+      const imageFileResponse = await fetch(
+        "https://dummyimage.com/600x400/0000ff/fff.png&text=Budibase+Eval"
+      )
+      if (!imageFileResponse.ok) {
+        throw new Error(
+          `Failed to fetch sample image (${imageFileResponse.status})`
+        )
+      }
+      const imageBuffer = Buffer.from(await imageFileResponse.arrayBuffer())
+      const attachment = await client.uploadAttachment(
+        "sample.png",
+        imageBuffer,
+        "image/png"
+      )
+
+      const result = await runAutomationStepEval(
+        client,
+        definitions,
+        "EXTRACT_FILE_DATA",
+        {
+          source: DocumentSourceType.ATTACHMENT,
+          file: attachment,
+          schema: {
+            text: "string",
+            backgroundColor: "string",
+          },
+        }
+      )
+
+      const output = getActionOutput(result, "EXTRACT_FILE_DATA")
+      if (!output?.success || !output?.data) {
+        throw new Error(`Unexpected output: ${JSON.stringify(output)}`)
+      }
+      if (
+        !Array.isArray(output.data) ||
+        output.data.length === 0 ||
+        output.data.length > 1
+      ) {
+        throw new Error(
+          `Image extract output should be non-empty array: ${JSON.stringify(output.data)}`
+        )
+      }
+
+      const data = output.data[0]
+      if (!data || typeof data !== "object") {
+        throw new Error(
+          `Image extract output is invalid: ${JSON.stringify(output.data)}`
+        )
+      }
+
+      const text = String(data.text || "")
+      if (!normalizeText(text).includes("budibase")) {
+        throw new Error(
+          `Image extract output text missing 'Budibase': ${JSON.stringify(output.data)}`
+        )
+      }
+
+      const color = String(data.backgroundColor || "")
+      if (!looksBlueColor(color)) {
+        throw new Error(
+          `Image extract backgroundColor is not recognizably blue: ${JSON.stringify(output.data)}`
+        )
+      }
+    }
+  )
+
   return results
 }
 
@@ -1026,35 +1370,16 @@ async function runScenario(
 
   await configureAIProvider(client, scenario.config)
   const startedAt = Date.now()
-  const results = await runFeatureEvals(client, enabledFeatures)
+  const results = await runFeatureEvals(
+    client,
+    enabledFeatures,
+    scenario.mode,
+    scenario.config
+  )
   return {
     ok: results.every(r => r.ok),
     elapsedMs: Date.now() - startedAt,
     results,
-  }
-}
-
-function printScenarioResult(result: {
-  skipped?: string
-  elapsedMs?: number
-  results: EvalResult[]
-}) {
-  if (result.skipped) {
-    console.log(yellow(`SKIPPED: ${result.skipped}`))
-    return
-  }
-
-  for (const item of result.results) {
-    const itemElapsedLabel =
-      typeof item.elapsedMs === "number" ? ` (${item.elapsedMs}ms)` : ""
-    if (item.ok) {
-      console.log(green(`PASS: ${item.name}${itemElapsedLabel}`))
-    } else {
-      console.log(red(`FAIL: ${item.name}${itemElapsedLabel}`))
-      if (item.detail) {
-        console.log(red(`  ${item.detail}`))
-      }
-    }
   }
 }
 
@@ -1074,7 +1399,6 @@ async function executeScenarioAndLog(
   console.log(section(`Provider: ${displayName}`))
   const result = await runScenario(client, scenario, enabledFeatures)
   summary.push({ name: displayName, ...result })
-  printScenarioResult(result)
 }
 
 async function main() {
@@ -1108,11 +1432,17 @@ async function main() {
         continue
       }
 
-      switchBudibaseMode(mode)
-      activeMode = mode
-      console.log(yellow(`Waiting for server readiness after mode:${mode}...`))
-      await waitForServerReady(baseUrl)
-      await client.init()
+      if (activeMode === mode) {
+        console.log(yellow(`Budibase mode already set to: ${mode}`))
+      } else {
+        switchBudibaseMode(mode)
+        activeMode = mode
+        console.log(
+          yellow(`Waiting for server readiness after mode:${mode}...`)
+        )
+        await waitForServerReady(baseUrl)
+        await client.init()
+      }
 
       for (const scenario of modeScenarios) {
         const enabledFeatures = resolveFeatures(globalFeatures)
@@ -1149,6 +1479,11 @@ async function main() {
       console.log(green(`PASS: ${row.name}${elapsedLabel}`))
     } else {
       console.log(red(`FAIL: ${row.name}${elapsedLabel}`))
+      const failedSteps = row.results.filter(r => !r.ok)
+      for (const failedStep of failedSteps) {
+        const reason = failedStep.detail || "Unknown error"
+        console.log(red(`  - ${failedStep.name}: ${reason}`))
+      }
     }
   }
 

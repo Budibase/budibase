@@ -48,6 +48,8 @@
     option?.colour ?? undefined
   export let getOptionSubtitle = (option: O, _index?: number) =>
     option?.subtitle ?? undefined
+  export let getOptionTooltip = (option: O, _index?: number) =>
+    option?.tooltip ?? undefined
   export let useOptionIconImage = false
   export let open: boolean = false
   export let readonly: boolean = false
@@ -77,6 +79,7 @@
   export let toggleSelectAll: () => void = () => {}
   export let hideChevron: boolean = false
   export let wrapText: boolean = false
+  export let fieldTooltip: string | null = null
 
   const maxHeight = 360
   const VIRTUALIZATION_THRESHOLD = 200
@@ -257,6 +260,7 @@
     class:auto-width={autoWidth}
     class:has-subtitle={!!fieldSubtitle}
     class:wrap-text={wrapText}
+    title={fieldTooltip}
   >
     <span class="picker-label-text">{fieldText}</span>
     {#if fieldSubtitle}
@@ -351,6 +355,7 @@
           ></li>
         {/if}
         {#each virtualizedOptions as { option, idx } (getOptionValue(option, idx) ?? idx)}
+          {@const optionTooltip = getOptionTooltip(option, idx)}
           {@const optionIcon = resolveIcon(getOptionIcon(option, idx))}
           <li
             class="spectrum-Menu-item"
@@ -362,6 +367,7 @@
             on:mouseenter={e => onOptionMouseenter(e, option)}
             on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
+            title={optionTooltip ?? undefined}
           >
             {#if optionIcon}
               <span class="option-extra icon">
