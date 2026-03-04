@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import type { File } from "formidable"
 
 export enum PluginType {
   DATASOURCE = "datasource",
@@ -12,9 +13,10 @@ export enum PluginSource {
   URL = "URL",
   FILE = "File Upload",
 }
-export interface KoaFile {
-  path: string | null
-  name: string | null
+export interface KoaFile extends Partial<File> {
+  path?: File["filepath"]
+  name?: File["originalFilename"]
+  type?: File["mimetype"]
 }
 
 export interface Plugin extends Document {

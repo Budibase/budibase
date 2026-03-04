@@ -19,7 +19,6 @@ import {
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
 } from "@budibase/shared-core"
-import type { File, Files } from "formidable"
 import {
   AddWorkspaceSampleDataResponse,
   BBReferenceFieldSubType,
@@ -51,6 +50,7 @@ import {
   UpdateWorkspaceResponse,
   UserCtx,
   Workspace,
+  KoaFile,
 } from "@budibase/types"
 import { cleanupAutomations } from "../../automations/utils"
 import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
@@ -1098,9 +1098,9 @@ export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   }
 }
 
-type WorkspaceImportFiles = Files & {
-  appExport?: File | File[]
-  file?: File | File[]
+type WorkspaceImportFiles = {
+  appExport?: KoaFile | KoaFile[]
+  file?: KoaFile | KoaFile[]
 }
 
 export async function importToWorkspace(

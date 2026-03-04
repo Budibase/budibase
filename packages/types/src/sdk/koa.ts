@@ -10,7 +10,7 @@ import {
   UserSSO,
 } from "../documents"
 import { FeatureFlag, License } from "../sdk"
-import { Files } from "formidable"
+import type { File } from "formidable"
 import { EventType } from "../core"
 import { UserAgentContext } from "koa-useragent"
 
@@ -18,6 +18,14 @@ export enum LoginMethod {
   API_KEY = "api_key",
   COOKIE = "cookie",
 }
+
+export interface BBUploadedFile extends File {
+  path?: File["filepath"]
+  name?: File["originalFilename"]
+  type?: File["mimetype"]
+}
+
+export type BBFiles = Record<string, BBUploadedFile | BBUploadedFile[]>
 
 export interface ContextUser extends Omit<User & Partial<UserSSO>, "roles"> {
   globalId?: string
@@ -37,7 +45,7 @@ export interface ContextUser extends Omit<User & Partial<UserSSO>, "roles"> {
  */
 export interface BBRequest<RequestBody> extends Request {
   body: RequestBody
-  files?: Files
+  files?: BBFiles
 }
 
 /**
