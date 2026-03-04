@@ -12,7 +12,6 @@
   import {
     automationStore,
     previewStore,
-    builderStore,
     sortedScreens,
     appStore,
     datasources,
@@ -22,6 +21,7 @@
     viewsV2,
   } from "@/stores/builder"
   import { themeStore, featureFlags } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
   import { getContext } from "svelte"
   import { ThemeOptions, BUILDER_URLS } from "@budibase/shared-core"
   import { FeatureFlag } from "@budibase/types"
@@ -43,7 +43,7 @@
       name: "Invite users and manage app access",
       description: "",
       icon: "user",
-      action: () => builderStore.showBuilderSidePanel(),
+      action: () => bb.settings("/people/workspace"),
       requiresApp: true,
     },
     ...navigationCommands(),
