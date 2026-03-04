@@ -1,15 +1,16 @@
 import { configs, db, docIds } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
 import {
-  AIConfig,
   AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
   ConfigType,
-  ProviderConfig,
 } from "@budibase/types"
 import * as setup from "../../../api/routes/tests/utilities"
 import * as aiConfigs from "../../../sdk/workspace/ai/configs"
-import migration from "../20260227144312_unify_ai_configs"
+import migration, {
+  AIConfig,
+  defaultModelByProvider,
+  ProviderConfig,
+} from "../20260227144312_unify_ai_configs"
 
 jest.mock("../../../sdk/workspace/ai/configs", () => {
   const actual = jest.requireActual("../../../sdk/workspace/ai/configs")
@@ -76,7 +77,7 @@ describe("20260227144312_unify_ai_configs", () => {
     expect(createMock).toHaveBeenCalledWith({
       name: "OpenAI",
       provider: "OpenAI",
-      model: ai.DefaultModelByProvider.OpenAI,
+      model: defaultModelByProvider.OpenAI,
       credentialsFields: {
         api_key: "sk-test",
         api_base: "https://api.openai.com/v1",
@@ -156,7 +157,7 @@ describe("20260227144312_unify_ai_configs", () => {
     expect(createMock).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: BUDIBASE_AI_PROVIDER_ID,
-        model: `budibase/legacy/${ai.DefaultModelByProvider.BudibaseAI}`,
+        model: `budibase/legacy/${defaultModelByProvider.BudibaseAI}`,
         credentialsFields: {},
       })
     )

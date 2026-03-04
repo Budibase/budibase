@@ -15,7 +15,7 @@ type AIProvider =
   | "Custom"
   | "BudibaseAI"
 
-interface ProviderConfig {
+export interface ProviderConfig {
   provider: AIProvider
   isDefault: boolean
   name: string
@@ -29,9 +29,9 @@ interface AIInnerConfig {
   [key: string]: ProviderConfig
 }
 
-interface AIConfig extends Config<AIInnerConfig> {}
+export interface AIConfig extends Config<AIInnerConfig> {}
 
-const defaultModelByProvider: Record<AIProvider, string> = {
+export const defaultModelByProvider: Record<AIProvider, string> = {
   OpenAI: "gpt-5-mini",
   TogetherAI: "gpt-5-mini",
   AzureOpenAI: "gpt-4.1",
