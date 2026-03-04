@@ -50,6 +50,7 @@ export interface AppNavigation {
   title?: string
   navWidth?: string
   sticky?: boolean
+  showLoginButton?: boolean
   hideLogo?: boolean
   logoUrl?: string
   hideTitle?: boolean
