@@ -54,20 +54,19 @@ export interface ProvisionAgentMSTeamsChannelResponse
   messagingEndpointUrl: string
 }
 
-export interface ToggleAgentDiscordRequest {
+export type ProvisionAgentSlackChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface ProvisionAgentSlackChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  messagingEndpointUrl: string
+}
+
+export interface ToggleAgentDeploymentRequest {
   enabled: boolean
 }
 
-export interface ToggleAgentDiscordResponse {
-  success: boolean
-  enabled: boolean
-}
-
-export interface ToggleAgentMSTeamsRequest {
-  enabled: boolean
-}
-
-export interface ToggleAgentMSTeamsResponse {
+export interface ToggleAgentDeploymentResponse {
   success: boolean
   enabled: boolean
 }

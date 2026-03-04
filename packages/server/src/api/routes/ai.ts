@@ -5,10 +5,12 @@ import * as ai from "../controllers/ai"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 import {
   createAgentValidator,
+  provisionAgentSlackChannelValidator,
   provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
+  toggleAgentSlackDeploymentValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 import {
@@ -48,6 +50,17 @@ builderAdminRoutes
     toggleAgentMSTeamsDeploymentValidator(),
     ai.toggleAgentMSTeamsDeployment
   )
+  .post(
+    "/api/agent/:agentId/slack/toggle",
+    toggleAgentSlackDeploymentValidator(),
+    ai.toggleAgentSlackDeployment
+  )
+  .post(
+    "/api/agent/:agentId/slack/provision",
+    provisionAgentSlackChannelValidator(),
+    ai.provisionAgentSlackChannel
+  )
+
   .get("/api/agent/tools", ai.fetchTools)
 
 builderAdminRoutes
