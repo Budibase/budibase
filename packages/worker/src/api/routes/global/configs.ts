@@ -64,22 +64,6 @@ function scimValidation() {
   }).unknown(true)
 }
 
-function aiValidation() {
-  // prettier-ignore
-  return Joi.object().pattern(
-    Joi.string(),
-    Joi.object({
-      provider: Joi.string().required(),
-      isDefault: Joi.boolean().required(),
-      name: Joi.string().required(),
-      active: Joi.boolean().required(),
-      baseUrl: Joi.string().optional().allow("", null),
-      apiKey: Joi.string().optional(),
-      defaultModel: Joi.string().optional(),
-    }).required()
-  )
-}
-
 function recaptchaValidation() {
   return Joi.object({
     siteKey: Joi.string().required(),
