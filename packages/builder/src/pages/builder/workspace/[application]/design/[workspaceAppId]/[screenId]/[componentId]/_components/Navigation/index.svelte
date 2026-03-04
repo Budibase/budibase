@@ -127,7 +127,7 @@
           />
         {/if}
         <PropertyControl
-          label="Show log in button"
+          label="Show log in"
           control={Checkbox}
           value={$nav.showLoginButton !== false}
           onChange={show => update("showLoginButton", show)}
