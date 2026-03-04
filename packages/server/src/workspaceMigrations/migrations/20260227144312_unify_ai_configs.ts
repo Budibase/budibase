@@ -120,16 +120,16 @@ const migration = async () => {
 
   let defaultAlreadyAssigned = hasDefaultCompletions
 
-    for (const legacyProvider of Object.values(legacyConfig.config)) {
-      if (!legacyProvider?.active) {
-        continue
-      }
-      if (!MIGRATABLE_PROVIDERS.has(legacyProvider.provider)) {
-        continue
-      }
+  for (const legacyProvider of Object.values(legacyConfig.config)) {
+    if (!legacyProvider?.active) {
+      continue
+    }
+    if (!MIGRATABLE_PROVIDERS.has(legacyProvider.provider)) {
+      continue
+    }
 
-      const model =
-        legacyProvider.defaultModel ||
+    const model =
+      legacyProvider.defaultModel ||
       defaultModelByProvider[legacyProvider.provider]
     if (!model) {
       continue
