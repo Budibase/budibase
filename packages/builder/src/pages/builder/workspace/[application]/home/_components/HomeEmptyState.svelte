@@ -324,7 +324,9 @@
     font-size: 13px;
     font-weight: 500;
     color: var(--spectrum-global-color-gray-800);
-    transition: background 130ms ease-out, border-color 130ms ease-out;
+    transition:
+      background 130ms ease-out,
+      border-color 130ms ease-out;
   }
 
   .pill:hover {
