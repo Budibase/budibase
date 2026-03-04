@@ -21,7 +21,6 @@
   import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
-    builderStore,
     workspaceFavouriteStore,
     workspaceAppStore,
     automationStore,
@@ -72,6 +71,7 @@
   export const show = () => {
     pinned.set(true)
   }
+  export let onInviteUser: () => void = () => {}
 
   $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
   $: automationErrorCount = Object.keys(automationErrors).length
@@ -167,6 +167,11 @@
       : `${prefix}/${target.replace(/^\.\//, "")}`
 
     $goto(normalisedTarget)
+    keepCollapsed()
+  }
+
+  const openInviteUser = () => {
+    onInviteUser()
     keepCollapsed()
   }
 
@@ -647,10 +652,7 @@
               <SideNavLink
                 icon="user-plus"
                 text="Invite user"
-                on:click={() => {
-                  builderStore.showBuilderSidePanel()
-                  keepCollapsed()
-                }}
+                on:click={openInviteUser}
                 {collapsed}
               />
               <span class="root-nav" class:error={backupErrorCount}>
