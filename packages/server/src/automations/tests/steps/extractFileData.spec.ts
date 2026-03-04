@@ -1,5 +1,16 @@
-import { objectStore, setEnv as setCoreEnv } from "@budibase/backend-core"
-import { DocumentSourceType, SupportedFileType } from "@budibase/types"
+import {
+  context,
+  docIds,
+  objectStore,
+  setEnv as setCoreEnv,
+} from "@budibase/backend-core"
+import {
+  AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
+  CustomAIProviderConfig,
+  DocumentSourceType,
+  SupportedFileType,
+} from "@budibase/types"
 import nock from "nock"
 import {
   mockChatGPTResponse,
@@ -21,6 +32,47 @@ async function uploadTestFile(filename: string, content?: string) {
 describe("test the extract file data action", () => {
   const config = new TestConfiguration()
   let resetEnv: () => void | undefined
+  let cleanupDefaultAIConfig: (() => Promise<void>) | undefined
+
+  async function setupDefaultAIConfig() {
+    const appIds = [config.getDevWorkspaceId(), config.getProdWorkspaceId()]
+    const configIds = appIds.map((_, idx) =>
+      docIds.generateAIConfigID(`extract-file-data-default-${idx}`)
+    )
+    const revs: string[] = []
+
+    for (let idx = 0; idx < appIds.length; idx++) {
+      const appId = appIds[idx]
+      const configId = configIds[idx]
+      const rev = await config.withApp(appId, async () => {
+        const db = context.getWorkspaceDB()
+        const aiConfig: CustomAIProviderConfig = {
+          _id: configId,
+          name: "Default BBAI",
+          provider: BUDIBASE_AI_PROVIDER_ID,
+          credentialsFields: {},
+          model: "budibase/v1",
+          liteLLMModelId: BUDIBASE_AI_PROVIDER_ID,
+          configType: AIConfigType.COMPLETIONS,
+          isDefault: true,
+        }
+        return (await db.put(aiConfig)).rev
+      })
+      revs.push(rev)
+    }
+
+    return async () => {
+      for (let idx = 0; idx < appIds.length; idx++) {
+        const appId = appIds[idx]
+        const configId = configIds[idx]
+        const rev = revs[idx]
+        await config.withApp(appId, async () => {
+          const db = context.getWorkspaceDB()
+          await db.remove(configId, rev)
+        })
+      }
+    }
+  }
 
   beforeAll(async () => {
     await config.init()
@@ -29,10 +81,14 @@ describe("test the extract file data action", () => {
   beforeEach(async () => {
     await config.api.table.save(basicTableWithAttachmentField())
     await config.api.automation.deleteAll()
-    resetEnv = setCoreEnv({ SELF_HOSTED: true, OPENAI_API_KEY: "abc123" })
+    resetEnv = setCoreEnv({ SELF_HOSTED: false, OPENAI_API_KEY: "abc123" })
+    cleanupDefaultAIConfig = await setupDefaultAIConfig()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    if (cleanupDefaultAIConfig) {
+      await cleanupDefaultAIConfig()
+    }
     resetEnv()
     jest.clearAllMocks()
     nock.cleanAll()
