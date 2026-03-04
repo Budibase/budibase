@@ -1,6 +1,7 @@
 const mockCreateVectorDb = jest.fn()
 const mockEmbedMany = jest.fn()
 const mockCreateLLM = jest.fn()
+const mockKnowledgeBaseFind = jest.fn()
 
 jest.mock("../vectorDb/utils", () => ({
   createVectorDb: (...args: any[]) => mockCreateVectorDb(...args),
@@ -13,6 +14,12 @@ jest.mock("ai", () => ({
 
 jest.mock("../llm", () => ({
   createLLM: (...args: any[]) => mockCreateLLM(...args),
+}))
+
+jest.mock("..", () => ({
+  knowledgeBase: {
+    find: (...args: any[]) => mockKnowledgeBaseFind(...args),
+  },
 }))
 
 import {
@@ -42,12 +49,18 @@ describe("rag files", () => {
       mockCreateVectorDb.mockResolvedValue(vectorDb)
       mockCreateLLM.mockResolvedValue({ embedding: "mock-embedding-model" })
       mockEmbedMany.mockResolvedValue({ embeddings: [[0.1, 0.2, 0.3]] })
+      mockKnowledgeBaseFind.mockResolvedValue({
+        _id: "kb_123",
+        name: "KB",
+        embeddingModel: "embedding_config",
+        vectorDb: "vector_db_config",
+      })
 
       const agent: Agent = {
         _id: "agent_123",
         name: "Agent",
         aiconfig: "ai_config",
-        embeddingModel: "embedding_config",
+        knowledgeBases: ["kb_123"],
       }
 
       const agentFile: AgentFile = {

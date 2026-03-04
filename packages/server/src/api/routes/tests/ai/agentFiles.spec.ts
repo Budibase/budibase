@@ -119,10 +119,15 @@ describe("agent files", () => {
       aiconfig: "default",
       description: "Support",
       promptInstructions: "Be helpful",
-      embeddingModel: embeddings._id!,
-      vectorDb: vectorDb._id!,
-      ragMinDistance: 0.6,
-      ragTopK: 3,
+      knowledgeBases: [
+        (
+          await config.api.knowledgeBase.create({
+            name: "Support KB",
+            embeddingModel: embeddings._id!,
+            vectorDb: vectorDb._id!,
+          })
+        )._id!,
+      ],
     })
     return { agent, vectorDb }
   }
