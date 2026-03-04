@@ -150,7 +150,9 @@ export async function discordWebhook(
               : "Sorry, something went wrong while processing your request."
           try {
             await event.channel.post(msg)
-          } catch {}
+          } catch {
+            throw new Error("Failed to send error to discord")
+          }
         }
       })
 
