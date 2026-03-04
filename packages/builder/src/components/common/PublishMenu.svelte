@@ -13,8 +13,8 @@
     workspaceAppStore,
     appStore,
   } from "@/stores/builder"
-  import { agentsStore } from "@/stores/portal"
-  import { PluginType, type Plugin } from "@budibase/types"
+  import { agentsStore, featureFlags } from "@/stores/portal"
+  import { FeatureFlag, PluginType, type Plugin } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
 
   let actionMenu: any
@@ -137,7 +137,7 @@
         Apps published: {$workspaceAppStore.workspaceApps.length}
         <br />
       {/if}
-      {#if $agentsStore.agents.length}
+      {#if $featureFlags[FeatureFlag.AI_AGENTS] && $agentsStore.agents.length}
         Agents published: {$agentsStore.agents.length}
       {/if}
     </Body>
