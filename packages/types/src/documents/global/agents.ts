@@ -56,6 +56,7 @@ export interface Agent extends Document {
   iconColor?: string
   createdBy?: string
   enabledTools?: string[]
+  knowledgeBases?: string[]
   embeddingModel?: string
   vectorDb?: string
   ragMinDistance?: number

@@ -85,6 +85,7 @@ const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
+  knowledgeBases: agent.knowledgeBases || [],
   discordIntegration: decodeDiscordIntegrationSecrets(agent.discordIntegration),
   slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
 })
@@ -221,6 +222,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
+    knowledgeBases: request.knowledgeBases || [],
     embeddingModel: request.embeddingModel,
     vectorDb: request.vectorDb,
     ragMinDistance: request.ragMinDistance,
@@ -263,6 +265,7 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     enabledTools: source.enabledTools || [],
+    knowledgeBases: source.knowledgeBases || [],
     embeddingModel: source.embeddingModel,
     vectorDb: source.vectorDb,
     ragMinDistance: source.ragMinDistance,
@@ -285,6 +288,7 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
     ...agent,
     updatedAt: new Date().toISOString(),
     enabledTools: agent.enabledTools ?? existing?.enabledTools ?? [],
+    knowledgeBases: agent.knowledgeBases ?? existing?.knowledgeBases ?? [],
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,
