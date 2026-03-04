@@ -62,6 +62,7 @@
     "@bull-board/api": "5.10.2",
     "@bull-board/koa": "5.10.2",
     "@chat-adapter/discord": "^4.14.0",
+    "@chat-adapter/slack": "^4.14.0",
     "@chat-adapter/state-ioredis": "^4.14.0",
     "@chat-adapter/state-memory": "^4.14.0",
     "@chat-adapter/teams": "^4.14.0",
