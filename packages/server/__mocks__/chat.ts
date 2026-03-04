@@ -101,8 +101,11 @@ export class Chat {
     }
   }
 
-  onSlashCommand(command: string, handler: AnyFn) {
-    this.slashHandlers.set(command, handler)
+  onSlashCommand(command: string | string[], handler: AnyFn) {
+    const commands = Array.isArray(command) ? command : [command]
+    for (const cmd of commands) {
+      this.slashHandlers.set(cmd, handler)
+    }
   }
 
   onNewMention(handler: AnyFn) {
