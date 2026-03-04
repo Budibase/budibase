@@ -32,7 +32,6 @@ describe("url helpers", () => {
       const url = accountPortalUpgradeUrl(BASE, null)
       expect(url).toEqual(`${BASE}/portal/upgrade`)
     })
-
   })
 
   describe("builder", () => {
