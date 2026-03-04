@@ -1,13 +1,5 @@
+import { objectStore, setEnv as setCoreEnv } from "@budibase/backend-core"
 import {
-  context,
-  docIds,
-  objectStore,
-  setEnv as setCoreEnv,
-} from "@budibase/backend-core"
-import {
-  AIConfigType,
-  BUDIBASE_AI_PROVIDER_ID,
-  CustomAIProviderConfig,
   DocumentSourceType,
   SupportedFileType,
 } from "@budibase/types"
@@ -16,6 +8,7 @@ import {
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import { basicTableWithAttachmentField } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
@@ -34,46 +27,6 @@ describe("test the extract file data action", () => {
   let resetEnv: () => void | undefined
   let cleanupDefaultAIConfig: (() => Promise<void>) | undefined
 
-  async function setupDefaultAIConfig() {
-    const appIds = [config.getDevWorkspaceId(), config.getProdWorkspaceId()]
-    const configIds = appIds.map((_, idx) =>
-      docIds.generateAIConfigID(`extract-file-data-default-${idx}`)
-    )
-    const revs: string[] = []
-
-    for (let idx = 0; idx < appIds.length; idx++) {
-      const appId = appIds[idx]
-      const configId = configIds[idx]
-      const rev = await config.withApp(appId, async () => {
-        const db = context.getWorkspaceDB()
-        const aiConfig: CustomAIProviderConfig = {
-          _id: configId,
-          name: "Default BBAI",
-          provider: BUDIBASE_AI_PROVIDER_ID,
-          credentialsFields: {},
-          model: "budibase/v1",
-          liteLLMModelId: BUDIBASE_AI_PROVIDER_ID,
-          configType: AIConfigType.COMPLETIONS,
-          isDefault: true,
-        }
-        return (await db.put(aiConfig)).rev
-      })
-      revs.push(rev)
-    }
-
-    return async () => {
-      for (let idx = 0; idx < appIds.length; idx++) {
-        const appId = appIds[idx]
-        const configId = configIds[idx]
-        const rev = revs[idx]
-        await config.withApp(appId, async () => {
-          const db = context.getWorkspaceDB()
-          await db.remove(configId, rev)
-        })
-      }
-    }
-  }
-
   beforeAll(async () => {
     await config.init()
   })
@@ -81,8 +34,9 @@ describe("test the extract file data action", () => {
   beforeEach(async () => {
     await config.api.table.save(basicTableWithAttachmentField())
     await config.api.automation.deleteAll()
-    resetEnv = setCoreEnv({ SELF_HOSTED: false, OPENAI_API_KEY: "abc123" })
-    cleanupDefaultAIConfig = await setupDefaultAIConfig()
+    resetEnv = setCoreEnv({ SELF_HOSTED: false })
+    cleanupDefaultAIConfig = await setupDefaultCompletionsAIConfig(config)
+    await config.publish()
   })
 
   afterEach(async () => {

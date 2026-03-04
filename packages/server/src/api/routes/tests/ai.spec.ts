@@ -6,14 +6,12 @@ import {
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import nock from "nock"
-import { context, docIds, env, setEnv } from "@budibase/backend-core"
+import { context, env, setEnv } from "@budibase/backend-core"
 import {
-  AIConfigType,
   AIOperationEnum,
   AttachmentSubType,
-  BUDIBASE_AI_PROVIDER_ID,
-  CustomAIProviderConfig,
   Feature,
   FieldType,
   License,
@@ -43,33 +41,6 @@ function dedent(str: string) {
     .join("\n")
 }
 
-async function setupDefaultAIConfig(config: TestConfiguration) {
-  const { id, rev } = await config.withApp(
-    config.getDevWorkspaceId(),
-    async () => {
-      const db = context.getWorkspaceDB()
-      const aiConfig: CustomAIProviderConfig = {
-        _id: docIds.generateAIConfigID(),
-        name: "Default BBAI",
-        provider: BUDIBASE_AI_PROVIDER_ID,
-        credentialsFields: {},
-        model: "budibase/v1",
-        liteLLMModelId: BUDIBASE_AI_PROVIDER_ID,
-        configType: AIConfigType.COMPLETIONS,
-        isDefault: true,
-      }
-      return await db.put(aiConfig)
-    }
-  )
-
-  return async () => {
-    await config.withApp(config.getDevWorkspaceId(), async () => {
-      const db = context.getWorkspaceDB()
-      await db.remove(id, rev)
-    })
-  }
-}
-
 describe("AI", () => {
   const config = new TestConfiguration()
   let cleanup: (() => Promise<void>) | undefined
@@ -79,7 +50,7 @@ describe("AI", () => {
     cleanupEnv = setEnv({ SELF_HOSTED: false })
     await config.init()
     await config.newTenant()
-    cleanup = await setupDefaultAIConfig(config)
+    cleanup = await setupDefaultCompletionsAIConfig(config)
   })
 
   afterAll(async () => {
@@ -386,7 +357,7 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      cleanupDefaultConfig = await setupDefaultAIConfig(config)
+      cleanupDefaultConfig = await setupDefaultCompletionsAIConfig(config)
     })
 
     afterEach(async () => {

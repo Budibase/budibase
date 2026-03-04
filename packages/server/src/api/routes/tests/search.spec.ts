@@ -43,6 +43,7 @@ import { cloneDeep } from "lodash/fp"
 import tk from "timekeeper"
 import { DEFAULT_EMPLOYEE_TABLE_SCHEMA } from "../../../db/defaultData/datasource_bb_default"
 import { generateRowIdField } from "../../../integrations/utils"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
@@ -1923,12 +1924,14 @@ if (descriptions.length) {
               describe("AI Column", () => {
                 const UNEXISTING_AI_COLUMN = "Real LLM Response"
                 let envCleanup: () => void
+                let cleanupDefaultAIConfig: (() => Promise<void>) | undefined
 
                 beforeAll(async () => {
                   mocks.licenses.useBudibaseAI()
                   mocks.licenses.useAICustomConfigs()
-
-                  envCleanup = setEnv({ OPENAI_API_KEY: "mock" })
+                  envCleanup = setEnv({ SELF_HOSTED: false })
+                  cleanupDefaultAIConfig =
+                    await setupDefaultCompletionsAIConfig(config)
 
                   // Ensure MockAgent is installed for OpenAI interceptors
                   const {
@@ -1956,7 +1959,10 @@ if (descriptions.length) {
                   ])
                 })
 
-                afterAll(() => {
+                afterAll(async () => {
+                  if (cleanupDefaultAIConfig) {
+                    await cleanupDefaultAIConfig()
+                  }
                   envCleanup()
                 })
 
