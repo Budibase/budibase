@@ -51,6 +51,7 @@
   export let defaultSortOrder: "Ascending" | "Descending" = "Ascending"
   export let rounded: boolean = false
   export let stickyHeader: boolean = true
+  export let editColumnPosition: "left" | "right" = "left"
 
   const dispatch = createEventDispatcher()
 
@@ -91,7 +92,12 @@
     effectiveHeaderHeight
   )
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
-  $: gridStyle = getGridStyle(fields, schema, showEditColumn)
+  $: gridStyle = getGridStyle(
+    fields,
+    schema,
+    showEditColumn,
+    editColumnPosition
+  )
   $: showEditColumn = allowEditRows || allowSelectRows
   $: cellStyles = computeCellStyles(schema)
 
@@ -166,10 +172,11 @@
   const getGridStyle = (
     fields: string[],
     schema: Record<string, any>,
-    showEditColumn: boolean
+    showEditColumn: boolean,
+    editColumnPosition: "left" | "right"
   ): string => {
     let style = "grid-template-columns:"
-    if (showEditColumn) {
+    if (showEditColumn && editColumnPosition === "left") {
       style += " auto"
     }
     fields?.forEach(field => {
@@ -180,6 +187,9 @@
         style += " minmax(auto, 1fr)"
       }
     })
+    if (showEditColumn && editColumnPosition === "right") {
+      style += " auto"
+    }
     style += ";"
     return style
   }
@@ -394,10 +404,10 @@
       >
         {#if fields.length && !hideHeader}
           <div class="spectrum-Table-head">
-            {#if showEditColumn}
+            {#if showEditColumn && editColumnPosition === "left"}
               <div
                 class:noBorderHeader={!showHeaderBorder}
-                class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
+                class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit spectrum-Table-headCell--editLeft"
               >
                 {#if allowSelectRows}
                   <Checkbox
@@ -453,15 +463,30 @@
                 </div>
               </div>
             {/each}
+            {#if showEditColumn && editColumnPosition === "right"}
+              <div
+                class:noBorderHeader={!showHeaderBorder}
+                class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit spectrum-Table-headCell--editRight"
+              >
+                {#if allowSelectRows}
+                  <Checkbox
+                    bind:value={checkboxStatus}
+                    on:change={toggleSelectAll}
+                  />
+                {:else}
+                  Edit
+                {/if}
+              </div>
+            {/if}
           </div>
         {/if}
         {#if sortedRows?.length}
           {#each sortedRows as row}
             <div class="spectrum-Table-row" class:clickable={allowClickRows}>
-              {#if showEditColumn}
+              {#if showEditColumn && editColumnPosition === "left"}
                 <div
                   class:noBorderCheckbox={!showHeaderBorder}
-                  class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
+                  class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit spectrum-Table-cell--editLeft"
                   on:click={e => {
                     if (row.__selectable === false) {
                       return
@@ -508,6 +533,29 @@
                   </CellRenderer>
                 </div>
               {/each}
+              {#if showEditColumn && editColumnPosition === "right"}
+                <div
+                  class:noBorderCheckbox={!showHeaderBorder}
+                  class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit spectrum-Table-cell--editRight"
+                  on:click={e => {
+                    if (row.__selectable === false) {
+                      return
+                    }
+                    toggleSelectRow(row)
+                    e.stopPropagation()
+                  }}
+                >
+                  <SelectEditRenderer
+                    data={row}
+                    selected={selectedRows.findIndex(
+                      selectedRow => selectedRow._id === row._id
+                    ) !== -1}
+                    onEdit={e => editRow(e, row)}
+                    {allowSelectRows}
+                    {allowEditRows}
+                  />
+                </div>
+              {/if}
             </div>
           {/each}
         {:else}
@@ -585,6 +633,10 @@
     /* adding 1px to compensate for lack of right border in header */
     padding-right: calc(var(--cell-padding) / 1.33 + 1px);
   }
+  .spectrum-Table-head > .spectrum-Table-headCell--edit:last-child {
+    padding-left: calc(var(--cell-padding) / 1.33);
+    padding-right: calc(var(--cell-padding) / 1.33);
+  }
   .spectrum-Table-head > :last-child {
     border-right: 1px solid transparent;
     padding-right: var(--cell-padding);
@@ -640,7 +692,7 @@
     position: sticky;
     top: 0;
   }
-  .wrapper--sticky-header .spectrum-Table-headCell--edit {
+  .wrapper--sticky-header .spectrum-Table-headCell--editLeft {
     position: sticky;
     left: 0;
   }
@@ -679,6 +731,9 @@
   .spectrum-Table-row > .spectrum-Table-cell--edit:first-child {
     padding-left: calc(var(--cell-padding) / 1.33);
   }
+  .spectrum-Table-row > .spectrum-Table-cell--edit:last-child {
+    padding-right: calc(var(--cell-padding) / 1.33);
+  }
   .spectrum-Table-row > :last-child {
     border-right: var(--table-border);
     padding-right: var(--cell-padding);
@@ -705,12 +760,14 @@
     transition: background-color 130ms ease-out;
   }
   .spectrum-Table-cell--edit {
-    position: sticky;
-    left: 0;
     z-index: 2;
     justify-content: center;
     padding-left: calc(var(--cell-padding) / 1.33);
     padding-right: calc(var(--cell-padding) / 1.33);
+  }
+  .spectrum-Table-cell--editLeft {
+    position: sticky;
+    left: 0;
   }
 
   /* Placeholder  */

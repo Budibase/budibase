@@ -62,6 +62,7 @@
           rounded
           allowClickRows={false}
           allowEditRows
+          editColumnPosition="right"
           on:editrow={r => editKnowledgeBase(r.detail)}
         ></Table>
       {:else}
