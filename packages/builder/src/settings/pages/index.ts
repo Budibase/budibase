@@ -40,6 +40,7 @@ import KnowledgeBasesPage from "@/settings/pages/ai/knowledge-bases/index.svelte
 import AIConfigForm from "@/settings/pages/ai/AIConfigForm.svelte"
 import KnowledgeBaseForm from "./ai/knowledge-bases/KnowledgeBaseForm.svelte"
 import EmbeddingModelForm from "./ai/knowledge-bases/EmbeddingModelForm.svelte"
+import VectorDatabaseForm from "./ai/knowledge-bases/VectorDatabaseForm.svelte"
 
 const componentMap = {
   profile: ProfilePage,
@@ -77,6 +78,7 @@ const componentMap = {
   oauth2: OAuth2Page,
   recaptcha: Recaptcha,
   embedding_model: EmbeddingModelForm,
+  vector_database: VectorDatabaseForm,
 } satisfies Record<string, Component<any>>
 
 export const Pages = {
