@@ -315,15 +315,9 @@ export const appRoutes = (
               title: "Knowledge base",
               routes: [
                 {
-                  path: "embedding-model",
+                  path: ":configId",
                   title: "Embedding model",
-                  routes: [
-                    {
-                      path: ":configId",
-                      title: "Embedding model",
-                      comp: Pages.get("embedding_model"),
-                    },
-                  ],
+                  comp: Pages.get("embedding_model"),
                 },
                 {
                   path: "vector-database",

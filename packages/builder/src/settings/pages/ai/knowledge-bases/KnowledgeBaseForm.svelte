@@ -166,12 +166,9 @@
       knowledgeBaseStore.setFormDraft(draft)
       draft.embeddingModel = lastEmbeddingModelSelection
       const currentKnowledgeBaseId = knowledgeBaseId || "new"
-      bb.settings(
-        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding-model/new`,
-        {
-          type: AIConfigType.EMBEDDINGS,
-        }
-      )
+      bb.settings(`/ai-config/knowledge-bases/${currentKnowledgeBaseId}/new`, {
+        type: AIConfigType.EMBEDDINGS,
+      })
       return
     }
     lastEmbeddingModelSelection = draft.embeddingModel || ""
