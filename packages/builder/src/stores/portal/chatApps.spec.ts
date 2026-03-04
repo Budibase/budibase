@@ -157,6 +157,46 @@ describe("chatAppsStore", () => {
     expect(get(currentChatApp)).toEqual(updated)
   })
 
+  it("defaults new toggled chat agents to BASIC role", async () => {
+    const chatApp: ChatApp = {
+      _id: "chatapp-1",
+      _rev: "1",
+      agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+      live: false,
+    }
+    const expectedAgents = [
+      { agentId: "agent-1", isEnabled: true, isDefault: true },
+      {
+        agentId: "agent-2",
+        isEnabled: true,
+        isDefault: false,
+        roleId: "BASIC",
+      },
+    ]
+    const updated: ChatApp = {
+      ...chatApp,
+      _rev: "2",
+      agents: expectedAgents,
+      live: true,
+    }
+
+    fetchChatApp.mockResolvedValue(chatApp)
+    updateChatApp.mockResolvedValue(updated)
+
+    const result = await chatAppsStore.toggleAgentDeploymentInChat(
+      "agent-2",
+      "workspace-123"
+    )
+
+    expect(updateChatApp).toHaveBeenCalledWith({
+      ...chatApp,
+      agents: expectedAgents,
+      live: true,
+    })
+    expect(result).toEqual({ enabled: true })
+    expect(get(currentChatApp)).toEqual(updated)
+  })
+
   it("upserts a missing agent config as disabled", async () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
@@ -170,6 +210,7 @@ describe("chatAppsStore", () => {
         agentId: "agent-2",
         isEnabled: false,
         isDefault: false,
+        roleId: "BASIC",
         conversationStarters: starters,
       },
     ]
@@ -280,7 +321,12 @@ describe("chatAppsStore", () => {
     }
     const expectedAgents = [
       { agentId: "agent-1", isEnabled: true, isDefault: true },
-      { agentId: "agent-2", isEnabled: false, isDefault: false },
+      {
+        agentId: "agent-2",
+        isEnabled: false,
+        isDefault: false,
+        roleId: "BASIC",
+      },
     ]
     const updated: ChatApp = {
       ...chatApp,
