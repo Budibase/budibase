@@ -13,6 +13,7 @@
     workspaceAppStore,
     appStore,
   } from "@/stores/builder"
+  import { agentsStore } from "@/stores/portal"
   import { PluginType, type Plugin } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
 
@@ -134,6 +135,10 @@
       {/if}
       {#if $workspaceAppStore.workspaceApps.length}
         Apps published: {$workspaceAppStore.workspaceApps.length}
+        <br />
+      {/if}
+      {#if $agentsStore.agents.length}
+        Agents published: {$agentsStore.agents.length}
       {/if}
     </Body>
   </div>
