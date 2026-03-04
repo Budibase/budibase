@@ -1,7 +1,7 @@
 <script lang="ts">
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
-  import { aiConfigsStore } from "@/stores/portal"
+  import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
   import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
   import type {
     AIConfigResponse,
@@ -17,9 +17,10 @@
   export interface Props {
     configId?: string
     provider?: string | undefined
+    knowledgeBaseId?: string
   }
 
-  let { configId, provider }: Props = $props()
+  let { configId, provider, knowledgeBaseId }: Props = $props()
 
   let config = $derived(
     $aiConfigsStore.customConfigs.find(c => c._id === configId)
@@ -130,6 +131,18 @@
           _rev: created._rev,
         })
         notifications.success(`Configuration created`)
+
+        const formDraft = knowledgeBaseStore.getFormDraft()
+        if (formDraft && created._id) {
+          knowledgeBaseStore.setFormDraft({
+            ...formDraft,
+            embeddingModel: created._id,
+          })
+        }
+
+        if (knowledgeBaseId) {
+          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        }
       }
     } catch (err: any) {
       notifications.error(err.message || `Failed to save configuration`)
