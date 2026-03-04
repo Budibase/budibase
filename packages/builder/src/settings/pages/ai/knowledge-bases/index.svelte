@@ -10,10 +10,13 @@
   import { onMount } from "svelte"
 
   let knowledgeBases = $derived(
-    [...$knowledgeBaseStore.configs].sort((a, b) => a.name.localeCompare(b.name))
+    [...$knowledgeBaseStore.configs].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    )
   )
 
   function createKnowledgeBase() {
+    knowledgeBaseStore.clearFormDraft()
     bb.settings(`/ai-config/knowledge-bases/new`)
   }
 
@@ -21,6 +24,7 @@
     if (!row._id) {
       return
     }
+    knowledgeBaseStore.clearFormDraft()
     bb.settings(`/ai-config/knowledge-bases/${row._id}`)
   }
 
@@ -55,13 +59,15 @@
                 <Body size="S" weight="600">{config.name}</Body>
                 <Body size="XS">
                   Embedding model:
-                  {$aiConfigsStore.customConfigs.find(ai => ai._id === config.embeddingModel)
-                    ?.name || "Unknown model"}
+                  {$aiConfigsStore.customConfigs.find(
+                    ai => ai._id === config.embeddingModel
+                  )?.name || "Unknown model"}
                 </Body>
                 <Body size="XS">
                   Vector database:
-                  {$vectorDbStore.configs.find(vectorDb => vectorDb._id === config.vectorDb)
-                    ?.name || "Unknown vector database"}
+                  {$vectorDbStore.configs.find(
+                    vectorDb => vectorDb._id === config.vectorDb
+                  )?.name || "Unknown vector database"}
                 </Body>
               </div>
               <Button size="S" on:click={() => editKnowledgeBase(config)}>

@@ -6,19 +6,23 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Button, Input, notifications, Select } from "@budibase/bbui"
+  import VectorDbModal from "@/settings/pages/ai/VectorDbModal.svelte"
+  import { Button, Input, Modal, notifications, Select } from "@budibase/bbui"
+  import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
   import { routeActions } from "../.."
 
   export interface Props {
-    configId?: string
+    knowledgeBaseId: string
   }
 
-  let { configId }: Props = $props()
+  let { knowledgeBaseId }: Props = $props()
 
   let config = $derived(
-    $knowledgeBaseStore.configs.find(kb => kb._id === configId)
+    $knowledgeBaseStore.configs.find(kb => kb._id === knowledgeBaseId)
   )
+
+  const isCreation = knowledgeBaseId === "new"
 
   const createDraft = () =>
     config?._id
@@ -30,6 +34,8 @@
           vectorDb: config.vectorDb,
         }
       : {
+          _id: undefined as string | undefined,
+          _rev: undefined as string | undefined,
           name: "",
           embeddingModel: "",
           vectorDb: "",
@@ -62,6 +68,28 @@
     )
   })
 
+  const CREATE_NEW_EMBEDDING_MODEL = "__create_new_embedding_model__"
+  const CREATE_NEW_VECTOR_DB = "__create_new_vector_db__"
+  let lastEmbeddingModelSelection = $state("")
+  let lastVectorDbSelection = $state("")
+  let createVectorDbModal = $state<Modal | null>()
+
+  let embeddingModelSelectOptions = $derived([
+    { label: "Create new", value: CREATE_NEW_EMBEDDING_MODEL },
+    ...embeddingModelOptions.map(option => ({
+      label: option.name,
+      value: option._id || "",
+    })),
+  ])
+
+  let vectorDbSelectOptions = $derived([
+    { label: "Create new", value: CREATE_NEW_VECTOR_DB },
+    ...vectorDbOptions.map(option => ({
+      label: option.name,
+      value: option._id || "",
+    })),
+  ])
+
   onMount(async () => {
     try {
       await Promise.all([
@@ -70,13 +98,24 @@
         vectorDbStore.fetch(),
       ])
 
-      if (configId && configId !== "new" && !config) {
+      if (!isCreation && !config) {
         notifications.error("Knowledge base not found")
         bb.settings(`/ai-config/knowledge-bases`)
         return
       }
 
       draft = createDraft()
+      const persistedDraft = isCreation
+        ? knowledgeBaseStore.getFormDraft()
+        : undefined
+      if (persistedDraft) {
+        draft = {
+          ...draft,
+          ...persistedDraft,
+        }
+      }
+      lastEmbeddingModelSelection = draft.embeddingModel || ""
+      lastVectorDbSelection = draft.vectorDb || ""
       savedSnapshot = JSON.stringify(draft)
     } catch (err: any) {
       notifications.error(
@@ -116,11 +155,37 @@
         })
         notifications.success("Knowledge base created")
       }
+      knowledgeBaseStore.clearFormDraft()
     } catch (err: any) {
       notifications.error(err.message || "Failed to save knowledge base")
     } finally {
       isSaving = false
     }
+  }
+
+  function handleEmbeddingModelChange() {
+    if (draft.embeddingModel === CREATE_NEW_EMBEDDING_MODEL) {
+      knowledgeBaseStore.setFormDraft(draft)
+      draft.embeddingModel = lastEmbeddingModelSelection
+      const currentKnowledgeBaseId = knowledgeBaseId || "new"
+      bb.settings(
+        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding-model/new`,
+        {
+          type: AIConfigType.EMBEDDINGS,
+        }
+      )
+      return
+    }
+    lastEmbeddingModelSelection = draft.embeddingModel || ""
+  }
+
+  function handleVectorDbChange() {
+    if (draft.vectorDb === CREATE_NEW_VECTOR_DB) {
+      draft.vectorDb = lastVectorDbSelection
+      createVectorDbModal?.show()
+      return
+    }
+    lastVectorDbSelection = draft.vectorDb || ""
   }
 
   async function deleteKnowledgeBase() {
@@ -136,6 +201,7 @@
       onConfirm: async () => {
         try {
           await knowledgeBaseStore.delete(knowledgeBaseId)
+          knowledgeBaseStore.clearFormDraft()
           notifications.success("Knowledge base deleted")
           bb.settings(`/ai-config/knowledge-bases`)
         } catch (err: any) {
@@ -176,11 +242,12 @@
     description="Models used to convert text into vector embeddings for search and retrieval."
     required
     bind:value={draft.embeddingModel}
-    options={embeddingModelOptions}
-    getOptionValue={option => option._id || ""}
-    getOptionLabel={option => option.name}
-    placeholder="Select embedding model"
-    disabled={!embeddingModelOptions.length}
+    options={embeddingModelSelectOptions}
+    getOptionValue={option => option.value}
+    getOptionLabel={option => option.label}
+    placeholder={false}
+    disabled={isEdit}
+    on:change={handleEmbeddingModelChange}
   />
 
   <Select
@@ -188,13 +255,18 @@
     description="Databases optimized for storing and querying vector embeddings. We support PGVector."
     required
     bind:value={draft.vectorDb}
-    options={vectorDbOptions}
-    getOptionValue={option => option._id || ""}
-    getOptionLabel={option => option.name}
-    placeholder="Select vector database"
-    disabled={!vectorDbOptions.length}
+    options={vectorDbSelectOptions}
+    getOptionValue={option => option.value}
+    getOptionLabel={option => option.label}
+    placeholder={false}
+    disabled={isEdit}
+    on:change={handleVectorDbChange}
   />
 </div>
+
+<Modal bind:this={createVectorDbModal} on:hide={() => vectorDbStore.fetch()}>
+  <VectorDbModal config={null} />
+</Modal>
 
 <style>
   .form {
