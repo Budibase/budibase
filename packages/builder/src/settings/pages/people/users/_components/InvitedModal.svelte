@@ -54,8 +54,8 @@
 <ModalContent size="L" showCancelButton={false} {title} confirmText="Done">
   {#if hasSuccess}
     <Body size="S">
-      Your users should now receive an email invite to get access to their
-      Budibase account
+      Your users should now receive an email invite to get access to the
+      workspace.
     </Body>
   {/if}
   {#if hasFailure}
