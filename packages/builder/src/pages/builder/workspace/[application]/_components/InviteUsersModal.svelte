@@ -176,6 +176,9 @@
   />
 </Modal>
 
-<Modal bind:this={inviteConfirmationModal} on:hide={hideInviteConfirmationModal}>
+<Modal
+  bind:this={inviteConfirmationModal}
+  on:hide={hideInviteConfirmationModal}
+>
   <InvitedModal {inviteUsersResponse} />
 </Modal>
