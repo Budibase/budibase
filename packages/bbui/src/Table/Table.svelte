@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="O extends Record<string, any>">
   import "@spectrum-css/table/dist/index-vars.css"
   import { createEventDispatcher, onMount } from "svelte"
   import Checkbox from "../Form/Checkbox.svelte"
@@ -26,7 +26,7 @@
    * borderLeft: show a left border
    * borderRight: show a right border
    */
-  export let data: any[] = []
+  export let data: O[] = []
   export let schema: Record<string, any> = {}
   export let showAutoColumns: boolean = false
   export let rowCount: number = 0
@@ -53,7 +53,12 @@
   export let stickyHeader: boolean = true
   export let editColumnPosition: "left" | "right" = "left"
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{
+    click: O
+    sort: { column: typeof sortColumn; order: typeof sortOrder }
+    editcolumn: string
+    editrow: O
+  }>()
 
   let ref: HTMLDivElement
 
