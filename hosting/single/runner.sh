@@ -128,10 +128,6 @@ if [ ! -f "${DATA_DIR}/.env" ]; then
         temp=$(eval "echo \$$ENV_VAR")
         echo "$ENV_VAR=$temp" >>${DATA_DIR}/.env
     done
-    for ENV_VAR in "${DOCKER_VARS[@]}"; do
-        temp=$(eval "echo \$$ENV_VAR")
-        echo "$ENV_VAR=$temp" >>${DATA_DIR}/.env
-    done
     echo "COUCH_DB_URL=${COUCH_DB_URL}" >>${DATA_DIR}/.env
 fi
 
