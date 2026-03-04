@@ -40,6 +40,18 @@ export const defaultModelByProvider: Record<AIProvider, string> = {
   BudibaseAI: "gpt-5-mini",
 }
 
+const normalizeAzureBaseUrl = (baseUrl: string): string => {
+  try {
+    const parsed = new URL(baseUrl)
+    parsed.pathname = parsed.pathname.replace(/\/openai\/?.*$/i, "/")
+    parsed.search = ""
+    parsed.hash = ""
+    return parsed.toString().replace(/\/$/, "")
+  } catch {
+    return baseUrl.replace(/\/openai\/?.*$/i, "").replace(/\/$/, "")
+  }
+}
+
 const mapCredentials = (config: ProviderConfig): Record<string, string> => {
   if (config.provider === "BudibaseAI") {
     return {}
@@ -50,13 +62,24 @@ const mapCredentials = (config: ProviderConfig): Record<string, string> => {
     credentials.api_key = config.apiKey
   }
   if (config.baseUrl) {
-    credentials.api_base = config.baseUrl
+    credentials.api_base =
+      config.provider === "AzureOpenAI"
+        ? normalizeAzureBaseUrl(config.baseUrl)
+        : config.baseUrl
   }
   return credentials
 }
 
 const normalizeProvider = (provider: string) => {
-  return provider === "BudibaseAI" ? BUDIBASE_AI_PROVIDER_ID : provider
+  if (provider === "BudibaseAI") {
+    return BUDIBASE_AI_PROVIDER_ID
+  }
+
+  if (provider === "AzureOpenAI") {
+    return "Azure"
+  }
+
+  return provider
 }
 
 const normalizeModel = (provider: string, model: string) => {

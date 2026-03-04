@@ -162,4 +162,43 @@ describe("20260227144312_unify_ai_configs", () => {
       })
     )
   })
+
+  it("maps legacy AzureOpenAI provider to Azure", async () => {
+    const legacyConfig: AIConfig = {
+      type: ConfigType.AI,
+      config: {
+        azure: {
+          provider: "AzureOpenAI",
+          name: "Azure OpenAI",
+          active: true,
+          isDefault: true,
+          apiKey: "azure-key",
+          baseUrl:
+            "https://example.openai.azure.com/openai/deployments/gpt-4.1?api-version=2024-10-21",
+        },
+      },
+    }
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock.mockResolvedValue({} as any)
+
+    await config.doInContext(config.getDevWorkspaceId(), migration)
+
+    expect(createMock).toHaveBeenCalledTimes(1)
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "Azure",
+        model: defaultModelByProvider.AzureOpenAI,
+        credentialsFields: {
+          api_key: "azure-key",
+          api_base: "https://example.openai.azure.com",
+        },
+      })
+    )
+  })
 })
