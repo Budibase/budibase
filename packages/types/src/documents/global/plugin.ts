@@ -14,9 +14,9 @@ export enum PluginSource {
   FILE = "File Upload",
 }
 export interface KoaFile extends Partial<File> {
-  path?: File["filepath"]
-  name?: File["originalFilename"]
-  type?: File["mimetype"]
+  filepath?: File["filepath"]
+  originalFilename?: File["originalFilename"]
+  mimetype?: File["mimetype"]
 }
 
 export interface Plugin extends Document {
