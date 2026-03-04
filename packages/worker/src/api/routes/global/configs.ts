@@ -124,7 +124,6 @@ function buildConfigSaveValidation() {
           { is: ConfigType.GOOGLE, then: googleValidation() },
           { is: ConfigType.OIDC, then: oidcValidation() },
           { is: ConfigType.SCIM, then: scimValidation() },
-          { is: ConfigType.AI, then: aiValidation() },
           { is: ConfigType.RECAPTCHA, then: recaptchaValidation() },
           { is: ConfigType.TRANSLATIONS, then: translationsValidation() },
         ],
