@@ -89,6 +89,7 @@ async function runBuild(entry, outfile) {
           "svelte",
           "chat",
           "@chat-adapter/discord",
+          "@chat-adapter/slack",
           "@chat-adapter/teams",
           "@chat-adapter/state-ioredis",
           "@chat-adapter/state-memory",
