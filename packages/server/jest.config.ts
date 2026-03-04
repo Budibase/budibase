@@ -32,6 +32,7 @@ const baseConfig: Config = {
     "@budibase/string-templates": ["<rootDir>/../string-templates/src"],
     "^chat$": "<rootDir>/__mocks__/chat.ts",
     "^@chat-adapter/discord$": "<rootDir>/__mocks__/chat-adapter-discord.ts",
+    "^@chat-adapter/slack$": "<rootDir>/__mocks__/chat-adapter-slack.ts",
     "^@chat-adapter/teams$": "<rootDir>/__mocks__/chat-adapter-teams.ts",
     "^@chat-adapter/state-memory$":
       "<rootDir>/__mocks__/chat-adapter-state-memory.ts",

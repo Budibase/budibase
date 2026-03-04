@@ -1,6 +1,20 @@
 import { Feature, PlanFeatures, PlanType } from "@budibase/types"
 import * as constants from "../../../constants"
 
+const PRO_FEATURES = [Feature.BUDIBASE_AI, Feature.SYNC_AUTOMATIONS]
+
+const PREMIUM_FEATURES = [
+  Feature.WORKSPACE_BACKUPS,
+  Feature.BRANDING,
+  Feature.SYNC_AUTOMATIONS,
+  Feature.VIEW_PERMISSIONS,
+  Feature.TRIGGER_AUTOMATION_RUN,
+  Feature.VIEW_READONLY_COLUMNS,
+  Feature.AI_CUSTOM_CONFIGS,
+  Feature.PDF,
+  Feature.BUDIBASE_AI,
+]
+
 const SELF_FEATURES: PlanFeatures = {
   [PlanType.FREE]: [...constants.licenses.SELF_FREE_LICENSE.features],
   [PlanType.PREMIUM]: [
@@ -9,17 +23,8 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.VIEW_PERMISSIONS,
     Feature.PDF,
   ],
-  [PlanType.PREMIUM_PLUS]: [
-    Feature.WORKSPACE_BACKUPS,
-    Feature.BRANDING,
-    Feature.SYNC_AUTOMATIONS,
-    Feature.VIEW_PERMISSIONS,
-    Feature.TRIGGER_AUTOMATION_RUN,
-    Feature.VIEW_READONLY_COLUMNS,
-    Feature.AI_CUSTOM_CONFIGS,
-    Feature.PDF,
-    Feature.BUDIBASE_AI,
-  ],
+  [PlanType.PREMIUM_PLUS]: PREMIUM_FEATURES,
+  [PlanType.PREMIUM_MAX]: PREMIUM_FEATURES,
   [PlanType.PREMIUM_PLUS_TRIAL]: [
     Feature.WORKSPACE_BACKUPS,
     Feature.BRANDING,
@@ -31,19 +36,26 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.PDF,
     Feature.BUDIBASE_AI,
   ],
-  [PlanType.PRO]: [Feature.USER_GROUPS, Feature.WORKSPACE_BACKUPS],
+  [PlanType.PRO]: PRO_FEATURES,
+  [PlanType.PRO_MAX]: PRO_FEATURES,
   [PlanType.TEAM]: [Feature.USER_GROUPS, Feature.WORKSPACE_BACKUPS],
   [PlanType.BUSINESS]: [
     Feature.USER_GROUPS,
     Feature.WORKSPACE_BACKUPS,
-    Feature.ENVIRONMENT_VARIABLES,
-    Feature.AUDIT_LOGS,
     Feature.BRANDING,
+    Feature.ENFORCEABLE_SSO,
+    Feature.ENVIRONMENT_VARIABLES,
     Feature.SYNC_AUTOMATIONS,
-    Feature.EXPANDED_PUBLIC_API,
+    Feature.TRIGGER_AUTOMATION_RUN,
     Feature.VIEW_PERMISSIONS,
+    Feature.VIEW_READONLY_COLUMNS,
+    Feature.AI_CUSTOM_CONFIGS,
+    Feature.CUSTOM_APP_SCRIPTS,
+    Feature.PWA,
     Feature.PDF,
-    Feature.BUDIBASE_AI,
+    Feature.RECAPTCHA,
+    Feature.PKCE_OIDC,
+    Feature.TRANSLATIONS,
   ],
   [PlanType.ENTERPRISE_BASIC]: [
     Feature.USER_GROUPS,

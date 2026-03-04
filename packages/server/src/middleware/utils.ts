@@ -6,6 +6,7 @@ const WEBHOOK_ENDPOINTS = new RegExp(
     "webhooks/schema",
     "webhooks/discord",
     "webhooks/ms-teams",
+    "webhooks/slack",
   ].join("|")
 )
 
