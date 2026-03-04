@@ -1,8 +1,5 @@
 import { objectStore, setEnv as setCoreEnv } from "@budibase/backend-core"
-import {
-  DocumentSourceType,
-  SupportedFileType,
-} from "@budibase/types"
+import { DocumentSourceType, SupportedFileType } from "@budibase/types"
 import nock from "nock"
 import {
   mockChatGPTResponse,

@@ -3772,9 +3772,8 @@ if (descriptions.length) {
             mocks.licenses.useBudibaseAI()
             mocks.licenses.useAICustomConfigs()
             envCleanup = setEnv({ SELF_HOSTED: false })
-            cleanupDefaultAIConfig = await setupDefaultCompletionsAIConfig(
-              config
-            )
+            cleanupDefaultAIConfig =
+              await setupDefaultCompletionsAIConfig(config)
 
             // Ensure MockAgent is installed for OpenAI interceptors
             const { installHttpMocking } = require("../../../tests/jestEnv")
