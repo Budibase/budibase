@@ -17,7 +17,7 @@
 
   const onKeyDown = e => {
     const state = get(builderStore)
-    if (!state.inBuilder || state.editMode || state.previewModalDevice) {
+    if (!state.inBuilder || state.editMode) {
       return
     }
     const activeTag = document.activeElement?.tagName.toLowerCase()

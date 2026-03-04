@@ -5,6 +5,7 @@
     componentStore,
     selectedComponent,
     componentTreeNodesStore,
+    previewStore,
   } from "@/stores/builder"
   import { findComponent, getChildIdsForComponent } from "@/helpers/components"
   import { goto, isActive } from "@roxi/routify"
@@ -136,6 +137,10 @@
   }
 
   const handleKeyPress = async e => {
+    if ($previewStore.showPreview) {
+      return
+    }
+
     // Ignore repeating events
     if (e.repeat) {
       return
