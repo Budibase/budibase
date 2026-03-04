@@ -201,4 +201,31 @@ describe("20260227144312_unify_ai_configs", () => {
       })
     )
   })
+
+  it("ignores active legacy providers outside OpenAI/BudibaseAI/AzureOpenAI", async () => {
+    const legacyConfig: AIConfig = {
+      type: ConfigType.AI,
+      config: {
+        anthropic: {
+          provider: "Anthropic",
+          name: "Anthropic",
+          active: true,
+          isDefault: true,
+          apiKey: "anthropic-key",
+        },
+      },
+    }
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock.mockResolvedValue({} as any)
+
+    await config.doInContext(config.getDevWorkspaceId(), migration)
+
+    expect(createMock).not.toHaveBeenCalled()
+  })
 })
