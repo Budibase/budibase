@@ -12,7 +12,7 @@
   } from "@budibase/types"
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
-  import { routeActions } from ".."
+  import { routeActions } from "../.."
 
   export interface Props {
     configId?: string
