@@ -2,10 +2,43 @@ import { configs } from "@budibase/backend-core"
 import {
   AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
-  type ProviderConfig,
+  Config,
+  ConfigType,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { ai } from "@budibase/pro"
+
+type AIProvider =
+  | "OpenAI"
+  | "Anthropic"
+  | "AzureOpenAI"
+  | "TogetherAI"
+  | "Custom"
+  | "BudibaseAI"
+
+interface ProviderConfig {
+  provider: AIProvider
+  isDefault: boolean
+  name: string
+  active: boolean
+  baseUrl?: string
+  apiKey?: string
+  defaultModel?: string
+}
+
+interface AIInnerConfig {
+  [key: string]: ProviderConfig
+}
+
+interface AIConfig extends Config<AIInnerConfig> {}
+
+const defaultModelByProvider: Record<AIProvider, string> = {
+  OpenAI: "gpt-5-mini",
+  TogetherAI: "gpt-5-mini",
+  AzureOpenAI: "gpt-4.1",
+  Custom: "gpt-5-mini",
+  Anthropic: "claude-3-5-sonnet-20240620",
+  BudibaseAI: "gpt-5-mini",
+}
 
 const mapCredentials = (config: ProviderConfig): Record<string, string> => {
   if (config.provider === "BudibaseAI") {
@@ -39,7 +72,7 @@ const normalizeModel = (provider: string, model: string) => {
 }
 
 const migration = async () => {
-  const legacyConfig = await configs.getAIConfig()
+  const legacyConfig = await configs.getConfig<AIConfig>(ConfigType.AI)
   if (!legacyConfig?.config) {
     return
   }
@@ -65,7 +98,7 @@ const migration = async () => {
 
     const model =
       legacyProvider.defaultModel ||
-      ai.DefaultModelByProvider[legacyProvider.provider]
+      defaultModelByProvider[legacyProvider.provider]
     if (!model) {
       continue
     }

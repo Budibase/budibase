@@ -1,23 +1,6 @@
-import {
-  AIProvider,
-  ChatCompletionRequest,
-  Message,
-  ResponseFormat,
-} from "@budibase/types"
+import { ChatCompletionRequest, Message, ResponseFormat } from "@budibase/types"
 import openai from "openai"
 import { z } from "zod"
-
-// Provider-specific default models. If a provider's saved config does not
-// include a default model, we fall back to these. Azure defaults to gpt-4.1
-// so we avoid GPT-5-only parameters like verbosity/reasoning_effort.
-export const DefaultModelByProvider: Record<AIProvider, string> = {
-  OpenAI: "gpt-5-mini",
-  TogetherAI: "gpt-5-mini",
-  AzureOpenAI: "gpt-4.1",
-  Custom: "gpt-5-mini",
-  Anthropic: "claude-3-5-sonnet-20240620",
-  BudibaseAI: "gpt-5-mini",
-}
 
 export function parseResponseFormat(
   responseFormat?: ResponseFormat

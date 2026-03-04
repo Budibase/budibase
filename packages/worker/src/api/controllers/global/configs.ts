@@ -15,7 +15,6 @@ import {
   filterValidTranslationOverrides,
 } from "@budibase/shared-core"
 import {
-  AIInnerConfig,
   Config,
   ConfigChecklistResponse,
   ConfigType,
@@ -256,33 +255,6 @@ async function processOIDCConfig(config: OIDCConfigs, existing?: OIDCConfigs) {
       }
       if (c.clientSecret === PASSWORD_REPLACEMENT) {
         c.clientSecret = existingConfig.clientSecret
-      }
-    }
-  }
-}
-
-export async function processAIConfig(
-  newConfig: AIInnerConfig,
-  existingConfig: AIInnerConfig
-) {
-  for (const key in existingConfig) {
-    if (newConfig[key]?.apiKey === PASSWORD_REPLACEMENT) {
-      newConfig[key].apiKey = existingConfig[key].apiKey
-    }
-  }
-
-  let numBudibaseAI = 0
-  for (const config of Object.values(newConfig)) {
-    if (config.provider === "BudibaseAI") {
-      numBudibaseAI++
-      if (numBudibaseAI > 1) {
-        throw new BadRequestError("Only one Budibase AI provider is allowed")
-      }
-    } else {
-      if (!config.apiKey) {
-        throw new BadRequestError(
-          `API key is required for provider ${config.provider}`
-        )
       }
     }
   }

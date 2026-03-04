@@ -1,6 +1,5 @@
 import type { EmbeddingModelV3, LanguageModelV3 } from "@ai-sdk/provider"
 import { ProviderOptions } from "@ai-sdk/provider-utils"
-import { AIProvider } from "../documents"
 import { Readable } from "stream"
 
 export enum AIOperationEnum {
@@ -102,10 +101,6 @@ export interface LLMConfigOptions {
   max_completion_tokens?: number
   // Primarily here for Azure OpenAI, because each customer has their own endpoint
   baseUrl?: string
-}
-
-export interface LLMProviderConfig extends LLMConfigOptions {
-  provider: AIProvider
 }
 
 export interface LLMResponse {
