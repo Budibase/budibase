@@ -528,7 +528,7 @@ function resolveFeatures(
 }
 
 function shouldRunProviderMode(
-  providerId: ProviderName,
+  providerId: string,
   mode: BudibaseMode,
   selected?: string[]
 ) {
@@ -578,7 +578,7 @@ function buildScenarios(
       id: mode === "self" ? "bbai-self" : "bbai-cloud",
       name: `BBAI (${modeName})`,
       mode,
-      enabled: shouldRunProviderMode("Budibase", mode, selected),
+      enabled: shouldRunProviderMode("bbai", mode, selected),
       config: bbaiBaseConfig,
     })
 
@@ -588,7 +588,7 @@ function buildScenarios(
         name: `OpenAI (${modeName})`,
         mode,
         enabled:
-          shouldRunProviderMode("OpenAI", mode, selected) && Boolean(openaiKey),
+          shouldRunProviderMode("openai", mode, selected) && Boolean(openaiKey),
         config: {
           name: "Eval OpenAI",
           provider: "OpenAI",
@@ -602,7 +602,7 @@ function buildScenarios(
         name: `Azure OpenAI (${modeName})`,
         mode,
         enabled:
-          shouldRunProviderMode("Azure", mode, selected) &&
+          shouldRunProviderMode("azure-openai", mode, selected) &&
           Boolean(azureKey) &&
           Boolean(azureBaseUrl),
         config: {
