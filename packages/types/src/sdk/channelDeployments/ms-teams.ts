@@ -57,6 +57,6 @@ export type MSTeamsCommand = "ask" | "new" | "unsupported"
 export interface ResolvedMSTeamsIntegration {
   appId: string
   appPassword: string
-  tenantId?: string
+  tenantId: string
   chatAppId?: string
 }

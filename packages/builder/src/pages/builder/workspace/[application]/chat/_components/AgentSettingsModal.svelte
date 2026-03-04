@@ -20,8 +20,9 @@
   export let selectedAgent: AgentListItem | undefined
   export let selectedAgentConfig: ChatAppAgent | undefined
   export let defaultAgentId: string | undefined
+  export let showDefaultControls = true
   export let isAgentAvailable: (_agentId: string) => boolean
-  export let onSetDefault: (_agentId: string) => void
+  export let onSetDefault: ((_agentId: string) => void) | undefined = undefined
   export let onUpdateConversationStarters: (
     _agentId: string,
     _starters: ConversationStarter[]
@@ -62,7 +63,8 @@
   $: isDisabled = !selectedAgent || !isAvailable || isDefault
 
   const saveConversationStarters = () => {
-    if (!selectedAgentConfig?.agentId) {
+    const targetAgentId = selectedAgent?.agentId || selectedAgentConfig?.agentId
+    if (!targetAgentId) {
       return
     }
 
@@ -71,7 +73,7 @@
       .filter(starter => starter.prompt.length)
       .slice(0, 3)
 
-    onUpdateConversationStarters(selectedAgentConfig.agentId, trimmedStarters)
+    onUpdateConversationStarters(targetAgentId, trimmedStarters)
   }
 
   const debouncedSave = Utils.debounce(() => {
@@ -79,7 +81,7 @@
   }, 400)
 
   const handleSetDefault = () => {
-    if (selectedAgent) {
+    if (selectedAgent && onSetDefault) {
       onSetDefault(selectedAgent.agentId)
     }
   }
@@ -125,7 +127,7 @@
     showConfirmButton={false}
     showCancelButton={false}
   >
-    {#if !isDefault}
+    {#if showDefaultControls && !isDefault}
       <div class="agent-settings">
         <div class="agent-settings-default">
           <Button size="S" disabled={isDisabled} on:click={handleSetDefault}>

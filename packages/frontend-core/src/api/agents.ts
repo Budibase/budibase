@@ -5,12 +5,14 @@ import {
   DuplicateAgentResponse,
   FetchAgentFilesResponse,
   FetchAgentsResponse,
+  ProvisionAgentSlackChannelRequest,
+  ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
-  ToggleAgentDiscordRequest,
-  ToggleAgentDiscordResponse,
+  ToggleAgentDeploymentRequest,
+  ToggleAgentDeploymentResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -42,10 +44,22 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
   ) => Promise<ProvisionAgentMSTeamsChannelResponse>
+  provisionAgentSlackChannel: (
+    agentId: string,
+    body?: ProvisionAgentSlackChannelRequest
+  ) => Promise<ProvisionAgentSlackChannelResponse>
   toggleAgentDiscordDeployment: (
     agentId: string,
     enabled: boolean
-  ) => Promise<ToggleAgentDiscordResponse>
+  ) => Promise<ToggleAgentDeploymentResponse>
+  toggleAgentMSTeamsDeployment: (
+    agentId: string,
+    enabled: boolean
+  ) => Promise<ToggleAgentDeploymentResponse>
+  toggleAgentSlackDeployment: (
+    agentId: string,
+    enabled: boolean
+  ) => Promise<ToggleAgentDeploymentResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -131,12 +145,42 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
+  provisionAgentSlackChannel: async (agentId: string, body) => {
+    return await API.post<
+      ProvisionAgentSlackChannelRequest | undefined,
+      ProvisionAgentSlackChannelResponse
+    >({
+      url: `/api/agent/${agentId}/slack/provision`,
+      body,
+    })
+  },
+
   toggleAgentDiscordDeployment: async (agentId: string, enabled: boolean) => {
     return await API.post<
-      ToggleAgentDiscordRequest,
-      ToggleAgentDiscordResponse
+      ToggleAgentDeploymentRequest,
+      ToggleAgentDeploymentResponse
     >({
       url: `/api/agent/${agentId}/discord/toggle`,
+      body: { enabled },
+    })
+  },
+
+  toggleAgentMSTeamsDeployment: async (agentId: string, enabled: boolean) => {
+    return await API.post<
+      ToggleAgentDeploymentRequest,
+      ToggleAgentDeploymentResponse
+    >({
+      url: `/api/agent/${agentId}/ms-teams/toggle`,
+      body: { enabled },
+    })
+  },
+
+  toggleAgentSlackDeployment: async (agentId: string, enabled: boolean) => {
+    return await API.post<
+      ToggleAgentDeploymentRequest,
+      ToggleAgentDeploymentResponse
+    >({
+      url: `/api/agent/${agentId}/slack/toggle`,
       body: { enabled },
     })
   },

@@ -1,12 +1,8 @@
-import { DiscordCommands } from "@budibase/shared-core"
-import type { ChatConversation, DiscordInteraction } from "@budibase/types"
+import type { ChatConversation } from "@budibase/types"
 import {
-  extractDiscordContent,
-  getDiscordInteractionCommand,
-  isDiscordTimestampFresh,
   matchesDiscordConversationScope,
   pickDiscordConversation,
-} from "./discord"
+} from "../discord"
 
 const makeChat = (
   overrides: Partial<ChatConversation> = {}
@@ -27,48 +23,7 @@ const makeChat = (
   ...overrides,
 })
 
-const makeInteraction = (
-  overrides: Partial<DiscordInteraction> = {}
-): DiscordInteraction => ({
-  id: "interaction-default",
-  type: 2,
-  token: "token",
-  application_id: "app",
-  ...overrides,
-})
-
 describe("discord webhook helpers", () => {
-  it("extracts slash-command and modal text content", () => {
-    const content = extractDiscordContent(
-      makeInteraction({
-        data: {
-          options: [{ name: "message", value: "hello" }, { value: 123 }],
-          components: [
-            {
-              components: [{ value: "from modal" }],
-            },
-          ],
-        },
-      })
-    )
-
-    expect(content).toEqual("hello 123 from modal")
-  })
-
-  it.each([
-    [{ type: 2, data: { name: "ask" } }, DiscordCommands.ASK],
-    [{ type: 2, data: { name: "new" } }, DiscordCommands.NEW],
-    [{ type: 5, data: {} }, DiscordCommands.ASK],
-    [{ type: 2, data: { name: "status" } }, DiscordCommands.UNSUPPORTED],
-  ] as [Partial<DiscordInteraction>, string][])(
-    "maps interaction %j to command %s",
-    (overrides, expected) => {
-      expect(getDiscordInteractionCommand(makeInteraction(overrides))).toEqual(
-        expected
-      )
-    }
-  )
-
   it("scopes conversations by chat app, agent, channel, thread, and user", () => {
     const scope = {
       chatAppId: "chat-app-1",
@@ -172,22 +127,5 @@ describe("discord webhook helpers", () => {
     })
 
     expect(picked?._id).toEqual("latest")
-  })
-
-  describe("isDiscordTimestampFresh", () => {
-    it("returns true for current timestamps", () => {
-      const nowSec = Math.floor(Date.now() / 1000).toString()
-      expect(isDiscordTimestampFresh(nowSec)).toBe(true)
-    })
-
-    it("returns false for stale timestamps", () => {
-      // 3600 = 1 hour, just old enough to be staler than the 45min default timeout
-      const staleSec = Math.floor(Date.now() / 1000 - 3600).toString()
-      expect(isDiscordTimestampFresh(staleSec)).toBe(false)
-    })
-
-    it("returns false for invalid timestamps", () => {
-      expect(isDiscordTimestampFresh("not-a-timestamp")).toBe(false)
-    })
   })
 })
