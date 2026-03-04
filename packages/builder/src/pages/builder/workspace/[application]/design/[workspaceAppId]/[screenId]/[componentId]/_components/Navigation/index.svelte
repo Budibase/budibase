@@ -126,6 +126,12 @@
             }}
           />
         {/if}
+        <PropertyControl
+          label="Show log in button"
+          control={Checkbox}
+          value={$nav.showLoginButton !== false}
+          onChange={show => update("showLoginButton", show)}
+        />
         {#if $nav.navigation === "Left"}
           <PropertyControl
             label="Logo position"

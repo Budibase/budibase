@@ -45,6 +45,7 @@
   export let textAlign
   export let embedded = false
   export let banner
+  export let showLoginButton = true
 
   export let collapsible = false
 
@@ -330,7 +331,7 @@
                 {/if}
                 {#if !embedded}
                   <div class="user top">
-                    <UserMenu compact />
+                    <UserMenu compact {showLoginButton} />
                   </div>
                 {/if}
               </div>
@@ -365,7 +366,7 @@
 
               {#if !embedded}
                 <div class="user left" class:collapsed={navCollapsed}>
-                  <UserMenu collapsed={navCollapsed} />
+                  <UserMenu collapsed={navCollapsed} {showLoginButton} />
                   {#if logoPosition === "bottom"}
                     <div>
                       <Logo
