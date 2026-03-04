@@ -650,7 +650,7 @@
               />
               <SideNavLink
                 icon="user-plus"
-                text="Invite user"
+                text="Invite users"
                 on:click={openInviteUser}
                 {collapsed}
               />

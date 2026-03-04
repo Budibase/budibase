@@ -1,9 +1,10 @@
 <script lang="ts">
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
-  import type { BulkUserCreated } from "@budibase/types"
+  import type { BulkUserCreated, InviteUsersResponse } from "@budibase/types"
   import { onMount } from "svelte"
   import { OnboardingType } from "@/constants"
   import AddUserModal from "@/settings/pages/people/users/_components/AddUserModal.svelte"
+  import InvitedModal from "@/settings/pages/people/users/_components/InvitedModal.svelte"
   import {
     assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
@@ -18,7 +19,13 @@
   export let onHide: () => void = () => {}
 
   let createUserModal: Modal
+  let inviteConfirmationModal: Modal
   let isOpened = false
+  let deferClose = false
+  let inviteUsersResponse: InviteUsersResponse = {
+    successful: [],
+    unsuccessful: [],
+  }
 
   $: currentWorkspaceId = $appStore.appId
     ? sdk.applications.getProdAppID($appStore.appId)
@@ -56,8 +63,9 @@
       assignToWorkspace
     )
 
-    await users.invite(payload)
-    notifications.success("User invite successful")
+    inviteUsersResponse = await users.invite(payload)
+    deferClose = true
+    inviteConfirmationModal.show()
   }
 
   const createUsers = async (userData: UserData) => {
@@ -132,11 +140,19 @@
       return
     }
     isOpened = false
+    if (deferClose) {
+      return
+    }
     onHide()
   }
 
   const showModal = () => {
     isOpened = true
+  }
+
+  const hideInviteConfirmationModal = () => {
+    deferClose = false
+    onHide()
   }
 
   onMount(() => {
@@ -158,4 +174,8 @@
     assignToWorkspace={true}
     inviteTitle="Invite users to workspace"
   />
+</Modal>
+
+<Modal bind:this={inviteConfirmationModal} on:hide={hideInviteConfirmationModal}>
+  <InvitedModal {inviteUsersResponse} />
 </Modal>
