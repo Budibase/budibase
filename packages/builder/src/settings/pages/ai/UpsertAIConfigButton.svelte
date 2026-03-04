@@ -4,12 +4,11 @@
     type AIConfigResponse,
   } from "@budibase/types"
   import { ActionButton, Modal, Body, ProgressCircle } from "@budibase/bbui"
-  import CustomConfigModal from "./AIConfigModal.svelte"
-  import BBAIConfigModal from "./BBAIConfigModal.svelte"
   import { onMount } from "svelte"
-  import { admin, licensing } from "@/stores/portal"
-  import { API } from "@/api"
+  import { admin } from "@/stores/portal"
   import PortalModal from "./PortalModal.svelte"
+  import { bb } from "@/stores/bb"
+  import { aiLicenseStatus } from "./licenseStatus"
 
   interface Props {
     row: AIConfigResponse
@@ -18,74 +17,62 @@
   let { row }: Props = $props()
 
   let isEdit = $derived(!!row._id)
+  let isBBAI = $derived(row.provider === BUDIBASE_AI_PROVIDER_ID)
+  let licenseStatus = $derived($aiLicenseStatus)
 
-  let configModal = $state<Modal | null>()
-  let openModal = $state(false)
-  let hasLicenseKey: boolean | null = $state(null)
+  let enableBBAIModal = $state<Modal | null>()
+  let pendingOpen = $state(false)
 
-  $effect(() => {
-    configModal?.show()
-  })
+  function openConfig() {
+    bb.settings(`/ai-config/${row.configType}/${row._id || "new"}`, {
+      provider: row.provider,
+      type: row.configType,
+    })
+  }
+
+  function onClick() {
+    if (!isBBAI) {
+      openConfig()
+      return
+    }
+
+    if (licenseStatus === "has_key") {
+      openConfig()
+      return
+    }
+
+    pendingOpen = licenseStatus === "checking"
+    enableBBAIModal?.show()
+  }
 
   onMount(async () => {
-    try {
-      const license = $licensing.license
-      const isOfflineLicense = () => license && "identifier" in license
-      if (isOfflineLicense()) {
-        hasLicenseKey = true
-      } else {
-        const licenseKeyResponse = await API.getLicenseKey()
-        hasLicenseKey = !!licenseKeyResponse?.licenseKey
-      }
-    } catch {
-      hasLicenseKey = false
+    if (pendingOpen && licenseStatus === "has_key") {
+      pendingOpen = false
+      enableBBAIModal?.hide()
+      openConfig()
     }
   })
 </script>
 
-<ActionButton
-  size="S"
-  on:click={() => {
-    openModal = true
-  }}>{isEdit ? "Edit" : "Connect"}</ActionButton
+<ActionButton size="S" on:click={onClick}
+  >{isEdit ? "Edit" : "Connect"}</ActionButton
 >
 
-{#if openModal}
-  <Modal
-    bind:this={configModal}
-    on:hide={() => {
-      openModal = false
-    }}
-  >
-    {#if row.provider !== BUDIBASE_AI_PROVIDER_ID}
-      <CustomConfigModal
-        config={row}
-        provider={row.provider}
-        type={row.configType}
-      />
-    {:else if hasLicenseKey == null}
-      <div class="license-check">
-        <ProgressCircle />
-        <Body size="S">Checking license...</Body>
-      </div>
-    {:else if hasLicenseKey === false}
-      <PortalModal
-        confirmHandler={() => {
-          window.open($admin.accountPortalUrl, "_blank", "noopener,noreferrer")
-          openModal = false
-        }}
-        cancelHandler={() => {
-          openModal = false
-        }}
-      />
-    {:else}
-      <BBAIConfigModal
-        config={row._id ? row : undefined}
-        type={row.configType}
-      />
-    {/if}
-  </Modal>
-{/if}
+<Modal bind:this={enableBBAIModal}>
+  {#if licenseStatus === "checking"}
+    <div class="license-check">
+      <ProgressCircle />
+      <Body size="S">Checking license...</Body>
+    </div>
+  {:else if licenseStatus === "missing_key"}
+    <PortalModal
+      confirmHandler={() => {
+        window.open($admin.accountPortalUrl, "_blank", "noopener,noreferrer")
+      }}
+      cancelHandler={() => {}}
+    />
+  {/if}
+</Modal>
 
 <style>
   .license-check {

@@ -65,7 +65,7 @@ export const PlanModel = {
   PER_USER: "perUser",
 }
 
-export const CHANGELOG_URL = "https://docs.budibase.com/changelog"
+export const CHANGELOG_URL = "https://github.com/Budibase/budibase/releases"
 export const DISCORD_URL = "https://discord.com/invite/ZepTmGbtfF"
 export const DOCUMENTATION_URL = "https://docs.budibase.com/docs"
 export const GITHUB_DISCUSSIONS_URL =

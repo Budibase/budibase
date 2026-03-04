@@ -48,6 +48,8 @@
     option?.colour ?? undefined
   export let getOptionSubtitle = (option: O, _index?: number) =>
     option?.subtitle ?? undefined
+  export let getOptionTooltip = (option: O, _index?: number) =>
+    option?.tooltip ?? undefined
   export let useOptionIconImage = false
   export let open: boolean = false
   export let readonly: boolean = false
@@ -76,6 +78,8 @@
   export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
   export let hideChevron: boolean = false
+  export let wrapText: boolean = false
+  export let fieldTooltip: string | null = null
 
   const maxHeight = 360
   const VIRTUALIZATION_THRESHOLD = 200
@@ -115,7 +119,8 @@
     searchTerm,
     getOptionLabel
   )
-  $: virtualizationEnabled = filteredOptions.length > VIRTUALIZATION_THRESHOLD
+  $: virtualizationEnabled =
+    !wrapText && filteredOptions.length > VIRTUALIZATION_THRESHOLD
   $: {
     if (!virtualizationEnabled) {
       virtualizedOptions = filteredOptions.map((option, idx) => ({
@@ -254,6 +259,8 @@
     class:is-placeholder={isPlaceholder}
     class:auto-width={autoWidth}
     class:has-subtitle={!!fieldSubtitle}
+    class:wrap-text={wrapText}
+    title={fieldTooltip}
   >
     <span class="picker-label-text">{fieldText}</span>
     {#if fieldSubtitle}
@@ -279,6 +286,7 @@
   <div
     class="popover-content"
     class:auto-width={autoWidth}
+    class:wrap-text={wrapText}
     use:clickOutside={() => {
       open = false
     }}
@@ -347,6 +355,7 @@
           ></li>
         {/if}
         {#each virtualizedOptions as { option, idx } (getOptionValue(option, idx) ?? idx)}
+          {@const optionTooltip = getOptionTooltip(option, idx)}
           {@const optionIcon = resolveIcon(getOptionIcon(option, idx))}
           <li
             class="spectrum-Menu-item"
@@ -358,6 +367,7 @@
             on:mouseenter={e => onOptionMouseenter(e, option)}
             on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
+            title={optionTooltip ?? undefined}
           >
             {#if optionIcon}
               <span class="option-extra icon">
@@ -484,6 +494,30 @@
   }
   .spectrum-Menu-item.is-disabled {
     pointer-events: none;
+  }
+
+  .spectrum-Picker-label.wrap-text {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    width: auto;
+  }
+  .spectrum-Picker-label.wrap-text .picker-label-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .popover-content.wrap-text .spectrum-Menu-item {
+    height: auto;
+    min-height: var(--spectrum-menu-item-height);
+    align-items: flex-start;
+  }
+  .popover-content.wrap-text .spectrum-Menu-itemLabel {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    width: auto;
+    flex: 1 1 auto;
   }
 
   /* Search styles inside popover */

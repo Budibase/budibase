@@ -10,6 +10,7 @@ export async function run({
   let {
     to,
     from,
+    replyTo,
     subject,
     contents,
     cc,
@@ -38,6 +39,7 @@ export async function run({
     let response = await sendSmtpEmail({
       to,
       from,
+      replyTo,
       subject,
       contents,
       cc,

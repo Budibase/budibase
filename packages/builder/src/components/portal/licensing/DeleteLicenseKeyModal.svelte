@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
   import { Modal, ModalContent, Body } from "@budibase/bbui"
 
-  let modal
+  let modal: Modal
 
-  export let onConfirm
+  export let onConfirm: (() => Promise<any> | any) | undefined
 
   export function show() {
     modal.show()
@@ -14,7 +14,7 @@
   }
 </script>
 
-<Modal bind:this={modal} on:hide={modal}>
+<Modal bind:this={modal}>
   <ModalContent
     title="Confirm deletion"
     size="S"

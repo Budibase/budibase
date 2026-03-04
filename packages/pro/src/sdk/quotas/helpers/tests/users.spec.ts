@@ -70,6 +70,14 @@ describe("User helpers", () => {
     expect(response).toBe("OK")
   })
 
+  it("Skips quota and license sync when user and creator deltas are zero", async () => {
+    const response = await addUsers(0, 0, addUsersFnMock)
+    expect(addUsersFnMock).toHaveBeenCalledTimes(1)
+    expect(incrementManyMock).not.toHaveBeenCalled()
+    expect(licenseClientMock).not.toHaveBeenCalled()
+    expect(response).toBeUndefined()
+  })
+
   it("Decrements quotas for users and creators when new users are deleted", async () => {
     const userDeleted = 1
     const creatorsDeleted = 1

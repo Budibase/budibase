@@ -2,9 +2,11 @@ import { embedMany } from "ai"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
+import { features } from "@budibase/backend-core"
 import {
   AgentFileStatus,
   AgentMessageRagSource,
+  FeatureFlag,
   type Agent,
   type AgentFile,
 } from "@budibase/types"
@@ -15,6 +17,12 @@ import { createLLM } from "../llm"
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
+
+const ensureRagEnabled = async () => {
+  if (!(await features.isEnabled(FeatureFlag.AI_RAG))) {
+    throw new Error("RAG feature is disabled")
+  }
+}
 
 const textFileExtensions = new Set([
   ".txt",
@@ -241,6 +249,7 @@ export const ingestAgentFile = async (
   inserted: number
   total: number
 }> => {
+  await ensureRagEnabled()
   const { _id: agentId } = agent
   if (!agentId) {
     throw new Error("Agent id not set")
@@ -282,6 +291,7 @@ export const deleteAgentFileChunks = async (
   agent: Agent,
   sourceIds: string[]
 ) => {
+  await ensureRagEnabled()
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
@@ -309,6 +319,7 @@ export const retrieveContextForAgent = async (
   agent: Agent,
   question: string
 ): Promise<RetrievedContextResult> => {
+  await ensureRagEnabled()
   if (!question || question.trim().length === 0) {
     return { text: "", chunks: [], sources: [] }
   }

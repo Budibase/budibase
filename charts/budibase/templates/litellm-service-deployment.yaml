@@ -13,6 +13,8 @@ spec:
       io.kompose.service: litellm-service
   template:
     metadata:
+      annotations:
+        ad.datadoghq.com/litellm.logs: '[{"source":"python"}]'
       labels:
         io.kompose.service: litellm-service
     spec:

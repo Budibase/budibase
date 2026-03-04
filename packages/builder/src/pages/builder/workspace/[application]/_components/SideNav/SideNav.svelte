@@ -21,7 +21,6 @@
   import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
-    builderStore,
     workspaceFavouriteStore,
     workspaceAppStore,
     automationStore,
@@ -71,6 +70,7 @@
   export const show = () => {
     pinned.set(true)
   }
+  export let onInviteUser: () => void = () => {}
 
   $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
   $: automationErrorCount = Object.keys(automationErrors).length
@@ -166,6 +166,11 @@
       : `${prefix}/${target.replace(/^\.\//, "")}`
 
     $goto(normalisedTarget)
+    keepCollapsed()
+  }
+
+  const openInviteUser = () => {
+    onInviteUser()
     keepCollapsed()
   }
 
@@ -615,19 +620,6 @@
                       </div>
                     </svelte:fragment>
                   </SideNavLink>
-                  <SideNavLink
-                    icon="chat-circle"
-                    text="Chat"
-                    url={$url("./chat")}
-                    {collapsed}
-                    on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      <div class="beta-tag-wrapper">
-                        <Tag emphasized>Alpha</Tag>
-                      </div>
-                    </svelte:fragment>
-                  </SideNavLink>
                 {/if}
               {/if}
             </div>
@@ -659,10 +651,7 @@
               <SideNavLink
                 icon="user-plus"
                 text="Invite user"
-                on:click={() => {
-                  builderStore.showBuilderSidePanel()
-                  keepCollapsed()
-                }}
+                on:click={openInviteUser}
                 {collapsed}
               />
               <span class="root-nav" class:error={backupErrorCount}>

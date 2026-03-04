@@ -8,9 +8,11 @@ import {
   AIQuotaUsageResponse,
   BUDIBASE_AI_PROVIDER_ID,
   CustomAIProviderConfig,
+  LLMResponse,
 } from "@budibase/types"
-import { LLMResponse } from "."
 import nodeFetch from "node-fetch"
+import { Readable } from "stream"
+import { blob } from "stream/consumers"
 
 type LiteLLMFetch = (
   input: Parameters<typeof fetch>[0],
@@ -53,6 +55,16 @@ export const createLiteLLMOpenAI = async (
     chat: llm.chat(modelId),
     embedding: llm.embedding(modelId),
     providerOptions: getLiteLLMProviderOptions,
+    uploadFile: async (stream: Readable, filename: string) => {
+      const fileId = await uploadFile({
+        stream,
+        filename,
+        model: modelId,
+        purpose: "assistants",
+        apiKey,
+      })
+      return fileId
+    },
   }
 }
 
@@ -178,5 +190,68 @@ async function getLiteLLMModelSettings(): Promise<{
   return {
     apiKey: secretKey,
     baseUrl: environment.LITELLM_URL,
+  }
+}
+
+async function uploadFile({
+  stream,
+  filename,
+  purpose,
+  model,
+  apiKey,
+}: {
+  stream: Readable
+  filename: string
+  purpose: "assistants"
+  model: string
+  apiKey: string
+}): Promise<string> {
+  const liteLLMAuthorizationHeader = `Bearer ${apiKey}`
+  const fileBlob = (await blob(stream)) as Blob
+
+  const formdata = new FormData()
+  formdata.append("purpose", purpose)
+  formdata.append("file", fileBlob, filename)
+  formdata.append("model", model)
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      Authorization: liteLLMAuthorizationHeader,
+    },
+    body: formdata,
+  }
+
+  try {
+    const res = await fetch(
+      `${environment.LITELLM_URL}/v1/files`,
+      requestOptions
+    )
+
+    const json = await res.json()
+    if (typeof json.id !== "string") {
+      throw new Error("File id not found")
+    }
+    return unwrapLiteLLMFileId(json.id)
+  } catch (e) {
+    console.error("Error uploading file to LiteLLM", e)
+    throw e
+  }
+}
+
+export function unwrapLiteLLMFileId(fileId: string): string {
+  if (!fileId.startsWith("file-")) {
+    return fileId
+  }
+
+  const encodedPart = fileId.slice("file-".length)
+  try {
+    const decoded = Buffer.from(encodedPart, "base64").toString("utf8")
+    const match = decoded.match(/^litellm:(file-[^;]+);/)
+    if (match?.[1]) {
+      return match[1]
+    }
+    return fileId
+  } catch {
+    return fileId
   }
 }

@@ -19,6 +19,8 @@
     extractProperty(option, "value")
   export let getOptionSubtitle = (option: O, _index?: number) =>
     (option as any)?.subtitle
+  export let getOptionTooltip = (option: O, _index?: number) =>
+    (option as any)?.tooltip
   export let showSelectedSubtitle = false
   export let getOptionIcon = (option: O, _index?: number) =>
     (option as any)?.icon
@@ -48,6 +50,8 @@
   export let loading: boolean | undefined = false
   export let searchPlaceholder: string | undefined = undefined
   export let hideChevron: boolean = false
+  export let required: boolean = false
+  export let description: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<any>) => {
@@ -63,7 +67,15 @@
   }
 </script>
 
-<Field {helpText} {label} {labelPosition} {error} {tooltip}>
+<Field
+  {helpText}
+  {label}
+  {labelPosition}
+  {error}
+  {tooltip}
+  {required}
+  {description}
+>
   <Select
     {size}
     {bordered}
@@ -84,6 +96,7 @@
     {getOptionIcon}
     {getOptionColour}
     {getOptionSubtitle}
+    {getOptionTooltip}
     {showSelectedSubtitle}
     {useOptionIconImage}
     {isOptionEnabled}

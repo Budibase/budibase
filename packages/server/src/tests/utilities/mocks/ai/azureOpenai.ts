@@ -68,29 +68,61 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
     : null
 
   const interceptor = pool.intercept({
-    path: /\/deployments\/.*?\/chat\/completions/,
+    path: /\/(v1\/responses|v1\/chat\/completions|deployments\/.*?\/chat\/completions)/,
     method: "POST",
   })
   interceptor.defaultReplyHeaders?.({
     "content-type": "application/json",
   })
-  interceptor.reply(200, reqOpts => {
+  const scope = interceptor.reply<object>(reqOpts => {
     const reqBody = parseJsonBody(reqOpts.body)
-    if (expectedFormat && !expectedFormat(reqBody)) {
+    const path = reqOpts.path || ""
+    const isResponsesApi = path.includes("/v1/responses")
+    if (!isResponsesApi && expectedFormat && !expectedFormat(reqBody)) {
       return {
-        error: { message: "Unexpected response_format in request body" },
+        statusCode: 200,
+        data: {
+          error: { message: "Unexpected response_format in request body" },
+        },
       }
     }
 
-    const messages = reqBody?.messages as Message[]
-    const prompt = messages[0]?.content || ""
+    let prompt = ""
+    if (isResponsesApi) {
+      const input = reqBody && "input" in reqBody && reqBody.input
+      if (typeof input === "string") {
+        prompt = input
+      } else if (Array.isArray(input)) {
+        const userMessage = input.find((item: any) => item.role === "user")
+        const content = userMessage?.content
+        if (Array.isArray(content)) {
+          prompt = content
+            .filter((part: any) => part.type === "input_text")
+            .map((part: any) => part.text)
+            .join(" ")
+        }
+      }
+    } else {
+      const messages = reqBody?.messages as Message[]
+      prompt = messages[0]?.content || ""
+    }
 
     let content
     if (typeof answer === "function") {
       try {
         content = answer(prompt)
       } catch (e) {
-        return [500, "Internal Server Error"]
+        return {
+          statusCode: 500,
+          data: {
+            error: {
+              message: "Internal Server Error",
+              type: "server_error",
+              param: null,
+              code: null,
+            },
+          },
+        }
       }
     } else {
       content = answer
@@ -101,8 +133,39 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
     // We mock token usage because we use it to calculate Budibase AI quota
     // usage when Budibase AI is enabled, and some tests assert against quota
     // usage to make sure we're tracking correctly.
-    const prompt_tokens = messages[0].content.split(SPACE_REGEX).length
+    const prompt_tokens = prompt ? prompt.split(SPACE_REGEX).length : 1
     const completion_tokens = content.split(SPACE_REGEX).length
+
+    if (isResponsesApi) {
+      return {
+        statusCode: 200,
+        data: {
+          id: `resp_${chatID}`,
+          created_at: Math.floor(Date.now() / 1000),
+          model: reqBody?.model ?? "gpt-4o-realtime-preview-1001",
+          output: [
+            {
+              type: "message",
+              role: "assistant",
+              id: `msg_${chatID}`,
+              content: [
+                {
+                  type: "output_text",
+                  text: content,
+                  annotations: [],
+                },
+              ],
+            },
+          ],
+          usage: {
+            input_tokens: prompt_tokens,
+            input_tokens_details: { cached_tokens: 0 },
+            output_tokens: completion_tokens,
+            output_tokens_details: { reasoning_tokens: 0 },
+          },
+        },
+      }
+    }
 
     const response: ChatCompletionResponse = {
       id: `chatcmpl-${chatID}`,
@@ -130,6 +193,12 @@ export const mockAzureOpenAIResponse: MockLLMResponseFn = (
       },
     }
 
-    return response
+    return {
+      statusCode: 200,
+      data: response,
+    }
   })
+
+  // ai-sdk retries 3 times
+  scope.times(3)
 }

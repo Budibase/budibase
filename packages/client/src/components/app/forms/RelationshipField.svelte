@@ -44,6 +44,7 @@
   export let primaryDisplay: string | undefined = undefined
   export let span: number | undefined = undefined
   export let helpText: string | undefined = undefined
+  export let wrapText: boolean = false
   export let type:
     | FieldType.LINK
     | FieldType.BB_REFERENCE
@@ -485,6 +486,7 @@
       bind:searchTerm
       bind:open
       searchPlaceholder={relationshipPickerPlaceholder}
+      {wrapText}
       on:change={handleChange}
     />
   {/if}

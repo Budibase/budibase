@@ -34,6 +34,7 @@ import {
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
   FetchPublishedAppsResponse,
+  FetchPublishedChatAppsResponse,
   FetchWorkspacesResponse,
   FieldType,
   ImportToUpdateWorkspaceRequest,
@@ -320,6 +321,66 @@ export async function fetchClientApps(
   ctx.body = { apps: result }
 }
 
+export async function fetchClientChatApps(
+  ctx: UserCtx<void, FetchPublishedChatAppsResponse>
+) {
+  const workspaces = await sdk.workspaces.fetch(
+    WorkspaceStatus.DEPLOYED,
+    ctx.user
+  )
+
+  const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
+  for (const workspace of workspaces) {
+    const { chatApp, workspaceAgents } = await context.doInWorkspaceContext(
+      workspace.appId,
+      async () => {
+        const [chatApp, workspaceAgents] = await Promise.all([
+          sdk.ai.chatApps.getSingle(),
+          sdk.ai.agents.fetch(),
+        ])
+
+        return {
+          chatApp,
+          workspaceAgents,
+        }
+      }
+    )
+
+    if (!chatApp?.live || !chatApp._id) {
+      continue
+    }
+
+    const workspaceAgentsById = new Map(
+      workspaceAgents
+        .filter(agent => agent._id)
+        .map(agent => [agent._id!, agent])
+    )
+
+    const enabledChatAgents = (chatApp.agents || []).filter(
+      agent => agent.isEnabled
+    )
+
+    for (const chatAgent of enabledChatAgents) {
+      const workspaceAgent = workspaceAgentsById.get(chatAgent.agentId)
+      if (!workspaceAgent?.live) {
+        continue
+      }
+
+      chatApps.push({
+        appId: workspace.appId,
+        chatAppId: chatApp._id,
+        agentId: chatAgent.agentId,
+        agentName: workspaceAgent.name,
+        name: workspaceAgent.name,
+        url: `${workspace.url}/agent/${chatAgent.agentId}`.replace(/\/$/, ""),
+        updatedAt: chatApp.updatedAt || workspace.updatedAt,
+      })
+    }
+  }
+
+  ctx.body = { chatApps }
+}
+
 export async function fetchAppDefinition(
   ctx: UserCtx<void, FetchAppDefinitionResponse>
 ) {
@@ -434,18 +495,38 @@ export async function fetchAppPackage(
     const urlPath =
       embedPath ||
       (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
+    const normalizedUrlPath = urlPath.split("?")[0].replace(/\/$/, "")
+    const isChatRoute =
+      normalizedUrlPath.startsWith("/app-chat/") ||
+      /\/_chat(?:\/.*)?$/.test(normalizedUrlPath)
 
-    const matchedWorkspaceApp =
+    let matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+    if (!matchedWorkspaceApp) {
+      const chatPath = urlPath.replace(/\/_chat(?:\/.*)?$/, "")
+      if (chatPath !== urlPath) {
+        matchedWorkspaceApp =
+          await sdk.workspaceApps.getMatchedWorkspaceApp(chatPath)
+      }
+    }
 
     // disabled workspace apps should appear to not exist
     // if the dev workspace is being served, allow the request regardless
-    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
+    if (
+      !isChatRoute &&
+      (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev))
+    ) {
       ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
     }
-    screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
 
-    application.navigation = matchedWorkspaceApp.navigation
+    if (matchedWorkspaceApp) {
+      screens = screens.filter(
+        s => s.workspaceAppId === matchedWorkspaceApp._id
+      )
+      application.navigation = matchedWorkspaceApp.navigation
+    } else {
+      screens = []
+    }
   }
 
   const clientLibPath = await objectStore.clientLibraryUrl(

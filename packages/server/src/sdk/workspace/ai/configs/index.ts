@@ -7,6 +7,7 @@ import {
 } from "@budibase/backend-core"
 import { licensing } from "@budibase/pro"
 import {
+  AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
   CustomAIProviderConfig,
   DocumentType,
@@ -96,6 +97,33 @@ const decodeConfigSecrets = (
   }
 }
 
+const ensureDefaultUniqueness = async (excludeId?: string) => {
+  const db = context.getWorkspaceDB()
+  const result = await db.allDocs<CustomAIProviderConfig>(
+    docIds.getDocParams(DocumentType.AI_CONFIG, undefined, {
+      include_docs: true,
+    })
+  )
+
+  const docsToUpdate = result.rows
+    .map(row => row.doc)
+    .filter((doc): doc is CustomAIProviderConfig => !!doc)
+    .filter(
+      doc =>
+        doc.configType === AIConfigType.COMPLETIONS &&
+        doc.isDefault === true &&
+        doc._id !== excludeId
+    )
+    .map(doc => ({
+      ...doc,
+      isDefault: false,
+    }))
+
+  for (const doc of docsToUpdate) {
+    await db.put(doc)
+  }
+}
+
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
   const db = context.getWorkspaceDB()
   const result = await db.allDocs<CustomAIProviderConfig>(
@@ -128,6 +156,7 @@ export async function create(
     | "reasoningEffort"
     | "webSearchConfig"
     | "name"
+    | "isDefault"
   >
 ): Promise<CustomAIProviderConfig> {
   const db = context.getWorkspaceDB()
@@ -147,9 +176,22 @@ export async function create(
     config.credentialsFields.api_key = licenseKey
   }
 
+  const configId =
+    config.provider === BUDIBASE_AI_PROVIDER_ID
+      ? docIds.generateAIConfigID("bbai")
+      : docIds.generateAIConfigID()
+
   let modelId
   if (!isBBAI || isSelfhost) {
+    await liteLLM.validateConfig({
+      provider: config.provider,
+      name: config.model,
+      credentialFields: config.credentialsFields,
+      configType: config.configType,
+    })
+
     modelId = await liteLLM.addModel({
+      configId,
       provider: config.provider,
       model: config.model,
       credentialFields: config.credentialsFields,
@@ -161,10 +203,7 @@ export async function create(
   }
 
   const newConfig: CustomAIProviderConfig = {
-    _id:
-      config.provider === BUDIBASE_AI_PROVIDER_ID
-        ? docIds.generateAIConfigID("bbai")
-        : docIds.generateAIConfigID(),
+    _id: configId,
     name: config.name,
     provider: config.provider,
     credentialsFields: config.credentialsFields,
@@ -173,6 +212,7 @@ export async function create(
     ...(config.webSearchConfig && { webSearchConfig: config.webSearchConfig }),
     configType: config.configType,
     reasoningEffort: config.reasoningEffort,
+    isDefault: config.isDefault,
   }
 
   const encodedConfig: CustomAIProviderConfig = {
@@ -181,6 +221,13 @@ export async function create(
   }
   const { rev } = await db.put(encodedConfig)
   newConfig._rev = rev
+
+  if (
+    newConfig.configType === AIConfigType.COMPLETIONS &&
+    newConfig.isDefault === true
+  ) {
+    await ensureDefaultUniqueness(newConfig._id)
+  }
 
   await liteLLM.syncKeyModels()
 
@@ -199,6 +246,7 @@ export async function update(
     | "configType"
     | "reasoningEffort"
     | "webSearchConfig"
+    | "isDefault"
   >
 ): Promise<CustomAIProviderConfig> {
   const id = config._id
@@ -233,15 +281,8 @@ export async function update(
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
     ...config,
+    isDefault: config.isDefault ?? existing.isDefault,
   }
-
-  const db = context.getWorkspaceDB()
-  const encodedConfig: CustomAIProviderConfig = {
-    ...updatedConfig,
-    ...(await encodeConfigSecrets(updatedConfig)),
-  }
-  const { rev } = await db.put(encodedConfig)
-  updatedConfig._rev = rev
 
   function getLiteLLMAwareFields(config: CustomAIProviderConfig) {
     return {
@@ -261,8 +302,33 @@ export async function update(
     (isSelfhost || !isBBAI)
 
   if (shouldUpdateLiteLLM) {
+    await liteLLM.validateConfig({
+      provider: updatedConfig.provider,
+      name: updatedConfig.model,
+      credentialFields: updatedConfig.credentialsFields,
+      configType: updatedConfig.configType,
+    })
+  }
+
+  const db = context.getWorkspaceDB()
+  const encodedConfig: CustomAIProviderConfig = {
+    ...updatedConfig,
+    ...(await encodeConfigSecrets(updatedConfig)),
+  }
+  const { rev } = await db.put(encodedConfig)
+  updatedConfig._rev = rev
+
+  if (
+    updatedConfig.configType === AIConfigType.COMPLETIONS &&
+    updatedConfig.isDefault === true
+  ) {
+    await ensureDefaultUniqueness(updatedConfig._id)
+  }
+
+  if (shouldUpdateLiteLLM) {
     try {
       await liteLLM.updateModel({
+        configId: id,
         llmModelId: updatedConfig.liteLLMModelId,
         provider: updatedConfig.provider,
         name: updatedConfig.model,
@@ -272,10 +338,12 @@ export async function update(
       })
       await liteLLM.syncKeyModels()
     } catch (err) {
-      await db.put({
+      const rollbackConfig: CustomAIProviderConfig = {
         ...existing,
+        ...(await encodeConfigSecrets(existing)),
         _rev: updatedConfig._rev,
-      })
+      }
+      await db.put(rollbackConfig)
       throw err
     }
   }

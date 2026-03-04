@@ -15,11 +15,7 @@
     LLMProvider,
     RequiredKeys,
   } from "@budibase/types"
-  import {
-    AIConfigType,
-    BUDIBASE_AI_MODELS,
-    BUDIBASE_AI_PROVIDER_ID,
-  } from "@budibase/types"
+  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
 
   export let config: AIConfigResponse | undefined
@@ -27,16 +23,19 @@
 
   const dispatch = createEventDispatcher<{ hide: void }>()
 
+  const BUDIBASE_AI_MODELS = [{ id: "budibase/v1", label: "v1" }]
+
   let draft: AIConfigResponse = config
     ? structuredClone(config)
     : ({
         provider: BUDIBASE_AI_PROVIDER_ID,
         name: "Budibase AI",
-        model: "",
+        model: BUDIBASE_AI_MODELS.length === 1 ? BUDIBASE_AI_MODELS[0].id : "",
         configType: type,
         credentialsFields: {},
         webSearchConfig: undefined,
         reasoningEffort: undefined,
+        isDefault: !$aiConfigsStore.customConfigsPerType[type].length,
       } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   $: isEdit = !!config
@@ -147,16 +146,18 @@
     </Heading>
   </div>
 
-  <div class="row">
-    <Label size="M">Model</Label>
-    <Select
-      placeholder="Select a model"
-      options={BUDIBASE_AI_MODELS}
-      getOptionLabel={option => option.label}
-      getOptionValue={option => option.id}
-      bind:value={draft.model}
-    />
-  </div>
+  {#if BUDIBASE_AI_MODELS.length > 1}
+    <div class="row">
+      <Label size="M">Model</Label>
+      <Select
+        placeholder="Select a model"
+        options={BUDIBASE_AI_MODELS}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.id}
+        bind:value={draft.model}
+      />
+    </div>
+  {/if}
 
   {#if draft.configType === AIConfigType.COMPLETIONS}
     <div class="row">
@@ -181,12 +182,21 @@
           placeholder={field.placeholder ?? undefined}
           helpText={field.tooltip ?? undefined}
         />
+      {:else if field.field_type === "password" || field.key.includes("key")}
+        <div class="secret-input">
+          <Input
+            bind:value={draft.credentialsFields[field.key]}
+            type="password"
+            autocomplete="new-password"
+            placeholder={field.placeholder ?? undefined}
+            helpText={field.tooltip ?? undefined}
+          />
+        </div>
       {:else}
         <Input
           bind:value={draft.credentialsFields[field.key]}
-          type={field.field_type === "password" || field.key.includes("key")
-            ? "password"
-            : "text"}
+          type="password"
+          autocomplete="new-password"
           placeholder={field.placeholder ?? undefined}
           helpText={field.tooltip ?? undefined}
         />
@@ -199,5 +209,9 @@
   .row {
     display: grid;
     gap: var(--spacing-s);
+  }
+
+  .secret-input :global(input) {
+    -webkit-text-security: disc;
   }
 </style>

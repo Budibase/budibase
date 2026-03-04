@@ -675,7 +675,7 @@
         >
       </div>
 
-      {#if $featureFlags.AI_AGENTS}
+      {#if $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT}
         <div class="header-actions">
           <a href={url("../chat")} class="header-link header-link--with-icons">
             <Icon name="chat-circle" size="XS" color="#8CA171" weight="fill" />

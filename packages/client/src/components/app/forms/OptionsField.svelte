@@ -23,6 +23,7 @@
   export let sort = true
   export let span
   export let helpText = null
+  export let wrapText = false
 
   let fieldState
   let fieldApi
@@ -77,6 +78,7 @@
         {autocomplete}
         {sort}
         searchPlaceholder={pickerLabels.searchPlaceholder}
+        {wrapText}
       />
     {:else if optionsType === "radio"}
       <CoreRadioGroup

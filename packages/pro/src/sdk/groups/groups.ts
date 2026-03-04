@@ -3,7 +3,6 @@ import {
   context,
   db as dbUtils,
   events,
-  HTTPError,
   logging,
   roles,
   tenancy,
@@ -16,7 +15,7 @@ import {
   User,
   UserGroup,
 } from "@budibase/types"
-import { GroupNameUnavailableError } from "../../api/errors"
+import { GroupNameUnavailableError } from "../../errors"
 import * as db from "../../db"
 import * as features from "../features"
 import * as quotas from "../quotas"
@@ -221,6 +220,10 @@ async function getCreatorsCountInGroup(group: UserGroup) {
   return creatorsInGroup.filter(x => x).length
 }
 
+function isCreatorGroup(group: Pick<UserGroup, "roles">) {
+  return Object.values(group.roles || {}).includes("CREATOR")
+}
+
 export async function save(group: UserGroup | EnrichedUserGroup) {
   let eventPromises = []
   // Config does not exist yet
@@ -239,15 +242,19 @@ export async function save(group: UserGroup | EnrichedUserGroup) {
     }
     eventPromises.push(events.group.updated(group))
     if (JSON.stringify(oldGroup.roles) !== JSON.stringify(group.roles)) {
-      const usersCountInGroup = oldGroup.users?.length || 0
-      let creatorsCountBeforeSave = 0
-      if (usersCountInGroup > 0) {
-        creatorsCountBeforeSave = await getCreatorsCountInGroup(oldGroup)
-      }
-      if (Object.values(group.roles as object).includes("CREATOR")) {
-        newCreators = usersCountInGroup - creatorsCountBeforeSave
-      } else {
-        newCreators = -usersCountInGroup
+      const oldCreatorGroup = isCreatorGroup(oldGroup)
+      const newCreatorGroup = isCreatorGroup(group)
+      if (oldCreatorGroup !== newCreatorGroup) {
+        const usersCountInGroup = oldGroup.users?.length || 0
+        let creatorsCountBeforeSave = 0
+        if (usersCountInGroup > 0) {
+          creatorsCountBeforeSave = await getCreatorsCountInGroup(oldGroup)
+        }
+        if (newCreatorGroup) {
+          newCreators = usersCountInGroup - creatorsCountBeforeSave
+        } else {
+          newCreators = -usersCountInGroup
+        }
       }
       eventPromises.push(events.group.permissionsEdited(group))
     }
@@ -425,10 +432,6 @@ export async function updateGroupApps(
     apps: Object.entries(group.roles)
       .filter(([_groupId, role]) => role === "CREATOR")
       .map(([groupId]) => groupId),
-  }
-
-  if (group.builder.apps.length && !features.isAppBuildersEnabled()) {
-    throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
   return await save(group)

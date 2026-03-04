@@ -24,15 +24,51 @@ export interface FetchAgentsResponse {
   agents: Agent[]
 }
 
-export interface SyncAgentDiscordCommandsRequest {
+export interface FetchChatAppAgentsResponse {
+  agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
+}
+
+interface ConfigureAgentDeploymentChannelRequest {
   chatAppId?: string
 }
 
-export interface SyncAgentDiscordCommandsResponse {
-  success: true
+interface ConfigureAgentDeploymentChannelResponse {
+  success: boolean
   chatAppId: string
+}
+
+export type SyncAgentDiscordCommandsRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface SyncAgentDiscordCommandsResponse
+  extends ConfigureAgentDeploymentChannelResponse {
   interactionsEndpointUrl: string
   inviteUrl: string
+}
+
+export type ProvisionAgentMSTeamsChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface ProvisionAgentMSTeamsChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  messagingEndpointUrl: string
+}
+
+export type ProvisionAgentSlackChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface ProvisionAgentSlackChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  messagingEndpointUrl: string
+}
+
+export interface ToggleAgentDeploymentRequest {
+  enabled: boolean
+}
+
+export interface ToggleAgentDeploymentResponse {
+  success: boolean
+  enabled: boolean
 }
 
 export type CreateAgentRequest = Optional<
