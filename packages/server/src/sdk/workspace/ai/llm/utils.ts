@@ -1,13 +1,7 @@
-import { features, HTTPError } from "@budibase/backend-core"
-import {
-  AIConfigType,
-  FeatureFlag,
-  LLMResponse,
-  ReasoningEffort,
-} from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
+import { AIConfigType, LLMResponse, ReasoningEffort } from "@budibase/types"
 import { createLLM } from "."
 import { configs } from ".."
-import { createLegacyLLM } from "./legacy"
 
 interface GetDefaultLLMOptions {
   reasoningEffort?: ReasoningEffort
@@ -46,7 +40,7 @@ async function getDefaultLLMObject(): Promise<LLMResponse | undefined> {
     c => c.configType === AIConfigType.COMPLETIONS && c.isDefault === true
   )
   if (!configToUse?._id) {
-    return await createLegacyLLM()
+    return
   }
 
   return await createLLM(configToUse._id)
