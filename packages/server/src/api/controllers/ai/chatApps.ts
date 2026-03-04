@@ -50,23 +50,25 @@ export const getAccessibleEnabledChatAppAgents = async (
   return accessibleEnabledAgents
 }
 
+const filterChatAppAgentsByAccess = async (ctx: UserCtx, chatApp: ChatApp) => {
+  const accessibleAgents = await getAccessibleEnabledChatAppAgents(ctx, chatApp)
+  const accessibleAgentIds = new Set(
+    accessibleAgents.map(agent => agent.agentId)
+  )
+
+  return {
+    ...chatApp,
+    agents: (chatApp.agents || []).filter(
+      agent => !agent.isEnabled || accessibleAgentIds.has(agent.agentId)
+    ),
+  }
+}
+
 export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
   const chatApp = await sdk.ai.chatApps.getSingle()
   if (chatApp) {
     assertChatAppIsLiveForUser(ctx, chatApp)
-    const accessibleAgents = await getAccessibleEnabledChatAppAgents(
-      ctx,
-      chatApp
-    )
-    const accessibleAgentIds = new Set(
-      accessibleAgents.map(agent => agent.agentId)
-    )
-    ctx.body = {
-      ...chatApp,
-      agents: (chatApp.agents || []).filter(
-        agent => !agent.isEnabled || accessibleAgentIds.has(agent.agentId)
-      ),
-    }
+    ctx.body = await filterChatAppAgentsByAccess(ctx, chatApp)
     return
   }
 
@@ -100,16 +102,7 @@ export async function fetchChatAppById(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
-  const accessibleAgents = await getAccessibleEnabledChatAppAgents(ctx, chatApp)
-  const accessibleAgentIds = new Set(
-    accessibleAgents.map(agent => agent.agentId)
-  )
-  ctx.body = {
-    ...chatApp,
-    agents: (chatApp.agents || []).filter(
-      agent => !agent.isEnabled || accessibleAgentIds.has(agent.agentId)
-    ),
-  }
+  ctx.body = await filterChatAppAgentsByAccess(ctx, chatApp)
 }
 
 export async function fetchChatAppAgents(
