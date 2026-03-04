@@ -302,9 +302,22 @@ export const appRoutes = (
           comp: Pages.get("knowledgeBases"),
           routes: [
             {
-              path: ":configId",
+              path: ":knowledgeBaseId",
               comp: Pages.get("knowledgeBase"),
               title: "Knowledge base",
+              routes: [
+                {
+                  path: "embedding-model",
+                  title: "Embedding model",
+                  routes: [
+                    {
+                      path: ":configId",
+                      title: "Embedding model",
+                      comp: Pages.get("embedding_model"),
+                    },
+                  ],
+                },
+              ],
             },
           ],
         },

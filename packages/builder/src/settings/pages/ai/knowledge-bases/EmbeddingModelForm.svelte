@@ -10,9 +10,9 @@
     RequiredKeys,
     UpdateAIConfigRequest,
   } from "@budibase/types"
-  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
+  import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
-  import { routeActions } from ".."
+  import { routeActions } from "../.."
 
   export interface Props {
     configId?: string
@@ -20,8 +20,6 @@
   }
 
   let { configId, provider }: Props = $props()
-
-  let isBBAI = $derived(provider === BUDIBASE_AI_PROVIDER_ID)
 
   let config = $derived(
     $aiConfigsStore.customConfigs.find(c => c._id === configId)
@@ -43,24 +41,18 @@
         } satisfies RequiredKeys<UpdateAIConfigRequest>)
       : ({
           provider: provider ?? "",
-          name: isBBAI ? "bbai" : "",
-          model: isBBAI ? "budibase/v1" : "",
-          configType: AIConfigType.COMPLETIONS,
+          name: "",
+          model: "",
+          configType: AIConfigType.EMBEDDINGS,
           credentialsFields: {},
           webSearchConfig: undefined,
           reasoningEffort: undefined,
-          isDefault: !$aiConfigsStore.customConfigsPerType.completions.length,
+          isDefault: undefined,
         } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   let draft: AIConfigResponse = $state(createDraft())
 
   let isEdit = $derived(!!draft._id)
-
-  const reasoningEffortOptions = [
-    { label: "Low", value: "low" },
-    { label: "Medium", value: "medium" },
-    { label: "High", value: "high" },
-  ]
 
   let providers = $derived($aiConfigsStore.providers)
 
@@ -86,10 +78,6 @@
   let canSave = $derived.by(() => {
     if (isSaving) {
       return false
-    }
-
-    if (isBBAI) {
-      return isModified || !draft?._id
     }
 
     if (!isModified) {
@@ -133,13 +121,6 @@
         notifications.success(`Configuration updated`)
       } else {
         const { _id, ...rest } = Helpers.cloneDeep(draft)
-        if (
-          !$aiConfigsStore.customConfigsPerType.completions.some(
-            config => config.isDefault === true
-          )
-        ) {
-          rest.isDefault = true
-        }
         const created = await aiConfigsStore.createConfig(rest)
         draft._id = created._id
         draft._rev = created._rev
@@ -196,34 +177,32 @@
 </div>
 
 <div class="form">
-  {#if !isBBAI}
-    <Select
-      label="Provider"
-      required
-      bind:value={draft.provider}
-      options={providers}
-      getOptionValue={o => o.id}
-      getOptionLabel={o => o.displayName}
-      placeholder={providerPlaceholder}
-      loading={!providers}
-    />
+  <Select
+    label="Provider"
+    required
+    bind:value={draft.provider}
+    options={providers}
+    getOptionValue={o => o.id}
+    getOptionLabel={o => o.displayName}
+    placeholder={providerPlaceholder}
+    loading={!providers}
+  />
 
-    <Input
-      label="Model"
-      description="The model you would like to connect to"
-      required
-      bind:value={draft.model}
-      placeholder="GPT-5.2"
-    />
+  <Input
+    label="Model"
+    description="The model you would like to connect to"
+    required
+    bind:value={draft.model}
+    placeholder="GPT-5.2"
+  />
 
-    <Input
-      label="Display name"
-      description="Human readable name for the model"
-      required
-      bind:value={draft.name}
-      placeholder="Latest ChatGPT"
-    />
-  {/if}
+  <Input
+    label="Display name"
+    description="Human readable name for the model"
+    required
+    bind:value={draft.name}
+    placeholder="Latest ChatGPT"
+  />
 
   {#each selectedProvider?.credentialFields as field (field.key)}
     {#if field.options?.length || field.field_type === "select"}
@@ -249,16 +228,6 @@
       />
     {/if}
   {/each}
-
-  <Select
-    label="Reasoning effort"
-    required
-    placeholder="Use provider default"
-    options={reasoningEffortOptions}
-    getOptionLabel={option => option.label}
-    getOptionValue={option => option.value}
-    bind:value={draft.reasoningEffort}
-  />
 </div>
 
 <style>

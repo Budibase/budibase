@@ -10,7 +10,13 @@ interface KnowledgeBaseState {
   configs: KnowledgeBase[]
 }
 
+type KnowledgeBaseFormDraft = Partial<
+  Pick<KnowledgeBase, "_id" | "_rev" | "name" | "embeddingModel" | "vectorDb">
+>
+
 export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
+  private formDraft: KnowledgeBaseFormDraft | undefined
+
   constructor() {
     super({
       configs: [],
@@ -41,6 +47,18 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
   delete = async (id: string) => {
     await API.knowledgeBase.delete(id)
     await this.fetch()
+  }
+
+  setFormDraft = (draft: KnowledgeBaseFormDraft) => {
+    this.formDraft = draft
+  }
+
+  getFormDraft = (): KnowledgeBaseFormDraft | undefined => {
+    return this.formDraft
+  }
+
+  clearFormDraft = () => {
+    this.formDraft = undefined
   }
 }
 
