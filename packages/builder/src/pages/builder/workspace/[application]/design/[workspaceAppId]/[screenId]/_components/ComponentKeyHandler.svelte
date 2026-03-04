@@ -151,8 +151,7 @@
       document.activeElement?.classList?.contains("cm-content")
     const inPosthogSurvey =
       document.activeElement?.classList?.[0]?.startsWith("PostHogSurvey")
-    const isModifiedEnter =
-      e.key === "Enter" && (e.ctrlKey || e.metaKey)
+    const isModifiedEnter = e.key === "Enter" && (e.ctrlKey || e.metaKey)
     if (
       (inCodeEditor ||
         inPosthogSurvey ||
