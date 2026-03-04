@@ -978,6 +978,34 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(email)
     })
 
+    it("should include all global admins in workspace search when there are more than 25", async () => {
+      const workspaceId = "app_workspace_filter_global_admin_many"
+      const globalAdminUsers = await Promise.all(
+        Array.from({ length: 30 }).map((_, index) =>
+          config.createUser({
+            email: `workspace-global-admin-${index}-${structures.users.newEmail()}`,
+            admin: { global: true },
+            builder: { global: true },
+          })
+        )
+      )
+      const globalAdminIds = globalAdminUsers
+        .map(user => user._id)
+        .filter(Boolean) as string[]
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        query: { oneOf: { _id: globalAdminIds } },
+        limit: 100,
+      })
+
+      const returnedIds = response.body.data
+        .map((user: User) => user._id)
+        .filter(Boolean)
+      expect(returnedIds).toHaveLength(globalAdminIds.length)
+      expect(returnedIds).toEqual(expect.arrayContaining(globalAdminIds))
+    })
+
     it("should return no users when workspaceId is empty", async () => {
       const email = structures.users.newEmail()
       await config.createUser({ email })
