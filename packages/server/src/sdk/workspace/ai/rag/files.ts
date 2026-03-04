@@ -9,14 +9,17 @@ import {
   FeatureFlag,
   type Agent,
   type AgentFile,
+  type KnowledgeBase,
 } from "@budibase/types"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
-import { agents } from ".."
+import { agents, knowledgeBase as knowledgeBaseSdk } from ".."
 import { createLLM } from "../llm"
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
+const DEFAULT_RAG_TOP_K = 4
+const DEFAULT_RAG_MIN_SIMILARITY = 0.7
 
 const ensureRagEnabled = async () => {
   if (!(await features.isEnabled(FeatureFlag.AI_RAG))) {
@@ -192,6 +195,24 @@ const getEmbeddingModel = async (configId: string) => {
   return embedding
 }
 
+const resolveKnowledgeBaseForAgent = async (
+  agent: Agent
+): Promise<KnowledgeBase> => {
+  const knowledgeBaseIds = (agent.knowledgeBases || []).filter(Boolean)
+  if (knowledgeBaseIds.length === 0) {
+    throw new Error("No knowledge base is configured for this agent")
+  }
+
+  for (const knowledgeBaseId of knowledgeBaseIds) {
+    const config = await knowledgeBaseSdk.find(knowledgeBaseId)
+    if (config) {
+      return config
+    }
+  }
+
+  throw new Error("No valid knowledge base is configured for this agent")
+}
+
 const embedChunks = async (
   configId: string,
   chunks: string[],
@@ -255,16 +276,14 @@ export const ingestAgentFile = async (
     throw new Error("Agent id not set")
   }
 
-  if (!agent.embeddingModel) {
-    throw new Error("Embedding model is not set")
-  }
+  const knowledgeBase = await resolveKnowledgeBaseForAgent(agent)
 
   const content = await getTextFromBuffer(fileBuffer, agentFile)
   const chunks = createChunksFromContent(content, agentFile.filename)
 
   const vectorDb = await createVectorDb({
     agentId: agent._id!,
-    vectorDbId: agent.vectorDb,
+    vectorDbId: knowledgeBase.vectorDb,
   })
 
   if (chunks.length === 0) {
@@ -273,7 +292,7 @@ export const ingestAgentFile = async (
     return { inserted: 0, total: 0 }
   }
 
-  const embeddings = await embedChunks(agent.embeddingModel, chunks)
+  const embeddings = await embedChunks(knowledgeBase.embeddingModel, chunks)
   if (embeddings.length !== chunks.length) {
     throw new Error("Embedding response size mismatch")
   }
@@ -295,10 +314,11 @@ export const deleteAgentFileChunks = async (
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
+  const knowledgeBase = await resolveKnowledgeBaseForAgent(agent)
 
   const vectorDb = await createVectorDb({
     agentId: agent._id!,
-    vectorDbId: agent.vectorDb,
+    vectorDbId: knowledgeBase.vectorDb,
   })
   await vectorDb.deleteBySourceIds(sourceIds)
 }
@@ -328,14 +348,7 @@ export const retrieveContextForAgent = async (
   if (!agentId) {
     throw new Error("Agent id not set")
   }
-
-  if (!agent.ragTopK || !agent.ragMinDistance) {
-    throw new Error("RAG settings not properly configured")
-  }
-
-  if (!agent.embeddingModel) {
-    throw new Error("Embedding model is not set")
-  }
+  const knowledgeBase = await resolveKnowledgeBaseForAgent(agent)
 
   const agentFiles = await agents.listAgentFiles(agent._id!)
   const readyFileSources = agentFiles
@@ -347,7 +360,7 @@ export const retrieveContextForAgent = async (
   }
 
   const [queryEmbedding] = await embedChunks(
-    agent.embeddingModel,
+    knowledgeBase.embeddingModel,
     [question],
     1
   )
@@ -357,18 +370,18 @@ export const retrieveContextForAgent = async (
 
   const vectorDb = await createVectorDb({
     agentId,
-    vectorDbId: agent.vectorDb,
+    vectorDbId: knowledgeBase.vectorDb,
   })
   const rows = await vectorDb.queryNearest(
     queryEmbedding,
     readyFileSources,
-    agent.ragTopK
+    DEFAULT_RAG_TOP_K
   )
   if (rows.length === 0) {
     return { text: "", chunks: [], sources: [] }
   }
 
-  const maxDistance = 1 - agent.ragMinDistance
+  const maxDistance = 1 - DEFAULT_RAG_MIN_SIMILARITY
   const filtered = rows.filter(row => row.distance <= maxDistance)
   if (filtered.length === 0) {
     return { text: "", chunks: [], sources: [] }

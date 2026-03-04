@@ -6,7 +6,6 @@ import type {
   UpdateAgentRequest,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
-import { listAgentFiles, removeAgentFile } from "./files"
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -223,10 +222,6 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
     knowledgeBases: request.knowledgeBases || [],
-    embeddingModel: request.embeddingModel,
-    vectorDb: request.vectorDb,
-    ragMinDistance: request.ragMinDistance,
-    ragTopK: request.ragTopK,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
@@ -266,10 +261,6 @@ export async function duplicate(
     createdBy,
     enabledTools: source.enabledTools || [],
     knowledgeBases: source.knowledgeBases || [],
-    embeddingModel: source.embeddingModel,
-    vectorDb: source.vectorDb,
-    ragMinDistance: source.ragMinDistance,
-    ragTopK: source.ragTopK,
   })
 }
 
@@ -319,11 +310,4 @@ export async function remove(agentId: string) {
   const agent = await getOrThrow(agentId)
 
   await db.remove(agent)
-
-  if (agent.vectorDb) {
-    const files = await listAgentFiles(agentId)
-    if (files.length > 0) {
-      await Promise.all(files.map(file => removeAgentFile(agent, file)))
-    }
-  }
 }

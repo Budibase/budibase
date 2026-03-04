@@ -227,8 +227,7 @@ export async function webhookChat({
   let retrievedContext = ""
   const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
 
-  const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
-  if (ragEnabled && hasRagConfig && latestQuestion) {
+  if (ragEnabled && agent.knowledgeBases?.length && latestQuestion) {
     try {
       const result = await retrieveContextForAgent(agent, latestQuestion)
       retrievedContext = result.text
@@ -414,8 +413,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   let ragSourcesMetadata: AgentMessageMetadata["ragSources"] | undefined
   const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
 
-  const hasRagConfig = !!agent.embeddingModel && !!agent.vectorDb
-  if (ragEnabled && hasRagConfig && latestQuestion) {
+  if (ragEnabled && agent.knowledgeBases?.length && latestQuestion) {
     try {
       const result = await retrieveContextForAgent(agent, latestQuestion)
       retrievedContext = result.text

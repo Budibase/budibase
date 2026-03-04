@@ -57,10 +57,6 @@ export interface Agent extends Document {
   createdBy?: string
   enabledTools?: string[]
   knowledgeBases?: string[]
-  embeddingModel?: string
-  vectorDb?: string
-  ragMinDistance?: number
-  ragTopK?: number
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
