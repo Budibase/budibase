@@ -17,6 +17,8 @@
   <Select
     {label}
     placeholder={false}
+    popoverClass="global-role-select-popover"
+    wrapText
     bind:value
     {options}
     getOptionLabel={option => option.label}
@@ -33,5 +35,16 @@
     align-items: center;
     padding-top: var(--spacing-m);
     padding-bottom: var(--spacing-m);
+  }
+  .role-select
+    :global(.spectrum-Picker-label.has-subtitle .picker-label-text),
+  .role-select :global(.spectrum-Picker-label .picker-label-subtitle) {
+    font-size: 14px;
+    line-height: 18px;
+  }
+  :global(.global-role-select-popover .spectrum-Menu-itemLabel),
+  :global(.global-role-select-popover .subtitle-text) {
+    font-size: 14px;
+    line-height: 18px;
   }
 </style>
