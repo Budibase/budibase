@@ -53,6 +53,24 @@ const normalizeAzureBaseUrl = (baseUrl: string): string => {
   }
 }
 
+const normalizeOpenAIBaseUrl = (baseUrl: string): string => {
+  try {
+    const parsed = new URL(baseUrl)
+    if (
+      parsed.hostname.toLowerCase() === "api.openai.com" &&
+      (!parsed.pathname || parsed.pathname === "/")
+    ) {
+      parsed.pathname = "/v1"
+    }
+    return parsed.toString().replace(/\/$/, "")
+  } catch {
+    if (/^https:\/\/api\.openai\.com\/?$/i.test(baseUrl.trim())) {
+      return "https://api.openai.com/v1"
+    }
+    return baseUrl
+  }
+}
+
 const mapCredentials = (config: ProviderConfig): Record<string, string> => {
   if (config.provider === "BudibaseAI") {
     return {}
@@ -66,7 +84,9 @@ const mapCredentials = (config: ProviderConfig): Record<string, string> => {
     credentials.api_base =
       config.provider === "AzureOpenAI"
         ? normalizeAzureBaseUrl(config.baseUrl)
-        : config.baseUrl
+        : config.provider === "OpenAI"
+          ? normalizeOpenAIBaseUrl(config.baseUrl)
+          : config.baseUrl
   }
   return credentials
 }
