@@ -119,7 +119,9 @@ describe("BudibaseAI", () => {
 
     it("fetches provider-specific models from LiteLLM cost map", async () => {
       const providers = await config.api.ai.fetchProviders()
-      const openAIProvider = providers.find(provider => provider.id === "OpenAI")
+      const openAIProvider = providers.find(
+        provider => provider.id === "OpenAI"
+      )
       expect(openAIProvider).toMatchObject({
         models: {
           completions: ["gpt-4o", "gpt-4o-mini"],
