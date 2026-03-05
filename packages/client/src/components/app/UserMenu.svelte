@@ -4,8 +4,7 @@
     UserAvatar,
     ProfileModal,
     ChangePasswordModal,
-    Constants,
-    CookieUtils,
+    redirectToLoginWithReturnUrl,
   } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import { type User, type ContextUser, isSSOUser } from "@budibase/types"
@@ -72,9 +71,7 @@
   }
 
   const goToLogin = () => {
-    const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
-    CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
-    window.location.href = "/builder/auth/login"
+    redirectToLoginWithReturnUrl()
   }
 
   $: user = $authStore as User

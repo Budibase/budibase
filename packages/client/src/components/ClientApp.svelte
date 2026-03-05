@@ -4,8 +4,8 @@
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import {
-    Constants,
-    CookieUtils,
+    sessionBannerStore,
+    redirectToLoginWithReturnUrl,
     invalidationMessage,
     popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
@@ -62,6 +62,13 @@
   import PausedChat from "./app/PausedChat.svelte"
 
   // Provide contexts
+
+  // Session banner subscription
+  let sessionBanner
+  $: sessionBanner = $sessionBannerStore
+  $: layoutInstance = sessionBanner
+    ? { ...$screenStore.activeLayout?.props, banner: sessionBanner }
+    : $screenStore.activeLayout?.props
   const context = createContextStore()
   setContext("sdk", SDK)
   setContext("component", writable({ id: null, ancestors: [] }))
@@ -116,9 +123,7 @@
       } else {
         // If they have no screens and are not logged in, it probably means
         // they should log in to gain access
-        const returnUrl = `${window.location.pathname}${window.location.hash}`
-        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
-        window.location = "/builder/auth/login"
+        redirectToLoginWithReturnUrl()
       }
     }
   }
@@ -323,7 +328,7 @@
                                 {#key $screenStore.activeLayout._id}
                                   <Component
                                     isLayout
-                                    instance={$screenStore.activeLayout.props}
+                                    instance={layoutInstance}
                                   />
                                 {/key}
 

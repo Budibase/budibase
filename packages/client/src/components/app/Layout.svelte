@@ -1,8 +1,8 @@
 <script>
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
-  import { Heading, Icon, clickOutside } from "@budibase/bbui"
-  import { Constants } from "@budibase/frontend-core"
+  import { Heading, Icon, Button, clickOutside } from "@budibase/bbui"
+  import { redirectToLoginWithReturnUrl } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
@@ -95,6 +95,8 @@
     banner?.textColor,
     banner?.textSize
   )
+  $: isSessionNotAuthenticatedBanner =
+    banner?.variant === "session-not-authenticated"
   $: showBanner = !!banner?.text?.trim?.() && typeClass !== "none"
   $: autoCloseSidePanel =
     !$builderStore.inBuilder &&
@@ -235,6 +237,17 @@
     sidePanelStore.actions.close()
     modalStore.actions.close()
   }
+
+  const handleBannerActionClick = () => {
+    if (typeof banner?.action?.onClick === "function") {
+      banner.action.onClick()
+      return
+    }
+
+    if (isSessionNotAuthenticatedBanner) {
+      redirectToLoginWithReturnUrl()
+    }
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -249,8 +262,19 @@
 >
   <div class="screen-wrapper layout-body">
     {#if showBanner && (typeClass !== "left" || mobile)}
-      <div class="banner" style={bannerStyle}>
-        <div class="banner-content">{banner?.text}</div>
+      <div
+        class="banner"
+        class:session-not-authenticated-banner={isSessionNotAuthenticatedBanner}
+        style={bannerStyle}
+      >
+        <div class="banner-content">
+          {banner?.text}
+          {#if banner?.action}
+            <Button cta on:click={handleBannerActionClick}>
+              {banner.action.label}
+            </Button>
+          {/if}
+        </div>
       </div>
     {/if}
     <div class="layout-content">
@@ -397,8 +421,19 @@
       >
         <div class="main-content-area">
           {#if showBanner && typeClass === "left" && !mobile}
-            <div class="banner" style={bannerStyle}>
-              <div class="banner-content">{banner?.text}</div>
+            <div
+              class="banner"
+              class:session-not-authenticated-banner={isSessionNotAuthenticatedBanner}
+              style={bannerStyle}
+            >
+              <div class="banner-content">
+                {banner?.text}
+                {#if banner?.action}
+                  <Button cta on:click={handleBannerActionClick}>
+                    {banner.action.label}
+                  </Button>
+                {/if}
+              </div>
             </div>
           {/if}
           <div class="main size--{pageWidthClass}">
@@ -479,6 +514,35 @@
     max-width: 1200px;
     margin: 0 auto;
     word-break: break-word;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+  }
+
+  .banner-content :global(.spectrum-Button) {
+    margin-left: 1em;
+  }
+
+  /* Session-only banner styles: these apply only to auth session banners */
+  .banner.session-not-authenticated-banner {
+    background: var(
+      --sessionAuthBannerBackground,
+      var(
+        --spectrum-toast-negative-background-color,
+        var(--spectrum-semantic-negative-color-background)
+      )
+    );
+    color: var(
+      --sessionAuthBannerTextColor,
+      var(--spectrum-global-color-static-white)
+    );
+  }
+
+  .banner.session-not-authenticated-banner .banner-content {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    font-size: var(--sessionAuthBannerTextSize, 15px);
   }
 
   .nav-wrapper {
