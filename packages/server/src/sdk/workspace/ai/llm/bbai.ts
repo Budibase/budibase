@@ -98,11 +98,13 @@ const createBBAIFetch = (
           }
         }
 
-        if (!body.user && agentId) {
-          body.user = `bb-agent:${agentId}`
+        if (agentId) {
           body.metadata = {
             ...body.metadata,
             agent_id: agentId,
+          }
+          if (!body.user) {
+            body.user = `bb-agent:${agentId}`
           }
         }
 
