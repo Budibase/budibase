@@ -89,6 +89,9 @@
     }, {})
   )
   let selectedProvider = $derived(providersMap?.[draft.provider])
+  let hasProviderModelOptions = $derived(
+    !!selectedProvider?.models?.length && !!draft.provider?.trim()
+  )
   let modelOptions = $derived.by(() => {
     const models = selectedProvider?.models || []
     const options = models.map<ModelOption>(model => ({
@@ -260,17 +263,27 @@
       loading={!providers}
     />
 
-    <Select
-      label="Model"
-      description="The model you would like to connect to"
-      required
-      bind:value={draft.model}
-      options={modelOptions}
-      getOptionValue={o => o.value}
-      getOptionLabel={o => o.label}
-      placeholder={modelPlaceholder}
-      loading={!providers}
-    />
+    {#if hasProviderModelOptions}
+      <Select
+        label="Model"
+        description="The model you would like to connect to"
+        required
+        bind:value={draft.model}
+        options={modelOptions}
+        getOptionValue={o => o.value}
+        getOptionLabel={o => o.label}
+        placeholder={modelPlaceholder}
+        loading={!providers}
+      />
+    {:else}
+      <Input
+        label="Model"
+        description="The model you would like to connect to"
+        required
+        bind:value={draft.model}
+        placeholder="GPT-5.2"
+      />
+    {/if}
 
     <Input
       label="Display name"
