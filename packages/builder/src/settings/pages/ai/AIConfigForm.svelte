@@ -2,7 +2,14 @@
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
   import { aiConfigsStore } from "@/stores/portal"
-  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
+  import {
+    Button,
+    Combobox,
+    Helpers,
+    Input,
+    notifications,
+    Select,
+  } from "@budibase/bbui"
   import type {
     AIConfigResponse,
     CreateAIConfigRequest,
@@ -90,9 +97,6 @@
     }, {})
   )
   let selectedProvider = $derived(providersMap?.[draft.provider])
-  let hasProviderModelOptions = $derived(
-    !!selectedProvider?.models?.length && !!draft.provider?.trim()
-  )
   let modelOptions = $derived.by(() => {
     const models = selectedProvider?.models || []
     const options = models.map<ModelOption>(model => ({
@@ -114,7 +118,7 @@
     if (!providers) {
       return "Loading models..."
     }
-    return modelOptions.length ? "Select a model" : "No models available"
+    return modelOptions.length ? "Select or type a model" : "Type a model"
   })
 
   let isSaving = $state(false)
@@ -273,29 +277,14 @@
       searchPlaceholder="Search providers"
     />
 
-    {#if hasProviderModelOptions}
-      <Select
-        label="Model"
-        description="The model you would like to connect to"
-        required
-        bind:value={draft.model}
-        options={modelOptions}
-        getOptionValue={o => o.value}
-        getOptionLabel={o => o.label}
-        placeholder={modelPlaceholder}
-        loading={!providers}
-        autocomplete
-        searchPlaceholder="Search models"
-      />
-    {:else}
-      <Input
-        label="Model"
-        description="The model you would like to connect to"
-        required
-        bind:value={draft.model}
-        placeholder="GPT-5.2"
-      />
-    {/if}
+    <Combobox
+      label="Model"
+      bind:value={draft.model}
+      options={modelOptions}
+      getOptionValue={o => o.value}
+      getOptionLabel={o => o.label}
+      placeholder={modelPlaceholder}
+    />
 
     <Input
       label="Display name"

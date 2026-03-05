@@ -7,7 +7,7 @@
   import "@spectrum-css/menu/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import type { ChangeEventHandler } from "svelte/elements"
+  import type { FormEventHandler } from "svelte/elements"
   import clickOutside from "../../Actions/clickOutside"
   import { PopoverAlignment } from "../../constants"
   import Icon from "../../Icon/Icon.svelte"
@@ -32,16 +32,30 @@
   let open = false
   let focus = false
   let anchor
+  let query = ""
 
-  const selectOption = (value: string) => {
+  $: query = value || ""
+  $: filteredOptions =
+    !query.trim() || !options?.length
+      ? options
+      : options.filter(option => {
+          const optionLabel = getOptionLabel(option)?.toLowerCase() || ""
+          const optionValue = getOptionValue(option)?.toLowerCase() || ""
+          const search = query.toLowerCase()
+          return (
+            optionLabel.includes(search) || optionValue.includes(search)
+          )
+        })
+
+  const selectOption = (value: string, shouldClose = true) => {
     dispatch("change", value)
-    open = false
+    open = !shouldClose
   }
 
-  const onType: ChangeEventHandler<HTMLInputElement> = e => {
+  const onType: FormEventHandler<HTMLInputElement> = e => {
     const value = e.currentTarget.value
     dispatch("type", value)
-    selectOption(value)
+    selectOption(value, false)
   }
 
   const onPick = (value: string) => {
@@ -69,7 +83,7 @@
         focus = false
         dispatch("blur")
       }}
-      on:change={onType}
+      on:input={onType}
       value={value || ""}
       placeholder={placeholder || ""}
       {disabled}
@@ -103,8 +117,8 @@
     }}
   >
     <ul class="spectrum-Menu" role="listbox">
-      {#if options && Array.isArray(options)}
-        {#each options as option}
+      {#if filteredOptions && Array.isArray(filteredOptions) && filteredOptions.length}
+        {#each filteredOptions as option}
           <li
             class="spectrum-Menu-item"
             class:is-selected={getOptionValue(option) === value}
@@ -120,6 +134,8 @@
             </div>
           </li>
         {/each}
+      {:else}
+        <li class="spectrum-Menu-item empty">No results</li>
       {/if}
     </ul>
   </div>
@@ -138,6 +154,11 @@
   }
   .check {
     display: none;
+  }
+
+  .empty {
+    opacity: 0.7;
+    cursor: default;
   }
   li.is-selected .check {
     display: block;
