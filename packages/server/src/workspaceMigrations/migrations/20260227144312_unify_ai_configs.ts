@@ -15,12 +15,6 @@ type AIProvider =
   | "Custom"
   | "BudibaseAI"
 
-const MIGRATABLE_PROVIDERS: ReadonlySet<AIProvider> = new Set([
-  "OpenAI",
-  "BudibaseAI",
-  "AzureOpenAI",
-])
-
 export interface ProviderConfig {
   provider: AIProvider
   isDefault: boolean
@@ -124,9 +118,6 @@ const migration = async () => {
     if (!legacyProvider?.active) {
       continue
     }
-    if (!MIGRATABLE_PROVIDERS.has(legacyProvider.provider)) {
-      continue
-    }
 
     const model =
       legacyProvider.defaultModel ||
@@ -142,17 +133,23 @@ const migration = async () => {
       continue
     }
 
-    await sdk.ai.configs.create({
-      name: legacyProvider.name || legacyProvider.provider,
-      provider,
-      model: normalizedModel,
-      credentialsFields: mapCredentials(legacyProvider),
-      configType: AIConfigType.COMPLETIONS,
-      isDefault: !defaultAlreadyAssigned && legacyProvider.isDefault === true,
-    })
-    existingBySignature.add(signature)
-    if (legacyProvider.isDefault === true) {
-      defaultAlreadyAssigned = true
+    try {
+      await sdk.ai.configs.create({
+        name: legacyProvider.name || legacyProvider.provider,
+        provider,
+        model: normalizedModel,
+        credentialsFields: mapCredentials(legacyProvider),
+        configType: AIConfigType.COMPLETIONS,
+        isDefault: !defaultAlreadyAssigned && legacyProvider.isDefault === true,
+      })
+      existingBySignature.add(signature)
+      if (legacyProvider.isDefault === true) {
+        defaultAlreadyAssigned = true
+      }
+    } catch (err: any) {
+      console.warn(
+        `Skipping legacy AI config migration for provider ${legacyProvider.provider}: ${err?.message || "unknown error"}`
+      )
     }
   }
 }

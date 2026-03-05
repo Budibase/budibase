@@ -202,7 +202,7 @@ describe("20260227144312_unify_ai_configs", () => {
     )
   })
 
-  it("ignores active legacy providers outside OpenAI/BudibaseAI/AzureOpenAI", async () => {
+  it("attempts migrating active legacy providers beyond OpenAI/BudibaseAI/AzureOpenAI", async () => {
     const legacyConfig: AIConfig = {
       type: ConfigType.AI,
       config: {
@@ -226,6 +226,59 @@ describe("20260227144312_unify_ai_configs", () => {
 
     await config.doInContext(config.getDevWorkspaceId(), migration)
 
-    expect(createMock).not.toHaveBeenCalled()
+    expect(createMock).toHaveBeenCalledTimes(1)
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "Anthropic",
+        model: defaultModelByProvider.Anthropic,
+        credentialsFields: {
+          api_key: "anthropic-key",
+        },
+      })
+    )
+  })
+
+  it("skips invalid configs and continues migrating other providers", async () => {
+    const legacyConfig: AIConfig = {
+      type: ConfigType.AI,
+      config: {
+        badConfig: {
+          provider: "Custom",
+          name: "Invalid custom",
+          active: true,
+          isDefault: true,
+          defaultModel: "bad-model",
+          apiKey: "bad-key",
+        },
+        openai: {
+          provider: "OpenAI",
+          name: "OpenAI",
+          active: true,
+          isDefault: false,
+          apiKey: "sk-test",
+        },
+      },
+    }
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock
+      .mockRejectedValueOnce(new Error("invalid configuration"))
+      .mockResolvedValue({} as any)
+
+    await config.doInContext(config.getDevWorkspaceId(), migration)
+
+    expect(createMock).toHaveBeenCalledTimes(2)
+    expect(createMock).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        provider: "OpenAI",
+        model: defaultModelByProvider.OpenAI,
+      })
+    )
   })
 })
