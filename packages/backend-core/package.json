@@ -26,7 +26,7 @@
     "build:oss": "node ./scripts/build.js",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --paths null && tsc -p tsconfig.test.json --paths null",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
-    "check:dependencies": "node ../../scripts/depcheck.js",
+    "check:dependencies": "knip --include unlisted --no-progress",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
   },
