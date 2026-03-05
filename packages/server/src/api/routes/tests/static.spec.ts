@@ -1,7 +1,34 @@
-import { constants } from "@budibase/backend-core"
+import { constants, objectStore } from "@budibase/backend-core"
 import { Datasource, SourceName } from "@budibase/types"
+import fsp from "fs/promises"
+import path from "path"
+import { tmpdir } from "os"
 import { setEnv } from "../../../environment"
 import { afterAll as _afterAll, getConfig, getRequest } from "./utilities"
+
+jest.mock("extract-zip", () => jest.fn())
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    context: {
+      ...actual.context,
+      getProdWorkspaceId: jest.fn().mockReturnValue("app_prod_test123"),
+    },
+    objectStore: {
+      ...actual.objectStore,
+      upload: jest.fn(),
+    },
+  }
+})
+
+import extract from "extract-zip"
+
+const mockedUpload = objectStore.upload as jest.MockedFunction<
+  typeof objectStore.upload
+>
+const mockedExtract = extract as jest.MockedFunction<typeof extract>
 
 describe("/static", () => {
   let request = getRequest()
@@ -162,6 +189,127 @@ describe("/static", () => {
       expect(res.text).toEqual(
         `Redirecting to <a href="/builder/bblogo.png">/builder/bblogo.png</a>.`
       )
+    })
+  })
+
+  describe("processPWAZip", () => {
+    let tempDir: string
+
+    beforeEach(async () => {
+      jest.clearAllMocks()
+      tempDir = path.join(tmpdir(), `pwa-test-${Date.now()}`)
+      await fsp.mkdir(tempDir, { recursive: true })
+
+      mockedExtract.mockImplementation(async (_zipPath: string, opts: any) => {
+        await fsp.mkdir(opts.dir, { recursive: true })
+        await fsp.cp(tempDir, opts.dir, { recursive: true })
+      })
+    })
+
+    afterEach(async () => {
+      await fsp.rm(tempDir, { recursive: true, force: true })
+    })
+
+    describe("path traversal prevention", () => {
+      it("skips icons whose src attempts to escape the zip directory via ../ traversal", async () => {
+        const sensitiveDir = path.join(tmpdir(), `sensitive-${Date.now()}`)
+        await fsp.mkdir(sensitiveDir, { recursive: true })
+        const sensitiveFile = path.join(sensitiveDir, "secret.png")
+        await fsp.writeFile(sensitiveFile, "sensitive-data")
+
+        try {
+          const relativePath = path.relative(tempDir, sensitiveFile)
+          const iconsJson = {
+            icons: [
+              {
+                src: relativePath, // e.g. "../../sensitive-.../secret.png"
+                sizes: "192x192",
+                type: "image/png",
+              },
+            ],
+          }
+          await fsp.writeFile(
+            path.join(tempDir, "icons.json"),
+            JSON.stringify(iconsJson)
+          )
+
+          const res = await request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders())
+
+          expect(res.status).toEqual(500)
+          expect(res.body.message).toMatch(
+            "No valid icons found in the zip file"
+          )
+          expect(mockedUpload).not.toHaveBeenCalled()
+        } finally {
+          await fsp.rm(sensitiveDir, { recursive: true, force: true })
+        }
+      })
+
+      it("accepts icons whose src stays within the zip directory", async () => {
+        const iconFile = path.join(tempDir, "icon-192.png")
+        await fsp.writeFile(iconFile, "fake-png-data")
+
+        const iconsJson = {
+          icons: [
+            {
+              src: "icon-192.png",
+              sizes: "192x192",
+              type: "image/png",
+            },
+          ],
+        }
+        await fsp.writeFile(
+          path.join(tempDir, "icons.json"),
+          JSON.stringify(iconsJson)
+        )
+
+        mockedUpload.mockResolvedValue({
+          Key: "app_prod_test123/pwa/some-uuid.png",
+        } as any)
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+          .expect(200)
+
+        expect(mockedUpload).toHaveBeenCalledTimes(1)
+        expect(res.body.icons).toEqual([
+          {
+            src: "app_prod_test123/pwa/some-uuid.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+        ])
+      })
+
+      it("skips icons with an absolute src path outside the zip directory", async () => {
+        const iconsJson = {
+          icons: [
+            {
+              src: "/etc/passwd",
+              sizes: "192x192",
+              type: "image/png",
+            },
+          ],
+        }
+        await fsp.writeFile(
+          path.join(tempDir, "icons.json"),
+          JSON.stringify(iconsJson)
+        )
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+
+        expect(res.status).toEqual(500)
+        expect(res.body.message).toMatch("No valid icons found in the zip file")
+        expect(mockedUpload).not.toHaveBeenCalled()
+      })
     })
   })
 })
