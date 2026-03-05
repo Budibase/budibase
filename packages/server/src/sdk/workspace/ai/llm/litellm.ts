@@ -107,10 +107,6 @@ function createLiteLLMFetch(
 
         if (!body.user && agentId) {
           body.user = `bb-agent:${agentId}`
-          body.metadata = {
-            ...body.metadata,
-            agent_id: agentId,
-          }
         }
 
         modifiedInit = { ...init, body: JSON.stringify(body) }
