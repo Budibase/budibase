@@ -18,7 +18,7 @@
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationHistory: ConversationListItem[] = []
   export let selectedConversationId: string | undefined
-  export let logoUrl: string | undefined
+  export let logoUrl: string | undefined = undefined
   export let logoAlt = "Budibase"
   export let hideAgents = false
 
