@@ -14,7 +14,6 @@
   let { configId, knowledgeBaseId }: Props = $props()
 
   let config = $derived($vectorDbStore.configs.find(db => db._id === configId))
-  const isCreation = configId === "new"
 
   const createDraft = (): VectorDb =>
     config
@@ -51,6 +50,7 @@
   onMount(async () => {
     try {
       const configs = await vectorDbStore.fetch()
+      const isCreation = configId === "new"
       if (!isCreation && configId && !configs.find(db => db._id === configId)) {
         notifications.error("Vector database not found")
         bb.settings("/ai-config/knowledge-bases")
@@ -61,17 +61,30 @@
   })
 
   async function saveVectorDb() {
+    const normalizedPort = Number(draft.port)
+    if (!Number.isFinite(normalizedPort) || normalizedPort <= 0) {
+      notifications.error("Port must be a valid positive number")
+      return
+    }
+
+    const payload: VectorDb = {
+      ...draft,
+      port: normalizedPort,
+    }
+
     try {
       isSaving = true
-      if (draft._id) {
-        const updated = await vectorDbStore.edit(draft)
+      if (payload._id) {
+        const updated = await vectorDbStore.edit(payload)
         draft._rev = updated._rev
+        draft.port = payload.port
         savedSnapshot = JSON.stringify({ ...draft, _rev: updated._rev })
         notifications.success("Vector database updated")
       } else {
-        const created = await vectorDbStore.create(draft)
+        const created = await vectorDbStore.create(payload)
         draft._id = created._id
         draft._rev = created._rev
+        draft.port = payload.port
         savedSnapshot = JSON.stringify({
           ...draft,
           _id: created._id,
@@ -134,6 +147,7 @@
   <Input
     label="Port"
     description="Port used by your PostgreSQL instance."
+    type="number"
     required
     bind:value={draft.port}
     placeholder="5432"
