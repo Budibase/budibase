@@ -6,17 +6,7 @@ const coreBuild = require("../../../scripts/build")
 const dir = join(__dirname, "..")
 const entryPath = join(dir, "src")
 const outfilePath = join(dir, "dist")
-const externals = [
-  "deasync",
-  "graphql/*",
-  "better-sqlite3",
-  "sqlite3",
-  "mysql",
-  "mysql2",
-  "oracledb",
-  "pg",
-  "pg-query-stream",
-]
+const externals = ["botbuilder"]
 
 /**
  * The reasoning for this is that now our built version is simple

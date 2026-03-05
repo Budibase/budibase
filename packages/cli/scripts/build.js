@@ -7,8 +7,6 @@ const externals = [
   "better-sqlite3",
   "sqlite3",
   "mysql",
-  "mysql2",
-  "oracledb",
   "pg",
   "pg-query-stream",
 ]
