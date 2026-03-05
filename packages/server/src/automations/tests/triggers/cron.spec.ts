@@ -16,6 +16,14 @@ describe("cron trigger", () => {
 
   beforeAll(async () => {
     await config.init()
+    config.initQueues({
+      automations: true,
+      events: false,
+      rag: false,
+      workspaceMigrations: false,
+      pro: false,
+      dev: false,
+    })
     await config.publish()
     await config.api.automation.deleteAll()
   })
