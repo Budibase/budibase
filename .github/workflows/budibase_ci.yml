@@ -168,15 +168,6 @@ jobs:
           - datasource: mariadb
             shard_index: 1
             shard_total: 1
-          - datasource: oracle
-            shard_index: 1
-            shard_total: 3
-          - datasource: oracle
-            shard_index: 2
-            shard_total: 3
-          - datasource: oracle
-            shard_index: 3
-            shard_total: 3
           - datasource: elasticsearch
             shard_index: 1
             shard_total: 1
@@ -185,13 +176,7 @@ jobs:
             shard_total: 1
           - datasource: sqs
             shard_index: 1
-            shard_total: 3
-          - datasource: sqs
-            shard_index: 2
-            shard_total: 3
-          - datasource: sqs
-            shard_index: 3
-            shard_total: 3
+            shard_total: 1
           - datasource: none
             shard_index: 1
             shard_total: 3
@@ -199,6 +184,15 @@ jobs:
             shard_index: 2
             shard_total: 3
           - datasource: none
+            shard_index: 3
+            shard_total: 3
+          - datasource: oracle
+            shard_index: 1
+            shard_total: 3
+          - datasource: oracle
+            shard_index: 2
+            shard_total: 3
+          - datasource: oracle
             shard_index: 3
             shard_total: 3
     steps:
@@ -273,6 +267,7 @@ jobs:
           DATASOURCE: ${{ matrix.datasource }}
           JEST_SHARD_INDEX: ${{ matrix.shard_index }}
           JEST_SHARD_TOTAL: ${{ matrix.shard_total }}
+          JEST_MAX_WORKERS: 4
           # DEBUG: testcontainers*
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
@@ -295,7 +290,7 @@ jobs:
           fi
 
           cd packages/server
-          yarn test --filter $FILTER --verbose --reporters=default --reporters=github-actions $SHARD_ARG
+          yarn test --filter $FILTER --reporters=default --reporters=github-actions $SHARD_ARG
 
   check-lockfile:
     runs-on: ubuntu-24.04
