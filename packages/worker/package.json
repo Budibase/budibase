@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "node ../../scripts/build.js",
+    "build": "node ./scripts/build.js",
     "postbuild": "copyfiles -f ../../yarn.lock ./dist/",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "check:dependencies": "knip --include unlisted --no-progress",

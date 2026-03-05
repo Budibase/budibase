@@ -9,7 +9,7 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
-    "tsc": "node ../../scripts/build.js",
+    "tsc": "node ./scripts/build.js",
     "build": "yarn tsc",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "start": "ts-node ./src/index.ts"

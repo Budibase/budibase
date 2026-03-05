@@ -1,5 +1,6 @@
 #!/usr/bin/node
 const coreBuild = require("../../../scripts/build")
+
 const externals = [
   "deasync",
   "graphql/*",
@@ -12,5 +13,4 @@ const externals = [
   "pg-query-stream",
 ]
 
-coreBuild("./src/plugin/index.ts", "./dist/plugins.js", { external: externals })
 coreBuild("./src/index.ts", "./dist/index.js", { external: externals })
