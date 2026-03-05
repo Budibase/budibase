@@ -37,14 +37,4 @@
     padding-top: var(--spacing-m);
     padding-bottom: var(--spacing-m);
   }
-  .role-select :global(.spectrum-Picker-label.has-subtitle .picker-label-text),
-  .role-select :global(.spectrum-Picker-label .picker-label-subtitle) {
-    font-size: 14px;
-    line-height: 18px;
-  }
-  :global(.popover-content .spectrum-Menu-itemLabel),
-  :global(.popover-content .subtitle-text) {
-    font-size: 14px;
-    line-height: 18px;
-  }
 </style>
