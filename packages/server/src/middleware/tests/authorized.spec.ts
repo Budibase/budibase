@@ -20,10 +20,10 @@ const APP_ID = ""
 initProMocks()
 
 class TestConfiguration {
-  middleware: (ctx: any, next: any) => Promise<void>
+  middleware: ReturnType<typeof authorizedMiddleware>
   next: () => void
   throw: () => void
-  headers: Record<string, any>
+  headers: Record<string, string>
   ctx: any
 
   constructor() {
@@ -53,8 +53,9 @@ class TestConfiguration {
     this.ctx.user = user
   }
 
-  setMiddlewareRequiredPermission(...perms: any[]) {
-    // @ts-ignore
+  setMiddlewareRequiredPermission(
+    ...perms: Parameters<typeof authorizedMiddleware>
+  ) {
     this.middleware = authorizedMiddleware(...perms)
   }
 
@@ -75,7 +76,7 @@ class TestConfiguration {
     env._set("NODE_ENV", isProd ? "production" : "jest")
   }
 
-  setRequestHeaders(headers: Record<string, any>) {
+  setRequestHeaders(headers: Record<string, string>) {
     this.ctx.headers = headers
   }
 
