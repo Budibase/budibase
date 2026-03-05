@@ -40,6 +40,9 @@
     if ($isActive("./deployment")) {
       return "Deployment"
     }
+    if ($isActive("./logs")) {
+      return "Logs"
+    }
     return "Configuration"
   })
   let currentAgent = $derived($selectedAgent)
@@ -115,6 +118,13 @@
       >
         Deployment
       </ActionButton>
+      <ActionButton
+        quiet
+        selected={activeTab === "Logs"}
+        on:click={() => $goto("./logs")}
+      >
+        Logs
+      </ActionButton>
     </div>
     <div class="start-pause-row">
       <div class="status-icons">
@@ -139,8 +149,8 @@
       >
     </div>
   </div>
-  <div class="config-page">
-    <div class=" config-content">
+  <div class="config-page" class:full-width={activeTab === "Logs"}>
+    <div class="config-content" class:full-width={activeTab === "Logs"}>
       <div class="config-form">
         <!-- svelte-ignore slot_element_deprecated -->
         <Layout gap="L">
@@ -148,12 +158,14 @@
         </Layout>
       </div>
     </div>
-    <div class="config-preview">
-      <AgentChatPanel
-        agentId={currentAgent?._id}
-        workspaceId={$params.application || ""}
-      />
-    </div>
+    {#if activeTab !== "Logs"}
+      <div class="config-preview">
+        <AgentChatPanel
+          agentId={currentAgent?._id}
+          workspaceId={$params.application || ""}
+        />
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -182,6 +194,15 @@
     min-width: 0;
     overflow-y: auto;
     scrollbar-width: thin;
+  }
+
+  .config-page.full-width {
+    grid-template-columns: 1fr;
+  }
+
+  .config-content.full-width {
+    grid-column: 1 / -1;
+    padding: var(--spacing-xl) var(--spacing-xl) 20px;
   }
 
   .config-content::-webkit-scrollbar {
