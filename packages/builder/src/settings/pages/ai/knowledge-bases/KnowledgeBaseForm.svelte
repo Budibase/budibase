@@ -6,8 +6,7 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Button, Input, notifications, Select } from "@budibase/bbui"
-  import { AIConfigType } from "@budibase/types"
+  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { routeActions } from "../.."
 
@@ -42,8 +41,10 @@
 
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
-  let savedSnapshot = $state(JSON.stringify(draft))
-  let isModified = $derived(savedSnapshot !== JSON.stringify(draft))
+  let savedSnapshot = $state(Helpers.cloneDeep(draft))
+  let isModified = $derived(
+    JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
+  )
 
   let embeddingModelOptions = $derived(
     [...$aiConfigsStore.customConfigsPerType.embeddings].sort((a, b) =>
@@ -113,7 +114,7 @@
       }
       lastEmbeddingModelSelection = draft.embeddingModel || ""
       lastVectorDbSelection = draft.vectorDb || ""
-      savedSnapshot = JSON.stringify(draft)
+      savedSnapshot = Helpers.cloneDeep(draft)
     } catch (err: any) {
       notifications.error(
         err.message || "Failed to load knowledge base settings"
@@ -135,7 +136,7 @@
           vectorDb: draft.vectorDb || "",
         })
         draft._rev = updated._rev
-        savedSnapshot = JSON.stringify({ ...draft, _rev: updated._rev })
+        savedSnapshot = Helpers.cloneDeep({ ...draft, _rev: updated._rev })
         notifications.success("Knowledge base updated")
       } else {
         const created = await knowledgeBaseStore.create({
@@ -145,7 +146,7 @@
         })
         draft._id = created._id
         draft._rev = created._rev
-        savedSnapshot = JSON.stringify({
+        savedSnapshot = Helpers.cloneDeep({
           ...draft,
           _id: created._id,
           _rev: created._rev,
