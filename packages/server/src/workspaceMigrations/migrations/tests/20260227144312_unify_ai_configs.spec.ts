@@ -1,4 +1,4 @@
-import { configs, db, docIds } from "@budibase/backend-core"
+import { configs, db, docIds, HTTPError } from "@budibase/backend-core"
 import {
   AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
@@ -267,7 +267,7 @@ describe("20260227144312_unify_ai_configs", () => {
       typeof aiConfigs.create
     >
     createMock
-      .mockRejectedValueOnce(new Error("invalid configuration"))
+      .mockRejectedValueOnce(new HTTPError("invalid configuration", 400))
       .mockResolvedValue({} as any)
 
     await config.doInContext(config.getDevWorkspaceId(), migration)
