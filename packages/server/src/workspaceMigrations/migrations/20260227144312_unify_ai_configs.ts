@@ -1,10 +1,11 @@
-import { configs } from "@budibase/backend-core"
+import { configs, context } from "@budibase/backend-core"
 import {
   AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
   Config,
   ConfigType,
 } from "@budibase/types"
+import tracer from "dd-trace"
 import sdk from "../../sdk"
 
 type AIProvider =
@@ -95,63 +96,97 @@ const normalizeModel = (provider: string, model: string) => {
 }
 
 const migration = async () => {
-  const legacyConfig = await configs.getConfig<AIConfig>(ConfigType.AI)
-  if (!legacyConfig?.config) {
-    return
-  }
+  await tracer.trace("workspaceMigration.unifyAIConfigs", async span => {
+    span.addTags({
+      workspaceId: context.getWorkspaceId(),
+    })
 
-  const existingConfigs = await sdk.ai.configs.fetch()
-  const existingBySignature = new Set(
-    existingConfigs.map(
-      config => `${config.provider}:${config.model}:${config.configType}`
-    )
-  )
-  const hasDefaultCompletions = existingConfigs.some(
-    config =>
-      config.configType === AIConfigType.COMPLETIONS &&
-      config.isDefault === true
-  )
-
-  let defaultAlreadyAssigned = hasDefaultCompletions
-
-  for (const legacyProvider of Object.values(legacyConfig.config)) {
-    if (!legacyProvider?.active) {
-      continue
-    }
-
-    const model =
-      legacyProvider.defaultModel ||
-      defaultModelByProvider[legacyProvider.provider]
-    if (!model) {
-      continue
-    }
-
-    const provider = normalizeProvider(legacyProvider.provider)
-    const normalizedModel = normalizeModel(provider, model)
-    const signature = `${provider}:${normalizedModel}:${AIConfigType.COMPLETIONS}`
-    if (existingBySignature.has(signature)) {
-      continue
-    }
-
-    try {
-      await sdk.ai.configs.create({
-        name: legacyProvider.name || legacyProvider.provider,
-        provider,
-        model: normalizedModel,
-        credentialsFields: mapCredentials(legacyProvider),
-        configType: AIConfigType.COMPLETIONS,
-        isDefault: !defaultAlreadyAssigned && legacyProvider.isDefault === true,
+    const legacyConfig = await configs.getConfig<AIConfig>(ConfigType.AI)
+    if (!legacyConfig?.config) {
+      span.addTags({
+        hasLegacyConfig: false,
+        processedProviders: 0,
+        createdConfigs: 0,
+        skippedExisting: 0,
+        skippedInvalid: 0,
       })
-      existingBySignature.add(signature)
-      if (legacyProvider.isDefault === true) {
-        defaultAlreadyAssigned = true
-      }
-    } catch (err: any) {
-      console.warn(
-        `Skipping legacy AI config migration for provider ${legacyProvider.provider}: ${err?.message || "unknown error"}`
-      )
+      return
     }
-  }
+
+    const existingConfigs = await sdk.ai.configs.fetch()
+    const existingBySignature = new Set(
+      existingConfigs.map(
+        config => `${config.provider}:${config.model}:${config.configType}`
+      )
+    )
+    const hasDefaultCompletions = existingConfigs.some(
+      config =>
+        config.configType === AIConfigType.COMPLETIONS &&
+        config.isDefault === true
+    )
+
+    let defaultAlreadyAssigned = hasDefaultCompletions
+    let processedProviders = 0
+    let createdConfigs = 0
+    let skippedExisting = 0
+    let skippedInvalid = 0
+
+    for (const legacyProvider of Object.values(legacyConfig.config)) {
+      if (!legacyProvider?.active) {
+        continue
+      }
+
+      processedProviders++
+
+      const model =
+        legacyProvider.defaultModel ||
+        defaultModelByProvider[legacyProvider.provider]
+      if (!model) {
+        skippedInvalid++
+        continue
+      }
+
+      const provider = normalizeProvider(legacyProvider.provider)
+      const normalizedModel = normalizeModel(provider, model)
+      const signature = `${provider}:${normalizedModel}:${AIConfigType.COMPLETIONS}`
+      if (existingBySignature.has(signature)) {
+        skippedExisting++
+        continue
+      }
+
+      try {
+        await sdk.ai.configs.create({
+          name: legacyProvider.name || legacyProvider.provider,
+          provider,
+          model: normalizedModel,
+          credentialsFields: mapCredentials(legacyProvider),
+          configType: AIConfigType.COMPLETIONS,
+          isDefault:
+            !defaultAlreadyAssigned && legacyProvider.isDefault === true,
+        })
+        createdConfigs++
+        existingBySignature.add(signature)
+        if (legacyProvider.isDefault === true) {
+          defaultAlreadyAssigned = true
+        }
+      } catch (err: any) {
+        skippedInvalid++
+        console.warn(
+          `Skipping legacy AI config migration for provider ${legacyProvider.provider}: ${err?.message || "unknown error"}`
+        )
+      }
+    }
+
+    span.addTags({
+      hasLegacyConfig: true,
+      existingConfigs: existingConfigs.length,
+      processedProviders,
+      createdConfigs,
+      skippedExisting,
+      skippedInvalid,
+      defaultAlreadyAssigned,
+    })
+  })
 }
 
 export default migration
