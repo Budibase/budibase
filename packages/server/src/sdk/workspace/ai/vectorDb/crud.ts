@@ -1,5 +1,17 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { DocumentType, PASSWORD_REPLACEMENT, VectorDb } from "@budibase/types"
+import {
+  DocumentType,
+  PASSWORD_REPLACEMENT,
+  SEPARATOR,
+  VectorDb,
+} from "@budibase/types"
+
+const assertValidVectorDbId = (id: string) => {
+  const prefix = `${DocumentType.VECTOR_STORE}${SEPARATOR}`
+  if (!id?.startsWith(prefix)) {
+    throw new HTTPError("Invalid vector database id", 400)
+  }
+}
 
 export async function fetch(): Promise<VectorDb[]> {
   const db = context.getWorkspaceDB()
@@ -13,6 +25,7 @@ export async function fetch(): Promise<VectorDb[]> {
 }
 
 export async function find(id: string): Promise<VectorDb | undefined> {
+  assertValidVectorDbId(id)
   const db = context.getWorkspaceDB()
   const result = await db.tryGet<VectorDb>(id)
   if (!result || result._deleted) {
@@ -45,6 +58,7 @@ export async function update(config: VectorDb): Promise<VectorDb> {
   if (!config._id || !config._rev) {
     throw new HTTPError("id and rev required", 400)
   }
+  assertValidVectorDbId(config._id)
 
   const db = context.getWorkspaceDB()
   const existing = await db.tryGet<VectorDb>(config._id)
@@ -70,6 +84,7 @@ export async function update(config: VectorDb): Promise<VectorDb> {
 }
 
 export async function remove(id: string) {
+  assertValidVectorDbId(id)
   const db = context.getWorkspaceDB()
 
   const existing = await db.get<VectorDb>(id)

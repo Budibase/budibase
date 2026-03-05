@@ -142,6 +142,36 @@ describe("knowledge base configs", () => {
         )
       })
     })
+
+    it("rejects non-vector db configs", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId } = await buildDependencies()
+        const completionsModelId = docIds.generateAIConfigID(
+          "vectordb_type_mismatch"
+        )
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const db = context.getWorkspaceDB()
+          await db.put({
+            _id: completionsModelId,
+            name: "Completions",
+            provider: "OpenAI",
+            credentialsFields: {},
+            model: "gpt-4o-mini",
+            liteLLMModelId: "completions-model",
+            configType: AIConfigType.COMPLETIONS,
+          })
+        })
+
+        await config.api.knowledgeBase.create(
+          {
+            name: "Invalid Vector DB Type",
+            embeddingModel: embeddingModelId,
+            vectorDb: completionsModelId,
+          },
+          { status: 400 }
+        )
+      })
+    })
   })
 
   describe("fetch", () => {
