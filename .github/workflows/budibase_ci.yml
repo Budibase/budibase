@@ -208,13 +208,30 @@ jobs:
           node-version: 22.x
           cache: yarn
 
+      - run: yarn --frozen-lockfile
+
+      - name: Check affected server tests
+        id: affected_server
+        run: |
+          RUN_SERVER_TESTS="true"
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
+            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
+            if [ -z "$AFFECTED" ]; then
+              RUN_SERVER_TESTS="false"
+            fi
+          fi
+          echo "run_server_tests=$RUN_SERVER_TESTS" >> $GITHUB_OUTPUT
+          echo "run_server_tests=$RUN_SERVER_TESTS"
+
       - name: Load dotenv
+        if: steps.affected_server.outputs.run_server_tests == 'true'
         id: dotenv
         uses: falti/dotenv-action@v1.1.3
         with:
           path: ./packages/server/images-sha.env
 
       - name: Pull testcontainers images
+        if: steps.affected_server.outputs.run_server_tests == 'true'
         run: |
           if [ "${{ matrix.datasource }}" == "mssql" ]; then
             docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
@@ -243,13 +260,12 @@ jobs:
 
           wait $(jobs -p)
 
-      - run: yarn --frozen-lockfile
-
       - name: Build client library - necessary for component tests
+        if: steps.affected_server.outputs.run_server_tests == 'true'
         run: yarn build:client
 
       - name: Set up PostgreSQL 16
-        if: matrix.datasource == 'postgres'
+        if: steps.affected_server.outputs.run_server_tests == 'true' && matrix.datasource == 'postgres'
         run: |
           sudo systemctl stop postgresql
           sudo apt-get remove --purge -y postgresql* libpq-dev
@@ -263,6 +279,7 @@ jobs:
           sudo apt-get install -y postgresql-16
 
       - name: Test server
+        if: steps.affected_server.outputs.run_server_tests == 'true'
         env:
           DATASOURCE: ${{ matrix.datasource }}
           JEST_SHARD_INDEX: ${{ matrix.shard_index }}
@@ -270,14 +287,6 @@ jobs:
           JEST_MAX_WORKERS: 4
           # DEBUG: testcontainers*
         run: |
-          if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
-            if [ -z "$AFFECTED" ]; then
-              echo "No affected tests to run"
-              exit 0
-            fi
-          fi
-
           FILTER="./src/tests/filters/datasource-tests.js"
           if [ "${{ matrix.datasource }}" == "none" ]; then
             FILTER="./src/tests/filters/non-datasource-tests.js"
