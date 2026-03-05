@@ -21,8 +21,6 @@
     $knowledgeBaseStore.configs.find(kb => kb._id === knowledgeBaseId)
   )
 
-  const isCreation = knowledgeBaseId === "new"
-
   const createDraft = () =>
     config?._id
       ? {
@@ -96,6 +94,7 @@
         vectorDbStore.fetch(),
       ])
 
+      const isCreation = knowledgeBaseId === "new"
       if (!isCreation && !config) {
         notifications.error("Knowledge base not found")
         bb.settings(`/ai-config/knowledge-bases`)
@@ -166,9 +165,9 @@
       knowledgeBaseStore.setFormDraft(draft)
       draft.embeddingModel = lastEmbeddingModelSelection
       const currentKnowledgeBaseId = knowledgeBaseId || "new"
-      bb.settings(`/ai-config/knowledge-bases/${currentKnowledgeBaseId}/new`, {
-        type: AIConfigType.EMBEDDINGS,
-      })
+      bb.settings(
+        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/new`
+      )
       return
     }
     lastEmbeddingModelSelection = draft.embeddingModel || ""
@@ -180,7 +179,7 @@
       draft.vectorDb = lastVectorDbSelection
       const currentKnowledgeBaseId = knowledgeBaseId || "new"
       bb.settings(
-        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vector-database/new`
+        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/new`
       )
       return
     }

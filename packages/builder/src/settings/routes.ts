@@ -318,8 +318,9 @@ export const appRoutes = (
                   return "New"
                 }
                 return (
-                  get(aiConfigsStore).customConfigs.find(config => config._id === id)
-                    ?.name ?? "AI config"
+                  get(aiConfigsStore).customConfigs.find(
+                    config => config._id === id
+                  )?.name ?? "AI config"
                 )
               },
             },
@@ -340,23 +341,29 @@ export const appRoutes = (
                   return "New"
                 }
                 return (
-                  get(knowledgeBaseStore).configs.find(k => k._id === id)?.name ??
-                  "Knowledge base"
+                  get(knowledgeBaseStore).configs.find(k => k._id === id)
+                    ?.name ?? "Knowledge base"
                 )
               },
               routes: [
                 {
-                  path: ":configId",
+                  path: "embedding",
                   title: "Embedding model",
-                  comp: Pages.get("embedding_model"),
-                },
-                {
-                  path: "vector-database",
-                  title: "Vector database",
                   routes: [
                     {
                       path: ":configId",
-                      title: "Vector database",
+                      title: "New embedding model",
+                      comp: Pages.get("embedding_model"),
+                    },
+                  ],
+                },
+                {
+                  path: "vectordb",
+                  title: "New vector database",
+                  routes: [
+                    {
+                      path: ":id",
+                      title: "New vector database",
                       comp: Pages.get("vector_database"),
                     },
                   ],
