@@ -8,9 +8,10 @@
     appStore,
   } from "@/stores/builder"
   import { appsStore, admin } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
   import { Heading, Layout, Body } from "@budibase/bbui"
   import { API } from "@/api"
-  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
+  import InviteUsersModal from "./_components/InviteUsersModal.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
 
@@ -18,6 +19,10 @@
 
   let promise = getPackage(application)
   let sideNav: SideNav
+  let showInviteUsersModal = false
+  $: if ($bb.settings.open && showInviteUsersModal) {
+    showInviteUsersModal = false
+  }
 
   async function getPackage(appId: string) {
     try {
@@ -44,12 +49,15 @@
   }
 </script>
 
-{#if $builderStore.builderSidePanel}
-  <BuilderSidePanel />
+{#if showInviteUsersModal}
+  <InviteUsersModal onHide={() => (showInviteUsersModal = false)} />
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
-  <SideNav bind:this={sideNav} />
+  <SideNav
+    bind:this={sideNav}
+    onInviteUser={() => (showInviteUsersModal = true)}
+  />
   {#await promise}
     <div class="loading"></div>
   {:then _}
