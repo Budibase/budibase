@@ -365,11 +365,38 @@ let liteLLMProviders: LLMProvider[]
 export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
   if (!liteLLMProviders?.length) {
     const providers = await liteLLM.fetchPublicProviders()
+    let modelCostMap: Awaited<
+      ReturnType<typeof liteLLM.fetchPublicModelCostMap>
+    > = {}
+    try {
+      modelCostMap = await liteLLM.fetchPublicModelCostMap()
+    } catch (err) {
+      console.log("Failed to fetch LiteLLM model cost map", err)
+    }
+
     liteLLMProviders = providers.map(provider => {
+      const models = Object.entries(modelCostMap)
+        .filter(([, metadata]) => {
+          const modelProvider = metadata?.litellm_provider
+          if (Array.isArray(modelProvider)) {
+            return modelProvider.includes(provider.litellm_provider)
+          }
+          if (typeof modelProvider === "string") {
+            return modelProvider
+              .split(",")
+              .map(value => value.trim())
+              .includes(provider.litellm_provider)
+          }
+          return false
+        })
+        .map(([modelId]) => modelId)
+        .sort((a, b) => a.localeCompare(b))
+
       const mapProvider: RequiredKeys<LLMProvider> = {
         id: provider.provider,
         displayName: provider.provider_display_name,
         externalProvider: provider.litellm_provider,
+        models,
         credentialFields: provider.credential_fields.map(f => {
           const field: RequiredKeys<LLMProviderField> = {
             key: f.key,
@@ -391,6 +418,7 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
       id: BUDIBASE_AI_PROVIDER_ID,
       displayName: "Budibase AI",
       externalProvider: "custom_openai",
+      models: ["budibase/v1"],
       credentialFields: [
         { key: "api_key", label: "api_key", field_type: "password" },
       ],

@@ -36,6 +36,7 @@ export interface LLMProvider {
   displayName: string
   externalProvider: string
   credentialFields: LLMProviderField[]
+  models?: string[]
 }
 
 export type LLMProvidersResponse = LLMProvider[]
