@@ -72,7 +72,7 @@
   }
 
   const goToLogin = () => {
-    const returnUrl = `${window.location.pathname}${window.location.hash}`
+    const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
     CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
     window.location.href = "/builder/auth/login"
   }
