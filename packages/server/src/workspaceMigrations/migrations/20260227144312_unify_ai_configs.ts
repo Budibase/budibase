@@ -134,11 +134,6 @@ const migration = async () => {
     }
 
     const existingConfigs = await sdk.ai.configs.fetch()
-    const existingBySignature = new Set(
-      existingConfigs.map(
-        config => `${config.provider}:${config.model}:${config.configType}`
-      )
-    )
     const hasDefaultCompletions = existingConfigs.some(
       config =>
         config.configType === AIConfigType.COMPLETIONS &&
@@ -168,8 +163,9 @@ const migration = async () => {
 
       const provider = normalizeProvider(legacyProvider.provider)
       const normalizedModel = normalizeModel(provider, model)
-      const signature = `${provider}:${normalizedModel}:${AIConfigType.COMPLETIONS}`
-      if (existingBySignature.has(signature)) {
+
+      const name = legacyProvider.name || legacyProvider.provider
+      if (existingConfigs.some(c => c.name === name)) {
         skippedExisting++
         continue
       }
@@ -185,7 +181,6 @@ const migration = async () => {
             !defaultAlreadyAssigned && legacyProvider.isDefault === true,
         })
         createdConfigs++
-        existingBySignature.add(signature)
         if (legacyProvider.isDefault === true) {
           defaultAlreadyAssigned = true
         }

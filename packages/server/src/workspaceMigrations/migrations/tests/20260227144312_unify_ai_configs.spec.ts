@@ -87,13 +87,13 @@ describe("20260227144312_unify_ai_configs", () => {
     })
   })
 
-  it("does not create configs when matching signatures already exist", async () => {
+  it("does not create configs when matching name already exist", async () => {
     const legacyConfig: AIConfig = {
       type: ConfigType.AI,
       config: {
         openai: {
           provider: "OpenAI",
-          name: "OpenAI",
+          name: "Existing OpenAI",
           active: true,
           isDefault: true,
           defaultModel: "gpt-5-mini",
