@@ -364,15 +364,10 @@ let liteLLMProviders: LLMProvider[]
 
 export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
   if (!liteLLMProviders?.length) {
-    const providers = await liteLLM.fetchPublicProviders()
-    let modelCostMap: Awaited<
-      ReturnType<typeof liteLLM.fetchPublicModelCostMap>
-    > = {}
-    try {
-      modelCostMap = await liteLLM.fetchPublicModelCostMap()
-    } catch (err) {
-      console.log("Failed to fetch LiteLLM model cost map", err)
-    }
+    const [providers, modelCostMap] = await Promise.all([
+      liteLLM.fetchPublicProviders(),
+      liteLLM.fetchPublicModelCostMap(),
+    ])
 
     liteLLMProviders = providers.map(provider => {
       const modelsByType = Object.entries(modelCostMap).reduce<{
