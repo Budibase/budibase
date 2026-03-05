@@ -60,7 +60,6 @@
   export let searchTerm: string | null = null
   export let searchPlaceholder: string = "Search"
   export let customPopoverHeight: string | undefined = undefined
-  export let popoverClass: string | undefined = undefined
   export let align: PopoverAlignment | undefined = PopoverAlignment.Left
   export let footer: string | undefined = undefined
   export let customAnchor: HTMLElement | undefined = undefined
@@ -285,7 +284,7 @@
   {maxHeight}
 >
   <div
-    class={`popover-content ${popoverClass || ""}`}
+    class="popover-content"
     class:auto-width={autoWidth}
     class:wrap-text={wrapText}
     use:clickOutside={() => {

@@ -47,7 +47,6 @@
   export let onOptionMouseenter = () => {}
   export let onOptionMouseleave = () => {}
   export let customPopoverHeight: string | undefined = undefined
-  export let popoverClass: string | undefined = undefined
   export let searchPlaceholder: string = "Search"
   export let hideChevron: boolean = false
   export let wrapText: boolean = false
@@ -147,7 +146,6 @@
   onSelectOption={selectOption}
   {loading}
   {customPopoverHeight}
-  {popoverClass}
   {searchPlaceholder}
   {hideChevron}
   {fieldTooltip}

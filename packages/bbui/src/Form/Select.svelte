@@ -41,7 +41,6 @@
     | undefined = undefined
   export let autocomplete: boolean = false
   export let customPopoverHeight: string | undefined = undefined
-  export let popoverClass: string | undefined = undefined
   export let align: PopoverAlignment | undefined = PopoverAlignment.Left
   export let footer: string | undefined = undefined
   export let helpText: string | undefined = undefined
@@ -104,7 +103,6 @@
     {isOptionEnabled}
     {autocomplete}
     {customPopoverHeight}
-    {popoverClass}
     {compare}
     {onOptionMouseenter}
     {onOptionMouseleave}

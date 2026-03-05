@@ -259,11 +259,13 @@
         <GlobalRoleSelect
           bind:value={selectedRole}
           options={Constants.BudibaseRoleOptions}
+          size="L"
         />
 
         {#if workspaceOnly && selectedRole === Constants.BudibaseRoles.AppUser}
           <Select
             label="Select end user role"
+            size="L"
             bind:value={endUserRole}
             options={endUserRoleOptions}
             getOptionLabel={option => option.label}
@@ -274,7 +276,7 @@
         {/if}
 
         <div class="onboarding">
-          <Label>Select onboarding</Label>
+          <Label size="L">Select onboarding</Label>
           <RadioGroup
             bind:value={onboardingType}
             options={[
@@ -420,11 +422,6 @@
     align-items: flex-start;
     gap: var(--spacing-xs);
   }
-  .workspace-invite-modal {
-    font-size: 14px;
-  }
-  .workspace-invite-modal :global(.spectrum-FieldLabel),
-  .workspace-invite-modal :global(.spectrum-Picker-label),
   .workspace-invite-modal :global(.spectrum-Radio-label),
   .workspace-invite-modal :global(.spectrum-Textfield-input),
   .workspace-invite-modal :global(.spectrum-Tags-itemLabel),

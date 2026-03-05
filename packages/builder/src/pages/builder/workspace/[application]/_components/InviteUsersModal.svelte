@@ -21,7 +21,7 @@
   let createUserModal: Modal
   let inviteConfirmationModal: Modal
   let isOpened = false
-  let deferClose = false
+  let showingInviteConfirmation = false
   let inviteUsersResponse: InviteUsersResponse = {
     successful: [],
     unsuccessful: [],
@@ -64,7 +64,7 @@
     )
 
     inviteUsersResponse = await users.invite(payload)
-    deferClose = true
+    showingInviteConfirmation = true
     inviteConfirmationModal.show()
   }
 
@@ -140,7 +140,7 @@
       return
     }
     isOpened = false
-    if (deferClose) {
+    if (showingInviteConfirmation) {
       return
     }
     onHide()
@@ -151,7 +151,7 @@
   }
 
   const hideInviteConfirmationModal = () => {
-    deferClose = false
+    showingInviteConfirmation = false
     onHide()
   }
 

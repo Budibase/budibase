@@ -10,14 +10,15 @@
   export let value: string | undefined = undefined
   export let options: GlobalRoleOption[] = []
   export let label = "Select role"
+  export let size: "S" | "M" | "L" = "M"
   export let disabled = false
 </script>
 
 <div class="role-select">
   <Select
     {label}
+    {size}
     placeholder={false}
-    popoverClass="global-role-select-popover"
     wrapText
     bind:value
     {options}
@@ -41,8 +42,8 @@
     font-size: 14px;
     line-height: 18px;
   }
-  :global(.global-role-select-popover .spectrum-Menu-itemLabel),
-  :global(.global-role-select-popover .subtitle-text) {
+  :global(.popover-content .spectrum-Menu-itemLabel),
+  :global(.popover-content .subtitle-text) {
     font-size: 14px;
     line-height: 18px;
   }
