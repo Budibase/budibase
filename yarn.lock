@@ -3887,9 +3887,9 @@
     "@hapi/hoek" "^9.0.0"
 
 "@hono/node-server@^1.19.9":
-  version "1.19.9"
-  resolved "https://registry.yarnpkg.com/@hono/node-server/-/node-server-1.19.9.tgz#8f37119b1acf283fd3f6035f3d1356fdb97a09ac"
-  integrity sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw==
+  version "1.19.10"
+  resolved "https://registry.yarnpkg.com/@hono/node-server/-/node-server-1.19.10.tgz#e230fbb7fb31891cafc653d01deee03f437dd66b"
+  integrity sha512-hZ7nOssGqRgyV3FVVQdfi+U4q02uB23bpnYpdvNXkYTRRyWx84b7yf1ans+dnJ/7h41sGL3CeQTfO+ZGxuO+Iw==
 
 "@humanfs/core@^0.19.1":
   version "0.19.1"
@@ -24118,6 +24118,17 @@ tar-stream@^3.0.0, tar-stream@^3.1.5:
     b4a "^1.6.4"
     fast-fifo "^1.2.0"
     streamx "^2.15.0"
+
+tar@7.5.10:
+  version "7.5.10"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.10.tgz#2281541123f5507db38bc6eb22619f4bbaef73ad"
+  integrity sha512-8mOPs1//5q/rlkNSPcCegA6hiHJYDmSLEI8aMH/CdSQJNWztHC9WHNam5zdQlfpTwB9Xp7IBEsHfV5LKMJGVAw==
+  dependencies:
+    "@isaacs/fs-minipass" "^4.0.0"
+    chownr "^3.0.0"
+    minipass "^7.1.2"
+    minizlib "^3.1.0"
+    yallist "^5.0.0"
 
 tar@7.5.7:
   version "7.5.7"
