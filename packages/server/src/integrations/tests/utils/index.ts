@@ -147,7 +147,9 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
     throw new Error("invalid options")
   }
 
-  if (!datasourceEnv || datasourceEnv === "none") {
+  if (!datasourceEnv) {
+    databases = databases.filter(db => db === DatabaseName.SQS)
+  } else if (datasourceEnv === "none") {
     databases = []
   } else if (datasourceEnv !== "all") {
     databases = databases.filter(db => db === datasourceEnv)
