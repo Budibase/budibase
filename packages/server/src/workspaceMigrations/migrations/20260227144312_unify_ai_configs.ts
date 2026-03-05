@@ -170,10 +170,14 @@ const migration = async () => {
           defaultAlreadyAssigned = true
         }
       } catch (err: any) {
-        skippedInvalid++
-        console.warn(
-          `Skipping legacy AI config migration for provider ${legacyProvider.provider}: ${err?.message || "unknown error"}`
-        )
+        if (err?.status === 400 || err?.statusCode === 400) {
+          skippedInvalid++
+          console.warn(
+            `Skipping legacy AI config migration for provider ${legacyProvider.provider}: ${err?.message || "unknown error"}`
+          )
+          continue
+        }
+        throw err
       }
     }
 
