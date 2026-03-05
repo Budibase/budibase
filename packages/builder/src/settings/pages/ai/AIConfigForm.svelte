@@ -98,7 +98,7 @@
   )
   let selectedProvider = $derived(providersMap?.[draft.provider])
   let modelOptions = $derived.by(() => {
-    const models = selectedProvider?.models || []
+    const models = selectedProvider?.models?.[draft.configType] || []
     const options = models.map<ModelOption>(model => ({
       label: model,
       value: model,

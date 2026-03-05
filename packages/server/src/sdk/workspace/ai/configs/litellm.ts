@@ -511,6 +511,7 @@ type LiteLLMModelCostMap = Record<
   string,
   {
     litellm_provider?: string | string[] | null
+    mode?: string | string[] | null
   }
 >
 
