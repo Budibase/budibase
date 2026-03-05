@@ -153,9 +153,6 @@ export const changeTenantOwnerEmail = async (
 export const addSsoSupport = async (
   ctx: Ctx<AddSSoUserRequest, AddSSoUserResponse>
 ) => {
-  if (!ctx.internal) {
-    ctx.throw(403, "Unauthorized")
-  }
   const { email, ssoId } = ctx.request.body
   try {
     const [userByEmail] = await users.getExistingPlatformUsers([email])
