@@ -176,7 +176,10 @@ jobs:
             shard_total: 1
           - datasource: sqs
             shard_index: 1
-            shard_total: 1
+            shard_total: 2
+          - datasource: sqs
+            shard_index: 2
+            shard_total: 2
           - datasource: none
             shard_index: 1
             shard_total: 3
@@ -188,13 +191,16 @@ jobs:
             shard_total: 3
           - datasource: oracle
             shard_index: 1
-            shard_total: 3
+            shard_total: 4
           - datasource: oracle
             shard_index: 2
-            shard_total: 3
+            shard_total: 4
           - datasource: oracle
             shard_index: 3
-            shard_total: 3
+            shard_total: 4
+          - datasource: oracle
+            shard_index: 4
+            shard_total: 4
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
