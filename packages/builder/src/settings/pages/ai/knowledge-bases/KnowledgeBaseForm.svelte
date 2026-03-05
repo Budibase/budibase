@@ -41,7 +41,10 @@
 
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
-  let savedSnapshot = $state(Helpers.cloneDeep(draft))
+  let savedSnapshot = $state(Helpers.cloneDeep(createDraft()))
+  const captureSavedSnapshot = () => {
+    savedSnapshot = Helpers.cloneDeep(draft)
+  }
   let isModified = $derived(
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
   )
@@ -114,7 +117,7 @@
       }
       lastEmbeddingModelSelection = draft.embeddingModel || ""
       lastVectorDbSelection = draft.vectorDb || ""
-      savedSnapshot = Helpers.cloneDeep(draft)
+      captureSavedSnapshot()
     } catch (err: any) {
       notifications.error(
         err.message || "Failed to load knowledge base settings"
@@ -136,7 +139,7 @@
           vectorDb: draft.vectorDb || "",
         })
         draft._rev = updated._rev
-        savedSnapshot = Helpers.cloneDeep({ ...draft, _rev: updated._rev })
+        captureSavedSnapshot()
         notifications.success("Knowledge base updated")
       } else {
         const created = await knowledgeBaseStore.create({
@@ -146,11 +149,7 @@
         })
         draft._id = created._id
         draft._rev = created._rev
-        savedSnapshot = Helpers.cloneDeep({
-          ...draft,
-          _id: created._id,
-          _rev: created._rev,
-        })
+        captureSavedSnapshot()
         notifications.success("Knowledge base created")
       }
       knowledgeBaseStore.clearFormDraft()
@@ -163,7 +162,7 @@
 
   function handleEmbeddingModelChange() {
     if (draft.embeddingModel === CREATE_NEW_EMBEDDING_MODEL) {
-      knowledgeBaseStore.setFormDraft(draft)
+      knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
       draft.embeddingModel = lastEmbeddingModelSelection
       const currentKnowledgeBaseId = knowledgeBaseId || "new"
       bb.settings(
@@ -176,7 +175,7 @@
 
   function handleVectorDbChange() {
     if (draft.vectorDb === CREATE_NEW_VECTOR_DB) {
-      knowledgeBaseStore.setFormDraft(draft)
+      knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
       draft.vectorDb = lastVectorDbSelection
       const currentKnowledgeBaseId = knowledgeBaseId || "new"
       bb.settings(
