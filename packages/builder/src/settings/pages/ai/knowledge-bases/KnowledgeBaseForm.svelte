@@ -6,7 +6,14 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Button,
+    Helpers,
+    Input,
+    notifications,
+    Select,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { routeActions } from "../.."
 
@@ -69,26 +76,19 @@
     )
   })
 
-  const CREATE_NEW_EMBEDDING_MODEL = "__create_new_embedding_model__"
-  const CREATE_NEW_VECTOR_DB = "__create_new_vector_db__"
-  let lastEmbeddingModelSelection = $state("")
-  let lastVectorDbSelection = $state("")
-
-  let embeddingModelSelectOptions = $derived([
-    { label: "Create new", value: CREATE_NEW_EMBEDDING_MODEL },
-    ...embeddingModelOptions.map(option => ({
+  let embeddingModelSelectOptions = $derived(
+    embeddingModelOptions.map(option => ({
       label: option.name,
       value: option._id || "",
-    })),
-  ])
+    }))
+  )
 
-  let vectorDbSelectOptions = $derived([
-    { label: "Create new", value: CREATE_NEW_VECTOR_DB },
-    ...vectorDbOptions.map(option => ({
+  let vectorDbSelectOptions = $derived(
+    vectorDbOptions.map(option => ({
       label: option.name,
       value: option._id || "",
-    })),
-  ])
+    }))
+  )
 
   onMount(async () => {
     try {
@@ -116,8 +116,6 @@
           ...persistedDraft,
         }
       }
-      lastEmbeddingModelSelection = draft.embeddingModel || ""
-      lastVectorDbSelection = draft.vectorDb || ""
     } catch (err: any) {
       notifications.error(
         err.message || "Failed to load knowledge base settings"
@@ -166,30 +164,20 @@
     }
   }
 
-  function handleEmbeddingModelChange() {
-    if (draft.embeddingModel === CREATE_NEW_EMBEDDING_MODEL) {
-      knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-      draft.embeddingModel = lastEmbeddingModelSelection
-      const currentKnowledgeBaseId = knowledgeBaseId || "new"
-      bb.settings(
-        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/new`
-      )
-      return
-    }
-    lastEmbeddingModelSelection = draft.embeddingModel || ""
+  function createEmbeddingModel() {
+    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
+    const currentKnowledgeBaseId = knowledgeBaseId || "new"
+    bb.settings(
+      `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/new`
+    )
   }
 
-  function handleVectorDbChange() {
-    if (draft.vectorDb === CREATE_NEW_VECTOR_DB) {
-      knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-      draft.vectorDb = lastVectorDbSelection
-      const currentKnowledgeBaseId = knowledgeBaseId || "new"
-      bb.settings(
-        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/new`
-      )
-      return
-    }
-    lastVectorDbSelection = draft.vectorDb || ""
+  function createVectorDb() {
+    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
+    const currentKnowledgeBaseId = knowledgeBaseId || "new"
+    bb.settings(
+      `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/new`
+    )
   }
 
   async function deleteKnowledgeBase() {
@@ -241,31 +229,43 @@
     placeholder="HR Policies"
   />
 
-  <Select
-    label="Embedding model"
-    description="Models used to convert text into vector embeddings for search and retrieval."
-    required
-    bind:value={draft.embeddingModel}
-    options={embeddingModelSelectOptions}
-    getOptionValue={option => option.value}
-    getOptionLabel={option => option.label}
-    placeholder={false}
-    disabled={isEdit}
-    on:change={handleEmbeddingModelChange}
-  />
+  <div class="select">
+    <Select
+      label="Embedding model"
+      description="Models used to convert text into vector embeddings for search and retrieval."
+      required
+      bind:value={draft.embeddingModel}
+      options={embeddingModelSelectOptions}
+      getOptionValue={option => option.value}
+      getOptionLabel={option => option.label}
+      disabled={isEdit}
+    />
+    <ActionButton
+      icon="Add"
+      size="M"
+      disabled={isEdit}
+      on:click={createEmbeddingModel}
+    />
+  </div>
 
-  <Select
-    label="Vector database"
-    description="Databases optimized for storing and querying vector embeddings. We support PGVector."
-    required
-    bind:value={draft.vectorDb}
-    options={vectorDbSelectOptions}
-    getOptionValue={option => option.value}
-    getOptionLabel={option => option.label}
-    placeholder={false}
-    disabled={isEdit}
-    on:change={handleVectorDbChange}
-  />
+  <div class="select">
+    <Select
+      label="Vector database"
+      description="Databases optimized for storing and querying vector embeddings. We support PGVector."
+      required
+      bind:value={draft.vectorDb}
+      options={vectorDbSelectOptions}
+      getOptionValue={option => option.value}
+      getOptionLabel={option => option.label}
+      disabled={isEdit}
+    />
+    <ActionButton
+      icon="Add"
+      size="M"
+      disabled={isEdit}
+      on:click={createVectorDb}
+    />
+  </div>
 </div>
 
 <style>
@@ -278,5 +278,15 @@
   .actions {
     display: flex;
     gap: var(--spacing-s);
+  }
+
+  .select {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: flex-end;
+  }
+
+  .select :global(.spectrum-Form-item) {
+    flex: 1;
   }
 </style>
