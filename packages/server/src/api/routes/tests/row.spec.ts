@@ -1075,6 +1075,7 @@ if (descriptions.length) {
 
         isInternal &&
           it("can search row from user table", async () => {
+            await config.publish()
             const res = await config.api.row.get(
               InternalTables.USER_METADATA,
               config.userMetadataId!
