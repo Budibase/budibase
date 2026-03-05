@@ -239,7 +239,9 @@ describe("/static", () => {
             .set(config.defaultHeaders())
 
           expect(res.status).toEqual(500)
-          expect(res.body.message).toMatch("No valid icons found in the zip file")
+          expect(res.body.message).toMatch(
+            "No valid icons found in the zip file"
+          )
           expect(mockedUpload).not.toHaveBeenCalled()
         } finally {
           await fsp.rm(sensitiveDir, { recursive: true, force: true })
