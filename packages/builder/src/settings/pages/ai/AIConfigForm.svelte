@@ -67,6 +67,10 @@
     { label: "Medium", value: "medium" },
     { label: "High", value: "high" },
   ]
+  interface ModelOption {
+    label: string
+    value: string
+  }
 
   let providers = $derived($aiConfigsStore.providers)
 
@@ -85,6 +89,29 @@
     }, {})
   )
   let selectedProvider = $derived(providersMap?.[draft.provider])
+  let modelOptions = $derived.by(() => {
+    const models = selectedProvider?.models || []
+    const options = models.map<ModelOption>(model => ({
+      label: model,
+      value: model,
+    }))
+    if (draft.model?.trim() && !models.includes(draft.model)) {
+      options.unshift({
+        label: `${draft.model} (custom)`,
+        value: draft.model,
+      })
+    }
+    return options
+  })
+  let modelPlaceholder = $derived.by(() => {
+    if (!draft.provider?.trim()) {
+      return "Choose a provider first"
+    }
+    if (!providers) {
+      return "Loading models..."
+    }
+    return modelOptions.length ? "Select a model" : "No models available"
+  })
 
   let isSaving = $state(false)
   let savedSnapshot = $state(JSON.stringify(draft))
@@ -233,12 +260,16 @@
       loading={!providers}
     />
 
-    <Input
+    <Select
       label="Model"
       description="The model you would like to connect to"
       required
       bind:value={draft.model}
-      placeholder="GPT-5.2"
+      options={modelOptions}
+      getOptionValue={o => o.value}
+      getOptionLabel={o => o.label}
+      placeholder={modelPlaceholder}
+      loading={!providers}
     />
 
     <Input
