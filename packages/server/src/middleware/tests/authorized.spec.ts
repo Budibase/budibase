@@ -33,6 +33,7 @@ class TestConfiguration {
     this.headers = {}
     this.ctx = {
       headers: {},
+      path: "",
       request: {
         url: "",
       },
@@ -67,6 +68,7 @@ class TestConfiguration {
 
   setRequestUrl(url: string) {
     this.ctx.request.url = url
+    this.ctx.path = url.split("?")[0]
   }
 
   setEnvironment(isProd: boolean) {
@@ -219,6 +221,32 @@ describe("Authorization middleware", () => {
         expect(mockedGetResourcePerms).toHaveBeenCalledTimes(1)
         expect(mockedGetResourcePerms).toHaveBeenCalledWith(resourceId)
       })
+    })
+  })
+
+  describe("webhook detection", () => {
+    beforeEach(() => {
+      config = new TestConfiguration()
+      config.setEnvironment(true)
+      config.setAuthenticated(true)
+    })
+
+    it("does not bypass auth when webhook path appears in query string", async () => {
+      config.setRequestUrl("/api/tables?/webhooks/trigger")
+
+      await config.executeMiddleware()
+
+      expect(config.throw).toHaveBeenCalledWith(401, "No user info found")
+      expect(config.next).not.toHaveBeenCalled()
+    })
+
+    it("bypasses auth for actual webhook endpoints", async () => {
+      config.setRequestUrl("/api/webhooks/trigger/app-id/webhook-id")
+
+      await config.executeMiddleware()
+
+      expect(config.next).toHaveBeenCalled()
+      expect(config.throw).not.toHaveBeenCalled()
     })
   })
 })
