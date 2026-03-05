@@ -9,7 +9,7 @@
     getThemeClassNames,
   } from "@budibase/shared-core"
   import type { ChatConversation } from "@budibase/types"
-  import { appStore, authStore, themeStore } from "@/stores"
+  import { appStore, authStore, orgStore, themeStore } from "@/stores"
   import {
     ChatboxController,
     type ChatboxState,
@@ -79,6 +79,11 @@
   $: userName = getUserLabel($authStore)
   $: resolvedTheme = ensureValidTheme($themeStore.theme)
   $: resolvedThemeClassNames = getThemeClassNames(resolvedTheme)
+  $: chatLogoUrl =
+    $appStore?.application?.navigation?.logoUrl ||
+    $orgStore?.logoUrl ||
+    "/builder/bblogo.png"
+  $: chatLogoAlt = $appStore?.application?.name || "Budibase"
 
   const agentIconColors = [
     "#6366F1",
@@ -187,6 +192,8 @@
       {enabledAgentList}
       conversationHistory={filteredConversationHistory}
       {selectedConversationId}
+      logoUrl={chatLogoUrl}
+      logoAlt={chatLogoAlt}
       hideAgents={isLockedAgentMode}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
