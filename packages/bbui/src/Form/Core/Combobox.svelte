@@ -48,9 +48,7 @@
           const optionLabel = normalizeForSearch(getOptionLabel(option))
           const optionValue = normalizeForSearch(getOptionValue(option))
           const search = normalizeForSearch(query)
-          return (
-            optionLabel.includes(search) || optionValue.includes(search)
-          )
+          return optionLabel.includes(search) || optionValue.includes(search)
         })
 
   const selectOption = (value: string, shouldClose = true) => {
