@@ -261,7 +261,7 @@ jobs:
           wait $(jobs -p)
 
       - name: Build client library - necessary for component tests
-        if: steps.affected_server.outputs.run_server_tests == 'true'
+        if: steps.affected_server.outputs.run_server_tests == 'true' && matrix.datasource == 'none'
         run: yarn build:client
 
       - name: Set up PostgreSQL 16
