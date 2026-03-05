@@ -17,6 +17,16 @@
     }
     return path.replace(/:([^/]+)/g, (_match, key) => params[key] ?? `:${key}`)
   }
+
+  const resolveTitle = (
+    title: string | ((_path: string | undefined) => string) | undefined,
+    path: string | undefined
+  ) => {
+    if (typeof title === "function") {
+      return title(path)
+    }
+    return title
+  }
 </script>
 
 <div class="route-header">
@@ -36,7 +46,7 @@
             class:error={nav.error?.()}
             on:click={() => bb.settings(nav.path)}
           >
-            {nav.title}
+            {resolveTitle(nav.title, nav.path)}
             {#if nav.error?.()}
               <span class="indicator">
                 <StatusLight
@@ -64,7 +74,7 @@
               {@const isLast = idx == (route?.crumbs?.length || 0) - 1}
               {@const crumbPath = resolvePathParams(crumb.path, params)}
               <Breadcrumb
-                text={crumb.title}
+                text={resolveTitle(crumb.title, crumbPath)}
                 {...!isLast && { onClick: () => bb.settings(crumbPath) }}
               />
             {/each}
