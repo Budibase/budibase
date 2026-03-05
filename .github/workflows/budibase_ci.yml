@@ -214,6 +214,7 @@ jobs:
       - run: yarn --frozen-lockfile
 
       - name: Build client library - necessary for component tests
+        if: matrix.datasource == 'none'
         run: yarn build:client
 
       - name: Set up PostgreSQL 16
