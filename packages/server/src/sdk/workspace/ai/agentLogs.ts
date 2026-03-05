@@ -21,7 +21,57 @@ interface LiteLLMSpendLog {
   endTime?: string
   status?: string
   proxy_server_request?: {
-    messages?: Array<{ role: string; content: string }>
+    messages?: LiteLLMProxyMessage[]
+  }
+}
+
+interface LiteLLMToolCall {
+  id?: string
+  function?: {
+    name?: string
+    arguments?: string
+  }
+}
+
+interface LiteLLMProxyMessage {
+  role: string
+  content?: unknown
+  tool_calls?: LiteLLMToolCall[]
+  tool_call_id?: string
+}
+
+interface LiteLLMRequestDetail {
+  request_id?: string
+  model?: string
+  prompt_tokens?: number
+  completion_tokens?: number
+  startTime?: string
+  endTime?: string
+  response?: {
+    model?: string
+    choices?: Array<{
+      message?: {
+        content?: unknown
+        tool_calls?: LiteLLMToolCall[] | null
+      }
+    }>
+  }
+  proxy_server_request?: {
+    messages?: LiteLLMProxyMessage[]
+  }
+}
+
+function toContentString(content: unknown): string {
+  if (typeof content === "string") {
+    return content
+  }
+  if (content == null) {
+    return ""
+  }
+  try {
+    return JSON.stringify(content)
+  } catch {
+    return String(content)
   }
 }
 
@@ -41,10 +91,9 @@ function extractFirstInput(logs: LiteLLMSpendLog[]): string {
     const messages = log.proxy_server_request?.messages
     if (messages) {
       const userMsg = messages.find(m => m.role === "user")
-      if (userMsg?.content) {
-        return userMsg.content.length > 100
-          ? userMsg.content.slice(0, 100) + "..."
-          : userMsg.content
+      const content = toContentString(userMsg?.content)
+      if (content) {
+        return content.length > 100 ? content.slice(0, 100) + "..." : content
       }
     }
   }
@@ -67,10 +116,6 @@ export async function fetchSessions(
     page: String(apiPage),
     page_size: String(apiPageSize),
   })
-  console.log(params.toString())
-  console.log(Object.fromEntries(params.entries()))
-
-  console.log(`${liteLLMUrl}/spend/logs/v2?${params}`)
   const response = await fetch(`${liteLLMUrl}/spend/logs/v2?${params}`, {
     headers: {
       Authorization: liteLLMAuthorizationHeader,
@@ -161,40 +206,67 @@ export async function fetchRequestDetail(
     )
   }
 
-  const data = await response.json()
+  const data = (await response.json()) as LiteLLMRequestDetail
+  const requestMessages = data.proxy_server_request?.messages || []
 
-  const messages =
-    data.proxy_server_request?.messages?.map(
-      (m: { role: string; content: string }) => ({
-        role: m.role,
-        content:
-          typeof m.content === "string" ? m.content : JSON.stringify(m.content),
-      })
-    ) || []
+  const messages = requestMessages.map(m => ({
+    role: m.role,
+    content: toContentString(m.content),
+  }))
 
   const responseText =
-    data.response?.choices?.[0]?.message?.content ||
+    toContentString(data.response?.choices?.[0]?.message?.content) ||
     JSON.stringify(data.response?.choices?.[0]?.message) ||
     ""
 
+  const inputToolCalls = requestMessages.flatMap(message => {
+    if (message.role !== "assistant" || !message.tool_calls?.length) {
+      return []
+    }
+    return message.tool_calls.map(toolCall => ({
+      id: toolCall.id,
+      name: toolCall.function?.name || "unknown",
+      arguments: toolCall.function?.arguments || "{}",
+    }))
+  })
+
   const toolCalls =
-    data.response?.choices?.[0]?.message?.tool_calls?.map(
-      (tc: {
-        function?: { name: string; arguments: string }
-        result?: string
-      }) => ({
-        name: tc.function?.name || "unknown",
-        arguments: tc.function?.arguments || "{}",
-        result: tc.result,
-      })
-    ) || []
+    data.response?.choices?.[0]?.message?.tool_calls?.map(toolCall => ({
+      id: toolCall.id,
+      name: toolCall.function?.name || "unknown",
+      arguments: toolCall.function?.arguments || "{}",
+    })) || []
+
+  const toolNameById = new Map<string, string>()
+  for (const call of [...inputToolCalls, ...toolCalls]) {
+    if (call.id) {
+      toolNameById.set(call.id, call.name)
+    }
+  }
+
+  const toolResults = requestMessages.flatMap(message => {
+    if (message.role !== "tool") {
+      return []
+    }
+    return [
+      {
+        toolCallId: message.tool_call_id,
+        name: message.tool_call_id
+          ? toolNameById.get(message.tool_call_id) || "tool"
+          : "tool",
+        content: toContentString(message.content),
+      },
+    ]
+  })
 
   return {
     requestId: data.request_id || requestId,
-    model: data.model || "unknown",
+    model: data.response?.model || data.model || "unknown",
     messages,
+    inputToolCalls,
     response: responseText,
     toolCalls,
+    toolResults,
     inputTokens: data.prompt_tokens || 0,
     outputTokens: data.completion_tokens || 0,
     startTime: data.startTime || "",

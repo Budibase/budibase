@@ -32,9 +32,15 @@ export interface AgentLogMessage {
 }
 
 export interface AgentLogToolCall {
+  id?: string
   name: string
   arguments: string
-  result?: string
+}
+
+export interface AgentLogToolResult {
+  toolCallId?: string
+  name: string
+  content: string
 }
 
 export interface AgentLogRequestDetail {
@@ -42,7 +48,9 @@ export interface AgentLogRequestDetail {
   model: string
   messages: AgentLogMessage[]
   response: string
+  inputToolCalls: AgentLogToolCall[]
   toolCalls: AgentLogToolCall[]
+  toolResults: AgentLogToolResult[]
   inputTokens: number
   outputTokens: number
   startTime: string

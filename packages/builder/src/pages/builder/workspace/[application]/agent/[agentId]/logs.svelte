@@ -5,24 +5,31 @@
   import { onMount } from "svelte"
   import dayjs from "dayjs"
   import type {
-    AgentLogSession,
     AgentLogEntry,
     AgentLogRequestDetail,
+    AgentLogSession,
   } from "@budibase/types"
+
+  interface StepFlow {
+    from: string
+    to: string
+  }
 
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)
   let selectedSession = $state<AgentLogSession | null>(null)
   let expandedStepId = $state<string | null>(null)
-  let stepDetail = $state<AgentLogRequestDetail | null>(null)
-  let stepDetailLoading = $state(false)
-  let activeDetailTab = $state<"input" | "output">("input")
   let currentPage = $state(0)
   let hasMore = $state(false)
+
+  let stepDetailsByRequestId = $state<Record<string, AgentLogRequestDetail>>({})
+  let stepLoadingByRequestId = $state<Record<string, boolean>>({})
 
   let statusFilter = $state<string>("all")
   let timeRange = $state<string>("7d")
   let triggerFilter = $state<string>("all")
+
+  let mounted = false
 
   const statusOptions = [
     { label: "All statuses", value: "all" },
@@ -48,6 +55,7 @@
     const now = new Date()
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
     const endDate = tomorrow.toISOString().split("T")[0]
+
     let start = new Date(now)
     switch (timeRange) {
       case "1h":
@@ -66,7 +74,14 @@
         start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
         break
     }
+
     return { startDate: start.toISOString().split("T")[0], endDate }
+  }
+
+  function resetDetailState() {
+    stepDetailsByRequestId = {}
+    stepLoadingByRequestId = {}
+    expandedStepId = null
   }
 
   let filteredSessions = $derived.by(() => {
@@ -82,7 +97,13 @@
 
   async function loadSessions(page = 0) {
     const agentId = $selectedAgent?._id
-    if (!agentId) return
+    if (!agentId) {
+      sessions = []
+      selectedSession = null
+      resetDetailState()
+      return
+    }
+
     loading = true
     try {
       const { startDate, endDate } = getDateRange()
@@ -92,53 +113,117 @@
         page,
         pageSize: 20,
       })
+
       sessions = response.sessions
       currentPage = response.currentPage
       hasMore = response.hasMore
-    } catch (e) {
-      console.error("Failed to fetch agent logs", e)
+
+      const selectedStillExists = selectedSession
+        ? response.sessions.some(
+            s => s.sessionId === selectedSession?.sessionId
+          )
+        : false
+      if (!selectedStillExists) {
+        selectedSession = null
+        resetDetailState()
+      }
+    } catch (error) {
+      console.error("Failed to fetch agent logs", error)
       sessions = []
+      selectedSession = null
+      resetDetailState()
     } finally {
       loading = false
     }
   }
 
+  async function loadStepDetail(entry: AgentLogEntry): Promise<void> {
+    const agentId = $selectedAgent?._id
+    if (!agentId) return
+
+    if (
+      stepDetailsByRequestId[entry.requestId] ||
+      stepLoadingByRequestId[entry.requestId]
+    ) {
+      return
+    }
+
+    stepLoadingByRequestId = {
+      ...stepLoadingByRequestId,
+      [entry.requestId]: true,
+    }
+
+    try {
+      const { startDate } = getDateRange()
+      const detail = await API.fetchAgentLogDetail(
+        agentId,
+        entry.requestId,
+        startDate
+      )
+      stepDetailsByRequestId = {
+        ...stepDetailsByRequestId,
+        [entry.requestId]: detail,
+      }
+    } catch (error) {
+      console.error("Failed to fetch step detail", error)
+    } finally {
+      stepLoadingByRequestId = {
+        ...stepLoadingByRequestId,
+        [entry.requestId]: false,
+      }
+    }
+  }
+
+  async function prefetchSessionDetails(
+    session: AgentLogSession
+  ): Promise<void> {
+    await Promise.allSettled(
+      session.entries.map(entry => loadStepDetail(entry))
+    )
+  }
+
   function selectSession(session: AgentLogSession) {
     selectedSession = session
-    expandedStepId = null
-    stepDetail = null
-    activeDetailTab = "input"
+    resetDetailState()
+    void prefetchSessionDetails(session)
   }
 
   async function toggleStep(entry: AgentLogEntry) {
     if (expandedStepId === entry.requestId) {
       expandedStepId = null
-      stepDetail = null
       return
     }
+
     expandedStepId = entry.requestId
-    stepDetail = null
-    activeDetailTab = "input"
-    stepDetailLoading = true
-    try {
-      const agentId = $selectedAgent?._id
-      if (!agentId) return
-      const { startDate } = getDateRange()
-      stepDetail = await API.fetchAgentLogDetail(
-        agentId,
-        entry.requestId,
-        startDate
-      )
-    } catch (e) {
-      console.error("Failed to fetch step detail", e)
-    } finally {
-      stepDetailLoading = false
-    }
+    await loadStepDetail(entry)
+  }
+
+  function getStepDetail(
+    entry: AgentLogEntry
+  ): AgentLogRequestDetail | undefined {
+    return stepDetailsByRequestId[entry.requestId]
+  }
+
+  function isStepLoading(entry: AgentLogEntry): boolean {
+    return !!stepLoadingByRequestId[entry.requestId]
   }
 
   function formatTime(dateStr: string): string {
     if (!dateStr) return "-"
     return dayjs(dateStr).format("MMM D, YYYY | HH:mm")
+  }
+
+  function formatSpend(spend: number): string {
+    if (!spend) return "$0.0000"
+    return `$${spend.toFixed(4)}`
+  }
+
+  function getStepDuration(entry: AgentLogEntry): string {
+    if (!entry.startTime || !entry.endTime) return ""
+    const ms =
+      new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime()
+    if (ms < 1000) return `${ms}ms`
+    return `${(ms / 1000).toFixed(1)}s`
   }
 
   function calculateLatency(session: AgentLogSession): string {
@@ -152,59 +237,129 @@
     return `${(ms / 1000).toFixed(2)}s`
   }
 
-  function getLastOutput(session: AgentLogSession): string {
-    if (!session.entries.length) return "-"
-    return "View in step detail"
+  function getSessionInputTokens(session: AgentLogSession): number {
+    return session.entries.reduce((sum, entry) => sum + entry.inputTokens, 0)
   }
 
-  function getStepDuration(entry: AgentLogEntry): string {
-    if (!entry.startTime || !entry.endTime) return ""
-    const ms =
-      new Date(entry.endTime).getTime() -
-      new Date(entry.startTime).getTime()
-    if (ms < 1000) return `${ms}ms`
-    return `${(ms / 1000).toFixed(1)}s`
+  function getSessionOutputTokens(session: AgentLogSession): number {
+    return session.entries.reduce((sum, entry) => sum + entry.outputTokens, 0)
+  }
+
+  function getSessionSpend(session: AgentLogSession): number {
+    return session.entries.reduce((sum, entry) => sum + entry.spend, 0)
+  }
+
+  function summarizeToolNames(names: string[]): string {
+    if (!names.length) {
+      return ""
+    }
+
+    const counts = new Map<string, number>()
+    for (const name of names) {
+      counts.set(name, (counts.get(name) || 0) + 1)
+    }
+
+    return [...counts.entries()]
+      .map(([name, count]) => (count > 1 ? `${name} (x${count})` : name))
+      .join(", ")
+  }
+
+  function getStepFlow(
+    detail: AgentLogRequestDetail | undefined,
+    loadingStep: boolean
+  ): StepFlow {
+    if (loadingStep) {
+      return {
+        from: "Loading details",
+        to: "...",
+      }
+    }
+
+    if (!detail) {
+      return {
+        from: "Model input",
+        to: "Model output",
+      }
+    }
+
+    const inputTools = detail.toolResults.map(result => result.name)
+    const fallbackInputTools = detail.inputToolCalls.map(call => call.name)
+    const outputTools = detail.toolCalls.map(call => call.name)
+
+    const from =
+      summarizeToolNames(inputTools) ||
+      summarizeToolNames(fallbackInputTools) ||
+      "Prompt + context"
+
+    const to =
+      summarizeToolNames(outputTools) ||
+      (detail.response ? "Assistant response" : "No response")
+
+    return { from, to }
+  }
+
+  function extractUserPrompt(content: string): string {
+    const trimmed = content.trim()
+    const match = trimmed.match(/(?:^|\n)\s*user:\s*([\s\S]*)$/i)
+    return match?.[1]?.trim() || trimmed
   }
 
   function formatMessages(detail: AgentLogRequestDetail): string {
-    if (!detail.messages.length) return "No messages"
-    return detail.messages
-      .map(m => `${m.role}: ${m.content}`)
+    const userMessages = detail.messages
+      .filter(message => message.role.toLowerCase() === "user")
+      .map(message => extractUserPrompt(message.content))
+      .filter(Boolean)
+
+    if (!userMessages.length) {
+      return "No user prompt"
+    }
+
+    return userMessages.join("\n\n")
+  }
+
+  function formatToolCalls(detail: AgentLogRequestDetail): string {
+    if (!detail.toolCalls.length) {
+      return "No tool calls"
+    }
+
+    return detail.toolCalls
+      .map(toolCall => {
+        const idPart = toolCall.id ? ` [${toolCall.id}]` : ""
+        return `${toolCall.name}${idPart}(\n${toolCall.arguments}\n)`
+      })
       .join("\n\n")
   }
 
-  function formatOutput(detail: AgentLogRequestDetail): string {
-    const parts: string[] = []
-    if (detail.response) {
-      parts.push(detail.response)
+  function formatToolResults(detail: AgentLogRequestDetail): string {
+    if (!detail.toolResults.length) {
+      return "No tool results"
     }
-    if (detail.toolCalls.length) {
-      parts.push("\n--- Tool Calls ---")
-      for (const tc of detail.toolCalls) {
-        parts.push(`\n${tc.name}(${tc.arguments})`)
-        if (tc.result) {
-          parts.push(`→ ${tc.result}`)
-        }
-      }
-    }
-    return parts.join("\n") || "No output"
+
+    return detail.toolResults
+      .map(result => {
+        const callId = result.toolCallId ? ` [${result.toolCallId}]` : ""
+        return `${result.name}${callId}\n${result.content}`
+      })
+      .join("\n\n")
   }
 
   $effect(() => {
-    // Re-fetch when filters change
     statusFilter
     timeRange
     triggerFilter
-    loadSessions(0)
+
+    if (mounted) {
+      void loadSessions(0)
+    }
   })
 
   onMount(() => {
-    loadSessions()
+    mounted = true
+    void loadSessions(0)
   })
 </script>
 
 <div class="logs-container">
-  <!-- Filters bar -->
   <div class="filters-bar">
     <div class="filter-group">
       <Select
@@ -233,7 +388,6 @@
   </div>
 
   <div class="logs-split">
-    <!-- Left panel: Session table -->
     <div class="logs-table-panel">
       <div class="table-wrapper">
         <div class="table">
@@ -244,6 +398,7 @@
             <div class="header-cell">Start time</div>
             <div class="header-cell">Operations</div>
           </div>
+
           <div class="table-body">
             {#if loading && !sessions.length}
               <div class="empty-state">
@@ -261,29 +416,27 @@
               {#each filteredSessions as session (session.sessionId)}
                 <button
                   class="row"
-                  class:active={selectedSession?.sessionId === session.sessionId}
+                  class:active={selectedSession?.sessionId ===
+                    session.sessionId}
                   type="button"
                   onclick={() => selectSession(session)}
                 >
                   <div class="cell cell--status">
-                    <div
-                      class="status-dot"
-                      class:status-dot--success={session.status === "success"}
-                      class:status-dot--error={session.status === "error"}
-                    >
-                      <Icon
-                        name={session.status === "error"
-                          ? "close-circle"
-                          : "checkmark-circle"}
-                        size="S"
-                        color={session.status === "error"
-                          ? "var(--spectrum-global-color-red-600)"
-                          : "#8CA171"}
-                      />
-                    </div>
+                    <Icon
+                      name={session.status === "error"
+                        ? "close-circle"
+                        : "checkmark-circle"}
+                      size="S"
+                      color={session.status === "error"
+                        ? "var(--spectrum-global-color-red-600)"
+                        : "#8CA171"}
+                    />
                   </div>
                   <div class="cell cell--input">
-                    <Body size="S" color="var(--spectrum-global-color-gray-900)">
+                    <Body
+                      size="S"
+                      color="var(--spectrum-global-color-gray-900)"
+                    >
                       {session.firstInput || "No input"}
                     </Body>
                   </div>
@@ -291,12 +444,18 @@
                     <span class="trigger-badge">{session.trigger}</span>
                   </div>
                   <div class="cell">
-                    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+                    <Body
+                      size="S"
+                      color="var(--spectrum-global-color-gray-700)"
+                    >
                       {formatTime(session.startTime)}
                     </Body>
                   </div>
                   <div class="cell">
-                    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+                    <Body
+                      size="S"
+                      color="var(--spectrum-global-color-gray-700)"
+                    >
                       {session.operations}
                     </Body>
                   </div>
@@ -305,6 +464,7 @@
             {/if}
           </div>
         </div>
+
         {#if hasMore || currentPage > 0}
           <div class="pagination">
             <button
@@ -337,22 +497,26 @@
       </div>
     </div>
 
-    <!-- Right panel: Session detail -->
     <div class="detail-panel">
       {#if selectedSession}
         <div class="detail-content">
           <div class="detail-header">
             <h3 class="detail-title">Log</h3>
+            <div class="detail-header-stats">
+              <span class="header-stat"
+                >{selectedSession.entries.length} steps</span
+              >
+              <span class="header-stat"
+                >{calculateLatency(selectedSession)}</span
+              >
+            </div>
           </div>
 
           <div class="detail-meta">
             <div class="meta-row">
               <span class="meta-label">Input</span>
-              <span class="meta-value">{selectedSession.firstInput || "-"}</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-label">Output</span>
-              <span class="meta-value">{getLastOutput(selectedSession)}</span>
+              <span class="meta-value">{selectedSession.firstInput || "-"}</span
+              >
             </div>
             <div class="meta-row">
               <span class="meta-label">Status</span>
@@ -369,82 +533,125 @@
               <span class="meta-value">{selectedSession.trigger}</span>
             </div>
             <div class="meta-row">
-              <span class="meta-label">Latency</span>
-              <span class="meta-value">{calculateLatency(selectedSession)}</span>
+              <span class="meta-label">Tokens (in/out)</span>
+              <span class="meta-value">
+                {getSessionInputTokens(selectedSession)} / {getSessionOutputTokens(
+                  selectedSession
+                )}
+              </span>
             </div>
             <div class="meta-row">
-              <span class="meta-label">Total operations</span>
-              <span class="meta-value">{selectedSession.operations}</span>
+              <span class="meta-label">Spend</span>
+              <span class="meta-value"
+                >{formatSpend(getSessionSpend(selectedSession))}</span
+              >
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Started</span>
+              <span class="meta-value"
+                >{formatTime(selectedSession.startTime)}</span
+              >
             </div>
           </div>
 
           <div class="steps-section">
-            <h4 class="steps-title">Steps</h4>
+            <h4 class="steps-title">Execution steps</h4>
             <div class="steps-list">
-              {#each selectedSession.entries as entry, i (entry.requestId)}
-                <div class="step" class:step--expanded={expandedStepId === entry.requestId}>
+              {#each selectedSession.entries as entry, index (entry.requestId)}
+                {@const detail = getStepDetail(entry)}
+                {@const loadingStep = isStepLoading(entry)}
+                {@const flow = getStepFlow(detail, loadingStep)}
+
+                <div
+                  class="step"
+                  class:step--expanded={expandedStepId === entry.requestId}
+                >
                   <button
                     class="step-header"
                     type="button"
                     onclick={() => toggleStep(entry)}
                   >
-                    <Icon
-                      name={expandedStepId === entry.requestId
-                        ? "chevron-down"
-                        : "chevron-right"}
-                      size="S"
-                      color="var(--spectrum-global-color-gray-600)"
-                    />
-                    <span class="step-label">Step {i + 1}</span>
-                    <span class="step-model">{entry.model}</span>
-                    <span
-                      class="step-duration"
-                      class:step-duration--slow={
-                        entry.startTime &&
-                        entry.endTime &&
-                        new Date(entry.endTime).getTime() -
-                          new Date(entry.startTime).getTime() >
-                          2000
-                      }
-                    >
-                      {getStepDuration(entry)}
-                    </span>
+                    <div class="step-number">{index + 1}</div>
+                    <div class="step-flow">
+                      <div class="step-flow-main">
+                        <span class="step-flow-from">{flow.from}</span>
+                        <span class="step-flow-arrow">→</span>
+                        <span class="step-flow-to">{flow.to}</span>
+                      </div>
+                      <div class="step-model">{entry.model}</div>
+                    </div>
+                    <div class="step-metrics">
+                      <span class="step-token-metric"
+                        >{entry.inputTokens} → {entry.outputTokens}</span
+                      >
+                      <span
+                        class="step-duration"
+                        class:step-duration--slow={entry.startTime &&
+                          entry.endTime &&
+                          new Date(entry.endTime).getTime() -
+                            new Date(entry.startTime).getTime() >
+                            2000}
+                      >
+                        {getStepDuration(entry)}
+                      </span>
+                      <Icon
+                        name={expandedStepId === entry.requestId
+                          ? "chevron-down"
+                          : "chevron-right"}
+                        size="S"
+                        color="var(--spectrum-global-color-gray-600)"
+                      />
+                    </div>
                   </button>
 
                   {#if expandedStepId === entry.requestId}
                     <div class="step-body">
-                      {#if stepDetailLoading}
+                      {#if loadingStep && !detail}
                         <div class="step-loading">
                           <Body
                             size="S"
                             color="var(--spectrum-global-color-gray-600)"
                           >
-                            Loading...
+                            Loading step detail...
                           </Body>
                         </div>
-                      {:else if stepDetail}
-                        <div class="step-tabs">
-                          <button
-                            class="step-tab"
-                            class:step-tab--active={activeDetailTab === "input"}
-                            type="button"
-                            onclick={() => (activeDetailTab = "input")}
+                      {:else if detail}
+                        <div class="step-pill-row">
+                          <span class="step-pill">Model: {detail.model}</span>
+                          <span class="step-pill"
+                            >Input calls: {detail.inputToolCalls.length}</span
                           >
-                            Input
-                          </button>
-                          <button
-                            class="step-tab"
-                            class:step-tab--active={activeDetailTab === "output"}
-                            type="button"
-                            onclick={() => (activeDetailTab = "output")}
+                          <span class="step-pill"
+                            >Output calls: {detail.toolCalls.length}</span
                           >
-                            Output
-                          </button>
+                          <span class="step-pill"
+                            >Tool results: {detail.toolResults.length}</span
+                          >
                         </div>
-                        <div class="code-block">
-                          <pre><code>{activeDetailTab === "input"
-                                ? formatMessages(stepDetail)
-                                : formatOutput(stepDetail)}</code></pre>
+
+                        <div class="io-grid">
+                          <div class="io-panel">
+                            <h5 class="io-title">Input</h5>
+                            <div class="code-block">
+                              <pre><code>{formatMessages(detail)}</code></pre>
+                            </div>
+                            <div class="code-block">
+                              <pre><code>{formatToolResults(detail)}</code
+                                ></pre>
+                            </div>
+                          </div>
+
+                          <div class="io-panel">
+                            <h5 class="io-title">Output</h5>
+                            <div class="code-block">
+                              <pre><code
+                                  >{detail.response || "No response"}</code
+                                ></pre>
+                            </div>
+                            <div class="code-block">
+                              <pre><code>{formatToolCalls(detail)}</code></pre>
+                            </div>
+                          </div>
                         </div>
                       {/if}
                     </div>
@@ -479,11 +686,11 @@
     gap: 0;
   }
 
-  /* Filters */
   .filters-bar {
     display: flex;
     gap: var(--spacing-m);
     padding-bottom: var(--spacing-l);
+    flex-wrap: wrap;
     flex-shrink: 0;
   }
 
@@ -497,19 +704,18 @@
     border-radius: 6px;
   }
 
-  /* Split layout */
   .logs-split {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(520px, 1.05fr) minmax(520px, 1fr);
     gap: 0;
     flex: 1 1 auto;
     min-height: 0;
     border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 6px;
+    border-radius: 8px;
     overflow: hidden;
+    background: var(--background-alt);
   }
 
-  /* Left panel */
   .logs-table-panel {
     display: flex;
     flex-direction: column;
@@ -545,14 +751,12 @@
     padding: 10px 12px;
     font-size: 13px;
     color: var(--spectrum-global-color-gray-700);
-    background: transparent;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
     flex-shrink: 0;
+    background: var(--background-alt);
   }
 
   .header-cell {
-    font-family: var(--font-sans);
-    font-weight: 400;
     font-size: 13px;
     color: var(--spectrum-global-color-gray-700);
   }
@@ -564,21 +768,28 @@
   .table-body {
     display: flex;
     flex-direction: column;
-    background: var(--background-alt);
     flex: 1 1 auto;
     overflow-y: auto;
     scrollbar-width: thin;
+    background: var(--background-alt);
   }
 
-  .table-body::-webkit-scrollbar {
+  .table-body::-webkit-scrollbar,
+  .detail-panel::-webkit-scrollbar,
+  .code-block::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
 
-  .table-body::-webkit-scrollbar-track {
+  .table-body::-webkit-scrollbar-track,
+  .detail-panel::-webkit-scrollbar-track,
+  .code-block::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .table-body::-webkit-scrollbar-thumb {
+  .table-body::-webkit-scrollbar-thumb,
+  .detail-panel::-webkit-scrollbar-thumb,
+  .code-block::-webkit-scrollbar-thumb {
     background: var(--spectrum-global-color-gray-300);
     border-radius: 3px;
   }
@@ -589,9 +800,8 @@
     border: none;
     border-bottom: 0.5px solid var(--spectrum-global-color-gray-200);
     background: var(--background-alt);
-    transition: background 130ms ease-out;
     cursor: pointer;
-    flex-shrink: 0;
+    transition: background 130ms ease-out;
   }
 
   .row:hover,
@@ -618,12 +828,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .status-dot {
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
   .trigger-badge {
@@ -673,27 +877,10 @@
     cursor: default;
   }
 
-  /* Right panel */
   .detail-panel {
-    display: flex;
-    flex-direction: column;
     min-height: 0;
     overflow-y: auto;
-    scrollbar-width: thin;
     background: var(--background);
-  }
-
-  .detail-panel::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .detail-panel::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .detail-panel::-webkit-scrollbar-thumb {
-    background: var(--spectrum-global-color-gray-300);
-    border-radius: 3px;
   }
 
   .detail-content {
@@ -705,7 +892,9 @@
 
   .detail-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    gap: var(--spacing-m);
   }
 
   .detail-title {
@@ -715,16 +904,32 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .detail-meta {
+  .detail-header-stats {
     display: flex;
-    flex-direction: column;
     gap: var(--spacing-s);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .header-stat {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-700);
+    background: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 999px;
+    padding: 4px 10px;
+  }
+
+  .detail-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: var(--spacing-s) var(--spacing-l);
   }
 
   .meta-row {
     display: grid;
-    grid-template-columns: 130px 1fr;
-    gap: var(--spacing-m);
+    grid-template-columns: 140px 1fr;
+    gap: var(--spacing-s);
     align-items: baseline;
     font-size: 13px;
   }
@@ -740,18 +945,17 @@
   }
 
   .meta-value--success {
-    color: #8CA171;
+    color: #8ca171;
   }
 
   .meta-value--error {
     color: var(--spectrum-global-color-red-600);
   }
 
-  /* Steps */
   .steps-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-m);
+    gap: var(--spacing-s);
   }
 
   .steps-title {
@@ -770,44 +974,96 @@
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
-  .step:first-child {
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
+  .step:last-child {
+    border-bottom: none;
   }
 
   .step-header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--spacing-s);
-    padding: 10px 4px;
     width: 100%;
+    padding: 10px 12px;
     border: none;
     background: transparent;
-    cursor: pointer;
     text-align: left;
+    cursor: pointer;
     transition: background 130ms ease-out;
-    font-family: var(--font-sans);
   }
 
-  .step-header:hover {
+  .step-header:hover,
+  .step--expanded .step-header {
     background: var(--spectrum-global-color-gray-100);
   }
 
-  .step-label {
-    font-size: 13px;
+  .step-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step-flow {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .step-flow-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .step-flow-from,
+  .step-flow-to {
+    font-size: 13px;
     color: var(--spectrum-global-color-gray-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .step-flow-arrow {
+    color: var(--spectrum-global-color-gray-500);
+    font-size: 12px;
+    flex-shrink: 0;
   }
 
   .step-model {
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--spectrum-global-color-gray-900);
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .step-metrics {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .step-token-metric {
+    color: var(--spectrum-global-color-gray-700);
   }
 
   .step-duration {
-    font-size: 12px;
     color: var(--spectrum-global-color-gray-600);
-    margin-left: auto;
+    min-width: 34px;
+    text-align: right;
   }
 
   .step-duration--slow {
@@ -815,85 +1071,78 @@
   }
 
   .step-body {
-    padding: 0 4px 12px 28px;
+    padding: 0 12px 12px;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
   }
 
   .step-loading {
-    padding: var(--spacing-m);
+    padding: var(--spacing-s) 0;
   }
 
-  .step-tabs {
+  .step-pill-row {
     display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
-  .step-tab {
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 500;
-    font-family: var(--font-sans);
+  .step-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-global-color-gray-100);
     color: var(--spectrum-global-color-gray-700);
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    transition:
-      color 130ms ease-out,
-      border-color 130ms ease-out;
+    font-size: 11px;
   }
 
-  .step-tab:hover {
-    color: var(--spectrum-global-color-gray-900);
+  .io-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-s);
   }
 
-  .step-tab--active {
-    color: var(--spectrum-global-color-gray-900);
-    border-bottom-color: var(--spectrum-global-color-gray-900);
+  .io-panel {
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 8px;
+    background: var(--background);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .io-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-700);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .code-block {
-    background: var(--spectrum-global-color-gray-100);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
     overflow: auto;
-    max-height: 320px;
-    scrollbar-width: thin;
-  }
-
-  .code-block::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .code-block::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .code-block::-webkit-scrollbar-thumb {
-    background: var(--spectrum-global-color-gray-300);
-    border-radius: 3px;
+    max-height: 220px;
+    background: var(--background-alt);
   }
 
   .code-block pre {
     margin: 0;
-    padding: 12px 14px;
+    padding: 10px;
     font-size: 12px;
-    line-height: 1.6;
-    font-family: var(--font-mono, "SF Mono", "Fira Code", monospace);
+    line-height: 1.55;
     color: var(--spectrum-global-color-gray-800);
+    font-family: var(--font-mono, "SF Mono", "Fira Code", monospace);
     white-space: pre-wrap;
     word-break: break-word;
   }
 
-  .code-block code {
-    font-family: inherit;
-  }
-
-  /* Detail empty state */
   .detail-empty {
     display: flex;
     flex-direction: column;
@@ -902,5 +1151,47 @@
     gap: var(--spacing-m);
     height: 100%;
     padding: var(--spacing-xl);
+  }
+
+  @media (max-width: 1400px) {
+    .logs-split {
+      grid-template-columns: 1fr;
+    }
+
+    .logs-table-panel {
+      border-right: none;
+      border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+      max-height: 360px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .table-header,
+    .row {
+      grid-template-columns: 30px 1fr 80px 120px 70px;
+    }
+
+    .detail-meta {
+      grid-template-columns: 1fr;
+    }
+
+    .meta-row {
+      grid-template-columns: 110px 1fr;
+    }
+
+    .step-header {
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .step-metrics {
+      grid-column: 1 / -1;
+      justify-content: flex-end;
+      padding-left: 36px;
+    }
+
+    .io-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
