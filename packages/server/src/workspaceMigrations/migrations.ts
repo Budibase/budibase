@@ -1,4 +1,4 @@
-// This file should never be manually modified, use `yarn add-app-migration` in order to add a new one
+// This file should never be manually modified, use `yarn add-workspace-migration` in order to add a new one
 
 import { WorkspaceMigration } from "."
 
