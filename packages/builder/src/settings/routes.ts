@@ -348,7 +348,6 @@ export const appRoutes = (
               routes: [
                 {
                   path: "embedding",
-                  title: "Embedding model",
                   routes: [
                     {
                       path: ":configId",
@@ -359,7 +358,6 @@ export const appRoutes = (
                 },
                 {
                   path: "vectordb",
-                  title: "New vector database",
                   routes: [
                     {
                       path: ":id",
