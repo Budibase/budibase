@@ -56,6 +56,7 @@
         } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   let draft: AIConfigResponse = $state(createDraft())
+  let previousProvider = $state(draft.provider)
 
   let isEdit = $derived(!!draft._id)
   let typeLabel = $derived(
@@ -141,6 +142,13 @@
         f => f.required && !draft.credentialsFields[f.key]?.trim()
       )
     )
+  })
+
+  $effect(() => {
+    if (previousProvider !== draft.provider) {
+      draft.model = ""
+      previousProvider = draft.provider
+    }
   })
 
   onMount(async () => {
