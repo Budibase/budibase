@@ -77,6 +77,11 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: internalApiKey
+        - name: INTERNAL_RPC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: internalRpcKey
         - name: INTERNAL_API_KEY_FALLBACK
           value: {{ .Values.globals.internalApiKeyFallback | quote }}
         - name: JWT_SECRET
