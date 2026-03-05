@@ -39,6 +39,12 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
   messagingEndpointUrl?: string
 }
 
+export interface SlackAgentIntegration extends ChatAgentIntegration {
+  botToken?: string
+  signingSecret?: string
+  messagingEndpointUrl?: string
+}
+
 export interface Agent extends Document {
   name: string
   description?: string
@@ -56,6 +62,7 @@ export interface Agent extends Document {
   ragTopK?: number
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
+  slackIntegration?: SlackAgentIntegration
 }
 
 export interface AgentMessageRagSource {

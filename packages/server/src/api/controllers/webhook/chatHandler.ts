@@ -237,6 +237,14 @@ const matchesScope = ({
     )
   }
 
+  if (provider === "slack") {
+    return (
+      ch?.channelId === scope.channelId &&
+      (ch?.threadId || undefined) === scope.threadId &&
+      ch?.externalUserId === scope.externalUserId
+    )
+  }
+
   return false
 }
 
@@ -332,7 +340,7 @@ export interface HandleChatMessageParams {
   workspaceId: string
   chatAppId: string
   agentId: string
-  provider: "discord" | "msteams"
+  provider: "discord" | "msteams" | "slack"
   command: "ask" | "new"
   content: string
   user: {
@@ -357,8 +365,7 @@ export const handleChatMessage = async ({
   scope,
   idleTimeoutMinutes,
 }: HandleChatMessageParams): Promise<void> => {
-  const userPrefix = provider === "discord" ? "discord" : "msteams"
-  const userId = `${userPrefix}:${user.externalUserId}`
+  const userId = `${provider}:${user.externalUserId}`
 
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
@@ -448,12 +455,11 @@ export const handleChatMessage = async ({
     const contextUser: ContextUser = {
       _id: userId,
       tenantId: context.getTenantId(),
-      email: `${userPrefix}+${user.externalUserId}@example.invalid`,
+      email: `${provider}+${user.externalUserId}@example.invalid`,
       roles: {},
       userId: user.externalUserId,
       firstName: user.displayName,
     }
-    console.log("test?")
     let result: Awaited<ReturnType<typeof webhookChat>>
     try {
       result = await webhookChat({ chat: draftChat, user: contextUser })
