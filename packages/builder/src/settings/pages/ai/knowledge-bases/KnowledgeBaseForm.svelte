@@ -41,7 +41,7 @@
 
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
-  let savedSnapshot = $state(Helpers.cloneDeep(createDraft()))
+  let savedSnapshot = $state<typeof draft>()
   const captureSavedSnapshot = () => {
     savedSnapshot = Helpers.cloneDeep(draft)
   }
@@ -109,6 +109,7 @@
       const persistedDraft = isCreation
         ? knowledgeBaseStore.getFormDraft()
         : undefined
+      captureSavedSnapshot()
       if (persistedDraft) {
         draft = {
           ...draft,
@@ -117,7 +118,6 @@
       }
       lastEmbeddingModelSelection = draft.embeddingModel || ""
       lastVectorDbSelection = draft.vectorDb || ""
-      captureSavedSnapshot()
     } catch (err: any) {
       notifications.error(
         err.message || "Failed to load knowledge base settings"
