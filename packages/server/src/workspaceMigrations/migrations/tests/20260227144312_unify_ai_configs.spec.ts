@@ -281,4 +281,135 @@ describe("20260227144312_unify_ai_configs", () => {
       })
     )
   })
+
+  it("normalizes OpenAI base url to /v1 when using api.openai.com root", async () => {
+    const legacyConfig: AIConfig = {
+      type: ConfigType.AI,
+      config: {
+        openai: {
+          provider: "OpenAI",
+          name: "OpenAI",
+          active: true,
+          isDefault: true,
+          apiKey: "sk-test",
+          baseUrl: "https://api.openai.com/",
+        },
+      },
+    }
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock.mockResolvedValue({} as any)
+
+    await config.doInContext(config.getDevWorkspaceId(), migration)
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        credentialsFields: expect.objectContaining({
+          api_base: "https://api.openai.com/v1",
+        }),
+      })
+    )
+  })
+
+  it("does not double-prefix budibase legacy model", async () => {
+    const legacyConfig: AIConfig = {
+      type: ConfigType.AI,
+      config: {
+        bbai: {
+          provider: "BudibaseAI",
+          name: "Budibase AI",
+          active: true,
+          isDefault: true,
+          defaultModel: "budibase/legacy/gpt-5-mini",
+        },
+      },
+    }
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock.mockResolvedValue({} as any)
+
+    await config.doInContext(config.getDevWorkspaceId(), migration)
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: BUDIBASE_AI_PROVIDER_ID,
+        model: "budibase/legacy/gpt-5-mini",
+      })
+    )
+  })
+
+  it("rethrows non-400 errors from config creation", async () => {
+    const legacyConfig: AIConfig = {
+      type: ConfigType.AI,
+      config: {
+        openai: {
+          provider: "OpenAI",
+          name: "OpenAI",
+          active: true,
+          isDefault: true,
+          apiKey: "sk-test",
+        },
+      },
+    }
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock.mockRejectedValue(new HTTPError("upstream failure", 500))
+
+    await expect(
+      config.doInContext(config.getDevWorkspaceId(), migration)
+    ).rejects.toThrow("upstream failure")
+  })
+
+  it("skips providers with no model available and continues", async () => {
+    const legacyConfig = {
+      type: ConfigType.AI,
+      config: {
+        unknownNoModel: {
+          provider: "UnknownProvider",
+          name: "Unknown",
+          active: true,
+          isDefault: true,
+        },
+        openai: {
+          provider: "OpenAI",
+          name: "OpenAI",
+          active: true,
+          isDefault: false,
+          apiKey: "sk-test",
+        },
+      },
+    } as unknown as AIConfig
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock.mockResolvedValue({} as any)
+
+    await config.doInContext(config.getDevWorkspaceId(), migration)
+
+    expect(createMock).toHaveBeenCalledTimes(1)
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "OpenAI",
+      })
+    )
+  })
 })
