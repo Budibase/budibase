@@ -1,16 +1,5 @@
 #!/usr/bin/node
 const coreBuild = require("../../../scripts/build")
-const externals = [
-  "deasync",
-  "graphql/*",
-  "better-sqlite3",
-  "sqlite3",
-  "mysql",
-  "mysql2",
-  "oracledb",
-  "pg",
-  "pg-query-stream",
-]
 
-coreBuild("./src/plugin/index.ts", "./dist/plugins.js", { external: externals })
-coreBuild("./src/index.ts", "./dist/index.js", { external: externals })
+coreBuild("./src/plugin/index.ts", "./dist/plugins.js")
+coreBuild("./src/index.ts", "./dist/index.js")
