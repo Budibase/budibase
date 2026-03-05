@@ -269,6 +269,8 @@
       getOptionLabel={o => o.displayName}
       placeholder={providerPlaceholder}
       loading={!providers}
+      autocomplete
+      searchPlaceholder="Search providers"
     />
 
     {#if hasProviderModelOptions}
@@ -282,6 +284,8 @@
         getOptionLabel={o => o.label}
         placeholder={modelPlaceholder}
         loading={!providers}
+        autocomplete
+        searchPlaceholder="Search models"
       />
     {:else}
       <Input
