@@ -2,6 +2,7 @@
   import { getContext, onDestroy } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, QueryUtils } from "@budibase/frontend-core"
+  import { createAutoRefresh } from "@/utils/autoRefresh"
   import type {
     TableSchema,
     SortOrder,
@@ -30,7 +31,7 @@
   const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
 
-  let interval: ReturnType<typeof setInterval>
+  const autoRefreshActions = createAutoRefresh()
   let queryExtensions: Record<string, any> = {}
 
   $: defaultQuery = QueryUtils.buildQuery(filter)
@@ -47,7 +48,7 @@
     paginate,
   })
   $: schema = sanitizeSchema($fetch.schema)
-  $: setUpAutoRefresh(autoRefresh)
+  $: autoRefreshActions.setUp(autoRefresh, fetch.refresh)
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
@@ -169,15 +170,8 @@
       : {}
   }
 
-  const setUpAutoRefresh = (autoRefresh: number) => {
-    clearInterval(interval)
-    if (autoRefresh) {
-      interval = setInterval(fetch.refresh, Math.max(10000, autoRefresh * 1000))
-    }
-  }
-
   onDestroy(() => {
-    clearInterval(interval) // Clears auto-refresh when navigating away
+    autoRefreshActions.clear() // Clears auto-refresh when navigating away
   })
 </script>
 
