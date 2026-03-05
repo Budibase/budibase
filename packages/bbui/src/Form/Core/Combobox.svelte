@@ -33,15 +33,21 @@
   let focus = false
   let anchor
   let query = ""
+  const normalizeForSearch = (value: unknown): string => {
+    if (value === null || value === undefined) {
+      return ""
+    }
+    return String(value).toLowerCase()
+  }
 
   $: query = value || ""
   $: filteredOptions =
     !query.trim() || !options?.length
       ? options
       : options.filter(option => {
-          const optionLabel = getOptionLabel(option)?.toLowerCase() || ""
-          const optionValue = getOptionValue(option)?.toLowerCase() || ""
-          const search = query.toLowerCase()
+          const optionLabel = normalizeForSearch(getOptionLabel(option))
+          const optionValue = normalizeForSearch(getOptionValue(option))
+          const search = normalizeForSearch(query)
           return (
             optionLabel.includes(search) || optionValue.includes(search)
           )
