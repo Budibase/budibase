@@ -6,7 +6,7 @@
   import { helpers } from "@budibase/shared-core"
   import { params } from "@roxi/routify"
   import AgentSettingsModal from "../../../chat/_components/AgentSettingsModal.svelte"
-  import BBAILogo from "assets/bb-ai.svg"
+  import BudibaseLogo from "assets/bb-emblem.svg"
 
   const CHAT_UPDATE_ERROR_MESSAGE = "Could not update chat"
   const CHAT_LOAD_ERROR_MESSAGE = "Failed to load agent chat status"
@@ -194,7 +194,7 @@
 
 <div class="integration-row">
   <div class="channel-main">
-    <img alt="Agent Chat" width="22px" height="22px" src={BBAILogo} />
+    <img alt="Agent Chat" width="22px" height="22px" src={BudibaseLogo} />
     <div class="channel-details">
       <Body color={"var(--spectrum-global-color-gray-900)"} size="XS"
         >Agent Chat</Body

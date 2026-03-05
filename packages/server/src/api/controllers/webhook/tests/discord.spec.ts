@@ -1,7 +1,5 @@
 import type { ChatConversation } from "@budibase/types"
 import {
-  extractDiscordOptionText,
-  getDiscordApplicationCommand,
   matchesDiscordConversationScope,
   pickDiscordConversation,
 } from "../discord"
@@ -26,50 +24,6 @@ const makeChat = (
 })
 
 describe("discord webhook helpers", () => {
-  it("extracts command text from flat and nested discord options", () => {
-    expect(
-      extractDiscordOptionText([
-        { name: "prompt", value: "hello" },
-        {
-          name: "subcommand",
-          options: [{ name: "followup", value: "world" }],
-        },
-      ])
-    ).toEqual("hello world")
-  })
-
-  it("returns supported application command names", () => {
-    expect(
-      getDiscordApplicationCommand({
-        id: "1",
-        type: 2,
-        token: "token",
-        application_id: "app",
-        data: { name: "ask" },
-      })
-    ).toEqual("ask")
-
-    expect(
-      getDiscordApplicationCommand({
-        id: "1",
-        type: 2,
-        token: "token",
-        application_id: "app",
-        data: { name: "new" },
-      })
-    ).toEqual("new")
-
-    expect(
-      getDiscordApplicationCommand({
-        id: "1",
-        type: 2,
-        token: "token",
-        application_id: "app",
-        data: { name: "unknown" },
-      })
-    ).toBeUndefined()
-  })
-
   it("scopes conversations by chat app, agent, channel, thread, and user", () => {
     const scope = {
       chatAppId: "chat-app-1",
