@@ -206,7 +206,7 @@ You may specify foreignColumnName, but do not create that field manually.
 
 export function generateAIColumns() {
   const tablesMessage = `
-Given the generated schema, add only one field of type "AI" to relevant tables to add value to the Budibase user.
+Given the generated schema, add only one field of type "ai" to relevant tables to add value to the Budibase user.
 Use the exact Budibase AI operation enum values from the schema.
 The field type itself must be exactly "ai" in lowercase, never "AI".
 - translation must use operation "TRANSLATE"
