@@ -6,11 +6,17 @@
   import { getAuthBindings, getEnvironmentBindings } from "@/dataBinding"
   import { environment, licensing } from "@/stores/portal"
   import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
-  import { RestAuthType, type RestAuthConfig } from "@budibase/types"
+  import {
+    RestAuthType,
+    type BasicRestAuthConfig,
+    type BearerRestAuthConfig,
+  } from "@budibase/types"
+
+  type HTTPRestAuthConfig = BasicRestAuthConfig | BearerRestAuthConfig
   import { cloneDeep } from "lodash/fp"
 
-  export let config: RestAuthConfig | undefined = undefined
-  export let existingConfigs: RestAuthConfig[] = []
+  export let config: HTTPRestAuthConfig | undefined = undefined
+  export let existingConfigs: HTTPRestAuthConfig[] = []
 
   const dispatch = createEventDispatcher()
 
@@ -29,8 +35,8 @@
     type: RestAuthType.BASIC,
     config: {},
   }
-  let errors: Record<string, any> = {}
-  let blurred: Record<string, any> = {}
+  let errors: Record<string, string> = {}
+  let blurred: Record<string, boolean> = {}
 
   onMount(async () => {
     try {
@@ -45,39 +51,40 @@
   })
 
   const validate = (): boolean => {
-    errors = {}
+    const newErrors: Record<string, any> = {}
 
     if (!data.name) {
-      errors.name = "Name is required"
+      newErrors.name = "Name is required"
     } else if (
       existingConfigs.find(c => c.name === data.name && c._id !== data._id)
     ) {
-      errors.name = "Name must be unique"
+      newErrors.name = "Name must be unique"
     }
 
     if (!data.type) {
-      errors.type = "Type is required"
+      newErrors.type = "Type is required"
     }
 
     if (data.type === RestAuthType.BASIC) {
       if (!data.config.username) {
-        errors.username = "Username is required"
+        newErrors.username = "Username is required"
       }
       if (!data.config.password) {
-        errors.password = "Password is required"
+        newErrors.password = "Password is required"
       }
     } else if (data.type === RestAuthType.BEARER) {
       if (!data.config.token) {
-        errors.token = "Token is required"
+        newErrors.token = "Token is required"
       }
     }
 
+    errors = newErrors
     return Object.keys(errors).length === 0
   }
 
   export const getConfig = (opts?: {
     showErrors?: boolean
-  }): RestAuthConfig | null => {
+  }): HTTPRestAuthConfig | null => {
     if (opts?.showErrors) {
       blurred = {
         name: true,
@@ -188,7 +195,6 @@
 
 <style>
   .wrap {
-    max-width: 75%;
     display: flex;
     flex-direction: column;
     gap: var(--spectrum-alias-grid-gutter-xsmall);

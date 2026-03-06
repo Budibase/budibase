@@ -6,19 +6,20 @@
   import { Body, Divider, Input, Link, Select, Layout } from "@budibase/bbui"
   import type {
     InsertOAuth2ConfigRequest,
-    OAuth2AuthConfig,
+    OAuth2RestAuthConfig,
   } from "@budibase/types"
   import {
     OAuth2CredentialsMethod,
     OAuth2GrantType,
     PASSWORD_REPLACEMENT,
+    RestAuthType,
   } from "@budibase/types"
   import type { ZodType } from "zod"
   import { cloneDeep } from "lodash/fp"
   import type { OAuth2Config } from "@/types"
 
-  export let config: OAuth2Config | OAuth2AuthConfig | undefined = undefined
-  export let existingConfigs: (OAuth2Config | OAuth2AuthConfig)[] = []
+  export let config: OAuth2Config | OAuth2RestAuthConfig | undefined = undefined
+  export let existingConfigs: (OAuth2Config | OAuth2RestAuthConfig)[] = []
 
   const dispatch = createEventDispatcher()
 
@@ -40,14 +41,14 @@
   let blurred: Record<string, boolean> = {}
 
   // Form state
-  let data: Partial<OAuth2AuthConfig> = {}
+  let data: Partial<OAuth2RestAuthConfig> = {}
 
   $: isProtectedPassword =
     data?.clientSecret === PASSWORD_REPLACEMENT ||
     data?.clientSecret?.match(/{{\s*env\.[^\s]+\s*}}/)
 
   const onUpdate = (
-    field: keyof OAuth2AuthConfig,
+    field: keyof OAuth2RestAuthConfig,
     value: string | undefined
   ) => {
     const normalizedValue = value || undefined
@@ -55,19 +56,21 @@
       return
     }
     if (normalizedValue === undefined) {
-      delete data[field]
-      data = data // trigger reactivity
+      const { [field]: _, ...rest } = data
+      data = rest as Partial<OAuth2RestAuthConfig>
     } else {
-      ;(data as Record<string, unknown>)[field] = normalizedValue
+      data = { ...data, [field]: normalizedValue }
     }
     onFieldChange()
   }
 
   const getInitialData = (
-    config: OAuth2Config | OAuth2AuthConfig | undefined
-  ): Partial<OAuth2AuthConfig> => {
-    const initial: Partial<OAuth2AuthConfig> = config ? cloneDeep(config) : {}
-    initial.type = "oauth2"
+    config: OAuth2Config | OAuth2RestAuthConfig | undefined
+  ): Partial<OAuth2RestAuthConfig> => {
+    const initial: Partial<OAuth2RestAuthConfig> = config
+      ? cloneDeep(config)
+      : {}
+    initial.type = RestAuthType.OAUTH2
     initial.grantType ??= OAuth2GrantType.CLIENT_CREDENTIALS
     return initial
   }
@@ -126,7 +129,7 @@
 
   export const getConfig = (opts?: {
     showErrors?: boolean
-  }): OAuth2AuthConfig | null => {
+  }): OAuth2RestAuthConfig | null => {
     if (opts?.showErrors) {
       blurred = {
         name: true,
@@ -145,7 +148,7 @@
 
     return {
       _id: data._id || crypto.randomUUID(),
-      type: "oauth2",
+      type: RestAuthType.OAUTH2,
       name: data.name!,
       url: data.url!,
       clientId: data.clientId!,
@@ -299,7 +302,6 @@
     margin-top: calc(var(--spacing-xl) * -1 + var(--spacing-s));
   }
   .wrap {
-    max-width: 75%;
     display: flex;
     flex-direction: column;
     gap: var(--spectrum-alias-grid-gutter-xsmall);

@@ -161,7 +161,7 @@
     }
     if (
       editor &&
-      value &&
+      value != null &&
       (editor.state.doc.toString() !== value || queuedRefresh)
     ) {
       editor.dispatch({

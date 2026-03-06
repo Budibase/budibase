@@ -95,6 +95,7 @@
 
   let selectedEndpointOption: EndpointWithIcon | undefined
   let endpoints: ImportEndpoint[] | undefined
+  let selectedAuth = false
   let endpointsLoading = false
   let endpointLoadError: string | undefined
   let queryParams: Record<string, string> | undefined = undefined
@@ -148,6 +149,7 @@
     editableQuery = structuredClone(storeQuery)
     queryParams = undefined
     originalBuiltQuery = undefined
+    selectedAuth = false
   }
 
   $: datasourceLookupId = selectedDatasourceId || storeQuery?.datasourceId
@@ -155,8 +157,9 @@
     $datasources.list.find(d => d._id === datasourceLookupId)
   )
 
-  $: if (editableQuery && datasource && isNewQuery) {
-    applyDefaultAuth(editableQuery, datasource)
+  $: if (editableQuery && datasource && isNewQuery && !selectedAuth) {
+    const withAuth = applyDefaultAuth(editableQuery, datasource)
+    if (withAuth) editableQuery = withAuth
   }
 
   // QUERY DATA
@@ -327,13 +330,13 @@
   const applyDefaultAuth = (
     q: Query,
     ds: Datasource | UIInternalDatasource
-  ) => {
+  ): Query | undefined => {
     const defaultAuth = getDefaultRestAuthConfig(ds)
     if (!defaultAuth) {
       return
     }
     if (!q.fields?.authConfigId && !q.fields?.authConfigType) {
-      editableQuery = {
+      return {
         ...q,
         fields: {
           ...q.fields,
@@ -906,6 +909,7 @@
             authConfigType,
             datasourceId: selectedDatasourceId,
           } = e.detail
+          selectedAuth = true
           if (
             isNewQuery &&
             selectedDatasourceId &&

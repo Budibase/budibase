@@ -301,7 +301,7 @@
           const entry: UIFavouriteResource = {
             name: resource.name,
             icon: isRestQuery
-              ? "webhooks-logo"
+              ? "globe-simple"
               : ResourceIcons[favourite.resourceType],
           }
 

@@ -6,6 +6,7 @@ import {
   RestTemplateName,
   RestTemplateSpecVersion,
 } from "../../ui/rest"
+import { OAuth2Config } from "./oauth2"
 
 export interface Datasource extends Document {
   type: string
@@ -60,7 +61,22 @@ export interface BearerRestAuthConfig {
   config: RestBearerAuthConfig
 }
 
-export type RestAuthConfig = BasicRestAuthConfig | BearerRestAuthConfig
+export interface OAuth2RestAuthConfig
+  extends Omit<OAuth2Config, keyof Document> {
+  _id: string
+  type: RestAuthType.OAUTH2
+}
+
+export const REST_AUTH_SECRET_FIELD: Partial<Record<RestAuthType, string>> = {
+  [RestAuthType.BASIC]: "password" satisfies keyof RestBasicAuthConfig,
+  [RestAuthType.BEARER]: "token" satisfies keyof RestBearerAuthConfig,
+  [RestAuthType.OAUTH2]: "clientSecret" satisfies keyof OAuth2RestAuthConfig,
+}
+
+export type RestAuthConfig =
+  | BasicRestAuthConfig
+  | BearerRestAuthConfig
+  | OAuth2RestAuthConfig
 
 export interface DynamicVariable {
   name: string
@@ -69,11 +85,15 @@ export interface DynamicVariable {
 }
 
 export interface RestConfig {
+  // Base URL
   url: string
   rejectUnauthorized?: boolean
   downloadImages?: boolean
   defaultHeaders?: {
     [key: string]: any
+  }
+  defaultQueryParameters?: {
+    [key: string]: string
   }
   legacyHttpParser?: boolean
   authConfigs?: RestAuthConfig[]

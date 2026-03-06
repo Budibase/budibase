@@ -1,10 +1,9 @@
-import { cache, context, docIds } from "@budibase/backend-core"
+import { cache, context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   Document,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
 } from "@budibase/types"
-import { HttpError } from "koa"
 import fetch, { RequestInit } from "node-fetch"
 import { get } from "."
 import { processEnvironmentVariable } from "../../utils"
@@ -101,7 +100,7 @@ export async function getToken(id: string) {
     async () => {
       const config = await get(id)
       if (!config) {
-        throw new HttpError(`oAuth config ${id} count not be found`)
+        throw new HTTPError(`oAuth config ${id} could not be found`, 400)
       }
       return fetchAndParseToken(config)
     }

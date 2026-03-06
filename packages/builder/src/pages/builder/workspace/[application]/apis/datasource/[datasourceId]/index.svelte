@@ -1,5 +1,8 @@
 <script>
-  import DatasourcePage from "../../../data/datasource/[datasourceId]/index.svelte"
-</script>
+  import { params, redirect } from "@roxi/routify"
+  import { onMount } from "svelte"
 
-<DatasourcePage />
+  onMount(() => {
+    $redirect(`../../query/new/${$params.datasourceId}`)
+  })
+</script>

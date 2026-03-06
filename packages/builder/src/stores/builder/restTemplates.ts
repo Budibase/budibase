@@ -1816,7 +1816,7 @@ const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
 // Microsoft SharePoint templates were renamed from "SharePoint X" to "X"
 // to match the slugify pattern (group prefix + name = id). This alias map
 // maintains backwards compatibility for legacy datasources.
-const MICROSOFT_SHAREPOINT_NAME_ALIASES: Record<string, string> = {
+export const MICROSOFT_SHAREPOINT_NAME_ALIASES: Record<string, string> = {
   "SharePoint Sites": "Sites",
   "SharePoint Drives": "Drives",
   "SharePoint Shares": "Shares",

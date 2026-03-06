@@ -148,7 +148,7 @@
       name: datasource.name,
       icon:
         datasource.source === IntegrationTypes.REST
-          ? "webhooks-logo"
+          ? "globe-simple"
           : "database",
       action: () =>
         $goto(

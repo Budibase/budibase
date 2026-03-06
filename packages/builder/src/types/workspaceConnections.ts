@@ -1,4 +1,4 @@
-import { WorkspaceConnectionResponse, RestAuthType } from "@budibase/types"
+import { RestAuthType, RestAuthConfig } from "@budibase/types"
 
 export const AUTH_TYPE_OPTIONS: Array<{
   label: string
@@ -9,18 +9,19 @@ export const AUTH_TYPE_OPTIONS: Array<{
   { label: "OAuth2", value: RestAuthType.OAUTH2 },
 ]
 
-export type ConnectionType =
-  | "workspace_connection"
-  | "unknown"
-  // Legacy
-  | "oauth2"
-  | "datasource"
+export type ConnectionType = "unknown" | "oauth2" | "datasource"
 
-export interface UIWorkspaceConnection
-  extends Partial<WorkspaceConnectionResponse> {
+export interface UIWorkspaceConnection {
   name: string
   source: ConnectionType
   sourceId: string
+  templateId?: string
+  templateVersion?: string
   icon?: { type: "asset" | "icon"; value: string }
-  auth?: WorkspaceConnectionResponse["auth"]
+  auth?: RestAuthConfig[]
+  props?: {
+    headers?: Record<string, string>
+    staticVariables?: Record<string, string>
+    query?: Record<string, string>
+  }
 }

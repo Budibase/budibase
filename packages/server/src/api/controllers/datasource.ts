@@ -20,6 +20,7 @@ import {
   FieldType,
   FindDatasourcesResponse,
   RelationshipFieldMetadata,
+  RestAuthType,
   RowValue,
   SourceName,
   Table,
@@ -35,6 +36,16 @@ import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
 import { builderSocket } from "../../websockets"
+
+async function clearOAuth2TokenCaches(datasource: Datasource) {
+  const authConfigs = datasource.config?.authConfigs
+  if (!authConfigs) return
+  for (const config of authConfigs) {
+    if (config.type === RestAuthType.OAUTH2 && config._id) {
+      await sdk.oauth2.cleanStoredToken(config._id)
+    }
+  }
+}
 
 export async function fetch(ctx: UserCtx<void, FetchDatasourcesResponse>) {
   ctx.body = await sdk.datasources.fetch()
@@ -232,6 +243,7 @@ export async function update(
     ctx.throw(400, "Duplicate dynamic/static variable names are invalid.")
   }
 
+  await clearOAuth2TokenCaches(baseDatasource)
   const response = await db.put(
     sdk.tables.populateExternalTableSchemas(datasource)
   )
@@ -346,6 +358,7 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   }
 
   // delete the datasource
+  await clearOAuth2TokenCaches(datasource)
   await db.remove(datasourceId, ctx.params.revId)
   await events.datasource.deleted(datasource)
 

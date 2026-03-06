@@ -1,18 +1,17 @@
 import {
   BodyType,
   DatasourceFieldType,
-  DocumentType,
   HttpMethod,
   Integration,
   IntegrationBase,
   JSONValue,
+  OAuth2RestAuthConfig,
   PaginationConfig,
   PaginationValues,
   QueryType,
   RestAuthType,
   RestConfig,
   RestQueryFields as RestQuery,
-  SEPARATOR,
 } from "@budibase/types"
 import get from "lodash/get"
 import qs from "querystring"
@@ -641,126 +640,40 @@ export class RestIntegration implements IntegrationBase {
     }
   }
 
-  private async getConnectionHeaders(
-    authSourceId?: string
-  ): Promise<Record<string, string>> {
-    if (!authSourceId) {
-      return {}
-    }
-
-    const workspaceConnectionPrefix = `${DocumentType.WORKSPACE_CONNECTION}${SEPARATOR}`
-    const datasourcePrefix = `${DocumentType.DATASOURCE}${SEPARATOR}`
-
-    if (authSourceId.startsWith(workspaceConnectionPrefix)) {
-      const { connection } = await sdk.connections.getWithEnvVars(authSourceId)
-      return connection?.props?.headers || {}
-    }
-
-    if (authSourceId.startsWith(datasourcePrefix)) {
-      const { datasource } = await sdk.datasources.getWithEnvVars(authSourceId)
-      return datasource?.config?.defaultHeaders || {}
-    }
-
-    return {}
-  }
-
-  private async getConnectionQueryParams(
-    authSourceId?: string
-  ): Promise<Record<string, string>> {
-    if (!authSourceId) {
-      return {}
-    }
-
-    const workspaceConnectionPrefix = `${DocumentType.WORKSPACE_CONNECTION}${SEPARATOR}`
-    if (authSourceId.startsWith(workspaceConnectionPrefix)) {
-      const { connection } = await sdk.connections.getWithEnvVars(authSourceId)
-      return connection?.props?.query || {}
-    }
-
-    return {}
-  }
-
-  private async resolveWorkspaceConnectionAuth(
-    authSourceId: string
-  ): Promise<ResolvedAuthConfig | null> {
-    const { connection } = await sdk.connections.getWithEnvVars(authSourceId)
-    if (!connection?.auth?.length) {
-      return null
-    }
-    const auth = connection.auth[0]
-    if (auth.type === "oauth2") {
-      const token = await sdk.oauth2.getTokenFromConfig(authSourceId, auth)
-      return {
-        type: "auth",
-        auth: { type: RestAuthType.OAUTH2, config: { token } },
-      }
-    }
-    return { type: "auth", auth }
-  }
-
-  private async resolveExternalDatasourceAuth(
-    authSourceId: string,
-    authConfigId?: string
-  ): Promise<ResolvedAuthConfig | null> {
-    const { datasource } = await sdk.datasources.getWithEnvVars(authSourceId)
-    const authConfig = datasource?.config?.authConfigs?.find(
-      (c: any) => c._id === authConfigId
-    )
-    if (!authConfig) {
-      return null
-    }
-    return { type: "auth", auth: authConfig }
-  }
-
-  private resolveLegacyAuth(
+  private async resolveAuthConfig(
     authConfigId?: string,
     authConfigType?: RestAuthType
-  ): ResolvedAuthConfig | null {
-    if (!authConfigId) {
-      return null
-    }
-
+  ): Promise<ResolvedAuthConfig | null> {
+    if (!authConfigId) return null
     if (authConfigType === RestAuthType.OAUTH2) {
       return { type: "oauth2", sourceId: authConfigId }
     }
-
-    if (!this.config.authConfigs) {
-      return null
-    }
-
-    const authConfig = this.config.authConfigs.find(c => c._id === authConfigId)
-    if (!authConfig) {
-      return null
-    }
-    return { type: "auth", auth: authConfig }
-  }
-
-  private async resolveAuthConfig(
-    authConfigId?: string,
-    authConfigType?: RestAuthType,
-    authSourceId?: string
-  ): Promise<ResolvedAuthConfig | null> {
-    if (authSourceId?.startsWith("workspace_connection_")) {
-      return this.resolveWorkspaceConnectionAuth(authSourceId)
-    }
-
-    if (authSourceId?.startsWith("datasource_")) {
-      return this.resolveExternalDatasourceAuth(authSourceId, authConfigId)
-    }
-
-    return this.resolveLegacyAuth(authConfigId, authConfigType)
+    if (!this.config.authConfigs) return null
+    const authConfig = this.config.authConfigs.find(
+      c => c._id === authConfigId && c.type !== RestAuthType.OAUTH2
+    )
+    if (!authConfig) return null
+    return { type: "auth", auth: authConfig as AuthConfig }
   }
 
   async getAuthHeaders(
     authConfigId?: string,
-    authConfigType?: RestAuthType,
-    authSourceId?: string
+    authConfigType?: RestAuthType
   ): Promise<Record<string, string>> {
-    const resolved = await this.resolveAuthConfig(
-      authConfigId,
-      authConfigType,
-      authSourceId
-    )
+    if (authConfigId && authConfigType === RestAuthType.OAUTH2) {
+      const inlineOAuth2 = this.config.authConfigs?.find(
+        c => c._id === authConfigId && c.type === RestAuthType.OAUTH2
+      )
+      if (inlineOAuth2) {
+        const token = await sdk.oauth2.getTokenFromConfig(
+          authConfigId,
+          inlineOAuth2 as OAuth2RestAuthConfig
+        )
+        return { Authorization: token }
+      }
+    }
+
+    const resolved = await this.resolveAuthConfig(authConfigId, authConfigType)
 
     if (!resolved) {
       return {}
@@ -784,27 +697,13 @@ export class RestIntegration implements IntegrationBase {
       requestBody,
       authConfigId,
       authConfigType,
-      authSourceId,
       pagination,
       paginationValues,
     } = query
-    const authHeaders = await this.getAuthHeaders(
-      authConfigId,
-      authConfigType,
-      authSourceId
-    )
-    const connectionHeaders = await this.getConnectionHeaders(authSourceId)
-
-    // Header mergep priority
-    // 1. Datasource defaultHeaders (legacy) OR Connection headers (new) - based on authSourceId
-    // 2. Query headers
-    // 3. Auth-generated headers
-    const baseHeaders = authSourceId
-      ? connectionHeaders
-      : this.config.defaultHeaders || {}
+    const authHeaders = await this.getAuthHeaders(authConfigId, authConfigType)
 
     this.headers = {
-      ...baseHeaders,
+      ...(this.config.defaultHeaders || {}),
       ...headers,
       ...authHeaders,
     }
@@ -837,13 +736,11 @@ export class RestIntegration implements IntegrationBase {
       input.extraHttpOptions = { insecureHTTPParser: true }
     }
 
-    // Query param merge: connection params as base, query params override
-    const connectionQueryParams =
-      await this.getConnectionQueryParams(authSourceId)
+    const defaultQueryParameters = this.config.defaultQueryParameters || {}
     let mergedQueryString = queryString
-    if (Object.keys(connectionQueryParams).length > 0) {
+    if (Object.keys(defaultQueryParameters).length > 0) {
       const queryParams = queryString ? qs.decode(queryString) : {}
-      const merged = { ...connectionQueryParams, ...queryParams }
+      const merged = { ...defaultQueryParameters, ...queryParams }
       mergedQueryString = qs.encode(merged)
     }
 
@@ -913,15 +810,6 @@ export class RestIntegration implements IntegrationBase {
       throw error
     }
     if (response.status === 401 && retry401) {
-      // Workspace connection OAuth2
-      if (authSourceId?.startsWith("workspace_connection_")) {
-        const connection = await sdk.connections.get(authSourceId)
-        if (connection?.auth?.[0]?.type === "oauth2") {
-          await sdk.oauth2.cleanStoredToken(authSourceId)
-          return await this._req(query, false)
-        }
-      }
-      // Legacy OAuth2
       if (authConfigType === RestAuthType.OAUTH2 && authConfigId) {
         await sdk.oauth2.cleanStoredToken(authConfigId)
         return await this._req(query, false)

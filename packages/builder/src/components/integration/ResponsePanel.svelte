@@ -86,9 +86,9 @@
     option.type === value?.type
 
   const handleSchemaChange = (
-    e: CustomEvent<Array<{ name: string; value: any }>>
+    e: CustomEvent<{ fields: Array<{ name: string; value: any }> }>
   ) => {
-    schema = keyValueArrayToRecord(e.detail)
+    schema = keyValueArrayToRecord(e.detail.fields)
     dispatch("change", { schema })
   }
 
@@ -98,9 +98,9 @@
   }
 
   const handleDynamicVariablesUpdate = (
-    e: CustomEvent<Array<{ name: string; value: any }>>
+    e: CustomEvent<{ fields: Array<{ name: string; value: any }> }>
   ) => {
-    dynamicVariables = keyValueArrayToRecord(e.detail)
+    dynamicVariables = keyValueArrayToRecord(e.detail.fields)
     dispatch("change", { dynamicVariables })
   }
 </script>

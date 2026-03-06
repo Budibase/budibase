@@ -15,9 +15,16 @@
   import { helpers, utils } from "@budibase/shared-core"
   import { SourceType, Theme } from "@budibase/types"
   import { goto as gotoStore, params as paramsStore } from "@roxi/routify"
-  import { DB_TYPE_EXTERNAL } from "@/constants/backend"
+  import { DB_TYPE_EXTERNAL, IntegrationTypes } from "@/constants/backend"
   import { get } from "svelte/store"
-  import type { Table, ViewV2, View, Datasource, Query } from "@budibase/types"
+  import type {
+    Table,
+    ViewV2,
+    View,
+    Datasource,
+    Query,
+    UIInternalDatasource,
+  } from "@budibase/types"
 
   $gotoStore
   $paramsStore
@@ -26,11 +33,17 @@
   $: params = $paramsStore
   $: isDarkTheme = ![Theme.LIGHTEST, Theme.LIGHT].includes($themeStore.theme)
 
-  export let source: Table | ViewV2 | Datasource | Query | undefined
+  export let source: Table | ViewV2 | Datasource | UIInternalDatasource | Query | undefined
+  export let onDeleted: (() => void) | undefined = undefined
 
   let confirmDeleteDialog: any
   let affectedScreens: { text: string; url: string }[] = []
   let sourceType: SourceType | undefined = undefined
+
+  $: isRestDatasource =
+    sourceType === SourceType.DATASOURCE &&
+    (source as Datasource)?.source === IntegrationTypes.REST
+  $: sourceTypeLabel = isRestDatasource ? "connection" : sourceType
 
   const getDatasourceQueries = () => {
     if (sourceType !== SourceType.DATASOURCE) {
@@ -114,10 +127,14 @@
       }
       await datasources.delete(datasource)
       notifications.success("Datasource deleted")
-      const isSelected =
-        get(datasources).selectedDatasourceId === datasource._id
-      if (isSelected) {
-        goto("./datasource")
+      if (onDeleted) {
+        onDeleted()
+      } else {
+        const isSelected =
+          get(datasources).selectedDatasourceId === datasource._id
+        if (isSelected) {
+          goto("./datasource")
+        }
       }
     } catch (error) {
       notifications.error("Error deleting datasource")
@@ -129,7 +146,44 @@
       // Go back to the datasource if we are deleting the active query
       if ($queries.selectedQueryId === query._id) {
         markSkipUnsavedPrompt(query._id)
-        goto(`./datasource/${query.datasourceId}`)
+        const appId = $appStore.appId
+        const base = `/builder/workspace/${appId}/apis`
+        const nextQuery = $queries.list.find(
+          q => q.datasourceId === query.datasourceId && q._id !== query._id
+        )
+        if (nextQuery) {
+          goto(`${base}/query/${nextQuery._id}`)
+        } else {
+          // For the scenario where the datasource has no remaining queries,
+          // prefer other REST datasources that have queries (alphabetical order)
+          const otherDatasources = $datasources.list
+            .filter(
+              ds =>
+                ds.source === IntegrationTypes.REST &&
+                ds._id !== query.datasourceId
+            )
+            .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+
+          let found = false
+          for (const ds of otherDatasources) {
+            const otherQuery = $queries.list.find(
+              q => q.datasourceId === ds._id
+            )
+            if (otherQuery) {
+              goto(`${base}/query/${otherQuery._id}`)
+              found = true
+              break
+            }
+          }
+
+          if (!found) {
+            if (otherDatasources.length) {
+              goto(`${base}/query/new/${otherDatasources[0]._id}`)
+            } else {
+              goto(`${base}/query/new/${query.datasourceId}`)
+            }
+          }
+        }
       }
       await queries.delete(query)
       await datasources.fetch()
@@ -197,7 +251,7 @@
   okText="Delete"
   onOk={deleteSource}
   onCancel={hideDeleteDialog}
-  title={`Are you sure you want to delete this ${sourceType}?`}
+  title={`Are you sure you want to delete this ${sourceTypeLabel}?`}
 >
   <div class="content">
     {#if sourceType}

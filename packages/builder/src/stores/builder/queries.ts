@@ -85,6 +85,13 @@ export class QueryStore extends DerivedBudiStore<
     }
 
     query.datasourceId = datasourceId
+    const isNew = !query._id
+    if (isNew && query.name) {
+      const existingNames = get(this.store).list.map(q => q.name)
+      if (existingNames.includes(query.name)) {
+        query.name = duplicateName(query.name, existingNames)
+      }
+    }
     const savedQuery = await API.saveQuery(query)
     this.store.update(state => {
       const idx = state.list.findIndex(query => query._id === savedQuery._id)

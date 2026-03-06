@@ -39,7 +39,7 @@
     : allConnections
 
   onMount(async () => {
-    await Promise.all([oauth2.fetch(), workspaceConnections.fetch()])
+    await oauth2.fetch()
   })
 </script>
 

@@ -49,7 +49,6 @@ export enum DocumentType {
   VECTOR_STORE = "vectordb",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
-  WORKSPACE_CONNECTION = "workspace_connection",
   AUTO_COLUMN_STATE = "autocolumn_state",
 }
 

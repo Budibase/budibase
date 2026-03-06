@@ -668,16 +668,8 @@
         <Layout gap="M" noPadding>
           <Divider noMargin noGrid size="S" />
           {#if isRestTemplate}
-            <!-- <Input
-              label="Base URL"
-              value={data.baseUrl ?? ""}
-              on:change={e => {
-                data.baseUrl = e.detail
-                data = { ...data }
-              }}
-            /> -->
             <ServerUrlInput
-              label="Base URL (new)"
+              label="Base URL"
               value={data.baseUrl ?? ""}
               servers={openApiInfo?.servers ?? []}
               on:change={e => {
@@ -790,7 +782,11 @@
   </Layout>
 </Layout>
 
-<DeleteDataConfirmationModal bind:this={deleteModal} source={datasource} />
+<DeleteDataConfirmationModal
+  bind:this={deleteModal}
+  source={datasource}
+  onDeleted={() => bb.settings("/connections")}
+/>
 
 <style>
   .icon-wrap {
