@@ -21,6 +21,7 @@
   export let allRowsCount = 0
   export let typeFilter: HomeType = "all"
   export let searchTerm = ""
+  export let playbooksEnabled = false
   export let sortColumn: HomeSortColumn
   export let sortOrder: HomeSortOrder
 
@@ -160,7 +161,7 @@
               <Body size="S" color="var(--spectrum-global-color-gray-900)"
                 >{row.name}</Body
               >
-              {#if row.playbookName}
+              {#if playbooksEnabled && row.playbookName}
                 <span
                   class="playbook-chip"
                   style={`--playbook-color: ${row.playbookColor || "#8CA171"}`}

@@ -6,6 +6,7 @@
 
   export let typeFilter: HomeType = "all"
   export let agentsEnabled = false
+  export let playbooksEnabled = false
   export let playbooks: PlaybookResponse[] = []
   export let selectedPlaybookId = ""
 
@@ -64,7 +65,7 @@
         </span>
       {/each}
     </div>
-    {#if playbooks.length}
+    {#if playbooksEnabled && playbooks.length}
       <label class="playbook-filter">
         <span>Playbook</span>
         <select

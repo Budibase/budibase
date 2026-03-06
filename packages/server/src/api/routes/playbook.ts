@@ -1,5 +1,6 @@
 import { middleware } from "@budibase/backend-core"
 import Joi from "joi"
+import { playbooksEnabled } from "../../middleware/playbooksEnabled"
 import * as controller from "../controllers/playbook"
 import { builderRoutes } from "./endpointGroups"
 
@@ -10,9 +11,10 @@ const baseSchema = {
 }
 
 builderRoutes
-  .get("/api/playbooks", controller.fetch)
+  .get("/api/playbooks", playbooksEnabled, controller.fetch)
   .post(
     "/api/playbooks",
+    playbooksEnabled,
     middleware.joiValidator.body(Joi.object(baseSchema), {
       allowUnknown: false,
     }),
@@ -20,6 +22,7 @@ builderRoutes
   )
   .put(
     "/api/playbooks/:id",
+    playbooksEnabled,
     middleware.joiValidator.body(
       Joi.object({
         _id: Joi.string().required(),
@@ -32,4 +35,4 @@ builderRoutes
     ),
     controller.update
   )
-  .delete("/api/playbooks/:id/:rev", controller.remove)
+  .delete("/api/playbooks/:id/:rev", playbooksEnabled, controller.remove)

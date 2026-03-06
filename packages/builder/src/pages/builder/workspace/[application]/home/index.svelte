@@ -119,6 +119,8 @@
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
+  $: playbooksEnabled = $featureFlags[FeatureFlag.PLAYBOOKS]
+  $: if (!playbooksEnabled && selectedPlaybookId) selectedPlaybookId = ""
 
   let getFavourite: (
     _resourceType: WorkspaceResource,
@@ -444,7 +446,7 @@
   }
 
   const assignPlaybook = async (playbookId: string | undefined) => {
-    if (!selectedRow) {
+    if (!playbooksEnabled || !selectedRow) {
       return
     }
 
@@ -517,7 +519,7 @@
         {
           icon: "stack",
           name: "Assign playbook",
-          visible: true,
+          visible: playbooksEnabled,
           callback: () => assignPlaybookModal.show(),
         },
         {
@@ -571,7 +573,7 @@
         {
           icon: "stack",
           name: "Assign playbook",
-          visible: true,
+          visible: playbooksEnabled,
           callback: () => assignPlaybookModal.show(),
         },
         {
@@ -609,7 +611,7 @@
         {
           icon: "stack",
           name: "Assign playbook",
-          visible: true,
+          visible: playbooksEnabled,
           callback: () => assignPlaybookModal.show(),
         },
         {
@@ -701,8 +703,12 @@
     getFavourite,
   })
 
-  $: playbookLookup = Object.fromEntries(
-    $playbooksStore.map(playbook => [playbook._id, playbook])
+  $: playbookLookup = (
+    playbooksEnabled
+      ? Object.fromEntries(
+          $playbooksStore.map(playbook => [playbook._id, playbook])
+        )
+      : {}
   ) as Record<string, PlaybookResponse>
 
   $: rowsWithPlaybooks = baseRows.map(row => {
@@ -720,7 +726,12 @@
     rows: allRows,
     typeFilter,
     searchTerm,
-  }).filter(row => !selectedPlaybookId || row.playbookId === selectedPlaybookId)
+  }).filter(
+    row =>
+      !playbooksEnabled ||
+      !selectedPlaybookId ||
+      row.playbookId === selectedPlaybookId
+  )
 
   $: if (hasMounted) writeUrlState()
 
@@ -755,7 +766,7 @@
 
     await Promise.all([
       $featureFlags.AI_AGENTS ? agentsStore.fetchAgents() : Promise.resolve(),
-      playbooksStore.fetch(),
+      playbooksEnabled ? playbooksStore.fetch() : Promise.resolve(),
       loadMetrics(),
     ])
   })
@@ -795,6 +806,7 @@
       <HomeControls
         {typeFilter}
         agentsEnabled={$featureFlags.AI_AGENTS}
+        {playbooksEnabled}
         playbooks={$playbooksStore}
         {selectedPlaybookId}
         on:typeChange={({ detail }) => setTypeFilter(detail)}
@@ -850,8 +862,10 @@
             App
           </MenuItem>
 
-          <MenuSeparator />
-          <MenuItem icon="stack" on:click={createPlaybook}>Playbook</MenuItem>
+          {#if playbooksEnabled}
+            <MenuSeparator />
+            <MenuItem icon="stack" on:click={createPlaybook}>Playbook</MenuItem>
+          {/if}
 
           <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
             Connection
@@ -869,6 +883,7 @@
       allRowsCount={allRows.length}
       {typeFilter}
       {searchTerm}
+      {playbooksEnabled}
       {sortColumn}
       {sortOrder}
       {highlightedRowId}
@@ -884,19 +899,21 @@
   </div>
 </div>
 
-<Modal bind:this={createPlaybookModal}>
-  <CreatePlaybookModal
-    on:confirm={({ detail }) => handleCreatePlaybook(detail)}
-  />
-</Modal>
+{#if playbooksEnabled}
+  <Modal bind:this={createPlaybookModal}>
+    <CreatePlaybookModal
+      on:confirm={({ detail }) => handleCreatePlaybook(detail)}
+    />
+  </Modal>
 
-<Modal bind:this={assignPlaybookModal}>
-  <AssignPlaybookModal
-    row={selectedRow}
-    playbooks={$playbooksStore}
-    on:confirm={({ detail }) => assignPlaybook(detail)}
-  />
-</Modal>
+  <Modal bind:this={assignPlaybookModal}>
+    <AssignPlaybookModal
+      row={selectedRow}
+      playbooks={$playbooksStore}
+      on:confirm={({ detail }) => assignPlaybook(detail)}
+    />
+  </Modal>
+{/if}
 
 <WorkspaceAppModal
   bind:this={workspaceAppModal}
