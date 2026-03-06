@@ -2,7 +2,14 @@
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
   import { aiConfigsStore } from "@/stores/portal"
-  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
+  import {
+    Button,
+    Combobox,
+    Helpers,
+    Input,
+    notifications,
+    Select,
+  } from "@budibase/bbui"
   import type {
     AIConfigResponse,
     CreateAIConfigRequest,
@@ -53,6 +60,7 @@
         } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   let draft: AIConfigResponse = $state(createDraft())
+  let previousProvider = $state(draft.provider)
 
   let isEdit = $derived(!!draft._id)
 
@@ -61,6 +69,10 @@
     { label: "Medium", value: "medium" },
     { label: "High", value: "high" },
   ]
+  interface ModelOption {
+    label: string
+    value: string
+  }
 
   let providers = $derived($aiConfigsStore.providers)
 
@@ -79,6 +91,29 @@
     }, {})
   )
   let selectedProvider = $derived(providersMap?.[draft.provider])
+  let modelOptions = $derived.by(() => {
+    const models = selectedProvider?.models?.[draft.configType] || []
+    const options = models.map<ModelOption>(model => ({
+      label: model,
+      value: model,
+    }))
+    if (draft.model?.trim() && !models.includes(draft.model)) {
+      options.unshift({
+        label: `${draft.model} (custom)`,
+        value: draft.model,
+      })
+    }
+    return options
+  })
+  let modelPlaceholder = $derived.by(() => {
+    if (!draft.provider?.trim()) {
+      return "Choose a provider first"
+    }
+    if (!providers) {
+      return "Loading models..."
+    }
+    return modelOptions.length ? "Select or type a model" : "Type a model"
+  })
 
   let isSaving = $state(false)
   let savedSnapshot = $state(JSON.stringify(draft))
@@ -105,6 +140,13 @@
         f => f.required && !draft.credentialsFields[f.key]?.trim()
       )
     )
+  })
+
+  $effect(() => {
+    if (previousProvider !== draft.provider) {
+      draft.model = ""
+      previousProvider = draft.provider
+    }
   })
 
   onMount(async () => {
@@ -206,14 +248,17 @@
       getOptionLabel={o => o.displayName}
       placeholder={providerPlaceholder}
       loading={!providers}
+      autocomplete
+      searchPlaceholder="Search providers"
     />
 
-    <Input
+    <Combobox
       label="Model"
-      description="The model you would like to connect to"
-      required
       bind:value={draft.model}
-      placeholder="GPT-5.2"
+      options={modelOptions}
+      getOptionValue={o => o.value}
+      getOptionLabel={o => o.label}
+      placeholder={modelPlaceholder}
     />
 
     <Input

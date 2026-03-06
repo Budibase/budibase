@@ -13,8 +13,6 @@ import EmailPage from "@/settings/pages/email.svelte"
 import EmailTemplatesPage from "@/settings/pages/email/EmailTemplates.svelte"
 import EmailTemplatePage from "@/settings/pages/email/Template.svelte"
 import AuditLogsPage from "@/settings/pages/auditLogs/index.svelte"
-import AIPage from "@/settings/pages/ai/index.svelte"
-import AIConfigsPage from "@/settings/pages/ai/completion-models/index.svelte"
 import AuthPage from "@/settings/pages/auth/index.svelte"
 import OrgPage from "@/settings/pages/organisation.svelte"
 import BrandingPage from "@/settings/pages/branding.svelte"
@@ -37,11 +35,12 @@ import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
 import Recaptcha from "@/settings/pages/recaptcha.svelte"
 
 // AI config
-import KnowledgeBasesPage from "@/settings/pages/ai/knowledge-bases/index.svelte"
+import AIConfigsPage from "@/settings/pages/ai/completion-models/index.svelte"
 import AIConfigForm from "@/settings/pages/ai/completion-models/AIConfigForm.svelte"
-import KnowledgeBaseForm from "./ai/knowledge-bases/KnowledgeBaseForm.svelte"
-import EmbeddingModelForm from "./ai/knowledge-bases/EmbeddingModelForm.svelte"
-import VectorDatabaseForm from "./ai/knowledge-bases/VectorDatabaseForm.svelte"
+import KnowledgeBasesPage from "@/settings/pages/ai/knowledge-bases/index.svelte"
+import KnowledgeBaseForm from "@/settings/pages/ai/knowledge-bases/KnowledgeBaseForm.svelte"
+import EmbeddingModelForm from "@/settings/pages/ai/knowledge-bases/EmbeddingModelForm.svelte"
+import VectorDatabaseForm from "@/settings/pages/ai/knowledge-bases/VectorDatabaseForm.svelte"
 
 const componentMap = {
   profile: ProfilePage,
@@ -56,7 +55,6 @@ const componentMap = {
   email_templates: EmailTemplatesPage,
   email_template: EmailTemplatePage,
   audit_logs: AuditLogsPage,
-  ai: AIPage,
   ai_configs: AIConfigsPage,
   ai_config: AIConfigForm,
   knowledgeBases: KnowledgeBasesPage,
