@@ -1,6 +1,7 @@
 import { constants } from "@budibase/backend-core"
 import {
   AIConfigListResponse,
+  LLMProvidersResponse,
   ChatCompletionRequest,
   ChatCompletionRequestV2,
   ChatCompletionResponse,
@@ -157,6 +158,14 @@ export class AIAPI extends TestAPI {
     expectations?: Expectations
   ): Promise<AIConfigListResponse> => {
     return await this._get<AIConfigListResponse>(`/api/configs`, {
+      expectations,
+    })
+  }
+
+  fetchProviders = async (
+    expectations?: Expectations
+  ): Promise<LLMProvidersResponse> => {
+    return await this._get<LLMProvidersResponse>(`/api/configs/providers`, {
       expectations,
     })
   }

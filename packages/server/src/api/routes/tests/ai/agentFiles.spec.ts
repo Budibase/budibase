@@ -44,6 +44,17 @@ describe("agent files", () => {
         },
       ])
 
+  const mockLiteLLMModelCostMap = () =>
+    nock(environment.LITELLM_URL)
+      .persist()
+      .get("/public/litellm_model_cost_map")
+      .reply(200, {
+        "text-embedding-3-small": {
+          litellm_provider: "openai",
+          mode: "embedding",
+        },
+      })
+
   afterAll(() => {
     config.end()
   })
@@ -52,6 +63,7 @@ describe("agent files", () => {
 
   const createAgentWithRag = async () => {
     mockLiteLLMProviders()
+    mockLiteLLMModelCostMap()
     const embeddingValidationScope = nock(environment.LITELLM_URL)
       .post("/v1/embeddings")
       .reply(200, { data: [] })

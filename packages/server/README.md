@@ -10,5 +10,5 @@ A migration system has been created in order to modify existing apps when breaki
 
 In order to add a new migration:
 
-1. Run `yarn add-app-migration [title]`
+1. Run `yarn add-workspace-migration [title]`
 2. Write your code on the newly created file

@@ -1,5 +1,6 @@
 import * as automationUtils from "../../automationUtils"
 import { getErrorMessage } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
   AgentStepInputs,
   AgentStepOutputs,
@@ -11,7 +12,7 @@ import {
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
   updatePendingToolCalls,
-} from "../../../sdk/workspace/ai/agents/utils"
+} from "../../../sdk/workspace/ai/agents"
 import {
   ToolLoopAgent,
   stepCountIs,
@@ -92,7 +93,8 @@ export async function run({
         const { chat, providerOptions } = await sdk.ai.llm.createLLM(
           agentConfig.aiconfig,
           sessionId,
-          agentSpan
+          agentSpan,
+          agentId
         )
 
         let outputOption = undefined
@@ -123,12 +125,15 @@ export async function run({
           stopWhen: stepCountIs(30),
           providerOptions: providerOptions?.(hasTools),
           output: outputOption,
-          onStepFinish({ content, toolCalls, toolResults }) {
+          async onStepFinish({ content, toolCalls, toolResults }) {
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
             for (const part of content) {
               if (part.type === "tool-error") {
                 pendingToolCalls.delete(part.toolCallId)
               }
+            }
+            for (const _toolResult of toolResults) {
+              await quotas.addAction(async () => {})
             }
           },
         })

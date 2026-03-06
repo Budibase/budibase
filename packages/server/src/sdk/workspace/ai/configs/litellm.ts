@@ -507,6 +507,28 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
   return json as LiteLLMPublicProvider[]
 }
 
+type LiteLLMModelCostMap = Record<
+  string,
+  {
+    litellm_provider?: string | string[] | null
+    mode?: string | string[] | null
+  }
+>
+
+export async function fetchPublicModelCostMap(): Promise<LiteLLMModelCostMap> {
+  const res = await fetch(`${liteLLMUrl}/public/litellm_model_cost_map`)
+  if (!res.ok) {
+    const text = await res.text()
+    throw new HTTPError(
+      `Error fetching LiteLLM model cost map: ${text || res.statusText}`,
+      res.status
+    )
+  }
+
+  const json = await res.json()
+  return json as LiteLLMModelCostMap
+}
+
 async function mapToLiteLLMProvider(provider: string) {
   if (provider === BUDIBASE_AI_PROVIDER_ID) {
     return "custom_openai"
