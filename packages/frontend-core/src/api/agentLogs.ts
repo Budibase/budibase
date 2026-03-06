@@ -1,6 +1,7 @@
 import type {
   FetchAgentLogsResponse,
   AgentLogRequestDetail,
+  AgentLogSession,
 } from "@budibase/types"
 import type { BaseAPIClient } from "./types"
 
@@ -11,7 +12,6 @@ export interface AgentLogEndpoints {
       startDate?: string
       endDate?: string
       page?: number
-      pageSize?: number
     }
   ) => Promise<FetchAgentLogsResponse>
   fetchAgentLogDetail: (
@@ -19,6 +19,10 @@ export interface AgentLogEndpoints {
     requestId: string,
     startDate?: string
   ) => Promise<AgentLogRequestDetail>
+  fetchAgentLogSession: (
+    agentId: string,
+    sessionId: string
+  ) => Promise<AgentLogSession | null>
 }
 
 export const buildAgentLogEndpoints = (
@@ -29,7 +33,6 @@ export const buildAgentLogEndpoints = (
     if (opts.startDate) params.set("startDate", opts.startDate)
     if (opts.endDate) params.set("endDate", opts.endDate)
     if (opts.page !== undefined) params.set("page", String(opts.page))
-    if (opts.pageSize !== undefined) params.set("pageSize", String(opts.pageSize))
     const query = params.toString()
     return await API.get({
       url: `/api/agent/${agentId}/logs${query ? `?${query}` : ""}`,
@@ -42,6 +45,13 @@ export const buildAgentLogEndpoints = (
     const query = params.toString()
     return await API.get({
       url: `/api/agent/${agentId}/logs/${requestId}${query ? `?${query}` : ""}`,
+    })
+  },
+
+  fetchAgentLogSession: async (agentId, sessionId) => {
+    const params = new URLSearchParams({ sessionId })
+    return await API.get({
+      url: `/api/agent/${agentId}/logs/session?${params.toString()}`,
     })
   },
 })

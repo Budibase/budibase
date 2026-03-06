@@ -14,6 +14,7 @@ const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 interface LiteLLMSpendLog {
   request_id: string
   session_id?: string
+  end_user?: string
   model?: string
   prompt_tokens?: number
   completion_tokens?: number
@@ -21,6 +22,7 @@ interface LiteLLMSpendLog {
   startTime?: string
   endTime?: string
   status?: string
+  session_total_count?: number
   proxy_server_request?: {
     messages?: LiteLLMProxyMessage[]
   }
@@ -117,23 +119,76 @@ function extractFirstInput(logs: LiteLLMSpendLog[]): string {
   return ""
 }
 
+function formatLiteLLMDateTime(
+  value: string,
+  mode: "start" | "end" = "start"
+): string {
+  if (!value) {
+    return value
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return `${value} ${mode === "start" ? "00:00:00" : "23:59:59"}`
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value.replace("T", " ").replace("Z", "").split(".")[0]
+  }
+
+  const iso = date.toISOString().replace("T", " ")
+  return iso.slice(0, 19)
+}
+
+function buildSession(sessionId: string, sessionLogs: LiteLLMSpendLog[]) {
+  const sorted = sessionLogs.sort(
+    (a, b) =>
+      new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime()
+  )
+
+  const entries: AgentLogEntry[] = sorted.map(log => ({
+    requestId: log.request_id,
+    sessionId,
+    model: log.model || "unknown",
+    inputTokens: log.prompt_tokens || 0,
+    outputTokens: log.completion_tokens || 0,
+    spend: log.spend || 0,
+    startTime: log.startTime || "",
+    endTime: log.endTime || "",
+    status: log.status === "failure" ? "error" : "success",
+  }))
+
+  return {
+    sessionId,
+    firstInput: extractFirstInput(sorted),
+    trigger: determineTrigger(sessionId),
+    startTime: entries[0]?.startTime || "",
+    operations: Math.max(
+      entries.length,
+      ...sorted.map(log => log.session_total_count || 0)
+    ),
+    status: determineStatus(entries),
+    entries,
+  } satisfies AgentLogSession
+}
+
 export async function fetchSessions(
   agentId: string,
   startDate: string,
   endDate: string,
-  page: number,
-  pageSize: number
+  page: number
 ): Promise<FetchAgentLogsResponse> {
   const apiPage = Math.max(1, page + 1)
-  const apiPageSize = Math.min(100, pageSize)
   const params = new URLSearchParams({
     end_user: `bb-agent:${agentId}`,
-    start_date: startDate,
-    end_date: endDate,
+    start_date: formatLiteLLMDateTime(startDate, "start"),
+    end_date: formatLiteLLMDateTime(endDate, "end"),
     page: String(apiPage),
-    page_size: String(apiPageSize),
+    page_size: "100",
+    sort_by: "startTime",
+    sort_order: "desc",
   })
-  const response = await fetch(`${liteLLMUrl}/spend/logs/v2?${params}`, {
+  const response = await fetch(`${liteLLMUrl}/spend/logs/ui?${params}`, {
     headers: {
       Authorization: liteLLMAuthorizationHeader,
     },
@@ -158,33 +213,7 @@ export async function fetchSessions(
 
   const sessions: AgentLogSession[] = []
   for (const [sessionId, sessionLogs] of sessionMap) {
-    const sorted = sessionLogs.sort(
-      (a, b) =>
-        new Date(a.startTime || 0).getTime() -
-        new Date(b.startTime || 0).getTime()
-    )
-
-    const entries: AgentLogEntry[] = sorted.map(log => ({
-      requestId: log.request_id,
-      sessionId,
-      model: log.model || "unknown",
-      inputTokens: log.prompt_tokens || 0,
-      outputTokens: log.completion_tokens || 0,
-      spend: log.spend || 0,
-      startTime: log.startTime || "",
-      endTime: log.endTime || "",
-      status: log.status === "failure" ? "error" : "success",
-    }))
-
-    sessions.push({
-      sessionId,
-      firstInput: extractFirstInput(sorted),
-      trigger: determineTrigger(sessionId),
-      startTime: entries[0]?.startTime || "",
-      operations: entries.length,
-      status: determineStatus(entries),
-      entries,
-    })
+    sessions.push(buildSession(sessionId, sessionLogs))
   }
 
   sessions.sort(
@@ -198,16 +227,77 @@ export async function fetchSessions(
   }
 }
 
+export async function fetchSessionDetail(
+  agentId: string,
+  sessionId: string
+): Promise<AgentLogSession | null> {
+  const firstPageParams = new URLSearchParams({
+    session_id: sessionId,
+    page: "1",
+    page_size: "100",
+  })
+  const firstPageResponse = await fetch(
+    `${liteLLMUrl}/spend/logs/session/ui?${firstPageParams}`,
+    {
+      headers: {
+        Authorization: liteLLMAuthorizationHeader,
+      },
+    }
+  )
+
+  if (!firstPageResponse.ok) {
+    const text = await firstPageResponse.text()
+    throw new Error(
+      `Error fetching agent session detail: ${text || firstPageResponse.statusText}`
+    )
+  }
+
+  const firstPageJson = await firstPageResponse.json()
+  const logs: LiteLLMSpendLog[] = firstPageJson.data || []
+  const totalPages = firstPageJson.total_pages || 0
+
+  for (let currentPage = 2; currentPage <= totalPages; currentPage += 1) {
+    const params = new URLSearchParams({
+      session_id: sessionId,
+      page: String(currentPage),
+      page_size: "100",
+    })
+    const response = await fetch(`${liteLLMUrl}/spend/logs/session/ui?${params}`, {
+      headers: {
+        Authorization: liteLLMAuthorizationHeader,
+      },
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(
+        `Error fetching agent session detail: ${text || response.statusText}`
+      )
+    }
+
+    const json = await response.json()
+    logs.push(...(json.data || []))
+  }
+
+  const filteredLogs = logs.filter(
+    log => !log.end_user || log.end_user === `bb-agent:${agentId}`
+  )
+
+  if (!filteredLogs.length) {
+    return null
+  }
+
+  return buildSession(sessionId, filteredLogs)
+}
+
 export async function fetchRequestDetail(
   agentId: string,
   requestId: string,
   startDate: string
 ): Promise<AgentLogRequestDetail> {
-  const fullStartDate = startDate.includes(" ")
-    ? startDate
-    : `${startDate} 00:00:00`
-  const params = new URLSearchParams({ start_date: fullStartDate })
-  console.log(params)
+  const params = new URLSearchParams({
+    start_date: formatLiteLLMDateTime(startDate, "start"),
+  })
   const response = await fetch(
     `${liteLLMUrl}/spend/logs/ui/${requestId}?${params}`,
     {
@@ -225,8 +315,6 @@ export async function fetchRequestDetail(
   }
 
   const data = (await response.json()) as LiteLLMRequestDetail
-  console.log(response)
-
   const requestMessages = data.proxy_server_request?.messages || []
   const agent = await getOrThrow(agentId)
   const toolDisplayNames = getToolDisplayNames(

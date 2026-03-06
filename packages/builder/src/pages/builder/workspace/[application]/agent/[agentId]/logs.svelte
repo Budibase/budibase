@@ -100,7 +100,6 @@
         startDate,
         endDate,
         page,
-        pageSize: 20,
       })
 
       sessions = response.sessions
@@ -167,10 +166,29 @@
     await Promise.all(session.entries.map(entry => loadStepDetail(entry)))
   }
 
-  function selectSession(session: AgentLogSession) {
+  async function selectSession(session: AgentLogSession) {
+    const agentId = $selectedAgent?._id
     selectedSession = session
     resetDetailState()
-    prefetchSessionDetails(session)
+
+    if (!agentId) {
+      await prefetchSessionDetails(session)
+      return
+    }
+
+    try {
+      const fullSession = await API.fetchAgentLogSession(agentId, session.sessionId)
+      if (selectedSession?.sessionId !== session.sessionId) {
+        return
+      }
+      selectedSession = fullSession || session
+      await prefetchSessionDetails(fullSession || session)
+    } catch (error) {
+      console.error("Failed to fetch full session detail", error)
+      if (selectedSession?.sessionId === session.sessionId) {
+        await prefetchSessionDetails(session)
+      }
+    }
   }
 
   function onSessionRowClick(row: { sessionId?: string }) {
@@ -181,7 +199,7 @@
       item => item.sessionId === row.sessionId
     )
     if (session) {
-      selectSession(session)
+      void selectSession(session)
     }
   }
 
