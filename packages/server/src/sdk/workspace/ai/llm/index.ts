@@ -13,7 +13,8 @@ export * from "./messages"
 export async function createLLM(
   configId: string,
   sessionId?: string,
-  span?: tracer.Span
+  span?: tracer.Span,
+  agentId?: string
 ): Promise<LLMResponse> {
   if (!configId) {
     throw new HTTPError("Config id not found", 422)
@@ -32,9 +33,10 @@ export async function createLLM(
       aiConfig.model,
       sessionId,
       span,
-      aiConfig.reasoningEffort
+      aiConfig.reasoningEffort,
+      agentId
     )
   }
 
-  return createLiteLLMOpenAI(aiConfig, sessionId, span)
+  return createLiteLLMOpenAI(aiConfig, sessionId, span, agentId)
 }

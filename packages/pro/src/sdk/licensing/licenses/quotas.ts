@@ -230,7 +230,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
         ...quotas.rows(UNLIMITED),
         ...quotas.apps(UNLIMITED),
         ...quotas.users(UNLIMITED),
-        ...quotas.creators(UNLIMITED),
+        ...quotas.creators(1),
         ...quotas.userGroups(UNLIMITED),
         ...quotas.plugins(UNLIMITED),
         ...quotas.customAIConfigurations(UNLIMITED),

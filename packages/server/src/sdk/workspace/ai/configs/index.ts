@@ -20,6 +20,16 @@ import * as liteLLM from "./litellm"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
+const normalizeProviderModelId = (
+  modelId: string,
+  providerId: string
+): string => {
+  const providerPrefix = `${providerId}/`
+  return modelId.startsWith(providerPrefix)
+    ? modelId.slice(providerPrefix.length)
+    : modelId
+}
+
 const encodeSecret = (value: string): string => {
   if (!value || value.startsWith(SECRET_ENCODING_PREFIX)) {
     return value
@@ -364,12 +374,77 @@ let liteLLMProviders: LLMProvider[]
 
 export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
   if (!liteLLMProviders?.length) {
-    const providers = await liteLLM.fetchPublicProviders()
+    const [providers, modelCostMap] = await Promise.all([
+      liteLLM.fetchPublicProviders(),
+      liteLLM.fetchPublicModelCostMap(),
+    ])
+
     liteLLMProviders = providers.map(provider => {
+      const modelsByType = Object.entries(modelCostMap).reduce<{
+        completions: string[]
+        embeddings: string[]
+      }>(
+        (acc, [modelId, metadata]) => {
+          const modelProvider = metadata?.litellm_provider
+          const isMatchingProvider = Array.isArray(modelProvider)
+            ? modelProvider.includes(provider.litellm_provider)
+            : typeof modelProvider === "string"
+              ? modelProvider
+                  .split(",")
+                  .map(value => value.trim())
+                  .includes(provider.litellm_provider)
+              : false
+
+          if (!isMatchingProvider) {
+            return acc
+          }
+
+          const normalizedModelId = normalizeProviderModelId(
+            modelId,
+            provider.litellm_provider
+          )
+
+          const modelModes = Array.isArray(metadata?.mode)
+            ? metadata.mode
+            : typeof metadata?.mode === "string"
+              ? metadata.mode.split(",")
+              : []
+          const normalizedModes = modelModes.map(mode =>
+            mode.trim().toLowerCase()
+          )
+
+          if (normalizedModes.includes("embedding")) {
+            acc.embeddings.push(normalizedModelId)
+          }
+
+          if (
+            !normalizedModes.length ||
+            normalizedModes.some(mode =>
+              ["chat", "completion", "responses"].includes(mode)
+            )
+          ) {
+            acc.completions.push(normalizedModelId)
+          }
+
+          return acc
+        },
+        { completions: [], embeddings: [] }
+      )
+
+      const models = {
+        completions: [...new Set(modelsByType.completions)].sort((a, b) =>
+          a.localeCompare(b)
+        ),
+        embeddings: [...new Set(modelsByType.embeddings)].sort((a, b) =>
+          a.localeCompare(b)
+        ),
+      }
+
       const mapProvider: RequiredKeys<LLMProvider> = {
         id: provider.provider,
         displayName: provider.provider_display_name,
         externalProvider: provider.litellm_provider,
+        models,
         credentialFields: provider.credential_fields.map(f => {
           const field: RequiredKeys<LLMProviderField> = {
             key: f.key,
@@ -391,6 +466,10 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
       id: BUDIBASE_AI_PROVIDER_ID,
       displayName: "Budibase AI",
       externalProvider: "custom_openai",
+      models: {
+        completions: ["budibase/v1"],
+        embeddings: [],
+      },
       credentialFields: [
         { key: "api_key", label: "api_key", field_type: "password" },
       ],

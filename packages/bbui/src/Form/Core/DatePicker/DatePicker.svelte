@@ -77,6 +77,7 @@
   portalTarget={appendTo}
   {anchor}
   {align}
+  useAnchorWidth={timeOnly}
   resizable={false}
 >
   {#if isOpen}
