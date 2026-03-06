@@ -14,7 +14,7 @@ const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
 interface LiteLLMSpendLog {
   request_id: string
-  session_id?: string
+  session_id: string
   end_user?: string
   model?: string
   prompt_tokens?: number
@@ -64,6 +64,11 @@ interface LiteLLMRequestDetail {
   proxy_server_request?: {
     messages?: LiteLLMProxyMessage[]
   }
+}
+
+interface LiteLLMLogsPage<T> {
+  data: T[]
+  total_pages: number
 }
 
 function getExpectedEndUser(agentId: string): string {
@@ -206,13 +211,13 @@ export async function fetchSessions(
     throw new Error(`Error fetching agent logs: ${text || response.statusText}`)
   }
 
-  const json = await response.json()
-  const logs: LiteLLMSpendLog[] = Array.isArray(json) ? json : json.data || []
-  const totalPages: number = json.total_pages || 0
+  const json = (await response.json()) as LiteLLMLogsPage<LiteLLMSpendLog>
+  const logs = json.data
+  const totalPages = json.total_pages
 
   const sessionMap = new Map<string, LiteLLMSpendLog[]>()
   for (const log of logs) {
-    const sessionId = log.session_id || log.request_id
+    const sessionId = log.session_id
     const existing = sessionMap.get(sessionId) || []
     existing.push(log)
     sessionMap.set(sessionId, existing)
@@ -259,9 +264,10 @@ export async function fetchSessionDetail(
     )
   }
 
-  const firstPageJson = await firstPageResponse.json()
-  const logs: LiteLLMSpendLog[] = firstPageJson.data || []
-  const totalPages = firstPageJson.total_pages || 0
+  const firstPageJson =
+    (await firstPageResponse.json()) as LiteLLMLogsPage<LiteLLMSpendLog>
+  const logs = firstPageJson.data
+  const totalPages = firstPageJson.total_pages
 
   for (let currentPage = 2; currentPage <= totalPages; currentPage += 1) {
     const params = new URLSearchParams({
@@ -285,8 +291,8 @@ export async function fetchSessionDetail(
       )
     }
 
-    const json = await response.json()
-    logs.push(...(json.data || []))
+    const json = (await response.json()) as LiteLLMLogsPage<LiteLLMSpendLog>
+    logs.push(...json.data)
   }
 
   const filteredLogs = logs.filter(

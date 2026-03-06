@@ -8,13 +8,15 @@
     operations: number
   }
 
+  type TimeRange = "1h" | "8h" | "24h" | "7d" | "30d"
+
   type Props = {
     loading: boolean
     sessionTableData: SessionTableRow[]
     hasMore: boolean
     currentPage: number
     statusFilter?: string
-    timeRange?: string
+    timeRange?: TimeRange
     triggerFilter?: string
     onSessionRowClick: (row: { sessionId?: string }) => void
     onPrevPage: () => void

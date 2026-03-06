@@ -33,7 +33,7 @@ describe("agentLogs controller", () => {
     } as unknown as UserCtx<void, FetchAgentLogsResponse>
   }
 
-  it("sanitizes invalid page queries before calling the sdk", async () => {
+  it("rejects invalid page queries", async () => {
     fetchSessionsMock.mockResolvedValue({
       sessions: [],
       currentPage: 0,
@@ -42,13 +42,10 @@ describe("agentLogs controller", () => {
 
     const ctx = buildCtx({ page: "1abc" })
 
-    await fetchAgentLogs(ctx)
-
-    expect(fetchSessionsMock).toHaveBeenCalledWith(
-      "agent-1",
-      expect.any(String),
-      expect.any(String),
-      0
-    )
+    await expect(fetchAgentLogs(ctx)).rejects.toMatchObject({
+      status: 400,
+      message: "Invalid page query",
+    })
+    expect(fetchSessionsMock).not.toHaveBeenCalled()
   })
 })

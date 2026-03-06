@@ -10,6 +10,9 @@
   import LogsSessionDetail from "./LogComponents/LogsSessionDetail.svelte"
   import LogsSessionList from "./LogComponents/LogsSessionList.svelte"
   import { formatLogDateForApi, formatTime } from "./LogComponents/utils"
+  import { notifications } from "@budibase/bbui"
+
+  type TimeRange = "1h" | "8h" | "24h" | "7d" | "30d"
 
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)
@@ -22,14 +25,14 @@
   let stepLoadingByRequestId = $state<Record<string, boolean>>({})
 
   let statusFilter = $state<string>("all")
-  let timeRange = $state<string>("7d")
+  let timeRange = $state<TimeRange>("7d")
   let triggerFilter = $state<string>("all")
 
   let mounted = false
 
   const HOUR = 60 * 60 * 1000
   const DAY = 24 * HOUR
-  const TIME_RANGE_MS: Record<string, number> = {
+  const TIME_RANGE_MS: Record<TimeRange, number> = {
     "1h": HOUR,
     "8h": 8 * HOUR,
     "24h": DAY,
@@ -41,7 +44,7 @@
     const now = new Date()
     const endDate = formatLogDateForApi(new Date(now.getTime() + DAY))
     const includeTime = ["1h", "8h", "24h"].includes(timeRange)
-    const start = new Date(now.getTime() - (TIME_RANGE_MS[timeRange] || TIME_RANGE_MS["7d"]))
+    const start = new Date(now.getTime() - TIME_RANGE_MS[timeRange])
 
     return {
       startDate: formatLogDateForApi(start, { includeTime }),
@@ -98,8 +101,11 @@
       hasMore = response.hasMore
 
       const selectedStillExists = selectedSession
-        ? response.sessions.some(s => s.sessionId === selectedSession.sessionId)
+        ? response.sessions.some(
+            s => s.sessionId === currentSelectedSession.sessionId
+          )
         : false
+
       if (!selectedStillExists) {
         selectedSession = null
         resetDetailState()
@@ -168,16 +174,23 @@
     }
 
     try {
-      const fullSession = await API.fetchAgentLogSession(agentId, session.sessionId)
+      const fullSession = await API.fetchAgentLogSession(
+        agentId,
+        session.sessionId
+      )
       if (selectedSession?.sessionId !== session.sessionId) {
         return
       }
-      selectedSession = fullSession || session
-      await prefetchSessionDetails(fullSession || session)
+      if (!fullSession) {
+        throw new Error("Session detail not found")
+      }
+      selectedSession = fullSession
+      await prefetchSessionDetails(fullSession)
     } catch (error) {
-      console.error("Failed to fetch full session detail", error)
+      notifications.error("Failed to fetch full session detail", error)
       if (selectedSession?.sessionId === session.sessionId) {
-        await prefetchSessionDetails(session)
+        selectedSession = null
+        resetDetailState()
       }
     }
   }

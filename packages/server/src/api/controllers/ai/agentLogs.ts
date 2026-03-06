@@ -4,6 +4,7 @@ import type {
   AgentLogSession,
   UserCtx,
 } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 function getDefaultLogRange() {
@@ -21,7 +22,7 @@ function sanitizePageQuery(page?: string): number {
   const normalizedPage = page?.trim()
 
   if (!normalizedPage || !/^\d+$/.test(normalizedPage)) {
-    return 0
+    throw new HTTPError("Invalid page query", 400)
   }
 
   return Number.parseInt(normalizedPage, 10)
