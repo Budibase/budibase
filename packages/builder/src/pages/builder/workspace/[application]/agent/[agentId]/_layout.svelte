@@ -150,12 +150,21 @@
     </div>
   </div>
   <div class="config-page" class:full-width={activeTab === "Logs"}>
-    <div class="config-content" class:full-width={activeTab === "Logs"}>
+    <div
+      class="config-content"
+      class:full-width={activeTab === "Logs"}
+      class:logs-tab={activeTab === "Logs"}
+    >
       <div class="config-form">
-        <!-- svelte-ignore slot_element_deprecated -->
-        <Layout gap="L">
+        {#if activeTab === "Logs"}
+          <!-- svelte-ignore slot_element_deprecated -->
           <slot />
-        </Layout>
+        {:else}
+          <!-- svelte-ignore slot_element_deprecated -->
+          <Layout gap="L">
+            <slot />
+          </Layout>
+        {/if}
       </div>
     </div>
     {#if activeTab !== "Logs"}
@@ -203,6 +212,14 @@
   .config-content.full-width {
     grid-column: 1 / -1;
     padding: var(--spacing-xl) var(--spacing-xl) 20px;
+  }
+
+  .config-content.full-width.logs-tab {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
   }
 
   .config-content::-webkit-scrollbar {
