@@ -42,6 +42,14 @@ const mockLiteLLMProviders = () =>
           { key: "api_base", label: "Base URL", field_type: "text" },
         ],
       },
+      {
+        provider: "groq",
+        provider_display_name: "Groq",
+        litellm_provider: "groq",
+        credential_fields: [
+          { key: "api_key", label: "API Key", field_type: "password" },
+        ],
+      },
     ])
 
 const mockLiteLLMModelCostMap = () =>
@@ -56,6 +64,7 @@ const mockLiteLLMModelCostMap = () =>
       },
       "claude-3-5-haiku": { litellm_provider: "anthropic", mode: "chat" },
       "gpt-4o": { litellm_provider: ["openai", "azure"], mode: "responses" },
+      "groq/qwen/qwen3-32b": { litellm_provider: "groq", mode: "chat" },
     })
 
 const mockLiteLLMTeam = () =>
@@ -126,6 +135,14 @@ describe("BudibaseAI", () => {
         models: {
           completions: ["gpt-4o", "gpt-4o-mini"],
           embeddings: ["text-embedding-3-small"],
+        },
+      })
+
+      const groqProvider = providers.find(provider => provider.id === "groq")
+      expect(groqProvider).toMatchObject({
+        models: {
+          completions: ["qwen/qwen3-32b"],
+          embeddings: [],
         },
       })
     })
