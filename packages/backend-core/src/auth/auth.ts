@@ -26,6 +26,7 @@ import {
 import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
 import { getSessionsForUser, invalidateSessions } from "../security/sessions"
 import { clearCookie, getCookie } from "../utils"
+import OpenIDConnectStrategy from "@govtechsg/passport-openidconnect"
 
 const refresh = require("passport-oauth2-refresh")
 
@@ -56,7 +57,7 @@ async function refreshOIDCAccessToken(
 ): Promise<RefreshResponse> {
   const callbackUrl = await oidc.getCallbackUrl()
   let enrichedConfig: any
-  let strategy: any
+  let strategy: OpenIDConnectStrategy
 
   try {
     enrichedConfig = await oidc.fetchStrategyConfig(chosenConfig, callbackUrl)
@@ -68,11 +69,7 @@ async function refreshOIDCAccessToken(
     throw new Error("Could not refresh OAuth Token")
   }
 
-  refresh.use(strategy, {
-    setRefreshOAuth2() {
-      return strategy._getOAuth2Client(enrichedConfig)
-    },
-  })
+  refresh.use(strategy)
 
   return new Promise(resolve => {
     refresh.requestNewAccessToken(
