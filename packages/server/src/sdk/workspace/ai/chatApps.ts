@@ -40,7 +40,7 @@ const normalizeConversationStarters = (
   })
 }
 
-const normalizeRoleId = (roleId?: string) => {
+const normalizeRoleId = (roleId?: unknown) => {
   if (roleId === undefined) {
     return undefined
   }
