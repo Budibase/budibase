@@ -124,11 +124,10 @@ async function processUrlFile(
     return { kind: "image", value: toImageDataUrl(data, fileType) }
   }
 
-  const data = await response.buffer()
   const filename = `document.${fileType || "pdf"}`
   try {
     const uploaded = await llm.uploadFile(
-      Readable.from(data),
+      response.body as Readable,
       filename,
       fileType
     )
@@ -138,6 +137,13 @@ async function processUrlFile(
     }
   } catch (error) {
     if (shouldInlineFileAfterUploadFailure(error)) {
+      const fallbackResponse = await fetch(fileUrl)
+      if (!fallbackResponse.ok) {
+        throw new Error(
+          `Failed to fetch file from URL: ${fallbackResponse.statusText}`
+        )
+      }
+      const data = await fallbackResponse.buffer()
       const text = await extractPdfText(data)
       return { kind: "text", value: text }
     }
@@ -158,20 +164,17 @@ async function processAttachmentFile(
     return { kind: "image", value: toImageDataUrl(data, contentType) }
   }
 
-  const data = await buffer(stream)
   const filename = attachment.name || "document"
   try {
-    const uploaded = await llm.uploadFile(
-      Readable.from(data),
-      filename,
-      contentType
-    )
+    const uploaded = await llm.uploadFile(stream, filename, contentType)
     return {
       kind: "file",
       value: uploaded,
     }
   } catch (error) {
     if (shouldInlineFileAfterUploadFailure(error)) {
+      const fallback = await objectStore.getReadStream(bucket, attachment.key!)
+      const data = await buffer(fallback.stream)
       const text = await extractPdfText(data)
       return { kind: "text", value: text }
     }
