@@ -287,14 +287,12 @@ export const workspaceRoutes = (
           path: "new",
           component: Pages.get("connection"),
           skipNav: true,
-          props: { create: true },
         },
         {
           title: "New connection from template",
           path: "new/:templateId",
           component: Pages.get("connection"),
           skipNav: true,
-          props: { create: true },
         },
         {
           title: "Connection",
