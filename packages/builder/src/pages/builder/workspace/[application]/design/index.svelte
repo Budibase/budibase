@@ -3,5 +3,5 @@
 
   $redirect
 
-  $redirect("../home")
+  $redirect("../home?type=app")
 </script>

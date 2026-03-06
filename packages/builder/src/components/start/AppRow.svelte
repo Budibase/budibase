@@ -34,7 +34,7 @@
   }
 
   const goToBuilder = () => {
-    goto && goto(`../../workspace/${app.devId}`)
+    goto && goto(`../../workspace/${app.devId}/home`)
   }
 
   const goToOverview = () => {

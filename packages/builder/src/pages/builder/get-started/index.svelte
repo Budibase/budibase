@@ -23,7 +23,7 @@
     // Refresh the apps list to include the newly created app
     await appsStore.load()
     // Redirect to the newly created workspace
-    goto(`/builder/workspace/${event.detail.instance._id}`)
+    goto(`/builder/workspace/${event.detail.instance._id}/home`)
   }
 </script>
 

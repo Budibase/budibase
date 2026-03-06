@@ -35,15 +35,9 @@
       return
     }
 
-    const workspaceHomeEnabled = $featureFlags[FeatureFlag.WORKSPACE_HOME]
     const agentsEnabled = $featureFlags[FeatureFlag.AI_AGENTS]
 
-    if (workspaceHomeEnabled) {
-      goto(agentsEnabled ? "../home?type=agent" : "../home")
-      return
-    }
-
-    goto(agentsEnabled ? "../agent" : "../")
+    goto(agentsEnabled ? "../home?type=agent" : "../home")
   })
 
   $: namedAgents = agents.filter(agent => Boolean(agent?.name))

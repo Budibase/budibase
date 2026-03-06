@@ -221,7 +221,10 @@
           const defaultApp = $enrichedApps.find(app => app.editable)
           // Only redirect if enriched apps are loaded and app is editable
           if (defaultApp?.devId) {
-            return { type: "redirect", path: `./workspace/${defaultApp.devId}` }
+            return {
+              type: "redirect",
+              path: `./workspace/${defaultApp.devId}/home`,
+            }
           }
         }
       }
