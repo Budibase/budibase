@@ -425,6 +425,7 @@ describe("chat conversation transient behavior", () => {
       chat: mockModel as LanguageModelV3,
       embedding: {} as EmbeddingModelV3,
       providerOptions: jest.fn(),
+      uploadFile: jest.fn(),
     })
     ;(
       convertToModelMessages as jest.MockedFunction<
@@ -739,6 +740,7 @@ describe("Agent chat tool call tracking", () => {
       chat: {} as any,
       embedding: {} as any,
       providerOptions: jest.fn().mockReturnValue({}),
+      uploadFile: jest.fn(),
     })
     ;(
       convertToModelMessages as jest.MockedFunction<
