@@ -5,6 +5,7 @@ import {
   ConfigType,
   GoogleInnerConfig,
   OIDCInnerConfig,
+  OIDCStrategyConfiguration,
   PlatformLogoutOpts,
   SessionCookie,
   SSOProviderType,
@@ -56,7 +57,7 @@ async function refreshOIDCAccessToken(
   refreshToken: string
 ): Promise<RefreshResponse> {
   const callbackUrl = await oidc.getCallbackUrl()
-  let enrichedConfig: any
+  let enrichedConfig: OIDCStrategyConfiguration
   let strategy: OpenIDConnectStrategy
 
   try {
