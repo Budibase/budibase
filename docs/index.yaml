@@ -2,6 +2,30 @@ apiVersion: v1
 entries:
   budibase:
   - apiVersion: v2
+    appVersion: 3.32.0
+    created: "2026-03-06T09:19:05.221019942Z"
+    dependencies:
+    - condition: services.couchdb.enabled
+      name: couchdb
+      repository: https://apache.github.io/couchdb-helm
+      version: 4.5.6
+    description: Budibase is an open source low-code platform, helping thousands of
+      teams build apps for their workplace in minutes.
+    digest: 976529c7ffdf0e7f65a8135358091aafc3f22390730b53e7e5a45cfb4cb7243c
+    icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - budibase-3.0.553.tgz
+    version: 3.0.553
+  - apiVersion: v2
     appVersion: 3.31.9
     created: "2026-03-05T15:22:05.71832882Z"
     dependencies:
@@ -15644,8 +15668,8 @@ entries:
     - budibase-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v2
-    appVersion: 3.31.9
-    created: "2026-03-05T15:22:07.428155082Z"
+    appVersion: 3.32.0
+    created: "2026-03-06T09:19:07.62308731Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -15653,7 +15677,7 @@ entries:
       version: 4.5.6
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: c528391a83a0719d655e7d2caba1fac58f9bf2a18cdff993849396fc71890c09
+    digest: 703197f99db5d5fe3813af97633fdb320a4d73e0bfe110b7e2480267c27f3fbd
     icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
     keywords:
     - low-code
@@ -28952,4 +28976,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2026-03-06T09:17:40.987667378Z"
+generated: "2026-03-06T09:19:07.613167147Z"
