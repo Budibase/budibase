@@ -149,7 +149,7 @@ const environment = {
   ENABLE_PLUGIN_GH_ORIGIN_BACKFILL:
     process.env.ENABLE_PLUGIN_GH_ORIGIN_BACKFILL ?? "true",
   SYNC_MIGRATION_CHECKS_MS:
-    parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 5000,
+    parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 2000,
   SKIP_MIGRATION_LOCKS_IN_TESTS:
     process.env.SKIP_MIGRATION_LOCKS_IN_TESTS ?? true,
   REST_REJECT_UNAUTHORIZED: process.env.REST_REJECT_UNAUTHORIZED !== "false",

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Updating } from "@budibase/frontend-core"
   import { API } from "../api"
   import { onMount } from "svelte"

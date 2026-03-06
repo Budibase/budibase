@@ -1,4 +1,5 @@
 import { context, db, Header } from "@budibase/backend-core"
+import { ClientHeader } from "@budibase/shared-core"
 import { UserCtx } from "@budibase/types"
 import { Next } from "koa"
 import environment from "../environment"
@@ -17,10 +18,14 @@ export type WorkspaceMigration = {
   disabled?: boolean
 }
 
-const SKIP_MIGRATION_WAIT_ENDPOINTS = new RegExp(["appPackage"].join("|"))
+const BUILDER_APP_PACKAGE_ENDPOINT =
+  /^\/api\/applications\/[^/]+\/appPackage\/?$/
 
 function shouldSkipMigrationWait(ctx: UserCtx): boolean {
-  return SKIP_MIGRATION_WAIT_ENDPOINTS.test(ctx.path || "")
+  return (
+    BUILDER_APP_PACKAGE_ENDPOINT.test(ctx.path || "") &&
+    ctx.headers[Header.CLIENT] === ClientHeader.BUILDER
+  )
 }
 
 export function getLatestEnabledMigrationId(migrations?: WorkspaceMigration[]) {
@@ -85,6 +90,7 @@ export async function checkMissingMigrations(
       }
     } else {
       ctx.response.set(Header.MIGRATING_APP, workspaceId)
+      ctx.response.set(Header.SKIP_MIGRATING_WAIT, "true")
     }
   }
 
