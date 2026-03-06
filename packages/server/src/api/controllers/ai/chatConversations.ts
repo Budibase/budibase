@@ -232,7 +232,8 @@ export async function webhookChat({
       baseSystemPrompt: ai.agentSystemPrompt(user),
       includeGoal: false,
     })
-  const sessionId = chat._id || v4()
+  const providerPrefix = chat.channel?.provider || "chat"
+  const sessionId = `${providerPrefix}:${chat._id || v4()}`
   const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
     agent.aiconfig,
     sessionId,
@@ -399,7 +400,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     }
   }
 
-  const { systemPrompt: system, tools } =
+  const { systemPrompt: system, tools, toolDisplayNames } =
     await sdk.ai.agents.buildPromptAndTools(agent, {
       baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
       includeGoal: false,
@@ -465,9 +466,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
     ctx.respond = false
     const streamStartTime = Date.now()
-    const baseMetadata = ragSourcesMetadata?.length
-      ? { ragSources: ragSourcesMetadata }
-      : {}
+    const baseMetadata = {
+      ...(ragSourcesMetadata?.length ? { ragSources: ragSourcesMetadata } : {}),
+      ...(Object.keys(toolDisplayNames).length > 0 ? { toolDisplayNames } : {}),
+    }
 
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,

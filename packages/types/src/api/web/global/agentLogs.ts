@@ -13,7 +13,7 @@ export interface AgentLogEntry {
 export interface AgentLogSession {
   sessionId: string
   firstInput: string
-  trigger: "Chat" | "Automation"
+  trigger: string
   startTime: string
   operations: number
   status: "success" | "error"
@@ -34,12 +34,14 @@ export interface AgentLogMessage {
 export interface AgentLogToolCall {
   id?: string
   name: string
+  displayName?: string
   arguments: string
 }
 
 export interface AgentLogToolResult {
   toolCallId?: string
   name: string
+  displayName?: string
   content: string
 }
 

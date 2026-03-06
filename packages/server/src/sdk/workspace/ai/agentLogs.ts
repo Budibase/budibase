@@ -6,6 +6,7 @@ import type {
 } from "@budibase/types"
 import fetch from "node-fetch"
 import env from "../../../environment"
+import { getAvailableTools, getOrThrow, getToolDisplayNames } from "./agents"
 
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
@@ -75,7 +76,23 @@ function toContentString(content: unknown): string {
   }
 }
 
-function determineTrigger(sessionId: string): "Chat" | "Automation" {
+function determineTrigger(sessionId: string): string {
+  if (sessionId.startsWith("chat-preview:")) {
+    return "Chat Preview"
+  }
+
+  if (sessionId.startsWith("slack:")) {
+    return "Slack"
+  }
+
+  if (sessionId.startsWith("msteams:")) {
+    return "Microsoft Teams"
+  }
+
+  if (sessionId.startsWith("discord:")) {
+    return "Discord"
+  }
+
   if (sessionId.startsWith("chatconvo_")) {
     return "Chat"
   }
@@ -182,6 +199,7 @@ export async function fetchSessions(
 }
 
 export async function fetchRequestDetail(
+  agentId: string,
   requestId: string,
   startDate: string
 ): Promise<AgentLogRequestDetail> {
@@ -208,6 +226,19 @@ export async function fetchRequestDetail(
 
   const data = (await response.json()) as LiteLLMRequestDetail
   const requestMessages = data.proxy_server_request?.messages || []
+  let toolDisplayNames: Record<string, string> = {}
+  try {
+    const agent = await getOrThrow(agentId)
+    toolDisplayNames = getToolDisplayNames(
+      await getAvailableTools(agent.aiconfig)
+    )
+  } catch (error) {
+    console.error("Failed to resolve agent tool display names", {
+      agentId,
+      requestId,
+      error,
+    })
+  }
 
   const messages = requestMessages.map(m => ({
     role: m.role,
@@ -226,6 +257,7 @@ export async function fetchRequestDetail(
     return message.tool_calls.map(toolCall => ({
       id: toolCall.id,
       name: toolCall.function?.name || "unknown",
+      displayName: toolDisplayNames[toolCall.function?.name || ""],
       arguments: toolCall.function?.arguments || "{}",
     }))
   })
@@ -234,6 +266,7 @@ export async function fetchRequestDetail(
     data.response?.choices?.[0]?.message?.tool_calls?.map(toolCall => ({
       id: toolCall.id,
       name: toolCall.function?.name || "unknown",
+      displayName: toolDisplayNames[toolCall.function?.name || ""],
       arguments: toolCall.function?.arguments || "{}",
     })) || []
 
@@ -254,6 +287,9 @@ export async function fetchRequestDetail(
         name: message.tool_call_id
           ? toolNameById.get(message.tool_call_id) || "tool"
           : "tool",
+        displayName: message.tool_call_id
+          ? toolDisplayNames[toolNameById.get(message.tool_call_id) || ""]
+          : undefined,
         content: toContentString(message.content),
       },
     ]

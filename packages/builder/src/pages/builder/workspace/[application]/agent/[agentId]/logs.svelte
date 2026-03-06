@@ -7,9 +7,9 @@
     AgentLogRequestDetail,
     AgentLogSession,
   } from "@budibase/types"
-  import LogsSessionDetail from "./logs/LogsSessionDetail.svelte"
-  import LogsSessionList from "./logs/LogsSessionList.svelte"
-  import { formatTime } from "./logs/utils"
+  import LogsSessionDetail from "./LogComponents/LogsSessionDetail.svelte"
+  import LogsSessionList from "./LogComponents/LogsSessionList.svelte"
+  import { formatTime } from "./LogComponents/utils"
 
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)

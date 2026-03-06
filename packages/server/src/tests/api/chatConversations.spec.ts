@@ -411,7 +411,7 @@ describe("chat conversation transient behavior", () => {
       sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
         typeof sdk.ai.agents.buildPromptAndTools
       >
-    ).mockResolvedValue({ systemPrompt: "system", tools })
+    ).mockResolvedValue({ systemPrompt: "system", tools, toolDisplayNames: {} })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
     ).mockResolvedValue({

@@ -30,13 +30,14 @@ export async function fetchAgentLogs(ctx: UserCtx<void, FetchAgentLogsResponse>)
 export async function fetchAgentLogDetail(
   ctx: UserCtx<void, AgentLogRequestDetail>
 ) {
-  const { requestId } = ctx.params
+  const { agentId, requestId } = ctx.params
   const { startDate } = ctx.query as Record<string, string>
 
   const now = new Date()
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
   ctx.body = await sdk.ai.agentLogs.fetchRequestDetail(
+    agentId,
     requestId,
     startDate || sevenDaysAgo.toISOString().split("T")[0]
   )
