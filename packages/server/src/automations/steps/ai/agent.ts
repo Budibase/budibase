@@ -93,7 +93,8 @@ export async function run({
         const { chat, providerOptions } = await sdk.ai.llm.createLLM(
           agentConfig.aiconfig,
           sessionId,
-          agentSpan
+          agentSpan,
+          agentId
         )
 
         let outputOption = undefined
