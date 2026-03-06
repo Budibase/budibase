@@ -140,6 +140,8 @@ jobs:
       - name: Check affected tests
         id: affected
         run: |
+          # This gates whole package test jobs (worker/server) based on Nx affected projects.
+          # Example: if a PR changes only FE projects, server/worker test jobs are skipped.
           RUN_WORKER_TESTS="true"
           RUN_SERVER_TESTS="true"
 
