@@ -33,7 +33,13 @@
   $: params = $paramsStore
   $: isDarkTheme = ![Theme.LIGHTEST, Theme.LIGHT].includes($themeStore.theme)
 
-  export let source: Table | ViewV2 | Datasource | UIInternalDatasource | Query | undefined
+  export let source:
+    | Table
+    | ViewV2
+    | Datasource
+    | UIInternalDatasource
+    | Query
+    | undefined
   export let onDeleted: (() => void) | undefined = undefined
 
   let confirmDeleteDialog: any

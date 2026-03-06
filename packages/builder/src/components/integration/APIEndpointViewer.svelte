@@ -726,7 +726,6 @@
     }
   }
 
-
   const ensureQueryDefaults = (target: Query) => {
     if (!target.fields?.disabledHeaders) {
       target.fields.disabledHeaders = {}

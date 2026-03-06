@@ -99,7 +99,9 @@ describe("RestTemplatesStore", () => {
     })
 
     it("resolves legacy SharePoint aliases via name fallback", () => {
-      const [alias, expected] = Object.entries(MICROSOFT_SHAREPOINT_NAME_ALIASES)[0]
+      const [alias, expected] = Object.entries(
+        MICROSOFT_SHAREPOINT_NAME_ALIASES
+      )[0]
       const result = store.get(alias as any)
       expect(result).toBeDefined()
       expect(result?.name).toBe(expected)
