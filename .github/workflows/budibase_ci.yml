@@ -118,7 +118,8 @@ jobs:
             yarn test -- --scope=@budibase/builder --scope=@budibase/client --scope=@budibase/frontend-core --no-prefix
           fi
 
-  affected-tests:
+  check-affected-tests-to-run:
+    name: Check affected tests to run
     runs-on: ubuntu-24.04
     outputs:
       run_worker_tests: ${{ steps.affected.outputs.run_worker_tests }}
@@ -164,8 +165,8 @@ jobs:
 
   test-worker:
     runs-on: ubuntu-24.04
-    needs: affected-tests
-    if: needs.affected-tests.outputs.run_worker_tests == 'true'
+    needs: check-affected-tests-to-run
+    if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -186,8 +187,8 @@ jobs:
 
   test-server:
     runs-on: ubuntu-24.04
-    needs: affected-tests
-    if: needs.affected-tests.outputs.run_server_tests == 'true'
+    needs: check-affected-tests-to-run
+    if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
     strategy:
       matrix:
         include:
