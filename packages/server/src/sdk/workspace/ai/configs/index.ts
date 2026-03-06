@@ -20,6 +20,16 @@ import * as liteLLM from "./litellm"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
+const normalizeProviderModelId = (
+  modelId: string,
+  providerId: string
+): string => {
+  const providerPrefix = `${providerId}/`
+  return modelId.startsWith(providerPrefix)
+    ? modelId.slice(providerPrefix.length)
+    : modelId
+}
+
 const encodeSecret = (value: string): string => {
   if (!value || value.startsWith(SECRET_ENCODING_PREFIX)) {
     return value
@@ -389,6 +399,11 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
             return acc
           }
 
+          const normalizedModelId = normalizeProviderModelId(
+            modelId,
+            provider.litellm_provider
+          )
+
           const modelModes = Array.isArray(metadata?.mode)
             ? metadata.mode
             : typeof metadata?.mode === "string"
@@ -399,7 +414,7 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
           )
 
           if (normalizedModes.includes("embedding")) {
-            acc.embeddings.push(modelId)
+            acc.embeddings.push(normalizedModelId)
           }
 
           if (
@@ -408,7 +423,7 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
               ["chat", "completion", "responses"].includes(mode)
             )
           ) {
-            acc.completions.push(modelId)
+            acc.completions.push(normalizedModelId)
           }
 
           return acc
