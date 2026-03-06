@@ -215,10 +215,7 @@
                   </div>
                 </div>
                 <div class="content-surface">
-                  <pre><code
-                      >{assistantResponse.response ||
-                        "No response captured"}</code
-                    ></pre>
+                  <pre><code>{assistantResponse.response}</code></pre>
                 </div>
               </div>
             {/if}

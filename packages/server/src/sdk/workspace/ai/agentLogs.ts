@@ -226,19 +226,10 @@ export async function fetchRequestDetail(
 
   const data = (await response.json()) as LiteLLMRequestDetail
   const requestMessages = data.proxy_server_request?.messages || []
-  let toolDisplayNames: Record<string, string> = {}
-  try {
-    const agent = await getOrThrow(agentId)
-    toolDisplayNames = getToolDisplayNames(
-      await getAvailableTools(agent.aiconfig)
-    )
-  } catch (error) {
-    console.error("Failed to resolve agent tool display names", {
-      agentId,
-      requestId,
-      error,
-    })
-  }
+  const agent = await getOrThrow(agentId)
+  const toolDisplayNames = getToolDisplayNames(
+    await getAvailableTools(agent.aiconfig)
+  )
 
   const messages = requestMessages.map(m => ({
     role: m.role,

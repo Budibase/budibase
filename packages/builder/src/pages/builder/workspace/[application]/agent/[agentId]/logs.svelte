@@ -104,9 +104,7 @@
       hasMore = response.hasMore
 
       const selectedStillExists = selectedSession
-        ? response.sessions.some(
-            s => s.sessionId === selectedSession?.sessionId
-          )
+        ? response.sessions.some(s => s.sessionId === selectedSession.sessionId)
         : false
       if (!selectedStillExists) {
         selectedSession = null
@@ -162,9 +160,7 @@
   async function prefetchSessionDetails(
     session: AgentLogSession
   ): Promise<void> {
-    await Promise.allSettled(
-      session.entries.map(entry => loadStepDetail(entry))
-    )
+    await Promise.all(session.entries.map(entry => loadStepDetail(entry)))
   }
 
   function selectSession(session: AgentLogSession) {
@@ -201,13 +197,13 @@
     triggerFilter
 
     if (mounted) {
-      loadSessions(0)
+      void loadSessions(0)
     }
   })
 
   onMount(() => {
     mounted = true
-    loadSessions(0)
+    void loadSessions(0)
   })
 </script>
 
