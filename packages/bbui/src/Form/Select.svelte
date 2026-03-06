@@ -50,6 +50,7 @@
   export let loading: boolean | undefined = false
   export let searchPlaceholder: string | undefined = undefined
   export let hideChevron: boolean = false
+  export let wrapText: boolean = false
   export let required: boolean = false
   export let description: string | undefined = undefined
 
@@ -107,6 +108,7 @@
     {onOptionMouseleave}
     {tooltipMessage}
     {searchPlaceholder}
+    {wrapText}
     on:change={onChange}
     on:click
   />

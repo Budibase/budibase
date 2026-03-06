@@ -210,8 +210,9 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       return
     }
     const migration = response.headers.get(Header.MIGRATING_APP)
+    const shouldSkipWait = response.headers.get(Header.SKIP_MIGRATING_WAIT)
 
-    if (migration) {
+    if (migration && !shouldSkipWait) {
       config.onMigrationDetected(migration)
     }
   }
