@@ -37,6 +37,10 @@
   $: apps = $enrichedApps
   $: appId = $appStore.appId
   $: currentSort = $sortBy
+  $: canManageWorkspaceCreation =
+    !!$auth.user && sdk.users.canCreateApps($auth.user)
+  $: showCreateWorkspace = canManageWorkspaceCreation && !$licensing.isFreePlan
+  $: showUpgradeWorkspace = canManageWorkspaceCreation && $licensing.isFreePlan
 
   $: filtered = apps?.filter(app => matchesFilter(app.name, filter)) || []
   $: favourites = filtered.filter(app => app.favourite)
@@ -178,7 +182,7 @@
       on:keydown={onFilterKeydown}
     />
     <div class="header-actions">
-      {#if $auth.user && sdk.users.canCreateApps($auth.user) && !$licensing.isFreePlan}
+      {#if showCreateWorkspace}
         <Icon
           name="plus"
           size="M"
@@ -189,7 +193,7 @@
             workspaceMenu?.hide()
           }}
         />
-      {:else}
+      {:else if showUpgradeWorkspace}
         <Icon
           name="plus"
           size="M"
@@ -197,6 +201,8 @@
           tooltip="Upgrade to unlock multiple workspaces"
           on:click={licensing.goToUpgradePage}
         />
+      {:else}
+        <div class="header-actions-spacer" aria-hidden="true"></div>
       {/if}
       <WorkspaceSortMenu
         {currentSort}
@@ -410,11 +416,8 @@
     align-items: center;
   }
 
-  .premium-lock {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    width: auto;
-    height: auto;
+  .menu-item-error-status {
+    width: 16px !important;
+    height: 18px;
   }
 </style>
