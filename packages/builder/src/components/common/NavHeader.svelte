@@ -1,6 +1,12 @@
 <script lang="ts">
   import { tick } from "svelte"
-  import { Icon, Body, AbsTooltip, TooltipType, TooltipPosition } from "@budibase/bbui"
+  import {
+    Icon,
+    Body,
+    AbsTooltip,
+    TooltipType,
+    TooltipPosition,
+  } from "@budibase/bbui"
   import { keyUtils } from "@/helpers/keyUtils"
 
   export let title: string
@@ -81,7 +87,11 @@
   {/if}
 
   {#if showAddIcon}
-    <AbsTooltip text={tooltip} position={TooltipPosition.Top} type={TooltipType.Info}>
+    <AbsTooltip
+      text={tooltip}
+      position={TooltipPosition.Top}
+      type={TooltipType.Info}
+    >
       <div
         on:click={handleAddButton}
         on:keydown={e => keyUtils.handleEnter(() => handleAddButton(e))}
