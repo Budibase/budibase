@@ -189,6 +189,8 @@ jobs:
     strategy:
       matrix:
         include:
+          # Use uneven sharding to balance runtime across datasources.
+          # Oracle and non-datasource ("none") suites are slower, so they use more shards.
           - datasource: mssql
             shard_index: 1
             shard_total: 1
