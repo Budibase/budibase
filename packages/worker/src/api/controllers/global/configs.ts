@@ -15,7 +15,6 @@ import {
   filterValidTranslationOverrides,
 } from "@budibase/shared-core"
 import {
-  AIInnerConfig,
   Config,
   ConfigChecklistResponse,
   ConfigType,
@@ -27,7 +26,6 @@ import {
   GetPublicTranslationsResponse,
   GoogleInnerConfig,
   TranslationOverrides,
-  isAIConfig,
   isGoogleConfig,
   isOIDCConfig,
   isRecaptchaConfig,
@@ -62,8 +60,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
   if (!existing) {
     if (isSMTPConfig(config)) {
       fns.push(events.email.SMTPCreated)
-    } else if (isAIConfig(config)) {
-      fns.push(() => events.ai.AIConfigCreated)
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
       if (config.config.activated) {
@@ -100,8 +96,6 @@ const getEventFns = async (config: Config, existing?: Config) => {
   } else {
     if (isSMTPConfig(config)) {
       fns.push(events.email.SMTPUpdated)
-    } else if (isAIConfig(config)) {
-      fns.push(() => events.ai.AIConfigUpdated)
     } else if (isGoogleConfig(config)) {
       fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
       if (!existing.config.activated && config.config.activated) {
@@ -266,33 +260,6 @@ async function processOIDCConfig(config: OIDCConfigs, existing?: OIDCConfigs) {
   }
 }
 
-export async function processAIConfig(
-  newConfig: AIInnerConfig,
-  existingConfig: AIInnerConfig
-) {
-  for (const key in existingConfig) {
-    if (newConfig[key]?.apiKey === PASSWORD_REPLACEMENT) {
-      newConfig[key].apiKey = existingConfig[key].apiKey
-    }
-  }
-
-  let numBudibaseAI = 0
-  for (const config of Object.values(newConfig)) {
-    if (config.provider === "BudibaseAI") {
-      numBudibaseAI++
-      if (numBudibaseAI > 1) {
-        throw new BadRequestError("Only one Budibase AI provider is allowed")
-      }
-    } else {
-      if (!config.apiKey) {
-        throw new BadRequestError(
-          `API key is required for provider ${config.provider}`
-        )
-      }
-    }
-  }
-}
-
 export async function processRecaptchaConfig(
   config: RecaptchaInnerConfig,
   existingConfig?: RecaptchaInnerConfig
@@ -407,11 +374,6 @@ export async function save(
       case ConfigType.OIDC:
         await processOIDCConfig(config, existingConfig?.config)
         break
-      case ConfigType.AI:
-        if (existingConfig) {
-          await processAIConfig(config, existingConfig.config)
-        }
-        break
       case ConfigType.RECAPTCHA:
         await processRecaptchaConfig(config, existingConfig?.config)
         break
@@ -521,7 +483,7 @@ export async function find(ctx: UserCtx<void, FindConfigResponse>) {
 }
 
 function stripSecrets(config: Config, ctx?: UserCtx) {
-  if (isAIConfig(config)) {
+  if (config.type === ConfigType.AI) {
     for (const key in config.config) {
       if (config.config[key].apiKey) {
         config.config[key].apiKey = PASSWORD_REPLACEMENT

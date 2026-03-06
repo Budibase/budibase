@@ -10,13 +10,16 @@
   export let value: string | undefined = undefined
   export let options: GlobalRoleOption[] = []
   export let label = "Select role"
+  export let size: "S" | "M" | "L" = "M"
   export let disabled = false
 </script>
 
 <div class="role-select">
   <Select
     {label}
+    {size}
     placeholder={false}
+    wrapText
     bind:value
     {options}
     getOptionLabel={option => option.label}

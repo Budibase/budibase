@@ -290,6 +290,8 @@
   <div
     class="add-component"
     class:active={isAddingComponent}
+    title="Add component (Cmd/Ctrl + Enter)"
+    aria-label="Add component"
     on:click={toggleAddComponent}
   >
     <Icon size="XL" name="plus">Component</Icon>
