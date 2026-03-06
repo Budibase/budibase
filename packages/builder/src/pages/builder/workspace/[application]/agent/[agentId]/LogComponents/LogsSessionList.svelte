@@ -136,12 +136,10 @@
     display: flex;
     gap: var(--spacing-m);
     padding: var(--spacing-xl) var(--spacing-l) var(--spacing-m);
-    flex-wrap: wrap;
-    flex-shrink: 0;
   }
 
   .filter-group {
-    min-width: 140px;
+    min-width: 100px;
   }
 
   .filter-group :global(.spectrum-Picker) {

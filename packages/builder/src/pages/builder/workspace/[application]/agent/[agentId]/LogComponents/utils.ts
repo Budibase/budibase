@@ -16,6 +16,14 @@ export interface ParsedAssistantResponse {
   response: string
 }
 
+export function formatLogDateForApi(
+  date: Date,
+  { includeTime = false }: { includeTime?: boolean } = {}
+): string {
+  const isoDate = date.toISOString()
+  return includeTime ? isoDate : isoDate.split("T")[0]
+}
+
 export function formatTime(dateStr: string): string {
   if (!dateStr) return "-"
   return dayjs(dateStr).format("MMM D, YYYY | HH:mm")

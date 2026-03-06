@@ -9,7 +9,7 @@
   } from "@budibase/types"
   import LogsSessionDetail from "./LogComponents/LogsSessionDetail.svelte"
   import LogsSessionList from "./LogComponents/LogsSessionList.svelte"
-  import { formatTime } from "./LogComponents/utils"
+  import { formatLogDateForApi, formatTime } from "./LogComponents/utils"
 
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)
@@ -30,7 +30,8 @@
   function getDateRange(): { startDate: string; endDate: string } {
     const now = new Date()
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
-    const endDate = tomorrow.toISOString().split("T")[0]
+    const endDate = formatLogDateForApi(tomorrow)
+    const includeTime = ["1h", "8h", "24h"].includes(timeRange)
 
     let start = new Date(now)
     switch (timeRange) {
@@ -51,7 +52,10 @@
         break
     }
 
-    return { startDate: start.toISOString().split("T")[0], endDate }
+    return {
+      startDate: formatLogDateForApi(start, { includeTime }),
+      endDate,
+    }
   }
 
   function resetDetailState() {

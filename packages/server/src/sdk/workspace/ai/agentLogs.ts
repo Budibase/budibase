@@ -207,7 +207,7 @@ export async function fetchRequestDetail(
     ? startDate
     : `${startDate} 00:00:00`
   const params = new URLSearchParams({ start_date: fullStartDate })
-
+  console.log(params)
   const response = await fetch(
     `${liteLLMUrl}/spend/logs/ui/${requestId}?${params}`,
     {
@@ -225,6 +225,8 @@ export async function fetchRequestDetail(
   }
 
   const data = (await response.json()) as LiteLLMRequestDetail
+  console.log(response)
+
   const requestMessages = data.proxy_server_request?.messages || []
   const agent = await getOrThrow(agentId)
   const toolDisplayNames = getToolDisplayNames(

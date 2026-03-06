@@ -1,5 +1,19 @@
 import type { AgentLogRequestDetail } from "@budibase/types"
-import { formatMessages } from "./utils"
+import { formatLogDateForApi, formatMessages } from "./utils"
+
+describe("formatLogDateForApi", () => {
+  const date = new Date("2026-03-06T10:15:30.000Z")
+
+  it("keeps the full timestamp for sub-day filters", () => {
+    expect(formatLogDateForApi(date, { includeTime: true })).toBe(
+      "2026-03-06T10:15:30.000Z"
+    )
+  })
+
+  it("uses date-only values for day-based filters", () => {
+    expect(formatLogDateForApi(date)).toBe("2026-03-06")
+  })
+})
 
 describe("formatMessages", () => {
   function buildDetail(messages: AgentLogRequestDetail["messages"]) {
