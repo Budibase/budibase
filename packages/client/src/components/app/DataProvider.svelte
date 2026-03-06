@@ -28,7 +28,8 @@
   export let paginate: boolean
   export let autoRefresh: number
 
-  const { styleable, Provider, ActionTypes, API } = getContext("sdk")
+  const { styleable, Provider, ActionTypes, API, builderStore } =
+    getContext("sdk")
   const component = getContext("component")
 
   const autoRefreshActions = createAutoRefresh()
@@ -48,7 +49,12 @@
     paginate,
   })
   $: schema = sanitizeSchema($fetch.schema)
-  $: autoRefreshActions.setUp(autoRefresh, fetch.refresh)
+  $: autoRefreshEnabled =
+    !$builderStore.inBuilder || !$builderStore.selectedComponentId
+  $: autoRefreshActions.setUp(
+    autoRefreshEnabled ? autoRefresh : null,
+    fetch.refresh
+  )
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,

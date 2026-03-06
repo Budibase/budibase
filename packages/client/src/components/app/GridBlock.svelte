@@ -90,8 +90,11 @@
   ]
 
   $: extendedFilter = extendFilter(initialFilter, filterExtensions)
-  $: autoRefreshActions.setUp(autoRefresh, () =>
-    gridContext?.rows?.actions?.refreshData()
+  $: autoRefreshEnabled =
+    !$builderStore.inBuilder || !$builderStore.selectedComponentId
+  $: autoRefreshActions.setUp(
+    autoRefreshEnabled ? autoRefresh : null,
+    gridContext?.rows?.actions?.refreshData
   )
 
   /**
