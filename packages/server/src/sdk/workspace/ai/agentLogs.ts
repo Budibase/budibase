@@ -46,7 +46,6 @@ interface LiteLLMProxyMessage {
 
 interface LiteLLMRequestDetail {
   request_id?: string
-  end_user?: string
   model?: string
   prompt_tokens?: number
   completion_tokens?: number
@@ -62,6 +61,7 @@ interface LiteLLMRequestDetail {
     }>
   }
   proxy_server_request?: {
+    user?: string
     messages?: LiteLLMProxyMessage[]
   }
 }
@@ -331,7 +331,7 @@ export async function fetchRequestDetail(
   }
 
   const data = (await response.json()) as LiteLLMRequestDetail
-  if (data.end_user !== getExpectedEndUser(agentId)) {
+  if (data.proxy_server_request?.user !== getExpectedEndUser(agentId)) {
     throw new HTTPError("Agent log detail not found", 404)
   }
   const requestMessages = data.proxy_server_request?.messages || []

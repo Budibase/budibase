@@ -159,13 +159,13 @@ describe("agentLogs", () => {
     expect(session).toBeNull()
   })
 
-  it("rejects request detail when the returned end_user belongs to another agent", async () => {
+  it("rejects request detail when the returned user belongs to another agent", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue({
         request_id: "req-1",
-        end_user: "bb-agent:agent-2",
         proxy_server_request: {
+          user: "bb-agent:agent-2",
           messages: [],
         },
       }),

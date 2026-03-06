@@ -228,10 +228,46 @@
     justify-content: center;
   }
 
-  .step-flow {
-    min-width: 0;
+  .step-flow,
+  .step-body,
+  .section-label-group,
+  .content-section,
+  .io-panel,
+  .tool-stack,
+  .tool-card,
+  .tool-card-meta {
     display: flex;
     flex-direction: column;
+  }
+
+  .step-flow,
+  .step-flow-main,
+  .io-panel,
+  .content-section,
+  .section-label-group,
+  .tool-card-header,
+  .tool-card-meta,
+  .tool-card-id {
+    min-width: 0;
+  }
+
+  .step-flow-from,
+  .step-flow-to,
+  .step-model,
+  .tool-card-id {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tool-card-subtitle,
+  .tool-card-id,
+  .tool-card-kind {
+    font-size: 11px;
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .step-flow {
     gap: 2px;
   }
 
@@ -239,16 +275,12 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    min-width: 0;
   }
 
   .step-flow-from,
   .step-flow-to {
     font-size: 13px;
     color: var(--spectrum-global-color-gray-900);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .step-flow-arrow {
@@ -260,9 +292,6 @@
   .step-model {
     font-size: 12px;
     color: var(--spectrum-global-color-gray-600);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .step-metrics {
@@ -290,8 +319,6 @@
 
   .step-body {
     padding: 12px;
-    display: flex;
-    flex-direction: column;
     gap: var(--spacing-s);
   }
 
@@ -310,10 +337,7 @@
     border-radius: 8px;
     background: var(--background);
     padding: 12px;
-    display: flex;
-    flex-direction: column;
     gap: 14px;
-    min-width: 0;
   }
 
   .panel-header {
@@ -333,10 +357,7 @@
   }
 
   .content-section {
-    display: flex;
-    flex-direction: column;
     gap: 8px;
-    min-width: 0;
   }
 
   .content-section-header {
@@ -346,9 +367,6 @@
   }
 
   .section-label-group {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
     gap: 2px;
   }
 
@@ -384,15 +402,8 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .tool-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
+  .tool-stack,
   .tool-card {
-    display: flex;
-    flex-direction: column;
     gap: 8px;
   }
 
@@ -401,13 +412,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    min-width: 0;
   }
 
   .tool-card-meta {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
@@ -418,24 +425,11 @@
     color: var(--spectrum-global-color-gray-800);
   }
 
-  .tool-card-subtitle {
-    font-size: 11px;
-    color: var(--spectrum-global-color-gray-600);
-  }
-
   .tool-card-id {
-    min-width: 0;
     max-width: 240px;
-    font-size: 11px;
-    color: var(--spectrum-global-color-gray-600);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .tool-card-kind {
-    font-size: 11px;
-    color: var(--spectrum-global-color-gray-600);
     border: 1px solid var(--spectrum-global-color-gray-200);
     background: var(--spectrum-global-color-gray-100);
     border-radius: 999px;
