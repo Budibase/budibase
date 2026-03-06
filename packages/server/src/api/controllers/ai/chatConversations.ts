@@ -6,7 +6,7 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
-import { ai } from "@budibase/pro"
+import { ai, quotas } from "@budibase/pro"
 import {
   AgentMessageMetadata,
   ChatAgentRequest,
