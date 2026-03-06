@@ -15,6 +15,7 @@ describe("syncGlobalUsers", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    await config.publish()
     tk.reset()
   })
 

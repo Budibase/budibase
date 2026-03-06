@@ -3,11 +3,14 @@ set -e
 
 if [[ -n $CI ]]
 then
-  # --runInBand performs better in ci where resources are limited
-  echo "jest --coverage --runInBand --forceExit $@"
-  jest --coverage --runInBand --forceExit $@
+  max_workers="${JEST_MAX_WORKERS:-50%}"
+  jest_args=(
+    --maxWorkers=$max_workers
+    --bail
+  )
 else
-  # --maxWorkers performs better in development
-  echo "jest --coverage --forceExit --detectOpenHandles $@"
-  jest --coverage --forceExit --detectOpenHandles $@
+  max_workers="${JEST_MAX_WORKERS:-50%}"
+  jest_args=(--maxWorkers=$max_workers)
 fi
+
+jest "${jest_args[@]}" "$@"

@@ -33,6 +33,24 @@ import { rag } from "../sdk/workspace/ai"
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
 
+export interface QueueInitOptions {
+  events?: boolean
+  rag?: boolean
+  automations?: boolean
+  workspaceMigrations?: boolean
+  pro?: boolean
+  dev?: boolean
+}
+
+const INITIALISED_QUEUES: Required<QueueInitOptions> = {
+  events: false,
+  rag: false,
+  automations: false,
+  workspaceMigrations: false,
+  pro: false,
+  dev: false,
+}
+
 export function getState(): State {
   return STATE
 }
@@ -63,8 +81,70 @@ async function initPro() {
   })
 }
 
+export function initQueues(opts: QueueInitOptions = {}) {
+  const options: Required<QueueInitOptions> = {
+    events: opts.events ?? true,
+    rag: opts.rag ?? true,
+    automations: opts.automations ?? true,
+    workspaceMigrations: opts.workspaceMigrations ?? true,
+    pro: opts.pro ?? true,
+    dev: opts.dev ?? true,
+  }
+
+  const queuePromises = []
+
+  if (options.events && !INITIALISED_QUEUES.events) {
+    console.log("Initialising events queue")
+    queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
+    INITIALISED_QUEUES.events = true
+  }
+
+  if (options.rag && !INITIALISED_QUEUES.rag) {
+    console.log("Initialising RAG queue")
+    queuePromises.push(rag.queue.init())
+    INITIALISED_QUEUES.rag = true
+  }
+
+  if (
+    options.automations &&
+    !INITIALISED_QUEUES.automations &&
+    automationsEnabled()
+  ) {
+    console.log("Initialising automations queue")
+    queuePromises.push(automations.init())
+    INITIALISED_QUEUES.automations = true
+  }
+
+  if (
+    options.workspaceMigrations &&
+    !INITIALISED_QUEUES.workspaceMigrations &&
+    automationsEnabled()
+  ) {
+    console.log("Initialising workspace migrations queue")
+    queuePromises.push(workspaceMigrations.init())
+    INITIALISED_QUEUES.workspaceMigrations = true
+  }
+
+  if (options.pro && !INITIALISED_QUEUES.pro) {
+    console.log("Initialising pro queue integrations")
+    queuePromises.push(initPro())
+    INITIALISED_QUEUES.pro = true
+  }
+
+  if (options.dev && !INITIALISED_QUEUES.dev) {
+    console.log("Initialising dev queue")
+    queuePromises.push(sdk.dev.init())
+    INITIALISED_QUEUES.dev = true
+  }
+}
+
 export async function startup(
-  opts: { app?: Koa; server?: Server; force?: boolean } = {}
+  opts: {
+    app?: Koa
+    server?: Server
+    force?: boolean
+    initQueues?: boolean
+  } = {}
 ) {
   const { app, server } = opts
   if (STATE !== "uninitialised" && !opts.force) {
@@ -120,21 +200,9 @@ export async function startup(
   console.log("Checking for version updates")
   await installation.checkInstallVersion()
 
-  console.log("Initialising queues")
-  // get the references to the queue promises, don't await as
-  // they will never end, unless the processing stops
-  let queuePromises = []
-  // configure events to use the pro audit log write
-  // can't integrate directly into backend-core due to cyclic issues
-  queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
-  queuePromises.push(rag.queue.init())
-  // app migrations and automations on other service
-  if (automationsEnabled()) {
-    queuePromises.push(automations.init())
-    queuePromises.push(workspaceMigrations.init())
+  if (opts.initQueues ?? true) {
+    initQueues()
   }
-  queuePromises.push(initPro())
-  queuePromises.push(sdk.dev.init())
   if (app) {
     console.log("Initialising routes")
     // bring routes online as final step once everything ready

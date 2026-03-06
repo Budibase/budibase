@@ -11,6 +11,7 @@ describe("/navigation", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    await config.ensureDefaultWorkspaceAppId()
     const { workspaceApps } = await config.api.workspaceApp.fetch()
     workspaceApp = workspaceApps[0]
   })

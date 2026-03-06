@@ -9,6 +9,7 @@ describe("/dev", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.publish()
     jest.clearAllMocks()
   })
 

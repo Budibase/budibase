@@ -11,6 +11,7 @@ describe("/static", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.publish()
   })
 
   beforeEach(() => {

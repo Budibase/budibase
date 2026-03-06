@@ -28,6 +28,7 @@ describe("/api/deploy", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+    await config.publish()
   })
 
   describe("GET /api/deploy/status", () => {

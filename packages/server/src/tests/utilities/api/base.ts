@@ -54,7 +54,7 @@ export abstract class TestAPI {
 
   constructor(config: TestConfiguration) {
     this.config = config
-    this.request = config.request!
+    this.request = config.getRequest()!
   }
 
   protected _get = async <T>(url: string, opts?: RequestOpts): Promise<T> => {

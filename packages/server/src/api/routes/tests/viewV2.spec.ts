@@ -1316,7 +1316,8 @@ if (descriptions.length) {
               },
             })
             const result = await config
-              .request!.put(`/api/v2/views/${anotherView.id}`)
+              .getRequest()!
+              .put(`/api/v2/views/${anotherView.id}`)
               .send(view)
               .set(config.defaultHeaders())
               .expect("Content-Type", /json/)

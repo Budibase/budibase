@@ -8,8 +8,16 @@ describe("app action trigger", () => {
   let automation: Automation
 
   beforeAll(async () => {
+    config.initQueues({
+      automations: true,
+      events: false,
+      rag: false,
+      workspaceMigrations: false,
+      pro: false,
+      dev: false,
+    })
     await config.init()
-    await config.api.automation.deleteAll()
+    await config.publish()
 
     automation = await createAutomationBuilder(config)
       .onAppAction()

@@ -41,6 +41,7 @@ describe("Webhook trigger test", () => {
 
   beforeAll(async () => {
     await config.init()
+    await config.publish()
   })
 
   beforeEach(async () => {

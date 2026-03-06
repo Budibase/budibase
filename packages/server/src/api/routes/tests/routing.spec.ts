@@ -21,7 +21,6 @@ describe("/routing", () => {
     await config.init()
     basic = await config.createScreen(basicScreen(route))
     power = await config.createScreen(powerScreen(route))
-    await config.publish()
   })
 
   describe("fetch", () => {

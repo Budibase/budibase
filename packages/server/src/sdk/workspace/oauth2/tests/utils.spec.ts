@@ -21,7 +21,6 @@ describe("oauth2 utils", () => {
 
   beforeAll(async () => {
     await config.init()
-
     const ports = await startContainer(
       new GenericContainer(KEYCLOAK_IMAGE)
         .withName("keycloak_testcontainer")

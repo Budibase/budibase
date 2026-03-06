@@ -1,6 +1,7 @@
 import { context, events } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import { DocumentType, Workspace } from "@budibase/types"
+import { backups } from "@budibase/pro"
+import { BackupStatus, DocumentType, Workspace } from "@budibase/types"
 import path from "path"
 import { Readable, Writable } from "stream"
 import { pipeline } from "stream/promises"
@@ -16,6 +17,22 @@ mocks.licenses.useBackups()
 describe("/backups", () => {
   let config = setup.getConfig()
 
+  async function waitForRestoreToComplete(restoreId: string) {
+    for (let i = 0; i < 30; i++) {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      const restore = await context.doInTenant(config.getTenantId(), async () =>
+        backups.getAppBackup(restoreId)
+      )
+      if (restore.status === BackupStatus.COMPLETE) {
+        return
+      }
+      if (restore.status === BackupStatus.FAILED) {
+        throw new Error(`Backup restore failed for restoreId=${restoreId}`)
+      }
+    }
+    throw new Error(`Restore did not complete for restoreId=${restoreId}`)
+  }
+
   afterAll(() => {
     setup.afterAll()
   })
@@ -23,6 +40,7 @@ describe("/backups", () => {
   beforeEach(async () => {
     tk.reset()
     jest.clearAllMocks()
+    config.initQueues({ pro: true, events: false, rag: false, dev: false })
     await withEnv({ UPLOAD_APPS_FILES_ON_TEST: "1" }, () => config.init())
   })
 
@@ -190,7 +208,11 @@ describe("/backups", () => {
         workspaceId,
         exportRes.backupId
       )
-      await config.api.backup.importBackup(workspaceId, exportRes.backupId)
+      const response = await config.api.backup.importBackup(
+        workspaceId,
+        exportRes.backupId
+      )
+      await waitForRestoreToComplete(response.restoreId)
     })
   })
 
@@ -210,6 +232,7 @@ describe("/backups", () => {
   describe("backup error tracking", () => {
     it("should track backup failures in workspace metadata", async () => {
       const workspaceId = config.getDevWorkspaceId()
+      await config.publish()
 
       // First manually add a backup error to simulate a failure
       await context.doInWorkspaceContext(workspaceId, async () => {
@@ -237,6 +260,7 @@ describe("/backups", () => {
 
     it("should be able to clear backup errors from workspace metadata", async () => {
       const workspaceId = config.getDevWorkspaceId()
+      await config.publish()
 
       // First set up backup errors in workspace metadata
       await context.doInWorkspaceContext(workspaceId, async () => {

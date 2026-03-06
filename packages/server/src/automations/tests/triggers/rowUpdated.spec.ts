@@ -10,8 +10,16 @@ describe("row updated trigger", () => {
   let automation: Automation
 
   beforeAll(async () => {
+    config.initQueues({
+      automations: true,
+      events: false,
+      rag: false,
+      workspaceMigrations: false,
+      pro: false,
+      dev: false,
+    })
     await config.init()
-    await config.api.automation.deleteAll()
+    await config.publish()
     table = await config.api.table.save(basicTable())
     automation = await createAutomationBuilder(config)
       .onRowUpdated({ tableId: table._id! })

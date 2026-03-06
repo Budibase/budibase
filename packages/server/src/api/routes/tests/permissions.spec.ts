@@ -297,9 +297,7 @@ describe("/permission", () => {
 
   describe("multi-inheritance permissions", () => {
     let table1: Table, table2: Table, role1: Role, role2: Role
-    beforeEach(async () => {
-      // create new app
-      await config.newTenant()
+    beforeAll(async () => {
       table1 = await config.createTable()
       table2 = await config.createTable()
       await config.api.row.save(table1._id!, {

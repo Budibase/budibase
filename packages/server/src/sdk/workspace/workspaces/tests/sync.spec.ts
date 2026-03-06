@@ -27,7 +27,8 @@ let group: UserGroup, groupUser: User
 
 beforeAll(async () => {
   await utils.queue.useRealQueues()
-  await config.init("syncWorkspace")
+  await config.init()
+  await config.publish()
 })
 
 async function createUser(user?: Partial<User>) {

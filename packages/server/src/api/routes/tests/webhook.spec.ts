@@ -20,6 +20,7 @@ describe("/webhooks", () => {
   const setupTest = async () => {
     cleanupEnv = setEnv({ SELF_HOSTED: "true" })
     await config.init()
+    await config.publish()
     const autoConfig = basicAutomation()
     autoConfig.definition.trigger.schema = {
       outputs: { properties: {} },

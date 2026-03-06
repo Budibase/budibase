@@ -11,7 +11,7 @@
         "default",
         "{workspaceRoot}/scripts/*",
         "{workspaceRoot}/lerna.json",
-        "{workspaceRoot}/.github/workflows/*",
+        "{workspaceRoot}/.github/workflows/budibase_ci.yml",
         "{workspaceRoot}/tsconfig.build.json"
       ],
       "cache": true
@@ -21,7 +21,7 @@
         "default",
         "{workspaceRoot}/scripts/*",
         "{workspaceRoot}/lerna.json",
-        "{workspaceRoot}/.github/workflows/*"
+        "{workspaceRoot}/.github/workflows/budibase_ci.yml"
       ],
       "cache": true
     },

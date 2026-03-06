@@ -43,7 +43,6 @@ import {
 import {
   AuthToken,
   Automation,
-  CreateViewRequest,
   Datasource,
   DevInfo,
   FieldType,
@@ -68,7 +67,12 @@ import {
 } from "@budibase/types"
 import supertest from "supertest"
 import { generateUserMetadataID } from "../../db/utils"
-import { startup } from "../../startup"
+import {
+  getState,
+  initQueues,
+  startup,
+  type QueueInitOptions,
+} from "../../startup"
 import { cleanup } from "../../utilities/fileSystem"
 
 import { Server } from "http"
@@ -84,43 +88,40 @@ mocks.licenses.useUnlimited()
 
 dbInit()
 
-export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
+interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
   sourceType?: TableSourceType
 }
 
 export default class TestConfiguration {
-  server?: Server
-  request?: supertest.SuperTest<supertest.Test>
-  started: boolean
+  private server?: Server
+  private request?: supertest.SuperTest<supertest.Test>
+  private started: boolean
   devWorkspaceId?: string
-  defaultWorkspaceAppId?: string
+  private defaultWorkspaceAppId?: string
   name?: string
-  allWorkspaces: Workspace[]
+  private allWorkspaces: Workspace[]
   devWorkspace?: Workspace
   prodWorkspace?: Workspace
   prodWorkspaceId?: string
   user?: User
   userMetadataId?: string
   table?: Table
-  automation?: Automation
-  datasource?: Datasource
+  private automation?: Automation
+  private datasource?: Datasource
   tenantId?: string
   api: API
-  csrfToken?: string
-  temporaryHeaders?: Record<string, string | string[]>
+  private csrfToken?: string
+  private temporaryHeaders?: Record<string, string | string[]>
 
-  constructor(openServer = true) {
-    if (openServer) {
-      // use a random port because it doesn't matter
-      env.PORT = "0"
-      this.server = require("../../app").getServer()
-      // we need the request for logging in, involves cookies, hard to fake
-      this.request = supertest(this.server)
-      this.started = true
-    } else {
-      this.started = false
-    }
+  constructor() {
+    // use a random port because it doesn't matter
+    env.PORT = "0"
+    this.server = require("../../app").getServer()
+    // we need the request for logging in, involves cookies, hard to fake
+    this.request = supertest(this.server)
+    this.started = true
+
     this.devWorkspaceId = undefined
     this.allWorkspaces = []
 
@@ -158,22 +159,8 @@ export default class TestConfiguration {
     return this.devWorkspaceId
   }
 
-  getDefaultWorkspaceAppId() {
-    if (!this.defaultWorkspaceAppId) {
-      throw new Error(
-        "appId has not been initialised, call config.init() first"
-      )
-    }
-    return this.defaultWorkspaceAppId
-  }
-
   getProdWorkspaceId() {
-    if (!this.prodWorkspaceId) {
-      throw new Error(
-        "prodWorkspaceId has not been initialised, call config.init() first"
-      )
-    }
-    return this.prodWorkspaceId
+    return dbCore.getProdWorkspaceID(this.getDevWorkspaceId())
   }
 
   getUser() {
@@ -193,15 +180,6 @@ export default class TestConfiguration {
     }
   }
 
-  getAutomation() {
-    if (!this.automation) {
-      throw new Error(
-        "automation has not been initialised, call config.init() first"
-      )
-    }
-    return this.automation
-  }
-
   getDatasource() {
     if (!this.datasource) {
       throw new Error(
@@ -210,7 +188,6 @@ export default class TestConfiguration {
     }
     return this.datasource
   }
-
   async doInContext<T>(
     appId: string | undefined,
     task: () => Promise<T>
@@ -235,11 +212,26 @@ export default class TestConfiguration {
   // SETUP /  TEARDOWN
 
   // use a new id as the name to avoid name collisions
-  async init(appName = newid()) {
-    if (!this.started) {
-      await startup()
+  async init() {
+    if (this.started) {
+      let attempts = 0
+      while (getState() !== "ready" && attempts < 500) {
+        attempts++
+        await new Promise(resolve => setTimeout(resolve, 10))
+      }
+      if (getState() !== "ready") {
+        throw new Error("Server did not reach ready state")
+      }
+    } else {
+      await startup({
+        initQueues: false,
+      })
     }
-    return this.newTenant(appName)
+    return this.newTenant()
+  }
+
+  initQueues(opts?: QueueInitOptions) {
+    initQueues(opts)
   }
 
   end() {
@@ -284,12 +276,13 @@ export default class TestConfiguration {
   }
 
   async withProdApp<R>(f: () => Promise<R>) {
+    await this.ensurePublished()
     return await this.withApp(this.getProdWorkspaceId(), f)
   }
 
   // UTILS
 
-  _req<Req extends Record<string, any> | void, Res>(
+  private _req<Req extends Record<string, any> | void, Res>(
     handler: (ctx: UserCtx<Req, Res>) => Promise<void>,
     body?: Req,
     params?: Record<string, string | undefined>
@@ -421,6 +414,9 @@ export default class TestConfiguration {
     builder: boolean
     prodApp: boolean
   }) {
+    if (prodApp) {
+      await this.ensurePublished()
+    }
     const appId = prodApp ? this.getProdWorkspaceId() : this.getDevWorkspaceId()
     return context.doInWorkspaceContext(appId, async () => {
       userId = !userId ? `us_uuid1` : userId
@@ -534,7 +530,7 @@ export default class TestConfiguration {
     }
 
     if (prodApp) {
-      headers[constants.Header.APP_ID] = this.prodWorkspaceId
+      headers[constants.Header.APP_ID] = this.getProdWorkspaceId()
     } else if (this.devWorkspaceId) {
       headers[constants.Header.APP_ID] = this.devWorkspaceId
     }
@@ -548,7 +544,7 @@ export default class TestConfiguration {
     prodApp = true,
     extras = {},
   }: { prodApp?: boolean; extras?: Record<string, string | string[]> } = {}) {
-    const appId = prodApp ? this.prodWorkspaceId : this.devWorkspaceId
+    const appId = prodApp ? this.getProdWorkspaceId() : this.devWorkspaceId
 
     const headers: Record<string, string> = {
       Accept: "application/json",
@@ -614,22 +610,35 @@ export default class TestConfiguration {
     return this.createWorkspace(appName)
   }
 
-  async createDefaultWorkspaceApp(
-    appName: string,
-    mode: "dev" | "prod" = "dev"
-  ) {
+  async createDefaultWorkspaceApp(appName: string = generator.guid()) {
     const { workspaceApp } = await this.api.workspaceApp.create(
       structures.workspaceApps.createRequest({
         name: appName,
         url: "/",
+        disabled: false,
       })
     )
-    const appId =
-      mode === "dev" ? this.getDevWorkspaceId() : this.getProdWorkspaceId()
+    const appId = this.getDevWorkspaceId()
     const db = dbCore.getDB(appId)
     await db.put({ ...workspaceApp, isDefault: true })
 
     return { ...workspaceApp, isDefault: true }
+  }
+
+  async ensureDefaultWorkspaceAppId(appName = "default app") {
+    if (this.defaultWorkspaceAppId) {
+      return this.defaultWorkspaceAppId
+    }
+    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(appName)
+    this.defaultWorkspaceAppId = defaultWorkspaceApp._id
+    return this.defaultWorkspaceAppId
+  }
+
+  async ensurePublished() {
+    if (this.prodWorkspace) {
+      return this.prodWorkspace
+    }
+    return this.publish()
   }
 
   doInTenant<T>(task: () => T) {
@@ -664,6 +673,10 @@ export default class TestConfiguration {
     url?: string
   ): Promise<Workspace> {
     this.devWorkspaceId = undefined
+    this.prodWorkspace = undefined
+    this.prodWorkspaceId = undefined
+    this.defaultWorkspaceAppId = undefined
+
     this.devWorkspace = await context.doInTenant(
       this.tenantId!,
       async () =>
@@ -674,25 +687,13 @@ export default class TestConfiguration {
     )
     this.devWorkspaceId = this.devWorkspace.appId
 
-    const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(name)
-    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
+    this.allWorkspaces.push(this.devWorkspace)
 
-    return await context.doInWorkspaceContext(
-      this.devWorkspace.appId!,
-      async () => {
-        // create production app
-        this.prodWorkspace = await this.publish()
-
-        this.allWorkspaces.push(this.prodWorkspace)
-        this.allWorkspaces.push(this.devWorkspace!)
-
-        return this.devWorkspace!
-      }
-    )
+    return this.devWorkspace
   }
 
   async createWorkspaceWithOnboarding(
-    name: string,
+    name: string = generator.guid(),
     url?: string
   ): Promise<Workspace> {
     this.devWorkspaceId = undefined
@@ -731,10 +732,14 @@ export default class TestConfiguration {
     const prodAppId = this.getDevWorkspaceId().replace("_dev", "")
     this.prodWorkspaceId = prodAppId
 
-    return context.doInWorkspaceContext(prodAppId, async () => {
-      const db = context.getProdWorkspaceDB()
-      return await db.get<Workspace>(dbCore.DocumentType.WORKSPACE_METADATA)
-    })
+    this.prodWorkspace = await context.doInWorkspaceContext(
+      prodAppId,
+      async () => {
+        const db = context.getProdWorkspaceDB()
+        return await db.get<Workspace>(dbCore.DocumentType.WORKSPACE_METADATA)
+      }
+    )
+    return this.prodWorkspace
   }
 
   async unpublish() {
@@ -777,21 +782,6 @@ export default class TestConfiguration {
     return this.upsertTable(config, options)
   }
 
-  async createExternalTable(
-    config?: TableToBuild,
-    options = { skipReassigning: false }
-  ) {
-    if (config != null && config._id) {
-      delete config._id
-    }
-    config = config || basicTable()
-    if (this.datasource?._id) {
-      config.sourceId = this.datasource._id
-      config.sourceType = TableSourceType.EXTERNAL
-    }
-    return this.upsertTable(config, options)
-  }
-
   async getTable(tableId?: string) {
     tableId = tableId || this.table!._id!
     return this.api.table.get(tableId)
@@ -828,14 +818,6 @@ export default class TestConfiguration {
     return await this.createTable(tableConfig)
   }
 
-  async createAttachmentTable() {
-    const table: any = basicTable()
-    table.schema.attachment = {
-      type: "attachment",
-    }
-    return this.createTable(table)
-  }
-
   // ROW
 
   async createRow(config?: Row): Promise<Row> {
@@ -845,13 +827,6 @@ export default class TestConfiguration {
     const tableId = (config && config.tableId) || this.table._id!
     config = config || basicRow(tableId!)
     return this.api.row.save(tableId, config)
-  }
-
-  async getRows(tableId: string) {
-    if (!tableId && this.table) {
-      tableId = this.table._id!
-    }
-    return this.api.row.fetch(tableId)
   }
 
   async searchRows(tableId: string, searchParams?: RowSearchParams) {
@@ -880,25 +855,6 @@ export default class TestConfiguration {
     return this._req(viewController.v1.save, view)
   }
 
-  async createView(
-    config?: Omit<CreateViewRequest, "tableId" | "name"> & {
-      name?: string
-      tableId?: string
-    }
-  ) {
-    if (!this.table && !config?.tableId) {
-      throw "Test requires table to be configured."
-    }
-
-    const view: CreateViewRequest = {
-      ...config,
-      tableId: config?.tableId || this.table!._id!,
-      name: config?.name || generator.word(),
-    }
-
-    return await this.api.viewV2.create(view)
-  }
-
   // AUTOMATION
 
   async createAutomation(config?: Automation) {
@@ -909,21 +865,6 @@ export default class TestConfiguration {
     const res = await this._req(automationController.create, config)
     this.automation = res.automation
     return this.automation
-  }
-
-  async getAllAutomations() {
-    return this._req(automationController.fetch)
-  }
-
-  async deleteAutomation(automation?: Automation) {
-    automation = automation || this.automation
-    if (!automation) {
-      return
-    }
-    return this._req(automationController.destroy, undefined, {
-      id: automation._id,
-      rev: automation._rev,
-    })
   }
 
   async createWebhook(config?: Webhook) {
@@ -946,14 +887,6 @@ export default class TestConfiguration {
     return { ...this.datasource, _id: this.datasource!._id! }
   }
 
-  async updateDatasource(
-    datasource: Datasource
-  ): Promise<WithRequired<Datasource, "_id">> {
-    const response = await this.api.datasource.update(datasource)
-    this.datasource = response
-    return { ...this.datasource, _id: this.datasource!._id! }
-  }
-
   async restDatasource(cfg?: Record<string, any>) {
     return this.createDatasource({
       datasource: {
@@ -964,34 +897,13 @@ export default class TestConfiguration {
     })
   }
 
-  async dynamicVariableDatasource() {
-    let datasource = await this.restDatasource()
-
-    const basedOnQuery = await this.createQuery({
-      ...basicQuery(datasource._id!),
-      fields: {
-        path: "www.google.com",
-      },
-    })
-    datasource = await this.updateDatasource({
-      ...datasource,
-      config: {
-        dynamicVariables: [
-          {
-            queryId: basedOnQuery._id,
-            name: "variable3",
-            value: "{{ data.0.[value] }}",
-          },
-        ],
-      },
-    })
-    return { datasource, query: basedOnQuery }
-  }
-
   // AUTOMATION LOG
 
   async createAutomationLog(automation: Automation, appId?: string) {
-    appId = appId || this.getProdWorkspaceId()
+    if (!appId) {
+      await this.ensurePublished()
+      appId = this.getProdWorkspaceId()
+    }
     return await context.doInWorkspaceContext(appId!, async () => {
       return await pro.sdk.automations.logs.storeLog(
         automation,
@@ -1026,7 +938,9 @@ export default class TestConfiguration {
       !config.workspaceAppId ||
       config.workspaceAppId === TEST_WORKSPACEAPPID_PLACEHOLDER
     ) {
-      config.workspaceAppId = this.getDefaultWorkspaceAppId()
+      config.workspaceAppId = await this.ensureDefaultWorkspaceAppId(
+        this.devWorkspace?.name || "default app"
+      )
     }
 
     return this.api.screen.save(config)

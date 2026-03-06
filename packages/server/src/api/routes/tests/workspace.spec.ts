@@ -547,6 +547,11 @@ describe("/applications", () => {
   })
 
   describe("fetchClientApps", () => {
+    beforeEach(async () => {
+      await config.createDefaultWorkspaceApp(workspace.name)
+      await config.publish()
+    })
+
     it("should return apps when workspace app are published", async () => {
       const response = await config.api.workspace.fetchClientApps()
       expect(response.apps).toHaveLength(1)
@@ -852,6 +857,7 @@ describe("/applications", () => {
     })
 
     it("should retrieve all the screens for public calls", async () => {
+      await config.ensureDefaultWorkspaceAppId()
       const [_screen1, screen2, _screen3] = await Promise.all([
         config.api.screen.save(basicScreen()),
         config.api.screen.save(
@@ -1492,6 +1498,14 @@ describe("/applications", () => {
 
     it("should remove MIGRATING_APP header if present during deletion", async () => {
       setEnv({ DISABLE_WORKSPACE_MIGRATIONS: false })
+      config.initQueues({
+        workspaceMigrations: true,
+        events: false,
+        rag: false,
+        automations: false,
+        pro: false,
+        dev: false,
+      })
 
       const migrationsModule = await import(
         "../../../workspaceMigrations/migrations"

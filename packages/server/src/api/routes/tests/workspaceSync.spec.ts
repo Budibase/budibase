@@ -8,7 +8,8 @@ describe("/api/applications/:appId/sync", () => {
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
-    app = await config.init()
+    await config.init()
+    app = await config.createWorkspaceWithOnboarding()
     // create some users which we will use throughout the tests
     await config.createUser({
       email: "sync1@example.com",

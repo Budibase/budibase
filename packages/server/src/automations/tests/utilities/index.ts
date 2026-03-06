@@ -22,7 +22,7 @@ let config: TestConfiguration
 
 export function getConfig(): TestConfiguration {
   if (!config) {
-    config = new TestConfiguration(true)
+    config = new TestConfiguration()
   }
   return config
 }

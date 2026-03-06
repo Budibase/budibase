@@ -7,6 +7,7 @@ import * as db from "./db"
 db.init()
 import { ServiceType } from "@budibase/types"
 import { env as coreEnv } from "@budibase/backend-core"
+import env from "./environment"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import createKoaApp from "./koa"
@@ -21,7 +22,7 @@ async function start() {
   app = koa.app
   server = koa.server
   try {
-    await startup({ app, server })
+    await startup({ app, server, initQueues: !env.isTest() })
   } catch (err: any) {
     console.error(`Failed server startup - ${err.message}`)
     process.exit(1)

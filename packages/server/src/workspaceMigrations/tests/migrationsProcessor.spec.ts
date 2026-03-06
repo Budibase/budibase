@@ -24,11 +24,20 @@ describe.each([true, false])("migrationsProcessor", fromProd => {
 
     config = setup.getConfig()
     await config.init()
+    config.initQueues({
+      workspaceMigrations: true,
+      events: false,
+      rag: false,
+      automations: false,
+      pro: false,
+      dev: false,
+    })
   })
 
   beforeEach(async () => {
     jest.clearAllMocks()
     await config.newTenant()
+    await config.publish()
   })
 
   async function runMigrations(migrations: WorkspaceMigration[]) {
