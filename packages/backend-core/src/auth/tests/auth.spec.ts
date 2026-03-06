@@ -21,6 +21,7 @@ jest.mock("../../middleware", () => {
 import { structures } from "../../../tests"
 import { testEnv } from "../../../tests/extra"
 import { ConfigType, SSOProviderType } from "@budibase/types"
+import type OpenIDConnectStrategy from "@govtechsg/passport-openidconnect"
 import * as auth from "../auth"
 import * as configs from "../../configs"
 import * as events from "../../events"
@@ -87,7 +88,7 @@ describe("refreshOAuthToken", () => {
         },
       },
       name: ConfigType.OIDC,
-    }
+    } as unknown as OpenIDConnectStrategy
 
     getOIDCConfigById.mockResolvedValue(oidcConfig)
     getCallbackUrl.mockResolvedValue(callbackUrl)
