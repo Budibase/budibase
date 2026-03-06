@@ -18,7 +18,7 @@
     statusFilter?: string
     timeRange?: TimeRange
     triggerFilter?: string
-    onSessionRowClick: (row: { sessionId?: string }) => void
+    onSessionRowClick: (_row: { sessionId?: string }) => void
     onPrevPage: () => void
     onNextPage: () => void
   }

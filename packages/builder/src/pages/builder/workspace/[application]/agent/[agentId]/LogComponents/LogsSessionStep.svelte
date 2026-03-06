@@ -26,7 +26,11 @@
   let flow = $derived(getStepFlow(detail, loadingStep))
 </script>
 
-{#snippet toolCard(item: { name: string, displayName?: string, toolCallId?: string }, content: string, kindLabel?: string)}
+{#snippet toolCard(
+  item: { name: string; displayName?: string; toolCallId?: string },
+  content: string,
+  kindLabel?: string
+)}
   {@const displayName = formatToolName(item.name, item.displayName)}
   <article class="tool-card">
     <div class="tool-card-header">

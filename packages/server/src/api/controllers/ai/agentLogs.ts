@@ -28,7 +28,9 @@ function sanitizePageQuery(page?: string): number {
   return Number.parseInt(normalizedPage, 10)
 }
 
-export async function fetchAgentLogs(ctx: UserCtx<void, FetchAgentLogsResponse>) {
+export async function fetchAgentLogs(
+  ctx: UserCtx<void, FetchAgentLogsResponse>
+) {
   const { agentId } = ctx.params
   const { startDate, endDate, page = "0" } = ctx.query as Record<string, string>
   const defaults = getDefaultLogRange()

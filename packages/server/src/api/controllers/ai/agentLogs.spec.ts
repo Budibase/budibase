@@ -14,9 +14,8 @@ jest.mock("../../../sdk", () => ({
 }))
 
 describe("agentLogs controller", () => {
-  const fetchSessionsMock = sdk.ai.agentLogs.fetchSessions as jest.MockedFunction<
-    typeof sdk.ai.agentLogs.fetchSessions
-  >
+  const fetchSessionsMock = sdk.ai.agentLogs
+    .fetchSessions as jest.MockedFunction<typeof sdk.ai.agentLogs.fetchSessions>
 
   afterEach(() => {
     jest.clearAllMocks()

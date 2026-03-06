@@ -405,11 +405,14 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     }
   }
 
-  const { systemPrompt: system, tools, toolDisplayNames } =
-    await sdk.ai.agents.buildPromptAndTools(agent, {
-      baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
-      includeGoal: false,
-    })
+  const {
+    systemPrompt: system,
+    tools,
+    toolDisplayNames,
+  } = await sdk.ai.agents.buildPromptAndTools(agent, {
+    baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
+    includeGoal: false,
+  })
 
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()

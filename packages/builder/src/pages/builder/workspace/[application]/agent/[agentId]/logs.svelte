@@ -101,9 +101,7 @@
       hasMore = response.hasMore
 
       const selectedStillExists = selectedSession
-        ? response.sessions.some(
-            s => s.sessionId === currentSelectedSession.sessionId
-          )
+        ? response.sessions.some(s => s.sessionId === selectedSession.sessionId)
         : false
 
       if (!selectedStillExists) {
@@ -203,7 +201,7 @@
       item => item.sessionId === row.sessionId
     )
     if (session) {
-      void selectSession(session)
+      selectSession(session)
     }
   }
 
@@ -223,13 +221,13 @@
     triggerFilter
 
     if (mounted) {
-      void loadSessions(0)
+      loadSessions(0)
     }
   })
 
   onMount(() => {
     mounted = true
-    void loadSessions(0)
+    loadSessions(0)
   })
 </script>
 

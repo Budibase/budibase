@@ -18,7 +18,7 @@
     expandedStepId: string | null
     stepDetailsByRequestId: Record<string, AgentLogRequestDetail>
     stepLoadingByRequestId: Record<string, boolean>
-    onToggleStep: (entry: AgentLogEntry) => void | Promise<void>
+    onToggleStep: (_entry: AgentLogEntry) => void | Promise<void>
   }
 
   let {

@@ -1,6 +1,10 @@
 import fetch from "node-fetch"
 import { getAvailableTools, getOrThrow } from "./agents"
-import { fetchRequestDetail, fetchSessionDetail, fetchSessions } from "./agentLogs"
+import {
+  fetchRequestDetail,
+  fetchSessionDetail,
+  fetchSessions,
+} from "./agentLogs"
 
 jest.mock("node-fetch", () => jest.fn())
 jest.mock("./agents", () => ({
@@ -178,5 +182,4 @@ describe("agentLogs", () => {
       message: "Agent log detail not found",
     })
   })
-
 })

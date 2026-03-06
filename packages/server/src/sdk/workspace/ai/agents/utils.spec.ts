@@ -1,4 +1,10 @@
-import type { Tool, UIMessage, ToolSet, TypedToolCall, TypedToolResult } from "ai"
+import type {
+  Tool,
+  UIMessage,
+  ToolSet,
+  TypedToolCall,
+  TypedToolResult,
+} from "ai"
 import { ToolType } from "@budibase/types"
 import {
   findIncompleteToolCalls,
