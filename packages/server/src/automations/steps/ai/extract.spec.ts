@@ -64,6 +64,9 @@ describe("extract file data step unit tests", () => {
       chat: {} as any,
       embedding: {} as any,
       providerOptions: undefined,
+      uploadFile: jest
+        .fn()
+        .mockRejectedValue(new Error("This model doesn't support create_file")),
     })
 
     generateTextMock.mockResolvedValue({
@@ -151,6 +154,7 @@ describe("extract file data step unit tests", () => {
       chat: {} as any,
       embedding: {} as any,
       providerOptions: undefined,
+      uploadFile: jest.fn(),
     })
 
     PDFParseMock.mockImplementation(
