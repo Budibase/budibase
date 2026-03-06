@@ -118,8 +118,52 @@ jobs:
             yarn test -- --scope=@budibase/builder --scope=@budibase/client --scope=@budibase/frontend-core --no-prefix
           fi
 
+  affected-tests:
+    runs-on: ubuntu-24.04
+    outputs:
+      run_worker_tests: ${{ steps.affected.outputs.run_worker_tests }}
+      run_server_tests: ${{ steps.affected.outputs.run_server_tests }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+      - run: yarn --frozen-lockfile
+
+      - name: Check affected tests
+        id: affected
+        run: |
+          RUN_WORKER_TESTS="true"
+          RUN_SERVER_TESTS="true"
+
+          if ${{ env.ONLY_AFFECTED_TASKS }}; then
+            AFFECTED_WORKER=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/worker)
+            if [ -z "$AFFECTED_WORKER" ]; then
+              RUN_WORKER_TESTS="false"
+            fi
+
+            AFFECTED_SERVER=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
+            if [ -z "$AFFECTED_SERVER" ]; then
+              RUN_SERVER_TESTS="false"
+            fi
+          fi
+
+          echo "run_worker_tests=$RUN_WORKER_TESTS" >> $GITHUB_OUTPUT
+          echo "run_server_tests=$RUN_SERVER_TESTS" >> $GITHUB_OUTPUT
+          echo "run_worker_tests=$RUN_WORKER_TESTS"
+          echo "run_server_tests=$RUN_SERVER_TESTS"
+
   test-worker:
     runs-on: ubuntu-24.04
+    needs: affected-tests
+    if: needs.affected-tests.outputs.run_worker_tests == 'true'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -135,19 +179,13 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Test worker
         run: |
-          if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/worker)
-            if [ -z "$AFFECTED" ]; then
-              echo "No affected tests to run"
-              exit 0
-            fi
-          fi
-
           cd packages/worker
           yarn test --reporters=default --reporters=github-actions
 
   test-server:
     runs-on: ubuntu-24.04
+    needs: affected-tests
+    if: needs.affected-tests.outputs.run_server_tests == 'true'
     strategy:
       matrix:
         include:
@@ -217,28 +255,13 @@ jobs:
 
       - run: yarn --frozen-lockfile
 
-      - name: Check affected server tests
-        id: affected_server
-        run: |
-          RUN_SERVER_TESTS="true"
-          if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
-            if [ -z "$AFFECTED" ]; then
-              RUN_SERVER_TESTS="false"
-            fi
-          fi
-          echo "run_server_tests=$RUN_SERVER_TESTS" >> $GITHUB_OUTPUT
-          echo "run_server_tests=$RUN_SERVER_TESTS"
-
       - name: Load dotenv
-        if: steps.affected_server.outputs.run_server_tests == 'true'
         id: dotenv
         uses: falti/dotenv-action@v1.1.3
         with:
           path: ./packages/server/images-sha.env
 
       - name: Pull testcontainers images
-        if: steps.affected_server.outputs.run_server_tests == 'true'
         run: |
           if [ "${{ matrix.datasource }}" == "mssql" ]; then
             docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
@@ -268,11 +291,11 @@ jobs:
           wait $(jobs -p)
 
       - name: Build client library - necessary for component tests
-        if: steps.affected_server.outputs.run_server_tests == 'true' && matrix.datasource == 'none'
+        if: matrix.datasource == 'none'
         run: yarn build:client
 
       - name: Set up PostgreSQL 16
-        if: steps.affected_server.outputs.run_server_tests == 'true' && matrix.datasource == 'postgres'
+        if: matrix.datasource == 'postgres'
         run: |
           sudo systemctl stop postgresql
           sudo apt-get remove --purge -y postgresql* libpq-dev
@@ -286,7 +309,6 @@ jobs:
           sudo apt-get install -y postgresql-16
 
       - name: Test server
-        if: steps.affected_server.outputs.run_server_tests == 'true'
         env:
           DATASOURCE: ${{ matrix.datasource }}
           JEST_SHARD_INDEX: ${{ matrix.shard_index }}
