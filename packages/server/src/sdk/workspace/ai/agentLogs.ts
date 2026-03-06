@@ -4,6 +4,7 @@ import type {
   AgentLogRequestDetail,
   FetchAgentLogsResponse,
 } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
 import fetch from "node-fetch"
 import env from "../../../environment"
 import { getAvailableTools, getOrThrow, getToolDisplayNames } from "./agents"
@@ -45,6 +46,7 @@ interface LiteLLMProxyMessage {
 
 interface LiteLLMRequestDetail {
   request_id?: string
+  end_user?: string
   model?: string
   prompt_tokens?: number
   completion_tokens?: number
@@ -62,6 +64,10 @@ interface LiteLLMRequestDetail {
   proxy_server_request?: {
     messages?: LiteLLMProxyMessage[]
   }
+}
+
+function getExpectedEndUser(agentId: string): string {
+  return `bb-agent:${agentId}`
 }
 
 function toContentString(content: unknown): string {
@@ -143,7 +149,8 @@ function formatLiteLLMDateTime(
 function buildSession(sessionId: string, sessionLogs: LiteLLMSpendLog[]) {
   const sorted = sessionLogs.sort(
     (a, b) =>
-      new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime()
+      new Date(a.startTime || 0).getTime() -
+      new Date(b.startTime || 0).getTime()
   )
 
   const entries: AgentLogEntry[] = sorted.map(log => ({
@@ -262,11 +269,14 @@ export async function fetchSessionDetail(
       page: String(currentPage),
       page_size: "100",
     })
-    const response = await fetch(`${liteLLMUrl}/spend/logs/session/ui?${params}`, {
-      headers: {
-        Authorization: liteLLMAuthorizationHeader,
-      },
-    })
+    const response = await fetch(
+      `${liteLLMUrl}/spend/logs/session/ui?${params}`,
+      {
+        headers: {
+          Authorization: liteLLMAuthorizationHeader,
+        },
+      }
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -280,7 +290,7 @@ export async function fetchSessionDetail(
   }
 
   const filteredLogs = logs.filter(
-    log => !log.end_user || log.end_user === `bb-agent:${agentId}`
+    log => log.end_user === `bb-agent:${agentId}`
   )
 
   if (!filteredLogs.length) {
@@ -315,6 +325,9 @@ export async function fetchRequestDetail(
   }
 
   const data = (await response.json()) as LiteLLMRequestDetail
+  if (data.end_user !== getExpectedEndUser(agentId)) {
+    throw new HTTPError("Agent log detail not found", 404)
+  }
   const requestMessages = data.proxy_server_request?.messages || []
   const agent = await getOrThrow(agentId)
   const toolDisplayNames = getToolDisplayNames(

@@ -10,9 +10,7 @@
     calculateLatency,
     formatSpend,
     formatTime,
-    getSessionInputTokens,
-    getSessionOutputTokens,
-    getSessionSpend,
+    getSessionStats,
   } from "./utils"
 
   type Props = {
@@ -33,6 +31,7 @@
 </script>
 
 {#if selectedSession}
+  {@const stats = getSessionStats(selectedSession)}
   <div class="detail-content">
     <div class="detail-header">
       <h3 class="detail-title">Session</h3>
@@ -64,16 +63,12 @@
       <div class="meta-row">
         <span class="meta-label">Tokens (in/out)</span>
         <span class="meta-value">
-          {getSessionInputTokens(selectedSession)} / {getSessionOutputTokens(
-            selectedSession
-          )}
+          {stats.inputTokens} / {stats.outputTokens}
         </span>
       </div>
       <div class="meta-row">
         <span class="meta-label">Spend</span>
-        <span class="meta-value"
-          >{formatSpend(getSessionSpend(selectedSession))}</span
-        >
+        <span class="meta-value">{formatSpend(stats.spend)}</span>
       </div>
       <div class="meta-row">
         <span class="meta-label">Started</span>

@@ -7,6 +7,7 @@
     formatStructuredContent,
     getStepDuration,
     getStepFlow,
+    isSlowStep,
     parseAssistantResponse,
   } from "./utils"
 
@@ -23,18 +24,32 @@
     $props()
 
   let flow = $derived(getStepFlow(detail, loadingStep))
-
-  const isSlowStep = (step: AgentLogEntry) => {
-    if (!step.startTime || !step.endTime) {
-      return false
-    }
-
-    return (
-      new Date(step.endTime).getTime() - new Date(step.startTime).getTime() >
-      2000
-    )
-  }
 </script>
+
+{#snippet toolCard(item: { name: string, displayName?: string, toolCallId?: string }, content: string, kindLabel?: string)}
+  {@const displayName = formatToolName(item.name, item.displayName)}
+  <article class="tool-card">
+    <div class="tool-card-header">
+      <div class="tool-card-meta">
+        <span class="tool-card-name">{displayName.primary}</span>
+        {#if displayName.secondary}
+          <span class="tool-card-subtitle">{displayName.secondary}</span>
+        {/if}
+        {#if item.toolCallId}
+          <span class="tool-card-id" title={item.toolCallId}>
+            {item.toolCallId}
+          </span>
+        {/if}
+      </div>
+      {#if kindLabel}
+        <span class="tool-card-kind">{kindLabel}</span>
+      {/if}
+    </div>
+    <div class="content-surface">
+      <pre><code>{formatStructuredContent(content)}</code></pre>
+    </div>
+  </article>
+{/snippet}
 
 <div class="step" class:step--expanded={expanded}>
   <button class="step-header" type="button" onclick={() => onToggleStep(entry)}>
@@ -82,7 +97,6 @@
               <div class="content-section-header">
                 <div class="section-label-group">
                   <h5 class="content-title">Prompt</h5>
-                  <p class="content-subtitle">User message and context</p>
                 </div>
               </div>
               <div class="content-surface">
@@ -106,38 +120,7 @@
 
                 <div class="tool-stack">
                   {#each detail.toolResults as result}
-                    {@const displayName = formatToolName(
-                      result.name,
-                      result.displayName
-                    )}
-                    <article class="tool-card">
-                      <div class="tool-card-header">
-                        <div class="tool-card-meta">
-                          <span class="tool-card-name"
-                            >{displayName.primary}</span
-                          >
-                          {#if displayName.secondary}
-                            <span class="tool-card-subtitle">
-                              {displayName.secondary}
-                            </span>
-                          {/if}
-                          {#if result.toolCallId}
-                            <span
-                              class="tool-card-id"
-                              title={result.toolCallId}
-                            >
-                              {result.toolCallId}
-                            </span>
-                          {/if}
-                        </div>
-                        <span class="tool-card-kind">Result</span>
-                      </div>
-                      <div class="content-surface">
-                        <pre><code
-                            >{formatStructuredContent(result.content)}</code
-                          ></pre>
-                      </div>
-                    </article>
+                    {@render toolCard(result, result.content, "Result")}
                   {/each}
                 </div>
               </div>
@@ -179,29 +162,7 @@
 
                 <div class="tool-stack">
                   {#each detail.toolCalls as toolCall}
-                    {@const displayName = formatToolName(
-                      toolCall.name,
-                      toolCall.displayName
-                    )}
-                    <article class="tool-card">
-                      <div class="tool-card-header">
-                        <div class="tool-card-meta">
-                          <span class="tool-card-name"
-                            >{displayName.primary}</span
-                          >
-                          {#if displayName.secondary}
-                            <span class="tool-card-subtitle">
-                              {displayName.secondary}
-                            </span>
-                          {/if}
-                        </div>
-                      </div>
-                      <div class="content-surface">
-                        <pre><code
-                            >{formatStructuredContent(toolCall.arguments)}</code
-                          ></pre>
-                      </div>
-                    </article>
+                    {@render toolCard(toolCall, toolCall.arguments)}
                   {/each}
                 </div>
               </div>
@@ -328,7 +289,7 @@
   }
 
   .step-body {
-    padding: 12px 12px 12px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
@@ -380,7 +341,6 @@
 
   .content-section-header {
     display: flex;
-    flex-direction: row;
     align-items: center;
     gap: 10px;
   }

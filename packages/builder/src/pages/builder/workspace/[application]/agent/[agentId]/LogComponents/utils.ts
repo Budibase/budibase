@@ -34,12 +34,25 @@ export function formatSpend(spend: number): string {
   return `$${spend.toFixed(4)}`
 }
 
-export function getStepDuration(entry: AgentLogEntry): string {
-  if (!entry.startTime || !entry.endTime) return ""
-  const ms =
-    new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime()
+function formatDuration(ms: number, decimals = 1): string {
   if (ms < 1000) return `${ms}ms`
-  return `${(ms / 1000).toFixed(1)}s`
+  return `${(ms / 1000).toFixed(decimals)}s`
+}
+
+function getEntryDurationMs(entry: AgentLogEntry): number | null {
+  if (!entry.startTime || !entry.endTime) return null
+  return new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime()
+}
+
+export function getStepDuration(entry: AgentLogEntry): string {
+  const ms = getEntryDurationMs(entry)
+  if (ms == null) return ""
+  return formatDuration(ms)
+}
+
+export function isSlowStep(entry: AgentLogEntry): boolean {
+  const ms = getEntryDurationMs(entry)
+  return ms != null && ms > 2000
 }
 
 export function calculateLatency(session: AgentLogSession): string {
@@ -49,20 +62,24 @@ export function calculateLatency(session: AgentLogSession): string {
   if (!first.startTime || !last.endTime) return "-"
   const ms =
     new Date(last.endTime).getTime() - new Date(first.startTime).getTime()
-  if (ms < 1000) return `${ms}ms`
-  return `${(ms / 1000).toFixed(2)}s`
+  return formatDuration(ms, 2)
 }
 
-export function getSessionInputTokens(session: AgentLogSession): number {
-  return session.entries.reduce((sum, entry) => sum + entry.inputTokens, 0)
+export interface SessionStats {
+  inputTokens: number
+  outputTokens: number
+  spend: number
 }
 
-export function getSessionOutputTokens(session: AgentLogSession): number {
-  return session.entries.reduce((sum, entry) => sum + entry.outputTokens, 0)
-}
-
-export function getSessionSpend(session: AgentLogSession): number {
-  return session.entries.reduce((sum, entry) => sum + entry.spend, 0)
+export function getSessionStats(session: AgentLogSession): SessionStats {
+  return session.entries.reduce(
+    (acc, entry) => ({
+      inputTokens: acc.inputTokens + entry.inputTokens,
+      outputTokens: acc.outputTokens + entry.outputTokens,
+      spend: acc.spend + entry.spend,
+    }),
+    { inputTokens: 0, outputTokens: 0, spend: 0 }
+  )
 }
 
 function summarizeToolNames(names: string[]): string {

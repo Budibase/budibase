@@ -17,6 +17,16 @@ function getDefaultLogRange() {
   }
 }
 
+function sanitizePageQuery(page?: string): number {
+  const normalizedPage = page?.trim()
+
+  if (!normalizedPage || !/^\d+$/.test(normalizedPage)) {
+    return 0
+  }
+
+  return Number.parseInt(normalizedPage, 10)
+}
+
 export async function fetchAgentLogs(ctx: UserCtx<void, FetchAgentLogsResponse>) {
   const { agentId } = ctx.params
   const { startDate, endDate, page = "0" } = ctx.query as Record<string, string>
@@ -26,7 +36,7 @@ export async function fetchAgentLogs(ctx: UserCtx<void, FetchAgentLogsResponse>)
     agentId,
     startDate || defaults.startDate,
     endDate || defaults.endDate,
-    parseInt(page)
+    sanitizePageQuery(page)
   )
 }
 

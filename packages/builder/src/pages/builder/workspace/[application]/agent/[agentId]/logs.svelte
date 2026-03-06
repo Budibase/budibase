@@ -27,30 +27,21 @@
 
   let mounted = false
 
+  const HOUR = 60 * 60 * 1000
+  const DAY = 24 * HOUR
+  const TIME_RANGE_MS: Record<string, number> = {
+    "1h": HOUR,
+    "8h": 8 * HOUR,
+    "24h": DAY,
+    "7d": 7 * DAY,
+    "30d": 30 * DAY,
+  }
+
   function getDateRange(): { startDate: string; endDate: string } {
     const now = new Date()
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
-    const endDate = formatLogDateForApi(tomorrow)
+    const endDate = formatLogDateForApi(new Date(now.getTime() + DAY))
     const includeTime = ["1h", "8h", "24h"].includes(timeRange)
-
-    let start = new Date(now)
-    switch (timeRange) {
-      case "1h":
-        start = new Date(now.getTime() - 60 * 60 * 1000)
-        break
-      case "8h":
-        start = new Date(now.getTime() - 8 * 60 * 60 * 1000)
-        break
-      case "24h":
-        start = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-        break
-      case "7d":
-        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        break
-      case "30d":
-        start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-        break
-    }
+    const start = new Date(now.getTime() - (TIME_RANGE_MS[timeRange] || TIME_RANGE_MS["7d"]))
 
     return {
       startDate: formatLogDateForApi(start, { includeTime }),
