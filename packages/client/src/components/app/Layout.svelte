@@ -2,7 +2,7 @@
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
   import { Heading, Icon, Button, clickOutside } from "@budibase/bbui"
-  import { redirectToLoginWithReturnUrl } from "@budibase/frontend-core"
+  import { redirectToLoginWithReturnUrl, Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
