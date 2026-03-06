@@ -1,9 +1,10 @@
 <script>
   // NOTE: this is not a block - it's just named as such to avoid confusing users,
   // because it functions similarly to one
-  import { getContext, onMount } from "svelte"
+  import { getContext, onDestroy, onMount } from "svelte"
   import { get, derived, readable } from "svelte/store"
   import { featuresStore } from "@/stores"
+  import { createAutoRefresh } from "@/utils/autoRefresh"
   import { Grid } from "@budibase/frontend-core"
   import { processStringSync } from "@budibase/string-templates"
   import { enrichGridConditions } from "@/utils/conditions"
@@ -25,6 +26,7 @@
   export let buttons = null
   export let buttonsCollapsed = false
   export let buttonsCollapsedText = null
+  export let autoRefresh = null
 
   const context = getContext("context")
   const component = getContext("component")
@@ -43,6 +45,7 @@
 
   let grid
   let gridContext
+  const autoRefreshActions = createAutoRefresh()
   let minHeight = 0
 
   let filterExtensions = {}
@@ -87,6 +90,12 @@
   ]
 
   $: extendedFilter = extendFilter(initialFilter, filterExtensions)
+  $: autoRefreshEnabled =
+    !$builderStore.inBuilder || !$builderStore.selectedComponentId
+  $: autoRefreshActions.setUp(
+    autoRefreshEnabled ? autoRefresh : null,
+    gridContext?.rows?.actions?.refreshData
+  )
 
   /**
    *
@@ -245,6 +254,10 @@
   onMount(() => {
     gridContext = grid.getContext()
     gridContext.minHeight.subscribe($height => (minHeight = $height))
+  })
+
+  onDestroy(() => {
+    autoRefreshActions.clear()
   })
 </script>
 

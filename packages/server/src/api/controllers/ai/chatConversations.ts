@@ -6,7 +6,7 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
-import { ai } from "@budibase/pro"
+import { ai, quotas } from "@budibase/pro"
 import {
   AgentMessageMetadata,
   ChatAgentRequest,
@@ -276,6 +276,11 @@ export async function webhookChat({
     toolChoice: hasTools ? "auto" : "none",
     stopWhen: stepCountIs(30),
     providerOptions: providerOptions?.(hasTools),
+    async onStepFinish({ toolResults }) {
+      for (const _toolResult of toolResults) {
+        await quotas.addAction(async () => {})
+      }
+    },
     onError({ error }) {
       console.error("Agent streaming error", {
         agentId,
@@ -464,12 +469,15 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools: hasTools ? tools : undefined,
       toolChoice: hasTools ? "auto" : "none",
       stopWhen: stepCountIs(30),
-      onStepFinish({ content, toolCalls, toolResults }) {
+      async onStepFinish({ content, toolCalls, toolResults }) {
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
         for (const part of content) {
           if (part.type === "tool-error") {
             pendingToolCalls.delete(part.toolCallId)
           }
+        }
+        for (const _toolResult of toolResults) {
+          await quotas.addAction(async () => {})
         }
       },
       providerOptions: providerOptions?.(hasTools),
