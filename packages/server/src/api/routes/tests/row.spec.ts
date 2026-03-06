@@ -49,7 +49,8 @@ import * as uuid from "uuid"
 import emitter from "../../../../src/events"
 import { InternalTables } from "../../../db/utils"
 import { withEnv } from "../../../environment"
-import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
+import { mockAISDKChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import { isDate } from "../../../utilities"
 import { outputProcessing } from "../../../utilities/rowProcessor"
 
@@ -3765,22 +3766,21 @@ if (descriptions.length) {
         describe("AI fields", () => {
           let table: Table
           let envCleanup: () => void
+          let cleanupDefaultAIConfig: (() => Promise<void>) | undefined
 
           beforeAll(async () => {
             mocks.licenses.useBudibaseAI()
             mocks.licenses.useAICustomConfigs()
-
-            envCleanup = setEnv({
-              OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
-            })
+            envCleanup = setEnv({ SELF_HOSTED: false })
+            cleanupDefaultAIConfig =
+              await setupDefaultCompletionsAIConfig(config)
 
             // Ensure MockAgent is installed for OpenAI interceptors
             const { installHttpMocking } = require("../../../tests/jestEnv")
             installHttpMocking()
 
             //We need to supply multiple interceptors.
-            mockChatGPTResponse("Mock LLM Response")
-            mockChatGPTResponse("Mock LLM Response")
+            mockAISDKChatGPTResponse("Mock LLM Response", { times: 2 })
 
             table = await config.api.table.save(
               saveTableRequest({
@@ -3804,10 +3804,13 @@ if (descriptions.length) {
             })
           })
 
-          afterAll(() => {
+          afterAll(async () => {
             nock.cleanAll()
             envCleanup()
             mocks.licenses.useCloudFree()
+            if (cleanupDefaultAIConfig) {
+              await cleanupDefaultAIConfig()
+            }
           })
 
           it("should be able to save a row with an AI column", async () => {
