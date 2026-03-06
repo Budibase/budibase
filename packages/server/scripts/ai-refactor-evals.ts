@@ -1,20 +1,24 @@
-import { ConfigType, ContentType, DocumentSourceType } from "@budibase/types"
+import {
+  AIConfigResponse,
+  AIConfigType,
+  BUDIBASE_AI_PROVIDER_ID,
+  ContentType,
+  DocumentSourceType,
+} from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import { existsSync, readFileSync } from "fs"
 import { isAbsolute, resolve } from "path"
 import * as dotenv from "dotenv"
 import { execSync } from "child_process"
 
-type ProviderName = "BudibaseAI" | "OpenAI" | "AzureOpenAI"
+type ProviderName = "Budibase" | "OpenAI" | "Azure"
 
 interface AIProviderConfig {
-  provider: ProviderName
   name: string
-  isDefault: boolean
-  active: boolean
+  provider: ProviderName
+  model: string
   apiKey?: string
   baseUrl?: string
-  defaultModel?: string
 }
 
 interface Scenario {
@@ -524,7 +528,7 @@ function resolveFeatures(
 }
 
 function shouldRunProviderMode(
-  providerId: "bbai" | "openai" | "azure-openai",
+  providerId: string,
   mode: BudibaseMode,
   selected?: string[]
 ) {
@@ -548,16 +552,22 @@ function buildScenarios(
   const azureBaseUrl = process.env.AZURE_OPENAI_BASE_URL
   const azureModel = process.env.AZURE_OPENAI_MODEL || "gpt-4.1"
 
+  const normalizeBBAIModel = (model: string) => {
+    if (model.startsWith("budibase/")) {
+      return model
+    }
+    return `budibase/legacy/${model}`
+  }
+
   const bbaiBaseConfig: AIProviderConfig = {
-    provider: "BudibaseAI",
+    provider: "Budibase",
     name: "Eval BBAI",
-    isDefault: true,
-    active: true,
-    defaultModel:
+    model: normalizeBBAIModel(
       process.env.BBAI_MODEL ||
-      process.env.BBAI_CLOUD_MODEL ||
-      process.env.BBAI_SELFHOST_MODEL ||
-      "gpt-5-mini",
+        process.env.BBAI_CLOUD_MODEL ||
+        process.env.BBAI_SELFHOST_MODEL ||
+        "budibase/v1"
+    ),
   }
 
   const scenarios: Scenario[] = []
@@ -580,12 +590,10 @@ function buildScenarios(
         enabled:
           shouldRunProviderMode("openai", mode, selected) && Boolean(openaiKey),
         config: {
-          provider: "OpenAI",
           name: "Eval OpenAI",
-          isDefault: true,
-          active: true,
+          provider: "OpenAI",
+          model: process.env.OPENAI_MODEL || "gpt-5-mini",
           apiKey: openaiKey,
-          defaultModel: process.env.OPENAI_MODEL || "gpt-5-mini",
         },
       })
 
@@ -598,13 +606,11 @@ function buildScenarios(
           Boolean(azureKey) &&
           Boolean(azureBaseUrl),
         config: {
-          provider: "AzureOpenAI",
           name: "Eval Azure OpenAI",
-          isDefault: true,
-          active: true,
+          provider: "Azure",
           apiKey: azureKey,
           baseUrl: azureBaseUrl,
-          defaultModel: azureModel,
+          model: azureModel,
         },
       })
     }
@@ -617,14 +623,50 @@ async function configureAIProvider(
   client: ApiClient,
   config: AIProviderConfig
 ) {
-  const body = {
-    type: ConfigType.AI,
-    config: {
-      evalProvider: config,
-    },
+  const credentialsFields: Record<string, string> = {}
+  if (config.apiKey) {
+    credentialsFields.api_key = config.apiKey
+  }
+  if (config.baseUrl) {
+    credentialsFields.api_base = config.baseUrl
   }
 
-  await client.request("POST", "/api/global/configs", body, false)
+  const body = {
+    name: config.name,
+    provider: config.provider,
+    model: config.model || "gpt-5-mini",
+    credentialsFields,
+    configType: AIConfigType.COMPLETIONS,
+    isDefault: true,
+  }
+
+  const existingConfigs = await client.request<AIConfigResponse[]>(
+    "GET",
+    "/api/configs"
+  )
+
+  const existingConfig = existingConfigs.find(existing => {
+    if (existing.configType !== AIConfigType.COMPLETIONS) {
+      return false
+    }
+
+    if (config.provider === "Budibase") {
+      return existing.provider === BUDIBASE_AI_PROVIDER_ID
+    }
+
+    return existing.name === config.name
+  })
+
+  if (existingConfig?._id && existingConfig?._rev) {
+    await client.request("PUT", "/api/configs", {
+      _id: existingConfig._id,
+      _rev: existingConfig._rev,
+      ...body,
+    })
+    return
+  }
+
+  await client.request("POST", "/api/configs", body)
 }
 
 async function getAutomationDefinitions(client: ApiClient) {
@@ -953,7 +995,7 @@ async function runFeatureEvals(
     "automation-openai",
     "Automation OpenAI step",
     async () => {
-      const automationModel = scenarioConfig.defaultModel || "gpt-4o-mini"
+      const automationModel = scenarioConfig.model || "gpt-4o-mini"
       const result = await runAutomationStepEval(
         client,
         definitions,

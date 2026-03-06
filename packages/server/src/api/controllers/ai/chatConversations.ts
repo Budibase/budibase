@@ -245,7 +245,9 @@ export async function webhookChat({
   const sessionId = chat._id || v4()
   const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
     agent.aiconfig,
-    sessionId
+    sessionId,
+    undefined,
+    agentId
   )
 
   const modelMessages = await convertToModelMessages(chat.messages)
@@ -430,7 +432,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const sessionId = chat._id || chat.sessionId || chatId
     const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
       agent.aiconfig,
-      sessionId
+      sessionId,
+      undefined,
+      agentId
     )
 
     const modelMessages = await convertToModelMessages(chat.messages)

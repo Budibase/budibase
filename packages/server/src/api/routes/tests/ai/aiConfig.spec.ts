@@ -44,6 +44,20 @@ const mockLiteLLMProviders = () =>
       },
     ])
 
+const mockLiteLLMModelCostMap = () =>
+  nock(environment.LITELLM_URL)
+    .persist()
+    .get("/public/litellm_model_cost_map")
+    .reply(200, {
+      "gpt-4o-mini": { litellm_provider: "openai", mode: "chat" },
+      "text-embedding-3-small": {
+        litellm_provider: "openai",
+        mode: "embedding",
+      },
+      "claude-3-5-haiku": { litellm_provider: "anthropic", mode: "chat" },
+      "gpt-4o": { litellm_provider: ["openai", "azure"], mode: "responses" },
+    })
+
 const mockLiteLLMTeam = () =>
   nock(environment.LITELLM_URL)
     .persist()
@@ -99,7 +113,21 @@ describe("BudibaseAI", () => {
       nock.cleanAll()
 
       mockLiteLLMProviders()
+      mockLiteLLMModelCostMap()
       mockLiteLLMTeam()
+    })
+
+    it("fetches provider-specific models from LiteLLM cost map", async () => {
+      const providers = await config.api.ai.fetchProviders()
+      const openAIProvider = providers.find(
+        provider => provider.id === "OpenAI"
+      )
+      expect(openAIProvider).toMatchObject({
+        models: {
+          completions: ["gpt-4o", "gpt-4o-mini"],
+          embeddings: ["text-embedding-3-small"],
+        },
+      })
     })
 
     it("creates a custom config and sanitizes the API key", async () => {
