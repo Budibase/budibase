@@ -254,12 +254,6 @@
       params.set("order", sortOrder)
     }
 
-    if (typeFilter === "all") {
-      params.delete("type")
-    } else {
-      params.set("type", typeFilter)
-    }
-
     const query = params.toString()
     const next = `${window.location.pathname}${query ? `?${query}` : ""}`
     history.replaceState({}, "", next)
