@@ -8,7 +8,7 @@
   async function checkMigrationsFinished() {
     let totalWaitMs = 0
     while (true) {
-      const waitForMs = 5000 + Math.random() * 5000
+      const waitForMs = 500
       await new Promise(resolve => setTimeout(resolve, waitForMs))
       totalWaitMs += waitForMs
 
