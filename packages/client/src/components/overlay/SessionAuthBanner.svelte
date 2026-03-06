@@ -20,6 +20,10 @@
     }
     redirectToLoginWithReturnUrl()
   }
+
+  const handleDismiss = () => {
+    sessionBannerStore.set(null)
+  }
 </script>
 
 <Portal target=".banner-container">
@@ -30,7 +34,9 @@
           type={BANNER_TYPES.WARNING}
           extraButtonText={sessionBanner?.action?.label || "Login"}
           extraButtonAction={handleAction}
-          showCloseButton={false}
+          showCloseButton={true}
+          closeButtonTooltip="Close"
+          on:change={handleDismiss}
         >
           {sessionBanner?.text}
         </Banner>

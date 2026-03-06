@@ -12,6 +12,7 @@
   export let extraLinkText = undefined
   export let extraLinkAction = undefined
   export let showCloseButton = true
+  export let closeButtonTooltip = undefined
 
   let show = true
 
@@ -46,6 +47,8 @@
       <div class="spectrum-Toast-buttons">
         <button
           class="spectrum-ClearButton spectrum-ClearButton--overBackground spectrum-ClearButton--size{size}"
+          aria-label={closeButtonTooltip}
+          title={closeButtonTooltip}
           on:click={clear}
         >
           <div class="spectrum-ClearButton-fill">
