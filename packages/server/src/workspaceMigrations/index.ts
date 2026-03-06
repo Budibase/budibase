@@ -90,6 +90,7 @@ export async function checkMissingMigrations(
       }
     } else {
       ctx.response.set(Header.MIGRATING_APP, workspaceId)
+      ctx.response.set(Header.SKIP_MIGRATING_WAIT, "true")
     }
   }
 
