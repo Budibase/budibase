@@ -156,9 +156,19 @@
                 weight="fill"
               />
             </div>
-            <Body size="S" color="var(--spectrum-global-color-gray-900)"
-              >{row.name}</Body
-            >
+            <div class="name-content">
+              <Body size="S" color="var(--spectrum-global-color-gray-900)"
+                >{row.name}</Body
+              >
+              {#if row.playbookName}
+                <span
+                  class="playbook-chip"
+                  style={`--playbook-color: ${row.playbookColor || "#8CA171"}`}
+                >
+                  {row.playbookName}
+                </span>
+              {/if}
+            </div>
           </div>
 
           <div class="cell">
@@ -254,6 +264,24 @@
     grid-template-columns: 1fr 200px 200px 200px 50px;
     border-bottom: var(--border);
     align-items: center;
+  }
+
+  .name-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .playbook-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--playbook-color);
+    background: color-mix(in srgb, var(--playbook-color) 14%, white);
   }
 
   @media (max-width: 1200px) {

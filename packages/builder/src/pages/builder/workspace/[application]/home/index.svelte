@@ -6,6 +6,8 @@
   import AgentModal from "@/pages/builder/workspace/[application]/agent/AgentModal.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import AssignPlaybookModal from "./_components/AssignPlaybookModal.svelte"
+  import CreatePlaybookModal from "./_components/CreatePlaybookModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
   import HomeMetrics from "./_components/HomeMetrics.svelte"
   import HomeTable from "./_components/HomeTable.svelte"
@@ -17,7 +19,12 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { agentsStore, auth, featureFlags } from "@/stores/portal"
+  import {
+    agentsStore,
+    auth,
+    featureFlags,
+    playbooksStore,
+  } from "@/stores/portal"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     ActionMenu,
@@ -41,6 +48,7 @@
     type HomeSortColumn,
     type HomeSortOrder,
     type HomeType,
+    type PlaybookResponse,
     PublishResourceState,
     type Agent,
     type Table,
@@ -92,8 +100,13 @@
   let selectedAgent: Agent | undefined
   let updateAgentModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
+  let selectedRow: HomeRow | null = null
+
+  let createPlaybookModal: ModalAPI
+  let assignPlaybookModal: ModalAPI
 
   let typeFilter: HomeType = "all"
+  let selectedPlaybookId = ""
   let searchTerm = ""
   let metrics: GetWorkspaceHomeMetricsResponse | null = null
 
@@ -316,6 +329,10 @@
     agentModal?.show()
   }
 
+  const createPlaybook = () => {
+    createPlaybookModal?.show()
+  }
+
   const goToCreate = (target: "data/new" | "apis/new") => {
     goto(url(`../${target}`))
   }
@@ -426,6 +443,50 @@
     }
   }
 
+  const assignPlaybook = async (playbookId: string | undefined) => {
+    if (!selectedRow) {
+      return
+    }
+
+    try {
+      if (selectedRow.type === "app") {
+        await workspaceAppStore.edit({
+          ...selectedRow.resource,
+          playbookId,
+        })
+      } else if (selectedRow.type === "automation") {
+        await automationStore.actions.save({
+          ...selectedRow.resource,
+          playbookId,
+        })
+      } else if (selectedRow.type === "agent") {
+        await agentsStore.updateAgent({
+          ...selectedRow.resource,
+          playbookId,
+        })
+      }
+
+      notifications.success("Playbook updated successfully")
+      assignPlaybookModal?.hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to update playbook")
+    }
+  }
+
+  const handleCreatePlaybook = async (
+    playbook: Pick<PlaybookResponse, "name" | "description" | "color">
+  ) => {
+    try {
+      await playbooksStore.create(playbook)
+      notifications.success("Playbook created successfully")
+      createPlaybookModal?.hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to create playbook")
+    }
+  }
+
   const getContextMenuItemsForRow = (row: HomeRow) => {
     if (row.type === "app") {
       const workspaceApp = row.resource
@@ -452,6 +513,12 @@
             selectedWorkspaceApp = workspaceApp
             workspaceAppModal.show()
           },
+        },
+        {
+          icon: "stack",
+          name: "Assign playbook",
+          visible: true,
+          callback: () => assignPlaybookModal.show(),
         },
         {
           icon: "globe-simple",
@@ -502,6 +569,12 @@
       return [
         edit,
         {
+          icon: "stack",
+          name: "Assign playbook",
+          visible: true,
+          callback: () => assignPlaybookModal.show(),
+        },
+        {
           icon: "copy",
           name: "Duplicate",
           visible: true,
@@ -534,6 +607,12 @@
           callback: () => updateAgentModal.show(),
         },
         {
+          icon: "stack",
+          name: "Assign playbook",
+          visible: true,
+          callback: () => assignPlaybookModal.show(),
+        },
+        {
           icon: "copy",
           name: "Duplicate",
           visible: true,
@@ -564,6 +643,7 @@
     selectedWorkspaceApp = undefined
     selectedAutomation = undefined
     selectedAgent = undefined
+    selectedRow = row
 
     highlightedRowId = row._id
 
@@ -621,9 +701,26 @@
     getFavourite,
   })
 
-  $: allRows = sortHomeRows(baseRows, { sortColumn, sortOrder })
+  $: playbookLookup = Object.fromEntries(
+    $playbooksStore.map(playbook => [playbook._id, playbook])
+  ) as Record<string, PlaybookResponse>
 
-  $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
+  $: rowsWithPlaybooks = baseRows.map(row => {
+    const playbook = row.playbookId ? playbookLookup[row.playbookId] : undefined
+    return {
+      ...row,
+      playbookName: playbook?.name,
+      playbookColor: playbook?.color,
+    }
+  })
+
+  $: allRows = sortHomeRows(rowsWithPlaybooks, { sortColumn, sortOrder })
+
+  $: filteredRows = filterHomeRows({
+    rows: allRows,
+    typeFilter,
+    searchTerm,
+  }).filter(row => !selectedPlaybookId || row.playbookId === selectedPlaybookId)
 
   $: if (hasMounted) writeUrlState()
 
@@ -658,6 +755,7 @@
 
     await Promise.all([
       $featureFlags.AI_AGENTS ? agentsStore.fetchAgents() : Promise.resolve(),
+      playbooksStore.fetch(),
       loadMetrics(),
     ])
   })
@@ -697,7 +795,10 @@
       <HomeControls
         {typeFilter}
         agentsEnabled={$featureFlags.AI_AGENTS}
+        playbooks={$playbooksStore}
+        {selectedPlaybookId}
         on:typeChange={({ detail }) => setTypeFilter(detail)}
+        on:playbookChange={({ detail }) => (selectedPlaybookId = detail)}
       />
       <div class="controls-right">
         <div class="search-wrapper">
@@ -750,6 +851,8 @@
           </MenuItem>
 
           <MenuSeparator />
+          <MenuItem icon="stack" on:click={createPlaybook}>Playbook</MenuItem>
+
           <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
             Connection
           </MenuItem>
@@ -772,11 +875,28 @@
       on:openRow={({ detail }) => openRow(detail)}
       on:openContextMenu={({ detail }) => openHomeContextMenu(detail)}
       on:clearSearch={() => (searchTerm = "")}
-      on:resetFilters={() => (typeFilter = "all")}
+      on:resetFilters={() => {
+        typeFilter = "all"
+        selectedPlaybookId = ""
+      }}
       on:sortChange={({ detail }) => setSort(detail)}
     />
   </div>
 </div>
+
+<Modal bind:this={createPlaybookModal}>
+  <CreatePlaybookModal
+    on:confirm={({ detail }) => handleCreatePlaybook(detail)}
+  />
+</Modal>
+
+<Modal bind:this={assignPlaybookModal}>
+  <AssignPlaybookModal
+    row={selectedRow}
+    playbooks={$playbooksStore}
+    on:confirm={({ detail }) => assignPlaybook(detail)}
+  />
+</Modal>
 
 <WorkspaceAppModal
   bind:this={workspaceAppModal}

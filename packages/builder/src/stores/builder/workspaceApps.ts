@@ -133,6 +133,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       url: workspaceApp.url,
       navigation: workspaceApp.navigation,
       disabled: workspaceApp.disabled,
+      playbookId: workspaceApp.playbookId,
     }
 
     const updatedWorkspaceApp = await API.workspaceApp.update(safeWorkspaceApp)

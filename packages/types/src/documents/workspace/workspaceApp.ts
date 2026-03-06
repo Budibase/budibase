@@ -7,4 +7,5 @@ export interface WorkspaceApp extends Document {
   navigation: AppNavigation
   isDefault: boolean
   disabled?: boolean
+  playbookId?: string
 }

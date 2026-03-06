@@ -163,6 +163,10 @@ export const generateWorkspaceFavouriteID = () => {
   return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
 }
 
+export const generatePlaybookID = () => {
+  return `${DocumentType.PLAYBOOK}${SEPARATOR}${newid()}`
+}
+
 export const generateVectorDbID = () => {
   return `${DocumentType.VECTOR_STORE}${SEPARATOR}${newid()}`
 }

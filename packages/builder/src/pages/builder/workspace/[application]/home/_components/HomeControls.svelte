@@ -1,11 +1,13 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
   import { ActionButton, Icon } from "@budibase/bbui"
-  import type { HomeType } from "@budibase/types"
+  import type { HomeType, PlaybookResponse } from "@budibase/types"
   import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
 
   export let typeFilter: HomeType = "all"
   export let agentsEnabled = false
+  export let playbooks: PlaybookResponse[] = []
+  export let selectedPlaybookId = ""
 
   interface HomeFilterOption {
     label: string
@@ -15,6 +17,7 @@
 
   const dispatch = createEventDispatcher<{
     typeChange: HomeType
+    playbookChange: string
   }>()
 
   const getOptions = (agentsEnabled: boolean) => {
@@ -61,6 +64,20 @@
         </span>
       {/each}
     </div>
+    {#if playbooks.length}
+      <label class="playbook-filter">
+        <span>Playbook</span>
+        <select
+          bind:value={selectedPlaybookId}
+          on:change={() => dispatch("playbookChange", selectedPlaybookId)}
+        >
+          <option value="">All playbooks</option>
+          {#each playbooks as playbook}
+            <option value={playbook._id}>{playbook.name}</option>
+          {/each}
+        </select>
+      </label>
+    {/if}
   </div>
 </div>
 
@@ -76,6 +93,7 @@
     display: flex;
     gap: var(--spacing-m);
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .filter {
@@ -110,6 +128,22 @@
     gap: 6px;
     font-size: 14px;
     font-weight: 500;
+  }
+
+  .playbook-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .playbook-filter select {
+    min-height: 32px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 6px;
+    padding: 0 10px;
+    background: white;
   }
 
   @media (max-width: 1140px) {

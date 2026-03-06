@@ -26,6 +26,7 @@ function toWorkspaceAppResponse(
     createdAt: workspaceApp.createdAt as string,
     updatedAt: workspaceApp.updatedAt!,
     disabled: workspaceApp.disabled,
+    playbookId: workspaceApp.playbookId,
   }
 }
 
@@ -72,6 +73,7 @@ export async function create(
     name: body.name,
     url: body.url,
     disabled: body.disabled,
+    playbookId: body.playbookId,
     navigation: defaultAppNavigator(body.name),
     isDefault: false,
   }
@@ -99,6 +101,7 @@ export async function edit(
     url: body.url,
     navigation: body.navigation,
     disabled: body.disabled,
+    playbookId: body.playbookId,
   }
 
   const workspaceApp = await sdk.workspaceApps.update(toUpdate)
