@@ -124,16 +124,30 @@ async function processUrlFile(
     return { kind: "image", value: toImageDataUrl(data, fileType) }
   }
 
-  if (!llm.uploadFile) {
-    const data = await response.buffer()
-    const text = await extractPdfText(data)
-    return { kind: "text", value: text }
-  }
-  const stream = response.body as Readable
   const filename = `document.${fileType || "pdf"}`
-  return {
-    kind: "file",
-    value: await llm.uploadFile(stream, filename, fileType),
+  try {
+    const uploaded = await llm.uploadFile(
+      response.body as Readable,
+      filename,
+      fileType
+    )
+    return {
+      kind: "file",
+      value: uploaded,
+    }
+  } catch (error) {
+    if (shouldInlineFileAfterUploadFailure(error)) {
+      const fallbackResponse = await fetch(fileUrl)
+      if (!fallbackResponse.ok) {
+        throw new Error(
+          `Failed to fetch file from URL: ${fallbackResponse.statusText}`
+        )
+      }
+      const data = await fallbackResponse.buffer()
+      const text = await extractPdfText(data)
+      return { kind: "text", value: text }
+    }
+    throw error
   }
 }
 
@@ -150,16 +164,32 @@ async function processAttachmentFile(
     return { kind: "image", value: toImageDataUrl(data, contentType) }
   }
 
-  if (!llm.uploadFile) {
-    const data = await buffer(stream)
-    const text = await extractPdfText(data)
-    return { kind: "text", value: text }
-  }
   const filename = attachment.name || "document"
-  return {
-    kind: "file",
-    value: await llm.uploadFile(stream, filename, contentType),
+  try {
+    const uploaded = await llm.uploadFile(stream, filename, contentType)
+    return {
+      kind: "file",
+      value: uploaded,
+    }
+  } catch (error) {
+    if (shouldInlineFileAfterUploadFailure(error)) {
+      const fallback = await objectStore.getReadStream(bucket, attachment.key!)
+      const data = await buffer(fallback.stream)
+      const text = await extractPdfText(data)
+      return { kind: "text", value: text }
+    }
+    throw error
   }
+}
+
+function shouldInlineFileAfterUploadFailure(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
+  }
+  return (
+    /doesn't support .*create_file/i.test(error.message) ||
+    error.message === "File id not found"
+  )
 }
 
 export async function run({

@@ -15,12 +15,14 @@ import {
   streamText,
   wrapLanguageModel,
 } from "ai"
+import { quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
 import {
   findLatestUserQuestion,
   prepareChatConversationForSave,
   truncateTitle,
-} from "../../api/controllers/ai/chatConversations"
+  webhookChat,
+} from "../../api/controllers/ai"
 import sdk from "../../sdk"
 import type { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
 
@@ -28,6 +30,11 @@ jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
   return {
     ...actual,
+    quotas: {
+      ...actual.quotas,
+      addAction: jest.fn().mockImplementation((fn: () => Promise<any>) => fn()),
+      throwIfBudibaseAICreditsExceeded: jest.fn(),
+    },
     ai: {
       ...actual.ai,
       agentSystemPrompt: jest.fn(() => "system"),
@@ -418,6 +425,7 @@ describe("chat conversation transient behavior", () => {
       chat: mockModel as LanguageModelV3,
       embedding: {} as EmbeddingModelV3,
       providerOptions: jest.fn(),
+      uploadFile: jest.fn(),
     })
     ;(
       convertToModelMessages as jest.MockedFunction<
@@ -643,5 +651,226 @@ describe("chat conversation path validation", () => {
       })
 
     expect(res.status).toBe(400)
+  })
+})
+
+describe("Agent chat tool call tracking", () => {
+  const config = new TestConfiguration()
+  let chatApp: ChatApp
+  const addActionMock = jest.mocked(quotas.addAction)
+
+  function makeStreamTextMock(toolResults: { toolCallId: string }[]) {
+    return (options: any) => ({
+      pipeUIMessageStreamToResponse: jest
+        .fn()
+        .mockImplementation(async (res: any, pipeOptions: any) => {
+          if (options.onStepFinish) {
+            await options.onStepFinish({
+              content: [],
+              toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
+              toolResults,
+            })
+          }
+          if (pipeOptions?.onFinish) {
+            await pipeOptions.onFinish({ messages: [] })
+          }
+          res.end()
+        }),
+    })
+  }
+
+  function makeWebhookStreamTextMock(toolResults: { toolCallId: string }[]) {
+    return async (options: any) => {
+      if (options.onStepFinish) {
+        await options.onStepFinish({
+          content: [],
+          toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
+          toolResults,
+        })
+      }
+      return { text: Promise.resolve("response") }
+    }
+  }
+
+  beforeAll(async () => {
+    await config.init("chat-conversation-quota")
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        chatApp = {
+          _id: docIds.generateChatAppID(),
+          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
+          live: true,
+          createdAt: now,
+        }
+        await db.put(chatApp)
+      }
+    )
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  beforeEach(() => {
+    addActionMock.mockClear()
+    jest.mocked(streamText).mockClear()
+    ;(
+      sdk.ai.agents.getOrThrow as jest.MockedFunction<
+        typeof sdk.ai.agents.getOrThrow
+      >
+    ).mockResolvedValue({
+      _id: "agent-1",
+      name: "Test Agent",
+      aiconfig: "config-1",
+    } as any)
+    ;(
+      sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
+        typeof sdk.ai.agents.buildPromptAndTools
+      >
+    ).mockResolvedValue({
+      systemPrompt: "system",
+      tools: { tool1: {} as any },
+    })
+    ;(
+      sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
+    ).mockResolvedValue({
+      chat: {} as any,
+      embedding: {} as any,
+      providerOptions: jest.fn().mockReturnValue({}),
+      uploadFile: jest.fn(),
+    })
+    ;(
+      convertToModelMessages as jest.MockedFunction<
+        typeof convertToModelMessages
+      >
+    ).mockResolvedValue([])
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  describe("agentChatStream", () => {
+    it("counts each completed tool call as one action", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(
+          makeStreamTextMock([
+            { toolCallId: "c1" },
+            { toolCallId: "c2" },
+          ]) as any
+        )
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+          transient: true,
+        })
+
+      expect(res.status).toBe(200)
+      expect(addActionMock).toHaveBeenCalledTimes(2)
+    })
+
+    it("counts zero actions when the agent makes no tool calls", async () => {
+      jest.mocked(streamText).mockImplementation(makeStreamTextMock([]) as any)
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+          transient: true,
+        })
+
+      expect(res.status).toBe(200)
+      expect(addActionMock).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("webhookChat", () => {
+    it("counts each completed tool call as one action", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(
+          makeWebhookStreamTextMock([
+            { toolCallId: "c1" },
+            { toolCallId: "c2" },
+            { toolCallId: "c3" },
+          ]) as any
+        )
+
+      await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () => {
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+        }
+      )
+
+      expect(addActionMock).toHaveBeenCalledTimes(3)
+    })
+
+    it("counts zero actions when the agent makes no tool calls", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(makeWebhookStreamTextMock([]) as any)
+
+      await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () => {
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+        }
+      )
+
+      expect(addActionMock).not.toHaveBeenCalled()
+    })
   })
 })
