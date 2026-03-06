@@ -206,7 +206,7 @@
   on:hide={hidePasswordConfirmationModal}
 >
   <PasswordModal
-    createUsersResponse={createUsersResponse}
+    {createUsersResponse}
     userData={createdUsers}
     {addedToWorkspaceEmails}
   />
