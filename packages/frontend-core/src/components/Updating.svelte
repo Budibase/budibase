@@ -1,6 +1,6 @@
-<script>
-  export let isMigrationDone
-  export let onMigrationDone
+<script lang="ts">
+  export let isMigrationDone: () => Promise<boolean>
+  export let onMigrationDone: () => void
   export let timeoutSeconds = 60 // 1 minute
 
   let timedOut = false
