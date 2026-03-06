@@ -4,7 +4,6 @@
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import {
-    sessionBannerStore,
     redirectToLoginWithReturnUrl,
     invalidationMessage,
     popNumSessionsInvalidated,
@@ -32,6 +31,7 @@
     recaptchaStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
+  import SessionAuthBanner from "./overlay/SessionAuthBanner.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
   import PeekScreenDisplay from "./overlay/PeekScreenDisplay.svelte"
   import InstallPrompt from "./overlay/InstallPrompt.svelte"
@@ -63,12 +63,7 @@
 
   // Provide contexts
 
-  // Session banner subscription
-  let sessionBanner
-  $: sessionBanner = $sessionBannerStore
-  $: layoutInstance = sessionBanner
-    ? { ...$screenStore.activeLayout?.props, banner: sessionBanner }
-    : $screenStore.activeLayout?.props
+  $: layoutInstance = $screenStore.activeLayout?.props
   const context = createContextStore()
   setContext("sdk", SDK)
   setContext("component", writable({ id: null, ancestors: [] }))
@@ -263,6 +258,9 @@
                       >
                         <!-- Actual app -->
                         <div id="app-root">
+                          <div class="banner-container"></div>
+                          <SessionAuthBanner />
+
                           {#if showDevTools}
                             <DevToolsHeader />
                           {/if}

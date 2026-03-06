@@ -2,7 +2,7 @@
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
   import { Heading, Icon, Button, clickOutside } from "@budibase/bbui"
-  import { redirectToLoginWithReturnUrl, Constants } from "@budibase/frontend-core"
+  import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
@@ -95,8 +95,6 @@
     banner?.textColor,
     banner?.textSize
   )
-  $: isSessionNotAuthenticatedBanner =
-    banner?.variant === "session-not-authenticated"
   $: showBanner = !!banner?.text?.trim?.() && typeClass !== "none"
   $: autoCloseSidePanel =
     !$builderStore.inBuilder &&
@@ -241,11 +239,6 @@
   const handleBannerActionClick = () => {
     if (typeof banner?.action?.onClick === "function") {
       banner.action.onClick()
-      return
-    }
-
-    if (isSessionNotAuthenticatedBanner) {
-      redirectToLoginWithReturnUrl()
     }
   }
 </script>
@@ -262,11 +255,7 @@
 >
   <div class="screen-wrapper layout-body">
     {#if showBanner && (typeClass !== "left" || mobile)}
-      <div
-        class="banner"
-        class:session-not-authenticated-banner={isSessionNotAuthenticatedBanner}
-        style={bannerStyle}
-      >
+      <div class="banner" style={bannerStyle}>
         <div class="banner-content">
           {banner?.text}
           {#if banner?.action}
@@ -421,11 +410,7 @@
       >
         <div class="main-content-area">
           {#if showBanner && typeClass === "left" && !mobile}
-            <div
-              class="banner"
-              class:session-not-authenticated-banner={isSessionNotAuthenticatedBanner}
-              style={bannerStyle}
-            >
+            <div class="banner" style={bannerStyle}>
               <div class="banner-content">
                 {banner?.text}
                 {#if banner?.action}
@@ -521,28 +506,6 @@
 
   .banner-content :global(.spectrum-Button) {
     margin-left: 1em;
-  }
-
-  /* Session-only banner styles: these apply only to auth session banners */
-  .banner.session-not-authenticated-banner {
-    background: var(
-      --sessionAuthBannerBackground,
-      var(
-        --spectrum-toast-negative-background-color,
-        var(--spectrum-semantic-negative-color-background)
-      )
-    );
-    color: var(
-      --sessionAuthBannerTextColor,
-      var(--spectrum-global-color-static-white)
-    );
-  }
-
-  .banner.session-not-authenticated-banner .banner-content {
-    justify-content: center;
-    width: 100%;
-    text-align: center;
-    font-size: var(--sessionAuthBannerTextSize, 15px);
   }
 
   .nav-wrapper {
