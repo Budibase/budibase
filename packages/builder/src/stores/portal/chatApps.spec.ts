@@ -156,4 +156,151 @@ describe("chatAppsStore", () => {
     expect(result).toEqual(updated)
     expect(get(currentChatApp)).toEqual(updated)
   })
+
+  it("upserts a missing agent config as disabled", async () => {
+    const chatApp: ChatApp = {
+      _id: "chatapp-1",
+      _rev: "1",
+      agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+    }
+    const starters = [{ prompt: "How can you help?" }]
+    const expectedAgents = [
+      ...(chatApp.agents || []),
+      {
+        agentId: "agent-2",
+        isEnabled: false,
+        isDefault: false,
+        conversationStarters: starters,
+      },
+    ]
+    const updated: ChatApp = {
+      ...chatApp,
+      _rev: "2",
+      agents: expectedAgents,
+    }
+
+    fetchChatApp.mockResolvedValue(chatApp)
+    updateChatApp.mockResolvedValue(updated)
+
+    const result = await chatAppsStore.upsertAgentConfig({
+      agentId: "agent-2",
+      updates: { conversationStarters: starters },
+    })
+
+    expect(setChatAppAgent).not.toHaveBeenCalled()
+    expect(updateChatApp).toHaveBeenCalledWith({
+      ...chatApp,
+      agents: expectedAgents,
+    })
+    expect(result).toEqual(updated)
+    expect(get(currentChatApp)).toEqual(updated)
+  })
+
+  it("upserts an existing agent config without duplicating entries", async () => {
+    const chatApp: ChatApp = {
+      _id: "chatapp-1",
+      _rev: "1",
+      agents: [
+        { agentId: "agent-1", isEnabled: true, isDefault: true },
+        { agentId: "agent-2", isEnabled: false, isDefault: false },
+      ],
+    }
+    const starters = [{ prompt: "Hello there" }]
+    const expectedAgents = (chatApp.agents || []).map(agent =>
+      agent.agentId === "agent-2"
+        ? {
+            ...agent,
+            conversationStarters: starters,
+          }
+        : agent
+    )
+    const updated: ChatApp = {
+      ...chatApp,
+      _rev: "2",
+      agents: expectedAgents,
+    }
+
+    fetchChatApp.mockResolvedValue(chatApp)
+    updateChatApp.mockResolvedValue(updated)
+
+    const result = await chatAppsStore.upsertAgentConfig({
+      agentId: "agent-2",
+      updates: { conversationStarters: starters },
+    })
+
+    expect(setChatAppAgent).not.toHaveBeenCalled()
+    expect(updateChatApp).toHaveBeenCalledWith({
+      ...chatApp,
+      agents: expectedAgents,
+    })
+    expect(result).toEqual(updated)
+    expect(get(currentChatApp)).toEqual(updated)
+  })
+
+  it("normalizes defaults when upsert could create multiple defaults", async () => {
+    const chatApp: ChatApp = {
+      _id: "chatapp-1",
+      _rev: "1",
+      agents: [
+        { agentId: "agent-1", isEnabled: true, isDefault: true },
+        { agentId: "agent-2", isEnabled: true, isDefault: false },
+      ],
+    }
+    const expectedAgents = [
+      { agentId: "agent-1", isEnabled: true, isDefault: true },
+      { agentId: "agent-2", isEnabled: true, isDefault: false },
+    ]
+    const updated: ChatApp = {
+      ...chatApp,
+      _rev: "2",
+      agents: expectedAgents,
+    }
+
+    fetchChatApp.mockResolvedValue(chatApp)
+    updateChatApp.mockResolvedValue(updated)
+
+    const result = await chatAppsStore.upsertAgentConfig({
+      agentId: "agent-2",
+      updates: { isDefault: true },
+    })
+
+    expect(updateChatApp).toHaveBeenCalledWith({
+      ...chatApp,
+      agents: expectedAgents,
+    })
+    expect(result).toEqual(updated)
+    expect(get(currentChatApp)).toEqual(updated)
+  })
+
+  it("clears default on disabled agent during upsert", async () => {
+    const chatApp: ChatApp = {
+      _id: "chatapp-1",
+      _rev: "1",
+      agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+    }
+    const expectedAgents = [
+      { agentId: "agent-1", isEnabled: true, isDefault: true },
+      { agentId: "agent-2", isEnabled: false, isDefault: false },
+    ]
+    const updated: ChatApp = {
+      ...chatApp,
+      _rev: "2",
+      agents: expectedAgents,
+    }
+
+    fetchChatApp.mockResolvedValue(chatApp)
+    updateChatApp.mockResolvedValue(updated)
+
+    const result = await chatAppsStore.upsertAgentConfig({
+      agentId: "agent-2",
+      updates: { isDefault: true },
+    })
+
+    expect(updateChatApp).toHaveBeenCalledWith({
+      ...chatApp,
+      agents: expectedAgents,
+    })
+    expect(result).toEqual(updated)
+    expect(get(currentChatApp)).toEqual(updated)
+  })
 })

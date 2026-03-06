@@ -21,7 +21,6 @@
   import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
-    builderStore,
     workspaceFavouriteStore,
     workspaceAppStore,
     automationStore,
@@ -53,6 +52,7 @@
     type WorkspaceFavourite,
     PublishResourceState,
     WorkspaceResource,
+    AIConfigType,
   } from "@budibase/types"
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
@@ -71,6 +71,7 @@
   export const show = () => {
     pinned.set(true)
   }
+  export let onInviteUser: () => void = () => {}
 
   $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
   $: automationErrorCount = Object.keys(automationErrors).length
@@ -166,6 +167,11 @@
       : `${prefix}/${target.replace(/^\.\//, "")}`
 
     $goto(normalisedTarget)
+    keepCollapsed()
+  }
+
+  const openInviteUser = () => {
+    onInviteUser()
     keepCollapsed()
   }
 
@@ -625,7 +631,7 @@
                 text="AI models"
                 {collapsed}
                 on:click={() => {
-                  bb.settings("/ai")
+                  bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)
                   keepCollapsed()
                 }}
               />
@@ -645,11 +651,8 @@
               />
               <SideNavLink
                 icon="user-plus"
-                text="Invite user"
-                on:click={() => {
-                  builderStore.showBuilderSidePanel()
-                  keepCollapsed()
-                }}
+                text="Invite users"
+                on:click={openInviteUser}
                 {collapsed}
               />
               <span class="root-nav" class:error={backupErrorCount}>

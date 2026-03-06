@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onDestroy } from "svelte"
   import CreateExternalDatasourceModal from "../data/_components/CreateExternalDatasourceModal/index.svelte"
   import DatasourceOption from "../data/_components/DatasourceOption.svelte"
   import RestTemplateOption from "../data/_components/RestTemplateOption.svelte"
@@ -19,11 +18,6 @@
     ProgressCircle,
     keepOpen,
     ModalCancelFrom,
-    Popover,
-    Icon,
-    PopoverAlignment,
-    Link,
-    type PopoverAPI,
   } from "@budibase/bbui"
   import {
     sortedIntegrations as integrations,
@@ -73,10 +67,6 @@
   let templateEndpoints: ImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined
   let templateDocsBaseUrl: string | undefined = undefined
-  let templatesInfoPopover: PopoverAPI | undefined
-  let templatesInfoAnchor: HTMLElement | undefined
-  let templatesInfoOpen = false
-  let templatesInfoTimeout: ReturnType<typeof setTimeout> | undefined
   let templateSearchValue = ""
   $: selectedEndpoint = templateEndpoints.find(
     endpoint => endpoint.id === selectedEndpointId
@@ -114,37 +104,13 @@
         template.name.toLowerCase().includes(normalizedTemplateSearch)
       )
     : restTemplatesList
-  $: verifiedRestTemplates = filteredRestTemplates.filter(
-    template => template.verified
-  )
-  $: unverifiedRestTemplates = filteredRestTemplates.filter(
-    template => !template.verified
-  )
-  $: verifiedTemplateGroups = filteredTemplateGroups.filter(
-    group => group.verified
-  )
-  $: unverifiedTemplateGroups = filteredTemplateGroups.filter(
-    group => !group.verified
-  )
-  $: verifiedTemplateOptions = [
-    ...verifiedTemplateGroups.map(group => ({
+  $: templateOptions = [
+    ...filteredTemplateGroups.map(group => ({
       type: "group" as const,
       name: group.name,
       group,
     })),
-    ...verifiedRestTemplates.map(template => ({
-      type: "template" as const,
-      name: template.name,
-      template,
-    })),
-  ].sort((a, b) => a.name.localeCompare(b.name))
-  $: unverifiedTemplateOptions = [
-    ...unverifiedTemplateGroups.map(group => ({
-      type: "group" as const,
-      name: group.name,
-      group,
-    })),
-    ...unverifiedRestTemplates.map(template => ({
+    ...filteredRestTemplates.map(template => ({
       type: "template" as const,
       name: template.name,
       template,
@@ -413,7 +379,6 @@
       specs: selectedTemplateGroupItem.specs,
       operationsCount: selectedTemplateGroupItem.operationsCount,
       icon: selectedTemplateGroup.icon,
-      verified: selectedTemplateGroup.verified,
     })
   }
 
@@ -424,12 +389,6 @@
       goto("../")
     }
   }
-
-  onDestroy(() => {
-    if (templatesInfoTimeout) {
-      clearTimeout(templatesInfoTimeout)
-    }
-  })
 </script>
 
 <CreateExternalDatasourceModal
@@ -465,64 +424,19 @@
       </div>
     </div>
 
-    {#if normalizedTemplateSearch && !verifiedTemplateOptions.length && !unverifiedTemplateOptions.length}
+    {#if normalizedTemplateSearch && !templateOptions.length}
       <p class="empty-state">No templates match your search.</p>
     {/if}
-
-    {#if verifiedTemplateOptions.length}
-      <div class="templates-header">
-        <Body
-          size="S"
-          weight="500"
-          color="var(--spectrum-global-color-gray-900)">Verified templates</Body
-        >
-      </div>
-      <div class="options templateOptions">
-        {#each verifiedTemplateOptions as option (option.name)}
-          <RestTemplateOption
-            on:click={() =>
-              option.type === "group"
-                ? selectTemplateGroup(option.group)
-                : selectTemplate(option.template)}
-            template={option.type === "group" ? option.group : option.template}
-            disabled={templateDisabled}
-          />
-        {/each}
-      </div>
-    {/if}
-    {#if unverifiedTemplateOptions.length}
+    {#if templateOptions.length}
       <div class="templates-header">
         <Body
           size="S"
           weight="500"
           color="var(--spectrum-global-color-gray-900)">Templates</Body
         >
-        <div
-          class="info-icon-wrapper"
-          bind:this={templatesInfoAnchor}
-          role="button"
-          tabindex="0"
-          on:mouseenter={() => {
-            if (templatesInfoTimeout) {
-              clearTimeout(templatesInfoTimeout)
-            }
-            templatesInfoPopover?.show()
-          }}
-          on:mouseleave={() => {
-            templatesInfoTimeout = setTimeout(() => {
-              templatesInfoPopover?.hide()
-            }, 100)
-          }}
-        >
-          <Icon
-            name="info"
-            size="S"
-            color="var(--spectrum-global-color-gray-600)"
-          />
-        </div>
       </div>
       <div class="options templateOptions">
-        {#each unverifiedTemplateOptions as option (option.name)}
+        {#each templateOptions as option (`${option.type}-${option.name}`)}
           <RestTemplateOption
             on:click={() =>
               option.type === "group"
@@ -538,40 +452,6 @@
     <p class="empty-state">REST API integration is unavailable.</p>
   {/if}
 </CreationPage>
-
-<Popover
-  bind:this={templatesInfoPopover}
-  bind:open={templatesInfoOpen}
-  anchor={templatesInfoAnchor}
-  align={PopoverAlignment.Left}
-  minWidth={400}
-  maxWidth={400}
-  dismissible={false}
-  clickOutsideOverride={true}
-  on:mouseenter={() => {
-    if (templatesInfoTimeout) {
-      clearTimeout(templatesInfoTimeout)
-    }
-  }}
-  on:mouseleave={() => {
-    templatesInfoTimeout = setTimeout(() => {
-      templatesInfoPopover?.hide()
-    }, 100)
-  }}
->
-  <div class="templates-popover-content">
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      These templates are not verified by Budibase and we cannot guarantee the
-      validity of them. You can review all specs using the following link:{" "}
-      <Link
-        href="https://github.com/Budibase/openapi-rest-templates"
-        target="_blank"
-      >
-        https://github.com/Budibase/openapi-rest-templates
-      </Link>
-    </Body>
-  </div>
-</Popover>
 
 <Modal
   bind:this={templateVersionModal}
@@ -752,25 +632,6 @@
     gap: 6px;
     margin: 12px 0;
     font-weight: 600;
-  }
-  .info-icon-wrapper {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-  }
-  .info-icon-wrapper :global(svg) {
-    width: 20px;
-    height: 20px;
-  }
-  .templates-popover-content {
-    padding: 16px;
-    margin: 0;
-  }
-  .templates-popover-content :global(p) {
-    margin: 0;
-  }
-  :global(.spectrum-Popover:has(.templates-popover-content)) {
-    background-color: var(--background);
   }
   .versionOptions {
     display: grid;

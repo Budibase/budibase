@@ -30,6 +30,14 @@ const baseConfig: Config = {
     "@budibase/types": "<rootDir>/../types/src",
     "@budibase/string-templates/(.*)": ["<rootDir>/../string-templates/$1"],
     "@budibase/string-templates": ["<rootDir>/../string-templates/src"],
+    "^chat$": "<rootDir>/__mocks__/chat.ts",
+    "^@chat-adapter/discord$": "<rootDir>/__mocks__/chat-adapter-discord.ts",
+    "^@chat-adapter/slack$": "<rootDir>/__mocks__/chat-adapter-slack.ts",
+    "^@chat-adapter/teams$": "<rootDir>/__mocks__/chat-adapter-teams.ts",
+    "^@chat-adapter/state-memory$":
+      "<rootDir>/__mocks__/chat-adapter-state-memory.ts",
+    "^@chat-adapter/state-ioredis$":
+      "<rootDir>/__mocks__/chat-adapter-state-ioredis.ts",
     "@budibase/pro": "<rootDir>/../pro/src",
   },
 }
