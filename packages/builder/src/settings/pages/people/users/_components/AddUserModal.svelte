@@ -91,6 +91,19 @@
     $admin.loaded && ($admin.cloud || !!$admin.checklist?.smtp?.checked)
   $: emailInviteDisabled = $admin.loaded ? !smtpConfigured : false
   $: passwordInviteDisabled = $organisation.isSSOEnforced
+  $: onboardingOptions = [
+    {
+      label: "Send email invites",
+      subtitle: emailInviteDisabled ? "Requires SMTP setup" : undefined,
+      value: OnboardingType.EMAIL,
+      disabled: emailInviteDisabled,
+    },
+    {
+      label: "Generate passwords for each user",
+      value: OnboardingType.PASSWORD,
+      disabled: passwordInviteDisabled,
+    },
+  ]
   $: if (emailInviteDisabled && passwordInviteDisabled) {
     onboardingType = null
   } else if (emailInviteDisabled) {
@@ -279,21 +292,7 @@
           <Label size="L">Select onboarding</Label>
           <RadioGroup
             bind:value={onboardingType}
-            options={[
-              {
-                label: "Send email invites",
-                subtitle: emailInviteDisabled
-                  ? "Requires SMTP setup"
-                  : undefined,
-                value: OnboardingType.EMAIL,
-                disabled: emailInviteDisabled,
-              },
-              {
-                label: "Generate passwords for each user",
-                value: OnboardingType.PASSWORD,
-                disabled: passwordInviteDisabled,
-              },
-            ]}
+            options={onboardingOptions}
             getOptionLabel={option => option.label}
             getOptionValue={option => option.value}
             getOptionSubtitle={option => option.subtitle}
