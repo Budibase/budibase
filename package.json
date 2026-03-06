@@ -101,7 +101,7 @@
     "postinstall": "husky install",
     "submodules:load": "git submodule init && git submodule update && yarn",
     "submodules:unload": "git submodule deinit --all && yarn",
-    "add-app-migration": "node scripts/add-app-migration.js --title"
+    "add-workspace-migration": "node scripts/add-workspace-migration.js --title"
   },
   "workspaces": {
     "packages": [
