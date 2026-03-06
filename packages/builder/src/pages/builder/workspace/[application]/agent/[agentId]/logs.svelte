@@ -100,8 +100,9 @@
       currentPage = response.currentPage
       hasMore = response.hasMore
 
-      const selectedStillExists = selectedSession
-        ? response.sessions.some(s => s.sessionId === selectedSession.sessionId)
+      const current = selectedSession
+      const selectedStillExists = current
+        ? response.sessions.some(s => s.sessionId === current.sessionId)
         : false
 
       if (!selectedStillExists) {
@@ -185,7 +186,7 @@
       selectedSession = fullSession
       await prefetchSessionDetails(fullSession)
     } catch (error) {
-      notifications.error("Failed to fetch full session detail", error)
+      notifications.error("Failed to fetch full session detail")
       if (selectedSession?.sessionId === session.sessionId) {
         selectedSession = null
         resetDetailState()

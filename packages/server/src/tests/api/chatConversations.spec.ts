@@ -732,6 +732,7 @@ describe("Agent chat tool call tracking", () => {
     ).mockResolvedValue({
       systemPrompt: "system",
       tools: { tool1: {} as any },
+      toolDisplayNames: {},
     })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
