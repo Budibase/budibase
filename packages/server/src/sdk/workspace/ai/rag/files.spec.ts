@@ -15,8 +15,14 @@ jest.mock("../llm", () => ({
   createLLM: (...args: any[]) => mockCreateLLM(...args),
 }))
 
-import { AgentFileStatus, type Agent, type AgentFile } from "@budibase/types"
+import {
+  AgentFileStatus,
+  FeatureFlag,
+  type Agent,
+  type AgentFile,
+} from "@budibase/types"
 import { ingestAgentFile } from "./files"
+import { features, tenancy } from "@budibase/backend-core"
 
 describe("rag files", () => {
   beforeEach(() => {
@@ -55,7 +61,13 @@ describe("rag files", () => {
         uploadedBy: "user_123",
       }
 
-      await ingestAgentFile(agent, agentFile, Buffer.from("hello world"))
+      await tenancy.doInTenant("tenant", () =>
+        features.testutils.withFeatureFlags(
+          "tenant",
+          { [FeatureFlag.AI_RAG]: true },
+          () => ingestAgentFile(agent, agentFile, Buffer.from("hello world"))
+        )
+      )
 
       expect(mockCreateLLM).toHaveBeenCalledTimes(1)
       expect(mockCreateLLM).toHaveBeenCalledWith("embedding_config")

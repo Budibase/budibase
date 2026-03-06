@@ -5,8 +5,6 @@ import {
   SummariseLength,
 } from "@budibase/types"
 import { LLMRequest } from "../llm"
-import { ChatCompletionContentPart } from "openai/resources/chat/completions"
-import { z } from "zod"
 import { AgentPromptOptions } from "../../types"
 
 export interface AutomationAgentToolGuideline {
@@ -35,77 +33,6 @@ export function summarizeText(text: string, length?: SummariseLength) {
   )
 }
 
-export function extractFileData(
-  schema: Record<string, any>,
-  fileIdOrDataUrl: string
-) {
-  const prompt = [
-    "You are a data extraction assistant.",
-    `Extract data from the attached document/image that matches the provided schema.`,
-    "The schema defines the structure where values like 'string', 'number', 'boolean' indicate the expected data types.",
-    "Extract all items that match the schema from the document.",
-    "Return the data in json format",
-    "If no matching data is found, return an empty data array.",
-  ].join("\n\n")
-
-  // Check if it's a base64 data URL (for images) or a file ID (for documents)
-  const isDataUrl = fileIdOrDataUrl.startsWith("data:")
-
-  const content: ChatCompletionContentPart[] = isDataUrl
-    ? [
-        {
-          type: "image_url",
-          image_url: {
-            url: fileIdOrDataUrl,
-          },
-        },
-        { type: "text", text: prompt },
-      ]
-    : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
-
-  // We create a structured zod schema from the user object
-  const zodSchema = createZodSchemaFromRecord(schema)
-  const responseSchema = z.object({
-    data: z.array(zodSchema),
-  })
-
-  return new LLMRequest()
-    .addMessages([
-      {
-        role: "user",
-        content,
-      },
-    ])
-    .withFormat(responseSchema)
-}
-
-function createZodSchemaFromRecord(
-  schema: Record<string, any>
-): z.ZodType<any> {
-  const zodFields: Record<string, z.ZodType<any>> = {}
-
-  for (const [key, type] of Object.entries(schema)) {
-    if (typeof type === "string") {
-      switch (type.toLowerCase()) {
-        case "string":
-          zodFields[key] = z.string()
-          break
-        case "number":
-          zodFields[key] = z.number()
-          break
-        case "boolean":
-          zodFields[key] = z.boolean()
-          break
-        default:
-          zodFields[key] = z.string()
-      }
-    } else {
-      zodFields[key] = z.string()
-    }
-  }
-
-  return z.object(zodFields)
-}
 export function classifyText(text: string, categories: string[]) {
   return new LLMRequest().addUserMessage(
     `Return the category of this text: "${text}". Based on these categories: ${categories.join(
@@ -120,21 +47,13 @@ export function cleanData(text: string) {
   )
 }
 
-export function generateSQL(prompt: string, tableSchema: string) {
-  return new LLMRequest().addUserMessage(
-    `Given the table schema:\n${tableSchema}\n\nGenerate a SQL query for the following request:\n${prompt}.\n Only provide the SQL.`
-  )
-}
-
-export function generateCode(prompt: string) {
-  return new LLMRequest().addUserMessage(
-    `Generate JavaScript code for the following request:\n${prompt}.\n Only provide the JS and nothing else.`
-  )
-}
-
 export function generateCronExpression(text: string) {
   return new LLMRequest().addUserMessage(
-    `Generate a node-cron compatible expression based on the following prompt. Return only the cron expression (without backticks), and if not possible return only 'Error generating cron' with a short explanation:\n${text}`
+    `Generate a cron expression with exactly 5 fields (minute hour day-of-month month day-of-week) based on the following prompt.
+Do not include a seconds field.
+Return only the cron expression (without backticks or explanation).
+If not possible, return only 'Error generating cron:' followed by a short explanation.
+\n${text}`
   )
 }
 
@@ -274,6 +193,7 @@ Exclude id, created_at, and updated_at (Budibase adds them).
 Include a variety of column types: text, dropdown, date, number.
 Add at least one formula column, one attachment, and one multi-attachment column across the tables.
 Budibase handles reverse relationships and many-to-many links — never define join tables or reverse fields.
+Never reference pre-existing/internal Budibase tables in relationships. Relationships must only reference table names generated in this same response.
 You may specify foreignColumnName, but do not create that field manually.
 `
 
@@ -290,6 +210,7 @@ export function generateData() {
   const dataMessage = `
 For each table, populate the data field with realistic-looking sample records.
 Avoid placeholder values like "foo" or "bar". Use real names, emails, etc., and ensure values are unique across rows.
+Keep the dataset compact for speed: target 2-6 rows per table unless the prompt explicitly asks for more.
 `
 
   return new LLMRequest().addSystemMessage(dataMessage)
@@ -376,13 +297,10 @@ export function composeAutomationAgentToolGuidelines(
 }
 
 export function agentSystemPrompt(user: ContextUser) {
+  const date = new Date().toISOString()
   return `You are a helpful support agent who uses workflows to resolve user issues efficiently.
-
-  - The user will ask support queries.
-  - Your replies MUST be short, concise, and directly answer the user's question as quickly and clearly as possible.
-  - Use Markdown formatting in your responses.
+  - The current date is: ${date}
   - When receiving truncated or paginated results, automatically make follow-up requests to retrieve all pages
-  - If you aren't entirely sure which tool to call, make sure to ask for confirmation rather than assume. If there's any ambiguity, get user confirmation.
   - When a tool call fails, show the detailed error status and message in the UI to provide the user further information as to how to debug.
   - When specifying a "limit" for a certain tool call related to the number of records, use at least 100. This helps prevent cutting off the list of results too short. If the number of results overflows the limit, make sure you tell the user there are more, and confirm if they want to fetch the rest before continuing.
 

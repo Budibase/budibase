@@ -3,9 +3,10 @@
 # go into the app dir
 cd /root
 
-# fetch nginx and docker-compose files
+# fetch required hosting files
 wget https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml
 wget https://raw.githubusercontent.com/Budibase/budibase/master/hosting/hosting.properties
+wget https://raw.githubusercontent.com/Budibase/budibase/master/hosting/litellm_config.yaml
 
 # Create .env file from hosting.properties using bash and then remove it
 while read line; do

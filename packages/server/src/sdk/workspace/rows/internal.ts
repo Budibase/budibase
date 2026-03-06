@@ -60,7 +60,7 @@ export async function save(
 
   return finaliseRow(source, row, {
     updateFormula: true,
-    updateAIColumns: opts?.updateAIColumns || true,
+    updateAIColumns: opts?.updateAIColumns ?? true,
   })
 }
 

@@ -13,7 +13,6 @@ import EmailPage from "@/settings/pages/email.svelte"
 import EmailTemplatesPage from "@/settings/pages/email/EmailTemplates.svelte"
 import EmailTemplatePage from "@/settings/pages/email/Template.svelte"
 import AuditLogsPage from "@/settings/pages/auditLogs/index.svelte"
-import AIPage from "@/settings/pages/ai/index.svelte"
 import AIConfigsPage from "@/settings/pages/ai/configs.svelte"
 import EmbeddingsPage from "@/settings/pages/ai/embeddings.svelte"
 import AuthPage from "@/settings/pages/auth/index.svelte"
@@ -37,6 +36,9 @@ import ScriptsPage from "@/settings/pages/scripts.svelte"
 import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
 import Recaptcha from "@/settings/pages/recaptcha.svelte"
 
+// AI config
+import AIConfigForm from "@/settings/pages/ai/AIConfigForm.svelte"
+
 const componentMap = {
   profile: ProfilePage,
   users: OrganisationUsersPage,
@@ -50,8 +52,8 @@ const componentMap = {
   email_templates: EmailTemplatesPage,
   email_template: EmailTemplatePage,
   audit_logs: AuditLogsPage,
-  ai: AIPage,
   ai_configs: AIConfigsPage,
+  ai_config: AIConfigForm,
   embeddings: EmbeddingsPage,
   auth: AuthPage,
   org: OrgPage,

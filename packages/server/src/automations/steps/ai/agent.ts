@@ -92,7 +92,8 @@ export async function run({
         const { chat, providerOptions } = await sdk.ai.llm.createLLM(
           agentConfig.aiconfig,
           sessionId,
-          agentSpan
+          agentSpan,
+          agentId
         )
 
         let outputOption = undefined
@@ -118,7 +119,8 @@ export async function run({
             }),
           }),
           instructions: systemPrompt || undefined,
-          tools,
+          tools: hasTools ? tools : undefined,
+          toolChoice: hasTools ? "auto" : "none",
           stopWhen: stepCountIs(30),
           providerOptions: providerOptions?.(hasTools),
           output: outputOption,

@@ -14,7 +14,6 @@ export const SEPARATOR = "-"
 export enum Databases {
   PW_RESETS = "pwReset",
   VERIFICATIONS = "verification",
-  INVITATIONS = "invitation",
   INVITATIONS_LIST = "invitationList",
   DEV_LOCKS = "devLocks",
   DEBOUNCE = "debounce",

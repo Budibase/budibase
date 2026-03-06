@@ -163,6 +163,22 @@ describe("oidc", () => {
       )
     })
 
+    it("normalizes uppercase emails before authenticating", async () => {
+      const upperEmail = "MIKE.SEALEY@EXAMPLE.COM"
+      uiProfile._json = { email: upperEmail }
+      idProfile.emails = [{ value: upperEmail }]
+      idProfile.username = upperEmail
+
+      await authenticate()
+
+      expect(sso.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({ email: upperEmail.toLowerCase() }),
+        false,
+        mockDone,
+        mockSaveUser
+      )
+    })
+
     it("populates first and last name from profile data", async () => {
       const givenName = "Ada"
       const familyName = "Lovelace"

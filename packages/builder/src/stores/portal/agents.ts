@@ -4,6 +4,12 @@ import {
   Agent,
   AgentFile,
   CreateAgentRequest,
+  ProvisionAgentSlackChannelRequest,
+  ProvisionAgentSlackChannelResponse,
+  ProvisionAgentMSTeamsChannelRequest,
+  ProvisionAgentMSTeamsChannelResponse,
+  SyncAgentDiscordCommandsRequest,
+  SyncAgentDiscordCommandsResponse,
   UpdateAgentRequest,
   ToolMetadata,
 } from "@budibase/types"
@@ -146,6 +152,53 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       return state
     })
   }
+
+  private runAndRefreshAgents = async <T>(
+    action: () => Promise<T>
+  ): Promise<T> => {
+    const result = await action()
+    await this.fetchAgents()
+    return result
+  }
+
+  syncDiscordCommands = async (
+    agentId: string,
+    body?: SyncAgentDiscordCommandsRequest
+  ): Promise<SyncAgentDiscordCommandsResponse> =>
+    await this.runAndRefreshAgents(() =>
+      API.syncAgentDiscordCommands(agentId, body)
+    )
+
+  provisionMSTeamsChannel = async (
+    agentId: string,
+    body?: ProvisionAgentMSTeamsChannelRequest
+  ): Promise<ProvisionAgentMSTeamsChannelResponse> =>
+    await this.runAndRefreshAgents(() =>
+      API.provisionAgentMSTeamsChannel(agentId, body)
+    )
+
+  provisionSlackChannel = async (
+    agentId: string,
+    body?: ProvisionAgentSlackChannelRequest
+  ): Promise<ProvisionAgentSlackChannelResponse> =>
+    await this.runAndRefreshAgents(() =>
+      API.provisionAgentSlackChannel(agentId, body)
+    )
+
+  toggleDiscordDeployment = async (agentId: string, enabled: boolean) =>
+    await this.runAndRefreshAgents(() =>
+      API.toggleAgentDiscordDeployment(agentId, enabled)
+    )
+
+  toggleMSTeamsDeployment = async (agentId: string, enabled: boolean) =>
+    await this.runAndRefreshAgents(() =>
+      API.toggleAgentMSTeamsDeployment(agentId, enabled)
+    )
+
+  toggleSlackDeployment = async (agentId: string, enabled: boolean) =>
+    await this.runAndRefreshAgents(() =>
+      API.toggleAgentSlackDeployment(agentId, enabled)
+    )
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state =>

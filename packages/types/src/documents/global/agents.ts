@@ -19,6 +19,32 @@ export interface ToolMetadata {
   sourceIconType?: string
 }
 
+interface ChatAgentIntegration {
+  chatAppId?: string
+  idleTimeoutMinutes?: number
+}
+
+export interface DiscordAgentIntegration extends ChatAgentIntegration {
+  applicationId?: string
+  publicKey?: string
+  botToken?: string
+  guildId?: string
+  interactionsEndpointUrl?: string
+}
+
+export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
+  appId?: string
+  appPassword?: string
+  tenantId?: string
+  messagingEndpointUrl?: string
+}
+
+export interface SlackAgentIntegration extends ChatAgentIntegration {
+  botToken?: string
+  signingSecret?: string
+  messagingEndpointUrl?: string
+}
+
 export interface Agent extends Document {
   name: string
   description?: string
@@ -34,6 +60,9 @@ export interface Agent extends Document {
   vectorDb?: string
   ragMinDistance?: number
   ragTopK?: number
+  discordIntegration?: DiscordAgentIntegration
+  MSTeamsIntegration?: MSTeamsAgentIntegration
+  slackIntegration?: SlackAgentIntegration
 }
 
 export interface AgentMessageRagSource {

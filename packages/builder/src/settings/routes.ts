@@ -1,5 +1,9 @@
 import { sdk, helpers } from "@budibase/shared-core"
-import { GetGlobalSelfResponse } from "@budibase/types"
+import {
+  AIConfigType,
+  FeatureFlag,
+  GetGlobalSelfResponse,
+} from "@budibase/types"
 import { UserAvatar } from "@budibase/frontend-core"
 
 import { Target, type Route } from "@/types/routing"
@@ -140,13 +144,6 @@ export const orgRoutes = (
       routes: emailRoutes,
     },
     {
-      section: "AI",
-      access: () => isAdmin,
-      path: "ai",
-      icon: "sparkle",
-      comp: Pages.get("ai"),
-    },
-    {
       section: "Auth",
       access: () => isAdmin,
       path: "auth",
@@ -282,20 +279,34 @@ export const appRoutes = (
       ],
     },
     {
-      section: "AI config",
+      section: "AI",
       path: "ai-config",
       icon: "sparkle",
-      access: () => featureFlag.isEnabled("AI_AGENTS"),
       routes: [
         {
-          path: "configs",
-          title: "AI Configs",
+          path: AIConfigType.COMPLETIONS,
+          title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI Configs" : "",
           comp: Pages.get("ai_configs"),
+          routes: [
+            {
+              path: ":configId",
+              comp: Pages.get("ai_config"),
+              title: "AI config",
+            },
+          ],
         },
         {
-          path: "embedding-settings",
+          path: AIConfigType.EMBEDDINGS,
           title: "Embeddings",
+          access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
           comp: Pages.get("embeddings"),
+          routes: [
+            {
+              path: ":configId",
+              comp: Pages.get("ai_config"),
+              title: "AI config",
+            },
+          ],
         },
       ],
     },

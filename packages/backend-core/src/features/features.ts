@@ -234,6 +234,8 @@ export class FlagSet<T extends { [name: string]: boolean }> {
 
 const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.AI_AGENTS]: false,
+  [FeatureFlag.AI_CHAT]: false,
+  [FeatureFlag.AI_RAG]: false,
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
 }

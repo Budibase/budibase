@@ -133,7 +133,7 @@ export type DatasourceDescribeOpts = OnlyOpts | PlusOpts
 // filtering datasource/non-datasource tests in CI.
 export function datasourceDescribe(opts: DatasourceDescribeOpts) {
   // tests that call this need a lot longer timeouts
-  jest.setTimeout(120000)
+  jest.setTimeout(240000)
 
   if (process.env.DATASOURCE === "none") {
     createDummyTest()

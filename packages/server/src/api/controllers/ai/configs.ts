@@ -37,13 +37,6 @@ const sanitizeConfig = async (
     credentialsFields: { ...credentialsFields },
   }
 
-  if (
-    sanitized.provider === BUDIBASE_AI_PROVIDER_ID &&
-    sanitized.credentialsFields?.api_key
-  ) {
-    sanitized.credentialsFields.api_key = PASSWORD_REPLACEMENT
-  }
-
   if (sanitized.webSearchConfig?.apiKey) {
     sanitized.webSearchConfig = {
       ...sanitized.webSearchConfig,
@@ -68,7 +61,9 @@ export const fetchAIConfigs = async (
 export const fetchAIProviders = async (
   ctx: UserCtx<void, LLMProvidersResponse>
 ) => {
-  ctx.body = await sdk.ai.configs.fetchLiteLLMProviders()
+  const allProviders = await sdk.ai.configs.fetchLiteLLMProviders()
+  const providers = allProviders.filter(p => p.id !== BUDIBASE_AI_PROVIDER_ID)
+  ctx.body = providers
 }
 
 export const createAIConfig = async (
@@ -91,6 +86,7 @@ export const createAIConfig = async (
     webSearchConfig: body.webSearchConfig,
     configType: body.configType,
     reasoningEffort: body.reasoningEffort,
+    isDefault: body.isDefault,
   }
 
   const newConfig = await sdk.ai.configs.create(createRequest)
@@ -130,6 +126,7 @@ export const updateAIConfig = async (
     webSearchConfig: body.webSearchConfig,
     configType,
     reasoningEffort: body.reasoningEffort,
+    isDefault: body.isDefault,
   }
 
   const updatedConfig = await sdk.ai.configs.update(updateRequest)

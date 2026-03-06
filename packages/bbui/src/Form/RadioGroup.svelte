@@ -13,8 +13,10 @@
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
   export let getOptionTitle = option => extractProperty(option, "label")
-  export let getOptionSubtitle = option => extractProperty(option, "subtitle")
-  export let getOptionDisabled = option => extractProperty(option, "disabled")
+  export let getOptionSubtitle = option =>
+    extractProperty(option, "subtitle", undefined)
+  export let getOptionDisabled = option =>
+    extractProperty(option, "disabled", false)
   export let helpText = undefined
 
   const dispatch = createEventDispatcher()
@@ -22,11 +24,11 @@
     value = e.detail
     dispatch("change", e.detail)
   }
-  const extractProperty = (value, property) => {
+  const extractProperty = (value, property, primitiveFallback = value) => {
     if (value && typeof value === "object") {
       return value[property]
     }
-    return value
+    return primitiveFallback
   }
 </script>
 

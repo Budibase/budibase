@@ -42,10 +42,6 @@ const PUBLIC_ENDPOINTS = [
     method: "POST",
   },
   {
-    route: "/api/global/users/sso",
-    method: "POST",
-  },
-  {
     route: "/api/global/users/invite/accept",
     method: "POST",
   },
@@ -70,6 +66,13 @@ const PUBLIC_ENDPOINTS = [
   {
     route: "/api/global/users/invite",
     method: "GET",
+  },
+]
+
+const ALLOW_INACTIVE_TENANT_ENDPOINTS = [
+  {
+    route: "/api/system/tenants/:tenantId",
+    method: "DELETE",
   },
 ]
 
@@ -150,7 +153,7 @@ router
   .use("/health", ctx => (ctx.status = 200))
   .use(auth.buildAuthMiddleware(PUBLIC_ENDPOINTS))
   .use(auth.buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
-  .use(middleware.activeTenant())
+  .use(middleware.activeTenant(ALLOW_INACTIVE_TENANT_ENDPOINTS))
   .use(auth.buildCsrfMiddleware({ noCsrfPatterns: NO_CSRF_ENDPOINTS }))
   .use(pro.licensing())
   // for now no public access is allowed to worker (bar health check)

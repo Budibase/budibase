@@ -1,5 +1,6 @@
-import { Message } from "../api"
-import { ChatConversation, AIProvider } from "../documents"
+import type { EmbeddingModelV3, LanguageModelV3 } from "@ai-sdk/provider"
+import { ProviderOptions } from "@ai-sdk/provider-utils"
+import { Readable } from "stream"
 
 export enum AIOperationEnum {
   SUMMARISE_TEXT = "SUMMARISE_TEXT",
@@ -102,30 +103,15 @@ export interface LLMConfigOptions {
   baseUrl?: string
 }
 
-export interface LLMProviderConfig extends LLMConfigOptions {
-  provider: AIProvider
+export interface LLMResponse {
+  chat: LanguageModelV3
+  embedding: EmbeddingModelV3
+  providerOptions?: (hasTools: boolean) => LLMProviderOptions | undefined
+  uploadFile?: (
+    stream: Readable,
+    filename: string,
+    contentType?: string
+  ) => Promise<string>
 }
 
-export interface LLMStreamChunk {
-  type:
-    | "content"
-    | "tool_call_start"
-    | "tool_call_result"
-    | "done"
-    | "error"
-    | "chat_saved"
-  content?: string
-  toolCall?: {
-    id: string
-    name: string
-    arguments: string
-  }
-  toolResult?: {
-    id: string
-    result: string
-    error?: string
-  }
-  messages?: Message[]
-  chat?: ChatConversation
-  tokensUsed?: number
-}
+export type LLMProviderOptions = ProviderOptions

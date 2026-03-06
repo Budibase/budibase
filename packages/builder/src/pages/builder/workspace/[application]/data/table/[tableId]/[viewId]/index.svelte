@@ -8,7 +8,7 @@
     workspaceDeploymentStore,
   } from "@/stores/builder"
   import { gridClipboard } from "@budibase/frontend-core"
-  import { admin, themeStore, licensing } from "@/stores/portal"
+  import { admin, themeStore, aiStore } from "@/stores/portal"
   import { Grid } from "@budibase/frontend-core"
   import { notifications } from "@budibase/bbui"
   import GridCreateEditRowModal from "@/components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
@@ -130,8 +130,7 @@
       {buttons}
       allowAddRows
       allowDeleteRows
-      aiEnabled={$licensing.customAIConfigsEnabled ||
-        $licensing.budibaseAIEnabled}
+      aiEnabled={$aiStore.aiEnabled}
       showAvatars={false}
       externalClipboard={externalClipboardData}
       on:updatedatasource={handleGridViewUpdate}

@@ -2,6 +2,14 @@ import {
   Agent,
   CreateAgentRequest,
   CreateAgentResponse,
+  ProvisionAgentSlackChannelRequest,
+  ProvisionAgentSlackChannelResponse,
+  ProvisionAgentMSTeamsChannelRequest,
+  ProvisionAgentMSTeamsChannelResponse,
+  SyncAgentDiscordCommandsRequest,
+  SyncAgentDiscordCommandsResponse,
+  ToggleAgentDeploymentRequest,
+  ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
@@ -44,6 +52,62 @@ export class AgentAPI extends TestAPI {
     return await this._delete<{ deleted: true }>(`/api/agent/${agentId}`, {
       expectations,
     })
+  }
+
+  syncDiscordCommands = async (
+    agentId: string,
+    body?: SyncAgentDiscordCommandsRequest,
+    expectations?: Expectations
+  ): Promise<SyncAgentDiscordCommandsResponse> => {
+    return await this._post<SyncAgentDiscordCommandsResponse>(
+      `/api/agent/${agentId}/discord/sync`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  provisionMSTeamsChannel = async (
+    agentId: string,
+    body?: ProvisionAgentMSTeamsChannelRequest,
+    expectations?: Expectations
+  ): Promise<ProvisionAgentMSTeamsChannelResponse> => {
+    return await this._post<ProvisionAgentMSTeamsChannelResponse>(
+      `/api/agent/${agentId}/ms-teams/provision`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  provisionSlackChannel = async (
+    agentId: string,
+    body?: ProvisionAgentSlackChannelRequest,
+    expectations?: Expectations
+  ): Promise<ProvisionAgentSlackChannelResponse> => {
+    return await this._post<ProvisionAgentSlackChannelResponse>(
+      `/api/agent/${agentId}/slack/provision`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  toggleDiscordDeployment = async (
+    agentId: string,
+    body?: ToggleAgentDeploymentRequest | Record<string, unknown>,
+    expectations?: Expectations
+  ): Promise<ToggleAgentDeploymentResponse> => {
+    return await this._post<ToggleAgentDeploymentResponse>(
+      `/api/agent/${agentId}/discord/toggle`,
+      {
+        body,
+        expectations,
+      }
+    )
   }
 
   duplicate = async (

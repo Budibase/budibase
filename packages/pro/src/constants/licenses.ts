@@ -13,7 +13,7 @@ export const CLOUD_FREE_LICENSE: License = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(200),
-        ...quotas.budibaseAICredits(50000),
+        ...quotas.budibaseAICredits(0),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -48,7 +48,7 @@ export const SELF_FREE_LICENSE: License = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(50000),
+        ...quotas.budibaseAICredits(0),
         ...quotas.actions(UNLIMITED),
       },
       static: {

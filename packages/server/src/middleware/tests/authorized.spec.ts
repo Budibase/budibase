@@ -20,10 +20,10 @@ const APP_ID = ""
 initProMocks()
 
 class TestConfiguration {
-  middleware: (ctx: any, next: any) => Promise<void>
+  middleware: ReturnType<typeof authorizedMiddleware>
   next: () => void
   throw: () => void
-  headers: Record<string, any>
+  headers: Record<string, string>
   ctx: any
 
   constructor() {
@@ -33,6 +33,7 @@ class TestConfiguration {
     this.headers = {}
     this.ctx = {
       headers: {},
+      path: "",
       request: {
         url: "",
       },
@@ -52,8 +53,9 @@ class TestConfiguration {
     this.ctx.user = user
   }
 
-  setMiddlewareRequiredPermission(...perms: any[]) {
-    // @ts-ignore
+  setMiddlewareRequiredPermission(
+    ...perms: Parameters<typeof authorizedMiddleware>
+  ) {
     this.middleware = authorizedMiddleware(...perms)
   }
 
@@ -67,13 +69,14 @@ class TestConfiguration {
 
   setRequestUrl(url: string) {
     this.ctx.request.url = url
+    this.ctx.path = url.split("?")[0]
   }
 
   setEnvironment(isProd: boolean) {
     env._set("NODE_ENV", isProd ? "production" : "jest")
   }
 
-  setRequestHeaders(headers: Record<string, any>) {
+  setRequestHeaders(headers: Record<string, string>) {
     this.ctx.headers = headers
   }
 
@@ -219,6 +222,32 @@ describe("Authorization middleware", () => {
         expect(mockedGetResourcePerms).toHaveBeenCalledTimes(1)
         expect(mockedGetResourcePerms).toHaveBeenCalledWith(resourceId)
       })
+    })
+  })
+
+  describe("webhook detection", () => {
+    beforeEach(() => {
+      config = new TestConfiguration()
+      config.setEnvironment(true)
+      config.setAuthenticated(true)
+    })
+
+    it("does not bypass auth when webhook path appears in query string", async () => {
+      config.setRequestUrl("/api/tables?/webhooks/trigger")
+
+      await config.executeMiddleware()
+
+      expect(config.throw).toHaveBeenCalledWith(401, "No user info found")
+      expect(config.next).not.toHaveBeenCalled()
+    })
+
+    it("bypasses auth for actual webhook endpoints", async () => {
+      config.setRequestUrl("/api/webhooks/trigger/app-id/webhook-id")
+
+      await config.executeMiddleware()
+
+      expect(config.next).toHaveBeenCalled()
+      expect(config.throw).not.toHaveBeenCalled()
     })
   })
 })

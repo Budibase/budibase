@@ -8,9 +8,15 @@ import { DockerCompose } from "./types"
 const ERROR_FILE = "docker-error.log"
 const COMPOSE_URL =
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml"
+const LITELLM_CONFIG_URL =
+  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/litellm_config.yaml"
+
+function hostingFilename(url: string) {
+  return url.split("/").slice(-1)[0]
+}
 
 function composeFilename() {
-  return COMPOSE_URL.split("/").slice(-1)[0]
+  return hostingFilename(COMPOSE_URL)
 }
 
 export function getServiceImage(service: string) {
@@ -44,11 +50,13 @@ export function setServiceImage(service: string, image: string) {
 }
 
 export async function downloadDockerCompose() {
-  const filename = composeFilename()
   try {
-    await downloadFile(COMPOSE_URL, `./${filename}`)
+    const files = [COMPOSE_URL, LITELLM_CONFIG_URL]
+    for (const fileUrl of files) {
+      await downloadFile(fileUrl, `./${hostingFilename(fileUrl)}`)
+    }
   } catch (err) {
-    console.error(error(`Failed to retrieve compose file - ${err}`))
+    console.error(error(`Failed to retrieve required hosting files - ${err}`))
   }
 }
 

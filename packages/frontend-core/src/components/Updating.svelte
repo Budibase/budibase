@@ -1,6 +1,6 @@
-<script>
-  export let isMigrationDone
-  export let onMigrationDone
+<script lang="ts">
+  export let isMigrationDone: () => Promise<boolean>
+  export let onMigrationDone: () => void
   export let timeoutSeconds = 60 // 1 minute
 
   let timedOut = false
@@ -8,7 +8,7 @@
   async function checkMigrationsFinished() {
     let totalWaitMs = 0
     while (true) {
-      const waitForMs = 5000 + Math.random() * 5000
+      const waitForMs = 500 + Math.random() * 200
       await new Promise(resolve => setTimeout(resolve, waitForMs))
       totalWaitMs += waitForMs
 

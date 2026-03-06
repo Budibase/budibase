@@ -1,53 +1,151 @@
 <script>
-  import { keepOpen, Body, ModalContent, Select } from "@budibase/bbui"
-  import { appsStore, groups } from "@/stores/portal"
+  import {
+    Body,
+    Layout,
+    ModalContent,
+    Multiselect,
+    Select,
+    keepOpen,
+    notifications,
+  } from "@budibase/bbui"
+  import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { roles } from "@/stores/builder"
-  import RoleSelect from "@/components/common/RoleSelect.svelte"
+  import { appsStore } from "@/stores/portal/apps"
+  import { groups } from "@/stores/portal/groups"
+  import { Constants } from "@budibase/frontend-core"
+  import GroupIcon from "./GroupIcon.svelte"
 
-  export let group
+  export let groupId
 
-  $: appOptions = $appsStore.apps.map(app => ({
-    label: app.name,
-    value: app,
-  }))
+  const workspaceRoleOptions = Constants.BudibaseRoleOptions.filter(
+    option =>
+      option.value === Constants.BudibaseRoles.Creator ||
+      option.value === Constants.BudibaseRoles.AppUser
+  )
+
+  let selectedWorkspaceIds = []
+  let selectedRole = Constants.BudibaseRoles.AppUser
+  let selectedEndUserRole = Constants.Roles.BASIC
+  let workspaceSearchTerm = ""
+
+  $: group = $groups.find(x => x._id === groupId)
+  $: roleColorLookup = ($roles || []).reduce((acc, role) => {
+    acc[role._id] = role.uiMetadata?.color
+    return acc
+  }, {})
+  $: endUserRoleOptions = [
+    {
+      label: "Basic user",
+      value: Constants.Roles.BASIC,
+      color: roleColorLookup[Constants.Roles.BASIC],
+    },
+    {
+      label: "Admin user",
+      value: Constants.Roles.ADMIN,
+      color: roleColorLookup[Constants.Roles.ADMIN],
+    },
+  ]
+  $: assignedWorkspaceIds = groups.getGroupAppIds(group)
+  $: workspaceOptions = Object.values(
+    $appsStore.apps.reduce((acc, app) => {
+      const prodAppId = appsStore.getProdAppID(app.devId)
+      if (assignedWorkspaceIds.includes(prodAppId) || acc[prodAppId]) {
+        return acc
+      }
+      acc[prodAppId] = {
+        label: app.name,
+        value: prodAppId,
+      }
+      return acc
+    }, {})
+  ).sort((a, b) => a.label.localeCompare(b.label))
+  $: validOptionIds = workspaceOptions.map(option => option.value)
+  $: selectedWorkspaceIdsForSubmit = selectedWorkspaceIds.filter(id =>
+    validOptionIds.includes(id)
+  )
   $: confirmDisabled =
-    (!selectingRole && !selectedApp) || (selectingRole && !selectedRoleId)
-  let selectedApp, selectedRoleId
-  let selectingRole = false
+    !selectedWorkspaceIdsForSubmit.length ||
+    (selectedRole === Constants.BudibaseRoles.AppUser && !selectedEndUserRole)
 
-  async function appSelected() {
-    const prodAppId = appsStore.getProdAppID(selectedApp.devId)
-    if (!selectingRole) {
-      selectingRole = true
-      await roles.fetchByAppId(prodAppId)
+  export function reset() {
+    selectedWorkspaceIds = []
+    selectedRole = Constants.BudibaseRoles.AppUser
+    selectedEndUserRole = Constants.Roles.BASIC
+    workspaceSearchTerm = ""
+  }
 
+  const getWorkspaceRole = () => {
+    if (selectedRole === Constants.BudibaseRoles.Creator) {
+      return Constants.Roles.CREATOR
+    }
+    return selectedEndUserRole || Constants.Roles.BASIC
+  }
+
+  const onConfirm = async () => {
+    if (confirmDisabled) {
       return keepOpen
-    } else {
-      await groups.addApp(group._id, prodAppId, selectedRoleId)
+    }
+    try {
+      await groups.addApps(
+        groupId,
+        selectedWorkspaceIdsForSubmit,
+        getWorkspaceRole()
+      )
+      reset()
+    } catch (error) {
+      notifications.error("Error assigning workspaces")
+      return keepOpen
     }
   }
 </script>
 
 <ModalContent
-  onConfirm={appSelected}
+  {onConfirm}
   size="M"
-  title="Add app to group"
-  confirmText={selectingRole ? "Confirm" : "Next"}
-  showSecondaryButton={selectingRole}
-  secondaryButtonText="Back"
-  secondaryAction={() => (selectingRole = false)}
+  title="Assign workspaces"
+  confirmText="Assign"
   disabled={confirmDisabled}
 >
-  {#if !selectingRole}
-    <Body
-      >Select an app to assign roles for members of <i>"{group.name}"</i></Body
-    >
-    <Select bind:value={selectedApp} options={appOptions} />
-  {:else}
-    <Body
-      >Select the role that all members of "<i>{group.name}</i>" will have for
-      <i>"{selectedApp.name}"</i></Body
-    >
-    <RoleSelect allowPublic={false} bind:value={selectedRoleId} />
-  {/if}
+  <Layout noPadding gap="S">
+    <div class="group-name">
+      <GroupIcon {group} size="S" />
+      <Body><b>{group?.name}</b></Body>
+    </div>
+    <Multiselect
+      bind:value={selectedWorkspaceIds}
+      bind:searchTerm={workspaceSearchTerm}
+      label="Workspaces"
+      options={workspaceOptions}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.value}
+      placeholder={workspaceOptions.length
+        ? "Select workspaces"
+        : "No available workspaces"}
+      searchPlaceholder="Search workspace"
+      autocomplete
+    />
+    <GlobalRoleSelect
+      bind:value={selectedRole}
+      options={workspaceRoleOptions}
+    />
+    {#if selectedRole === Constants.BudibaseRoles.AppUser}
+      <Select
+        label="Select end user role"
+        bind:value={selectedEndUserRole}
+        options={endUserRoleOptions}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        getOptionColour={option => option.color}
+        placeholder={false}
+      />
+    {/if}
+  </Layout>
 </ModalContent>
+
+<style>
+  .group-name {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+</style>
