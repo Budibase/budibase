@@ -197,7 +197,7 @@ describe("chatAppsStore", () => {
     expect(get(currentChatApp)).toEqual(updated)
   })
 
-  it("upserts a missing agent config as disabled", async () => {
+  it("upserts a missing agent config as disabled with custom role", async () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
@@ -210,7 +210,7 @@ describe("chatAppsStore", () => {
         agentId: "agent-2",
         isEnabled: false,
         isDefault: false,
-        roleId: "BASIC",
+        roleId: "ADMIN",
         conversationStarters: starters,
       },
     ]
@@ -225,7 +225,7 @@ describe("chatAppsStore", () => {
 
     const result = await chatAppsStore.upsertAgentConfig({
       agentId: "agent-2",
-      updates: { conversationStarters: starters },
+      updates: { conversationStarters: starters, roleId: "ADMIN" },
     })
 
     expect(setChatAppAgent).not.toHaveBeenCalled()
@@ -350,7 +350,7 @@ describe("chatAppsStore", () => {
     expect(get(currentChatApp)).toEqual(updated)
   })
 
-  it("persists roleId updates for an existing agent config", async () => {
+  it("persists non-default roleId updates for an existing agent config", async () => {
     const chatApp: ChatApp = {
       _id: "chatapp-1",
       _rev: "1",
@@ -361,7 +361,7 @@ describe("chatAppsStore", () => {
         agentId: "agent-1",
         isEnabled: true,
         isDefault: true,
-        roleId: "BASIC",
+        roleId: "ADMIN",
       },
     ]
     const updated: ChatApp = {
@@ -375,7 +375,7 @@ describe("chatAppsStore", () => {
 
     const result = await chatAppsStore.upsertAgentConfig({
       agentId: "agent-1",
-      updates: { roleId: "BASIC" },
+      updates: { roleId: "ADMIN" },
     })
 
     expect(updateChatApp).toHaveBeenCalledWith({
