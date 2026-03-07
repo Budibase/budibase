@@ -223,6 +223,7 @@
       return {
         q: "",
         type: null as HomeType | null,
+        playbook: "",
         create: null as HomeCreate | null,
         sort: null as HomeSortColumn | null,
         order: null as HomeSortOrder | null,
@@ -231,10 +232,11 @@
     const params = new URLSearchParams(window.location.search)
     const q = params.get("q") ?? ""
     const type = normaliseType(params.get("type"))
+    const playbook = params.get("playbook") ?? ""
     const sort = normaliseSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
     const create = normaliseCreate(params.get("create"))
-    return { q, type, sort, order, create }
+    return { q, type, playbook, sort, order, create }
   }
 
   const writeUrlState = () => {
@@ -257,6 +259,12 @@
       params.delete("type")
     } else {
       params.set("type", typeFilter)
+    }
+
+    if (!playbooksEnabled || !selectedPlaybookId) {
+      params.delete("playbook")
+    } else {
+      params.set("playbook", selectedPlaybookId)
     }
 
     const defaultSortColumn: HomeSortColumn = "updated"
@@ -307,6 +315,19 @@
       return
     }
     typeFilter = normalised
+  }
+
+  const openPrimaryCreate = () => {
+    switch (typeFilter) {
+      case "automation":
+        return createAutomation()
+      case "agent":
+        return createAgent()
+      case "app":
+      case "all":
+      default:
+        return createApp()
+    }
   }
 
   const setSort = (column: HomeSortColumn) => {
@@ -710,6 +731,9 @@
         )
       : {}
   ) as Record<string, PlaybookResponse>
+  $: selectedPlaybookName = selectedPlaybookId
+    ? playbookLookup[selectedPlaybookId]?.name || ""
+    : ""
 
   $: rowsWithPlaybooks = baseRows.map(row => {
     const playbook = row.playbookId ? playbookLookup[row.playbookId] : undefined
@@ -746,12 +770,15 @@
       return
     }
 
-    const { q, type, sort, order } = readUrlState()
+    const { q, type, playbook, sort, order } = readUrlState()
     if (q) {
       searchTerm = q
     }
     if (type) {
       typeFilter = type
+    }
+    if (playbook) {
+      selectedPlaybookId = playbook
     }
     if (sort) {
       sortColumn = sort
@@ -884,9 +911,11 @@
       {typeFilter}
       {searchTerm}
       {playbooksEnabled}
+      {selectedPlaybookName}
       {sortColumn}
       {sortOrder}
       {highlightedRowId}
+      on:create={() => openPrimaryCreate()}
       on:openRow={({ detail }) => openRow(detail)}
       on:openContextMenu={({ detail }) => openHomeContextMenu(detail)}
       on:clearSearch={() => (searchTerm = "")}
@@ -1049,17 +1078,20 @@
 
   .controls-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: var(--spacing-m);
+    gap: var(--spacing-m) var(--spacing-l);
+    flex-wrap: wrap;
     position: relative;
-    margin-bottom: -12px;
   }
 
   .controls-row .controls-right {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .controls-row .search-wrapper {
@@ -1072,6 +1104,7 @@
     min-width: 200px;
     height: 32px;
     box-sizing: border-box;
+    flex: 1 1 220px;
   }
 
   .controls-row .search-input {
@@ -1107,6 +1140,34 @@
     padding: 4px !important;
     margin-top: 4px;
     margin-left: 2px;
+  }
+
+  @media (max-width: 1080px) {
+    .controls-row .controls-right {
+      width: 100%;
+      margin-left: 0;
+      justify-content: space-between;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .controls-row .controls-right {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .controls-row .search-wrapper {
+      width: 100%;
+    }
+
+    .controls-row .create-menu-control {
+      width: 100%;
+    }
+
+    .controls-row .create-menu-control :global(button) {
+      width: 100%;
+      justify-content: center;
+    }
   }
 
   .create-popover-container :global(.spectrum-Menu) {

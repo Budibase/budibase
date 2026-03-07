@@ -22,11 +22,13 @@
   export let typeFilter: HomeType = "all"
   export let searchTerm = ""
   export let playbooksEnabled = false
+  export let selectedPlaybookName = ""
   export let sortColumn: HomeSortColumn
   export let sortOrder: HomeSortOrder
 
   const dispatch = createEventDispatcher<{
     openRow: HomeRow
+    create: void
     clearSearch: void
     resetFilters: void
     sortChange: HomeSortColumn
@@ -158,18 +160,20 @@
               />
             </div>
             <div class="name-content">
-              <Body size="S" color="var(--spectrum-global-color-gray-900)"
-                >{row.name}</Body
-              >
-              {#if playbooksEnabled && row.playbookName}
-                <span
-                  class="playbook-chip"
-                  style={`--playbook-color: ${row.playbookColor || "#8CA171"}`}
+              <div class="name-line">
+                <Body size="S" color="var(--spectrum-global-color-gray-900)"
+                  >{row.name}</Body
                 >
-                  <span class="playbook-chip__dot"></span>
-                  {row.playbookName}
-                </span>
-              {/if}
+                {#if playbooksEnabled && row.playbookName}
+                  <span
+                    class="playbook-chip"
+                    style={`--playbook-color: ${row.playbookColor || "#8CA171"}`}
+                  >
+                    <span class="playbook-chip__dot"></span>
+                    {row.playbookName}
+                  </span>
+                {/if}
+              </div>
             </div>
           </div>
 
@@ -232,6 +236,8 @@
             {searchTerm}
             {allRowsCount}
             filteredRowsCount={rows.length}
+            {selectedPlaybookName}
+            on:create={() => dispatch("create")}
             on:clearSearch={() => dispatch("clearSearch")}
             on:resetFilters={() => dispatch("resetFilters")}
           />
@@ -270,9 +276,15 @@
 
   .name-content {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+    min-width: 0;
+  }
+
+  .name-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex-wrap: wrap;
   }
 
   .playbook-chip {
@@ -399,6 +411,10 @@
 
   .name-cell {
     gap: var(--spacing-m);
+  }
+
+  .name-line :global(.spectrum-Body) {
+    min-width: 0;
   }
 
   .icon-wrapper {

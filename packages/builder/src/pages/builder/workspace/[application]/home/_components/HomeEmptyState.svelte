@@ -7,23 +7,38 @@
   export let filteredRowsCount = 0
   export let typeFilter: HomeType = "all"
   export let searchTerm = ""
+  export let selectedPlaybookName = ""
 
   const dispatch = createEventDispatcher<{
     clearSearch: void
     resetFilters: void
+    create: void
   }>()
 
   $: hasAnyRows = allRowsCount > 0
   $: hasSearch = !!searchTerm.trim()
-  $: hasFilter = typeFilter !== "all"
+  $: hasPlaybookFilter = !!selectedPlaybookName
+  $: hasFilter = typeFilter !== "all" || hasPlaybookFilter
   $: isNoResults = hasAnyRows && filteredRowsCount === 0
+  $: noResultsText = hasPlaybookFilter
+    ? `No results in ${selectedPlaybookName}.`
+    : "No results."
+
+  const createLabelByType: Record<HomeType, string> = {
+    all: "Create app",
+    app: "Create app",
+    automation: "Create automation",
+    agent: "Create agent",
+  }
+
+  $: createLabel = createLabelByType[typeFilter]
 </script>
 
 {#if filteredRowsCount === 0}
   <div class="empty">
     {#if isNoResults}
       <Body size="M" color="var(--spectrum-global-color-gray-700)">
-        No results.
+        {noResultsText}
       </Body>
       <div class="actions">
         {#if hasSearch}
@@ -51,6 +66,9 @@
       <Body size="M" color="var(--spectrum-global-color-gray-700)">
         Nothing here yet.
       </Body>
+      <Button cta size="S" on:click={() => dispatch("create")}
+        >{createLabel}</Button
+      >
     {/if}
   </div>
 {/if}
