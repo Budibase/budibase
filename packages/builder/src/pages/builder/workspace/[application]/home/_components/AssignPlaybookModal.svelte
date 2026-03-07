@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { ModalContent } from "@budibase/bbui"
+  import { Body, ModalContent, Select } from "@budibase/bbui"
   import type { HomeRow, PlaybookResponse } from "@budibase/types"
 
   export let row: HomeRow | null = null
@@ -10,9 +10,23 @@
     confirm: string | undefined
   }>()
 
+  interface PlaybookOption {
+    label: string
+    value: string
+    color?: string
+  }
+
   let selectedPlaybookId = ""
 
   $: selectedPlaybookId = row?.playbookId || ""
+  $: playbookOptions = [
+    { label: "No playbook", value: "", color: undefined },
+    ...playbooks.map(playbook => ({
+      label: playbook.name,
+      value: playbook._id,
+      color: playbook.color,
+    })),
+  ] satisfies PlaybookOption[]
 </script>
 
 <ModalContent
@@ -21,34 +35,26 @@
   size="M"
   onConfirm={() => dispatch("confirm", selectedPlaybookId || undefined)}
 >
-  <label class="field">
-    <span class="label">Playbook</span>
-    <select bind:value={selectedPlaybookId}>
-      <option value="">No playbook</option>
-      {#each playbooks as playbook}
-        <option value={playbook._id}>{playbook.name}</option>
-      {/each}
-    </select>
-  </label>
+  {#if row}
+    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+      Choose which playbook this {row.type} belongs to.
+    </Body>
+  {/if}
+
+  <div class="field">
+    <Select
+      label="Playbook"
+      bind:value={selectedPlaybookId}
+      options={playbookOptions}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.value}
+      getOptionColour={option => option.color}
+    />
+  </div>
 </ModalContent>
 
 <style>
   .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .label {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-700);
-  }
-
-  select {
-    min-height: 32px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 6px;
-    padding: 0 10px;
-    background: white;
+    margin-top: var(--spacing-s);
   }
 </style>

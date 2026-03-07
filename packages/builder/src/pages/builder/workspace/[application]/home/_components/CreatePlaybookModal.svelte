@@ -1,6 +1,13 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { Input, ModalContent } from "@budibase/bbui"
+  import {
+    Body,
+    ColorPicker,
+    Input,
+    keepOpen,
+    ModalContent,
+    TextArea,
+  } from "@budibase/bbui"
 
   const dispatch = createEventDispatcher<{
     confirm: {
@@ -13,8 +20,18 @@
   let name = ""
   let description = ""
   let color = "#8CA171"
+  let nameError: string | undefined = undefined
+
+  $: if (name.trim()) {
+    nameError = undefined
+  }
 
   const confirm = () => {
+    if (!name.trim()) {
+      nameError = "Name is required"
+      return keepOpen
+    }
+
     dispatch("confirm", {
       name: name.trim(),
       description: description.trim() || undefined,
@@ -27,10 +44,26 @@
   title="Create playbook"
   confirmText="Create"
   size="M"
-  canConfirm={!!name.trim()}
   onConfirm={confirm}
 >
-  <Input bind:value={name} label="Name" />
-  <Input bind:value={description} label="Description" />
-  <Input bind:value={color} label="Color" />
+  <Input bind:value={name} label="Name" error={nameError} />
+  <TextArea
+    bind:value={description}
+    label="Description"
+    minHeight={96}
+    placeholder="What does this playbook cover?"
+  />
+
+  <div class="color-field">
+    <Body size="XS" color="var(--spectrum-global-color-gray-700)">Color</Body>
+    <ColorPicker bind:value={color} on:change={e => (color = e.detail)} />
+  </div>
 </ModalContent>
+
+<style>
+  .color-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+</style>
