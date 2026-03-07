@@ -166,6 +166,7 @@
                   class="playbook-chip"
                   style={`--playbook-color: ${row.playbookColor || "#8CA171"}`}
                 >
+                  <span class="playbook-chip__dot"></span>
                   {row.playbookName}
                 </span>
               {/if}
@@ -271,18 +272,28 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: 6px;
   }
 
   .playbook-chip {
     display: inline-flex;
     align-items: center;
+    gap: 6px;
     border-radius: 999px;
-    padding: 2px 8px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    padding: 1px 8px;
     font-size: 11px;
-    font-weight: 600;
-    color: var(--playbook-color);
-    background: color-mix(in srgb, var(--playbook-color) 14%, white);
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-800);
+    background: var(--spectrum-global-color-gray-75);
+  }
+
+  .playbook-chip__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--playbook-color);
+    flex-shrink: 0;
   }
 
   @media (max-width: 1200px) {
