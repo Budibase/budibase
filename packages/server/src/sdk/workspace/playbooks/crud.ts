@@ -64,11 +64,15 @@ export async function update(
 }
 
 async function clearAssignments(playbookId: string) {
-  const [workspaceApps, automations, agents] = await Promise.all([
-    sdk.workspaceApps.fetch(),
-    sdk.automations.fetch(),
-    sdk.ai.agents.fetch(),
-  ])
+  const [workspaceApps, automations, agents, tables, queries, datasources] =
+    await Promise.all([
+      sdk.workspaceApps.fetch(),
+      sdk.automations.fetch(),
+      sdk.ai.agents.fetch(),
+      sdk.tables.getAllTables(),
+      sdk.queries.fetch(),
+      sdk.datasources.getExternalDatasources(),
+    ])
 
   await Promise.all([
     ...workspaceApps
@@ -84,6 +88,24 @@ async function clearAssignments(playbookId: string) {
     ...agents
       .filter(agent => agent.playbookId === playbookId)
       .map(agent => sdk.ai.agents.update({ ...agent, playbookId: undefined })),
+    ...tables
+      .filter(table => table.playbookId === playbookId)
+      .map(table => sdk.tables.saveTable({ ...table, playbookId: undefined })),
+    ...queries
+      .filter(query => query.playbookId === playbookId)
+      .map(query =>
+        context.getWorkspaceDB().put({ ...query, playbookId: undefined })
+      ),
+    ...datasources
+      .filter(datasource => datasource.playbookId === playbookId)
+      .map(datasource =>
+        context.getWorkspaceDB().put(
+          sdk.tables.populateExternalTableSchemas({
+            ...datasource,
+            playbookId: undefined,
+          })
+        )
+      ),
   ])
 }
 

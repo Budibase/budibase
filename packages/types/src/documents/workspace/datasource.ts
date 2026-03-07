@@ -6,6 +6,7 @@ import { RestTemplateName, RestTemplateSpecVersion } from "../../ui/rest"
 export interface Datasource extends Document {
   type: string
   name?: string
+  playbookId?: string
   source: SourceName
   // this is a googlesheets specific property which
   // can be found in the GSheets schema - pertains to SSO creds

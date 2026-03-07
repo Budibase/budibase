@@ -39,6 +39,7 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
+import { resolvePlaybookId } from "../../../utilities/playbooks"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
 
@@ -170,6 +171,8 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   if (!query?.name.match(ValidQueryNameRegex)) {
     ctx.throw(400, "Invalid query name")
   }
+
+  query.playbookId = await resolvePlaybookId(query.playbookId)
 
   const datasource = await sdk.datasources.get(query.datasourceId)
 

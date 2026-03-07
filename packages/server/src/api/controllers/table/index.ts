@@ -53,6 +53,7 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { handleDataImport } from "./utils"
+import { resolvePlaybookId } from "../../../utilities/playbooks"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
@@ -170,6 +171,8 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const renaming = ctx.request.body._rename
 
   const isCreate = !table._id
+
+  table.playbookId = await resolvePlaybookId(table.playbookId)
 
   await guardTable(table, isCreate)
 

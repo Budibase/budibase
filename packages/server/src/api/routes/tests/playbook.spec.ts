@@ -2,6 +2,11 @@ import { features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import { FeatureFlag } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import {
+  basicDatasource,
+  basicQuery,
+  basicTable,
+} from "../../../tests/utilities/structures"
 
 describe("/playbooks", () => {
   const config = new TestConfiguration()
@@ -44,6 +49,10 @@ describe("/playbooks", () => {
 
   it("rejects assigning an unknown playbook id", async () => {
     await withPlaybooksEnabled(async () => {
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+
       await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Ops app",
@@ -76,6 +85,45 @@ describe("/playbooks", () => {
         {
           name: "Ops agent",
           aiconfig: "default",
+          playbookId: "playbook_missing",
+        },
+        {
+          status: 404,
+          body: {
+            message: "Playbook 'playbook_missing' not found.",
+          },
+        }
+      )
+
+      await config.api.table.save(
+        {
+          ...basicTable(),
+          playbookId: "playbook_missing",
+        },
+        {
+          status: 404,
+          body: {
+            message: "Playbook 'playbook_missing' not found.",
+          },
+        }
+      )
+
+      await config.api.query.save(
+        {
+          ...basicQuery(datasource._id!),
+          playbookId: "playbook_missing",
+        },
+        {
+          status: 404,
+          body: {
+            message: "Playbook 'playbook_missing' not found.",
+          },
+        }
+      )
+
+      await config.api.datasource.create(
+        {
+          ...basicDatasource().datasource,
           playbookId: "playbook_missing",
         },
         {
@@ -131,6 +179,21 @@ describe("/playbooks", () => {
         playbookId: playbook._id,
       })
 
+      const table = await config.api.table.save({
+        ...basicTable(),
+        playbookId: playbook._id,
+      })
+
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        playbookId: playbook._id,
+      })
+
+      const query = await config.api.query.save({
+        ...basicQuery(datasource._id!),
+        playbookId: playbook._id,
+      })
+
       await config.api.playbook.delete(playbook._id, playbook._rev)
 
       const fetchedWorkspaceApp = await config.api.workspaceApp.find(
@@ -146,6 +209,15 @@ describe("/playbooks", () => {
       const { agents } = await config.api.agent.fetch()
       const fetchedAgent = agents.find(existing => existing._id === agent._id)
       expect(fetchedAgent?.playbookId).toBeUndefined()
+
+      const fetchedTable = await config.api.table.get(table._id!)
+      expect(fetchedTable.playbookId).toBeUndefined()
+
+      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
+      expect(fetchedDatasource.playbookId).toBeUndefined()
+
+      const fetchedQuery = await config.api.query.get(query._id!)
+      expect(fetchedQuery.playbookId).toBeUndefined()
     })
   })
 })
