@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { ActionButton, Icon } from "@budibase/bbui"
+  import { ActionButton, Icon, Select } from "@budibase/bbui"
   import type { HomeType, PlaybookResponse } from "@budibase/types"
   import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
 
@@ -14,6 +14,12 @@
     label: string
     value: HomeType
     disabled?: boolean
+  }
+
+  interface PlaybookOption {
+    label: string
+    value: string
+    color?: string
   }
 
   const dispatch = createEventDispatcher<{
@@ -37,6 +43,15 @@
     { label: "All", value: "all" },
     ...getOptions(agentsEnabled),
   ] satisfies HomeFilterOption[]
+
+  $: playbookOptions = [
+    { label: "All playbooks", value: "", color: undefined },
+    ...playbooks.map(playbook => ({
+      label: playbook.name,
+      value: playbook._id,
+      color: playbook.color,
+    })),
+  ] satisfies PlaybookOption[]
 </script>
 
 <div class="controls">
@@ -67,16 +82,16 @@
     </div>
     {#if playbooksEnabled && playbooks.length}
       <label class="playbook-filter">
-        <span>Playbook</span>
-        <select
+        <span class="playbook-filter__label">Playbook</span>
+        <Select
+          autoWidth={true}
           bind:value={selectedPlaybookId}
+          options={playbookOptions}
+          getOptionLabel={option => option.label}
+          getOptionValue={option => option.value}
+          getOptionColour={option => option.color}
           on:change={() => dispatch("playbookChange", selectedPlaybookId)}
-        >
-          <option value="">All playbooks</option>
-          {#each playbooks as playbook}
-            <option value={playbook._id}>{playbook.name}</option>
-          {/each}
-        </select>
+        />
       </label>
     {/if}
   </div>
@@ -135,16 +150,17 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-700);
+    min-height: 32px;
   }
 
-  .playbook-filter select {
-    min-height: 32px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 6px;
-    padding: 0 10px;
-    background: white;
+  .playbook-filter__label {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-700);
+    white-space: nowrap;
+  }
+
+  .playbook-filter :global(.spectrum-Picker) {
+    min-width: 180px;
   }
 
   @media (max-width: 1140px) {

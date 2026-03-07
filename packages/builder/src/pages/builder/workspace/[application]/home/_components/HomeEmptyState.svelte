@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { Body } from "@budibase/bbui"
+  import { Body, Button } from "@budibase/bbui"
   import type { HomeType } from "@budibase/types"
 
   export let allRowsCount = 0
@@ -27,22 +27,24 @@
       </Body>
       <div class="actions">
         {#if hasSearch}
-          <button
-            type="button"
-            class="action"
+          <Button
+            secondary
+            quiet
+            size="S"
             on:click={() => dispatch("clearSearch")}
           >
             Clear search
-          </button>
+          </Button>
         {/if}
         {#if hasFilter}
-          <button
-            type="button"
-            class="action"
+          <Button
+            secondary
+            quiet
+            size="S"
             on:click={() => dispatch("resetFilters")}
           >
             Reset filter
-          </button>
+          </Button>
         {/if}
       </div>
     {:else}
@@ -67,22 +69,6 @@
   .actions {
     display: flex;
     gap: var(--spacing-s);
-  }
-
-  .action {
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    background: transparent;
-    border-radius: 6px;
-    padding: 6px 10px;
-    cursor: pointer;
-    color: var(--spectrum-global-color-gray-800);
-    transition:
-      background 130ms ease-out,
-      border-color 130ms ease-out;
-  }
-
-  .action:hover {
-    background: var(--spectrum-global-color-gray-100);
-    border-color: var(--spectrum-global-color-gray-400);
+    flex-wrap: wrap;
   }
 </style>
