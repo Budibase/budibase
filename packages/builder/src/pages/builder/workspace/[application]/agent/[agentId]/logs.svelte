@@ -1,6 +1,7 @@
 <script lang="ts">
   import { API } from "@/api"
   import { selectedAgent } from "@/stores/portal"
+  import { admin } from "@/stores/portal/admin"
   import { onMount } from "svelte"
   import type {
     AgentLogEntry,
@@ -68,6 +69,9 @@
 
   let filteredSessions = $derived.by(() => {
     let result = sessions
+    if (!$admin.isDev) {
+      result = result.filter(session => !session.isPreview)
+    }
     if (statusFilter !== "all") {
       result = result.filter(s => s.status === statusFilter)
     }
@@ -85,6 +89,16 @@
       operations: session.operations,
     }))
   )
+
+  let visibleSelectedSession = $derived.by(() => {
+    if (!selectedSession) {
+      return null
+    }
+    if (!$admin.isDev && selectedSession.isPreview) {
+      return null
+    }
+    return selectedSession
+  })
 
   async function loadSessions(page = 0) {
     const agentId = $selectedAgent?._id
@@ -287,7 +301,7 @@
 
     <div class="detail-panel">
       <LogsSessionDetail
-        {selectedSession}
+        selectedSession={visibleSelectedSession}
         {expandedStepId}
         {stepDetailsByRequestId}
         {stepLoadingByRequestId}

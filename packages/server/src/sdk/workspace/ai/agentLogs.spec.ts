@@ -72,10 +72,48 @@ describe("agentLogs", () => {
     expect(result.sessions[0]).toEqual(
       expect.objectContaining({
         sessionId: "session-1",
+        isPreview: false,
         operations: 3,
       })
     )
     expect(result.hasMore).toBe(true)
+  })
+
+  it("marks chat preview sessions so the UI can hide them outside dev", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        data: [
+          {
+            request_id: "req-1",
+            session_id: "chat-preview:session-1",
+            model: "gpt-5",
+            prompt_tokens: 10,
+            completion_tokens: 20,
+            spend: 0.1,
+            startTime: "2026-03-06T10:00:00.000Z",
+            endTime: "2026-03-06T10:00:10.000Z",
+            status: "success",
+          },
+        ],
+        total_pages: 1,
+      }),
+    } as any)
+
+    const result = await fetchSessions(
+      "agent-1",
+      "2026-03-06T09:00:00.000Z",
+      "2026-03-06",
+      0
+    )
+
+    expect(result.sessions[0]).toEqual(
+      expect.objectContaining({
+        sessionId: "chat-preview:session-1",
+        trigger: "Chat Preview",
+        isPreview: true,
+      })
+    )
   })
 
   it("fetches all pages for a session detail", async () => {

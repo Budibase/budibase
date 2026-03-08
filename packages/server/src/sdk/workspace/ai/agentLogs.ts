@@ -122,7 +122,7 @@ function extractError(
 }
 
 function determineTrigger(sessionId: string): string {
-  if (sessionId.startsWith("chat-preview:")) {
+  if (isPreviewSession(sessionId)) {
     return "Chat Preview"
   }
 
@@ -142,6 +142,10 @@ function determineTrigger(sessionId: string): string {
     return "Chat"
   }
   return "Automation"
+}
+
+function isPreviewSession(sessionId: string): boolean {
+  return sessionId.startsWith("chat-preview:")
 }
 
 function determineStatus(entries: AgentLogEntry[]): "success" | "error" {
@@ -206,6 +210,7 @@ function buildSession(sessionId: string, sessionLogs: LiteLLMSpendLog[]) {
     sessionId,
     firstInput: extractFirstInput(sorted),
     trigger: determineTrigger(sessionId),
+    isPreview: isPreviewSession(sessionId),
     startTime: entries[0]?.startTime || "",
     operations: Math.max(
       entries.length,

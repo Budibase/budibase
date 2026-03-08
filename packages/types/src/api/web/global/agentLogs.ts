@@ -14,6 +14,7 @@ export interface AgentLogSession {
   sessionId: string
   firstInput: string
   trigger: string
+  isPreview: boolean
   startTime: string
   operations: number
   status: "success" | "error"
