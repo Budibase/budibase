@@ -45,11 +45,20 @@ export interface AgentLogToolResult {
   content: string
 }
 
+export interface AgentLogRequestError {
+  message: string
+  code?: string
+  errorClass?: string
+  provider?: string
+  traceback?: string
+}
+
 export interface AgentLogRequestDetail {
   requestId: string
   model: string
   messages: AgentLogMessage[]
   response: string
+  error?: AgentLogRequestError
   inputToolCalls: AgentLogToolCall[]
   toolCalls: AgentLogToolCall[]
   toolResults: AgentLogToolResult[]

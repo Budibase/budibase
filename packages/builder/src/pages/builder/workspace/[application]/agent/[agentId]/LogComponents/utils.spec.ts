@@ -1,5 +1,5 @@
 import type { AgentLogRequestDetail } from "@budibase/types"
-import { formatLogDateForApi, formatMessages } from "./utils"
+import { formatLogDateForApi, formatMessages, parseAssistantResponse } from "./utils"
 
 describe("formatLogDateForApi", () => {
   const date = new Date("2026-03-06T10:15:30.000Z")
@@ -22,6 +22,7 @@ describe("formatMessages", () => {
       model: "test-model",
       messages,
       response: "",
+      error: undefined,
       inputToolCalls: [],
       toolCalls: [],
       toolResults: [],
@@ -58,5 +59,36 @@ describe("formatMessages", () => {
     const detail = buildDetail([{ role: "assistant", content: "hello" }])
 
     expect(formatMessages(detail)).toBe("No user prompt")
+  })
+})
+
+describe("agent log detail helpers", () => {
+  function buildDetail(overrides: Partial<AgentLogRequestDetail>) {
+    return {
+      requestId: "req-1",
+      model: "test-model",
+      messages: [],
+      response: "",
+      error: undefined,
+      inputToolCalls: [],
+      toolCalls: [],
+      toolResults: [],
+      inputTokens: 0,
+      outputTokens: 0,
+      startTime: "",
+      endTime: "",
+      ...overrides,
+    } satisfies AgentLogRequestDetail
+  }
+
+  it("parses thinking from think tags", () => {
+    const detail = buildDetail({
+      response: "<think>hidden chain of thought</think>ok",
+    })
+
+    expect(parseAssistantResponse(detail.response)).toEqual({
+      thinking: "hidden chain of thought",
+      response: "ok",
+    })
   })
 })

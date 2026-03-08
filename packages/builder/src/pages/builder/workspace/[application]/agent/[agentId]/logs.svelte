@@ -20,6 +20,7 @@
   let expandedStepId = $state<string | null>(null)
   let currentPage = $state(0)
   let hasMore = $state(false)
+  let deepLinkedSessionId = $state<string | null>(null)
 
   let stepDetailsByRequestId = $state<Record<string, AgentLogRequestDetail>>({})
   let stepLoadingByRequestId = $state<Record<string, boolean>>({})
@@ -56,6 +57,13 @@
     stepDetailsByRequestId = {}
     stepLoadingByRequestId = {}
     expandedStepId = null
+  }
+
+  function readLinkedSessionId(): string | null {
+    if (typeof window === "undefined") {
+      return null
+    }
+    return new URLSearchParams(window.location.search).get("sessionId")
   }
 
   let filteredSessions = $derived.by(() => {
@@ -105,7 +113,10 @@
         ? response.sessions.some(s => s.sessionId === current.sessionId)
         : false
 
-      if (!selectedStillExists) {
+      if (
+        !selectedStillExists &&
+        current?.sessionId !== deepLinkedSessionId
+      ) {
         selectedSession = null
         resetDetailState()
       }
@@ -194,6 +205,29 @@
     }
   }
 
+  async function loadLinkedSession() {
+    const agentId = $selectedAgent?._id
+    if (!agentId || !deepLinkedSessionId) {
+      return
+    }
+
+    try {
+      const fullSession = await API.fetchAgentLogSession(
+        agentId,
+        deepLinkedSessionId
+      )
+      if (!fullSession) {
+        notifications.error("Linked session was not found")
+        return
+      }
+      selectedSession = fullSession
+      resetDetailState()
+      await prefetchSessionDetails(fullSession)
+    } catch (error) {
+      notifications.error("Failed to fetch linked session")
+    }
+  }
+
   function onSessionRowClick(row: { sessionId?: string }) {
     if (!row.sessionId) {
       return
@@ -228,7 +262,9 @@
 
   onMount(() => {
     mounted = true
+    deepLinkedSessionId = readLinkedSessionId()
     loadSessions(0)
+    loadLinkedSession()
   })
 </script>
 

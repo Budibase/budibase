@@ -44,6 +44,19 @@ interface LiteLLMProxyMessage {
   tool_call_id?: string
 }
 
+interface LiteLLMResponseMessage {
+  content?: unknown
+  tool_calls?: LiteLLMToolCall[] | null
+}
+
+interface LiteLLMErrorInformation {
+  traceback?: string
+  error_code?: string
+  error_class?: string
+  llm_provider?: string
+  error_message?: string
+}
+
 interface LiteLLMRequestDetail {
   request_id?: string
   model?: string
@@ -54,15 +67,16 @@ interface LiteLLMRequestDetail {
   response?: {
     model?: string
     choices?: Array<{
-      message?: {
-        content?: unknown
-        tool_calls?: LiteLLMToolCall[] | null
-      }
+      message?: LiteLLMResponseMessage
     }>
   }
   proxy_server_request?: {
     user?: string
+    model?: string
     messages?: LiteLLMProxyMessage[]
+    metadata?: {
+      error_information?: LiteLLMErrorInformation | null
+    }
   }
 }
 
@@ -86,6 +100,24 @@ function toContentString(content: unknown): string {
     return JSON.stringify(content)
   } catch {
     return String(content)
+  }
+}
+
+function extractError(
+  data: LiteLLMRequestDetail
+): AgentLogRequestDetail["error"] | undefined {
+  const errorInfo = data.proxy_server_request?.metadata?.error_information
+  const message = errorInfo?.error_message?.trim()
+  if (!message) {
+    return undefined
+  }
+
+  return {
+    message,
+    code: errorInfo?.error_code,
+    errorClass: errorInfo?.error_class,
+    provider: errorInfo?.llm_provider,
+    traceback: errorInfo?.traceback,
   }
 }
 
@@ -335,6 +367,7 @@ export async function fetchRequestDetail(
     throw new HTTPError("Agent log detail not found", 404)
   }
   const requestMessages = data.proxy_server_request?.messages || []
+  const responseMessage = data.response?.choices?.[0]?.message
   const agent = await getOrThrow(agentId)
   const toolDisplayNames = getToolDisplayNames(
     await getAvailableTools(agent.aiconfig)
@@ -345,10 +378,10 @@ export async function fetchRequestDetail(
     content: toContentString(m.content),
   }))
 
-  const responseText =
-    toContentString(data.response?.choices?.[0]?.message?.content) ||
-    JSON.stringify(data.response?.choices?.[0]?.message) ||
-    ""
+  const responseText = responseMessage
+    ? toContentString(responseMessage.content)
+    : ""
+  const error = extractError(data)
 
   const inputToolCalls = requestMessages.flatMap(message => {
     if (message.role !== "assistant" || !message.tool_calls?.length) {
@@ -363,7 +396,7 @@ export async function fetchRequestDetail(
   })
 
   const toolCalls =
-    data.response?.choices?.[0]?.message?.tool_calls?.map(toolCall => ({
+    responseMessage?.tool_calls?.map(toolCall => ({
       id: toolCall.id,
       name: toolCall.function?.name || "unknown",
       displayName: toolDisplayNames[toolCall.function?.name || ""],
@@ -397,10 +430,11 @@ export async function fetchRequestDetail(
 
   return {
     requestId: data.request_id || requestId,
-    model: data.response?.model || data.model || "unknown",
+    model: data.response?.model || data.model || data.proxy_server_request?.model || "unknown",
     messages,
     inputToolCalls,
     response: responseText,
+    error,
     toolCalls,
     toolResults,
     inputTokens: data.prompt_tokens || 0,

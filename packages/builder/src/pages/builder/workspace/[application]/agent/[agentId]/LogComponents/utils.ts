@@ -1,6 +1,7 @@
 import dayjs from "dayjs"
 import type {
   AgentLogEntry,
+  AgentLogRequestError,
   AgentLogRequestDetail,
   AgentLogSession,
 } from "@budibase/types"
@@ -136,7 +137,11 @@ export function getStepFlow(
 
   const to =
     summarizeToolNames(outputTools) ||
-    (detail.response ? "Assistant response" : "No response")
+    (detail.error
+      ? "Error"
+      : detail.response
+        ? "Assistant response"
+        : "No response")
 
   return { from, to }
 }
@@ -193,6 +198,25 @@ export function parseAssistantResponse(
     thinking: "",
     response: trimmed,
   }
+}
+
+export function formatErrorDetail(error: AgentLogRequestError): string {
+  const lines = [error.message]
+
+  if (error.errorClass) {
+    lines.push(`Class: ${error.errorClass}`)
+  }
+  if (error.code) {
+    lines.push(`Code: ${error.code}`)
+  }
+  if (error.provider) {
+    lines.push(`Provider: ${error.provider}`)
+  }
+  if (error.traceback) {
+    lines.push("", error.traceback)
+  }
+
+  return lines.join("\n")
 }
 
 export function formatStructuredContent(content: string): string {

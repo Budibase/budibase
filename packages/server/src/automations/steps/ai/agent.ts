@@ -169,6 +169,7 @@ export async function run({
             success: false,
             response: errorMessage,
             message: assistantMessage,
+            sessionId,
           }
         }
 
@@ -190,6 +191,7 @@ export async function run({
             success: false,
             response: error,
             message: assistantMessage,
+            sessionId,
           }
         }
         const usage = await streamResult.usage
@@ -207,6 +209,7 @@ export async function run({
           response: responseText,
           usage,
           message: assistantMessage,
+          sessionId,
           output,
         }
       } catch (err: any) {
@@ -231,6 +234,7 @@ export async function run({
         return {
           success: false,
           response: errorMessage,
+          sessionId,
         }
       }
     }

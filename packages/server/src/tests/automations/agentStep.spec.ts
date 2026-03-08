@@ -101,7 +101,7 @@ describe("Agent step tool call tracking", () => {
         ])
       )
 
-    await run({
+    const result = await run({
       inputs: { agentId: "agent-id", prompt: "Do things with tools" },
       appId: "test",
       context: {},
@@ -109,6 +109,7 @@ describe("Agent step tool call tracking", () => {
     })
 
     expect(addActionMock).toHaveBeenCalledTimes(3)
+    expect(result.sessionId).toEqual(expect.any(String))
   })
 
   it("counts zero extra actions when the agent makes no tool calls", async () => {

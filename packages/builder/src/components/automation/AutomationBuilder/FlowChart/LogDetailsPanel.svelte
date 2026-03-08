@@ -2,8 +2,10 @@
   import { Body, Icon, ActionButton, Divider } from "@budibase/bbui"
   import Panel from "@/components/design/Panel.svelte"
   import JSONViewer from "@/components/common/JSONViewer.svelte"
+  import { goto as gotoStore, params as paramsStore } from "@roxi/routify"
   import dayjs from "dayjs"
   import StatusRenderer from "@/settings/pages/backups/_components/StatusRenderer.svelte"
+  import { AutomationActionStepId } from "@budibase/types"
   import {
     summariseBranch,
     getCurrentStepData,
@@ -13,6 +15,9 @@
   export let log
   export let selectedStep = null
   export let onBack = () => {}
+
+  $: goto = $gotoStore
+  $: params = $paramsStore
 
   $: selectedTab = isBranchStep ? "Branch Info" : "Data in"
 
@@ -26,6 +31,13 @@
   $: logDate = log ? dayjs(log.createdAt).format("MMM DD, YYYY HH:mm:ss") : ""
   $: currentStepData = getCurrentStepData(selectedStep)
   $: branchDetails = getBranchConditionDetails(selectedStep)
+  $: linkedAgentId = selectedStep?.inputs?.agentId
+  $: linkedSessionId = selectedStep?.outputs?.sessionId
+  $: canOpenAgentLogs =
+    selectedStep?.stepId === AutomationActionStepId.AGENT &&
+    linkedAgentId &&
+    linkedSessionId &&
+    params?.application
 
   let expandedBranches = new Set()
 
@@ -36,6 +48,16 @@
       expandedBranches.add(id)
     }
     expandedBranches = new Set(expandedBranches)
+  }
+
+  function openAgentLogs() {
+    if (!canOpenAgentLogs) {
+      return
+    }
+
+    goto(
+      `/builder/workspace/${params.application}/agent/${linkedAgentId}/logs?sessionId=${encodeURIComponent(linkedSessionId)}`
+    )
   }
 </script>
 
@@ -89,6 +111,14 @@
         <Divider noMargin />
 
         <div class="step-data-viewer">
+          {#if canOpenAgentLogs}
+            <div class="agent-link">
+              <ActionButton quiet on:click={openAgentLogs}>
+                Open agent logs
+              </ActionButton>
+            </div>
+          {/if}
+
           {#if selectedTab === "Data in"}
             {#if !hasInputData}
               <div class="no-data-message">
@@ -250,6 +280,12 @@
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-l);
+  }
+
+  .agent-link {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--spacing-m);
   }
 
   .issue {

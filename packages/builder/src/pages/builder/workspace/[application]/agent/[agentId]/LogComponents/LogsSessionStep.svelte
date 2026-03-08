@@ -4,6 +4,7 @@
   import { formatToolName } from "@budibase/frontend-core"
   import {
     formatMessages,
+    formatErrorDetail,
     formatStructuredContent,
     getStepDuration,
     getStepFlow,
@@ -22,7 +23,7 @@
 
   let { entry, index, expanded, detail, loadingStep, onToggleStep }: Props =
     $props()
-
+  console.log(detail)
   let flow = $derived(getStepFlow(detail, loadingStep))
 </script>
 
@@ -149,6 +150,25 @@
                 </div>
                 <div class="content-surface content-surface--thinking">
                   <pre><code>{assistantResponse.thinking}</code></pre>
+                </div>
+              </div>
+            {/if}
+
+            {#if detail.error}
+              <div class="content-section">
+                <div class="content-section-header">
+                  <div class="section-icon section-icon--error">
+                    <Icon name="Alert" size="S" />
+                  </div>
+                  <div class="section-label-group">
+                    <h5 class="content-title">Error</h5>
+                    <p class="content-subtitle">
+                      Provider and model failure details
+                    </p>
+                  </div>
+                </div>
+                <div class="content-surface content-surface--error">
+                  <pre><code>{formatErrorDetail(detail.error)}</code></pre>
                 </div>
               </div>
             {/if}
@@ -393,6 +413,12 @@
     color: #6f8157;
   }
 
+  .section-icon--error {
+    background: rgba(214, 60, 60, 0.12);
+    border-color: rgba(214, 60, 60, 0.2);
+    color: var(--spectrum-global-color-red-700);
+  }
+
   .content-title {
     margin: 0;
     font-size: 12px;
@@ -467,6 +493,11 @@
   .content-surface--thinking {
     background: rgba(140, 161, 113, 0.08);
     border-color: rgba(140, 161, 113, 0.2);
+  }
+
+  .content-surface--error {
+    background: rgba(214, 60, 60, 0.04);
+    border-color: rgba(214, 60, 60, 0.2);
   }
 
   .content-surface pre {
