@@ -41,20 +41,12 @@
     </Body>
   {/if}
 
-  <div class="field">
-    <Select
-      label="Playbook"
-      bind:value={selectedPlaybookId}
-      options={playbookOptions}
-      getOptionLabel={option => option.label}
-      getOptionValue={option => option.value}
-      getOptionColour={option => option.color}
-    />
-  </div>
+  <Select
+    label="Playbook"
+    bind:value={selectedPlaybookId}
+    options={playbookOptions}
+    getOptionLabel={option => option.label}
+    getOptionValue={option => option.value}
+    getOptionColour={option => option.color}
+  />
 </ModalContent>
-
-<style>
-  .field {
-    margin-top: var(--spacing-s);
-  }
-</style>

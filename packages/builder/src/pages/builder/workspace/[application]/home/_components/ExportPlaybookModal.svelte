@@ -29,6 +29,7 @@
 <ModalContent
   title="Export playbook"
   confirmText="Export"
+  size="M"
   bind:disabled
   onConfirm={() =>
     dispatch("confirm", {

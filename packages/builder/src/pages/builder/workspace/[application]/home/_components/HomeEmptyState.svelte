@@ -75,7 +75,7 @@
 
 <style>
   .empty {
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl) var(--spacing-l);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);

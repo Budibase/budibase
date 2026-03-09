@@ -33,6 +33,7 @@
 <ModalContent
   title="Import playbook"
   confirmText="Import"
+  size="M"
   bind:disabled
   onConfirm={() =>
     file &&
@@ -46,7 +47,7 @@
     workspace without replacing existing apps or automations.
   </Body>
 
-  <Layout noPadding gap="XS">
+  <Layout noPadding gap="S">
     <Dropzone
       gallery={false}
       label="Playbook export"

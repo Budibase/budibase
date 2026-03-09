@@ -55,7 +55,7 @@
   />
 
   <div class="color-field">
-    <Body size="XS" color="var(--spectrum-global-color-gray-700)">Color</Body>
+    <Body size="S" weight="600">Color</Body>
     <ColorPicker bind:value={color} on:change={e => (color = e.detail)} />
   </div>
 </ModalContent>

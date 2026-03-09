@@ -39,6 +39,7 @@
     type ModalAPI,
     notifications,
     PopoverAlignment,
+    Select,
     Tag,
   } from "@budibase/bbui"
   import {
@@ -787,6 +788,15 @@
     ? playbookLookup[selectedPlaybookId]?.name || ""
     : ""
 
+  $: playbookOptions = [
+    { label: "All", value: "", color: undefined },
+    ...($playbooksStore || []).map(playbook => ({
+      label: playbook.name,
+      value: playbook._id,
+      color: playbook.color,
+    })),
+  ]
+
   $: rowsWithPlaybooks = baseRows.map(row => {
     const playbook = row.playbookId ? playbookLookup[row.playbookId] : undefined
     return {
@@ -885,13 +895,22 @@
       <HomeControls
         {typeFilter}
         agentsEnabled={$featureFlags.AI_AGENTS}
-        {playbooksEnabled}
-        playbooks={$playbooksStore}
-        {selectedPlaybookId}
         on:typeChange={({ detail }) => setTypeFilter(detail)}
-        on:playbookChange={({ detail }) => (selectedPlaybookId = detail)}
       />
       <div class="controls-right">
+        {#if playbooksEnabled && $playbooksStore.length}
+          <div class="playbook-filter">
+            <Select
+              placeholder="Playbook"
+              bind:value={selectedPlaybookId}
+              options={playbookOptions}
+              getOptionLabel={option => option.label}
+              getOptionValue={option => option.value}
+              getOptionColour={option => option.color}
+              on:change={() => {}}
+            />
+          </div>
+        {/if}
         <div class="search-wrapper">
           <Icon name="magnifying-glass" size="S" />
           <input
@@ -901,27 +920,6 @@
             bind:value={searchTerm}
           />
         </div>
-        {#if playbooksEnabled}
-          <div class="playbook-actions">
-            <Button
-              secondary
-              size="M"
-              icon="upload-simple"
-              on:click={importPlaybook}
-            >
-              Import playbook
-            </Button>
-            <Button
-              secondary
-              size="M"
-              icon="download-simple"
-              disabled={!$playbooksStore.length}
-              on:click={exportPlaybook}
-            >
-              Export playbook
-            </Button>
-          </div>
-        {/if}
         <div class="create-popover-container"></div>
         <ActionMenu
           align={PopoverAlignment.Right}
@@ -965,8 +963,19 @@
           {#if playbooksEnabled}
             <MenuSeparator />
             <MenuItem icon="stack" on:click={createPlaybook}>Playbook</MenuItem>
+            <MenuItem icon="upload-simple" on:click={importPlaybook}>
+              Import playbook
+            </MenuItem>
+            <MenuItem
+              icon="download-simple"
+              on:click={exportPlaybook}
+              disabled={!$playbooksStore.length}
+            >
+              Export playbook
+            </MenuItem>
           {/if}
 
+          <MenuSeparator />
           <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
             Connection
           </MenuItem>
@@ -1160,12 +1169,12 @@
   .header-link--with-icons {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--spacing-xs);
   }
 
   .controls-row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: var(--spacing-m) var(--spacing-l);
     flex-wrap: wrap;
@@ -1177,14 +1186,13 @@
     align-items: center;
     gap: var(--spacing-m);
     margin-left: auto;
-    flex-wrap: wrap;
+    flex-shrink: 0;
     justify-content: flex-end;
   }
 
-  .controls-row .playbook-actions {
-    display: flex;
-    gap: var(--spacing-s);
-    flex-wrap: wrap;
+  .controls-row .playbook-filter {
+    flex: 0 0 auto;
+    width: 140px;
   }
 
   .controls-row .search-wrapper {
@@ -1192,12 +1200,13 @@
     align-items: center;
     gap: var(--spacing-s);
     border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 6px;
-    padding: 3px 8px;
-    min-width: 200px;
+    border-radius: var(--border-radius-s);
+    padding: var(--spacing-xs) var(--spacing-s);
+    min-width: 140px;
     height: 32px;
     box-sizing: border-box;
-    flex: 1 1 220px;
+    flex: 1 1 160px;
+    max-width: 240px;
   }
 
   .controls-row .search-input {
@@ -1206,7 +1215,7 @@
     outline: none;
     flex: 1;
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--font-size-s);
     color: var(--spectrum-global-color-gray-900);
   }
 
@@ -1214,32 +1223,29 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .controls-row .create-menu-control :global(button) {
-    border-radius: 100px;
-    padding: 7px 15px 8px;
-    height: 32px;
-    box-sizing: border-box;
-  }
-
   .create-popover-container {
     position: absolute;
   }
 
   .create-popover-container :global(.spectrum-Popover) {
-    min-width: 245px;
-    border-radius: 6px !important;
-    background: var(--background) !important;
-    border: 1px solid var(--spectrum-global-color-gray-200) !important;
-    padding: 4px !important;
-    margin-top: 4px;
-    margin-left: 2px;
+    min-width: 240px;
+    border-radius: var(--border-radius-s);
+    background: var(--background);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    padding: var(--spacing-xs);
+    margin-top: var(--spacing-xs);
   }
 
   @media (max-width: 1080px) {
     .controls-row .controls-right {
       width: 100%;
       margin-left: 0;
-      justify-content: space-between;
+      flex-shrink: 1;
+      justify-content: flex-end;
+    }
+
+    .controls-row .search-wrapper {
+      max-width: none;
     }
   }
 
@@ -1247,14 +1253,6 @@
     .controls-row .controls-right {
       flex-direction: column;
       align-items: stretch;
-    }
-
-    .controls-row .playbook-actions {
-      width: 100%;
-    }
-
-    .controls-row .playbook-actions :global(button) {
-      flex: 1 1 auto;
     }
 
     .controls-row .search-wrapper {
@@ -1267,7 +1265,6 @@
 
     .controls-row .create-menu-control :global(button) {
       width: 100%;
-      justify-content: center;
     }
   }
 
@@ -1277,7 +1274,7 @@
   }
 
   .create-popover-container :global(.spectrum-Menu-item) {
-    border-radius: 4px;
+    border-radius: var(--border-radius-s);
     margin: 0;
   }
 
@@ -1288,13 +1285,12 @@
   .create-popover-container
     :global(.spectrum-Menu-item)
     :global(.spectrum-Menu-itemLabel) {
-    font-size: 13px;
-    line-height: 17px;
+    font-size: var(--font-size-s);
     color: var(--spectrum-global-color-gray-800);
   }
 
   .create-popover-container :global(.spectrum-Menu-divider) {
-    margin: 4px 0;
+    margin: var(--spacing-xs) 0;
     background: var(--spectrum-global-color-gray-200);
   }
 </style>

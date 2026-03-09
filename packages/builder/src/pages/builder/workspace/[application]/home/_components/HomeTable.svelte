@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { Body, Icon } from "@budibase/bbui"
+  import { AbsTooltip, Body, Helpers, Icon } from "@budibase/bbui"
   import dayjs from "dayjs"
   import relativeTime from "dayjs/plugin/relativeTime"
   import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
@@ -168,9 +168,10 @@
                   <span
                     class="playbook-chip"
                     style={`--playbook-color: ${row.playbookColor || "#8CA171"}`}
+                    title={row.playbookName}
                   >
                     <span class="playbook-chip__dot"></span>
-                    {row.playbookName}
+                    <span class="playbook-chip__name">{row.playbookName}</span>
                   </span>
                 {/if}
               </div>
@@ -203,13 +204,17 @@
           </div>
 
           <div class="cell">
-            <Body size="S" color="var(--spectrum-global-color-gray-700)">
-              {#if row.updatedAt}
-                {dayjs(row.updatedAt).fromNow()}
-              {:else}
+            {#if row.updatedAt}
+              <AbsTooltip text={Helpers.getDateDisplayValue(row.updatedAt)}>
+                <Body size="S" color="var(--spectrum-global-color-gray-700)">
+                  {dayjs(row.updatedAt).fromNow()}
+                </Body>
+              </AbsTooltip>
+            {:else}
+              <Body size="S" color="var(--spectrum-global-color-gray-700)">
                 -
-              {/if}
-            </Body>
+              </Body>
+            {/if}
           </div>
 
           <div class="cell actions">
@@ -260,7 +265,7 @@
 
   .table {
     --border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 6px;
+    border-radius: var(--border-radius-s);
     overflow: hidden;
     background: transparent;
     min-width: 700px;
@@ -282,7 +287,7 @@
   .name-line {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--spacing-s);
     min-width: 0;
     flex-wrap: wrap;
   }
@@ -290,14 +295,21 @@
   .playbook-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--spacing-xs);
     border-radius: 999px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    padding: 1px 8px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    padding: 2px var(--spacing-s);
     font-size: 11px;
     font-weight: 500;
     color: var(--spectrum-global-color-gray-800);
     background: var(--spectrum-global-color-gray-75);
+    max-width: 180px;
+  }
+
+  .playbook-chip__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .playbook-chip__dot {
@@ -316,8 +328,8 @@
   }
 
   .table-header {
-    padding: 12px 12px;
-    font-size: 14px;
+    padding: 12px;
+    font-size: var(--font-size-s);
     color: var(--spectrum-global-color-gray-700);
     background: transparent;
   }
@@ -332,6 +344,7 @@
     background: transparent;
     color: inherit;
     font-family: var(--font-sans);
+    font-size: inherit;
     text-align: left;
     cursor: pointer;
   }
@@ -369,7 +382,7 @@
     padding: 9px 12px;
     text-align: left;
     border: none;
-    border-bottom: 0.5px solid var(--spectrum-global-color-gray-200);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
     background: var(--background-alt);
     transition: background 130ms ease-out;
     cursor: pointer;
@@ -420,7 +433,7 @@
   .icon-wrapper {
     width: 24px;
     height: 24px;
-    border-radius: 4px;
+    border-radius: var(--border-radius-s);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -431,7 +444,7 @@
     justify-content: flex-end;
     display: flex;
     align-items: center;
-    gap: calc(var(--spacing-xs) + 12px);
+    gap: var(--spacing-m);
   }
 
   .actions > * {
@@ -456,7 +469,7 @@
   }
 
   .empty {
-    padding: 20px 0;
+    padding: var(--spacing-l) 0;
   }
 
   @media (max-width: 900px) {
