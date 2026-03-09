@@ -401,6 +401,82 @@ describe("/playbooks", () => {
     })
   })
 
+  it("imports empty playbooks without requiring docs", async () => {
+    await withPlaybooksEnabled(async () => {
+      const { playbook } = await config.api.playbook.create({
+        name: "Operations",
+      })
+
+      const body = await config.api.playbook.export(playbook._id)
+      const destinationWorkspace = await config.api.workspace.create({
+        name: "Imported workspace",
+      })
+
+      await config.withHeaders(
+        { [Header.APP_ID]: destinationWorkspace.appId },
+        async () => {
+          const imported = await config.api.playbook.import(body)
+          expect(imported.resources).toEqual({
+            playbook: [imported.playbook._id],
+          })
+        }
+      )
+    })
+  })
+
+  it("imports row action dependencies with remapped automation references", async () => {
+    await withPlaybooksEnabled(async () => {
+      const { playbook } = await config.api.playbook.create({
+        name: "Operations",
+      })
+      const table = await config.api.table.save({
+        ...basicTable(),
+        playbookId: playbook._id,
+      })
+      const rowAction = await config.api.rowAction.save(table._id!, {
+        name: "Approve",
+      })
+
+      const body = await config.api.playbook.export(playbook._id)
+      const destinationWorkspace = await config.api.workspace.create({
+        name: "Imported workspace",
+      })
+
+      await config.withHeaders(
+        { [Header.APP_ID]: destinationWorkspace.appId },
+        async () => {
+          const imported = await config.api.playbook.import(body)
+          expect(imported.resources.table).toHaveLength(1)
+          expect(imported.resources.automation).toHaveLength(1)
+          expect(imported.resources.row_action).toHaveLength(1)
+
+          const importedRowActions = await config.api.rowAction.find(
+            imported.resources.table?.[0]!
+          )
+          const importedAction = Object.values(importedRowActions.actions)[0]
+
+          expect(importedAction).toBeDefined()
+          expect(importedAction.tableId).toBe(imported.resources.table?.[0])
+          expect(importedAction.automationId).toBe(
+            imported.resources.automation?.[0]
+          )
+          expect(importedAction.id).not.toBe(rowAction.id)
+
+          const importedAutomation = await config.api.automation.get(
+            imported.resources.automation?.[0]!
+          )
+          const triggerInputs = importedAutomation.definition.trigger
+            .inputs as {
+            tableId?: string
+            rowActionId?: string
+          }
+          expect(triggerInputs.tableId).toBe(imported.resources.table?.[0])
+          expect(triggerInputs.rowActionId).toBe(importedAction.id)
+        }
+      )
+    })
+  })
+
   it("imports exported playbooks additively into another workspace", async () => {
     await withPlaybooksEnabled(async () => {
       const { playbook } = await config.api.playbook.create({

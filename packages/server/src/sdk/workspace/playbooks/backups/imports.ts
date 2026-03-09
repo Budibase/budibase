@@ -1,4 +1,4 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
   AnyDocument,
   Datasource,
@@ -9,14 +9,20 @@ import {
   PlaybookPackageDependencyIndex,
   PlaybookPackageManifest,
   ResourceType,
+  RowActionPermissions,
+  TableRowActions,
+  SEPARATOR,
+  VirtualDocumentType,
   prefixed,
 } from "@budibase/types"
 import fsp from "fs/promises"
 import { join, relative } from "path"
 import {
+  extractTableIdFromRowActionsID,
   generateAutomationID,
   generateDatasourceID,
   generateQueryID,
+  generateRowActionsID,
   generateScreenID,
   generateTableID,
 } from "../../../../db/utils"
@@ -35,8 +41,19 @@ const IMPORT_ORDER: ResourceType[] = [
   ResourceType.TABLE,
   ResourceType.QUERY,
   ResourceType.AUTOMATION,
+  ResourceType.ROW_ACTION,
   ResourceType.WORKSPACE_APP,
   ResourceType.SCREEN,
+]
+
+const PREASSIGNED_IMPORT_TYPES: ResourceType[] = [
+  ResourceType.DATASOURCE,
+  ResourceType.TABLE,
+  ResourceType.AUTOMATION,
+  ResourceType.ROW_ACTION,
+  ResourceType.WORKSPACE_APP,
+  ResourceType.SCREEN,
+  ResourceType.QUERY,
 ]
 
 interface ImportedDoc {
@@ -51,6 +68,11 @@ interface ExtractedPlaybookPackage {
   playbook: Playbook
   dependencyIndex: PlaybookPackageDependencyIndex
   docs: ImportedDoc[]
+}
+
+interface InsertedDocRef {
+  _id: string
+  _rev: string
 }
 
 const readJsonFile = async <T>(filePath: string): Promise<T> => {
@@ -88,6 +110,18 @@ const getResourceTypeForDocPath = (
   return resourceType as ResourceType
 }
 
+const remapObjectKeys = <T>(
+  value: Record<string, T>,
+  idMap: Map<string, string>
+) => {
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nestedValue]) => [
+      idMap.get(key) || key,
+      nestedValue,
+    ])
+  )
+}
+
 const remapValue = (value: unknown, idMap: Map<string, string>): unknown => {
   if (typeof value === "string") {
     return idMap.get(value) || value
@@ -114,6 +148,34 @@ const sanitizeImportedDoc = (
 ): AnyDocument => {
   const remapped = remapValue(structuredClone(doc), idMap) as AnyDocument
   delete remapped._rev
+
+  if (resourceType === ResourceType.ROW_ACTION) {
+    const rowActions = remapped as TableRowActions
+    rowActions.actions = Object.fromEntries(
+      Object.entries((doc as TableRowActions).actions).map(
+        ([actionId, action]) => {
+          const permissions = (action.permissions || {
+            table: { runAllowed: true },
+            views: {},
+          }) as RowActionPermissions
+          return [
+            idMap.get(actionId) || actionId,
+            {
+              ...(remapValue(action, idMap) as typeof action),
+              permissions: {
+                ...permissions,
+                views: remapObjectKeys<RowActionPermissions["views"][string]>(
+                  permissions.views || {},
+                  idMap
+                ),
+              },
+            },
+          ]
+        }
+      )
+    )
+    return rowActions
+  }
 
   if (resourceType === ResourceType.AUTOMATION) {
     remapped.appId = workspaceId
@@ -152,6 +214,16 @@ const generateImportedId = (
     }
     case ResourceType.AUTOMATION:
       return generateAutomationID()
+    case ResourceType.ROW_ACTION: {
+      const tableId = idMap.get(extractTableIdFromRowActionsID(doc._id!))
+      if (!tableId) {
+        throw new HTTPError(
+          `Playbook import could not remap table for row actions '${doc._id}'.`,
+          400
+        )
+      }
+      return generateRowActionsID(tableId)
+    }
     case ResourceType.WORKSPACE_APP:
       return docIds.generateWorkspaceAppID()
     case ResourceType.SCREEN:
@@ -180,6 +252,105 @@ const validateManifest = (manifest: PlaybookPackageManifest) => {
       400
     )
   }
+}
+
+const validateDependencyIndex = (
+  playbook: Playbook,
+  dependencyIndex: PlaybookPackageDependencyIndex,
+  docs: ImportedDoc[],
+  manifest: PlaybookPackageManifest
+) => {
+  if (dependencyIndex.rootPlaybookId !== playbook._id) {
+    throw new HTTPError(
+      "Playbook package dependency index does not match playbook.json.",
+      400
+    )
+  }
+
+  const actualDocIds = new Set(docs.map(doc => doc.doc._id!))
+
+  if (!dependencyIndex.resources[dependencyIndex.rootPlaybookId]) {
+    throw new HTTPError(
+      "Playbook package docs do not match dependency-index.json.",
+      400
+    )
+  }
+
+  if (
+    dependencyIndex.directMembers.some(member => !actualDocIds.has(member.id))
+  ) {
+    throw new HTTPError(
+      "Playbook package docs do not match dependency-index.json.",
+      400
+    )
+  }
+
+  const countedResources = docs.reduce<Partial<Record<ResourceType, number>>>(
+    (acc, doc) => {
+      acc[doc.resourceType] = (acc[doc.resourceType] || 0) + 1
+      return acc
+    },
+    { [ResourceType.PLAYBOOK]: 1 }
+  )
+
+  for (const [resourceType, count] of Object.entries(
+    manifest.resourcesByType
+  )) {
+    if ((countedResources[resourceType as ResourceType] || 0) !== count) {
+      throw new HTTPError(
+        `Playbook package resource count mismatch for '${resourceType}'.`,
+        400
+      )
+    }
+  }
+}
+
+const assignImportedIds = (docs: ImportedDoc[], idMap: Map<string, string>) => {
+  for (const resourceType of PREASSIGNED_IMPORT_TYPES) {
+    for (const importedDoc of docs.filter(
+      doc => doc.resourceType === resourceType
+    )) {
+      idMap.set(
+        importedDoc.doc._id!,
+        generateImportedId(resourceType, importedDoc.doc, idMap)
+      )
+
+      if (resourceType === ResourceType.ROW_ACTION) {
+        for (const actionId of Object.keys(
+          (importedDoc.doc as TableRowActions).actions || {}
+        )) {
+          idMap.set(
+            actionId,
+            `${VirtualDocumentType.ROW_ACTION}${SEPARATOR}${utils.newid()}`
+          )
+        }
+      }
+    }
+  }
+}
+
+const bulkInsertDocs = async (
+  docs: AnyDocument[],
+  insertedDocs: InsertedDocRef[]
+) => {
+  const response = (await context.getWorkspaceDB().bulkDocs(docs)) as Array<{
+    id?: string
+    rev?: string
+    error?: string
+  }>
+
+  response.forEach((result, index) => {
+    if (result.error || !result.id || !result.rev) {
+      throw new HTTPError(
+        `Playbook import failed while saving '${docs[index]._id}'.`,
+        400
+      )
+    }
+    insertedDocs.push({
+      _id: result.id,
+      _rev: result.rev,
+    })
+  })
 }
 
 async function extractPlaybookPackage(
@@ -224,17 +395,18 @@ async function extractPlaybookPackage(
           400
         )
       }),
-      fsp.access(docsPath).catch(() => {
-        throw new HTTPError("Playbook package is missing docs/.", 400)
-      }),
     ])
 
-    const [manifest, playbook, dependencyIndex, docFiles] = await Promise.all([
+    const [manifest, playbook, dependencyIndex] = await Promise.all([
       readJsonFile<PlaybookPackageManifest>(manifestPath),
       readJsonFile<Playbook>(playbookPath),
       readJsonFile<PlaybookPackageDependencyIndex>(dependencyIndexPath),
-      readDirectoryRecursively(docsPath),
     ])
+
+    const docFiles = await fsp
+      .access(docsPath)
+      .then(() => readDirectoryRecursively(docsPath))
+      .catch(() => [])
 
     validateManifest(manifest)
 
@@ -247,6 +419,8 @@ async function extractPlaybookPackage(
           doc: await readJsonFile<AnyDocument>(filePath),
         }))
     )
+
+    validateDependencyIndex(playbook, dependencyIndex, docs, manifest)
 
     return {
       tmpPath,
@@ -288,8 +462,10 @@ export async function importPlaybook(
   }
 
   const extracted = await extractPlaybookPackage(file, opts?.encryptPassword)
+  const insertedDocs: InsertedDocRef[] = []
+  let importedPlaybook: Playbook | undefined
   try {
-    const importedPlaybook = await sdk.playbooks.create({
+    importedPlaybook = await sdk.playbooks.create({
       name: extracted.playbook.name,
       description: extracted.playbook.description,
       color: extracted.playbook.color,
@@ -299,16 +475,7 @@ export async function importPlaybook(
       [extracted.playbook._id!, importedPlaybook._id!],
     ])
 
-    for (const resourceType of IMPORT_ORDER) {
-      for (const importedDoc of extracted.docs.filter(
-        doc => doc.resourceType === resourceType
-      )) {
-        idMap.set(
-          importedDoc.doc._id!,
-          generateImportedId(resourceType, importedDoc.doc, idMap)
-        )
-      }
-    }
+    assignImportedIds(extracted.docs, idMap)
 
     const resources: Partial<Record<ResourceType, string[]>> = {
       [ResourceType.PLAYBOOK]: [importedPlaybook._id!],
@@ -332,7 +499,7 @@ export async function importPlaybook(
         continue
       }
 
-      await context.getWorkspaceDB().bulkDocs(docsToInsert)
+      await bulkInsertDocs(docsToInsert, insertedDocs)
       resources[resourceType] = docsToInsert.map(doc => doc._id!)
     }
 
@@ -355,6 +522,19 @@ export async function importPlaybook(
       unsupportedContent: extracted.manifest.unsupportedContent,
       requirements,
     }
+  } catch (err) {
+    if (insertedDocs.length) {
+      await context.getWorkspaceDB().bulkRemove(insertedDocs, {
+        silenceErrors: true,
+      })
+    }
+    if (importedPlaybook?._id && importedPlaybook._rev) {
+      await context
+        .getWorkspaceDB()
+        .remove(importedPlaybook._id, importedPlaybook._rev)
+        .catch(() => {})
+    }
+    throw err
   } finally {
     await fsp.rm(extracted.tmpPath, { recursive: true, force: true })
   }

@@ -200,7 +200,14 @@ export async function exportPlaybook(
   }
 
   const graph = await sdk.resources.getResourcesInfo()
-  const playbookDependencies = graph[playbookId]?.dependencies || []
+  const playbookDependencies = Array.from(
+    new Map(
+      (graph[playbookId]?.dependencies || []).map(resource => [
+        resource.id,
+        resource,
+      ])
+    ).values()
+  )
   const directMembers = await getDirectMembers(playbookId)
   const unsupportedContent = await getUnsupportedContent(playbookId)
 
@@ -217,11 +224,12 @@ export async function exportPlaybook(
   const dependencyIndex: PlaybookPackageDependencyIndex = {
     rootPlaybookId: playbookId,
     directMembers,
-    resources: Object.fromEntries(
-      [playbookId, ...docsToExport]
-        .filter(id => !!graph[id])
-        .map(id => [id, graph[id]])
-    ),
+    resources: {
+      [playbookId]: graph[playbookId] || { dependencies: [] },
+      ...Object.fromEntries(
+        docsToExport.filter(id => !!graph[id]).map(id => [id, graph[id]])
+      ),
+    },
   }
 
   const manifest = buildManifest(
@@ -241,6 +249,7 @@ export async function exportPlaybook(
     join(tmpPath, PLAYBOOK_DEPENDENCY_INDEX_FILE),
     dependencyIndex
   )
+  await fsp.mkdir(join(tmpPath, PLAYBOOK_DOCS_DIRECTORY), { recursive: true })
 
   for (const doc of exportedDocs) {
     const type = typeByResourceId.get(doc._id!)

@@ -12,7 +12,19 @@ const baseSchema = {
 
 builderRoutes
   .get("/api/playbooks", playbooksEnabled, controller.fetch)
-  .post("/api/playbooks/import", playbooksEnabled, controller.importBundle)
+  .post(
+    "/api/playbooks/import",
+    playbooksEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        encryptPassword: Joi.string().optional().allow(""),
+      }),
+      {
+        allowUnknown: false,
+      }
+    ),
+    controller.importBundle
+  )
   .post(
     "/api/playbooks/:id/export",
     playbooksEnabled,

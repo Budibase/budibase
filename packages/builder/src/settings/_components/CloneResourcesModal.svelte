@@ -33,6 +33,7 @@
     toWorkspaceId = undefined
     copyRows = false
     selectedResources = {
+      [ResourceType.PLAYBOOK]: [],
       [ResourceType.DATASOURCE]: [],
       [ResourceType.TABLE]: [],
       [ResourceType.ROW_ACTION]: [],
@@ -55,6 +56,7 @@
   let copyRows = false
 
   let selectedResources: Record<ResourceType, DataType[]> = {
+    [ResourceType.PLAYBOOK]: [],
     [ResourceType.DATASOURCE]: [],
     [ResourceType.TABLE]: [],
     [ResourceType.ROW_ACTION]: [],
@@ -137,6 +139,11 @@
     }
   }
   $: resourceTypesToDisplay = {
+    [ResourceType.PLAYBOOK]: {
+      displayName: "Playbooks",
+      data: [],
+      type: ResourceType.PLAYBOOK,
+    },
     [ResourceType.TABLE]: {
       displayName: "Tables",
       data: $tables.list

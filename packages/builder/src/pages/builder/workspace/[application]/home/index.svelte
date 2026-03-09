@@ -8,9 +8,11 @@
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import AssignPlaybookModal from "./_components/AssignPlaybookModal.svelte"
   import CreatePlaybookModal from "./_components/CreatePlaybookModal.svelte"
+  import ExportPlaybookModal from "./_components/ExportPlaybookModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
   import HomeMetrics from "./_components/HomeMetrics.svelte"
   import HomeTable from "./_components/HomeTable.svelte"
+  import ImportPlaybookModal from "./_components/ImportPlaybookModal.svelte"
   import {
     appStore,
     automationStore,
@@ -104,6 +106,8 @@
 
   let createPlaybookModal: ModalAPI
   let assignPlaybookModal: ModalAPI
+  let exportPlaybookModal: ModalAPI
+  let importPlaybookModal: ModalAPI
 
   let typeFilter: HomeType = "all"
   let selectedPlaybookId = ""
@@ -356,6 +360,14 @@
     createPlaybookModal?.show()
   }
 
+  const exportPlaybook = () => {
+    exportPlaybookModal?.show()
+  }
+
+  const importPlaybook = () => {
+    importPlaybookModal?.show()
+  }
+
   const goToCreate = (target: "data/new" | "apis/new") => {
     goto(url(`../${target}`))
   }
@@ -507,6 +519,46 @@
     } catch (error) {
       console.error(error)
       notifications.error("Unable to create playbook")
+    }
+  }
+
+  const handleExportPlaybook = async ({
+    id,
+    encryptPassword,
+  }: {
+    id: string
+    encryptPassword?: string
+  }) => {
+    try {
+      await playbooksStore.exportPlaybook(id, { encryptPassword })
+      exportPlaybookModal?.hide()
+    } catch (error: any) {
+      console.error(error)
+      notifications.error(error.message || "Unable to export playbook")
+    }
+  }
+
+  const handleImportPlaybook = async ({
+    file,
+    encryptPassword,
+  }: {
+    file: File
+    encryptPassword?: string
+  }) => {
+    try {
+      const response = await playbooksStore.importPlaybook(file, {
+        encryptPassword,
+      })
+      await Promise.all([
+        workspaceAppStore.refresh(),
+        automationStore.actions.fetch(),
+        loadMetrics(),
+      ])
+      importPlaybookModal?.hide()
+      notifications.success(`Imported playbook '${response.playbook.name}'`)
+    } catch (error: any) {
+      console.error(error)
+      notifications.error(error.message || "Unable to import playbook")
     }
   }
 
@@ -849,6 +901,27 @@
             bind:value={searchTerm}
           />
         </div>
+        {#if playbooksEnabled}
+          <div class="playbook-actions">
+            <Button
+              secondary
+              size="M"
+              icon="upload-simple"
+              on:click={importPlaybook}
+            >
+              Import playbook
+            </Button>
+            <Button
+              secondary
+              size="M"
+              icon="download-simple"
+              disabled={!$playbooksStore.length}
+              on:click={exportPlaybook}
+            >
+              Export playbook
+            </Button>
+          </div>
+        {/if}
         <div class="create-popover-container"></div>
         <ActionMenu
           align={PopoverAlignment.Right}
@@ -940,6 +1013,20 @@
       row={selectedRow}
       playbooks={$playbooksStore}
       on:confirm={({ detail }) => assignPlaybook(detail)}
+    />
+  </Modal>
+
+  <Modal bind:this={exportPlaybookModal}>
+    <ExportPlaybookModal
+      playbooks={$playbooksStore}
+      {selectedPlaybookId}
+      on:confirm={({ detail }) => handleExportPlaybook(detail)}
+    />
+  </Modal>
+
+  <Modal bind:this={importPlaybookModal}>
+    <ImportPlaybookModal
+      on:confirm={({ detail }) => handleImportPlaybook(detail)}
     />
   </Modal>
 {/if}
@@ -1094,6 +1181,12 @@
     justify-content: flex-end;
   }
 
+  .controls-row .playbook-actions {
+    display: flex;
+    gap: var(--spacing-s);
+    flex-wrap: wrap;
+  }
+
   .controls-row .search-wrapper {
     display: flex;
     align-items: center;
@@ -1154,6 +1247,14 @@
     .controls-row .controls-right {
       flex-direction: column;
       align-items: stretch;
+    }
+
+    .controls-row .playbook-actions {
+      width: 100%;
+    }
+
+    .controls-row .playbook-actions :global(button) {
+      flex: 1 1 auto;
     }
 
     .controls-row .search-wrapper {
