@@ -1,4 +1,4 @@
-import { HTTPError } from "@budibase/backend-core"
+import { HTTPError, roles } from "@budibase/backend-core"
 import {
   ChatApp,
   ChatAppAgent,
@@ -16,11 +16,59 @@ export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
   }
 }
 
+const getUserRoleId = (ctx: UserCtx) =>
+  ctx.roleId || ctx.user?.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
+
+export const canAccessChatAppAgentForUser = async (
+  ctx: UserCtx,
+  chatAgent: ChatAppAgent,
+  accessController?: InstanceType<typeof roles.AccessController>
+) => {
+  if (usersSdk.users.isAdminOrBuilder(ctx.user)) {
+    return true
+  }
+  if (!chatAgent.roleId) {
+    return true
+  }
+
+  const roleAccessController = accessController || new roles.AccessController()
+  return roleAccessController.hasAccess(chatAgent.roleId, getUserRoleId(ctx))
+}
+
+export const getAccessibleEnabledChatAppAgents = async (
+  ctx: UserCtx,
+  chatApp: ChatApp
+) => {
+  const enabledAgents = (chatApp.agents || []).filter(agent => agent.isEnabled)
+  const accessibleEnabledAgents: ChatAppAgent[] = []
+  const accessController = new roles.AccessController()
+  for (const agent of enabledAgents) {
+    if (await canAccessChatAppAgentForUser(ctx, agent, accessController)) {
+      accessibleEnabledAgents.push(agent)
+    }
+  }
+  return accessibleEnabledAgents
+}
+
+const filterChatAppAgentsByAccess = async (ctx: UserCtx, chatApp: ChatApp) => {
+  const accessibleAgents = await getAccessibleEnabledChatAppAgents(ctx, chatApp)
+  const accessibleAgentIds = new Set(
+    accessibleAgents.map(agent => agent.agentId)
+  )
+
+  return {
+    ...chatApp,
+    agents: (chatApp.agents || []).filter(
+      agent => !agent.isEnabled || accessibleAgentIds.has(agent.agentId)
+    ),
+  }
+}
+
 export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
   const chatApp = await sdk.ai.chatApps.getSingle()
   if (chatApp) {
     assertChatAppIsLiveForUser(ctx, chatApp)
-    ctx.body = chatApp
+    ctx.body = await filterChatAppAgentsByAccess(ctx, chatApp)
     return
   }
 
@@ -54,7 +102,7 @@ export async function fetchChatAppById(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
-  ctx.body = chatApp
+  ctx.body = await filterChatAppAgentsByAccess(ctx, chatApp)
 }
 
 export async function fetchChatAppAgents(
@@ -67,10 +115,12 @@ export async function fetchChatAppAgents(
 
   const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
   assertChatAppIsLiveForUser(ctx, chatApp)
+  const accessibleEnabledAgents = await getAccessibleEnabledChatAppAgents(
+    ctx,
+    chatApp
+  )
   const configuredAgentIds = new Set(
-    (chatApp.agents || [])
-      .filter(agent => agent.isEnabled === true)
-      .map(agent => agent.agentId)
+    accessibleEnabledAgents.map(agent => agent.agentId)
   )
 
   if (configuredAgentIds.size === 0) {
