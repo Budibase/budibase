@@ -9,8 +9,8 @@ export async function generateAgentInstructions(
   ctx: Ctx<GenerateAgentInstructionsRequest, GenerateAgentInstructionsResponse>
 ) {
   const { aiconfigId, prompt, agentName, goal } = ctx.request.body
-  const toolNames = Array.isArray(ctx.request.body.toolNames)
-    ? ctx.request.body.toolNames
+  const toolReferences = Array.isArray(ctx.request.body.toolReferences)
+    ? ctx.request.body.toolReferences
     : []
 
   if (!aiconfigId) {
@@ -28,7 +28,7 @@ export async function generateAgentInstructions(
     prompt,
     agentName,
     goal,
-    toolNames,
+    toolReferences,
   })
 
   ctx.body = { instructions }

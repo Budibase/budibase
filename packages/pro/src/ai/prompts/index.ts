@@ -61,18 +61,20 @@ interface GenerateAgentInstructionsOptions {
   prompt: string
   agentName?: string
   goal?: string
-  toolNames: string[]
+  toolReferences: string[]
 }
 
 export function generateAgentInstructionsPrompt({
   prompt,
   agentName,
   goal,
-  toolNames = [],
+  toolReferences = [],
 }: GenerateAgentInstructionsOptions) {
   const toolsSection =
-    toolNames.length > 0
-      ? `Enabled tools:\n${toolNames.map(name => `- ${name}`).join("\n")}`
+    toolReferences.length > 0
+      ? `Enabled tools (use these exact Handlebars references when mentioning tools):\n${toolReferences
+          .map(reference => `- ${reference}`)
+          .join("\n")}`
       : "Enabled tools:\n- None"
 
   return new LLMRequest()
@@ -81,6 +83,10 @@ export function generateAgentInstructionsPrompt({
 Return only the final instructions text.
 Do not include explanations, preamble, commentary, or markdown code fences.
 Do not include reasoning, thinking traces, internal notes, XML-style tags, or system reminder blocks.
+Use the exact enabled tool references provided by the user when referring to tools.
+If tools are enabled, reflect them concretely in the **Actions** and **Rules** sections.
+Do not mention tools that are not in the enabled tools list.
+If no tools are enabled, do not instruct the agent to use tools.
 
 The output must use exactly these sections and headings:
 
@@ -115,7 +121,9 @@ ${agentName?.trim() || "Not provided"}
 Goal:
 ${goal?.trim() || "Not provided"}
 
-${toolsSection}`)
+${toolsSection}
+
+Make sure the generated instructions use the enabled tool references exactly as written above, for example {{ budibase.example.run }}.`)
 }
 
 export function translate(text: string, language: string) {

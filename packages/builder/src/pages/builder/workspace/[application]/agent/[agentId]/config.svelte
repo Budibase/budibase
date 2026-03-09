@@ -236,10 +236,11 @@ Any constraints the agent must follow.
       )
       .filter((tool): tool is AgentTool => !!tool)
   )
-  let enabledToolNames = $derived(
-    includedToolsWithDetails.map(tool =>
-      tool.sourceType === ToolType.SEARCH ? "Web search" : formatToolLabel(tool)
-    )
+  let enabledToolReferences = $derived(
+    includedToolsWithDetails
+      .map(tool => tool.readableBinding)
+      .filter((binding): binding is string => !!binding)
+      .map(binding => `{{ ${binding} }}`)
   )
 
   let filteredTools = $derived.by(() => {
@@ -658,7 +659,7 @@ Any constraints the agent must follow.
         prompt: generateInstructionsPrompt,
         agentName: draft.name,
         goal: draft.goal,
-        toolNames: enabledToolNames,
+        toolReferences: enabledToolReferences,
       })
 
       console.log("Generated agent instructions:", instructions)

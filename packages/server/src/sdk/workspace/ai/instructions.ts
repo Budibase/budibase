@@ -27,13 +27,13 @@ export async function generateAgentInstructions({
   prompt,
   agentName,
   goal,
-  toolNames,
+  toolReferences,
 }: GenerateAgentInstructionsRequest) {
   const request = ai.generateAgentInstructionsPrompt({
     prompt,
     agentName,
     goal,
-    toolNames,
+    toolReferences,
   })
 
   const systemMessage = request.messages.find(
