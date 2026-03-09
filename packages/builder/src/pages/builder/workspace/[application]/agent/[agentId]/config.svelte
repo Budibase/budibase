@@ -800,14 +800,17 @@ Any constraints the agent must follow.
 </div>
 
 <div class="section">
-  <div class="section-header">
-    <Body size="S" color="var(--spectrum-global-color-gray-900)"
-      >Instructions</Body
-    >
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Set the rules for how the AI agent responds, uses tools, and structures
-      output.
-    </Body>
+  <div class="section-header section-header-actions">
+    <div class="section-header-copy">
+      <Body size="S" color="var(--spectrum-global-color-gray-900)"
+        >Instructions</Body
+      >
+      <Body size="S" color="var(--spectrum-global-color-gray-700)">
+        Set the rules for how the AI agent responds, uses tools, and structures
+        output.
+      </Body>
+    </div>
+    <Button secondary size="S" icon="sparkle">Generate</Button>
   </div>
   <div class="prompt-editor-wrapper">
     <div class="prompt-editor">
@@ -1053,6 +1056,21 @@ Any constraints the agent must follow.
   }
 
   .section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 600px;
+  }
+
+  .section-header-actions {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    max-width: none;
+  }
+
+  .section-header-copy {
     display: flex;
     flex-direction: column;
     gap: 2px;
