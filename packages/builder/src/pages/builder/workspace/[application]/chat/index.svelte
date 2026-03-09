@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Button, notifications } from "@budibase/bbui"
+  import { Constants } from "@budibase/frontend-core"
   import TopBar from "@/components/common/TopBar.svelte"
   import {
     agentsStore,
@@ -19,6 +20,7 @@
     agentId: string
     isEnabled: boolean
     isDefault: boolean
+    roleId?: string
     conversationStarters?: { prompt: string }[]
   }
 
@@ -85,6 +87,7 @@
             agentId,
             isEnabled: true,
             isDefault: existing?.isDefault ?? false,
+            roleId: existing?.roleId || Constants.Roles.BASIC,
           },
         ]
       : current.map(agent =>
@@ -113,7 +116,15 @@
     const hasAgent = current.some(agent => agent.agentId === agentId)
     const baseAgents = hasAgent
       ? current
-      : [...current, { agentId, isEnabled: true, isDefault: false }]
+      : [
+          ...current,
+          {
+            agentId,
+            isEnabled: true,
+            isDefault: false,
+            roleId: Constants.Roles.BASIC,
+          },
+        ]
 
     const nextAgents: ChatAgentConfig[] = baseAgents.map(agent => ({
       ...agent,
@@ -130,7 +141,46 @@
       return
     }
 
-    await chatAppsStore.ensureChatApp(agentId, workspaceId)
+    const chatApp = await chatAppsStore.ensureChatApp(agentId, workspaceId)
+    if (!chatApp) {
+      return
+    }
+
+    const chatAgent = (chatApp.agents || []).find(
+      agent => agent.agentId === agentId
+    )
+    if (!chatAgent || chatAgent.roleId) {
+      return
+    }
+
+    await chatAppsStore.upsertAgentConfig({
+      agentId,
+      updates: { roleId: Constants.Roles.BASIC },
+      workspaceId,
+    })
+  }
+
+  const handleUpdateAccessRole = async (agentId: string, roleId?: string) => {
+    const workspaceId = $params.application
+    if (!workspaceId || !agentId) {
+      return
+    }
+
+    await chatAppsStore.ensureChatApp(undefined, workspaceId)
+
+    const current = chatAgents
+    const hasAgent = current.some(agent => agent.agentId === agentId)
+    if (!hasAgent) {
+      return
+    }
+
+    const nextAgents: ChatAgentConfig[] = current.map(agent =>
+      agent.agentId === agentId
+        ? { ...agent, roleId: roleId || Constants.Roles.BASIC }
+        : agent
+    )
+
+    await chatAppsStore.updateAgents(nextAgents)
   }
 
   const handleUpdateConversationStarters = async (
@@ -217,6 +267,7 @@
       {handleAvailabilityToggle}
       {handleDefaultToggle}
       {handleAddAgent}
+      {handleUpdateAccessRole}
       {handleUpdateConversationStarters}
     />
 
