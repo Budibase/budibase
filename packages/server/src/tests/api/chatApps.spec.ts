@@ -127,6 +127,59 @@ describe("chat apps validation", () => {
 
     expect(res.status).toBe(400)
   })
+
+  it("persists roleId for agents", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        },
+      ],
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.agents[0].roleId).toBe(roles.BUILTIN_ROLE_IDS.BASIC)
+  })
+
+  it("normalizes empty roleId to unrestricted", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          roleId: "   ",
+        },
+      ],
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.agents[0].roleId).toBeUndefined()
+  })
+
+  it("rejects non-string roleId", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          roleId: 123,
+        },
+      ],
+    })
+
+    expect(res.status).toBe(400)
+  })
 })
 
 describe("chat apps create validation", () => {
@@ -162,6 +215,7 @@ describe("chat route auth split", () => {
   let basicUser: User
   let agentId: string
   let disabledAgentId: string
+  let restrictedAgentId: string
 
   beforeAll(async () => {
     await config.init("chat-route-auth-split")
@@ -204,11 +258,30 @@ describe("chat route auth split", () => {
         await db.put(disabledAgent)
         disabledAgentId = disabledAgent._id!
 
+        const restrictedAgent: Agent = {
+          _id: docIds.generateAgentID(),
+          name: "Restricted support agent",
+          aiconfig: "",
+          live: true,
+          icon: "robot",
+          iconColor: "#a56f6f",
+          createdAt: now,
+          enabledTools: [],
+        }
+        await db.put(restrictedAgent)
+        restrictedAgentId = restrictedAgent._id!
+
         const doc: ChatApp = {
           _id: docIds.generateChatAppID(),
           agents: [
             { agentId, isEnabled: true, isDefault: true },
             { agentId: disabledAgentId, isEnabled: false, isDefault: false },
+            {
+              agentId: restrictedAgentId,
+              isEnabled: true,
+              isDefault: false,
+              roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+            },
           ],
           live: true,
           createdAt: now,
@@ -274,6 +347,11 @@ describe("chat route auth split", () => {
 
     expect(res.status).toBe(200)
     expect(res.body?._id).toBe(chatApp._id)
+    expect(
+      (res.body.agents || [])
+        .filter((agent: { isEnabled: boolean }) => agent.isEnabled)
+        .map((agent: { agentId: string }) => agent.agentId)
+    ).not.toContain(restrictedAgentId)
   })
 
   it("allows basic users to access GET /api/chatapps/:chatAppId", async () => {
@@ -346,6 +424,57 @@ describe("chat route auth split", () => {
     expect(
       res.body.agents.map((agent: { _id: string }) => agent._id)
     ).not.toContain(disabledAgentId)
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).not.toContain(restrictedAgentId)
+  })
+
+  it("allows builders to see role-restricted agents", async () => {
+    const headers = await headersForUser(config.getUser())
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/agents`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).toContain(restrictedAgentId)
+  })
+
+  it("hides role-restricted chat links in /api/client/chatapps", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .get("/api/client/chatapps")
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    const currentChatEntries = res.body.chatApps.filter(
+      (entry: { chatAppId: string }) => entry.chatAppId === chatApp._id
+    )
+    expect(
+      currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
+    ).toContain(agentId)
+    expect(
+      currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
+    ).not.toContain(restrictedAgentId)
+  })
+
+  it("includes role-restricted chat links for builders in /api/client/chatapps", async () => {
+    const headers = await headersForUser(config.getUser())
+    const res = await config
+      .getRequest()!
+      .get("/api/client/chatapps")
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    const currentChatEntries = res.body.chatApps.filter(
+      (entry: { chatAppId: string }) => entry.chatAppId === chatApp._id
+    )
+    expect(
+      currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
+    ).toContain(restrictedAgentId)
   })
 
   it("blocks basic users from PUT /api/chatapps/:chatAppId", async () => {
@@ -431,6 +560,21 @@ describe("chat route auth split", () => {
     expect(res.body.agentId).toBe(agentId)
   })
 
+  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations for role-restricted agents", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId: restrictedAgentId,
+        title: "restricted conversation",
+      })
+
+    expect(res.status).toBe(403)
+  })
+
   it("allows basic users to access DELETE /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
     const headers = await headersForUser(basicUser)
     const conversation = await createConversation("delete conversation")
@@ -474,5 +618,21 @@ describe("chat route auth split", () => {
     expect(res.status).toBe(403)
 
     await setChatAppLive(true)
+  })
+
+  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations/:chatConversationId/stream for role-restricted agents", async () => {
+    const headers = await headersForUser(basicUser)
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId: restrictedAgentId,
+        messages: [],
+      })
+
+    expect(res.status).toBe(403)
   })
 })

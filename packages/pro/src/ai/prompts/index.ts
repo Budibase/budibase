@@ -192,6 +192,10 @@ Always return at least 2 tables, and define only one side of relationships using
 Exclude id, created_at, and updated_at (Budibase adds them).
 Include a variety of column types: text, dropdown, date, number.
 Add at least one formula column, one attachment, and one multi-attachment column across the tables.
+Use the exact Budibase field type names from the schema.
+Single attachment must use type "attachment_single".
+Multi-attachment must use type "attachment", never "attachments".
+Multi-image must use type "attachment" with subtype "image".
 Budibase handles reverse relationships and many-to-many links — never define join tables or reverse fields.
 Never reference pre-existing/internal Budibase tables in relationships. Relationships must only reference table names generated in this same response.
 You may specify foreignColumnName, but do not create that field manually.
@@ -201,7 +205,19 @@ You may specify foreignColumnName, but do not create that field manually.
 }
 
 export function generateAIColumns() {
-  const tablesMessage = `Given the generated schema, add only one field of type "AI" to relevant tables to add value to the Budibase user.`
+  const tablesMessage = `
+Given the generated schema, add only one field of type "ai" to relevant tables to add value to the Budibase user.
+Use the exact Budibase AI operation enum values from the schema.
+The field type itself must be exactly "ai" in lowercase, never "AI".
+- translation must use operation "TRANSLATE"
+- categorisation must use operation "CATEGORISE_TEXT"
+- summarisation must use operation "SUMMARISE_TEXT"
+Do not use lowercase operation names like "translate", "categorize", or "summarize".
+For "TRANSLATE", provide both "column" and "language".
+For "CATEGORISE_TEXT", provide both "columns" and "categories".
+For "SUMMARISE_TEXT", provide "columns".
+Only use table keys and column names that exist in the generated schema.
+`
 
   return new LLMRequest().addSystemMessage(tablesMessage)
 }
@@ -211,6 +227,12 @@ export function generateData() {
 For each table, populate the data field with realistic-looking sample records.
 Avoid placeholder values like "foo" or "bar". Use real names, emails, etc., and ensure values are unique across rows.
 Keep the dataset compact for speed: target 2-6 rows per table unless the prompt explicitly asks for more.
+For image fields, use only these exact URLs:
+- "https://picsum.photos/600/600" for profile pictures and similar
+- "https://picsum.photos/1920/1080" for other images
+Do not use any other image URLs.
+For non-image attachments, return attachment objects with "fileName", "extension", and "content".
+Only use ".pdf" or ".txt" as attachment extensions.
 `
 
   return new LLMRequest().addSystemMessage(dataMessage)
