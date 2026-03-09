@@ -107,7 +107,7 @@ export interface LLMResponse {
   chat: LanguageModelV3
   embedding: EmbeddingModelV3
   providerOptions?: (hasTools: boolean) => LLMProviderOptions | undefined
-  uploadFile?: (
+  uploadFile: (
     stream: Readable,
     filename: string,
     contentType?: string
