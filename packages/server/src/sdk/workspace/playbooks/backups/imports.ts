@@ -152,7 +152,7 @@ const sanitizeImportedDoc = (
   if (resourceType === ResourceType.ROW_ACTION) {
     const rowActions = remapped as TableRowActions
     rowActions.actions = Object.fromEntries(
-      Object.entries((doc as TableRowActions).actions).map(
+      Object.entries((doc as TableRowActions).actions || {}).map(
         ([actionId, action]) => {
           const permissions = (action.permissions || {
             table: { runAllowed: true },

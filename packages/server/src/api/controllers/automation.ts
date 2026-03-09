@@ -60,14 +60,15 @@ export async function create(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
   let automation = ctx.request.body
-  automation.playbookId = await resolvePlaybookId(automation.playbookId)
-  automation.appId = ctx.appId
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
     await update(ctx)
     return
   }
+
+  automation.playbookId = await resolvePlaybookId(automation.playbookId)
+  automation.appId = ctx.appId
 
   let createdAutomation: Automation
 

@@ -17,6 +17,7 @@
   }
 
   let selectedPlaybookId = ""
+  let playbookOptions: PlaybookOption[] = []
 
   $: selectedPlaybookId = row?.playbookId || ""
   $: playbookOptions = [

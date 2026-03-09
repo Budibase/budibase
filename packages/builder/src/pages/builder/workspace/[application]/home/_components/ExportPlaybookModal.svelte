@@ -16,6 +16,7 @@
   let playbookId = ""
   let encrypted = false
   let encryptPassword = ""
+  let disabled = false
 
   $: if (selectedPlaybookId) {
     playbookId = selectedPlaybookId

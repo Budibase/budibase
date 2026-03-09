@@ -20,6 +20,7 @@
   let encrypted = false
   let encryptPassword = ""
   let file: File | undefined = undefined
+  let disabled = false
 
   $: disabled = !file || (encrypted && !encryptPassword.trim())
 

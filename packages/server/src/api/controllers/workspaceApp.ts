@@ -91,11 +91,12 @@ export async function edit(
   ctx: Ctx<UpdateWorkspaceAppRequest, UpdateWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
-  const playbookId = await resolvePlaybookId(body.playbookId)
 
   if (ctx.params.id !== body._id) {
     ctx.throw("Path and body ids do not match", 400)
   }
+
+  const playbookId = await resolvePlaybookId(body.playbookId)
 
   const toUpdate = {
     _id: body._id,
