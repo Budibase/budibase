@@ -2,6 +2,7 @@
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "@/stores/builder"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
+  import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
 
   export let table
 
@@ -14,10 +15,12 @@
 
   let originalName
   let updatedName
+  let playbookId = ""
 
   async function save() {
     const updatedTable = cloneDeep(table)
     updatedTable.name = updatedName
+    updatedTable.playbookId = playbookId || undefined
     await tables.save(updatedTable)
     await datasources.fetch()
     notifications.success("Table renamed successfully")
@@ -34,6 +37,7 @@
   const initForm = () => {
     originalName = table.name + ""
     updatedName = table.name + ""
+    playbookId = table.playbookId || ""
   }
 </script>
 
@@ -53,6 +57,7 @@
         on:input={checkValid}
         {error}
       />
+      <PlaybookSelect bind:value={playbookId} />
     </form>
   </ModalContent>
 </Modal>

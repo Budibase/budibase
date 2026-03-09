@@ -26,6 +26,7 @@
   import { Utils } from "@budibase/frontend-core"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
   import { getErrorMessage } from "@/helpers/errors"
+  import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
 
   $: goto = $gotoStore
 
@@ -221,6 +222,7 @@
             }}
             error={nameError}
           />
+          <PlaybookSelect bind:value={newQuery.playbookId} />
           {#if integration.query}
             <Label>Function</Label>
             <Select

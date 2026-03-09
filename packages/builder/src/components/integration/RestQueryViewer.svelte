@@ -51,6 +51,7 @@
   } from "@/dataBinding"
   import ConnectedQueryScreens from "./ConnectedQueryScreens.svelte"
   import AuthPicker from "./rest/AuthPicker.svelte"
+  import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
   import {
     getBindingContext,
     getDefaultRestAuthConfig,
@@ -604,6 +605,9 @@
             <div class="access">
               <Label>Access</Label>
               <AccessLevelSelect {query} {saveId} />
+            </div>
+            <div class="playbook">
+              <PlaybookSelect bind:value={query.playbookId} />
             </div>
           </div>
         </div>
