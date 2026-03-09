@@ -1,7 +1,10 @@
 import {
   CreatePlaybookRequest,
   CreatePlaybookResponse,
+  ExportPlaybookRequest,
   FetchPlaybooksResponse,
+  ImportPlaybookRequest,
+  ImportPlaybookResponse,
   UpdatePlaybookRequest,
   UpdatePlaybookResponse,
 } from "@budibase/types"
@@ -24,6 +27,43 @@ export class PlaybookAPI extends TestAPI {
         status: 201,
         ...expectations,
       },
+    })
+  }
+
+  export = async (
+    id: string,
+    body?: ExportPlaybookRequest,
+    expectations?: Expectations
+  ) => {
+    const expectsError = (expectations?.status || 200) >= 400
+    const exp = {
+      ...expectations,
+      headers: {
+        ...expectations?.headers,
+        ...(expectsError ? {} : { "Content-Type": "application/gzip" }),
+      },
+    }
+
+    return await this._post<Buffer>(`/api/playbooks/${id}/export`, {
+      body,
+      expectations: exp,
+    })
+  }
+
+  import = async (
+    file: Buffer | string,
+    body?: ImportPlaybookRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._post<ImportPlaybookResponse>(`/api/playbooks/import`, {
+      fields: body,
+      files: {
+        file: {
+          file,
+          name: "playbook-export.tar.gz",
+        },
+      },
+      expectations,
     })
   }
 

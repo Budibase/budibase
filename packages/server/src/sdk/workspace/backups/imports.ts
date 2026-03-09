@@ -144,7 +144,7 @@ export async function untarFile(file: { path: string }) {
   return tmpPath
 }
 
-async function decryptFiles(path: string, password: string) {
+export async function decryptFiles(path: string, password: string) {
   try {
     const processDirectory = async (dirPath: string) => {
       for (let file of await fsp.readdir(dirPath)) {
