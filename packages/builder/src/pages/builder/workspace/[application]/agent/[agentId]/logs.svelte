@@ -2,6 +2,7 @@
   import { API } from "@/api"
   import { selectedAgent } from "@/stores/portal"
   import { admin } from "@/stores/portal/admin"
+  import dayjs, { type Dayjs } from "dayjs"
   import { onMount } from "svelte"
   import type {
     AgentLogEntry,
@@ -13,51 +14,41 @@
   import { formatLogDateForApi, formatTime } from "./LogComponents/utils"
   import { notifications } from "@budibase/bbui"
 
-  type TimeRange = "1h" | "8h" | "24h" | "7d" | "30d"
-
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)
   let selectedSession = $state<AgentLogSession | null>(null)
   let expandedStepId = $state<string | null>(null)
-  let currentPage = $state(0)
+  let expandedStepDetail = $state<AgentLogRequestDetail | null>(null)
+  let expandedStepLoading = $state(false)
   let hasMore = $state(false)
+  let nextBookmark = $state<string | undefined>(undefined)
   let deepLinkedSessionId = $state<string | null>(null)
-
-  let stepDetailsByRequestId = $state<Record<string, AgentLogRequestDetail>>({})
-  let stepLoadingByRequestId = $state<Record<string, boolean>>({})
+  let linkedSessionLoaded = $state(false)
 
   let statusFilter = $state<string>("all")
-  let timeRange = $state<TimeRange>("7d")
+  let dateRange = $state<[Dayjs | null, Dayjs | null]>([
+    dayjs().subtract(7, "days"),
+    dayjs(),
+  ])
   let triggerFilter = $state<string>("all")
 
   let mounted = false
 
-  const HOUR = 60 * 60 * 1000
-  const DAY = 24 * HOUR
-  const TIME_RANGE_MS: Record<TimeRange, number> = {
-    "1h": HOUR,
-    "8h": 8 * HOUR,
-    "24h": DAY,
-    "7d": 7 * DAY,
-    "30d": 30 * DAY,
-  }
-
   function getDateRange(): { startDate: string; endDate: string } {
-    const now = new Date()
-    const endDate = formatLogDateForApi(new Date(now.getTime() + DAY))
-    const includeTime = ["1h", "8h", "24h"].includes(timeRange)
-    const start = new Date(now.getTime() - TIME_RANGE_MS[timeRange])
+    const [start, end] = dateRange
+    const fallbackEnd = dayjs()
+    const fallbackStart = fallbackEnd.subtract(7, "days")
 
     return {
-      startDate: formatLogDateForApi(start, { includeTime }),
-      endDate,
+      startDate: formatLogDateForApi((start || fallbackStart).toDate()),
+      endDate: formatLogDateForApi((end || fallbackEnd).toDate()),
     }
   }
 
   function resetDetailState() {
-    stepDetailsByRequestId = {}
-    stepLoadingByRequestId = {}
     expandedStepId = null
+    expandedStepDetail = null
+    expandedStepLoading = false
   }
 
   function readLinkedSessionId(): string | null {
@@ -67,22 +58,12 @@
     return new URLSearchParams(window.location.search).get("sessionId")
   }
 
-  let filteredSessions = $derived.by(() => {
-    let result = sessions
-    if (!$admin.isDev) {
-      result = result.filter(session => !session.isPreview)
-    }
-    if (statusFilter !== "all") {
-      result = result.filter(s => s.status === statusFilter)
-    }
-    if (triggerFilter !== "all") {
-      result = result.filter(s => s.trigger === triggerFilter)
-    }
-    return result
-  })
+  let visibleSessions = $derived.by(() =>
+    $admin.isDev ? sessions : sessions.filter(session => !session.isPreview)
+  )
 
   let sessionTableData = $derived.by(() =>
-    filteredSessions.map(session => ({
+    visibleSessions.map(session => ({
       sessionId: session.sessionId,
       trigger: session.trigger,
       startTime: formatTime(session.startTime),
@@ -100,10 +81,15 @@
     return selectedSession
   })
 
-  async function loadSessions(page = 0) {
+  async function loadSessions(
+    bookmark: string | undefined = undefined,
+    { append = false }: { append?: boolean } = {}
+  ) {
     const agentId = $selectedAgent?._id
     if (!agentId) {
       sessions = []
+      hasMore = false
+      nextBookmark = undefined
       selectedSession = null
       resetDetailState()
       return
@@ -115,19 +101,35 @@
       const response = await API.fetchAgentLogs(agentId, {
         startDate,
         endDate,
-        page,
+        bookmark,
+        limit: 75,
+        statusFilter,
+        triggerFilter,
       })
 
-      sessions = response.sessions
-      currentPage = response.currentPage
+      const nextSessions = append
+        ? [
+            ...sessions,
+            ...response.sessions.filter(
+              session =>
+                !sessions.some(
+                  existing => existing.sessionId === session.sessionId
+                )
+            ),
+          ]
+        : response.sessions
+
+      sessions = nextSessions
       hasMore = response.hasMore
+      nextBookmark = response.nextBookmark
 
       const current = selectedSession
       const selectedStillExists = current
-        ? response.sessions.some(s => s.sessionId === current.sessionId)
+        ? nextSessions.some(s => s.sessionId === current.sessionId)
         : false
 
       if (
+        !append &&
         !selectedStillExists &&
         current?.sessionId !== deepLinkedSessionId
       ) {
@@ -136,9 +138,13 @@
       }
     } catch (error) {
       console.error("Failed to fetch agent logs", error)
-      sessions = []
-      selectedSession = null
-      resetDetailState()
+      if (!append) {
+        sessions = []
+        hasMore = false
+        nextBookmark = undefined
+        selectedSession = null
+        resetDetailState()
+      }
     } finally {
       loading = false
     }
@@ -148,43 +154,25 @@
     const agentId = $selectedAgent?._id
     if (!agentId) return
 
-    if (
-      stepDetailsByRequestId[entry.requestId] ||
-      stepLoadingByRequestId[entry.requestId]
-    ) {
+    if (expandedStepLoading || expandedStepDetail?.requestId === entry.requestId) {
       return
     }
 
-    stepLoadingByRequestId = {
-      ...stepLoadingByRequestId,
-      [entry.requestId]: true,
-    }
+    expandedStepLoading = true
+    expandedStepDetail = null
 
     try {
-      const { startDate } = getDateRange()
-      const detail = await API.fetchAgentLogDetail(
-        agentId,
-        entry.requestId,
-        startDate
-      )
-      stepDetailsByRequestId = {
-        ...stepDetailsByRequestId,
-        [entry.requestId]: detail,
+      const detail = await API.fetchAgentLogDetail(agentId, entry.requestId)
+      if (expandedStepId === entry.requestId) {
+        expandedStepDetail = detail
       }
     } catch (error) {
       console.error("Failed to fetch step detail", error)
     } finally {
-      stepLoadingByRequestId = {
-        ...stepLoadingByRequestId,
-        [entry.requestId]: false,
+      if (expandedStepId === entry.requestId) {
+        expandedStepLoading = false
       }
     }
-  }
-
-  async function prefetchSessionDetails(
-    session: AgentLogSession
-  ): Promise<void> {
-    await Promise.all(session.entries.map(entry => loadStepDetail(entry)))
   }
 
   async function selectSession(session: AgentLogSession) {
@@ -193,7 +181,6 @@
     resetDetailState()
 
     if (!agentId) {
-      await prefetchSessionDetails(session)
       return
     }
 
@@ -209,7 +196,6 @@
         throw new Error("Session detail not found")
       }
       selectedSession = fullSession
-      await prefetchSessionDetails(fullSession)
     } catch (error) {
       notifications.error("Failed to fetch full session detail")
       if (selectedSession?.sessionId === session.sessionId) {
@@ -236,7 +222,6 @@
       }
       selectedSession = fullSession
       resetDetailState()
-      await prefetchSessionDetails(fullSession)
     } catch (error) {
       notifications.error("Failed to fetch linked session")
     }
@@ -246,7 +231,7 @@
     if (!row.sessionId) {
       return
     }
-    const session = filteredSessions.find(
+    const session = visibleSessions.find(
       item => item.sessionId === row.sessionId
     )
     if (session) {
@@ -254,9 +239,19 @@
     }
   }
 
+  async function loadMoreSessions() {
+    if (!hasMore || loading) {
+      return
+    }
+
+    await loadSessions(nextBookmark, { append: true })
+  }
+
   async function toggleStep(entry: AgentLogEntry) {
     if (expandedStepId === entry.requestId) {
       expandedStepId = null
+      expandedStepDetail = null
+      expandedStepLoading = false
       return
     }
 
@@ -266,19 +261,31 @@
 
   $effect(() => {
     statusFilter
-    timeRange
+    dateRange
     triggerFilter
 
     if (mounted) {
-      loadSessions(0)
+      linkedSessionLoaded = false
+      loadSessions()
+    }
+  })
+
+  $effect(() => {
+    if (
+      mounted &&
+      !linkedSessionLoaded &&
+      deepLinkedSessionId &&
+      $selectedAgent?._id
+    ) {
+      linkedSessionLoaded = true
+      loadLinkedSession()
     }
   })
 
   onMount(() => {
     mounted = true
     deepLinkedSessionId = readLinkedSessionId()
-    loadSessions(0)
-    loadLinkedSession()
+    loadSessions()
   })
 </script>
 
@@ -289,13 +296,11 @@
         {loading}
         {sessionTableData}
         {hasMore}
-        {currentPage}
         bind:statusFilter
-        bind:timeRange
+        bind:dateRange
         bind:triggerFilter
         {onSessionRowClick}
-        onPrevPage={() => loadSessions(currentPage - 1)}
-        onNextPage={() => loadSessions(currentPage + 1)}
+        onLoadMore={loadMoreSessions}
       />
     </div>
 
@@ -303,8 +308,8 @@
       <LogsSessionDetail
         selectedSession={visibleSelectedSession}
         {expandedStepId}
-        {stepDetailsByRequestId}
-        {stepLoadingByRequestId}
+        {expandedStepDetail}
+        {expandedStepLoading}
         onToggleStep={toggleStep}
       />
     </div>

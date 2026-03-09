@@ -23,7 +23,6 @@
 
   let { entry, index, expanded, detail, loadingStep, onToggleStep }: Props =
     $props()
-  console.log(detail)
   let flow = $derived(getStepFlow(detail, loadingStep))
 </script>
 

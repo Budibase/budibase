@@ -11,13 +11,15 @@ export interface AgentLogEndpoints {
     opts?: {
       startDate?: string
       endDate?: string
-      page?: number
+      bookmark?: string
+      limit?: number
+      statusFilter?: string
+      triggerFilter?: string
     }
   ) => Promise<FetchAgentLogsResponse>
   fetchAgentLogDetail: (
     agentId: string,
-    requestId: string,
-    startDate?: string
+    requestId: string
   ) => Promise<AgentLogRequestDetail>
   fetchAgentLogSession: (
     agentId: string,
@@ -32,19 +34,19 @@ export const buildAgentLogEndpoints = (
     const params = new URLSearchParams()
     if (opts.startDate) params.set("startDate", opts.startDate)
     if (opts.endDate) params.set("endDate", opts.endDate)
-    if (opts.page !== undefined) params.set("page", String(opts.page))
+    if (opts.bookmark) params.set("bookmark", opts.bookmark)
+    if (opts.limit !== undefined) params.set("limit", String(opts.limit))
+    if (opts.statusFilter) params.set("statusFilter", opts.statusFilter)
+    if (opts.triggerFilter) params.set("triggerFilter", opts.triggerFilter)
     const query = params.toString()
     return await API.get({
       url: `/api/agent/${agentId}/logs${query ? `?${query}` : ""}`,
     })
   },
 
-  fetchAgentLogDetail: async (agentId, requestId, startDate) => {
-    const params = new URLSearchParams()
-    if (startDate) params.set("startDate", startDate)
-    const query = params.toString()
+  fetchAgentLogDetail: async (agentId, requestId) => {
     return await API.get({
-      url: `/api/agent/${agentId}/logs/${requestId}${query ? `?${query}` : ""}`,
+      url: `/api/agent/${agentId}/logs/${requestId}`,
     })
   },
 

@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Body, Pagination, Select, Table } from "@budibase/bbui"
+  import { Body, Button, Select, Table } from "@budibase/bbui"
+  import DateRangePicker from "@/components/common/DateRangePicker.svelte"
+  import type { Dayjs } from "dayjs"
 
   export interface SessionTableRow {
     sessionId: string
@@ -8,32 +10,26 @@
     operations: number
   }
 
-  type TimeRange = "1h" | "8h" | "24h" | "7d" | "30d"
-
   type Props = {
     loading: boolean
     sessionTableData: SessionTableRow[]
     hasMore: boolean
-    currentPage: number
     statusFilter?: string
-    timeRange?: TimeRange
+    dateRange?: [Dayjs | null, Dayjs | null]
     triggerFilter?: string
     onSessionRowClick: (_row: { sessionId?: string }) => void
-    onPrevPage: () => void
-    onNextPage: () => void
+    onLoadMore: () => void | Promise<void>
   }
 
   let {
     loading,
     sessionTableData,
     hasMore,
-    currentPage,
     statusFilter = $bindable("all"),
-    timeRange = $bindable("7d"),
+    dateRange = $bindable([null, null]),
     triggerFilter = $bindable("all"),
     onSessionRowClick,
-    onPrevPage,
-    onNextPage,
+    onLoadMore,
   }: Props = $props()
 
   const statusOptions = [
@@ -42,23 +38,20 @@
     { label: "Error", value: "error" },
   ]
 
-  const timeRangeOptions = [
-    { label: "Last hour", value: "1h" },
-    { label: "Last 8 hours", value: "8h" },
-    { label: "Last 24 hours", value: "24h" },
-    { label: "Last 7 days", value: "7d" },
-    { label: "Last 30 days", value: "30d" },
-  ]
-
-  let triggerOptions = $derived.by(() => [
+  const triggerOptions = [
     { label: "All triggers", value: "all" },
-    ...Array.from(new Set(sessionTableData.map(row => row.trigger))).map(
-      trigger => ({
-        label: trigger,
-        value: trigger,
-      })
-    ),
-  ])
+    ...[
+      "Automation",
+      "Chat",
+      "Chat Preview",
+      "Discord",
+      "Microsoft Teams",
+      "Slack",
+    ].map(trigger => ({
+      label: trigger,
+      value: trigger,
+    })),
+  ]
 
   const sessionTableSchema = {
     trigger: { width: "0.8fr", displayName: "Trigger" },
@@ -69,27 +62,26 @@
 
 <div class="filters-bar">
   <div class="filter-group">
+    <div class="filter-label">Status</div>
     <Select
-      quiet
       options={statusOptions}
       bind:value={statusFilter}
       placeholder="All statuses"
     />
   </div>
   <div class="filter-group">
+    <div class="filter-label">Trigger</div>
     <Select
-      quiet
-      options={timeRangeOptions}
-      bind:value={timeRange}
-      placeholder="Last 7 days"
-    />
-  </div>
-  <div class="filter-group">
-    <Select
-      quiet
       options={triggerOptions}
       bind:value={triggerFilter}
       placeholder="All triggers"
+    />
+  </div>
+
+  <div class="filter-group date-range-group">
+    <DateRangePicker
+      value={dateRange}
+      on:change={e => (dateRange = e.detail)}
     />
   </div>
 </div>
@@ -103,9 +95,14 @@
     </div>
   {:else if !sessionTableData.length}
     <div class="empty-state">
-      <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        No logs found for this time period
-      </Body>
+      <div class="empty-state-content">
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          No logs found for this time period
+        </Body>
+        <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+          Only sessions indexed after this deployment are shown.
+        </Body>
+      </div>
     </div>
   {:else}
     <div class="table-host">
@@ -120,15 +117,11 @@
     </div>
   {/if}
 
-  {#if hasMore || currentPage > 0}
+  {#if hasMore}
     <div class="pagination">
-      <Pagination
-        page={currentPage + 1}
-        hasPrevPage={currentPage > 0}
-        hasNextPage={hasMore}
-        goToPrevPage={onPrevPage}
-        goToNextPage={onNextPage}
-      />
+      <Button secondary disabled={loading} on:click={onLoadMore}
+        >Load more</Button
+      >
     </div>
   {/if}
 </div>
@@ -136,18 +129,38 @@
 <style>
   .filters-bar {
     display: flex;
+    flex-direction: row;
     gap: var(--spacing-m);
-    padding: var(--spacing-xl) var(--spacing-l) var(--spacing-m);
+    padding: var(--spacing-l) var(--spacing-l) var(--spacing-s);
+    align-items: flex-end;
   }
 
   .filter-group {
-    min-width: 100px;
+    flex: 0 0 120px;
+    min-width: 0;
+  }
+
+  .date-range-group {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+  }
+
+  .date-range-group :global(.date-range-picker),
+  .date-range-group :global(.spectrum-Form-item) {
+    flex: 1 1 auto;
+    width: 0;
+  }
+
+  .filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-600);
+    margin-bottom: var(--spacing-xs);
   }
 
   .filter-group :global(.spectrum-Picker) {
-    background: var(--spectrum-global-color-gray-100) !important;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 6px;
+    width: 100%;
   }
 
   .table-wrapper {
@@ -186,6 +199,13 @@
     padding: 40px 0;
     display: flex;
     justify-content: center;
+    align-items: center;
+  }
+
+  .empty-state-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
     align-items: center;
   }
 

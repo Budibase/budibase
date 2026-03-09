@@ -74,11 +74,13 @@ export interface SessionStats {
 
 export function getSessionStats(session: AgentLogSession): SessionStats {
   return session.entries.reduce(
-    (acc, entry) => ({
-      inputTokens: acc.inputTokens + entry.inputTokens,
-      outputTokens: acc.outputTokens + entry.outputTokens,
-      spend: acc.spend + entry.spend,
-    }),
+    (acc, entry) => {
+      return {
+        inputTokens: acc.inputTokens + entry.inputTokens,
+        outputTokens: acc.outputTokens + entry.outputTokens,
+        spend: acc.spend + entry.spend,
+      }
+    },
     { inputTokens: 0, outputTokens: 0, spend: 0 }
   )
 }
@@ -123,17 +125,11 @@ export function getStepFlow(
   const inputTools = detail.toolResults.map(result =>
     getToolLabel(result.name, result.displayName)
   )
-  const fallbackInputTools = detail.inputToolCalls.map(call =>
-    getToolLabel(call.name, call.displayName)
-  )
   const outputTools = detail.toolCalls.map(call =>
     getToolLabel(call.name, call.displayName)
   )
 
-  const from =
-    summarizeToolNames(inputTools) ||
-    summarizeToolNames(fallbackInputTools) ||
-    "Prompt + context"
+  const from = summarizeToolNames(inputTools) || "Prompt + context"
 
   const to =
     summarizeToolNames(outputTools) ||

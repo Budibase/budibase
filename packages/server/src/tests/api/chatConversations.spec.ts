@@ -434,6 +434,16 @@ describe("chat conversation transient behavior", () => {
     ;(streamText as jest.MockedFunction<typeof streamText>).mockImplementation(
       () =>
         ({
+          response: Promise.resolve({
+            id: "gen-test",
+            headers: {
+              "x-litellm-response-cost": "0.0001",
+            },
+          }),
+          usage: Promise.resolve({
+            inputTokens: 0,
+            outputTokens: 0,
+          }),
           pipeUIMessageStreamToResponse: async (
             res: ServerResponse,
             options?: unknown
@@ -660,6 +670,16 @@ describe("Agent chat tool call tracking", () => {
 
   function makeStreamTextMock(toolResults: { toolCallId: string }[]) {
     return (options: any) => ({
+      response: Promise.resolve({
+        id: "gen-test",
+        headers: {
+          "x-litellm-response-cost": "0.0001",
+        },
+      }),
+      usage: Promise.resolve({
+        inputTokens: 0,
+        outputTokens: 0,
+      }),
       pipeUIMessageStreamToResponse: jest
         .fn()
         .mockImplementation(async (res: any, pipeOptions: any) => {
@@ -679,16 +699,28 @@ describe("Agent chat tool call tracking", () => {
   }
 
   function makeWebhookStreamTextMock(toolResults: { toolCallId: string }[]) {
-    return async (options: any) => {
-      if (options.onStepFinish) {
-        await options.onStepFinish({
-          content: [],
-          toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
-          toolResults,
-        })
-      }
-      return { text: Promise.resolve("response") }
-    }
+    return (options: any) => ({
+      text: (async () => {
+        if (options.onStepFinish) {
+          await options.onStepFinish({
+            content: [],
+            toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
+            toolResults,
+          })
+        }
+        return "response"
+      })(),
+      response: Promise.resolve({
+        id: "gen-test",
+        headers: {
+          "x-litellm-response-cost": "0.0001",
+        },
+      }),
+      usage: Promise.resolve({
+        inputTokens: 0,
+        outputTokens: 0,
+      }),
+    })
   }
 
   beforeAll(async () => {

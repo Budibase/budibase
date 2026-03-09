@@ -234,6 +234,8 @@ export async function webhookChat({
     })
   const providerPrefix = chat.channel?.provider || "chat"
   const sessionId = `${providerPrefix}:${chat._id || v4()}`
+  const requestIds = new Set<string>()
+  const operationStartedAt = new Date().toISOString()
   const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
     agent.aiconfig,
     sessionId,
@@ -267,7 +269,10 @@ export async function webhookChat({
     toolChoice: hasTools ? "auto" : "none",
     stopWhen: stepCountIs(30),
     providerOptions: providerOptions?.(hasTools),
-    async onStepFinish({ toolResults }) {
+    async onStepFinish({ toolResults, response }) {
+      if (response?.id) {
+        requestIds.add(response.id)
+      }
       for (const _toolResult of toolResults) {
         await quotas.addAction(async () => {})
       }
@@ -282,7 +287,62 @@ export async function webhookChat({
     },
   })
 
-  const assistantText = await result.text
+  let assistantText = ""
+  const captureResponseMetadata = async () => {
+    const response = await result.response
+    return {
+      requestId: response.id || undefined,
+    }
+  }
+  try {
+    assistantText = await result.text
+    const responseMetadata = await captureResponseMetadata()
+    if (responseMetadata.requestId) {
+      requestIds.add(responseMetadata.requestId)
+    }
+    if (requestIds.size) {
+      void sdk.ai.agentLogs
+        .addSessionLog({
+          agentId,
+          sessionId,
+          requestIds: [...requestIds],
+          firstInput: latestQuestion,
+          startedAt: operationStartedAt,
+          completedAt: new Date().toISOString(),
+        })
+        .catch(error => {
+          console.error("Failed to index webhook chat logs", {
+            agentId,
+            sessionId,
+            error,
+          })
+        })
+    }
+  } catch (error) {
+    const responseMetadata = await captureResponseMetadata()
+    if (responseMetadata.requestId) {
+      requestIds.add(responseMetadata.requestId)
+    }
+    if (requestIds.size) {
+      void sdk.ai.agentLogs
+        .addSessionLog({
+          agentId,
+          sessionId,
+          requestIds: [...requestIds],
+          firstInput: latestQuestion,
+          startedAt: operationStartedAt,
+          completedAt: new Date().toISOString(),
+        })
+        .catch(indexError => {
+          console.error("Failed to index webhook chat logs", {
+            agentId,
+            sessionId,
+            error: indexError,
+          })
+        })
+    }
+    throw error
+  }
   const assistantMessage: ChatConversation["messages"][number] = {
     id: v4(),
     role: "assistant",
@@ -400,7 +460,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       retrievedContext = result.text
       ragSourcesMetadata = result.sources
     } catch (error) {
-      // TODO: implement logging and fallbacks
+      // TODO: implement logging
       console.error("Failed to retrieve agent context", error)
     }
   }
@@ -417,6 +477,29 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
     const sessionId = chat._id || chat.sessionId || chatId
+    const requestIds = new Set<string>()
+    const operationStartedAt = new Date().toISOString()
+    const indexOperation = () => {
+      if (!requestIds.size) {
+        return
+      }
+      void sdk.ai.agentLogs
+        .addSessionLog({
+          agentId,
+          sessionId,
+          requestIds: [...requestIds],
+          firstInput: latestQuestion,
+          startedAt: operationStartedAt,
+          completedAt: new Date().toISOString(),
+        })
+        .catch(error => {
+          console.error("Failed to index chat stream logs", {
+            agentId,
+            sessionId,
+            error,
+          })
+        })
+    }
     const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
       agent.aiconfig,
       sessionId,
@@ -451,7 +534,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools: hasTools ? tools : undefined,
       toolChoice: hasTools ? "auto" : "none",
       stopWhen: stepCountIs(30),
-      async onStepFinish({ content, toolCalls, toolResults }) {
+      async onStepFinish({ content, toolCalls, toolResults, response }) {
+        if (response?.id) {
+          requestIds.add(response.id)
+        }
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
         for (const part of content) {
           if (part.type === "tool-error") {
@@ -464,6 +550,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       providerOptions: providerOptions?.(hasTools),
       onError({ error }) {
+        indexOperation()
         console.error("Agent streaming error", {
           agentId,
           chatAppId,
@@ -474,6 +561,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
+    const captureResponseMetadata = async () => {
+      const response = await result.response
+      return {
+        requestId: response.id || undefined,
+      }
+    }
 
     ctx.respond = false
     const streamStartTime = Date.now()
@@ -509,6 +602,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
+        const responseMetadata = await captureResponseMetadata()
+        if (responseMetadata.requestId) {
+          requestIds.add(responseMetadata.requestId)
+        }
+        indexOperation()
+
         if (chat.transient || !chatAppId) {
           return
         }

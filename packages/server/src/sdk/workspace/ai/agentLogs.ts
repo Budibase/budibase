@@ -1,89 +1,53 @@
 import type {
   AgentLogEntry,
-  AgentLogSession,
   AgentLogRequestDetail,
+  AgentLogSession,
+  AgentLogSessionIndexDoc,
+  AgentLogSessionSnapshot,
+  Document,
+  EnrichedQueryJson,
   FetchAgentLogsResponse,
+  IndexAgentLogOperationInput,
+  LiteLLMRequestDetail,
+  LiteLLMRequestListResponse,
+  LiteLLMRequestPayload,
+  LiteLLMRequestRecord,
+  SearchFilters,
+  Table,
 } from "@budibase/types"
-import { HTTPError } from "@budibase/backend-core"
+import {
+  constants,
+  context,
+  HTTPError,
+  sql,
+  SQS_DATASOURCE_INTERNAL,
+} from "@budibase/backend-core"
+import {
+  DocumentType,
+  FieldType,
+  Operation,
+  SEPARATOR,
+  SortOrder,
+  SortType,
+  SqlClient,
+  TableSourceType,
+} from "@budibase/types"
+export type { IndexAgentLogOperationInput } from "@budibase/types"
 import fetch from "node-fetch"
 import env from "../../../environment"
 import { getAvailableTools, getOrThrow, getToolDisplayNames } from "./agents"
+import * as tableSqs from "../tables/internal/sqs"
+import {
+  AGENT_LOG_SESSION_TABLE_ID,
+} from "../sqs/staticTables"
 
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
+const DEFAULT_SESSION_PAGE_SIZE = 75
+const MAX_SESSION_PAGE_SIZE = 100
+const DEFAULT_BOOKMARK_PAGE = 1
+const builder = new sql.Sql(SqlClient.SQL_LITE)
 
-interface LiteLLMSpendLog {
-  request_id: string
-  session_id: string
-  end_user?: string
-  model?: string
-  prompt_tokens?: number
-  completion_tokens?: number
-  spend?: number
-  startTime?: string
-  endTime?: string
-  status?: string
-  session_total_count?: number
-  proxy_server_request?: {
-    messages?: LiteLLMProxyMessage[]
-  }
-}
-
-interface LiteLLMToolCall {
-  id?: string
-  function?: {
-    name?: string
-    arguments?: string
-  }
-}
-
-interface LiteLLMProxyMessage {
-  role: string
-  content?: unknown
-  tool_calls?: LiteLLMToolCall[]
-  tool_call_id?: string
-}
-
-interface LiteLLMResponseMessage {
-  content?: unknown
-  tool_calls?: LiteLLMToolCall[] | null
-}
-
-interface LiteLLMErrorInformation {
-  traceback?: string
-  error_code?: string
-  error_class?: string
-  llm_provider?: string
-  error_message?: string
-}
-
-interface LiteLLMRequestDetail {
-  request_id?: string
-  model?: string
-  prompt_tokens?: number
-  completion_tokens?: number
-  startTime?: string
-  endTime?: string
-  response?: {
-    model?: string
-    choices?: Array<{
-      message?: LiteLLMResponseMessage
-    }>
-  }
-  proxy_server_request?: {
-    user?: string
-    model?: string
-    messages?: LiteLLMProxyMessage[]
-    metadata?: {
-      error_information?: LiteLLMErrorInformation | null
-    }
-  }
-}
-
-interface LiteLLMLogsPage<T> {
-  data: T[]
-  total_pages: number
-}
 
 function getExpectedEndUser(agentId: string): string {
   return `bb-agent:${agentId}`
@@ -106,7 +70,9 @@ function toContentString(content: unknown): string {
 function extractError(
   data: LiteLLMRequestDetail
 ): AgentLogRequestDetail["error"] | undefined {
-  const errorInfo = data.proxy_server_request?.metadata?.error_information
+  const errorInfo =
+    data.metadata?.error_information ||
+    data.proxy_server_request?.metadata?.error_information
   const message = errorInfo?.error_message?.trim()
   if (!message) {
     return undefined
@@ -138,9 +104,10 @@ function determineTrigger(sessionId: string): string {
     return "Discord"
   }
 
-  if (sessionId.startsWith("chatconvo_")) {
+  if (sessionId.startsWith("chat:") || sessionId.startsWith("chatconvo_")) {
     return "Chat"
   }
+
   return "Automation"
 }
 
@@ -148,172 +115,273 @@ function isPreviewSession(sessionId: string): boolean {
   return sessionId.startsWith("chat-preview:")
 }
 
-function determineStatus(entries: AgentLogEntry[]): "success" | "error" {
-  return entries.some(e => e.status === "error") ? "error" : "success"
+function determineStatus(entries: AgentLogEntry[]): AgentLogSession["status"] {
+  return entries.some(entry => entry.status === "error") ? "error" : "success"
 }
 
-function extractFirstInput(logs: LiteLLMSpendLog[]): string {
-  for (const log of logs) {
-    const messages = log.proxy_server_request?.messages
-    if (messages) {
-      const userMsg = messages.find(m => m.role === "user")
-      const content = toContentString(userMsg?.content)
-      if (content) {
-        return content.length > 100 ? content.slice(0, 100) + "..." : content
-      }
-    }
-  }
-  return ""
-}
-
-function formatLiteLLMDateTime(
-  value: string,
-  mode: "start" | "end" = "start"
-): string {
+function toISO(value?: string): string {
   if (!value) {
-    return value
+    return new Date().toISOString()
   }
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return `${value} ${mode === "start" ? "00:00:00" : "23:59:59"}`
-  }
-
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
-    return value.replace("T", " ").replace("Z", "").split(".")[0]
+    return new Date().toISOString()
+  }
+  return date.toISOString()
+}
+
+function minDate(a?: string, b?: string): string {
+  const aTime = new Date(toISO(a)).getTime()
+  const bTime = new Date(toISO(b)).getTime()
+  return aTime <= bTime ? toISO(a) : toISO(b)
+}
+
+function maxDate(a?: string, b?: string): string {
+  const aTime = new Date(toISO(a)).getTime()
+  const bTime = new Date(toISO(b)).getTime()
+  return aTime >= bTime ? toISO(a) : toISO(b)
+}
+
+function truncateText(value: string, maxLength = 100): string {
+  if (value.length <= maxLength) {
+    return value
+  }
+  return `${value.slice(0, maxLength)}...`
+}
+
+function parseBookmarkPage(bookmark?: string): number {
+  if (!bookmark) {
+    return DEFAULT_BOOKMARK_PAGE
+  }
+  const parsed = Number.parseInt(bookmark, 10)
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    throw new HTTPError("Invalid bookmark query", 400)
+  }
+  return parsed
+}
+
+function normalizeSessionLimit(limit?: number): number {
+  if (!limit || limit <= 0) {
+    return DEFAULT_SESSION_PAGE_SIZE
+  }
+  return Math.min(limit, MAX_SESSION_PAGE_SIZE)
+}
+
+function mapRequestModel(data: LiteLLMRequestDetail) {
+  return (
+    data.response?.model || data.model || data.proxy_server_request?.model || ""
+  )
+}
+
+function getDateBoundaryISO(value: string, mode: "start" | "end"): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return `${value}T${mode === "start" ? "00:00:00" : "23:59:59"}.000Z`
   }
 
-  const iso = date.toISOString().replace("T", " ")
-  return iso.slice(0, 19)
+  const parsed = new Date(value)
+  if (Number.isFinite(parsed.getTime())) {
+    return parsed.toISOString()
+  }
+
+  return mode === "start"
+    ? constants.MIN_VALID_DATE.toISOString()
+    : constants.MAX_VALID_DATE.toISOString()
 }
 
-function buildSession(sessionId: string, sessionLogs: LiteLLMSpendLog[]) {
-  const sorted = sessionLogs.sort(
-    (a, b) =>
-      new Date(a.startTime || 0).getTime() -
-      new Date(b.startTime || 0).getTime()
-  )
+function encodeKeyPart(value: string): string {
+  return encodeURIComponent(value)
+}
 
-  const entries: AgentLogEntry[] = sorted.map(log => ({
-    requestId: log.request_id,
-    sessionId,
-    model: log.model || "unknown",
-    inputTokens: log.prompt_tokens || 0,
-    outputTokens: log.completion_tokens || 0,
-    spend: log.spend || 0,
-    startTime: log.startTime || "",
-    endTime: log.endTime || "",
-    status: log.status === "failure" ? "error" : "success",
-  }))
+function getSessionDocId(agentId: string, sessionId: string): string {
+  const encodedAgentId = encodeKeyPart(agentId)
+  const encodedSessionId = encodeKeyPart(sessionId)
+  return `${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}${encodedAgentId}${SEPARATOR}${encodedSessionId}`
+}
 
+function parseIndexedRequestIds(value?: string): Set<string> {
+  if (!value) {
+    return new Set()
+  }
+  try {
+    const parsed = JSON.parse(value)
+    if (!Array.isArray(parsed)) {
+      return new Set()
+    }
+    return new Set(parsed.filter((item): item is string => typeof item === "string"))
+  } catch {
+    return new Set()
+  }
+}
+
+function agentLogSessionTable(): Table {
   return {
-    sessionId,
-    firstInput: extractFirstInput(sorted),
-    trigger: determineTrigger(sessionId),
-    isPreview: isPreviewSession(sessionId),
-    startTime: entries[0]?.startTime || "",
-    operations: Math.max(
-      entries.length,
-      ...sorted.map(log => log.session_total_count || 0)
-    ),
-    status: determineStatus(entries),
-    entries,
-  } satisfies AgentLogSession
+    type: "table",
+    sourceType: TableSourceType.INTERNAL,
+    name: AGENT_LOG_SESSION_TABLE_ID,
+    sourceId: SQS_DATASOURCE_INTERNAL,
+    primary: ["_id"],
+    schema: {
+      firstInput: {
+        name: "firstInput",
+        type: FieldType.STRING,
+      },
+      requestIds: {
+        name: "requestIds",
+        type: FieldType.STRING,
+      },
+    },
+  }
 }
 
-export async function fetchSessions(
+async function querySql<T extends Document & Record<string, any>>(
+  request: EnrichedQueryJson,
+  table: Table
+): Promise<T[]> {
+  await tableSqs.ensureStaticTables()
+
+  const query = builder._query(request)
+  if (Array.isArray(query)) {
+    throw new Error("Cannot execute multiple queries for agent log search")
+  }
+
+  const rows = await context.getWorkspaceDB().sql<T>(query.sql, query.bindings)
+  return builder.convertJsonStringColumns<T>(table, rows)
+}
+
+function buildSessionFilters(
   agentId: string,
   startDate: string,
   endDate: string,
-  page: number
-): Promise<FetchAgentLogsResponse> {
-  const apiPage = Math.max(1, page + 1)
+  statusFilter?: string,
+  triggerFilter?: string
+): SearchFilters {
+  const oneOf: NonNullable<SearchFilters["oneOf"]> = {
+    agentId: [agentId],
+  }
+  if (statusFilter && statusFilter !== "all") {
+    oneOf.status = [statusFilter]
+  }
+  if (triggerFilter && triggerFilter !== "all") {
+    oneOf.trigger = [triggerFilter]
+  }
+
+  const filter: SearchFilters = {
+    oneOf,
+    range: {
+      lastActivityAt: {
+        low: getDateBoundaryISO(startDate, "start"),
+        high: getDateBoundaryISO(endDate, "end"),
+      },
+    },
+  }
+
+  return filter
+}
+
+function getLiteLLMRequestUser(data: LiteLLMRequestDetail): string | undefined {
+  return data.proxy_server_request?.user || data.end_user || data.user
+}
+
+function validateLiteLLMRequestOwnership(
+  agentId: string,
+  data: LiteLLMRequestDetail
+) {
+  if (getLiteLLMRequestUser(data) !== getExpectedEndUser(agentId)) {
+    throw new HTTPError("Agent log detail not found", 404)
+  }
+}
+
+function formatLiteLLMDateTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid LiteLLM date: ${value}`)
+  }
+
+  const pad = (part: number) => String(part).padStart(2, "0")
+  return [
+    date.getUTCFullYear(),
+    pad(date.getUTCMonth() + 1),
+    pad(date.getUTCDate()),
+  ].join("-") +
+    ` ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(
+      date.getUTCSeconds()
+    )}`
+}
+
+function getLiteLLMDayBoundary(
+  value: string,
+  mode: "start" | "end"
+): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid LiteLLM date: ${value}`)
+  }
+
+  const boundary = new Date(date)
+  if (mode === "start") {
+    boundary.setUTCHours(0, 0, 0, 0)
+  } else {
+    boundary.setUTCHours(23, 59, 59, 999)
+  }
+
+  return formatLiteLLMDateTime(boundary.toISOString())
+}
+
+async function fetchLiteLLMRequestSummaryById(
+  requestId: string,
+  startDate?: string,
+  endDate?: string
+): Promise<LiteLLMRequestDetail | null> {
   const params = new URLSearchParams({
-    end_user: `bb-agent:${agentId}`,
-    start_date: formatLiteLLMDateTime(startDate, "start"),
-    end_date: formatLiteLLMDateTime(endDate, "end"),
-    page: String(apiPage),
-    page_size: "100",
-    sort_by: "startTime",
-    sort_order: "desc",
+    request_id: requestId,
+    start_date: getLiteLLMDayBoundary(
+      startDate || constants.MIN_VALID_DATE.toISOString(),
+      "start"
+    ),
+    end_date: getLiteLLMDayBoundary(
+      endDate || constants.MAX_VALID_DATE.toISOString(),
+      "end"
+    ),
+    page: "1",
+    page_size: "1",
   })
-  const response = await fetch(`${liteLLMUrl}/spend/logs/ui?${params}`, {
+  const response = await fetch(`${liteLLMUrl}/spend/logs/v2?${params.toString()}`, {
     headers: {
       Authorization: liteLLMAuthorizationHeader,
     },
   })
 
   if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`Error fetching agent logs: ${text || response.statusText}`)
-  }
-
-  const json = (await response.json()) as LiteLLMLogsPage<LiteLLMSpendLog>
-  const logs = json.data
-  const totalPages = json.total_pages
-
-  const sessionMap = new Map<string, LiteLLMSpendLog[]>()
-  for (const log of logs) {
-    const sessionId = log.session_id
-    const existing = sessionMap.get(sessionId) || []
-    existing.push(log)
-    sessionMap.set(sessionId, existing)
-  }
-
-  const sessions: AgentLogSession[] = []
-  for (const [sessionId, sessionLogs] of sessionMap) {
-    sessions.push(buildSession(sessionId, sessionLogs))
-  }
-
-  sessions.sort(
-    (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-  )
-
-  return {
-    sessions,
-    currentPage: page,
-    hasMore: apiPage < totalPages,
-  }
-}
-
-export async function fetchSessionDetail(
-  agentId: string,
-  sessionId: string
-): Promise<AgentLogSession | null> {
-  const firstPageParams = new URLSearchParams({
-    session_id: sessionId,
-    page: "1",
-    page_size: "100",
-  })
-  const firstPageResponse = await fetch(
-    `${liteLLMUrl}/spend/logs/session/ui?${firstPageParams}`,
-    {
-      headers: {
-        Authorization: liteLLMAuthorizationHeader,
-      },
+    if (response.status === 404) {
+      return null
     }
-  )
-
-  if (!firstPageResponse.ok) {
-    const text = await firstPageResponse.text()
+    const text = await response.text()
     throw new Error(
-      `Error fetching agent session detail: ${text || firstPageResponse.statusText}`
+      `Error fetching agent log detail: ${text || response.statusText}`
     )
   }
 
-  const firstPageJson =
-    (await firstPageResponse.json()) as LiteLLMLogsPage<LiteLLMSpendLog>
-  const logs = firstPageJson.data
-  const totalPages = firstPageJson.total_pages
+  const data = (await response.json()) as LiteLLMRequestListResponse | null
+  return data?.data?.[0] || null
+}
 
-  for (let currentPage = 2; currentPage <= totalPages; currentPage += 1) {
+async function fetchLiteLLMSessionRows(
+  sessionId: string
+): Promise<{ rows: LiteLLMRequestRecord[]; total: number }> {
+  const pageSize = 100
+  const rows: LiteLLMRequestRecord[] = []
+  let page = 1
+  let total = 0
+  let totalPages = 1
+
+  while (page <= totalPages) {
     const params = new URLSearchParams({
       session_id: sessionId,
-      page: String(currentPage),
-      page_size: "100",
+      page: String(page),
+      page_size: String(pageSize),
     })
     const response = await fetch(
-      `${liteLLMUrl}/spend/logs/session/ui?${params}`,
+      `${liteLLMUrl}/spend/logs/session/ui?${params.toString()}`,
       {
         headers: {
           Authorization: liteLLMAuthorizationHeader,
@@ -322,37 +390,30 @@ export async function fetchSessionDetail(
     )
 
     if (!response.ok) {
+      if (response.status === 404) {
+        return { rows: [], total: 0 }
+      }
       const text = await response.text()
       throw new Error(
         `Error fetching agent session detail: ${text || response.statusText}`
       )
     }
 
-    const json = (await response.json()) as LiteLLMLogsPage<LiteLLMSpendLog>
-    logs.push(...json.data)
+    const data = (await response.json()) as LiteLLMRequestListResponse
+    rows.push(...(data.data || []))
+    total = data.total || total || rows.length
+    totalPages = data.total_pages || 1
+    page += 1
   }
 
-  const filteredLogs = logs.filter(
-    log => log.end_user === `bb-agent:${agentId}`
-  )
-
-  if (!filteredLogs.length) {
-    return null
-  }
-
-  return buildSession(sessionId, filteredLogs)
+  return { rows, total }
 }
 
-export async function fetchRequestDetail(
-  agentId: string,
-  requestId: string,
-  startDate: string
-): Promise<AgentLogRequestDetail> {
-  const params = new URLSearchParams({
-    start_date: formatLiteLLMDateTime(startDate, "start"),
-  })
+async function fetchLiteLLMRequestPayloadById(
+  requestId: string
+): Promise<LiteLLMRequestPayload | null> {
   const response = await fetch(
-    `${liteLLMUrl}/spend/logs/ui/${requestId}?${params}`,
+    `${liteLLMUrl}/spend/logs/ui/${encodeURIComponent(requestId)}`,
     {
       headers: {
         Authorization: liteLLMAuthorizationHeader,
@@ -361,16 +422,313 @@ export async function fetchRequestDetail(
   )
 
   if (!response.ok) {
+    if (response.status === 404) {
+      return null
+    }
     const text = await response.text()
     throw new Error(
       `Error fetching agent log detail: ${text || response.statusText}`
     )
   }
 
-  const data = (await response.json()) as LiteLLMRequestDetail
-  if (data.proxy_server_request?.user !== getExpectedEndUser(agentId)) {
+  return (await response.json()) as LiteLLMRequestPayload
+}
+
+async function fetchLiteLLMRequestRaw(
+  agentId: string,
+  requestId: string
+): Promise<LiteLLMRequestDetail> {
+  const [payload, summary] = await Promise.all([
+    fetchLiteLLMRequestPayloadById(requestId),
+    fetchLiteLLMRequestSummaryById(requestId),
+  ])
+
+  if (!payload) {
     throw new HTTPError("Agent log detail not found", 404)
   }
+  const data: LiteLLMRequestDetail = {
+    request_id: requestId,
+    model: summary?.model,
+    prompt_tokens: summary?.prompt_tokens,
+    completion_tokens: summary?.completion_tokens,
+    spend: summary?.spend,
+    status: summary?.status,
+    startTime: summary?.startTime,
+    endTime: summary?.endTime,
+    end_user: summary?.end_user,
+    user: summary?.user,
+    metadata: summary?.metadata,
+    response: payload.response,
+    proxy_server_request: payload.proxy_server_request,
+  }
+
+  validateLiteLLMRequestOwnership(agentId, data)
+
+  return data
+}
+
+async function upsertSessionIndexDoc(
+  db: ReturnType<typeof context.getWorkspaceDB>,
+  snapshot: AgentLogSessionSnapshot
+): Promise<void> {
+  const sessionDocId = getSessionDocId(snapshot.agentId, snapshot.sessionId)
+  const now = new Date().toISOString()
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const existing = await db.tryGet<AgentLogSessionIndexDoc>(sessionDocId)
+    const requestIds = parseIndexedRequestIds(existing?.requestIds)
+    for (const requestId of snapshot.requestIds) {
+      requestIds.add(requestId)
+    }
+    const startTime = existing
+      ? minDate(existing.startTime, snapshot.startTime)
+      : snapshot.startTime
+    const lastActivityAt = existing
+      ? maxDate(existing.lastActivityAt, snapshot.endTime || snapshot.startTime)
+      : snapshot.endTime || snapshot.startTime
+    const status =
+      existing?.status === "error" || snapshot.status === "error"
+        ? "error"
+        : "success"
+
+    const doc: AgentLogSessionIndexDoc = {
+      ...(existing ? { _rev: existing._rev } : {}),
+      _id: sessionDocId,
+      tableId: AGENT_LOG_SESSION_TABLE_ID,
+      type: "agent_log_session",
+      agentId: snapshot.agentId,
+      sessionId: snapshot.sessionId,
+      trigger: existing?.trigger || snapshot.trigger,
+      isPreview: existing?.isPreview ?? snapshot.isPreview,
+      firstInput: existing?.firstInput || snapshot.firstInput,
+      startTime,
+      lastActivityAt,
+      requestIds: JSON.stringify([...requestIds]),
+      operations: requestIds.size,
+      status,
+      createdAt: existing?.createdAt || now,
+      updatedAt: now,
+    }
+
+    try {
+      await db.put(doc)
+      return
+    } catch (error: any) {
+      if (error?.status === 409 && attempt < 2) {
+        continue
+      }
+      throw error
+    }
+  }
+}
+
+export async function addSessionLog(
+  input: IndexAgentLogOperationInput
+): Promise<void> {
+  const uniqueRequestIds = [...new Set(input.requestIds)].filter(Boolean)
+  if (!input.agentId || !input.sessionId || !uniqueRequestIds.length) {
+    return
+  }
+
+  const db = context.getWorkspaceDB()
+  const trigger = determineTrigger(input.sessionId)
+  const isPreview = isPreviewSession(input.sessionId)
+  const firstInput = truncateText(input.firstInput || "")
+  const fallbackStartTime = toISO(input.startedAt)
+  const fallbackEndTime = toISO(input.completedAt || input.startedAt)
+
+  const summaries = (
+    await Promise.all(
+      uniqueRequestIds.map(async requestId => {
+        try {
+          const requestDetail = await fetchLiteLLMRequestSummaryById(
+            requestId,
+            fallbackStartTime,
+            fallbackEndTime
+          )
+          if (!requestDetail) {
+            throw new HTTPError("Agent log detail not found", 404)
+          }
+          validateLiteLLMRequestOwnership(input.agentId, requestDetail)
+          return {
+            requestId,
+            detail: requestDetail,
+          }
+        } catch (error) {
+          console.error("Failed to index agent log request", {
+            agentId: input.agentId,
+            sessionId: input.sessionId,
+            requestId,
+            error,
+          })
+          return null
+        }
+      })
+    )
+  ).filter(
+    (
+      result
+    ): result is {
+      requestId: string
+      detail: LiteLLMRequestDetail
+    } => result != null
+  )
+
+  if (!summaries.length) {
+    return
+  }
+
+  const snapshot: AgentLogSessionSnapshot = {
+    agentId: input.agentId,
+    sessionId: input.sessionId,
+    requestIds: summaries.map(summary => summary.requestId),
+    trigger,
+    isPreview,
+    firstInput,
+    startTime: summaries.reduce(
+      (earliest, summary) => minDate(earliest, summary.detail.startTime),
+      fallbackStartTime
+    ),
+    endTime: summaries.reduce(
+      (latest, summary) => maxDate(latest, summary.detail.endTime),
+      fallbackEndTime
+    ),
+    status: summaries.some(summary => summary.detail.status === "failure")
+      ? "error"
+      : "success",
+  }
+
+  await upsertSessionIndexDoc(db, snapshot)
+}
+
+/**
+ * Sessions are listed from local Budibase index documents.
+ * Historical LiteLLM logs that were never indexed are out of scope by design.
+ */
+export async function fetchSessions(
+  agentId: string,
+  startDate: string,
+  endDate: string,
+  bookmark?: string,
+  limit?: number,
+  statusFilter?: string,
+  triggerFilter?: string
+): Promise<FetchAgentLogsResponse> {
+  const page = parseBookmarkPage(bookmark)
+  const pageSize = normalizeSessionLimit(limit)
+  const sessionTable = agentLogSessionTable()
+
+  const rows = await querySql<AgentLogSessionIndexDoc>(
+    {
+      operation: Operation.READ,
+      table: sessionTable,
+      tables: {},
+      paginate: {
+        page,
+        limit: pageSize + 1,
+      },
+      filters: buildSessionFilters(
+        agentId,
+        startDate,
+        endDate,
+        statusFilter,
+        triggerFilter
+      ),
+      resource: {
+        fields: [],
+      },
+      sort: {
+        lastActivityAt: {
+          direction: SortOrder.DESCENDING,
+          type: SortType.STRING,
+        },
+      },
+    },
+    sessionTable
+  )
+
+  const hasMore = rows.length > pageSize
+  if (hasMore) {
+    rows.pop()
+  }
+
+  const sessions = rows.map(
+    session =>
+      ({
+        sessionId: session.sessionId,
+        firstInput: session.firstInput || "",
+        trigger: session.trigger,
+        isPreview: !!session.isPreview,
+        startTime: session.startTime,
+        operations: session.operations || 0,
+        status: session.status,
+        entries: [],
+      }) satisfies AgentLogSession
+  )
+
+  return {
+    sessions,
+    hasMore,
+    nextBookmark: hasMore ? String(page + 1) : undefined,
+  }
+}
+
+export async function fetchSessionDetail(
+  agentId: string,
+  sessionId: string
+): Promise<AgentLogSession | null> {
+  const { rows: sessionRows, total } = await fetchLiteLLMSessionRows(sessionId)
+  const liveEntries = sessionRows
+    .filter(row => getLiteLLMRequestUser(row) === getExpectedEndUser(agentId))
+    .sort((a, b) => {
+      const aTime = new Date(a.startTime || 0).getTime()
+      const bTime = new Date(b.startTime || 0).getTime()
+      return aTime - bTime
+    })
+    .map(
+      row =>
+        ({
+          requestId: row.request_id || "",
+          sessionId: row.session_id || sessionId,
+          model: mapRequestModel(row),
+          inputTokens: row.prompt_tokens ?? 0,
+          outputTokens: row.completion_tokens ?? 0,
+          spend: row.spend ?? 0,
+          startTime: row.startTime || "",
+          endTime: row.endTime || "",
+          status: row.status === "failure" ? "error" : "success",
+        }) satisfies AgentLogEntry
+    )
+
+  const sessionSummary = await context
+    .getWorkspaceDB()
+    .tryGet<AgentLogSessionIndexDoc>(getSessionDocId(agentId, sessionId))
+
+  if (!liveEntries.length) {
+    return null
+  }
+
+  return {
+    sessionId,
+    firstInput: sessionSummary?.firstInput || "",
+    trigger: sessionSummary?.trigger || determineTrigger(sessionId),
+    isPreview: sessionSummary?.isPreview ?? isPreviewSession(sessionId),
+    startTime: liveEntries[0]?.startTime || sessionSummary?.startTime || "",
+    operations: Math.max(
+      sessionSummary?.operations || 0,
+      total,
+      liveEntries.length
+    ),
+    status: determineStatus(liveEntries),
+    entries: liveEntries,
+  }
+}
+
+export async function fetchRequestDetail(
+  agentId: string,
+  requestId: string
+): Promise<AgentLogRequestDetail> {
+  const data = await fetchLiteLLMRequestRaw(agentId, requestId)
   const requestMessages = data.proxy_server_request?.messages || []
   const responseMessage = data.response?.choices?.[0]?.message
   const agent = await getOrThrow(agentId)
@@ -378,9 +736,9 @@ export async function fetchRequestDetail(
     await getAvailableTools(agent.aiconfig)
   )
 
-  const messages = requestMessages.map(m => ({
-    role: m.role,
-    content: toContentString(m.content),
+  const messages = requestMessages.map(message => ({
+    role: message.role,
+    content: toContentString(message.content),
   }))
 
   const responseText = responseMessage
@@ -435,7 +793,7 @@ export async function fetchRequestDetail(
 
   return {
     requestId: data.request_id || requestId,
-    model: data.response?.model || data.model || data.proxy_server_request?.model || "unknown",
+    model: mapRequestModel(data) || "unknown",
     messages,
     inputToolCalls,
     response: responseText,
@@ -444,6 +802,7 @@ export async function fetchRequestDetail(
     toolResults,
     inputTokens: data.prompt_tokens || 0,
     outputTokens: data.completion_tokens || 0,
+    spend: data.spend || 0,
     startTime: data.startTime || "",
     endTime: data.endTime || "",
   }

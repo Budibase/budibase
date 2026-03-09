@@ -16,16 +16,16 @@
   type Props = {
     selectedSession: AgentLogSession | null
     expandedStepId: string | null
-    stepDetailsByRequestId: Record<string, AgentLogRequestDetail>
-    stepLoadingByRequestId: Record<string, boolean>
+    expandedStepDetail: AgentLogRequestDetail | null
+    expandedStepLoading: boolean
     onToggleStep: (_entry: AgentLogEntry) => void | Promise<void>
   }
 
   let {
     selectedSession,
     expandedStepId,
-    stepDetailsByRequestId,
-    stepLoadingByRequestId,
+    expandedStepDetail,
+    expandedStepLoading,
     onToggleStep,
   }: Props = $props()
 </script>
@@ -84,8 +84,8 @@
             {entry}
             {index}
             expanded={expandedStepId === entry.requestId}
-            detail={stepDetailsByRequestId[entry.requestId]}
-            loadingStep={!!stepLoadingByRequestId[entry.requestId]}
+            detail={expandedStepId === entry.requestId ? (expandedStepDetail || undefined) : undefined}
+            loadingStep={expandedStepId === entry.requestId && expandedStepLoading}
             {onToggleStep}
           />
         {/each}

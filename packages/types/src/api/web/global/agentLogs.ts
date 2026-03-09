@@ -23,8 +23,8 @@ export interface AgentLogSession {
 
 export interface FetchAgentLogsResponse {
   sessions: AgentLogSession[]
-  currentPage: number
   hasMore: boolean
+  nextBookmark?: string
 }
 
 export interface AgentLogMessage {
@@ -65,6 +65,7 @@ export interface AgentLogRequestDetail {
   toolResults: AgentLogToolResult[]
   inputTokens: number
   outputTokens: number
+  spend: number
   startTime: string
   endTime: string
 }

@@ -34,6 +34,9 @@ jest.mock("../../sdk", () => ({
           providerOptions: undefined,
         }),
       },
+      agentLogs: {
+        addSessionLog: jest.fn().mockResolvedValue(undefined),
+      },
     },
   },
 }))
@@ -72,6 +75,12 @@ function makeToolLoopAgentMock(toolResults: { toolCallId: string }[]) {
       })
       return {
         toUIMessageStream: jest.fn().mockReturnValue({}),
+        response: Promise.resolve({
+          id: "gen-test",
+          headers: {
+            "x-litellm-response-cost": "0.0001",
+          },
+        }),
         text: Promise.resolve("Agent response"),
         usage: Promise.resolve({ totalTokens: 50 }),
         output: Promise.resolve(undefined),
