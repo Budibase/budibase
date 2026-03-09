@@ -37,9 +37,7 @@ import fetch from "node-fetch"
 import env from "../../../environment"
 import { getAvailableTools, getOrThrow, getToolDisplayNames } from "./agents"
 import * as tableSqs from "../tables/internal/sqs"
-import {
-  AGENT_LOG_SESSION_TABLE_ID,
-} from "../sqs/staticTables"
+import { AGENT_LOG_SESSION_TABLE_ID } from "../sqs/staticTables"
 
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
@@ -47,7 +45,6 @@ const DEFAULT_SESSION_PAGE_SIZE = 75
 const MAX_SESSION_PAGE_SIZE = 100
 const DEFAULT_BOOKMARK_PAGE = 1
 const builder = new sql.Sql(SqlClient.SQL_LITE)
-
 
 function getExpectedEndUser(agentId: string): string {
   return `bb-agent:${agentId}`
@@ -207,7 +204,9 @@ function parseIndexedRequestIds(value?: string): Set<string> {
     if (!Array.isArray(parsed)) {
       return new Set()
     }
-    return new Set(parsed.filter((item): item is string => typeof item === "string"))
+    return new Set(
+      parsed.filter((item): item is string => typeof item === "string")
+    )
   } catch {
     return new Set()
   }
@@ -298,20 +297,19 @@ function formatLiteLLMDateTime(value: string): string {
   }
 
   const pad = (part: number) => String(part).padStart(2, "0")
-  return [
-    date.getUTCFullYear(),
-    pad(date.getUTCMonth() + 1),
-    pad(date.getUTCDate()),
-  ].join("-") +
+  return (
+    [
+      date.getUTCFullYear(),
+      pad(date.getUTCMonth() + 1),
+      pad(date.getUTCDate()),
+    ].join("-") +
     ` ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(
       date.getUTCSeconds()
     )}`
+  )
 }
 
-function getLiteLLMDayBoundary(
-  value: string,
-  mode: "start" | "end"
-): string {
+function getLiteLLMDayBoundary(value: string, mode: "start" | "end"): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
     throw new Error(`Invalid LiteLLM date: ${value}`)
@@ -345,11 +343,14 @@ async function fetchLiteLLMRequestSummaryById(
     page: "1",
     page_size: "1",
   })
-  const response = await fetch(`${liteLLMUrl}/spend/logs/v2?${params.toString()}`, {
-    headers: {
-      Authorization: liteLLMAuthorizationHeader,
-    },
-  })
+  const response = await fetch(
+    `${liteLLMUrl}/spend/logs/v2?${params.toString()}`,
+    {
+      headers: {
+        Authorization: liteLLMAuthorizationHeader,
+      },
+    }
+  )
 
   if (!response.ok) {
     if (response.status === 404) {

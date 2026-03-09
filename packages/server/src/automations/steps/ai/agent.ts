@@ -57,12 +57,12 @@ export async function run({
     { kind: "agent", name: "automation.agent", sessionId },
     async agentSpan => {
       const requestIds = new Set<string>()
-      const indexOperation = () => {
+      const indexOperation = async () => {
         if (!requestIds.size) {
           return
         }
-        void sdk.ai.agentLogs
-          .addSessionLog({
+        try {
+          await sdk.ai.agentLogs.addSessionLog({
             agentId,
             sessionId,
             requestIds: [...requestIds],
@@ -70,13 +70,13 @@ export async function run({
             startedAt: operationStartedAt,
             completedAt: new Date().toISOString(),
           })
-          .catch(error => {
-            console.error("Failed to index automation agent logs", {
-              agentId,
-              sessionId,
-              error,
-            })
+        } catch (error) {
+          console.error("Failed to index automation agent logs", {
+            agentId,
+            sessionId,
+            error,
           })
+        }
       }
 
       try {

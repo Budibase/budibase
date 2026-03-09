@@ -1,7 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
   import { selectedAgent } from "@/stores/portal"
-  import { admin } from "@/stores/portal/admin"
   import dayjs, { type Dayjs } from "dayjs"
   import { onMount } from "svelte"
   import type {
@@ -149,7 +148,10 @@
     const agentId = $selectedAgent?._id
     if (!agentId) return
 
-    if (expandedStepLoading || expandedStepDetail?.requestId === entry.requestId) {
+    if (
+      expandedStepLoading ||
+      expandedStepDetail?.requestId === entry.requestId
+    ) {
       return
     }
 

@@ -14,7 +14,10 @@ import { isEqual } from "lodash"
 import tablesSdk from ".."
 import { DEFAULT_TABLES } from "../../../../db/defaultData/datasource_bb_default"
 import { generateJunctionTableID } from "../../../../db/utils"
-import { STATIC_SQS_TABLE_IDS, getStaticSqsTables } from "../../sqs/staticTables"
+import {
+  STATIC_SQS_TABLE_IDS,
+  getStaticSqsTables,
+} from "../../sqs/staticTables"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,

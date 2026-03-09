@@ -301,7 +301,7 @@ export async function webhookChat({
       requestIds.add(responseMetadata.requestId)
     }
     if (requestIds.size) {
-      void sdk.ai.agentLogs
+      sdk.ai.agentLogs
         .addSessionLog({
           agentId,
           sessionId,
@@ -324,22 +324,22 @@ export async function webhookChat({
       requestIds.add(responseMetadata.requestId)
     }
     if (requestIds.size) {
-      void sdk.ai.agentLogs
-        .addSessionLog({
+      try {
+        await sdk.ai.agentLogs.addSessionLog({
           agentId,
           sessionId,
-          requestIds: [...requestIds],
+          requestIds: Array.from(requestIds),
           firstInput: latestQuestion,
           startedAt: operationStartedAt,
           completedAt: new Date().toISOString(),
         })
-        .catch(indexError => {
-          console.error("Failed to index webhook chat logs", {
-            agentId,
-            sessionId,
-            error: indexError,
-          })
+      } catch (error) {
+        console.error("Failed to index webhook chat logs", {
+          agentId,
+          sessionId,
+          error,
         })
+      }
     }
     throw error
   }
@@ -479,12 +479,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const sessionId = chat._id || chat.sessionId || chatId
     const requestIds = new Set<string>()
     const operationStartedAt = new Date().toISOString()
-    const indexOperation = () => {
+    const indexOperation = async () => {
       if (!requestIds.size) {
         return
       }
-      void sdk.ai.agentLogs
-        .addSessionLog({
+      try {
+        await sdk.ai.agentLogs.addSessionLog({
           agentId,
           sessionId,
           requestIds: [...requestIds],
@@ -492,13 +492,13 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           startedAt: operationStartedAt,
           completedAt: new Date().toISOString(),
         })
-        .catch(error => {
-          console.error("Failed to index chat stream logs", {
-            agentId,
-            sessionId,
-            error,
-          })
+      } catch (error) {
+        console.error("Failed to index chat stream logs", {
+          agentId,
+          sessionId,
+          error,
         })
+      }
     }
     const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
       agent.aiconfig,
