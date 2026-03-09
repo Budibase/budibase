@@ -9,6 +9,9 @@ export async function generateAgentInstructions(
   ctx: Ctx<GenerateAgentInstructionsRequest, GenerateAgentInstructionsResponse>
 ) {
   const { aiconfigId, prompt, agentName, goal } = ctx.request.body
+  const toolNames = Array.isArray(ctx.request.body.toolNames)
+    ? ctx.request.body.toolNames
+    : []
 
   if (!aiconfigId) {
     ctx.throw(400, "Missing required field: aiconfigId")
@@ -25,6 +28,7 @@ export async function generateAgentInstructions(
     prompt,
     agentName,
     goal,
+    toolNames,
   })
 
   ctx.body = { instructions }

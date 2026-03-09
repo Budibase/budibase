@@ -61,13 +61,20 @@ interface GenerateAgentInstructionsOptions {
   prompt: string
   agentName?: string
   goal?: string
+  toolNames: string[]
 }
 
 export function generateAgentInstructionsPrompt({
   prompt,
   agentName,
   goal,
+  toolNames = [],
 }: GenerateAgentInstructionsOptions) {
+  const toolsSection =
+    toolNames.length > 0
+      ? `Enabled tools:\n${toolNames.map(name => `- ${name}`).join("\n")}`
+      : "Enabled tools:\n- None"
+
   return new LLMRequest()
     .addSystemMessage(`You write instruction prompts for Budibase agents.
 
@@ -106,7 +113,9 @@ Agent name:
 ${agentName?.trim() || "Not provided"}
 
 Goal:
-${goal?.trim() || "Not provided"}`)
+${goal?.trim() || "Not provided"}
+
+${toolsSection}`)
 }
 
 export function translate(text: string, language: string) {

@@ -85,6 +85,7 @@ export interface GenerateAgentInstructionsRequest {
   prompt: string
   agentName?: string
   goal?: string
+  toolNames: string[]
 }
 
 export interface GenerateAgentInstructionsResponse {

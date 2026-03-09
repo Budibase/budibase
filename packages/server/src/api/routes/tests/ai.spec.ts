@@ -186,6 +186,7 @@ describe("AI", () => {
       const { instructions } = await config.api.ai.generateAgentInstructions({
         aiconfigId: "test-config",
         prompt: "Create support agent instructions",
+        toolNames: [],
       })
 
       expect(instructions).toContain("**Agent role**")
@@ -200,6 +201,7 @@ describe("AI", () => {
       const { instructions } = await config.api.ai.generateAgentInstructions({
         aiconfigId: "test-config",
         prompt: "Create support agent instructions",
+        toolNames: [],
       })
 
       expect(instructions).toBe("**Agent role**\nHelp users.")
@@ -210,6 +212,7 @@ describe("AI", () => {
         {
           aiconfigId: "",
           prompt: "Create support agent instructions",
+          toolNames: [],
         },
         { status: 400 }
       )
@@ -220,6 +223,7 @@ describe("AI", () => {
         {
           aiconfigId: "test-config",
           prompt: "   ",
+          toolNames: [],
         },
         { status: 400 }
       )
@@ -237,6 +241,7 @@ describe("AI", () => {
         {
           aiconfigId: "test-config",
           prompt: "Create support agent instructions",
+          toolNames: [],
         },
         { status: 500 }
       )
