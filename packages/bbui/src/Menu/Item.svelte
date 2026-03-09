@@ -41,6 +41,7 @@
 <li
   on:click={disabled ? null : onClick}
   on:auxclick
+  on:contextmenu
   class="spectrum-Menu-item"
   class:is-disabled={disabled}
   role="menuitem"
