@@ -1,8 +1,6 @@
 <script>
   import { params, redirect } from "@roxi/routify"
   import QueryViewer from "@/components/integration/QueryViewer.svelte"
-  import RestQueryViewer from "@/components/integration/RestQueryViewer.svelte"
-  import { IntegrationTypes } from "@/constants/backend"
   import { datasources } from "@/stores/builder"
 
   $params
@@ -14,36 +12,19 @@
       $redirect("../../../")
     }
   }
-  $: isRestQuery = datasource?.source === IntegrationTypes.REST
-  $: query = buildNewQuery(isRestQuery)
-  $: {
-    if (isRestQuery) {
-      $redirect(`../../../../apis/query/new/${$params.datasourceId}`)
-    }
-  }
-
-  const buildNewQuery = isRestQuery => {
-    let query = {
-      name: "Untitled query",
-      transformer: "return data",
-      schema: {},
-      datasourceId: $params.datasourceId,
-      parameters: [],
-      fields: {},
-      queryVerb: "read",
-    }
-    if (isRestQuery) {
-      query.flags = {}
-      query.fields = { disabledHeaders: {}, headers: {} }
-    }
-    return query
-  }
+  $: query = datasource
+    ? {
+        name: "Untitled query",
+        transformer: "return data",
+        schema: {},
+        datasourceId: $params.datasourceId,
+        parameters: [],
+        fields: {},
+        queryVerb: "read",
+      }
+    : null
 </script>
 
 {#if datasource && query}
-  {#if isRestQuery}
-    <RestQueryViewer />
-  {:else}
-    <QueryViewer {query} />
-  {/if}
+  <QueryViewer {query} />
 {/if}

@@ -62,8 +62,9 @@
       <div class="inline-icon">
         <Icon
           name="globe"
-          hoverable={!disabled}
-          on:click={() => !disabled && openPopover()}
+          hoverable={!disabled && servers.length > 0}
+          disabled={disabled || servers.length === 0}
+          on:click={() => !disabled && servers.length > 0 && openPopover()}
         />
       </div>
       <input
@@ -130,8 +131,9 @@
 
   .inline-icon {
     position: absolute;
-    top: 25%;
-    right: 2%;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 6px;
   }
 
   .spectrum-InputGroup {
