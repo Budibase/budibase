@@ -26,6 +26,7 @@ env:
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
   ONLY_AFFECTED_TASKS: ${{ github.event_name == 'pull_request' }}
+  HUSKY: 0
 
 jobs:
   lint:
@@ -78,7 +79,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Use Node.js 22.x
         uses: azure/setup-helm@v3
@@ -110,15 +111,19 @@ jobs:
       - name: Test
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --ignore=@budibase/frontend-core --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --ignore=@budibase/frontend-core --no-prefix --since=${{ env.NX_BASE_BRANCH }} -- --reporters=default --reporters=github-actions
             yarn test -- --scope=@budibase/builder --scope=@budibase/client --scope=@budibase/frontend-core --since=${{ env.NX_BASE_BRANCH }}
           else
-            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --ignore=@budibase/frontend-core --no-prefix -- --verbose --reporters=default --reporters=github-actions
+            yarn test -- --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/builder --ignore=@budibase/upgrade-tests --ignore=@budibase/client --ignore=@budibase/frontend-core --no-prefix -- --reporters=default --reporters=github-actions
             yarn test -- --scope=@budibase/builder --scope=@budibase/client --scope=@budibase/frontend-core --no-prefix
           fi
 
-  test-worker:
+  check-affected-tests-to-run:
+    name: Check affected tests to run
     runs-on: ubuntu-24.04
+    outputs:
+      run_worker_tests: ${{ steps.affected.outputs.run_worker_tests }}
+      run_server_tests: ${{ steps.affected.outputs.run_server_tests }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -132,57 +137,151 @@ jobs:
           node-version: 22.x
           cache: yarn
       - run: yarn --frozen-lockfile
-      - name: Test worker
+
+      - name: Check affected tests
+        id: affected
         run: |
+          # This gates whole package test jobs (worker/server) based on Nx affected projects.
+          # Example: if a PR changes only FE projects, server/worker test jobs are skipped.
+          RUN_WORKER_TESTS="true"
+          RUN_SERVER_TESTS="true"
+
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/worker)
-            if [ -z "$AFFECTED" ]; then
-              echo "No affected tests to run"
-              exit 0
+            AFFECTED_WORKER=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/worker)
+            if [ -z "$AFFECTED_WORKER" ]; then
+              RUN_WORKER_TESTS="false"
+            fi
+
+            AFFECTED_SERVER=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
+            if [ -z "$AFFECTED_SERVER" ]; then
+              RUN_SERVER_TESTS="false"
             fi
           fi
 
-          cd packages/worker
-          yarn test --verbose --reporters=default --reporters=github-actions
+          echo "run_worker_tests=$RUN_WORKER_TESTS" >> $GITHUB_OUTPUT
+          echo "run_server_tests=$RUN_SERVER_TESTS" >> $GITHUB_OUTPUT
+          echo "run_worker_tests=$RUN_WORKER_TESTS"
+          echo "run_server_tests=$RUN_SERVER_TESTS"
 
-  test-server:
+  test-worker:
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        datasource:
-          [
-            mssql,
-            mysql,
-            postgres,
-            postgres_legacy,
-            mongodb,
-            mariadb,
-            oracle,
-            sqs,
-            elasticsearch,
-            dynamodb,
-            none,
-          ]
+    needs: check-affected-tests-to-run
     steps:
+      - name: Skip worker tests
+        if: needs.check-affected-tests-to-run.outputs.run_worker_tests != 'true'
+        run: echo "Skipping worker tests because @budibase/worker is not affected."
+
       - name: Checkout repo
+        if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
       - name: Use Node.js 22.x
+        if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: yarn
+      - if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
+        run: yarn --frozen-lockfile
+      - name: Test worker
+        if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
+        run: |
+          cd packages/worker
+          yarn test --reporters=default --reporters=github-actions
+
+  test-server:
+    runs-on: ubuntu-24.04
+    needs: check-affected-tests-to-run
+    strategy:
+      matrix:
+        include:
+          # Use uneven sharding to balance runtime across datasources.
+          # Oracle and non-datasource ("none") suites are slower, so they use more shards.
+          - datasource: mssql
+            shard_index: 1
+            shard_total: 1
+          - datasource: mysql
+            shard_index: 1
+            shard_total: 1
+          - datasource: postgres
+            shard_index: 1
+            shard_total: 1
+          - datasource: postgres_legacy
+            shard_index: 1
+            shard_total: 1
+          - datasource: mongodb
+            shard_index: 1
+            shard_total: 1
+          - datasource: mariadb
+            shard_index: 1
+            shard_total: 1
+          - datasource: elasticsearch
+            shard_index: 1
+            shard_total: 1
+          - datasource: dynamodb
+            shard_index: 1
+            shard_total: 1
+          - datasource: sqs
+            shard_index: 1
+            shard_total: 2
+          - datasource: sqs
+            shard_index: 2
+            shard_total: 2
+          - datasource: none
+            shard_index: 1
+            shard_total: 3
+          - datasource: none
+            shard_index: 2
+            shard_total: 3
+          - datasource: none
+            shard_index: 3
+            shard_total: 3
+          - datasource: oracle
+            shard_index: 1
+            shard_total: 4
+          - datasource: oracle
+            shard_index: 2
+            shard_total: 4
+          - datasource: oracle
+            shard_index: 3
+            shard_total: 4
+          - datasource: oracle
+            shard_index: 4
+            shard_total: 4
+    steps:
+      - name: Skip server tests
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests != 'true'
+        run: echo "Skipping server tests because @budibase/server is not affected."
+
+      - name: Checkout repo
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
+
+      - name: Use Node.js 22.x
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           cache: yarn
 
+      - if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
+        run: yarn --frozen-lockfile
+
       - name: Load dotenv
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
         id: dotenv
         uses: falti/dotenv-action@v1.1.3
         with:
           path: ./packages/server/images-sha.env
 
       - name: Pull testcontainers images
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
         run: |
           if [ "${{ matrix.datasource }}" == "mssql" ]; then
             docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
@@ -211,13 +310,12 @@ jobs:
 
           wait $(jobs -p)
 
-      - run: yarn --frozen-lockfile
-
       - name: Build client library - necessary for component tests
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true' && matrix.datasource == 'none'
         run: yarn build:client
 
       - name: Set up PostgreSQL 16
-        if: matrix.datasource == 'postgres'
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true' && matrix.datasource == 'postgres'
         run: |
           sudo systemctl stop postgresql
           sudo apt-get remove --purge -y postgresql* libpq-dev
@@ -231,25 +329,27 @@ jobs:
           sudo apt-get install -y postgresql-16
 
       - name: Test server
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
         env:
           DATASOURCE: ${{ matrix.datasource }}
+          JEST_SHARD_INDEX: ${{ matrix.shard_index }}
+          JEST_SHARD_TOTAL: ${{ matrix.shard_total }}
+          JEST_MAX_WORKERS: 4
           # DEBUG: testcontainers*
         run: |
-          if ${{ env.ONLY_AFFECTED_TASKS }}; then
-            AFFECTED=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/server)
-            if [ -z "$AFFECTED" ]; then
-              echo "No affected tests to run"
-              exit 0
-            fi
-          fi
-
           FILTER="./src/tests/filters/datasource-tests.js"
           if [ "${{ matrix.datasource }}" == "none" ]; then
             FILTER="./src/tests/filters/non-datasource-tests.js"
           fi
 
+          SHARD_ARG=""
+          if [ "$JEST_SHARD_TOTAL" -gt "1" ]; then
+            SHARD_ARG="--shard=$JEST_SHARD_INDEX/$JEST_SHARD_TOTAL"
+            echo "Running shard $JEST_SHARD_INDEX/$JEST_SHARD_TOTAL for datasource '$DATASOURCE'"
+          fi
+
           cd packages/server
-          yarn test --filter $FILTER --verbose --reporters=default --reporters=github-actions
+          yarn test --filter $FILTER --reporters=default --reporters=github-actions $SHARD_ARG
 
   check-lockfile:
     runs-on: ubuntu-24.04
