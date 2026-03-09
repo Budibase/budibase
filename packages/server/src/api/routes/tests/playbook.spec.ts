@@ -74,6 +74,28 @@ describe("/playbooks", () => {
     })
   })
 
+  it("rejects path and body playbook id mismatches on update", async () => {
+    await withPlaybooksEnabled(async () => {
+      const { playbook } = await config.api.playbook.create({
+        name: "Operations",
+      })
+
+      await config.api.playbook.update(
+        {
+          ...playbook,
+          name: "Updated operations",
+        },
+        {
+          status: 400,
+          body: {
+            message: "Path and body ids do not match",
+          },
+        },
+        "playbook_mismatch"
+      )
+    })
+  })
+
   it("rejects assigning an unknown playbook id", async () => {
     await withPlaybooksEnabled(async () => {
       const datasource = await config.api.datasource.create(

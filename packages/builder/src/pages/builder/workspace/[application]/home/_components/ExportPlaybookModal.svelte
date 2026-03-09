@@ -17,9 +17,14 @@
   let encrypted = false
   let encryptPassword = ""
   let disabled = false
+  let initialSelectedPlaybookId = ""
 
-  $: if (selectedPlaybookId) {
+  $: if (
+    selectedPlaybookId &&
+    selectedPlaybookId !== initialSelectedPlaybookId
+  ) {
     playbookId = selectedPlaybookId
+    initialSelectedPlaybookId = selectedPlaybookId
   } else if (!playbookId && playbooks.length === 1) {
     playbookId = playbooks[0]._id
   }

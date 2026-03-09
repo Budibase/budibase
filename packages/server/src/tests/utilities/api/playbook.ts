@@ -69,10 +69,11 @@ export class PlaybookAPI extends TestAPI {
 
   update = async (
     playbook: UpdatePlaybookRequest,
-    expectations?: Expectations
+    expectations?: Expectations,
+    pathId?: string
   ) => {
     return await this._put<UpdatePlaybookResponse>(
-      `/api/playbooks/${playbook._id}`,
+      `/api/playbooks/${pathId || playbook._id}`,
       {
         body: playbook,
         expectations,

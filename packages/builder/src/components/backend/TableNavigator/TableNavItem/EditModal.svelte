@@ -1,5 +1,6 @@
 <script>
   import { cloneDeep } from "lodash/fp"
+  import { get } from "svelte/store"
   import { tables, datasources } from "@/stores/builder"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
   import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
@@ -15,7 +16,11 @@
 
   let originalName
   let updatedName
+  let originalPlaybookId = ""
   let playbookId = ""
+
+  $: hasChanges =
+    updatedName !== originalName || playbookId !== originalPlaybookId
 
   async function save() {
     const updatedTable = cloneDeep(table)
@@ -23,21 +28,23 @@
     updatedTable.playbookId = playbookId || undefined
     await tables.save(updatedTable)
     await datasources.fetch()
-    notifications.success("Table renamed successfully")
+    notifications.success("Table updated successfully")
   }
 
   function checkValid(evt) {
     const tableName = evt.target.value
-    error =
-      originalName === tableName
-        ? `Table with name ${tableName} already exists. Please choose another name.`
-        : ""
+    error = get(tables).list.some(
+      existing => existing._id !== table._id && existing.name === tableName
+    )
+      ? `Table with name ${tableName} already exists. Please choose another name.`
+      : ""
   }
 
   const initForm = () => {
     originalName = table.name + ""
     updatedName = table.name + ""
-    playbookId = table.playbookId || ""
+    originalPlaybookId = table.playbookId || ""
+    playbookId = originalPlaybookId
   }
 </script>
 
@@ -47,7 +54,7 @@
     title="Edit Table"
     confirmText="Save"
     onConfirm={save}
-    disabled={updatedName === originalName || error}
+    disabled={!hasChanges || !!error}
   >
     <form on:submit|preventDefault={() => editTableNameModal.confirm()}>
       <Input

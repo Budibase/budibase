@@ -55,6 +55,11 @@ export async function update(
   ctx: Ctx<UpdatePlaybookRequest, UpdatePlaybookResponse>
 ) {
   const { body } = ctx.request
+
+  if (ctx.params.id !== body._id) {
+    ctx.throw("Path and body ids do not match", 400)
+  }
+
   const playbook: RequiredKeys<Playbook> = {
     _id: body._id,
     _rev: body._rev,

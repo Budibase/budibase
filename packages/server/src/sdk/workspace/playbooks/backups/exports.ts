@@ -329,8 +329,16 @@ export async function streamExportPlaybook({
   playbookId: string
   encryptPassword?: string
 }) {
-  const tmpPath = await exportPlaybook(playbookId, {
+  const tarPath = await exportPlaybook(playbookId, {
     encryptPassword,
   })
-  return streamFile(tmpPath)
+  const stream = streamFile(tarPath)
+  const cleanup = () => {
+    fsp.rm(tarPath, { force: true }).catch(() => {})
+  }
+
+  stream.once("close", cleanup)
+  stream.once("error", cleanup)
+
+  return stream
 }
