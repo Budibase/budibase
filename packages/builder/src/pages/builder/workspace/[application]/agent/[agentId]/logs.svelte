@@ -58,9 +58,7 @@
     return new URLSearchParams(window.location.search).get("sessionId")
   }
 
-  let visibleSessions = $derived.by(() =>
-    $admin.isDev ? sessions : sessions.filter(session => !session.isPreview)
-  )
+  let visibleSessions = $derived.by(() => sessions)
 
   let sessionTableData = $derived.by(() =>
     visibleSessions.map(session => ({
@@ -73,9 +71,6 @@
 
   let visibleSelectedSession = $derived.by(() => {
     if (!selectedSession) {
-      return null
-    }
-    if (!$admin.isDev && selectedSession.isPreview) {
       return null
     }
     return selectedSession
