@@ -636,10 +636,14 @@ Any constraints the agent must follow.
     generatingInstructions = true
 
     try {
-      await API.generateAgentInstructions({
+      const { instructions } = await API.generateAgentInstructions({
         aiconfigId: draft.aiconfig,
         prompt: generateInstructionsPrompt,
+        agentName: draft.name,
+        goal: draft.goal,
       })
+
+      console.log("Generated agent instructions:", instructions)
       generateInstructionsModal?.hide()
       notifications.success("Instructions generated successfully")
     } catch (error: any) {

@@ -83,9 +83,13 @@ export interface GenerateTablesResponse {
 export interface GenerateAgentInstructionsRequest {
   aiconfigId: string
   prompt: string
+  agentName?: string
+  goal?: string
 }
 
-export interface GenerateAgentInstructionsResponse {}
+export interface GenerateAgentInstructionsResponse {
+  instructions: string
+}
 
 export interface UploadFileRequest {
   data: string
