@@ -649,10 +649,6 @@ export function createSessionLogIndexer({
   }
 }
 
-/**
- * Sessions are listed from local Budibase index documents.
- * Historical LiteLLM logs that were never indexed are out of scope by design.
- */
 export async function fetchSessions(
   agentId: string,
   startDate: string,
