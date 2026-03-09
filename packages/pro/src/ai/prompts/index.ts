@@ -57,6 +57,57 @@ If not possible, return only 'Error generating cron:' followed by a short explan
   )
 }
 
+interface GenerateAgentInstructionsOptions {
+  prompt: string
+  agentName?: string
+  goal?: string
+}
+
+export function generateAgentInstructionsPrompt({
+  prompt,
+  agentName,
+  goal,
+}: GenerateAgentInstructionsOptions) {
+  return new LLMRequest()
+    .addSystemMessage(`You write instruction prompts for Budibase agents.
+
+Return only the final instructions text.
+Do not include explanations, preamble, commentary, or markdown code fences.
+
+The output must use exactly these sections and headings:
+
+**Agent role**
+<short paragraph>
+
+**Inputs**
+<short paragraph>
+
+**Actions**
+- <bullet>
+- <bullet>
+
+**Output**
+- <bullet>
+- <bullet>
+
+**Rules**
+- <bullet>
+- <bullet>
+
+Write concise, practical instructions that help the agent behave well in Budibase.
+Prefer clear operational guidance over abstract advice.`)
+    .addUserMessage(`Generate instructions for a Budibase agent using this request:
+
+Prompt:
+${prompt.trim()}
+
+Agent name:
+${agentName?.trim() || "Not provided"}
+
+Goal:
+${goal?.trim() || "Not provided"}`)
+}
+
 export function translate(text: string, language: string) {
   return new LLMRequest().addUserMessage(
     `Translate the following text: "${text}" into ${language}. Only return the translation.`
