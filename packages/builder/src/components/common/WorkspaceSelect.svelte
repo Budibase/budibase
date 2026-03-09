@@ -4,7 +4,10 @@
   import { ActionMenu, MenuItem, Icon, StatusLight } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
+  import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
+  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems"
   import { appStore } from "@/stores/builder"
+  import { contextMenuStore } from "@/stores/builder/contextMenu"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
   import { appsStore, sortBy } from "@/stores/portal/apps"
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
@@ -33,6 +36,15 @@
   let filterInput: HTMLInputElement | null = null
   let activeIndex = -1
   let itemEls: (HTMLElement | null)[] = []
+  let selectedWorkspaceForMenu: EnrichedApp | null = null
+  let appContextMenuModals:
+    | {
+        showDuplicateModal: () => void
+        showExportDevModal: () => void
+        showExportProdModal: () => void
+        showDeleteModal: () => void
+      }
+    | undefined
 
   $: apps = $enrichedApps
   $: appId = $appStore.appId
@@ -80,6 +92,46 @@
 
   const getWorkspaceUrl = (app: any) => {
     return app.editable ? `/builder/workspace/${app.devId}` : `/app${app.url}`
+  }
+
+  const resolveMouseEvent = (
+    event: MouseEvent | CustomEvent<MouseEvent>
+  ): MouseEvent | null => {
+    if (event instanceof MouseEvent) {
+      return event
+    }
+    return event.detail instanceof MouseEvent ? event.detail : null
+  }
+
+  const openWorkspaceContextMenu = (
+    event: MouseEvent | CustomEvent<MouseEvent>,
+    ws: EnrichedApp
+  ) => {
+    if (!ws.editable) {
+      return
+    }
+
+    const e = resolveMouseEvent(event)
+    if (!e) {
+      return
+    }
+
+    e.preventDefault()
+    e.stopPropagation()
+    selectedWorkspaceForMenu = ws
+
+    const items = getAppContextMenuItems({
+      app: ws,
+      onDuplicate: () => appContextMenuModals?.showDuplicateModal(),
+      onExportDev: () => appContextMenuModals?.showExportDevModal(),
+      onExportProd: () => appContextMenuModals?.showExportProdModal(),
+      onDelete: () => appContextMenuModals?.showDeleteModal(),
+    })
+
+    contextMenuStore.open(`workspace-select-${ws.appId}`, items, {
+      x: e.clientX,
+      y: e.clientY,
+    })
   }
 
   const matchesFilter = (name: string, term: string) =>
@@ -217,7 +269,11 @@
           on:click={() => {
             navigateToWorkspace(ws)
           }}
-          on:auxclick={() => {
+          on:contextmenu={e => openWorkspaceContextMenu(e, ws)}
+          on:auxclick={e => {
+            if (e.button !== 1) {
+              return
+            }
             window.open(getWorkspaceUrl(ws), "_blank")
           }}
         >
@@ -262,6 +318,13 @@
     {/each}
   </div>
 </ActionMenu>
+
+{#if selectedWorkspaceForMenu}
+  <AppContextMenuModals
+    app={selectedWorkspaceForMenu}
+    bind:this={appContextMenuModals}
+  />
+{/if}
 
 <style>
   .app-items {
