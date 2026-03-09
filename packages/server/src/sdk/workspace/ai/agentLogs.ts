@@ -171,6 +171,7 @@ function mapRequestModel(data: LiteLLMRequestDetail) {
 }
 
 function getDateBoundaryISO(value: string, mode: "start" | "end"): string {
+  // Match date-only strings in YYYY-MM-DD format (no time component)
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return `${value}T${mode === "start" ? "00:00:00" : "23:59:59"}.000Z`
   }
