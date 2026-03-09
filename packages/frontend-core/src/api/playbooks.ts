@@ -37,7 +37,7 @@ export const buildPlaybookEndpoints = (
     })
   },
   exportBundle: async (id, body) => {
-    return await API.post<ExportPlaybookRequest, Response>({
+    return await API.post<ExportPlaybookRequest | undefined, Response>({
       url: `/api/playbooks/${id}/export`,
       body,
       parseResponse: response => response,

@@ -14,7 +14,7 @@ import {
   UpdatePlaybookResponse,
   WithoutDocMetadata,
 } from "@budibase/types"
-import { File, Files } from "formidable"
+import type { File, Files } from "formidable"
 import sdk from "../../sdk"
 
 const toPlaybookResponse = (playbook: Playbook): PlaybookResponse => ({
