@@ -638,6 +638,7 @@ Any constraints the agent must follow.
     try {
       await API.generateAgentInstructions({
         aiconfigId: draft.aiconfig,
+        prompt: generateInstructionsPrompt,
       })
       generateInstructionsModal?.hide()
       notifications.success("Instructions generated successfully")
@@ -917,7 +918,7 @@ Any constraints the agent must follow.
       <Button
         cta
         icon="sparkle"
-        disabled={generatingInstructions}
+        disabled={generatingInstructions || !generateInstructionsPrompt.trim()}
         on:click={generateInstructions}
       >
         {generatingInstructions ? "Generating..." : "Generate"}
