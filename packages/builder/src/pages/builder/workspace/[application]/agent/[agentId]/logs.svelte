@@ -166,9 +166,7 @@
     } catch (error) {
       console.error("Failed to fetch step detail", error)
     } finally {
-      if (expandedStepId === entry.requestId) {
-        expandedStepLoading = false
-      }
+      expandedStepLoading = false
     }
   }
 

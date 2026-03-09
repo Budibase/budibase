@@ -244,7 +244,8 @@ export async function webhookChat({
       includeGoal: false,
     })
   const providerPrefix = chat.channel?.provider || "chat"
-  const sessionId = `${providerPrefix}:${chat._id || v4()}`
+  const chatId = chat._id ?? docIds.generateChatConversationID()
+  const sessionId = `${providerPrefix}:${chatId}`
   const sessionLogIndexer = createSessionLogIndexer({
     agentId,
     sessionId,
@@ -463,7 +464,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
-    const sessionId = chat._id || chat.sessionId || chatId
+    const sessionId = chat.transient ? chat.sessionId || chatId : chatId
     const sessionLogIndexer = createSessionLogIndexer({
       agentId,
       sessionId,
