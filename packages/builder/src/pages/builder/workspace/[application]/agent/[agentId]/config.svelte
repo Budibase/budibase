@@ -27,6 +27,7 @@
     queries,
   } from "@/stores/builder"
   import { onDestroy, onMount, untrack } from "svelte"
+  import { API } from "@/api"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
@@ -111,6 +112,7 @@ Any constraints the agent must follow.
   let webSearchConfigModal = $state<WebSearchConfigModal>()
   let generateInstructionsModal = $state<Modal>()
   let generateInstructionsPrompt = $state("")
+  let generatingInstructions = $state(false)
   let lastWebSearchConfigId: string | undefined = $state()
   let pendingWebSearchInsert = $state(false)
   let webSearchConfig = $derived(
@@ -626,6 +628,30 @@ Any constraints the agent must follow.
     webSearchConfigModal?.show()
   }
 
+  async function generateInstructions() {
+    if (generatingInstructions) {
+      return
+    }
+
+    generatingInstructions = true
+
+    try {
+      await API.generateAgentInstructions({
+        aiconfigId: draft.aiconfig,
+      })
+      generateInstructionsModal?.hide()
+      notifications.success("Instructions generated successfully")
+    } catch (error: any) {
+      notifications.error(
+        error?.message ||
+          error?.json?.message ||
+          "Error generating instructions"
+      )
+    } finally {
+      generatingInstructions = false
+    }
+  }
+
   async function saveAgent({
     showNotifications = true,
   }: {
@@ -881,10 +907,21 @@ Any constraints the agent must follow.
       placeholder="Describe what kind of instructions you want to generate..."
     />
     <div class="generate-instructions-actions">
-      <Button secondary on:click={() => generateInstructionsModal?.hide()}>
+      <Button
+        secondary
+        disabled={generatingInstructions}
+        on:click={() => generateInstructionsModal?.hide()}
+      >
         Cancel
       </Button>
-      <Button cta icon="sparkle">Generate</Button>
+      <Button
+        cta
+        icon="sparkle"
+        disabled={generatingInstructions}
+        on:click={generateInstructions}
+      >
+        {generatingInstructions ? "Generating..." : "Generate"}
+      </Button>
     </div>
   </ModalContent>
 </Modal>

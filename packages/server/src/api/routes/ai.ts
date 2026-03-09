@@ -64,6 +64,7 @@ builderAdminRoutes
   .get("/api/agent/tools", ai.fetchTools)
 
 builderAdminRoutes
+  .post("/api/ai/agent-instructions", ai.generateAgentInstructions)
   .post("/api/ai/tables", ai.generateTables)
   .get("/api/configs", ai.fetchAIConfigs)
   .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)
