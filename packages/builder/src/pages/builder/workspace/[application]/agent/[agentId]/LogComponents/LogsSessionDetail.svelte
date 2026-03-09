@@ -6,12 +6,7 @@
     AgentLogSession,
   } from "@budibase/types"
   import LogsSessionStep from "./LogsSessionStep.svelte"
-  import {
-    calculateLatency,
-    formatSpend,
-    formatTime,
-    getSessionStats,
-  } from "./utils"
+  import { formatSpend, formatTime, getSessionSummary } from "./utils"
 
   type Props = {
     selectedSession: AgentLogSession | null
@@ -31,13 +26,13 @@
 </script>
 
 {#if selectedSession}
-  {@const stats = getSessionStats(selectedSession)}
+  {@const summary = getSessionSummary(selectedSession)}
   <div class="detail-content">
     <div class="detail-header">
       <h3 class="detail-title">Session</h3>
       <div class="detail-header-stats">
         <span class="header-stat">{selectedSession.entries.length} steps</span>
-        <span class="header-stat">{calculateLatency(selectedSession)}</span>
+        <span class="header-stat">{summary.latency}</span>
       </div>
     </div>
 
@@ -63,12 +58,12 @@
       <div class="meta-row">
         <span class="meta-label">Tokens (in/out)</span>
         <span class="meta-value">
-          {stats.inputTokens} / {stats.outputTokens}
+          {summary.inputTokens} / {summary.outputTokens}
         </span>
       </div>
       <div class="meta-row">
         <span class="meta-label">Spend</span>
-        <span class="meta-value">{formatSpend(stats.spend)}</span>
+        <span class="meta-value">{formatSpend(summary.spend)}</span>
       </div>
       <div class="meta-row">
         <span class="meta-label">Started</span>
@@ -84,8 +79,11 @@
             {entry}
             {index}
             expanded={expandedStepId === entry.requestId}
-            detail={expandedStepId === entry.requestId ? (expandedStepDetail || undefined) : undefined}
-            loadingStep={expandedStepId === entry.requestId && expandedStepLoading}
+            detail={expandedStepId === entry.requestId
+              ? expandedStepDetail || undefined
+              : undefined}
+            loadingStep={expandedStepId === entry.requestId &&
+              expandedStepLoading}
             {onToggleStep}
           />
         {/each}

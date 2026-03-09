@@ -35,54 +35,57 @@ export function formatSpend(spend: number): string {
   return `$${spend.toFixed(4)}`
 }
 
-function formatDuration(ms: number, decimals = 1): string {
+export function formatDuration(ms: number, decimals = 1): string {
   if (ms < 1000) return `${ms}ms`
   return `${(ms / 1000).toFixed(decimals)}s`
 }
 
-function getEntryDurationMs(entry: AgentLogEntry): number | null {
-  if (!entry.startTime || !entry.endTime) return null
-  return new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime()
+function getDurationMs(startTime?: string, endTime?: string): number | null {
+  if (!startTime || !endTime) return null
+  return new Date(endTime).getTime() - new Date(startTime).getTime()
+}
+
+export function getDuration(
+  startTime?: string,
+  endTime?: string,
+  decimals = 1
+): string {
+  const ms = getDurationMs(startTime, endTime)
+  if (ms == null) return ""
+  return formatDuration(ms, decimals)
 }
 
 export function getStepDuration(entry: AgentLogEntry): string {
-  const ms = getEntryDurationMs(entry)
-  if (ms == null) return ""
-  return formatDuration(ms)
+  return getDuration(entry.startTime, entry.endTime)
 }
 
 export function isSlowStep(entry: AgentLogEntry): boolean {
-  const ms = getEntryDurationMs(entry)
+  const ms = getDurationMs(entry.startTime, entry.endTime)
   return ms != null && ms > 2000
 }
 
-export function calculateLatency(session: AgentLogSession): string {
-  if (!session.entries.length) return "-"
-  const first = session.entries[0]
-  const last = session.entries[session.entries.length - 1]
-  if (!first.startTime || !last.endTime) return "-"
-  const ms =
-    new Date(last.endTime).getTime() - new Date(first.startTime).getTime()
-  return formatDuration(ms, 2)
-}
-
-export interface SessionStats {
+export function getSessionSummary(session: AgentLogSession): {
+  latency: string
   inputTokens: number
   outputTokens: number
   spend: number
-}
-
-export function getSessionStats(session: AgentLogSession): SessionStats {
-  return session.entries.reduce(
-    (acc, entry) => {
-      return {
-        inputTokens: acc.inputTokens + entry.inputTokens,
-        outputTokens: acc.outputTokens + entry.outputTokens,
-        spend: acc.spend + entry.spend,
-      }
-    },
+} {
+  const totals = session.entries.reduce(
+    (summary, entry) => ({
+      inputTokens: summary.inputTokens + entry.inputTokens,
+      outputTokens: summary.outputTokens + entry.outputTokens,
+      spend: summary.spend + entry.spend,
+    }),
     { inputTokens: 0, outputTokens: 0, spend: 0 }
   )
+  const latency =
+    getDuration(
+      session.startTime,
+      session.entries[session.entries.length - 1]?.endTime,
+      2
+    ) || "-"
+
+  return { latency, ...totals }
 }
 
 function summarizeToolNames(names: string[]): string {

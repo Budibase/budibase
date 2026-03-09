@@ -63,19 +63,11 @@
 <div class="filters-bar">
   <div class="filter-group">
     <div class="filter-label">Status</div>
-    <Select
-      options={statusOptions}
-      bind:value={statusFilter}
-      placeholder="All statuses"
-    />
+    <Select options={statusOptions} bind:value={statusFilter} />
   </div>
   <div class="filter-group">
     <div class="filter-label">Trigger</div>
-    <Select
-      options={triggerOptions}
-      bind:value={triggerFilter}
-      placeholder="All triggers"
-    />
+    <Select options={triggerOptions} bind:value={triggerFilter} />
   </div>
 
   <div class="filter-group date-range-group">
