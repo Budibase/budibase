@@ -166,21 +166,28 @@ jobs:
   test-worker:
     runs-on: ubuntu-24.04
     needs: check-affected-tests-to-run
-    if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
     steps:
+      - name: Skip worker tests
+        if: needs.check-affected-tests-to-run.outputs.run_worker_tests != 'true'
+        run: echo "Skipping worker tests because @budibase/worker is not affected."
+
       - name: Checkout repo
+        if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
       - name: Use Node.js 22.x
+        if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           cache: yarn
-      - run: yarn --frozen-lockfile
+      - if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
+        run: yarn --frozen-lockfile
       - name: Test worker
+        if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
         run: |
           cd packages/worker
           yarn test --reporters=default --reporters=github-actions
@@ -188,7 +195,6 @@ jobs:
   test-server:
     runs-on: ubuntu-24.04
     needs: check-affected-tests-to-run
-    if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
     strategy:
       matrix:
         include:
@@ -246,27 +252,36 @@ jobs:
             shard_index: 4
             shard_total: 4
     steps:
+      - name: Skip server tests
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests != 'true'
+        run: echo "Skipping server tests because @budibase/server is not affected."
+
       - name: Checkout repo
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
       - name: Use Node.js 22.x
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           cache: yarn
 
-      - run: yarn --frozen-lockfile
+      - if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
+        run: yarn --frozen-lockfile
 
       - name: Load dotenv
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
         id: dotenv
         uses: falti/dotenv-action@v1.1.3
         with:
           path: ./packages/server/images-sha.env
 
       - name: Pull testcontainers images
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
         run: |
           if [ "${{ matrix.datasource }}" == "mssql" ]; then
             docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
@@ -296,11 +311,11 @@ jobs:
           wait $(jobs -p)
 
       - name: Build client library - necessary for component tests
-        if: matrix.datasource == 'none'
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true' && matrix.datasource == 'none'
         run: yarn build:client
 
       - name: Set up PostgreSQL 16
-        if: matrix.datasource == 'postgres'
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true' && matrix.datasource == 'postgres'
         run: |
           sudo systemctl stop postgresql
           sudo apt-get remove --purge -y postgresql* libpq-dev
@@ -314,6 +329,7 @@ jobs:
           sudo apt-get install -y postgresql-16
 
       - name: Test server
+        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
         env:
           DATASOURCE: ${{ matrix.datasource }}
           JEST_SHARD_INDEX: ${{ matrix.shard_index }}

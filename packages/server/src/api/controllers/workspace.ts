@@ -331,20 +331,44 @@ export async function fetchClientChatApps(
 
   const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
   for (const workspace of workspaces) {
-    const { chatApp, workspaceAgents } = await context.doInWorkspaceContext(
-      workspace.appId,
-      async () => {
+    const isBuilderOrAdmin = users.isAdminOrBuilder(ctx.user, workspace.appId)
+    const workspaceRoleId =
+      ctx.user?.roles?.[workspace.appId] || roles.BUILTIN_ROLE_IDS.PUBLIC
+
+    const { chatApp, workspaceAgents, accessibleEnabledAgentIds } =
+      await context.doInWorkspaceContext(workspace.appId, async () => {
         const [chatApp, workspaceAgents] = await Promise.all([
           sdk.ai.chatApps.getSingle(),
           sdk.ai.agents.fetch(),
         ])
 
+        const accessController = new roles.AccessController()
+        const accessibleEnabledAgentIds = new Set<string>()
+
+        for (const chatAgent of chatApp?.agents || []) {
+          if (!chatAgent.isEnabled) {
+            continue
+          }
+
+          const canAccessAgent =
+            isBuilderOrAdmin ||
+            !chatAgent.roleId ||
+            (await accessController.hasAccess(
+              chatAgent.roleId,
+              workspaceRoleId
+            ))
+
+          if (canAccessAgent) {
+            accessibleEnabledAgentIds.add(chatAgent.agentId)
+          }
+        }
+
         return {
           chatApp,
           workspaceAgents,
+          accessibleEnabledAgentIds: [...accessibleEnabledAgentIds],
         }
-      }
-    )
+      })
 
     if (!chatApp?.live || !chatApp._id) {
       continue
@@ -357,7 +381,8 @@ export async function fetchClientChatApps(
     )
 
     const enabledChatAgents = (chatApp.agents || []).filter(
-      agent => agent.isEnabled
+      agent =>
+        agent.isEnabled && accessibleEnabledAgentIds.includes(agent.agentId)
     )
 
     for (const chatAgent of enabledChatAgents) {

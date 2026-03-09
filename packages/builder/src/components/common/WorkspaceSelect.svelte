@@ -37,6 +37,10 @@
   $: apps = $enrichedApps
   $: appId = $appStore.appId
   $: currentSort = $sortBy
+  $: canManageWorkspaceCreation =
+    !!$auth.user && sdk.users.canCreateApps($auth.user)
+  $: showCreateWorkspace = canManageWorkspaceCreation && !$licensing.isFreePlan
+  $: showUpgradeWorkspace = canManageWorkspaceCreation && $licensing.isFreePlan
 
   $: filtered = apps?.filter(app => matchesFilter(app.name, filter)) || []
   $: favourites = filtered.filter(app => app.favourite)
@@ -180,7 +184,7 @@
       on:keydown={onFilterKeydown}
     />
     <div class="header-actions">
-      {#if $auth.user && sdk.users.canCreateApps($auth.user) && !$licensing.isFreePlan}
+      {#if showCreateWorkspace}
         <Icon
           name="plus"
           size="M"
@@ -191,8 +195,16 @@
             workspaceMenu?.hide()
           }}
         />
+      {:else if showUpgradeWorkspace}
+        <Icon
+          name="plus"
+          size="M"
+          hoverable
+          tooltip="Upgrade to unlock multiple workspaces"
+          on:click={licensing.goToUpgradePage}
+        />
       {:else}
-        <span class="header-actions-spacer" aria-hidden="true"></span>
+        <div class="header-actions-spacer" aria-hidden="true"></div>
       {/if}
       <WorkspaceSortMenu
         {currentSort}
@@ -389,12 +401,13 @@
     outline: none;
     background: transparent;
     color: var(--spectrum-global-color-gray-900);
+    width: 100px;
   }
 
   .header-actions {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-s);
   }
   .header-actions > :global(*),
   .header-actions-spacer {
