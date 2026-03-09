@@ -89,6 +89,27 @@ const withAgentDefaults = (agent: Agent): Agent => ({
   slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
 })
 
+export const sanitiseAgentForExport = (agent: Agent): Agent => {
+  const sanitised = structuredClone(withAgentDefaults(agent))
+  sanitised.live = false
+
+  if (sanitised.discordIntegration) {
+    delete sanitised.discordIntegration.publicKey
+    delete sanitised.discordIntegration.botToken
+  }
+
+  if (sanitised.slackIntegration) {
+    delete sanitised.slackIntegration.botToken
+    delete sanitised.slackIntegration.signingSecret
+  }
+
+  if (sanitised.MSTeamsIntegration) {
+    delete sanitised.MSTeamsIntegration.appPassword
+  }
+
+  return sanitised
+}
+
 const mergeDiscordIntegration = ({
   existing,
   incoming,

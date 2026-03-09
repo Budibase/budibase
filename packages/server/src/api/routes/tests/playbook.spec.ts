@@ -286,9 +286,14 @@ describe("/playbooks", () => {
         ...automation,
         playbookId: playbook._id,
       })
-      await config.api.agent.create({
+      const agent = await config.api.agent.create({
         name: "Ops agent",
         aiconfig: "default",
+        live: true,
+        slackIntegration: {
+          botToken: "secret-token",
+          signingSecret: "secret-signing-key",
+        },
         playbookId: playbook._id,
       })
 
@@ -304,6 +309,7 @@ describe("/playbooks", () => {
           `docs/query/${query._id}.json`,
           `docs/table/${table._id}.json`,
           `docs/automation/${automation._id}.json`,
+          `docs/agent/${agent._id}.json`,
           `docs/workspace_app/${workspaceApp._id}.json`,
           `docs/screen/${screen._id}.json`,
         ])
@@ -328,12 +334,13 @@ describe("/playbooks", () => {
           query: 1,
           table: 1,
           automation: 1,
+          agent: 1,
           workspace_app: 1,
           screen: 1,
         },
         unsupportedContent: [
           {
-            type: "agent",
+            type: "agent_linked_content",
             count: 1,
           },
         ],
@@ -351,6 +358,13 @@ describe("/playbooks", () => {
       )
       expect(exportedDatasource.config.password).not.toBe("super-secret")
 
+      const exportedAgent = JSON.parse(
+        files.get(`docs/agent/${agent._id}.json`)!.toString()
+      )
+      expect(exportedAgent.live).toBe(false)
+      expect(exportedAgent.slackIntegration?.botToken).toBeUndefined()
+      expect(exportedAgent.slackIntegration?.signingSecret).toBeUndefined()
+
       const dependencyIndex = JSON.parse(
         files.get("dependency-index.json")!.toString()
       )
@@ -363,6 +377,7 @@ describe("/playbooks", () => {
           query._id,
           table._id,
           automation._id,
+          agent._id,
           workspaceApp._id,
         ])
       )
@@ -512,6 +527,16 @@ describe("/playbooks", () => {
         ...automation,
         playbookId: playbook._id,
       })
+      const agent = await config.api.agent.create({
+        name: "Ops agent",
+        aiconfig: "default",
+        live: true,
+        slackIntegration: {
+          botToken: "secret-token",
+          signingSecret: "secret-signing-key",
+        },
+        playbookId: playbook._id,
+      })
 
       const body = await config.api.playbook.export(playbook._id)
       const destinationWorkspace = await config.api.workspace.create({
@@ -533,14 +558,22 @@ describe("/playbooks", () => {
           expect(imported.resources.query).toHaveLength(1)
           expect(imported.resources.table).toHaveLength(1)
           expect(imported.resources.automation).toHaveLength(1)
+          expect(imported.resources.agent).toHaveLength(1)
           expect(imported.resources.workspace_app).toHaveLength(1)
           expect(imported.resources.screen).toHaveLength(1)
-          expect(imported.requirements).toEqual([
-            expect.objectContaining({
-              type: "datasource_secrets",
-              resourceId: imported.resources.datasource?.[0],
-            }),
-          ])
+          expect(imported.requirements).toHaveLength(2)
+          expect(imported.requirements).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "datasource_secrets",
+                resourceId: imported.resources.datasource?.[0],
+              }),
+              expect.objectContaining({
+                type: "agent_secrets",
+                resourceId: imported.resources.agent?.[0],
+              }),
+            ])
+          )
 
           const { playbooks } = await config.api.playbook.fetch()
           expect(playbooks.map(existing => existing._id)).toContain(
@@ -593,6 +626,14 @@ describe("/playbooks", () => {
           expect(importedDatasource.playbookId).toBe(imported.playbook._id)
           expect(importedDatasource.config?.password).not.toBe("super-secret")
 
+          const { agents } = await config.api.agent.fetch()
+          const importedAgent = agents.find(
+            existing => existing._id === imported.resources.agent?.[0]
+          )
+          expect(importedAgent).toBeDefined()
+          expect(importedAgent?.playbookId).toBe(imported.playbook._id)
+          expect(importedAgent?.live).toBe(false)
+
           const resourceGraph =
             await config.api.resource.getResourceDependencies()
           expect(
@@ -605,6 +646,7 @@ describe("/playbooks", () => {
               imported.resources.query?.[0],
               imported.resources.table?.[0],
               imported.resources.automation?.[0],
+              imported.resources.agent?.[0],
               imported.resources.workspace_app?.[0],
               imported.resources.screen?.[0],
             ])
@@ -614,6 +656,7 @@ describe("/playbooks", () => {
 
       expect(screen._id).toBeDefined()
       expect(table._id).toBeDefined()
+      expect(agent._id).toBeDefined()
     })
   })
 

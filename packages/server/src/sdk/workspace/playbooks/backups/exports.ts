@@ -1,5 +1,6 @@
 import { context, encryption } from "@budibase/backend-core"
 import {
+  Agent,
   AnyDocument,
   Datasource,
   Playbook,
@@ -45,12 +46,13 @@ function getExportDirectoryName(resourceType: ResourceType) {
 }
 
 async function getDirectMembers(playbookId: string): Promise<UsedResource[]> {
-  const [datasources, tables, queries, automations, workspaceApps] =
+  const [datasources, tables, queries, automations, agents, workspaceApps] =
     await Promise.all([
       sdk.datasources.fetch(),
       sdk.tables.getAllTables(),
       sdk.queries.fetch(),
       sdk.automations.fetch(),
+      sdk.ai.agents.fetch(),
       sdk.workspaceApps.fetch(),
     ])
 
@@ -76,6 +78,9 @@ async function getDirectMembers(playbookId: string): Promise<UsedResource[]> {
     ...automations
       .filter(automation => automation.playbookId === playbookId)
       .map(automation => asUsedResource(automation, ResourceType.AUTOMATION)),
+    ...agents
+      .filter(agent => agent.playbookId === playbookId)
+      .map(agent => asUsedResource(agent, ResourceType.AGENT)),
     ...workspaceApps
       .filter(workspaceApp => workspaceApp.playbookId === playbookId)
       .map(workspaceApp =>
@@ -88,19 +93,52 @@ async function getUnsupportedContent(
   playbookId: string
 ): Promise<PlaybookPackageUnsupportedContent[]> {
   const agents = await sdk.ai.agents.fetch()
+  const workspaceApps = await sdk.workspaceApps.fetch()
   const assignedAgents = agents.filter(agent => agent.playbookId === playbookId)
-  if (!assignedAgents.length) {
-    return []
+  const assignedWorkspaceApps = workspaceApps.filter(
+    workspaceApp => workspaceApp.playbookId === playbookId
+  )
+  const [assignedAgentFiles, orphanScreens] = await Promise.all([
+    Promise.all(
+      assignedAgents.map(agent => sdk.ai.agents.listAgentFiles(agent._id!))
+    ).then(files => files.flat()),
+    sdk.screens
+      .fetch(undefined, {
+        repairMissingWorkspaceAppId: false,
+      })
+      .then(screens => screens.filter(screen => !screen.workspaceAppId)),
+  ])
+
+  const unsupported: PlaybookPackageUnsupportedContent[] = []
+
+  if (assignedAgentFiles.length) {
+    unsupported.push({
+      type: "agent_file",
+      count: assignedAgentFiles.length,
+      reason:
+        "Agent files and related RAG data are excluded from Playbook exports.",
+    })
   }
 
-  return [
-    {
-      type: "agent",
+  if (assignedAgents.length) {
+    unsupported.push({
+      type: "agent_linked_content",
       count: assignedAgents.length,
       reason:
-        "Agents are not included in the first portable Playbook export format.",
-    },
-  ]
+        "Agent chats, deployments, and other linked AI content are excluded from Playbook exports.",
+    })
+  }
+
+  if (assignedWorkspaceApps.length && orphanScreens.length) {
+    unsupported.push({
+      type: "screen",
+      count: orphanScreens.length,
+      reason:
+        "Screens without a workspace app link are excluded from deterministic Playbook export packaging.",
+    })
+  }
+
+  return unsupported
 }
 
 async function sanitizeDocumentForExport(doc: AnyDocument, type: ResourceType) {
@@ -109,6 +147,10 @@ async function sanitizeDocumentForExport(doc: AnyDocument, type: ResourceType) {
 
   if (type === ResourceType.DATASOURCE) {
     return await sdk.datasources.removeSecretSingle(sanitized as Datasource)
+  }
+
+  if (type === ResourceType.AGENT) {
+    return sdk.ai.agents.sanitiseAgentForExport(sanitized as Agent)
   }
 
   return sanitized
@@ -155,7 +197,9 @@ function buildManifest(
     resourcesByType,
     containsRows: false,
     containsAttachments: false,
-    requiresSecrets: !!resourcesByType[ResourceType.DATASOURCE],
+    requiresSecrets:
+      !!resourcesByType[ResourceType.DATASOURCE] ||
+      !!resourcesByType[ResourceType.AGENT],
     unsupportedContent,
     supportedImportModes: ["additiveImport"],
   }

@@ -1,5 +1,6 @@
 import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
 import {
+  Agent,
   AnyDocument,
   Datasource,
   DocumentType,
@@ -37,6 +38,7 @@ import {
 } from "./constants"
 
 const IMPORT_ORDER: ResourceType[] = [
+  ResourceType.AGENT,
   ResourceType.DATASOURCE,
   ResourceType.TABLE,
   ResourceType.QUERY,
@@ -47,6 +49,7 @@ const IMPORT_ORDER: ResourceType[] = [
 ]
 
 const PREASSIGNED_IMPORT_TYPES: ResourceType[] = [
+  ResourceType.AGENT,
   ResourceType.DATASOURCE,
   ResourceType.TABLE,
   ResourceType.AUTOMATION,
@@ -182,6 +185,10 @@ const sanitizeImportedDoc = (
     remapped.disabled = true
   }
 
+  if (resourceType === ResourceType.AGENT) {
+    remapped.live = false
+  }
+
   if (resourceType === ResourceType.WORKSPACE_APP) {
     remapped.disabled = true
     remapped.isDefault = false
@@ -196,6 +203,8 @@ const generateImportedId = (
   idMap: Map<string, string>
 ) => {
   switch (resourceType) {
+    case ResourceType.AGENT:
+      return docIds.generateAgentID()
     case ResourceType.DATASOURCE:
       return generateDatasourceID({
         plus: !!doc._id?.startsWith(prefixed(DocumentType.DATASOURCE_PLUS)),
@@ -438,18 +447,41 @@ async function extractPlaybookPackage(
 const buildRequirements = (
   docs: ImportedDoc[]
 ): PlaybookImportRequirement[] => {
-  return docs
-    .filter(
-      (doc): doc is ImportedDoc & { doc: Datasource } =>
-        doc.resourceType === ResourceType.DATASOURCE
-    )
-    .map(({ doc }) => ({
-      type: "datasource_secrets",
-      resourceId: doc._id!,
-      name: doc.name || "Unknown",
-      reason:
-        "Datasource credentials are excluded from Playbook exports and must be reconfigured after import.",
-    }))
+  return docs.flatMap<PlaybookImportRequirement>(importedDoc => {
+    if (importedDoc.resourceType === ResourceType.DATASOURCE) {
+      const doc = importedDoc.doc as Datasource
+      return [
+        {
+          type: "datasource_secrets" as const,
+          resourceId: doc._id!,
+          name: doc.name || "Unknown",
+          reason:
+            "Datasource credentials are excluded from Playbook exports and must be reconfigured after import.",
+        },
+      ]
+    }
+
+    if (importedDoc.resourceType === ResourceType.AGENT) {
+      const doc = importedDoc.doc as Agent
+      if (
+        doc.discordIntegration ||
+        doc.slackIntegration ||
+        doc.MSTeamsIntegration
+      ) {
+        return [
+          {
+            type: "agent_secrets" as const,
+            resourceId: doc._id!,
+            name: doc.name || "Unknown",
+            reason:
+              "Agent integration secrets are excluded from Playbook exports and must be reconfigured after import.",
+          },
+        ]
+      }
+    }
+
+    return []
+  })
 }
 
 export async function importPlaybook(

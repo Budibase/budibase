@@ -5,6 +5,7 @@ export enum UsedByType {
 
 export enum ResourceType {
   PLAYBOOK = "playbook",
+  AGENT = "agent",
   DATASOURCE = "datasource",
   TABLE = "table",
   ROW_ACTION = "row_action",

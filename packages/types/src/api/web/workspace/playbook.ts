@@ -42,7 +42,7 @@ export interface ImportPlaybookRequest {
 }
 
 export interface PlaybookImportRequirement {
-  type: "datasource_secrets"
+  type: "datasource_secrets" | "agent_secrets"
   resourceId: string
   name: string
   reason: string

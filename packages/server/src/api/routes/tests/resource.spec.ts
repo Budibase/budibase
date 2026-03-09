@@ -300,6 +300,11 @@ describe("/api/resources/usage", () => {
           ...automation,
           playbookId: playbook._id,
         })
+        const agent = await config.api.agent.create({
+          name: "Ops agent",
+          aiconfig: "default",
+          playbookId: playbook._id,
+        })
 
         const result = await config.api.resource.getResourceDependencies()
 
@@ -324,6 +329,11 @@ describe("/api/resources/usage", () => {
               id: automation._id,
               name: automation.name,
               type: ResourceType.AUTOMATION,
+            },
+            {
+              id: agent._id,
+              name: agent.name,
+              type: ResourceType.AGENT,
             },
             {
               id: workspaceApp._id,

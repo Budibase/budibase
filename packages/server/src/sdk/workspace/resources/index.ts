@@ -9,6 +9,7 @@ import {
 import chunk from "lodash/chunk"
 import {
   AnyDocument,
+  Agent,
   Automation,
   Datasource,
   DocumentType,
@@ -35,6 +36,7 @@ export async function getResourcesInfo(): Promise<
   Record<string, { dependencies: UsedResource[] }>
 > {
   const automations = await sdk.automations.fetch()
+  const agents = await sdk.ai.agents.fetch()
   const playbooks = await sdk.playbooks.fetch()
   const workspaceApps = await sdk.workspaceApps.fetch()
 
@@ -191,7 +193,9 @@ export async function getResourcesInfo(): Promise<
   }
 
   // Search in workspace app screens
-  const screens = await sdk.screens.fetch()
+  const screens = await sdk.screens.fetch(undefined, {
+    repairMissingWorkspaceAppId: false,
+  })
   const workspaceAppScreens: Record<string, Screen[]> = {}
 
   for (const screen of screens) {
@@ -281,6 +285,9 @@ export async function getResourcesInfo(): Promise<
           .map(automation =>
             buildUsedResource(automation, ResourceType.AUTOMATION)
           ),
+        ...agents
+          .filter(agent => agent.playbookId === playbook._id)
+          .map(agent => buildUsedResource(agent, ResourceType.AGENT)),
         ...workspaceApps
           .filter(workspaceApp => workspaceApp.playbookId === playbook._id)
           .map(workspaceApp =>
@@ -314,6 +321,7 @@ async function getDestinationDb(toWorkspace: string) {
 
 const resourceTypeIdPrefixes: Record<ResourceType, string> = {
   [ResourceType.PLAYBOOK]: prefixed(DocumentType.PLAYBOOK),
+  [ResourceType.AGENT]: prefixed(DocumentType.AGENT),
   [ResourceType.DATASOURCE]: prefixed(DocumentType.DATASOURCE),
   [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
   [ResourceType.ROW_ACTION]: prefixed(DocumentType.ROW_ACTIONS),
@@ -754,6 +762,10 @@ export async function duplicateResourcesToWorkspace(
       case ResourceType.PLAYBOOK:
         name = (doc as Playbook).name
         displayType = "Playbook"
+        break
+      case ResourceType.AGENT:
+        name = (doc as Agent).name
+        displayType = "Agent"
         break
       case ResourceType.DATASOURCE:
         name = (doc as Datasource).name || "Unknown"
