@@ -112,6 +112,7 @@ Any constraints the agent must follow.
   let webSearchConfigModal = $state<WebSearchConfigModal>()
   let generateInstructionsModal = $state<Modal>()
   let generateInstructionsPrompt = $state("")
+  let generatedInstructions = $state("")
   let generatingInstructions = $state(false)
   let lastWebSearchConfigId: string | undefined = $state()
   let pendingWebSearchInsert = $state(false)
@@ -628,6 +629,17 @@ Any constraints the agent must follow.
     webSearchConfigModal?.show()
   }
 
+  function hideGenerateInstructionsModal() {
+    generateInstructionsModal?.hide()
+    generatedInstructions = ""
+  }
+
+  function applyGeneratedInstructions() {
+    draft.promptInstructions = generatedInstructions
+    hideGenerateInstructionsModal()
+    notifications.success("Instructions updated successfully")
+  }
+
   async function generateInstructions() {
     if (generatingInstructions) {
       return
@@ -644,8 +656,8 @@ Any constraints the agent must follow.
       })
 
       console.log("Generated agent instructions:", instructions)
-      generateInstructionsModal?.hide()
       notifications.success("Instructions generated successfully")
+      generatedInstructions = instructions
     } catch (error: any) {
       notifications.error(
         error?.message ||
@@ -897,37 +909,62 @@ Any constraints the agent must follow.
   aiconfigId={draft.aiconfig}
 />
 
-<Modal bind:this={generateInstructionsModal}>
+<Modal
+  bind:this={generateInstructionsModal}
+  on:hide={() => {
+    generatedInstructions = ""
+  }}
+>
   <ModalContent
-    title="Generate Instructions"
+    title={generatedInstructions
+      ? "Review Generated Instructions"
+      : "Generate Instructions"}
     size="M"
     showCloseIcon
     showConfirmButton={false}
     showCancelButton={false}
   >
-    <TextArea
-      label="Prompt"
-      bind:value={generateInstructionsPrompt}
-      minHeight={140}
-      placeholder="Describe what kind of instructions you want to generate..."
-    />
-    <div class="generate-instructions-actions">
-      <Button
-        secondary
-        disabled={generatingInstructions}
-        on:click={() => generateInstructionsModal?.hide()}
-      >
-        Cancel
-      </Button>
-      <Button
-        cta
-        icon="sparkle"
-        disabled={generatingInstructions || !generateInstructionsPrompt.trim()}
-        on:click={generateInstructions}
-      >
-        {generatingInstructions ? "Generating..." : "Generate"}
-      </Button>
-    </div>
+    {#if generatedInstructions}
+      <TextArea
+        label="Generated instructions"
+        value={generatedInstructions}
+        minHeight={220}
+        readonly
+      />
+      <div class="generate-instructions-actions">
+        <Button secondary on:click={hideGenerateInstructionsModal}
+          >Cancel</Button
+        >
+        <Button cta on:click={applyGeneratedInstructions}
+          >Replace current</Button
+        >
+      </div>
+    {:else}
+      <TextArea
+        label="Prompt"
+        bind:value={generateInstructionsPrompt}
+        minHeight={140}
+        placeholder="Describe what kind of instructions you want to generate..."
+      />
+      <div class="generate-instructions-actions">
+        <Button
+          secondary
+          disabled={generatingInstructions}
+          on:click={hideGenerateInstructionsModal}
+        >
+          Cancel
+        </Button>
+        <Button
+          cta
+          icon="sparkle"
+          disabled={generatingInstructions ||
+            !generateInstructionsPrompt.trim()}
+          on:click={generateInstructions}
+        >
+          {generatingInstructions ? "Generating..." : "Generate"}
+        </Button>
+      </div>
+    {/if}
   </ModalContent>
 </Modal>
 

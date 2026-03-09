@@ -5,10 +5,21 @@ import type { GenerateAgentInstructionsRequest } from "@budibase/types"
 import sdk from "../.."
 
 const MARKDOWN_CODE_BLOCK = /```(?:\w+)?\n([\s\S]+?)\n```/
+const THINK_BLOCK = /<think>[\s\S]*?<\/think>/gi
+const SYSTEM_REMINDER_BLOCK = /<system-reminder>[\s\S]*?<\/system-reminder>/gi
+const XML_TAG_LINE = /^<[^>]+>\s*$/gm
 
 function stripCodeFence(value: string) {
   const match = value.match(MARKDOWN_CODE_BLOCK)
   return match ? match[1] : value
+}
+
+function sanitizeInstructions(value: string) {
+  return stripCodeFence(value)
+    .replace(THINK_BLOCK, "")
+    .replace(SYSTEM_REMINDER_BLOCK, "")
+    .replace(XML_TAG_LINE, "")
+    .trim()
 }
 
 export async function generateAgentInstructions({
@@ -46,7 +57,7 @@ export async function generateAgentInstructions({
     providerOptions: providerOptions?.(false),
   })
 
-  const instructions = stripCodeFence(result.text || "").trim()
+  const instructions = sanitizeInstructions(result.text || "")
 
   if (!instructions) {
     throw new Error("Failed to generate instructions")

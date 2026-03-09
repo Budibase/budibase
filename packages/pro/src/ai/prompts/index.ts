@@ -73,6 +73,7 @@ export function generateAgentInstructionsPrompt({
 
 Return only the final instructions text.
 Do not include explanations, preamble, commentary, or markdown code fences.
+Do not include reasoning, thinking traces, internal notes, XML-style tags, or system reminder blocks.
 
 The output must use exactly these sections and headings:
 
