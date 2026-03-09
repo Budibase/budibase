@@ -1,5 +1,14 @@
 <script lang="ts">
-  import { Body, notifications, Select, Button, Icon } from "@budibase/bbui"
+  import {
+    Body,
+    notifications,
+    Select,
+    Button,
+    Icon,
+    Modal,
+    ModalContent,
+    TextArea,
+  } from "@budibase/bbui"
   import {
     AIConfigType,
     ToolType,
@@ -100,6 +109,8 @@ Any constraints the agent must follow.
 
   // Web search Config
   let webSearchConfigModal = $state<WebSearchConfigModal>()
+  let generateInstructionsModal = $state<Modal>()
+  let generateInstructionsPrompt = $state("")
   let lastWebSearchConfigId: string | undefined = $state()
   let pendingWebSearchInsert = $state(false)
   let webSearchConfig = $derived(
@@ -810,7 +821,14 @@ Any constraints the agent must follow.
         output.
       </Body>
     </div>
-    <Button secondary size="S" icon="sparkle">Generate</Button>
+    <Button
+      secondary
+      size="S"
+      icon="sparkle"
+      on:click={() => generateInstructionsModal?.show()}
+    >
+      Generate
+    </Button>
   </div>
   <div class="prompt-editor-wrapper">
     <div class="prompt-editor">
@@ -847,6 +865,29 @@ Any constraints the agent must follow.
   bind:this={webSearchConfigModal}
   aiconfigId={draft.aiconfig}
 />
+
+<Modal bind:this={generateInstructionsModal}>
+  <ModalContent
+    title="Generate Instructions"
+    size="M"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <TextArea
+      label="Prompt"
+      bind:value={generateInstructionsPrompt}
+      minHeight={140}
+      placeholder="Describe what kind of instructions you want to generate..."
+    />
+    <div class="generate-instructions-actions">
+      <Button secondary on:click={() => generateInstructionsModal?.hide()}>
+        Cancel
+      </Button>
+      <Button cta icon="sparkle">Generate</Button>
+    </div>
+  </ModalContent>
+</Modal>
 
 <style>
   :global(.tools-popover-container .spectrum-Popover) {
@@ -1075,6 +1116,13 @@ Any constraints the agent must follow.
     flex-direction: column;
     gap: 2px;
     max-width: 600px;
+  }
+
+  .generate-instructions-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-s);
+    margin-top: var(--spacing-m);
   }
 
   .llm-header > :global(.spectrum-Body):first-child {
