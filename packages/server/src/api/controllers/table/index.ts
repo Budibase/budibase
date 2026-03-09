@@ -166,7 +166,9 @@ export async function find(ctx: UserCtx<void, FindTableResponse>) {
 
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
-  ctx.request.body.playbookId = await resolvePlaybookId(ctx.request.body.playbookId)
+  ctx.request.body.playbookId = await resolvePlaybookId(
+    ctx.request.body.playbookId
+  )
   const { rows, ...table } = ctx.request.body
   const isImport = rows
   const renaming = ctx.request.body._rename
