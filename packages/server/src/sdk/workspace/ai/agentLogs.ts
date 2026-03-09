@@ -4,6 +4,7 @@ import type {
   AgentLogSession,
   AgentLogSessionIndexDoc,
   AgentLogSessionSnapshot,
+  CreateSessionLogIndexerInput,
   Document,
   EnrichedQueryJson,
   FetchAgentLogsResponse,
@@ -13,6 +14,7 @@ import type {
   LiteLLMRequestPayload,
   LiteLLMRequestRecord,
   SearchFilters,
+  SessionLogIndexer,
   Table,
 } from "@budibase/types"
 import {
@@ -32,7 +34,11 @@ import {
   SqlClient,
   TableSourceType,
 } from "@budibase/types"
-export type { IndexAgentLogOperationInput } from "@budibase/types"
+export type {
+  CreateSessionLogIndexerInput,
+  IndexAgentLogOperationInput,
+  SessionLogIndexer,
+} from "@budibase/types"
 import fetch from "node-fetch"
 import env from "../../../environment"
 import { getAvailableTools, getOrThrow, getToolDisplayNames } from "./agents"
@@ -601,6 +607,46 @@ export async function addSessionLog(
   }
 
   await upsertSessionIndexDoc(db, snapshot)
+}
+
+export function createSessionLogIndexer({
+  agentId,
+  sessionId,
+  firstInput,
+  errorLabel,
+  startedAt = new Date().toISOString(),
+}: CreateSessionLogIndexerInput): SessionLogIndexer {
+  const requestIds = new Set<string>()
+
+  return {
+    addRequestId(requestId) {
+      if (requestId) {
+        requestIds.add(requestId)
+      }
+    },
+    async index() {
+      if (!requestIds.size) {
+        return
+      }
+
+      try {
+        await addSessionLog({
+          agentId,
+          sessionId,
+          requestIds: [...requestIds],
+          firstInput,
+          startedAt,
+          completedAt: new Date().toISOString(),
+        })
+      } catch (error) {
+        console.error(`Failed to index ${errorLabel} logs`, {
+          agentId,
+          sessionId,
+          error,
+        })
+      }
+    },
+  }
 }
 
 /**

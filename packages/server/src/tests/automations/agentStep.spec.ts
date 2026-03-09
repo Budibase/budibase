@@ -12,6 +12,13 @@ jest.mock("@budibase/pro", () => {
   }
 })
 
+jest.mock("../../sdk/workspace/ai/agentLogs", () => ({
+  createSessionLogIndexer: jest.fn(() => ({
+    addRequestId: jest.fn(),
+    index: jest.fn().mockResolvedValue(undefined),
+  })),
+}))
+
 jest.mock("../../sdk", () => ({
   __esModule: true,
   default: {

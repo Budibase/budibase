@@ -34,6 +34,7 @@ import {
   formatIncompleteToolCallError,
   updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents"
+import { createSessionLogIndexer } from "../../../sdk/workspace/ai/agentLogs"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag"
 import { assertChatAppIsLiveForUser } from "./chatApps"
@@ -234,8 +235,12 @@ export async function webhookChat({
     })
   const providerPrefix = chat.channel?.provider || "chat"
   const sessionId = `${providerPrefix}:${chat._id || v4()}`
-  const requestIds = new Set<string>()
-  const operationStartedAt = new Date().toISOString()
+  const sessionLogIndexer = createSessionLogIndexer({
+    agentId,
+    sessionId,
+    firstInput: latestQuestion,
+    errorLabel: "webhook chat",
+  })
   const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
     agent.aiconfig,
     sessionId,
@@ -270,9 +275,7 @@ export async function webhookChat({
     stopWhen: stepCountIs(30),
     providerOptions: providerOptions?.(hasTools),
     async onStepFinish({ toolResults, response }) {
-      if (response?.id) {
-        requestIds.add(response.id)
-      }
+      sessionLogIndexer.addRequestId(response?.id)
       for (const _toolResult of toolResults) {
         await quotas.addAction(async () => {})
       }
@@ -297,50 +300,12 @@ export async function webhookChat({
   try {
     assistantText = await result.text
     const responseMetadata = await captureResponseMetadata()
-    if (responseMetadata.requestId) {
-      requestIds.add(responseMetadata.requestId)
-    }
-    if (requestIds.size) {
-      sdk.ai.agentLogs
-        .addSessionLog({
-          agentId,
-          sessionId,
-          requestIds: [...requestIds],
-          firstInput: latestQuestion,
-          startedAt: operationStartedAt,
-          completedAt: new Date().toISOString(),
-        })
-        .catch(error => {
-          console.error("Failed to index webhook chat logs", {
-            agentId,
-            sessionId,
-            error,
-          })
-        })
-    }
+    sessionLogIndexer.addRequestId(responseMetadata.requestId)
+    await sessionLogIndexer.index()
   } catch (error) {
     const responseMetadata = await captureResponseMetadata()
-    if (responseMetadata.requestId) {
-      requestIds.add(responseMetadata.requestId)
-    }
-    if (requestIds.size) {
-      try {
-        await sdk.ai.agentLogs.addSessionLog({
-          agentId,
-          sessionId,
-          requestIds: Array.from(requestIds),
-          firstInput: latestQuestion,
-          startedAt: operationStartedAt,
-          completedAt: new Date().toISOString(),
-        })
-      } catch (error) {
-        console.error("Failed to index webhook chat logs", {
-          agentId,
-          sessionId,
-          error,
-        })
-      }
-    }
+    sessionLogIndexer.addRequestId(responseMetadata.requestId)
+    await sessionLogIndexer.index()
     throw error
   }
   const assistantMessage: ChatConversation["messages"][number] = {
@@ -477,29 +442,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
     const sessionId = chat._id || chat.sessionId || chatId
-    const requestIds = new Set<string>()
-    const operationStartedAt = new Date().toISOString()
-    const indexOperation = async () => {
-      if (!requestIds.size) {
-        return
-      }
-      try {
-        await sdk.ai.agentLogs.addSessionLog({
-          agentId,
-          sessionId,
-          requestIds: [...requestIds],
-          firstInput: latestQuestion,
-          startedAt: operationStartedAt,
-          completedAt: new Date().toISOString(),
-        })
-      } catch (error) {
-        console.error("Failed to index chat stream logs", {
-          agentId,
-          sessionId,
-          error,
-        })
-      }
-    }
+    const sessionLogIndexer = createSessionLogIndexer({
+      agentId,
+      sessionId,
+      firstInput: latestQuestion,
+      errorLabel: "chat stream",
+    })
     const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
       agent.aiconfig,
       sessionId,
@@ -535,9 +483,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       toolChoice: hasTools ? "auto" : "none",
       stopWhen: stepCountIs(30),
       async onStepFinish({ content, toolCalls, toolResults, response }) {
-        if (response?.id) {
-          requestIds.add(response.id)
-        }
+        sessionLogIndexer.addRequestId(response?.id)
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
         for (const part of content) {
           if (part.type === "tool-error") {
@@ -549,8 +495,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         }
       },
       providerOptions: providerOptions?.(hasTools),
-      onError({ error }) {
-        indexOperation()
+      async onError({ error }) {
+        await sessionLogIndexer.index()
         console.error("Agent streaming error", {
           agentId,
           chatAppId,
@@ -603,10 +549,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
         const responseMetadata = await captureResponseMetadata()
-        if (responseMetadata.requestId) {
-          requestIds.add(responseMetadata.requestId)
-        }
-        indexOperation()
+        sessionLogIndexer.addRequestId(responseMetadata.requestId)
+        await sessionLogIndexer.index()
 
         if (chat.transient || !chatAppId) {
           return

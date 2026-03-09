@@ -109,3 +109,16 @@ export interface IndexAgentLogOperationInput {
   startedAt?: string
   completedAt?: string
 }
+
+export interface CreateSessionLogIndexerInput {
+  agentId: string
+  sessionId: string
+  firstInput?: string
+  errorLabel: string
+  startedAt?: string
+}
+
+export interface SessionLogIndexer {
+  addRequestId(requestId?: string | null): void
+  index(): Promise<void>
+}

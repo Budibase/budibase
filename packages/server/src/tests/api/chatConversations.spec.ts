@@ -71,6 +71,13 @@ jest.mock("../../sdk/workspace/ai/llm", () => {
   }
 })
 
+jest.mock("../../sdk/workspace/ai/agentLogs", () => ({
+  createSessionLogIndexer: jest.fn(() => ({
+    addRequestId: jest.fn(),
+    index: jest.fn().mockResolvedValue(undefined),
+  })),
+}))
+
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
   let userA: User
