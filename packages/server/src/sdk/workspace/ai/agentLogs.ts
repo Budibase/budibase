@@ -362,6 +362,7 @@ export async function clearOldHistory(): Promise<void> {
   const db = context.getWorkspaceDB()
 
   try {
+    const expiredEnd = await oldestLogDate()
     const expiredSessions = await getExpiredSessions()
     if (!expiredSessions.length) {
       return
@@ -372,7 +373,12 @@ export async function clearOldHistory(): Promise<void> {
       { allowMissing: true }
     )
     const toDelete = docs
-      .filter(doc => !!doc?._id && !!doc?._rev)
+      .filter(
+        doc =>
+          !!doc?._id &&
+          !!doc?._rev &&
+          new Date(doc.lastActivityAt).getTime() <= new Date(expiredEnd).getTime()
+      )
       .map(doc => ({
         _id: doc._id!,
         _rev: doc._rev!,
