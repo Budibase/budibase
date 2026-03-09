@@ -748,9 +748,7 @@ describe("API Endpoint Viewer", () => {
       await fireEvent.click(getTab(container, "Params")!)
       await waitFor(() => {
         // KeyValueBuilder renders rows with .spectrum-Table or an add button
-        const paramsSection = container.querySelector(
-          ".spectrum-Tabs-content"
-        )
+        const paramsSection = container.querySelector(".spectrum-Tabs-content")
         expect(paramsSection).not.toBeNull()
       })
     })
@@ -781,14 +779,10 @@ describe("API Endpoint Viewer", () => {
 
     it("clicking the Body tab shows body type radio group", async () => {
       const { container } = setupDOM({ datasourceId: REST_DS_ID })
-      await waitFor(() =>
-        expect(getTab(container, "Body")).not.toBeUndefined()
-      )
+      await waitFor(() => expect(getTab(container, "Body")).not.toBeUndefined())
       await fireEvent.click(getTab(container, "Body")!)
       await waitFor(() => {
-        expect(
-          container.querySelector(".spectrum-Radio")
-        ).not.toBeNull()
+        expect(container.querySelector(".spectrum-Radio")).not.toBeNull()
       })
     })
 
