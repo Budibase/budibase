@@ -7,6 +7,8 @@ import {
   ChatCompletionResponse,
   CreateAIConfigRequest,
   CustomAIProviderConfig,
+  GenerateAgentInstructionsRequest,
+  GenerateAgentInstructionsResponse,
   GenerateCronRequest,
   GenerateCronResponse,
   GenerateJsRequest,
@@ -87,6 +89,19 @@ export class AIAPI extends TestAPI {
       body: req,
       expectations,
     })
+  }
+
+  generateAgentInstructions = async (
+    req: GenerateAgentInstructionsRequest,
+    expectations?: Expectations
+  ): Promise<GenerateAgentInstructionsResponse> => {
+    return await this._post<GenerateAgentInstructionsResponse>(
+      `/api/ai/agent-instructions`,
+      {
+        body: req,
+        expectations,
+      }
+    )
   }
 
   chat = async (

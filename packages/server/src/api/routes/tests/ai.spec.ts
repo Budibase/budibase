@@ -158,6 +158,90 @@ describe("AI", () => {
       )
     })
   })
+
+  describe("POST /api/ai/agent-instructions", () => {
+    it("handles generated instructions response", async () => {
+      mockAISDKChatGPTResponse(
+        dedent(`
+          **Agent role**
+          Help users.
+
+          **Inputs**
+          User requests.
+
+          **Actions**
+          - Answer clearly.
+          - Use tools when needed.
+
+          **Output**
+          - Concise response.
+          - Structured when helpful.
+
+          **Rules**
+          - Stay accurate.
+          - Do not invent facts.
+        `)
+      )
+
+      const { instructions } = await config.api.ai.generateAgentInstructions({
+        aiconfigId: "test-config",
+        prompt: "Create support agent instructions",
+      })
+
+      expect(instructions).toContain("**Agent role**")
+      expect(instructions).toContain("**Rules**")
+    })
+
+    it("strips markdown fences from generated instructions", async () => {
+      mockAISDKChatGPTResponse(
+        ["```markdown", "**Agent role**", "Help users.", "```"].join("\n")
+      )
+
+      const { instructions } = await config.api.ai.generateAgentInstructions({
+        aiconfigId: "test-config",
+        prompt: "Create support agent instructions",
+      })
+
+      expect(instructions).toBe("**Agent role**\nHelp users.")
+    })
+
+    it("returns 400 when aiconfigId is missing", async () => {
+      await config.api.ai.generateAgentInstructions(
+        {
+          aiconfigId: "",
+          prompt: "Create support agent instructions",
+        },
+        { status: 400 }
+      )
+    })
+
+    it("returns 400 when prompt is blank", async () => {
+      await config.api.ai.generateAgentInstructions(
+        {
+          aiconfigId: "test-config",
+          prompt: "   ",
+        },
+        { status: 400 }
+      )
+    })
+
+    it("handles LLM errors", async () => {
+      mockAISDKChatGPTResponse(
+        () => {
+          throw new Error("LLM error")
+        },
+        { times: 3 }
+      )
+
+      await config.api.ai.generateAgentInstructions(
+        {
+          aiconfigId: "test-config",
+          prompt: "Create support agent instructions",
+        },
+        { status: 500 }
+      )
+    })
+  })
 })
 
 describe("BudibaseAI", () => {
