@@ -24,7 +24,6 @@
   import { bb } from "@/stores/bb"
   import {
     getRestBindings,
-    getEnvironmentBindings,
     readableToRuntimeBinding,
     runtimeToReadableMap,
   } from "@/dataBinding"

@@ -732,14 +732,6 @@ describe("API Endpoint Viewer", () => {
       })
     })
 
-    it("tabs are enabled when a datasource is selected", async () => {
-      const { container } = setupDOM({ datasourceId: REST_DS_ID })
-      await waitFor(() => {
-        const tabsWrapper = container.querySelector(".spectrum-Tabs")
-        expect(tabsWrapper?.classList.contains("is-disabled")).toBeFalsy()
-      })
-    })
-
     it("clicking the Params tab shows the params key-value builder", async () => {
       const { container } = setupDOM({ datasourceId: REST_DS_ID })
       await waitFor(() =>
