@@ -3,12 +3,10 @@ import { type GetWorkspaceHomeMetricsResponse } from "@budibase/types"
 describe("workspace home metrics caching", () => {
   let cacheGet: jest.Mock
   let cacheStore: jest.Mock
-  let find: jest.Mock
+  let getUserCount: jest.Mock
   let getQuotaUsage: jest.Mock
   let cacheState: Map<string, unknown>
-  let getWorkspaceHomeMetrics: (
-    workspaceId: string
-  ) => Promise<GetWorkspaceHomeMetricsResponse>
+  let getWorkspaceHomeMetrics: () => Promise<GetWorkspaceHomeMetricsResponse>
 
   beforeEach(() => {
     jest.resetModules()
@@ -17,7 +15,7 @@ describe("workspace home metrics caching", () => {
     jest.setSystemTime(new Date("2026-01-20T12:00:00.000Z"))
 
     cacheState = new Map()
-    find = jest.fn(async () => ({ docs: [{ _id: "us_1" }], bookmark: null }))
+    getUserCount = jest.fn(async () => 1)
     getQuotaUsage = jest.fn(async () => ({
       monthly: {
         current: {
@@ -39,12 +37,10 @@ describe("workspace home metrics caching", () => {
           store: cacheStore,
         },
         context: {
-          getGlobalDB: () => ({
-            find,
-          }),
+          getTenantId: jest.fn(() => "tenant_1"),
         },
-        db: {
-          getProdWorkspaceID: jest.fn(() => "prod_workspace"),
+        users: {
+          getUserCount,
         },
       }
     })
@@ -62,12 +58,9 @@ describe("workspace home metrics caching", () => {
   })
 
   it("returns cached metrics inside the freshness window", async () => {
-    const first = await getWorkspaceHomeMetrics("dev_workspace")
+    const first = await getWorkspaceHomeMetrics()
 
-    find.mockResolvedValue({
-      docs: [{ _id: "us_1" }, { _id: "us_2" }],
-      bookmark: null,
-    })
+    getUserCount.mockResolvedValue(2)
     getQuotaUsage.mockResolvedValue({
       monthly: {
         current: {
@@ -77,28 +70,28 @@ describe("workspace home metrics caching", () => {
       },
     })
 
-    const second = await getWorkspaceHomeMetrics("dev_workspace")
+    const second = await getWorkspaceHomeMetrics()
 
     expect(second).toEqual(first)
-    expect(find).toHaveBeenCalledTimes(1)
+    expect(getUserCount).toHaveBeenCalledTimes(1)
     expect(getQuotaUsage).toHaveBeenCalledTimes(1)
   })
 
   it("returns stale metrics when refresh fails after ttl", async () => {
-    const first = await getWorkspaceHomeMetrics("dev_workspace")
+    const first = await getWorkspaceHomeMetrics()
 
     jest.setSystemTime(new Date(Date.now() + 5 * 60 * 1000 + 1))
-    find.mockRejectedValue(new Error("failed"))
+    getUserCount.mockRejectedValue(new Error("failed"))
 
-    const second = await getWorkspaceHomeMetrics("dev_workspace")
+    const second = await getWorkspaceHomeMetrics()
 
     expect(second).toEqual(first)
   })
 
   it("returns safe defaults on cold cache failure", async () => {
-    find.mockRejectedValue(new Error("failed"))
+    getUserCount.mockRejectedValue(new Error("failed"))
 
-    const res = await getWorkspaceHomeMetrics("dev_workspace")
+    const res = await getWorkspaceHomeMetrics()
 
     expect(res.totalUsers).toEqual(0)
     expect(res.operationsThisMonth).toEqual(0)

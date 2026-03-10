@@ -1,4 +1,4 @@
-import { Header, roles } from "@budibase/backend-core"
+import { Header } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
 import tk from "timekeeper"
@@ -28,9 +28,8 @@ describe("/workspace/home/metrics", () => {
     jest.restoreAllMocks()
   })
 
-  it("returns user access count for the workspace", async () => {
+  it("returns total users for the tenant", async () => {
     tk.freeze(new Date(2026, 0, 20, 12, 0, 0, 0))
-    const prodWorkspaceId = config.getProdWorkspaceId()
 
     const initial = await request
       .get("/api/workspace/home/metrics")
@@ -38,17 +37,17 @@ describe("/workspace/home/metrics", () => {
       .expect(200)
 
     await config.createUser({
-      roles: { [prodWorkspaceId]: roles.BUILTIN_ROLE_IDS.BASIC },
+      roles: {},
       builder: { global: false },
       admin: { global: false },
     })
     await config.createUser({
-      roles: { [prodWorkspaceId]: roles.BUILTIN_ROLE_IDS.BASIC },
+      roles: {},
       builder: { global: false },
       admin: { global: false },
     })
     await config.createUser({
-      roles: { [prodWorkspaceId]: roles.BUILTIN_ROLE_IDS.BASIC },
+      roles: {},
       builder: { global: false },
       admin: { global: false },
     })

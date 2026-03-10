@@ -1,13 +1,13 @@
 <script lang="ts">
   import { Body, Icon } from "@budibase/bbui"
+  import type { GetWorkspaceHomeMetricsResponse } from "@budibase/types"
   import { onMount } from "svelte"
 
   import { API } from "@/api"
-  import type { WorkspaceHomeMetrics } from "../types"
 
   const GITHUB_REPO_URL = "https://github.com/Budibase/budibase"
 
-  export let metrics: WorkspaceHomeMetrics | null = null
+  export let metrics: GetWorkspaceHomeMetricsResponse | null = null
   export let showBudibaseAIMetric = true
 
   let githubStars: number | null = null

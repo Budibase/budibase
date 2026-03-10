@@ -41,6 +41,7 @@
   } from "@budibase/bbui"
   import {
     FeatureFlag,
+    type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
     type HomeRow,
@@ -66,7 +67,6 @@
     filterHomeRows,
     sortHomeRows,
   } from "./_components/rows"
-  import type { WorkspaceHomeMetrics } from "./types"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
@@ -102,7 +102,7 @@
 
   let typeFilter: HomeType = "all"
   let searchTerm = ""
-  let metrics: WorkspaceHomeMetrics | null = null
+  let metrics: GetWorkspaceHomeMetricsResponse | null = null
 
   let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
