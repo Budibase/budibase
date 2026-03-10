@@ -2,45 +2,72 @@ import { refreshBlacklist, isBlacklisted } from ".."
 import env from "../../environment"
 
 describe("blacklist", () => {
-  beforeAll(async () => {
-    env._set(
-      "BLACKLIST_IPS",
-      "www.google.com,192.168.1.1, 1.1.1.1,2.2.2.2/something"
-    )
-    await refreshBlacklist()
+  describe("default ranges", () => {
+    beforeAll(async () => {
+      env._set("BLACKLIST_IPS", undefined)
+      await refreshBlacklist()
+    })
+
+    it("should blacklist localhost", async () => {
+      expect(await isBlacklisted("127.0.0.1")).toBe(true)
+    })
+
+    it("should blacklist RFC1918 addresses", async () => {
+      expect(await isBlacklisted("192.168.1.1")).toBe(true)
+      expect(await isBlacklisted("10.0.0.1")).toBe(true)
+      expect(await isBlacklisted("172.16.0.1")).toBe(true)
+    })
+
+    it("should blacklist link-local addresses", async () => {
+      expect(await isBlacklisted("169.254.169.254")).toBe(true)
+    })
+
+    it("should allow public IPs by default", async () => {
+      expect(await isBlacklisted("8.8.8.8")).toBe(false)
+    })
   })
 
-  it("should blacklist 192.168.1.1", async () => {
-    expect(await isBlacklisted("192.168.1.1")).toBe(true)
-  })
+  describe("configured entries", () => {
+    beforeAll(async () => {
+      env._set(
+        "BLACKLIST_IPS",
+        "www.google.com,192.168.1.1, 1.1.1.1,2.2.2.2/something"
+      )
+      await refreshBlacklist()
+    })
 
-  it("should allow 192.168.1.2", async () => {
-    expect(await isBlacklisted("192.168.1.2")).toBe(false)
-  })
+    it("should blacklist 192.168.1.1", async () => {
+      expect(await isBlacklisted("192.168.1.1")).toBe(true)
+    })
 
-  it("should blacklist www.google.com", async () => {
-    expect(await isBlacklisted("www.google.com")).toBe(true)
-  })
+    it("should allow public IPs that are not configured", async () => {
+      expect(await isBlacklisted("8.8.8.8")).toBe(false)
+    })
 
-  it("should handle a complex domain", async () => {
-    expect(
-      await isBlacklisted("https://www.google.com/derp/?something=1")
-    ).toBe(true)
-  })
+    it("should blacklist www.google.com", async () => {
+      expect(await isBlacklisted("www.google.com")).toBe(true)
+    })
 
-  it("should allow www.microsoft.com", async () => {
-    expect(await isBlacklisted("www.microsoft.com")).toBe(false)
-  })
+    it("should handle a complex domain", async () => {
+      expect(
+        await isBlacklisted("https://www.google.com/derp/?something=1")
+      ).toBe(true)
+    })
 
-  it("should blacklist an IP that needed trimming", async () => {
-    expect(await isBlacklisted("1.1.1.1")).toBe(true)
-  })
+    it("should allow www.microsoft.com", async () => {
+      expect(await isBlacklisted("www.microsoft.com")).toBe(false)
+    })
 
-  it("should blacklist 1.1.1.1/something", async () => {
-    expect(await isBlacklisted("1.1.1.1/something")).toBe(true)
-  })
+    it("should blacklist an IP that needed trimming", async () => {
+      expect(await isBlacklisted("1.1.1.1")).toBe(true)
+    })
 
-  it("should blacklist 2.2.2.2", async () => {
-    expect(await isBlacklisted("2.2.2.2")).toBe(true)
+    it("should blacklist 1.1.1.1/something", async () => {
+      expect(await isBlacklisted("1.1.1.1/something")).toBe(true)
+    })
+
+    it("should blacklist 2.2.2.2", async () => {
+      expect(await isBlacklisted("2.2.2.2")).toBe(true)
+    })
   })
 })
