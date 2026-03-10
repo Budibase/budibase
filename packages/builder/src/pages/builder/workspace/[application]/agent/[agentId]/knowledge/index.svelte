@@ -99,19 +99,22 @@
     )
   )
   let tableRows = $derived.by(() =>
-    knowledgeBases.map(knowledgeBase => ({
-      ...knowledgeBase,
-      enabled: selectedKnowledgeBases.includes(knowledgeBase._id || ""),
-      embeddingModel:
-        embeddingNameById.get(knowledgeBase.embeddingModel) ||
-        knowledgeBase.embeddingModel,
-      vectorDb:
-        vectorDbNameById.get(knowledgeBase.vectorDb) || knowledgeBase.vectorDb,
-      files: knowledgeBase.files.length,
-      onToggle: toggleKnowledgeBase,
-      onManage: (knowledgeBaseId: string) =>
-        bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`),
-    }))
+    knowledgeBases
+      .map(knowledgeBase => ({
+        ...knowledgeBase,
+        enabled: selectedKnowledgeBases.includes(knowledgeBase._id || ""),
+        embeddingModel:
+          embeddingNameById.get(knowledgeBase.embeddingModel) ||
+          knowledgeBase.embeddingModel,
+        vectorDb:
+          vectorDbNameById.get(knowledgeBase.vectorDb) ||
+          knowledgeBase.vectorDb,
+        files: knowledgeBase.files.length,
+        onToggle: toggleKnowledgeBase,
+        onManage: (knowledgeBaseId: string) =>
+          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
   )
 
   const customRenderers = [
