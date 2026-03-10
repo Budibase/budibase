@@ -2,10 +2,8 @@ import { embedMany } from "ai"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
-import { features } from "@budibase/backend-core"
 import {
   AgentMessageRagSource,
-  FeatureFlag,
   type Agent,
   type KnowledgeBase,
   type KnowledgeBaseFile,
@@ -26,12 +24,6 @@ const DEFAULT_CHUNK_OVERLAP = 200
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
 const DEFAULT_RAG_TOP_K = 4
 const DEFAULT_RAG_MIN_SIMILARITY = 0.7
-
-const ensureRagEnabled = async () => {
-  if (!(await features.isEnabled(FeatureFlag.AI_RAG))) {
-    throw new Error("RAG feature is disabled")
-  }
-}
 
 const textFileExtensions = new Set([
   ".txt",
@@ -324,7 +316,6 @@ export const deleteKnowledgeBaseFileChunks = async (
   knowledgeBase: KnowledgeBase,
   sourceIds: string[]
 ) => {
-  await ensureRagEnabled()
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
@@ -356,7 +347,6 @@ export const retrieveContextForAgent = async (
   agent: Agent,
   question: string
 ): Promise<RetrievedContextResult> => {
-  await ensureRagEnabled()
   if (!question || question.trim().length === 0) {
     return { text: "", chunks: [], sources: [] }
   }
