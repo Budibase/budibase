@@ -1,15 +1,8 @@
 <script lang="ts">
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
-  import { aiConfigsStore } from "@/stores/portal"
-  import {
-    Button,
-    Combobox,
-    Helpers,
-    Input,
-    notifications,
-    Select,
-  } from "@budibase/bbui"
+  import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
+  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
   import type {
     AIConfigResponse,
     CreateAIConfigRequest,
@@ -17,19 +10,18 @@
     RequiredKeys,
     UpdateAIConfigRequest,
   } from "@budibase/types"
-  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
+  import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
+  import ProviderModelFields from "../ProviderModelFields.svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
 
   export interface Props {
     configId?: string
     provider?: string | undefined
-    type: AIConfigType
+    knowledgeBaseId?: string
   }
 
-  let { configId, provider, type }: Props = $props()
-
-  let isBBAI = $derived(provider === BUDIBASE_AI_PROVIDER_ID)
+  let { configId, provider, knowledgeBaseId }: Props = $props()
 
   let config = $derived(
     $aiConfigsStore.customConfigs.find(c => c._id === configId)
@@ -51,44 +43,20 @@
         } satisfies RequiredKeys<UpdateAIConfigRequest>)
       : ({
           provider: provider ?? "",
-          name: isBBAI ? "bbai" : "",
-          model: isBBAI ? "budibase/v1" : "",
-          configType: type || AIConfigType.COMPLETIONS,
+          name: "",
+          model: "",
+          configType: AIConfigType.EMBEDDINGS,
           credentialsFields: {},
           webSearchConfig: undefined,
           reasoningEffort: undefined,
-          isDefault:
-            type === AIConfigType.COMPLETIONS &&
-            !$aiConfigsStore.customConfigs.length,
+          isDefault: undefined,
         } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   let draft: AIConfigResponse = $state(createDraft())
-  let previousProvider = $state(draft.provider)
 
   let isEdit = $derived(!!draft._id)
-  let typeLabel = $derived(
-    draft.configType === AIConfigType.EMBEDDINGS ? "embeddings" : "chat"
-  )
-
-  const reasoningEffortOptions = [
-    { label: "Low", value: "low" },
-    { label: "Medium", value: "medium" },
-    { label: "High", value: "high" },
-  ]
-  interface ModelOption {
-    label: string
-    value: string
-  }
 
   let providers = $derived($aiConfigsStore.providers)
-
-  let providerPlaceholder = $derived(
-    !providers
-      ? "Loading providers..."
-      : providers.length
-        ? "Choose a provider"
-        : "No providers available"
-  )
 
   let providersMap = $derived(
     providers?.reduce<Record<string, LLMProvider>>((acc, p) => {
@@ -97,29 +65,6 @@
     }, {})
   )
   let selectedProvider = $derived(providersMap?.[draft.provider])
-  let modelOptions = $derived.by(() => {
-    const models = selectedProvider?.models?.[draft.configType] || []
-    const options = models.map<ModelOption>(model => ({
-      label: model,
-      value: model,
-    }))
-    if (draft.model?.trim() && !models.includes(draft.model)) {
-      options.unshift({
-        label: `${draft.model} (custom)`,
-        value: draft.model,
-      })
-    }
-    return options
-  })
-  let modelPlaceholder = $derived.by(() => {
-    if (!draft.provider?.trim()) {
-      return "Choose a provider first"
-    }
-    if (!providers) {
-      return "Loading models..."
-    }
-    return modelOptions.length ? "Select or type a model" : "Type a model"
-  })
 
   let isSaving = $state(false)
   let savedSnapshot = $state(JSON.stringify(draft))
@@ -127,10 +72,6 @@
   let canSave = $derived.by(() => {
     if (isSaving) {
       return false
-    }
-
-    if (isBBAI) {
-      return isModified || !draft?._id
     }
 
     if (!isModified) {
@@ -146,13 +87,6 @@
         f => f.required && !draft.credentialsFields[f.key]?.trim()
       )
     )
-  })
-
-  $effect(() => {
-    if (previousProvider !== draft.provider) {
-      draft.model = ""
-      previousProvider = draft.provider
-    }
   })
 
   onMount(async () => {
@@ -178,23 +112,9 @@
         draft._rev = updated._rev
         payload._rev = updated._rev
         savedSnapshot = JSON.stringify(payload)
-        notifications.success(
-          `${typeLabel[0].toUpperCase()}${typeLabel.slice(
-            1
-          )} configuration updated`
-        )
+        notifications.success(`Configuration updated`)
       } else {
         const { _id, ...rest } = Helpers.cloneDeep(draft)
-        if (
-          rest.configType === AIConfigType.COMPLETIONS &&
-          !$aiConfigsStore.customConfigs.some(
-            config =>
-              config.configType === AIConfigType.COMPLETIONS &&
-              config.isDefault === true
-          )
-        ) {
-          rest.isDefault = true
-        }
         const created = await aiConfigsStore.createConfig(rest)
         draft._id = created._id
         draft._rev = created._rev
@@ -203,16 +123,22 @@
           _id: created._id,
           _rev: created._rev,
         })
-        notifications.success(
-          `${typeLabel[0].toUpperCase()}${typeLabel.slice(
-            1
-          )} configuration created`
-        )
+        notifications.success(`Configuration created`)
+
+        const formDraft = knowledgeBaseStore.getFormDraft()
+        if (formDraft && created._id) {
+          knowledgeBaseStore.setFormDraft({
+            ...formDraft,
+            embeddingModel: created._id,
+          })
+        }
+
+        if (knowledgeBaseId) {
+          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        }
       }
     } catch (err: any) {
-      notifications.error(
-        err.message || `Failed to save ${typeLabel} configuration`
-      )
+      notifications.error(err.message || `Failed to save configuration`)
     } finally {
       isSaving = false
     }
@@ -231,16 +157,10 @@
       onConfirm: async () => {
         try {
           await aiConfigsStore.deleteConfig(configId)
-          notifications.success(
-            `${typeLabel[0].toUpperCase()}${typeLabel.slice(
-              1
-            )} configuration deleted`
-          )
+          notifications.success(`Configuration deleted`)
           bb.settings(`/ai-config/${draft.configType}`)
         } catch (err: any) {
-          notifications.error(
-            err.message || `Failed to delete ${typeLabel} configuration`
-          )
+          notifications.error(err.message || `Failed to delete configuration`)
         }
       },
     })
@@ -263,37 +183,22 @@
 </RouteActions>
 
 <div class="form">
-  {#if !isBBAI}
-    <Select
-      label="Provider"
-      required
-      bind:value={draft.provider}
-      options={providers}
-      getOptionValue={o => o.id}
-      getOptionLabel={o => o.displayName}
-      placeholder={providerPlaceholder}
-      loading={!providers}
-      autocomplete
-      searchPlaceholder="Search providers"
-    />
+  <ProviderModelFields
+    configType={draft.configType}
+    provider={draft.provider}
+    model={draft.model}
+    {providers}
+    on:providerChange={event => (draft.provider = event.detail)}
+    on:modelChange={event => (draft.model = event.detail)}
+  />
 
-    <Combobox
-      label="Model"
-      bind:value={draft.model}
-      options={modelOptions}
-      getOptionValue={o => o.value}
-      getOptionLabel={o => o.label}
-      placeholder={modelPlaceholder}
-    />
-
-    <Input
-      label="Display name"
-      description="Human readable name for the model"
-      required
-      bind:value={draft.name}
-      placeholder="Latest ChatGPT"
-    />
-  {/if}
+  <Input
+    label="Display name"
+    description="Human readable name for the model"
+    required
+    bind:value={draft.name}
+    placeholder="Latest ChatGPT"
+  />
 
   {#each selectedProvider?.credentialFields as field (field.key)}
     {#if field.options?.length || field.field_type === "select"}
@@ -319,18 +224,6 @@
       />
     {/if}
   {/each}
-
-  {#if draft.configType === AIConfigType.COMPLETIONS}
-    <Select
-      label="Reasoning effort"
-      required
-      placeholder="Use provider default"
-      options={reasoningEffortOptions}
-      getOptionLabel={option => option.label}
-      getOptionValue={option => option.value}
-      bind:value={draft.reasoningEffort}
-    />
-  {/if}
 </div>
 
 <style>

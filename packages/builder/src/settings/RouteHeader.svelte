@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Divider, Layout, StatusLight } from "@budibase/bbui"
   import { Breadcrumbs, Breadcrumb } from "@/components/portal/page"
   import { bb } from "@/stores/bb"
@@ -6,6 +6,7 @@
 
   $: matched = $bb.settings.route
   $: route = matched?.entry
+  $: params = matched?.params || {}
 
   $: handleSectionClick = () => {
     if (route?.crumbs?.length) {
@@ -14,6 +15,26 @@
         bb.settings(firstCrumb.path)
       }
     }
+  }
+
+  const resolvePathParams = (
+    path: string | undefined,
+    params: Record<string, string>
+  ) => {
+    if (!path) {
+      return path
+    }
+    return path.replace(/:([^/]+)/g, (_match, key) => params[key] ?? `:${key}`)
+  }
+
+  const resolveTitle = (
+    title: string | ((_path: string | undefined) => string) | undefined,
+    path: string | undefined
+  ) => {
+    if (typeof title === "function") {
+      return title(path)
+    }
+    return title
   }
 </script>
 
@@ -36,7 +57,7 @@
             class:error={nav.error?.()}
             on:click={() => bb.settings(nav.path)}
           >
-            {nav.title}
+            {resolveTitle(nav.title, nav.path)}
             {#if nav.error?.()}
               <span class="indicator">
                 <StatusLight
@@ -62,11 +83,12 @@
             {#if !route?.crumbs?.length}
               <Breadcrumb text={route?.section} />
             {:else}
-              {#each route.crumbs as crumb, idx}
-                {@const isLast = idx == route.crumbs.length - 1}
+              {#each route?.crumbs || [] as crumb, idx}
+                {@const isLast = idx == (route?.crumbs?.length || 0) - 1}
+                {@const crumbPath = resolvePathParams(crumb.path, params)}
                 <Breadcrumb
-                  text={crumb.title}
-                  {...!isLast && { onClick: () => bb.settings(crumb.path) }}
+                  text={resolveTitle(crumb.title, crumbPath)}
+                  {...!isLast && { onClick: () => bb.settings(crumbPath) }}
                 />
               {/each}
             {/if}

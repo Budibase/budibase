@@ -548,9 +548,12 @@
       .slice(0, length)
   }
 
-  const onRowClick = ({ detail }: { detail: User }) => {
+  const onRowClick = ({ detail }: { detail: EnrichedUser }) => {
     if (isWorkspaceOnly) {
-      selectedWorkspaceUser = detail
+      selectedWorkspaceUser = {
+        ...detail,
+        userGroups: detail.userGroups.map(g => g._id!),
+      }
       editWorkspaceUserModal.show()
       return
     }
