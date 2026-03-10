@@ -187,7 +187,7 @@ describe("/applications", () => {
       })
     })
 
-    it("creates app with sample data when onboarding", async () => {
+    it("creates default workspace without sample data when onboarding", async () => {
       const name = "Welcome app"
       const newWorkspace = await config.api.workspace.create({
         name,
@@ -195,21 +195,16 @@ describe("/applications", () => {
       })
       expect(newWorkspace._id).toBeDefined()
       expect(newWorkspace.name).toBe("Default workspace")
+      expect(newWorkspace.navigation?.title).toBe("Default workspace")
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
-      // Check sample resources in the newly created app context
+      // Check the onboarding path now creates an empty workspace baseline
       await config.withApp(newWorkspace, async () => {
-        const workspaceAppsFetchResult = await config.api.workspaceApp.fetch()
-        const {
-          workspaceApps: [app],
-        } = workspaceAppsFetchResult
-        expect(app.name).toBe(name)
-
         const res = await config.api.workspace.getDefinition(newWorkspace.appId)
-        expect(res.screens.length).toEqual(1)
+        expect(res.screens.length).toEqual(0)
 
         const tables = await config.api.table.fetch()
-        expect(tables.length).toEqual(5)
+        expect(tables.length).toEqual(1)
       })
     })
 
@@ -686,7 +681,9 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(
+                  secondWorkspace.appId
+                )}_workspace_app_.+`
               )
             ),
             name: "App Two",
@@ -769,7 +766,9 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(
+                  secondWorkspace.appId
+                )}_workspace_app_.+`
               )
             ),
             name: "Default",
