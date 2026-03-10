@@ -13,6 +13,8 @@
   import { formatLogDateForApi, formatTime } from "./LogComponents/utils"
   import { notifications } from "@budibase/bbui"
 
+  const AGENT_LOG_SESSION_LIMIT = 75
+  const AGENT_LOG_STEP_DETAIL_LIMIT = 100
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)
   let selectedSession = $state<AgentLogSession | null>(null)
@@ -89,7 +91,7 @@
         startDate,
         endDate,
         bookmark,
-        limit: 75,
+        limit: AGENT_LOG_SESSION_LIMIT,
         statusFilter,
         triggerFilter,
       })
