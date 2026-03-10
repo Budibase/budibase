@@ -66,6 +66,22 @@
   let vectorDbOptions = $derived(
     [...$vectorDbStore.configs].sort((a, b) => a.name.localeCompare(b.name))
   )
+  let duplicateNameError = $derived.by(() => {
+    const normalizedDraftName = draft.name?.trim().toLowerCase()
+    if (!normalizedDraftName) {
+      return undefined
+    }
+
+    const duplicate = $knowledgeBaseStore.list.find(
+      knowledgeBase =>
+        knowledgeBase._id !== draft._id &&
+        knowledgeBase.name.trim().toLowerCase() === normalizedDraftName
+    )
+
+    return duplicate
+      ? "A knowledge base with this name already exists"
+      : undefined
+  })
 
   let canSave = $derived.by(() => {
     if (isSaving || !isModified) {
@@ -73,6 +89,7 @@
     }
     return (
       !!draft.name?.trim() &&
+      !duplicateNameError &&
       !!draft.embeddingModel?.trim() &&
       !!draft.vectorDb?.trim()
     )
@@ -228,6 +245,7 @@
     description="Human readable name for the knowledge base"
     required
     bind:value={draft.name}
+    error={duplicateNameError}
     placeholder="HR Policies"
   />
 

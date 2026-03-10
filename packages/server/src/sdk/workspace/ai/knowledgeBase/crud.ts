@@ -3,6 +3,9 @@ import { AIConfigType, DocumentType, KnowledgeBase } from "@budibase/types"
 import * as configSdk from "../configs"
 import * as vectorDbSdk from "../vectorDb"
 
+const normalizeKnowledgeBaseName = (name: string | undefined) =>
+  name?.trim().toLowerCase() || ""
+
 const validateReferences = async ({
   embeddingModel,
   vectorDb,
@@ -43,13 +46,31 @@ export async function find(id: string): Promise<KnowledgeBase | undefined> {
   return result
 }
 
+const ensureUniqueName = async (
+  name: string,
+  currentId?: string
+): Promise<void> => {
+  const knowledgeBases = await fetch()
+  const normalizedName = normalizeKnowledgeBaseName(name)
+  const duplicate = knowledgeBases.find(
+    knowledgeBase =>
+      knowledgeBase._id !== currentId &&
+      normalizeKnowledgeBaseName(knowledgeBase.name) === normalizedName
+  )
+
+  if (duplicate) {
+    throw new HTTPError("Knowledge base name already exists", 400)
+  }
+}
+
 export async function create(config: KnowledgeBase): Promise<KnowledgeBase> {
   const db = context.getWorkspaceDB()
   await validateReferences(config)
+  await ensureUniqueName(config.name)
 
   const newConfig: KnowledgeBase = {
     _id: docIds.generateKnowledgeBaseID(),
-    name: config.name,
+    name: config.name.trim(),
     embeddingModel: config.embeddingModel,
     vectorDb: config.vectorDb,
   }
@@ -87,6 +108,8 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
   }
 
   await validateReferences(updated)
+  await ensureUniqueName(updated.name, updated._id)
+  updated.name = updated.name.trim()
 
   const { rev } = await db.put(updated)
   updated._rev = rev
