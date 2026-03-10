@@ -60,12 +60,12 @@ async function waitForLiteLLMReadiness() {
     })
     clearTimeout(timeout)
 
-    if (status === "ok") {
+    if (status === sdk.ai.configs.LiteLLMStatus.OK) {
       console.log(`LiteLLM ready after waiting ${Date.now() - start}ms`)
       return
     }
 
-    if (status === "unavailable") {
+    if (status === sdk.ai.configs.LiteLLMStatus.NOT_CONFIGURED) {
       console.warn(`LiteLLM not configured ${Date.now() - start}ms`)
       return
     }

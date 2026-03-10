@@ -23,7 +23,11 @@ import * as configSdk from "../configs"
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
-export type LiteLLMStatus = "ok" | "waiting" | "unavailable"
+export enum LiteLLMStatus {
+  OK = "ok",
+  STARTING = "starting",
+  NOT_CONFIGURED = "not configured",
+}
 
 type LiteLLMTeam = {
   id: string
@@ -57,16 +61,16 @@ export async function getLiteLLMStatus({
   signal?: AbortSignal
 } = {}): Promise<LiteLLMStatus> {
   if (!env.LITELLM_MASTER_KEY) {
-    return "unavailable"
+    return LiteLLMStatus.NOT_CONFIGURED
   }
 
   try {
     const response = await fetch(`${liteLLMUrl}/health/liveliness`, {
       signal,
     })
-    return response.ok ? "ok" : "waiting"
+    return response.ok ? LiteLLMStatus.OK : LiteLLMStatus.STARTING
   } catch {
-    return "waiting"
+    return LiteLLMStatus.STARTING
   }
 }
 
