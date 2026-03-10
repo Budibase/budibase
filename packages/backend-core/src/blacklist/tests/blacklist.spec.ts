@@ -1,10 +1,17 @@
 import { refreshBlacklist, isBlacklisted } from ".."
-import env from "../../environment"
+import { setEnv } from "../../environment"
 
 describe("blacklist", () => {
   describe("default ranges", () => {
+    let restoreEnv: (() => void) | undefined
+
     beforeAll(async () => {
-      env._set("BLACKLIST_IPS", undefined)
+      restoreEnv = setEnv({ BLACKLIST_IPS: undefined })
+      await refreshBlacklist()
+    })
+
+    afterAll(async () => {
+      restoreEnv?.()
       await refreshBlacklist()
     })
 
@@ -25,14 +32,25 @@ describe("blacklist", () => {
     it("should allow public IPs by default", async () => {
       expect(await isBlacklisted("8.8.8.8")).toBe(false)
     })
+
+    it("should block addresses that fail lookup or parsing", async () => {
+      expect(await isBlacklisted("http://[")).toBe(true)
+    })
   })
 
   describe("configured entries", () => {
+    let restoreEnv: (() => void) | undefined
+
     beforeAll(async () => {
-      env._set(
-        "BLACKLIST_IPS",
-        "www.google.com,192.168.1.1, 1.1.1.1,2.2.2.2/something"
-      )
+      restoreEnv = setEnv({
+        BLACKLIST_IPS:
+          "www.google.com,192.168.1.1, 1.1.1.1,2.2.2.2/something",
+      })
+      await refreshBlacklist()
+    })
+
+    afterAll(async () => {
+      restoreEnv?.()
       await refreshBlacklist()
     })
 

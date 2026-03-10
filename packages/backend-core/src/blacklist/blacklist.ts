@@ -107,7 +107,7 @@ export async function isBlacklisted(address: string): Promise<boolean> {
     try {
       ips = await lookup(address)
     } catch {
-      return false
+      return true
     }
   } else {
     ips = [address]
