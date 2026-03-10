@@ -31,6 +31,7 @@ export async function run({
 }): Promise<BashStepOutputs> {
   if (inputs.command == null) {
     return {
+      success: false,
       stdout: INVALID_INPUTS,
     }
   }
@@ -49,6 +50,7 @@ export async function run({
     const command = inputs.command.trim()
     if (!command) {
       return {
+        success: false,
         stdout: INVALID_INPUTS,
       }
     }

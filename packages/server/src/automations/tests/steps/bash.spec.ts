@@ -205,6 +205,22 @@ describe("Execute Bash Automations", () => {
       )
       .test({ fields: {} })
 
+    expect(result.steps[0].outputs.success).toBe(false)
+    expect(result.steps[0].outputs.stdout).toBe(
+      "Budibase bash automation failed: Invalid inputs"
+    )
+  })
+
+  it("should reject empty commands as failed invalid inputs", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash(
+        { command: "   " },
+        { stepName: "Empty Command" }
+      )
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toBe(false)
     expect(result.steps[0].outputs.stdout).toBe(
       "Budibase bash automation failed: Invalid inputs"
     )
