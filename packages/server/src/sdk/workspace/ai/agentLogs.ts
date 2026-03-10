@@ -155,9 +155,13 @@ function toISO(value?: string): string {
 function minDate(a?: string, b?: string): string {
   const firstDate = parseDate(a)
   const secondDate = parseDate(b)
-  if (!firstDate || !secondDate) {
-    throw new Error(`Expected valid dates, received '${a}' and '${b}'`)
+  if (!firstDate && !secondDate) {
+    throw new Error(
+      `Expected at least one valid date, received '${a}' and '${b}'`
+    )
   }
+  if (!firstDate) return secondDate!.toISOString()
+  if (!secondDate) return firstDate.toISOString()
 
   return firstDate <= secondDate
     ? firstDate.toISOString()
@@ -167,9 +171,13 @@ function minDate(a?: string, b?: string): string {
 function maxDate(a?: string, b?: string): string {
   const firstDate = parseDate(a)
   const secondDate = parseDate(b)
-  if (!firstDate || !secondDate) {
-    throw new Error(`Expected valid dates, received '${a}' and '${b}'`)
+  if (!firstDate && !secondDate) {
+    throw new Error(
+      `Expected at least one valid date, received '${a}' and '${b}'`
+    )
   }
+  if (!firstDate) return secondDate!.toISOString()
+  if (!secondDate) return firstDate.toISOString()
 
   return firstDate >= secondDate
     ? firstDate.toISOString()
@@ -623,7 +631,9 @@ export function initLogIndexQueue(
 }
 
 async function enqueueSessionLogIndex(job: AgentLogIndexJob) {
-  await initLogIndexQueue()
+  initLogIndexQueue().catch(error => {
+    console.error("Failed to initialise agent log index queue", error)
+  })
   return await getIndexQueue().add(job)
 }
 
@@ -702,7 +712,6 @@ export async function addSessionLog(
       ? "error"
       : "success",
   }
-
   await upsertSessionIndexDoc(db, snapshot)
 
   if (missingRequestIds.length) {
