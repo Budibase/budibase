@@ -1,10 +1,13 @@
 <script lang="ts">
+  import type { AgentLogEnvironment } from "@budibase/types"
   import { Body, Button, Select, Table } from "@budibase/bbui"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import type { Dayjs } from "dayjs"
 
   export interface SessionTableRow {
     sessionId: string
+    environment: AgentLogEnvironment
+    environmentLabel: string
     trigger: string
     startTime: string
     operations: number
@@ -55,6 +58,7 @@
 
   const sessionTableSchema = {
     trigger: { width: "0.8fr", displayName: "Trigger" },
+    environmentLabel: { width: "0.55fr", displayName: "Environment" },
     startTime: { width: "1fr", displayName: "Start time" },
     operations: { width: "0.4fr", displayName: "Operations" },
   }

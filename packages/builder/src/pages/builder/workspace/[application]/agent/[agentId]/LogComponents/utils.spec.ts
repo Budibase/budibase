@@ -49,6 +49,7 @@ function makeSession(
 ): AgentLogSession {
   return {
     sessionId: "sess-1",
+    environment: "development",
     firstInput: "Hello",
     trigger: "manual",
     isPreview: false,

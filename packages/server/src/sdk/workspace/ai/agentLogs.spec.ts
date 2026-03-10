@@ -304,7 +304,11 @@ describe("agentLogs", () => {
     })
 
     const detail = await withWorkspace(async () => {
-      return await fetchSessionDetail("agent-1", "session-chronological")
+      return await fetchSessionDetail(
+        "agent-1",
+        "session-chronological",
+        "production"
+      )
     })
 
     expect(detail?.entries.map(entry => entry.requestId)).toEqual([
@@ -337,12 +341,41 @@ describe("agentLogs", () => {
 
   it("treats a missing retention quota as unlimited", async () => {
     const license = cloneDeep(await licensing.cache.getCachedLicense())
-    delete license.quotas.constant.agentLogRetentionDays
+    if (license.quotas?.constant) {
+      Reflect.deleteProperty(
+        license.quotas.constant,
+        "agentLogRetentionDays"
+      )
+    }
     mocks.licenses.useLicense(license)
 
     await expect(oldestLogDate()).resolves.toBe(
       constants.MIN_VALID_DATE.toISOString()
     )
+  })
+
+  it("rejects session queries that exceed the maximum scan window", async () => {
+    await expect(
+      fetchSessions(
+        "agent-1",
+        "2026-03-08T00:00:00.000Z",
+        "2026-03-08T23:59:59.999Z",
+        "50",
+        100
+      )
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Bookmark query exceeds maximum scan window of 5000 sessions",
+    })
+  })
+
+  it("rejects invalid environments when fetching session detail", async () => {
+    await expect(
+      fetchSessionDetail("agent-1", "session-chronological", "staging" as any)
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Invalid environment query",
+    })
   })
 
   it("treats a zero retention quota as unlimited", async () => {
@@ -519,7 +552,7 @@ describe("agentLogs", () => {
     })
 
     const detail = await withWorkspace(async () => {
-      return await fetchSessionDetail("agent-1", "session-live")
+      return await fetchSessionDetail("agent-1", "session-live", "production")
     })
 
     expect(detail).toEqual(

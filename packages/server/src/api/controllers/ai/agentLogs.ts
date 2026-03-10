@@ -1,4 +1,5 @@
 import type {
+  AgentLogEnvironment,
   FetchAgentLogsResponse,
   AgentLogRequestDetail,
   AgentLogSession,
@@ -76,6 +77,18 @@ function sanitizeDateQuery(
   return parsedDate.toISOString()
 }
 
+function sanitizeEnvironmentQuery(environment?: string): AgentLogEnvironment {
+  const normalizedEnvironment = environment?.trim()
+  if (
+    normalizedEnvironment === "development" ||
+    normalizedEnvironment === "production"
+  ) {
+    return normalizedEnvironment
+  }
+
+  throw new HTTPError("Invalid environment query", 400)
+}
+
 function getComparableDate(value: string, mode: "start" | "end"): number {
   const comparableValue = DATE_ONLY_REGEX.test(value)
     ? `${value}T${mode === "start" ? "00:00:00.000" : "23:59:59.999"}Z`
@@ -118,8 +131,12 @@ export async function fetchAgentLogSession(
   ctx: UserCtx<void, AgentLogSession | null>
 ) {
   const { agentId } = ctx.params
-  const { sessionId } = ctx.query as Record<string, string>
-  ctx.body = await sdk.ai.agentLogs.fetchSessionDetail(agentId, sessionId)
+  const { sessionId, environment } = ctx.query as Record<string, string>
+  ctx.body = await sdk.ai.agentLogs.fetchSessionDetail(
+    agentId,
+    sessionId,
+    sanitizeEnvironmentQuery(environment)
+  )
 }
 
 export async function fetchAgentLogDetail(

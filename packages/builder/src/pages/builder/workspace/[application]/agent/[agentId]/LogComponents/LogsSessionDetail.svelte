@@ -23,6 +23,10 @@
     expandedStepLoading,
     onToggleStep,
   }: Props = $props()
+
+  function formatEnvironment(environment: "development" | "production") {
+    return environment === "production" ? "Production" : "Development"
+  }
 </script>
 
 {#if selectedSession}
@@ -54,6 +58,12 @@
       <div class="meta-row">
         <span class="meta-label">Trigger</span>
         <span class="meta-value">{selectedSession.trigger}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Environment</span>
+        <span class="meta-value">
+          {formatEnvironment(selectedSession.environment)}
+        </span>
       </div>
       <div class="meta-row">
         <span class="meta-label">Tokens (in/out)</span>

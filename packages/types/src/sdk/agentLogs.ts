@@ -106,8 +106,8 @@ export interface IndexAgentLogOperationInput {
   sessionId: string
   requestIds: string[]
   firstInput?: string
-  startedAt?: string
-  completedAt?: string
+  startedAt: string
+  completedAt: string
 }
 
 export interface CreateSessionLogIndexerInput {

@@ -1,5 +1,6 @@
 import type {
   AgentLogEntry,
+  AgentLogEnvironment,
   AgentLogRequestDetail,
   AgentLogSession,
   AgentLogSessionIndexDoc,
@@ -55,6 +56,7 @@ const MAX_SESSION_PAGE_SIZE = 100
 const DEFAULT_BOOKMARK_PAGE = 1
 const EXPIRED_LIMIT = 100
 const ONE_DAY_MILLIS = 1000 * 60 * 60 * 24
+const MAX_SESSION_SCAN_LIMIT = 5000
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const DEFAULT_INDEX_QUEUE_CONCURRENCY = 2
 const DEFAULT_INDEX_QUEUE_BACKOFF_MS = 5000
@@ -67,7 +69,6 @@ interface AgentLogIndexJob extends IndexAgentLogOperationInput {
 
 let agentLogIndexQueue: queue.BudibaseQueue<AgentLogIndexJob> | undefined
 let agentLogIndexQueueInitialised = false
-let agentLogIndexQueueInitPromise: Promise<void> | undefined
 
 export async function oldestLogDate() {
   const license = await licensing.cache.getCachedLicense()
@@ -172,8 +173,12 @@ function parseDate(value?: string): Date | undefined {
   return parsedDate
 }
 
-function toISO(value?: string): string {
-  return (parseDate(value) || new Date()).toISOString()
+function parseDateOrThrow(value: string, label: string): string {
+  const parsedDate = parseDate(value)
+  if (!parsedDate) {
+    throw new Error(`Invalid ${label}: ${value}`)
+  }
+  return parsedDate.toISOString()
 }
 
 function minDate(a?: string, b?: string): string {
@@ -222,18 +227,33 @@ function parseBookmarkPage(bookmark?: string): number {
   if (!/^\d+$/.test(bookmark)) {
     throw new HTTPError("Invalid bookmark query", 400)
   }
-  const parsed = Number.parseInt(bookmark, 10)
-  if (!Number.isFinite(parsed) || parsed < 1) {
+
+  const parsedBookmark = Number.parseInt(bookmark, 10)
+  if (!Number.isFinite(parsedBookmark) || parsedBookmark < 1) {
     throw new HTTPError("Invalid bookmark query", 400)
   }
-  return parsed
+
+  return parsedBookmark
 }
 
 function normalizeSessionLimit(limit?: number): number {
   if (!limit || limit <= 0) {
     return DEFAULT_SESSION_PAGE_SIZE
   }
+
   return Math.min(limit, MAX_SESSION_PAGE_SIZE)
+}
+
+function getMergedSessionLimit(page: number, pageSize: number): number {
+  const mergedLimit = (page - 1) * pageSize + pageSize + 1
+  if (mergedLimit > MAX_SESSION_SCAN_LIMIT) {
+    throw new HTTPError(
+      `Bookmark query exceeds maximum scan window of ${MAX_SESSION_SCAN_LIMIT} sessions`,
+      400
+    )
+  }
+
+  return mergedLimit
 }
 
 function mapRequestModel(data: LiteLLMRequestDetail) {
@@ -286,17 +306,16 @@ function parseIndexedRequestIds(value?: string): Set<string> {
   if (!value) {
     return new Set()
   }
-  try {
-    const parsed = JSON.parse(value)
-    if (!Array.isArray(parsed)) {
-      return new Set()
-    }
-    return new Set(
-      parsed.filter((item): item is string => typeof item === "string")
-    )
-  } catch {
-    return new Set()
+
+  const parsed = JSON.parse(value)
+  if (!Array.isArray(parsed)) {
+    throw new Error("Expected indexed request IDs to be an array")
   }
+  if (parsed.some(item => typeof item !== "string")) {
+    throw new Error("Expected indexed request IDs to contain only strings")
+  }
+
+  return new Set(parsed)
 }
 
 function agentLogSessionTable(): Table {
@@ -321,16 +340,17 @@ function agentLogSessionTable(): Table {
 
 async function querySql<T extends Document>(
   request: EnrichedQueryJson,
-  table: Table
+  table: Table,
+  db = context.getWorkspaceDB()
 ): Promise<T[]> {
-  await tableSqs.ensureStaticTables()
+  await tableSqs.ensureStaticTables(db)
 
   const query = builder._query(request)
   if (Array.isArray(query)) {
     throw new Error("Cannot execute multiple queries for agent log search")
   }
 
-  const rows = await context.getWorkspaceDB().sql<T>(query.sql, query.bindings)
+  const rows = await db.sql<T>(query.sql, query.bindings)
   return builder.convertJsonStringColumns(
     table,
     rows as Array<T & Record<string, unknown>>
@@ -437,6 +457,17 @@ function buildSessionFilters(
   }
 
   return filter
+}
+
+function getWorkspaceDbForEnvironment(environment: AgentLogEnvironment) {
+  if (environment === "development") {
+    return context.getDevWorkspaceDB()
+  }
+  if (environment === "production") {
+    return context.getProdWorkspaceDB()
+  }
+
+  throw new HTTPError("Invalid environment query", 400)
 }
 
 function getLiteLLMRequestUser(data: LiteLLMRequestDetail): string | undefined {
@@ -716,28 +747,22 @@ export function initLogIndexQueue(
     return Promise.resolve()
   }
 
-  if (!agentLogIndexQueueInitPromise) {
-    agentLogIndexQueueInitPromise = (async () => {
-      await getIndexQueue().process(concurrency, async job => {
-        const { workspaceId, ...indexInput } = job.data
-        await context.doInWorkspaceContext(workspaceId, async () => {
-          await addSessionLog(indexInput)
-        })
+  try {
+    agentLogIndexQueueInitialised = true
+    return getIndexQueue().process(concurrency, async job => {
+      const { workspaceId, ...indexInput } = job.data
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        await addSessionLog(indexInput)
       })
-      agentLogIndexQueueInitialised = true
-    })()
-  }
-
-  return agentLogIndexQueueInitPromise.catch(error => {
-    agentLogIndexQueueInitPromise = undefined
+    })
+  } catch (error) {
+    agentLogIndexQueueInitialised = false
     throw error
-  })
+  }
 }
 
 async function enqueueSessionLogIndex(job: AgentLogIndexJob) {
-  initLogIndexQueue().catch(error => {
-    console.error("Failed to initialise agent log index queue", error)
-  })
+  initLogIndexQueue()
   return await getIndexQueue().add(job)
 }
 
@@ -753,8 +778,8 @@ export async function addSessionLog(
   const trigger = determineTrigger(input.sessionId)
   const isPreview = isPreviewSession(input.sessionId)
   const firstInput = truncateText(input.firstInput || "")
-  const fallbackStartTime = toISO(input.startedAt)
-  const fallbackEndTime = toISO(input.completedAt || input.startedAt)
+  const fallbackStartTime = parseDateOrThrow(input.startedAt, "startedAt")
+  const fallbackEndTime = parseDateOrThrow(input.completedAt, "completedAt")
 
   const summaryResults = await Promise.all(
     uniqueRequestIds.map(async requestId => {
@@ -886,52 +911,90 @@ export async function fetchSessions(
   statusFilter?: string,
   triggerFilter?: string
 ): Promise<FetchAgentLogsResponse> {
-  await clearOldHistory()
-
   const page = parseBookmarkPage(bookmark)
   const pageSize = normalizeSessionLimit(limit)
+  const pageStart = (page - 1) * pageSize
+  const mergedLimit = getMergedSessionLimit(page, pageSize)
   const sessionTable = agentLogSessionTable()
   const maxStartDate = await oldestLogDate()
   const clampedStartDate = clampStartDate(startDate, maxStartDate)
 
-  const rows = await querySql<AgentLogSessionIndexDoc>(
-    {
-      operation: Operation.READ,
-      table: sessionTable,
-      tables: {},
-      paginate: {
-        page,
-        limit: pageSize + 1,
-      },
-      filters: buildSessionFilters(
-        agentId,
-        clampedStartDate,
-        endDate,
-        statusFilter,
-        triggerFilter
-      ),
-      resource: {
-        fields: [],
-      },
-      sort: {
-        lastActivityAt: {
-          direction: SortOrder.DESCENDING,
-          type: SortType.STRING,
-        },
+  await clearOldHistory()
+
+  const query = {
+    operation: Operation.READ,
+    table: sessionTable,
+    tables: {},
+    paginate: {
+      page: 1,
+      limit: mergedLimit,
+    },
+    filters: buildSessionFilters(
+      agentId,
+      clampedStartDate,
+      endDate,
+      statusFilter,
+      triggerFilter
+    ),
+    resource: {
+      fields: [],
+    },
+    sort: {
+      lastActivityAt: {
+        direction: SortOrder.DESCENDING,
+        type: SortType.STRING,
       },
     },
-    sessionTable
-  )
+  } satisfies EnrichedQueryJson
 
-  const hasMore = rows.length > pageSize
+  const [developmentRows, productionRows] = await Promise.all([
+    querySql<AgentLogSessionIndexDoc>(
+      query,
+      sessionTable,
+      context.getDevWorkspaceDB()
+    ),
+    querySql<AgentLogSessionIndexDoc>(
+      query,
+      sessionTable,
+      context.getProdWorkspaceDB()
+    ),
+  ])
+
+  const rows = [
+    ...developmentRows.map(session => ({
+      session,
+      environment: "development" as const,
+    })),
+    ...productionRows.map(session => ({
+      session,
+      environment: "production" as const,
+    })),
+  ]
+    .sort((a, b) => {
+      const aTime = new Date(a.session.lastActivityAt || 0).getTime()
+      const bTime = new Date(b.session.lastActivityAt || 0).getTime()
+      return bTime - aTime
+    })
+    .filter(
+      (item, index, items) =>
+        items.findIndex(
+          other =>
+            other.environment === item.environment &&
+            other.session.sessionId === item.session.sessionId
+        ) === index
+    )
+
+  const pagedRows = rows.slice(pageStart, pageStart + pageSize + 1)
+  const hasMore = pagedRows.length > pageSize
   if (hasMore) {
-    rows.pop()
+    pagedRows.pop()
   }
 
-  const sessions = rows.map(
-    session =>
+  const sessions = pagedRows.map(
+    ({ session, environment }) =>
       ({
         sessionId: session.sessionId,
+        environment,
         firstInput: session.firstInput || "",
         trigger: session.trigger,
         isPreview: !!session.isPreview,
@@ -951,8 +1014,10 @@ export async function fetchSessions(
 
 export async function fetchSessionDetail(
   agentId: string,
-  sessionId: string
+  sessionId: string,
+  environment: AgentLogEnvironment
 ): Promise<AgentLogSession | null> {
+  const sessionSummaryDb = getWorkspaceDbForEnvironment(environment)
   const { rows: sessionRows, total } = await fetchLiteLLMSessionRows(sessionId)
   const liveEntries = sessionRows
     .filter(row => getLiteLLMRequestUser(row) === getExpectedEndUser(agentId))
@@ -976,9 +1041,9 @@ export async function fetchSessionDetail(
         }) satisfies AgentLogEntry
     )
 
-  const sessionSummary = await context
-    .getWorkspaceDB()
-    .tryGet<AgentLogSessionIndexDoc>(getSessionDocId(agentId, sessionId))
+  const sessionSummary = await sessionSummaryDb.tryGet<AgentLogSessionIndexDoc>(
+    getSessionDocId(agentId, sessionId)
+  )
 
   if (!liveEntries.length) {
     return null
@@ -986,6 +1051,7 @@ export async function fetchSessionDetail(
 
   return {
     sessionId,
+    environment,
     firstInput: sessionSummary?.firstInput || "",
     trigger: sessionSummary?.trigger || determineTrigger(sessionId),
     isPreview: sessionSummary?.isPreview ?? isPreviewSession(sessionId),

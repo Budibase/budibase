@@ -48,27 +48,6 @@ const newClient = (opts?: { production?: boolean }) =>
         // Let the user be redirected to auth by the core layout
         return
       }
-
-      // Logout on 403's
-      if (status === 403) {
-        // Remove cookies
-        CookieUtils.removeCookie(Constants.Cookies.Auth)
-
-        const isAuthenticated = !!get(auth).user
-        if (isAuthenticated) {
-          // Clear return URL to prevent redirect loops with invalid URLs
-          CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
-        }
-
-        // Reload after removing cookie, go to login
-        if (
-          isAuthenticated &&
-          !url.includes("self") &&
-          !url.includes("login")
-        ) {
-          location.reload()
-        }
-      }
     },
     onMigrationDetected: appId => {
       const updatingUrl = `/builder/workspace/updating/${appId}`

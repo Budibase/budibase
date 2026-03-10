@@ -1,4 +1,5 @@
 import type {
+  AgentLogEnvironment,
   FetchAgentLogsResponse,
   AgentLogRequestDetail,
   AgentLogSession,
@@ -23,7 +24,8 @@ export interface AgentLogEndpoints {
   ) => Promise<AgentLogRequestDetail>
   fetchAgentLogSession: (
     agentId: string,
-    sessionId: string
+    sessionId: string,
+    environment: AgentLogEnvironment
   ) => Promise<AgentLogSession | null>
 }
 
@@ -50,8 +52,9 @@ export const buildAgentLogEndpoints = (
     })
   },
 
-  fetchAgentLogSession: async (agentId, sessionId) => {
+  fetchAgentLogSession: async (agentId, sessionId, environment) => {
     const params = new URLSearchParams({ sessionId })
+    params.set("environment", environment)
     return await API.get({
       url: `/api/agent/${agentId}/logs/session?${params.toString()}`,
     })
