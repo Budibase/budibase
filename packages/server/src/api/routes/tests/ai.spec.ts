@@ -5,6 +5,7 @@ import {
   mockChatGPTStreamFailure,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
+import { resetHttpMocking } from "../../../tests/jestEnv"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import nock from "nock"
@@ -1039,6 +1040,7 @@ describe("BudibaseAI", () => {
     })
 
     beforeEach(async () => {
+      await resetHttpMocking()
       await config.newTenant()
       nock.cleanAll()
       const license: License = {
@@ -1142,6 +1144,10 @@ describe("BudibaseAI", () => {
       nock(env.ACCOUNT_PORTAL_URL)
         .get(`/api/license/${licenseKey}`)
         .reply(200, license)
+    })
+
+    afterEach(async () => {
+      await resetHttpMocking()
     })
 
     it("proxies the OpenAI response without reshaping", async () => {
