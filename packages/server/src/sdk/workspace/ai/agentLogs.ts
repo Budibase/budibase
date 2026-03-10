@@ -377,7 +377,8 @@ export async function clearOldHistory(): Promise<void> {
         doc =>
           !!doc?._id &&
           !!doc?._rev &&
-          new Date(doc.lastActivityAt).getTime() <= new Date(expiredEnd).getTime()
+          new Date(doc.lastActivityAt).getTime() <=
+            new Date(expiredEnd).getTime()
       )
       .map(doc => ({
         _id: doc._id!,
