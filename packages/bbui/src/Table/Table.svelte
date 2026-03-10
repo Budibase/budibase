@@ -552,9 +552,9 @@
                 >
                   <SelectEditRenderer
                     data={row}
-                    selected={selectedRows.findIndex(
+                    selected={selectedRows.some(
                       selectedRow => selectedRow._id === row._id
-                    ) !== -1}
+                    )}
                     onEdit={e => editRow(e, row)}
                     {allowSelectRows}
                     {allowEditRows}
