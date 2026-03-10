@@ -7,7 +7,14 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Button, Layout, notifications, Table } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Layout,
+    notifications,
+    ProgressCircle,
+    Table,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
 
   let knowledgeBases = $derived(
@@ -49,7 +56,12 @@
       </Button>
     </div>
 
-    {#if knowledgeBases.length}
+    {#if $knowledgeBaseStore.loading && !$knowledgeBaseStore.loaded}
+      <div class="loading-state">
+        <ProgressCircle size="S" />
+        <Body size="S">Loading knowledge bases...</Body>
+      </div>
+    {:else if knowledgeBases.length > 0}
       <Table
         compact
         data={knowledgeBases}
@@ -80,5 +92,12 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
+  }
+
+  .loading-state {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: 24px 0;
   }
 </style>
