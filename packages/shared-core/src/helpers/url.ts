@@ -37,8 +37,21 @@ export const accountPortalAccountUrl = (accountPortalUrl?: string | null) =>
 export const accountPortalBillingUrl = (accountPortalUrl?: string | null) =>
   joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.BILLING)
 
-export const accountPortalUpgradeUrl = (accountPortalUrl?: string | null) =>
-  joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.UPGRADE)
+export const accountPortalUpgradeUrl = (
+  accountPortalUrl?: string | null,
+  tenantId?: string | null
+) => {
+  if (tenantId) {
+    const tenantPath = joinBaseAndPath(
+      accountPortalUrl,
+      ACCOUNT_PORTAL_PATHS.TENANTS
+    )
+    const encodedTenantId = encodeURIComponent(tenantId)
+    return `${tenantPath}?managePlansTenantId=${encodedTenantId}`
+  }
+
+  return joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.UPGRADE)
+}
 
 export const builderWorkspacesUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.WORKSPACES)
