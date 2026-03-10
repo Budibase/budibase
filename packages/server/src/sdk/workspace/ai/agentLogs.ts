@@ -1,5 +1,6 @@
 import type {
   AgentLogEntry,
+  AgentLogEnvironment,
   AgentLogRequestDetail,
   AgentLogSession,
   AgentLogSessionIndexDoc,
@@ -288,7 +289,8 @@ function agentLogSessionTable(): Table {
 
 async function querySql<T extends Document>(
   request: EnrichedQueryJson,
-  table: Table
+  table: Table,
+  db: ReturnType<typeof context.getWorkspaceDB> = context.getWorkspaceDB()
 ): Promise<T[]> {
   await tableSqs.ensureStaticTables()
 
@@ -297,7 +299,7 @@ async function querySql<T extends Document>(
     throw new Error("Cannot execute multiple queries for agent log search")
   }
 
-  const rows = await context.getWorkspaceDB().sql<T>(query.sql, query.bindings)
+  const rows = await db.sql<T>(query.sql, query.bindings)
   return builder.convertJsonStringColumns(
     table,
     rows as Array<T & Record<string, unknown>>
@@ -776,46 +778,83 @@ export async function fetchSessions(
 ): Promise<FetchAgentLogsResponse> {
   const page = parseBookmarkPage(bookmark)
   const pageSize = normalizeSessionLimit(limit)
+  const pageStart = (page - 1) * pageSize
+  const mergedLimit = pageStart + pageSize + 1
   const sessionTable = agentLogSessionTable()
-
-  const rows = await querySql<AgentLogSessionIndexDoc>(
-    {
-      operation: Operation.READ,
-      table: sessionTable,
-      tables: {},
-      paginate: {
-        page,
-        limit: pageSize + 1,
-      },
-      filters: buildSessionFilters(
-        agentId,
-        startDate,
-        endDate,
-        statusFilter,
-        triggerFilter
-      ),
-      resource: {
-        fields: [],
-      },
-      sort: {
-        lastActivityAt: {
-          direction: SortOrder.DESCENDING,
-          type: SortType.STRING,
-        },
+  const query = {
+    operation: Operation.READ,
+    table: sessionTable,
+    tables: {},
+    paginate: {
+      page: 1,
+      limit: mergedLimit,
+    },
+    filters: buildSessionFilters(
+      agentId,
+      startDate,
+      endDate,
+      statusFilter,
+      triggerFilter
+    ),
+    resource: {
+      fields: [],
+    },
+    sort: {
+      lastActivityAt: {
+        direction: SortOrder.DESCENDING,
+        type: SortType.STRING,
       },
     },
-    sessionTable
-  )
+  } satisfies EnrichedQueryJson
 
-  const hasMore = rows.length > pageSize
+  const [developmentRows, productionRows] = await Promise.all([
+    querySql<AgentLogSessionIndexDoc>(
+      query,
+      sessionTable,
+      context.getDevWorkspaceDB()
+    ),
+    querySql<AgentLogSessionIndexDoc>(
+      query,
+      sessionTable,
+      context.getProdWorkspaceDB()
+    ),
+  ])
+
+  const rows = [
+    ...developmentRows.map(session => ({
+      session,
+      environment: "development" as const,
+    })),
+    ...productionRows.map(session => ({
+      session,
+      environment: "production" as const,
+    })),
+  ]
+    .sort((a, b) => {
+      const aTime = new Date(a.session.lastActivityAt || 0).getTime()
+      const bTime = new Date(b.session.lastActivityAt || 0).getTime()
+      return bTime - aTime
+    })
+    .filter(
+      (item, index, items) =>
+        items.findIndex(
+          other =>
+            other.environment === item.environment &&
+            other.session.sessionId === item.session.sessionId
+        ) === index
+    )
+
+  const pagedRows = rows.slice(pageStart, pageStart + pageSize + 1)
+  const hasMore = pagedRows.length > pageSize
   if (hasMore) {
-    rows.pop()
+    pagedRows.pop()
   }
 
-  const sessions = rows.map(
-    session =>
+  const sessions = pagedRows.map(
+    ({ session, environment }) =>
       ({
         sessionId: session.sessionId,
+        environment,
         firstInput: session.firstInput || "",
         trigger: session.trigger,
         isPreview: !!session.isPreview,
@@ -835,7 +874,8 @@ export async function fetchSessions(
 
 export async function fetchSessionDetail(
   agentId: string,
-  sessionId: string
+  sessionId: string,
+  environment: AgentLogEnvironment
 ): Promise<AgentLogSession | null> {
   const { rows: sessionRows, total } = await fetchLiteLLMSessionRows(sessionId)
   const liveEntries = sessionRows
@@ -860,9 +900,11 @@ export async function fetchSessionDetail(
         }) satisfies AgentLogEntry
     )
 
-  const sessionSummary = await context
-    .getWorkspaceDB()
-    .tryGet<AgentLogSessionIndexDoc>(getSessionDocId(agentId, sessionId))
+  const sessionSummary = await (
+    environment === "production"
+      ? context.getProdWorkspaceDB()
+      : context.getDevWorkspaceDB()
+  ).tryGet<AgentLogSessionIndexDoc>(getSessionDocId(agentId, sessionId))
 
   if (!liveEntries.length) {
     return null
@@ -870,6 +912,7 @@ export async function fetchSessionDetail(
 
   return {
     sessionId,
+    environment,
     firstInput: sessionSummary?.firstInput || "",
     trigger: sessionSummary?.trigger || determineTrigger(sessionId),
     isPreview: sessionSummary?.isPreview ?? isPreviewSession(sessionId),

@@ -1,4 +1,5 @@
 import type {
+  AgentLogEnvironment,
   FetchAgentLogsResponse,
   AgentLogRequestDetail,
   AgentLogSession,
@@ -118,8 +119,12 @@ export async function fetchAgentLogSession(
   ctx: UserCtx<void, AgentLogSession | null>
 ) {
   const { agentId } = ctx.params
-  const { sessionId } = ctx.query as Record<string, string>
-  ctx.body = await sdk.ai.agentLogs.fetchSessionDetail(agentId, sessionId)
+  const { sessionId, environment } = ctx.query as Record<string, string>
+  ctx.body = await sdk.ai.agentLogs.fetchSessionDetail(
+    agentId,
+    sessionId,
+    environment as AgentLogEnvironment
+  )
 }
 
 export async function fetchAgentLogDetail(

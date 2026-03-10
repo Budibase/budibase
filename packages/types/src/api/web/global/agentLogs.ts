@@ -10,8 +10,11 @@ export interface AgentLogEntry {
   status: "success" | "error"
 }
 
+export type AgentLogEnvironment = "development" | "production"
+
 export interface AgentLogSession {
   sessionId: string
+  environment: AgentLogEnvironment
   firstInput: string
   trigger: string
   isPreview: boolean

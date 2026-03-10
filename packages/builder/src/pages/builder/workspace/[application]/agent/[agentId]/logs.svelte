@@ -4,6 +4,7 @@
   import dayjs, { type Dayjs } from "dayjs"
   import { onMount } from "svelte"
   import type {
+    AgentLogEnvironment,
     AgentLogEntry,
     AgentLogRequestDetail,
     AgentLogSession,
@@ -23,8 +24,6 @@
   let expandedStepLoading = $state(false)
   let hasMore = $state(false)
   let nextBookmark = $state<string | undefined>(undefined)
-  let deepLinkedSessionId = $state<string | null>(null)
-  let linkedSessionLoaded = $state(false)
 
   let statusFilter = $state<string>("all")
   let dateRange = $state<[Dayjs | null, Dayjs | null]>([
@@ -57,6 +56,9 @@
   let sessionTableData = $derived.by(() =>
     visibleSessions.map(session => ({
       sessionId: session.sessionId,
+      environment: session.environment,
+      environmentLabel:
+        session.environment === "production" ? "Production" : "Development",
       trigger: session.trigger,
       startTime: formatTime(session.startTime),
       operations: session.operations,
@@ -102,7 +104,9 @@
             ...response.sessions.filter(
               session =>
                 !sessions.some(
-                  existing => existing.sessionId === session.sessionId
+                  existing =>
+                    existing.sessionId === session.sessionId &&
+                    existing.environment === session.environment
                 )
             ),
           ]
@@ -114,14 +118,14 @@
 
       const current = selectedSession
       const selectedStillExists = current
-        ? nextSessions.some(s => s.sessionId === current.sessionId)
+        ? nextSessions.some(
+            s =>
+              s.sessionId === current.sessionId &&
+              s.environment === current.environment
+          )
         : false
 
-      if (
-        !append &&
-        !selectedStillExists &&
-        current?.sessionId !== deepLinkedSessionId
-      ) {
+      if (!append && !selectedStillExists) {
         selectedSession = null
         resetDetailState()
       }
@@ -168,18 +172,21 @@
   async function selectSession(session: AgentLogSession) {
     const agentId = $selectedAgent?._id
     const requestedSessionId = session.sessionId
+    const requestedEnvironment = session.environment
     selectedSession = session
     resetDetailState()
 
     if (!agentId) return
 
     const isCurrentSelection = () =>
-      selectedSession?.sessionId === requestedSessionId
+      selectedSession?.sessionId === requestedSessionId &&
+      selectedSession?.environment === requestedEnvironment
 
     try {
       const fullSession = await API.fetchAgentLogSession(
         agentId,
-        requestedSessionId
+        requestedSessionId,
+        session.environment
       )
       if (!isCurrentSelection()) return
 
@@ -195,34 +202,16 @@
     }
   }
 
-  async function loadLinkedSession() {
-    const agentId = $selectedAgent?._id
-    if (!agentId || !deepLinkedSessionId) {
-      return
-    }
-
-    try {
-      const fullSession = await API.fetchAgentLogSession(
-        agentId,
-        deepLinkedSessionId
-      )
-      if (!fullSession) {
-        notifications.error("Linked session was not found")
-        return
-      }
-      selectedSession = fullSession
-      resetDetailState()
-    } catch (error) {
-      notifications.error("Failed to fetch linked session")
-    }
-  }
-
-  function onSessionRowClick(row: { sessionId?: string }) {
-    if (!row.sessionId) {
+  function onSessionRowClick(row: {
+    sessionId?: string
+    environment?: AgentLogEnvironment
+  }) {
+    if (!row.sessionId || !row.environment) {
       return
     }
     const session = visibleSessions.find(
-      item => item.sessionId === row.sessionId
+      item =>
+        item.sessionId === row.sessionId && item.environment === row.environment
     )
     if (session) {
       selectSession(session)
@@ -255,28 +244,12 @@
     triggerFilter
 
     if (mounted) {
-      linkedSessionLoaded = false
       loadSessions()
-    }
-  })
-
-  $effect(() => {
-    if (
-      mounted &&
-      !linkedSessionLoaded &&
-      deepLinkedSessionId &&
-      $selectedAgent?._id
-    ) {
-      linkedSessionLoaded = true
-      loadLinkedSession()
     }
   })
 
   onMount(() => {
     mounted = true
-    deepLinkedSessionId = new URLSearchParams(window.location.search).get(
-      "sessionId"
-    )
     loadSessions()
   })
 </script>
