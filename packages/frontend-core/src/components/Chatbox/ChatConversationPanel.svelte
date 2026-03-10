@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte"
-  import { Body, Button, Icon, ProgressCircle } from "@budibase/bbui"
+  import { Body, Icon } from "@budibase/bbui"
   import type { ChatConversation, DraftChatConversation } from "@budibase/types"
   import Chatbox from "./index.svelte"
 
@@ -28,14 +28,12 @@
   export let chat: ChatConversationLike
   export let loading: boolean = false
   export let suppressAgentPicker: boolean = false
-  export let deletingChat: boolean = false
   export let workspaceId: string
   export let initialPrompt: string = ""
   export let userName: string = ""
 
   const dispatch = createEventDispatcher<{
     chatSaved: { chatId?: string; chat: ChatConversationLike }
-    deleteChat: undefined
     agentSelected: { agentId: string }
     startChat: { agentId: string; prompt: string }
   }>()
@@ -82,10 +80,6 @@
 
   $: readOnlyReason = getReadOnlyReason(agentAvailability)
 
-  const deleteChat = () => {
-    dispatch("deleteChat")
-  }
-
   const selectAgent = (agentId: string) => {
     dispatch("agentSelected", { agentId })
   }
@@ -126,23 +120,6 @@
         <div class="chat-header-title">
           <Body size="S">{chat.title || "Untitled Chat"}</Body>
         </div>
-
-        <Button
-          quiet
-          warning
-          disabled={deletingChat || loading}
-          on:click={deleteChat}
-        >
-          <span class="delete-button-content">
-            {#if deletingChat}
-              <ProgressCircle size="S" />
-              Deleting...
-            {:else}
-              <Icon name="trash" size="S" />
-              Delete chat
-            {/if}
-          </span>
-        </Button>
       </div>
     {/if}
 
@@ -246,20 +223,18 @@
 
   .chat-header-title {
     min-width: 0;
+    flex: 1 1 auto;
   }
 
   .chat-header-title :global(p) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 14px;
     line-height: 17px;
     letter-spacing: 0;
     font-weight: 400;
     color: var(--spectrum-alias-text-color);
-  }
-
-  .delete-button-content {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
   }
 
   .chat-empty {

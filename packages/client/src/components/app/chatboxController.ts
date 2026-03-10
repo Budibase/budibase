@@ -388,8 +388,12 @@ export class ChatboxController {
   }
 
   async deleteCurrentChat() {
-    const { chat, deletingChat, chatAppId } = this.state
-    if (!chat?._id || deletingChat || !chatAppId) {
+    await this.deleteConversation(this.state.chat?._id)
+  }
+
+  async deleteConversation(conversationId?: string) {
+    const { deletingChat, chatAppId, selectedConversationId } = this.state
+    if (!conversationId || deletingChat || !chatAppId) {
       return
     }
 
@@ -401,7 +405,7 @@ export class ChatboxController {
       })
 
       await this.api.deleteChatConversation(
-        chat._id,
+        conversationId,
         this.state.chatAppId,
         conversationScopeAgentId
       )
@@ -409,14 +413,19 @@ export class ChatboxController {
         conversationScopeAgentId
       )
 
-      if (updatedConversations.length) {
-        this.selectConversation(updatedConversations[0])
-      } else {
-        this.patch({
-          selectedAgentId: this.state.lockedAgentId || null,
-          selectedConversationId: undefined,
-          chat: createDraftChat(this.state.chatAppId, this.state.lockedAgentId),
-        })
+      if (selectedConversationId === conversationId) {
+        if (updatedConversations.length) {
+          this.selectConversation(updatedConversations[0])
+        } else {
+          this.patch({
+            selectedAgentId: this.state.lockedAgentId || null,
+            selectedConversationId: undefined,
+            chat: createDraftChat(
+              this.state.chatAppId,
+              this.state.lockedAgentId
+            ),
+          })
+        }
       }
     } catch (error) {
       const message =
