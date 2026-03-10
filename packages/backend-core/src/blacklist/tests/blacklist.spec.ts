@@ -87,4 +87,32 @@ describe("blacklist", () => {
       expect(await isBlacklisted("2.2.2.2")).toBe(true)
     })
   })
+
+  describe("malformed CIDR entries", () => {
+    let restoreEnv: (() => void) | undefined
+
+    afterEach(async () => {
+      restoreEnv?.()
+      restoreEnv = undefined
+      await refreshBlacklist()
+    })
+
+    it("should treat out of range ipv4 prefixes as a single host entry", async () => {
+      restoreEnv = setEnv({ BLACKLIST_IPS: "1.1.1.1/33" })
+
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("1.1.1.1")).toBe(true)
+      expect(await isBlacklisted("1.1.1.2")).toBe(false)
+    })
+
+    it("should reject partially numeric prefixes and blacklist only the host", async () => {
+      restoreEnv = setEnv({ BLACKLIST_IPS: "2.2.2.2/1foo" })
+
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("2.2.2.2")).toBe(true)
+      expect(await isBlacklisted("64.0.0.1")).toBe(false)
+    })
+  })
 })

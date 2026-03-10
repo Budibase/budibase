@@ -22,6 +22,31 @@ function getIpVersion(address: string): "ipv4" | "ipv6" {
   return net.isIP(address) === 6 ? "ipv6" : "ipv4"
 }
 
+function getMaxPrefixLength(address: string): number | null {
+  const ipVersion = net.isIP(address)
+  if (ipVersion === 4) {
+    return 32
+  }
+  if (ipVersion === 6) {
+    return 128
+  }
+  return null
+}
+
+function getValidSubnetPrefix(address: string, prefix: string): number | null {
+  if (!/^\d+$/.test(prefix)) {
+    return null
+  }
+
+  const parsedPrefix = Number.parseInt(prefix, 10)
+  const maxPrefixLength = getMaxPrefixLength(address)
+  if (maxPrefixLength == null || parsedPrefix > maxPrefixLength) {
+    return null
+  }
+
+  return parsedPrefix
+}
+
 function parseAddress(address: string) {
   if (net.isIP(address)) {
     return address
@@ -48,13 +73,8 @@ function addEntryToBlacklist(blockList: net.BlockList, entry: string) {
 
   const [ip, prefix] = trimmed.split("/")
   const parsedIp = net.isIP(ip)
-  const parsedPrefix = prefix ? parseInt(prefix, 10) : null
-  if (
-    prefix &&
-    parsedIp &&
-    parsedPrefix !== null &&
-    !Number.isNaN(parsedPrefix)
-  ) {
+  const parsedPrefix = prefix ? getValidSubnetPrefix(ip, prefix) : null
+  if (prefix && parsedIp && parsedPrefix !== null) {
     blockList.addSubnet(ip, parsedPrefix, getIpVersion(ip))
     return
   }
@@ -77,13 +97,8 @@ export async function refreshBlacklist() {
       continue
     }
 
-    const [ip, prefix] = trimmed.split("/")
-    if (net.isIP(ip) && prefix && !Number.isNaN(parseInt(prefix, 10))) {
-      addEntryToBlacklist(next, trimmed)
-      continue
-    }
-
-    if (net.isIP(trimmed)) {
+    const [ip] = trimmed.split("/")
+    if (net.isIP(ip)) {
       addEntryToBlacklist(next, trimmed)
       continue
     }
