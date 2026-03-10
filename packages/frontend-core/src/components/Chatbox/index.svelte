@@ -79,7 +79,7 @@
   let isHoldingFirstResponse = $state(false)
   let firstResponseHoldTimer: ReturnType<typeof setTimeout> | undefined
 
-  const MIN_FIRST_RESPONSE_LOADING_MS = 5000
+  const MIN_FIRST_RESPONSE_LOADING_MS = 1000
 
   const clearFirstResponseHold = () => {
     if (firstResponseHoldTimer) {
