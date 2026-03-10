@@ -780,7 +780,7 @@
           class:running={isRequestPending}
           onclick={handlePromptAction}
           aria-label={isBusy ? "Pause response" : "Start response"}
-          disabled={!isBusy && !isPreparingResponse && !canStart}
+          disabled={isPreparingResponse || (!isBusy && !canStart)}
         >
           {#if isBusy}
             <Icon name="stop" size="M" weight="fill" color="#ffffff" />
