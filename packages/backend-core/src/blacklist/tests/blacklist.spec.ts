@@ -36,6 +36,10 @@ describe("blacklist", () => {
     it("should block addresses that fail lookup or parsing", async () => {
       expect(await isBlacklisted("http://[")).toBe(true)
     })
+
+    it("should block addresses when DNS lookup fails", async () => {
+      expect(await isBlacklisted("https://budibase-ssrf.invalid")).toBe(true)
+    })
   })
 
   describe("configured entries", () => {

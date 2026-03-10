@@ -151,7 +151,7 @@ describe("rest", () => {
 
   it("should automatically retry on fail with cached dynamics", async () => {
     const basedOnQuery = await createQuery({
-      path: "one.example.com",
+      path: "example.com",
     })
 
     let cached = await getCachedVariable(basedOnQuery._id!, "foo")
@@ -177,10 +177,10 @@ describe("rest", () => {
     const body1 = [{ name: "one" }]
     const body2 = [{ name: "two" }]
     mockAgent!
-      .get("http://one.example.com")
+      .get("http://example.com")
       .intercept({ path: "/", method: "GET" })
       .reply(200, body1, { headers: jsonHeaders })
-    const twoExample = mockAgent!.get("http://two.example.com")
+    const twoExample = mockAgent!.get("http://example.org")
     twoExample
       .intercept({ path: "/", method: "GET", query: { test: "one" } })
       .reply(500, { message: "fail" }, { headers: jsonHeaders })
@@ -197,7 +197,7 @@ describe("rest", () => {
       schema: {},
       readable: true,
       fields: {
-        path: "two.example.com",
+        path: "example.org",
         queryString: "test={{ foo }}",
       },
     })
