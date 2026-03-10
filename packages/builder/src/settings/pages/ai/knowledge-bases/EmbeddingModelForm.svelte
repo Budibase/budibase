@@ -2,13 +2,7 @@
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
   import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
-  import {
-    Button,
-    Helpers,
-    Input,
-    notifications,
-    Select,
-  } from "@budibase/bbui"
+  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
   import type {
     AIConfigResponse,
     CreateAIConfigRequest,

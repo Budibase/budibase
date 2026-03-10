@@ -48,7 +48,7 @@
 
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
-  let savedSnapshot = $state<typeof draft>()
+  let savedSnapshot = $state(Helpers.cloneDeep(draft))
   const captureSavedSnapshot = () => {
     savedSnapshot = Helpers.cloneDeep(draft)
   }
