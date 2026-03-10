@@ -71,11 +71,22 @@ function addEntryToBlacklist(blockList: net.BlockList, entry: string) {
     return
   }
 
-  const [ip, prefix] = trimmed.split("/")
+  const segments = trimmed.split("/")
+  if (segments.length > 2) {
+    console.log(`Ignoring invalid blacklist entry: ${trimmed}`)
+    return
+  }
+
+  const [ip, prefix] = segments
   const parsedIp = net.isIP(ip)
-  const parsedPrefix = prefix ? getValidSubnetPrefix(ip, prefix) : null
-  if (prefix && parsedIp && parsedPrefix !== null) {
-    blockList.addSubnet(ip, parsedPrefix, getIpVersion(ip))
+  if (segments.length === 2) {
+    const parsedPrefix = getValidSubnetPrefix(ip, prefix)
+    if (parsedIp && parsedPrefix !== null) {
+      blockList.addSubnet(ip, parsedPrefix, getIpVersion(ip))
+      return
+    }
+
+    console.log(`Ignoring invalid blacklist entry: ${trimmed}`)
     return
   }
 

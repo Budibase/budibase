@@ -43,7 +43,7 @@ describe("blacklist", () => {
 
     beforeAll(async () => {
       restoreEnv = setEnv({
-        BLACKLIST_IPS: "www.google.com,192.168.1.1, 1.1.1.1,2.2.2.2/something",
+        BLACKLIST_IPS: "www.google.com,192.168.1.1,1.1.1.1",
       })
       await refreshBlacklist()
     })
@@ -82,10 +82,6 @@ describe("blacklist", () => {
     it("should blacklist 1.1.1.1/something", async () => {
       expect(await isBlacklisted("1.1.1.1/something")).toBe(true)
     })
-
-    it("should blacklist 2.2.2.2", async () => {
-      expect(await isBlacklisted("2.2.2.2")).toBe(true)
-    })
   })
 
   describe("malformed CIDR entries", () => {
@@ -97,22 +93,59 @@ describe("blacklist", () => {
       await refreshBlacklist()
     })
 
-    it("should treat out of range ipv4 prefixes as a single host entry", async () => {
+    it("should ignore out of range ipv4 prefixes", async () => {
       restoreEnv = setEnv({ BLACKLIST_IPS: "1.1.1.1/33" })
 
       await refreshBlacklist()
 
-      expect(await isBlacklisted("1.1.1.1")).toBe(true)
+      expect(await isBlacklisted("1.1.1.1")).toBe(false)
       expect(await isBlacklisted("1.1.1.2")).toBe(false)
     })
 
-    it("should reject partially numeric prefixes and blacklist only the host", async () => {
+    it("should ignore partially numeric prefixes", async () => {
       restoreEnv = setEnv({ BLACKLIST_IPS: "2.2.2.2/1foo" })
 
       await refreshBlacklist()
 
-      expect(await isBlacklisted("2.2.2.2")).toBe(true)
+      expect(await isBlacklisted("2.2.2.2")).toBe(false)
       expect(await isBlacklisted("64.0.0.1")).toBe(false)
+    })
+
+    it("should ignore empty prefixes", async () => {
+      restoreEnv = setEnv({ BLACKLIST_IPS: "3.3.3.3/" })
+
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("3.3.3.3")).toBe(false)
+    })
+
+    it("should ignore entries with multiple slashes", async () => {
+      restoreEnv = setEnv({ BLACKLIST_IPS: "4.4.4.4/24/extra" })
+
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("4.4.4.4")).toBe(false)
+      expect(await isBlacklisted("4.4.4.5")).toBe(false)
+    })
+  })
+
+  describe("valid CIDR entries", () => {
+    let restoreEnv: (() => void) | undefined
+
+    afterEach(async () => {
+      restoreEnv?.()
+      restoreEnv = undefined
+      await refreshBlacklist()
+    })
+
+    it("should blacklist the full configured ipv4 subnet", async () => {
+      restoreEnv = setEnv({ BLACKLIST_IPS: "5.5.5.0/24" })
+
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("5.5.5.1")).toBe(true)
+      expect(await isBlacklisted("5.5.5.200")).toBe(true)
+      expect(await isBlacklisted("5.5.6.1")).toBe(false)
     })
   })
 })
