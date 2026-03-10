@@ -313,12 +313,14 @@ describe("agentLogs", () => {
 
   it("rejects partially numeric bookmarks when fetching sessions", async () => {
     await expect(
-      fetchSessions(
-        "agent-1",
-        "2026-03-08T00:00:00.000Z",
-        "2026-03-08T23:59:59.999Z",
-        "123abc"
-      )
+      withWorkspace(async () => {
+        return await fetchSessions(
+          "agent-1",
+          "2026-03-08T00:00:00.000Z",
+          "2026-03-08T23:59:59.999Z",
+          "123abc"
+        )
+      })
     ).rejects.toMatchObject({
       status: 400,
       message: "Invalid bookmark query",
