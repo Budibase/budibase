@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Body, Button, Table, notifications, Layout } from "@budibase/bbui"
   import { type Agent } from "@budibase/types"
+  import EmptyStateImage from "assets/no-knowledge-bases.png"
   import {
     agentsStore,
     aiConfigsStore,
@@ -141,27 +142,32 @@
 </script>
 
 <Layout gap="S" noPadding>
-  <div class="knowledge-header">
-    <Body size="XS">Knowledge bases</Body>
-
-    <Button
-      icon="plus"
-      size="S"
-      secondary
-      on:click={() => bb.settings("/ai-config/knowledge-bases/new")}
-      >Add knowledge base</Button
-    >
-  </div>
-
   {#if knowledgeBases.length === 0}
     <div class="empty-state">
-      <Body size="S">No knowledge bases created yet.</Body>
+      <img class="empty-state-image" src={EmptyStateImage} alt="" />
+      <div class="empty-state-copy">
+        <Body size="S">No knowledge bases attached</Body>
+        This agent currently has no access to documents. Attach a knowledge base
+        to enable document search.
+      </div>
       <Button
         on:click={() => bb.settings("/ai-config/knowledge-bases/new")}
-        size="M">Create knowledge base</Button
+        size="S"
+        cta>Create knowledge base</Button
       >
     </div>
   {:else}
+    <div class="knowledge-header">
+      <Body size="XS">Knowledge bases</Body>
+
+      <Button
+        icon="plus"
+        size="S"
+        secondary
+        on:click={() => bb.settings("/ai-config/knowledge-bases/new")}
+        >Add knowledge base</Button
+      >
+    </div>
     <Table
       compact
       quiet
@@ -193,11 +199,23 @@
 
   .empty-state {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    gap: var(--spacing-m);
-    padding: var(--spacing-m);
-    border: 1px dashed var(--spectrum-global-color-gray-300);
-    border-radius: 8px;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px 16px;
+    text-align: center;
+  }
+
+  .empty-state-image {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+  }
+
+  .empty-state-copy {
+    width: 400px;
+    max-width: 100%;
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

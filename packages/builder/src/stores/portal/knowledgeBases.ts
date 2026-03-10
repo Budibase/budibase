@@ -65,7 +65,9 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
     return files
   }
 
-  private fetchFilesForKnowledgeBases = async (knowledgeBases: KnowledgeBase[]) => {
+  private fetchFilesForKnowledgeBases = async (
+    knowledgeBases: KnowledgeBase[]
+  ) => {
     const fileEntries = await Promise.all(
       knowledgeBases
         .map(knowledgeBase => knowledgeBase._id)
