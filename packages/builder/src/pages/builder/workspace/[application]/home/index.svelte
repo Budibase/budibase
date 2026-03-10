@@ -17,7 +17,8 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { agentsStore, auth, featureFlags } from "@/stores/portal"
+  import { agentsStore, auth, featureFlags, licensing } from "@/stores/portal"
+  import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     ActionMenu,
@@ -625,6 +626,9 @@
 
   $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
 
+  $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT
+  $: showHeaderActions = $licensing.showTrialBanner || showAgentChat
+
   $: if (hasMounted) writeUrlState()
 
   onMount(async () => {
@@ -675,18 +679,30 @@
         >
       </div>
 
-      {#if $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT}
+      {#if showHeaderActions}
         <div class="header-actions">
-          <a href={url("../chat")} class="header-link header-link--with-icons">
-            <Icon name="chat-circle" size="XS" color="#8CA171" weight="fill" />
-            <Body size="S">Agent chat</Body>
-            <Icon
-              name="arrow-up-right"
-              size="XS"
-              color="var(--spectrum-global-color-gray-600)"
-              weight="regular"
-            />
-          </a>
+          <EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
+
+          {#if showAgentChat}
+            <a
+              href={url("../chat")}
+              class="header-link header-link--with-icons"
+            >
+              <Icon
+                name="chat-circle"
+                size="XS"
+                color="#8CA171"
+                weight="fill"
+              />
+              <Body size="S">Agent chat</Body>
+              <Icon
+                name="arrow-up-right"
+                size="XS"
+                color="var(--spectrum-global-color-gray-600)"
+                weight="regular"
+              />
+            </a>
+          {/if}
         </div>
       {/if}
     </div>
@@ -764,6 +780,7 @@
     <HomeTable
       rows={filteredRows}
       allRowsCount={allRows.length}
+      agentsEnabled={$featureFlags.AI_AGENTS}
       {typeFilter}
       {searchTerm}
       {sortColumn}
@@ -774,6 +791,9 @@
       on:clearSearch={() => (searchTerm = "")}
       on:resetFilters={() => (typeFilter = "all")}
       on:sortChange={({ detail }) => setSort(detail)}
+      on:createAgent={createAgent}
+      on:createAutomation={createAutomation}
+      on:createApp={createApp}
     />
   </div>
 </div>
