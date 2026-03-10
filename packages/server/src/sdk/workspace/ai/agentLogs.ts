@@ -63,7 +63,6 @@ interface AgentLogIndexJob extends IndexAgentLogOperationInput {
 
 let agentLogIndexQueue: queue.BudibaseQueue<AgentLogIndexJob> | undefined
 let agentLogIndexQueueInitialised = false
-let agentLogIndexQueueInitPromise: Promise<void> | undefined
 
 function getExpectedEndUser(agentId: string): string {
   return `bb-agent:${agentId}`
@@ -601,29 +600,37 @@ export function initLogIndexQueue(
   concurrency = DEFAULT_INDEX_QUEUE_CONCURRENCY
 ) {
   if (agentLogIndexQueueInitialised) {
+    console.log("[AgentLogs] Index queue already initialised, skipping")
     return Promise.resolve()
   }
 
-  if (!agentLogIndexQueueInitPromise) {
-    agentLogIndexQueueInitPromise = (async () => {
-      await getIndexQueue().process(concurrency, async job => {
-        const { workspaceId, ...indexInput } = job.data
-        await context.doInWorkspaceContext(workspaceId, async () => {
-          await addSessionLog(indexInput)
-        })
+  try {
+    agentLogIndexQueueInitialised = true
+    console.log("[AgentLogs] Initialising index queue")
+    return getIndexQueue().process(concurrency, async job => {
+      console.log(
+        `[AgentLogs] Processing index job: sessionId=${job.data.sessionId} requestIds=${job.data.requestIds?.join(",")} attempt=${job.attemptsMade + 1}`
+      )
+      const { workspaceId, ...indexInput } = job.data
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        await addSessionLog(indexInput)
       })
-      agentLogIndexQueueInitialised = true
-    })()
-  }
-
-  return agentLogIndexQueueInitPromise.catch(error => {
-    agentLogIndexQueueInitPromise = undefined
+      console.log(
+        `[AgentLogs] Index job complete: sessionId=${job.data.sessionId}`
+      )
+    })
+  } catch (error) {
+    console.error("[AgentLogs] Index queue init failed", error)
+    agentLogIndexQueueInitialised = false
     throw error
-  })
+  }
 }
 
 async function enqueueSessionLogIndex(job: AgentLogIndexJob) {
-  await initLogIndexQueue()
+  console.log(
+    `[AgentLogs] Enqueueing index job: sessionId=${job.sessionId} requestIds=${job.requestIds?.join(",")}`
+  )
+  initLogIndexQueue()
   return await getIndexQueue().add(job)
 }
 
@@ -642,6 +649,10 @@ export async function addSessionLog(
   const fallbackStartTime = toISO(input.startedAt)
   const fallbackEndTime = toISO(input.completedAt || input.startedAt)
 
+  console.log(
+    `[AgentLogs] addSessionLog: sessionId=${input.sessionId} requestIds=${uniqueRequestIds.join(",")}`
+  )
+
   const summaryResults = await Promise.all(
     uniqueRequestIds.map(async requestId => {
       try {
@@ -651,9 +662,15 @@ export async function addSessionLog(
           fallbackEndTime
         )
         if (!requestDetail) {
+          console.log(
+            `[AgentLogs] LiteLLM returned null for requestId=${requestId}`
+          )
           return null
         }
         validateLiteLLMRequestOwnership(input.agentId, requestDetail)
+        console.log(
+          `[AgentLogs] LiteLLM found requestId=${requestId} status=${requestDetail.status}`
+        )
         return {
           requestId,
           detail: requestDetail,
@@ -678,6 +695,9 @@ export async function addSessionLog(
   )
 
   if (!summaries.length) {
+    console.log(
+      `[AgentLogs] No summaries found yet for sessionId=${input.sessionId}, will retry`
+    )
     const error: any = new HTTPError("Agent log details not ready", 404)
     error.missingRequestIds = uniqueRequestIds
     throw error
