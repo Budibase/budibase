@@ -214,10 +214,7 @@ describe("Execute Bash Automations", () => {
   it("should reject empty commands as failed invalid inputs", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()
-      .bash(
-        { command: "   " },
-        { stepName: "Empty Command" }
-      )
+      .bash({ command: "   " }, { stepName: "Empty Command" })
       .test({ fields: {} })
 
     expect(result.steps[0].outputs.success).toBe(false)
