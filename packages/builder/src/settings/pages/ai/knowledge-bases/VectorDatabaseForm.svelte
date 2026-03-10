@@ -162,12 +162,14 @@
     label="User"
     description="Database user with permission to read and write vector data."
     bind:value={draft.user}
+    autocomplete={"off"}
   />
   <Input
     label="Password"
     description="Password for the database user."
     type="password"
     bind:value={draft.password}
+    autocomplete={"off"}
   />
 </div>
 
