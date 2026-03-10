@@ -170,18 +170,15 @@
     selectedSession = session
     resetDetailState()
 
-    if (!agentId) {
-      return
-    }
+    if (!agentId) return
+    if (selectedSession?.sessionId !== session.sessionId) return
 
     try {
       const fullSession = await API.fetchAgentLogSession(
         agentId,
         session.sessionId
       )
-      if (selectedSession?.sessionId !== session.sessionId) {
-        return
-      }
+
       if (!fullSession) {
         throw new Error("Session detail not found")
       }

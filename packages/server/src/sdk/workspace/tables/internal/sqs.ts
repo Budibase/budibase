@@ -212,7 +212,7 @@ export async function removeTable(table: Table) {
 export async function ensureStaticTables() {
   const db = context.getWorkspaceDB()
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     let definition: SQLiteDefinition | undefined
     try {
       definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
