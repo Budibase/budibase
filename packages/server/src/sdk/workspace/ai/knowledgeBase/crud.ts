@@ -1,6 +1,7 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { AIConfigType, DocumentType, KnowledgeBase } from "@budibase/types"
 import * as configSdk from "../configs"
+import * as knowledgeBaseFileSdk from "./files"
 import * as vectorDbSdk from "../vectorDb"
 
 const normalizeKnowledgeBaseName = (name: string | undefined) =>
@@ -97,14 +98,18 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
     ...config,
   }
 
-  if (
+  const referencesChanged =
     existing.embeddingModel !== updated.embeddingModel ||
     existing.vectorDb !== updated.vectorDb
-  ) {
-    throw new HTTPError(
-      "Embedding model and vector database cannot be changed after creation",
-      400
-    )
+
+  if (referencesChanged) {
+    const files = await knowledgeBaseFileSdk.listKnowledgeBaseFiles(config._id)
+    if (files.length > 0) {
+      throw new HTTPError(
+        "Embedding model and vector database cannot be changed after files are added",
+        400
+      )
+    }
   }
 
   await validateReferences(updated)
