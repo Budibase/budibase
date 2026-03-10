@@ -55,6 +55,7 @@ const builder = new sql.Sql(SqlClient.SQL_LITE)
 const DEFAULT_INDEX_QUEUE_CONCURRENCY = 2
 const DEFAULT_INDEX_QUEUE_BACKOFF_MS = 5000
 const DEFAULT_INDEX_QUEUE_TIMEOUT_MS = 30000
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/
 
 interface AgentLogIndexJob extends IndexAgentLogOperationInput {
   workspaceId: string
@@ -134,27 +135,45 @@ function determineStatus(entries: AgentLogEntry[]): AgentLogSession["status"] {
   return entries.some(entry => entry.status === "error") ? "error" : "success"
 }
 
-function toISO(value?: string): string {
+function parseDate(value?: string): Date | undefined {
   if (!value) {
-    return new Date().toISOString()
+    return undefined
   }
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return new Date().toISOString()
+
+  const parsedDate = new Date(value)
+  if (!Number.isFinite(parsedDate.getTime())) {
+    return undefined
   }
-  return date.toISOString()
+
+  return parsedDate
+}
+
+function toISO(value?: string): string {
+  return (parseDate(value) || new Date()).toISOString()
 }
 
 function minDate(a?: string, b?: string): string {
-  const aTime = new Date(toISO(a)).getTime()
-  const bTime = new Date(toISO(b)).getTime()
-  return aTime <= bTime ? toISO(a) : toISO(b)
+  const firstDate = parseDate(a)
+  const secondDate = parseDate(b)
+  if (!firstDate || !secondDate) {
+    throw new Error(`Expected valid dates, received '${a}' and '${b}'`)
+  }
+
+  return firstDate <= secondDate
+    ? firstDate.toISOString()
+    : secondDate.toISOString()
 }
 
 function maxDate(a?: string, b?: string): string {
-  const aTime = new Date(toISO(a)).getTime()
-  const bTime = new Date(toISO(b)).getTime()
-  return aTime >= bTime ? toISO(a) : toISO(b)
+  const firstDate = parseDate(a)
+  const secondDate = parseDate(b)
+  if (!firstDate || !secondDate) {
+    throw new Error(`Expected valid dates, received '${a}' and '${b}'`)
+  }
+
+  return firstDate >= secondDate
+    ? firstDate.toISOString()
+    : secondDate.toISOString()
 }
 
 function truncateText(value: string, maxLength = 100): string {
@@ -191,20 +210,23 @@ function mapRequestModel(data: LiteLLMRequestDetail) {
   )
 }
 
+function getDateBoundary(value: string, mode: "start" | "end"): Date | undefined {
+  if (DATE_ONLY_REGEX.test(value)) {
+    return new Date(
+      `${value}T${mode === "start" ? "00:00:00.000" : "23:59:59.999"}Z`
+    )
+  }
+
+  return parseDate(value)
+}
+
 function getDateBoundaryISO(value: string, mode: "start" | "end"): string {
-  // Match date-only strings in YYYY-MM-DD format (no time component)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return `${value}T${mode === "start" ? "00:00:00" : "23:59:59"}.000Z`
-  }
-
-  const parsed = new Date(value)
-  if (Number.isFinite(parsed.getTime())) {
-    return parsed.toISOString()
-  }
-
-  return mode === "start"
-    ? constants.MIN_VALID_DATE.toISOString()
-    : constants.MAX_VALID_DATE.toISOString()
+  return (
+    getDateBoundary(value, mode)?.toISOString() ||
+    (mode === "start"
+      ? constants.MIN_VALID_DATE.toISOString()
+      : constants.MAX_VALID_DATE.toISOString())
+  )
 }
 
 function encodeKeyPart(value: string): string {
@@ -315,12 +337,7 @@ function validateLiteLLMRequestOwnership(
   }
 }
 
-function formatLiteLLMDateTime(value: string): string {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    throw new Error(`Invalid LiteLLM date: ${value}`)
-  }
-
+function formatLiteLLMDateTime(date: Date): string {
   const pad = (part: number) => String(part).padStart(2, "0")
   return (
     [
@@ -335,19 +352,19 @@ function formatLiteLLMDateTime(value: string): string {
 }
 
 function getLiteLLMDayBoundary(value: string, mode: "start" | "end"): string {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
+  const parsedDate = parseDate(value)
+  if (!parsedDate) {
     throw new Error(`Invalid LiteLLM date: ${value}`)
   }
 
-  const boundary = new Date(date)
+  const boundary = new Date(parsedDate)
   if (mode === "start") {
     boundary.setUTCHours(0, 0, 0, 0)
   } else {
     boundary.setUTCHours(23, 59, 59, 999)
   }
 
-  return formatLiteLLMDateTime(boundary.toISOString())
+  return formatLiteLLMDateTime(boundary)
 }
 
 async function fetchLiteLLMRequestSummaryById(

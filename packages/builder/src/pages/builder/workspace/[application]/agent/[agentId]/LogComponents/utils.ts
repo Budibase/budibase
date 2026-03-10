@@ -1,4 +1,4 @@
-import dayjs from "dayjs"
+import dayjs, { type Dayjs } from "dayjs"
 import type {
   AgentLogEntry,
   AgentLogRequestError,
@@ -18,9 +18,13 @@ export interface ParsedAssistantResponse {
 }
 
 export function formatLogDateForApi(
-  date: Date,
+  date: Date | Dayjs,
   { includeTime = false }: { includeTime?: boolean } = {}
 ): string {
+  if (!includeTime && dayjs.isDayjs(date)) {
+    return date.format("YYYY-MM-DD")
+  }
+
   const isoDate = date.toISOString()
   return includeTime ? isoDate : isoDate.split("T")[0]
 }

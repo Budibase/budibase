@@ -14,7 +14,7 @@
   import { notifications } from "@budibase/bbui"
 
   const AGENT_LOG_SESSION_LIMIT = 75
-  const AGENT_LOG_STEP_DETAIL_LIMIT = 100
+
   let sessions = $state<AgentLogSession[]>([])
   let loading = $state(false)
   let selectedSession = $state<AgentLogSession | null>(null)
@@ -41,8 +41,8 @@
     const fallbackStart = fallbackEnd.subtract(7, "days")
 
     return {
-      startDate: formatLogDateForApi((start || fallbackStart).toDate()),
-      endDate: formatLogDateForApi((end || fallbackEnd).toDate()),
+      startDate: formatLogDateForApi(start || fallbackStart),
+      endDate: formatLogDateForApi(end || fallbackEnd),
     }
   }
 

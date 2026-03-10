@@ -1,4 +1,5 @@
 import { vi } from "vitest"
+import dayjs from "dayjs"
 
 vi.mock("@budibase/frontend-core", () => ({
   formatToolName: (name: string, displayName?: string) => ({
@@ -85,6 +86,12 @@ describe("formatLogDateForApi", () => {
   it("returns date only by default", () => {
     const date = new Date("2025-06-15T14:30:00.000Z")
     expect(formatLogDateForApi(date)).toBe("2025-06-15")
+  })
+
+  it("preserves the selected local day for dayjs inputs", () => {
+    expect(formatLogDateForApi(dayjs("2025-06-15T23:30:00"))).toBe(
+      "2025-06-15"
+    )
   })
 
   it("returns full ISO string when includeTime is true", () => {

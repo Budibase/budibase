@@ -312,6 +312,21 @@ describe("agentLogs", () => {
     })
   })
 
+  it("uses full-day UTC boundaries for date-only session filters", async () => {
+    const db = createInMemoryDb()
+    mockGetWorkspaceDB.mockReturnValue(db as any)
+
+    await fetchSessions("agent-1", "2026-03-08", "2026-03-09")
+
+    expect(db.sql).toHaveBeenCalledTimes(1)
+    expect(db.sql.mock.calls[0][1]).toEqual(
+      expect.arrayContaining([
+        "2026-03-08T00:00:00.000Z",
+        "2026-03-09T23:59:59.999Z",
+      ])
+    )
+  })
+
   it("rejects request detail when the returned user belongs to another agent", async () => {
     const db = createInMemoryDb()
     mockGetWorkspaceDB.mockReturnValue(db as any)

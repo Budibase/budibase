@@ -7,6 +7,8 @@ import type {
 import { Duration, HTTPError } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/
+
 function getDefaultLogRange() {
   const now = new Date()
   const sevenDaysAgo = new Date(now.getTime() - Duration.fromDays(7).toMs())
@@ -53,6 +55,35 @@ function sanitizeLimitQuery(limit?: string): number | undefined {
   return parsedLimit
 }
 
+function sanitizeDateQuery(
+  value: string | undefined,
+  queryName: "startDate" | "endDate"
+): string | undefined {
+  const normalizedValue = value?.trim()
+  if (!normalizedValue) {
+    return undefined
+  }
+
+  if (DATE_ONLY_REGEX.test(normalizedValue)) {
+    return normalizedValue
+  }
+
+  const parsedDate = new Date(normalizedValue)
+  if (!Number.isFinite(parsedDate.getTime())) {
+    throw new HTTPError(`Invalid ${queryName} query`, 400)
+  }
+
+  return parsedDate.toISOString()
+}
+
+function getComparableDate(value: string, mode: "start" | "end"): number {
+  const comparableValue = DATE_ONLY_REGEX.test(value)
+    ? `${value}T${mode === "start" ? "00:00:00.000" : "23:59:59.999"}Z`
+    : value
+
+  return new Date(comparableValue).getTime()
+}
+
 export async function fetchAgentLogs(
   ctx: UserCtx<void, FetchAgentLogsResponse>
 ) {
@@ -60,11 +91,22 @@ export async function fetchAgentLogs(
   const { startDate, endDate, bookmark, limit, statusFilter, triggerFilter } =
     ctx.query as Record<string, string>
   const defaults = getDefaultLogRange()
+  const sanitizedStartDate =
+    sanitizeDateQuery(startDate, "startDate") || defaults.startDate
+  const sanitizedEndDate =
+    sanitizeDateQuery(endDate, "endDate") || defaults.endDate
+
+  if (
+    getComparableDate(sanitizedStartDate, "start") >
+    getComparableDate(sanitizedEndDate, "end")
+  ) {
+    throw new HTTPError("startDate query must be before endDate query", 400)
+  }
 
   ctx.body = await sdk.ai.agentLogs.fetchSessions(
     agentId,
-    startDate || defaults.startDate,
-    endDate || defaults.endDate,
+    sanitizedStartDate,
+    sanitizedEndDate,
     sanitizeBookmarkQuery(bookmark),
     sanitizeLimitQuery(limit),
     statusFilter,
