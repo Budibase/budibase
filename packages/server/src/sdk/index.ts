@@ -12,6 +12,7 @@ import { default as links } from "./workspace/links"
 import * as navigation from "./workspace/navigation"
 import * as oauth2 from "./workspace/oauth2"
 import * as permissions from "./workspace/permissions"
+import * as playbooks from "./workspace/playbooks"
 import { default as queries } from "./workspace/queries"
 import * as resources from "./workspace/resources"
 import * as rowActions from "./workspace/rowActions"
@@ -35,6 +36,7 @@ const sdk = {
   screens,
   views,
   permissions,
+  playbooks,
   links,
   rowActions,
   common,

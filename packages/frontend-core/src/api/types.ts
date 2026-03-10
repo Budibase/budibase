@@ -20,6 +20,7 @@ import { MigrationEndpoints } from "./migrations"
 import { OAuth2Endpoints } from "./oauth2"
 import { OtherEndpoints } from "./other"
 import { PermissionEndpoints } from "./permissions"
+import { PlaybookEndpoints } from "./playbooks"
 import { PluginEndpoins } from "./plugins"
 import { QueryEndpoints } from "./queries"
 import { RelationshipEndpoints } from "./relationships"
@@ -154,6 +155,7 @@ export type APIClient = BaseAPIClient &
     viewV2: ViewV2Endpoints
     oauth2: OAuth2Endpoints
     navigation: NavigationEndpoints
+    playbooks: PlaybookEndpoints
     workspaceApp: WorkspaceAppEndpoints
     workspace: WorkspaceFavouriteEndpoints
     workspaceHome: WorkspaceHomeEndpoints

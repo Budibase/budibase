@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import { Body, Icon } from "@budibase/bbui"
+  import { Body, Button, Icon } from "@budibase/bbui"
   import type { HomeType } from "@budibase/types"
   import { getRowIcon, getRowIconColor } from "./rows"
 
@@ -8,6 +8,7 @@
   export let filteredRowsCount = 0
   export let typeFilter: HomeType = "all"
   export let searchTerm = ""
+  export let selectedPlaybookName = ""
   export let agentsEnabled = false
 
   const dispatch = createEventDispatcher<{
@@ -20,8 +21,12 @@
 
   $: hasAnyRows = allRowsCount > 0
   $: hasSearch = !!searchTerm.trim()
-  $: hasFilter = typeFilter !== "all"
+  $: hasPlaybookFilter = !!selectedPlaybookName
+  $: hasFilter = typeFilter !== "all" || hasPlaybookFilter
   $: isNoResults = hasAnyRows && filteredRowsCount === 0
+  $: noResultsText = hasPlaybookFilter
+    ? `No results in ${selectedPlaybookName}.`
+    : "No results."
 
   const agentColor = getRowIconColor("agent")
   const automationColor = getRowIconColor("automation")
@@ -36,26 +41,28 @@
   <div class="empty">
     {#if isNoResults}
       <Body size="M" color="var(--spectrum-global-color-gray-700)">
-        No results.
+        {noResultsText}
       </Body>
       <div class="actions">
         {#if hasSearch}
-          <button
-            type="button"
-            class="action"
+          <Button
+            secondary
+            quiet
+            size="S"
             on:click={() => dispatch("clearSearch")}
           >
             Clear search
-          </button>
+          </Button>
         {/if}
         {#if hasFilter}
-          <button
-            type="button"
-            class="action"
+          <Button
+            secondary
+            quiet
+            size="S"
             on:click={() => dispatch("resetFilters")}
           >
             Reset filter
-          </button>
+          </Button>
         {/if}
       </div>
     {:else}
@@ -183,7 +190,7 @@
 
 <style>
   .empty {
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl) var(--spacing-l);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
@@ -195,23 +202,7 @@
   .actions {
     display: flex;
     gap: var(--spacing-s);
-  }
-
-  .action {
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    background: transparent;
-    border-radius: 6px;
-    padding: 6px 10px;
-    cursor: pointer;
-    color: var(--spectrum-global-color-gray-800);
-    transition:
-      background 130ms ease-out,
-      border-color 130ms ease-out;
-  }
-
-  .action:hover {
-    background: var(--spectrum-global-color-gray-100);
-    border-color: var(--spectrum-global-color-gray-400);
+    flex-wrap: wrap;
   }
 
   .welcome {

@@ -68,6 +68,7 @@
   import AuthPicker from "./rest/AuthPicker.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
   import { getErrorMessage } from "@/helpers/errors"
+  import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
 
   export let queryId
   export let datasourceId
@@ -804,6 +805,9 @@
         {#if query}
           <div class="access">
             <AccessLevelSelect {query} label="Access" />
+          </div>
+          <div class="playbook">
+            <PlaybookSelect bind:value={query.playbookId} />
           </div>
         {/if}
         {#if query && selectedEndpointOption}

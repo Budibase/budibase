@@ -12,6 +12,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
+import { resolvePlaybookId } from "../../utilities/playbooks"
 
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
@@ -26,6 +27,7 @@ function toWorkspaceAppResponse(
     createdAt: workspaceApp.createdAt as string,
     updatedAt: workspaceApp.updatedAt!,
     disabled: workspaceApp.disabled,
+    playbookId: workspaceApp.playbookId,
   }
 }
 
@@ -68,10 +70,12 @@ export async function create(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
+  const playbookId = await resolvePlaybookId(body.playbookId)
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     url: body.url,
     disabled: body.disabled,
+    playbookId,
     navigation: defaultAppNavigator(body.name),
     isDefault: false,
   }
@@ -92,6 +96,8 @@ export async function edit(
     ctx.throw("Path and body ids do not match", 400)
   }
 
+  const playbookId = await resolvePlaybookId(body.playbookId)
+
   const toUpdate = {
     _id: body._id,
     _rev: body._rev,
@@ -99,6 +105,7 @@ export async function edit(
     url: body.url,
     navigation: body.navigation,
     disabled: body.disabled,
+    playbookId,
   }
 
   const workspaceApp = await sdk.workspaceApps.update(toUpdate)

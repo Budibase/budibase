@@ -9,12 +9,14 @@ import {
 import chunk from "lodash/chunk"
 import {
   AnyDocument,
+  Agent,
   Automation,
   Datasource,
   DocumentType,
   INTERNAL_TABLE_SOURCE_ID,
   FieldType,
   DatabaseQueryOpts,
+  Playbook,
   Row,
   RowAttachment,
   WithDocMetadata,
@@ -34,9 +36,31 @@ export async function getResourcesInfo(): Promise<
   Record<string, { dependencies: UsedResource[] }>
 > {
   const automations = await sdk.automations.fetch()
+  const agents = await sdk.ai.agents.fetch()
+  const playbooks = await sdk.playbooks.fetch()
   const workspaceApps = await sdk.workspaceApps.fetch()
 
   const dependencies: Record<string, { dependencies: UsedResource[] }> = {}
+  const addDependency = (forResource: string, dependency: UsedResource) => {
+    dependencies[forResource] ??= { dependencies: [] }
+    if (
+      !dependencies[forResource].dependencies.find(
+        resource => resource.id === dependency.id
+      )
+    ) {
+      dependencies[forResource].dependencies.push(dependency)
+    }
+  }
+
+  const addDependencies = (
+    forResource: string,
+    nextDependencies: UsedResource[]
+  ) => {
+    nextDependencies.forEach(dependency =>
+      addDependency(forResource, dependency)
+    )
+  }
+
   interface BaseSearchTarget {
     id: string
     idToSearch: string
@@ -128,15 +152,14 @@ export async function getResourcesInfo(): Promise<
     possibleUsages: AnyDocument
   ) => {
     const json = JSON.stringify(possibleUsages)
-    dependencies[forResource] ??= { dependencies: [] }
     for (const search of baseSearchTargets) {
       if (
         json.includes(search.idToSearch) &&
-        !dependencies[forResource].dependencies.find(
+        !dependencies[forResource]?.dependencies.find(
           resource => resource.id === search.id
         )
       ) {
-        dependencies[forResource].dependencies.push({
+        addDependency(forResource, {
           id: search.id,
           name: search.name,
           type: search.type,
@@ -147,9 +170,9 @@ export async function getResourcesInfo(): Promise<
           ...(dependencies[search.id]?.dependencies || []),
         ].filter(
           ({ id }) =>
-            !dependencies[forResource].dependencies.some(r => r.id === id)
+            !dependencies[forResource]?.dependencies.some(r => r.id === id)
         )
-        dependencies[forResource].dependencies.push(...toAdd)
+        addDependencies(forResource, toAdd)
       }
     }
   }
@@ -170,7 +193,9 @@ export async function getResourcesInfo(): Promise<
   }
 
   // Search in workspace app screens
-  const screens = await sdk.screens.fetch()
+  const screens = await sdk.screens.fetch(undefined, {
+    repairMissingWorkspaceAppId: false,
+  })
   const workspaceAppScreens: Record<string, Screen[]> = {}
 
   for (const screen of screens) {
@@ -185,9 +210,9 @@ export async function getResourcesInfo(): Promise<
 
   for (const workspaceApp of workspaceApps) {
     const screens = workspaceAppScreens[workspaceApp._id!] || []
-    dependencies[workspaceApp._id!] ??= { dependencies: [] }
-    dependencies[workspaceApp._id!].dependencies.push(
-      ...screens.map(s => ({
+    addDependencies(
+      workspaceApp._id!,
+      screens.map(s => ({
         id: s._id!,
         name: s.name!,
         type: ResourceType.SCREEN,
@@ -219,12 +244,64 @@ export async function getResourcesInfo(): Promise<
       if (!automation) {
         continue
       }
-      dependencies[rowActionResource.id] ??= { dependencies: [] }
-      dependencies[rowActionResource.id].dependencies.push({
+      addDependency(rowActionResource.id, {
         id: automation._id,
         name: automation.name,
         type: ResourceType.AUTOMATION,
       })
+    }
+  }
+
+  if (playbooks.length) {
+    const allTables = await sdk.tables.getAllTables()
+
+    const buildUsedResource = (
+      doc: { _id?: string; name?: string },
+      type: ResourceType
+    ): UsedResource => ({
+      id: doc._id!,
+      name: doc.name || "Unknown",
+      type,
+    })
+
+    for (const playbook of playbooks.filter(
+      (doc): doc is Required<Pick<Playbook, "_id" | "name">> & Playbook =>
+        !!doc._id && !!doc.name
+    )) {
+      const directMembers: UsedResource[] = [
+        ...datasources
+          .filter(datasource => datasource.playbookId === playbook._id)
+          .map(datasource =>
+            buildUsedResource(datasource, ResourceType.DATASOURCE)
+          ),
+        ...allTables
+          .filter(table => table.playbookId === playbook._id)
+          .map(table => buildUsedResource(table, ResourceType.TABLE)),
+        ...queries
+          .filter(query => query.playbookId === playbook._id)
+          .map(query => buildUsedResource(query, ResourceType.QUERY)),
+        ...automations
+          .filter(automation => automation.playbookId === playbook._id)
+          .map(automation =>
+            buildUsedResource(automation, ResourceType.AUTOMATION)
+          ),
+        ...agents
+          .filter(agent => agent.playbookId === playbook._id)
+          .map(agent => buildUsedResource(agent, ResourceType.AGENT)),
+        ...workspaceApps
+          .filter(workspaceApp => workspaceApp.playbookId === playbook._id)
+          .map(workspaceApp =>
+            buildUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
+          ),
+      ]
+
+      addDependencies(playbook._id, directMembers)
+      for (const member of directMembers) {
+        addDependencies(
+          playbook._id,
+          dependencies[member.id]?.dependencies || []
+        )
+      }
     }
   }
 
@@ -243,6 +320,8 @@ async function getDestinationDb(toWorkspace: string) {
 }
 
 const resourceTypeIdPrefixes: Record<ResourceType, string> = {
+  [ResourceType.PLAYBOOK]: prefixed(DocumentType.PLAYBOOK),
+  [ResourceType.AGENT]: prefixed(DocumentType.AGENT),
   [ResourceType.DATASOURCE]: prefixed(DocumentType.DATASOURCE),
   [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
   [ResourceType.ROW_ACTION]: prefixed(DocumentType.ROW_ACTIONS),
@@ -679,6 +758,14 @@ export async function duplicateResourcesToWorkspace(
       case ResourceType.AUTOMATION:
         name = (doc as Automation).name
         displayType = "Automation"
+        break
+      case ResourceType.PLAYBOOK:
+        name = (doc as Playbook).name
+        displayType = "Playbook"
+        break
+      case ResourceType.AGENT:
+        name = (doc as Agent).name
+        displayType = "Agent"
         break
       case ResourceType.DATASOURCE:
         name = (doc as Datasource).name || "Unknown"

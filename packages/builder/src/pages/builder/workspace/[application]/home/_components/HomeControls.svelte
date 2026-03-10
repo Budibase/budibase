@@ -35,54 +35,37 @@
   ] satisfies HomeFilterOption[]
 </script>
 
-<div class="controls">
-  <div class="controls-left">
-    <div class="filter">
-      {#each tabOptions as option}
-        <span
-          class="filter-tab"
-          style="--tab-icon-color: {getHomeTypeIconColor(option.value)}"
-        >
-          <ActionButton
-            quiet
-            selected={typeFilter === option.value}
-            disabled={option.disabled}
-            on:click={() =>
-              !option.disabled && dispatch("typeChange", option.value)}
-          >
-            <Icon
-              name={getHomeTypeIcon(option.value)}
-              size="S"
-              color={getHomeTypeIconColor(option.value)}
-              weight="fill"
-            />
-            {option.label}
-          </ActionButton>
-        </span>
-      {/each}
-    </div>
-  </div>
+<div class="filter">
+  {#each tabOptions as option}
+    <span
+      class="filter-tab"
+      style="--tab-icon-color: {getHomeTypeIconColor(option.value)}"
+    >
+      <ActionButton
+        quiet
+        selected={typeFilter === option.value}
+        disabled={option.disabled}
+        on:click={() =>
+          !option.disabled && dispatch("typeChange", option.value)}
+      >
+        <Icon
+          name={getHomeTypeIcon(option.value)}
+          size="S"
+          color={getHomeTypeIconColor(option.value)}
+          weight="fill"
+        />
+        {option.label}
+      </ActionButton>
+    </span>
+  {/each}
 </div>
 
 <style>
-  .controls {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--spacing-m);
-  }
-
-  .controls-left {
-    display: flex;
-    gap: var(--spacing-m);
-    align-items: center;
-  }
-
   .filter {
     display: flex;
-    gap: 10px;
-    padding: 3px;
-    border-radius: 7px;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-s);
     background: var(--spectrum-global-color-gray-100);
   }
 
@@ -95,32 +78,20 @@
   }
 
   .filter :global(.spectrum-ActionButton) {
-    border-radius: 6px;
+    border-radius: var(--border-radius-s);
     transition:
       border-color 130ms ease-out,
       background 130ms ease-out;
     border: 1px solid transparent;
-    padding: 3px 10px;
+    padding: var(--spacing-xs) var(--spacing-s);
     height: auto;
   }
 
   .filter :global(.spectrum-ActionButton-label) {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 14px;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-s);
     font-weight: 500;
-  }
-
-  @media (max-width: 1140px) {
-    .controls {
-      flex-direction: column;
-      align-items: stretch;
-      gap: var(--spacing-m);
-    }
-
-    .controls-left {
-      justify-content: flex-start;
-    }
   }
 </style>

@@ -34,6 +34,7 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
+import { resolvePlaybookId } from "../../utilities/playbooks"
 import { builderSocket } from "../../websockets"
 
 export async function fetch(ctx: UserCtx<void, FetchDatasourcesResponse>) {
@@ -216,6 +217,7 @@ export async function update(
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
+  datasource.playbookId = await resolvePlaybookId(datasource.playbookId)
 
   // this block is specific to GSheets, if no auth set, set it back
   const auth = baseDatasource.config?.auth
@@ -265,6 +267,7 @@ export async function save(
     fetchSchema,
     tablesFilter,
   } = ctx.request.body
+  datasourceData.playbookId = await resolvePlaybookId(datasourceData.playbookId)
   const { datasource, errors } = await sdk.datasources.save(datasourceData, {
     fetchSchema,
     tablesFilter,

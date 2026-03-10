@@ -20,6 +20,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { resolvePlaybookId } from "../../../utilities/playbooks"
 
 const SECRET_MASK = "********"
 
@@ -229,11 +230,13 @@ export async function createAgent(
   const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
+  const playbookId = await resolvePlaybookId(body.playbookId)
 
   const createRequest: RequiredKeys<CreateAgentRequest> = {
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
+    playbookId,
     promptInstructions: body.promptInstructions,
     goal: body.goal,
     icon: body.icon,
@@ -262,6 +265,7 @@ export async function updateAgent(
 ) {
   const body = ctx.request.body
   const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
+  const playbookId = await resolvePlaybookId(body.playbookId)
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
@@ -269,6 +273,7 @@ export async function updateAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
+    playbookId,
     promptInstructions: body.promptInstructions,
     goal: body.goal,
     icon: body.icon,

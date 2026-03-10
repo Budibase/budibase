@@ -10,12 +10,14 @@ export interface WorkspaceAppResponse {
   createdAt: string
   updatedAt: string
   disabled?: boolean
+  playbookId?: string
 }
 
 export interface InsertWorkspaceAppRequest {
   name: string
   url: string
   disabled?: boolean
+  playbookId?: string
 }
 
 export interface InsertWorkspaceAppResponse {
@@ -33,6 +35,7 @@ export interface UpdateWorkspaceAppRequest {
   url: string
   navigation: AppNavigation
   disabled?: boolean
+  playbookId?: string
 }
 
 export interface UpdateWorkspaceAppResponse {

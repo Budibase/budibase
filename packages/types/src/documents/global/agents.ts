@@ -49,6 +49,7 @@ export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
+  playbookId?: string
   promptInstructions?: string
   goal?: string
   live?: boolean

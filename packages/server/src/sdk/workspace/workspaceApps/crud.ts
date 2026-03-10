@@ -53,6 +53,7 @@ const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
     disabled: true,
     navigation: workspaceApp.navigation,
     isDefault: false,
+    playbookId: workspaceApp.playbookId,
   }
 
   return sdk.workspaceApps.create(duplicatedAppData)
@@ -127,6 +128,7 @@ export async function update(
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
     disabled: workspaceApp.disabled,
+    playbookId: workspaceApp.playbookId,
 
     // Immutable properties
     createdAt: persisted.createdAt,

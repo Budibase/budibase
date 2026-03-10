@@ -1,4 +1,4 @@
-import { db, events, objectStore } from "@budibase/backend-core"
+import { db, events, features, objectStore } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { Header } from "@budibase/shared-core"
 import {
@@ -6,6 +6,7 @@ import {
   Automation,
   Datasource,
   FieldType,
+  FeatureFlag,
   Query,
   RelationshipType,
   ResourceType,
@@ -21,6 +22,7 @@ import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { generateRowActionsID } from "../../../db/utils"
 import {
+  basicDatasource,
   basicQuery,
   basicScreen,
   basicTable,
@@ -31,6 +33,13 @@ import { ObjectStoreBuckets } from "../../../constants"
 
 describe("/api/resources/usage", () => {
   const config = new TestConfiguration()
+  const withPlaybooksEnabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.PLAYBOOKS]: true },
+      f
+    )
+  }
 
   beforeAll(async () => {
     await config.init()
@@ -256,6 +265,88 @@ describe("/api/resources/usage", () => {
             type: ResourceType.QUERY,
           },
         ],
+      })
+    })
+
+    it("should include direct playbook members and transitive dependencies", async () => {
+      await withPlaybooksEnabled(async () => {
+        const { playbook } = await config.api.playbook.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          playbookId: playbook._id,
+        })
+        const query = await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          playbookId: playbook._id,
+        })
+        const table = await config.api.table.save({
+          ...basicTable(),
+          playbookId: playbook._id,
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create({
+          name: "Operations app",
+          url: "/operations-app",
+          playbookId: playbook._id,
+        })
+        const screen = await config.api.screen.save({
+          ...createQueryScreen(datasource._id!, query),
+          workspaceAppId: workspaceApp._id,
+        })
+
+        const automation = await config.createAutomation()
+        await config.api.automation.update({
+          ...automation,
+          playbookId: playbook._id,
+        })
+        const agent = await config.api.agent.create({
+          name: "Ops agent",
+          aiconfig: "default",
+          playbookId: playbook._id,
+        })
+
+        const result = await config.api.resource.getResourceDependencies()
+
+        expect(result.body.resources[playbook._id!]).toEqual({
+          dependencies: [
+            {
+              id: datasource._id,
+              name: datasource.name,
+              type: ResourceType.DATASOURCE,
+            },
+            {
+              id: table._id,
+              name: table.name,
+              type: ResourceType.TABLE,
+            },
+            {
+              id: query._id,
+              name: query.name,
+              type: ResourceType.QUERY,
+            },
+            {
+              id: automation._id,
+              name: automation.name,
+              type: ResourceType.AUTOMATION,
+            },
+            {
+              id: agent._id,
+              name: agent.name,
+              type: ResourceType.AGENT,
+            },
+            {
+              id: workspaceApp._id,
+              name: workspaceApp.name,
+              type: ResourceType.WORKSPACE_APP,
+            },
+            {
+              id: screen._id,
+              name: screen.name,
+              type: ResourceType.SCREEN,
+            },
+          ],
+        })
       })
     })
   })

@@ -45,6 +45,7 @@ import { updateTestHistory } from "../../automations/utils"
 import { DocumentType } from "../../db/utils"
 import env from "../../environment"
 import sdk from "../../sdk"
+import { resolvePlaybookId } from "../../utilities/playbooks"
 import { isQsTrue } from "../../utilities"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
@@ -59,13 +60,15 @@ export async function create(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
   let automation = ctx.request.body
-  automation.appId = ctx.appId
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
     await update(ctx)
     return
   }
+
+  automation.playbookId = await resolvePlaybookId(automation.playbookId)
+  automation.appId = ctx.appId
 
   let createdAutomation: Automation
 
@@ -100,6 +103,7 @@ export async function update(
   ctx: UserCtx<UpdateAutomationRequest, UpdateAutomationResponse>
 ) {
   let automation = ctx.request.body
+  automation.playbookId = await resolvePlaybookId(automation.playbookId)
   automation.appId = ctx.appId
 
   // Call through to create if it doesn't exist

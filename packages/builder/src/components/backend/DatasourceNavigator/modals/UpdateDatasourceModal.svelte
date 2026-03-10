@@ -3,16 +3,19 @@
   import { datasources, integrations } from "@/stores/builder"
   import { notifications, Input, ModalContent, Modal } from "@budibase/bbui"
   import { integrationForDatasource } from "@/stores/selectors"
+  import PlaybookSelect from "@/components/common/PlaybookSelect.svelte"
 
   let error = ""
   let modal
   let name
+  let playbookId = ""
 
   export let datasource
   export let onCancel = undefined
 
   export const show = () => {
     name = datasource?.name
+    playbookId = datasource?.playbookId || ""
     modal.show()
   }
   export const hide = () => {
@@ -32,6 +35,7 @@
     const updatedDatasource = {
       ...datasource,
       name,
+      playbookId: playbookId || undefined,
     }
     await datasources.save({
       datasource: updatedDatasource,
@@ -56,5 +60,6 @@
       bind:value={name}
       {error}
     />
+    <PlaybookSelect bind:value={playbookId} />
   </ModalContent>
 </Modal>

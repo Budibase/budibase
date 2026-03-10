@@ -4,7 +4,8 @@ import sdk from "../.."
 import { generateScreenID, getScreenParams } from "../../../db/utils"
 
 export async function fetch(
-  db: Database = context.getWorkspaceDB()
+  db: Database = context.getWorkspaceDB(),
+  opts?: { repairMissingWorkspaceAppId?: boolean }
 ): Promise<Screen[]> {
   const screens = (
     await db.allDocs<Screen>(
@@ -16,7 +17,10 @@ export async function fetch(
 
   // Handling a bug where some screens have missing workspaceAppId (in this case, they are part of the default workspace app)
   const screensWithMissingWorkspaceApp = screens.filter(s => !s.workspaceAppId)
-  if (screensWithMissingWorkspaceApp.length) {
+  if (
+    opts?.repairMissingWorkspaceAppId !== false &&
+    screensWithMissingWorkspaceApp.length
+  ) {
     const allWorkspaces = await sdk.workspaceApps.fetch()
     const defaultWorkspaceApp =
       allWorkspaces.find(a => a.isDefault) || allWorkspaces[0]
