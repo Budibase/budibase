@@ -5,10 +5,10 @@ import {
   KnowledgeBaseFile,
   UpdateKnowledgeBaseRequest,
 } from "@budibase/types"
-import { BudiStore } from "../BudiStore"
-import { derived } from "svelte/store"
+import { DerivedBudiStore } from "../BudiStore"
+import { derived, Writable } from "svelte/store"
 
-export interface KnowledgeBaseWithFiles extends KnowledgeBase {
+interface KnowledgeBaseWithFiles extends KnowledgeBase {
   files: KnowledgeBaseFile[]
 }
 
@@ -19,19 +19,47 @@ interface KnowledgeBaseState {
   filesByKnowledgeBaseId: Record<string, KnowledgeBaseFile[]>
 }
 
+interface DerivedKnowledgeBaseState {
+  currentKnowledgeBaseId?: string
+  list: KnowledgeBaseWithFiles[]
+  selectedKnowledgeBase: KnowledgeBaseWithFiles | undefined
+}
+
 type KnowledgeBaseFormDraft = Partial<
   Pick<KnowledgeBase, "_id" | "_rev" | "name" | "embeddingModel" | "vectorDb">
 >
 
-export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
+export class KnowledgeBaseStore extends DerivedBudiStore<
+  KnowledgeBaseState,
+  DerivedKnowledgeBaseState
+> {
   private formDraft: KnowledgeBaseFormDraft | undefined
 
   constructor() {
-    super({
-      list: [],
-      files: [],
-      filesByKnowledgeBaseId: {},
-    })
+    const makeDerivedStore = (store: Writable<KnowledgeBaseState>) => {
+      return derived(store, $state => {
+        const list = $state.list.map<KnowledgeBaseWithFiles>(knowledgeBase => ({
+          ...knowledgeBase,
+          files: $state.filesByKnowledgeBaseId[knowledgeBase._id || ""] || [],
+        }))
+        return {
+          currentKnowledgeBaseId: $state.currentKnowledgeBaseId,
+          list,
+          selectedKnowledgeBase: $state.currentKnowledgeBaseId
+            ? list.find(k => k._id === $state.currentKnowledgeBaseId)
+            : undefined,
+        }
+      })
+    }
+
+    super(
+      {
+        list: [],
+        files: [],
+        filesByKnowledgeBaseId: {},
+      },
+      makeDerivedStore
+    )
   }
 
   fetch = async () => {
@@ -143,12 +171,3 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
 }
 
 export const knowledgeBaseStore = new KnowledgeBaseStore()
-export const knowledgeBasesWithFiles = derived(knowledgeBaseStore, state =>
-  state.list.map(
-    knowledgeBase =>
-      ({
-        ...knowledgeBase,
-        files: state.filesByKnowledgeBaseId[knowledgeBase._id || ""] || [],
-      }) satisfies KnowledgeBaseWithFiles
-  )
-)

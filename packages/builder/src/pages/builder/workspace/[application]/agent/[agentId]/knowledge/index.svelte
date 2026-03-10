@@ -4,7 +4,6 @@
   import {
     agentsStore,
     aiConfigsStore,
-    knowledgeBasesWithFiles,
     knowledgeBaseStore,
     selectedAgent,
     vectorDbStore,
@@ -21,7 +20,7 @@
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
   let currentAgent: Agent | undefined = $derived($selectedAgent)
-  let knowledgeBases = $derived($knowledgeBasesWithFiles || [])
+  let knowledgeBases = $derived($knowledgeBaseStore.list || [])
 
   $effect(() => {
     const agent = currentAgent

@@ -28,7 +28,9 @@
   let uploadError = $state("")
   let fileInput = $state<HTMLInputElement>()
 
-  let currentFiles = $derived($knowledgeBaseStore.files || [])
+  let currentFiles = $derived(
+    $knowledgeBaseStore.selectedKnowledgeBase?.files || []
+  )
   let hasEmbeddingConfig = $derived(
     ($aiConfigsStore.customConfigs || []).some(
       config => config.configType === AIConfigType.EMBEDDINGS
