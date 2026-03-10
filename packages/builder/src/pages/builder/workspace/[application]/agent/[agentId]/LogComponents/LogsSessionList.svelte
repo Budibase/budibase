@@ -133,7 +133,8 @@
   }
 
   .date-range-group {
-    flex: 1 1 auto;
+    flex: 0 1 420px;
+    max-width: 420px;
     display: flex;
     flex-direction: row;
   }
@@ -151,7 +152,7 @@
     margin-bottom: var(--spacing-xs);
   }
 
-  .filter-group :global(.spectrum-Picker) {
+  .filter-group:not(.date-range-group) :global(.spectrum-Picker) {
     width: 100%;
   }
 
