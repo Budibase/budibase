@@ -62,7 +62,7 @@
         editColumnPosition="right"
         on:editrow={r => editKnowledgeBase(r.detail)}
       ></Table>
-    {:else}
+    {:else if $knowledgeBaseStore.loaded}
       <div class="no-enabled">
         <Body size="XS">No knowledge bases created yet</Body>
       </div>

@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { Body, Button, Table, notifications, Layout } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Table,
+    notifications,
+    Layout,
+    ProgressCircle,
+  } from "@budibase/bbui"
   import { type Agent } from "@budibase/types"
   import EmptyStateImage from "assets/no-knowledge-bases.png"
   import {
@@ -149,7 +156,12 @@
 </script>
 
 <Layout gap="S" noPadding>
-  {#if knowledgeBases.length === 0}
+  {#if $knowledgeBaseStore.loading && !$knowledgeBaseStore.loaded}
+    <div class="loading-state">
+      <ProgressCircle size="S" />
+      <Body size="S">Loading knowledge bases...</Body>
+    </div>
+  {:else if knowledgeBases.length === 0 && $knowledgeBaseStore.loaded}
     <div class="empty-state">
       <img class="empty-state-image" src={EmptyStateImage} alt="" />
       <div class="empty-state-copy">
@@ -163,7 +175,7 @@
         cta>Create knowledge base</Button
       >
     </div>
-  {:else}
+  {:else if knowledgeBases.length > 0}
     <div class="knowledge-header">
       <Body size="XS">Knowledge bases</Body>
 
@@ -202,6 +214,13 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: var(--spacing-m);
+  }
+
+  .loading-state {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: 24px 0;
   }
 
   .empty-state {
