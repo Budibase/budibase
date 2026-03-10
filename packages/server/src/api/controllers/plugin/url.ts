@@ -1,5 +1,8 @@
 import { downloadUnzipTarball } from "./utils"
-import { getPluginMetadata } from "../../../utilities/fileSystem"
+import {
+  deleteFolderFileSystem,
+  getPluginMetadata,
+} from "../../../utilities/fileSystem"
 
 export async function urlUpload(url: string, name = "", headers = {}) {
   if (!url.includes(".tar.gz")) {
@@ -7,6 +10,10 @@ export async function urlUpload(url: string, name = "", headers = {}) {
   }
 
   const path = await downloadUnzipTarball(url, name, headers)
-
-  return await getPluginMetadata(path)
+  try {
+    return await getPluginMetadata(path)
+  } catch (err) {
+    deleteFolderFileSystem(path)
+    throw err
+  }
 }

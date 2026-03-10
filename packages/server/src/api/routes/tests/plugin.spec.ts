@@ -29,6 +29,7 @@ import { Plugin, PluginSource, PluginType } from "@budibase/types"
 import nock from "nock"
 import * as setup from "./utilities"
 import * as github from "../../controllers/plugin/github"
+import { budibaseTempDir } from "../../../utilities/budibaseDir"
 
 const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
@@ -103,6 +104,32 @@ describe("/plugins", () => {
 
       expect(res.body.plugins[0]._id).toEqual("plg_comment-box")
       expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+    })
+
+    it("should clean up temp directories when upload extraction fails", async () => {
+      const invalidTarballPath = path.join(
+        os.tmpdir(),
+        `invalid-plugin-${Date.now()}.tar.gz`
+      )
+      fs.writeFileSync(invalidTarballPath, "not a tarball")
+
+      try {
+        const dirsBefore = fs.readdirSync(budibaseTempDir()).sort()
+
+        await request
+          .post("/api/plugin/upload")
+          .attach("file", invalidTarballPath, {
+            filename: "broken-plugin.tar.gz",
+          })
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        const dirsAfter = fs.readdirSync(budibaseTempDir()).sort()
+        expect(dirsAfter).toEqual(dirsBefore)
+      } finally {
+        fs.unlinkSync(invalidTarballPath)
+      }
     })
   })
 
