@@ -34,7 +34,10 @@ import { budibaseTempDir } from "../../../utilities/budibaseDir"
 const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
 const getTempDirsWithPrefix = (prefix: string) =>
-  fs.readdirSync(budibaseTempDir()).filter(dir => dir.startsWith(prefix)).sort()
+  fs
+    .readdirSync(budibaseTempDir())
+    .filter(dir => dir.startsWith(prefix))
+    .sort()
 
 describe("/plugins", () => {
   let request = setup.getRequest()
@@ -298,8 +301,7 @@ describe("/plugins", () => {
           versions: {
             "1.0.0": {
               dist: {
-                tarball:
-                  `https://registry.npmjs.org/${packageName}/-/${packageName}-1.0.1.tgz`,
+                tarball: `https://registry.npmjs.org/${packageName}/-/${packageName}-1.0.1.tgz`,
               },
             },
           },

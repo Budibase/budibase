@@ -75,8 +75,7 @@ export async function create(
           metadata: metadataNpm,
           directory: directoryNpm,
           cleanupDirectory: cleanupDirectoryNpm,
-        } =
-          await npmUpload(url, name)
+        } = await npmUpload(url, name)
         metadata = metadataNpm
         directory = directoryNpm
         cleanupDirectory = cleanupDirectoryNpm
@@ -87,8 +86,7 @@ export async function create(
           metadata: metadataGithub,
           directory: directoryGithub,
           cleanupDirectory: cleanupDirectoryGithub,
-        } =
-          await githubUpload(url, name, githubToken)
+        } = await githubUpload(url, name, githubToken)
         metadata = metadataGithub
         directory = directoryGithub
         cleanupDirectory = cleanupDirectoryGithub
@@ -100,8 +98,7 @@ export async function create(
           metadata: metadataUrl,
           directory: directoryUrl,
           cleanupDirectory: cleanupDirectoryUrl,
-        } =
-          await urlUpload(url, name, headersObj)
+        } = await urlUpload(url, name, headersObj)
         metadata = metadataUrl
         directory = directoryUrl
         cleanupDirectory = cleanupDirectoryUrl
