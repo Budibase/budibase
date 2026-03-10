@@ -14,4 +14,4 @@
   }
 </script>
 
-<ActionButton size="S" icon="gear" on:click={handleClick} />
+<ActionButton size="S" on:click={handleClick}>Manage</ActionButton>

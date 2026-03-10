@@ -171,12 +171,12 @@
       allowEditColumns={false}
       data={tableRows}
       schema={{
-        enabled: { displayName: "", width: "72px" },
+        enabled: { displayName: "", width: "48px" },
         name: {},
         embeddingModel: { displayName: "Embedding model" },
         vectorDb: { displayName: "VectorDB" },
-        files: { displayName: "# Files", width: "80px" },
-        manage: { displayName: "", width: "64px" },
+        files: { displayName: "# Files", width: "60px" },
+        manage: { displayName: "", width: "88px" },
       }}
       {customRenderers}
     />
