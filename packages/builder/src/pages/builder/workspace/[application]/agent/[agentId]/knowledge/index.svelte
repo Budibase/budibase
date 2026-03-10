@@ -1,13 +1,5 @@
 <script lang="ts">
-  import {
-    ActionButton,
-    Body,
-    Button,
-    Table,
-    Toggle,
-    notifications,
-    Layout,
-  } from "@budibase/bbui"
+  import { Body, Button, Table, notifications, Layout } from "@budibase/bbui"
   import { type Agent } from "@budibase/types"
   import {
     agentsStore,
@@ -18,6 +10,8 @@
   } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { onDestroy, onMount } from "svelte"
+  import KnowledgeBaseManageRenderer from "./KnowledgeBaseManageRenderer.svelte"
+  import KnowledgeBaseToggleRenderer from "./KnowledgeBaseToggleRenderer.svelte"
 
   const AUTO_SAVE_DEBOUNCE_MS = 800
 
@@ -103,28 +97,30 @@
       $vectorDbStore.configs.map(config => [config._id, config.name || ""])
     )
   )
+  let tableRows = $derived.by(() =>
+    knowledgeBases.map(knowledgeBase => ({
+      ...knowledgeBase,
+      enabled: selectedKnowledgeBases.includes(knowledgeBase._id || ""),
+      embeddingModel:
+        embeddingNameById.get(knowledgeBase.embeddingModel) ||
+        knowledgeBase.embeddingModel,
+      vectorDb:
+        vectorDbNameById.get(knowledgeBase.vectorDb) || knowledgeBase.vectorDb,
+      files: "—",
+      onToggle: toggleKnowledgeBase,
+      onManage: (knowledgeBaseId: string) =>
+        bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`),
+    }))
+  )
 
   const customRenderers = [
     {
       column: "enabled",
-      component: Toggle,
-
-      // <Toggle
-      //   value={selectedKnowledgeBases.includes(knowledgeBase._id || "")}
-      //   on:change={event =>
-      //     toggleKnowledgeBase(knowledgeBase._id || "", event.detail)}
-      // />
+      component: KnowledgeBaseToggleRenderer,
     },
     {
       column: "manage",
-      component: ActionButton,
-
-      // <ActionButton
-      //   size="S"
-      //   icon="gear"
-      //   on:click={() =>
-      //     bb.settings(`/ai-config/knowledge-bases/${knowledgeBase._id}`)}
-      // />
+      component: KnowledgeBaseManageRenderer,
     },
   ]
 
@@ -166,25 +162,24 @@
       >
     </div>
   {:else}
-    {#each knowledgeBases as knowledgeBase (knowledgeBase._id)}
-      <Table
-        compact
-        quiet
-        rounded
-        allowEditRows={false}
-        allowEditColumns={false}
-        data={knowledgeBases}
-        schema={{
-          enabled: { displayName: "" },
-          name: {},
-          embeddingModel: { displayName: "Embedding model" },
-          vectorDb: { displayName: "VectorDB" },
-          files: { displayName: "# Files" },
-          manage: { displayName: "" },
-        }}
-        {customRenderers}
-      ></Table>
-    {/each}
+    <Table
+      compact
+      quiet
+      rounded
+      allowClickRows={false}
+      allowEditRows={false}
+      allowEditColumns={false}
+      data={tableRows}
+      schema={{
+        enabled: { displayName: "", width: "72px" },
+        name: {},
+        embeddingModel: { displayName: "Embedding model" },
+        vectorDb: { displayName: "VectorDB" },
+        files: { displayName: "# Files", width: "80px" },
+        manage: { displayName: "", width: "64px" },
+      }}
+      {customRenderers}
+    />
   {/if}
 </Layout>
 
