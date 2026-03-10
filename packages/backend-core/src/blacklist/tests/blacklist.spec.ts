@@ -33,6 +33,10 @@ describe("blacklist", () => {
       expect(await isBlacklisted("8.8.8.8")).toBe(false)
     })
 
+    it("should allow hostnames that fail DNS resolution", async () => {
+      expect(await isBlacklisted("one.example.com")).toBe(false)
+    })
+
     it("should block addresses that fail lookup or parsing", async () => {
       expect(await isBlacklisted("http://[")).toBe(true)
     })

@@ -65,6 +65,11 @@ async function lookup(address: string): Promise<string[]> {
   return addresses.map(addr => addr.address)
 }
 
+function isDnsLookupError(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException | undefined)?.code
+  return code === "ENOTFOUND" || code === "EAI_AGAIN"
+}
+
 function addEntryToBlacklist(blockList: net.BlockList, entry: string) {
   const trimmed = entry.trim()
   if (!trimmed) {
@@ -132,8 +137,8 @@ export async function isBlacklisted(address: string): Promise<boolean> {
   if (!net.isIP(address)) {
     try {
       ips = await lookup(address)
-    } catch {
-      return true
+    } catch (error) {
+      return !isDnsLookupError(error)
     }
   } else {
     ips = [address]
