@@ -18,6 +18,7 @@
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationHistory: ConversationListItem[] = []
   export let selectedConversationId: string | undefined
+  export let selectedAgentName: string | undefined
   export let hideAgents = false
 
   $: defaultAgent =
@@ -39,6 +40,12 @@
 
 <div class="chat-nav-shell">
   <div class="chat-nav-content">
+    {#if selectedAgentName}
+      <div class="list-section current-agent-section">
+        <div class="current-agent-name">{selectedAgentName}</div>
+      </div>
+    {/if}
+
     {#if defaultAgent?.agentId}
       <div class="list-section">
         <button
@@ -124,6 +131,17 @@
 
   .list-section + .list-section {
     padding-top: 0;
+  }
+
+  .current-agent-section {
+    padding-bottom: var(--spacing-m);
+  }
+
+  .current-agent-name {
+    font-size: 14px;
+    line-height: 17px;
+    color: var(--spectrum-global-color-gray-800);
+    padding: var(--spacing-xs) 0;
   }
 
   .new-chat {

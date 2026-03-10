@@ -338,6 +338,7 @@
       {enabledAgentList}
       conversationHistory={filteredConversationHistory}
       selectedConversationId={$chatAppsStore.currentConversationId}
+      {selectedAgentName}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
     />
@@ -347,7 +348,6 @@
       {deletingChat}
       {enabledAgentList}
       {selectedAgentId}
-      {selectedAgentName}
       {workspaceId}
       {conversationStarters}
       {agentAvailability}

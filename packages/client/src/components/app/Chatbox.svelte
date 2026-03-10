@@ -187,6 +187,7 @@
       {enabledAgentList}
       conversationHistory={filteredConversationHistory}
       {selectedConversationId}
+      {selectedAgentName}
       hideAgents={isLockedAgentMode}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
@@ -197,7 +198,6 @@
       {deletingChat}
       {enabledAgentList}
       {selectedAgentId}
-      {selectedAgentName}
       {workspaceId}
       {userName}
       {conversationStarters}

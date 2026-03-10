@@ -21,7 +21,6 @@
   }
 
   export let selectedAgentId: string | null = null
-  export let selectedAgentName: string = ""
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationStarters: { prompt: string }[] = []
   export let agentAvailability: AgentAvailability = "ready"
@@ -122,14 +121,8 @@
 
 <div class="chat-wrapper">
   {#if selectedAgentId}
-    <div class="chat-header">
-      <div class="chat-header-agent">
-        <Body size="S">
-          {selectedAgentName || (loading ? "" : "Unknown agent")}
-        </Body>
-      </div>
-
-      {#if hasChatId(chat)}
+    {#if hasChatId(chat)}
+      <div class="chat-header chat-header-actions">
         <Button
           quiet
           warning
@@ -146,8 +139,8 @@
             {/if}
           </span>
         </Button>
-      {/if}
-    </div>
+      </div>
+    {/if}
 
     <Chatbox
       bind:chat
@@ -242,22 +235,12 @@
     padding: var(--spacing-l) 0 var(--spacing-l);
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--spacing-m);
     border-bottom: var(--border-light);
   }
 
-  .chat-header-agent {
-    display: flex;
-    align-items: center;
-  }
-
-  .chat-header-agent :global(p) {
-    font-size: 14px;
-    line-height: 17px;
-    letter-spacing: 0;
-    font-weight: 400;
-    color: var(--spectrum-alias-text-color);
+  .chat-header-actions {
+    justify-content: flex-end;
   }
 
   .delete-button-content {
