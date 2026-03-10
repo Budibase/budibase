@@ -63,7 +63,6 @@ interface AgentLogIndexJob extends IndexAgentLogOperationInput {
 
 let agentLogIndexQueue: queue.BudibaseQueue<AgentLogIndexJob> | undefined
 let agentLogIndexQueueInitialised = false
-let agentLogIndexQueueInitPromise: Promise<void> | undefined
 
 function getExpectedEndUser(agentId: string): string {
   return `bb-agent:${agentId}`
@@ -612,28 +611,22 @@ export function initLogIndexQueue(
     return Promise.resolve()
   }
 
-  if (!agentLogIndexQueueInitPromise) {
-    agentLogIndexQueueInitPromise = (async () => {
-      await getIndexQueue().process(concurrency, async job => {
-        const { workspaceId, ...indexInput } = job.data
-        await context.doInWorkspaceContext(workspaceId, async () => {
-          await addSessionLog(indexInput)
-        })
+  try {
+    agentLogIndexQueueInitialised = true
+    return getIndexQueue().process(concurrency, async job => {
+      const { workspaceId, ...indexInput } = job.data
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        await addSessionLog(indexInput)
       })
-      agentLogIndexQueueInitialised = true
-    })()
-  }
-
-  return agentLogIndexQueueInitPromise.catch(error => {
-    agentLogIndexQueueInitPromise = undefined
+    })
+  } catch (error) {
+    agentLogIndexQueueInitialised = false
     throw error
-  })
+  }
 }
 
 async function enqueueSessionLogIndex(job: AgentLogIndexJob) {
-  initLogIndexQueue().catch(error => {
-    console.error("Failed to initialise agent log index queue", error)
-  })
+  initLogIndexQueue()
   return await getIndexQueue().add(job)
 }
 
