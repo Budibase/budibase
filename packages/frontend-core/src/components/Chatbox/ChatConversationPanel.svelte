@@ -122,7 +122,11 @@
 <div class="chat-wrapper">
   {#if selectedAgentId}
     {#if hasChatId(chat)}
-      <div class="chat-header chat-header-actions">
+      <div class="chat-header">
+        <div class="chat-header-title">
+          <Body size="S">{chat.title || "Untitled Chat"}</Body>
+        </div>
+
         <Button
           quiet
           warning
@@ -235,12 +239,21 @@
     padding: var(--spacing-l) 0 var(--spacing-l);
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--spacing-m);
     border-bottom: var(--border-light);
   }
 
-  .chat-header-actions {
-    justify-content: flex-end;
+  .chat-header-title {
+    min-width: 0;
+  }
+
+  .chat-header-title :global(p) {
+    font-size: 14px;
+    line-height: 17px;
+    letter-spacing: 0;
+    font-weight: 400;
+    color: var(--spectrum-alias-text-color);
   }
 
   .delete-button-content {
