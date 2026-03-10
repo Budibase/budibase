@@ -67,8 +67,14 @@
   let selectedProvider = $derived(providersMap?.[draft.provider])
 
   let isSaving = $state(false)
-  let savedSnapshot = $state(JSON.stringify(draft))
-  let isModified = $derived(savedSnapshot !== JSON.stringify(draft))
+  let savedSnapshot = $state<typeof draft>()
+  const captureSavedSnapshot = () => {
+    savedSnapshot = Helpers.cloneDeep(draft)
+  }
+  captureSavedSnapshot()
+  let isModified = $derived(
+    JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
+  )
   let canSave = $derived.by(() => {
     if (isSaving) {
       return false
@@ -98,7 +104,7 @@
 
       if (configId !== "new" && config) {
         draft = createDraft()
-        savedSnapshot = JSON.stringify(draft)
+        captureSavedSnapshot()
       }
     } catch (err: any) {
       notifications.error(err.message || "Failed to load providers")
@@ -118,19 +124,14 @@
         const payload = Helpers.cloneDeep(draft)
         const updated = await aiConfigsStore.updateConfig(payload)
         draft._rev = updated._rev
-        payload._rev = updated._rev
-        savedSnapshot = JSON.stringify(payload)
+        captureSavedSnapshot()
         notifications.success(`Configuration updated`)
       } else {
         const { _id, ...rest } = Helpers.cloneDeep(draft)
         const created = await aiConfigsStore.createConfig(rest)
         draft._id = created._id
         draft._rev = created._rev
-        savedSnapshot = JSON.stringify({
-          ...rest,
-          _id: created._id,
-          _rev: created._rev,
-        })
+        captureSavedSnapshot()
         notifications.success(`Configuration created`)
 
         const formDraft = knowledgeBaseStore.getFormDraft()

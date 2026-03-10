@@ -31,9 +31,15 @@
   let draft = $state(createDraft())
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
-  let savedSnapshot = $state(JSON.stringify(draft))
+  let savedSnapshot = $state<typeof draft>()
+  const captureSavedSnapshot = () => {
+    savedSnapshot = structuredClone(draft)
+  }
+  captureSavedSnapshot()
 
-  let isModified = $derived(savedSnapshot !== JSON.stringify(draft))
+  let isModified = $derived(
+    JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
+  )
 
   let canSave = $derived.by(() => {
     if (isSaving || !isModified) {
@@ -59,7 +65,7 @@
       }
 
       draft = createDraft()
-      savedSnapshot = JSON.stringify(draft)
+      captureSavedSnapshot()
     } catch (err: any) {
       notifications.error(err.message || "Failed to load vector databases")
     }
@@ -83,18 +89,14 @@
         const updated = await vectorDbStore.edit(payload)
         draft._rev = updated._rev
         draft.port = payload.port
-        savedSnapshot = JSON.stringify({ ...draft, _rev: updated._rev })
+        captureSavedSnapshot()
         notifications.success("Vector database updated")
       } else {
         const created = await vectorDbStore.create(payload)
         draft._id = created._id
         draft._rev = created._rev
         draft.port = payload.port
-        savedSnapshot = JSON.stringify({
-          ...draft,
-          _id: created._id,
-          _rev: created._rev,
-        })
+        captureSavedSnapshot()
         notifications.success("Vector database created")
 
         const formDraft = knowledgeBaseStore.getFormDraft()
