@@ -120,6 +120,7 @@ const environment = {
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
+  MAX_WORKER_RUNS: parseIntSafe(process.env.MAX_WORKER_RUNS),
   DISABLE_AUTOMATION_LOGS: process.env.DISABLE_AUTOMATION_LOGS,
   DISABLE_RATE_LIMITING: process.env.DISABLE_RATE_LIMITING,
   DISABLE_WORKSPACE_MIGRATIONS: process.env.SKIP_WORKSPACE_MIGRATIONS || false,
@@ -149,7 +150,7 @@ const environment = {
   ENABLE_PLUGIN_GH_ORIGIN_BACKFILL:
     process.env.ENABLE_PLUGIN_GH_ORIGIN_BACKFILL ?? "true",
   SYNC_MIGRATION_CHECKS_MS:
-    parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 5000,
+    parseIntSafe(process.env.SYNC_MIGRATION_CHECKS_MS) || 2000,
   SKIP_MIGRATION_LOCKS_IN_TESTS:
     process.env.SKIP_MIGRATION_LOCKS_IN_TESTS ?? true,
   REST_REJECT_UNAUTHORIZED: process.env.REST_REJECT_UNAUTHORIZED !== "false",
@@ -160,6 +161,8 @@ const environment = {
     `http://localhost:${process.env.LITELLM_PORT || "4000"}`,
   LITELLM_MASTER_KEY: process.env.LITELLM_MASTER_KEY,
   BBAI_LITELLM_KEY: process.env.BBAI_LITELLM_KEY,
+  TABLE_GENERATION_TIMEOUT_MS:
+    process.env.TABLE_GENERATION_TIMEOUT_MS || "240000",
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

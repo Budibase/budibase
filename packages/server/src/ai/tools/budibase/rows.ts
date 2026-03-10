@@ -175,7 +175,7 @@ const buildRowDataSchema = (
   return z
     .object(shape)
     .partial()
-    .loose()
+    .passthrough()
     .describe(buildDataFieldDescription(schemaSummary))
 }
 

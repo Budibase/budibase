@@ -21,17 +21,23 @@
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
+  import { roles } from "@/stores/builder"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import DateAddedRenderer from "./_components/DateAddedRenderer.svelte"
-  import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
   import InvitedModal from "./_components/InvitedModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
+  import EditWorkspaceUserModal from "./_components/EditWorkspaceUserModal.svelte"
   import { get } from "svelte/store"
-  import { Constants, Utils, fetchData } from "@budibase/frontend-core"
+  import {
+    Constants,
+    RoleUtils,
+    Utils,
+    fetchData,
+  } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { OnboardingType } from "@/constants"
   import { sdk } from "@budibase/shared-core"
@@ -46,6 +52,13 @@
   import { InternalTable } from "@budibase/types"
   import type { UserInfo } from "@/types"
   import { routeActions } from "@/settings/pages"
+  import {
+    assignCreatedUsersToWorkspace,
+    assignExistingUsersToWorkspace,
+    buildWorkspaceInvitePayload,
+    dedupeUsersByEmail,
+    type UserData,
+  } from "./workspaceInviteUtils"
 
   interface User extends UserDoc {
     tenantOwnerEmail?: string
@@ -56,6 +69,8 @@
     userGroups: UserGroup[]
     apps: string[]
     access: number
+    workspaceRole?: string
+    workspaceRoleGroupRole?: string
   }
 
   export let workspaceOnly: boolean
@@ -82,24 +97,20 @@
     },
   })
 
-  interface UserData {
-    users: UserInfo[]
-    groups: string[]
-    assignToWorkspace?: boolean
-  }
-
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
   let enrichedUsers: EnrichedUser[] = []
   let tenantOwner: AccountMetadata | null
   let createUserModal: Modal,
     inviteConfirmationModal: Modal,
-    onboardingTypeModal: Modal,
     passwordModal: Modal,
     importUsersModal: Modal,
-    userLimitReachedModal: Modal
+    userLimitReachedModal: Modal,
+    editWorkspaceUserModal: Modal
   let searchEmail: string | undefined = undefined
   let selectedRows: User[] = []
+  let selectedWorkspaceUser: User | null = null
   let bulkSaveResponse: BulkUserCreated
+  let addedToWorkspaceEmails: string[] = []
 
   let currentWorkspaceId = ""
   let workspaceReady = false
@@ -135,9 +146,9 @@
   $: debouncedUpdateFetch(searchEmail, currentWorkspaceId)
   $: schema = {
     email: {
-      displayName: isWorkspaceOnly ? "User" : "Email",
+      displayName: "Email",
       sortable: false,
-      width: "2fr",
+      width: "minmax(200px, max-content)",
       minWidth: "200px",
     },
     role: {
@@ -162,6 +173,7 @@
           workspaces: {
             sortable: false,
             width: "1fr",
+            preventSelectRow: false,
           },
         }),
   }
@@ -169,14 +181,19 @@
     successful: [],
     unsuccessful: [],
   }
-  $: inviteTitle = isWorkspaceOnly
-    ? "Invite users to workspace"
-    : "Invite users to organisation"
   $: enrichedUsers = buildEnrichedUsers(
     $fetch.rows as User[],
     tenantOwner,
     $groups
   )
+  $: shouldOpenWorkspaceInviteModal =
+    isWorkspaceOnly &&
+    $bb.settings.route?.entry?.path === "/people/workspace" &&
+    $bb.settings.route?.hash === "#invite"
+  $: if (shouldOpenWorkspaceInviteModal && createUserModal) {
+    createUserModal.show()
+    bb.settings("/people/workspace")
+  }
 
   const buildEnrichedUsers = (
     rows: User[],
@@ -201,13 +218,44 @@
         const role = Constants.ExtendedBudibaseRoleOptions.find(
           x => x.value === users.getUserRole(user)
         )!
+        const workspaceRoleFromUser = currentWorkspaceId
+          ? user.roles?.[currentWorkspaceId]
+          : undefined
+        const workspaceRoleGroupRoles =
+          isWorkspaceOnly && currentWorkspaceId
+            ? userGroups
+                .filter(group => group.roles?.[currentWorkspaceId])
+                .map(group => group.roles?.[currentWorkspaceId])
+                .filter(Boolean)
+                .sort((roleA, roleB) => {
+                  const priorityA = RoleUtils.getRolePriority(roleA)
+                  const priorityB = RoleUtils.getRolePriority(roleB)
+                  if (priorityA !== priorityB) {
+                    return priorityB - priorityA
+                  }
+                  return `${roleA}`.localeCompare(`${roleB}`)
+                })
+            : []
+        const workspaceRoleGroupRole = workspaceRoleGroupRoles[0]
+        const workspaceRole =
+          workspaceRoleFromUser ||
+          (workspaceRoleGroupRole ? Constants.Roles.GROUP : undefined)
+        const isGroupUser = workspaceRole === Constants.Roles.GROUP
+        const isWorkspaceTenantAdmin =
+          isWorkspaceOnly && role.value === Constants.BudibaseRoles.Admin
         return {
           ...user,
           name: user.firstName ? user.firstName + " " + user.lastName : "",
           userGroups,
+          workspaceRole: isWorkspaceOnly ? workspaceRole : undefined,
+          workspaceRoleGroupRole: isWorkspaceOnly
+            ? workspaceRoleGroupRole
+            : undefined,
           __selectable:
             role.value === Constants.BudibaseRoles.Owner ||
-            $auth.user?.email === user.email
+            $auth.user?.email === user.email ||
+            isGroupUser ||
+            isWorkspaceTenantAdmin
               ? false
               : true,
           apps: sdk.users.userAppAccessList(user, allGroups),
@@ -247,62 +295,81 @@
     }
 
     if ($organisation.isSSOEnforced) {
-      // bypass the onboarding type selection of sso is enforced
+      // bypass the onboarding type selection if sso is enforced
       await chooseCreationType(OnboardingType.EMAIL)
     } else if (onboardingType) {
       await chooseCreationType(onboardingType)
-    } else {
-      onboardingTypeModal.show()
     }
   }
 
   async function createUserFlow() {
-    const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
-    const payload = (userData?.users ?? []).map(user => {
-      const workspaceRole = getWorkspaceRole(user.role, user.appRole)
-      return {
-        email: user.email,
-        builder: user.role === Constants.BudibaseRoles.Developer,
-        creator: user.role === Constants.BudibaseRoles.Creator,
-        admin: user.role === Constants.BudibaseRoles.Admin,
-        groups: userData.groups,
-        apps:
-          assignToWorkspace && currentWorkspaceId && workspaceRole
-            ? { [currentWorkspaceId]: workspaceRole }
-            : undefined,
+    if (!isWorkspaceOnly) {
+      return
+    }
+    let usersForInvite = userData?.users ?? []
+    let assignedExistingUsers = false
+    if (isWorkspaceOnly) {
+      const result = await assignExistingUsersToWorkspace(
+        userData,
+        currentWorkspaceId
+      )
+      usersForInvite = result.usersToInvite
+      const shouldShowInviteModal = usersForInvite.length > 0
+      assignedExistingUsers = result.assignedCount > 0
+
+      if (result.assignedCount && !shouldShowInviteModal) {
+        notifications.success("Users added to workspace")
       }
-    })
+      if (result.failedCount) {
+        notifications.error("Error adding some users to workspace")
+      }
+      if (!usersForInvite.length) {
+        await refreshUserList()
+        return
+      }
+    }
+
+    const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
+    const payload = buildWorkspaceInvitePayload(
+      usersForInvite,
+      userData.groups,
+      currentWorkspaceId,
+      assignToWorkspace
+    )
     try {
       inviteUsersResponse = await users.invite(payload)
+      await refreshUserList()
       inviteConfirmationModal.show()
     } catch (error) {
+      if (assignedExistingUsers) {
+        await refreshUserList()
+      }
       notifications.error("Error inviting user")
     }
   }
 
   const removingDuplicities = async (userData: UserData): Promise<UserData> => {
-    const currentUserEmails = (await users.fetch())?.map(x => x.email) || []
-    const newUsers: UserInfo[] = []
+    const dedupedUserData = dedupeUsersByEmail(userData)
+    const currentUserEmails = isWorkspaceOnly
+      ? []
+      : (await users.fetch())?.map(x => x.email.toLowerCase()) || []
+    const newUsers: UserInfo[] = dedupedUserData.users.filter(
+      user => !currentUserEmails.includes(user.email.toLowerCase())
+    )
 
-    for (const user of userData?.users ?? []) {
-      const { email } = user
-      if (
-        newUsers.find(x => x.email === email) ||
-        currentUserEmails.includes(email)
-      ) {
-        continue
-      }
-      newUsers.push(user)
-    }
-
-    if (!newUsers.length) {
+    if (!newUsers.length && !isWorkspaceOnly) {
       notifications.info("Duplicated! There is no new users to add.")
     }
     return { ...userData, users: newUsers }
   }
 
   const createUsersFromCsv = async (userCsvData: any) => {
-    const { userEmails, usersRole, userGroups: groups } = userCsvData
+    const {
+      userEmails,
+      usersRole,
+      usersAppRole,
+      userGroups: groups,
+    } = userCsvData
 
     const users: UserInfo[] = []
     for (const email of userEmails) {
@@ -314,6 +381,10 @@
       const newUser = {
         email: email.trim(),
         role: usersRole,
+        appRole:
+          usersRole === Constants.BudibaseRoles.AppUser
+            ? usersAppRole || Constants.Roles.BASIC
+            : undefined,
         password: generatePassword(12),
         forceResetPassword: true,
       }
@@ -321,7 +392,11 @@
       users.push(newUser)
     }
 
-    userData = await removingDuplicities({ groups, users })
+    userData = await removingDuplicities({
+      groups,
+      users,
+      assignToWorkspace: isWorkspaceOnly,
+    })
     if (!userData.users.length) return
 
     return createUsers()
@@ -329,9 +404,30 @@
 
   async function createUsers() {
     try {
-      bulkSaveResponse = (await users.create(
-        await removingDuplicities(userData)
-      )) || {
+      addedToWorkspaceEmails = []
+      let usersForCreation = await removingDuplicities(userData)
+
+      if (isWorkspaceOnly) {
+        const result = await assignExistingUsersToWorkspace(
+          usersForCreation,
+          currentWorkspaceId
+        )
+        usersForCreation = { ...usersForCreation, users: result.usersToInvite }
+        addedToWorkspaceEmails = result.addedToWorkspaceEmails
+
+        if (result.assignedCount && !usersForCreation.users.length) {
+          notifications.success("Users added to workspace")
+        }
+        if (result.failedCount) {
+          notifications.error("Error adding some users to workspace")
+        }
+        if (!usersForCreation.users.length) {
+          await refreshUserList()
+          return
+        }
+      }
+
+      bulkSaveResponse = (await users.create(usersForCreation)) || {
         successful: [],
         unsuccessful: [],
       }
@@ -339,39 +435,32 @@
       if (
         assignToWorkspace &&
         currentWorkspaceId &&
-        bulkSaveResponse.successful
+        bulkSaveResponse.successful?.length
       ) {
-        await Promise.all(
-          bulkSaveResponse.successful.map(async user => {
-            const matchingUser = userData.users.find(
-              created => created.email === user.email
-            )
-            const role = getWorkspaceRole(
-              matchingUser?.role,
-              matchingUser?.appRole
-            )
-            if (!role) {
-              return
-            }
-            const fullUser = await users.get(user._id)
-            if (fullUser?._rev) {
-              await users.addUserToWorkspace(user._id, role, fullUser._rev)
-            }
-          })
+        const assignmentResult = await assignCreatedUsersToWorkspace(
+          bulkSaveResponse.successful,
+          usersForCreation.users,
+          currentWorkspaceId
         )
+        if (assignmentResult.failedCount) {
+          notifications.error("Error adding some users to workspace")
+        }
       }
       notifications.success("Successfully created user")
       await groups.init()
       passwordModal.show()
       await refreshUserList()
     } catch (error) {
+      if (addedToWorkspaceEmails.length > 0) {
+        await refreshUserList()
+      }
       console.error(error)
       notifications.error("Error creating user")
     }
   }
 
   async function chooseCreationType(onboardingType: string) {
-    if (onboardingType === OnboardingType.EMAIL) {
+    if (onboardingType === OnboardingType.EMAIL && isWorkspaceOnly) {
       await createUserFlow()
     } else {
       await createUsers()
@@ -381,30 +470,73 @@
   const deleteUsers = async () => {
     try {
       let ids = selectedRows.map(user => user._id)
-      if (ids.includes(get(auth).user?._id)) {
-        notifications.error("You cannot delete yourself")
-        return
-      }
 
       if (selectedRows.some(u => u.scimInfo?.isSync)) {
         notifications.error("You cannot remove users created via your AD")
         return
       }
 
-      if (ids.length > 0) {
-        await users.bulkDelete(
-          selectedRows.map(user => ({
-            userId: user._id!,
-            email: user.email,
-          }))
+      if (isWorkspaceOnly) {
+        if (!currentWorkspaceId) {
+          notifications.error("Workspace not found")
+          return
+        }
+
+        const settled = await Promise.allSettled(
+          selectedRows.map(async user => {
+            if (!user._id) {
+              throw new Error("User ID missing")
+            }
+
+            let rev = user._rev
+            if (!rev) {
+              const fullUser = await users.get(user._id)
+              rev = fullUser?._rev
+            }
+            if (!rev) {
+              throw new Error("User revision missing")
+            }
+
+            await users.removeUserFromWorkspace(user._id, rev)
+          })
+        )
+        const failed = settled.filter(result => result.status === "rejected")
+        const removed = selectedRows.length - failed.length
+
+        if (removed > 0) {
+          notifications.success(`Successfully removed ${removed} users`)
+        }
+        if (failed.length > 0) {
+          notifications.error("Error removing some users from workspace")
+        }
+      } else {
+        if (ids.includes(get(auth).user?._id)) {
+          notifications.error("You cannot delete yourself")
+          return
+        }
+
+        if (ids.length > 0) {
+          await users.bulkDelete(
+            selectedRows.map(user => ({
+              userId: user._id!,
+              email: user.email,
+            }))
+          )
+        }
+
+        notifications.success(
+          `Successfully deleted ${selectedRows.length} users`
         )
       }
 
-      notifications.success(`Successfully deleted ${selectedRows.length} users`)
       selectedRows = []
       await refreshUserList()
     } catch (error) {
-      notifications.error("Error deleting users")
+      notifications.error(
+        isWorkspaceOnly
+          ? "Error removing users from workspace"
+          : "Error deleting users"
+      )
     }
   }
 
@@ -416,28 +548,29 @@
       .slice(0, length)
   }
 
-  const getWorkspaceRole = (role?: string, appRole?: string) => {
-    if (!isWorkspaceOnly || !currentWorkspaceId || !role) {
-      return undefined
+  const onRowClick = ({ detail }: { detail: User }) => {
+    if (isWorkspaceOnly) {
+      selectedWorkspaceUser = detail
+      editWorkspaceUserModal.show()
+      return
     }
-    if (role === Constants.BudibaseRoles.Creator) {
-      return Constants.Roles.CREATOR
-    }
-    if (role === Constants.BudibaseRoles.Admin) {
-      return Constants.Roles.CREATOR
-    }
-    if (role === Constants.BudibaseRoles.AppUser) {
-      return appRole || Constants.Roles.BASIC
-    }
-    return Constants.Roles.BASIC
+    bb.settings(`/people/users/${detail._id}`)
+  }
+
+  const onWorkspaceUserSaved = async () => {
+    await refreshUserList()
   }
 
   onMount(async () => {
+    roles.fetch().catch(() => {
+      notifications.error("Error fetching role data")
+    })
     try {
       await groups.init()
-      groupsLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
+    } finally {
+      groupsLoaded = true
     }
     try {
       tenantOwner = await users.getAccountHolder()
@@ -473,47 +606,57 @@
         {#if selectedRows.length > 0}
           <DeleteRowsButton
             item="user"
+            action={isWorkspaceOnly ? "Remove" : "Delete"}
+            confirmationTitle={isWorkspaceOnly
+              ? "Confirm user removal"
+              : "Confirm user deletion"}
+            confirmationButtonText={isWorkspaceOnly
+              ? "Remove users"
+              : "Delete users"}
             on:updaterows
             selectedRows={[...selectedRows]}
             deleteRows={deleteUsers}
           />
         {:else}
           <Search bind:value={searchEmail} placeholder="Search" />
-          <ActionButton
-            size="M"
-            quiet
-            on:click={$licensing.userLimitReached
-              ? userLimitReachedModal.show
-              : importUsersModal.show}
-            disabled={readonly}
-          >
-            <Icon name={"upload-simple"} size="M" />
-          </ActionButton>
-          <Button
-            size="M"
-            disabled={readonly}
-            on:click={$licensing.userLimitReached
-              ? userLimitReachedModal.show
-              : createUserModal.show}
-            cta
-          >
-            {isWorkspaceOnly ? "Invite to workspace" : "Invite users"}
-          </Button>
+          {#if !isWorkspaceOnly}
+            <ActionButton
+              size="M"
+              quiet
+              on:click={$licensing.userLimitReached
+                ? userLimitReachedModal.show
+                : importUsersModal.show}
+              disabled={readonly}
+            >
+              <Icon name={"upload-simple"} size="M" />
+            </ActionButton>
+          {/if}
+          {#if isWorkspaceOnly}
+            <Button
+              size="M"
+              disabled={readonly}
+              on:click={$licensing.userLimitReached
+                ? userLimitReachedModal.show
+                : createUserModal.show}
+              cta
+            >
+              Invite to workspace
+            </Button>
+          {/if}
         {/if}
       </div>
     {/if}
   </div>
   <div class="table-wrap" style={`min-height: ${TABLE_MIN_HEIGHT}px;`}>
     <Table
-      on:click={({ detail }) => {
-        bb.settings(`/people/users/${detail._id}`)
-      }}
+      on:click={onRowClick}
       {schema}
       bind:selectedRows
       data={tableLoading ? [] : enrichedUsers}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={!readonly}
+      selectOnRowClick={!isWorkspaceOnly}
       {customRenderers}
       loading={false}
       customPlaceholder={tableLoading}
@@ -535,38 +678,51 @@
   </div>
 </div>
 
-<Modal bind:this={createUserModal} closeOnOutsideClick={false}>
-  <AddUserModal
-    {showOnboardingTypeModal}
-    workspaceOnly={isWorkspaceOnly}
-    useWorkspaceInviteModal={true}
-    assignToWorkspace={isWorkspaceOnly}
-    {inviteTitle}
-  />
-</Modal>
+{#if isWorkspaceOnly}
+  <Modal bind:this={createUserModal} closeOnOutsideClick={false}>
+    <AddUserModal
+      {showOnboardingTypeModal}
+      workspaceOnly={isWorkspaceOnly}
+      useWorkspaceInviteModal={isWorkspaceOnly}
+      assignToWorkspace={isWorkspaceOnly}
+      inviteTitle="Invite users to workspace"
+    />
+  </Modal>
 
-<Modal bind:this={inviteConfirmationModal}>
-  <InvitedModal {inviteUsersResponse} />
-</Modal>
-
-<Modal bind:this={onboardingTypeModal}>
-  <OnboardingTypeModal {chooseCreationType} />
-</Modal>
+  <Modal bind:this={inviteConfirmationModal}>
+    <InvitedModal {inviteUsersResponse} />
+  </Modal>
+{/if}
 
 <Modal bind:this={passwordModal} disableCancel={true}>
   <PasswordModal
     createUsersResponse={bulkSaveResponse}
     userData={userData.users}
+    {addedToWorkspaceEmails}
   />
 </Modal>
 
-<Modal bind:this={importUsersModal}>
-  <ImportUsersModal {createUsersFromCsv} />
-</Modal>
+{#if !isWorkspaceOnly}
+  <Modal bind:this={importUsersModal}>
+    <ImportUsersModal {createUsersFromCsv} />
+  </Modal>
+{/if}
 
 <Modal bind:this={userLimitReachedModal}>
   <UpgradeModal {isOwner} />
 </Modal>
+
+{#if isWorkspaceOnly}
+  <Modal bind:this={editWorkspaceUserModal} closeOnOutsideClick={false}>
+    <EditWorkspaceUserModal
+      user={selectedWorkspaceUser}
+      workspaceId={currentWorkspaceId}
+      {readonly}
+      isTenantOwner={selectedWorkspaceUser?.email === tenantOwner?.email}
+      onsaved={onWorkspaceUserSaved}
+    />
+  </Modal>
+{/if}
 
 <style>
   .buttons {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { appStore } from "@/stores/builder"
-  import { agentsStore, aiConfigsStore, vectorDbStore } from "@/stores/portal"
+  import { agentsStore, aiConfigsStore } from "@/stores/portal"
   import { Input, Modal, ModalContent } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
   import { onMount } from "svelte"
@@ -32,7 +32,6 @@
 
   onMount(() => {
     aiConfigsStore.fetch()
-    vectorDbStore.fetch()
   })
 </script>
 

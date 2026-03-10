@@ -38,11 +38,11 @@ export const getRowIcon = (type: HomeRowType) => {
 export const getRowIconColor = (type: HomeRowType) => {
   switch (type) {
     case "automation":
-      return "#89B5E2"
+      return "var(--color-purple-300)"
     case "app":
-      return "#D4A27F"
+      return "var(--color-orange-400)"
     case "agent":
-      return "#BDB0F5"
+      return "var(--color-brand-400)"
     default:
       return "var(--spectrum-global-color-gray-700)"
   }

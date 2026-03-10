@@ -588,11 +588,11 @@ Any constraints the agent must follow.
     if (!configured || !config) {
       return undefined
     }
-    if (config.provider === WebSearchProvider.EXA) {
-      return "exa_search"
-    }
-    if (config.provider === WebSearchProvider.PARALLEL) {
-      return "parallel_search"
+    if (
+      config.provider === WebSearchProvider.EXA ||
+      config.provider === WebSearchProvider.PARALLEL
+    ) {
+      return "search_web_search"
     }
     return undefined
   }

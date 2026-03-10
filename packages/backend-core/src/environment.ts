@@ -260,7 +260,6 @@ const environment = {
   ENABLE_SCIM_LOGGER: process.env.ENABLE_SCIM_LOGGER,
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
-  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   MIN_VERSION_WITHOUT_POWER_ROLE:
     process.env.MIN_VERSION_WITHOUT_POWER_ROLE || "3.0.0",
   DISABLE_CONTENT_SECURITY_POLICY: process.env.DISABLE_CONTENT_SECURITY_POLICY,
@@ -292,12 +291,16 @@ export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
 
 export function withEnv<T>(envVars: Partial<typeof environment>, f: () => T) {
   const cleanup = setEnv(envVars)
-  const result = f()
-  if (result instanceof Promise) {
-    return result.finally(cleanup)
-  } else {
+  try {
+    const result = f()
+    if (result instanceof Promise) {
+      return result.finally(cleanup)
+    }
     cleanup()
     return result
+  } catch (err) {
+    cleanup()
+    throw err
   }
 }
 
@@ -314,7 +317,6 @@ export const SECRETS: EnvironmentKey[] = [
   "JWT_SECRET",
   "MINIO_ACCESS_KEY",
   "MINIO_SECRET_KEY",
-  "OPENAI_API_KEY",
   "REDIS_PASSWORD",
   "REDIS_USERNAME",
 ]

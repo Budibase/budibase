@@ -336,6 +336,12 @@ async function validateCompletionsModel(model: {
   )
   if (res.status !== 200) {
     const text = await res.text()
+    if (text.includes("DB not connected")) {
+      throw new HTTPError(
+        "LiteLLM requires a database connection. Set DATABASE_URL on LiteLLM when store_model_in_db is enabled.",
+        400
+      )
+    }
     throw new HTTPError(text, 500)
   }
   const json = await res.json()
@@ -499,6 +505,28 @@ export async function fetchPublicProviders(): Promise<LiteLLMPublicProvider[]> {
 
   const json = await res.json()
   return json as LiteLLMPublicProvider[]
+}
+
+type LiteLLMModelCostMap = Record<
+  string,
+  {
+    litellm_provider?: string | string[] | null
+    mode?: string | string[] | null
+  }
+>
+
+export async function fetchPublicModelCostMap(): Promise<LiteLLMModelCostMap> {
+  const res = await fetch(`${liteLLMUrl}/public/litellm_model_cost_map`)
+  if (!res.ok) {
+    const text = await res.text()
+    throw new HTTPError(
+      `Error fetching LiteLLM model cost map: ${text || res.statusText}`,
+      res.status
+    )
+  }
+
+  const json = await res.json()
+  return json as LiteLLMModelCostMap
 }
 
 async function mapToLiteLLMProvider(provider: string) {

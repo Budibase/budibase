@@ -1,8 +1,16 @@
+import { auth } from "@budibase/backend-core"
+import { middleware } from "@budibase/pro"
+import { aiRagEnabled } from "../../middleware/aiRagEnabled"
 import * as ai from "../controllers/ai"
+import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 import {
   createAgentValidator,
+  provisionAgentSlackChannelValidator,
+  provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
   toggleAgentDiscordDeploymentValidator,
+  toggleAgentMSTeamsDeploymentValidator,
+  toggleAgentSlackDeploymentValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 import {
@@ -13,10 +21,6 @@ import {
   createVectorDbValidator,
   updateVectorDbValidator,
 } from "./utils/validators/vectorDb"
-import { middleware } from "@budibase/pro"
-import { aiRagEnabled } from "../../middleware/aiRagEnabled"
-import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
-import { auth } from "@budibase/backend-core"
 
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
@@ -36,6 +40,27 @@ builderAdminRoutes
     toggleAgentDiscordDeploymentValidator(),
     ai.toggleAgentDiscordDeployment
   )
+  .post(
+    "/api/agent/:agentId/ms-teams/provision",
+    provisionAgentMSTeamsChannelValidator(),
+    ai.provisionAgentMSTeamsChannel
+  )
+  .post(
+    "/api/agent/:agentId/ms-teams/toggle",
+    toggleAgentMSTeamsDeploymentValidator(),
+    ai.toggleAgentMSTeamsDeployment
+  )
+  .post(
+    "/api/agent/:agentId/slack/toggle",
+    toggleAgentSlackDeploymentValidator(),
+    ai.toggleAgentSlackDeployment
+  )
+  .post(
+    "/api/agent/:agentId/slack/provision",
+    provisionAgentSlackChannelValidator(),
+    ai.provisionAgentSlackChannel
+  )
+
   .get("/api/agent/tools", ai.fetchTools)
 
 builderAdminRoutes

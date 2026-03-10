@@ -14,15 +14,30 @@ import {
 } from "@budibase/types"
 import { db, groups, users as usersSdk } from "@budibase/pro"
 
+const DEFAULT_PAGE_SIZE = 10
+
+function parsePageSize(pageSize: unknown) {
+  if (pageSize === undefined || pageSize === null) {
+    return DEFAULT_PAGE_SIZE
+  }
+  const parsedPageSize = Number(pageSize)
+  if (!Number.isFinite(parsedPageSize) || parsedPageSize < 1) {
+    return DEFAULT_PAGE_SIZE
+  }
+  return Math.floor(parsedPageSize)
+}
+
 export async function save(ctx: UserCtx) {
   const group: UserGroup = ctx.request.body
   group.name = group.name.trim()
 
   // don't allow updating the roles through this endpoint
   delete group.roles
+  delete group.builder
   if (group._id) {
     const oldGroup = await groups.get(group._id)
     group.roles = oldGroup.roles
+    group.builder = oldGroup.builder
     group.scimInfo = oldGroup.scimInfo
   }
   const response = await groups.save(group)
@@ -99,7 +114,8 @@ export async function find(ctx: UserCtx) {
 }
 
 export async function searchUsers(ctx: Ctx<{}, SearchUserGroupResponse>) {
-  const { pageSize = 10, bookmark, emailSearch } = ctx.request.query as any
+  const { bookmark, emailSearch } = ctx.request.query as any
+  const pageSize = parsePageSize((ctx.request.query as any).pageSize)
   const groupId = ctx.params.groupId
 
   const params: DatabaseQueryOpts = { limit: pageSize + 1 }

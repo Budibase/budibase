@@ -76,12 +76,6 @@ export async function isTriggerAutomationRunEnabled() {
   return areFeaturesEnabled(Feature.TRIGGER_AUTOMATION_RUN)
 }
 
-// APP BUILDERS
-
-export async function isAppBuildersEnabled() {
-  return areFeaturesEnabled(Feature.APP_BUILDERS)
-}
-
 // AUDIT LOGS
 
 export async function isAuditLogsEnabled() {
@@ -120,6 +114,17 @@ export async function isTranslationsEnabled() {
 
 export async function isExpandedPublicApiEnabled() {
   return areFeaturesEnabled(Feature.EXPANDED_PUBLIC_API)
+}
+
+export async function isWorkspaceImportExportEnabled() {
+  return areFeaturesEnabled(Feature.WORKSPACE_IMPORT_EXPORT)
+}
+
+export async function isWorkspaceImportExportPublicApiEnabled() {
+  return areFeaturesEnabled([
+    Feature.EXPANDED_PUBLIC_API,
+    Feature.WORKSPACE_IMPORT_EXPORT,
+  ])
 }
 
 export async function isSSOEnforced(opts?: {

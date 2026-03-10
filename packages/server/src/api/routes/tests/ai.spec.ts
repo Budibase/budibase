@@ -6,40 +6,30 @@ import {
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import nock from "nock"
-import { configs, env, setEnv } from "@budibase/backend-core"
+import { context, env, setEnv } from "@budibase/backend-core"
 import {
-  AIInnerConfig,
   AIOperationEnum,
   AttachmentSubType,
-  ConfigType,
   Feature,
   FieldType,
   License,
   PlanModel,
   PlanType,
-  ProviderConfig,
   RelationshipType,
 } from "@budibase/types"
-import { context } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { quotas, ai } from "@budibase/pro"
-import {
-  MockLLMResponseFn,
-  MockLLMResponseOpts,
-} from "../../../tests/utilities/mocks/ai"
-import { mockAnthropicResponse } from "../../../tests/utilities/mocks/ai/anthropic"
-import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
-import { resetHttpMocking } from "../../../tests/jestEnv"
 import { withEnv as serverWithEnv } from "../../../environment"
 
-function toResponseFormat(schema: any, name = "response") {
+function toResponseFormat(schema: z.ZodType) {
   return {
     type: "json_schema" as const,
     json_schema: {
-      name,
+      name: "response",
       strict: false,
-      schema: schema.toJSONSchema({ target: "draft-7" }),
+      schema: z.toJSONSchema(schema, { target: "draft-7" }),
     },
   }
 }
@@ -51,170 +41,50 @@ function dedent(str: string) {
     .join("\n")
 }
 
-type SetupFn = (
-  config: TestConfiguration
-) => Promise<() => Promise<void> | void>
-interface TestSetup {
-  name: string
-  setup: SetupFn
-  mockLLMResponse: MockLLMResponseFn
-}
-
-function budibaseAI(): SetupFn {
-  return async (config: TestConfiguration) => {
-    await config.doInTenant(async () => {
-      await configs.save({
-        type: ConfigType.AI,
-        config: {
-          budibaseAI: {
-            provider: "BudibaseAI",
-            name: "Budibase AI",
-            active: true,
-            isDefault: true,
-          },
-        },
-      })
-    })
-
-    return setEnv({
-      OPENAI_API_KEY: "test-key",
-      SELF_HOSTED: false,
-    })
-  }
-}
-
-function customAIConfig(providerConfig: Partial<ProviderConfig>): SetupFn {
-  return async (config: TestConfiguration) => {
-    const innerConfig: AIInnerConfig = {
-      myaiconfig: {
-        provider: "OpenAI",
-        name: "OpenAI",
-        apiKey: "test-key",
-        defaultModel: "gpt-5-mini",
-        active: true,
-        isDefault: true,
-        ...providerConfig,
-      },
-    }
-
-    const { id, rev } = await config.doInTenant(
-      async () =>
-        await configs.save({
-          type: ConfigType.AI,
-          config: innerConfig,
-        })
-    )
-
-    return async () => {
-      await config.doInTenant(async () => {
-        const db = context.getGlobalDB()
-        await db.remove(id, rev)
-      })
-    }
-  }
-}
-
-const allProviders: TestSetup[] = [
-  {
-    name: "OpenAI API key",
-    setup: async () => {
-      return setEnv({
-        OPENAI_API_KEY: "test-key",
-      })
-    },
-    mockLLMResponse: mockAISDKChatGPTResponse,
-  },
-  {
-    name: "OpenAI API key with custom config",
-    setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
-    mockLLMResponse: mockAISDKChatGPTResponse,
-  },
-  {
-    name: "Anthropic API key with custom config",
-    setup: customAIConfig({
-      provider: "Anthropic",
-      defaultModel: "claude-3-5-sonnet-20240620",
-    }),
-    mockLLMResponse: mockAnthropicResponse,
-  },
-  {
-    name: "Azure OpenAI API key with custom config",
-    setup: customAIConfig({
-      provider: "AzureOpenAI",
-      defaultModel: "gpt-4o-realtime-preview-1001",
-      baseUrl: "https://azure.example.com",
-    }),
-    mockLLMResponse: (
-      answer: string | ((prompt: string) => string),
-      opts?: MockLLMResponseOpts
-    ) =>
-      mockAzureOpenAIResponse(answer, {
-        baseUrl: "https://azure.example.com",
-        ...opts,
-      }),
-  },
-  {
-    name: "BudibaseAI",
-    setup: budibaseAI(),
-    mockLLMResponse: mockAISDKChatGPTResponse,
-  },
-]
-
 describe("AI", () => {
   const config = new TestConfiguration()
+  let cleanup: (() => Promise<void>) | undefined
+  let cleanupEnv: (() => void) | undefined
 
   beforeAll(async () => {
+    cleanupEnv = setEnv({ SELF_HOSTED: false })
     await config.init()
+    await config.newTenant()
+    cleanup = await setupDefaultCompletionsAIConfig(config)
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    cleanupEnv?.()
+    if (cleanup) {
+      await cleanup()
+    }
     config.end()
   })
 
-  beforeEach(async () => {
-    nock.cleanAll()
-    await resetHttpMocking()
-  })
+  describe("POST /api/ai/js", () => {
+    it("handles correct plain code response", async () => {
+      mockAISDKChatGPTResponse(`return 42`)
 
-  describe.each(allProviders)(
-    "provider: $name",
-    ({ setup, mockLLMResponse }: TestSetup) => {
-      let cleanup: () => Promise<void> | void
-      beforeAll(async () => {
-        cleanup = await setup(config)
-      })
+      const { code } = await config.api.ai.generateJs({ prompt: "test" })
+      expect(code).toBe("return 42")
+    })
 
-      afterAll(async () => {
-        const maybePromise = cleanup()
-        if (maybePromise) {
-          await maybePromise
-        }
-      })
-
-      describe("POST /api/ai/js", () => {
-        it("handles correct plain code response", async () => {
-          mockLLMResponse(`return 42`)
-
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("return 42")
-        })
-
-        it("handles correct markdown code response", async () => {
-          mockLLMResponse(
-            dedent(`
+    it("handles correct markdown code response", async () => {
+      mockAISDKChatGPTResponse(
+        dedent(`
                 \`\`\`js
                 return 42
                 \`\`\`
             `)
-          )
+      )
 
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("return 42")
-        })
+      const { code } = await config.api.ai.generateJs({ prompt: "test" })
+      expect(code).toBe("return 42")
+    })
 
-        it("handles multiple markdown code blocks returned", async () => {
-          mockLLMResponse(
-            dedent(`
+    it("handles multiple markdown code blocks returned", async () => {
+      mockAISDKChatGPTResponse(
+        dedent(`
                 This:
 
                 \`\`\`js
@@ -227,82 +97,83 @@ describe("AI", () => {
                 return 10
                 \`\`\`
             `)
-          )
+      )
 
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("return 42")
-        })
+      const { code } = await config.api.ai.generateJs({ prompt: "test" })
+      expect(code).toBe("return 42")
+    })
 
-        // TODO: handle when this happens
-        it.skip("handles no code response", async () => {
-          mockLLMResponse("I'm sorry, you're quite right, etc.")
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("")
-        })
+    // TODO: handle when this happens
+    it.skip("handles no code response", async () => {
+      mockAISDKChatGPTResponse("I'm sorry, you're quite right, etc.")
+      const { code } = await config.api.ai.generateJs({ prompt: "test" })
+      expect(code).toBe("")
+    })
 
-        it("handles LLM errors", async () => {
-          mockLLMResponse(() => {
-            throw new Error("LLM error")
-          })
-          await config.api.ai.generateJs({ prompt: "test" }, { status: 500 })
-        })
+    it("handles LLM errors", async () => {
+      mockAISDKChatGPTResponse(
+        () => {
+          throw new Error("LLM error")
+        },
+        { times: 3 }
+      )
+      await config.api.ai.generateJs({ prompt: "test" }, { status: 500 })
+    })
+  })
+
+  describe("POST /api/ai/cron", () => {
+    it("handles correct cron response", async () => {
+      mockAISDKChatGPTResponse("0 0 * * *")
+
+      const { message } = await config.api.ai.generateCron({
+        prompt: "test",
       })
+      expect(message).toBe("0 0 * * *")
+    })
 
-      describe("POST /api/ai/cron", () => {
-        it("handles correct cron response", async () => {
-          mockLLMResponse("0 0 * * *")
+    it("handles expected LLM error", async () => {
+      mockAISDKChatGPTResponse("Error generating cron: skill issue")
 
-          const { message } = await config.api.ai.generateCron({
-            prompt: "test",
-          })
-          expect(message).toBe("0 0 * * *")
-        })
+      await config.api.ai.generateCron(
+        {
+          prompt: "test",
+        },
+        { status: 400 }
+      )
+    })
 
-        it("handles expected LLM error", async () => {
-          mockLLMResponse("Error generating cron: skill issue")
+    it("handles unexpected LLM error", async () => {
+      mockAISDKChatGPTResponse(
+        () => {
+          throw new Error("LLM error")
+        },
+        { times: 3 }
+      )
 
-          await config.api.ai.generateCron(
-            {
-              prompt: "test",
-            },
-            { status: 400 }
-          )
-        })
-
-        it("handles unexpected LLM error", async () => {
-          mockLLMResponse(() => {
-            throw new Error("LLM error")
-          })
-
-          await config.api.ai.generateCron(
-            {
-              prompt: "test",
-            },
-            { status: 500 }
-          )
-        })
-      })
-    }
-  )
+      await config.api.ai.generateCron(
+        {
+          prompt: "test",
+        },
+        { status: 500 }
+      )
+    })
+  })
 })
 
 describe("BudibaseAI", () => {
   const config = new TestConfiguration()
-  let cleanup: () => void | Promise<void>
+  let cleanup: (() => void | Promise<void>)[] = []
   beforeAll(async () => {
     await config.init()
-    cleanup = await budibaseAI()(config)
-  })
-
-  beforeEach(async () => {
-    await resetHttpMocking()
+    cleanup.push(setEnv({ SELF_HOSTED: false }))
   })
 
   afterAll(async () => {
-    if ("then" in cleanup) {
-      await cleanup()
-    } else {
-      cleanup()
+    for (const fn of cleanup) {
+      const result = fn()
+      if (result && "then" in result) {
+        await result
+      }
     }
     config.end()
   })
@@ -334,7 +205,6 @@ describe("BudibaseAI", () => {
 
     beforeEach(async () => {
       await config.newTenant()
-      nock.cleanAll()
       const license: License = {
         plan: {
           type: PlanType.FREE,
@@ -351,15 +221,13 @@ describe("BudibaseAI", () => {
     })
 
     it("handles correct chat response", async () => {
-      let usage = await getQuotaUsage()
-      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
-      expect(usage.monthly.current.budibaseAICredits).toBe(0)
+      mockAISDKChatGPTResponse("Hi there!")
 
-      mockChatGPTResponse("Hi there!")
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         licenseKey: licenseKey,
       })
+
       expect(messages).toEqual([
         {
           role: "user",
@@ -370,15 +238,15 @@ describe("BudibaseAI", () => {
           content: "Hi there!",
         },
       ])
-
-      usage = await getQuotaUsage()
-      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
 
     it("handles chat response error", async () => {
-      mockChatGPTResponse(() => {
-        throw new Error("LLM error")
-      })
+      mockAISDKChatGPTResponse(
+        () => {
+          throw new Error("LLM error")
+        },
+        { times: 3 }
+      )
       await config.api.ai.chat(
         {
           messages: [{ role: "user", content: "Hello!" }],
@@ -416,12 +284,8 @@ describe("BudibaseAI", () => {
     })
 
     it("handles text format", async () => {
-      let usage = await getQuotaUsage()
-      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
-      expect(usage.monthly.current.budibaseAICredits).toBe(0)
-
       const gptResponse = generator.word()
-      mockChatGPTResponse(gptResponse, { format: "text" })
+      mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "text",
@@ -437,20 +301,13 @@ describe("BudibaseAI", () => {
           content: gptResponse,
         },
       ])
-
-      usage = await getQuotaUsage()
-      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
 
     it("handles json format", async () => {
-      let usage = await getQuotaUsage()
-      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
-      expect(usage.monthly.current.budibaseAICredits).toBe(0)
-
       const gptResponse = JSON.stringify({
         [generator.word()]: generator.word(),
       })
-      mockChatGPTResponse(gptResponse, { format: "json" })
+      mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: "json",
@@ -466,24 +323,16 @@ describe("BudibaseAI", () => {
           content: gptResponse,
         },
       ])
-
-      usage = await getQuotaUsage()
-      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
 
     it("handles structured outputs", async () => {
-      let usage = await getQuotaUsage()
-      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
-      expect(usage.monthly.current.budibaseAICredits).toBe(0)
-
       const gptResponse = generator.guid()
       const structuredOutput = toResponseFormat(
         z.object({
           [generator.word()]: z.string(),
-        }),
-        "key"
+        })
       )
-      mockChatGPTResponse(gptResponse, { format: structuredOutput })
+      mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         format: structuredOutput,
@@ -499,22 +348,28 @@ describe("BudibaseAI", () => {
           content: gptResponse,
         },
       ])
-
-      usage = await getQuotaUsage()
-      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
   })
 
   describe("POST /api/ai/tables", () => {
+    let cleanupDefaultConfig: (() => Promise<void>) | undefined
+
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
+      cleanupDefaultConfig = await setupDefaultCompletionsAIConfig(config)
+    })
+
+    afterEach(async () => {
+      if (cleanupDefaultConfig) {
+        await cleanupDefaultConfig()
+      }
     })
 
     const mockAIGenerationStructure = (
       generationStructure: ai.GenerationStructure
     ) => {
-      mockChatGPTResponse(JSON.stringify(generationStructure), {
+      mockAISDKChatGPTResponse(JSON.stringify(generationStructure), {
         format: toResponseFormat(ai.generationStructure),
       })
     }
@@ -523,7 +378,7 @@ describe("BudibaseAI", () => {
       generationStructure: ai.GenerationStructure,
       aiColumnGeneration: ai.AIColumnSchemas
     ) =>
-      mockChatGPTResponse(JSON.stringify(aiColumnGeneration), {
+      mockAISDKChatGPTResponse(JSON.stringify(aiColumnGeneration), {
         format: toResponseFormat(
           ai.aiColumnSchemas(
             ai.aiTableResponseToTableSchema(generationStructure)
@@ -532,10 +387,15 @@ describe("BudibaseAI", () => {
       })
 
     const mockDataGeneration = (
+      generationStructure: ai.GenerationStructure,
       dataGeneration: Record<string, Record<string, any>[]>
     ) =>
-      mockChatGPTResponse(JSON.stringify(dataGeneration), {
-        format: toResponseFormat(ai.tableDataStructuredOutput([])),
+      mockAISDKChatGPTResponse(JSON.stringify(dataGeneration), {
+        format: toResponseFormat(
+          ai.tableDataStructuredOutput(
+            ai.aiTableResponseToTableSchema(generationStructure)
+          )
+        ),
       })
 
     const mockProcessAIColumn = (response: string) =>
@@ -684,61 +544,69 @@ describe("BudibaseAI", () => {
       mockAIColumnGeneration(generationStructure, aiColumnGeneration)
 
       // Use nock for image downloads since it intercepts before undici
-      nock("https://photourl.com")
-        .get("/any.png")
+      nock("https://picsum.photos")
+        .get("/600/600")
         .times(5) // 5 employee photos
         .reply(200, Buffer.from("fake image data"))
 
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Tickets: [
           {
+            _id: "ticket_1",
             Title: "System slow performance",
             Description:
               "User reports significant slowdowns when using multiple applications simultaneously on their PC.",
             Priority: "Medium",
             Status: "Closed",
             "Created Date": "2025-04-17",
+            Assignee: [],
             Attachment: {
-              name: "performance_logs.txt",
+              fileName: "performance_logs.txt",
               extension: ".txt",
               content: "performance logs",
             },
           },
           {
+            _id: "ticket_2",
             Title: "Email delivery failure",
             Description:
               "Emails sent to external clients are bouncing back. Bounce back message: '550: Recipient address rejected'.",
             Priority: "Medium",
             Status: "In Progress",
             "Created Date": "2025-04-19",
+            Assignee: [],
             Attachment: {
-              name: "email_bounce_back.txt",
+              fileName: "email_bounce_back.txt",
               extension: ".txt",
               content: "Email delivery failure",
             },
           },
           {
+            _id: "ticket_3",
             Title: "Software installation request",
             Description:
               "Request to install Adobe Photoshop on user’s workstation for design work.",
             Priority: "Low",
             Status: "In Progress",
             "Created Date": "2025-04-18",
+            Assignee: [],
             Attachment: {
-              name: "software_request_form.pdf",
+              fileName: "software_request_form.pdf",
               extension: ".pdf",
               content: "Software installation request",
             },
           },
           {
+            _id: "ticket_4",
             Title: "Unable to connect to VPN",
             Description:
               "User is experiencing issues when trying to connect to the VPN. Error message: 'VPN connection failed due to incorrect credentials'.",
             Priority: "High",
             Status: "Open",
             "Created Date": "2025-04-20",
+            Assignee: [],
             Attachment: {
-              name: "vpn_error_screenshot.pdf",
+              fileName: "vpn_error_screenshot.pdf",
               extension: ".pdf",
               content: "vpn error",
             },
@@ -746,95 +614,100 @@ describe("BudibaseAI", () => {
         ],
         Employees: [
           {
+            _id: "employee_1",
             "First Name": "Joshua",
             "Last Name": "Lee",
             Position: "Application Developer",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "development_guidelines.pdf",
+                fileName: "development_guidelines.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "project_documents.txt",
+                fileName: "project_documents.txt",
                 extension: ".txt",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_2",
             "First Name": "Emily",
             "Last Name": "Davis",
             Position: "Software Deployment Technician",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "software_license_list.txt",
+                fileName: "software_license_list.txt",
                 extension: ".txt",
                 content: "any content",
               },
               {
-                name: "deployment_guide.pdf",
+                fileName: "deployment_guide.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "installation_logs.txt",
+                fileName: "installation_logs.txt",
                 extension: ".txt",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_3",
             "First Name": "James",
             "Last Name": "Smith",
             Position: "IT Support Specialist",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "certificates.pdf",
+                fileName: "certificates.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "employment_contract.pdf",
+                fileName: "employment_contract.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_4",
             "First Name": "Jessica",
             "Last Name": "Taylor",
             Position: "Cybersecurity Analyst",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "security_audit_report.pdf",
+                fileName: "security_audit_report.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
               {
-                name: "incident_response_plan.pdf",
+                fileName: "incident_response_plan.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
             ],
           },
           {
+            _id: "employee_5",
             "First Name": "Ashley",
             "Last Name": "Harris",
             Position: "Database Administrator",
-            Photo: "https://photourl.com/any.png",
+            Photo: "https://picsum.photos/600/600",
             Documents: [
               {
-                name: "database_backup.txt",
+                fileName: "database_backup.txt",
                 extension: ".txt",
                 content: "any content",
               },
               {
-                name: "permission_settings.pdf",
+                fileName: "permission_settings.pdf",
                 extension: ".pdf",
                 content: "any content",
               },
@@ -842,7 +715,7 @@ describe("BudibaseAI", () => {
           },
         ],
       }
-      mockDataGeneration(dataGeneration)
+      mockDataGeneration(generationStructure, dataGeneration)
 
       // Set up interceptors for AI column processing
       // Tickets: 4 rows × 2 AI columns = 8 calls
@@ -913,7 +786,6 @@ describe("BudibaseAI", () => {
               name: "Created Date",
               type: "datetime",
               ignoreTimezones: false,
-              dateOnly: true,
               aiGenerated: true,
             },
             "Resolution Time (Days)": {
@@ -1053,7 +925,7 @@ describe("BudibaseAI", () => {
       const dataGeneration: Record<string, Record<string, any>[]> = {
         Employees: [],
       }
-      mockDataGeneration(dataGeneration)
+      mockDataGeneration(generationStructure, dataGeneration)
 
       await expect(config.api.ai.generateTables({ prompt })).rejects.toThrow(
         "Self-referential relationships are not supported. Table Employees cannot link to itself."
@@ -1111,12 +983,11 @@ describe("BudibaseAI", () => {
     })
 
     it("handles OpenAI API errors", async () => {
-      mockOpenAIFileUpload("", {
+      mockOpenAIFileUpload("file-invalid", {
         status: 400,
         error: {
           error: {
             message: "Invalid file format",
-            type: "invalid_request_error",
           },
         },
       })
@@ -1154,7 +1025,6 @@ describe("BudibaseAI", () => {
     let licenseKey = "test-key"
     let internalApiKey = "api-key"
     let envCleanup: () => void
-    let cleanup: () => Promise<void> | void
 
     beforeAll(async () => {
       envCleanup = setEnv({
@@ -1170,11 +1040,6 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      cleanup = await customAIConfig({
-        provider: "OpenAI",
-        defaultModel: "gpt-5-mini",
-        apiKey: "test-key",
-      })(config)
       const license: License = {
         plan: {
           type: PlanType.FREE,
@@ -1188,11 +1053,6 @@ describe("BudibaseAI", () => {
       nock(env.ACCOUNT_PORTAL_URL)
         .get(`/api/license/${licenseKey}`)
         .reply(200, license)
-    })
-
-    afterEach(async () => {
-      await cleanup?.()
-      jest.clearAllMocks()
     })
 
     it("proxies the OpenAI response without reshaping", async () => {

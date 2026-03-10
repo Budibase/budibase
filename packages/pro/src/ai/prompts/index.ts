@@ -5,8 +5,6 @@ import {
   SummariseLength,
 } from "@budibase/types"
 import { LLMRequest } from "../llm"
-import { ChatCompletionContentPart } from "openai/resources/chat/completions"
-import { z } from "zod"
 import { AgentPromptOptions } from "../../types"
 
 export interface AutomationAgentToolGuideline {
@@ -35,92 +33,6 @@ export function summarizeText(text: string, length?: SummariseLength) {
   )
 }
 
-export function extractFileData(
-  schema: Record<string, any>,
-  fileIdOrDataUrl: string,
-  supportsFile: boolean
-) {
-  if (typeof fileIdOrDataUrl !== "string" || !fileIdOrDataUrl.trim()) {
-    throw new Error("Invalid file reference returned from uploadFile")
-  }
-
-  const prompt = [
-    "You are a data extraction assistant.",
-    `Extract data from the attached document/image that matches the provided schema.`,
-    "The schema defines the structure where values like 'string', 'number', 'boolean' indicate the expected data types.",
-    "Extract all items that match the schema from the document.",
-    "Return the data in json format. This array should never have more than 1 element.",
-    "If no matching data is found, return an empty data array.",
-  ].join("\n\n")
-
-  // Check if it's a base64 data URL (for images) or a file ID (for documents)
-  const isDataUrl = fileIdOrDataUrl.startsWith("data:")
-
-  const content: ChatCompletionContentPart[] = isDataUrl
-    ? [
-        {
-          type: "image_url",
-          image_url: {
-            url: fileIdOrDataUrl,
-          },
-        },
-        { type: "text", text: prompt },
-      ]
-    : supportsFile
-      ? [
-          {
-            type: "file",
-            file: {
-              file_id: fileIdOrDataUrl,
-            },
-          },
-          { type: "text", text: prompt },
-        ]
-      : [{ type: "text", text: `${prompt}\n\nFile ID: ${fileIdOrDataUrl}` }]
-
-  // We create a structured zod schema from the user object
-  const zodSchema = createZodSchemaFromRecord(schema)
-  const responseSchema = z.object({
-    data: z.array(zodSchema).max(1),
-  })
-
-  return new LLMRequest()
-    .addMessages([
-      {
-        role: "user",
-        content,
-      },
-    ])
-    .withFormat(responseSchema)
-}
-
-function createZodSchemaFromRecord(
-  schema: Record<string, any>
-): z.ZodType<any> {
-  const zodFields: Record<string, z.ZodType<any>> = {}
-
-  for (const [key, type] of Object.entries(schema)) {
-    if (typeof type === "string") {
-      switch (type.toLowerCase()) {
-        case "string":
-          zodFields[key] = z.string()
-          break
-        case "number":
-          zodFields[key] = z.number()
-          break
-        case "boolean":
-          zodFields[key] = z.boolean()
-          break
-        default:
-          zodFields[key] = z.string()
-      }
-    } else {
-      zodFields[key] = z.string()
-    }
-  }
-
-  return z.object(zodFields)
-}
 export function classifyText(text: string, categories: string[]) {
   return new LLMRequest().addUserMessage(
     `Return the category of this text: "${text}". Based on these categories: ${categories.join(
@@ -132,18 +44,6 @@ export function classifyText(text: string, categories: string[]) {
 export function cleanData(text: string) {
   return new LLMRequest().addUserMessage(
     `Clean the following string: "${text}". Remove any spelling mistakes or data issues. Only return the cleaned string itself and nothing else.`
-  )
-}
-
-export function generateSQL(prompt: string, tableSchema: string) {
-  return new LLMRequest().addUserMessage(
-    `Given the table schema:\n${tableSchema}\n\nGenerate a SQL query for the following request:\n${prompt}.\n Only provide the SQL.`
-  )
-}
-
-export function generateCode(prompt: string) {
-  return new LLMRequest().addUserMessage(
-    `Generate JavaScript code for the following request:\n${prompt}.\n Only provide the JS and nothing else.`
   )
 }
 
@@ -292,7 +192,12 @@ Always return at least 2 tables, and define only one side of relationships using
 Exclude id, created_at, and updated_at (Budibase adds them).
 Include a variety of column types: text, dropdown, date, number.
 Add at least one formula column, one attachment, and one multi-attachment column across the tables.
+Use the exact Budibase field type names from the schema.
+Single attachment must use type "attachment_single".
+Multi-attachment must use type "attachment", never "attachments".
+Multi-image must use type "attachment" with subtype "image".
 Budibase handles reverse relationships and many-to-many links — never define join tables or reverse fields.
+Never reference pre-existing/internal Budibase tables in relationships. Relationships must only reference table names generated in this same response.
 You may specify foreignColumnName, but do not create that field manually.
 `
 
@@ -300,7 +205,19 @@ You may specify foreignColumnName, but do not create that field manually.
 }
 
 export function generateAIColumns() {
-  const tablesMessage = `Given the generated schema, add only one field of type "AI" to relevant tables to add value to the Budibase user.`
+  const tablesMessage = `
+Given the generated schema, add only one field of type "ai" to relevant tables to add value to the Budibase user.
+Use the exact Budibase AI operation enum values from the schema.
+The field type itself must be exactly "ai" in lowercase, never "AI".
+- translation must use operation "TRANSLATE"
+- categorisation must use operation "CATEGORISE_TEXT"
+- summarisation must use operation "SUMMARISE_TEXT"
+Do not use lowercase operation names like "translate", "categorize", or "summarize".
+For "TRANSLATE", provide both "column" and "language".
+For "CATEGORISE_TEXT", provide both "columns" and "categories".
+For "SUMMARISE_TEXT", provide "columns".
+Only use table keys and column names that exist in the generated schema.
+`
 
   return new LLMRequest().addSystemMessage(tablesMessage)
 }
@@ -309,6 +226,13 @@ export function generateData() {
   const dataMessage = `
 For each table, populate the data field with realistic-looking sample records.
 Avoid placeholder values like "foo" or "bar". Use real names, emails, etc., and ensure values are unique across rows.
+Keep the dataset compact for speed: target 2-6 rows per table unless the prompt explicitly asks for more.
+For image fields, use only these exact URLs:
+- "https://picsum.photos/600/600" for profile pictures and similar
+- "https://picsum.photos/1920/1080" for other images
+Do not use any other image URLs.
+For non-image attachments, return attachment objects with "fileName", "extension", and "content".
+Only use ".pdf" or ".txt" as attachment extensions.
 `
 
   return new LLMRequest().addSystemMessage(dataMessage)

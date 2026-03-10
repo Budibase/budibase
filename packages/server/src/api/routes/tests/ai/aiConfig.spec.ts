@@ -42,7 +42,30 @@ const mockLiteLLMProviders = () =>
           { key: "api_base", label: "Base URL", field_type: "text" },
         ],
       },
+      {
+        provider: "groq",
+        provider_display_name: "Groq",
+        litellm_provider: "groq",
+        credential_fields: [
+          { key: "api_key", label: "API Key", field_type: "password" },
+        ],
+      },
     ])
+
+const mockLiteLLMModelCostMap = () =>
+  nock(environment.LITELLM_URL)
+    .persist()
+    .get("/public/litellm_model_cost_map")
+    .reply(200, {
+      "gpt-4o-mini": { litellm_provider: "openai", mode: "chat" },
+      "text-embedding-3-small": {
+        litellm_provider: "openai",
+        mode: "embedding",
+      },
+      "claude-3-5-haiku": { litellm_provider: "anthropic", mode: "chat" },
+      "gpt-4o": { litellm_provider: ["openai", "azure"], mode: "responses" },
+      "groq/qwen/qwen3-32b": { litellm_provider: "groq", mode: "chat" },
+    })
 
 const mockLiteLLMTeam = () =>
   nock(environment.LITELLM_URL)
@@ -99,7 +122,29 @@ describe("BudibaseAI", () => {
       nock.cleanAll()
 
       mockLiteLLMProviders()
+      mockLiteLLMModelCostMap()
       mockLiteLLMTeam()
+    })
+
+    it("fetches provider-specific models from LiteLLM cost map", async () => {
+      const providers = await config.api.ai.fetchProviders()
+      const openAIProvider = providers.find(
+        provider => provider.id === "OpenAI"
+      )
+      expect(openAIProvider).toMatchObject({
+        models: {
+          completions: ["gpt-4o", "gpt-4o-mini"],
+          embeddings: ["text-embedding-3-small"],
+        },
+      })
+
+      const groqProvider = providers.find(provider => provider.id === "groq")
+      expect(groqProvider).toMatchObject({
+        models: {
+          completions: ["qwen/qwen3-32b"],
+          embeddings: [],
+        },
+      })
     })
 
     it("creates a custom config and sanitizes the API key", async () => {

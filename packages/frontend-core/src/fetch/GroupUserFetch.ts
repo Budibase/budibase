@@ -41,6 +41,7 @@ export default class GroupUserFetch extends BaseDataFetch<
   }
 
   async getData() {
+    const { limit } = this.options
     const { query, cursor } = get(this.store)
 
     try {
@@ -48,6 +49,7 @@ export default class GroupUserFetch extends BaseDataFetch<
         id: query.groupId,
         emailSearch: query.emailSearch,
         bookmark: cursor ?? undefined,
+        pageSize: limit,
       })
 
       return {

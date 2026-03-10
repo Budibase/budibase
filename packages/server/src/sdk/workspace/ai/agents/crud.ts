@@ -8,7 +8,7 @@ import type {
 import { helpers } from "@budibase/shared-core"
 import { listAgentFiles, removeAgentFile } from "./files"
 
-const DISCORD_SECRET_MASK = "********"
+const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
 const encodeSecret = (value?: string): string | undefined => {
@@ -53,11 +53,40 @@ const decodeDiscordIntegrationSecrets = (
   }
 }
 
+const encodeSlackIntegrationSecrets = (
+  slackIntegration?: Agent["slackIntegration"]
+) => {
+  if (!slackIntegration) {
+    return slackIntegration
+  }
+
+  return {
+    ...slackIntegration,
+    botToken: encodeSecret(slackIntegration.botToken),
+    signingSecret: encodeSecret(slackIntegration.signingSecret),
+  }
+}
+
+const decodeSlackIntegrationSecrets = (
+  slackIntegration?: Agent["slackIntegration"]
+) => {
+  if (!slackIntegration) {
+    return slackIntegration
+  }
+
+  return {
+    ...slackIntegration,
+    botToken: decodeSecret(slackIntegration.botToken),
+    signingSecret: decodeSecret(slackIntegration.signingSecret),
+  }
+}
+
 const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
   discordIntegration: decodeDiscordIntegrationSecrets(agent.discordIntegration),
+  slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
 })
 
 const mergeDiscordIntegration = ({
@@ -79,12 +108,68 @@ const mergeDiscordIntegration = ({
     ...incoming,
   }
 
-  if (incoming.publicKey === DISCORD_SECRET_MASK && existing?.publicKey) {
+  if (incoming.publicKey === SECRET_MASK && existing?.publicKey) {
     merged.publicKey = existing.publicKey
   }
 
-  if (incoming.botToken === DISCORD_SECRET_MASK && existing?.botToken) {
+  if (incoming.botToken === SECRET_MASK && existing?.botToken) {
     merged.botToken = existing.botToken
+  }
+
+  return merged
+}
+
+const mergeMSTeamsIntegration = ({
+  existing,
+  incoming,
+}: {
+  existing?: Agent["MSTeamsIntegration"]
+  incoming?: Agent["MSTeamsIntegration"]
+}) => {
+  if (incoming === undefined) {
+    return existing
+  }
+  if (!incoming) {
+    return incoming
+  }
+
+  const merged = {
+    ...(existing || {}),
+    ...incoming,
+  }
+
+  if (incoming.appPassword === SECRET_MASK && existing?.appPassword) {
+    merged.appPassword = existing.appPassword
+  }
+
+  return merged
+}
+
+const mergeSlackIntegration = ({
+  existing,
+  incoming,
+}: {
+  existing?: Agent["slackIntegration"]
+  incoming?: Agent["slackIntegration"]
+}) => {
+  if (incoming === undefined) {
+    return existing
+  }
+  if (!incoming) {
+    return incoming
+  }
+
+  const merged = {
+    ...(existing || {}),
+    ...incoming,
+  }
+
+  if (incoming.botToken === SECRET_MASK && existing?.botToken) {
+    merged.botToken = existing.botToken
+  }
+
+  if (incoming.signingSecret === SECRET_MASK && existing?.signingSecret) {
+    merged.signingSecret = existing.signingSecret
   }
 
   return merged
@@ -141,6 +226,8 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     ragMinDistance: request.ragMinDistance,
     ragTopK: request.ragTopK,
     discordIntegration: request.discordIntegration,
+    MSTeamsIntegration: request.MSTeamsIntegration,
+    slackIntegration: request.slackIntegration,
   }
 
   const { rev } = await db.put({
@@ -148,6 +235,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     discordIntegration: encodeDiscordIntegrationSecrets(
       agent.discordIntegration
     ),
+    slackIntegration: encodeSlackIntegrationSecrets(agent.slackIntegration),
   })
   agent._rev = rev
   return withAgentDefaults(agent)
@@ -201,6 +289,14 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,
     }),
+    MSTeamsIntegration: mergeMSTeamsIntegration({
+      existing: existing?.MSTeamsIntegration,
+      incoming: agent.MSTeamsIntegration,
+    }),
+    slackIntegration: mergeSlackIntegration({
+      existing: existing?.slackIntegration,
+      incoming: agent.slackIntegration,
+    }),
   }
 
   const { rev } = await db.put({
@@ -208,6 +304,7 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
     discordIntegration: encodeDiscordIntegrationSecrets(
       updated.discordIntegration
     ),
+    slackIntegration: encodeSlackIntegrationSecrets(updated.slackIntegration),
   })
   updated._rev = rev
   return withAgentDefaults(updated)

@@ -52,9 +52,9 @@ export const BudibaseRoleOptionsOld = [
 ]
 export const BudibaseRoleOptions = [
   {
-    label: "Tenant admin",
+    label: "Organisation admin",
     value: BudibaseRoles.Admin,
-    subtitle: "Has full access to all workspaces in your tenant",
+    subtitle: "Can change settings and access all workspaces.",
     sortOrder: 1,
   },
   {

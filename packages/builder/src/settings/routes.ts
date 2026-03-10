@@ -144,13 +144,6 @@ export const orgRoutes = (
       routes: emailRoutes,
     },
     {
-      section: "AI",
-      access: () => isAdmin,
-      path: "ai",
-      icon: "sparkle",
-      comp: Pages.get("ai"),
-    },
-    {
       section: "Auth",
       access: () => isAdmin,
       path: "auth",
@@ -286,10 +279,9 @@ export const appRoutes = (
       ],
     },
     {
-      section: "AI config",
+      section: "AI",
       path: "ai-config",
       icon: "sparkle",
-      access: () => featureFlag.isEnabled("AI_AGENTS"),
       routes: [
         {
           path: AIConfigType.COMPLETIONS,

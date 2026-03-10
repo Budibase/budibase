@@ -22,9 +22,8 @@
   } from "@budibase/bbui"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
   import EditableLabel from "@/components/common/inputs/EditableLabel.svelte"
-  import CodeMirrorEditor, {
-    EditorModes,
-  } from "@/components/common/CodeMirrorEditor.svelte"
+  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import { EditorModes } from "@/components/common/CodeEditor"
   import RestBodyInput from "./RestBodyInput.svelte"
   import { capitalise, confirm } from "@/helpers"
   import { onMount } from "svelte"
@@ -744,13 +743,14 @@
                   Add a JavaScript function to transform the query result.
                 </Banner>
               {/if}
-              <CodeMirrorEditor
-                height={200}
-                mode={EditorModes.JSON}
-                value={query.transformer}
-                resize="vertical"
-                on:change={e => (query.transformer = e.detail)}
-              />
+              <div class="embed">
+                <CodeEditor
+                  value={query.transformer}
+                  mode={EditorModes.JS}
+                  aiEnabled={false}
+                  on:change={e => (query.transformer = e.detail)}
+                />
+              </div>
             </Layout>
           </Tab>
           <div class="auth-container">
@@ -969,5 +969,16 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-m);
+  }
+
+  .embed :global(.cm-editor) {
+    min-height: 200px;
+    border: 1px solid var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
+  }
+
+  .embed :global(.cm-gutters) {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
   }
 </style>
