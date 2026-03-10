@@ -27,6 +27,7 @@ export const CLOUD_FREE_LICENSE: License = {
       },
     },
     constant: {
+      ...quotas.agentLogRetentionDays(1),
       ...quotas.automationLogRetentionDays(1),
       ...quotas.appBackupRetentionDays(0),
     },
@@ -62,6 +63,7 @@ export const SELF_FREE_LICENSE: License = {
       },
     },
     constant: {
+      ...quotas.agentLogRetentionDays(1),
       ...quotas.automationLogRetentionDays(1),
       ...quotas.appBackupRetentionDays(0),
     },
@@ -97,6 +99,7 @@ export const UNLIMITED_LICENSE: License = {
       },
     },
     constant: {
+      ...quotas.agentLogRetentionDays(UNLIMITED),
       ...quotas.automationLogRetentionDays(UNLIMITED),
       ...quotas.appBackupRetentionDays(UNLIMITED),
     },

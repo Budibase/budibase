@@ -1,27 +1,21 @@
 import fetch from "node-fetch"
-import { context } from "@budibase/backend-core"
+import cloneDeep from "lodash/cloneDeep"
+import { constants, context } from "@budibase/backend-core"
+import { mocks } from "@budibase/backend-core/tests"
+import { licensing } from "@budibase/pro"
 import { getAvailableTools, getOrThrow } from "./agents"
 import { AGENT_LOG_SESSION_TABLE_ID } from "../sqs/staticTables"
-import * as tableSqs from "../tables/internal/sqs"
+import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import type { AgentLogSessionIndexDoc } from "@budibase/types"
 import {
+  addSessionLog,
+  clearOldHistory,
   fetchRequestDetail,
   fetchSessions,
   fetchSessionDetail,
-  addSessionLog,
+  getExpiredSessions,
+  oldestLogDate,
 } from "./agentLogs"
-
-jest.mock("@budibase/backend-core", () => {
-  const actual = jest.requireActual("@budibase/backend-core")
-  return {
-    ...actual,
-    context: {
-      ...actual.context,
-      getWorkspaceDB: jest.fn(),
-      getDevWorkspaceDB: jest.fn(),
-      getProdWorkspaceDB: jest.fn(),
-    },
-  }
-})
 
 jest.mock("node-fetch", () => jest.fn())
 jest.mock("./agents", () => ({
@@ -29,46 +23,36 @@ jest.mock("./agents", () => ({
   getOrThrow: jest.fn(),
   getToolDisplayNames: jest.fn().mockReturnValue({}),
 }))
-jest.mock("../tables/internal/sqs", () => ({
-  ensureStaticTables: jest.fn().mockResolvedValue(undefined),
-}))
 
-interface InMemoryDoc {
-  _id: string
-  _rev?: string
-  [key: string]: any
+function getSessionDocId(agentId: string, sessionId: string): string {
+  return `agentlogsession_${encodeURIComponent(agentId)}_${encodeURIComponent(
+    sessionId
+  )}`
 }
 
-function createInMemoryDb() {
-  const docs = new Map<string, InMemoryDoc>()
+function createSessionDoc(
+  overrides: Partial<AgentLogSessionIndexDoc> & {
+    agentId: string
+    sessionId: string
+    startTime: string
+    lastActivityAt: string
+  }
+): AgentLogSessionIndexDoc {
+  const now = new Date().toISOString()
 
   return {
-    docs,
-    tryGet: jest.fn(async (id: string) => docs.get(id)),
-    put: jest.fn(async (doc: InMemoryDoc) => {
-      const existing = docs.get(doc._id)
-
-      if (existing) {
-        if (!doc._rev || doc._rev !== existing._rev) {
-          const error: any = new Error("conflict")
-          error.status = 409
-          throw error
-        }
-      }
-
-      const currentRev = existing?._rev ? Number.parseInt(existing._rev, 10) : 0
-      const nextRev = String(currentRev + 1)
-      const stored = { ...doc, _rev: nextRev }
-      docs.set(doc._id, stored)
-      return {
-        ok: true,
-        id: doc._id,
-        rev: nextRev,
-      }
-    }),
-    sql: jest.fn(
-      async (_query: string, _bindings: any[]) => [] as InMemoryDoc[]
-    ),
+    _id: getSessionDocId(overrides.agentId, overrides.sessionId),
+    tableId: AGENT_LOG_SESSION_TABLE_ID,
+    type: "agent_log_session",
+    trigger: "Chat",
+    isPreview: false,
+    firstInput: "",
+    requestIds: JSON.stringify([]),
+    operations: 1,
+    status: "success",
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
   }
 }
 
@@ -155,30 +139,46 @@ function liteLLMSessionResponse(
 }
 
 describe("agentLogs", () => {
+  const config = new TestConfiguration()
   const fetchMock = fetch as jest.MockedFunction<typeof fetch>
-  const mockGetWorkspaceDB = context.getWorkspaceDB as jest.MockedFunction<
-    typeof context.getWorkspaceDB
-  >
-  const mockGetDevWorkspaceDB =
-    context.getDevWorkspaceDB as jest.MockedFunction<
-      typeof context.getDevWorkspaceDB
-    >
-  const mockGetProdWorkspaceDB =
-    context.getProdWorkspaceDB as jest.MockedFunction<
-      typeof context.getProdWorkspaceDB
-    >
   const getAvailableToolsMock = getAvailableTools as jest.MockedFunction<
     typeof getAvailableTools
   >
   const getOrThrowMock = getOrThrow as jest.MockedFunction<typeof getOrThrow>
-  const ensureStaticTablesMock = jest.mocked(tableSqs.ensureStaticTables)
 
-  beforeEach(() => {
+  const withWorkspace = async <T>(task: () => Promise<T>): Promise<T> => {
+    return await config.doInContext(config.getProdWorkspaceId(), task)
+  }
+
+  const saveSessionDoc = async (doc: AgentLogSessionIndexDoc) => {
+    return await withWorkspace(async () => {
+      const response = await context.getWorkspaceDB().put(doc)
+      return {
+        ...doc,
+        _rev: response.rev,
+      }
+    })
+  }
+
+  const getSessionDoc = async (agentId: string, sessionId: string) => {
+    return await withWorkspace(async () => {
+      return await context
+        .getWorkspaceDB()
+        .tryGet<AgentLogSessionIndexDoc>(getSessionDocId(agentId, sessionId))
+    })
+  }
+
+  beforeAll(async () => {
+    await config.init("agent-logs")
+  })
+
+  beforeEach(async () => {
+    await config.newTenant()
     jest.clearAllMocks()
-    mockGetWorkspaceDB.mockReset()
-    mockGetDevWorkspaceDB.mockReset()
-    mockGetProdWorkspaceDB.mockReset()
-    ensureStaticTablesMock.mockResolvedValue(undefined)
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date("2026-03-09T12:00:00.000Z"))
+    mocks.licenses.useUnlimited()
+
     fetchMock.mockImplementation(async (url: any) => {
       const path = String(url)
       if (path.includes("/spend/logs/v2")) {
@@ -202,34 +202,37 @@ describe("agentLogs", () => {
     } as Awaited<ReturnType<typeof getOrThrow>>)
   })
 
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
   it("indexes request/session docs idempotently", async () => {
-    const db = createInMemoryDb()
-    mockGetWorkspaceDB.mockReturnValue(db as any)
-    fetchMock.mockResolvedValue(liteLLMSummaryResponse({ requestId: "req-1" }))
-
-    await addSessionLog({
-      agentId: "agent-1",
-      sessionId: "chatconvo_1",
-      requestIds: ["req-1"],
-      firstInput: "Hello",
-      startedAt: "2026-03-08T09:00:00.000Z",
-      completedAt: "2026-03-08T09:00:10.000Z",
-    })
-    await addSessionLog({
-      agentId: "agent-1",
-      sessionId: "chatconvo_1",
-      requestIds: ["req-1"],
-      firstInput: "Hello",
-      startedAt: "2026-03-08T09:00:00.000Z",
-      completedAt: "2026-03-08T09:00:10.000Z",
+    await withWorkspace(async () => {
+      await addSessionLog({
+        agentId: "agent-1",
+        sessionId: "chatconvo_1",
+        requestIds: ["req-1"],
+        firstInput: "Hello",
+        startedAt: "2026-03-08T09:00:00.000Z",
+        completedAt: "2026-03-08T09:00:10.000Z",
+      })
+      await addSessionLog({
+        agentId: "agent-1",
+        sessionId: "chatconvo_1",
+        requestIds: ["req-1"],
+        firstInput: "Hello",
+        startedAt: "2026-03-08T09:00:00.000Z",
+        completedAt: "2026-03-08T09:00:10.000Z",
+      })
     })
 
-    const sessionDocs = [...db.docs.values()].filter(
-      doc => doc.tableId === AGENT_LOG_SESSION_TABLE_ID
-    )
+    const sessionDoc = await getSessionDoc("agent-1", "chatconvo_1")
 
-    expect(sessionDocs).toHaveLength(1)
-    expect(sessionDocs[0]).toEqual(
+    expect(sessionDoc).toEqual(
       expect.objectContaining({
         sessionId: "chatconvo_1",
         operations: 1,
@@ -246,24 +249,18 @@ describe("agentLogs", () => {
   })
 
   it("returns session detail entries in chronological order", async () => {
-    const developmentDb = createInMemoryDb()
-    mockGetDevWorkspaceDB.mockReturnValue(developmentDb as any)
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-chronological",
+        trigger: "Automation",
+        startTime: "2026-03-08T10:00:00.000Z",
+        lastActivityAt: "2026-03-08T11:00:10.000Z",
+        requestIds: JSON.stringify(["req-old", "req-new"]),
+        operations: 2,
+      })
+    )
 
-    developmentDb.tryGet.mockResolvedValue({
-      _id: "session-1",
-      tableId: AGENT_LOG_SESSION_TABLE_ID,
-      type: "agent_log_session",
-      agentId: "agent-1",
-      sessionId: "session-chronological",
-      trigger: "Automation",
-      isPreview: false,
-      firstInput: "",
-      startTime: "2026-03-08T10:00:00.000Z",
-      lastActivityAt: "2026-03-08T11:00:10.000Z",
-      requestIds: JSON.stringify(["req-old", "req-new"]),
-      operations: 2,
-      status: "success",
-    })
     fetchMock.mockImplementation(async (url: any) => {
       const path = String(url)
       if (path.includes("/spend/logs/session/ui")) {
@@ -306,11 +303,14 @@ describe("agentLogs", () => {
       } as any
     })
 
-    const detail = await fetchSessionDetail(
-      "agent-1",
-      "session-chronological",
-      "development"
-    )
+    const detail = await withWorkspace(async () => {
+      return await fetchSessionDetail(
+        "agent-1",
+        "session-chronological",
+        "production"
+      )
+    })
+
     expect(detail?.entries.map(entry => entry.requestId)).toEqual([
       "req-old",
       "req-new",
@@ -319,36 +319,39 @@ describe("agentLogs", () => {
 
   it("rejects partially numeric bookmarks when fetching sessions", async () => {
     await expect(
-      fetchSessions(
-        "agent-1",
-        "2026-03-08T00:00:00.000Z",
-        "2026-03-08T23:59:59.999Z",
-        "123abc"
-      )
+      withWorkspace(async () => {
+        return await fetchSessions(
+          "agent-1",
+          "2026-03-08T00:00:00.000Z",
+          "2026-03-08T23:59:59.999Z",
+          "123abc"
+        )
+      })
     ).rejects.toMatchObject({
       status: 400,
       message: "Invalid bookmark query",
     })
   })
 
-  it("uses full-day UTC boundaries for date-only session filters", async () => {
-    const developmentDb = createInMemoryDb()
-    const productionDb = createInMemoryDb()
-    mockGetDevWorkspaceDB.mockReturnValue(developmentDb as any)
-    mockGetProdWorkspaceDB.mockReturnValue(productionDb as any)
+  it("calculates the oldest log date from the retention quota", async () => {
+    mocks.licenses.setAgentLogsQuota(7)
 
-    await fetchSessions("agent-1", "2026-03-08", "2026-03-09")
+    await expect(oldestLogDate()).resolves.toBe("2026-03-02T12:00:00.000Z")
+  })
 
-    expect(developmentDb.sql).toHaveBeenCalledTimes(1)
-    expect(productionDb.sql).toHaveBeenCalledTimes(1)
-    expect(developmentDb.sql.mock.calls[0][1]).toEqual(
-      expect.arrayContaining([
-        "2026-03-08T00:00:00.000Z",
-        "2026-03-09T23:59:59.999Z",
-      ])
+  it("treats a missing retention quota as unlimited", async () => {
+    const license = cloneDeep(await licensing.cache.getCachedLicense())
+    if (license.quotas?.constant) {
+      Reflect.deleteProperty(
+        license.quotas.constant,
+        "agentLogRetentionDays"
+      )
+    }
+    mocks.licenses.useLicense(license)
+
+    await expect(oldestLogDate()).resolves.toBe(
+      constants.MIN_VALID_DATE.toISOString()
     )
-    expect(ensureStaticTablesMock).toHaveBeenCalledWith(developmentDb)
-    expect(ensureStaticTablesMock).toHaveBeenCalledWith(productionDb)
   })
 
   it("rejects session queries that exceed the maximum scan window", async () => {
@@ -375,9 +378,118 @@ describe("agentLogs", () => {
     })
   })
 
+  it("treats a zero retention quota as unlimited", async () => {
+    mocks.licenses.setAgentLogsQuota(0)
+
+    await expect(oldestLogDate()).resolves.toBe(
+      constants.MIN_VALID_DATE.toISOString()
+    )
+  })
+
+  it("finds expired session docs using lastActivityAt", async () => {
+    mocks.licenses.setAgentLogsQuota(7)
+
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-old",
+        startTime: "2026-03-01T08:00:00.000Z",
+        lastActivityAt: "2026-03-01T08:00:00.000Z",
+      })
+    )
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-new",
+        startTime: "2026-03-08T08:00:00.000Z",
+        lastActivityAt: "2026-03-08T08:00:00.000Z",
+      })
+    )
+
+    const expired = await withWorkspace(async () => {
+      return await getExpiredSessions()
+    })
+
+    expect(expired.map(session => session.sessionId)).toEqual(["session-old"])
+  })
+
+  it("clears expired indexed session docs and leaves newer ones", async () => {
+    mocks.licenses.setAgentLogsQuota(7)
+
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-old",
+        startTime: "2026-03-01T08:00:00.000Z",
+        lastActivityAt: "2026-03-01T08:00:00.000Z",
+      })
+    )
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-new",
+        startTime: "2026-03-08T08:00:00.000Z",
+        lastActivityAt: "2026-03-08T08:00:00.000Z",
+      })
+    )
+
+    await withWorkspace(async () => {
+      await clearOldHistory()
+    })
+
+    await expect(
+      getSessionDoc("agent-1", "session-old")
+    ).resolves.toBeUndefined()
+    await expect(getSessionDoc("agent-1", "session-new")).resolves.toEqual(
+      expect.objectContaining({
+        sessionId: "session-new",
+      })
+    )
+  })
+
+  it("returns only sessions inside the retention window", async () => {
+    mocks.licenses.setAgentLogsQuota(7)
+
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-old",
+        firstInput: "Old question",
+        startTime: "2026-03-01T08:00:00.000Z",
+        lastActivityAt: "2026-03-01T08:00:00.000Z",
+      })
+    )
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-new",
+        firstInput: "New question",
+        startTime: "2026-03-08T08:00:00.000Z",
+        lastActivityAt: "2026-03-08T08:00:00.000Z",
+        operations: 2,
+      })
+    )
+
+    const response = await withWorkspace(async () => {
+      return await fetchSessions(
+        "agent-1",
+        "2026-02-20T00:00:00.000Z",
+        "2026-03-09T23:59:59.000Z"
+      )
+    })
+
+    expect(response.sessions).toEqual([
+      expect.objectContaining({
+        sessionId: "session-new",
+        operations: 2,
+      }),
+    ])
+    await expect(
+      getSessionDoc("agent-1", "session-old")
+    ).resolves.toBeUndefined()
+  })
+
   it("rejects request detail when the returned user belongs to another agent", async () => {
-    const db = createInMemoryDb()
-    mockGetWorkspaceDB.mockReturnValue(db as any)
     fetchMock.mockResolvedValue(
       liteLLMPayloadResponse({
         requestId: "req-1",
@@ -385,7 +497,11 @@ describe("agentLogs", () => {
       })
     )
 
-    await expect(fetchRequestDetail("agent-1", "req-1")).rejects.toMatchObject({
+    await expect(
+      withWorkspace(async () => {
+        return await fetchRequestDetail("agent-1", "req-1")
+      })
+    ).rejects.toMatchObject({
       status: 404,
       message: "Agent log detail not found",
     })
@@ -395,18 +511,60 @@ describe("agentLogs", () => {
   })
 
   it("returns not found when LiteLLM does not return request detail", async () => {
-    const db = createInMemoryDb()
-    mockGetWorkspaceDB.mockReturnValue(db as any)
     fetchMock.mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue(null),
     } as any)
 
     await expect(
-      fetchRequestDetail("agent-1", "req-missing")
+      withWorkspace(async () => {
+        return await fetchRequestDetail("agent-1", "req-missing")
+      })
     ).rejects.toMatchObject({
       status: 404,
       message: "Agent log detail not found",
     })
+  })
+
+  it("returns live session detail when the index doc has been deleted", async () => {
+    fetchMock.mockImplementation(async (url: any) => {
+      const path = String(url)
+      if (path.includes("/spend/logs/session/ui")) {
+        return liteLLMSessionResponse([
+          {
+            request_id: "req-live",
+            session_id: "session-live",
+            startTime: "2026-03-08T11:00:00.000Z",
+            endTime: "2026-03-08T11:00:10.000Z",
+            prompt_tokens: 10,
+            completion_tokens: 20,
+            spend: 0.01,
+            model: "gpt-5",
+            end_user: "bb-agent:agent-1",
+            status: "success",
+          },
+        ])
+      }
+      return {
+        ok: true,
+        json: jest.fn().mockResolvedValue([]),
+      } as any
+    })
+
+    const detail = await withWorkspace(async () => {
+      return await fetchSessionDetail("agent-1", "session-live", "production")
+    })
+
+    expect(detail).toEqual(
+      expect.objectContaining({
+        sessionId: "session-live",
+        operations: 1,
+        entries: [
+          expect.objectContaining({
+            requestId: "req-live",
+          }),
+        ],
+      })
+    )
   })
 })

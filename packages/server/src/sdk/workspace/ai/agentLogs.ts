@@ -18,6 +18,7 @@ import type {
   SessionLogIndexer,
   Table,
 } from "@budibase/types"
+import { constants as proConstants, licensing } from "@budibase/pro"
 import {
   constants,
   context,
@@ -27,6 +28,7 @@ import {
   SQS_DATASOURCE_INTERNAL,
 } from "@budibase/backend-core"
 import {
+  ConstantQuotaName,
   DocumentType,
   FieldType,
   Operation,
@@ -52,6 +54,8 @@ const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 const DEFAULT_SESSION_PAGE_SIZE = 75
 const MAX_SESSION_PAGE_SIZE = 100
 const DEFAULT_BOOKMARK_PAGE = 1
+const EXPIRED_LIMIT = 100
+const ONE_DAY_MILLIS = 1000 * 60 * 60 * 24
 const MAX_SESSION_SCAN_LIMIT = 5000
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 const DEFAULT_INDEX_QUEUE_CONCURRENCY = 2
@@ -65,6 +69,26 @@ interface AgentLogIndexJob extends IndexAgentLogOperationInput {
 
 let agentLogIndexQueue: queue.BudibaseQueue<AgentLogIndexJob> | undefined
 let agentLogIndexQueueInitialised = false
+
+export async function oldestLogDate() {
+  const license = await licensing.cache.getCachedLicense()
+  const retentionDays =
+    license.quotas?.constant?.[ConstantQuotaName.AGENT_LOG_RETENTION_DAYS]
+      ?.value
+
+  if (
+    retentionDays === proConstants.licenses.UNLIMITED ||
+    retentionDays == null ||
+    !Number.isFinite(retentionDays) ||
+    retentionDays <= 0
+  ) {
+    return constants.MIN_VALID_DATE.toISOString()
+  }
+
+  return new Date(
+    new Date().getTime() - ONE_DAY_MILLIS * retentionDays
+  ).toISOString()
+}
 
 function getExpectedEndUser(agentId: string): string {
   return `bb-agent:${agentId}`
@@ -260,6 +284,14 @@ function getDateBoundaryISO(value: string, mode: "start" | "end"): string {
   )
 }
 
+function clampStartDate(startDate: string, maxStartDate: string): string {
+  const normalizedStartDate = getDateBoundaryISO(startDate, "start")
+  if (normalizedStartDate < maxStartDate) {
+    return maxStartDate
+  }
+  return normalizedStartDate
+}
+
 function encodeKeyPart(value: string): string {
   return encodeURIComponent(value)
 }
@@ -309,7 +341,7 @@ function agentLogSessionTable(): Table {
 async function querySql<T extends Document>(
   request: EnrichedQueryJson,
   table: Table,
-  db: ReturnType<typeof context.getWorkspaceDB>
+  db = context.getWorkspaceDB()
 ): Promise<T[]> {
   await tableSqs.ensureStaticTables(db)
 
@@ -323,6 +355,78 @@ async function querySql<T extends Document>(
     table,
     rows as Array<T & Record<string, unknown>>
   ) as T[]
+}
+
+export async function getExpiredSessions(): Promise<AgentLogSessionIndexDoc[]> {
+  const expiredEnd = await oldestLogDate()
+  const sessionTable = agentLogSessionTable()
+
+  return await querySql<AgentLogSessionIndexDoc>(
+    {
+      operation: Operation.READ,
+      table: sessionTable,
+      tables: {},
+      paginate: {
+        page: DEFAULT_BOOKMARK_PAGE,
+        limit: EXPIRED_LIMIT,
+      },
+      filters: {
+        range: {
+          lastActivityAt: {
+            high: expiredEnd,
+          },
+        },
+      },
+      resource: {
+        fields: [],
+      },
+      sort: {
+        lastActivityAt: {
+          direction: SortOrder.ASCENDING,
+          type: SortType.STRING,
+        },
+      },
+    },
+    sessionTable
+  )
+}
+
+export async function clearOldHistory(): Promise<void> {
+  const db = context.getWorkspaceDB()
+
+  try {
+    const expiredEnd = await oldestLogDate()
+    const expiredSessions = await getExpiredSessions()
+    if (!expiredSessions.length) {
+      return
+    }
+
+    const docs = await db.getMultiple<AgentLogSessionIndexDoc>(
+      expiredSessions.map(session => session._id),
+      { allowMissing: true }
+    )
+    const toDelete = docs
+      .filter(
+        doc =>
+          !!doc?._id &&
+          !!doc?._rev &&
+          new Date(doc.lastActivityAt).getTime() <=
+            new Date(expiredEnd).getTime()
+      )
+      .map(doc => ({
+        _id: doc._id!,
+        _rev: doc._rev!,
+        _deleted: true,
+      }))
+
+    if (!toDelete.length) {
+      return
+    }
+
+    await db.bulkDocs(toDelete)
+  } catch (error) {
+    console.log("Failed to cleanup agent log history", error)
+  }
 }
 
 function buildSessionFilters(
@@ -744,6 +848,7 @@ export async function addSessionLog(
     error.missingRequestIds = missingRequestIds
     throw error
   }
+  await clearOldHistory()
 }
 
 export function createSessionLogIndexer({
@@ -811,6 +916,11 @@ export async function fetchSessions(
   const pageStart = (page - 1) * pageSize
   const mergedLimit = getMergedSessionLimit(page, pageSize)
   const sessionTable = agentLogSessionTable()
+  const maxStartDate = await oldestLogDate()
+  const clampedStartDate = clampStartDate(startDate, maxStartDate)
+
+  await clearOldHistory()
+
   const query = {
     operation: Operation.READ,
     table: sessionTable,
@@ -821,7 +931,7 @@ export async function fetchSessions(
     },
     filters: buildSessionFilters(
       agentId,
-      startDate,
+      clampedStartDate,
       endDate,
       statusFilter,
       triggerFilter
