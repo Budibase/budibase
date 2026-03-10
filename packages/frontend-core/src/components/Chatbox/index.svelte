@@ -88,7 +88,12 @@
     isHoldingFirstResponse = false
   }
 
-  const startFirstResponseHold = () => {
+  const resetPendingResponse = () => {
+    clearFirstResponseHold()
+    isPreparingResponse = false
+  }
+
+  const holdFirstResponse = () => {
     clearFirstResponseHold()
     isHoldingFirstResponse = true
     firstResponseHoldTimer = setTimeout(() => {
@@ -246,8 +251,7 @@
       textareaElement?.focus()
     },
     onError: error => {
-      clearFirstResponseHold()
-      isPreparingResponse = false
+      resetPendingResponse()
 
       console.error(error)
       let message = error.message || "Failed to send message"
@@ -264,24 +268,28 @@
   })
 
   let messages = $derived(chatInstance.messages)
-  let visibleMessages = $derived(
+  let lastVisibleMessage = $derived(
     isHoldingFirstResponse
-      ? messages.filter(message => message.role !== "assistant")
-      : messages
+      ? messages.findLast(message => message.role !== "assistant")
+      : messages[messages.length - 1]
   )
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
-  let lastMessage = $derived(visibleMessages?.[visibleMessages.length - 1])
   let isRequestPending = $derived(
-    isPreparingResponse || isBusy || isHoldingFirstResponse
+    isPreparingResponse || isHoldingFirstResponse || isBusy
   )
   let showPendingAssistantState = $derived(
     isPreparingResponse ||
-      ((isBusy || isHoldingFirstResponse) && lastMessage?.role === "user")
+      ((isBusy || isHoldingFirstResponse) &&
+        lastVisibleMessage?.role === "user")
   )
   let canStart = $derived(inputValue.trim().length > 0)
-  let hasMessages = $derived(Boolean(visibleMessages?.length))
+  let hasMessages = $derived(
+    messages.some(
+      message => !isHoldingFirstResponse || message.role !== "assistant"
+    )
+  )
   let showConversationStarters = $derived(
     !isRequestPending &&
       !hasMessages &&
@@ -307,8 +315,12 @@
 =======
       stableSessionId = Helpers.uuid()
       if (!isPreparingResponse) {
+<<<<<<< HEAD
 >>>>>>> fff8fd44dc (fix: remove unrequired)
         clearFirstResponseHold()
+=======
+        resetPendingResponse()
+>>>>>>> 16b655754b (fix: refactor)
       }
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
@@ -387,14 +399,23 @@
     }
 
     const text = inputValue.trim()
-    if (!text) return
-
-    const isFirstMessage = !messages.length
-    if (isFirstMessage) {
-      startFirstResponseHold()
+    if (!text) {
+      return
     }
 
+    const failToStartResponse = (message: string, error?: unknown) => {
+      resetPendingResponse()
+      if (error) {
+        console.error(error)
+      }
+      notifications.error(message)
+    }
+
+    const isFirstMessage = !messages.length
     isPreparingResponse = true
+    if (isFirstMessage) {
+      holdFirstResponse()
+    }
 
     const chatAppIdFromEnsure = await ensureChatApp()
 
@@ -406,14 +427,12 @@
     const agentId = chat.agentId
 
     if (!chatAppId) {
-      isPreparingResponse = false
-      notifications.error("Chat app could not be created")
+      failToStartResponse("Chat app could not be created")
       return
     }
 
     if (!agentId) {
-      isPreparingResponse = false
-      notifications.error("Agent is required to start a chat")
+      failToStartResponse("Agent is required to start a chat")
       return
     }
 
@@ -438,9 +457,7 @@
           err instanceof Error
             ? err.message
             : "Could not start a new chat conversation"
-        isPreparingResponse = false
-        console.error(err)
-        notifications.error(errorMessage)
+        failToStartResponse(errorMessage, err)
         return
       }
     } else if (chat._id) {
@@ -544,12 +561,12 @@
         </Body>
       </div>
     {/if}
-    {#each visibleMessages as message (message.id)}
+    {#each messages as message (message.id)}
       {#if message.role === "user"}
         <div class="message user">
           <MarkdownViewer value={getUserMessageText(message)} />
         </div>
-      {:else if message.role === "assistant"}
+      {:else if message.role === "assistant" && !isHoldingFirstResponse}
         {@const reasoningText = getReasoningText(message)}
         {@const reasoningId = `${message.id}-reasoning`}
         {@const toolError = hasToolError(message)}
