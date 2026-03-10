@@ -662,7 +662,6 @@ Any constraints the agent must follow.
         toolReferences: enabledToolReferences,
       })
 
-      console.log("Generated agent instructions:", instructions)
       notifications.success("Instructions generated successfully")
       generatedInstructions = instructions
     } catch (error: any) {
