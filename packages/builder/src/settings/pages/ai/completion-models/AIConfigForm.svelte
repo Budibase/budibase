@@ -2,14 +2,7 @@
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
   import { aiConfigsStore } from "@/stores/portal"
-  import {
-    Button,
-    Combobox,
-    Helpers,
-    Input,
-    notifications,
-    Select,
-  } from "@budibase/bbui"
+  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
   import type {
     AIConfigResponse,
     CreateAIConfigRequest,
@@ -19,6 +12,7 @@
   } from "@budibase/types"
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
+  import ProviderModelFields from "../ProviderModelFields.svelte"
   import { routeActions } from "../.."
 
   export interface Props {
@@ -60,7 +54,6 @@
         } satisfies RequiredKeys<CreateAIConfigRequest>)
 
   let draft: AIConfigResponse = $state(createDraft())
-  let previousProvider = $state(draft.provider)
 
   let isEdit = $derived(!!draft._id)
 
@@ -69,20 +62,7 @@
     { label: "Medium", value: "medium" },
     { label: "High", value: "high" },
   ]
-  interface ModelOption {
-    label: string
-    value: string
-  }
-
   let providers = $derived($aiConfigsStore.providers)
-
-  let providerPlaceholder = $derived(
-    !providers
-      ? "Loading providers..."
-      : providers.length
-        ? "Choose a provider"
-        : "No providers available"
-  )
 
   let providersMap = $derived(
     providers?.reduce<Record<string, LLMProvider>>((acc, p) => {
@@ -91,29 +71,6 @@
     }, {})
   )
   let selectedProvider = $derived(providersMap?.[draft.provider])
-  let modelOptions = $derived.by(() => {
-    const models = selectedProvider?.models?.[draft.configType] || []
-    const options = models.map<ModelOption>(model => ({
-      label: model,
-      value: model,
-    }))
-    if (draft.model?.trim() && !models.includes(draft.model)) {
-      options.unshift({
-        label: `${draft.model} (custom)`,
-        value: draft.model,
-      })
-    }
-    return options
-  })
-  let modelPlaceholder = $derived.by(() => {
-    if (!draft.provider?.trim()) {
-      return "Choose a provider first"
-    }
-    if (!providers) {
-      return "Loading models..."
-    }
-    return modelOptions.length ? "Select or type a model" : "Type a model"
-  })
 
   let isSaving = $state(false)
   let savedSnapshot = $state(JSON.stringify(draft))
@@ -140,13 +97,6 @@
         f => f.required && !draft.credentialsFields[f.key]?.trim()
       )
     )
-  })
-
-  $effect(() => {
-    if (previousProvider !== draft.provider) {
-      draft.model = ""
-      previousProvider = draft.provider
-    }
   })
 
   onMount(async () => {
@@ -239,26 +189,13 @@
 
 <div class="form">
   {#if !isBBAI}
-    <Select
-      label="Provider"
-      required
-      bind:value={draft.provider}
-      options={providers}
-      getOptionValue={o => o.id}
-      getOptionLabel={o => o.displayName}
-      placeholder={providerPlaceholder}
-      loading={!providers}
-      autocomplete
-      searchPlaceholder="Search providers"
-    />
-
-    <Combobox
-      label="Model"
-      bind:value={draft.model}
-      options={modelOptions}
-      getOptionValue={o => o.value}
-      getOptionLabel={o => o.label}
-      placeholder={modelPlaceholder}
+    <ProviderModelFields
+      configType={draft.configType}
+      provider={draft.provider}
+      model={draft.model}
+      {providers}
+      on:providerChange={event => (draft.provider = event.detail)}
+      on:modelChange={event => (draft.model = event.detail)}
     />
 
     <Input

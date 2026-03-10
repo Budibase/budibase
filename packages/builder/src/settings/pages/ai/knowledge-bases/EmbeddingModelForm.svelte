@@ -2,7 +2,13 @@
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
   import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
-  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
+  import {
+    Button,
+    Helpers,
+    Input,
+    notifications,
+    Select,
+  } from "@budibase/bbui"
   import type {
     AIConfigResponse,
     CreateAIConfigRequest,
@@ -12,6 +18,7 @@
   } from "@budibase/types"
   import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
+  import ProviderModelFields from "../ProviderModelFields.svelte"
   import { routeActions } from "../.."
 
   export interface Props {
@@ -56,14 +63,6 @@
   let isEdit = $derived(!!draft._id)
 
   let providers = $derived($aiConfigsStore.providers)
-
-  let providerPlaceholder = $derived(
-    !providers
-      ? "Loading providers..."
-      : providers.length
-        ? "Choose a provider"
-        : "No providers available"
-  )
 
   let providersMap = $derived(
     providers?.reduce<Record<string, LLMProvider>>((acc, p) => {
@@ -190,23 +189,13 @@
 </div>
 
 <div class="form">
-  <Select
-    label="Provider"
-    required
-    bind:value={draft.provider}
-    options={providers}
-    getOptionValue={o => o.id}
-    getOptionLabel={o => o.displayName}
-    placeholder={providerPlaceholder}
-    loading={!providers}
-  />
-
-  <Input
-    label="Model"
-    description="The model you would like to connect to"
-    required
-    bind:value={draft.model}
-    placeholder="GPT-5.2"
+  <ProviderModelFields
+    configType={draft.configType}
+    provider={draft.provider}
+    model={draft.model}
+    {providers}
+    on:providerChange={event => (draft.provider = event.detail)}
+    on:modelChange={event => (draft.model = event.detail)}
   />
 
   <Input
