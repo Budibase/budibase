@@ -18,7 +18,6 @@ vi.spyOn(notifications, "error").mockImplementation(() => {})
 vi.spyOn(notifications, "success").mockImplementation(() => {})
 vi.spyOn(notifications, "info").mockImplementation(() => {})
 
-// ---- API mock ----
 vi.mock("@/api", () => ({
   API: {
     getDatasources: vi.fn(),
@@ -31,7 +30,6 @@ vi.mock("@/api", () => ({
   },
 }))
 
-// ---- Router mock ----
 vi.mock("@roxi/routify", () => ({
   params: writable({
     datasourceId: "datasource_c190e3055ae643b4b3bb66ee15ad12c9",
@@ -40,14 +38,15 @@ vi.mock("@roxi/routify", () => ({
   beforeUrlChange: writable(() => () => true),
 }))
 
-// ---- Store mocks ----
-// Sub-module mocks are self-contained — they create their own store instances
-// using async factories. The parent @/stores/builder mock then safely imports
-// those already-mocked instances (sub→parent direction, no circular deps).
-// Tests import directly from the sub-module mocks to manipulate state.
+// Real class instances are needed for .store.update()/.init()/.set(). vi.importActual
+// is used (not bare import()) to avoid circular resolution inside vi.mock factories.
+// TODO: We need to readdress the structure of the stores in the builder. Either in the form
+// of module registration or possibly dependency injection.
 
 vi.mock("@/stores/builder/queries", async () => {
-  const { QueryStore } = await import("@/stores/builder/queries")
+  const { QueryStore } = await vi.importActual<
+    typeof import("@/stores/builder/queries")
+  >("@/stores/builder/queries")
   const instance = new QueryStore()
   return {
     queries: instance,
@@ -58,7 +57,9 @@ vi.mock("@/stores/builder/queries", async () => {
 })
 
 vi.mock("@/stores/builder/datasources", async () => {
-  const { DatasourceStore } = await import("@/stores/builder/datasources")
+  const { DatasourceStore } = await vi.importActual<
+    typeof import("@/stores/builder/datasources")
+  >("@/stores/builder/datasources")
   const instance = new DatasourceStore()
   return {
     datasources: instance,
@@ -70,14 +71,16 @@ vi.mock("@/stores/builder/datasources", async () => {
 })
 
 vi.mock("@/stores/builder/oauth2", async () => {
-  const { OAuth2Store } = await import("@/stores/builder/oauth2")
+  const { OAuth2Store } = await vi.importActual<
+    typeof import("@/stores/builder/oauth2")
+  >("@/stores/builder/oauth2")
   return { oauth2: new OAuth2Store(), OAuth2Store }
 })
 
 vi.mock("@/stores/builder/workspaceConnection", async () => {
-  const { WorkspaceConnectionStore } = await import(
-    "@/stores/builder/workspaceConnection"
-  )
+  const { WorkspaceConnectionStore } = await vi.importActual<
+    typeof import("@/stores/builder/workspaceConnection")
+  >("@/stores/builder/workspaceConnection")
   return {
     workspaceConnections: new WorkspaceConnectionStore(),
     WorkspaceConnectionStore,
