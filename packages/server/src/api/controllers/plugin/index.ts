@@ -24,6 +24,7 @@ import { npmUpload, urlUpload, githubUpload } from "./uploaders"
 import env from "../../../environment"
 import { clientAppSocket } from "../../../websockets"
 import sdk from "../../../sdk"
+import { deleteFolderFileSystem } from "../../../utilities/fileSystem"
 
 export async function upload(
   ctx: UserCtx<UploadPluginRequest, UploadPluginResponse>
@@ -59,10 +60,10 @@ export async function create(
   ctx: UserCtx<CreatePluginRequest, CreatePluginResponse>
 ) {
   const { source, url, headers, githubToken } = ctx.request.body
+  let directory: string | undefined
 
   try {
     let metadata: PluginMetadata
-    let directory: string
 
     // Generating random name as a backup and needed for url
     const name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
@@ -120,7 +121,7 @@ export async function create(
 
     const doc = await pro.plugins.storePlugin(
       metadata,
-      directory,
+      directory!,
       source,
       origin
     )
@@ -130,6 +131,10 @@ export async function create(
   } catch (err: any) {
     const errMsg = err?.message ? err?.message : err
     ctx.throw(400, `Failed to import plugin: ${errMsg}`)
+  } finally {
+    if (directory) {
+      deleteFolderFileSystem(directory)
+    }
   }
 }
 

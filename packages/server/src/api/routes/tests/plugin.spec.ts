@@ -50,16 +50,19 @@ describe("/plugins", () => {
 
   const createPlugin = async (
     pluginType: "default" | "encoded" = "default",
-    status?: number
+    status?: number,
+    uploadFilename?: string
   ) => {
-    const filename =
+    const fixtureFilename =
       pluginType === "encoded"
         ? "_.-encoded-plugin-1.0.0.tar.gz"
         : "comment-box-1.0.2.tar.gz"
 
     return request
       .post(`/api/plugin/upload`)
-      .attach("file", `src/api/routes/tests/data/${filename}`)
+      .attach("file", `src/api/routes/tests/data/${fixtureFilename}`, {
+        filename: uploadFilename || undefined,
+      })
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
@@ -89,6 +92,17 @@ describe("/plugins", () => {
       let res = await createPlugin(undefined, 400)
       expect(res.body.message).toEqual("Failed to import plugin: Error")
       expect(events.plugin.imported).toHaveBeenCalledTimes(0)
+    })
+
+    it("should ignore traversal sequences in uploaded filenames", async () => {
+      const res = await createPlugin(
+        "default",
+        undefined,
+        "../../../etc/cron.d/plugin.tar.gz"
+      )
+
+      expect(res.body.plugins[0]._id).toEqual("plg_comment-box")
+      expect(events.plugin.imported).toHaveBeenCalledTimes(1)
     })
   })
 
