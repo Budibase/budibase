@@ -15,7 +15,7 @@
     Select,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import KnowledgeBaseFilesPanel from "./KnowledgeBaseFilesPanel.svelte"
+  import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
   import { routeActions } from "../.."
 
   export interface Props {
@@ -49,10 +49,11 @@
 
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
-  let savedSnapshot = $state(Helpers.cloneDeep(draft))
+  let savedSnapshot = $state<typeof draft>()
   const captureSavedSnapshot = () => {
     savedSnapshot = Helpers.cloneDeep(draft)
   }
+  captureSavedSnapshot()
   let isModified = $derived(
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
   )

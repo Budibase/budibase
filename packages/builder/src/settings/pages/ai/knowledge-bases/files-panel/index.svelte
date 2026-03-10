@@ -1,12 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte"
-  import {
-    AbsTooltip,
-    ActionButton,
-    Button,
-    Heading,
-    notifications,
-  } from "@budibase/bbui"
+  import { Button, Field, notifications, Table } from "@budibase/bbui"
   import { helpers } from "@budibase/shared-core"
   import {
     AIConfigType,
@@ -15,6 +9,9 @@
   } from "@budibase/types"
   import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
   import { createPolling } from "@/utils/polling"
+  import KnowledgeBaseFileDeleteRenderer from "./column-renderer/DeleteRenderer.svelte"
+  import KnowledgeBaseFileNameRenderer from "./column-renderer/NameRenderer.svelte"
+  import KnowledgeBaseFileStatusRenderer from "./column-renderer/StatusRenderer.svelte"
 
   export interface Props {
     knowledgeBaseId?: string
@@ -29,8 +26,35 @@
   let fileInput = $state<HTMLInputElement>()
 
   let currentFiles = $derived(
-    $knowledgeBaseStore.selectedKnowledgeBase?.files || []
+    ($knowledgeBaseStore.selectedKnowledgeBase?.files || []).map(f => ({
+      _id: f._id,
+      filename: f.filename,
+      status: f.status,
+      displayStatus: formatFileStatus(f),
+      mimetype: f.mimetype,
+      errorMessage: f.errorMessage,
+      chunkCount: f.chunkCount ?? 0,
+      size: helpers.formatBytes(f.size, " "),
+      updatedAt: formatTimestamp(f.processedAt || f.updatedAt || f.createdAt),
+      onDelete: () => removeFile(f),
+    }))
   )
+
+  const customRenderers = [
+    {
+      column: "filename",
+      component: KnowledgeBaseFileNameRenderer,
+    },
+    {
+      column: "displayStatus",
+      component: KnowledgeBaseFileStatusRenderer,
+    },
+    {
+      column: "delete",
+      component: KnowledgeBaseFileDeleteRenderer,
+    },
+  ]
+
   let hasEmbeddingConfig = $derived(
     ($aiConfigsStore.customConfigs || []).some(
       config => config.configType === AIConfigType.EMBEDDINGS
@@ -154,30 +178,31 @@
   })
 </script>
 
-<div class="files-header-row">
-  <Heading size="XS">Files</Heading>
-  <div class="files-actions">
-    <Button
-      secondary
-      icon="upload"
-      disabled={!knowledgeBaseId || uploadingFile}
-      on:click={handleUploadClick}
-      >{uploadingFile ? "Uploading..." : "Upload file"}</Button
-    >
-    <input
-      type="file"
-      accept=".txt,.md,.markdown,.json,.yaml,.yml,.csv,.tsv,.pdf"
-      hidden
-      bind:this={fileInput}
-      on:change={handleFileUpload}
-    />
+<Field
+  label="Files"
+  required
+  description="Add text, Markdown, OpenAPI YAML, or PDF files to ground any agent using this
+  knowledge base."
+>
+  <div class="files-header-row">
+    <div class="files-actions">
+      <Button
+        secondary
+        icon="upload"
+        disabled={!knowledgeBaseId || uploadingFile}
+        on:click={handleUploadClick}
+        >{uploadingFile ? "Uploading..." : "Upload file"}</Button
+      >
+      <input
+        type="file"
+        accept=".txt,.md,.markdown,.json,.yaml,.yml,.csv,.tsv,.pdf"
+        hidden
+        bind:this={fileInput}
+        onchange={handleFileUpload}
+      />
+    </div>
   </div>
-</div>
-
-<p class="files-description">
-  Add text, Markdown, OpenAPI YAML, or PDF files to ground any agent using this
-  knowledge base.
-</p>
+</Field>
 
 {#if uploadError}
   <div class="upload-error">{uploadError}</div>
@@ -190,54 +215,26 @@
     No files have been uploaded for this knowledge base yet.
   </div>
 {:else}
-  <div class="files-table">
-    <div class="files-row files-row-header">
-      <div>Name</div>
-      <div>Status</div>
-      <div>Chunks</div>
-      <div>Size</div>
-      <div>Updated</div>
-      <div></div>
-    </div>
-    {#each currentFiles as file (file._id)}
-      <div class="files-row">
-        <div class="file-name">
-          <span class="file-title">{file.filename}</span>
-          <span class="file-meta">{file.mimetype || "text"}</span>
-          {#if file.status === KnowledgeBaseFileStatus.FAILED && file.errorMessage}
-            <span class="file-error">{file.errorMessage}</span>
-          {/if}
-        </div>
-        <div
-          class="file-status"
-          class:file-status_processing={file.status ===
-            KnowledgeBaseFileStatus.PROCESSING}
-          class:file-status_failed={file.status ===
-            KnowledgeBaseFileStatus.FAILED}
-          class:file-status_ready={file.status ===
-            KnowledgeBaseFileStatus.READY}
-        >
-          {formatFileStatus(file)}
-        </div>
-        <div>{file.chunkCount ?? 0}</div>
-        <div>{helpers.formatBytes(file.size, " ")}</div>
-        <div>
-          {formatTimestamp(
-            file.processedAt || file.updatedAt || file.createdAt
-          )}
-        </div>
-        <div class="file-actions">
-          <AbsTooltip text="Remove file">
-            <ActionButton
-              icon="trash"
-              size="S"
-              on:click={() => removeFile(file)}
-            />
-          </AbsTooltip>
-        </div>
-      </div>
-    {/each}
-  </div>
+  <Table
+    data={currentFiles}
+    schema={{
+      filename: { displayName: "name", width: "minmax(0, 2fr)" },
+      displayStatus: { displayName: "status", width: "130px" },
+      chunkCount: { displayName: "# chunks", width: "88px" },
+      size: { width: "100px" },
+      updatedAt: { displayName: "updated", width: "180px" },
+      delete: { displayName: "", width: "48px", align: "Right" },
+    }}
+    {customRenderers}
+    allowEditColumns={false}
+    allowEditRows={false}
+    allowSelectRows={false}
+    allowClickRows={false}
+    disableSorting
+    rounded
+    quiet
+    compact
+  ></Table>
 {/if}
 
 <style>
@@ -249,88 +246,19 @@
     margin-top: var(--spacing-l);
   }
 
-  .files-description {
-    margin: 0;
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-700);
-  }
-
   .files-actions {
     display: flex;
     gap: var(--spacing-s);
     align-items: center;
   }
 
-  .files-table {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .files-row {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) 120px 80px 90px 180px 48px;
-    gap: var(--spacing-s);
-    align-items: center;
-    padding: 10px 12px;
-    border-top: 1px solid var(--spectrum-global-color-gray-100);
-  }
-
-  .files-row-header {
-    border-top: 0;
-    background: var(--spectrum-global-color-gray-50);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-700);
-  }
-
-  .file-name {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .file-title {
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .file-meta,
-  .file-error,
   .upload-error,
   .files-empty {
     font-size: 12px;
     color: var(--spectrum-global-color-gray-700);
   }
 
-  .file-error,
   .upload-error {
     color: var(--spectrum-semantic-negative-color-default);
-  }
-
-  .file-status {
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .file-status_processing {
-    color: var(--spectrum-semantic-notice-color-default);
-  }
-
-  .file-status_failed {
-    color: var(--spectrum-semantic-negative-color-default);
-  }
-
-  .file-status_ready {
-    color: var(--spectrum-semantic-positive-color-default);
-  }
-
-  .file-actions {
-    display: flex;
-    justify-content: flex-end;
   }
 </style>

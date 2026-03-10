@@ -4,6 +4,7 @@ import "./bbui.css"
 export * from "./constants"
 
 // Form components
+export { default as Field } from "./Form/Field.svelte"
 export { default as Checkbox } from "./Form/Checkbox.svelte"
 export { default as Combobox } from "./Form/Combobox.svelte"
 export { default as DatePicker } from "./Form/DatePicker.svelte"
