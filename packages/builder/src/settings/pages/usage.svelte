@@ -148,13 +148,18 @@
   }
 
   const setPrimaryActionText = () => {
-    if (license?.plan.type === Constants.PlanType.FREE) {
+    const planType = license?.plan.type
+    if (
+      planType === Constants.PlanType.FREE ||
+      planType === Constants.PlanType.PREMIUM_PLUS_TRIAL ||
+      planType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL
+    ) {
       primaryActionText = "Upgrade"
       return
     }
 
     if (cancelAt) {
-      primaryActionText = "Upgrade"
+      primaryActionText = "Renew"
     } else {
       primaryActionText = "Manage"
     }
