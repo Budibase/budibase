@@ -17,6 +17,14 @@ describe("knowledge base configs", () => {
     )
   }
 
+  const withRagDisabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.AI_RAG]: false },
+      f
+    )
+  }
+
   beforeEach(async () => {
     await config.newTenant()
   })
@@ -256,6 +264,31 @@ describe("knowledge base configs", () => {
         const knowledgeBases = await config.api.knowledgeBase.fetch()
         expect(knowledgeBases).toHaveLength(0)
       })
+    })
+  })
+
+  it("returns 403 when RAG is disabled", async () => {
+    await withRagDisabled(async () => {
+      await config.api.knowledgeBase.fetch({ status: 403 })
+      await config.api.knowledgeBase.create(
+        {
+          name: "Support Docs",
+          embeddingModel: "aiconfig_test",
+          vectorDb: "vectordb_test",
+        },
+        { status: 403 }
+      )
+      await config.api.knowledgeBase.update(
+        {
+          _id: "kb_test",
+          _rev: "1-test",
+          name: "Support Docs",
+          embeddingModel: "aiconfig_test",
+          vectorDb: "vectordb_test",
+        },
+        { status: 403 }
+      )
+      await config.api.knowledgeBase.remove("kb_test", { status: 403 })
     })
   })
 })
