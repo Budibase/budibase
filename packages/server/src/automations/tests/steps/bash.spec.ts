@@ -195,6 +195,44 @@ describe("Execute Bash Automations", () => {
     )
   })
 
+  it("should accept args provided in the builder JSON editor shape", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash(
+        {
+          command: "echo",
+          args: {
+            value: JSON.stringify(["{{ trigger.fields.command }}"]),
+          },
+        },
+        { stepName: "JSON Editor Args" }
+      )
+      .test({ fields: { command: "hello world" } })
+
+    expect(result.steps[0].outputs.success).toEqual(true)
+    expect(result.steps[0].outputs.stdout).toEqual("hello world\n")
+  })
+
+  it("should reject invalid JSON editor args", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash(
+        {
+          command: "echo",
+          args: {
+            value: "{ invalid json }",
+          },
+        },
+        { stepName: "Invalid JSON Editor Args" }
+      )
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(result.steps[0].outputs.response).toEqual(
+      "Budibase bash automation failed: Args must be a JSON array of strings."
+    )
+  })
+
   it("should handle null values gracefully", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()

@@ -38,9 +38,13 @@ export type ExternalAppStepOutputs = {
   success: boolean
 }
 
+export type JSONEditorInput<T> = {
+  value?: T | string
+}
+
 export type BashStepInputs = {
   command: string
-  args?: string[]
+  args?: string[] | JSONEditorInput<string[]>
 }
 
 export type BashStepOutputs = BaseAutomationOutputs & {

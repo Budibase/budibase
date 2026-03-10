@@ -10,16 +10,48 @@ const COMMAND_BINDINGS_ERROR =
 const ARGS_VALIDATION_ERROR =
   "Budibase bash automation failed: Args must be a JSON array of strings."
 
-const processArgs = (args: string[] | undefined, context: object) => {
-  if (args == null) {
-    return []
-  }
+interface JsonEditorInput {
+  value?: unknown
+}
 
+const validateArgs = (args: unknown): string[] => {
   if (!Array.isArray(args) || args.some(arg => typeof arg !== "string")) {
     throw new Error(ARGS_VALIDATION_ERROR)
   }
 
-  return args.map(arg => processStringSync(arg, context))
+  return args
+}
+
+const parseArgs = (args: unknown) => {
+  if (args == null) {
+    return []
+  }
+
+  if (Array.isArray(args)) {
+    return validateArgs(args)
+  }
+
+  if (typeof args === "object" && "value" in (args as JsonEditorInput)) {
+    const value = (args as JsonEditorInput).value
+
+    if (Array.isArray(value)) {
+      return validateArgs(value)
+    }
+
+    if (typeof value === "string") {
+      try {
+        return validateArgs(JSON.parse(value))
+      } catch {
+        throw new Error(ARGS_VALIDATION_ERROR)
+      }
+    }
+  }
+
+  throw new Error(ARGS_VALIDATION_ERROR)
+}
+
+const processArgs = (args: unknown, context: object) => {
+  return parseArgs(args).map(arg => processStringSync(arg, context))
 }
 
 export async function run({
@@ -76,7 +108,8 @@ export async function run({
   } catch (err) {
     return {
       success: false,
-      response: automationUtils.getError(err),
+      response:
+        err instanceof Error ? err.message : automationUtils.getError(err),
     }
   }
 }
