@@ -518,6 +518,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           await quotas.addAction(async () => {})
         }
       },
+      onFinish({ response }) {
+        sessionLogIndexer.addRequestId(response?.id)
+      },
       providerOptions: providerOptions?.(hasTools),
       async onError({ error }) {
         await sessionLogIndexer.index()
@@ -538,7 +541,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       ...(ragSourcesMetadata?.length ? { ragSources: ragSourcesMetadata } : {}),
       ...(Object.keys(toolDisplayNames).length > 0 ? { toolDisplayNames } : {}),
     }
-
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
       messageMetadata: ({ part }) => {
@@ -566,17 +568,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
-        const [responseResult] = await Promise.allSettled([result.response])
-        const requestId =
-          responseResult.status === "fulfilled"
-            ? (responseResult.value.id ?? undefined)
-            : undefined
-        sessionLogIndexer.addRequestId(requestId)
         await sessionLogIndexer.index()
-
-        if (responseResult.status === "rejected") {
-          throw responseResult.reason
-        }
 
         if (chat.transient || !chatAppId) {
           return

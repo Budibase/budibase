@@ -21,6 +21,14 @@ describe("vector db configs", () => {
     )
   }
 
+  const withRagDisabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.AI_RAG]: false },
+      f
+    )
+  }
+
   const vectorDbRequest = {
     name: "Primary Vector DB",
     provider: VectorDbProvider.PGVECTOR,
@@ -77,6 +85,22 @@ describe("vector db configs", () => {
         },
         { status: 400 }
       )
+    })
+  })
+
+  it("returns 403 when RAG is disabled", async () => {
+    await withRagDisabled(async () => {
+      await config.api.vectorDb.fetch({ status: 403 })
+      await config.api.vectorDb.create(vectorDbRequest, { status: 403 })
+      await config.api.vectorDb.update(
+        {
+          _id: "vectordb_test",
+          _rev: "1-test",
+          ...vectorDbRequest,
+        },
+        { status: 403 }
+      )
+      await config.api.vectorDb.remove("vectordb_test", { status: 403 })
     })
   })
 })

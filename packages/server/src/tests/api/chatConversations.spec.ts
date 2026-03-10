@@ -934,7 +934,7 @@ describe("Agent chat tool call tracking", () => {
               inputTokens: 0,
               outputTokens: 0,
             }),
-          }) as ReturnType<typeof streamText>) as any
+          }) as unknown as ReturnType<typeof streamText>) as any
       )
 
       await expect(
