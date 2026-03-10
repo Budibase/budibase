@@ -43,8 +43,7 @@ describe("blacklist", () => {
 
     beforeAll(async () => {
       restoreEnv = setEnv({
-        BLACKLIST_IPS:
-          "www.google.com,192.168.1.1, 1.1.1.1,2.2.2.2/something",
+        BLACKLIST_IPS: "www.google.com,192.168.1.1, 1.1.1.1,2.2.2.2/something",
       })
       await refreshBlacklist()
     })
