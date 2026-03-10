@@ -241,5 +241,6 @@ export async function startup(
     console.warn("Error waiting for LiteLLM readiness", e)
   })
 
+  console.log("Server ready!")
   STATE = "ready"
 }
