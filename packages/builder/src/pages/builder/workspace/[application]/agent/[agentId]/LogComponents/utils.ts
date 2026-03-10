@@ -224,18 +224,13 @@ export function formatStructuredContent(content: string): string {
     return "No data captured"
   }
 
-  const fencedContent =
-    trimmed
-      .match(/^```(?:json|javascript|js|text)?\s*([\s\S]*?)\s*```$/i)?.[1]
-      ?.trim() || trimmed
-
-  if (/^[[{]/.test(fencedContent)) {
+  if (/^[[{]/.test(trimmed)) {
     try {
-      return JSON.stringify(JSON.parse(fencedContent), null, 2)
+      return JSON.stringify(JSON.parse(trimmed), null, 2)
     } catch (_error) {
-      return fencedContent
+      return trimmed
     }
   }
 
-  return fencedContent
+  return trimmed
 }
