@@ -39,7 +39,8 @@ export type ExternalAppStepOutputs = {
 }
 
 export type BashStepInputs = {
-  code: string
+  command: string
+  args?: string[]
 }
 
 export type BashStepOutputs = BaseAutomationOutputs & {
