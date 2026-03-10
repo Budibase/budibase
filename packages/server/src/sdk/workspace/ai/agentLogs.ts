@@ -250,7 +250,7 @@ function agentLogSessionTable(): Table {
   }
 }
 
-async function querySql<T extends Document & Record<string, any>>(
+async function querySql<T extends Document>(
   request: EnrichedQueryJson,
   table: Table
 ): Promise<T[]> {
@@ -262,7 +262,10 @@ async function querySql<T extends Document & Record<string, any>>(
   }
 
   const rows = await context.getWorkspaceDB().sql<T>(query.sql, query.bindings)
-  return builder.convertJsonStringColumns<T>(table, rows)
+  return builder.convertJsonStringColumns(
+    table,
+    rows as Array<T & Record<string, unknown>>
+  ) as T[]
 }
 
 function buildSessionFilters(
