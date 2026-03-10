@@ -18,6 +18,7 @@
   import KnowledgeBaseFileDeleteRenderer from "./column-renderer/DeleteRenderer.svelte"
   import KnowledgeBaseFileNameRenderer from "./column-renderer/NameRenderer.svelte"
   import KnowledgeBaseFileStatusRenderer from "./column-renderer/StatusRenderer.svelte"
+  import { confirm } from "@/helpers"
 
   export interface Props {
     knowledgeBaseId?: string
@@ -163,19 +164,21 @@
     if (!knowledgeBaseId) {
       return
     }
-    const confirmed = window.confirm(
-      `Remove "${file.filename}" from this knowledge base?`
-    )
-    if (!confirmed) {
-      return
-    }
-    try {
-      await knowledgeBaseStore.deleteFile(knowledgeBaseId, file._id!)
-      notifications.success("File removed")
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to remove file")
-    }
+    await confirm({
+      title: `Confirm deletion`,
+      body: `Are you sure to remove "${file.filename}" from this knowledge base? This action can't be undone.`,
+      size: "L",
+      okText: "Delete",
+      onConfirm: async () => {
+        try {
+          await knowledgeBaseStore.deleteFile(knowledgeBaseId, file._id!)
+          notifications.success("File removed")
+        } catch (error) {
+          console.error(error)
+          notifications.error("Failed to remove file")
+        }
+      },
+    })
   }
 
   onDestroy(() => {
