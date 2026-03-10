@@ -15,7 +15,6 @@ interface KnowledgeBaseWithFiles extends KnowledgeBase {
 interface KnowledgeBaseState {
   list: KnowledgeBase[]
   currentKnowledgeBaseId?: string
-  files: KnowledgeBaseFile[]
   filesByKnowledgeBaseId: Record<string, KnowledgeBaseFile[]>
 }
 
@@ -55,17 +54,40 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
     super(
       {
         list: [],
-        files: [],
         filesByKnowledgeBaseId: {},
       },
       makeDerivedStore
     )
   }
 
+  private fetchKnowledgeBaseFiles = async (knowledgeBaseId: string) => {
+    const { files } = await API.knowledgeBase.fetchFiles(knowledgeBaseId)
+    return files
+  }
+
+  private fetchFilesForKnowledgeBases = async (knowledgeBases: KnowledgeBase[]) => {
+    const fileEntries = await Promise.all(
+      knowledgeBases
+        .map(knowledgeBase => knowledgeBase._id)
+        .filter((id): id is string => !!id)
+        .map(async knowledgeBaseId => {
+          return [
+            knowledgeBaseId,
+            await this.fetchKnowledgeBaseFiles(knowledgeBaseId),
+          ] as const
+        })
+    )
+
+    return Object.fromEntries(fileEntries)
+  }
+
   fetch = async () => {
     const configs = await API.knowledgeBase.fetch()
+    const filesByKnowledgeBaseId =
+      await this.fetchFilesForKnowledgeBases(configs)
     this.update(state => {
       state.list = configs
+      state.filesByKnowledgeBaseId = filesByKnowledgeBaseId
       return state
     })
     return configs
@@ -107,27 +129,18 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
   selectKnowledgeBase = (knowledgeBaseId?: string) => {
     this.update(state => {
       state.currentKnowledgeBaseId = knowledgeBaseId
-      if (!knowledgeBaseId) {
-        state.files = []
-      }
       return state
     })
   }
 
   fetchFiles = async (knowledgeBaseId?: string) => {
     if (!knowledgeBaseId) {
-      this.update(state => {
-        state.files = []
-        return state
-      })
       return []
     }
-    const { files } = await API.knowledgeBase.fetchFiles(knowledgeBaseId)
+
+    const files = await this.fetchKnowledgeBaseFiles(knowledgeBaseId)
     this.update(state => {
       state.filesByKnowledgeBaseId[knowledgeBaseId] = files
-      if (state.currentKnowledgeBaseId === knowledgeBaseId) {
-        state.files = files
-      }
       return state
     })
     return files
@@ -145,12 +158,6 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
           existing => existing._id !== uploaded._id
         ),
       ]
-      if (state.currentKnowledgeBaseId === knowledgeBaseId) {
-        state.files = [
-          uploaded,
-          ...state.files.filter(existing => existing._id !== uploaded._id),
-        ]
-      }
       return state
     })
     return uploaded
@@ -162,9 +169,6 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
       state.filesByKnowledgeBaseId[knowledgeBaseId] = (
         state.filesByKnowledgeBaseId[knowledgeBaseId] || []
       ).filter(file => file._id !== fileId)
-      if (state.currentKnowledgeBaseId === knowledgeBaseId) {
-        state.files = state.files.filter(file => file._id !== fileId)
-      }
       return state
     })
   }

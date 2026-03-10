@@ -91,9 +91,7 @@
   })
 
   onMount(async () => {
-    if (knowledgeBaseId) {
-      await knowledgeBaseStore.fetchFiles(knowledgeBaseId)
-    }
+    await knowledgeBaseStore.fetch()
   })
 
   async function handleFileUpload(event: Event) {

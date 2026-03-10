@@ -133,12 +133,6 @@
       vectorDbStore.fetch(),
       knowledgeBaseStore.fetch(),
     ])
-    await Promise.all(
-      ($knowledgeBaseStore.list || [])
-        .map(knowledgeBase => knowledgeBase._id)
-        .filter((id): id is string => !!id)
-        .map(knowledgeBaseId => knowledgeBaseStore.fetchFiles(knowledgeBaseId))
-    )
   })
 
   onDestroy(() => {
