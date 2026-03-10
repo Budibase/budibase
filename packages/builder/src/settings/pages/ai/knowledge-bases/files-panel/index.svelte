@@ -219,13 +219,13 @@
   {/if}
 
   {#if !knowledgeBaseId}
-    <div class="files-empty">
+    <Label size="L" muted>
       Save the knowledge base before uploading files.
-    </div>
+    </Label>
   {:else if currentFiles.length === 0}
-    <div class="files-empty">
+    <Label size="L" muted>
       No files have been uploaded for this knowledge base yet.
-    </div>
+    </Label>
   {:else}
     <Table
       data={currentFiles}
@@ -261,12 +261,6 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-  }
-
-  .upload-error,
-  .files-empty {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-700);
   }
 
   .upload-error {
