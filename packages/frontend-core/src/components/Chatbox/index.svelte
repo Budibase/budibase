@@ -74,6 +74,29 @@
   let inputValue = $state("")
   let lastInitialPrompt = $state("")
   let reasoningTimers = $state<Record<string, number>>({})
+  let isPreparingResponse = $state(false)
+  let pendingUserMessageText = $state("")
+  let isHoldingFirstResponse = $state(false)
+  let firstResponseHoldTimer: ReturnType<typeof setTimeout> | undefined
+
+  const MIN_FIRST_RESPONSE_LOADING_MS = 5000
+
+  const clearFirstResponseHold = () => {
+    if (firstResponseHoldTimer) {
+      clearTimeout(firstResponseHoldTimer)
+      firstResponseHoldTimer = undefined
+    }
+    isHoldingFirstResponse = false
+  }
+
+  const startFirstResponseHold = () => {
+    clearFirstResponseHold()
+    isHoldingFirstResponse = true
+    firstResponseHoldTimer = setTimeout(() => {
+      isHoldingFirstResponse = false
+      firstResponseHoldTimer = undefined
+    }, MIN_FIRST_RESPONSE_LOADING_MS)
+  }
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? [])
@@ -193,6 +216,9 @@
     }),
     messages: chat?.messages || [],
     onFinish: async () => {
+      isPreparingResponse = false
+      pendingUserMessageText = ""
+
       if (persistConversation && !chat._id && chat.chatAppId) {
         try {
           const history = await API.fetchChatHistory(
@@ -222,6 +248,10 @@
       textareaElement?.focus()
     },
     onError: error => {
+      clearFirstResponseHold()
+      isPreparingResponse = false
+      pendingUserMessageText = ""
+
       console.error(error)
       let message = error.message || "Failed to send message"
       try {
@@ -237,13 +267,28 @@
   })
 
   let messages = $derived(chatInstance.messages)
+  let visibleMessages = $derived(
+    isHoldingFirstResponse
+      ? messages.filter(message => message.role !== "assistant")
+      : messages
+  )
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
+  let lastMessage = $derived(visibleMessages?.[visibleMessages.length - 1])
+  let showPendingAssistantState = $derived(
+    (isPreparingResponse || isBusy || isHoldingFirstResponse) &&
+      (lastMessage?.role === "user" || Boolean(pendingUserMessageText))
+  )
+  let isRequestPending = $derived(
+    isPreparingResponse || isBusy || isHoldingFirstResponse
+  )
   let canStart = $derived(inputValue.trim().length > 0)
-  let hasMessages = $derived(Boolean(messages?.length))
+  let hasMessages = $derived(Boolean(visibleMessages?.length))
+  let hasPendingSubmission = $derived(Boolean(pendingUserMessageText))
   let showConversationStarters = $derived(
     !isBusy &&
+      !hasPendingSubmission &&
       !hasMessages &&
       conversationStarters.length > 0 &&
       !isAgentPreviewChat &&
@@ -262,6 +307,9 @@
     if (chat?._id !== lastChatId) {
       lastChatId = chat?._id
       stableSessionId = createStableSessionId()
+      if (!isPreparingResponse && !pendingUserMessageText) {
+        clearFirstResponseHold()
+      }
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
     }
@@ -277,6 +325,22 @@
   $effect(() => {
     if (messages?.length) {
       scrollToBottom()
+    }
+  })
+
+  $effect(() => {
+    if (lastMessage?.role === "assistant") {
+      pendingUserMessageText = ""
+      isPreparingResponse = false
+      return
+    }
+
+    if (
+      pendingUserMessageText &&
+      lastMessage?.role === "user" &&
+      getUserMessageText(lastMessage) === pendingUserMessageText
+    ) {
+      pendingUserMessageText = ""
     }
   })
 
@@ -338,6 +402,17 @@
       return
     }
 
+    const text = inputValue.trim()
+    if (!text) return
+
+    const isFirstMessage = !messages.length
+    if (isFirstMessage) {
+      startFirstResponseHold()
+    }
+
+    isPreparingResponse = true
+    pendingUserMessageText = text
+
     const chatAppIdFromEnsure = await ensureChatApp()
 
     if (!chat) {
@@ -348,11 +423,15 @@
     const agentId = chat.agentId
 
     if (!chatAppId) {
+      isPreparingResponse = false
+      pendingUserMessageText = ""
       notifications.error("Chat app could not be created")
       return
     }
 
     if (!agentId) {
+      isPreparingResponse = false
+      pendingUserMessageText = ""
       notifications.error("Agent is required to start a chat")
       return
     }
@@ -378,6 +457,8 @@
           err instanceof Error
             ? err.message
             : "Could not start a new chat conversation"
+        isPreparingResponse = false
+        pendingUserMessageText = ""
         console.error(err)
         notifications.error(errorMessage)
         return
@@ -386,11 +467,9 @@
       resolvedConversationId = chat._id
     }
 
-    const text = inputValue.trim()
-    if (!text) return
-
     inputValue = ""
     chatInstance.sendMessage({ text })
+    isPreparingResponse = false
   }
 
   const handlePromptAction = async () => {
@@ -470,7 +549,7 @@
           {/each}
         </div>
       </div>
-    {:else if !hasMessages}
+    {:else if !hasMessages && !hasPendingSubmission}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -485,7 +564,7 @@
         </Body>
       </div>
     {/if}
-    {#each messages as message (message.id)}
+    {#each visibleMessages as message (message.id)}
       {#if message.role === "user"}
         <div class="message user">
           <MarkdownViewer value={getUserMessageText(message)} />
@@ -661,6 +740,19 @@
         </div>
       {/if}
     {/each}
+    {#if pendingUserMessageText && lastMessage?.role !== "user"}
+      <div class="message user user-pending">
+        <MarkdownViewer value={pendingUserMessageText} />
+      </div>
+    {/if}
+    {#if showPendingAssistantState}
+      <div class="message assistant assistant-loading" aria-live="polite">
+        <div class="assistant-loading-indicator">
+          <ProgressCircle size="S" />
+          <span>Thinking...</span>
+        </div>
+      </div>
+    {/if}
   </div>
 
   {#if readOnly}
@@ -680,18 +772,20 @@
           class="input spectrum-Textfield-input"
           onkeydown={handleKeyDown}
           placeholder="Ask..."
-          disabled={isBusy}
+          disabled={isRequestPending}
         ></textarea>
         <button
           type="button"
           class="prompt-action"
-          class:running={isBusy}
+          class:running={isRequestPending}
           onclick={handlePromptAction}
           aria-label={isBusy ? "Pause response" : "Start response"}
-          disabled={!isBusy && !canStart}
+          disabled={!isBusy && !isPreparingResponse && !canStart}
         >
           {#if isBusy}
             <Icon name="stop" size="M" weight="fill" color="#ffffff" />
+          {:else if isPreparingResponse}
+            <ProgressCircle size="S" />
           {:else}
             <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
           {/if}
@@ -804,6 +898,19 @@
     color: var(--spectrum-global-color-gray-800);
     line-height: 1.4;
     max-width: 100%;
+  }
+
+  .assistant-loading {
+    min-height: 24px;
+  }
+
+  .assistant-loading-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 13px;
+    animation: shimmer 1.6s ease-in-out infinite;
   }
 
   .input-wrapper {
