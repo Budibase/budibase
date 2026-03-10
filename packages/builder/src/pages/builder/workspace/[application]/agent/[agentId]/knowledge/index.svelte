@@ -19,8 +19,12 @@
   let selectedKnowledgeBases = $state<string[]>([])
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
+  let saveQueued = $state(false)
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let knowledgeBases = $derived($knowledgeBaseStore.list || [])
+
+  const serializeKnowledgeBases = (knowledgeBaseIds: string[]) =>
+    JSON.stringify(knowledgeBaseIds)
 
   $effect(() => {
     const agent = currentAgent
@@ -36,13 +40,18 @@
     showNotifications?: boolean
   }) {
     if (!currentAgent) return
-    if (saving) return
+    if (saving) {
+      saveQueued = true
+      return
+    }
 
     saving = true
+    saveQueued = false
+    const knowledgeBasesToSave = [...selectedKnowledgeBases]
     try {
       await agentsStore.updateAgent({
         ...currentAgent,
-        knowledgeBases: selectedKnowledgeBases,
+        knowledgeBases: knowledgeBasesToSave,
       })
 
       if (showNotifications) {
@@ -54,6 +63,14 @@
       notifications.error("Error saving agent")
     } finally {
       saving = false
+      if (
+        saveQueued ||
+        serializeKnowledgeBases(selectedKnowledgeBases) !==
+          serializeKnowledgeBases(knowledgeBasesToSave)
+      ) {
+        saveQueued = false
+        saveAgent({ showNotifications: false }).catch(console.error)
+      }
     }
   }
 
