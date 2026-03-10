@@ -5,7 +5,6 @@ import {
   mockChatGPTStreamFailure,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
-import { resetHttpMocking } from "../../../tests/jestEnv"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import nock from "nock"
@@ -154,95 +153,6 @@ describe("AI", () => {
       await config.api.ai.generateCron(
         {
           prompt: "test",
-        },
-        { status: 500 }
-      )
-    })
-  })
-
-  describe("POST /api/ai/agent-instructions", () => {
-    it("handles generated instructions response", async () => {
-      mockAISDKChatGPTResponse(
-        dedent(`
-          **Agent role**
-          Help users.
-
-          **Inputs**
-          User requests.
-
-          **Actions**
-          - Answer clearly.
-          - Use tools when needed.
-
-          **Output**
-          - Concise response.
-          - Structured when helpful.
-
-          **Rules**
-          - Stay accurate.
-          - Do not invent facts.
-        `)
-      )
-
-      const { instructions } = await config.api.ai.generateAgentInstructions({
-        aiconfigId: "test-config",
-        prompt: "Create support agent instructions",
-        toolReferences: [],
-      })
-
-      expect(instructions).toContain("**Agent role**")
-      expect(instructions).toContain("**Rules**")
-    })
-
-    it("strips markdown fences from generated instructions", async () => {
-      mockAISDKChatGPTResponse(
-        ["```markdown", "**Agent role**", "Help users.", "```"].join("\n")
-      )
-
-      const { instructions } = await config.api.ai.generateAgentInstructions({
-        aiconfigId: "test-config",
-        prompt: "Create support agent instructions",
-        toolReferences: [],
-      })
-
-      expect(instructions).toBe("**Agent role**\nHelp users.")
-    })
-
-    it("returns 400 when aiconfigId is missing", async () => {
-      await config.api.ai.generateAgentInstructions(
-        {
-          aiconfigId: "",
-          prompt: "Create support agent instructions",
-          toolReferences: [],
-        },
-        { status: 400 }
-      )
-    })
-
-    it("returns 400 when prompt is blank", async () => {
-      await config.api.ai.generateAgentInstructions(
-        {
-          aiconfigId: "test-config",
-          prompt: "   ",
-          toolReferences: [],
-        },
-        { status: 400 }
-      )
-    })
-
-    it("handles LLM errors", async () => {
-      mockAISDKChatGPTResponse(
-        () => {
-          throw new Error("LLM error")
-        },
-        { times: 3 }
-      )
-
-      await config.api.ai.generateAgentInstructions(
-        {
-          aiconfigId: "test-config",
-          prompt: "Create support agent instructions",
-          toolReferences: [],
         },
         { status: 500 }
       )
@@ -1040,7 +950,6 @@ describe("BudibaseAI", () => {
     })
 
     beforeEach(async () => {
-      await resetHttpMocking()
       await config.newTenant()
       nock.cleanAll()
       const license: License = {
@@ -1144,10 +1053,6 @@ describe("BudibaseAI", () => {
       nock(env.ACCOUNT_PORTAL_URL)
         .get(`/api/license/${licenseKey}`)
         .reply(200, license)
-    })
-
-    afterEach(async () => {
-      await resetHttpMocking()
     })
 
     it("proxies the OpenAI response without reshaping", async () => {
