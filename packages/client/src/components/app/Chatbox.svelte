@@ -222,6 +222,22 @@
     height: 100%;
     min-width: 0;
     min-height: 0;
+    font-family:
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      Segoe UI,
+      "Helvetica Neue",
+      Arial,
+      "Noto Sans",
+      sans-serif;
+    --font-sans:
+      "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, "Helvetica Neue",
+      Arial, "Noto Sans", sans-serif;
+    --font-serif: var(--font-sans);
+    --font-accent: var(--font-sans);
+    --spectrum-alias-body-text-font-family: var(--font-sans);
+    --spectrum-global-font-family-base: var(--font-sans);
   }
 
   .chat-empty-state {

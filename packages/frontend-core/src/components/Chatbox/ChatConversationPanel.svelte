@@ -158,7 +158,7 @@
   {:else if !suppressAgentPicker}
     <div class="chat-empty">
       <div class="chat-empty-greeting">
-        <Body size="XL" weight="600" serif>
+        <Body size="XL" weight="600">
           {greetingText}
         </Body>
       </div>
