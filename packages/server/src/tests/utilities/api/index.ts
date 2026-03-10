@@ -2,6 +2,7 @@ import TestConfiguration from "../TestConfiguration"
 import { AIAPI } from "./ai"
 import { AgentAPI } from "./ai/agent"
 import { AgentFilesAPI } from "./ai/agentFiles"
+import { KnowledgeBaseAPI } from "./ai/knowledgeBase"
 import { VectorDbAPI } from "./ai/vectorDb"
 import { AssetsAPI } from "./assets"
 import { AttachmentAPI } from "./attachment"
@@ -68,6 +69,7 @@ export default class API {
   workspaceFavourites: WorkspaceFavouriteAPI
   agent: AgentAPI
   vectorDb: VectorDbAPI
+  knowledgeBase: KnowledgeBaseAPI
   agentFiles: AgentFilesAPI
 
   public: {
@@ -108,6 +110,7 @@ export default class API {
     this.workspaceFavourites = new WorkspaceFavouriteAPI(config)
     this.agent = new AgentAPI(config)
     this.vectorDb = new VectorDbAPI(config)
+    this.knowledgeBase = new KnowledgeBaseAPI(config)
     this.agentFiles = new AgentFilesAPI(config)
     this.public = {
       user: new UserPublicAPI(config),

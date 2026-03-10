@@ -6,9 +6,9 @@
   import { ActionButton, Modal, Body, ProgressCircle } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { admin } from "@/stores/portal"
-  import PortalModal from "./PortalModal.svelte"
+  import PortalModal from "../PortalModal.svelte"
   import { bb } from "@/stores/bb"
-  import { aiLicenseStatus } from "./licenseStatus"
+  import { aiLicenseStatus } from "../licenseStatus"
 
   interface Props {
     row: AIConfigResponse

@@ -21,6 +21,7 @@ jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
 
 describe("agent files", () => {
   const config = new TestConfiguration()
+
   const withRagEnabled = async <T>(f: () => Promise<T>) => {
     return await features.testutils.withFeatureFlags(
       config.getTenantId(),
@@ -28,6 +29,15 @@ describe("agent files", () => {
       f
     )
   }
+
+  const withRagDisabled = async <T>(f: () => Promise<T>) => {
+    return await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.AI_RAG]: false },
+      f
+    )
+  }
+
   const mockLiteLLMProviders = () =>
     nock(environment.LITELLM_URL)
       .persist()
@@ -121,6 +131,30 @@ describe("agent files", () => {
     await config.newTenant()
     jest.restoreAllMocks()
     nock.cleanAll()
+  })
+
+  it("returns 403 when RAG is disabled", async () => {
+    await withRagDisabled(async () => {
+      const agent = await config.api.agent.create({
+        name: "Support Agent",
+        aiconfig: "default",
+        description: "Support",
+        promptInstructions: "Be helpful",
+      })
+
+      await config.api.agentFiles.fetch(agent._id!, { status: 403 })
+      await config.api.agentFiles.upload(
+        agent._id!,
+        {
+          file: fileBuffer,
+          name: "notes.txt",
+        },
+        { status: 403 }
+      )
+      await config.api.agentFiles.remove(agent._id!, "file_test", {
+        status: 403,
+      })
+    })
   })
 
   it("uploads and lists agent files", async () => {
