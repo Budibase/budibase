@@ -73,9 +73,14 @@ export async function oldestLogDate() {
   const license = await licensing.cache.getCachedLicense()
   const retentionDays =
     license.quotas?.constant?.[ConstantQuotaName.AGENT_LOG_RETENTION_DAYS]
-      ?.value || 0
+      ?.value
 
-  if (retentionDays === proConstants.licenses.UNLIMITED) {
+  if (
+    retentionDays === proConstants.licenses.UNLIMITED ||
+    retentionDays == null ||
+    !Number.isFinite(retentionDays) ||
+    retentionDays <= 0
+  ) {
     return constants.MIN_VALID_DATE.toISOString()
   }
 

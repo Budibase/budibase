@@ -1,6 +1,8 @@
 import fetch from "node-fetch"
-import { context } from "@budibase/backend-core"
+import cloneDeep from "lodash/cloneDeep"
+import { constants, context } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
+import { licensing } from "@budibase/pro"
 import { getAvailableTools, getOrThrow } from "./agents"
 import { AGENT_LOG_SESSION_TABLE_ID } from "../sqs/staticTables"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -331,6 +333,24 @@ describe("agentLogs", () => {
     mocks.licenses.setAgentLogsQuota(7)
 
     await expect(oldestLogDate()).resolves.toBe("2026-03-02T12:00:00.000Z")
+  })
+
+  it("treats a missing retention quota as unlimited", async () => {
+    const license = cloneDeep(await licensing.cache.getCachedLicense())
+    delete license.quotas.constant.agentLogRetentionDays
+    mocks.licenses.useLicense(license)
+
+    await expect(oldestLogDate()).resolves.toBe(
+      constants.MIN_VALID_DATE.toISOString()
+    )
+  })
+
+  it("treats a zero retention quota as unlimited", async () => {
+    mocks.licenses.setAgentLogsQuota(0)
+
+    await expect(oldestLogDate()).resolves.toBe(
+      constants.MIN_VALID_DATE.toISOString()
+    )
   })
 
   it("finds expired session docs using lastActivityAt", async () => {
