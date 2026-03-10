@@ -28,12 +28,12 @@
   )
 
   const createDraft = (): AIConfigResponse =>
-    config?._id && provider
+    config?._id
       ? ({
           _id: config._id,
           _rev: config._rev,
           name: config.name,
-          provider: provider,
+          provider: config.provider,
           credentialsFields: structuredClone(config.credentialsFields),
           model: config.model,
           webSearchConfig: structuredClone(config.webSearchConfig),
@@ -91,7 +91,15 @@
 
   onMount(async () => {
     try {
-      await aiConfigsStore.fetchProviders()
+      await Promise.all([
+        aiConfigsStore.fetch(),
+        aiConfigsStore.fetchProviders(),
+      ])
+
+      if (configId !== "new" && config) {
+        draft = createDraft()
+        savedSnapshot = JSON.stringify(draft)
+      }
     } catch (err: any) {
       notifications.error(err.message || "Failed to load providers")
     }
@@ -188,6 +196,7 @@
     provider={draft.provider}
     model={draft.model}
     {providers}
+    disabled={isEdit}
     on:providerChange={event => (draft.provider = event.detail)}
     on:modelChange={event => (draft.model = event.detail)}
   />

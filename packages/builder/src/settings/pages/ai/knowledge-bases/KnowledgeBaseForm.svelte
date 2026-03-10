@@ -63,9 +63,16 @@
       a.name.localeCompare(b.name)
     )
   )
+  let selectedEmbeddingModel = $derived(
+    embeddingModelOptions.find(option => option._id === draft.embeddingModel)
+  )
   let vectorDbOptions = $derived(
     [...$vectorDbStore.configs].sort((a, b) => a.name.localeCompare(b.name))
   )
+  let selectedVectorDb = $derived(
+    vectorDbOptions.find(option => option._id === draft.vectorDb)
+  )
+  let canEditReferences = $derived((config?.files.length || 0) === 0)
   let duplicateNameError = $derived.by(() => {
     const normalizedDraftName = draft.name?.trim().toLowerCase()
     if (!normalizedDraftName) {
@@ -183,17 +190,29 @@
     }
   }
 
-  function createEmbeddingModel() {
+  function openEmbeddingModel() {
     knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
     const currentKnowledgeBaseId = knowledgeBaseId || "new"
+    if (draft.embeddingModel) {
+      bb.settings(
+        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/${draft.embeddingModel}`
+      )
+      return
+    }
     bb.settings(
       `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/new`
     )
   }
 
-  function createVectorDb() {
+  function openVectorDb() {
     knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
     const currentKnowledgeBaseId = knowledgeBaseId || "new"
+    if (draft.vectorDb) {
+      bb.settings(
+        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/${draft.vectorDb}`
+      )
+      return
+    }
     bb.settings(
       `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/new`
     )
@@ -258,13 +277,12 @@
       options={embeddingModelSelectOptions}
       getOptionValue={option => option.value}
       getOptionLabel={option => option.label}
-      disabled={isEdit}
+      disabled={!canEditReferences}
     />
     <ActionButton
-      icon="Add"
+      icon={selectedEmbeddingModel ? "pencil" : "Add"}
       size="M"
-      disabled={isEdit}
-      on:click={createEmbeddingModel}
+      on:click={openEmbeddingModel}
     />
   </div>
 
@@ -277,13 +295,12 @@
       options={vectorDbSelectOptions}
       getOptionValue={option => option.value}
       getOptionLabel={option => option.label}
-      disabled={isEdit}
+      disabled={!canEditReferences}
     />
     <ActionButton
-      icon="Add"
+      icon={selectedVectorDb ? "pencil" : "Add"}
       size="M"
-      disabled={isEdit}
-      on:click={createVectorDb}
+      on:click={openVectorDb}
     />
   </div>
 

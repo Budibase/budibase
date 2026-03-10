@@ -7,13 +7,13 @@
   import { routeActions } from "../.."
 
   export interface Props {
-    configId?: string
+    id?: string
     knowledgeBaseId?: string
   }
 
-  let { configId, knowledgeBaseId }: Props = $props()
+  let { id, knowledgeBaseId }: Props = $props()
 
-  let config = $derived($vectorDbStore.configs.find(db => db._id === configId))
+  let config = $derived($vectorDbStore.configs.find(db => db._id === id))
 
   const createDraft = (): VectorDb =>
     config
@@ -32,6 +32,7 @@
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
   let savedSnapshot = $state(JSON.stringify(draft))
+
   let isModified = $derived(savedSnapshot !== JSON.stringify(draft))
 
   let canSave = $derived.by(() => {
@@ -50,11 +51,15 @@
   onMount(async () => {
     try {
       const configs = await vectorDbStore.fetch()
-      const isCreation = configId === "new"
-      if (!isCreation && configId && !configs.find(db => db._id === configId)) {
+      const isCreation = id === "new"
+      if (!isCreation && id && !configs.find(db => db._id === id)) {
         notifications.error("Vector database not found")
         bb.settings("/ai-config/knowledge-bases")
+        return
       }
+
+      draft = createDraft()
+      savedSnapshot = JSON.stringify(draft)
     } catch (err: any) {
       notifications.error(err.message || "Failed to load vector databases")
     }
