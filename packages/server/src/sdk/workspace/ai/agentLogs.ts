@@ -21,6 +21,7 @@ import {
   constants,
   context,
   HTTPError,
+  queue,
   sql,
   SQS_DATASOURCE_INTERNAL,
 } from "@budibase/backend-core"
@@ -51,6 +52,16 @@ const DEFAULT_SESSION_PAGE_SIZE = 75
 const MAX_SESSION_PAGE_SIZE = 100
 const DEFAULT_BOOKMARK_PAGE = 1
 const builder = new sql.Sql(SqlClient.SQL_LITE)
+const DEFAULT_INDEX_QUEUE_CONCURRENCY = 2
+const DEFAULT_INDEX_QUEUE_BACKOFF_MS = 5000
+const DEFAULT_INDEX_QUEUE_TIMEOUT_MS = 30000
+
+interface AgentLogIndexJob extends IndexAgentLogOperationInput {
+  workspaceId: string
+}
+
+let agentLogIndexQueue: queue.BudibaseQueue<AgentLogIndexJob> | undefined
+let agentLogIndexQueueInitialised = false
 
 function getExpectedEndUser(agentId: string): string {
   return `bb-agent:${agentId}`
@@ -397,10 +408,11 @@ async function fetchLiteLLMSessionRows(
       }
     )
 
+    if (response.status === 404) {
+      return { rows: [], total: 0 }
+    }
+
     if (!response.ok) {
-      if (response.status === 404) {
-        return { rows: [], total: 0 }
-      }
       const text = await response.text()
       throw new Error(
         `Error fetching agent session detail: ${text || response.statusText}`
@@ -482,7 +494,7 @@ async function upsertSessionIndexDoc(
   const sessionDocId = getSessionDocId(snapshot.agentId, snapshot.sessionId)
   const now = new Date().toISOString()
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     const existing = await db.tryGet<AgentLogSessionIndexDoc>(sessionDocId)
     const requestIds = parseIndexedRequestIds(existing?.requestIds)
     for (const requestId of snapshot.requestIds) {
@@ -530,6 +542,60 @@ async function upsertSessionIndexDoc(
   }
 }
 
+function getIndexQueue() {
+  if (!agentLogIndexQueue) {
+    agentLogIndexQueue = new queue.BudibaseQueue<AgentLogIndexJob>(
+      queue.JobQueue.AGENT_LOG_INDEXING,
+      {
+        maxStalledCount: 3,
+        jobOptions: {
+          attempts: 6,
+          backoff: {
+            type: "exponential",
+            delay: DEFAULT_INDEX_QUEUE_BACKOFF_MS,
+          },
+          timeout: DEFAULT_INDEX_QUEUE_TIMEOUT_MS,
+          removeOnComplete: true,
+          removeOnFail: 1000,
+        },
+        jobTags: data => ({
+          workspaceId: data.workspaceId,
+          agentId: data.agentId,
+          sessionId: data.sessionId,
+        }),
+      }
+    )
+  }
+
+  return agentLogIndexQueue
+}
+
+export function initLogIndexQueue(
+  concurrency = DEFAULT_INDEX_QUEUE_CONCURRENCY
+) {
+  if (agentLogIndexQueueInitialised) {
+    return Promise.resolve()
+  }
+
+  try {
+    agentLogIndexQueueInitialised = true
+    return getIndexQueue().process(concurrency, async job => {
+      const { workspaceId, ...indexInput } = job.data
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        await addSessionLog(indexInput)
+      })
+    })
+  } catch (error) {
+    agentLogIndexQueueInitialised = false
+    throw error
+  }
+}
+
+async function enqueueSessionLogIndex(job: AgentLogIndexJob) {
+  initLogIndexQueue()
+  return await getIndexQueue().add(job)
+}
+
 export async function addSessionLog(
   input: IndexAgentLogOperationInput
 ): Promise<void> {
@@ -545,35 +611,28 @@ export async function addSessionLog(
   const fallbackStartTime = toISO(input.startedAt)
   const fallbackEndTime = toISO(input.completedAt || input.startedAt)
 
-  const summaries = (
-    await Promise.all(
-      uniqueRequestIds.map(async requestId => {
-        try {
-          const requestDetail = await fetchLiteLLMRequestSummaryById(
-            requestId,
-            fallbackStartTime,
-            fallbackEndTime
-          )
-          if (!requestDetail) {
-            throw new HTTPError("Agent log detail not found", 404)
-          }
-          validateLiteLLMRequestOwnership(input.agentId, requestDetail)
-          return {
-            requestId,
-            detail: requestDetail,
-          }
-        } catch (error) {
-          console.error("Failed to index agent log request", {
-            agentId: input.agentId,
-            sessionId: input.sessionId,
-            requestId,
-            error,
-          })
+  const summaryResults = await Promise.all(
+    uniqueRequestIds.map(async requestId => {
+      try {
+        const requestDetail = await fetchLiteLLMRequestSummaryById(
+          requestId,
+          fallbackStartTime,
+          fallbackEndTime
+        )
+        if (!requestDetail) {
           return null
         }
-      })
-    )
-  ).filter(
+        validateLiteLLMRequestOwnership(input.agentId, requestDetail)
+        return {
+          requestId,
+          detail: requestDetail,
+        }
+      } catch {
+        return null
+      }
+    })
+  )
+  const summaries = summaryResults.filter(
     (
       result
     ): result is {
@@ -582,8 +641,15 @@ export async function addSessionLog(
     } => result != null
   )
 
+  const foundRequestIds = new Set(summaries.map(summary => summary.requestId))
+  const missingRequestIds = uniqueRequestIds.filter(
+    requestId => !foundRequestIds.has(requestId)
+  )
+
   if (!summaries.length) {
-    return
+    const error: any = new HTTPError("Agent log details not ready", 404)
+    error.missingRequestIds = uniqueRequestIds
+    throw error
   }
 
   const snapshot: AgentLogSessionSnapshot = {
@@ -607,6 +673,12 @@ export async function addSessionLog(
   }
 
   await upsertSessionIndexDoc(db, snapshot)
+
+  if (missingRequestIds.length) {
+    const error: any = new HTTPError("Agent log details not ready", 404)
+    error.missingRequestIds = missingRequestIds
+    throw error
+  }
 }
 
 export function createSessionLogIndexer({
@@ -629,8 +701,19 @@ export function createSessionLogIndexer({
         return
       }
 
+      const workspaceId = context.getWorkspaceId()
+      if (!workspaceId) {
+        console.error(`Failed to queue ${errorLabel} logs`, {
+          agentId,
+          sessionId,
+          error: new Error("workspaceId is required"),
+        })
+        return
+      }
+
       try {
-        await addSessionLog({
+        await enqueueSessionLogIndex({
+          workspaceId,
           agentId,
           sessionId,
           requestIds: [...requestIds],
@@ -639,7 +722,7 @@ export function createSessionLogIndexer({
           completedAt: new Date().toISOString(),
         })
       } catch (error) {
-        console.error(`Failed to index ${errorLabel} logs`, {
+        console.error(`Failed to queue ${errorLabel} logs`, {
           agentId,
           sessionId,
           error,
