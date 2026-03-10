@@ -7,7 +7,6 @@
     aiConfigsStore,
     knowledgeBaseStore,
     selectedAgent,
-    vectorDbStore,
   } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { onDestroy, onMount } from "svelte"
@@ -93,11 +92,6 @@
       ])
     )
   )
-  let vectorDbNameById = $derived(
-    new Map(
-      $vectorDbStore.configs.map(config => [config._id, config.name || ""])
-    )
-  )
   let tableRows = $derived.by(() =>
     knowledgeBases
       .map(knowledgeBase => ({
@@ -106,9 +100,6 @@
         embeddingModel:
           embeddingNameById.get(knowledgeBase.embeddingModel) ||
           knowledgeBase.embeddingModel,
-        vectorDb:
-          vectorDbNameById.get(knowledgeBase.vectorDb) ||
-          knowledgeBase.vectorDb,
         files: knowledgeBase.files.length,
         onToggle: toggleKnowledgeBase,
         onManage: (knowledgeBaseId: string) =>
@@ -132,11 +123,7 @@
     if (!$agentsStore.agentsLoaded) {
       await agentsStore.init()
     }
-    await Promise.all([
-      aiConfigsStore.fetch(),
-      vectorDbStore.fetch(),
-      knowledgeBaseStore.fetch(),
-    ])
+    await Promise.all([aiConfigsStore.fetch(), knowledgeBaseStore.fetch()])
   })
 
   onDestroy(() => {
@@ -183,7 +170,7 @@
         enabled: { displayName: "", width: "48px" },
         name: {},
         embeddingModel: { displayName: "Embedding model" },
-        vectorDb: { displayName: "VectorDB" },
+
         files: { displayName: "# Files", width: "60px" },
         manage: { displayName: "", width: "88px" },
       }}

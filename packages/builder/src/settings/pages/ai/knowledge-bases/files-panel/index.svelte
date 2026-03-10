@@ -166,8 +166,7 @@
     }
     await confirm({
       title: `Confirm deletion`,
-      body: `Are you sure to remove "${file.filename}" from this knowledge base? This action can't be undone.`,
-      size: "L",
+      body: `Are you sure to remove this file from this knowledge base? This action can't be undone.`,
       okText: "Delete",
       onConfirm: async () => {
         try {
