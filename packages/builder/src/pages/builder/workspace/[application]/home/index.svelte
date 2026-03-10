@@ -17,7 +17,13 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { agentsStore, auth, featureFlags, licensing } from "@/stores/portal"
+  import {
+    admin,
+    agentsStore,
+    auth,
+    featureFlags,
+    licensing,
+  } from "@/stores/portal"
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
@@ -35,7 +41,6 @@
   } from "@budibase/bbui"
   import {
     FeatureFlag,
-    type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
     type HomeRow,
@@ -61,6 +66,7 @@
     filterHomeRows,
     sortHomeRows,
   } from "./_components/rows"
+  import type { WorkspaceHomeMetrics } from "./types"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
@@ -96,7 +102,7 @@
 
   let typeFilter: HomeType = "all"
   let searchTerm = ""
-  let metrics: GetWorkspaceHomeMetricsResponse | null = null
+  let metrics: WorkspaceHomeMetrics | null = null
 
   let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
@@ -628,6 +634,7 @@
 
   $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT
   $: showHeaderActions = $licensing.showTrialBanner || showAgentChat
+  $: showBudibaseAIMetric = $admin.cloud || !$licensing.isFreePlan
 
   $: if (hasMounted) writeUrlState()
 
@@ -707,7 +714,7 @@
       {/if}
     </div>
 
-    <HomeMetrics {metrics} agentsEnabled={$featureFlags.AI_AGENTS} />
+    <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
     <div class="controls-row">
       <HomeControls

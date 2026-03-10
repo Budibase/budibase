@@ -19,13 +19,10 @@ describe("workspace home metrics caching", () => {
     cacheState = new Map()
     find = jest.fn(async () => ({ docs: [{ _id: "us_1" }], bookmark: null }))
     getQuotaUsage = jest.fn(async () => ({
-      apps: {
-        prod_workspace: {
-          monthly: {
-            "2026-01": {
-              automations: 2,
-            },
-          },
+      monthly: {
+        current: {
+          actions: 2,
+          budibaseAICredits: 4,
         },
       },
     }))
@@ -72,13 +69,10 @@ describe("workspace home metrics caching", () => {
       bookmark: null,
     })
     getQuotaUsage.mockResolvedValue({
-      apps: {
-        prod_workspace: {
-          monthly: {
-            "2026-01": {
-              automations: 7,
-            },
-          },
+      monthly: {
+        current: {
+          actions: 7,
+          budibaseAICredits: 11,
         },
       },
     })
@@ -93,7 +87,7 @@ describe("workspace home metrics caching", () => {
   it("returns stale metrics when refresh fails after ttl", async () => {
     const first = await getWorkspaceHomeMetrics("dev_workspace")
 
-    jest.setSystemTime(new Date(Date.now() + 10 * 60 * 1000 + 1))
+    jest.setSystemTime(new Date(Date.now() + 5 * 60 * 1000 + 1))
     find.mockRejectedValue(new Error("failed"))
 
     const second = await getWorkspaceHomeMetrics("dev_workspace")
@@ -107,8 +101,8 @@ describe("workspace home metrics caching", () => {
     const res = await getWorkspaceHomeMetrics("dev_workspace")
 
     expect(res.totalUsers).toEqual(0)
-    expect(res.automationRunsThisMonth).toEqual(0)
-    expect(res.agentActionsThisMonth).toEqual(0)
+    expect(res.operationsThisMonth).toEqual(0)
+    expect(res.budibaseAICreditsThisMonth).toEqual(0)
     expect(new Date(res.periodStart)).toEqual(
       new Date("2026-01-01T00:00:00.000Z")
     )

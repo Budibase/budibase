@@ -1,11 +1,12 @@
 import { Header, roles } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
+import { MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
 import tk from "timekeeper"
 
 import * as setup from "./utilities"
 
 describe("/workspace/home/metrics", () => {
-  const METRICS_FRESH_TTL_MS = 10 * 60 * 1000
+  const METRICS_FRESH_TTL_MS = 5 * 60 * 1000
   const config = setup.getConfig()
   const request = setup.getRequest()
 
@@ -62,15 +63,19 @@ describe("/workspace/home/metrics", () => {
     expect(res.body.totalUsers).toEqual(initial.body.totalUsers + 3)
   })
 
-  it("returns automation runs from quotas for the current quota month", async () => {
+  it("returns operations and ai credits from monthly quota usage", async () => {
     await tk.withFreeze(new Date(2026, 0, 20, 12, 0, 0, 0), async () => {
-      await config.withProdApp(async () => {
-        await quotas.addAutomation(async () => undefined, {
-          automationId: "au_test",
-        })
-        await quotas.addAutomation(async () => undefined, {
-          automationId: "au_test",
-        })
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await quotas.setUsage(
+          8,
+          MonthlyQuotaName.ACTIONS,
+          QuotaUsageType.MONTHLY
+        )
+        await quotas.setUsage(
+          3,
+          MonthlyQuotaName.BUDIBASE_AI_CREDITS,
+          QuotaUsageType.MONTHLY
+        )
       })
 
       const res = await request
@@ -78,8 +83,8 @@ describe("/workspace/home/metrics", () => {
         .set(config.defaultHeaders())
         .expect(200)
 
-      expect(res.body.automationRunsThisMonth).toEqual(2)
-      expect(res.body.agentActionsThisMonth).toEqual(0)
+      expect(res.body.operationsThisMonth).toEqual(8)
+      expect(res.body.budibaseAICreditsThisMonth).toEqual(3)
 
       expect(new Date(res.body.periodStart)).toEqual(new Date(2026, 0, 1))
       expect(new Date(res.body.periodEnd)).toEqual(new Date(2026, 1, 1))

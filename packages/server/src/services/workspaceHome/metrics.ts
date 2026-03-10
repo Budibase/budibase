@@ -4,10 +4,10 @@ import { type GetWorkspaceHomeMetricsResponse } from "@budibase/types"
 
 import { getQuotaMonthWindow } from "../../utilities/quotaMonthWindow"
 
-const METRICS_FRESH_TTL_MS = 10 * 60 * 1000
+const METRICS_FRESH_TTL_MS = 5 * 60 * 1000
 const METRICS_FAILURE_TTL_MS = 5 * 60 * 1000
 const METRICS_RETENTION_TTL_SECONDS = 24 * 60 * 60
-const METRICS_CACHE_KEY_PREFIX = "workspaceHome:metrics"
+const METRICS_CACHE_KEY_PREFIX = "workspaceHome:metrics:v2"
 
 interface WorkspaceMetricsCacheEnvelope {
   value: GetWorkspaceHomeMetricsResponse
@@ -21,8 +21,8 @@ const getDefaultMetrics = (): GetWorkspaceHomeMetricsResponse => {
   const { periodStart, periodEnd } = getQuotaMonthWindow()
   return {
     totalUsers: 0,
-    automationRunsThisMonth: 0,
-    agentActionsThisMonth: 0,
+    operationsThisMonth: 0,
+    budibaseAICreditsThisMonth: 0,
     periodStart,
     periodEnd,
   }
@@ -82,25 +82,27 @@ const countUsersWithWorkspaceAccess = async (prodWorkspaceId: string) => {
 const computeWorkspaceHomeMetrics = async (
   prodWorkspaceId: string
 ): Promise<GetWorkspaceHomeMetricsResponse> => {
-  const { periodStart, periodEnd, monthString } = getQuotaMonthWindow()
+  const { periodStart, periodEnd } = getQuotaMonthWindow()
 
   const usersPromise = countUsersWithWorkspaceAccess(prodWorkspaceId)
 
-  const automationsPromise = quotas.getQuotaUsage().then(usage => {
-    return (
-      usage.apps?.[prodWorkspaceId]?.monthly?.[monthString]?.automations ?? 0
-    )
+  const quotaUsagePromise = quotas.getQuotaUsage().then(usage => {
+    return {
+      operationsThisMonth: usage.monthly?.current?.actions ?? 0,
+      budibaseAICreditsThisMonth:
+        usage.monthly?.current?.budibaseAICredits ?? 0,
+    }
   })
 
-  const [totalUsers, automationRunsThisMonth] = await Promise.all([
+  const [totalUsers, quotaUsage] = await Promise.all([
     usersPromise,
-    automationsPromise,
+    quotaUsagePromise,
   ])
 
   return {
     totalUsers,
-    automationRunsThisMonth,
-    agentActionsThisMonth: 0,
+    operationsThisMonth: quotaUsage.operationsThisMonth,
+    budibaseAICreditsThisMonth: quotaUsage.budibaseAICreditsThisMonth,
     periodStart,
     periodEnd,
   }
