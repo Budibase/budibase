@@ -747,9 +747,17 @@
     {/if}
     {#if showPendingAssistantState}
       <div class="message assistant assistant-loading" aria-live="polite">
-        <div class="assistant-loading-indicator">
-          <ProgressCircle size="S" />
-          <span>Thinking...</span>
+        <div class="reasoning-part">
+          <button class="reasoning-toggle" type="button" disabled>
+            <span class="reasoning-icon shimmer">
+              <Icon
+                name="brain"
+                size="M"
+                color="var(--spectrum-global-color-gray-600)"
+              />
+            </span>
+            <span class="reasoning-label shimmer">Thinking</span>
+          </button>
         </div>
       </div>
     {/if}
@@ -904,13 +912,8 @@
     min-height: 24px;
   }
 
-  .assistant-loading-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--spectrum-global-color-gray-600);
-    font-size: 13px;
-    animation: shimmer 1.6s ease-in-out infinite;
+  .assistant-loading .reasoning-toggle {
+    cursor: default;
   }
 
   .input-wrapper {
