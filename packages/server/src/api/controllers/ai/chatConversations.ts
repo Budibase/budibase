@@ -302,19 +302,14 @@ export async function webhookChat({
   })
 
   let assistantText = ""
-  const captureResponseMetadata = async () => {
-    const response = await result.response
-    return {
-      requestId: response.id || undefined,
-    }
+  const responseMetadata = {
+    requestId: (await result.response).id ?? undefined,
   }
   try {
     assistantText = await result.text
-    const responseMetadata = await captureResponseMetadata()
     sessionLogIndexer.addRequestId(responseMetadata.requestId)
     await sessionLogIndexer.index()
   } catch (error) {
-    const responseMetadata = await captureResponseMetadata()
     sessionLogIndexer.addRequestId(responseMetadata.requestId)
     await sessionLogIndexer.index()
     throw error
@@ -530,12 +525,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     })
 
     const title = latestQuestion ? truncateTitle(latestQuestion) : chat.title
-    const captureResponseMetadata = async () => {
-      const response = await result.response
-      return {
-        requestId: response.id || undefined,
-      }
-    }
 
     ctx.respond = false
     const streamStartTime = Date.now()
@@ -571,7 +560,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
-        const responseMetadata = await captureResponseMetadata()
+        const responseMetadata = {
+          requestId: (await result.response).id ?? undefined,
+        }
         sessionLogIndexer.addRequestId(responseMetadata.requestId)
         await sessionLogIndexer.index()
 

@@ -150,12 +150,6 @@ export async function run({
         })
 
         const streamResult = await agent.stream({ prompt })
-        const captureResponseMetadata = async () => {
-          const response = await streamResult.response
-          return {
-            requestId: response.id || undefined,
-          }
-        }
 
         let assistantMessage: UIMessage | undefined
         let streamingError: string | undefined
@@ -176,8 +170,10 @@ export async function run({
         const incompleteTools = assistantMessage
           ? findIncompleteToolCalls([assistantMessage])
           : []
+        const responseMetadata = {
+          requestId: (await streamResult.response).id ?? undefined,
+        }
         if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
-          const responseMetadata = await captureResponseMetadata()
           sessionLogIndexer.addRequestId(responseMetadata.requestId)
           const errorMessage = formatIncompleteToolCallError(incompleteTools)
           await sessionLogIndexer.index()
@@ -203,7 +199,6 @@ export async function run({
 
         const error = streamingError || textExtractionError
         if (error && !responseText) {
-          const responseMetadata = await captureResponseMetadata()
           sessionLogIndexer.addRequestId(responseMetadata.requestId)
           await sessionLogIndexer.index()
           tracer.llmobs.annotate(agentSpan, {
@@ -218,7 +213,6 @@ export async function run({
           }
         }
         const usage = await streamResult.usage
-        const responseMetadata = await captureResponseMetadata()
         sessionLogIndexer.addRequestId(responseMetadata.requestId)
         await sessionLogIndexer.index()
         const output = outputOption
