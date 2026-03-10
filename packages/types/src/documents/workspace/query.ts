@@ -120,9 +120,9 @@ export interface GoogleSheetsQueryFields {
 }
 
 export interface PaginationConfig {
-  type: string
-  location: string
-  pageParam: string
+  type?: string
+  location?: string
+  pageParam?: string
   sizeParam?: string
   responseParam?: string
 }

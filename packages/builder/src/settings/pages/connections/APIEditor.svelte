@@ -5,6 +5,7 @@
     Datasource,
     UIInternalDatasource,
     DynamicVariable,
+    EnrichedBinding,
   } from "@budibase/types"
   import { type UIWorkspaceConnection, AUTH_TYPE_OPTIONS } from "@/types"
   import { appStore } from "@/stores/builder/app"
@@ -19,11 +20,10 @@
   import { oauth2 } from "@/stores/builder/oauth2"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { restTemplates } from "@/stores/builder/restTemplates"
-  import { licensing } from "@/stores/portal/licensing"
+  import { licensing, environment } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import {
     getRestBindings,
-    getEnvironmentBindings,
     readableToRuntimeBinding,
     runtimeToReadableMap,
   } from "@/dataBinding"
@@ -91,14 +91,19 @@
   let addHeader: KeyValueBuilder<unknown>
   let addVariable: KeyValueBuilder<unknown>
   let addQueryParam: KeyValueBuilder<unknown>
-  let restBindings = getRestBindings()
   let headerFieldsCount = 0
   let variableFieldsCount = 0
   let queryParamFieldsCount = 0
   let authEditors: Array<HTTPAuthEditor | OAuth2Editor> = []
   let canAddConfig = true
   let deleteModal: DeleteDataConfirmationModal
+  let restBindings: EnrichedBinding[] = []
 
+  $: {
+    $environment
+    $licensing
+    restBindings = getRestBindings()
+  }
   $: datasource =
     selected?.source === "datasource"
       ? $datasources.list.find(ds => ds._id === selected.sourceId)
@@ -136,7 +141,6 @@
     (selected?.templateId
       ? restTemplates.getById(selected.templateId)
       : undefined)
-  $: isRestTemplate = !!template
   $: spec = template?.specs?.[0]
 
   $: if (spec?.url && !openApiInfo) {
@@ -635,10 +639,10 @@
           <div class="settings-item first">
             <div class="settings-item-text">
               <span>Reject Unauthorized</span>
-              <span class="settings-item-blurb"
-                >Reject requests to servers with invalid or self-signed SSL
-                certificates.</span
-              >
+              <span class="settings-item-blurb">
+                Reject requests to servers with invalid or self-signed SSL
+                certificates.
+              </span>
             </div>
             <Toggle
               value={data.rejectUnauthorized ?? true}
@@ -667,17 +671,15 @@
       {:else}
         <Layout gap="M" noPadding>
           <Divider noMargin noGrid size="S" />
-          {#if isRestTemplate}
-            <ServerUrlInput
-              label="Base URL"
-              value={data.baseUrl ?? ""}
-              servers={openApiInfo?.servers ?? []}
-              on:change={e => {
-                data.baseUrl = e.detail
-                data = { ...data }
-              }}
-            />
-          {/if}
+          <ServerUrlInput
+            label="Base URL"
+            value={data.baseUrl ?? ""}
+            servers={openApiInfo?.servers ?? []}
+            on:change={e => {
+              data.baseUrl = e.detail
+              data = { ...data }
+            }}
+          />
           <Layout gap="XXS" noPadding>
             <div class="prop-table-header">
               <Label>URL parameters</Label>
@@ -703,6 +705,8 @@
               on:change={evt => onQueryParamsChange(evt.detail.fields)}
               noAddButton
               bindings={restBindings}
+              drawerForceModal
+              drawerZIndex={1003}
             />
           </Layout>
           <Layout gap="XXS" noPadding>
@@ -728,6 +732,8 @@
               on:change={evt => onHeadersChange(evt.detail.fields)}
               noAddButton
               bindings={restBindings}
+              drawerForceModal
+              drawerZIndex={1003}
             />
           </Layout>
           <Layout gap="XXS" noPadding>
@@ -755,9 +761,6 @@
               lockedKeys={templateStaticVariableKeys}
               on:change={evt => onStaticVariablesChange(evt.detail.fields)}
               noAddButton
-              bindings={$licensing.environmentVariablesEnabled
-                ? getEnvironmentBindings()
-                : []}
             />
           </Layout>
           {#if isDatasource && datasource}

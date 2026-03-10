@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto as gotoStore } from "@roxi/routify"
-  import { flags, workspaceConnections, appStore } from "@/stores/builder"
+  import { flags, appStore } from "@/stores/builder"
   import {
     datasources,
     hasRestTemplate,
@@ -17,6 +17,7 @@
     Heading,
     Button,
     Select,
+    Input,
     Layout,
     Tabs,
     Tab,
@@ -35,15 +36,22 @@
     type RestTemplateSpec,
     type PreviewQueryResponse,
     type UIInternalDatasource,
+    type EnrichedBinding,
   } from "@budibase/types"
   import {
     customQueryIconColor,
     getRestTemplateQueryDisplayName,
     QUERY_VERB_MAP,
   } from "@/helpers/data/utils"
-  import { RestBodyTypes } from "@/constants/backend"
+  import { capitalise } from "@/helpers"
+  import {
+    RestBodyTypes,
+    PaginationTypes,
+    PaginationLocations,
+  } from "@/constants/backend"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
+  import CustomEndpointInput from "./CustomEndpointInput.svelte"
   import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
   import {
     buildUrl,
@@ -70,6 +78,12 @@
   import ConnectionSelect from "./rest/ConnectionSelect.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
   import { getErrorMessage } from "@/helpers/errors"
+  import {
+    urlParamHighlightPlugin,
+    urlParamHighlightTheme,
+  } from "../common/CodeEditor/urlParamHighlight"
+  import { environment } from "@/stores/portal"
+  import { onMount } from "svelte"
 
   export let queryId
   export let datasourceId: string | undefined = undefined
@@ -108,14 +122,45 @@
   let editableQuery: Query | undefined
   let datasource: Datasource | UIInternalDatasource | undefined
   let enabledHeaders: Record<string, boolean> = {}
+  let globalDynamicRequestBindings: EnrichedBinding[] = []
+  let dataSourceStaticBindings: EnrichedBinding[] = []
+  let restBindings: EnrichedBinding[] = []
+  let mergedBindings: EnrichedBinding[] = []
+  let bindingPreviewContext: Record<string, any> = {}
 
-  // DATASOURCE/CONNECTION
-  $: availableConnections = $workspaceConnections.list
-  $: selectedConnection = availableConnections.find(c =>
-    c.auth?.some(a => a._id === editableQuery?.fields?.authConfigId)
-  )
-  $: staticVariables = selectedConnection?.props?.staticVariables ?? {}
+  // Custom query mode state
+  let customBaseUrl: string = ""
+  let customPath: string = ""
+
+  $: baseUrlOptions = (() => {
+    const opts: { label: string; url: string }[] = []
+    const connUrl = (datasource as Datasource)?.config?.url as
+      | string
+      | undefined
+    if (connUrl) {
+      opts.push({ label: "Connection default", url: connUrl })
+    }
+    return opts
+  })()
+
   $: selectedDatasourceId = datasourceId || _pickedDatasourceId
+
+  // CUSTOM MODE
+  $: isCustomMode = !hasRestTemplate(datasource)
+  $: if (isCustomMode && editableQuery && !editableQuery.fields.pagination) {
+    editableQuery.fields.pagination = {}
+  }
+  $: pagination = editableQuery?.fields.pagination
+  $: datasourceType = datasource?.source
+  $: integrationInfo = datasourceType
+    ? $integrations[datasourceType]
+    : undefined
+  $: queryConfig = integrationInfo?.query
+  $: verbOptions = Object.keys(queryConfig || {}).map(verb => ({
+    value: verb,
+    label: queryConfig?.[verb]?.displayName || capitalise(verb),
+    colour: customQueryIconColor(verb),
+  }))
 
   // Reset endpoints when the effective datasource changes
   $: if (selectedDatasourceId) {
@@ -132,7 +177,6 @@
     syncEndpointFromQuery(editableQuery, endpoints)
   }
 
-  // Bootstrap _pickedDatasourceId
   $: if (!datasourceId && queryId) {
     const dsId = $queries.list.find(q => q._id === queryId)?.datasourceId
     if (dsId && dsId !== _pickedDatasourceId) {
@@ -150,6 +194,9 @@
     queryParams = undefined
     originalBuiltQuery = undefined
     selectedAuth = false
+    if (isCustomMode) {
+      initCustomUrlFields(editableQuery?.fields?.path)
+    }
   }
 
   $: datasourceLookupId = selectedDatasourceId || storeQuery?.datasourceId
@@ -205,20 +252,21 @@
   $: dynamicVariables = localDynamicVariables ?? computedDynamicVariables
 
   // Generate all query bindings.
-  $: ({
-    globalDynamicRequestBindings,
-    dataSourceStaticBindings,
-    connectionStaticBindings,
-    restBindings,
-    mergedBindings,
-    bindingPreviewContext,
-  } = buildQueryBindings(
-    datasource,
-    requestBindings,
-    globalDynamicBindings,
-    dynamicVariables,
-    staticVariables
-  ))
+  $: {
+    $environment
+    ;({
+      globalDynamicRequestBindings,
+      dataSourceStaticBindings,
+      restBindings,
+      mergedBindings,
+      bindingPreviewContext,
+    } = buildQueryBindings(
+      datasource,
+      requestBindings,
+      globalDynamicBindings,
+      dynamicVariables
+    ))
+  }
 
   // Lazily initialize queryParams from query string once dependencies are ready
   $: if (!queryParams && queryString && mergedBindings) {
@@ -228,12 +276,17 @@
     )
   }
 
-  // Fully qualified display url
+  // Fully qualified display url shown in the CodeMirror preview.
   $: requestURL = buildUrl(
-    editableQuery?.fields?.path,
+    isCustomMode ? effectivePath : editableQuery?.fields?.path,
     queryParams,
     mergedBindings
   )
+
+  // Custom Mode Url Parsing
+  $: effectivePath = isCustomMode
+    ? (customBaseUrl ?? "") + (customPath ?? "")
+    : editableQuery?.fields?.path
 
   // Generates a complete runtime-ready version of the query used to monitor the
   // current edit state.
@@ -241,7 +294,12 @@
     editableQuery &&
     schema &&
     buildQuery(
-      editableQuery,
+      isCustomMode
+        ? {
+            ...editableQuery,
+            fields: { ...editableQuery.fields, path: effectivePath },
+          }
+        : editableQuery,
       runtimeUrlQueries,
       requestBindings,
       mergedBindings,
@@ -296,7 +354,9 @@
 
     return options
   })()
-  $: endpointVerbColor = selectedEndpointOption?.icon?.props?.color
+  $: endpointVerbColor = isCustomMode
+    ? customQueryIconColor(editableQuery?.queryVerb)
+    : selectedEndpointOption?.icon?.props?.color
   $: endpointDocs = selectedEndpointOption?.docsUrl
   $: if (
     editableQuery &&
@@ -310,6 +370,32 @@
       selectedEndpointOption,
       baseUrl
     )
+  }
+
+  // Splits a stored full URL (fields.path) into base URL and path portion
+  // for the custom mode UI. Legacy queries store the full URL in fields.path.
+  const initCustomUrlFields = (fullPath: string | undefined) => {
+    if (!fullPath) {
+      customBaseUrl = (datasource as Datasource)?.config?.url ?? ""
+      customPath = ""
+      return
+    }
+    try {
+      const u = new URL(fullPath)
+      customBaseUrl = u.origin
+      customPath = u.pathname
+    } catch {
+      const schemeEnd = fullPath.indexOf("://")
+      const searchFrom = schemeEnd !== -1 ? schemeEnd + 3 : 0
+      const slashIdx = fullPath.indexOf("/", searchFrom)
+      if (slashIdx !== -1) {
+        customBaseUrl = fullPath.slice(0, slashIdx)
+        customPath = fullPath.slice(slashIdx)
+      } else {
+        customBaseUrl = (datasource as Datasource)?.config?.url ?? ""
+        customPath = fullPath
+      }
+    }
   }
 
   const resolveStoreQuery = (
@@ -444,10 +530,10 @@
    * @param query
    * @param endpoints
    */
-  function parseLegacyQuery(
+  const parseLegacyQuery = (
     query: Query,
     endpoints: ImportEndpoint[] | undefined
-  ) {
+  ) => {
     if (endpoints && query.fields?.path && !query.restTemplateMetadata) {
       try {
         const url = new URL(query.fields.path)
@@ -481,7 +567,7 @@
   }
 
   // SAVE/PREVIEW
-  async function saveQuery(redirectIfNew = true) {
+  const saveQuery = async (redirectIfNew = true) => {
     if (!builtQuery || !datasource) {
       return
     }
@@ -550,8 +636,9 @@
     return { ok: false }
   }
 
-  async function previewQuery() {
-    if (!selectedEndpointOption || !editableQuery || !builtQuery) return
+  const previewQuery = async () => {
+    if (!editableQuery || !builtQuery) return
+    if (!isCustomMode && !selectedEndpointOption) return
     try {
       validateQuery(
         requestURL,
@@ -601,6 +688,21 @@
     const newBindings = keyValueArrayToRecord(e.detail.fields)
     requestBindings = newBindings
     editableQuery!.parameters = restUtils.keyValueToQueryParameters(newBindings)
+  }
+
+  const setPaginationField = (field: string, value: unknown) => {
+    if (editableQuery) {
+      editableQuery = {
+        ...editableQuery,
+        fields: {
+          ...editableQuery.fields,
+          pagination: {
+            ...editableQuery.fields.pagination,
+            [field]: value,
+          },
+        },
+      }
+    }
   }
 
   const onUpdateHeaders = (
@@ -826,6 +928,12 @@
 
     return updated
   }
+
+  onMount(() => {
+    if (!$environment.loaded) {
+      environment.loadVariables()
+    }
+  })
 </script>
 
 <div class="request-heading">
@@ -887,7 +995,8 @@
           cta
           disabled={!queryDirty ||
             savingQuery ||
-            (isNewQuery && !selectedEndpointOption)}
+            (isNewQuery && !isCustomMode && !selectedEndpointOption) ||
+            (isNewQuery && isCustomMode && !customPath)}
           on:click={() => saveQuery()}
         >
           Save
@@ -928,23 +1037,47 @@
           }
         }}
       />
-      <div class="picker">
-        <Select
-          on:change={e => {
-            selectedEndpointOption = e.detail
-          }}
-          value={selectedEndpointOption}
-          options={endpointOptions}
-          getOptionValue={endpoint => endpoint}
-          getOptionLabel={endpoint => endpoint.name}
-          compare={compareEndpoints}
-          disabled={endpointsLoading || !selectedDatasourceId}
-          readonly={!!editableQuery?._id}
-          hideChevron={!!editableQuery?._id}
-          loading={endpointsLoading}
-          autocomplete={true}
-        />
-      </div>
+      {#if isCustomMode}
+        <div class="picker">
+          <CustomEndpointInput
+            verb={editableQuery?.queryVerb ?? "read"}
+            path={customPath}
+            baseUrl={customBaseUrl}
+            {baseUrlOptions}
+            {verbOptions}
+            on:verbChange={e => {
+              if (editableQuery) editableQuery.queryVerb = e.detail
+            }}
+            on:baseUrlChange={e => {
+              customBaseUrl = e.detail
+            }}
+            on:pathChange={e => {
+              customPath = e.detail
+              const [base, qs] = (e.detail ?? "").split("?")
+              if (editableQuery) editableQuery.fields.path = base
+              if (qs) queryParams = restUtils.breakQueryString(qs)
+            }}
+          />
+        </div>
+      {:else}
+        <div class="picker">
+          <Select
+            on:change={e => {
+              selectedEndpointOption = e.detail
+            }}
+            value={selectedEndpointOption}
+            options={endpointOptions}
+            getOptionValue={endpoint => endpoint}
+            getOptionLabel={endpoint => endpoint.name}
+            compare={compareEndpoints}
+            disabled={endpointsLoading || !selectedDatasourceId}
+            readonly={!!editableQuery?._id}
+            hideChevron={!!editableQuery?._id}
+            loading={endpointsLoading}
+            autocomplete={true}
+          />
+        </div>
+      {/if}
     </div>
     <div class="request-bottom">
       <div class="endpoint">
@@ -954,12 +1087,18 @@
           aiEnabled={false}
           readonly
           lineWrapping={false}
+          extraExtensions={[urlParamHighlightPlugin, urlParamHighlightTheme]}
         />
       </div>
-      <div class="send" class:loaded={selectedEndpointOption}>
+      <div
+        class="send"
+        class:loaded={isCustomMode ? !!customPath : !!selectedEndpointOption}
+      >
         <Button
           primary
-          disabled={!selectedEndpointOption || runningQuery}
+          disabled={isCustomMode
+            ? !customPath || runningQuery
+            : !selectedEndpointOption || runningQuery}
           icon="paper-plane-right"
           on:click={previewQuery}
         >
@@ -976,16 +1115,18 @@
   <div class="wrap">
     <div class="main">
       <Layout noPadding>
-        <div class="details">
-          <Layout noPadding gap="XS">
-            <Heading size="XS">{selectedEndpointOption?.name || ""}</Heading>
-            <DescriptionViewer
-              description={selectedEndpointOption?.description}
-              label={""}
-              baseUrl={endpointDocs}
-            />
-          </Layout>
-        </div>
+        {#if !isCustomMode}
+          <div class="details">
+            <Layout noPadding gap="XS">
+              <Heading size="XS">{selectedEndpointOption?.name || ""}</Heading>
+              <DescriptionViewer
+                description={selectedEndpointOption?.description}
+                label={""}
+                baseUrl={endpointDocs}
+              />
+            </Layout>
+          </div>
+        {/if}
         <div class="config">
           <Layout noPadding gap="S">
             {#key selectedEndpointOption?.id}
@@ -995,7 +1136,7 @@
                 noPadding
                 noHorizPadding
                 onTop
-                disabled={!selectedEndpointOption}
+                disabled={isCustomMode ? !datasource : !selectedEndpointOption}
               >
                 <Tab title="Bindings">
                   <KeyValueBuilder
@@ -1007,13 +1148,13 @@
                     valuePlaceholder="Default"
                     bindings={[
                       ...dataSourceStaticBindings,
-                      ...connectionStaticBindings,
                       ...restBindings,
                       ...globalDynamicRequestBindings,
                     ]}
                     context={bindingPreviewContext}
                     on:change={onUpdateBindings}
-                    actionButtonDisabled={!selectedEndpointOption}
+                    actionButtonDisabled={!isCustomMode &&
+                      !selectedEndpointOption}
                   />
                 </Tab>
                 <Tab title="Params">
@@ -1057,6 +1198,55 @@
                     on:change={onUpdateBody}
                   />
                 </Tab>
+                {#if isCustomMode}
+                  <Tab title="Pagination">
+                    <div class="pagination">
+                      {#if pagination}
+                        <Select
+                          label="Pagination type"
+                          value={pagination.type}
+                          options={PaginationTypes}
+                          placeholder="None"
+                          on:change={e => setPaginationField("type", e.detail)}
+                        />
+                        {#if pagination.type}
+                          <Select
+                            label="Pagination parameters location"
+                            value={pagination.location}
+                            options={PaginationLocations}
+                            placeholder="Choose where to send pagination parameters"
+                            on:change={e =>
+                              setPaginationField("location", e.detail)}
+                          />
+                          <Input
+                            label={pagination.type === "page"
+                              ? "Page number parameter name"
+                              : "Request cursor parameter name"}
+                            value={pagination.pageParam}
+                            on:change={e =>
+                              setPaginationField("pageParam", e.detail)}
+                          />
+                          <Input
+                            label={pagination.type === "page"
+                              ? "Page size parameter name"
+                              : "Request limit parameter name"}
+                            value={pagination.sizeParam}
+                            on:change={e =>
+                              setPaginationField("sizeParam", e.detail)}
+                          />
+                          {#if pagination.type === "cursor"}
+                            <Input
+                              label="Response body parameter name for cursor"
+                              value={pagination.responseParam}
+                              on:change={e =>
+                                setPaginationField("responseParam", e.detail)}
+                            />
+                          {/if}
+                        {/if}
+                      {/if}
+                    </div>
+                  </Tab>
+                {/if}
                 <Tab title="Transformer">
                   <Layout noPadding>
                     {#if !$flags.queryTransformerBanner}
@@ -1196,7 +1386,7 @@
     margin: 0px -40px;
   }
   .wrap {
-    --sidebar-width: 280px;
+    --sidebar-width: 380px;
     display: flex;
     flex-direction: row;
     flex: 1;
@@ -1395,6 +1585,11 @@
   .access {
     display: flex;
     align-items: center;
+    gap: var(--spacing-m);
+  }
+  .pagination {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: var(--spacing-m);
   }
   .embed :global(.cm-editor) {
