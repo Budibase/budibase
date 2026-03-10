@@ -50,13 +50,6 @@
     expandedStepLoading = false
   }
 
-  function readLinkedSessionId(): string | null {
-    if (typeof window === "undefined") {
-      return null
-    }
-    return new URLSearchParams(window.location.search).get("sessionId")
-  }
-
   let visibleSessions = $derived.by(() => sessions)
 
   let sessionTableData = $derived.by(() =>
@@ -279,7 +272,9 @@
 
   onMount(() => {
     mounted = true
-    deepLinkedSessionId = readLinkedSessionId()
+    deepLinkedSessionId = new URLSearchParams(window.location.search).get(
+      "sessionId"
+    )
     loadSessions()
   })
 </script>
