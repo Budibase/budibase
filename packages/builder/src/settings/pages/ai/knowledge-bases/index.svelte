@@ -10,9 +10,7 @@
   import { onMount } from "svelte"
 
   let knowledgeBases = $derived(
-    [...$knowledgeBaseStore.configs].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    )
+    [...$knowledgeBaseStore.list].sort((a, b) => a.name.localeCompare(b.name))
   )
 
   function createKnowledgeBase() {

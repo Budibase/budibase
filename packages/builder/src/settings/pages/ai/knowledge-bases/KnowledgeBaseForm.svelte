@@ -25,7 +25,7 @@
   let { knowledgeBaseId }: Props = $props()
 
   let config = $derived(
-    $knowledgeBaseStore.configs.find(kb => kb._id === knowledgeBaseId)
+    $knowledgeBaseStore.list.find(kb => kb._id === knowledgeBaseId)
   )
 
   const createDraft = () =>

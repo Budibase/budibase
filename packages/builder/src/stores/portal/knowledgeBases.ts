@@ -6,11 +6,17 @@ import {
   UpdateKnowledgeBaseRequest,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import { derived } from "svelte/store"
+
+export interface KnowledgeBaseWithFiles extends KnowledgeBase {
+  files: KnowledgeBaseFile[]
+}
 
 interface KnowledgeBaseState {
-  configs: KnowledgeBase[]
+  list: KnowledgeBase[]
   currentKnowledgeBaseId?: string
   files: KnowledgeBaseFile[]
+  filesByKnowledgeBaseId: Record<string, KnowledgeBaseFile[]>
 }
 
 type KnowledgeBaseFormDraft = Partial<
@@ -22,15 +28,16 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
 
   constructor() {
     super({
-      configs: [],
+      list: [],
       files: [],
+      filesByKnowledgeBaseId: {},
     })
   }
 
   fetch = async () => {
     const configs = await API.knowledgeBase.fetch()
     this.update(state => {
-      state.configs = configs
+      state.list = configs
       return state
     })
     return configs
@@ -50,6 +57,10 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
 
   delete = async (id: string) => {
     await API.knowledgeBase.delete(id)
+    this.update(state => {
+      delete state.filesByKnowledgeBaseId[id]
+      return state
+    })
     await this.fetch()
   }
 
@@ -85,6 +96,7 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
     }
     const { files } = await API.knowledgeBase.fetchFiles(knowledgeBaseId)
     this.update(state => {
+      state.filesByKnowledgeBaseId[knowledgeBaseId] = files
       if (state.currentKnowledgeBaseId === knowledgeBaseId) {
         state.files = files
       }
@@ -99,6 +111,12 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
       file
     )
     this.update(state => {
+      state.filesByKnowledgeBaseId[knowledgeBaseId] = [
+        uploaded,
+        ...(state.filesByKnowledgeBaseId[knowledgeBaseId] || []).filter(
+          existing => existing._id !== uploaded._id
+        ),
+      ]
       if (state.currentKnowledgeBaseId === knowledgeBaseId) {
         state.files = [
           uploaded,
@@ -113,6 +131,9 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
   deleteFile = async (knowledgeBaseId: string, fileId: string) => {
     await API.knowledgeBase.deleteFile(knowledgeBaseId, fileId)
     this.update(state => {
+      state.filesByKnowledgeBaseId[knowledgeBaseId] = (
+        state.filesByKnowledgeBaseId[knowledgeBaseId] || []
+      ).filter(file => file._id !== fileId)
       if (state.currentKnowledgeBaseId === knowledgeBaseId) {
         state.files = state.files.filter(file => file._id !== fileId)
       }
@@ -122,3 +143,12 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
 }
 
 export const knowledgeBaseStore = new KnowledgeBaseStore()
+export const knowledgeBasesWithFiles = derived(knowledgeBaseStore, state =>
+  state.list.map(
+    knowledgeBase =>
+      ({
+        ...knowledgeBase,
+        files: state.filesByKnowledgeBaseId[knowledgeBase._id || ""] || [],
+      }) satisfies KnowledgeBaseWithFiles
+  )
+)

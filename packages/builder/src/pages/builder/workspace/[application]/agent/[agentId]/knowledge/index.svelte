@@ -4,6 +4,7 @@
   import {
     agentsStore,
     aiConfigsStore,
+    knowledgeBasesWithFiles,
     knowledgeBaseStore,
     selectedAgent,
     vectorDbStore,
@@ -20,7 +21,7 @@
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
   let currentAgent: Agent | undefined = $derived($selectedAgent)
-  let knowledgeBases = $derived($knowledgeBaseStore.configs || [])
+  let knowledgeBases = $derived($knowledgeBasesWithFiles || [])
 
   $effect(() => {
     const agent = currentAgent
@@ -106,7 +107,7 @@
         knowledgeBase.embeddingModel,
       vectorDb:
         vectorDbNameById.get(knowledgeBase.vectorDb) || knowledgeBase.vectorDb,
-      files: "—",
+      files: knowledgeBase.files.length,
       onToggle: toggleKnowledgeBase,
       onManage: (knowledgeBaseId: string) =>
         bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`),
@@ -133,6 +134,12 @@
       vectorDbStore.fetch(),
       knowledgeBaseStore.fetch(),
     ])
+    await Promise.all(
+      ($knowledgeBaseStore.list || [])
+        .map(knowledgeBase => knowledgeBase._id)
+        .filter((id): id is string => !!id)
+        .map(knowledgeBaseId => knowledgeBaseStore.fetchFiles(knowledgeBaseId))
+    )
   })
 
   onDestroy(() => {
