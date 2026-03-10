@@ -690,7 +690,7 @@
     editableQuery!.parameters = restUtils.keyValueToQueryParameters(newBindings)
   }
 
-  const setPaginationField = (field: string, value: any) => {
+  const setPaginationField = (field: string, value: unknown) => {
     if (editableQuery) {
       editableQuery = {
         ...editableQuery,

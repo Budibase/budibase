@@ -53,8 +53,12 @@
   }
 
   const save = async data => {
-    await environment.createVariable(data)
-    modal.hide()
+    try {
+      await environment.createVariable(data)
+      modal.hide()
+    } catch (err) {
+      notifications.error(`Error saving variable: ${err.message}`)
+    }
   }
 </script>
 
