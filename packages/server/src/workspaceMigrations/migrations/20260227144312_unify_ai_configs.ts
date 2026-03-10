@@ -165,7 +165,15 @@ const migration = async () => {
       const normalizedModel = normalizeModel(provider, model)
 
       const name = legacyProvider.name || legacyProvider.provider
-      if (existingConfigs.some(c => c.name === name)) {
+      const hasExistingConfig =
+        existingConfigs.some(c => c.name === name) ||
+        (provider === BUDIBASE_AI_PROVIDER_ID &&
+          existingConfigs.some(
+            c =>
+              c.provider === BUDIBASE_AI_PROVIDER_ID &&
+              c.configType === AIConfigType.COMPLETIONS
+          ))
+      if (hasExistingConfig) {
         skippedExisting++
         continue
       }

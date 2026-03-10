@@ -163,6 +163,45 @@ describe("20260227144312_unify_ai_configs", () => {
     )
   })
 
+  it("does not create Budibase AI config when one already exists with a different name", async () => {
+    const legacyConfig: AIConfig = {
+      type: ConfigType.AI,
+      config: {
+        bbai: {
+          provider: "BudibaseAI",
+          name: "Budibase AI",
+          active: true,
+          isDefault: true,
+        },
+      },
+    }
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock.mockResolvedValue({} as any)
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await db.getDB(config.getDevWorkspaceId()).put({
+        _id: docIds.generateAIConfigID("bbai"),
+        name: "Existing Budibase AI",
+        provider: BUDIBASE_AI_PROVIDER_ID,
+        model: "budibase/legacy/gpt-5-mini",
+        credentialsFields: {},
+        liteLLMModelId: "existing-model-id",
+        configType: AIConfigType.COMPLETIONS,
+        isDefault: true,
+      })
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), migration)
+
+    expect(createMock).not.toHaveBeenCalled()
+  })
+
   it("maps legacy AzureOpenAI provider to Azure", async () => {
     const legacyConfig: AIConfig = {
       type: ConfigType.AI,
