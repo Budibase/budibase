@@ -116,13 +116,12 @@ describe("/plugins", () => {
         os.tmpdir(),
         `invalid-plugin-${Date.now()}.tar.gz`
       )
-      const uploadFilename = `broken-plugin-${Date.now()}.tar.gz`
+      const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+      const uploadFilename = `broken-plugin-${uploadId}.tar.gz`
       const tempDirPrefix = `${uploadFilename.replace(".tar.gz", "")}-`
       fs.writeFileSync(invalidTarballPath, "not a tarball")
 
       try {
-        const dirsBefore = getTempDirsWithPrefix(tempDirPrefix)
-
         await request
           .post("/api/plugin/upload")
           .attach("file", invalidTarballPath, {
@@ -132,8 +131,7 @@ describe("/plugins", () => {
           .expect("Content-Type", /json/)
           .expect(400)
 
-        const dirsAfter = getTempDirsWithPrefix(tempDirPrefix)
-        expect(dirsAfter).toEqual(dirsBefore)
+        expect(getTempDirsWithPrefix(tempDirPrefix)).toEqual([])
       } finally {
         fs.unlinkSync(invalidTarballPath)
       }
@@ -288,7 +286,9 @@ describe("/plugins", () => {
     })
 
     it("should clean up temp directories after a successful npm import", async () => {
-      const packageName = `budibase-component-cleanup-${Date.now()}`
+      const packageName = `budibase-component-cleanup-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 10)}`
       const tempDirPrefix = `${packageName}-`
 
       nock("https://registry.npmjs.org")
@@ -312,15 +312,12 @@ describe("/plugins", () => {
           "src/api/routes/tests/data/budibase-component-1.0.1.tgz"
         )
 
-      const dirsBefore = getTempDirsWithPrefix(tempDirPrefix)
-
       await config.api.plugin.create({
         source: PluginSource.NPM,
         url: `https://www.npmjs.com/package/${packageName}`,
       })
 
-      const dirsAfter = getTempDirsWithPrefix(tempDirPrefix)
-      expect(dirsAfter).toEqual(dirsBefore)
+      expect(getTempDirsWithPrefix(tempDirPrefix)).toEqual([])
     })
   })
 
