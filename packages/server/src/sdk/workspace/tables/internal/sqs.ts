@@ -140,8 +140,9 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   return definition
 }
 
-export async function syncDefinition(): Promise<void> {
-  const db = context.getWorkspaceDB()
+export async function syncDefinition(
+  db = context.getWorkspaceDB()
+): Promise<void> {
   let existing: SQLiteDefinition | undefined
   try {
     existing = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
@@ -209,9 +210,7 @@ export async function removeTable(table: Table) {
   }
 }
 
-export async function ensureStaticTables() {
-  const db = context.getWorkspaceDB()
-
+export async function ensureStaticTables(db = context.getWorkspaceDB()) {
   for (let attempt = 0; attempt < 3; attempt++) {
     let definition: SQLiteDefinition | undefined
     try {
@@ -220,7 +219,7 @@ export async function ensureStaticTables() {
       if (err?.status !== 404) {
         throw err
       }
-      await syncDefinition()
+      await syncDefinition(db)
       return
     }
 

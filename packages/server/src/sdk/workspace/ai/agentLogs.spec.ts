@@ -2,6 +2,7 @@ import fetch from "node-fetch"
 import { context } from "@budibase/backend-core"
 import { getAvailableTools, getOrThrow } from "./agents"
 import { AGENT_LOG_SESSION_TABLE_ID } from "../sqs/staticTables"
+import * as tableSqs from "../tables/internal/sqs"
 import {
   fetchRequestDetail,
   fetchSessions,
@@ -16,6 +17,8 @@ jest.mock("@budibase/backend-core", () => {
     context: {
       ...actual.context,
       getWorkspaceDB: jest.fn(),
+      getDevWorkspaceDB: jest.fn(),
+      getProdWorkspaceDB: jest.fn(),
     },
   }
 })
@@ -156,14 +159,26 @@ describe("agentLogs", () => {
   const mockGetWorkspaceDB = context.getWorkspaceDB as jest.MockedFunction<
     typeof context.getWorkspaceDB
   >
+  const mockGetDevWorkspaceDB =
+    context.getDevWorkspaceDB as jest.MockedFunction<
+      typeof context.getDevWorkspaceDB
+    >
+  const mockGetProdWorkspaceDB =
+    context.getProdWorkspaceDB as jest.MockedFunction<
+      typeof context.getProdWorkspaceDB
+    >
   const getAvailableToolsMock = getAvailableTools as jest.MockedFunction<
     typeof getAvailableTools
   >
   const getOrThrowMock = getOrThrow as jest.MockedFunction<typeof getOrThrow>
+  const ensureStaticTablesMock = jest.mocked(tableSqs.ensureStaticTables)
 
   beforeEach(() => {
     jest.clearAllMocks()
     mockGetWorkspaceDB.mockReset()
+    mockGetDevWorkspaceDB.mockReset()
+    mockGetProdWorkspaceDB.mockReset()
+    ensureStaticTablesMock.mockResolvedValue(undefined)
     fetchMock.mockImplementation(async (url: any) => {
       const path = String(url)
       if (path.includes("/spend/logs/v2")) {
@@ -231,10 +246,10 @@ describe("agentLogs", () => {
   })
 
   it("returns session detail entries in chronological order", async () => {
-    const db = createInMemoryDb()
-    mockGetWorkspaceDB.mockReturnValue(db as any)
+    const developmentDb = createInMemoryDb()
+    mockGetDevWorkspaceDB.mockReturnValue(developmentDb as any)
 
-    db.tryGet.mockResolvedValue({
+    developmentDb.tryGet.mockResolvedValue({
       _id: "session-1",
       tableId: AGENT_LOG_SESSION_TABLE_ID,
       type: "agent_log_session",
@@ -291,7 +306,11 @@ describe("agentLogs", () => {
       } as any
     })
 
-    const detail = await fetchSessionDetail("agent-1", "session-chronological")
+    const detail = await fetchSessionDetail(
+      "agent-1",
+      "session-chronological",
+      "development"
+    )
     expect(detail?.entries.map(entry => entry.requestId)).toEqual([
       "req-old",
       "req-new",
@@ -313,18 +332,47 @@ describe("agentLogs", () => {
   })
 
   it("uses full-day UTC boundaries for date-only session filters", async () => {
-    const db = createInMemoryDb()
-    mockGetWorkspaceDB.mockReturnValue(db as any)
+    const developmentDb = createInMemoryDb()
+    const productionDb = createInMemoryDb()
+    mockGetDevWorkspaceDB.mockReturnValue(developmentDb as any)
+    mockGetProdWorkspaceDB.mockReturnValue(productionDb as any)
 
     await fetchSessions("agent-1", "2026-03-08", "2026-03-09")
 
-    expect(db.sql).toHaveBeenCalledTimes(1)
-    expect(db.sql.mock.calls[0][1]).toEqual(
+    expect(developmentDb.sql).toHaveBeenCalledTimes(1)
+    expect(productionDb.sql).toHaveBeenCalledTimes(1)
+    expect(developmentDb.sql.mock.calls[0][1]).toEqual(
       expect.arrayContaining([
         "2026-03-08T00:00:00.000Z",
         "2026-03-09T23:59:59.999Z",
       ])
     )
+    expect(ensureStaticTablesMock).toHaveBeenCalledWith(developmentDb)
+    expect(ensureStaticTablesMock).toHaveBeenCalledWith(productionDb)
+  })
+
+  it("rejects session queries that exceed the maximum scan window", async () => {
+    await expect(
+      fetchSessions(
+        "agent-1",
+        "2026-03-08T00:00:00.000Z",
+        "2026-03-08T23:59:59.999Z",
+        "50",
+        100
+      )
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Bookmark query exceeds maximum scan window of 5000 sessions",
+    })
+  })
+
+  it("rejects invalid environments when fetching session detail", async () => {
+    await expect(
+      fetchSessionDetail("agent-1", "session-chronological", "staging" as any)
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Invalid environment query",
+    })
   })
 
   it("rejects request detail when the returned user belongs to another agent", async () => {
