@@ -73,14 +73,28 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
         .map(knowledgeBase => knowledgeBase._id)
         .filter((id): id is string => !!id)
         .map(async knowledgeBaseId => {
-          return [
-            knowledgeBaseId,
-            await this.fetchKnowledgeBaseFiles(knowledgeBaseId),
-          ] as const
+          try {
+            return [
+              knowledgeBaseId,
+              await this.fetchKnowledgeBaseFiles(knowledgeBaseId),
+            ] as const
+          } catch (error) {
+            console.error(
+              `Failed to fetch files for knowledge base ${knowledgeBaseId}`,
+              error
+            )
+            return [knowledgeBaseId, undefined] as const
+          }
         })
     )
 
-    return Object.fromEntries(fileEntries)
+    return Object.fromEntries(
+      fileEntries.filter(
+        (
+          entry
+        ): entry is readonly [string, KnowledgeBaseFile[]] => entry[1] != null
+      )
+    )
   }
 
   fetch = async () => {
@@ -89,7 +103,10 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
       await this.fetchFilesForKnowledgeBases(configs)
     this.update(state => {
       state.list = configs
-      state.filesByKnowledgeBaseId = filesByKnowledgeBaseId
+      state.filesByKnowledgeBaseId = {
+        ...state.filesByKnowledgeBaseId,
+        ...filesByKnowledgeBaseId,
+      }
       return state
     })
     return configs
