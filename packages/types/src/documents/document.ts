@@ -43,7 +43,7 @@ export enum DocumentType {
   CHAT_APP = "chatapp",
   CHAT_CONVERSATION = "chatconvo",
   AGENT_TOOL_SOURCE = "agenttoolsource",
-  AGENT_FILE = "agentfile",
+  KNOWLEDGE_BASE_FILE = "knowledgebasefile",
   AI_CONFIG = "aiconfig",
   LITELLM_KEY = "litellmkey",
   VECTOR_STORE = "vectordb",

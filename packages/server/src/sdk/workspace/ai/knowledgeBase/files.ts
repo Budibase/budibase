@@ -6,19 +6,19 @@ import {
   objectStore,
 } from "@budibase/backend-core"
 import {
-  Agent,
-  AgentFile,
-  AgentFileStatus,
   DocumentType,
+  KnowledgeBase,
+  KnowledgeBaseFile,
+  KnowledgeBaseFileStatus,
   RequiredKeys,
   ToDocCreateMetadata,
 } from "@budibase/types"
-import { deleteAgentFileChunks } from "../rag/files"
 import { ObjectStoreBuckets } from "../../../../constants"
+import { deleteKnowledgeBaseFileChunks } from "../rag/files"
 
-interface CreateAgentFileOptions {
+interface CreateKnowledgeBaseFileOptions {
   id: string
-  agentId: string
+  knowledgeBaseId: string
   filename: string
   mimetype?: string
   size?: number
@@ -26,26 +26,33 @@ interface CreateAgentFileOptions {
   objectStoreKey: string
 }
 
-export const createAgentFile = async (
-  options: CreateAgentFileOptions
-): Promise<AgentFile> => {
+export const createKnowledgeBaseFile = async (
+  options: CreateKnowledgeBaseFileOptions
+): Promise<KnowledgeBaseFile> => {
   const db = context.getWorkspaceDB()
-  const { id, agentId, filename, mimetype, size, uploadedBy, objectStoreKey } =
-    options
-  const _id = id || docIds.generateAgentFileID(agentId)
-  if (!docIds.isAgentFileID(_id)) {
-    throw new Error(`Id ${_id} is not valid for an agent file`)
+  const {
+    id,
+    knowledgeBaseId,
+    filename,
+    mimetype,
+    size,
+    uploadedBy,
+    objectStoreKey,
+  } = options
+  const _id = id || docIds.generateKnowledgeBaseFileID(knowledgeBaseId)
+  if (!docIds.isKnowledgeBaseFileID(_id)) {
+    throw new Error(`Id ${_id} is not valid for a knowledge base file`)
   }
 
-  const doc: RequiredKeys<ToDocCreateMetadata<AgentFile>> = {
+  const doc: RequiredKeys<ToDocCreateMetadata<KnowledgeBaseFile>> = {
     _id,
-    agentId,
+    knowledgeBaseId,
     filename,
     mimetype,
     size,
     objectStoreKey,
     ragSourceId: _id,
-    status: AgentFileStatus.PROCESSING,
+    status: KnowledgeBaseFileStatus.PROCESSING,
     uploadedBy,
     chunkCount: 0,
     errorMessage: undefined,
@@ -53,14 +60,15 @@ export const createAgentFile = async (
   }
 
   const { rev } = await db.put(doc)
-  const result: AgentFile = {
+  return {
     ...doc,
     _rev: rev,
   }
-  return result
 }
 
-export const updateAgentFile = async (file: AgentFile): Promise<AgentFile> => {
+export const updateKnowledgeBaseFile = async (
+  file: KnowledgeBaseFile
+): Promise<KnowledgeBaseFile> => {
   const db = context.getWorkspaceDB()
   const updated = { ...file }
   const { rev } = await db.put(file)
@@ -68,19 +76,21 @@ export const updateAgentFile = async (file: AgentFile): Promise<AgentFile> => {
   return updated
 }
 
-export const getAgentFileOrThrow = async (fileId: string) => {
+export const getKnowledgeBaseFileOrThrow = async (fileId: string) => {
   const db = context.getWorkspaceDB()
-  const file = await db.tryGet<AgentFile>(fileId)
+  const file = await db.tryGet<KnowledgeBaseFile>(fileId)
   if (!file || file._deleted) {
-    throw new HTTPError("Agent file not found", 404)
+    throw new HTTPError("Knowledge base file not found", 404)
   }
   return file
 }
 
-export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
+export const listKnowledgeBaseFiles = async (
+  knowledgeBaseId: string
+): Promise<KnowledgeBaseFile[]> => {
   const db = context.getWorkspaceDB()
-  const response = await db.allDocs<AgentFile>(
-    docIds.getDocParams(DocumentType.AGENT_FILE, agentId, {
+  const response = await db.allDocs<KnowledgeBaseFile>(
+    docIds.getDocParams(DocumentType.KNOWLEDGE_BASE_FILE, knowledgeBaseId, {
       include_docs: true,
     })
   )
@@ -95,7 +105,10 @@ export const listAgentFiles = async (agentId: string): Promise<AgentFile[]> => {
     })
 }
 
-export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
+export const removeKnowledgeBaseFile = async (
+  knowledgeBase: KnowledgeBase,
+  file: KnowledgeBaseFile
+) => {
   let isFileInProduction = false
 
   try {
@@ -103,26 +116,27 @@ export const removeAgentFile = async (agent: Agent, file: AgentFile) => {
       context.getOrThrowWorkspaceId()
     )
     await context.doInWorkspaceContext(prodWorkspaceId, async () => {
-      await getAgentFileOrThrow(file._id!)
-
+      await getKnowledgeBaseFileOrThrow(file._id!)
       isFileInProduction = true
     })
   } catch (error: any) {
-    if (error?.status === 404) {
-      // ignore if prod version does not exist yet
-    } else {
+    if (error?.status !== 404) {
       throw error
     }
   }
+
   if (!isFileInProduction) {
-    await deleteAgentFileChunks(agent, [file.ragSourceId])
+    await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.ragSourceId])
   }
 
   if (file.objectStoreKey) {
     try {
       await objectStore.deleteFile(ObjectStoreBuckets.APPS, file.objectStoreKey)
     } catch (error) {
-      console.log("Failed to delete agent file from object store", error)
+      console.log(
+        "Failed to delete knowledge base file from object store",
+        error
+      )
     }
   }
 
