@@ -21,6 +21,10 @@ import {
   createVectorDbValidator,
   updateVectorDbValidator,
 } from "./utils/validators/vectorDb"
+import {
+  createKnowledgeBaseValidator,
+  updateKnowledgeBaseValidator,
+} from "./utils/validators/knowledgeBase"
 
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
@@ -93,6 +97,20 @@ aiRagBuilderAdminRoutes
     ai.updateVectorDbConfig
   )
   .delete("/api/vectordb/:id", ai.deleteVectorDbConfig)
+  .get("/api/knowledge-base", ai.fetchKnowledgeBases)
+  .post(
+    "/api/knowledge-base",
+    aiRagEnabled,
+    createKnowledgeBaseValidator(),
+    ai.createKnowledgeBase
+  )
+  .put(
+    "/api/knowledge-base",
+    aiRagEnabled,
+    updateKnowledgeBaseValidator(),
+    ai.updateKnowledgeBase
+  )
+  .delete("/api/knowledge-base/:id", ai.deleteKnowledgeBase)
 
 builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
 

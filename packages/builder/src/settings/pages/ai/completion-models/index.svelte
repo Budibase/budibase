@@ -5,7 +5,7 @@
   import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
   import AIConfigList from "./AIConfigList.svelte"
-  import { ensureAILicenseStatus } from "./licenseStatus"
+  import { ensureAILicenseStatus } from "../licenseStatus"
 
   let completionConfigs = $derived(
     [...$aiConfigsStore.customConfigsPerType.completions]

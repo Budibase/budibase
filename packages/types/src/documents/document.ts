@@ -47,6 +47,7 @@ export enum DocumentType {
   AI_CONFIG = "aiconfig",
   LITELLM_KEY = "litellmkey",
   VECTOR_STORE = "vectordb",
+  KNOWLEDGE_BASE = "knowledgebase",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
   AUTO_COLUMN_STATE = "autocolumn_state",
