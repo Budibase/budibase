@@ -83,18 +83,12 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
               `Failed to fetch files for knowledge base ${knowledgeBaseId}`,
               error
             )
-            return [knowledgeBaseId, undefined] as const
+            return [knowledgeBaseId, []] as const
           }
         })
     )
 
-    return Object.fromEntries(
-      fileEntries.filter(
-        (
-          entry
-        ): entry is readonly [string, KnowledgeBaseFile[]] => entry[1] != null
-      )
-    )
+    return Object.fromEntries(fileEntries)
   }
 
   fetch = async () => {
@@ -103,10 +97,7 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
       await this.fetchFilesForKnowledgeBases(configs)
     this.update(state => {
       state.list = configs
-      state.filesByKnowledgeBaseId = {
-        ...state.filesByKnowledgeBaseId,
-        ...filesByKnowledgeBaseId,
-      }
+      state.filesByKnowledgeBaseId = filesByKnowledgeBaseId
       return state
     })
     return configs
