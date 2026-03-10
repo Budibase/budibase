@@ -302,15 +302,22 @@ export async function webhookChat({
   })
 
   let assistantText = ""
-  const responseMetadata = {
-    requestId: (await result.response).id ?? undefined,
-  }
   try {
     assistantText = await result.text
+    const responseMetadata = {
+      requestId: (await result.response).id ?? undefined,
+    }
     sessionLogIndexer.addRequestId(responseMetadata.requestId)
     await sessionLogIndexer.index()
   } catch (error) {
-    sessionLogIndexer.addRequestId(responseMetadata.requestId)
+    try {
+      const responseMetadata = {
+        requestId: (await result.response).id ?? undefined,
+      }
+      sessionLogIndexer.addRequestId(responseMetadata.requestId)
+    } catch {
+      // response may not be available if the stream failed early
+    }
     await sessionLogIndexer.index()
     throw error
   }
