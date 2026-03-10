@@ -2,12 +2,15 @@ import { API } from "@/api"
 import {
   CreateKnowledgeBaseRequest,
   KnowledgeBase,
+  KnowledgeBaseFile,
   UpdateKnowledgeBaseRequest,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 interface KnowledgeBaseState {
   configs: KnowledgeBase[]
+  currentKnowledgeBaseId?: string
+  files: KnowledgeBaseFile[]
 }
 
 type KnowledgeBaseFormDraft = Partial<
@@ -20,6 +23,7 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
   constructor() {
     super({
       configs: [],
+      files: [],
     })
   }
 
@@ -59,6 +63,61 @@ export class KnowledgeBaseStore extends BudiStore<KnowledgeBaseState> {
 
   clearFormDraft = () => {
     this.formDraft = undefined
+  }
+
+  selectKnowledgeBase = (knowledgeBaseId?: string) => {
+    this.update(state => {
+      state.currentKnowledgeBaseId = knowledgeBaseId
+      if (!knowledgeBaseId) {
+        state.files = []
+      }
+      return state
+    })
+  }
+
+  fetchFiles = async (knowledgeBaseId?: string) => {
+    if (!knowledgeBaseId) {
+      this.update(state => {
+        state.files = []
+        return state
+      })
+      return []
+    }
+    const { files } = await API.knowledgeBase.fetchFiles(knowledgeBaseId)
+    this.update(state => {
+      if (state.currentKnowledgeBaseId === knowledgeBaseId) {
+        state.files = files
+      }
+      return state
+    })
+    return files
+  }
+
+  uploadFile = async (knowledgeBaseId: string, file: File) => {
+    const { file: uploaded } = await API.knowledgeBase.uploadFile(
+      knowledgeBaseId,
+      file
+    )
+    this.update(state => {
+      if (state.currentKnowledgeBaseId === knowledgeBaseId) {
+        state.files = [
+          uploaded,
+          ...state.files.filter(existing => existing._id !== uploaded._id),
+        ]
+      }
+      return state
+    })
+    return uploaded
+  }
+
+  deleteFile = async (knowledgeBaseId: string, fileId: string) => {
+    await API.knowledgeBase.deleteFile(knowledgeBaseId, fileId)
+    this.update(state => {
+      if (state.currentKnowledgeBaseId === knowledgeBaseId) {
+        state.files = state.files.filter(file => file._id !== fileId)
+      }
+      return state
+    })
   }
 }
 

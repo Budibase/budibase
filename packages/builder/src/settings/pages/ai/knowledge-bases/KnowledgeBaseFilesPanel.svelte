@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import {
     AbsTooltip,
     ActionButton,
@@ -9,72 +9,93 @@
   } from "@budibase/bbui"
   import { helpers } from "@budibase/shared-core"
   import {
-    AgentFileStatus,
     AIConfigType,
-    type AgentFile,
+    KnowledgeBaseFileStatus,
+    type KnowledgeBaseFile,
   } from "@budibase/types"
-  import { agentsStore, aiConfigsStore } from "@/stores/portal"
+  import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
   import { createPolling } from "@/utils/polling"
 
-  export let currentAgentId: string | undefined
+  export interface Props {
+    knowledgeBaseId?: string
+  }
+
+  let { knowledgeBaseId }: Props = $props()
 
   const FILE_STATUS_POLL_MS = 1000
-  let uploadingFile = false
-  let uploadError = ""
-  let fileInput: HTMLInputElement | undefined
-  let currentFiles: AgentFile[] = []
-  let shouldPoll = false
 
-  $: currentFiles = $agentsStore.files || []
-  $: hasEmbeddingConfig = ($aiConfigsStore.customConfigs || []).some(
-    config => config.configType === AIConfigType.EMBEDDINGS
+  let uploadingFile = $state(false)
+  let uploadError = $state("")
+  let fileInput = $state<HTMLInputElement>()
+
+  let currentFiles = $derived($knowledgeBaseStore.files || [])
+  let hasEmbeddingConfig = $derived(
+    ($aiConfigsStore.customConfigs || []).some(
+      config => config.configType === AIConfigType.EMBEDDINGS
+    )
   )
-  $: shouldPoll =
-    !!currentAgentId &&
-    currentFiles.some(file => file.status === AgentFileStatus.PROCESSING)
+  let shouldPoll = $derived(
+    !!knowledgeBaseId &&
+      currentFiles.some(
+        file => file.status === KnowledgeBaseFileStatus.PROCESSING
+      )
+  )
 
   const poller = createPolling({
     intervalMs: FILE_STATUS_POLL_MS,
     shouldPoll: () =>
-      !!currentAgentId &&
-      currentFiles.some(file => file.status === AgentFileStatus.PROCESSING),
+      !!knowledgeBaseId &&
+      currentFiles.some(
+        file => file.status === KnowledgeBaseFileStatus.PROCESSING
+      ),
     poll: async () => {
-      if (!currentAgentId) {
+      if (!knowledgeBaseId) {
         return
       }
-      await agentsStore.fetchFiles(currentAgentId)
+      await knowledgeBaseStore.fetchFiles(knowledgeBaseId)
     },
   })
 
-  $: if (shouldPoll) {
-    poller.start()
-  } else {
-    poller.stop()
+  const readableStatus: Record<KnowledgeBaseFileStatus, string> = {
+    [KnowledgeBaseFileStatus.PROCESSING]: "Processing",
+    [KnowledgeBaseFileStatus.READY]: "Ready",
+    [KnowledgeBaseFileStatus.FAILED]: "Failed",
   }
+
+  const formatFileStatus = (file: KnowledgeBaseFile) =>
+    readableStatus[file.status] || file.status
 
   const formatTimestamp = (value?: string | number) => {
     if (!value) {
       return "—"
     }
     try {
-      const date = new Date(value)
-      return date.toLocaleString()
+      return new Date(value).toLocaleString()
     } catch (error) {
       return value
     }
   }
 
-  const readableStatus: Record<AgentFileStatus, string> = {
-    [AgentFileStatus.PROCESSING]: "Processing",
-    [AgentFileStatus.READY]: "Ready",
-    [AgentFileStatus.FAILED]: "Failed",
-  }
+  $effect(() => {
+    knowledgeBaseStore.selectKnowledgeBase(knowledgeBaseId)
+  })
 
-  const formatFileStatus = (file: AgentFile) =>
-    readableStatus[file.status] || file.status
+  $effect(() => {
+    if (shouldPoll) {
+      poller.start()
+    } else {
+      poller.stop()
+    }
+  })
+
+  onMount(async () => {
+    if (knowledgeBaseId) {
+      await knowledgeBaseStore.fetchFiles(knowledgeBaseId)
+    }
+  })
 
   async function handleFileUpload(event: Event) {
-    if (!currentAgentId) {
+    if (!knowledgeBaseId) {
       return
     }
     const target = event.currentTarget as HTMLInputElement
@@ -82,11 +103,12 @@
     if (!file) {
       return
     }
+
     uploadError = ""
     uploadingFile = true
     try {
-      await agentsStore.uploadAgentFile(currentAgentId, file)
-      notifications.success("File added to agent knowledge")
+      await knowledgeBaseStore.uploadFile(knowledgeBaseId, file)
+      notifications.success("File added to knowledge base")
     } catch (error: any) {
       console.error(error)
       uploadError = error?.message || "Failed to upload file"
@@ -107,18 +129,18 @@
     fileInput?.click()
   }
 
-  async function removeFile(file: AgentFile) {
-    if (!currentAgentId) {
+  async function removeFile(file: KnowledgeBaseFile) {
+    if (!knowledgeBaseId) {
       return
     }
     const confirmed = window.confirm(
-      `Remove "${file.filename}" from this agent?`
+      `Remove "${file.filename}" from this knowledge base?`
     )
     if (!confirmed) {
       return
     }
     try {
-      await agentsStore.deleteAgentFile(currentAgentId, file._id!)
+      await knowledgeBaseStore.deleteFile(knowledgeBaseId, file._id!)
       notifications.success("File removed")
     } catch (error) {
       console.error(error)
@@ -128,16 +150,17 @@
 
   onDestroy(() => {
     poller.stop()
+    knowledgeBaseStore.selectKnowledgeBase(undefined)
   })
 </script>
 
 <div class="files-header-row">
-  <Heading size="XS">Knowledge base</Heading>
+  <Heading size="XS">Files</Heading>
   <div class="files-actions">
     <Button
       secondary
       icon="upload"
-      disabled={!currentAgentId || uploadingFile}
+      disabled={!knowledgeBaseId || uploadingFile}
       on:click={handleUploadClick}
       >{uploadingFile ? "Uploading..." : "Upload file"}</Button
     >
@@ -150,15 +173,22 @@
     />
   </div>
 </div>
+
 <p class="files-description">
-  Add text, Markdown, OpenAPI YAML, or PDF files to ground agent replies with
-  your own knowledge.
+  Add text, Markdown, OpenAPI YAML, or PDF files to ground any agent using this
+  knowledge base.
 </p>
+
 {#if uploadError}
   <div class="upload-error">{uploadError}</div>
 {/if}
-{#if currentFiles.length === 0}
-  <div class="files-empty">No files have been uploaded for this agent yet.</div>
+
+{#if !knowledgeBaseId}
+  <div class="files-empty">Save the knowledge base before uploading files.</div>
+{:else if currentFiles.length === 0}
+  <div class="files-empty">
+    No files have been uploaded for this knowledge base yet.
+  </div>
 {:else}
   <div class="files-table">
     <div class="files-row files-row-header">
@@ -174,16 +204,18 @@
         <div class="file-name">
           <span class="file-title">{file.filename}</span>
           <span class="file-meta">{file.mimetype || "text"}</span>
-          {#if file.status === AgentFileStatus.FAILED && file.errorMessage}
+          {#if file.status === KnowledgeBaseFileStatus.FAILED && file.errorMessage}
             <span class="file-error">{file.errorMessage}</span>
           {/if}
         </div>
         <div
           class="file-status"
           class:file-status_processing={file.status ===
-            AgentFileStatus.PROCESSING}
-          class:file-status_failed={file.status === AgentFileStatus.FAILED}
-          class:file-status_ready={file.status === AgentFileStatus.READY}
+            KnowledgeBaseFileStatus.PROCESSING}
+          class:file-status_failed={file.status ===
+            KnowledgeBaseFileStatus.FAILED}
+          class:file-status_ready={file.status ===
+            KnowledgeBaseFileStatus.READY}
         >
           {formatFileStatus(file)}
         </div>
@@ -214,6 +246,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
+    margin-top: var(--spacing-l);
   }
 
   .files-description {
@@ -238,77 +271,62 @@
 
   .files-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 0.7fr 0.7fr 1fr 40px;
+    grid-template-columns: minmax(0, 2fr) 120px 80px 90px 180px 48px;
     gap: var(--spacing-s);
-    padding: var(--spacing-s) var(--spacing-m);
     align-items: center;
-  }
-
-  .files-row:nth-child(even) {
-    background: var(--spectrum-global-color-gray-75);
+    padding: 10px 12px;
+    border-top: 1px solid var(--spectrum-global-color-gray-100);
   }
 
   .files-row-header {
+    border-top: 0;
+    background: var(--spectrum-global-color-gray-50);
     font-size: 12px;
     font-weight: 600;
-    text-transform: uppercase;
-    color: var(--spectrum-global-color-gray-600);
-    background: var(--spectrum-global-color-gray-100);
+    color: var(--spectrum-global-color-gray-700);
   }
 
   .file-name {
     display: flex;
     flex-direction: column;
-    gap: 2px;
     min-width: 0;
   }
 
   .file-title {
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
+    font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .file-meta {
-    font-size: 11px;
-    color: var(--spectrum-global-color-gray-600);
+  .file-meta,
+  .file-error,
+  .upload-error,
+  .files-empty {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-700);
   }
 
-  .file-error {
-    font-size: 11px;
-    color: var(--spectrum-semantic-negative-color-default, #c92532);
+  .file-error,
+  .upload-error {
+    color: var(--spectrum-semantic-negative-color-default);
   }
 
   .file-status {
+    font-size: 12px;
     font-weight: 600;
-    font-size: 13px;
   }
 
   .file-status_processing {
-    color: var(--spectrum-global-color-orange-600);
-  }
-
-  .file-status_ready {
-    color: var(--spectrum-global-color-green-600);
+    color: var(--spectrum-semantic-notice-color-default);
   }
 
   .file-status_failed {
-    color: var(--spectrum-semantic-negative-color-default, #c92532);
+    color: var(--spectrum-semantic-negative-color-default);
   }
 
-  .files-empty {
-    border: 1px dashed var(--spectrum-global-color-gray-300);
-    border-radius: 8px;
-    padding: var(--spacing-l);
-    text-align: center;
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .upload-error {
-    color: var(--spectrum-semantic-negative-color-default, #c92532);
-    font-size: 12px;
+  .file-status_ready {
+    color: var(--spectrum-semantic-positive-color-default);
   }
 
   .file-actions {

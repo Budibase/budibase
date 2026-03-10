@@ -15,6 +15,7 @@
     Select,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import KnowledgeBaseFilesPanel from "./KnowledgeBaseFilesPanel.svelte"
   import { routeActions } from "../.."
 
   export interface Props {
@@ -266,6 +267,8 @@
       on:click={createVectorDb}
     />
   </div>
+
+  <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} />
 </div>
 
 <style>
