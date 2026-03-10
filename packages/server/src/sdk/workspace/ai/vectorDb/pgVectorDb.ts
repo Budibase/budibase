@@ -12,7 +12,7 @@ import type {
 const vectorLiteral = (values: number[]) =>
   `[${values.map(value => Number(value) || 0).join(",")}]`
 
-const TABLE_PREFIX = "bb_agent_chunks_"
+const TABLE_PREFIX = "bb_chunks_"
 const TABLE_HASH_LENGTH = 10
 
 const buildAgentTableName = (namespaceId: string) => {
