@@ -5,7 +5,7 @@
   import type { LLMProvider } from "@budibase/types"
 
   interface Props {
-    configType: string
+    configType: "completions" | "embeddings"
     provider: string
     model: string
     providers?: LLMProvider[]
