@@ -34,9 +34,9 @@
           _rev: config._rev,
           name: config.name,
           provider: config.provider,
-          credentialsFields: structuredClone(config.credentialsFields),
+          credentialsFields: Helpers.cloneDeep(config.credentialsFields),
           model: config.model,
-          webSearchConfig: structuredClone(config.webSearchConfig),
+          webSearchConfig: Helpers.cloneDeep(config.webSearchConfig),
           configType: config.configType,
           reasoningEffort: config.reasoningEffort,
           isDefault: config.isDefault,
@@ -126,6 +126,10 @@
         draft._rev = updated._rev
         captureSavedSnapshot()
         notifications.success(`Configuration updated`)
+
+        if (knowledgeBaseId) {
+          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        }
       } else {
         const { _id, ...rest } = Helpers.cloneDeep(draft)
         const created = await aiConfigsStore.createConfig(rest)

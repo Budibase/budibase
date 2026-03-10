@@ -1,7 +1,7 @@
 <script lang="ts">
   import { bb } from "@/stores/bb"
   import { knowledgeBaseStore, vectorDbStore } from "@/stores/portal"
-  import { Button, Input, notifications } from "@budibase/bbui"
+  import { Button, Helpers, Input, notifications } from "@budibase/bbui"
   import { VectorDbProvider, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
   import { routeActions } from "../.."
@@ -33,7 +33,7 @@
   let isSaving = $state(false)
   let savedSnapshot = $state<typeof draft>()
   const captureSavedSnapshot = () => {
-    savedSnapshot = structuredClone(draft)
+    savedSnapshot = Helpers.cloneDeep(draft)
   }
   captureSavedSnapshot()
 
@@ -91,6 +91,10 @@
         draft.port = payload.port
         captureSavedSnapshot()
         notifications.success("Vector database updated")
+
+        if (knowledgeBaseId) {
+          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        }
       } else {
         const created = await vectorDbStore.create(payload)
         draft._id = created._id
