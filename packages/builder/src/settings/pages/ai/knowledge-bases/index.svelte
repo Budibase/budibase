@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { bb } from "@/stores/bb"
   import {
     aiConfigsStore,
@@ -6,7 +7,7 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Body, Button, Layout, notifications, Table } from "@budibase/bbui"
+  import { Button, Layout, notifications, Table } from "@budibase/bbui"
   import { onMount } from "svelte"
 
   let knowledgeBases = $derived(
@@ -63,18 +64,12 @@
         on:editrow={r => editKnowledgeBase(r.detail)}
       ></Table>
     {:else if $knowledgeBaseStore.loaded}
-      <div class="no-enabled">
-        <Body size="XS">No knowledge bases created yet</Body>
-      </div>
+      <InfoDisplay body="No knowledge bases created yet"></InfoDisplay>
     {/if}
   {/if}
 </Layout>
 
 <style>
-  .no-enabled {
-    padding: 16px;
-  }
-
   .section-title {
     font-size: 13px;
     color: var(--grey-7, #a2a2a2);
