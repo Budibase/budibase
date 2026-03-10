@@ -15,8 +15,8 @@ const DEFAULT_TIMEOUT_MS = utils.Duration.fromMinutes(10).toMs()
 
 export interface RagIngestionJob {
   workspaceId: string
-  fileId: string
   knowledgeBaseId?: string
+  fileId: string
   objectStoreKey?: string
 }
 

@@ -58,7 +58,6 @@ jest.mock("../../sdk/workspace/ai/agents", () => {
   return {
     ...actual,
     getOrThrow: jest.fn(),
-    listAgentFiles: jest.fn(),
     buildPromptAndTools: jest.fn(),
   }
 })
@@ -409,11 +408,6 @@ describe("chat conversation transient behavior", () => {
         typeof sdk.ai.agents.getOrThrow
       >
     ).mockResolvedValue(mockAgent)
-    ;(
-      sdk.ai.agents.listAgentFiles as jest.MockedFunction<
-        typeof sdk.ai.agents.listAgentFiles
-      >
-    ).mockResolvedValue([])
     ;(
       sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
         typeof sdk.ai.agents.buildPromptAndTools
