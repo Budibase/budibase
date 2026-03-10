@@ -29,9 +29,7 @@ import {
   formatStructuredContent,
 } from "./utils"
 
-function makeEntry(
-  overrides: Partial<AgentLogEntry> = {}
-): AgentLogEntry {
+function makeEntry(overrides: Partial<AgentLogEntry> = {}): AgentLogEntry {
   return {
     requestId: "req-1",
     sessionId: "sess-1",
@@ -89,9 +87,7 @@ describe("formatLogDateForApi", () => {
   })
 
   it("preserves the selected local day for dayjs inputs", () => {
-    expect(formatLogDateForApi(dayjs("2025-06-15T23:30:00"))).toBe(
-      "2025-06-15"
-    )
+    expect(formatLogDateForApi(dayjs("2025-06-15T23:30:00"))).toBe("2025-06-15")
   })
 
   it("returns full ISO string when includeTime is true", () => {
@@ -158,20 +154,13 @@ describe("getDuration", () => {
 
   it("calculates duration between two times", () => {
     expect(
-      getDuration(
-        "2025-01-15T10:00:00.000Z",
-        "2025-01-15T10:00:01.500Z"
-      )
+      getDuration("2025-01-15T10:00:00.000Z", "2025-01-15T10:00:01.500Z")
     ).toBe("1.5s")
   })
 
   it("passes decimals through", () => {
     expect(
-      getDuration(
-        "2025-01-15T10:00:00.000Z",
-        "2025-01-15T10:00:01.234Z",
-        3
-      )
+      getDuration("2025-01-15T10:00:00.000Z", "2025-01-15T10:00:01.234Z", 3)
     ).toBe("1.234s")
   })
 })
@@ -242,9 +231,7 @@ describe("getSessionSummary", () => {
   it("calculates latency from session start to last entry end", () => {
     const session = makeSession({
       startTime: "2025-01-15T10:00:00.000Z",
-      entries: [
-        makeEntry({ endTime: "2025-01-15T10:00:03.500Z" }),
-      ],
+      entries: [makeEntry({ endTime: "2025-01-15T10:00:03.500Z" })],
     })
     expect(getSessionSummary(session).latency).toBe("3.50s")
   })

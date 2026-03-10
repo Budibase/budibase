@@ -307,7 +307,7 @@ export async function webhookChat({
   ])
   const requestId =
     responseResult.status === "fulfilled"
-      ? responseResult.value.id ?? undefined
+      ? (responseResult.value.id ?? undefined)
       : undefined
   sessionLogIndexer.addRequestId(requestId)
   await sessionLogIndexer.index()
@@ -569,7 +569,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         const [responseResult] = await Promise.allSettled([result.response])
         const requestId =
           responseResult.status === "fulfilled"
-            ? responseResult.value.id ?? undefined
+            ? (responseResult.value.id ?? undefined)
             : undefined
         sessionLogIndexer.addRequestId(requestId)
         await sessionLogIndexer.index()

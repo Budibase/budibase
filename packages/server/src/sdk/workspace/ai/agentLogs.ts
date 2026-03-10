@@ -210,7 +210,10 @@ function mapRequestModel(data: LiteLLMRequestDetail) {
   )
 }
 
-function getDateBoundary(value: string, mode: "start" | "end"): Date | undefined {
+function getDateBoundary(
+  value: string,
+  mode: "start" | "end"
+): Date | undefined {
   if (DATE_ONLY_REGEX.test(value)) {
     return new Date(
       `${value}T${mode === "start" ? "00:00:00.000" : "23:59:59.999"}Z`
