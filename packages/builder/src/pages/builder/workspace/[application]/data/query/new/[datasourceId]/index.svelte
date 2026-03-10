@@ -1,15 +1,21 @@
 <script>
   import { params, redirect } from "@roxi/routify"
   import QueryViewer from "@/components/integration/QueryViewer.svelte"
+  import { IntegrationTypes } from "@/constants/backend"
   import { datasources } from "@/stores/builder"
 
   $params
   $redirect
 
   $: datasource = $datasources.list.find(ds => ds._id === $params.datasourceId)
+  $: isRestDatasource = datasource?.source === IntegrationTypes.REST
   $: {
     if (!datasource) {
-      $redirect("../../../")
+      $redirect(`/builder/workspace/${$params.application}/data`)
+    } else if (isRestDatasource) {
+      $redirect(
+        `/builder/workspace/${$params.application}/apis/query/new/${$params.datasourceId}`
+      )
     }
   }
   $: query = datasource
@@ -25,6 +31,6 @@
     : null
 </script>
 
-{#if datasource && query}
+{#if datasource && query && !isRestDatasource}
   <QueryViewer {query} />
 {/if}

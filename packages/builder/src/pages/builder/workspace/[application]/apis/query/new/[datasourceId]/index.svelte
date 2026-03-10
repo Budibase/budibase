@@ -1,9 +1,22 @@
 <script>
-  import { params } from "@roxi/routify"
+  import { params, redirect } from "@roxi/routify"
   import { datasources } from "@/stores/builder"
+  import { IntegrationTypes } from "@/constants/backend"
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
 
+  $redirect
+
   $: datasource = $datasources.list.find(ds => ds._id === $params.datasourceId)
+  $: isRestDatasource = datasource?.source === IntegrationTypes.REST
+  $: {
+    if ($datasources.list.length && !datasource) {
+      $redirect(`/builder/workspace/${$params.application}/apis`)
+    } else if (datasource && !isRestDatasource) {
+      $redirect(
+        `/builder/workspace/${$params.application}/data/query/new/${$params.datasourceId}`
+      )
+    }
+  }
 </script>
 
 {#if datasource}
