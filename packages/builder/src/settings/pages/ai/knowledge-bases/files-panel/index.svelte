@@ -1,6 +1,12 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte"
-  import { Button, Field, notifications, Table } from "@budibase/bbui"
+  import {
+    Button,
+    FieldLabel,
+    Label,
+    notifications,
+    Table,
+  } from "@budibase/bbui"
   import { helpers } from "@budibase/shared-core"
   import {
     AIConfigType,
@@ -178,13 +184,15 @@
   })
 </script>
 
-<Field
-  label="Files"
-  required
-  description="Add text, Markdown, OpenAPI YAML, or PDF files to ground any agent using this
-  knowledge base."
->
+<div class="files-panel">
   <div class="files-header-row">
+    <div class="files-meta">
+      <FieldLabel label="Files" required />
+      <Label muted
+        >Add text, Markdown, OpenAPI YAML, or PDF files to ground any agent
+        using this knowledge base.</Label
+      >
+    </div>
     <div class="files-actions">
       <Button
         secondary
@@ -202,54 +210,54 @@
       />
     </div>
   </div>
-</Field>
 
-{#if uploadError}
-  <div class="upload-error">{uploadError}</div>
-{/if}
+  {#if uploadError}
+    <div class="upload-error">{uploadError}</div>
+  {/if}
 
-{#if !knowledgeBaseId}
-  <div class="files-empty">Save the knowledge base before uploading files.</div>
-{:else if currentFiles.length === 0}
-  <div class="files-empty">
-    No files have been uploaded for this knowledge base yet.
-  </div>
-{:else}
-  <Table
-    data={currentFiles}
-    schema={{
-      filename: { displayName: "name", width: "minmax(0, 2fr)" },
-      displayStatus: { displayName: "status", width: "130px" },
-      chunkCount: { displayName: "# chunks", width: "88px" },
-      size: { width: "100px" },
-      updatedAt: { displayName: "updated", width: "180px" },
-      delete: { displayName: "", width: "48px", align: "Right" },
-    }}
-    {customRenderers}
-    allowEditColumns={false}
-    allowEditRows={false}
-    allowSelectRows={false}
-    allowClickRows={false}
-    disableSorting
-    rounded
-    quiet
-    compact
-  ></Table>
-{/if}
+  {#if !knowledgeBaseId}
+    <div class="files-empty">
+      Save the knowledge base before uploading files.
+    </div>
+  {:else if currentFiles.length === 0}
+    <div class="files-empty">
+      No files have been uploaded for this knowledge base yet.
+    </div>
+  {:else}
+    <Table
+      data={currentFiles}
+      schema={{
+        filename: { displayName: "name", width: "minmax(0, 2fr)" },
+        displayStatus: { displayName: "status", width: "130px" },
+        chunkCount: { displayName: "# chunks", width: "88px" },
+        size: { width: "100px" },
+        updatedAt: { displayName: "updated", width: "180px" },
+        delete: { displayName: "", width: "48px", align: "Right" },
+      }}
+      {customRenderers}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+      allowClickRows={false}
+      disableSorting
+      rounded
+      quiet
+      compact
+    ></Table>
+  {/if}
+</div>
 
 <style>
-  .files-header-row {
+  .files-panel {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--spacing-m);
-    margin-top: var(--spacing-l);
+    flex-direction: column;
+    gap: var(--spacing-s);
   }
 
-  .files-actions {
+  .files-header-row {
     display: flex;
-    gap: var(--spacing-s);
-    align-items: center;
+    align-items: flex-end;
+    justify-content: space-between;
   }
 
   .upload-error,
