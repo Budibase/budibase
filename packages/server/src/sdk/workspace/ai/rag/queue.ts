@@ -15,7 +15,7 @@ const DEFAULT_TIMEOUT_MS = utils.Duration.fromMinutes(10).toMs()
 
 export interface RagIngestionJob {
   workspaceId: string
-  knowledgeBaseId?: string
+  knowledgeBaseId: string
   fileId: string
   objectStoreKey?: string
 }
@@ -63,11 +63,6 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
       await context.doInWorkspaceContext(workspaceId, async () => {
         let knowledgeBaseConfig: KnowledgeBase | undefined
         let knowledgeBaseFile: KnowledgeBaseFile | undefined
-
-        if (!knowledgeBaseId) {
-          await job.discard()
-          return
-        }
 
         knowledgeBaseConfig = await knowledgeBase.find(knowledgeBaseId)
         if (!knowledgeBaseConfig) {
