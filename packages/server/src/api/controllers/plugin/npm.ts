@@ -39,9 +39,8 @@ export async function npmUpload(url: string, name: string, headers = {}) {
 
   const path = await downloadUnzipTarball(npmTarballUrl, pluginName, headers)
   const pluginRoot = join(path, "package", "dist")
-
   try {
-    return await getPluginMetadata(pluginRoot)
+    return await getPluginMetadata(pluginRoot, path)
   } catch (err) {
     deleteFolderFileSystem(path)
     throw err

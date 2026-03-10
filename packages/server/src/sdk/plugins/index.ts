@@ -125,7 +125,7 @@ export async function backfillPluginOrigins() {
 }
 
 export async function processUploaded(plugin: KoaFile, source: PluginSource) {
-  const { metadata, directory } = await fileUpload(plugin)
+  const { metadata, directory, cleanupDirectory } = await fileUpload(plugin)
   try {
     pluginCore.validate(metadata.schema)
 
@@ -148,7 +148,7 @@ export async function processUploaded(plugin: KoaFile, source: PluginSource) {
     clientAppSocket?.emit("plugin-update", { name: doc.name, hash: doc.hash })
     return doc
   } finally {
-    deleteFolderFileSystem(directory)
+    deleteFolderFileSystem(cleanupDirectory)
   }
 }
 

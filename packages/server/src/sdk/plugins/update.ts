@@ -194,7 +194,7 @@ async function collectCandidates(
       const download = await githubUpload(plugin.origin.url, plugin.name, token)
 
       const svelteMajor = extractSvelteMajor(download.metadata)
-      safeRemoveDirectory(download.directory)
+      safeRemoveDirectory(download.cleanupDirectory)
 
       const originBase = {
         ...plugin.origin,
@@ -292,6 +292,7 @@ export async function applyPluginUpdates(
     }
 
     let directory: string | undefined
+    let cleanupDirectory: string | undefined
     try {
       const release = await fetchLatestRelease(plugin.origin.repo, token)
 
@@ -301,6 +302,7 @@ export async function applyPluginUpdates(
 
       const download = await githubUpload(plugin.origin.url, plugin.name, token)
       directory = download.directory
+      cleanupDirectory = download.cleanupDirectory
 
       const svelteMajor = extractSvelteMajor(download.metadata)
       if (typeof svelteMajor !== "number" || svelteMajor < 5) {
@@ -334,7 +336,7 @@ export async function applyPluginUpdates(
         error: err?.message || String(err),
       })
     } finally {
-      safeRemoveDirectory(directory)
+      safeRemoveDirectory(cleanupDirectory)
     }
   }
 

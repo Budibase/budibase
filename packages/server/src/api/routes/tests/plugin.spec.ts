@@ -33,6 +33,8 @@ import { budibaseTempDir } from "../../../utilities/budibaseDir"
 
 const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
+const getTempDirsWithPrefix = (prefix: string) =>
+  fs.readdirSync(budibaseTempDir()).filter(dir => dir.startsWith(prefix)).sort()
 
 describe("/plugins", () => {
   let request = setup.getRequest()
@@ -111,21 +113,23 @@ describe("/plugins", () => {
         os.tmpdir(),
         `invalid-plugin-${Date.now()}.tar.gz`
       )
+      const uploadFilename = `broken-plugin-${Date.now()}.tar.gz`
+      const tempDirPrefix = `${uploadFilename.replace(".tar.gz", "")}-`
       fs.writeFileSync(invalidTarballPath, "not a tarball")
 
       try {
-        const dirsBefore = fs.readdirSync(budibaseTempDir()).sort()
+        const dirsBefore = getTempDirsWithPrefix(tempDirPrefix)
 
         await request
           .post("/api/plugin/upload")
           .attach("file", invalidTarballPath, {
-            filename: "broken-plugin.tar.gz",
+            filename: uploadFilename,
           })
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
           .expect(400)
 
-        const dirsAfter = fs.readdirSync(budibaseTempDir()).sort()
+        const dirsAfter = getTempDirsWithPrefix(tempDirPrefix)
         expect(dirsAfter).toEqual(dirsBefore)
       } finally {
         fs.unlinkSync(invalidTarballPath)
@@ -279,6 +283,43 @@ describe("/plugins", () => {
       expect(plugin._id).toEqual("plg_budibase-component")
       expect(events.plugin.imported).toHaveBeenCalled()
     })
+
+    it("should clean up temp directories after a successful npm import", async () => {
+      const packageName = `budibase-component-cleanup-${Date.now()}`
+      const tempDirPrefix = `${packageName}-`
+
+      nock("https://registry.npmjs.org")
+        .get(`/${packageName}`)
+        .reply(200, {
+          name: packageName,
+          "dist-tags": {
+            latest: "1.0.0",
+          },
+          versions: {
+            "1.0.0": {
+              dist: {
+                tarball:
+                  `https://registry.npmjs.org/${packageName}/-/${packageName}-1.0.1.tgz`,
+              },
+            },
+          },
+        })
+        .get(`/${packageName}/-/${packageName}-1.0.1.tgz`)
+        .replyWithFile(
+          200,
+          "src/api/routes/tests/data/budibase-component-1.0.1.tgz"
+        )
+
+      const dirsBefore = getTempDirsWithPrefix(tempDirPrefix)
+
+      await config.api.plugin.create({
+        source: PluginSource.NPM,
+        url: `https://www.npmjs.com/package/${packageName}`,
+      })
+
+      const dirsAfter = getTempDirsWithPrefix(tempDirPrefix)
+      expect(dirsAfter).toEqual(dirsBefore)
+    })
   })
 
   describe("url", () => {
@@ -322,6 +363,7 @@ describe("/plugins", () => {
             },
           },
           directory: dir,
+          cleanupDirectory: dir,
         }
       })
 

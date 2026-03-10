@@ -61,6 +61,7 @@ export async function create(
 ) {
   const { source, url, headers, githubToken } = ctx.request.body
   let directory: string | undefined
+  let cleanupDirectory: string | undefined
 
   try {
     let metadata: PluginMetadata
@@ -70,25 +71,40 @@ export async function create(
 
     switch (source) {
       case PluginSource.NPM: {
-        const { metadata: metadataNpm, directory: directoryNpm } =
+        const {
+          metadata: metadataNpm,
+          directory: directoryNpm,
+          cleanupDirectory: cleanupDirectoryNpm,
+        } =
           await npmUpload(url, name)
         metadata = metadataNpm
         directory = directoryNpm
+        cleanupDirectory = cleanupDirectoryNpm
         break
       }
       case PluginSource.GITHUB: {
-        const { metadata: metadataGithub, directory: directoryGithub } =
+        const {
+          metadata: metadataGithub,
+          directory: directoryGithub,
+          cleanupDirectory: cleanupDirectoryGithub,
+        } =
           await githubUpload(url, name, githubToken)
         metadata = metadataGithub
         directory = directoryGithub
+        cleanupDirectory = cleanupDirectoryGithub
         break
       }
       case PluginSource.URL: {
         const headersObj = headers || {}
-        const { metadata: metadataUrl, directory: directoryUrl } =
+        const {
+          metadata: metadataUrl,
+          directory: directoryUrl,
+          cleanupDirectory: cleanupDirectoryUrl,
+        } =
           await urlUpload(url, name, headersObj)
         metadata = metadataUrl
         directory = directoryUrl
+        cleanupDirectory = cleanupDirectoryUrl
         break
       }
       default:
@@ -132,8 +148,8 @@ export async function create(
     const errMsg = err?.message ? err?.message : err
     ctx.throw(400, `Failed to import plugin: ${errMsg}`)
   } finally {
-    if (directory) {
-      deleteFolderFileSystem(directory)
+    if (cleanupDirectory) {
+      deleteFolderFileSystem(cleanupDirectory)
     }
   }
 }
