@@ -39,45 +39,40 @@
   })
 </script>
 
-<Layout noPadding gap="S">
+<Layout noPadding gap="XS">
   {#if $featureFlags.AI_RAG}
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Knowledge bases</div>
-        <Button size="S" icon="plus" on:click={() => createKnowledgeBase()}>
-          Knowledge base
-        </Button>
-      </div>
-
-      {#if knowledgeBases.length}
-        <Table
-          compact
-          data={knowledgeBases}
-          schema={{
-            name: {},
-          }}
-          hideHeader
-          rounded
-          allowClickRows={false}
-          allowEditRows
-          editColumnPosition="right"
-          on:editrow={r => editKnowledgeBase(r.detail)}
-        ></Table>
-      {:else}
-        <div class="no-enabled">
-          <Body size="XS">No knowledge bases created yet</Body>
-        </div>
-      {/if}
+    <div class="section-header">
+      <div class="section-title">Knowledge bases</div>
+      <Button size="S" icon="plus" on:click={() => createKnowledgeBase()}>
+        Knowledge base
+      </Button>
     </div>
+
+    {#if knowledgeBases.length}
+      <Table
+        compact
+        data={knowledgeBases}
+        schema={{
+          name: {},
+        }}
+        hideHeader
+        rounded
+        allowClickRows={false}
+        allowEditRows
+        editColumnPosition="right"
+        on:editrow={r => editKnowledgeBase(r.detail)}
+      ></Table>
+    {:else}
+      <div class="no-enabled">
+        <Body size="XS">No knowledge bases created yet</Body>
+      </div>
+    {/if}
   {/if}
 </Layout>
 
 <style>
   .no-enabled {
     padding: 16px;
-    background-color: var(--grey-1);
-    border: 1px solid var(--grey-4);
-    border-radius: var(--border-radius-m);
   }
 
   .section-title {
@@ -90,9 +85,5 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
-  }
-
-  .section-header .section-title {
-    margin-bottom: 0;
   }
 </style>
