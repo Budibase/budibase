@@ -20,6 +20,7 @@ import {
 import nock from "nock"
 
 const jsonHeaders = { "content-type": "application/json" }
+const apiOrigin = "https://www.microsoft.com"
 
 interface OAuthRetryResponse {
   success: boolean
@@ -122,7 +123,7 @@ describe("OAuth2 Automation Binding", () => {
 
   it("should make OAuth2 token available in executeQuery automation step", async () => {
     await config.withUser(ssoUser, async () => {
-      const pool = getPool("https://api.example.com")
+      const pool = getPool(apiOrigin)
       let requestCount = 0
 
       pool
@@ -144,7 +145,7 @@ describe("OAuth2 Automation Binding", () => {
       })
 
       const queryFields: RestQueryFields = {
-        path: "https://api.example.com/test",
+        path: `${apiOrigin}/test`,
         queryString: "",
         headers: {
           Authorization: "Bearer {{ user.oauth2.accessToken }}",
@@ -174,7 +175,7 @@ describe("OAuth2 Automation Binding", () => {
 
   it("should make OAuth2 token available in apiRequest automation step", async () => {
     await config.withUser(ssoUser, async () => {
-      const pool = getPool("https://api.example.com")
+      const pool = getPool(apiOrigin)
       let requestCount = 0
 
       pool
@@ -203,7 +204,7 @@ describe("OAuth2 Automation Binding", () => {
       })
 
       const queryFields: RestQueryFields = {
-        path: "https://api.example.com/api-request",
+        path: `${apiOrigin}/api-request`,
         queryString: "",
         headers: {
           Authorization: "Bearer {{ user.oauth2.accessToken }}",
@@ -258,7 +259,7 @@ describe("OAuth2 Automation Binding", () => {
 
   it("should handle 401 Unauthorized and retry mechanism in apiRequest step", async () => {
     await config.withUser(ssoUser, async () => {
-      const apiPool = getPool("https://api.example.com")
+      const apiPool = getPool(apiOrigin)
       let firstCall = true
 
       apiPool
@@ -293,7 +294,7 @@ describe("OAuth2 Automation Binding", () => {
       })
 
       const queryFields: RestQueryFields = {
-        path: "https://api.example.com/protected-endpoint",
+        path: `${apiOrigin}/protected-endpoint`,
         queryString: "",
         headers: {
           Authorization: "Bearer {{ user.oauth2.accessToken }}",
