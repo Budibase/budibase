@@ -34,7 +34,7 @@ export interface Route {
   comp?: Component<any>
   routes?: Route[]
   section?: string
-  title?: string
+  title?: string | ((path: string | undefined) => string)
   icon?: string | RouteIcon
   new?: boolean
   access?: () => boolean
