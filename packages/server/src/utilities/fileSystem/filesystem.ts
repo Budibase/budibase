@@ -144,10 +144,12 @@ export const findFileRec = (
 /**
  * Remove a folder which is not empty from the file system
  */
-export const deleteFolderFileSystem = (path: PathLike) => {
-  if (!fs.existsSync(path)) {
+export const deleteFolderFileSystem = (path: string) => {
+  const safePath = assertWithinTempDir(path)
+
+  if (!fs.existsSync(safePath)) {
     return
   }
 
-  fs.rmSync(path, { recursive: true, force: true })
+  fs.rmSync(safePath, { recursive: true, force: true })
 }

@@ -29,4 +29,14 @@ describe("filesystem", () => {
       ).rejects.toThrow("Path must be within the Budibase temp directory.")
     })
   })
+
+  describe("deleteFolderFileSystem", () => {
+    it("should reject deleting paths outside the Budibase temp directory", () => {
+      const outsidePath = path.resolve(budibaseTempDir(), "..", "outside")
+
+      expect(() => deleteFolderFileSystem(outsidePath)).toThrow(
+        "Path must be within the Budibase temp directory."
+      )
+    })
+  })
 })
