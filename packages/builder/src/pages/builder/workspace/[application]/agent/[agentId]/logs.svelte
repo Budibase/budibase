@@ -167,28 +167,31 @@
 
   async function selectSession(session: AgentLogSession) {
     const agentId = $selectedAgent?._id
+    const requestedSessionId = session.sessionId
     selectedSession = session
     resetDetailState()
 
     if (!agentId) return
-    if (selectedSession?.sessionId !== session.sessionId) return
+
+    const isCurrentSelection = () =>
+      selectedSession?.sessionId === requestedSessionId
 
     try {
       const fullSession = await API.fetchAgentLogSession(
         agentId,
-        session.sessionId
+        requestedSessionId
       )
+      if (!isCurrentSelection()) return
 
       if (!fullSession) {
         throw new Error("Session detail not found")
       }
       selectedSession = fullSession
     } catch (error) {
+      if (!isCurrentSelection()) return
       notifications.error("Failed to fetch full session detail")
-      if (selectedSession?.sessionId === session.sessionId) {
-        selectedSession = null
-        resetDetailState()
-      }
+      selectedSession = null
+      resetDetailState()
     }
   }
 

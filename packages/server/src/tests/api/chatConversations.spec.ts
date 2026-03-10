@@ -912,5 +912,63 @@ describe("Agent chat tool call tracking", () => {
 
       expect(addActionMock).not.toHaveBeenCalled()
     })
+
+    it("indexes session logs when response metadata rejects", async () => {
+      const responseError = new Error("response metadata failed")
+      jest.mocked(streamText).mockImplementation(
+        ((options: any) =>
+          ({
+            text: (async () => {
+              if (options.onStepFinish) {
+                await options.onStepFinish({
+                  content: [],
+                  toolCalls: [],
+                  toolResults: [],
+                  response: { id: "gen-test" },
+                })
+              }
+              return "response"
+            })(),
+            response: Promise.reject(responseError),
+            usage: Promise.resolve({
+              inputTokens: 0,
+              outputTokens: 0,
+            }),
+          }) as ReturnType<typeof streamText>) as any
+      )
+
+      await expect(
+        context.doInWorkspaceContext(config.getProdWorkspaceId(), async () => {
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+        })
+      ).rejects.toThrow("response metadata failed")
+
+      const { createSessionLogIndexer } = jest.requireMock(
+        "../../sdk/workspace/ai/agentLogs"
+      ) as {
+        createSessionLogIndexer: jest.Mock
+      }
+      const sessionLogIndexer = createSessionLogIndexer.mock.results.at(-1)
+        ?.value as {
+        addRequestId: jest.Mock
+        index: jest.Mock
+      }
+
+      expect(sessionLogIndexer.addRequestId).toHaveBeenCalledWith("gen-test")
+      expect(sessionLogIndexer.index).toHaveBeenCalledTimes(1)
+    })
   })
 })

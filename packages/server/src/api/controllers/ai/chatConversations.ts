@@ -301,19 +301,25 @@ export async function webhookChat({
     },
   })
 
-  let assistantText = ""
-  const responseMetadata = {
-    requestId: (await result.response).id ?? undefined,
+  const [textResult, responseResult] = await Promise.allSettled([
+    result.text,
+    result.response,
+  ])
+  const requestId =
+    responseResult.status === "fulfilled"
+      ? responseResult.value.id ?? undefined
+      : undefined
+  sessionLogIndexer.addRequestId(requestId)
+  await sessionLogIndexer.index()
+
+  if (textResult.status === "rejected") {
+    throw textResult.reason
   }
-  try {
-    assistantText = await result.text
-    sessionLogIndexer.addRequestId(responseMetadata.requestId)
-    await sessionLogIndexer.index()
-  } catch (error) {
-    sessionLogIndexer.addRequestId(responseMetadata.requestId)
-    await sessionLogIndexer.index()
-    throw error
+  if (responseResult.status === "rejected") {
+    throw responseResult.reason
   }
+
+  const assistantText = textResult.value
   const assistantMessage: ChatConversation["messages"][number] = {
     id: v4(),
     role: "assistant",
@@ -560,11 +566,17 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
-        const responseMetadata = {
-          requestId: (await result.response).id ?? undefined,
-        }
-        sessionLogIndexer.addRequestId(responseMetadata.requestId)
+        const [responseResult] = await Promise.allSettled([result.response])
+        const requestId =
+          responseResult.status === "fulfilled"
+            ? responseResult.value.id ?? undefined
+            : undefined
+        sessionLogIndexer.addRequestId(requestId)
         await sessionLogIndexer.index()
+
+        if (responseResult.status === "rejected") {
+          throw responseResult.reason
+        }
 
         if (chat.transient || !chatAppId) {
           return
