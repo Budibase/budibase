@@ -4,6 +4,7 @@ import { getAvailableTools, getOrThrow } from "./agents"
 import { AGENT_LOG_SESSION_TABLE_ID } from "../sqs/staticTables"
 import {
   fetchRequestDetail,
+  fetchSessions,
   fetchSessionDetail,
   addSessionLog,
 } from "./agentLogs"
@@ -295,6 +296,20 @@ describe("agentLogs", () => {
       "req-old",
       "req-new",
     ])
+  })
+
+  it("rejects partially numeric bookmarks when fetching sessions", async () => {
+    await expect(
+      fetchSessions(
+        "agent-1",
+        "2026-03-08T00:00:00.000Z",
+        "2026-03-08T23:59:59.999Z",
+        "123abc"
+      )
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Invalid bookmark query",
+    })
   })
 
   it("rejects request detail when the returned user belongs to another agent", async () => {

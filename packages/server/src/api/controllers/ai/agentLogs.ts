@@ -23,6 +23,10 @@ function sanitizeBookmarkQuery(bookmark?: string): string | undefined {
     return undefined
   }
 
+  if (!/^\d+$/.test(normalizedBookmark)) {
+    throw new HTTPError("Invalid bookmark query", 400)
+  }
+
   const parsedBookmark = Number.parseInt(normalizedBookmark, 10)
   if (!Number.isFinite(parsedBookmark) || parsedBookmark < 1) {
     throw new HTTPError("Invalid bookmark query", 400)

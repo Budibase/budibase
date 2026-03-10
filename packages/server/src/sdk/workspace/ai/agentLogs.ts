@@ -62,6 +62,7 @@ interface AgentLogIndexJob extends IndexAgentLogOperationInput {
 
 let agentLogIndexQueue: queue.BudibaseQueue<AgentLogIndexJob> | undefined
 let agentLogIndexQueueInitialised = false
+let agentLogIndexQueueInitPromise: Promise<void> | undefined
 
 function getExpectedEndUser(agentId: string): string {
   return `bb-agent:${agentId}`
@@ -166,6 +167,9 @@ function truncateText(value: string, maxLength = 100): string {
 function parseBookmarkPage(bookmark?: string): number {
   if (!bookmark) {
     return DEFAULT_BOOKMARK_PAGE
+  }
+  if (!/^\d+$/.test(bookmark)) {
+    throw new HTTPError("Invalid bookmark query", 400)
   }
   const parsed = Number.parseInt(bookmark, 10)
   if (!Number.isFinite(parsed) || parsed < 1) {
@@ -580,22 +584,26 @@ export function initLogIndexQueue(
     return Promise.resolve()
   }
 
-  try {
-    agentLogIndexQueueInitialised = true
-    return getIndexQueue().process(concurrency, async job => {
-      const { workspaceId, ...indexInput } = job.data
-      await context.doInWorkspaceContext(workspaceId, async () => {
-        await addSessionLog(indexInput)
+  if (!agentLogIndexQueueInitPromise) {
+    agentLogIndexQueueInitPromise = (async () => {
+      await getIndexQueue().process(concurrency, async job => {
+        const { workspaceId, ...indexInput } = job.data
+        await context.doInWorkspaceContext(workspaceId, async () => {
+          await addSessionLog(indexInput)
+        })
       })
-    })
-  } catch (error) {
-    agentLogIndexQueueInitialised = false
-    throw error
+      agentLogIndexQueueInitialised = true
+    })()
   }
+
+  return agentLogIndexQueueInitPromise.catch(error => {
+    agentLogIndexQueueInitPromise = undefined
+    throw error
+  })
 }
 
 async function enqueueSessionLogIndex(job: AgentLogIndexJob) {
-  initLogIndexQueue()
+  await initLogIndexQueue()
   return await getIndexQueue().add(job)
 }
 
