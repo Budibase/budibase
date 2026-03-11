@@ -11,6 +11,7 @@ import { HttpMethod } from "../query"
 import { Row, RowAttachment } from "../row"
 import {
   LoopStepType,
+  AutomationAttachment,
   EmailAttachment,
   AutomationResults,
   AutomationStepResult,
@@ -272,7 +273,9 @@ export type ExtractFileDataStepOutputs = {
 
 export type AgentStepInputs = {
   agentId: string
-  prompt: string
+  prompt?: string
+  files?: AutomationAttachment[]
+  message?: UIMessage
   useStructuredOutput?: boolean
   outputSchema?: Record<string, any>
 }

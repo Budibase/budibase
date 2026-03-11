@@ -1,7 +1,8 @@
 import * as automationUtils from "../../automationUtils"
-import { getErrorMessage } from "@budibase/backend-core"
+import { getErrorMessage, objectStore } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  AutomationAttachment,
   AgentStepInputs,
   AgentStepOutputs,
   AutomationStepInputBase,
@@ -14,6 +15,7 @@ import {
   updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents"
 import { createSessionLogIndexer } from "../../../sdk/workspace/ai/agentLogs"
+import { normalizeUIMessagesToModelMessages } from "../../../sdk/workspace/ai/llm"
 import {
   ToolLoopAgent,
   stepCountIs,
@@ -28,6 +30,61 @@ import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
 import tracer from "dd-trace"
 import env from "../../../environment"
+import path from "path"
+import { buffer } from "stream/consumers"
+
+const getAttachmentMediaType = (filename?: string) => {
+  const extension = path.extname(filename || "").toLowerCase()
+  const mediaTypeByExtension: Record<string, string> = {
+    ".txt": "text/plain",
+    ".md": "text/markdown",
+    ".csv": "text/csv",
+    ".pdf": "application/pdf",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+  }
+
+  return mediaTypeByExtension[extension] || "application/octet-stream"
+}
+
+async function buildMessageFromPromptAndFiles(
+  prompt: string | undefined,
+  files: AutomationAttachment[] | undefined
+): Promise<UIMessage | undefined> {
+  if ((!prompt || !prompt.trim()) && !files?.length) {
+    return undefined
+  }
+
+  const parts: UIMessage["parts"] = []
+
+  for (const file of files || []) {
+    const processed = await objectStore.processAutomationAttachment(file)
+    const content = await buffer(processed.content)
+    const mediaType = getAttachmentMediaType(processed.filename)
+    parts.push({
+      type: "file",
+      mediaType,
+      filename: processed.filename,
+      url: `data:${mediaType};base64,${content.toString("base64")}`,
+    })
+  }
+
+  if (prompt?.trim()) {
+    parts.push({
+      type: "text",
+      text: prompt.trim(),
+    })
+  }
+
+  return {
+    id: v4(),
+    role: "user",
+    parts,
+  }
+}
 
 export async function run({
   inputs,
@@ -35,7 +92,9 @@ export async function run({
 }: {
   inputs: AgentStepInputs
 } & AutomationStepInputBase): Promise<AgentStepOutputs> {
-  const { agentId, prompt, useStructuredOutput, outputSchema } = inputs
+  const { agentId, prompt, files, message, useStructuredOutput, outputSchema } =
+    inputs
+  const composedMessage = message || (await buildMessageFromPromptAndFiles(prompt, files))
 
   if (!agentId) {
     return {
@@ -44,15 +103,16 @@ export async function run({
     }
   }
 
-  if (!prompt) {
+  if (!prompt && !composedMessage) {
     return {
       success: false,
-      response: "Agent step failed: No prompt provided",
+      response: "Agent step failed: No prompt or message provided",
     }
   }
 
   const sessionId = v4()
   const operationStartedAt = new Date().toISOString()
+  const firstInput = prompt || files?.[0]?.filename || "Message input"
 
   return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
@@ -60,7 +120,7 @@ export async function run({
       const sessionLogIndexer = createSessionLogIndexer({
         agentId,
         sessionId,
-        firstInput: prompt,
+        firstInput,
         errorLabel: "automation agent",
         startedAt: operationStartedAt,
       })
@@ -69,7 +129,7 @@ export async function run({
         const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
         tracer.llmobs.annotate(agentSpan, {
-          inputData: prompt,
+          inputData: prompt || JSON.stringify(composedMessage),
           metadata: {
             agentId,
             agentName: agentConfig.name,
@@ -100,12 +160,13 @@ export async function run({
           },
         })
 
-        const { chat, providerOptions } = await sdk.ai.llm.createLLM(
+        const llm = await sdk.ai.llm.createLLM(
           agentConfig.aiconfig,
           sessionId,
           agentSpan,
           agentId
         )
+        const { chat, providerOptions } = llm
 
         let outputOption = undefined
         if (
@@ -149,7 +210,14 @@ export async function run({
           },
         })
 
-        const streamResult = await agent.stream({ prompt })
+        const streamResult = composedMessage
+          ? await agent.stream({
+              messages: await normalizeUIMessagesToModelMessages(
+                [composedMessage],
+                llm
+              ),
+            })
+          : await agent.stream({ prompt })
 
         let assistantMessage: UIMessage | undefined
         let streamingError: string | undefined

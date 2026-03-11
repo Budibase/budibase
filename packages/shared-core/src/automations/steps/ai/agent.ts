@@ -32,6 +32,12 @@ export const definition: AutomationStepDefinition = {
           title: "Prompt",
           description: "The task or question to send to the agent",
         },
+        files: {
+          type: AutomationIOType.ATTACHMENT,
+          customType: AutomationCustomIOType.MULTI_ATTACHMENTS,
+          title: "Files",
+          description: "Optional files to send to the agent",
+        },
         useStructuredOutput: {
           type: AutomationIOType.BOOLEAN,
           title: "Use structured output",
@@ -46,7 +52,7 @@ export const definition: AutomationStepDefinition = {
           dependsOn: "useStructuredOutput",
         },
       },
-      required: ["agentId", "prompt"],
+      required: ["agentId"],
     },
     outputs: {
       properties: {

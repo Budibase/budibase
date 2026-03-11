@@ -49,7 +49,7 @@ describe("test the agent action", () => {
           .test({ fields: {} })
 
         expect(result.steps[0].outputs.response).toEqual(
-          "Agent step failed: No prompt provided"
+          "Agent step failed: No prompt or message provided"
         )
         expect(result.steps[0].outputs.success).toBeFalsy()
       }
