@@ -12,11 +12,11 @@ import type {
 const vectorLiteral = (values: number[]) =>
   `[${values.map(value => Number(value) || 0).join(",")}]`
 
-const TABLE_PREFIX = "bb_agent_chunks_"
+const TABLE_PREFIX = "bb_chunks_"
 const TABLE_HASH_LENGTH = 10
 
-const buildAgentTableName = (agentId: string) => {
-  const normalized = agentId
+const buildAgentTableName = (namespaceId: string) => {
+  const normalized = namespaceId
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
@@ -24,7 +24,7 @@ const buildAgentTableName = (agentId: string) => {
   const prodWorkspaceId = dbCore.getProdWorkspaceID(currentWorkspaceId)
   const hash = crypto
     .createHash("sha256")
-    .update(`${tenancy.getTenantId()}:${prodWorkspaceId}:${agentId}`)
+    .update(`${tenancy.getTenantId()}:${prodWorkspaceId}:${namespaceId}`)
     .digest("hex")
     .slice(0, TABLE_HASH_LENGTH)
   const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH
@@ -43,12 +43,12 @@ const buildPgConnectionString = (config: VectorDbDoc) => {
 
 export const buildPgVectorDbConfig = (
   config: VectorDbDoc,
-  options: { agentId: string }
+  options: { namespaceId: string }
 ) => {
   return new PgVectorDb({
     provider: VectorDbProvider.PGVECTOR,
     databaseUrl: buildPgConnectionString(config),
-    tableName: buildAgentTableName(options.agentId),
+    tableName: buildAgentTableName(options.namespaceId),
   })
 }
 
