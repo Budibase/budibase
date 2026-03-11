@@ -30,12 +30,24 @@
       .sort((a, b) => a.name.localeCompare(b.name))
   )
   let embeddingModels = $derived(
-    [...$aiConfigsStore.customConfigsPerType.embeddings].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    )
+    [...$aiConfigsStore.customConfigsPerType.embeddings]
+      .map(config => ({
+        ...config,
+        usages: $knowledgeBaseStore.list.filter(
+          knowledgeBase => knowledgeBase.embeddingModel === config._id
+        ).length,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
   )
   let vectorDbs = $derived(
-    [...$vectorDbStore.configs].sort((a, b) => a.name.localeCompare(b.name))
+    [...$vectorDbStore.configs]
+      .map(config => ({
+        ...config,
+        usages: $knowledgeBaseStore.list.filter(
+          knowledgeBase => knowledgeBase.vectorDb === config._id
+        ).length,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
   )
 
   function createKnowledgeBase() {
@@ -106,7 +118,7 @@
         schema={{
           name: {},
           embeddingModel: { displayName: "Embedding model" },
-          files: { displayName: "# Files" },
+          files: { displayName: "# Files", width: "100px" },
         }}
         rounded
         allowClickRows={false}
@@ -135,8 +147,8 @@
         data={embeddingModels}
         schema={{
           name: {},
-          provider: {},
           model: {},
+          usages: { displayName: "# Usages", width: "100px" },
         }}
         rounded
         allowClickRows={false}
@@ -165,8 +177,8 @@
         data={vectorDbs}
         schema={{
           name: {},
-          host: {},
-          database: {},
+          provider: {},
+          usages: { displayName: "# Usages", width: "100px" },
         }}
         rounded
         allowClickRows={false}
