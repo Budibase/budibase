@@ -19,7 +19,7 @@ const buildWorkspaceMetricsCacheKey = (tenantId: string) =>
   `${METRICS_CACHE_KEY_PREFIX}:${tenantId}`
 
 const convertBudibaseAIUsageToCredits = (usage = 0) => {
-  return usage / BUDIBASE_AI_TOKENS_PER_CREDIT
+  return Math.floor(usage / BUDIBASE_AI_TOKENS_PER_CREDIT)
 }
 
 const getDefaultMetrics = (): GetWorkspaceHomeMetricsResponse => {

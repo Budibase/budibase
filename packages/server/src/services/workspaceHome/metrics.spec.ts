@@ -20,7 +20,7 @@ describe("workspace home metrics caching", () => {
       monthly: {
         current: {
           actions: 2,
-          budibaseAICredits: 4000,
+          budibaseAICredits: 4500,
         },
       },
     }))
@@ -67,7 +67,7 @@ describe("workspace home metrics caching", () => {
       monthly: {
         current: {
           actions: 7,
-          budibaseAICredits: 11000,
+          budibaseAICredits: 11999,
         },
       },
     })
