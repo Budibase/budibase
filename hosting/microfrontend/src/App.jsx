@@ -118,14 +118,14 @@ const App = () => {
   }, [appUrl])
 
   return (
-    <div className="shell">
-      <header className="header">
+    <div className="mf-shell">
+      <header className="mf-header">
         <h1>Budibase App Microfrontend PoC</h1>
         <p>App URL: {appUrl}</p>
         <p>Status: {status}</p>
       </header>
-      <main className="canvas">
-        <div ref={targetRef} className="budibase-target" />
+      <main className="mf-canvas">
+        <div ref={targetRef} className="mf-budibase-target" />
       </main>
     </div>
   )

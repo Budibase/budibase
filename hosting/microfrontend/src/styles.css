@@ -15,7 +15,7 @@ body,
   margin: 0;
 }
 
-.shell {
+.mf-shell {
   width: 100%;
   height: 100%;
   display: grid;
@@ -23,29 +23,29 @@ body,
   background: #f5f6f8;
 }
 
-.header {
+.mf-header {
   padding: 12px 16px;
   border-bottom: 1px solid #d9dde5;
   background: white;
 }
 
-.header h1 {
+.mf-header h1 {
   margin: 0 0 6px;
   font-size: 18px;
 }
 
-.header p {
+.mf-header p {
   margin: 2px 0;
   font-size: 13px;
   color: #4a5568;
 }
 
-.canvas {
+.mf-canvas {
   min-height: 0;
   padding: 12px;
 }
 
-.budibase-target {
+.mf-budibase-target {
   width: 100%;
   height: 100%;
   min-height: 640px;
