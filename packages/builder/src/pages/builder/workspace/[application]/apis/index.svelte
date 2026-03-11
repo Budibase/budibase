@@ -27,7 +27,7 @@
       }
     }
 
-    // Has connections but no queries — go to new query with first connection preselected
-    $redirect(`./query/new/${restDatasources[0]._id}`)
+    // Has connections but no queries — go to new query
+    $redirect("./query/new")
   })
 </script>

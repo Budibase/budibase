@@ -29,7 +29,7 @@
         )
       } else {
         $redirect(
-          `/builder/workspace/${$params.application}/apis/query/new/${ds._id}`
+          `/builder/workspace/${$params.application}/apis/query/new`
         )
       }
     }

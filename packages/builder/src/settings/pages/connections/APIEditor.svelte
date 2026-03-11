@@ -449,7 +449,7 @@
     )
     const targetPath = firstQuery?._id
       ? `/builder/workspace/${$appStore.appId}/apis/query/${firstQuery._id}`
-      : `/builder/workspace/${$appStore.appId}/apis/query/new/${datasource._id}`
+      : `/builder/workspace/${$appStore.appId}/apis/query/new`
     if ($isActive(targetPath)) {
       bb.hideSettings()
       return

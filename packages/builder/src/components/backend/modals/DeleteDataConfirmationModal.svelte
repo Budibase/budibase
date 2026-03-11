@@ -193,11 +193,7 @@
             }
 
             if (!found) {
-              if (otherDatasources.length) {
-                goto(`${base}/query/new/${otherDatasources[0]._id}`)
-              } else {
-                goto(`${base}/query/new/${query.datasourceId}`)
-              }
+              goto(`${base}/query/new`)
             }
           }
         }

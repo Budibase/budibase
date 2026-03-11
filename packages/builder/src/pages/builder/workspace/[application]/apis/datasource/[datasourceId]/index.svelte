@@ -1,8 +1,17 @@
 <script>
   import { params, redirect } from "@roxi/routify"
-  import { onMount } from "svelte"
+  import { queries } from "@/stores/builder"
 
-  onMount(() => {
-    $redirect(`../../query/new/${$params.datasourceId}`)
-  })
+  $redirect
+
+  $: firstQuery = $queries.list.find(
+    q => q.datasourceId === $params.datasourceId
+  )
+  $: {
+    if (firstQuery) {
+      $redirect(`../../query/${firstQuery._id}`)
+    } else {
+      $redirect("../../query/new")
+    }
+  }
 </script>

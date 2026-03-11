@@ -13,9 +13,7 @@
     if (!datasource) {
       $redirect(`/builder/workspace/${$params.application}/data`)
     } else if (isRestDatasource) {
-      $redirect(
-        `/builder/workspace/${$params.application}/apis/query/new/${$params.datasourceId}`
-      )
+      $redirect(`/builder/workspace/${$params.application}/apis/query/new`)
     }
   }
   $: query = datasource

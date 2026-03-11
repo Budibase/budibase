@@ -10,7 +10,7 @@
     )
 
     if (restDatasources.length) {
-      $redirect(`../query/new/${restDatasources[0]._id}`)
+      $redirect("../query/new")
     } else {
       $redirect("../new")
     }
