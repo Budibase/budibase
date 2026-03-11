@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { Constants } from "@budibase/frontend-core"
 import type { User } from "@budibase/types"
 const { authStore, rolesStore, usersMock } = vi.hoisted(() => {
-  const createStore = <T,>(initialValue: T) => {
+  const createStore = <T>(initialValue: T) => {
     let value = initialValue
     const subscribers = new Set<(value: T) => void>()
 
