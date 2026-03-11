@@ -37,12 +37,12 @@ REDIS_USERNAME=aaa
 REDIS_PASSWORD=bbb
 ```
 
-## 4. Smoke test
+## 4. Quick connectivity test
 
 Use the real Redis CLI inside the container:
 
 ```bash
-docker exec -it budi-redis-tls-dev redis-cli --tls --insecure -h localhost -p 6379 --user aaa -a bbb ping
+docker exec -it budi-redis-tls-dev redis-cli --tls --cacert /certs/ca.crt -h localhost -p 6379 --user aaa -a bbb ping
 ```
 
 Expected result:
