@@ -122,13 +122,21 @@
         url: "/builder/workspace/:application/data",
       },
       {
-        name: "Design",
-        url: "/builder/workspace/:application/design",
+        name: "Apps",
+        url: "/builder/workspace/:application/home?type=app",
       },
       {
         name: "Automations",
-        url: "/builder/workspace/:application/automation",
+        url: "/builder/workspace/:application/home?type=automation",
       },
+      ...($featureFlags.AI_AGENTS
+        ? [
+            {
+              name: "Agents",
+              url: "/builder/workspace/:application/home?type=agent",
+            },
+          ]
+        : []),
     ]
     return routes.map(route => ({
       type: "Navigate",

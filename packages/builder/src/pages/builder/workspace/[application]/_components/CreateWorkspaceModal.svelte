@@ -165,7 +165,7 @@
         // Refresh for access to created applications
         await auth.getSelf()
       }
-      goto(`/builder/workspace/${createdApp.instance._id}`)
+      goto(`/builder/workspace/${createdApp.instance._id}/home`)
     } catch (error) {
       creating = false
       builderStore.appCreated(false)

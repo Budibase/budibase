@@ -34,7 +34,6 @@
     Tag,
   } from "@budibase/bbui"
   import {
-    FeatureFlag,
     type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
@@ -231,7 +230,6 @@
     const params = new URLSearchParams(window.location.search)
 
     params.delete("create")
-
     const q = searchTerm.trim()
     if (!q) {
       params.delete("q")
@@ -638,11 +636,6 @@
   onMount(async () => {
     const workspaceId = $appStore.appId
     if (!workspaceId) {
-      return
-    }
-
-    if (!$featureFlags[FeatureFlag.WORKSPACE_HOME]) {
-      goto(url("../design"))
       return
     }
 

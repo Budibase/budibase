@@ -1,5 +1,4 @@
 <script>
-  import FavouriteAppButton from "@/pages/builder/portal/workspaces/_components/FavouriteAppButton.svelte"
   import { contextMenuStore } from "@/stores/builder"
   import { auth } from "@/stores/portal"
   import { goto as gotoStore } from "@roxi/routify"
@@ -35,7 +34,7 @@
   }
 
   const goToBuilder = () => {
-    goto && goto(`../../workspace/${app.devId}`)
+    goto && goto(`../../workspace/${app.devId}/home`)
   }
 
   const goToOverview = () => {
@@ -131,10 +130,6 @@
         <Button size="S" secondary>View</Button>
       {/if}
     </div>
-
-    <div class="favourite-icon">
-      <FavouriteAppButton {app} noWrap />
-    </div>
   </div>
   <AppContextMenuModals {app} bind:this={appContextMenuModals} />
 </div>
@@ -155,16 +150,6 @@
   .contextMenuOpen {
     cursor: pointer;
     border-color: var(--spectrum-global-color-gray-300);
-  }
-
-  .app-row .favourite-icon {
-    display: none;
-  }
-
-  .app-row.contextMenuOpen .favourite-icon,
-  .app-row:hover .favourite-icon,
-  .app-row.favourite .favourite-icon {
-    display: flex;
   }
 
   .updated {
