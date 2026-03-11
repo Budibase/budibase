@@ -7,12 +7,7 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import {
-    Button,
-    Layout,
-    notifications,
-    Table,
-  } from "@budibase/bbui"
+  import { Button, Layout, notifications, Table } from "@budibase/bbui"
   import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
 
