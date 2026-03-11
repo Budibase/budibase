@@ -29,23 +29,14 @@
   let chatAgents: ChatAgentConfig[] = []
   let settingChatLive = false
 
-  $: chatEnabled =
-    $featureFlags[FeatureFlag.AI_AGENTS] && $featureFlags[FeatureFlag.AI_AGENTS]
+  $: chatEnabled = $featureFlags[FeatureFlag.AI_AGENTS]
 
   onMount(() => {
     if (chatEnabled) {
       return
     }
 
-    const workspaceHomeEnabled = $featureFlags[FeatureFlag.AI_AGENTS]
-    const agentsEnabled = $featureFlags[FeatureFlag.AI_AGENTS]
-
-    if (workspaceHomeEnabled) {
-      goto(agentsEnabled ? "../home?type=agent" : "../home")
-      return
-    }
-
-    goto(agentsEnabled ? "../agent" : "../")
+    goto("../")
   })
 
   $: namedAgents = agents.filter(agent => Boolean(agent?.name))
