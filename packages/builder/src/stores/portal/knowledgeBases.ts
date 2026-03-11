@@ -14,11 +14,15 @@ interface KnowledgeBaseWithFiles extends KnowledgeBase {
 
 interface KnowledgeBaseState {
   list: KnowledgeBase[]
+  loading: boolean
+  loaded: boolean
   currentKnowledgeBaseId?: string
   filesByKnowledgeBaseId: Record<string, KnowledgeBaseFile[]>
 }
 
 interface DerivedKnowledgeBaseState {
+  loading: boolean
+  loaded: boolean
   currentKnowledgeBaseId?: string
   list: KnowledgeBaseWithFiles[]
   selectedKnowledgeBase: KnowledgeBaseWithFiles | undefined
@@ -42,6 +46,8 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
           files: $state.filesByKnowledgeBaseId[knowledgeBase._id || ""] || [],
         }))
         return {
+          loading: $state.loading,
+          loaded: $state.loaded,
           currentKnowledgeBaseId: $state.currentKnowledgeBaseId,
           list,
           selectedKnowledgeBase: $state.currentKnowledgeBaseId
@@ -54,6 +60,8 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
     super(
       {
         list: [],
+        loading: false,
+        loaded: false,
         filesByKnowledgeBaseId: {},
       },
       makeDerivedStore
@@ -92,15 +100,28 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
   }
 
   fetch = async () => {
-    const configs = await API.knowledgeBase.fetch()
-    const filesByKnowledgeBaseId =
-      await this.fetchFilesForKnowledgeBases(configs)
     this.update(state => {
-      state.list = configs
-      state.filesByKnowledgeBaseId = filesByKnowledgeBaseId
+      state.loading = true
       return state
     })
-    return configs
+
+    try {
+      const configs = await API.knowledgeBase.fetch()
+      const filesByKnowledgeBaseId =
+        await this.fetchFilesForKnowledgeBases(configs)
+      this.update(state => {
+        state.list = configs
+        state.filesByKnowledgeBaseId = filesByKnowledgeBaseId
+        state.loaded = true
+        return state
+      })
+      return configs
+    } finally {
+      this.update(state => {
+        state.loading = false
+        return state
+      })
+    }
   }
 
   create = async (config: CreateKnowledgeBaseRequest) => {

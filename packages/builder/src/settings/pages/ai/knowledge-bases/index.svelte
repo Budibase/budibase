@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { bb } from "@/stores/bb"
   import {
     aiConfigsStore,
@@ -6,7 +7,14 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Body, Button, Layout, notifications, Table } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Layout,
+    notifications,
+    ProgressCircle,
+    Table,
+  } from "@budibase/bbui"
   import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
 
@@ -111,7 +119,12 @@
       </Button>
     </div>
 
-    {#if knowledgeBases.length}
+    {#if $knowledgeBaseStore.loading && !$knowledgeBaseStore.loaded}
+      <div class="loading-state">
+        <ProgressCircle size="S" />
+        <Body size="S">Loading knowledge bases...</Body>
+      </div>
+    {:else if knowledgeBases.length > 0}
       <Table
         compact
         data={knowledgeBases}
@@ -128,10 +141,8 @@
         editColumnHeader=""
         on:editrow={r => editKnowledgeBase(r.detail)}
       ></Table>
-    {:else}
-      <div class="no-enabled">
-        <Body size="XS">No knowledge bases created yet</Body>
-      </div>
+    {:else if $knowledgeBaseStore.loaded}
+      <InfoDisplay body="No knowledge bases created yet"></InfoDisplay>
     {/if}
 
     <div class="section-header section-spacing">
@@ -197,10 +208,6 @@
 </Layout>
 
 <style>
-  .no-enabled {
-    padding: 16px;
-  }
-
   .section-title {
     font-size: 13px;
     color: var(--grey-7, #a2a2a2);
@@ -215,5 +222,12 @@
 
   .section-spacing {
     margin-top: var(--spacing-l);
+  }
+
+  .loading-state {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: 24px 0;
   }
 </style>
