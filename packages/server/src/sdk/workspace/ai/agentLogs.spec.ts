@@ -125,9 +125,15 @@ function mockLiteLLMPayload(
   requestId: string,
   payload: ReturnType<typeof buildLiteLLMPayload> | null
 ) {
-  return nock(environment.LITELLM_URL)
-    .get(`/spend/logs/ui/${encodeURIComponent(requestId)}`)
-    .reply(200, payload)
+  const request = nock(environment.LITELLM_URL).get(
+    `/spend/logs/ui/${encodeURIComponent(requestId)}`
+  )
+
+  if (!payload) {
+    return request.reply(404)
+  }
+
+  return request.reply(200, payload)
 }
 
 function mockLiteLLMSessionRows(
