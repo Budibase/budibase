@@ -626,7 +626,7 @@
 
   $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
 
-  $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT
+  $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_AGENTS
   $: showHeaderActions = $licensing.showTrialBanner || showAgentChat
   $: budibaseAICreditLimit =
     $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
@@ -641,7 +641,7 @@
       return
     }
 
-    if (!$featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+    if (!$featureFlags[FeatureFlag.AI_AGENTS]) {
       goto(url("../design"))
       return
     }
