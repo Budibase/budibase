@@ -16,6 +16,6 @@ export async function downloadUnzipTarball(
     return path
   } catch (e: any) {
     deleteFolderFileSystem(path)
-    throw new Error(e.message)
+    throw e
   }
 }
