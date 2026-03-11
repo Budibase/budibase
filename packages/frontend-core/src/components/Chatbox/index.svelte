@@ -18,7 +18,10 @@
   import { Chat } from "@ai-sdk/svelte"
   import { formatToolName } from "../../utils/aiTools"
   import {
+    convertFileListToFileUIParts,
     DefaultChatTransport,
+    type FileUIPart,
+    isFileUIPart,
     isTextUIPart,
     isToolUIPart,
     isReasoningUIPart,
@@ -70,8 +73,10 @@
   let stableSessionId = $state(createStableSessionId())
   let chatAreaElement = $state<HTMLDivElement>()
   let textareaElement = $state<HTMLTextAreaElement>()
+  let fileInputElement = $state<HTMLInputElement>()
   let expandedTools = $state<Record<string, boolean>>({})
   let inputValue = $state("")
+  let selectedFiles = $state<FileList | undefined>()
   let lastInitialPrompt = $state("")
   let reasoningTimers = $state<Record<string, number>>({})
 
@@ -240,7 +245,10 @@
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
-  let canStart = $derived(inputValue.trim().length > 0)
+  let pendingFiles = $derived(selectedFiles ? Array.from(selectedFiles) : [])
+  let canStart = $derived(
+    inputValue.trim().length > 0 || pendingFiles.length > 0
+  )
   let hasMessages = $derived(Boolean(messages?.length))
   let showConversationStarters = $derived(
     !isBusy &&
@@ -333,6 +341,25 @@
     }
   }
 
+  const openFilePicker = () => {
+    if (isBusy || readOnly) {
+      return
+    }
+    fileInputElement?.click()
+  }
+
+  const clearSelectedFiles = () => {
+    selectedFiles = undefined
+    if (fileInputElement) {
+      fileInputElement.value = ""
+    }
+  }
+
+  const handleFileChange = (event: Event) => {
+    const target = event.currentTarget as HTMLInputElement
+    selectedFiles = target.files || undefined
+  }
+
   const sendMessage = async () => {
     if (readOnly) {
       return
@@ -387,10 +414,18 @@
     }
 
     const text = inputValue.trim()
-    if (!text) return
+    if (!text && pendingFiles.length === 0) return
+
+    let fileParts: FileUIPart[] | undefined
+    if (selectedFiles?.length) {
+      fileParts = await convertFileListToFileUIParts(selectedFiles)
+    }
 
     inputValue = ""
-    chatInstance.sendMessage({ text })
+    clearSelectedFiles()
+    await chatInstance.sendMessage(
+      text ? { text, files: fileParts } : { files: fileParts || [] }
+    )
   }
 
   const handlePromptAction = async () => {
@@ -415,6 +450,19 @@
       ?.filter(isTextUIPart)
       .map(p => p.text)
       .join("") || "[Empty message]"
+
+  const getUserMessageFiles = (message: UIMessage<AgentMessageMetadata>) =>
+    message.parts?.filter(isFileUIPart) || []
+
+  const formatFileSize = (size: number) => {
+    if (size < 1024) {
+      return `${size} B`
+    }
+    if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(1)} KB`
+    }
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`
+  }
 
   let mounted = $state(false)
 
@@ -488,7 +536,46 @@
     {#each messages as message (message.id)}
       {#if message.role === "user"}
         <div class="message user">
-          <MarkdownViewer value={getUserMessageText(message)} />
+          {#if getUserMessageFiles(message).length}
+            <div class="file-parts">
+              {#each getUserMessageFiles(message) as part, index (`${message.id}-${index}`)}
+                {#if part.mediaType.startsWith("image/")}
+                  <a
+                    class="file-chip image-chip"
+                    href={part.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <img
+                      class="file-preview"
+                      src={part.url}
+                      alt={part.filename || "Attached image"}
+                    />
+                    <span class="file-chip-text">{part.filename || "Image"}</span>
+                  </a>
+                {:else}
+                  <a
+                    class="file-chip"
+                    href={part.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Icon
+                      name="paperclip"
+                      size="S"
+                      color="var(--spectrum-global-color-gray-700)"
+                    />
+                    <span class="file-chip-text"
+                      >{part.filename || part.mediaType || "Attached file"}</span
+                    >
+                  </a>
+                {/if}
+              {/each}
+            </div>
+          {/if}
+          {#if message.parts?.some(isTextUIPart)}
+            <MarkdownViewer value={getUserMessageText(message)} />
+          {/if}
         </div>
       {:else if message.role === "assistant"}
         {@const reasoningText = getReasoningText(message)}
@@ -674,6 +761,38 @@
   {:else}
     <div class="input-wrapper">
       <div class="input-container">
+        <input
+          bind:this={fileInputElement}
+          class="file-input"
+          type="file"
+          multiple
+          disabled={isBusy}
+          onchange={handleFileChange}
+        />
+        {#if pendingFiles.length}
+          <div class="pending-files">
+            {#each pendingFiles as file (`${file.name}-${file.size}-${file.lastModified}`)}
+              <div class="pending-file">
+                <Icon
+                  name={file.type.startsWith("image/") ? "image" : "paperclip"}
+                  size="S"
+                  color="var(--spectrum-global-color-gray-700)"
+                />
+                <span class="pending-file-name">{file.name}</span>
+                <span class="pending-file-size">{formatFileSize(file.size)}</span>
+              </div>
+            {/each}
+            <button
+              type="button"
+              class="clear-files"
+              onclick={clearSelectedFiles}
+              aria-label="Clear attached files"
+              disabled={isBusy}
+            >
+              <Icon name="x" size="S" color="var(--spectrum-global-color-gray-700)" />
+            </button>
+          </div>
+        {/if}
         <textarea
           bind:value={inputValue}
           bind:this={textareaElement}
@@ -682,6 +801,15 @@
           placeholder="Ask..."
           disabled={isBusy}
         ></textarea>
+        <button
+          type="button"
+          class="attach-action"
+          onclick={openFilePicker}
+          aria-label="Attach files"
+          disabled={isBusy}
+        >
+          <Icon name="paperclip" size="M" weight="regular" color="#111111" />
+        </button>
         <button
           type="button"
           class="prompt-action"
@@ -827,6 +955,94 @@
   .input-container {
     position: relative;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  .pending-files {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pending-file,
+  .file-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    color: var(--spectrum-global-color-gray-800);
+    text-decoration: none;
+  }
+
+  .pending-file-name,
+  .file-chip-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pending-file-size {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 12px;
+  }
+
+  .clear-files {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 999px;
+    background: var(--spectrum-global-color-gray-100);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .file-parts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .image-chip {
+    padding-left: 6px;
+  }
+
+  .file-preview {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  .attach-action {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .input {
@@ -834,7 +1050,7 @@
     height: 80px;
     top: 0;
     resize: none;
-    padding: 20px;
+    padding: 20px 44px 20px 44px;
     font-size: 16px;
     background-color: var(--spectrum-global-color-gray-200);
     color: var(--spectrum-alias-text-color);
@@ -874,11 +1090,19 @@
     opacity: 0.9;
   }
 
+  .attach-action:hover:not(:disabled),
+  .clear-files:hover:not(:disabled),
+  .file-chip:hover {
+    opacity: 0.9;
+  }
+
   .prompt-action.running {
     background: rgba(255, 255, 255, 0.14);
   }
 
-  .prompt-action:disabled {
+  .prompt-action:disabled,
+  .attach-action:disabled,
+  .clear-files:disabled {
     opacity: 0.45;
     cursor: not-allowed;
   }

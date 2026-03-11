@@ -788,6 +788,69 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("agentChatStream", () => {
+    it("uploads non-image file parts before streaming the chat", async () => {
+      const uploadFileMock = jest.fn().mockResolvedValue("file-123")
+      ;(
+        sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
+      ).mockResolvedValue({
+        chat: {} as any,
+        embedding: {} as any,
+        providerOptions: jest.fn().mockReturnValue({}),
+        uploadFile: uploadFileMock,
+      })
+      jest.mocked(streamText).mockImplementation(makeStreamTextMock([]) as any)
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [
+                {
+                  type: "file",
+                  mediaType: "application/pdf",
+                  filename: "spec.pdf",
+                  url: "data:application/pdf;base64,SGVsbG8=",
+                },
+                { type: "text", text: "summarize this" },
+              ],
+            },
+          ],
+          transient: true,
+        })
+
+      expect(res.status).toBe(200)
+      expect(uploadFileMock).toHaveBeenCalledTimes(1)
+      expect(uploadFileMock).toHaveBeenCalledWith(
+        expect.anything(),
+        "spec.pdf",
+        "application/pdf"
+      )
+      expect(jest.mocked(streamText).mock.calls.at(-1)?.[0]?.messages).toEqual([
+        {
+          role: "user",
+          content: [
+            {
+              type: "file",
+              data: "file-123",
+              filename: "spec.pdf",
+              mediaType: "application/pdf",
+            },
+            {
+              type: "text",
+              text: "summarize this",
+            },
+          ],
+        },
+      ])
+    })
+
     it("counts each completed tool call as one action", async () => {
       jest
         .mocked(streamText)
