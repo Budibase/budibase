@@ -6,7 +6,14 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Button,
+    Helpers,
+    Input,
+    notifications,
+    Select,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
   import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
   import { routeActions } from "../.."
@@ -180,6 +187,34 @@
     }
   }
 
+  function openEmbeddingModel() {
+    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
+    const currentKnowledgeBaseId = knowledgeBaseId || "new"
+    if (draft.embeddingModel) {
+      bb.settings(
+        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/${draft.embeddingModel}`
+      )
+      return
+    }
+    bb.settings(
+      `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/new`
+    )
+  }
+
+  function openVectorDb() {
+    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
+    const currentKnowledgeBaseId = knowledgeBaseId || "new"
+    if (draft.vectorDb) {
+      bb.settings(
+        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/${draft.vectorDb}`
+      )
+      return
+    }
+    bb.settings(
+      `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/new`
+    )
+  }
+
   async function deleteKnowledgeBase() {
     if (!draft._id) {
       return
@@ -244,6 +279,11 @@
         ? "Remove all files to change the embedding model."
         : ""}
     />
+    <ActionButton
+      icon={draft.embeddingModel ? "pencil" : "Add"}
+      size="M"
+      on:click={openEmbeddingModel}
+    />
   </div>
 
   <div class="select">
@@ -259,6 +299,11 @@
       tooltip={!canEditReferences
         ? "Remove all files to change the vector database."
         : ""}
+    />
+    <ActionButton
+      icon={draft.vectorDb ? "pencil" : "Add"}
+      size="M"
+      on:click={openVectorDb}
     />
   </div>
 
