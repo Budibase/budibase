@@ -98,11 +98,18 @@ const App = () => {
           return
         }
 
-        cleanup = await remote.mountBudibaseApp({
+        const nextCleanup = await remote.mountBudibaseApp({
           target: targetRef.current,
           appUrl,
           appId: resolvedApp.appId,
         })
+        if (!active) {
+          if (typeof nextCleanup === "function") {
+            nextCleanup()
+          }
+          return
+        }
+        cleanup = nextCleanup
         setStatus("Budibase app mounted")
       } catch (error) {
         console.error(error)
