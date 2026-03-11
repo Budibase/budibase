@@ -342,10 +342,7 @@ describe("agentLogs", () => {
   it("treats a missing retention quota as unlimited", async () => {
     const license = cloneDeep(await licensing.cache.getCachedLicense())
     if (license.quotas?.constant) {
-      Reflect.deleteProperty(
-        license.quotas.constant,
-        "agentLogRetentionDays"
-      )
+      Reflect.deleteProperty(license.quotas.constant, "agentLogRetentionDays")
     }
     mocks.licenses.useLicense(license)
 
