@@ -27,6 +27,9 @@
   } from "ai"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
+  type AgentMessageMetadataWithToolDisplayNames = AgentMessageMetadata & {
+    toolDisplayNames?: Record<string, string>
+  }
 
   interface Props {
     workspaceId: string
@@ -120,6 +123,21 @@
 
   const getMessageError = (message: UIMessage<AgentMessageMetadata>) =>
     message.metadata?.error
+
+  const hasToolDisplayNames = (
+    metadata: AgentMessageMetadata | undefined
+  ): metadata is AgentMessageMetadataWithToolDisplayNames =>
+    typeof metadata === "object" &&
+    metadata !== null &&
+    "toolDisplayNames" in metadata
+
+  const getToolDisplayName = (
+    message: UIMessage<AgentMessageMetadata>,
+    rawToolName: string
+  ) =>
+    hasToolDisplayNames(message.metadata)
+      ? message.metadata.toolDisplayNames?.[rawToolName]
+      : undefined
 
   $effect(() => {
     const interval = setInterval(() => {
@@ -306,18 +324,9 @@
   $effect(() => {
     if (chat?._id !== lastChatId) {
       lastChatId = chat?._id
-<<<<<<< HEAD
       stableSessionId = createStableSessionId()
-      if (!isPreparingResponse && !pendingUserMessageText) {
-=======
-      stableSessionId = Helpers.uuid()
       if (!isPreparingResponse) {
-<<<<<<< HEAD
->>>>>>> fff8fd44dc (fix: remove unrequired)
-        clearFirstResponseHold()
-=======
         resetPendingResponse()
->>>>>>> 16b655754b (fix: refactor)
       }
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
@@ -619,7 +628,7 @@
               {@const rawToolName = getToolName(part)}
               {@const displayToolName = formatToolName(
                 rawToolName,
-                message.metadata?.toolDisplayNames?.[rawToolName]
+                getToolDisplayName(message, rawToolName)
               )}
               {@const toolId = `${message.id}-${rawToolName}-${partIndex}`}
               {@const isRunning =
