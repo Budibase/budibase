@@ -180,14 +180,14 @@ export function getListOfAppsInMulti(tmpPath: string) {
 }
 
 export async function importApp(
-  targetWorkspaceId: string,
-  destinationDb: Database,
+  appId: string,
+  db: Database,
   template: TemplateType,
   opts: {
     updateAttachmentColumns: boolean
   } = { updateAttachmentColumns: true }
 ) {
-  const targetProdWorkspaceId = dbCore.getProdWorkspaceID(targetWorkspaceId)
+  let prodAppId = dbCore.getProdWorkspaceID(appId)
   let dbStream: fs.ReadStream
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
@@ -223,7 +223,7 @@ export async function importApp(
         if (excludedFiles.includes(filename)) {
           continue
         }
-        filename = join(targetProdWorkspaceId, filename)
+        filename = join(prodAppId, filename)
         if ((await fsp.lstat(path)).isDirectory()) {
           promises.push(
             objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
@@ -245,13 +245,13 @@ export async function importApp(
       await utils.parallelForeach(
         objectStore.listAllObjects(
           objectStore.ObjectStoreBuckets.APPS,
-          targetProdWorkspaceId
+          prodAppId
         ),
         async file => {
           if (
             file.Key &&
             !uploadedFiles.includes(
-              file.Key.replace(new RegExp(`^${targetProdWorkspaceId}/`), "")
+              file.Key.replace(new RegExp(`^${prodAppId}/`), "")
             )
           ) {
             filesToDelete.push(file.Key)
@@ -271,14 +271,14 @@ export async function importApp(
   } else {
     dbStream = await getTemplateStream(template)
   }
-  const { ok } = await destinationDb.load(dbStream)
+  const { ok } = await db.load(dbStream)
   if (!ok) {
     throw "Error loading database dump from template."
   }
   if (opts.updateAttachmentColumns) {
-    await updateAttachmentColumns(targetProdWorkspaceId, destinationDb)
+    await updateAttachmentColumns(prodAppId, db)
   }
-  await updateAutomations(targetProdWorkspaceId, destinationDb)
+  await updateAutomations(prodAppId, db)
   // clear up afterward
   if (tmpPath) {
     await fsp.rm(tmpPath, { recursive: true, force: true })
