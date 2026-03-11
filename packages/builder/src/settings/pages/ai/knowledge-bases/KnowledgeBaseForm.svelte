@@ -6,13 +6,7 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import {
-    Button,
-    Helpers,
-    Input,
-    notifications,
-    Select,
-  } from "@budibase/bbui"
+  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
   import { onMount } from "svelte"
   import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
   import { routeActions } from "../.."
@@ -147,7 +141,7 @@
 
     try {
       isSaving = true
-      let savedId: string | undefined
+
       if (draft._id && draft._rev) {
         const updated = await knowledgeBaseStore.edit({
           _id: draft._id,
@@ -156,7 +150,7 @@
           embeddingModel: draft.embeddingModel || "",
           vectorDb: draft.vectorDb || "",
         })
-        savedId = updated._id
+
         draft._rev = updated._rev
         captureSavedSnapshot()
         notifications.success("Knowledge base updated")
@@ -166,16 +160,14 @@
           embeddingModel: draft.embeddingModel || "",
           vectorDb: draft.vectorDb || "",
         })
-        savedId = created._id
+
         draft._id = created._id
         draft._rev = created._rev
         captureSavedSnapshot()
         notifications.success("Knowledge base created")
       }
-      if (savedId) {
-        bb.settings(`/ai-config/knowledge-bases/${savedId}`)
-      }
       knowledgeBaseStore.clearFormDraft()
+      bb.settings(`/ai-config/knowledge-bases`)
     } catch (err: any) {
       notifications.error(err.message || "Failed to save knowledge base")
     } finally {
