@@ -49,7 +49,7 @@ describe("pgVectorDb", () => {
           user: "user",
           password: "pass",
         },
-        { agentId: "agent_123" }
+        { namespaceId: "agent_123" }
       )
 
       await vectorDb.deleteBySourceIds(["source_1"])

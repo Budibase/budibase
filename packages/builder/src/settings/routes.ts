@@ -13,6 +13,19 @@ import { AppMetaState } from "@/stores/builder/app"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
 import { featureFlag } from "@/helpers"
+import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
+import { get } from "svelte/store"
+
+const getPathId = (path: string | undefined) => {
+  if (!path) {
+    return undefined
+  }
+  const id = path.split("/").pop()
+  if (!id || id === "new") {
+    return undefined
+  }
+  return id
+}
 
 export const globalRoutes = (user: GetGlobalSelfResponse) => {
   return [
@@ -291,20 +304,61 @@ export const appRoutes = (
             {
               path: ":configId",
               comp: Pages.get("ai_config"),
-              title: "AI config",
+              title: (path: string | undefined) => {
+                const id = getPathId(path)
+                if (!id) {
+                  return "New"
+                }
+                return (
+                  get(aiConfigsStore).customConfigs.find(
+                    config => config._id === id
+                  )?.name ?? "AI config"
+                )
+              },
             },
           ],
         },
         {
-          path: AIConfigType.EMBEDDINGS,
-          title: "Embeddings",
+          path: "knowledge-bases",
+          title: "Knowledge bases",
           access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
-          comp: Pages.get("embeddings"),
+          comp: Pages.get("knowledgeBases"),
           routes: [
             {
-              path: ":configId",
-              comp: Pages.get("ai_config"),
-              title: "AI config",
+              path: ":knowledgeBaseId",
+              comp: Pages.get("knowledgeBase"),
+              title: (path: string | undefined) => {
+                const id = getPathId(path)
+                if (!id) {
+                  return "New"
+                }
+                return (
+                  get(knowledgeBaseStore).list.find(k => k._id === id)?.name ??
+                  "Knowledge base"
+                )
+              },
+              routes: [
+                {
+                  path: "embedding",
+                  routes: [
+                    {
+                      path: ":configId",
+                      title: "New embedding model",
+                      comp: Pages.get("embedding_model"),
+                    },
+                  ],
+                },
+                {
+                  path: "vectordb",
+                  routes: [
+                    {
+                      path: ":id",
+                      title: "New vector database",
+                      comp: Pages.get("vector_database"),
+                    },
+                  ],
+                },
+              ],
             },
           ],
         },

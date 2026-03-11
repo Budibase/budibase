@@ -130,11 +130,6 @@
         <Button size="S" secondary>View</Button>
       {/if}
     </div>
-
-    <!-- Favourite functionality temporarily removed - component needs to be reimplemented -->
-    <!-- <div class="favourite-icon">
-      <FavouriteAppButton {app} noWrap />
-    </div> -->
   </div>
   <AppContextMenuModals {app} bind:this={appContextMenuModals} />
 </div>
@@ -155,16 +150,6 @@
   .contextMenuOpen {
     cursor: pointer;
     border-color: var(--spectrum-global-color-gray-300);
-  }
-
-  .app-row .favourite-icon {
-    display: none;
-  }
-
-  .app-row.contextMenuOpen .favourite-icon,
-  .app-row:hover .favourite-icon,
-  .app-row.favourite .favourite-icon {
-    display: flex;
   }
 
   .updated {

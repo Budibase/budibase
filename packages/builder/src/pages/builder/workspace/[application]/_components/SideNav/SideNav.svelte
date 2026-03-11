@@ -466,7 +466,7 @@
       <div>
         <a
           class="logo_link"
-          href={$url("./")}
+          href={$url("./home")}
           aria-label="Workspace home"
           title="Workspace home"
           on:click={keepCollapsed}
@@ -1002,15 +1002,6 @@
     margin: 0 0 10px 0;
   }
 
-  .nav-section-title {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-  .nav-section-title hr {
-    border: none;
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    margin: 0;
-  }
   .favourite-empty-state {
     display: flex;
     flex-direction: column;
@@ -1036,9 +1027,6 @@
   }
 
   @container (max-width: 239px) {
-    .nav-section-title {
-      transition: all var(--nav-transition-ms) var(--nav-transition-ease);
-    }
     .favourite-wrapper {
       display: none;
       transition: all var(--nav-transition-ms) var(--nav-transition-ease);
@@ -1053,7 +1041,6 @@
     .nav-title,
     .logo_link :global(svg),
     .favourite-empty-state,
-    .nav-section-title,
     .favourite-wrapper {
       transition: none;
     }
