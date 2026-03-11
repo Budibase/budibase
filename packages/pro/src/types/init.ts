@@ -18,11 +18,18 @@ export interface ImportAppConfig {
   key: string
 }
 
+export interface ImportAppOpts {
+  updateAttachmentColumns?: boolean
+  importObjStoreContents?: boolean
+  objectStoreAppId?: string
+}
+
 type ExportAppFn = (devAppId: string, opts: { tar: boolean }) => Promise<string>
 type ImportAppFn = (
   targetWorkspaceId: string,
   destinationDb: Database,
-  config: ImportAppConfig
+  config: ImportAppConfig,
+  opts?: ImportAppOpts
 ) => Promise<string>
 type StatsFn = (devAppId: string) => Promise<WorkspaceBackupContents>
 

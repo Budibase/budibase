@@ -1,4 +1,4 @@
-import { db, queue, utils } from "@budibase/backend-core"
+import { db, objectStore, queue, utils } from "@budibase/backend-core"
 import { utils as testUtils } from "@budibase/backend-core/tests"
 import {
   BackupStatus,
@@ -7,6 +7,7 @@ import {
   WorkspaceBackup,
 } from "@budibase/types"
 import tk from "timekeeper"
+import { Readable } from "stream"
 import { default as backups } from "../"
 import { DBTestConfiguration, mocks } from "../../../../tests"
 
@@ -36,9 +37,14 @@ jest.mock("@budibase/backend-core", () => {
       upload: jest.fn(),
       streamUpload: jest.fn(),
       deleteFile: jest.fn(),
+      deleteFiles: jest.fn(),
+      listAllObjects: jest
+        .fn()
+        .mockImplementation(() => (async function* () {})()),
       getReadStream: jest.fn().mockReturnValue({
         stream: fs.createReadStream(join(__dirname, "index.spec.ts")),
       }),
+      uploadDirectory: jest.fn(),
       retrieveToTmp: jest.fn().mockReturnValue("/path"),
     },
   }
@@ -49,6 +55,7 @@ const USER_ID = "user_test"
 beforeAll(() => testUtils.queue.useRealQueues())
 
 describe("backups", () => {
+  const mockedObjectStore = jest.mocked(objectStore)
   const config = new DBTestConfiguration()
 
   async function waitForQueue() {
@@ -172,6 +179,14 @@ describe("backups", () => {
     exportAppFn.mockReset().mockReturnValue("/path")
     importAppFn.mockReset().mockImplementation()
     statsFn.mockReset().mockImplementation()
+    mockedObjectStore.listAllObjects
+      .mockReset()
+      .mockImplementation(() => (async function* () {})())
+    mockedObjectStore.getReadStream.mockReset().mockResolvedValue({
+      stream: Readable.from(""),
+    })
+    mockedObjectStore.streamUpload.mockReset().mockImplementation(async () => {})
+    mockedObjectStore.deleteFiles.mockReset().mockImplementation(async () => {})
 
     mocks.licenses.useBackups()
     config.newTenant()
@@ -208,7 +223,8 @@ describe("backups", () => {
     await config.doInTenant(async () => {
       const restore = await createRestore()
       const processedRestore = await backups.getAppBackup(restore._id)
-      const [importWorkspaceId, importDb] = importAppFn.mock.calls[0]
+      const [importWorkspaceId, importDb, _config, importOpts] =
+        importAppFn.mock.calls[0]
       const devWorkspaceId = db.getDevWorkspaceID(config.workspaceId)
       const tempAppId = importDb.name
 
@@ -218,6 +234,38 @@ describe("backups", () => {
       expect(importWorkspaceId).toEqual(devWorkspaceId)
       expect(importWorkspaceId).not.toEqual(tempAppId)
       expect(importDb.name).toMatch(new RegExp(`^${devWorkspaceId}_temp_`))
+      expect(importOpts).toEqual(
+        expect.objectContaining({ objectStoreAppId: tempAppId })
+      )
+    })
+  })
+
+  it("should not promote object store files when restore cutover fails", async () => {
+    await config.doInTenant(async () => {
+      const backup = await createBackup()
+      await waitForQueue()
+      const replicateSpy = jest
+        .spyOn(db.Replication.prototype, "replicate")
+        .mockRejectedValueOnce(new Error("Replication failed"))
+
+      try {
+        const response = await backups.triggerAppRestore(
+          config.workspaceId,
+          backup._id,
+          "backup restore",
+          USER_ID
+        )
+        await waitForQueue()
+
+        const processedRestore = await backups.getAppBackup(response!.restoreId)
+        const appReadCalls = mockedObjectStore.getReadStream.mock.calls.filter(
+          ([bucket]) => bucket === objectStore.ObjectStoreBuckets.APPS
+        )
+        expect(processedRestore.status).toEqual(BackupStatus.FAILED)
+        expect(appReadCalls).toHaveLength(0)
+      } finally {
+        replicateSpy.mockRestore()
+      }
     })
   })
 

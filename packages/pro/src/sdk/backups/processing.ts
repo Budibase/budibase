@@ -50,6 +50,78 @@ async function removeExistingApp(devId: string) {
   await devDb.destroy()
 }
 
+const DELETE_BATCH_SIZE = 1000
+
+async function deleteAppFiles(fileKeys: string[]) {
+  for (let i = 0; i < fileKeys.length; i += DELETE_BATCH_SIZE) {
+    await objectStore.deleteFiles(
+      objectStore.ObjectStoreBuckets.APPS,
+      fileKeys.slice(i, i + DELETE_BATCH_SIZE)
+    )
+  }
+}
+
+async function listAppFiles(prefix: string) {
+  const fileKeys: string[] = []
+  for await (const file of objectStore.listAllObjects(
+    objectStore.ObjectStoreBuckets.APPS,
+    prefix
+  )) {
+    if (file.Key) {
+      fileKeys.push(file.Key)
+    }
+  }
+  return fileKeys
+}
+
+async function clearWorkspaceFiles(workspaceId: string) {
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  const fileKeys = await listAppFiles(`${prodWorkspaceId}/`)
+  if (fileKeys.length) {
+    await deleteAppFiles(fileKeys)
+  }
+}
+
+async function promoteWorkspaceFiles(
+  sourceWorkspaceId: string,
+  workspaceId: string
+) {
+  const sourceProdWorkspaceId = dbCore.getProdWorkspaceID(sourceWorkspaceId)
+  const targetProdWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  const sourcePrefix = `${sourceProdWorkspaceId}/`
+  const targetPrefix = `${targetProdWorkspaceId}/`
+
+  const sourceFileKeys = await listAppFiles(sourcePrefix)
+  const uploadedTargetKeys = new Set<string>()
+  for (const sourceKey of sourceFileKeys) {
+    const relativePath = sourceKey.startsWith(sourcePrefix)
+      ? sourceKey.slice(sourcePrefix.length)
+      : sourceKey
+    const targetKey = `${targetPrefix}${relativePath}`
+    const { stream } = await objectStore.getReadStream(
+      objectStore.ObjectStoreBuckets.APPS,
+      sourceKey
+    )
+    await objectStore.streamUpload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: targetKey,
+      stream,
+    })
+    uploadedTargetKeys.add(targetKey)
+  }
+
+  const targetFileKeys = await listAppFiles(targetPrefix)
+  const staleFileKeys = targetFileKeys.filter(
+    key => !uploadedTargetKeys.has(key)
+  )
+  if (staleFileKeys.length) {
+    await deleteAppFiles(staleFileKeys)
+  }
+  if (sourceFileKeys.length) {
+    await deleteAppFiles(sourceFileKeys)
+  }
+}
+
 async function runBackup(
   trigger: BackupTrigger,
   tenantId: string,
@@ -155,13 +227,20 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
     try {
       // Import into a temporary database, but rewrite embedded app references
       // against the real development workspace ID.
-      await opts.importAppFn(devWorkspaceId, dbCore.getDB(tempAppId), {
-        file: {
-          type: "application/gzip",
-          path,
+      await opts.importAppFn(
+        devWorkspaceId,
+        dbCore.getDB(tempAppId),
+        {
+          file: {
+            type: "application/gzip",
+            path,
+          },
+          key: path,
         },
-        key: path,
-      })
+        {
+          objectStoreAppId: tempAppId,
+        }
+      )
 
       // if import succeeds, replace the original app with the temporary one
       await removeExistingApp(devWorkspaceId)
@@ -169,6 +248,7 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
         source: tempAppId,
         target: devWorkspaceId,
       }).replicate()
+      await promoteWorkspaceFiles(tempAppId, devWorkspaceId)
     } catch (err: any) {
       logging.logAlert("App restore error", err)
       status = BackupStatus.FAILED
@@ -183,6 +263,11 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
       try {
         const tempDb = dbCore.getDB(tempAppId, { skip_setup: true })
         await tempDb.destroy()
+      } catch (cleanupErr) {
+        // ignore cleanup errors
+      }
+      try {
+        await clearWorkspaceFiles(tempAppId)
       } catch (cleanupErr) {
         // ignore cleanup errors
       }
