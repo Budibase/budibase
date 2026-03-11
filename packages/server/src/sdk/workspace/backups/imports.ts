@@ -179,58 +179,6 @@ export function getListOfAppsInMulti(tmpPath: string) {
   return fs.readdirSync(tmpPath).filter(dir => dir !== GLOBAL_DB_EXPORT_FILE)
 }
 
-async function syncImportedFiles(tmpPath: string, prodAppId: string) {
-  const contents = await fsp.readdir(tmpPath)
-  const promises = []
-  const excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
-
-  for (let filename of contents) {
-    const path = join(tmpPath, filename)
-    if (excludedFiles.includes(filename)) {
-      continue
-    }
-    filename = join(prodAppId, filename)
-    if ((await fsp.lstat(path)).isDirectory()) {
-      promises.push(
-        objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
-      )
-    } else {
-      promises.push(
-        objectStore.upload({
-          bucket: ObjectStoreBuckets.APPS,
-          path,
-          filename,
-        })
-      )
-    }
-  }
-  await Promise.all(promises)
-
-  const uploadedFiles = await fsp.readdir(tmpPath, { recursive: true })
-  const filesToDelete: string[] = []
-  await utils.parallelForeach(
-    objectStore.listAllObjects(objectStore.ObjectStoreBuckets.APPS, prodAppId),
-    async file => {
-      if (
-        file.Key &&
-        !uploadedFiles.includes(
-          file.Key.replace(new RegExp(`^${prodAppId}/`), "")
-        )
-      ) {
-        filesToDelete.push(file.Key)
-      }
-    },
-    5
-  )
-
-  if (filesToDelete.length) {
-    await objectStore.deleteFiles(
-      objectStore.ObjectStoreBuckets.APPS,
-      filesToDelete
-    )
-  }
-}
-
 export async function importApp(
   appId: string,
   db: Database,
@@ -245,48 +193,95 @@ export async function importApp(
   const isDirectory =
     template.file && (await fsp.lstat(template.file.path)).isDirectory()
   let tmpPath: string | undefined = undefined
-  try {
-    if (template.file && (isTar || isDirectory)) {
-      tmpPath = isTar ? await untarFile(template.file) : template.file.path
-      if (isTar && template.file.password) {
-        await decryptFiles(tmpPath, template.file.password)
+  if (template.file && (isTar || isDirectory)) {
+    tmpPath = isTar ? await untarFile(template.file) : template.file.path
+    if (isTar && template.file.password) {
+      await decryptFiles(tmpPath, template.file.password)
+    }
+    const contents = await fsp.readdir(tmpPath)
+    const stillEncrypted = !!contents.find(name => name.endsWith(".enc"))
+    if (stillEncrypted) {
+      throw new Error("Files are encrypted but no password has been supplied.")
+    }
+    const isPlugin = !!contents.find(name => name === "plugin.min.js")
+    if (isPlugin) {
+      throw new Error("Supplied file is a plugin - cannot import as app.")
+    }
+    const isInvalid = !contents.find(name => name === DB_EXPORT_FILE)
+    if (isInvalid) {
+      throw new Error(
+        "App export does not appear to be valid - no DB file found."
+      )
+    }
+    // have to handle object import
+    {
+      const promises = []
+      const excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
+
+      for (let filename of contents) {
+        const path = join(tmpPath, filename)
+        if (excludedFiles.includes(filename)) {
+          continue
+        }
+        filename = join(prodAppId, filename)
+        if ((await fsp.lstat(path)).isDirectory()) {
+          promises.push(
+            objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
+          )
+        } else {
+          promises.push(
+            objectStore.upload({
+              bucket: ObjectStoreBuckets.APPS,
+              path,
+              filename,
+            })
+          )
+        }
       }
-      const contents = await fsp.readdir(tmpPath)
-      const stillEncrypted = !!contents.find(name => name.endsWith(".enc"))
-      if (stillEncrypted) {
-        throw new Error(
-          "Files are encrypted but no password has been supplied."
+      await Promise.all(promises)
+      const uploadedFiles = await fsp.readdir(tmpPath, { recursive: true })
+
+      const filesToDelete: string[] = []
+      await utils.parallelForeach(
+        objectStore.listAllObjects(
+          objectStore.ObjectStoreBuckets.APPS,
+          prodAppId
+        ),
+        async file => {
+          if (
+            file.Key &&
+            !uploadedFiles.includes(
+              file.Key.replace(new RegExp(`^${prodAppId}/`), "")
+            )
+          ) {
+            filesToDelete.push(file.Key)
+          }
+        },
+        5
+      )
+
+      if (filesToDelete.length) {
+        await objectStore.deleteFiles(
+          objectStore.ObjectStoreBuckets.APPS,
+          filesToDelete
         )
       }
-      const isPlugin = !!contents.find(name => name === "plugin.min.js")
-      if (isPlugin) {
-        throw new Error("Supplied file is a plugin - cannot import as app.")
-      }
-      const isInvalid = !contents.find(name => name === DB_EXPORT_FILE)
-      if (isInvalid) {
-        throw new Error(
-          "App export does not appear to be valid - no DB file found."
-        )
-      }
-      dbStream = fs.createReadStream(join(tmpPath, DB_EXPORT_FILE))
-    } else {
-      dbStream = await getTemplateStream(template)
     }
-    const { ok } = await db.load(dbStream)
-    if (!ok) {
-      throw "Error loading database dump from template."
-    }
-    if (opts.updateAttachmentColumns) {
-      await updateAttachmentColumns(prodAppId, db)
-    }
-    await updateAutomations(prodAppId, db)
-    if (tmpPath) {
-      await syncImportedFiles(tmpPath, prodAppId)
-    }
-    return ok
-  } finally {
-    if (tmpPath) {
-      await fsp.rm(tmpPath, { recursive: true, force: true })
-    }
+    dbStream = fs.createReadStream(join(tmpPath, DB_EXPORT_FILE))
+  } else {
+    dbStream = await getTemplateStream(template)
   }
+  const { ok } = await db.load(dbStream)
+  if (!ok) {
+    throw "Error loading database dump from template."
+  }
+  if (opts.updateAttachmentColumns) {
+    await updateAttachmentColumns(prodAppId, db)
+  }
+  await updateAutomations(prodAppId, db)
+  // clear up afterward
+  if (tmpPath) {
+    await fsp.rm(tmpPath, { recursive: true, force: true })
+  }
+  return ok
 }
