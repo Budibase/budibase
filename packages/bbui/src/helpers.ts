@@ -1216,6 +1216,7 @@ export const SpectrumIconMap: Record<string, string> = {
   WebPages: "browsers",
   Workflow: "tree-structure",
   WorkflowAdd: "tree-structure",
+  Brain: "brain",
   Wrench: "wrench",
   ZoomIn: "magnifying-glass-plus",
   ZoomOut: "magnifying-glass-minus",

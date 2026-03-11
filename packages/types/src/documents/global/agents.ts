@@ -71,6 +71,7 @@ export interface AgentMessageRagSource {
 
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
+  toolDisplayNames?: Record<string, string>
   createdAt?: number
   completedAt?: number
   error?: string

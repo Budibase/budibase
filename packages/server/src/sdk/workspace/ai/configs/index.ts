@@ -487,3 +487,11 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
   }
   return liteLLMProviders
 }
+
+export async function getLiteLLMStatus(args?: {
+  signal?: AbortSignal
+}): Promise<liteLLM.LiteLLMStatus> {
+  return liteLLM.getLiteLLMStatus(args)
+}
+
+export { LiteLLMStatus } from "./litellm"

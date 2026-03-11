@@ -34,6 +34,7 @@ import {
   formatIncompleteToolCallError,
   updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents"
+import { createSessionLogIndexer } from "../../../sdk/workspace/ai/agentLogs"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag"
 import {
@@ -241,7 +242,15 @@ export async function webhookChat({
       baseSystemPrompt: ai.agentSystemPrompt(user),
       includeGoal: false,
     })
-  const sessionId = chat._id || v4()
+  const providerPrefix = chat.channel?.provider || "chat"
+  const chatId = chat._id ?? docIds.generateChatConversationID()
+  const sessionId = `${providerPrefix}:${chatId}`
+  const sessionLogIndexer = createSessionLogIndexer({
+    agentId,
+    sessionId,
+    firstInput: latestQuestion,
+    errorLabel: "webhook chat",
+  })
   const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
     agent.aiconfig,
     sessionId,
@@ -275,7 +284,8 @@ export async function webhookChat({
     toolChoice: hasTools ? "auto" : "none",
     stopWhen: stepCountIs(30),
     providerOptions: providerOptions?.(hasTools),
-    async onStepFinish({ toolResults }) {
+    async onStepFinish({ toolResults, response }) {
+      sessionLogIndexer.addRequestId(response?.id)
       for (const _toolResult of toolResults) {
         await quotas.addAction(async () => {})
       }
@@ -290,7 +300,25 @@ export async function webhookChat({
     },
   })
 
-  const assistantText = await result.text
+  const [textResult, responseResult] = await Promise.allSettled([
+    result.text,
+    result.response,
+  ])
+  const requestId =
+    responseResult.status === "fulfilled"
+      ? (responseResult.value.id ?? undefined)
+      : undefined
+  sessionLogIndexer.addRequestId(requestId)
+  await sessionLogIndexer.index()
+
+  if (textResult.status === "rejected") {
+    throw textResult.reason
+  }
+  if (responseResult.status === "rejected") {
+    throw responseResult.reason
+  }
+
+  const assistantText = textResult.value
   const assistantMessage: ChatConversation["messages"][number] = {
     id: v4(),
     role: "assistant",
@@ -419,20 +447,29 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       retrievedContext = result.text
       ragSourcesMetadata = result.sources
     } catch (error) {
-      // TODO: implement logging and fallbacks
+      // TODO: implement logging
       console.error("Failed to retrieve agent context", error)
     }
   }
 
-  const { systemPrompt: system, tools } =
-    await sdk.ai.agents.buildPromptAndTools(agent, {
-      baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
-      includeGoal: false,
-    })
+  const {
+    systemPrompt: system,
+    tools,
+    toolDisplayNames,
+  } = await sdk.ai.agents.buildPromptAndTools(agent, {
+    baseSystemPrompt: ai.agentSystemPrompt(ctx.user),
+    includeGoal: false,
+  })
 
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
-    const sessionId = chat._id || chat.sessionId || chatId
+    const sessionId = chat.transient ? chat.sessionId || chatId : chatId
+    const sessionLogIndexer = createSessionLogIndexer({
+      agentId,
+      sessionId,
+      firstInput: latestQuestion,
+      errorLabel: "chat stream",
+    })
     const { chat: chatLLM, providerOptions } = await sdk.ai.llm.createLLM(
       agent.aiconfig,
       sessionId,
@@ -467,7 +504,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       tools: hasTools ? tools : undefined,
       toolChoice: hasTools ? "auto" : "none",
       stopWhen: stepCountIs(30),
-      async onStepFinish({ content, toolCalls, toolResults }) {
+      async onStepFinish({ content, toolCalls, toolResults, response }) {
+        sessionLogIndexer.addRequestId(response?.id)
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
         for (const part of content) {
           if (part.type === "tool-error") {
@@ -478,8 +516,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           await quotas.addAction(async () => {})
         }
       },
+      onFinish({ response }) {
+        sessionLogIndexer.addRequestId(response?.id)
+      },
       providerOptions: providerOptions?.(hasTools),
-      onError({ error }) {
+      async onError({ error }) {
+        await sessionLogIndexer.index()
         console.error("Agent streaming error", {
           agentId,
           chatAppId,
@@ -493,10 +535,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
     ctx.respond = false
     const streamStartTime = Date.now()
-    const baseMetadata = ragSourcesMetadata?.length
-      ? { ragSources: ragSourcesMetadata }
-      : {}
-
+    const baseMetadata = {
+      ...(ragSourcesMetadata?.length ? { ragSources: ragSourcesMetadata } : {}),
+      ...(Object.keys(toolDisplayNames).length > 0 ? { toolDisplayNames } : {}),
+    }
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
       messageMetadata: ({ part }) => {
@@ -524,6 +566,8 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onError: error => getErrorMessage(error),
       onFinish: async ({ messages }) => {
+        await sessionLogIndexer.index()
+
         if (chat.transient || !chatAppId) {
           return
         }

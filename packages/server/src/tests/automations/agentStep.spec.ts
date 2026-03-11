@@ -12,6 +12,13 @@ jest.mock("@budibase/pro", () => {
   }
 })
 
+jest.mock("../../sdk/workspace/ai/agentLogs", () => ({
+  createSessionLogIndexer: jest.fn(() => ({
+    addRequestId: jest.fn(),
+    index: jest.fn().mockResolvedValue(undefined),
+  })),
+}))
+
 jest.mock("../../sdk", () => ({
   __esModule: true,
   default: {
@@ -33,6 +40,9 @@ jest.mock("../../sdk", () => ({
           chat: {},
           providerOptions: undefined,
         }),
+      },
+      agentLogs: {
+        addSessionLog: jest.fn().mockResolvedValue(undefined),
       },
     },
   },
@@ -72,6 +82,12 @@ function makeToolLoopAgentMock(toolResults: { toolCallId: string }[]) {
       })
       return {
         toUIMessageStream: jest.fn().mockReturnValue({}),
+        response: Promise.resolve({
+          id: "gen-test",
+          headers: {
+            "x-litellm-response-cost": "0.0001",
+          },
+        }),
         text: Promise.resolve("Agent response"),
         usage: Promise.resolve({ totalTokens: 50 }),
         output: Promise.resolve(undefined),
@@ -101,7 +117,7 @@ describe("Agent step tool call tracking", () => {
         ])
       )
 
-    await run({
+    const result = await run({
       inputs: { agentId: "agent-id", prompt: "Do things with tools" },
       appId: "test",
       context: {},
@@ -109,6 +125,7 @@ describe("Agent step tool call tracking", () => {
     })
 
     expect(addActionMock).toHaveBeenCalledTimes(3)
+    expect(result.sessionId).toEqual(expect.any(String))
   })
 
   it("counts zero extra actions when the agent makes no tool calls", async () => {
