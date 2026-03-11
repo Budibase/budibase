@@ -28,9 +28,7 @@
           `/builder/workspace/${$params.application}/apis/query/${firstQuery._id}`
         )
       } else {
-        $redirect(
-          `/builder/workspace/${$params.application}/apis/query/new`
-        )
+        $redirect(`/builder/workspace/${$params.application}/apis/query/new`)
       }
     }
   }
