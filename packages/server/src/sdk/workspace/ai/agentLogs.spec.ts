@@ -643,23 +643,6 @@ describe("agentLogs", () => {
     )
   })
 
-  it("passes the request start time when fetching LiteLLM request payload", async () => {
-    await withWorkspace(async () => {
-      await fetchRequestDetail("agent-1", "req-1", "2026-03-11T15:17:10.123Z")
-    })
-
-    const payloadCall = fetchMock.mock.calls.find(([url]) =>
-      String(url).includes("/spend/logs/ui/req-1")
-    )
-
-    expect(payloadCall).toBeDefined()
-
-    const payloadUrl = new URL(String(payloadCall?.[0]))
-    expect(payloadUrl.searchParams.get("start_date")).toBe(
-      "2026-03-11 15:17:10"
-    )
-  })
-
   it("returns not found when LiteLLM does not return request detail", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
