@@ -5,6 +5,7 @@ import {
   SEPARATOR,
   VectorDb,
 } from "@budibase/types"
+import * as knowledgeBaseSdk from "../knowledgeBase"
 
 const assertValidVectorDbId = (id: string) => {
   const prefix = `${DocumentType.VECTOR_STORE}${SEPARATOR}`
@@ -85,6 +86,14 @@ export async function update(config: VectorDb): Promise<VectorDb> {
 
 export async function remove(id: string) {
   assertValidVectorDbId(id)
+  const dependentKnowledgeBases = await knowledgeBaseSdk.findByVectorDb(id)
+  if (dependentKnowledgeBases.length > 0) {
+    throw new HTTPError(
+      "Vector database cannot be deleted while it is used by a knowledge base",
+      400
+    )
+  }
+
   const db = context.getWorkspaceDB()
 
   const existing = await db.get<VectorDb>(id)

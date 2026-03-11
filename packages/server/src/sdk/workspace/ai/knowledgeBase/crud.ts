@@ -38,6 +38,24 @@ export async function fetch(): Promise<KnowledgeBase[]> {
     .filter((doc): doc is KnowledgeBase => !!doc)
 }
 
+export async function findByEmbeddingModel(
+  embeddingModelId: string
+): Promise<KnowledgeBase[]> {
+  const knowledgeBases = await fetch()
+  return knowledgeBases.filter(
+    knowledgeBase => knowledgeBase.embeddingModel === embeddingModelId
+  )
+}
+
+export async function findByVectorDb(
+  vectorDbId: string
+): Promise<KnowledgeBase[]> {
+  const knowledgeBases = await fetch()
+  return knowledgeBases.filter(
+    knowledgeBase => knowledgeBase.vectorDb === vectorDbId
+  )
+}
+
 export async function find(id: string): Promise<KnowledgeBase | undefined> {
   const db = context.getWorkspaceDB()
   const result = await db.tryGet<KnowledgeBase>(id)
