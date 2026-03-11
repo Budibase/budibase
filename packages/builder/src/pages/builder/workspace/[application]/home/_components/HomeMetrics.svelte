@@ -8,9 +8,13 @@
   const GITHUB_REPO_URL = "https://github.com/Budibase/budibase"
 
   export let metrics: GetWorkspaceHomeMetricsResponse | null = null
-  export let agentsEnabled = false
+  export let showBudibaseAIMetric = true
 
   let githubStars: number | null = null
+
+  const formatMetric = (value: number) => {
+    return new Intl.NumberFormat("en").format(value)
+  }
 
   const formatStars = (stars: number) => {
     return new Intl.NumberFormat("en", {
@@ -29,9 +33,11 @@
   })
 </script>
 
-<div class="metrics" class:three={!agentsEnabled}>
+<div class="metrics" class:three={!showBudibaseAIMetric}>
   <div class="metric-card">
-    <Body size="XL" weight="600">{metrics ? metrics.totalUsers : "-"}</Body>
+    <Body size="XL" weight="600">
+      {metrics ? formatMetric(metrics.totalUsers) : "-"}
+    </Body>
     <Body size="S" color="var(--spectrum-global-color-gray-600)">
       Total users
     </Body>
@@ -39,20 +45,20 @@
 
   <div class="metric-card">
     <Body size="XL" weight="600">
-      {metrics ? metrics.automationRunsThisMonth : "-"}
+      {metrics ? formatMetric(metrics.operationsThisMonth) : "-"}
     </Body>
     <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      Automation runs this month
+      Operations this month
     </Body>
   </div>
 
-  {#if agentsEnabled}
+  {#if showBudibaseAIMetric}
     <div class="metric-card">
       <Body size="XL" weight="600">
-        {metrics ? metrics.agentActionsThisMonth : "-"}
+        {metrics ? formatMetric(metrics.budibaseAICreditsThisMonth) : "-"}
       </Body>
       <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        Agent actions this month
+        Budibase AI credits this month
       </Body>
     </div>
   {/if}

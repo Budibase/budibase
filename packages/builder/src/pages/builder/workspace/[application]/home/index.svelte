@@ -626,8 +626,12 @@
 
   $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
 
-  $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT
+  $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_AGENTS
   $: showHeaderActions = $licensing.showTrialBanner || showAgentChat
+  $: budibaseAICreditLimit =
+    $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
+  $: showBudibaseAIMetric =
+    budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
   $: if (hasMounted) writeUrlState()
 
@@ -637,7 +641,7 @@
       return
     }
 
-    if (!$featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+    if (!$featureFlags[FeatureFlag.AI_AGENTS]) {
       goto(url("../design"))
       return
     }
@@ -707,7 +711,7 @@
       {/if}
     </div>
 
-    <HomeMetrics {metrics} agentsEnabled={$featureFlags.AI_AGENTS} />
+    <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
     <div class="controls-row">
       <HomeControls
