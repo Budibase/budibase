@@ -30,14 +30,14 @@
   let settingChatLive = false
 
   $: chatEnabled =
-    $featureFlags[FeatureFlag.AI_AGENTS] && $featureFlags[FeatureFlag.AI_CHAT]
+    $featureFlags[FeatureFlag.AI_AGENTS] && $featureFlags[FeatureFlag.AI_AGENTS]
 
   onMount(() => {
     if (chatEnabled) {
       return
     }
 
-    const workspaceHomeEnabled = $featureFlags[FeatureFlag.WORKSPACE_HOME]
+    const workspaceHomeEnabled = $featureFlags[FeatureFlag.AI_AGENTS]
     const agentsEnabled = $featureFlags[FeatureFlag.AI_AGENTS]
 
     if (workspaceHomeEnabled) {

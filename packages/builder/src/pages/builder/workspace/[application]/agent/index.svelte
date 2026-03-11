@@ -111,7 +111,7 @@
     })
 
   onMount(async () => {
-    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+    if ($featureFlags[FeatureFlag.AI_AGENTS]) {
       goto($featureFlags.AI_AGENTS ? "../home?type=agent" : "../home")
       return
     }
