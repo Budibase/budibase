@@ -72,6 +72,15 @@
     savedSnapshot = Helpers.cloneDeep(draft)
   }
   captureSavedSnapshot()
+  let referencingKnowledgeBaseCount = $derived.by(
+    () =>
+      $knowledgeBaseStore.list.filter(
+        knowledgeBase => knowledgeBase.embeddingModel === draft._id
+      ).length
+  )
+  let canDelete = $derived(
+    !!draft._id && referencingKnowledgeBaseCount === 0 && !isSaving
+  )
   let isModified = $derived(
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
   )
@@ -100,6 +109,7 @@
       await Promise.all([
         aiConfigsStore.fetch(),
         aiConfigsStore.fetchProviders(),
+        knowledgeBaseStore.fetch(),
       ])
 
       if (configId !== "new" && config) {
@@ -127,8 +137,10 @@
         captureSavedSnapshot()
         notifications.success(`Configuration updated`)
 
-        if (knowledgeBaseId) {
+        if (knowledgeBaseId && knowledgeBaseId !== "new") {
           bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        } else {
+          bb.settings(`/ai-config/knowledge-bases`)
         }
       } else {
         const { _id, ...rest } = Helpers.cloneDeep(draft)
@@ -146,8 +158,10 @@
           })
         }
 
-        if (knowledgeBaseId) {
+        if (knowledgeBaseId && knowledgeBaseId !== "new") {
           bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        } else {
+          bb.settings(`/ai-config/knowledge-bases`)
         }
       }
     } catch (err: any) {
@@ -171,7 +185,7 @@
         try {
           await aiConfigsStore.deleteConfig(configId)
           notifications.success(`Configuration deleted`)
-          bb.settings(`/ai-config/${draft.configType}`)
+          bb.settings(`/ai-config/knowledge-bases`)
         } catch (err: any) {
           notifications.error(err.message || `Failed to delete configuration`)
         }
@@ -183,7 +197,9 @@
 <div use:routeActions>
   <div class="actions">
     {#if isEdit}
-      <Button on:click={deleteConfig} quiet overBackground>Delete</Button>
+      <Button on:click={deleteConfig} quiet overBackground disabled={!canDelete}
+        >Delete</Button
+      >
     {/if}
     <Button on:click={saveConfig} cta disabled={!canSave}>
       {#if !isEdit}
@@ -213,6 +229,14 @@
     bind:value={draft.name}
     placeholder="Latest ChatGPT"
   />
+
+  {#if isEdit && !canDelete}
+    <div class="info-note">
+      This embedding model is in use by {referencingKnowledgeBaseCount}
+      knowledge base{referencingKnowledgeBaseCount === 1 ? "" : "s"} and cannot be
+      deleted.
+    </div>
+  {/if}
 
   {#each selectedProvider?.credentialFields as field (field.key)}
     {#if field.options?.length || field.field_type === "select"}
@@ -249,5 +273,11 @@
   .actions {
     display: flex;
     gap: var(--spacing-s);
+  }
+
+  .info-note {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
+    line-height: 1.4;
   }
 </style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
   import { knowledgeBaseStore, vectorDbStore } from "@/stores/portal"
   import { Button, Helpers, Input, notifications } from "@budibase/bbui"
@@ -36,6 +37,15 @@
     savedSnapshot = Helpers.cloneDeep(draft)
   }
   captureSavedSnapshot()
+  let referencingKnowledgeBaseCount = $derived.by(
+    () =>
+      $knowledgeBaseStore.list.filter(
+        knowledgeBase => knowledgeBase.vectorDb === draft._id
+      ).length
+  )
+  let canDelete = $derived(
+    !!draft._id && referencingKnowledgeBaseCount === 0 && !isSaving
+  )
 
   let isModified = $derived(
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
@@ -56,7 +66,10 @@
 
   onMount(async () => {
     try {
-      const configs = await vectorDbStore.fetch()
+      const [configs] = await Promise.all([
+        vectorDbStore.fetch(),
+        knowledgeBaseStore.fetch(),
+      ])
       const isCreation = id === "new"
       if (!isCreation && id && !configs.find(db => db._id === id)) {
         notifications.error("Vector database not found")
@@ -92,8 +105,10 @@
         captureSavedSnapshot()
         notifications.success("Vector database updated")
 
-        if (knowledgeBaseId) {
+        if (knowledgeBaseId && knowledgeBaseId !== "new") {
           bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        } else {
+          bb.settings(`/ai-config/knowledge-bases`)
         }
       } else {
         const created = await vectorDbStore.create(payload)
@@ -111,8 +126,10 @@
           })
         }
 
-        if (knowledgeBaseId) {
+        if (knowledgeBaseId && knowledgeBaseId !== "new") {
           bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        } else {
+          bb.settings(`/ai-config/knowledge-bases`)
         }
       }
     } catch (err: any) {
@@ -121,10 +138,40 @@
       isSaving = false
     }
   }
+
+  async function deleteVectorDb() {
+    if (!draft._id) {
+      return
+    }
+
+    const vectorDbId = draft._id
+
+    await confirm({
+      title: "Delete vector database",
+      body: "Are you sure you want to permanently delete this vector database?",
+      onConfirm: async () => {
+        try {
+          await vectorDbStore.delete(vectorDbId)
+          notifications.success("Vector database deleted")
+          bb.settings("/ai-config/knowledge-bases")
+        } catch (err: any) {
+          notifications.error(err.message || "Failed to delete vector database")
+        }
+      },
+    })
+  }
 </script>
 
 <div use:routeActions>
   <div class="actions">
+    {#if isEdit}
+      <Button
+        on:click={deleteVectorDb}
+        quiet
+        overBackground
+        disabled={!canDelete}>Delete</Button
+      >
+    {/if}
     <Button on:click={saveVectorDb} cta disabled={!canSave}>
       {#if !isEdit}
         Create
@@ -142,6 +189,13 @@
     required
     bind:value={draft.name}
   />
+  {#if isEdit && !canDelete}
+    <div class="info-note">
+      This vector database is in use by {referencingKnowledgeBaseCount}
+      knowledge base{referencingKnowledgeBaseCount === 1 ? "" : "s"} and cannot be
+      deleted.
+    </div>
+  {/if}
   <Input
     label="Provider"
     description="Vector database provider. Currently PGVector is supported."
@@ -194,5 +248,11 @@
   .actions {
     display: flex;
     gap: var(--spacing-s);
+  }
+
+  .info-note {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
+    line-height: 1.4;
   }
 </style>

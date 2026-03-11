@@ -7,10 +7,35 @@
     vectorDbStore,
   } from "@/stores/portal"
   import { Body, Button, Layout, notifications, Table } from "@budibase/bbui"
+  import { AIConfigType } from "@budibase/types"
   import { onMount } from "svelte"
 
+  let embeddingNameById = $derived(
+    new Map(
+      $aiConfigsStore.customConfigs.map(config => [
+        config._id,
+        config.name || "",
+      ])
+    )
+  )
   let knowledgeBases = $derived(
-    [...$knowledgeBaseStore.list].sort((a, b) => a.name.localeCompare(b.name))
+    [...$knowledgeBaseStore.list]
+      .map(kb => ({
+        _id: kb._id,
+        name: kb.name,
+        embeddingModel:
+          embeddingNameById.get(kb.embeddingModel) || kb.embeddingModel,
+        files: kb.files.length,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  )
+  let embeddingModels = $derived(
+    [...$aiConfigsStore.customConfigsPerType.embeddings].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    )
+  )
+  let vectorDbs = $derived(
+    [...$vectorDbStore.configs].sort((a, b) => a.name.localeCompare(b.name))
   )
 
   function createKnowledgeBase() {
@@ -24,6 +49,32 @@
     }
     knowledgeBaseStore.clearFormDraft()
     bb.settings(`/ai-config/knowledge-bases/${row._id}`)
+  }
+
+  function createEmbeddingModel() {
+    bb.settings(`/ai-config/knowledge-bases/embedding/new`, {
+      type: AIConfigType.EMBEDDINGS,
+    })
+  }
+
+  function editEmbeddingModel(row: { _id?: string }) {
+    if (!row._id) {
+      return
+    }
+    bb.settings(`/ai-config/knowledge-bases/embedding/${row._id}`, {
+      type: AIConfigType.EMBEDDINGS,
+    })
+  }
+
+  function createVectorDb() {
+    bb.settings(`/ai-config/knowledge-bases/vectordb/new`)
+  }
+
+  function editVectorDb(row: { _id?: string }) {
+    if (!row._id) {
+      return
+    }
+    bb.settings(`/ai-config/knowledge-bases/vectordb/${row._id}`)
   }
 
   onMount(async () => {
@@ -54,17 +105,80 @@
         data={knowledgeBases}
         schema={{
           name: {},
+          embeddingModel: { displayName: "Embedding model" },
+          files: { displayName: "# Files" },
         }}
-        hideHeader
         rounded
         allowClickRows={false}
         allowEditRows
+        allowEditColumns={false}
         editColumnPosition="right"
+        editColumnHeader=""
         on:editrow={r => editKnowledgeBase(r.detail)}
       ></Table>
     {:else}
       <div class="no-enabled">
         <Body size="XS">No knowledge bases created yet</Body>
+      </div>
+    {/if}
+
+    <div class="section-header section-spacing">
+      <div class="section-title">Embedding models</div>
+      <Button size="S" icon="plus" on:click={createEmbeddingModel}>
+        Embedding model
+      </Button>
+    </div>
+
+    {#if embeddingModels.length}
+      <Table
+        compact
+        data={embeddingModels}
+        schema={{
+          name: {},
+          provider: {},
+          model: {},
+        }}
+        rounded
+        allowClickRows={false}
+        allowEditRows
+        allowEditColumns={false}
+        editColumnPosition="right"
+        editColumnHeader=""
+        on:editrow={r => editEmbeddingModel(r.detail)}
+      ></Table>
+    {:else}
+      <div class="no-enabled">
+        <Body size="XS">No embedding models created yet</Body>
+      </div>
+    {/if}
+
+    <div class="section-header section-spacing">
+      <div class="section-title">Vector databases</div>
+      <Button size="S" icon="plus" on:click={createVectorDb}>
+        Vector database
+      </Button>
+    </div>
+
+    {#if vectorDbs.length}
+      <Table
+        compact
+        data={vectorDbs}
+        schema={{
+          name: {},
+          host: {},
+          database: {},
+        }}
+        rounded
+        allowClickRows={false}
+        allowEditRows
+        allowEditColumns={false}
+        editColumnPosition="right"
+        editColumnHeader=""
+        on:editrow={r => editVectorDb(r.detail)}
+      ></Table>
+    {:else}
+      <div class="no-enabled">
+        <Body size="XS">No vector databases created yet</Body>
       </div>
     {/if}
   {/if}
@@ -85,5 +199,9 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
+  }
+
+  .section-spacing {
+    margin-top: var(--spacing-l);
   }
 </style>

@@ -7,7 +7,6 @@
     vectorDbStore,
   } from "@/stores/portal"
   import {
-    ActionButton,
     Button,
     Helpers,
     Input,
@@ -63,14 +62,8 @@
       a.name.localeCompare(b.name)
     )
   )
-  let selectedEmbeddingModel = $derived(
-    embeddingModelOptions.find(option => option._id === draft.embeddingModel)
-  )
   let vectorDbOptions = $derived(
     [...$vectorDbStore.configs].sort((a, b) => a.name.localeCompare(b.name))
-  )
-  let selectedVectorDb = $derived(
-    vectorDbOptions.find(option => option._id === draft.vectorDb)
   )
   let canEditReferences = $derived((config?.files.length || 0) === 0)
   let duplicateNameError = $derived.by(() => {
@@ -190,34 +183,6 @@
     }
   }
 
-  function openEmbeddingModel() {
-    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-    const currentKnowledgeBaseId = knowledgeBaseId || "new"
-    if (draft.embeddingModel) {
-      bb.settings(
-        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/${draft.embeddingModel}`
-      )
-      return
-    }
-    bb.settings(
-      `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/new`
-    )
-  }
-
-  function openVectorDb() {
-    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-    const currentKnowledgeBaseId = knowledgeBaseId || "new"
-    if (draft.vectorDb) {
-      bb.settings(
-        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/${draft.vectorDb}`
-      )
-      return
-    }
-    bb.settings(
-      `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/new`
-    )
-  }
-
   async function deleteKnowledgeBase() {
     if (!draft._id) {
       return
@@ -282,11 +247,6 @@
         ? "Remove all files to change the embedding model."
         : ""}
     />
-    <ActionButton
-      icon={selectedEmbeddingModel ? "pencil" : "Add"}
-      size="M"
-      on:click={openEmbeddingModel}
-    />
   </div>
 
   <div class="select">
@@ -302,11 +262,6 @@
       tooltip={!canEditReferences
         ? "Remove all files to change the vector database."
         : ""}
-    />
-    <ActionButton
-      icon={selectedVectorDb ? "pencil" : "Add"}
-      size="M"
-      on:click={openVectorDb}
     />
   </div>
 
