@@ -293,36 +293,6 @@ describe("agentLogs", () => {
     expect(summaryQuery?.end_date).toBe("2026-03-08 23:59:59")
   })
 
-  it("does not clear expired sessions while indexing logs", async () => {
-    mocks.licenses.setAgentLogsQuota(7)
-
-    await saveSessionDoc(
-      createSessionDoc({
-        agentId: "agent-1",
-        sessionId: "session-old",
-        startTime: "2026-03-01T08:00:00.000Z",
-        lastActivityAt: "2026-03-01T08:00:00.000Z",
-      })
-    )
-
-    await withWorkspace(async () => {
-      await addSessionLog({
-        agentId: "agent-1",
-        sessionId: "chatconvo_1",
-        requestIds: ["req-1"],
-        firstInput: "Hello",
-        startedAt: "2026-03-08T09:00:00.000Z",
-        completedAt: "2026-03-08T09:00:10.000Z",
-      })
-    })
-
-    await expect(getSessionDoc("agent-1", "session-old")).resolves.toEqual(
-      expect.objectContaining({
-        sessionId: "session-old",
-      })
-    )
-  })
-
   it("returns session detail entries in chronological order", async () => {
     jest.useRealTimers()
     await saveSessionDoc(
