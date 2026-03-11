@@ -1,8 +1,8 @@
 import TestConfiguration from "../TestConfiguration"
 import { AIAPI } from "./ai"
 import { AgentAPI } from "./ai/agent"
-import { AgentFilesAPI } from "./ai/agentFiles"
 import { KnowledgeBaseAPI } from "./ai/knowledgeBase"
+import { KnowledgeBaseFilesAPI } from "./ai/knowledgeBaseFiles"
 import { VectorDbAPI } from "./ai/vectorDb"
 import { AssetsAPI } from "./assets"
 import { AttachmentAPI } from "./attachment"
@@ -70,7 +70,7 @@ export default class API {
   agent: AgentAPI
   vectorDb: VectorDbAPI
   knowledgeBase: KnowledgeBaseAPI
-  agentFiles: AgentFilesAPI
+  knowledgeBaseFiles: KnowledgeBaseFilesAPI
 
   public: {
     user: UserPublicAPI
@@ -111,7 +111,7 @@ export default class API {
     this.agent = new AgentAPI(config)
     this.vectorDb = new VectorDbAPI(config)
     this.knowledgeBase = new KnowledgeBaseAPI(config)
-    this.agentFiles = new AgentFilesAPI(config)
+    this.knowledgeBaseFiles = new KnowledgeBaseFilesAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),
