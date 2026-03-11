@@ -381,7 +381,7 @@ export const workspaceRoutes = (
                         ?.name ?? "Embedding model"
                     )
                   },
-                  comp: Pages.get("embedding_model"),
+                  component: Pages.get("embedding_model"),
                 },
               ],
             },
@@ -400,7 +400,7 @@ export const workspaceRoutes = (
                         ?.name ?? "Vector database"
                     )
                   },
-                  comp: Pages.get("vector_database"),
+                  component: Pages.get("vector_database"),
                 },
               ],
             },
