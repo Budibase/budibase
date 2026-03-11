@@ -6,6 +6,7 @@ import {
 } from "@budibase/types"
 import * as setup from "../../../api/routes/tests/utilities"
 import * as aiConfigs from "../../../sdk/workspace/ai/configs"
+import { LiteLLMStatus } from "../../../sdk/workspace/ai/configs/litellm"
 import migration, {
   AIConfig,
   defaultModelByProvider,
@@ -17,6 +18,7 @@ jest.mock("../../../sdk/workspace/ai/configs", () => {
   return {
     ...actual,
     create: jest.fn(),
+    getLiteLLMStatus: jest.fn(),
   }
 })
 
@@ -30,6 +32,11 @@ describe("20260227144312_unify_ai_configs", () => {
   beforeEach(async () => {
     jest.clearAllMocks()
     await config.newTenant()
+    const getLiteLLMStatusMock =
+      aiConfigs.getLiteLLMStatus as jest.MockedFunction<
+        typeof aiConfigs.getLiteLLMStatus
+      >
+    getLiteLLMStatusMock.mockResolvedValue(LiteLLMStatus.OK)
   })
 
   afterAll(() => {
@@ -85,6 +92,39 @@ describe("20260227144312_unify_ai_configs", () => {
       configType: AIConfigType.COMPLETIONS,
       isDefault: true,
     })
+  })
+
+  it("skips the migration when LiteLLM is not configured", async () => {
+    const legacyConfig: AIConfig = {
+      type: ConfigType.AI,
+      config: {
+        openai: {
+          provider: "OpenAI",
+          name: "OpenAI",
+          active: true,
+          isDefault: true,
+          apiKey: "sk-test",
+        },
+      },
+    }
+    await config.doInTenant(async () => {
+      await configs.save(legacyConfig)
+    })
+
+    const getLiteLLMStatusMock =
+      aiConfigs.getLiteLLMStatus as jest.MockedFunction<
+        typeof aiConfigs.getLiteLLMStatus
+      >
+    getLiteLLMStatusMock.mockResolvedValue(LiteLLMStatus.NOT_CONFIGURED)
+
+    const createMock = aiConfigs.create as jest.MockedFunction<
+      typeof aiConfigs.create
+    >
+    createMock.mockResolvedValue({} as any)
+
+    await config.doInContext(config.getDevWorkspaceId(), migration)
+
+    expect(createMock).not.toHaveBeenCalled()
   })
 
   it("does not create configs when matching name already exist", async () => {

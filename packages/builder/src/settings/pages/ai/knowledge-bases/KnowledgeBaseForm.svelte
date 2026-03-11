@@ -15,6 +15,7 @@
     Select,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
   import { routeActions } from "../.."
 
   export interface Props {
@@ -24,7 +25,7 @@
   let { knowledgeBaseId }: Props = $props()
 
   let config = $derived(
-    $knowledgeBaseStore.configs.find(kb => kb._id === knowledgeBaseId)
+    $knowledgeBaseStore.list.find(kb => kb._id === knowledgeBaseId)
   )
 
   const createDraft = () =>
@@ -48,10 +49,11 @@
 
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
-  let savedSnapshot = $state(Helpers.cloneDeep(draft))
+  let savedSnapshot = $state<typeof draft>()
   const captureSavedSnapshot = () => {
     savedSnapshot = Helpers.cloneDeep(draft)
   }
+  captureSavedSnapshot()
   let isModified = $derived(
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
   )
@@ -64,6 +66,22 @@
   let vectorDbOptions = $derived(
     [...$vectorDbStore.configs].sort((a, b) => a.name.localeCompare(b.name))
   )
+  let duplicateNameError = $derived.by(() => {
+    const normalizedDraftName = draft.name?.trim().toLowerCase()
+    if (!normalizedDraftName) {
+      return undefined
+    }
+
+    const duplicate = $knowledgeBaseStore.list.find(
+      knowledgeBase =>
+        knowledgeBase._id !== draft._id &&
+        knowledgeBase.name.trim().toLowerCase() === normalizedDraftName
+    )
+
+    return duplicate
+      ? "A knowledge base with this name already exists"
+      : undefined
+  })
 
   let canSave = $derived.by(() => {
     if (isSaving || !isModified) {
@@ -71,6 +89,7 @@
     }
     return (
       !!draft.name?.trim() &&
+      !duplicateNameError &&
       !!draft.embeddingModel?.trim() &&
       !!draft.vectorDb?.trim()
     )
@@ -226,6 +245,7 @@
     description="Human readable name for the knowledge base"
     required
     bind:value={draft.name}
+    error={duplicateNameError}
     placeholder="HR Policies"
   />
 
@@ -266,6 +286,8 @@
       on:click={createVectorDb}
     />
   </div>
+
+  <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} />
 </div>
 
 <style>
