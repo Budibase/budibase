@@ -43,7 +43,7 @@
   $: goto = $gotoStore
 
   onMount(() => {
-    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+    if ($featureFlags[FeatureFlag.AI_AGENTS]) {
       goto("../home?type=app")
     }
   })
