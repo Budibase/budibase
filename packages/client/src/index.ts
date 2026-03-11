@@ -159,7 +159,9 @@ const normalizeAppPath = (pathOrUrl: string) => {
 const resolveAppIdFromPath = async (appPath: string) => {
   const publishedApps = await API.getPublishedApps()
   const pathToMatch = appPath.replace(/\/$/, "")
-  const matched = publishedApps.find(app => `/app${app.url}` === pathToMatch)
+  const matched = publishedApps.find(app => {
+    return [`/app${app.url}`, `/app-chat${app.url}`].includes(pathToMatch)
+  })
   if (!matched?.prodId) {
     throw new Error(`Could not resolve Budibase app for path: ${appPath}`)
   }
