@@ -24,7 +24,8 @@ export const API = createAPIClient({
     // Needed for workspace app resolution and client routing in an embed
     const appData = get(appStore)
     if (appData.embedded) {
-      headers["x-budibase-embed-location"] = window.location.pathname
+      headers["x-budibase-embed-location"] =
+        window["##BUDIBASE_EMBED_LOCATION##"] || window.location.pathname
     }
 
     // Attach client header if not inside the builder preview
