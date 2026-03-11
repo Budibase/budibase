@@ -189,7 +189,10 @@ describe("backups", () => {
       $metadata: {},
       ContentLength: 0,
     })
-    mockedObjectStore.deleteFiles.mockReset().mockImplementation(async () => {})
+    mockedObjectStore.deleteFiles.mockReset().mockResolvedValue({
+      $metadata: {},
+      Deleted: [],
+    })
 
     mocks.licenses.useBackups()
     config.newTenant()
@@ -269,6 +272,42 @@ describe("backups", () => {
       } finally {
         replicateSpy.mockRestore()
       }
+    })
+  })
+
+  it("should preserve temp object store files when promotion fails", async () => {
+    await config.doInTenant(async () => {
+      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+        (async function* () {
+          if (prefix?.includes("_temp_")) {
+            yield { Key: `${prefix}attachments/file.txt` }
+          }
+        })()
+      )
+      mockedObjectStore.streamUpload.mockImplementation(async args => {
+        if (args.bucket === objectStore.ObjectStoreBuckets.APPS) {
+          throw new Error("Promotion upload failed")
+        }
+        return {
+          $metadata: {},
+          ContentLength: 0,
+        }
+      })
+
+      const restore = await createRestore()
+
+      const tempObjectDeleteCalls = mockedObjectStore.deleteFiles.mock.calls.filter(
+        ([bucket, keys]) =>
+          bucket === objectStore.ObjectStoreBuckets.APPS &&
+          keys.some(key => key.includes("_temp_"))
+      )
+      const appReadCalls = mockedObjectStore.getReadStream.mock.calls.filter(
+        ([bucket]) => bucket === objectStore.ObjectStoreBuckets.APPS
+      )
+
+      expect(restore.status).toEqual(BackupStatus.FAILED)
+      expect(appReadCalls).toHaveLength(1)
+      expect(tempObjectDeleteCalls).toHaveLength(0)
     })
   })
 

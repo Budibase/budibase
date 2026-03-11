@@ -224,6 +224,7 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
     // get the backup ready on disk
     const path = await backups.downloadAppBackup(backupId)
     let status = BackupStatus.COMPLETE
+    let shouldClearTempWorkspaceFiles = true
     try {
       // Import into a temporary database, but rewrite embedded app references
       // against the real development workspace ID.
@@ -248,7 +249,13 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
         source: tempAppId,
         target: devWorkspaceId,
       }).replicate()
-      await promoteWorkspaceFiles(tempAppId, devWorkspaceId)
+      try {
+        await promoteWorkspaceFiles(tempAppId, devWorkspaceId)
+      } catch (err) {
+        // preserve temp files so a failed cutover can still be recovered
+        shouldClearTempWorkspaceFiles = false
+        throw err
+      }
     } catch (err: any) {
       logging.logAlert("App restore error", err)
       status = BackupStatus.FAILED
@@ -266,10 +273,12 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
       } catch (cleanupErr) {
         // ignore cleanup errors
       }
-      try {
-        await clearWorkspaceFiles(tempAppId)
-      } catch (cleanupErr) {
-        // ignore cleanup errors
+      if (shouldClearTempWorkspaceFiles) {
+        try {
+          await clearWorkspaceFiles(tempAppId)
+        } catch (cleanupErr) {
+          // ignore cleanup errors
+        }
       }
     }
     await backups.updateRestoreStatus(data.docId, rev, status)
