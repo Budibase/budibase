@@ -208,10 +208,14 @@ describe("backups", () => {
     await config.doInTenant(async () => {
       const restore = await createRestore()
       const processedRestore = await backups.getAppBackup(restore._id)
+      const [importWorkspaceId, importDb] = importAppFn.mock.calls[0]
+      const devWorkspaceId = db.getDevWorkspaceID(config.workspaceId)
 
       expect(processedRestore._id).toBeDefined()
       expect(exportAppFn).toHaveBeenCalledTimes(2)
       expect(importAppFn).toHaveBeenCalledTimes(1)
+      expect(importWorkspaceId).toEqual(devWorkspaceId)
+      expect(importDb.name).toMatch(new RegExp(`^${devWorkspaceId}_temp_`))
     })
   })
 

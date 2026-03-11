@@ -153,8 +153,9 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
     const path = await backups.downloadAppBackup(backupId)
     let status = BackupStatus.COMPLETE
     try {
-      // import into temporary database first
-      await opts.importAppFn(tempAppId, dbCore.getDB(tempAppId), {
+      // Import into a temporary database, but rewrite embedded app references
+      // against the real development workspace ID.
+      await opts.importAppFn(devWorkspaceId, dbCore.getDB(tempAppId), {
         file: {
           type: "application/gzip",
           path,
