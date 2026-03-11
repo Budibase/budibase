@@ -1,8 +1,7 @@
 <script>
   import { params, redirect } from "@roxi/routify"
-  import { datasources } from "@/stores/builder"
+  import { datasources, queries } from "@/stores/builder"
   import { IntegrationTypes } from "@/constants/backend"
-  import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
 
   $redirect
 
@@ -15,10 +14,9 @@
       $redirect(
         `/builder/workspace/${$params.application}/data/query/new/${$params.datasourceId}`
       )
+    } else if (datasource && isRestDatasource) {
+      queries.setNewQueryDatasourceId($params.datasourceId)
+      $redirect(`/builder/workspace/${$params.application}/apis/query/new`)
     }
   }
 </script>
-
-{#if datasource}
-  <APIEndpointViewer datasourceId={$params.datasourceId} />
-{/if}

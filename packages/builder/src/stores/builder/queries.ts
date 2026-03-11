@@ -27,6 +27,7 @@ let skipNextUnsavedPrompt = false
 interface BuilderQueryStore {
   list: Query[]
   selectedQueryId: string | null
+  newQueryDatasourceId: string | undefined
 }
 
 interface DerivedQueryStore extends BuilderQueryStore {
@@ -43,6 +44,7 @@ export class QueryStore extends DerivedBudiStore<
         return {
           list: $store.list,
           selectedQueryId: $store.selectedQueryId,
+          newQueryDatasourceId: $store.newQueryDatasourceId,
           selected: $store.list?.find(q => q._id === $store.selectedQueryId),
         }
       })
@@ -52,6 +54,7 @@ export class QueryStore extends DerivedBudiStore<
       {
         list: [],
         selectedQueryId: null,
+        newQueryDatasourceId: undefined,
       },
       makeDerivedStore
     )
@@ -180,6 +183,21 @@ export class QueryStore extends DerivedBudiStore<
         list: state.list.filter(table => table.datasourceId !== datasourceId),
       }
     })
+  }
+
+  setNewQueryDatasourceId(id: string | undefined) {
+    this.store.update(state => ({ ...state, newQueryDatasourceId: id }))
+  }
+
+  resetTargetDatasourceId(): string | undefined {
+    const id = get(this.store).newQueryDatasourceId
+    if (id) {
+      this.store.update(state => ({
+        ...state,
+        newQueryDatasourceId: undefined,
+      }))
+    }
+    return id
   }
 
   init = this.fetch

@@ -1,12 +1,12 @@
 <script>
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
   import { queries } from "@/stores/builder"
+  import { get } from "svelte/store"
 
-  // Use the datasource of the currently selected query as the initial suggestion
-  // (e.g. when clicking + from within a query)
-  $: selectedDatasourceId = $queries.list.find(
-    q => q._id === $queries.selectedQueryId
-  )?.datasourceId
+  const initialDatasourceId =
+    queries.resetTargetDatasourceId() ||
+    get(queries).list.find(q => q._id === get(queries).selectedQueryId)
+      ?.datasourceId
 </script>
 
-<APIEndpointViewer initialDatasourceId={selectedDatasourceId} />
+<APIEndpointViewer {initialDatasourceId} />
