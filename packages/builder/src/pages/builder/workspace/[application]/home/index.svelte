@@ -17,13 +17,7 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import {
-    admin,
-    agentsStore,
-    auth,
-    featureFlags,
-    licensing,
-  } from "@/stores/portal"
+  import { agentsStore, auth, featureFlags, licensing } from "@/stores/portal"
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
@@ -634,7 +628,10 @@
 
   $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT
   $: showHeaderActions = $licensing.showTrialBanner || showAgentChat
-  $: showBudibaseAIMetric = $admin.cloud || !$licensing.isFreePlan
+  $: budibaseAICreditLimit =
+    $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
+  $: showBudibaseAIMetric =
+    budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
   $: if (hasMounted) writeUrlState()
 
