@@ -30,7 +30,7 @@ export function getPublicApiRedisConfig(
     options.password = password
   }
 
-  if (redisUrl.startsWith("rediss://")) {
+  if (redisUrl.toLowerCase().startsWith("rediss://")) {
     options.socket = {
       tls: true,
     }

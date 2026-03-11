@@ -24,6 +24,26 @@ describe("public api redis config", () => {
     })
   })
 
+  it("enables tls for uppercase REDISS URLs", async () => {
+    const config = await withEnv(
+      {
+        REDIS_URL: "REDISS://master.xxxxx.cache.amazonaws.com",
+        REDIS_USERNAME: "aaa",
+        REDIS_PASSWORD: "bbb",
+      },
+      async () => getPublicApiRedisConfig()
+    )
+
+    expect(config).toEqual({
+      password: "bbb",
+      socket: {
+        tls: true,
+      },
+      url: "REDISS://master.xxxxx.cache.amazonaws.com",
+      username: "aaa",
+    })
+  })
+
   it("does not set tls for plain redis URLs", async () => {
     const config = await withEnv(
       {
