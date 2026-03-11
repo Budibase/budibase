@@ -82,7 +82,7 @@ describe("workspace home metrics caching", () => {
   it("returns stale metrics when refresh fails after ttl", async () => {
     const first = await getWorkspaceHomeMetrics()
 
-    jest.setSystemTime(new Date(Date.now() + 5 * 60 * 1000 + 1))
+    jest.setSystemTime(new Date(Date.now() + 90 * 1000 + 1))
     getUserCount.mockRejectedValue(new Error("failed"))
 
     const second = await getWorkspaceHomeMetrics()

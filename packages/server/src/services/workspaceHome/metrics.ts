@@ -4,7 +4,7 @@ import { type GetWorkspaceHomeMetricsResponse } from "@budibase/types"
 
 import { getQuotaMonthWindow } from "../../utilities/quotaMonthWindow"
 
-const METRICS_FRESH_TTL_MS = 5 * 60 * 1000
+const METRICS_FRESH_TTL_MS = 90 * 1000
 const METRICS_FAILURE_TTL_MS = 5 * 60 * 1000
 const METRICS_RETENTION_TTL_SECONDS = 24 * 60 * 60
 const METRICS_CACHE_KEY_PREFIX = "workspaceHome:metrics:v3"

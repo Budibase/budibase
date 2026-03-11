@@ -6,7 +6,7 @@ import tk from "timekeeper"
 import * as setup from "./utilities"
 
 describe("/workspace/home/metrics", () => {
-  const METRICS_FRESH_TTL_MS = 5 * 60 * 1000
+  const METRICS_FRESH_TTL_MS = 90 * 1000
   const config = setup.getConfig()
   const request = setup.getRequest()
 
