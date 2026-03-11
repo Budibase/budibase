@@ -149,10 +149,6 @@ export const syncURLToState = <State extends Record<string, any>>(
     const urlValue = cachedParams?.[urlParam]
     const stateValue = state?.[stateKey]
 
-    if (stateValue === urlValue) {
-      return
-    }
-
     const hasStateValue =
       stateValue !== undefined && stateValue !== null && stateValue !== ""
 
@@ -160,6 +156,10 @@ export const syncURLToState = <State extends Record<string, any>>(
       if (fallbackUrl && !isExitingPage()) {
         redirectUrl(fallbackUrl)
       }
+      return
+    }
+
+    if (stateValue === urlValue) {
       return
     }
 
