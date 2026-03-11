@@ -6,14 +6,17 @@ import {
 import { KoaFile } from "@budibase/types"
 
 export async function fileUpload(file: KoaFile) {
-  if (!file.name || !file.path) {
+  const filename = file.originalFilename
+  const filePath = file.filepath
+
+  if (!filename || !filePath) {
     throw new Error("File is not valid - cannot upload.")
   }
-  if (!file.name.endsWith(".tar.gz")) {
+  if (!filename.endsWith(".tar.gz")) {
     throw new Error("Plugin must be compressed into a gzipped tarball.")
   }
-  const path = createTempFolder(file.name.split(".tar.gz")[0])
-  await extractTarball(file.path, path)
+  const path = createTempFolder(filename.split(".tar.gz")[0])
+  await extractTarball(filePath, path)
 
   return await getPluginMetadata(path)
 }

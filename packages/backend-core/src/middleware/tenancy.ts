@@ -31,7 +31,9 @@ export function tenancy(
     }
 
     const tenantId = getTenantIDFromCtx(ctx, tenantOpts)
-    ctx.set(Header.TENANT_ID, tenantId as string)
+    if (tenantId) {
+      ctx.set(Header.TENANT_ID, tenantId as string)
+    }
     return doInTenant(tenantId, next)
   } as Middleware
 }
