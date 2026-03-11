@@ -26,16 +26,17 @@ jest.mock("@budibase/backend-core", () => {
       uploadDirectory: jest.fn(),
       upload: jest.fn(),
       deleteFiles: jest.fn(),
-      listAllObjects: jest.fn().mockReturnValue(
-        (async function* () {})()
-      ),
+      listAllObjects: jest.fn().mockReturnValue((async function* () {})()),
     },
   }
 })
 
 async function* emptyObjectList(): AsyncGenerator<S3Object> {}
 
-type ImportAppDatabase = Pick<Database, "name" | "load" | "allDocs" | "bulkDocs">
+type ImportAppDatabase = Pick<
+  Database,
+  "name" | "load" | "allDocs" | "bulkDocs"
+>
 
 const emptyAllDocs: Database["allDocs"] = async function <
   T extends Document | RowValue,
@@ -47,14 +48,12 @@ const emptyAllDocs: Database["allDocs"] = async function <
   } as AllDocsResponse<T>
 }
 
-function createDatabaseMock(
-  overrides: {
-    name: string
-    load: Database["load"]
-    allDocs?: Database["allDocs"]
-    bulkDocs?: Database["bulkDocs"]
-  }
-): ImportAppDatabase {
+function createDatabaseMock(overrides: {
+  name: string
+  load: Database["load"]
+  allDocs?: Database["allDocs"]
+  bulkDocs?: Database["bulkDocs"]
+}): ImportAppDatabase {
   return {
     name: overrides.name,
     load: overrides.load,
