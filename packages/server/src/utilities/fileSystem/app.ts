@@ -4,8 +4,8 @@ import { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
 import environment from "../../environment"
 import { budibaseTempDir } from "../budibaseDir"
+import { deleteFolderFileSystem, TOP_LEVEL_PATH } from "./filesystem"
 import { shouldServeLocally, updateClientLibrary } from "./clientLibrary"
-import { TOP_LEVEL_PATH } from "./filesystem"
 
 export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 
@@ -86,8 +86,6 @@ export const getComponentLibraryManifest = async (library: string) => {
 export const cleanup = (appIds: string[]) => {
   for (let appId of appIds) {
     const path = join(budibaseTempDir(), appId)
-    if (fs.existsSync(path)) {
-      fs.rmdirSync(path, { recursive: true })
-    }
+    deleteFolderFileSystem(path)
   }
 }
