@@ -628,6 +628,10 @@
 
   $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT
   $: showHeaderActions = $licensing.showTrialBanner || showAgentChat
+  $: budibaseAICreditLimit =
+    $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
+  $: showBudibaseAIMetric =
+    budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
   $: if (hasMounted) writeUrlState()
 
@@ -707,7 +711,7 @@
       {/if}
     </div>
 
-    <HomeMetrics {metrics} agentsEnabled={$featureFlags.AI_AGENTS} />
+    <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
     <div class="controls-row">
       <HomeControls
