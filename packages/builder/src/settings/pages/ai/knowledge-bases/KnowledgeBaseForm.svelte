@@ -167,7 +167,7 @@
         notifications.success("Knowledge base created")
       }
       knowledgeBaseStore.clearFormDraft()
-      bb.settings(`/ai-config/knowledge-bases`)
+      bb.settings(`/ai-config/knowledge-bases/${draft._id}`)
     } catch (err: any) {
       notifications.error(err.message || "Failed to save knowledge base")
     } finally {
