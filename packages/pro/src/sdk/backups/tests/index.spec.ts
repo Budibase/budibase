@@ -38,6 +38,7 @@ jest.mock("@budibase/backend-core", () => {
       streamUpload: jest.fn(),
       deleteFile: jest.fn(),
       deleteFiles: jest.fn(),
+      objectExists: jest.fn().mockResolvedValue(false),
       listAllObjects: jest
         .fn()
         .mockImplementation(() => (async function* () {})()),
@@ -193,6 +194,7 @@ describe("backups", () => {
       $metadata: {},
       Deleted: [],
     })
+    mockedObjectStore.objectExists.mockReset().mockResolvedValue(false)
 
     mocks.licenses.useBackups()
     config.newTenant()
@@ -246,13 +248,60 @@ describe("backups", () => {
     })
   })
 
-  it("should not promote object store files when restore cutover fails", async () => {
+  it("should overwrite existing target object store files during restore", async () => {
+    await config.doInTenant(async () => {
+      const backup = await createBackup()
+      await waitForQueue()
+      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+        (async function* () {
+          if (prefix?.includes("_temp_")) {
+            yield { Key: `${prefix}attachments/shared.txt` }
+          }
+          if (prefix === `${config.workspaceId}/`) {
+            yield { Key: `${prefix}attachments/shared.txt` }
+          }
+        })()
+      )
+      mockedObjectStore.objectExists.mockImplementation(
+        async (_bucket, key) =>
+          key === `${config.workspaceId}/attachments/shared.txt`
+      )
+
+      const response = await backups.triggerAppRestore(
+        config.workspaceId,
+        backup._id,
+        "backup restore",
+        USER_ID
+      )
+      await waitForQueue()
+
+      const processedRestore = await backups.getAppBackup(response!.restoreId)
+      const targetUploads = mockedObjectStore.streamUpload.mock.calls.filter(
+        ([args]) =>
+          args.bucket === objectStore.ObjectStoreBuckets.APPS &&
+          args.filename === `${config.workspaceId}/attachments/shared.txt`
+      )
+      expect(processedRestore.status).toEqual(BackupStatus.COMPLETE)
+      expect(targetUploads).toHaveLength(1)
+    })
+  })
+
+  it("should roll back promoted object store files when restore cutover fails", async () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
       await waitForQueue()
       const replicateSpy = jest
         .spyOn(db.Replication.prototype, "replicate")
         .mockRejectedValueOnce(new Error("Replication failed"))
+
+      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+        (async function* () {
+          if (prefix?.includes("_temp_")) {
+            yield { Key: `${prefix}attachments/file.txt` }
+          }
+        })()
+      )
+      mockedObjectStore.objectExists.mockResolvedValue(false)
 
       try {
         const response = await backups.triggerAppRestore(
@@ -264,19 +313,88 @@ describe("backups", () => {
         await waitForQueue()
 
         const processedRestore = await backups.getAppBackup(response!.restoreId)
-        const appReadCalls = mockedObjectStore.getReadStream.mock.calls.filter(
-          ([bucket]) => bucket === objectStore.ObjectStoreBuckets.APPS
+        const targetUploads = mockedObjectStore.streamUpload.mock.calls.filter(
+          ([args]) =>
+            args.bucket === objectStore.ObjectStoreBuckets.APPS &&
+            args.filename === `${config.workspaceId}/attachments/file.txt`
+        )
+        const targetRollbackDeletes = mockedObjectStore.deleteFiles.mock.calls.filter(
+          ([bucket, keys]) =>
+            bucket === objectStore.ObjectStoreBuckets.APPS &&
+            keys.includes(`${config.workspaceId}/attachments/file.txt`)
         )
         expect(processedRestore.status).toEqual(BackupStatus.FAILED)
-        expect(appReadCalls).toHaveLength(0)
+        expect(targetUploads).toHaveLength(1)
+        expect(targetRollbackDeletes).toHaveLength(1)
       } finally {
         replicateSpy.mockRestore()
       }
     })
   })
 
-  it("should preserve temp object store files when promotion fails", async () => {
+  it("should restore overwritten target files when restore cutover fails", async () => {
     await config.doInTenant(async () => {
+      const backup = await createBackup()
+      await waitForQueue()
+      const replicateSpy = jest
+        .spyOn(db.Replication.prototype, "replicate")
+        .mockRejectedValueOnce(new Error("Replication failed"))
+
+      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+        (async function* () {
+          if (prefix?.includes("_temp_")) {
+            yield { Key: `${prefix}attachments/shared.txt` }
+          }
+          if (prefix === `${config.workspaceId}/`) {
+            yield { Key: `${prefix}attachments/shared.txt` }
+          }
+        })()
+      )
+      mockedObjectStore.objectExists.mockImplementation(
+        async (_bucket, key) =>
+          key === `${config.workspaceId}/attachments/shared.txt`
+      )
+
+      try {
+        const response = await backups.triggerAppRestore(
+          config.workspaceId,
+          backup._id,
+          "backup restore",
+          USER_ID
+        )
+        await waitForQueue()
+
+        const processedRestore = await backups.getAppBackup(response!.restoreId)
+        const targetUploads = mockedObjectStore.streamUpload.mock.calls.filter(
+          ([args]) =>
+            args.bucket === objectStore.ObjectStoreBuckets.APPS &&
+            args.filename === `${config.workspaceId}/attachments/shared.txt`
+        )
+        const targetRollbackDeletes = mockedObjectStore.deleteFiles.mock.calls.filter(
+          ([bucket, keys]) =>
+            bucket === objectStore.ObjectStoreBuckets.APPS &&
+            keys.includes(`${config.workspaceId}/attachments/shared.txt`)
+        )
+        expect(processedRestore.status).toEqual(BackupStatus.FAILED)
+        expect(targetUploads).toHaveLength(2)
+        expect(targetRollbackDeletes).toHaveLength(0)
+      } finally {
+        replicateSpy.mockRestore()
+      }
+    })
+  })
+
+  it("should not cut over database when promotion fails", async () => {
+    await config.doInTenant(async () => {
+      const devWorkspaceId = db.getDevWorkspaceID(config.workspaceId)
+      const backup = await createBackup()
+      await waitForQueue()
+      await db.getDB(devWorkspaceId).put({
+        _id: "post-backup-marker",
+        type: "app",
+      })
+      const replicateSpy = jest.spyOn(db.Replication.prototype, "replicate")
+
       mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
         (async function* () {
           if (prefix?.includes("_temp_")) {
@@ -294,21 +412,24 @@ describe("backups", () => {
         }
       })
 
-      const restore = await createRestore()
-
-      const tempObjectDeleteCalls =
-        mockedObjectStore.deleteFiles.mock.calls.filter(
-          ([bucket, keys]) =>
-            bucket === objectStore.ObjectStoreBuckets.APPS &&
-            keys.some(key => key.includes("_temp_"))
+      try {
+        const response = await backups.triggerAppRestore(
+          config.workspaceId,
+          backup._id,
+          "backup restore",
+          USER_ID
         )
-      const appReadCalls = mockedObjectStore.getReadStream.mock.calls.filter(
-        ([bucket]) => bucket === objectStore.ObjectStoreBuckets.APPS
-      )
+        await waitForQueue()
+        const processedRestore = await backups.getAppBackup(response!.restoreId)
 
-      expect(restore.status).toEqual(BackupStatus.FAILED)
-      expect(appReadCalls).toHaveLength(1)
-      expect(tempObjectDeleteCalls).toHaveLength(0)
+        expect(processedRestore.status).toEqual(BackupStatus.FAILED)
+        expect(replicateSpy).not.toHaveBeenCalled()
+        expect(await db.getDB(devWorkspaceId).get("post-backup-marker")).toEqual(
+          expect.objectContaining({ _id: "post-backup-marker" })
+        )
+      } finally {
+        replicateSpy.mockRestore()
+      }
     })
   })
 
