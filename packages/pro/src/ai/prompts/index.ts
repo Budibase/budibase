@@ -318,10 +318,24 @@ export function composeAutomationAgentToolGuidelines(
   return sections.filter(section => section.trim()).join("\n\n")
 }
 
+function getAgentPromptUserContext(user: ContextUser) {
+  return {
+    _id: user._id,
+    userId: user.userId,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    status: user.status,
+    roleId: user.roleId,
+  }
+}
+
 export function agentSystemPrompt(user: ContextUser) {
   const date = new Date().toISOString()
+  const userContext = getAgentPromptUserContext(user)
   return `You are a helpful support agent who uses workflows to resolve user issues efficiently.
   - The current date is: ${date}
+  - The user's name is: ${userContext.firstName} ${userContext.lastName}
   - When receiving truncated or paginated results, automatically make follow-up requests to retrieve all pages
   - When a tool call fails, show the detailed error status and message in the UI to provide the user further information as to how to debug.
   - When specifying a "limit" for a certain tool call related to the number of records, use at least 100. This helps prevent cutting off the list of results too short. If the number of results overflows the limit, make sure you tell the user there are more, and confirm if they want to fetch the rest before continuing.
@@ -330,7 +344,7 @@ export function agentSystemPrompt(user: ContextUser) {
   User information is provided below for context:
   
   \`\`\`
-  ${JSON.stringify(user)}
+  ${JSON.stringify(userContext)}
   \`\`\``
 }
 
