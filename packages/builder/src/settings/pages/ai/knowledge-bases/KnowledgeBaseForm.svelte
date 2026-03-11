@@ -262,10 +262,7 @@
     />
   </div>
 
-  <KnowledgeBaseFilesPanel
-    knowledgeBaseId={draft._id}
-    hasReferenceChanges={hasReferenceChanges}
-  />
+  <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} {hasReferenceChanges} />
 </div>
 
 <style>
