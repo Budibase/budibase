@@ -181,6 +181,9 @@ class Replication {
         if (startsWithID(doc._id, DocumentType.AUTOMATION_LOG)) {
           return false
         }
+        if (startsWithID(doc._id, DocumentType.AGENT_LOG_SESSION)) {
+          return false
+        }
         if (doc._id === DocumentType.WORKSPACE_METADATA) {
           return false
         }

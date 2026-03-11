@@ -23,6 +23,12 @@ import * as configSdk from "../configs"
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
 
+export enum LiteLLMStatus {
+  OK = "ok",
+  STARTING = "starting",
+  NOT_CONFIGURED = "not configured",
+}
+
 type LiteLLMTeam = {
   id: string
   alias: string
@@ -47,6 +53,25 @@ const getKeyAlias = (workspaceId: string) => {
 
 const getModelAlias = (configId: string) => {
   return `${context.getTenantId()}:${context.getProdWorkspaceId()}:${configId}`
+}
+
+export async function getLiteLLMStatus({
+  signal,
+}: {
+  signal?: AbortSignal
+} = {}): Promise<LiteLLMStatus> {
+  if (!env.LITELLM_MASTER_KEY) {
+    return LiteLLMStatus.NOT_CONFIGURED
+  }
+
+  try {
+    const response = await fetch(`${liteLLMUrl}/health/liveliness`, {
+      signal,
+    })
+    return response.ok ? LiteLLMStatus.OK : LiteLLMStatus.STARTING
+  } catch {
+    return LiteLLMStatus.STARTING
+  }
 }
 
 async function createTeam(alias: string): Promise<LiteLLMTeam> {

@@ -80,9 +80,8 @@
     <div class="section-header">
       <div class="section-title">Connected models</div>
     </div>
-    <div class="model-list">
-      <AIConfigList configs={completionConfigs}></AIConfigList>
-    </div>
+
+    <AIConfigList configs={completionConfigs}></AIConfigList>
   {/if}
   <div class="section-header new-provider-section">
     <div class="section-title">Model providers</div>
@@ -107,7 +106,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
+    height: 24px;
   }
   .new-provider-section {
     margin-top: var(--spacing-l);
@@ -122,13 +122,5 @@
     display: flex;
     align-items: center;
     gap: 16px;
-  }
-
-  .model-list {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    background: var(--grey-1, #1d1d1d);
-    border-radius: 6px;
   }
 </style>
