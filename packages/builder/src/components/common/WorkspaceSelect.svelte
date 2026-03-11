@@ -90,34 +90,17 @@
     }
   }
 
-  const getWorkspaceUrl = (app: any) => {
+  const getWorkspaceUrl = (app: EnrichedApp) => {
     return app.editable ? `/builder/workspace/${app.devId}` : `/app${app.url}`
   }
 
-  const resolveMouseEvent = (
-    event: MouseEvent | CustomEvent<MouseEvent>
-  ): MouseEvent | null => {
-    if (event instanceof MouseEvent) {
-      return event
-    }
-    return event.detail instanceof MouseEvent ? event.detail : null
-  }
-
   const openWorkspaceContextMenu = (
-    event: MouseEvent | CustomEvent<MouseEvent>,
-    ws: EnrichedApp
+    ws: EnrichedApp,
+    position: { x: number; y: number }
   ) => {
     if (!ws.editable) {
       return
     }
-
-    const e = resolveMouseEvent(event)
-    if (!e) {
-      return
-    }
-
-    e.preventDefault()
-    e.stopPropagation()
     selectedWorkspaceForMenu = ws
 
     const items = getAppContextMenuItems({
@@ -129,8 +112,37 @@
     })
 
     contextMenuStore.open(`workspace-select-${ws.appId}`, items, {
+      x: position.x,
+      y: position.y,
+    })
+  }
+
+  const openWorkspaceContextMenuFromMouse = (e: MouseEvent, ws: EnrichedApp) => {
+    e.preventDefault()
+    e.stopPropagation()
+    openWorkspaceContextMenu(ws, {
       x: e.clientX,
       y: e.clientY,
+    })
+  }
+
+  const onWorkspaceItemKeydown = (
+    e: KeyboardEvent,
+    ws: EnrichedApp,
+    itemEl: HTMLElement | null
+  ) => {
+    const isContextMenuKey = e.key === "ContextMenu"
+
+    if (!isContextMenuKey || !itemEl) {
+      return
+    }
+
+    e.preventDefault()
+    e.stopPropagation()
+    const rect = itemEl.getBoundingClientRect()
+    openWorkspaceContextMenu(ws, {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
     })
   }
 
@@ -269,7 +281,8 @@
           on:click={() => {
             navigateToWorkspace(ws)
           }}
-          on:contextmenu={e => openWorkspaceContextMenu(e, ws)}
+          on:contextmenu={e => openWorkspaceContextMenuFromMouse(e, ws)}
+          on:keydown={e => onWorkspaceItemKeydown(e, ws, itemEls[i])}
           on:auxclick={e => {
             if (e.button !== 1) {
               return
