@@ -66,6 +66,9 @@ builderAdminRoutes
   )
 
   .get("/api/agent/tools", ai.fetchTools)
+  .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
+  .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
+  .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
 
 builderAdminRoutes
   .post("/api/ai/tables", ai.generateTables)

@@ -1,7 +1,15 @@
-import type { UIMessage, ToolSet, TypedToolCall, TypedToolResult } from "ai"
+import type {
+  Tool,
+  ToolSet,
+  TypedToolCall,
+  TypedToolResult,
+  UIMessage,
+} from "ai"
+import { ToolType } from "@budibase/types"
 import {
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
+  getToolDisplayNames,
   IncompleteToolCall,
   updatePendingToolCalls,
 } from "./utils"
@@ -10,6 +18,30 @@ type MessagePart = NonNullable<UIMessage["parts"]>[number]
 
 const toolPart = (part: Record<string, unknown>): MessagePart =>
   part as MessagePart
+
+describe("getToolDisplayNames", () => {
+  it("returns readable names keyed by raw tool name", () => {
+    expect(
+      getToolDisplayNames([
+        {
+          name: "ta_123_list_rows",
+          readableName: "Research Notes.list_rows",
+          description: "List rows",
+          sourceType: ToolType.INTERNAL_TABLE,
+          tool: {} as Tool,
+        },
+        {
+          name: "list_tables",
+          description: "List tables",
+          sourceType: ToolType.INTERNAL_TABLE,
+          tool: {} as Tool,
+        },
+      ])
+    ).toEqual({
+      ta_123_list_rows: "Research Notes.list_rows",
+    })
+  })
+})
 
 describe("incomplete tool call detection", () => {
   describe("findIncompleteToolCalls", () => {

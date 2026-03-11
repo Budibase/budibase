@@ -70,6 +70,13 @@ jest.mock("../../sdk/workspace/ai/llm", () => {
   }
 })
 
+jest.mock("../../sdk/workspace/ai/agentLogs", () => ({
+  createSessionLogIndexer: jest.fn(() => ({
+    addRequestId: jest.fn(),
+    index: jest.fn().mockResolvedValue(undefined),
+  })),
+}))
+
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
   let userA: User
@@ -412,7 +419,7 @@ describe("chat conversation transient behavior", () => {
       sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
         typeof sdk.ai.agents.buildPromptAndTools
       >
-    ).mockResolvedValue({ systemPrompt: "system", tools })
+    ).mockResolvedValue({ systemPrompt: "system", tools, toolDisplayNames: {} })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
     ).mockResolvedValue({
@@ -429,6 +436,16 @@ describe("chat conversation transient behavior", () => {
     ;(streamText as jest.MockedFunction<typeof streamText>).mockImplementation(
       () =>
         ({
+          response: Promise.resolve({
+            id: "gen-test",
+            headers: {
+              "x-litellm-response-cost": "0.0001",
+            },
+          }),
+          usage: Promise.resolve({
+            inputTokens: 0,
+            outputTokens: 0,
+          }),
           pipeUIMessageStreamToResponse: async (
             res: ServerResponse,
             options?: unknown
@@ -655,6 +672,16 @@ describe("Agent chat tool call tracking", () => {
 
   function makeStreamTextMock(toolResults: { toolCallId: string }[]) {
     return (options: any) => ({
+      response: Promise.resolve({
+        id: "gen-test",
+        headers: {
+          "x-litellm-response-cost": "0.0001",
+        },
+      }),
+      usage: Promise.resolve({
+        inputTokens: 0,
+        outputTokens: 0,
+      }),
       pipeUIMessageStreamToResponse: jest
         .fn()
         .mockImplementation(async (res: any, pipeOptions: any) => {
@@ -674,16 +701,28 @@ describe("Agent chat tool call tracking", () => {
   }
 
   function makeWebhookStreamTextMock(toolResults: { toolCallId: string }[]) {
-    return async (options: any) => {
-      if (options.onStepFinish) {
-        await options.onStepFinish({
-          content: [],
-          toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
-          toolResults,
-        })
-      }
-      return { text: Promise.resolve("response") }
-    }
+    return (options: any) => ({
+      text: (async () => {
+        if (options.onStepFinish) {
+          await options.onStepFinish({
+            content: [],
+            toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
+            toolResults,
+          })
+        }
+        return "response"
+      })(),
+      response: Promise.resolve({
+        id: "gen-test",
+        headers: {
+          "x-litellm-response-cost": "0.0001",
+        },
+      }),
+      usage: Promise.resolve({
+        inputTokens: 0,
+        outputTokens: 0,
+      }),
+    })
   }
 
   beforeAll(async () => {
@@ -727,6 +766,7 @@ describe("Agent chat tool call tracking", () => {
     ).mockResolvedValue({
       systemPrompt: "system",
       tools: { tool1: {} as any },
+      toolDisplayNames: {},
     })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
@@ -865,6 +905,64 @@ describe("Agent chat tool call tracking", () => {
       )
 
       expect(addActionMock).not.toHaveBeenCalled()
+    })
+
+    it("indexes session logs when response metadata rejects", async () => {
+      const responseError = new Error("response metadata failed")
+      jest.mocked(streamText).mockImplementation(
+        ((options: any) =>
+          ({
+            text: (async () => {
+              if (options.onStepFinish) {
+                await options.onStepFinish({
+                  content: [],
+                  toolCalls: [],
+                  toolResults: [],
+                  response: { id: "gen-test" },
+                })
+              }
+              return "response"
+            })(),
+            response: Promise.reject(responseError),
+            usage: Promise.resolve({
+              inputTokens: 0,
+              outputTokens: 0,
+            }),
+          }) as unknown as ReturnType<typeof streamText>) as any
+      )
+
+      await expect(
+        context.doInWorkspaceContext(config.getProdWorkspaceId(), async () => {
+          await webhookChat({
+            chat: {
+              chatAppId: chatApp._id!,
+              agentId: "agent-1",
+              messages: [
+                {
+                  id: "msg-1",
+                  role: "user",
+                  parts: [{ type: "text", text: "hello" }],
+                },
+              ],
+            },
+            user: { _id: "user-1" } as any,
+          })
+        })
+      ).rejects.toThrow("response metadata failed")
+
+      const { createSessionLogIndexer } = jest.requireMock(
+        "../../sdk/workspace/ai/agentLogs"
+      ) as {
+        createSessionLogIndexer: jest.Mock
+      }
+      const sessionLogIndexer = createSessionLogIndexer.mock.results.at(-1)
+        ?.value as {
+        addRequestId: jest.Mock
+        index: jest.Mock
+      }
+
+      expect(sessionLogIndexer.addRequestId).toHaveBeenCalledWith("gen-test")
+      expect(sessionLogIndexer.index).toHaveBeenCalledTimes(1)
     })
   })
 })
