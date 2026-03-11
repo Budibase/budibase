@@ -1,27 +1,27 @@
 import {
-  AgentFileUploadResponse,
-  FetchAgentFilesResponse,
+  FetchKnowledgeBaseFilesResponse,
+  KnowledgeBaseFileUploadResponse,
 } from "@budibase/types"
 import { AttachedFile, Expectations, TestAPI } from "../base"
 
-export class AgentFilesAPI extends TestAPI {
+export class KnowledgeBaseFilesAPI extends TestAPI {
   fetch = async (
-    agentId: string,
+    knowledgeBaseId: string,
     expectations?: Expectations
-  ): Promise<FetchAgentFilesResponse> => {
-    return await this._get<FetchAgentFilesResponse>(
-      `/api/agent/${agentId}/files`,
+  ): Promise<FetchKnowledgeBaseFilesResponse> => {
+    return await this._get<FetchKnowledgeBaseFilesResponse>(
+      `/api/knowledge-base/${knowledgeBaseId}/files`,
       { expectations }
     )
   }
 
   upload = async (
-    agentId: string,
+    knowledgeBaseId: string,
     file: AttachedFile,
     expectations?: Expectations
-  ): Promise<AgentFileUploadResponse> => {
-    return await this._post<AgentFileUploadResponse>(
-      `/api/agent/${agentId}/files`,
+  ): Promise<KnowledgeBaseFileUploadResponse> => {
+    return await this._post<KnowledgeBaseFileUploadResponse>(
+      `/api/knowledge-base/${knowledgeBaseId}/files`,
       {
         files: { file },
         expectations: {
@@ -33,12 +33,12 @@ export class AgentFilesAPI extends TestAPI {
   }
 
   remove = async (
-    agentId: string,
+    knowledgeBaseId: string,
     fileId: string,
     expectations?: Expectations
   ): Promise<{ deleted: true }> => {
     return await this._delete<{ deleted: true }>(
-      `/api/agent/${agentId}/files/${fileId}`,
+      `/api/knowledge-base/${knowledgeBaseId}/files/${fileId}`,
       { expectations }
     )
   }

@@ -180,6 +180,27 @@ describe("knowledge base configs", () => {
         )
       })
     })
+
+    it("rejects duplicate knowledge base names", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId, vectorDb } = await buildDependencies()
+
+        await config.api.knowledgeBase.create({
+          name: "Support Docs",
+          embeddingModel: embeddingModelId,
+          vectorDb: vectorDb._id!,
+        })
+
+        await config.api.knowledgeBase.create(
+          {
+            name: " support docs ",
+            embeddingModel: embeddingModelId,
+            vectorDb: vectorDb._id!,
+          },
+          { status: 400 }
+        )
+      })
+    })
   })
 
   describe("fetch", () => {
@@ -215,6 +236,30 @@ describe("knowledge base configs", () => {
           name: "Updated Knowledge Base",
         })
         expect(updated.name).toBe("Updated Knowledge Base")
+      })
+    })
+
+    it("rejects duplicate names when updating", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId, vectorDb } = await buildDependencies()
+        await config.api.knowledgeBase.create({
+          name: "Support Docs",
+          embeddingModel: embeddingModelId,
+          vectorDb: vectorDb._id!,
+        })
+        const created = await config.api.knowledgeBase.create({
+          name: "HR Policies",
+          embeddingModel: embeddingModelId,
+          vectorDb: vectorDb._id!,
+        })
+
+        await config.api.knowledgeBase.update(
+          {
+            ...created,
+            name: " support docs ",
+          },
+          { status: 400 }
+        )
       })
     })
 

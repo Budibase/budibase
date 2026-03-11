@@ -371,8 +371,8 @@ export const workspaceRoutes = (
                   return "New"
                 }
                 return (
-                  get(knowledgeBaseStore).configs.find(k => k._id === id)
-                    ?.name ?? "Knowledge base"
+                  get(knowledgeBaseStore).list.find(k => k._id === id)?.name ??
+                  "Knowledge base"
                 )
               },
               routes: [
