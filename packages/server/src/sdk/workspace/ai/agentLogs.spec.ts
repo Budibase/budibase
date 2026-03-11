@@ -283,9 +283,6 @@ describe("agentLogs", () => {
         agentId: "agent-1",
         sessionId: "chatconvo_1",
         requestIds: ["req-1"],
-        operations: {
-          "req-1": 3,
-        },
         firstInput: "Hello",
         startedAt: "2026-03-08T09:00:00.000Z",
         completedAt: "2026-03-08T09:00:10.000Z",
@@ -580,12 +577,25 @@ describe("agentLogs", () => {
   })
 
   it("rejects request detail when the returned user belongs to another agent", async () => {
-    fetchMock.mockResolvedValue(
-      liteLLMPayloadResponse({
-        requestId: "req-1",
-        user: "bb-agent:agent-2",
-      })
-    )
+    fetchMock.mockImplementation(async (url: any) => {
+      const path = String(url)
+      if (path.includes("/spend/logs/ui/")) {
+        return liteLLMPayloadResponse({
+          requestId: "req-1",
+          user: "bb-agent:agent-2",
+        })
+      }
+      if (path.includes("/spend/logs/v2")) {
+        return liteLLMSummaryResponse({
+          requestId: "req-1",
+          user: "bb-agent:agent-2",
+        })
+      }
+      return {
+        ok: true,
+        json: jest.fn().mockResolvedValue([]),
+      } as any
+    })
 
     await expect(
       withWorkspace(async () => {
@@ -597,6 +607,56 @@ describe("agentLogs", () => {
     })
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain(
       "/spend/logs/ui/req-1"
+    )
+  })
+
+  it("accepts request detail when LiteLLM summary ownership matches the agent", async () => {
+    fetchMock.mockImplementation(async (url: any) => {
+      const path = String(url)
+      if (path.includes("/spend/logs/ui/")) {
+        return liteLLMPayloadResponse({
+          requestId: "req-1",
+          user: "default_user_id",
+        })
+      }
+      if (path.includes("/spend/logs/v2")) {
+        return liteLLMSummaryResponse({
+          requestId: "req-1",
+          user: "bb-agent:agent-1",
+        })
+      }
+      return {
+        ok: true,
+        json: jest.fn().mockResolvedValue([]),
+      } as any
+    })
+
+    await expect(
+      withWorkspace(async () => {
+        return await fetchRequestDetail("agent-1", "req-1")
+      })
+    ).resolves.toEqual(
+      expect.objectContaining({
+        requestId: "req-1",
+        response: "ok",
+      })
+    )
+  })
+
+  it("passes the request start time when fetching LiteLLM request payload", async () => {
+    await withWorkspace(async () => {
+      await fetchRequestDetail("agent-1", "req-1", "2026-03-11T15:17:10.123Z")
+    })
+
+    const payloadCall = fetchMock.mock.calls.find(([url]) =>
+      String(url).includes("/spend/logs/ui/req-1")
+    )
+
+    expect(payloadCall).toBeDefined()
+
+    const payloadUrl = new URL(String(payloadCall?.[0]))
+    expect(payloadUrl.searchParams.get("start_date")).toBe(
+      "2026-03-11 15:17:10"
     )
   })
 
