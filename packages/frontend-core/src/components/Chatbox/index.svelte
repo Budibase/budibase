@@ -246,9 +246,6 @@
 
       chat = { ...chat, messages: chatInstance.messages }
       onchatsaved?.({ detail: { chatId: chat._id, chat } })
-
-      await tick()
-      textareaElement?.focus()
     },
     onError: error => {
       resetPendingResponse()
@@ -505,12 +502,17 @@
     if (!mounted) {
       mounted = true
       ensureChatApp()
-      tick().then(() => {
-        if (!readOnly) {
-          textareaElement?.focus()
-        }
-      })
     }
+  })
+
+  $effect(() => {
+    if (readOnly || isRequestPending) {
+      return
+    }
+
+    tick().then(() => {
+      textareaElement?.focus()
+    })
   })
 
   $effect(() => {
