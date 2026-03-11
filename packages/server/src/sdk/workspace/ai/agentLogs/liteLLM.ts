@@ -7,10 +7,7 @@ import type {
   LiteLLMRequestRecord,
 } from "@budibase/types"
 import env from "../../../../environment"
-import {
-  parseDate,
-  validateLiteLLMRequestOwnership,
-} from "./shared"
+import { parseDate, validateLiteLLMRequestOwnership } from "./shared"
 
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`

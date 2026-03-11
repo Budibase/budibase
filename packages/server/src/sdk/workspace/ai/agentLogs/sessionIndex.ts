@@ -145,7 +145,9 @@ export async function listSessionIndexDocs({
   )
 }
 
-export async function getExpiredSessions(): Promise<AgentLogSessionIndexDoc[]> {
+export async function getExpiredSessions(
+  db = context.getWorkspaceDB()
+): Promise<AgentLogSessionIndexDoc[]> {
   const expiredEnd = await oldestLogDate()
   const sessionTable = agentLogSessionTable()
 
@@ -175,16 +177,17 @@ export async function getExpiredSessions(): Promise<AgentLogSessionIndexDoc[]> {
         },
       },
     },
-    sessionTable
+    sessionTable,
+    db
   )
 }
 
-export async function clearOldHistory(): Promise<void> {
-  const db = context.getWorkspaceDB()
-
+export async function clearOldHistory(
+  db = context.getWorkspaceDB()
+): Promise<void> {
   try {
     const expiredEnd = await oldestLogDate()
-    const expiredSessions = await getExpiredSessions()
+    const expiredSessions = await getExpiredSessions(db)
     if (!expiredSessions.length) {
       return
     }
@@ -278,7 +281,9 @@ export async function getSessionSummary(
   db: ReturnType<typeof context.getWorkspaceDB>
 ) {
   await tableSqs.ensureStaticTables(db)
-  return await db.tryGet<AgentLogSessionIndexDoc>(getSessionDocId(agentId, sessionId))
+  return await db.tryGet<AgentLogSessionIndexDoc>(
+    getSessionDocId(agentId, sessionId)
+  )
 }
 
 export { oldestLogDate }

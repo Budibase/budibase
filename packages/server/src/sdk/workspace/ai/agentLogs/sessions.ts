@@ -24,8 +24,13 @@ export async function fetchSessions(
   const mergedLimit = getMergedSessionLimit(page, pageSize)
   const maxStartDate = await oldestLogDate()
   const clampedStartDate = clampStartDate(startDate, maxStartDate)
+  const developmentDb = context.getDevWorkspaceDB()
+  const productionDb = context.getProdWorkspaceDB()
 
-  await clearOldHistory()
+  await Promise.all([
+    clearOldHistory(developmentDb),
+    clearOldHistory(productionDb),
+  ])
 
   const [developmentRows, productionRows] = await Promise.all([
     listSessionIndexDocs({
@@ -35,7 +40,7 @@ export async function fetchSessions(
       limit: mergedLimit,
       statusFilter,
       triggerFilter,
-      db: context.getDevWorkspaceDB(),
+      db: developmentDb,
     }),
     listSessionIndexDocs({
       agentId,
@@ -44,7 +49,7 @@ export async function fetchSessions(
       limit: mergedLimit,
       statusFilter,
       triggerFilter,
-      db: context.getProdWorkspaceDB(),
+      db: productionDb,
     }),
   ])
 

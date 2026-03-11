@@ -240,7 +240,10 @@ export function getDateBoundaryISO(value: string, mode: "start" | "end") {
   )
 }
 
-export function clampStartDate(startDate: string, maxStartDate: string): string {
+export function clampStartDate(
+  startDate: string,
+  maxStartDate: string
+): string {
   const normalizedStartDate = getDateBoundaryISO(startDate, "start")
   if (normalizedStartDate < maxStartDate) {
     return maxStartDate

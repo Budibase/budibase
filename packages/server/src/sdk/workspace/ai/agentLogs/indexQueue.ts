@@ -122,7 +122,9 @@ export async function addSessionLog(
       result
     ): result is {
       requestId: string
-      detail: NonNullable<Awaited<ReturnType<typeof fetchLiteLLMRequestSummaryById>>>
+      detail: NonNullable<
+        Awaited<ReturnType<typeof fetchLiteLLMRequestSummaryById>>
+      >
     } => result != null
   )
 
