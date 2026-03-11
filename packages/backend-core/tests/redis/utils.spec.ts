@@ -91,5 +91,25 @@ describe("redis utils", () => {
         username: "alice",
       })
     })
+
+    it("supports rediss URL with username and password provided separately", async () => {
+      const options = await withEnv(
+        {
+          REDIS_URL: "rediss://master.xxxxx.cache.amazonaws.com",
+          REDIS_USERNAME: "aaa",
+          REDIS_PASSWORD: "bbb",
+        },
+        async () => getRedisOptions()
+      )
+
+      expect(options).toEqual({
+        connectTimeout: 30000,
+        host: "master.xxxxx.cache.amazonaws.com",
+        password: "bbb",
+        port: 6379,
+        tls: {},
+        username: "aaa",
+      })
+    })
   })
 })
