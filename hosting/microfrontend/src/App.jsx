@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-const DEFAULT_APP_URL = "/app/my-workspace#/employees"
+const DEFAULT_APP_URL = "http://localhost:10000/app/my-workspace#/employees"
 
 const getPathname = pathOrUrl => {
   if (!pathOrUrl) {
@@ -29,22 +29,25 @@ const normalizeAppPath = pathOrUrl => {
 
 const resolvePublishedApp = async appUrl => {
   const appPath = normalizeAppPath(appUrl)
-  const response = await fetch("/api/client/applications", {
+  const response = await fetch(appPath, {
     credentials: "same-origin",
   })
 
   if (!response.ok) {
-    throw new Error("Failed to fetch published apps")
+    throw new Error(`Failed to fetch app page for path: ${appPath}`)
   }
 
-  const { apps } = await response.json()
-  const matched = apps.find(app => `/app${app.url}` === appPath)
-  if (!matched?.prodId) {
+  const html = await response.text()
+  const appIdMatch = html.match(
+    /window\["##BUDIBASE_APP_ID##"\]\s*=\s*"([^"]+)"/
+  )
+
+  if (!appIdMatch?.[1]) {
     throw new Error(`Could not resolve Budibase app for path: ${appPath}`)
   }
 
   return {
-    appId: matched.prodId,
+    appId: appIdMatch[1],
     appPath,
   }
 }

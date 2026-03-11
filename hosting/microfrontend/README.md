@@ -20,4 +20,4 @@ The host app resolves the published app, fetches `/api/applications/:appId/appPa
 
 Set a custom published app URL to mount:
 
-`VITE_BUDIBASE_APP_URL=/app/my-workspace#/employees`
+`VITE_BUDIBASE_APP_URL=http://localhost:10000/app/my-workspace#/employees`
