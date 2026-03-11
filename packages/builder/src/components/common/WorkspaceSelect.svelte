@@ -117,7 +117,10 @@
     })
   }
 
-  const openWorkspaceContextMenuFromMouse = (e: MouseEvent, ws: EnrichedApp) => {
+  const openWorkspaceContextMenuFromMouse = (
+    e: MouseEvent,
+    ws: EnrichedApp
+  ) => {
     e.preventDefault()
     e.stopPropagation()
     openWorkspaceContextMenu(ws, {
