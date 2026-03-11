@@ -46,6 +46,7 @@ export enum DocumentType {
   AGENT_FILE = "agentfile",
   AGENT_LOG_SESSION = "agentlogsession",
   AGENT_LOG_REQUEST = "agentlogrequest",
+  KNOWLEDGE_BASE_FILE = "knowledgebasefile",
   AI_CONFIG = "aiconfig",
   LITELLM_KEY = "litellmkey",
   VECTOR_STORE = "vectordb",

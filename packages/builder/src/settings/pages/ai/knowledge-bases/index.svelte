@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { bb } from "@/stores/bb"
   import {
     aiConfigsStore,
@@ -6,13 +7,18 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Body, Button, Layout, notifications, Table } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Layout,
+    notifications,
+    ProgressCircle,
+    Table,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
 
   let knowledgeBases = $derived(
-    [...$knowledgeBaseStore.configs].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    )
+    [...$knowledgeBaseStore.list].sort((a, b) => a.name.localeCompare(b.name))
   )
 
   function createKnowledgeBase() {
@@ -41,47 +47,41 @@
   })
 </script>
 
-<Layout noPadding gap="S">
+<Layout noPadding gap="XS">
   {#if $featureFlags.AI_RAG}
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">Knowledge bases</div>
-        <Button size="S" icon="plus" on:click={() => createKnowledgeBase()}>
-          Knowledge base
-        </Button>
-      </div>
-
-      {#if knowledgeBases.length}
-        <Table
-          compact
-          data={knowledgeBases}
-          schema={{
-            name: {},
-          }}
-          hideHeader
-          rounded
-          allowClickRows={false}
-          allowEditRows
-          editColumnPosition="right"
-          on:editrow={r => editKnowledgeBase(r.detail)}
-        ></Table>
-      {:else}
-        <div class="no-enabled">
-          <Body size="XS">No knowledge bases created yet</Body>
-        </div>
-      {/if}
+    <div class="section-header">
+      <div class="section-title">Knowledge bases</div>
+      <Button size="S" icon="plus" on:click={() => createKnowledgeBase()}>
+        Knowledge base
+      </Button>
     </div>
+
+    {#if $knowledgeBaseStore.loading && !$knowledgeBaseStore.loaded}
+      <div class="loading-state">
+        <ProgressCircle size="S" />
+        <Body size="S">Loading knowledge bases...</Body>
+      </div>
+    {:else if knowledgeBases.length > 0}
+      <Table
+        compact
+        data={knowledgeBases}
+        schema={{
+          name: {},
+        }}
+        hideHeader
+        rounded
+        allowClickRows={false}
+        allowEditRows
+        editColumnPosition="right"
+        on:editrow={r => editKnowledgeBase(r.detail)}
+      ></Table>
+    {:else if $knowledgeBaseStore.loaded}
+      <InfoDisplay body="No knowledge bases created yet"></InfoDisplay>
+    {/if}
   {/if}
 </Layout>
 
 <style>
-  .no-enabled {
-    padding: 16px;
-    background-color: var(--grey-1);
-    border: 1px solid var(--grey-4);
-    border-radius: var(--border-radius-m);
-  }
-
   .section-title {
     font-size: 13px;
     color: var(--grey-7, #a2a2a2);
@@ -94,7 +94,10 @@
     gap: var(--spacing-m);
   }
 
-  .section-header .section-title {
-    margin-bottom: 0;
+  .loading-state {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: 24px 0;
   }
 </style>

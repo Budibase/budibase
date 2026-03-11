@@ -157,12 +157,26 @@ function mockLiteLLMSessionRows(
 describe("agentLogs", () => {
   const config = new TestConfiguration()
 
-  const withWorkspace = async <T>(task: () => Promise<T>): Promise<T> => {
-    return await config.doInContext(config.getProdWorkspaceId(), task)
+  const withEnvironment = async <T>(
+    environment: "development" | "production",
+    task: () => Promise<T>
+  ): Promise<T> => {
+    const workspaceId =
+      environment === "development"
+        ? config.getDevWorkspaceId()
+        : config.getProdWorkspaceId()
+    return await config.doInContext(workspaceId, task)
   }
 
-  const saveSessionDoc = async (doc: AgentLogSessionIndexDoc) => {
-    return await withWorkspace(async () => {
+  const withWorkspace = async <T>(task: () => Promise<T>): Promise<T> => {
+    return await withEnvironment("production", task)
+  }
+
+  const saveSessionDoc = async (
+    doc: AgentLogSessionIndexDoc,
+    environment: "development" | "production" = "production"
+  ) => {
+    return await withEnvironment(environment, async () => {
       const response = await context.getWorkspaceDB().put(doc)
       return {
         ...doc,
@@ -192,8 +206,12 @@ describe("agentLogs", () => {
     })
   }
 
-  const getSessionDoc = async (agentId: string, sessionId: string) => {
-    return await withWorkspace(async () => {
+  const getSessionDoc = async (
+    agentId: string,
+    sessionId: string,
+    environment: "development" | "production" = "production"
+  ) => {
+    return await withEnvironment(environment, async () => {
       return await context
         .getWorkspaceDB()
         .tryGet<AgentLogSessionIndexDoc>(getSessionDocId(agentId, sessionId))
@@ -350,10 +368,7 @@ describe("agentLogs", () => {
   it("treats a missing retention quota as unlimited", async () => {
     const license = cloneDeep(await licensing.cache.getCachedLicense())
     if (license.quotas?.constant) {
-      Reflect.deleteProperty(
-        license.quotas.constant,
-        "agentLogRetentionDays"
-      )
+      Reflect.deleteProperty(license.quotas.constant, "agentLogRetentionDays")
     }
     mocks.licenses.useLicense(license)
 
@@ -494,6 +509,48 @@ describe("agentLogs", () => {
     ])
     await expect(
       getSessionDoc("agent-1", "session-old")
+    ).resolves.toBeUndefined()
+  })
+
+  it("cleans expired sessions in both environments before merging results", async () => {
+    mocks.licenses.setAgentLogsQuota(7)
+
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-dev-expired",
+        firstInput: "Expired development question",
+        startTime: "2026-03-02T12:00:00.000Z",
+        lastActivityAt: "2026-03-02T12:00:00.000Z",
+      }),
+      "development"
+    )
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-prod-new",
+        firstInput: "Fresh production question",
+        startTime: "2026-03-08T08:00:00.000Z",
+        lastActivityAt: "2026-03-08T08:00:00.000Z",
+      })
+    )
+
+    const response = await withWorkspace(async () => {
+      return await fetchSessions(
+        "agent-1",
+        "2026-02-20T00:00:00.000Z",
+        "2026-03-09T23:59:59.000Z"
+      )
+    })
+
+    expect(response.sessions).toEqual([
+      expect.objectContaining({
+        sessionId: "session-prod-new",
+        environment: "production",
+      }),
+    ])
+    await expect(
+      getSessionDoc("agent-1", "session-dev-expired", "development")
     ).resolves.toBeUndefined()
   })
 

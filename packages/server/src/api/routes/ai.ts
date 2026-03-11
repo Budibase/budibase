@@ -83,33 +83,27 @@ const aiRagBuilderAdminRoutes = endpointGroupList
   .group(auth.builderOrAdmin)
   .addGroupMiddleware(aiRagEnabled)
 aiRagBuilderAdminRoutes
-  .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
-  .post("/api/agent/:agentId/files", ai.uploadAgentFile)
-  .delete("/api/agent/:agentId/files/:fileId", aiRagEnabled, ai.deleteAgentFile)
-  .get("/api/vectordb", ai.fetchVectorDbConfigs)
+  .get("/api/knowledge-base/:knowledgeBaseId/files", ai.fetchKnowledgeBaseFiles)
   .post(
-    "/api/vectordb",
-    aiRagEnabled,
-    createVectorDbValidator(),
-    ai.createVectorDbConfig
+    "/api/knowledge-base/:knowledgeBaseId/files",
+    ai.uploadKnowledgeBaseFile
   )
-  .put(
-    "/api/vectordb",
-    aiRagEnabled,
-    updateVectorDbValidator(),
-    ai.updateVectorDbConfig
+  .delete(
+    "/api/knowledge-base/:knowledgeBaseId/files/:fileId",
+    ai.deleteKnowledgeBaseFile
   )
+  .get("/api/vectordb", ai.fetchVectorDbConfigs)
+  .post("/api/vectordb", createVectorDbValidator(), ai.createVectorDbConfig)
+  .put("/api/vectordb", updateVectorDbValidator(), ai.updateVectorDbConfig)
   .delete("/api/vectordb/:id", ai.deleteVectorDbConfig)
   .get("/api/knowledge-base", ai.fetchKnowledgeBases)
   .post(
     "/api/knowledge-base",
-    aiRagEnabled,
     createKnowledgeBaseValidator(),
     ai.createKnowledgeBase
   )
   .put(
     "/api/knowledge-base",
-    aiRagEnabled,
     updateKnowledgeBaseValidator(),
     ai.updateKnowledgeBase
   )
