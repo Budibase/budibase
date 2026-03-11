@@ -237,7 +237,7 @@
   </div>
   <div class="row-action">
     {#if enabled && chatUrl}
-      <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
+      <a class="chat-link" href={chatUrl} target="_blank" rel="noopener">
         Open chat
       </a>
     {/if}

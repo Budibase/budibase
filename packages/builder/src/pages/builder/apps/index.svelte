@@ -213,7 +213,7 @@
                       <a
                         class="app"
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener"
                         href={appChatUrl(chatApp.url)}
                       >
                         <div
