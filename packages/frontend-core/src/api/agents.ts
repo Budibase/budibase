@@ -1,9 +1,7 @@
 import {
-  AgentFileUploadResponse,
   CreateAgentRequest,
   CreateAgentResponse,
   DuplicateAgentResponse,
-  FetchAgentFilesResponse,
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -27,15 +25,6 @@ export interface AgentEndpoints {
   updateAgent: (agent: UpdateAgentRequest) => Promise<UpdateAgentResponse>
   duplicateAgent: (agentId: string) => Promise<DuplicateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
-  fetchAgentFiles: (agentId: string) => Promise<FetchAgentFilesResponse>
-  uploadAgentFile: (
-    agentId: string,
-    file: File
-  ) => Promise<AgentFileUploadResponse>
-  deleteAgentFile: (
-    agentId: string,
-    fileId: string
-  ) => Promise<{ deleted: true }>
   syncAgentDiscordCommands: (
     agentId: string,
     body?: SyncAgentDiscordCommandsRequest
@@ -100,28 +89,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   deleteAgent: async (agentId: string) => {
     return await API.delete({
       url: `/api/agent/${agentId}`,
-    })
-  },
-
-  fetchAgentFiles: async (agentId: string) => {
-    return await API.get({
-      url: `/api/agent/${agentId}/files`,
-    })
-  },
-
-  uploadAgentFile: async (agentId: string, file: File) => {
-    const formData = new FormData()
-    formData.append("file", file)
-    return await API.post<FormData, AgentFileUploadResponse>({
-      url: `/api/agent/${agentId}/files`,
-      body: formData,
-      json: false,
-    })
-  },
-
-  deleteAgentFile: async (agentId: string, fileId: string) => {
-    return await API.delete({
-      url: `/api/agent/${agentId}/files/${fileId}`,
     })
   },
 
