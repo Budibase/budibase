@@ -35,7 +35,6 @@ Update your local `.env`:
 REDIS_URL=rediss://localhost:6381
 REDIS_USERNAME=aaa
 REDIS_PASSWORD=bbb
-NODE_EXTRA_CA_CERTS=/Users/adribb/code/budibase/hosting/redis-tls/certs/ca.crt
 ```
 
 ## 4. Smoke test
@@ -43,7 +42,7 @@ NODE_EXTRA_CA_CERTS=/Users/adribb/code/budibase/hosting/redis-tls/certs/ca.crt
 Use the real Redis CLI inside the container:
 
 ```bash
-docker exec -it budi-redis-tls-dev redis-cli --tls --cacert /certs/ca.crt -h localhost -p 6379 --user aaa -a bbb ping
+docker exec -it budi-redis-tls-dev redis-cli --tls --insecure -h localhost -p 6379 --user aaa -a bbb ping
 ```
 
 Expected result:

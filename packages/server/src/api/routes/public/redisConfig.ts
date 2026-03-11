@@ -7,6 +7,7 @@ interface KoaRateLimitOptions {
   database?: number
   socket?: {
     tls: boolean
+    ca?: string
   }
 }
 
