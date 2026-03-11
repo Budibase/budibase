@@ -102,12 +102,8 @@ describe("triggers", () => {
         type: QuotaUsageType.MONTHLY,
       })
       let usage = await db.quotas.getQuotaUsage()
-      expect(usage.monthly[currentMonthString].triggers.actions![80]).toBe(
-        now
-      ) // 80 is also recorded
-      expect(usage.monthly[currentMonthString].triggers.actions![90]).toBe(
-        now
-      )
+      expect(usage.monthly[currentMonthString].triggers.actions![80]).toBe(now) // 80 is also recorded
+      expect(usage.monthly[currentMonthString].triggers.actions![90]).toBe(now)
       expect(usage.monthly[currentMonthString].triggers.actions![100]).toBe(
         undefined
       )
@@ -127,15 +123,9 @@ describe("triggers", () => {
         type: QuotaUsageType.MONTHLY,
       })
       usage = await db.quotas.getQuotaUsage()
-      expect(usage.monthly[currentMonthString].triggers.actions![80]).toBe(
-        now
-      )
-      expect(usage.monthly[currentMonthString].triggers.actions![90]).toBe(
-        now
-      )
-      expect(usage.monthly[currentMonthString].triggers.actions![100]).toBe(
-        now
-      )
+      expect(usage.monthly[currentMonthString].triggers.actions![80]).toBe(now)
+      expect(usage.monthly[currentMonthString].triggers.actions![90]).toBe(now)
+      expect(usage.monthly[currentMonthString].triggers.actions![100]).toBe(now)
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
       expect(mockTriggerQuota).toHaveBeenCalledWith({
         name: "Actions",
@@ -160,15 +150,9 @@ describe("triggers", () => {
         type: QuotaUsageType.MONTHLY,
       })
       const usage = await db.quotas.getQuotaUsage()
-      expect(usage.monthly[currentMonthString].triggers.actions![80]).toBe(
-        now
-      )
-      expect(usage.monthly[currentMonthString].triggers.actions![90]).toBe(
-        now
-      )
-      expect(usage.monthly[currentMonthString].triggers.actions![100]).toBe(
-        now
-      )
+      expect(usage.monthly[currentMonthString].triggers.actions![80]).toBe(now)
+      expect(usage.monthly[currentMonthString].triggers.actions![90]).toBe(now)
+      expect(usage.monthly[currentMonthString].triggers.actions![100]).toBe(now)
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
       expect(mockTriggerQuota).toHaveBeenCalledWith({
         name: "Actions",
