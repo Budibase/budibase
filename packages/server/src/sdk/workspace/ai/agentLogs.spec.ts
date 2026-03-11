@@ -623,6 +623,7 @@ describe("agentLogs", () => {
 
   it("accepts request detail when LiteLLM summary ownership matches the agent", async () => {
     jest.useRealTimers()
+    await saveAgent("agent-1")
     const summaryScope = mockLiteLLMSummary([
       buildLiteLLMSummaryRow({
         requestId: "req-1",
