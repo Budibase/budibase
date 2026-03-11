@@ -197,7 +197,6 @@
     }
     inputValue = starterPrompt
     await sendMessage()
-    tick().then(() => textareaElement?.focus())
   }
 
   $effect(() => {
