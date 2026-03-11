@@ -621,6 +621,37 @@ describe("agentLogs", () => {
     expect(payloadScope.isDone()).toBe(true)
   })
 
+  it("accepts request detail when LiteLLM summary ownership matches the agent", async () => {
+    jest.useRealTimers()
+    await saveAgent("agent-1")
+    const summaryScope = mockLiteLLMSummary([
+      buildLiteLLMSummaryRow({
+        requestId: "req-1",
+        user: "bb-agent:agent-1",
+      }),
+    ])
+    const payloadScope = mockLiteLLMPayload(
+      "req-1",
+      buildLiteLLMPayload({
+        requestId: "req-1",
+        user: "",
+      })
+    )
+
+    await expect(
+      withWorkspace(async () => {
+        return await fetchRequestDetail("agent-1", "req-1")
+      })
+    ).resolves.toEqual(
+      expect.objectContaining({
+        requestId: "req-1",
+        response: "ok",
+      })
+    )
+    expect(summaryScope.isDone()).toBe(true)
+    expect(payloadScope.isDone()).toBe(true)
+  })
+
   it("returns not found when LiteLLM does not return request detail", async () => {
     jest.useRealTimers()
     const summaryScope = mockLiteLLMSummary([])

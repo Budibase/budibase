@@ -667,11 +667,6 @@
                     <span class="tool-name-primary"
                       >{displayToolName.primary}</span
                     >
-                    {#if displayToolName.secondary}
-                      <span class="tool-name-secondary">
-                        {displayToolName.secondary}
-                      </span>
-                    {/if}
                   </div>
                   {#if isRunning || isError || isSuccess}
                     <span class="tool-status">
@@ -1106,9 +1101,7 @@
 
   .tool-name-wrapper {
     display: flex;
-    flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
     padding: 6px 8px;
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: 6px;
@@ -1118,12 +1111,6 @@
     font-size: 13px;
     color: var(--spectrum-global-color-gray-800);
     font-weight: 600;
-    line-height: 1.2;
-  }
-
-  .tool-name-secondary {
-    font-size: 11px;
-    color: var(--spectrum-global-color-gray-600);
     line-height: 1.2;
   }
 
