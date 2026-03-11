@@ -22,9 +22,10 @@
 
   export interface Props {
     knowledgeBaseId?: string
+    hasLocalChanges?: boolean
   }
 
-  let { knowledgeBaseId }: Props = $props()
+  let { knowledgeBaseId, hasLocalChanges = false }: Props = $props()
 
   const FILE_STATUS_POLL_MS = 1000
 
@@ -126,7 +127,7 @@
   })
 
   async function handleFileUpload(event: Event) {
-    if (!knowledgeBaseId) {
+    if (!knowledgeBaseId || hasLocalChanges) {
       return
     }
     const target = event.currentTarget as HTMLInputElement
@@ -153,6 +154,12 @@
   }
 
   function handleUploadClick() {
+    if (hasLocalChanges) {
+      notifications.info(
+        "Save your knowledge base changes before uploading files"
+      )
+      return
+    }
     if (!hasEmbeddingConfig) {
       notifications.info("Add an embeddings configuration to enable uploads")
       return
@@ -199,7 +206,7 @@
       <Button
         secondary
         icon="upload"
-        disabled={!knowledgeBaseId || uploadingFile}
+        disabled={!knowledgeBaseId || uploadingFile || hasLocalChanges}
         on:click={handleUploadClick}
         >{uploadingFile ? "Uploading..." : "Upload file"}</Button
       >
@@ -221,6 +228,8 @@
     <Label size="L" muted>
       Save the knowledge base before uploading files.
     </Label>
+  {:else if hasLocalChanges}
+    <Label size="L" muted>Save your changes before uploading files.</Label>
   {:else if currentFiles.length === 0}
     <Label size="L" muted>
       No files have been uploaded for this knowledge base yet.

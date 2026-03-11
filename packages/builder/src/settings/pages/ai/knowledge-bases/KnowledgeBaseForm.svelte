@@ -257,7 +257,10 @@
     />
   </div>
 
-  <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} />
+  <KnowledgeBaseFilesPanel
+    knowledgeBaseId={draft._id}
+    hasLocalChanges={isModified}
+  />
 </div>
 
 <style>
