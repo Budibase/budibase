@@ -50,6 +50,11 @@
   let isModified = $derived(
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
   )
+  let hasReferenceChanges = $derived.by(
+    () =>
+      savedSnapshot?.embeddingModel !== draft.embeddingModel ||
+      savedSnapshot?.vectorDb !== draft.vectorDb
+  )
 
   let embeddingModelOptions = $derived(
     [...$aiConfigsStore.customConfigsPerType.embeddings].sort((a, b) =>
@@ -259,7 +264,7 @@
 
   <KnowledgeBaseFilesPanel
     knowledgeBaseId={draft._id}
-    hasLocalChanges={isModified}
+    hasReferenceChanges={hasReferenceChanges}
   />
 </div>
 
