@@ -204,17 +204,19 @@ describe("backups", () => {
     })
   })
 
-  it("should trigger a restore", async () => {
+  it("should call importAppFn with dev workspace id, not temp app id", async () => {
     await config.doInTenant(async () => {
       const restore = await createRestore()
       const processedRestore = await backups.getAppBackup(restore._id)
       const [importWorkspaceId, importDb] = importAppFn.mock.calls[0]
       const devWorkspaceId = db.getDevWorkspaceID(config.workspaceId)
+      const tempAppId = importDb.name
 
       expect(processedRestore._id).toBeDefined()
       expect(exportAppFn).toHaveBeenCalledTimes(2)
       expect(importAppFn).toHaveBeenCalledTimes(1)
       expect(importWorkspaceId).toEqual(devWorkspaceId)
+      expect(importWorkspaceId).not.toEqual(tempAppId)
       expect(importDb.name).toMatch(new RegExp(`^${devWorkspaceId}_temp_`))
     })
   })
