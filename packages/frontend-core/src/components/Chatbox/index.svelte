@@ -30,7 +30,6 @@
   } from "ai"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
-
   interface Props {
     workspaceId: string
     chat: ChatConversationLike
@@ -79,6 +78,33 @@
   let selectedFiles = $state<FileList | undefined>()
   let lastInitialPrompt = $state("")
   let reasoningTimers = $state<Record<string, number>>({})
+  let isPreparingResponse = $state(false)
+  let isHoldingFirstResponse = $state(false)
+  let firstResponseHoldTimer: ReturnType<typeof setTimeout> | undefined
+
+  const MIN_FIRST_RESPONSE_LOADING_MS = 1000
+
+  const clearFirstResponseHold = () => {
+    if (firstResponseHoldTimer) {
+      clearTimeout(firstResponseHoldTimer)
+      firstResponseHoldTimer = undefined
+    }
+    isHoldingFirstResponse = false
+  }
+
+  const resetPendingResponse = () => {
+    clearFirstResponseHold()
+    isPreparingResponse = false
+  }
+
+  const holdFirstResponse = () => {
+    clearFirstResponseHold()
+    isHoldingFirstResponse = true
+    firstResponseHoldTimer = setTimeout(() => {
+      isHoldingFirstResponse = false
+      firstResponseHoldTimer = undefined
+    }, MIN_FIRST_RESPONSE_LOADING_MS)
+  }
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? [])
@@ -98,6 +124,24 @@
 
   const getMessageError = (message: UIMessage<AgentMessageMetadata>) =>
     message.metadata?.error
+
+  const getToolDisplayName = (
+    message: UIMessage<AgentMessageMetadata>,
+    rawToolName: string
+  ) => {
+    const { metadata } = message
+    if (!metadata) {
+      return undefined
+    }
+
+    const toolDisplayNames = Reflect.get(metadata, "toolDisplayNames")
+    const displayName =
+      toolDisplayNames !== undefined
+        ? Reflect.get(toolDisplayNames, rawToolName)
+        : undefined
+
+    return displayName
+  }
 
   $effect(() => {
     const interval = setInterval(() => {
@@ -158,7 +202,6 @@
     }
     inputValue = starterPrompt
     await sendMessage()
-    tick().then(() => textareaElement?.focus())
   }
 
   $effect(() => {
@@ -198,6 +241,8 @@
     }),
     messages: chat?.messages || [],
     onFinish: async () => {
+      isPreparingResponse = false
+
       if (persistConversation && !chat._id && chat.chatAppId) {
         try {
           const history = await API.fetchChatHistory(
@@ -222,11 +267,10 @@
 
       chat = { ...chat, messages: chatInstance.messages }
       onchatsaved?.({ detail: { chatId: chat._id, chat } })
-
-      await tick()
-      textareaElement?.focus()
     },
     onError: error => {
+      resetPendingResponse()
+
       console.error(error)
       let message = error.message || "Failed to send message"
       try {
@@ -242,16 +286,33 @@
   })
 
   let messages = $derived(chatInstance.messages)
+  let lastVisibleMessage = $derived(
+    isHoldingFirstResponse
+      ? messages.findLast(message => message.role !== "assistant")
+      : messages[messages.length - 1]
+  )
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
   let pendingFiles = $derived(selectedFiles ? Array.from(selectedFiles) : [])
+  let isRequestPending = $derived(
+    isPreparingResponse || isHoldingFirstResponse || isBusy
+  )
+  let showPendingAssistantState = $derived(
+    isPreparingResponse ||
+      ((isBusy || isHoldingFirstResponse) &&
+        lastVisibleMessage?.role === "user")
+  )
   let canStart = $derived(
     inputValue.trim().length > 0 || pendingFiles.length > 0
   )
-  let hasMessages = $derived(Boolean(messages?.length))
+  let hasMessages = $derived(
+    messages.some(
+      message => !isHoldingFirstResponse || message.role !== "assistant"
+    )
+  )
   let showConversationStarters = $derived(
-    !isBusy &&
+    !isRequestPending &&
       !hasMessages &&
       conversationStarters.length > 0 &&
       !isAgentPreviewChat &&
@@ -270,6 +331,9 @@
     if (chat?._id !== lastChatId) {
       lastChatId = chat?._id
       stableSessionId = createStableSessionId()
+      if (!isPreparingResponse) {
+        resetPendingResponse()
+      }
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
     }
@@ -365,6 +429,25 @@
       return
     }
 
+    const text = inputValue.trim()
+    if (!text && pendingFiles.length === 0) {
+      return
+    }
+
+    const failToStartResponse = (message: string, error?: unknown) => {
+      resetPendingResponse()
+      if (error) {
+        console.error(error)
+      }
+      notifications.error(message)
+    }
+
+    const isFirstMessage = !messages.length
+    isPreparingResponse = true
+    if (isFirstMessage) {
+      holdFirstResponse()
+    }
+
     const chatAppIdFromEnsure = await ensureChatApp()
 
     if (!chat) {
@@ -375,12 +458,12 @@
     const agentId = chat.agentId
 
     if (!chatAppId) {
-      notifications.error("Chat app could not be created")
+      failToStartResponse("Chat app could not be created")
       return
     }
 
     if (!agentId) {
-      notifications.error("Agent is required to start a chat")
+      failToStartResponse("Agent is required to start a chat")
       return
     }
 
@@ -405,16 +488,12 @@
           err instanceof Error
             ? err.message
             : "Could not start a new chat conversation"
-        console.error(err)
-        notifications.error(errorMessage)
+        failToStartResponse(errorMessage, err)
         return
       }
     } else if (chat._id) {
       resolvedConversationId = chat._id
     }
-
-    const text = inputValue.trim()
-    if (!text && pendingFiles.length === 0) return
 
     let fileParts: FileUIPart[] | undefined
     if (selectedFiles?.length) {
@@ -423,9 +502,14 @@
 
     inputValue = ""
     clearSelectedFiles()
-    await chatInstance.sendMessage(
-      text ? { text, files: fileParts } : { files: fileParts || [] }
-    )
+    try {
+      await chatInstance.sendMessage(
+        text ? { text, files: fileParts } : { files: fileParts || [] }
+      )
+      isPreparingResponse = false
+    } catch (err) {
+      failToStartResponse("Failed to send message", err)
+    }
   }
 
   const handlePromptAction = async () => {
@@ -477,12 +561,17 @@
     if (!mounted) {
       mounted = true
       ensureChatApp()
-      tick().then(() => {
-        if (!readOnly) {
-          textareaElement?.focus()
-        }
-      })
     }
+  })
+
+  $effect(() => {
+    if (readOnly || isRequestPending) {
+      return
+    }
+
+    tick().then(() => {
+      textareaElement?.focus()
+    })
   })
 
   $effect(() => {
@@ -518,7 +607,7 @@
           {/each}
         </div>
       </div>
-    {:else if !hasMessages}
+    {:else if !hasMessages && !isRequestPending}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -577,7 +666,7 @@
             <MarkdownViewer value={getUserMessageText(message)} />
           {/if}
         </div>
-      {:else if message.role === "assistant"}
+      {:else if message.role === "assistant" && !isHoldingFirstResponse}
         {@const reasoningText = getReasoningText(message)}
         {@const reasoningId = `${message.id}-reasoning`}
         {@const toolError = hasToolError(message)}
@@ -628,7 +717,7 @@
               {@const rawToolName = getToolName(part)}
               {@const displayToolName = formatToolName(
                 rawToolName,
-                message.metadata?.toolDisplayNames?.[rawToolName]
+                getToolDisplayName(message, rawToolName)
               )}
               {@const toolId = `${message.id}-${rawToolName}-${partIndex}`}
               {@const isRunning =
@@ -748,6 +837,22 @@
         </div>
       {/if}
     {/each}
+    {#if showPendingAssistantState}
+      <div class="message assistant assistant-loading" aria-live="polite">
+        <div class="reasoning-part">
+          <button class="reasoning-toggle" type="button" disabled>
+            <span class="reasoning-icon shimmer">
+              <Icon
+                name="brain"
+                size="M"
+                color="var(--spectrum-global-color-gray-600)"
+              />
+            </span>
+            <span class="reasoning-label shimmer">Thinking</span>
+          </button>
+        </div>
+      </div>
+    {/if}
   </div>
 
   {#if readOnly}
@@ -799,7 +904,7 @@
           class="input spectrum-Textfield-input"
           onkeydown={handleKeyDown}
           placeholder="Ask..."
-          disabled={isBusy}
+          disabled={isRequestPending}
         ></textarea>
         <button
           type="button"
@@ -813,13 +918,15 @@
         <button
           type="button"
           class="prompt-action"
-          class:running={isBusy}
+          class:running={isRequestPending}
           onclick={handlePromptAction}
           aria-label={isBusy ? "Pause response" : "Start response"}
-          disabled={!isBusy && !canStart}
+          disabled={isPreparingResponse || (!isBusy && !canStart)}
         >
           {#if isBusy}
             <Icon name="stop" size="M" weight="fill" color="#ffffff" />
+          {:else if isPreparingResponse}
+            <ProgressCircle size="S" />
           {:else}
             <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
           {/if}
@@ -932,6 +1039,14 @@
     color: var(--spectrum-global-color-gray-800);
     line-height: 1.4;
     max-width: 100%;
+  }
+
+  .assistant-loading {
+    min-height: 24px;
+  }
+
+  .assistant-loading .reasoning-toggle {
+    cursor: default;
   }
 
   .input-wrapper {
