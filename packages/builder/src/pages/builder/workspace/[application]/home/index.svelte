@@ -626,8 +626,7 @@
 
   $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
 
-  $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_AGENTS
-  $: showHeaderActions = $licensing.showTrialBanner || showAgentChat
+  $: showHeaderActions = $licensing.showTrialBanner
   $: budibaseAICreditLimit =
     $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
   $: showBudibaseAIMetric =
@@ -686,27 +685,6 @@
       {#if showHeaderActions}
         <div class="header-actions">
           <EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
-
-          {#if showAgentChat}
-            <a
-              href={url("../chat")}
-              class="header-link header-link--with-icons"
-            >
-              <Icon
-                name="chat-circle"
-                size="XS"
-                color="#8CA171"
-                weight="fill"
-              />
-              <Body size="S">Agent chat</Body>
-              <Icon
-                name="arrow-up-right"
-                size="XS"
-                color="var(--spectrum-global-color-gray-600)"
-                weight="regular"
-              />
-            </a>
-          {/if}
         </div>
       {/if}
     </div>
