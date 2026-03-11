@@ -185,7 +185,10 @@ describe("backups", () => {
     mockedObjectStore.getReadStream.mockReset().mockResolvedValue({
       stream: Readable.from(""),
     })
-    mockedObjectStore.streamUpload.mockReset().mockImplementation(async () => {})
+    mockedObjectStore.streamUpload.mockReset().mockResolvedValue({
+      $metadata: {},
+      ContentLength: 0,
+    })
     mockedObjectStore.deleteFiles.mockReset().mockImplementation(async () => {})
 
     mocks.licenses.useBackups()
