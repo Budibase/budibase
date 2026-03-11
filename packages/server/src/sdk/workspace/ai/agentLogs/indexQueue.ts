@@ -5,7 +5,7 @@ import type {
   SessionLogIndexer,
 } from "@budibase/types"
 import { fetchLiteLLMRequestSummaryById } from "./liteLLM"
-import { clearOldHistory, upsertSessionIndexDoc } from "./sessionIndex"
+import { upsertSessionIndexDoc } from "./sessionIndex"
 import {
   determineTrigger,
   isPreviewSession,
@@ -164,7 +164,6 @@ export async function addSessionLog(
     error.missingRequestIds = missingRequestIds
     throw error
   }
-  await clearOldHistory()
 }
 
 export function createSessionLogIndexer({
