@@ -43,9 +43,6 @@
         knowledgeBase => knowledgeBase.vectorDb === draft._id
       ).length
   )
-  let canDelete = $derived(
-    !!draft._id && referencingKnowledgeBaseCount === 0 && !isSaving
-  )
 
   let isModified = $derived(
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
@@ -144,6 +141,13 @@
       return
     }
 
+    if (referencingKnowledgeBaseCount > 0) {
+      notifications.error(
+        `This vector database can't be deleted because it's used by ${referencingKnowledgeBaseCount} knowledge base${referencingKnowledgeBaseCount === 1 ? "" : "s"}.`
+      )
+      return
+    }
+
     const vectorDbId = draft._id
 
     await confirm({
@@ -165,12 +169,7 @@
 <div use:routeActions>
   <div class="actions">
     {#if isEdit}
-      <Button
-        on:click={deleteVectorDb}
-        quiet
-        overBackground
-        disabled={!canDelete}>Delete</Button
-      >
+      <Button on:click={deleteVectorDb} quiet overBackground>Delete</Button>
     {/if}
     <Button on:click={saveVectorDb} cta disabled={!canSave}>
       {#if !isEdit}
@@ -189,13 +188,6 @@
     required
     bind:value={draft.name}
   />
-  {#if isEdit && !canDelete}
-    <div class="info-note">
-      This vector database is in use by {referencingKnowledgeBaseCount}
-      knowledge base{referencingKnowledgeBaseCount === 1 ? "" : "s"} and cannot be
-      deleted.
-    </div>
-  {/if}
   <Input
     label="Provider"
     description="Vector database provider. Currently PGVector is supported."
@@ -248,11 +240,5 @@
   .actions {
     display: flex;
     gap: var(--spacing-s);
-  }
-
-  .info-note {
-    color: var(--spectrum-global-color-gray-700);
-    font-size: 12px;
-    line-height: 1.4;
   }
 </style>

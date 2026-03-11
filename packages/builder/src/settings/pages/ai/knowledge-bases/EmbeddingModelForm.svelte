@@ -78,9 +78,6 @@
         knowledgeBase => knowledgeBase.embeddingModel === draft._id
       ).length
   )
-  let canDelete = $derived(
-    !!draft._id && referencingKnowledgeBaseCount === 0 && !isSaving
-  )
   let isModified = $derived(
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
   )
@@ -176,6 +173,13 @@
       return
     }
 
+    if (referencingKnowledgeBaseCount > 0) {
+      notifications.error(
+        `This embedding model can't be deleted because it's used by ${referencingKnowledgeBaseCount} knowledge base${referencingKnowledgeBaseCount === 1 ? "" : "s"}.`
+      )
+      return
+    }
+
     const configId = draft._id
 
     await confirm({
@@ -197,9 +201,7 @@
 <div use:routeActions>
   <div class="actions">
     {#if isEdit}
-      <Button on:click={deleteConfig} quiet overBackground disabled={!canDelete}
-        >Delete</Button
-      >
+      <Button on:click={deleteConfig} quiet overBackground>Delete</Button>
     {/if}
     <Button on:click={saveConfig} cta disabled={!canSave}>
       {#if !isEdit}
@@ -229,14 +231,6 @@
     bind:value={draft.name}
     placeholder="Latest ChatGPT"
   />
-
-  {#if isEdit && !canDelete}
-    <div class="info-note">
-      This embedding model is in use by {referencingKnowledgeBaseCount}
-      knowledge base{referencingKnowledgeBaseCount === 1 ? "" : "s"} and cannot be
-      deleted.
-    </div>
-  {/if}
 
   {#each selectedProvider?.credentialFields as field (field.key)}
     {#if field.options?.length || field.field_type === "select"}
@@ -273,11 +267,5 @@
   .actions {
     display: flex;
     gap: var(--spacing-s);
-  }
-
-  .info-note {
-    color: var(--spectrum-global-color-gray-700);
-    font-size: 12px;
-    line-height: 1.4;
   }
 </style>
