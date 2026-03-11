@@ -27,10 +27,6 @@
   } from "ai"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
-  type AgentMessageMetadataWithToolDisplayNames = AgentMessageMetadata & {
-    toolDisplayNames?: Record<string, string>
-  }
-
   interface Props {
     workspaceId: string
     chat: ChatConversationLike
@@ -124,20 +120,23 @@
   const getMessageError = (message: UIMessage<AgentMessageMetadata>) =>
     message.metadata?.error
 
-  const hasToolDisplayNames = (
-    metadata: AgentMessageMetadata | undefined
-  ): metadata is AgentMessageMetadataWithToolDisplayNames =>
-    typeof metadata === "object" &&
-    metadata !== null &&
-    "toolDisplayNames" in metadata
-
   const getToolDisplayName = (
     message: UIMessage<AgentMessageMetadata>,
     rawToolName: string
-  ) =>
-    hasToolDisplayNames(message.metadata)
-      ? message.metadata.toolDisplayNames?.[rawToolName]
-      : undefined
+  ) => {
+    const { metadata } = message
+    if (!metadata) {
+      return undefined
+    }
+
+    const toolDisplayNames = Reflect.get(metadata, "toolDisplayNames")
+    const displayName =
+      toolDisplayNames !== undefined
+        ? Reflect.get(toolDisplayNames, rawToolName)
+        : undefined
+
+    return displayName
+  }
 
   $effect(() => {
     const interval = setInterval(() => {
