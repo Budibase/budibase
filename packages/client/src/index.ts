@@ -307,6 +307,9 @@ export const mountBudibaseApp = async ({
     window.location.hash = appHash
   }
 
+  if (app) {
+    throw new Error("Budibase is already mounted. Unmount the existing instance before mounting again.")
+  }
   await loadBudibase({ target })
 
   return () => {
