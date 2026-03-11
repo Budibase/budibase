@@ -16,6 +16,13 @@
     return new Intl.NumberFormat("en").format(value)
   }
 
+  const formatCredits = (value: number) => {
+    return new Intl.NumberFormat("en", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 3,
+    }).format(value)
+  }
+
   const formatStars = (stars: number) => {
     return new Intl.NumberFormat("en", {
       maximumSignificantDigits: 3,
@@ -55,7 +62,7 @@
   {#if showBudibaseAIMetric}
     <div class="metric-card">
       <Body size="XL" weight="600">
-        {metrics ? formatMetric(metrics.budibaseAICreditsThisMonth) : "-"}
+        {metrics ? formatCredits(metrics.budibaseAICreditsThisMonth) : "-"}
       </Body>
       <Body size="S" color="var(--spectrum-global-color-gray-600)">
         Budibase AI credits this month

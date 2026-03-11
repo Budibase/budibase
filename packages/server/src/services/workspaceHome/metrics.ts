@@ -8,6 +8,7 @@ const METRICS_FRESH_TTL_MS = 5 * 60 * 1000
 const METRICS_FAILURE_TTL_MS = 5 * 60 * 1000
 const METRICS_RETENTION_TTL_SECONDS = 24 * 60 * 60
 const METRICS_CACHE_KEY_PREFIX = "workspaceHome:metrics:v3"
+const BUDIBASE_AI_TOKENS_PER_CREDIT = 1000
 
 interface WorkspaceMetricsCacheEnvelope {
   value: GetWorkspaceHomeMetricsResponse
@@ -16,6 +17,10 @@ interface WorkspaceMetricsCacheEnvelope {
 
 const buildWorkspaceMetricsCacheKey = (tenantId: string) =>
   `${METRICS_CACHE_KEY_PREFIX}:${tenantId}`
+
+const convertBudibaseAIUsageToCredits = (usage = 0) => {
+  return usage / BUDIBASE_AI_TOKENS_PER_CREDIT
+}
 
 const getDefaultMetrics = (): GetWorkspaceHomeMetricsResponse => {
   const { periodStart, periodEnd } = getQuotaMonthWindow()
@@ -52,8 +57,9 @@ const computeWorkspaceHomeMetrics =
     const quotaUsagePromise = quotas.getQuotaUsage().then(usage => {
       return {
         operationsThisMonth: usage.monthly?.current?.actions ?? 0,
-        budibaseAICreditsThisMonth:
-          usage.monthly?.current?.budibaseAICredits ?? 0,
+        budibaseAICreditsThisMonth: convertBudibaseAIUsageToCredits(
+          usage.monthly?.current?.budibaseAICredits
+        ),
       }
     })
 

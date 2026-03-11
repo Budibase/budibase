@@ -20,7 +20,7 @@ describe("workspace home metrics caching", () => {
       monthly: {
         current: {
           actions: 2,
-          budibaseAICredits: 4,
+          budibaseAICredits: 4000,
         },
       },
     }))
@@ -60,12 +60,14 @@ describe("workspace home metrics caching", () => {
   it("returns cached metrics inside the freshness window", async () => {
     const first = await getWorkspaceHomeMetrics()
 
+    expect(first.budibaseAICreditsThisMonth).toEqual(4)
+
     getUserCount.mockResolvedValue(2)
     getQuotaUsage.mockResolvedValue({
       monthly: {
         current: {
           actions: 7,
-          budibaseAICredits: 11,
+          budibaseAICredits: 11000,
         },
       },
     })

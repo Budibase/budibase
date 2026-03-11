@@ -71,7 +71,7 @@ describe("/workspace/home/metrics", () => {
           QuotaUsageType.MONTHLY
         )
         await quotas.setUsage(
-          3,
+          3000,
           MonthlyQuotaName.BUDIBASE_AI_CREDITS,
           QuotaUsageType.MONTHLY
         )
