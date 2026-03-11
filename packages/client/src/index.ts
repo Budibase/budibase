@@ -61,6 +61,7 @@ declare global {
     "##BUDIBASE_PREVIEW_DEVICE##"?: PreviewDevice
     "##BUDIBASE_PREVIEW_MODAL_DEVICE##"?: PreviewDevice
     "##BUDIBASE_APP_EMBEDDED##"?: string // This is a bool wrapped in a string
+    "##BUDIBASE_EMBED_LOCATION##"?: string
     "##BUDIBASE_PREVIEW_NAVIGATION##"?: AppNavigation
     "##BUDIBASE_HIDDEN_COMPONENT_IDS##"?: string[]
     "##BUDIBASE_USED_PLUGINS##"?: Plugin[]
@@ -298,6 +299,7 @@ export const mountBudibaseApp = async ({
 
   window["##BUDIBASE_APP_ID##"] = resolvedAppId
   window["##BUDIBASE_APP_EMBEDDED##"] = String(embedded)
+  window["##BUDIBASE_EMBED_LOCATION##"] = appPath
 
   if (appHash && window.location.hash !== appHash) {
     window.location.hash = appHash

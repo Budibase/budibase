@@ -14,13 +14,9 @@
 
 `http://localhost:5173`
 
-The host app imports `/app/mfe/budibase-client.js` through the Vite proxy and mounts a published Budibase app.
+The host app resolves the published app, fetches `/api/applications/:appId/appPackage`, then imports `clientLibPath` from that response before mounting the app.
 
 ## Optional env
-
-Set a custom remote module URL:
-
-`VITE_BUDIBASE_MFE_URL=/app/mfe/budibase-client.js`
 
 Set a custom published app URL to mount:
 

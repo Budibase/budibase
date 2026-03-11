@@ -1,15 +1,77 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-const DEFAULT_MFE_URL = "/app/mfe/budibase-client.js"
 const DEFAULT_APP_URL = "/app/my-workspace#/employees"
+
+const getPathname = pathOrUrl => {
+  if (!pathOrUrl) {
+    return ""
+  }
+  if (pathOrUrl.startsWith("/")) {
+    return pathOrUrl.split("#")[0].split("?")[0]
+  }
+  try {
+    return new URL(pathOrUrl, window.location.origin).pathname
+  } catch (error) {
+    return pathOrUrl
+  }
+}
+
+const normalizeAppPath = pathOrUrl => {
+  const pathname = getPathname(pathOrUrl).replace(/\/$/, "")
+  if (!pathname) {
+    return ""
+  }
+  if (pathname.startsWith("/app/") || pathname.startsWith("/app-chat/")) {
+    return pathname
+  }
+  return pathname.startsWith("/") ? `/app${pathname}` : `/app/${pathname}`
+}
+
+const resolvePublishedApp = async appUrl => {
+  const appPath = normalizeAppPath(appUrl)
+  const response = await fetch("/api/client/applications", {
+    credentials: "same-origin",
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch published apps")
+  }
+
+  const { apps } = await response.json()
+  const matched = apps.find(app => `/app${app.url}` === appPath)
+  if (!matched?.prodId) {
+    throw new Error(`Could not resolve Budibase app for path: ${appPath}`)
+  }
+
+  return {
+    appId: matched.prodId,
+    appPath,
+  }
+}
+
+const resolveClientLibPath = async ({ appId, appPath }) => {
+  const response = await fetch(`/api/applications/${appId}/appPackage`, {
+    credentials: "same-origin",
+    headers: {
+      "x-budibase-embed-location": appPath,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch app package")
+  }
+
+  const appPackage = await response.json()
+  if (!appPackage?.clientLibPath) {
+    throw new Error("App package did not include clientLibPath")
+  }
+
+  return appPackage.clientLibPath
+}
 
 const App = () => {
   const targetRef = useRef(null)
-  const [status, setStatus] = useState("Loading remote module...")
-
-  const mfeUrl = useMemo(() => {
-    return import.meta.env.VITE_BUDIBASE_MFE_URL || DEFAULT_MFE_URL
-  }, [])
+  const [status, setStatus] = useState("Loading client bundle...")
 
   const appUrl = useMemo(() => {
     return import.meta.env.VITE_BUDIBASE_APP_URL || DEFAULT_APP_URL
@@ -21,24 +83,27 @@ const App = () => {
 
     const mountRemote = async () => {
       try {
-        const remote = await import(/* @vite-ignore */ mfeUrl)
+        const resolvedApp = await resolvePublishedApp(appUrl)
+        const clientLibPath = await resolveClientLibPath(resolvedApp)
+        const remote = await import(/* @vite-ignore */ clientLibPath)
         if (!active) {
           return
         }
 
         if (typeof remote.mountBudibaseApp !== "function") {
-          setStatus("Remote loaded, but mountBudibaseApp was not found")
+          setStatus("Client bundle loaded, but mountBudibaseApp was not found")
           return
         }
 
         cleanup = await remote.mountBudibaseApp({
           target: targetRef.current,
           appUrl,
+          appId: resolvedApp.appId,
         })
         setStatus("Budibase app mounted")
       } catch (error) {
         console.error(error)
-        setStatus("Failed to load remote module. Check Budibase server and URL.")
+        setStatus("Failed to load Budibase app via appPackage")
       }
     }
 
@@ -50,13 +115,12 @@ const App = () => {
         cleanup()
       }
     }
-  }, [appUrl, mfeUrl])
+  }, [appUrl])
 
   return (
     <div className="shell">
       <header className="header">
         <h1>Budibase App Microfrontend PoC</h1>
-        <p>Remote URL: {mfeUrl}</p>
         <p>App URL: {appUrl}</p>
         <p>Status: {status}</p>
       </header>
