@@ -4,5 +4,9 @@
 
   $redirect
 
-  $redirect(`./${$screenStore.selectedScreenId}-screen`)
+  $: selectedScreenId = $screenStore.selectedScreenId
+
+  $: if (selectedScreenId) {
+    $redirect(`./${selectedScreenId}-screen`)
+  }
 </script>
