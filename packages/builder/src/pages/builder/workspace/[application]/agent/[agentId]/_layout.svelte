@@ -88,7 +88,7 @@
 <div class="config-wrapper">
   <TopBar
     breadcrumbs={[
-      { text: "Agents", url: "../" },
+      { text: "Agents", url: "../", tag: "Beta" },
       { text: currentAgent?.name || "Agent" },
     ]}
     icon="Effect"
