@@ -75,7 +75,6 @@
   let lastInitialPrompt = $state("")
   let reasoningTimers = $state<Record<string, number>>({})
   let isPreparingResponse = $state(false)
-  let pendingUserMessageText = $state("")
   let isHoldingFirstResponse = $state(false)
   let firstResponseHoldTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -217,7 +216,6 @@
     messages: chat?.messages || [],
     onFinish: async () => {
       isPreparingResponse = false
-      pendingUserMessageText = ""
 
       if (persistConversation && !chat._id && chat.chatAppId) {
         try {
@@ -250,7 +248,6 @@
     onError: error => {
       clearFirstResponseHold()
       isPreparingResponse = false
-      pendingUserMessageText = ""
 
       console.error(error)
       let message = error.message || "Failed to send message"
@@ -276,19 +273,17 @@
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
   let lastMessage = $derived(visibleMessages?.[visibleMessages.length - 1])
-  let showPendingAssistantState = $derived(
-    (isPreparingResponse || isBusy || isHoldingFirstResponse) &&
-      (lastMessage?.role === "user" || Boolean(pendingUserMessageText))
-  )
   let isRequestPending = $derived(
     isPreparingResponse || isBusy || isHoldingFirstResponse
   )
+  let showPendingAssistantState = $derived(
+    isPreparingResponse ||
+      ((isBusy || isHoldingFirstResponse) && lastMessage?.role === "user")
+  )
   let canStart = $derived(inputValue.trim().length > 0)
   let hasMessages = $derived(Boolean(visibleMessages?.length))
-  let hasPendingSubmission = $derived(Boolean(pendingUserMessageText))
   let showConversationStarters = $derived(
-    !isBusy &&
-      !hasPendingSubmission &&
+    !isRequestPending &&
       !hasMessages &&
       conversationStarters.length > 0 &&
       !isAgentPreviewChat &&
@@ -306,8 +301,13 @@
   $effect(() => {
     if (chat?._id !== lastChatId) {
       lastChatId = chat?._id
+<<<<<<< HEAD
       stableSessionId = createStableSessionId()
       if (!isPreparingResponse && !pendingUserMessageText) {
+=======
+      stableSessionId = Helpers.uuid()
+      if (!isPreparingResponse) {
+>>>>>>> fff8fd44dc (fix: remove unrequired)
         clearFirstResponseHold()
       }
       chatInstance.messages = chat?.messages || []
@@ -325,22 +325,6 @@
   $effect(() => {
     if (messages?.length) {
       scrollToBottom()
-    }
-  })
-
-  $effect(() => {
-    if (lastMessage?.role === "assistant") {
-      pendingUserMessageText = ""
-      isPreparingResponse = false
-      return
-    }
-
-    if (
-      pendingUserMessageText &&
-      lastMessage?.role === "user" &&
-      getUserMessageText(lastMessage) === pendingUserMessageText
-    ) {
-      pendingUserMessageText = ""
     }
   })
 
@@ -411,7 +395,6 @@
     }
 
     isPreparingResponse = true
-    pendingUserMessageText = text
 
     const chatAppIdFromEnsure = await ensureChatApp()
 
@@ -424,14 +407,12 @@
 
     if (!chatAppId) {
       isPreparingResponse = false
-      pendingUserMessageText = ""
       notifications.error("Chat app could not be created")
       return
     }
 
     if (!agentId) {
       isPreparingResponse = false
-      pendingUserMessageText = ""
       notifications.error("Agent is required to start a chat")
       return
     }
@@ -458,7 +439,6 @@
             ? err.message
             : "Could not start a new chat conversation"
         isPreparingResponse = false
-        pendingUserMessageText = ""
         console.error(err)
         notifications.error(errorMessage)
         return
@@ -549,7 +529,7 @@
           {/each}
         </div>
       </div>
-    {:else if !hasMessages && !hasPendingSubmission}
+    {:else if !hasMessages && !isRequestPending}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -740,11 +720,6 @@
         </div>
       {/if}
     {/each}
-    {#if pendingUserMessageText && lastMessage?.role !== "user"}
-      <div class="message user user-pending">
-        <MarkdownViewer value={pendingUserMessageText} />
-      </div>
-    {/if}
     {#if showPendingAssistantState}
       <div class="message assistant assistant-loading" aria-live="polite">
         <div class="reasoning-part">
