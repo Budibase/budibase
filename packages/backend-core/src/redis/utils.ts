@@ -96,19 +96,20 @@ export function getRedisClusterOptions(): Redis.ClusterOptions {
     dnsLookup: (address: string, callback: any) => callback(null, address),
     redisOptions: {
       ...getRedisOptions(),
-      tls: {},
     },
   }
 }
 
 export function getRedisOptions(): Redis.RedisOptions {
   const { host, password, port, username } = getRedisConnectionDetails()
+  const tls = env.REDIS_URL.startsWith("rediss://") ? {} : undefined
   return {
     connectTimeout: 30000,
     port: port,
     host,
     password,
     ...(username && { username }),
+    ...(tls && { tls }),
   }
 }
 
