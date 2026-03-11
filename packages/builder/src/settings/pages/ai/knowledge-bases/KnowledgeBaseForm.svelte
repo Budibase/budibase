@@ -278,6 +278,9 @@
       getOptionValue={option => option.value}
       getOptionLabel={option => option.label}
       disabled={!canEditReferences}
+      tooltip={!canEditReferences
+        ? "Remove all files to change the embedding model."
+        : ""}
     />
     <ActionButton
       icon={selectedEmbeddingModel ? "pencil" : "Add"}
@@ -296,6 +299,9 @@
       getOptionValue={option => option.value}
       getOptionLabel={option => option.label}
       disabled={!canEditReferences}
+      tooltip={!canEditReferences
+        ? "Remove all files to change the vector database."
+        : ""}
     />
     <ActionButton
       icon={selectedVectorDb ? "pencil" : "Add"}
