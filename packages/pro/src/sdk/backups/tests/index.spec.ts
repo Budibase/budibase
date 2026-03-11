@@ -296,11 +296,12 @@ describe("backups", () => {
 
       const restore = await createRestore()
 
-      const tempObjectDeleteCalls = mockedObjectStore.deleteFiles.mock.calls.filter(
-        ([bucket, keys]) =>
-          bucket === objectStore.ObjectStoreBuckets.APPS &&
-          keys.some(key => key.includes("_temp_"))
-      )
+      const tempObjectDeleteCalls =
+        mockedObjectStore.deleteFiles.mock.calls.filter(
+          ([bucket, keys]) =>
+            bucket === objectStore.ObjectStoreBuckets.APPS &&
+            keys.some(key => key.includes("_temp_"))
+        )
       const appReadCalls = mockedObjectStore.getReadStream.mock.calls.filter(
         ([bucket]) => bucket === objectStore.ObjectStoreBuckets.APPS
       )
