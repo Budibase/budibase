@@ -318,11 +318,12 @@ describe("backups", () => {
             args.bucket === objectStore.ObjectStoreBuckets.APPS &&
             args.filename === `${config.workspaceId}/attachments/file.txt`
         )
-        const targetRollbackDeletes = mockedObjectStore.deleteFiles.mock.calls.filter(
-          ([bucket, keys]) =>
-            bucket === objectStore.ObjectStoreBuckets.APPS &&
-            keys.includes(`${config.workspaceId}/attachments/file.txt`)
-        )
+        const targetRollbackDeletes =
+          mockedObjectStore.deleteFiles.mock.calls.filter(
+            ([bucket, keys]) =>
+              bucket === objectStore.ObjectStoreBuckets.APPS &&
+              keys.includes(`${config.workspaceId}/attachments/file.txt`)
+          )
         expect(processedRestore.status).toEqual(BackupStatus.FAILED)
         expect(targetUploads).toHaveLength(1)
         expect(targetRollbackDeletes).toHaveLength(1)
@@ -370,11 +371,12 @@ describe("backups", () => {
             args.bucket === objectStore.ObjectStoreBuckets.APPS &&
             args.filename === `${config.workspaceId}/attachments/shared.txt`
         )
-        const targetRollbackDeletes = mockedObjectStore.deleteFiles.mock.calls.filter(
-          ([bucket, keys]) =>
-            bucket === objectStore.ObjectStoreBuckets.APPS &&
-            keys.includes(`${config.workspaceId}/attachments/shared.txt`)
-        )
+        const targetRollbackDeletes =
+          mockedObjectStore.deleteFiles.mock.calls.filter(
+            ([bucket, keys]) =>
+              bucket === objectStore.ObjectStoreBuckets.APPS &&
+              keys.includes(`${config.workspaceId}/attachments/shared.txt`)
+          )
         expect(processedRestore.status).toEqual(BackupStatus.FAILED)
         expect(targetUploads).toHaveLength(2)
         expect(targetRollbackDeletes).toHaveLength(0)
@@ -424,9 +426,9 @@ describe("backups", () => {
 
         expect(processedRestore.status).toEqual(BackupStatus.FAILED)
         expect(replicateSpy).not.toHaveBeenCalled()
-        expect(await db.getDB(devWorkspaceId).get("post-backup-marker")).toEqual(
-          expect.objectContaining({ _id: "post-backup-marker" })
-        )
+        expect(
+          await db.getDB(devWorkspaceId).get("post-backup-marker")
+        ).toEqual(expect.objectContaining({ _id: "post-backup-marker" }))
       } finally {
         replicateSpy.mockRestore()
       }

@@ -193,7 +193,9 @@ async function cleanupPromotedWorkspaceFiles(
   const targetPrefix = `${targetProdWorkspaceId}/`
   const allTargetFileKeys = await listAppFiles(targetPrefix)
   const targetFileKeySet = new Set(targetFileKeys)
-  const staleFileKeys = allTargetFileKeys.filter(key => !targetFileKeySet.has(key))
+  const staleFileKeys = allTargetFileKeys.filter(
+    key => !targetFileKeySet.has(key)
+  )
   if (staleFileKeys.length) {
     await deleteAppFiles(staleFileKeys)
   }
