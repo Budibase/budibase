@@ -27,7 +27,7 @@ describe("public api redis config", () => {
   it("does not set tls for plain redis URLs", async () => {
     const config = await withEnv(
       {
-        REDIS_URL: "redis://localhost:6379",
+        REDIS_URL: "localhost:6379",
         REDIS_USERNAME: "",
         REDIS_PASSWORD: "budibase",
       },
