@@ -6,7 +6,7 @@
   import { helpers } from "@budibase/shared-core"
   import { params } from "@roxi/routify"
   import AgentSettingsModal from "../../../chat/_components/AgentSettingsModal.svelte"
-  import BBAILogo from "assets/bb-ai.svg"
+  import BudibaseLogo from "assets/bb-emblem.svg"
 
   const CHAT_UPDATE_ERROR_MESSAGE = "Could not update chat"
   const CHAT_LOAD_ERROR_MESSAGE = "Failed to load agent chat status"
@@ -190,11 +190,42 @@
       notifications.error(AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE)
     }
   }
+
+  const handleUpdateAccessRole = async (
+    targetAgentId: string,
+    roleId?: string
+  ) => {
+    if (!workspaceId || !targetAgentId) {
+      return
+    }
+
+    try {
+      const updated = await chatAppsStore.upsertAgentConfig({
+        agentId: targetAgentId,
+        updates: {
+          roleId,
+        },
+        workspaceId,
+      })
+      if (!updated) {
+        notifications.error(CHAT_UPDATE_ERROR_MESSAGE)
+        return
+      }
+      const published = await publishIfAgentLive()
+      notifications.success(
+        published
+          ? AGENT_CHAT_SETTINGS_PUBLISHED_MESSAGE
+          : AGENT_CHAT_SETTINGS_SAVED_MESSAGE
+      )
+    } catch (error) {
+      notifications.error(AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE)
+    }
+  }
 </script>
 
 <div class="integration-row">
   <div class="channel-main">
-    <img alt="Agent Chat" width="22px" height="22px" src={BBAILogo} />
+    <img alt="Agent Chat" width="22px" height="22px" src={BudibaseLogo} />
     <div class="channel-details">
       <Body color={"var(--spectrum-global-color-gray-900)"} size="XS"
         >Agent Chat</Body
@@ -230,6 +261,7 @@
   {defaultAgentId}
   showDefaultControls={false}
   isAgentAvailable={() => true}
+  onUpdateAccessRole={handleUpdateAccessRole}
   onUpdateConversationStarters={handleUpdateConversationStarters}
   onClose={() => {
     settingsOpen = false

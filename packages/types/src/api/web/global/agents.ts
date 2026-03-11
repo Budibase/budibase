@@ -1,7 +1,6 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
-  AgentFile,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
@@ -54,12 +53,20 @@ export interface ProvisionAgentMSTeamsChannelResponse
   messagingEndpointUrl: string
 }
 
-export interface ToggleAgentDiscordRequest {
+export type ProvisionAgentSlackChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface ProvisionAgentSlackChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  messagingEndpointUrl: string
+}
+
+export interface ToggleAgentDeploymentRequest {
   enabled: boolean
 }
 
-export interface ToggleAgentDiscordResponse {
-  success: true
+export interface ToggleAgentDeploymentResponse {
+  success: boolean
   enabled: boolean
 }
 
@@ -75,11 +82,3 @@ export type UpdateAgentRequest = Omit<
   "createdAt" | "updatedAt" | "_deleted" | "createdBy"
 >
 export type UpdateAgentResponse = Agent
-
-export interface FetchAgentFilesResponse {
-  files: AgentFile[]
-}
-
-export interface AgentFileUploadResponse {
-  file: AgentFile
-}

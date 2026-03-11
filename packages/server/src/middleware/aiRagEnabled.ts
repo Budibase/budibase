@@ -4,7 +4,7 @@ import { Ctx, FeatureFlag } from "@budibase/types"
 
 export async function aiRagEnabled(ctx: Ctx, next: Next) {
   if (!(await features.isEnabled(FeatureFlag.AI_RAG))) {
-    ctx.throw(404)
+    ctx.throw(403, "RAG feature is disabled")
   }
   return next()
 }

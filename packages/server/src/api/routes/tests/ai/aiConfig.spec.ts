@@ -1,6 +1,6 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { db, docIds, encryption } from "@budibase/backend-core"
+import { db, docIds, encryption, features } from "@budibase/backend-core"
 import {
   CustomAIProviderConfig,
   BUDIBASE_AI_PROVIDER_ID,
@@ -8,11 +8,23 @@ import {
   WebSearchProvider,
   AIConfigType,
   CreateAIConfigRequest,
+  FeatureFlag,
   LiteLLMKeyConfig,
+  VectorDbProvider,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import environment from "../../../../environment"
 import { licensing } from "@budibase/pro"
+
+jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
+  const actual = jest.requireActual(
+    "../../../../sdk/workspace/ai/vectorDb/pgVectorDb"
+  )
+  return {
+    ...actual,
+    validatePgVectorDbConfig: jest.fn().mockResolvedValue(undefined),
+  }
+})
 
 jest.mock("@budibase/pro", () => {
   const actual = jest.requireActual("@budibase/pro")
@@ -42,7 +54,30 @@ const mockLiteLLMProviders = () =>
           { key: "api_base", label: "Base URL", field_type: "text" },
         ],
       },
+      {
+        provider: "groq",
+        provider_display_name: "Groq",
+        litellm_provider: "groq",
+        credential_fields: [
+          { key: "api_key", label: "API Key", field_type: "password" },
+        ],
+      },
     ])
+
+const mockLiteLLMModelCostMap = () =>
+  nock(environment.LITELLM_URL)
+    .persist()
+    .get("/public/litellm_model_cost_map")
+    .reply(200, {
+      "gpt-4o-mini": { litellm_provider: "openai", mode: "chat" },
+      "text-embedding-3-small": {
+        litellm_provider: "openai",
+        mode: "embedding",
+      },
+      "claude-3-5-haiku": { litellm_provider: "anthropic", mode: "chat" },
+      "gpt-4o": { litellm_provider: ["openai", "azure"], mode: "responses" },
+      "groq/qwen/qwen3-32b": { litellm_provider: "groq", mode: "chat" },
+    })
 
 const mockLiteLLMTeam = () =>
   nock(environment.LITELLM_URL)
@@ -99,7 +134,29 @@ describe("BudibaseAI", () => {
       nock.cleanAll()
 
       mockLiteLLMProviders()
+      mockLiteLLMModelCostMap()
       mockLiteLLMTeam()
+    })
+
+    it("fetches provider-specific models from LiteLLM cost map", async () => {
+      const providers = await config.api.ai.fetchProviders()
+      const openAIProvider = providers.find(
+        provider => provider.id === "OpenAI"
+      )
+      expect(openAIProvider).toMatchObject({
+        models: {
+          completions: ["gpt-4o", "gpt-4o-mini"],
+          embeddings: ["text-embedding-3-small"],
+        },
+      })
+
+      const groqProvider = providers.find(provider => provider.id === "groq")
+      expect(groqProvider).toMatchObject({
+        models: {
+          completions: ["qwen/qwen3-32b"],
+          embeddings: [],
+        },
+      })
     })
 
     it("creates a custom config and sanitizes the API key", async () => {
@@ -697,6 +754,61 @@ describe("BudibaseAI", () => {
       expect(
         configsResponse.filter(c => c.configType === AIConfigType.EMBEDDINGS)
       ).toHaveLength(0)
+    })
+
+    it("rejects deleting an embedding config used by a knowledge base", async () => {
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_RAG]: true },
+        async () => {
+          const creationValidationScope = nock(environment.LITELLM_URL)
+            .post("/v1/embeddings")
+            .reply(200, { data: [] })
+
+          const creationScope = nock(environment.LITELLM_URL)
+            .post("/key/generate")
+            .reply(200, { token_id: "embed-key-4", key: "embed-secret-4" })
+            .post("/model/new")
+            .reply(200, { model_id: "embed-validation-5" })
+            .post("/model/delete")
+            .reply(200, { status: "success" })
+            .post("/model/new")
+            .reply(200, { model_id: "embed-model-4" })
+            .post("/key/update")
+            .reply(200, { status: "success" })
+
+          const created = await config.api.ai.createConfig({
+            ...defaultEmbeddingRequest,
+          })
+          expect(creationScope.isDone()).toBe(true)
+          expect(creationValidationScope.isDone()).toBe(true)
+
+          const vectorDb = await config.api.vectorDb.create({
+            name: "Primary Vector DB",
+            provider: VectorDbProvider.PGVECTOR,
+            host: "localhost",
+            port: 5432,
+            database: "budibase",
+            user: "bb_user",
+            password: "secret",
+          })
+
+          await config.api.knowledgeBase.create({
+            name: "Support Docs",
+            embeddingModel: created._id!,
+            vectorDb: vectorDb._id!,
+          })
+
+          await config.api.ai.deleteConfig(created._id!, { status: 400 })
+
+          const configsResponse = await config.api.ai.fetchConfigs()
+          expect(
+            configsResponse.filter(
+              c => c.configType === AIConfigType.EMBEDDINGS
+            )
+          ).toHaveLength(1)
+        }
+      )
     })
   })
 

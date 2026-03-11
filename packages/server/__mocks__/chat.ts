@@ -27,6 +27,7 @@ export class Chat {
   webhooks: {
     discord: (request: Request) => Promise<Response>
     teams: (request: Request) => Promise<Response>
+    slack: (request: Request) => Promise<Response>
   }
 
   constructor(_options: ChatOptions) {
@@ -96,11 +97,15 @@ export class Chat {
         return new Response("", { status: 200 })
       },
       teams: async () => new Response("", { status: 200 }),
+      slack: async () => new Response("", { status: 200 }),
     }
   }
 
-  onSlashCommand(command: string, handler: AnyFn) {
-    this.slashHandlers.set(command, handler)
+  onSlashCommand(command: string | string[], handler: AnyFn) {
+    const commands = Array.isArray(command) ? command : [command]
+    for (const cmd of commands) {
+      this.slashHandlers.set(cmd, handler)
+    }
   }
 
   onNewMention(handler: AnyFn) {

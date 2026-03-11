@@ -20,6 +20,18 @@ describe("url helpers", () => {
       const url = accountPortalUpgradeUrl(undefined)
       expect(url).toEqual("/portal/upgrade")
     })
+
+    it("builds tenant-specific upgrade url", () => {
+      const url = accountPortalUpgradeUrl(BASE, "tenant123")
+      expect(url).toEqual(
+        `${BASE}/portal/tenants?managePlansTenantId=tenant123`
+      )
+    })
+
+    it("falls back to generic upgrade when tenant missing", () => {
+      const url = accountPortalUpgradeUrl(BASE, null)
+      expect(url).toEqual(`${BASE}/portal/upgrade`)
+    })
   })
 
   describe("builder", () => {

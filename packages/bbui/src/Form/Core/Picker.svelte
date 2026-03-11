@@ -287,6 +287,9 @@
     class="popover-content"
     class:auto-width={autoWidth}
     class:wrap-text={wrapText}
+    class:size-s={size === "S"}
+    class:size-m={size === "M"}
+    class:size-l={size === "L"}
     use:clickOutside={() => {
       open = false
     }}
@@ -596,6 +599,18 @@
     line-height: 15px;
     color: var(--spectrum-global-color-gray-600);
     font-weight: 500;
+  }
+  .spectrum-Picker--sizeL
+    .spectrum-Picker-label.has-subtitle
+    .picker-label-text,
+  .spectrum-Picker--sizeL .picker-label-subtitle {
+    font-size: 14px;
+    line-height: 18px;
+  }
+  .popover-content.size-l .spectrum-Menu-itemLabel,
+  .popover-content.size-l .subtitle-text {
+    font-size: 14px;
+    line-height: 18px;
   }
 
   .select-all-item {

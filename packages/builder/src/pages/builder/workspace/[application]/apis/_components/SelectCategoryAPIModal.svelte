@@ -293,12 +293,6 @@
               </div>
 
               <div class="api-name">{card.name}</div>
-              {#if card.type === "group" ? card.group.verified : card.template.verified}
-                <i
-                  class="ph ph-seal-check verified-icon"
-                  aria-label="Verified template"
-                ></i>
-              {/if}
             </div>
           {/each}
         </div>
@@ -319,7 +313,7 @@
   .api {
     display: flex;
     height: 38px;
-    padding: 6px 32px 6px 12px;
+    padding: 6px 12px;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
@@ -328,7 +322,6 @@
     border-radius: 8px;
     border: 1px solid var(--spectrum-global-color-gray-200);
     background-color: var(--spectrum-global-color-gray-100);
-    position: relative;
   }
 
   .api:hover {
@@ -374,14 +367,6 @@
   .api-icon.group-icon {
     width: 48px;
     height: 48px;
-  }
-
-  .verified-icon {
-    color: var(--spectrum-global-color-gray-600);
-    font-size: 16px;
-    flex-shrink: 0;
-    position: absolute;
-    right: 12px;
   }
 
   .api-header {

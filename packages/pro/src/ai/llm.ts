@@ -1,177 +1,26 @@
-import { configs, context, env } from "@budibase/backend-core"
-import {
-  AIConfig,
-  AIProvider,
-  ChatCompletionRequest,
-  ConfigType,
-  LLMConfigOptions,
-  LLMProviderConfig,
-  Message,
-  ResponseFormat,
-} from "@budibase/types"
-import { tracer } from "dd-trace"
+import { ChatCompletionRequest, Message, ResponseFormat } from "@budibase/types"
 import openai from "openai"
 import { z } from "zod"
-import { Anthropic, AnthropicModel } from "./models"
-import { AzureOpenAI } from "./models/azureOpenai"
-import { LLM } from "./models/base"
-import { BudibaseAI } from "./models/budibaseai"
-import { OpenAI, OpenAIModel } from "./models/openai"
 
-// Provider-specific default models. If a provider's saved config does not
-// include a default model, we fall back to these. Azure defaults to gpt-4.1
-// so we avoid GPT-5-only parameters like verbosity/reasoning_effort.
-const DefaultModelByProvider: Record<AIProvider, OpenAIModel | AnthropicModel> =
-  {
-    OpenAI: "gpt-5-mini",
-    TogetherAI: "gpt-5-mini",
-    AzureOpenAI: "gpt-4.1",
-    Custom: "gpt-5-mini",
-    Anthropic: "claude-3-5-sonnet-20240620",
-    BudibaseAI: "gpt-5-mini",
+export function parseResponseFormat(
+  responseFormat?: ResponseFormat
+):
+  | openai.ResponseFormatText
+  | openai.ResponseFormatJSONObject
+  | openai.ResponseFormatJSONSchema
+  | undefined {
+  if (!responseFormat) {
+    return
   }
 
-const ProviderMap = {
-  OpenAI: OpenAI,
-  TogetherAI: OpenAI,
-  AzureOpenAI: AzureOpenAI,
-  Custom: OpenAI,
-  Anthropic: Anthropic,
-  BudibaseAI: BudibaseAI,
-}
+  if (responseFormat === "text") {
+    return { type: "text" }
+  }
+  if (responseFormat === "json") {
+    return { type: "json_object" }
+  }
 
-async function getAIConfig(): Promise<LLMProviderConfig | undefined> {
-  return await tracer.trace("getAIConfig", async span => {
-    let aiConfigs: AIConfig = {
-      type: ConfigType.AI,
-      config: {},
-    }
-
-    // We can't look up AIConfigs in the database if this is a self-host user
-    // calling into Budibase AI in the cloud because self-host users don't have
-    // global DBs, that's why this check is here.
-    if (!context.isSelfHostUsingCloud()) {
-      const storedConfig = await configs.getAIConfig()
-      if (storedConfig) {
-        aiConfigs = storedConfig
-      }
-    }
-
-    const provider = Object.values(aiConfigs.config).find(
-      config => config.active && config.isDefault
-    )
-    if (!provider) {
-      span.addTags({ enabled: false, reason: "no provider found" })
-      return
-    }
-
-    span.addTags({ enabled: true })
-
-    return {
-      provider: provider.provider,
-      model: provider.defaultModel || DefaultModelByProvider[provider.provider],
-      apiKey: provider.apiKey,
-      baseUrl: provider.baseUrl,
-    }
-  })
-}
-
-// Support for self-host users that want to bring their own API key. We didn't
-// want to force self-host users to have to use Budibase AI because that would
-// be against the ethos of offering Budibase as an open source product.
-function getSelfHostOpenAIKeyConfig(): LLMProviderConfig | undefined {
-  return tracer.trace("getSelfHostOpenAIKeyConfig", span => {
-    if (!env.SELF_HOSTED) {
-      span.addTags({ enabled: false, reason: "not self host" })
-      return
-    }
-
-    if (!env.OPENAI_API_KEY) {
-      span.addTags({ enabled: false, reason: "no OPENAI_API_KEY" })
-      return
-    }
-
-    span.addTags({ enabled: true })
-
-    return {
-      provider: "OpenAI",
-      model: DefaultModelByProvider.OpenAI,
-      apiKey: env.OPENAI_API_KEY,
-    }
-  })
-}
-
-function getBudibaseAIKeyConfig(): LLMProviderConfig | undefined {
-  return tracer.trace("getBudibaseAIKeyConfig", span => {
-    if (env.SELF_HOSTED) {
-      span.addTags({ enabled: false, reason: "not cloud" })
-      return
-    }
-
-    span.addTags({ enabled: true })
-
-    return {
-      provider: "BudibaseAI",
-      model: DefaultModelByProvider.BudibaseAI,
-    }
-  })
-}
-
-/**
- * @deprecated use the new `ai.sdk` instead
- */
-export async function getLLMConfig(): Promise<LLMProviderConfig | undefined> {
-  return tracer.trace(
-    "getLLMConfig",
-    async () =>
-      // Always priorise saved AI config.
-      (await getAIConfig()) ||
-      // Next check for self-hosters that have their own API key.
-      (env.SELF_HOSTED
-        ? getSelfHostOpenAIKeyConfig()
-        : getBudibaseAIKeyConfig())
-  )
-}
-
-/**
- * @deprecated use the new `ai.sdk` instead
- */
-// This is the entrypoint for all LLM functionality in Budibase. If you're
-// making a feature that uses LLMs, you should call this function to get an LLM
-// instance. This function takes care of figuring out what LLM to use, and if
-// the user has no LLM configuration it will return undefined. It's the caller's
-// responsibility to handle this case.
-export async function getLLM(
-  options?: Omit<LLMConfigOptions, "model"> & { model?: string }
-): Promise<LLM | undefined> {
-  return await tracer.trace("getLLM", async span => {
-    const { model, maxTokens } = options || {}
-
-    const config = await getLLMConfig()
-    if (!config) {
-      span.addTags({ enabled: false, reason: "no config found" })
-      return
-    }
-
-    if (model) {
-      config.model = model
-    }
-    if (maxTokens) {
-      config.maxTokens = maxTokens
-    }
-
-    const LLMProvider = ProviderMap[config.provider]
-    if (!LLMProvider) {
-      span.addTags({
-        enabled: false,
-        reason: "no provider found",
-        provider: config.provider,
-      })
-      return
-    }
-
-    return new LLMProvider(config)
-  })
+  return responseFormat
 }
 
 export class LLMRequest {

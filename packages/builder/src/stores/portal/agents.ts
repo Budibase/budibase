@@ -2,8 +2,9 @@ import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
   Agent,
-  AgentFile,
   CreateAgentRequest,
+  ProvisionAgentSlackChannelRequest,
+  ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
@@ -18,7 +19,6 @@ interface AgentStoreState {
   currentAgentId?: string
   tools: ToolMetadata[]
   agentsLoaded: boolean
-  files: AgentFile[]
 }
 
 export class AgentsStore extends BudiStore<AgentStoreState> {
@@ -27,7 +27,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       agents: [],
       tools: [],
       agentsLoaded: false,
-      files: [],
     })
   }
 
@@ -56,11 +55,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
     this.update(state => {
       state.currentAgentId = agentId
-      if (agentId) {
-        this.fetchFiles(agentId)
-      } else {
-        state.files = []
-      }
       return state
     })
   }
@@ -109,48 +103,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await this.fetchAgents()
   }
 
-  fetchFiles = async (agentId?: string) => {
-    if (!agentId) {
-      this.update(state => {
-        state.files = []
-        return state
-      })
-      return []
-    }
-    const { files } = await API.fetchAgentFiles(agentId)
-    this.update(state => {
-      if (state.currentAgentId === agentId) {
-        state.files = files
-      }
-      return state
-    })
-    return files
-  }
-
-  uploadAgentFile = async (agentId: string, file: File) => {
-    const { file: uploaded } = await API.uploadAgentFile(agentId, file)
-    this.update(state => {
-      if (state.currentAgentId === agentId) {
-        state.files = [
-          uploaded,
-          ...state.files.filter(existing => existing._id !== uploaded._id),
-        ]
-      }
-      return state
-    })
-    return uploaded
-  }
-
-  deleteAgentFile = async (agentId: string, fileId: string) => {
-    await API.deleteAgentFile(agentId, fileId)
-    this.update(state => {
-      if (state.currentAgentId === agentId) {
-        state.files = state.files.filter(file => file._id !== fileId)
-      }
-      return state
-    })
-  }
-
   private runAndRefreshAgents = async <T>(
     action: () => Promise<T>
   ): Promise<T> => {
@@ -175,9 +127,27 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.provisionAgentMSTeamsChannel(agentId, body)
     )
 
+  provisionSlackChannel = async (
+    agentId: string,
+    body?: ProvisionAgentSlackChannelRequest
+  ): Promise<ProvisionAgentSlackChannelResponse> =>
+    await this.runAndRefreshAgents(() =>
+      API.provisionAgentSlackChannel(agentId, body)
+    )
+
   toggleDiscordDeployment = async (agentId: string, enabled: boolean) =>
     await this.runAndRefreshAgents(() =>
       API.toggleAgentDiscordDeployment(agentId, enabled)
+    )
+
+  toggleMSTeamsDeployment = async (agentId: string, enabled: boolean) =>
+    await this.runAndRefreshAgents(() =>
+      API.toggleAgentMSTeamsDeployment(agentId, enabled)
+    )
+
+  toggleSlackDeployment = async (agentId: string, enabled: boolean) =>
+    await this.runAndRefreshAgents(() =>
+      API.toggleAgentSlackDeployment(agentId, enabled)
     )
 }
 export const agentsStore = new AgentsStore()
