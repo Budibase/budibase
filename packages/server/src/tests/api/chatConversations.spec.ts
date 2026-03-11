@@ -24,6 +24,7 @@ import {
   webhookChat,
 } from "../../api/controllers/ai"
 import sdk from "../../sdk"
+import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
 import type { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
 
 jest.mock("@budibase/pro", () => {
@@ -70,12 +71,18 @@ jest.mock("../../sdk/workspace/ai/llm", () => {
   }
 })
 
-jest.mock("../../sdk/workspace/ai/agentLogs", () => ({
-  createSessionLogIndexer: jest.fn(() => ({
-    addRequestId: jest.fn(),
-    index: jest.fn().mockResolvedValue(undefined),
-  })),
-}))
+jest.mock("../../sdk/workspace/ai/agentLogs", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/agentLogs")
+  return {
+    ...actual,
+    createSessionLogIndexer: jest.fn(),
+  }
+})
+
+const createMockSessionLogIndexer = () => ({
+  addRequestId: jest.fn(),
+  index: jest.fn().mockResolvedValue(undefined),
+})
 
 describe("chat conversations authorization", () => {
   const config = new TestConfiguration()
@@ -343,6 +350,7 @@ describe("chat conversation transient behavior", () => {
   const config = new TestConfiguration()
   const agentId = "agent-1"
   let chatApp: ChatApp
+  let sessionLogIndexer: ReturnType<typeof createMockSessionLogIndexer>
 
   const mockMessages: ChatConversationRequest["messages"] = [
     {
@@ -376,6 +384,10 @@ describe("chat conversation transient behavior", () => {
 
   beforeEach(async () => {
     jest.clearAllMocks()
+    sessionLogIndexer = createMockSessionLogIndexer()
+    jest
+      .mocked(agentLogs.createSessionLogIndexer)
+      .mockReturnValue(sessionLogIndexer)
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
@@ -668,6 +680,7 @@ describe("chat conversation path validation", () => {
 describe("Agent chat tool call tracking", () => {
   const config = new TestConfiguration()
   let chatApp: ChatApp
+  let sessionLogIndexer: ReturnType<typeof createMockSessionLogIndexer>
   const addActionMock = jest.mocked(quotas.addAction)
 
   function makeStreamTextMock(toolResults: { toolCallId: string }[]) {
@@ -750,6 +763,10 @@ describe("Agent chat tool call tracking", () => {
   beforeEach(() => {
     addActionMock.mockClear()
     jest.mocked(streamText).mockClear()
+    sessionLogIndexer = createMockSessionLogIndexer()
+    jest
+      .mocked(agentLogs.createSessionLogIndexer)
+      .mockReturnValue(sessionLogIndexer)
     ;(
       sdk.ai.agents.getOrThrow as jest.MockedFunction<
         typeof sdk.ai.agents.getOrThrow
@@ -949,17 +966,6 @@ describe("Agent chat tool call tracking", () => {
           })
         })
       ).rejects.toThrow("response metadata failed")
-
-      const { createSessionLogIndexer } = jest.requireMock(
-        "../../sdk/workspace/ai/agentLogs"
-      ) as {
-        createSessionLogIndexer: jest.Mock
-      }
-      const sessionLogIndexer = createSessionLogIndexer.mock.results.at(-1)
-        ?.value as {
-        addRequestId: jest.Mock
-        index: jest.Mock
-      }
 
       expect(sessionLogIndexer.addRequestId).toHaveBeenCalledWith("gen-test")
       expect(sessionLogIndexer.index).toHaveBeenCalledTimes(1)

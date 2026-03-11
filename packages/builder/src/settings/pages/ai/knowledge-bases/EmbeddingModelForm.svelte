@@ -28,15 +28,15 @@
   )
 
   const createDraft = (): AIConfigResponse =>
-    config?._id && provider
+    config?._id
       ? ({
           _id: config._id,
           _rev: config._rev,
           name: config.name,
-          provider: provider,
-          credentialsFields: structuredClone(config.credentialsFields),
+          provider: config.provider,
+          credentialsFields: Helpers.cloneDeep(config.credentialsFields),
           model: config.model,
-          webSearchConfig: structuredClone(config.webSearchConfig),
+          webSearchConfig: Helpers.cloneDeep(config.webSearchConfig),
           configType: config.configType,
           reasoningEffort: config.reasoningEffort,
           isDefault: config.isDefault,
@@ -67,8 +67,20 @@
   let selectedProvider = $derived(providersMap?.[draft.provider])
 
   let isSaving = $state(false)
-  let savedSnapshot = $state(JSON.stringify(draft))
-  let isModified = $derived(savedSnapshot !== JSON.stringify(draft))
+  let savedSnapshot = $state<typeof draft>()
+  const captureSavedSnapshot = () => {
+    savedSnapshot = Helpers.cloneDeep(draft)
+  }
+  captureSavedSnapshot()
+  let referencingKnowledgeBaseCount = $derived.by(
+    () =>
+      $knowledgeBaseStore.list.filter(
+        knowledgeBase => knowledgeBase.embeddingModel === draft._id
+      ).length
+  )
+  let isModified = $derived(
+    JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
+  )
   let canSave = $derived.by(() => {
     if (isSaving) {
       return false
@@ -91,7 +103,16 @@
 
   onMount(async () => {
     try {
-      await aiConfigsStore.fetchProviders()
+      await Promise.all([
+        aiConfigsStore.fetch(),
+        aiConfigsStore.fetchProviders(),
+        knowledgeBaseStore.fetch(),
+      ])
+
+      if (configId !== "new" && config) {
+        draft = createDraft()
+        captureSavedSnapshot()
+      }
     } catch (err: any) {
       notifications.error(err.message || "Failed to load providers")
     }
@@ -110,19 +131,20 @@
         const payload = Helpers.cloneDeep(draft)
         const updated = await aiConfigsStore.updateConfig(payload)
         draft._rev = updated._rev
-        payload._rev = updated._rev
-        savedSnapshot = JSON.stringify(payload)
+        captureSavedSnapshot()
         notifications.success(`Configuration updated`)
+
+        if (knowledgeBaseId && knowledgeBaseId !== "new") {
+          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        } else {
+          bb.settings(`/ai-config/knowledge-bases`)
+        }
       } else {
         const { _id, ...rest } = Helpers.cloneDeep(draft)
         const created = await aiConfigsStore.createConfig(rest)
         draft._id = created._id
         draft._rev = created._rev
-        savedSnapshot = JSON.stringify({
-          ...rest,
-          _id: created._id,
-          _rev: created._rev,
-        })
+        captureSavedSnapshot()
         notifications.success(`Configuration created`)
 
         const formDraft = knowledgeBaseStore.getFormDraft()
@@ -133,8 +155,10 @@
           })
         }
 
-        if (knowledgeBaseId) {
+        if (knowledgeBaseId && knowledgeBaseId !== "new") {
           bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        } else {
+          bb.settings(`/ai-config/knowledge-bases`)
         }
       }
     } catch (err: any) {
@@ -149,6 +173,13 @@
       return
     }
 
+    if (referencingKnowledgeBaseCount > 0) {
+      notifications.error(
+        `This embedding model can't be deleted because it's used by ${referencingKnowledgeBaseCount} knowledge base${referencingKnowledgeBaseCount === 1 ? "" : "s"}.`
+      )
+      return
+    }
+
     const configId = draft._id
 
     await confirm({
@@ -158,7 +189,7 @@
         try {
           await aiConfigsStore.deleteConfig(configId)
           notifications.success(`Configuration deleted`)
-          bb.settings(`/ai-config/${draft.configType}`)
+          bb.settings(`/ai-config/knowledge-bases`)
         } catch (err: any) {
           notifications.error(err.message || `Failed to delete configuration`)
         }
@@ -188,6 +219,7 @@
     provider={draft.provider}
     model={draft.model}
     {providers}
+    disabled={isEdit}
     on:providerChange={event => (draft.provider = event.detail)}
     on:modelChange={event => (draft.model = event.detail)}
   />
