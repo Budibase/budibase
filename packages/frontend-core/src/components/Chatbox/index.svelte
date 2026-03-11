@@ -16,6 +16,7 @@
   import { tick } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
+  import { formatToolName } from "../../utils/aiTools"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -63,7 +64,10 @@
     })
   )
 
-  let stableSessionId = $state(Helpers.uuid())
+  const createStableSessionId = () =>
+    isAgentPreviewChat ? `chat-preview:${Helpers.uuid()}` : Helpers.uuid()
+
+  let stableSessionId = $state(createStableSessionId())
   let chatAreaElement = $state<HTMLDivElement>()
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
@@ -257,7 +261,7 @@
   $effect(() => {
     if (chat?._id !== lastChatId) {
       lastChatId = chat?._id
-      stableSessionId = Helpers.uuid()
+      stableSessionId = createStableSessionId()
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
     }
@@ -534,7 +538,12 @@
             {#if isTextUIPart(part)}
               <MarkdownViewer value={part.text} />
             {:else if isToolUIPart(part)}
-              {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
+              {@const rawToolName = getToolName(part)}
+              {@const displayToolName = formatToolName(
+                rawToolName,
+                message.metadata?.toolDisplayNames?.[rawToolName]
+              )}
+              {@const toolId = `${message.id}-${rawToolName}-${partIndex}`}
               {@const isRunning =
                 part.state === "input-streaming" ||
                 part.state === "input-available"}
@@ -553,7 +562,7 @@
                   >
                     <span class="tool-chevron-icon tool-chevron-icon-default">
                       <Icon
-                        name="globe-simple"
+                        name="wrench"
                         size="M"
                         weight="regular"
                         color="var(--spectrum-global-color-gray-600)"
@@ -570,7 +579,14 @@
                   </span>
                   <span class="tool-call-label">Tool call</span>
                   <div class="tool-name-wrapper">
-                    <span class="tool-name">{getToolName(part)}</span>
+                    <span class="tool-name-primary"
+                      >{displayToolName.primary}</span
+                    >
+                    {#if displayToolName.secondary}
+                      <span class="tool-name-secondary">
+                        {displayToolName.secondary}
+                      </span>
+                    {/if}
                   </div>
                   {#if isRunning || isError || isSuccess}
                     <span class="tool-status">
@@ -979,18 +995,25 @@
 
   .tool-name-wrapper {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    padding: 3px 6px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 8px;
     background-color: var(--spectrum-global-color-gray-200);
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
-  .tool-name {
-    font-family: var(--font-mono), monospace;
+  .tool-name-primary {
     font-size: 13px;
     color: var(--spectrum-global-color-gray-800);
-    font-weight: 400;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .tool-name-secondary {
+    font-size: 11px;
+    color: var(--spectrum-global-color-gray-600);
+    line-height: 1.2;
   }
 
   .tool-status {
