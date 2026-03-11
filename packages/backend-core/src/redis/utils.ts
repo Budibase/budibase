@@ -102,7 +102,9 @@ export function getRedisClusterOptions(): Redis.ClusterOptions {
 
 export function getRedisOptions(): Redis.RedisOptions {
   const { host, password, port, username } = getRedisConnectionDetails()
-  const tls = env.REDIS_URL.toLowerCase().startsWith("rediss://") ? {} : undefined
+  const tls = env.REDIS_URL.toLowerCase().startsWith("rediss://")
+    ? {}
+    : undefined
   return {
     connectTimeout: 30000,
     port: port,

@@ -39,7 +39,7 @@ describe("public api redis config", () => {
       socket: {
         tls: true,
       },
-      url: "REDISS://master.xxxxx.cache.amazonaws.com",
+      url: "rediss://master.xxxxx.cache.amazonaws.com",
       username: "aaa",
     })
   })

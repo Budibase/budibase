@@ -15,8 +15,9 @@ export function getPublicApiRedisConfig(
   database?: number
 ): KoaRateLimitOptions {
   const { password, username } = redis.utils.getRedisConnectionDetails()
-  const redisUrl = /^[a-z]+:\/\//i.test(env.REDIS_URL)
-    ? env.REDIS_URL
+  const schemaMatch = /^[a-z]+:\/\//i
+  const redisUrl = schemaMatch.test(env.REDIS_URL)
+    ? env.REDIS_URL.replace(schemaMatch, match => match.toLowerCase())
     : `redis://${env.REDIS_URL}`
   const options: KoaRateLimitOptions = {
     url: redisUrl,
