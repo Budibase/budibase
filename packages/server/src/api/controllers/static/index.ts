@@ -30,6 +30,7 @@ import {
 import extract from "extract-zip"
 import fs from "fs"
 import fsp from "fs/promises"
+import send from "koa-send"
 import { tmpdir } from "os"
 import path from "path"
 import * as uuid from "uuid"
@@ -40,12 +41,12 @@ import sdk from "../../../sdk"
 import { join } from "../../../utilities/centralPath"
 import {
   loadHandlebarsFile,
+  NODE_MODULES_PATH,
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
 import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
 import AppComponent from "./templates/BudibaseApp.svelte"
 import { render } from "svelte/server"
-import { serveLocalFile } from "./serveLocalFile"
 
 const ACTIVE_CONTENT_EXTENSIONS = new Set([
   "html",
@@ -457,6 +458,18 @@ export const serveBuilderPreview = async function (
     // just return the app info for jest to assert on
     ctx.body = { ...appInfo, builderPreview: true }
   }
+}
+
+function serveLocalFile(ctx: Ctx, fileName: string) {
+  // Resolve via the package.json to avoid ESM/CJS export resolution issues
+  // with require.resolve on packages that mark "type":"module".
+  const pkgJsonPath = require.resolve("@budibase/client/package.json")
+  const pkgDir = path.dirname(pkgJsonPath)
+  const distFromPkg = join(pkgDir, "dist")
+  //normal fallback
+  const nodeModulesDist = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
+  const root = nodeModulesDist || distFromPkg
+  return send(ctx, fileName, { root })
 }
 
 export const serveClientLibrary = async function (
