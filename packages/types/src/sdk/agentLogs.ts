@@ -85,7 +85,7 @@ export interface AgentLogSessionIndexDoc extends Document {
   startTime: string
   lastActivityAt: string
   requestIds?: string
-  operations: number
+  operations?: string
   status: AgentLogSession["status"]
 }
 
@@ -93,6 +93,7 @@ export interface AgentLogSessionSnapshot {
   agentId: string
   sessionId: string
   requestIds: string[]
+  operations?: Record<string, number>
   trigger: string
   isPreview: boolean
   firstInput: string
@@ -105,6 +106,7 @@ export interface IndexAgentLogOperationInput {
   agentId: string
   sessionId: string
   requestIds: string[]
+  operations?: Record<string, number>
   firstInput?: string
   startedAt: string
   completedAt: string
@@ -120,5 +122,6 @@ export interface CreateSessionLogIndexerInput {
 
 export interface SessionLogIndexer {
   addRequestId(requestId?: string | null): void
+  addRequestOperations(requestId: string | null | undefined, count: number): void
   index(): Promise<void>
 }

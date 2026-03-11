@@ -91,7 +91,11 @@ export async function fetchSessions(
       trigger: session.trigger,
       isPreview: !!session.isPreview,
       startTime: session.startTime,
-      operations: session.operations || 0,
+      operations: session.operations
+        ? Object.values(
+            JSON.parse(session.operations) as Record<string, number>
+          ).reduce((sum, count) => sum + count, 0)
+        : 0,
       status: session.status,
       entries: [],
     })),

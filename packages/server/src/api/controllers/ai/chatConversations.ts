@@ -286,6 +286,7 @@ export async function webhookChat({
     providerOptions: providerOptions?.(hasTools),
     async onStepFinish({ toolResults, response }) {
       sessionLogIndexer.addRequestId(response?.id)
+      sessionLogIndexer.addRequestOperations(response?.id, toolResults.length)
       for (const _toolResult of toolResults) {
         await quotas.addAction(async () => {})
       }
@@ -506,6 +507,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       stopWhen: stepCountIs(30),
       async onStepFinish({ content, toolCalls, toolResults, response }) {
         sessionLogIndexer.addRequestId(response?.id)
+        sessionLogIndexer.addRequestOperations(response?.id, toolResults.length)
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
         for (const part of content) {
           if (part.type === "tool-error") {

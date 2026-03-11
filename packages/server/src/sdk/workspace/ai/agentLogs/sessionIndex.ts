@@ -44,6 +44,10 @@ function agentLogSessionTable(): Table {
         name: "requestIds",
         type: FieldType.STRING,
       },
+      operations: {
+        name: "operations",
+        type: FieldType.STRING,
+      },
     },
   }
 }
@@ -230,8 +234,16 @@ export async function upsertSessionIndexDoc(
   for (let attempt = 0; attempt < 3; attempt++) {
     const existing = await db.tryGet<AgentLogSessionIndexDoc>(sessionDocId)
     const requestIds = parseIndexedRequestIds(existing?.requestIds)
+    const operations = existing?.operations
+      ? (JSON.parse(existing.operations) as Record<string, number>)
+      : {}
     for (const requestId of snapshot.requestIds) {
       requestIds.add(requestId)
+    }
+    for (const [requestId, count] of Object.entries(snapshot.operations || {})) {
+      requestIds.add(requestId)
+      const existingCount = operations[requestId] || 0
+      operations[requestId] = Math.max(existingCount, count)
     }
     const startTime = existing
       ? minDate(existing.startTime, snapshot.startTime)
@@ -257,7 +269,9 @@ export async function upsertSessionIndexDoc(
       startTime,
       lastActivityAt,
       requestIds: JSON.stringify([...requestIds]),
-      operations: requestIds.size,
+      operations: Object.keys(operations).length > 0
+        ? JSON.stringify(operations)
+        : undefined,
       status,
       createdAt: existing?.createdAt || now,
       updatedAt: now,

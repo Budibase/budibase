@@ -48,7 +48,7 @@ function createSessionDoc(
     isPreview: false,
     firstInput: "",
     requestIds: JSON.stringify([]),
-    operations: 1,
+    operations: JSON.stringify({}),
     status: "success",
     createdAt: now,
     updatedAt: now,
@@ -234,6 +234,9 @@ describe("agentLogs", () => {
         agentId: "agent-1",
         sessionId: "chatconvo_1",
         requestIds: ["req-1"],
+        operations: {
+          "req-1": 3,
+        },
         firstInput: "Hello",
         startedAt: "2026-03-08T09:00:00.000Z",
         completedAt: "2026-03-08T09:00:10.000Z",
@@ -242,6 +245,9 @@ describe("agentLogs", () => {
         agentId: "agent-1",
         sessionId: "chatconvo_1",
         requestIds: ["req-1"],
+        operations: {
+          "req-1": 3,
+        },
         firstInput: "Hello",
         startedAt: "2026-03-08T09:00:00.000Z",
         completedAt: "2026-03-08T09:00:10.000Z",
@@ -253,7 +259,7 @@ describe("agentLogs", () => {
     expect(sessionDoc).toEqual(
       expect.objectContaining({
         sessionId: "chatconvo_1",
-        operations: 1,
+        operations: JSON.stringify({ "req-1": 3 }),
         trigger: "Chat",
         requestIds: JSON.stringify(["req-1"]),
       })
@@ -275,7 +281,7 @@ describe("agentLogs", () => {
         startTime: "2026-03-08T10:00:00.000Z",
         lastActivityAt: "2026-03-08T11:00:10.000Z",
         requestIds: JSON.stringify(["req-old", "req-new"]),
-        operations: 2,
+        operations: JSON.stringify({ "req-old": 1, "req-new": 1 }),
       })
     )
 
@@ -333,6 +339,77 @@ describe("agentLogs", () => {
       "req-old",
       "req-new",
     ])
+  })
+
+  it("prefers indexed operation count over request totals in session detail", async () => {
+    await saveSessionDoc(
+      createSessionDoc({
+        agentId: "agent-1",
+        sessionId: "session-ops-indexed",
+        trigger: "Automation",
+        startTime: "2026-03-08T10:00:00.000Z",
+        lastActivityAt: "2026-03-08T11:00:10.000Z",
+        requestIds: JSON.stringify(["req-old", "req-new"]),
+        operations: JSON.stringify({ "req-new": 1 }),
+      })
+    )
+
+    fetchMock.mockImplementation(async (url: any) => {
+      const path = String(url)
+      if (path.includes("/spend/logs/session/ui")) {
+        return liteLLMSessionResponse([
+          {
+            request_id: "req-new",
+            session_id: "session-ops-indexed",
+            startTime: "2026-03-08T11:00:00.000Z",
+            endTime: "2026-03-08T11:00:10.000Z",
+            prompt_tokens: 10,
+            completion_tokens: 20,
+            spend: 0.01,
+            model: "gpt-5",
+            end_user: "bb-agent:agent-1",
+            status: "success",
+          },
+          {
+            request_id: "req-old",
+            session_id: "session-ops-indexed",
+            startTime: "2026-03-08T10:00:00.000Z",
+            endTime: "2026-03-08T10:00:10.000Z",
+            prompt_tokens: 10,
+            completion_tokens: 20,
+            spend: 0.01,
+            model: "gpt-5",
+            end_user: "bb-agent:agent-1",
+            status: "success",
+          },
+        ])
+      }
+      if (path.includes("/spend/logs/v2")) {
+        return liteLLMSummaryResponse({ requestId: "req-1" })
+      }
+      if (path.includes("/spend/logs/ui/")) {
+        return liteLLMPayloadResponse({ requestId: "req-1" })
+      }
+      return {
+        ok: true,
+        json: jest.fn().mockResolvedValue([]),
+      } as any
+    })
+
+    const detail = await withWorkspace(async () => {
+      return await fetchSessionDetail(
+        "agent-1",
+        "session-ops-indexed",
+        "production"
+      )
+    })
+
+    expect(detail).toEqual(
+      expect.objectContaining({
+        sessionId: "session-ops-indexed",
+        operations: 1,
+      })
+    )
   })
 
   it("rejects partially numeric bookmarks when fetching sessions", async () => {
@@ -481,7 +558,7 @@ describe("agentLogs", () => {
         firstInput: "New question",
         startTime: "2026-03-08T08:00:00.000Z",
         lastActivityAt: "2026-03-08T08:00:00.000Z",
-        operations: 2,
+        operations: JSON.stringify({ "req-new": 2 }),
       })
     )
 
@@ -615,7 +692,7 @@ describe("agentLogs", () => {
     expect(detail).toEqual(
       expect.objectContaining({
         sessionId: "session-live",
-        operations: 1,
+        operations: 0,
         entries: [
           expect.objectContaining({
             requestId: "req-live",

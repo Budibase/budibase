@@ -73,6 +73,7 @@ jest.mock("../../sdk/workspace/ai/llm", () => {
 jest.mock("../../sdk/workspace/ai/agentLogs", () => ({
   createSessionLogIndexer: jest.fn(() => ({
     addRequestId: jest.fn(),
+    addRequestOperations: jest.fn(),
     index: jest.fn().mockResolvedValue(undefined),
   })),
 }))

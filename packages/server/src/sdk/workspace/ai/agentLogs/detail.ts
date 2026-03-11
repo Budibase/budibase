@@ -25,7 +25,7 @@ export async function fetchSessionDetail(
   environment: AgentLogEnvironment
 ): Promise<AgentLogSession | null> {
   const sessionSummaryDb = getWorkspaceDbForEnvironment(environment)
-  const { rows: sessionRows, total } = await fetchLiteLLMSessionRows(sessionId)
+  const { rows: sessionRows } = await fetchLiteLLMSessionRows(sessionId)
   const liveEntries = sessionRows
     .filter(row => getLiteLLMRequestUser(row) === getExpectedEndUser(agentId))
     .sort((a, b) => {
@@ -53,6 +53,11 @@ export async function fetchSessionDetail(
     sessionId,
     sessionSummaryDb
   )
+  const operations = sessionSummary?.operations
+    ? Object.values(
+        JSON.parse(sessionSummary.operations) as Record<string, number>
+      ).reduce((sum, count) => sum + count, 0)
+    : 0
 
   if (!liveEntries.length) {
     return null
@@ -65,11 +70,7 @@ export async function fetchSessionDetail(
     trigger: sessionSummary?.trigger || determineTrigger(sessionId),
     isPreview: sessionSummary?.isPreview ?? isPreviewSession(sessionId),
     startTime: liveEntries[0]?.startTime || sessionSummary?.startTime || "",
-    operations: Math.max(
-      sessionSummary?.operations || 0,
-      total,
-      liveEntries.length
-    ),
+    operations,
     status: determineStatus(liveEntries),
     entries: liveEntries,
   }

@@ -137,6 +137,10 @@ export async function run({
           output: outputOption,
           async onStepFinish({ content, toolCalls, toolResults, response }) {
             sessionLogIndexer.addRequestId(response?.id)
+            sessionLogIndexer.addRequestOperations(
+              response?.id,
+              toolResults.length
+            )
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
             for (const part of content) {
               if (part.type === "tool-error") {

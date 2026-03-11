@@ -132,6 +132,11 @@ export async function addSessionLog(
   const missingRequestIds = uniqueRequestIds.filter(
     requestId => !foundRequestIds.has(requestId)
   )
+  const operations = Object.fromEntries(
+    Object.entries(input.operations || {}).filter(([requestId]) =>
+      foundRequestIds.has(requestId)
+    )
+  )
 
   if (!summaries.length) {
     const error: any = new HTTPError("Agent log details not ready", 404)
@@ -143,6 +148,7 @@ export async function addSessionLog(
     agentId: input.agentId,
     sessionId: input.sessionId,
     requestIds: summaries.map(summary => summary.requestId),
+    operations,
     trigger,
     isPreview,
     firstInput,
@@ -175,12 +181,23 @@ export function createSessionLogIndexer({
   startedAt = new Date().toISOString(),
 }: CreateSessionLogIndexerInput): SessionLogIndexer {
   const requestIds = new Set<string>()
+  const operations = new Map<string, number>()
 
   return {
     addRequestId(requestId) {
       if (requestId) {
         requestIds.add(requestId)
       }
+    },
+    addRequestOperations(requestId, count) {
+      if (!requestId) {
+        return
+      }
+      requestIds.add(requestId)
+      operations.set(
+        requestId,
+        (operations.get(requestId) || 0) + count
+      )
     },
     async index() {
       if (!requestIds.size) {
@@ -203,6 +220,7 @@ export function createSessionLogIndexer({
           agentId,
           sessionId,
           requestIds: [...requestIds],
+          operations: Object.fromEntries(operations),
           firstInput,
           startedAt,
           completedAt: new Date().toISOString(),
