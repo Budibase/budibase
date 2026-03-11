@@ -5,6 +5,7 @@
     componentStore,
     selectedComponent,
     componentTreeNodesStore,
+    previewStore,
   } from "@/stores/builder"
   import { findComponent, getChildIdsForComponent } from "@/helpers/components"
   import { goto, isActive } from "@roxi/routify"
@@ -49,7 +50,11 @@
       }
     },
     ["Ctrl+Enter"]: () => {
-      $goto(`./:componentId/new`)
+      if ($isActive(`./:componentId/new`)) {
+        $goto(`./${$componentStore.selectedComponentId}`)
+      } else {
+        $goto(`./:componentId/new`)
+      }
     },
     ["Delete"]: component => {
       // Don't show confirmation for the screen itself
@@ -132,6 +137,10 @@
   }
 
   const handleKeyPress = async e => {
+    if ($previewStore.showPreview) {
+      return
+    }
+
     // Ignore repeating events
     if (e.repeat) {
       return
@@ -142,11 +151,13 @@
       document.activeElement?.classList?.contains("cm-content")
     const inPosthogSurvey =
       document.activeElement?.classList?.[0]?.startsWith("PostHogSurvey")
+    const isModifiedEnter = e.key === "Enter" && (e.ctrlKey || e.metaKey)
     if (
       (inCodeEditor ||
         inPosthogSurvey ||
         ["input", "textarea"].indexOf(activeTag) !== -1) &&
-      e.key !== "Escape"
+      e.key !== "Escape" &&
+      !isModifiedEnter
     ) {
       return
     }

@@ -1,4 +1,4 @@
-import * as rowController from "../../api/controllers/row"
+import { patch } from "../../api/controllers/row"
 import * as automationUtils from "../automationUtils"
 import { buildCtx } from "./utils"
 import {
@@ -97,7 +97,7 @@ export async function run({
         tableId: tableId,
       },
     })
-    await rowController.patch(ctx)
+    await patch(ctx, { isAutomation: true })
     return {
       row: ctx.body,
       response: ctx.message,

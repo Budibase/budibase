@@ -3,6 +3,7 @@ import { generateText } from "ai"
 import sdk from "../../../sdk"
 import fetch from "node-fetch"
 import { PDFParse } from "pdf-parse"
+import { Readable } from "stream"
 import { run } from "./extract"
 
 jest.mock("node-fetch", () => jest.fn())
@@ -45,6 +46,60 @@ describe("extract file data step unit tests", () => {
     jest.clearAllMocks()
   })
 
+  it("streams pdf uploads and avoids buffering when upload succeeds", async () => {
+    const fileStream = Readable.from(Buffer.from("fake pdf bytes"))
+    const bufferMock = jest.fn()
+    const uploadFile = jest.fn().mockResolvedValue("file-123")
+
+    fetchMock.mockResolvedValue({
+      ok: true,
+      body: fileStream,
+      buffer: bufferMock,
+    } as any)
+
+    getDefaultLLMMock.mockResolvedValue({
+      chat: {} as any,
+      embedding: {} as any,
+      providerOptions: undefined,
+      uploadFile,
+    })
+
+    generateTextMock.mockResolvedValue({
+      output: { data: [{ invoiceNumber: "INV-1" }] },
+    } as any)
+
+    const result = await run({
+      inputs: {
+        source: DocumentSourceType.URL,
+        file: "https://example.com/invoice.pdf",
+        fileType: SupportedFileType.PDF,
+        schema: { invoiceNumber: "string" },
+      },
+    })
+
+    expect(result.success).toBe(true)
+    expect(uploadFile).toHaveBeenCalledWith(
+      fileStream,
+      "document.pdf",
+      SupportedFileType.PDF
+    )
+    expect(bufferMock).not.toHaveBeenCalled()
+    expect(generateTextMock.mock.calls[0][0].messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          role: "user",
+          content: expect.arrayContaining([
+            expect.objectContaining({
+              type: "file",
+              data: "file-123",
+              mediaType: "application/pdf",
+            }),
+          ]),
+        }),
+      ])
+    )
+  })
+
   it("falls back to inline pdf text when llm.uploadFile is unavailable", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
@@ -64,6 +119,9 @@ describe("extract file data step unit tests", () => {
       chat: {} as any,
       embedding: {} as any,
       providerOptions: undefined,
+      uploadFile: jest
+        .fn()
+        .mockRejectedValue(new Error("This model doesn't support create_file")),
     })
 
     generateTextMock.mockResolvedValue({
@@ -151,6 +209,7 @@ describe("extract file data step unit tests", () => {
       chat: {} as any,
       embedding: {} as any,
       providerOptions: undefined,
+      uploadFile: jest.fn(),
     })
 
     PDFParseMock.mockImplementation(

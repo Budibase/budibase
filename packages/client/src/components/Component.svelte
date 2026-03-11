@@ -590,7 +590,7 @@
     node.scrollIntoView({
       behavior: "instant",
       block: "nearest",
-      inline: "start",
+      inline: "nearest",
     })
   }
 

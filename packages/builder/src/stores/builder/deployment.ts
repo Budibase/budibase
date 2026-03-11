@@ -11,6 +11,7 @@ import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import { automationStore } from "./automations"
 import { workspaceAppStore } from "./workspaceApps"
+import { agentsStore } from "@/stores/portal/agents"
 
 interface DeploymentState {
   deployments: DeploymentProgressResponse[]
@@ -115,6 +116,7 @@ class DeploymentStore extends DerivedBudiStore<
         workspaceAppStore.refresh(),
         appsStore.load(),
         automationStore.actions.fetch(),
+        agentsStore.fetchAgents(),
       ])
       await this.load()
     } catch (err) {

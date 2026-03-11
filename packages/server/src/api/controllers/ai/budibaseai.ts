@@ -12,6 +12,8 @@ import { Readable } from "stream"
 import sdk from "../../../sdk"
 import { generateText } from "ai"
 
+const BBAI_DEFAULT_MODEL = "budibase/v1"
+
 const calculateBudibaseAICredits = (
   inputTokens: number,
   outputTokens: number
@@ -40,7 +42,7 @@ export async function uploadFile(
     if (env.SELF_HOSTED) {
       ctx.throw(500, "Budibase AI endpoints are not available in self-host")
     }
-    const llm = await sdk.ai.llm.getDefaultLLMOrThrow()
+    const llm = await sdk.ai.llm.bbai.createBBAIClient(BBAI_DEFAULT_MODEL)
     if (!llm.uploadFile) {
       ctx.throw(422, "The used LLM does not support uploading files")
     }
@@ -73,7 +75,8 @@ export async function chatCompletion(
 
   const messages = sdk.ai.llm.toModelMessages(ctx.request.body.messages)
 
-  const { chat, providerOptions } = await sdk.ai.llm.getDefaultLLMOrThrow()
+  const { chat, providerOptions } =
+    await sdk.ai.llm.bbai.createBBAIClient(BBAI_DEFAULT_MODEL)
   const result = await generateText({
     model: chat,
     messages: messages,

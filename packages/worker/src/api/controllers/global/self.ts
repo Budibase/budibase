@@ -7,7 +7,7 @@ import {
   tenancy,
   utils,
 } from "@budibase/backend-core"
-import { ai, groups } from "@budibase/pro"
+import { groups } from "@budibase/pro"
 import {
   DevInfo,
   FetchAPIKeyResponse,
@@ -116,13 +116,6 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
 
   // add the feature flags for this tenant
   const flags = await features.flags.fetch()
-  const llmConfig = await ai.getLLMConfig()
-  const sanitisedLLMConfig = llmConfig
-    ? {
-        provider: llmConfig.provider,
-        model: llmConfig.model,
-      }
-    : undefined
 
   const settingsConfig = await configs.getSettingsConfig()
 
@@ -130,7 +123,6 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
     ...enrichedUser,
     ...sessionAttributes,
     flags,
-    llm: sanitisedLLMConfig,
     lockedBy: settingsConfig?.lockedBy,
   }
 }

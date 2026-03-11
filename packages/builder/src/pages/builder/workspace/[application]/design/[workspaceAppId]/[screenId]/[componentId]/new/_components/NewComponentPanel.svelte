@@ -38,7 +38,7 @@
     $selectedComponent
   )
   $: structure = getComponentStructure({
-    chatbox: $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT,
+    chatbox: $featureFlags.AI_AGENTS && $featureFlags.AI_AGENTS,
   })
   $: enrichedStructure = enrichStructure(
     structure,

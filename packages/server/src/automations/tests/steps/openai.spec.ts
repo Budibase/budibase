@@ -8,23 +8,29 @@ import {
 } from "@budibase/types"
 import nock from "nock"
 import TestConfiguration from "../../..//tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("test the openai action", () => {
   const config = new TestConfiguration()
   let resetEnv: () => void | undefined
+  let cleanupDefaultAIConfig: (() => Promise<void>) | undefined
 
   beforeAll(async () => {
     await config.init()
     await config.api.automation.deleteAll()
   })
 
-  beforeEach(() => {
-    resetEnv = setCoreEnv({ SELF_HOSTED: true, OPENAI_API_KEY: "abc123" })
+  beforeEach(async () => {
+    resetEnv = setCoreEnv({ SELF_HOSTED: true })
+    cleanupDefaultAIConfig = await setupDefaultCompletionsAIConfig(config)
+    await config.publish()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    await cleanupDefaultAIConfig?.()
+
     resetEnv()
     jest.clearAllMocks()
     nock.cleanAll()

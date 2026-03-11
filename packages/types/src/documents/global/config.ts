@@ -121,30 +121,6 @@ export interface SCIMInnerConfig {
 
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}
 
-export type AIProvider =
-  | "OpenAI"
-  | "Anthropic"
-  | "AzureOpenAI"
-  | "TogetherAI"
-  | "Custom"
-  | "BudibaseAI"
-
-export interface ProviderConfig {
-  provider: AIProvider
-  isDefault: boolean
-  name: string
-  active: boolean
-  baseUrl?: string
-  apiKey?: string
-  defaultModel?: string
-}
-
-export interface AIInnerConfig {
-  [key: string]: ProviderConfig
-}
-
-export interface AIConfig extends Config<AIInnerConfig> {}
-
 export interface RecaptchaInnerConfig {
   siteKey: string
   secretKey: string
@@ -184,9 +160,6 @@ export const isOIDCConfig = (config: Config): config is OIDCConfig =>
 export const isSCIMConfig = (config: Config): config is SCIMConfig =>
   config.type === ConfigType.SCIM
 
-export const isAIConfig = (config: Config): config is AIConfig =>
-  config.type === ConfigType.AI
-
 export const isRecaptchaConfig = (config: Config): config is RecaptchaConfig =>
   config.type === ConfigType.RECAPTCHA
 
@@ -207,6 +180,7 @@ export enum ConfigType {
   OIDC = "oidc",
   OIDC_LOGOS = "logos_oidc",
   SCIM = "scim",
+  /** @deprecated use the ai sdk instead */
   AI = "ai",
   RECAPTCHA = "recaptcha",
   TRANSLATIONS = "translations",
@@ -225,10 +199,8 @@ export type ConfigTypeToConfig<T extends ConfigType> =
             ? OIDCLogosConfig
             : T extends ConfigType.SCIM
               ? SCIMConfig
-              : T extends ConfigType.AI
-                ? AIConfig
-                : T extends ConfigType.RECAPTCHA
-                  ? RecaptchaConfig
-                  : T extends ConfigType.TRANSLATIONS
-                    ? TranslationsConfig
-                    : never
+              : T extends ConfigType.RECAPTCHA
+                ? RecaptchaConfig
+                : T extends ConfigType.TRANSLATIONS
+                  ? TranslationsConfig
+                  : never

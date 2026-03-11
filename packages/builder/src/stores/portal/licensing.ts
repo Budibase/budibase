@@ -173,7 +173,8 @@ class LicensingStore extends BudiStore<LicensingState> {
     const adminStore = get(admin)
     if (authStore?.user?.accountPortalAccess) {
       window.location.href = accountPortalUpgradeUrl(
-        adminStore.accountPortalUrl
+        adminStore.accountPortalUrl,
+        authStore?.user?.tenantId
       )
     } else {
       bb.settings("/upgrade")

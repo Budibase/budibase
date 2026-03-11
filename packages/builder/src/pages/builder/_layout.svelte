@@ -34,7 +34,6 @@
   } from "@budibase/bbui"
   import SettingsModal from "@/components/settings/SettingsModal.svelte"
   import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
-  import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { writable } from "svelte/store"
 
   $isActive
@@ -52,6 +51,7 @@
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
   $: cloud = $admin?.cloud
   $: user = $auth.user
+  $: canCreateApps = sdk.users.canCreateApps(user)
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
   $: isBuilder = sdk.users.hasBuilderPermissions(user)
@@ -183,22 +183,18 @@
           return { type: "returnUrl", url: returnUrl }
         }
 
-        // Review if builder users have workspaces. If not, redirect them to get-started
+        // Review if builder users have workspaces. If not, redirect them to onboarding
         const hasEditableWorkspaces = $enrichedApps.some(app => app.editable)
         if (
-          ($appsStore.apps.length === 0 ||
-            (isBuilder && !hasEditableWorkspaces)) &&
+          isBuilder &&
+          ($appsStore.apps.length === 0 || !hasEditableWorkspaces) &&
           !$isActive("./apps") &&
           !$isActive("./onboarding") &&
           !$isActive("./get-started")
         ) {
-          // Tenant owners without apps should be redirected to onboarding
-          if (isOwner) {
-            return { type: "redirect", path: "./onboarding" }
-          }
-          // Regular builders without apps should be redirected to "get started"
-          if (isBuilder && !isOwner) {
-            return { type: "redirect", path: "./get-started" }
+          return {
+            type: "redirect",
+            path: canCreateApps ? "./onboarding" : "./apps",
           }
         }
 
@@ -300,8 +296,6 @@
     hasAuthenticated = !!$auth.user
   })
 </script>
-
-<EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
 
 <AccountLockedModal
   bind:this={accountLockedModal}

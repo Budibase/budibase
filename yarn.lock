@@ -2838,57 +2838,57 @@
   dependencies:
     "@bull-board/api" "5.10.2"
 
-"@chat-adapter/discord@^4.14.0":
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/discord/-/discord-4.15.0.tgz#d08939ad6932ff40696efa27d5ebcd138ed44372"
-  integrity sha512-vOe3Cy47D0reCy1ZAA+UCBA4619zXy9kVsLt2j4bIylKfPEfTnhVBhjtsNyixl+z6Bq65VxLllqvd9N6oS8reA==
+"@chat-adapter/discord@^4.16.0":
+  version "4.16.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/discord/-/discord-4.16.0.tgz#aa5f491d1e6c49948eed29acfcd9d098fe7ae2a5"
+  integrity sha512-PJ9oFUbapM2jNOPputx0RVQUn7Tm6x8VbT73BL6IoMg+1HLDRTP48nOFsIUgTlvoxbaQ3j/qgsdcjqkG+v7faQ==
   dependencies:
-    "@chat-adapter/shared" "4.15.0"
-    chat "4.15.0"
+    "@chat-adapter/shared" "4.16.0"
+    chat "4.16.0"
     discord-api-types "^0.37.119"
     discord-interactions "^4.4.0"
     discord.js "^14.25.1"
 
-"@chat-adapter/shared@4.15.0":
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/shared/-/shared-4.15.0.tgz#50779f1fe37e2c2426e0ee43e51a029860322d8b"
-  integrity sha512-otIS9zf0wY3DMc5WGK1sOJiASSeMHcdEqmuxDWW/6tK7gdRE7FOVE+dfo/74ykj9QZwv+a9cByh1cimaeHbiAw==
+"@chat-adapter/shared@4.16.0":
+  version "4.16.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/shared/-/shared-4.16.0.tgz#f05a283f1cd5b4769f26d9ad79a91f45ee62cf83"
+  integrity sha512-J/YaclwyB02+oXFKhueM5tu0qHIO1pvl0U7D1SYl8ZgoptyhLwfdG1/kEmh1o80dSwenqCF7j9Vvc/FuEYK0BA==
   dependencies:
-    chat "4.15.0"
+    chat "4.16.0"
 
-"@chat-adapter/slack@^4.14.0":
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/slack/-/slack-4.15.0.tgz#60d621b734e2d4bc08af88c7890352d94b31636f"
-  integrity sha512-DE2puxMXitt2AVLBvMAldZ4KKUKpKWxSd62nWLDX6xXtOo6z9uXAggZD3FnMOGITqw+oQypdFopvm/Wu6OxeFg==
+"@chat-adapter/slack@^4.16.0":
+  version "4.16.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/slack/-/slack-4.16.0.tgz#6bf63a250240dbf26acf9dfc169e17259a6c161f"
+  integrity sha512-5/E6GAzbx3UENZFn2Q3hz5eNScML6sJlCiKTKDEjQmRDFOgg3mBdNlk/Gy7hK5GbuoEIA9BJwyCpkPKMmV2aLA==
   dependencies:
-    "@chat-adapter/shared" "4.15.0"
+    "@chat-adapter/shared" "4.16.0"
     "@slack/web-api" "^7.11.0"
-    chat "4.15.0"
+    chat "4.16.0"
 
-"@chat-adapter/state-ioredis@^4.14.0":
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/state-ioredis/-/state-ioredis-4.15.0.tgz#8c28277e02b570052ad97fba9e366aac8536fe3b"
-  integrity sha512-1892j1GCaxwDDMBc7gzUQsbohtf6SArlnr0PYLSIXeSguNl/V9X36WBLbE3ExgjBhyqCBfsDzicGA8e0HIco+A==
+"@chat-adapter/state-ioredis@^4.16.0":
+  version "4.16.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/state-ioredis/-/state-ioredis-4.16.0.tgz#bcee111091ef8b1bcaea918f624244047f5f1a18"
+  integrity sha512-h641wmE+d0cc2MIMZ56Ap0GVHYRtc+1seyfGna2UYnGSrjTNk2YPQIjH+HJcg985jat81ICWaZJJGCZoSBWCfw==
   dependencies:
-    chat "4.15.0"
+    chat "4.16.0"
     ioredis "^5.4.1"
 
-"@chat-adapter/state-memory@^4.14.0":
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/state-memory/-/state-memory-4.15.0.tgz#38d4e886081b4351a2194aa898518c541e66160b"
-  integrity sha512-I/p6dA8fl8peZH9utKOsO8raFttUSyIQwyhB/uP6cR9d07hZVcG/SF30t4RjKDgegnq8+euqPFj3lCssIaYhoA==
+"@chat-adapter/state-memory@^4.16.0":
+  version "4.16.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/state-memory/-/state-memory-4.16.0.tgz#9f5a8f0c380a27dd930df78cc728746ae4b82638"
+  integrity sha512-OF1+ncPOGbHP0lplTvlfKkNizzOT6shsBt1GmJQCciyqAjoAIrj8o+Oh4RxkwI7vGEYpzgHDHz5hvn6UKAeHbA==
   dependencies:
-    chat "4.15.0"
+    chat "4.16.0"
 
-"@chat-adapter/teams@^4.14.0":
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/teams/-/teams-4.15.0.tgz#e58abf034ac8cc261e37484e98bbc07ab5dceaa1"
-  integrity sha512-348pKRPqfOIKDGGXMn1ul5Hxttfy1QOERkdNH7cNNlnktcJUlqgSFlEkGvp+anCNUH33Dtl2GIh/PT4AXem7wg==
+"@chat-adapter/teams@^4.16.0":
+  version "4.16.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/teams/-/teams-4.16.0.tgz#9911731dea446c8b0bd355d3283f7ad5c321dd35"
+  integrity sha512-VlBOEhVysC4HOwtY10kpttHROLaYgWmhUJjjH/GuAfxdz2YMOIx/giyApQcMIS9rECXJ3CpG20nAwGpqujE41w==
   dependencies:
     "@azure/identity" "^4.13.0"
-    "@chat-adapter/shared" "4.15.0"
+    "@chat-adapter/shared" "4.16.0"
     botbuilder "^4.23.1"
-    chat "4.15.0"
+    chat "4.16.0"
 
 "@codemirror/autocomplete@6.9.0":
   version "6.9.0"
@@ -3892,9 +3892,9 @@
     "@hapi/hoek" "^9.0.0"
 
 "@hono/node-server@^1.19.9":
-  version "1.19.9"
-  resolved "https://registry.yarnpkg.com/@hono/node-server/-/node-server-1.19.9.tgz#8f37119b1acf283fd3f6035f3d1356fdb97a09ac"
-  integrity sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw==
+  version "1.19.10"
+  resolved "https://registry.yarnpkg.com/@hono/node-server/-/node-server-1.19.10.tgz#e230fbb7fb31891cafc653d01deee03f437dd66b"
+  integrity sha512-hZ7nOssGqRgyV3FVVQdfi+U4q02uB23bpnYpdvNXkYTRRyWx84b7yf1ans+dnJ/7h41sGL3CeQTfO+ZGxuO+Iw==
 
 "@humanfs/core@^0.19.1":
   version "0.19.1"
@@ -9779,12 +9779,7 @@ aria-query@5.3.0:
   dependencies:
     dequal "^2.0.3"
 
-aria-query@5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/aria-query/-/aria-query-5.3.1.tgz#ebcb2c0d7fc43e68e4cb22f774d1209cb627ab42"
-  integrity sha512-Z/ZeOgVl7bcSYZ/u/rh0fOpvEpq//LZmdbkXyc7syVzjPAhfOa9ebsdTSjEBDU4vs5nC98Kfduj1uFo0qyET3g==
-
-aria-query@^5.0.0, aria-query@^5.3.0:
+aria-query@^5.0.0, aria-query@^5.3.0, aria-query@^5.3.1:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/aria-query/-/aria-query-5.3.2.tgz#93f81a43480e33a338f19163a3d10a50c01dcd59"
   integrity sha512-COROpnaoap1E2F000S62r6A60uHZnmlvomhfyT2DlTcrY1OrBKn2UhH7qn5wTC9zMvD0AY7csdPSNwKP+7WiQw==
@@ -10967,16 +10962,17 @@ chardet@^2.1.1:
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-2.1.1.tgz#5c75593704a642f71ee53717df234031e65373c8"
   integrity sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==
 
-chat@4.15.0, chat@^4.14.0:
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/chat/-/chat-4.15.0.tgz#4b009b7c0dfd5438c5ff99f416bcc6173edeab6f"
-  integrity sha512-fE1m3UEiKQoiYkhXWT0rpH1+ZhKqJGZYkS+1gNCZWNkLv0QWTZhzdzBM5qYWe5A/Y0wJ8yLVjaqvGO4zZFxZqg==
+chat@4.16.0, chat@^4.16.0:
+  version "4.16.0"
+  resolved "https://registry.yarnpkg.com/chat/-/chat-4.16.0.tgz#6cf1db355d7625a506b38e4dd8352a2bd9e679fe"
+  integrity sha512-rO3lA8SX+qPYiQW41/6ft7yTHeovr4BK3kZYAuI8lxiO1XkKD7EgrUPvJp9IWzpXVrhjfUhzJxY8VgHvoy0QYA==
   dependencies:
     "@workflow/serde" "4.1.0-beta.2"
     mdast-util-to-string "^4.0.0"
     remark-gfm "^4.0.0"
     remark-parse "^11.0.0"
     remark-stringify "^11.0.0"
+    remend "^1.2.1"
     unified "^11.0.5"
 
 cheap-watch@^1.0.4:
@@ -12644,11 +12640,6 @@ detective@^4.3.1:
     acorn "^5.2.1"
     defined "^1.0.0"
 
-devalue@^5.6.3:
-  version "5.6.3"
-  resolved "https://registry.yarnpkg.com/devalue/-/devalue-5.6.3.tgz#fee7b50bf072f4a4cdf18d1f27de3ce92131f699"
-  integrity sha512-nc7XjUU/2Lb+SvEFVGcWLiKkzfw8+qHI7zn8WYXKkLMgfGSHbgCEaR6bJpev8Cm6Rmrb19Gfd/tZvGqx9is3wg==
-
 devlop@^1.0.0, devlop@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/devlop/-/devlop-1.1.0.tgz#4db7c2ca4dc6e0e834c30be70c94bbc976dc7018"
@@ -12822,9 +12813,9 @@ domhandler@^5.0.2, domhandler@^5.0.3:
     domelementtype "^2.3.0"
 
 dompurify@^3.1.6, dompurify@^3.3.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.3.1.tgz#c7e1ddebfe3301eacd6c0c12a4af284936dbbb86"
-  integrity sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q==
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.3.2.tgz#58c515d0f8508b8749452a028aa589ad80b36325"
+  integrity sha512-6obghkliLdmKa56xdbLOpUZ43pAR6xFy1uOrxBaIDjT+yaRuuybLjGS9eVBoSR/UPU5fq3OXClEHLJNGvbxKpQ==
   optionalDependencies:
     "@types/trusted-types" "^2.0.7"
 
@@ -13683,7 +13674,7 @@ esquery@^1.4.2, esquery@^1.5.0:
   dependencies:
     estraverse "^5.1.0"
 
-esrap@^2.2.2:
+esrap@^2.1.0:
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/esrap/-/esrap-2.2.3.tgz#cbc5a6aad5349697b78ef7af62704e733a50d2c1"
   integrity sha512-8fOS+GIGCQZl/ZIlhl59htOlms6U8NvX6ZYgYHpRU/b6tVSh3uHkOHZikl3D4cMbYM0JlpBe+p/BkZEi8J9XIQ==
@@ -13858,11 +13849,11 @@ exponential-backoff@^3.1.1:
   integrity sha512-ZgEeZXj30q+I0EN+CbSSpIyPaJ5HVQD18Z1m+u1FXbAeT94mr1zw50q4q6jiiC447Nl/YTcIYSAftiGqetwXCA==
 
 express-rate-limit@^8.2.1:
-  version "8.2.1"
-  resolved "https://registry.yarnpkg.com/express-rate-limit/-/express-rate-limit-8.2.1.tgz#ec75fdfe280ecddd762b8da8784c61bae47d7f7f"
-  integrity sha512-PCZEIEIxqwhzw4KF0n7QF4QqruVTcF73O5kFKUnGOyjbCCgizBBiFaYpd/fnBLUMPw/BWw9OsiN7GgrNYr7j6g==
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/express-rate-limit/-/express-rate-limit-8.3.0.tgz#0ed00d3af24bcf74930d884a78595a96b0a9838c"
+  integrity sha512-KJzBawY6fB9FiZGdE/0aftepZ91YlaGIrV8vgblRM3J8X+dHx/aiowJWwkx6LIGyuqGiANsjSwwrbb8mifOJ4Q==
   dependencies:
-    ip-address "10.0.1"
+    ip-address "10.1.0"
 
 express-useragent@^1.0.15:
   version "1.0.15"
@@ -15263,9 +15254,9 @@ homedir-polyfill@^1.0.1:
     parse-passwd "^1.0.0"
 
 hono@^4.11.4:
-  version "4.12.3"
-  resolved "https://registry.yarnpkg.com/hono/-/hono-4.12.3.tgz#fd8dd1127c30956a9d58c1b0c4535d21c1ef3e16"
-  integrity sha512-SFsVSjp8sj5UumXOOFlkZOG6XS9SJDKw0TbwFeV+AJ8xlST8kxK5Z/5EYa111UY8732lK2S/xB653ceuaoGwpg==
+  version "4.12.7"
+  resolved "https://registry.yarnpkg.com/hono/-/hono-4.12.7.tgz#ca000956e965c2b3d791e43540498e616d6c6442"
+  integrity sha512-jq9l1DM0zVIvsm3lv9Nw9nlJnMNPOcAtsbsgiUhWcFzPE99Gvo6yRTlszSLLYacMeQ6quHD6hMfId8crVHvexw==
 
 hosted-git-info@^2.1.4:
   version "2.8.9"
@@ -15871,12 +15862,7 @@ ioredis@^5.4.1:
     redis-parser "^3.0.0"
     standard-as-callback "^2.1.0"
 
-ip-address@10.0.1:
-  version "10.0.1"
-  resolved "https://registry.yarnpkg.com/ip-address/-/ip-address-10.0.1.tgz#a8180b783ce7788777d796286d61bce4276818ed"
-  integrity sha512-NWv9YLW4PoW2B7xtzaS3NCot75m6nK7Icdv0o3lfMceJVRfSoQwqD4wEH5rLwoKJwUiZ/rfpiVBhnaF0FK4HoA==
-
-ip-address@^10.0.1:
+ip-address@10.1.0, ip-address@^10.0.1:
   version "10.1.0"
   resolved "https://registry.yarnpkg.com/ip-address/-/ip-address-10.1.0.tgz#d8dcffb34d0e02eb241427444a6e23f5b0595aa4"
   integrity sha512-XXADHxXmvT9+CRxhXg56LJovE+bmWnEWB78LB83VZTprKTmaC5QfruXocxzTZ2Kl0DNwKuBdlIhjL8LeY8Sf8Q==
@@ -22345,6 +22331,11 @@ remark-stringify@^11.0.0:
     mdast-util-to-markdown "^2.0.0"
     unified "^11.0.0"
 
+remend@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/remend/-/remend-1.2.1.tgz#95facafcc603313738d1b6ccf1d08a3a35902595"
+  integrity sha512-4wC12bgXsfKAjF1ewwkNIQz5sqewz/z1xgIgjEMb3r1pEytQ37F0Cm6i+OhbTWEvguJD7lhOUJhK5fSasw9f0w==
+
 remixicon@2.5.0:
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/remixicon/-/remixicon-2.5.0.tgz#b5e245894a1550aa23793f95daceadbf96ad1a41"
@@ -23949,23 +23940,21 @@ svelte-spa-router@^4.0.1:
   dependencies:
     regexparam "2.0.2"
 
-svelte@^5.53.5:
-  version "5.53.5"
-  resolved "https://registry.yarnpkg.com/svelte/-/svelte-5.53.5.tgz#9472539a0152d5e02e2c933cb8eb9918d71b21de"
-  integrity sha512-YkqERnF05g8KLdDZwZrF8/i1eSbj6Eoat8Jjr2IfruZz9StLuBqo8sfCSzjosNKd+ZrQ8DkKZDjpO5y3ht1Pow==
+svelte@5.40.2:
+  version "5.40.2"
+  resolved "https://registry.yarnpkg.com/svelte/-/svelte-5.40.2.tgz#94f8e9e5d5d2a07fd703af7335c04fa0e22d354b"
+  integrity sha512-wr/SwBVCVfeHU8FZr48vRrzSpWdBBzGo5mlErjGzeW4reJhK/CWutLZbk/eHwhKqO17ccjeTcvsqjrT4aK3wZA==
   dependencies:
     "@jridgewell/remapping" "^2.3.4"
     "@jridgewell/sourcemap-codec" "^1.5.0"
     "@sveltejs/acorn-typescript" "^1.0.5"
     "@types/estree" "^1.0.5"
-    "@types/trusted-types" "^2.0.7"
     acorn "^8.12.1"
-    aria-query "5.3.1"
+    aria-query "^5.3.1"
     axobject-query "^4.1.0"
     clsx "^2.1.1"
-    devalue "^5.6.3"
     esm-env "^1.2.1"
-    esrap "^2.2.2"
+    esrap "^2.1.0"
     is-reference "^3.0.3"
     locate-character "^3.0.0"
     magic-string "^0.30.11"
@@ -24126,10 +24115,10 @@ tar-stream@^3.0.0, tar-stream@^3.1.5:
     fast-fifo "^1.2.0"
     streamx "^2.15.0"
 
-tar@7.5.7:
-  version "7.5.7"
-  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.7.tgz#adf99774008ba1c89819f15dbd6019c630539405"
-  integrity sha512-fov56fJiRuThVFXD6o6/Q354S7pnWMJIVlDBYijsTNx6jKSE4pvrDTs6lUnmGvNyfJwFQQwWy3owKz1ucIhveQ==
+tar@7.5.11:
+  version "7.5.11"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.11.tgz#1250fae45d98806b36d703b30973fa8e0a6d8868"
+  integrity sha512-ChjMH33/KetonMTAtpYdgUFr0tbz69Fp2v7zWxQfYZX4g5ZN2nOBXm1R2xyA+lMIKrLKIoKAwFj93jE/avX9cQ==
   dependencies:
     "@isaacs/fs-minipass" "^4.0.0"
     chownr "^3.0.0"
@@ -24137,10 +24126,10 @@ tar@7.5.7:
     minizlib "^3.1.0"
     yallist "^5.0.0"
 
-tar@7.5.8:
-  version "7.5.8"
-  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.8.tgz#6bbdfdb487914803d401bab6a2abb100aaa253d5"
-  integrity sha512-SYkBtK99u0yXa+IWL0JRzzcl7RxNpvX/U08Z+8DKnysfno7M+uExnTZH8K+VGgShf2qFPKtbNr9QBl8n7WBP6Q==
+tar@7.5.7:
+  version "7.5.7"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.7.tgz#adf99774008ba1c89819f15dbd6019c630539405"
+  integrity sha512-fov56fJiRuThVFXD6o6/Q354S7pnWMJIVlDBYijsTNx6jKSE4pvrDTs6lUnmGvNyfJwFQQwWy3owKz1ucIhveQ==
   dependencies:
     "@isaacs/fs-minipass" "^4.0.0"
     chownr "^3.0.0"

@@ -4,6 +4,7 @@ import emitter from "../events/index"
 import { coerce } from "../utilities/rowProcessor"
 // need this to call directly, so we can get a response
 import { context, db as dbCore, logging } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import { dataFilters, sdk } from "@budibase/shared-core"
 import {
   Automation,
@@ -116,7 +117,9 @@ async function queueRelevantRowAutomations(
       })
       if (shouldTrigger) {
         try {
-          await automationQueue.add({ automation, event }, JOB_OPTS)
+          await quotas.addAction(() =>
+            automationQueue.add({ automation, event }, JOB_OPTS)
+          )
         } catch (e) {
           logging.logAlert("Failed to queue automation", e)
         }
@@ -261,9 +264,11 @@ export async function externalTrigger(
       appId: context.getWorkspaceId(),
       automation,
     }
-    return executeInThread({ data } as AutomationJob, { onProgress })
+    return quotas.addAction(() =>
+      executeInThread({ data } as AutomationJob, { onProgress })
+    )
   } else {
-    return automationQueue.add(data, JOB_OPTS)
+    return quotas.addAction(() => automationQueue.add(data, JOB_OPTS))
   }
 }
 

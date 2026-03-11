@@ -69,7 +69,8 @@ type BBAIFetch = (
 
 const createBBAIFetch = (
   sessionId?: string,
-  reasoningEffort?: ReasoningEffort
+  reasoningEffort?: ReasoningEffort,
+  agentId?: string
 ): BBAIFetch => {
   const bbaiFetch = (async (
     input: Parameters<typeof fetch>[0],
@@ -94,6 +95,16 @@ const createBBAIFetch = (
           body.metadata = {
             ...body.metadata,
             session_id: sessionId,
+          }
+        }
+
+        if (agentId) {
+          body.metadata = {
+            ...body.metadata,
+            agent_id: agentId,
+          }
+          if (!body.user) {
+            body.user = `bb-agent:${agentId}`
           }
         }
 
@@ -134,7 +145,8 @@ export async function createBBAIClient(
   model: string,
   sessionId?: string,
   span?: tracer.Span,
-  reasoningEffort?: ReasoningEffort
+  reasoningEffort?: ReasoningEffort,
+  agentId?: string
 ): Promise<LLMResponse> {
   const baseUrl = environment.LITELLM_URL
 
@@ -151,7 +163,7 @@ export async function createBBAIClient(
   const client = createOpenAI({
     apiKey: environment.BBAI_LITELLM_KEY,
     baseURL: baseUrl,
-    fetch: createBBAIFetch(sessionId, reasoningEffort),
+    fetch: createBBAIFetch(sessionId, reasoningEffort, agentId),
   })
   const chat = wrapLanguageModel({
     model: client.chat(model),

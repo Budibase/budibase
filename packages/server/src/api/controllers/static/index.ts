@@ -253,7 +253,14 @@ export async function processPWAZip(ctx: UserCtx) {
     const appId = context.getProdWorkspaceId()
 
     for (const icon of iconsData.icons) {
-      if (!icon.src || !icon.sizes || !fs.existsSync(join(baseDir, icon.src))) {
+      const resolvedSrc = icon.src ? path.resolve(baseDir, icon.src) : undefined
+      if (
+        !icon.src ||
+        !icon.sizes ||
+        !resolvedSrc ||
+        !resolvedSrc.startsWith(baseDir + path.sep) ||
+        !fs.existsSync(resolvedSrc)
+      ) {
         continue
       }
 
@@ -266,7 +273,7 @@ export async function processPWAZip(ctx: UserCtx) {
         const result = await objectStore.upload({
           bucket: ObjectStoreBuckets.APPS,
           filename: key,
-          path: join(baseDir, icon.src),
+          path: resolvedSrc,
           type: mimeType,
         })
 

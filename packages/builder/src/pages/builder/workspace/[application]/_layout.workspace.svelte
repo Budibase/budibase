@@ -7,13 +7,14 @@
     deploymentStore,
     appStore,
   } from "@/stores/builder"
-  import { appsStore, admin } from "@/stores/portal"
+  import { appsStore, admin, aiConfigsStore } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { Heading, Layout, Body } from "@budibase/bbui"
   import { API } from "@/api"
   import InviteUsersModal from "./_components/InviteUsersModal.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
+  import { onMount } from "svelte"
 
   export let application: string
 
@@ -47,6 +48,10 @@
       throw error
     }
   }
+
+  onMount(() => {
+    aiConfigsStore.init()
+  })
 </script>
 
 {#if showInviteUsersModal}

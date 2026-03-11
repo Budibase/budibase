@@ -55,26 +55,28 @@ function pickApi(tableId: string) {
   return internal
 }
 
-export async function patch(
-  ctx: UserCtx<PatchRowRequest, PatchRowResponse>
-): Promise<any> {
+async function _patch(
+  ctx: UserCtx<PatchRowRequest, PatchRowResponse>,
+  { isAutomation = false }: { isAutomation?: boolean } = {}
+): Promise<void> {
   const appId = ctx.appId
   const { tableId } = utils.getSourceId(ctx)
   const body = ctx.request.body
 
   // if it doesn't have an _id then its save
   if (body && !body._id) {
-    return save(ctx)
+    return save(ctx, { isAutomation })
   }
   try {
     const api = pickApi(tableId)
-    const { row, table, oldRow } = isExternalTableID(tableId)
-      ? await api.patch(ctx)
-      : await quotas.addAction(async () => {
-          const response = await api.patch(ctx)
-          events.action.crudExecuted({ type: "update" })
-          return response
-        })
+    const work = async () => {
+      const response = await api.patch(ctx)
+      events.action.crudExecuted({ type: "update" })
+      return response
+    }
+    const { row, table, oldRow } = isAutomation
+      ? await work()
+      : await quotas.addAction(work)
     if (!row) {
       ctx.throw(404, "Row not found")
     }
@@ -95,7 +97,17 @@ export async function patch(
   }
 }
 
-export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) => {
+export async function patch(
+  ctx: UserCtx<PatchRowRequest, PatchRowResponse>,
+  opts: { isAutomation?: boolean } = {}
+): Promise<void> {
+  return _patch(ctx, opts)
+}
+
+async function _save(
+  ctx: UserCtx<SaveRowRequest, SaveRowResponse>,
+  { isAutomation = false }: { isAutomation?: boolean } = {}
+) {
   const { tableId, viewId } = utils.getSourceId(ctx)
   const sourceId = viewId || tableId
 
@@ -109,17 +121,43 @@ export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) => {
 
   // if it has an ID already then it's a patch
   if (body && body._id) {
-    return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
+    return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>, {
+      isAutomation,
+    })
   }
-  const { row, table, squashed } = tableId.includes("datasource_plus")
-    ? await sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
-    : await quotas.addAction(async () => {
-        const response = await quotas.addRow(() =>
-          sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+  let saveResult: { row: Row; table: Table; squashed?: Row }
+  if (tableId.includes("datasource_plus")) {
+    if (isAutomation) {
+      saveResult = await sdk.rows.save(
+        sourceId,
+        ctx.request.body,
+        ctx.user?._id
+      )
+    } else {
+      saveResult = await quotas.addAction(async () => {
+        const response = await sdk.rows.save(
+          sourceId,
+          ctx.request.body,
+          ctx.user?._id
         )
         events.action.crudExecuted({ type: "create" })
         return response
       })
+    }
+  } else if (isAutomation) {
+    saveResult = await quotas.addRow(() =>
+      sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+    )
+  } else {
+    saveResult = await quotas.addAction(async () => {
+      const response = await quotas.addRow(() =>
+        sdk.rows.save(sourceId, ctx.request.body, ctx.user?._id)
+      )
+      events.action.crudExecuted({ type: "create" })
+      return response
+    })
+  }
+  const { row, table, squashed } = saveResult
 
   ctx.eventEmitter?.emitRow({
     eventName: EventType.ROW_SAVE,
@@ -133,6 +171,11 @@ export const save = async (ctx: UserCtx<SaveRowRequest, SaveRowResponse>) => {
   ctx.body = row || squashed
   gridSocket?.emitRowUpdate(ctx, row || squashed)
 }
+
+export const save = async (
+  ctx: UserCtx<SaveRowRequest, SaveRowResponse>,
+  opts: { isAutomation?: boolean } = {}
+) => _save(ctx, opts)
 
 export async function fetchLegacyView(ctx: any) {
   const viewName = decodeURIComponent(ctx.params.viewName)
@@ -187,7 +230,10 @@ async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
     .map(resp => (resp as PromiseFulfilledResult<Row>).value)
 }
 
-async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
+async function deleteRows(
+  ctx: UserCtx<DeleteRowRequest>,
+  { isAutomation = false }: { isAutomation?: boolean } = {}
+) {
   const { tableId } = utils.getSourceId(ctx)
   const appId = ctx.appId
 
@@ -195,13 +241,12 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 
   deleteRequest.rows = await processDeleteRowsRequest(ctx)
 
-  const { rows } = isExternalTableID(tableId)
-    ? await pickApi(tableId).bulkDestroy(ctx)
-    : await quotas.addAction(async () => {
-        const response = await pickApi(tableId).bulkDestroy(ctx)
-        events.action.crudExecuted({ type: "delete" })
-        return response
-      })
+  const work = async () => {
+    const response = await pickApi(tableId).bulkDestroy(ctx)
+    events.action.crudExecuted({ type: "delete" })
+    return response
+  }
+  const { rows } = isAutomation ? await work() : await quotas.addAction(work)
 
   if (!tableId.includes("datasource_plus")) {
     await quotas.removeRows(rows.length)
@@ -219,17 +264,19 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   return rows
 }
 
-async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
+async function deleteRow(
+  ctx: UserCtx<DeleteRowRequest>,
+  { isAutomation = false }: { isAutomation?: boolean } = {}
+) {
   const appId = ctx.appId
   const { tableId } = utils.getSourceId(ctx)
   const api = pickApi(tableId)
-  const resp = isExternalTableID(tableId)
-    ? await api.destroy(ctx)
-    : await quotas.addAction(async () => {
-        const response = await api.destroy(ctx)
-        events.action.crudExecuted({ type: "delete" })
-        return response
-      })
+  const work = async () => {
+    const response = await api.destroy(ctx)
+    events.action.crudExecuted({ type: "delete" })
+    return response
+  }
+  const resp = isAutomation ? await work() : await quotas.addAction(work)
   if (!tableId.includes("datasource_plus")) {
     await quotas.removeRow()
   }
@@ -245,13 +292,16 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   return resp
 }
 
-export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
+async function _destroy(
+  ctx: UserCtx<DeleteRowRequest>,
+  { isAutomation = false }: { isAutomation?: boolean } = {}
+) {
   let response, row
 
   if (isDeleteRows(ctx.request.body)) {
-    response = await deleteRows(ctx)
+    response = await deleteRows(ctx, { isAutomation })
   } else if (isDeleteRow(ctx.request.body)) {
-    const deleteResp = await deleteRow(ctx)
+    const deleteResp = await deleteRow(ctx, { isAutomation })
     response = deleteResp.response
     row = deleteResp.row
   } else {
@@ -262,6 +312,13 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
   // for automations include the row that was deleted
   ctx.row = row || {}
   ctx.body = response
+}
+
+export async function destroy(
+  ctx: UserCtx<DeleteRowRequest>,
+  opts: { isAutomation?: boolean } = {}
+) {
+  return _destroy(ctx, opts)
 }
 
 export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {

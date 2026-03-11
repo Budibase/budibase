@@ -31,11 +31,17 @@ export interface LLMProviderField {
   default_value?: string | null
 }
 
+export interface LLMProviderModels {
+  completions: string[]
+  embeddings: string[]
+}
+
 export interface LLMProvider {
   id: string
   displayName: string
   externalProvider: string
   credentialFields: LLMProviderField[]
+  models?: LLMProviderModels
 }
 
 export type LLMProvidersResponse = LLMProvider[]

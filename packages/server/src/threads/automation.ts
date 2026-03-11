@@ -563,7 +563,9 @@ class Orchestrator {
         const step = steps[stepIndex]
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
-            const branchResults = await this.executeBranchStep(ctx, step)
+            const branchResults = await quotas.addAction(() =>
+              this.executeBranchStep(ctx, step)
+            )
             ctx._stepResults.push(...branchResults)
             results.push(...branchResults)
             if (branchResults[0]) {

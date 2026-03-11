@@ -96,8 +96,6 @@ export const isTeamsLifecycleActivity = (activity: MSTeamsActivity) =>
   isTeamsInstallAddedActivity(activity) ||
   isTeamsBotAddedToConversation(activity)
 
-// --- Message handler shared between onNewMention and onSubscribedMessage ---
-
 const createTeamsMessageHandler = ({
   workspaceId,
   chatAppId,
@@ -214,7 +212,7 @@ export async function MSTeamsWebhook(
             idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
           }
         })
-      const teamsState = await getTeamsState()
+
       const chat = new Chat({
         userName: "Budibase",
         adapters: {
@@ -225,7 +223,7 @@ export async function MSTeamsWebhook(
             appType: "SingleTenant",
           }),
         },
-        state: teamsState,
+        state: await getTeamsState(),
         logger: "silent",
       })
 
