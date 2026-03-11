@@ -7,6 +7,16 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
+jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
+  const actual = jest.requireActual(
+    "../../../../sdk/workspace/ai/vectorDb/pgVectorDb"
+  )
+  return {
+    ...actual,
+    validatePgVectorDbConfig: jest.fn().mockResolvedValue(undefined),
+  }
+})
+
 describe("knowledge base configs", () => {
   const config = new TestConfiguration()
 
