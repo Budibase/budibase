@@ -144,6 +144,22 @@ function checkWorkspaceName(
   }
 }
 
+function getOnboardingWorkspaceName(workspaces: Workspace[]) {
+  if (
+    !workspaces.some(workspace => workspace.name === DEFAULT_WORKSPACE_NAME)
+  ) {
+    return DEFAULT_WORKSPACE_NAME
+  }
+
+  let suffix = 2
+  while (
+    workspaces.some(workspace => workspace.name === `Workspace ${suffix}`)
+  ) {
+    suffix++
+  }
+  return `Workspace ${suffix}`
+}
+
 interface AppTemplate {
   useTemplate?: boolean
   file?: {
@@ -558,7 +574,7 @@ async function performWorkspaceCreate(
   const useTemplate = body.useTemplate === "true"
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
 
-  const appName = isOnboarding ? DEFAULT_WORKSPACE_NAME : name
+  const appName = isOnboarding ? getOnboardingWorkspaceName(workspaces) : name
 
   checkWorkspaceName(ctx, workspaces, appName)
   const appUrl = sdk.workspaces.getAppUrl({ name: appName, url })

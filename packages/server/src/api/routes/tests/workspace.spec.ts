@@ -208,6 +208,19 @@ describe("/applications", () => {
       })
     })
 
+    it("creates a uniquely named default workspace when onboarding workspace already exists", async () => {
+      await config.api.workspace.create({
+        isOnboarding: "true",
+      })
+
+      const secondWorkspace = await config.api.workspace.create({
+        isOnboarding: "true",
+      })
+
+      expect(secondWorkspace.name).toBe("Workspace 2")
+      expect(secondWorkspace.navigation?.title).toBe("Workspace 2")
+    })
+
     it("creates app from template", async () => {
       nock("https://prod-budi-templates.s3-eu-west-1.amazonaws.com")
         .get(`/templates/app/expense-approval.tar.gz`)
