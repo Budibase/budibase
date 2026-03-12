@@ -52,6 +52,13 @@
   let keys = {}
   let queryEditorModal
   let queryEditorModalOpen = false
+  let transformerModal
+  let transformerModalOpen = false
+  const MODAL_EDITOR_MAX_LINES = 30
+  const MODAL_EDITOR_LINE_HEIGHT = 24
+  const MODAL_EDITOR_MAX_HEIGHT =
+    MODAL_EDITOR_MAX_LINES * MODAL_EDITOR_LINE_HEIGHT
+  const modalEditorMaxHeightStyle = `--modal-editor-max-height:${MODAL_EDITOR_MAX_HEIGHT}px;`
 
   const parseQuery = query => {
     modified = false
@@ -166,6 +173,17 @@
       queryEditorModal.show()
     }
   }
+
+  const toggleTransformerModal = () => {
+    if (!transformerModal) {
+      return
+    }
+    if (transformerModalOpen) {
+      transformerModal.hide()
+    } else {
+      transformerModal.show()
+    }
+  }
 </script>
 
 <svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
@@ -259,7 +277,7 @@
 
         <Divider />
 
-        <div class="heading queryHeading">
+        <div class="heading headingWithAction">
           <Heading weight="L" size="XS">Query</Heading>
           <ActionButton
             size="M"
@@ -303,13 +321,15 @@
             showConfirmButton={false}
             showCancelButton={false}
           >
-            <IntegrationQueryEditor
-              noLabel
-              {datasource}
-              bind:query={newQuery}
-              height={500}
-              schema={integration.query[newQuery.queryVerb]}
-            />
+            <div class="modalEditor" style={modalEditorMaxHeightStyle}>
+              <IntegrationQueryEditor
+                noLabel
+                {datasource}
+                bind:query={newQuery}
+                height={MODAL_EDITOR_MAX_HEIGHT}
+                schema={integration.query[newQuery.queryVerb]}
+              />
+            </div>
           </ModalContent>
         </Modal>
 
@@ -341,20 +361,53 @@
         {/key}
 
         <Divider />
-        <div class="heading">
+        <div class="heading headingWithAction">
           <Heading weight="L" size="XS">Transformer</Heading>
+          <ActionButton
+            size="M"
+            quiet
+            selected={transformerModalOpen}
+            icon={transformerModalOpen ? "arrows-in-simple" : "arrows-out-simple"}
+            tooltip={transformerModalOpen
+              ? "Close expanded editor"
+              : "Edit transformer in modal"}
+            on:click={toggleTransformerModal}
+          />
         </div>
         <div class="copy">
           <Body size="S">
             Add a JavaScript function to transform the query result.
           </Body>
         </div>
-        <CodeMirrorEditor
-          height={200}
-          value={newQuery.transformer}
-          resize="vertical"
-          on:change={e => (newQuery.transformer = e.detail)}
-        />
+        {#if !transformerModalOpen}
+          <CodeMirrorEditor
+            height={200}
+            value={newQuery.transformer}
+            resize="vertical"
+            on:change={e => (newQuery.transformer = e.detail)}
+          />
+        {/if}
+        <Modal
+          bind:this={transformerModal}
+          on:show={() => (transformerModalOpen = true)}
+          on:hide={() => (transformerModalOpen = false)}
+        >
+          <ModalContent
+            size="XL"
+            title="Edit transformer"
+            showConfirmButton={false}
+            showCancelButton={false}
+          >
+            <div class="modalEditor" style={modalEditorMaxHeightStyle}>
+              <CodeMirrorEditor
+                height={MODAL_EDITOR_MAX_HEIGHT}
+                value={newQuery.transformer}
+                resize="vertical"
+                on:change={e => (newQuery.transformer = e.detail)}
+              />
+            </div>
+          </ModalContent>
+        </Modal>
       </div>
     </div>
   </div>
@@ -485,7 +538,7 @@
     margin-bottom: 8px;
   }
 
-  .queryHeading {
+  .headingWithAction {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -498,6 +551,16 @@
 
   .copy :global(p) {
     color: var(--grey-7);
+  }
+
+  .modalEditor {
+    max-height: var(--modal-editor-max-height, 720px);
+    overflow: auto;
+  }
+
+  .modalEditor :global(.cm-editor),
+  .modalEditor :global(.cm-scroller) {
+    max-height: var(--modal-editor-max-height, 720px);
   }
 
   .sidePanel {
