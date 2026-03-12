@@ -18,10 +18,9 @@
   export interface Props {
     configId?: string
     provider?: string | undefined
-    knowledgeBaseId?: string
   }
 
-  let { configId, provider, knowledgeBaseId }: Props = $props()
+  let { configId, provider }: Props = $props()
 
   let config = $derived(
     $aiConfigsStore.customConfigs.find(c => c._id === configId)
@@ -133,12 +132,6 @@
         draft._rev = updated._rev
         captureSavedSnapshot()
         notifications.success(`Configuration updated`)
-
-        if (knowledgeBaseId && knowledgeBaseId !== "new") {
-          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
-        } else {
-          bb.settings(`/ai-config/knowledge-bases`)
-        }
       } else {
         const { _id, ...rest } = Helpers.cloneDeep(draft)
         const created = await aiConfigsStore.createConfig(rest)
@@ -154,13 +147,8 @@
             embeddingModel: created._id,
           })
         }
-
-        if (knowledgeBaseId && knowledgeBaseId !== "new") {
-          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
-        } else {
-          bb.settings(`/ai-config/knowledge-bases`)
-        }
       }
+      bb.goToParent()
     } catch (err: any) {
       notifications.error(err.message || `Failed to save configuration`)
     } finally {
@@ -189,7 +177,7 @@
         try {
           await aiConfigsStore.deleteConfig(configId)
           notifications.success(`Configuration deleted`)
-          bb.settings(`/ai-config/knowledge-bases`)
+          bb.goToParent()
         } catch (err: any) {
           notifications.error(err.message || `Failed to delete configuration`)
         }
