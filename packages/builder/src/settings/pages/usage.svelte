@@ -75,7 +75,7 @@
         if (value.value !== 0) {
           const isAICredits = value.name === "Budibase AI Credits"
           monthlyUsage.push({
-            name: value.name === "Actions" ? "Operations" : value.name,
+            name: value.name,
             used: isAICredits ? Math.floor((used ?? 0) / 1000) : (used ?? 0),
             total: isAICredits ? Math.floor(value.value / 1000) : value.value,
           })
