@@ -5,6 +5,7 @@
   import { chatAppsStore, currentChatApp } from "@/stores/portal"
   import { helpers } from "@budibase/shared-core"
   import { params } from "@roxi/routify"
+  import VersionModal from "@/components/deploy/VersionModal.svelte"
   import AgentSettingsModal from "../../../chat/_components/AgentSettingsModal.svelte"
   import BudibaseLogo from "assets/bb-emblem.svg"
 
@@ -19,6 +20,12 @@
     "Agent chat settings saved and published"
   const AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE =
     "Failed to save agent chat settings"
+  const MIN_AGENT_CHAT_CLIENT_VERSION = "3.30.0"
+  const AGENT_CHAT_UPDATE_UNAVAILABLE_MESSAGE =
+    "Agent chat requires client version " +
+    `${MIN_AGENT_CHAT_CLIENT_VERSION}+ but no newer client version is available on this instance`
+
+  type ShowUI = { show: () => void }
 
   export let agentId: string
   export let agentName: string
@@ -29,10 +36,44 @@
   let attemptedWorkspaceId: string | undefined
   let currentWorkspaceId: string | undefined
   let settingsOpen = false
+  let versionModal: ShowUI | undefined
 
   interface ChatAppAgentConfig {
     agentId: string
     isEnabled?: boolean
+  }
+
+  const parseVersion = (version?: string) => {
+    if (!version) {
+      return null
+    }
+
+    const match = version.trim().match(/^(\d+)\.(\d+)\.(\d+)/)
+    if (!match) {
+      return null
+    }
+
+    return match.slice(1).map(part => Number(part))
+  }
+
+  const isVersionAtLeast = (version: string | undefined, minimum: string) => {
+    const current = parseVersion(version)
+    const min = parseVersion(minimum)
+
+    if (!current || !min) {
+      return false
+    }
+
+    for (let index = 0; index < min.length; index++) {
+      if (current[index] > min[index]) {
+        return true
+      }
+      if (current[index] < min[index]) {
+        return false
+      }
+    }
+
+    return true
   }
 
   const isAgentEnabledInChat = (
@@ -83,6 +124,14 @@
   )?.agentId
   $: enabled = isAgentEnabledInChat(currentChatAgents, agentId)
   $: disabled = toggling || loadingChatApp || !workspaceId
+  $: isChatRouteSupported = isVersionAtLeast(
+    $appStore.version,
+    MIN_AGENT_CHAT_CLIENT_VERSION
+  )
+  $: canUpdateClientVersion =
+    !!$appStore.upgradableVersion &&
+    !!$appStore.version &&
+    $appStore.upgradableVersion !== $appStore.version
 
   $: chatUrl = $appStore.url
     ? `${helpers.appChatUrl($appStore.url)}/agent/${encodeURIComponent(agentId)}`
@@ -221,6 +270,18 @@
       notifications.error(AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE)
     }
   }
+
+  const onOpenChat = (event: MouseEvent) => {
+    if (isChatRouteSupported) {
+      return
+    }
+
+    event.preventDefault()
+    versionModal?.show()
+    if (!canUpdateClientVersion) {
+      notifications.warning(AGENT_CHAT_UPDATE_UNAVAILABLE_MESSAGE)
+    }
+  }
 </script>
 
 <div class="integration-row">
@@ -237,7 +298,13 @@
   </div>
   <div class="row-action">
     {#if enabled && chatUrl}
-      <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
+      <a
+        class="chat-link"
+        href={chatUrl}
+        target="_blank"
+        rel="noreferrer"
+        on:click={onOpenChat}
+      >
         Open chat
       </a>
     {/if}
@@ -267,6 +334,8 @@
     settingsOpen = false
   }}
 />
+
+<VersionModal hideIcon bind:this={versionModal} />
 
 <style>
   .integration-row {
