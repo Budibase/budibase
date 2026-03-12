@@ -10,7 +10,7 @@
     notifications,
   } from "@budibase/bbui"
 
-  let updateModal: { show: () => void; hide: () => void } | undefined
+  let updateModal = $state<{ show: () => void; hide: () => void } | undefined>()
 
   export function show() {
     updateModal?.show()
@@ -20,11 +20,12 @@
     updateModal?.hide()
   }
 
-  $: appId = $appStore.appId
-  $: updateAvailable =
+  let appId = $derived($appStore.appId)
+  let updateAvailable = $derived(
     !!$appStore.upgradableVersion &&
-    !!$appStore.version &&
-    $appStore.upgradableVersion !== $appStore.version
+      !!$appStore.version &&
+      $appStore.upgradableVersion !== $appStore.version
+  )
 
   const refreshAppPackage = async () => {
     if (!appId) {
