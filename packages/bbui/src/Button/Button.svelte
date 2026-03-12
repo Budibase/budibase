@@ -1,6 +1,7 @@
 <script>
   import "@spectrum-css/button/dist/index-vars.css"
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
+  import { TooltipPosition } from "../constants"
   import { createEventDispatcher } from "svelte"
   import Icon from "../Icon/Icon.svelte"
 
@@ -18,6 +19,7 @@
   export let iconWeight = "regular"
   export let active = false
   export let tooltip = undefined
+  export let tooltipPosition = undefined
   export let newStyles = true
   export let id = undefined
   export let ref = undefined
@@ -26,7 +28,7 @@
   const dispatch = createEventDispatcher()
 </script>
 
-<AbsTooltip text={tooltip}>
+<AbsTooltip text={tooltip} position={tooltipPosition || TooltipPosition.Top}>
   <button
     {id}
     {type}
