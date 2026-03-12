@@ -12,6 +12,8 @@
     Divider,
     Button,
     ActionButton,
+    Modal,
+    ModalContent,
   } from "@budibase/bbui"
   import { capitalise } from "@/helpers"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
@@ -48,6 +50,8 @@
   let nestedSchemaFields = {}
   let rows = []
   let keys = {}
+  let queryEditorModal
+  let queryEditorModalOpen = false
 
   const parseQuery = query => {
     modified = false
@@ -151,6 +155,17 @@
   function handleKeyUp(evt) {
     delete keys[evt.key]
   }
+
+  const toggleQueryEditorModal = () => {
+    if (!queryEditorModal) {
+      return
+    }
+    if (queryEditorModalOpen) {
+      queryEditorModal.hide()
+    } else {
+      queryEditorModal.show()
+    }
+  }
 </script>
 
 <svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
@@ -244,8 +259,16 @@
 
         <Divider />
 
-        <div class="heading">
+        <div class="heading queryHeading">
           <Heading weight="L" size="XS">Query</Heading>
+          <ActionButton
+            size="M"
+            quiet
+            selected={queryEditorModalOpen}
+            icon={queryEditorModalOpen ? "arrows-in-simple" : "arrows-out-simple"}
+            tooltip={queryEditorModalOpen ? "Close expanded editor" : "Edit query in modal"}
+            on:click={toggleQueryEditorModal}
+          />
         </div>
         <div class="copy">
           <Body size="S">
@@ -260,13 +283,35 @@
             {/if}
           </Body>
         </div>
-        <IntegrationQueryEditor
-          noLabel
-          {datasource}
-          bind:query={newQuery}
-          height={200}
-          schema={integration.query[newQuery.queryVerb]}
-        />
+        {#if !queryEditorModalOpen}
+          <IntegrationQueryEditor
+            noLabel
+            {datasource}
+            bind:query={newQuery}
+            height={200}
+            schema={integration.query[newQuery.queryVerb]}
+          />
+        {/if}
+        <Modal
+          bind:this={queryEditorModal}
+          on:show={() => (queryEditorModalOpen = true)}
+          on:hide={() => (queryEditorModalOpen = false)}
+        >
+          <ModalContent
+            size="XL"
+            title="Edit query"
+            showConfirmButton={false}
+            showCancelButton={false}
+          >
+            <IntegrationQueryEditor
+              noLabel
+              {datasource}
+              bind:query={newQuery}
+              height={500}
+              schema={integration.query[newQuery.queryVerb]}
+            />
+          </ModalContent>
+        </Modal>
 
         <Divider />
 
@@ -438,6 +483,13 @@
 
   .heading {
     margin-bottom: 8px;
+  }
+
+  .queryHeading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
   }
 
   .copy {
