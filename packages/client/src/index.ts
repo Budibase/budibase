@@ -308,7 +308,9 @@ export const mountBudibaseApp = async ({
   }
 
   if (app) {
-    throw new Error("Budibase is already mounted. Unmount the existing instance before mounting again.")
+    throw new Error(
+      "Budibase is already mounted. Unmount the existing instance before mounting again."
+    )
   }
   await loadBudibase({ target })
 
