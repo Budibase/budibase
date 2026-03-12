@@ -2,8 +2,11 @@
   import { Body, Icon } from "@budibase/bbui"
   import type { GetWorkspaceHomeMetricsResponse } from "@budibase/types"
   import { onMount } from "svelte"
+  import type { Route } from "@/types/routing"
 
   import { API } from "@/api"
+  import { bb } from "@/stores/bb"
+  import { flattenedRoutes } from "@/stores/routing"
 
   const GITHUB_REPO_URL = "https://github.com/Budibase/budibase"
 
@@ -11,6 +14,9 @@
   export let showBudibaseAIMetric = true
 
   let githubStars: number | null = null
+  $: canViewOrganisationUsers = $flattenedRoutes.some(
+    (route: Route) => route.path === "/people/users"
+  )
 
   const formatMetric = (value: number) => {
     return new Intl.NumberFormat("en").format(value)
@@ -38,9 +44,27 @@
     <Body size="XL" weight="600">
       {metrics ? formatMetric(metrics.totalUsers) : "-"}
     </Body>
-    <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      Total users
-    </Body>
+    {#if canViewOrganisationUsers}
+      <button
+        type="button"
+        class="metric-label-link metric-label-button"
+        on:click={() => bb.settings("/people/users")}
+      >
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          Total users
+        </Body>
+        <Icon
+          name="arrow-up-right"
+          size="XS"
+          color="var(--spectrum-global-color-gray-600)"
+          weight="regular"
+        />
+      </button>
+    {:else}
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        Total users
+      </Body>
+    {/if}
   </div>
 
   <div class="metric-card">
@@ -114,6 +138,14 @@
     text-decoration: none;
     color: inherit;
     width: fit-content;
+  }
+
+  .metric-label-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font: inherit;
   }
 
   .metric-label-link:hover {
