@@ -14,6 +14,10 @@ import { isEqual } from "lodash"
 import tablesSdk from ".."
 import { DEFAULT_TABLES } from "../../../../db/defaultData/datasource_bb_default"
 import { generateJunctionTableID } from "../../../../db/utils"
+import {
+  STATIC_SQS_TABLE_IDS,
+  getStaticSqsTables,
+} from "../../sqs/staticTables"
 
 const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.BOOLEAN]: SQLiteType.NUMERIC,
@@ -129,11 +133,16 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
       ...mapTable(table),
     }
   }
+  definition.sql.tables = {
+    ...definition.sql.tables,
+    ...getStaticSqsTables(),
+  }
   return definition
 }
 
-export async function syncDefinition(): Promise<void> {
-  const db = context.getWorkspaceDB()
+export async function syncDefinition(
+  db = context.getWorkspaceDB()
+): Promise<void> {
   let existing: SQLiteDefinition | undefined
   try {
     existing = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
@@ -162,6 +171,7 @@ export async function addTable(table: Table) {
   }
   definition.sql.tables = {
     ...definition.sql.tables,
+    ...getStaticSqsTables(),
     ...mapTable(table),
   }
   await db.put(definition)
@@ -177,6 +187,7 @@ export async function removeTable(table: Table) {
     const tableIds = tables
       .map(tbl => tbl._id!)
       .filter(id => !id.includes(table._id!))
+      .concat(STATIC_SQS_TABLE_IDS)
     let cleanup = false
     for (let tableKey of Object.keys(definition.sql?.tables || {})) {
       // there are no tables matching anymore
@@ -194,6 +205,51 @@ export async function removeTable(table: Table) {
     if (err?.status === 404) {
       return
     } else {
+      throw err
+    }
+  }
+}
+
+export async function ensureStaticTables(db = context.getWorkspaceDB()) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let definition: SQLiteDefinition | undefined
+    try {
+      definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    } catch (err: any) {
+      if (err?.status !== 404) {
+        throw err
+      }
+      await syncDefinition(db)
+      return
+    }
+
+    const staticTables = getStaticSqsTables()
+    const currentTables = definition.sql?.tables || {}
+
+    const needsUpdate = Object.entries(staticTables).some(
+      ([tableId, tableDef]) => !isEqual(currentTables[tableId], tableDef)
+    )
+
+    if (!needsUpdate) {
+      return
+    }
+
+    try {
+      await db.put({
+        ...definition,
+        sql: {
+          ...definition.sql,
+          tables: {
+            ...currentTables,
+            ...staticTables,
+          },
+        },
+      })
+      return
+    } catch (err: any) {
+      if (err?.status === 409 && attempt < 2) {
+        continue
+      }
       throw err
     }
   }

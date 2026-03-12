@@ -13,6 +13,7 @@ import {
   formatIncompleteToolCallError,
   updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents"
+import { createSessionLogIndexer } from "../../../sdk/workspace/ai/agentLogs"
 import {
   ToolLoopAgent,
   stepCountIs,
@@ -51,10 +52,19 @@ export async function run({
   }
 
   const sessionId = v4()
+  const operationStartedAt = new Date().toISOString()
 
   return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
     async agentSpan => {
+      const sessionLogIndexer = createSessionLogIndexer({
+        agentId,
+        sessionId,
+        firstInput: prompt,
+        errorLabel: "automation agent",
+        startedAt: operationStartedAt,
+      })
+
       try {
         const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
@@ -125,7 +135,8 @@ export async function run({
           stopWhen: stepCountIs(30),
           providerOptions: providerOptions?.(hasTools),
           output: outputOption,
-          async onStepFinish({ content, toolCalls, toolResults }) {
+          async onStepFinish({ content, toolCalls, toolResults, response }) {
+            sessionLogIndexer.addRequestId(response?.id)
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
             for (const part of content) {
               if (part.type === "tool-error") {
@@ -159,8 +170,13 @@ export async function run({
         const incompleteTools = assistantMessage
           ? findIncompleteToolCalls([assistantMessage])
           : []
+        const responseMetadata = {
+          requestId: (await streamResult.response).id ?? undefined,
+        }
         if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
+          sessionLogIndexer.addRequestId(responseMetadata.requestId)
           const errorMessage = formatIncompleteToolCallError(incompleteTools)
+          await sessionLogIndexer.index()
           tracer.llmobs.annotate(agentSpan, {
             outputData: errorMessage,
             tags: { error: "1", "error.type": "IncompleteToolCall" },
@@ -169,6 +185,7 @@ export async function run({
             success: false,
             response: errorMessage,
             message: assistantMessage,
+            sessionId,
           }
         }
 
@@ -182,6 +199,8 @@ export async function run({
 
         const error = streamingError || textExtractionError
         if (error && !responseText) {
+          sessionLogIndexer.addRequestId(responseMetadata.requestId)
+          await sessionLogIndexer.index()
           tracer.llmobs.annotate(agentSpan, {
             outputData: error,
             tags: { error: "1", "error.type": "StreamingError" },
@@ -190,9 +209,12 @@ export async function run({
             success: false,
             response: error,
             message: assistantMessage,
+            sessionId,
           }
         }
         const usage = await streamResult.usage
+        sessionLogIndexer.addRequestId(responseMetadata.requestId)
+        await sessionLogIndexer.index()
         const output = outputOption
           ? ((await streamResult.output) as Record<string, any>)
           : undefined
@@ -207,10 +229,12 @@ export async function run({
           response: responseText,
           usage,
           message: assistantMessage,
+          sessionId,
           output,
         }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
+        await sessionLogIndexer.index()
 
         tracer.llmobs.annotate(agentSpan, {
           outputData: errorMessage,
@@ -231,6 +255,7 @@ export async function run({
         return {
           success: false,
           response: errorMessage,
+          sessionId,
         }
       }
     }
