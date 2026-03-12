@@ -18,6 +18,7 @@ import {
 } from "@budibase/types"
 import * as liteLLM from "./litellm"
 import * as knowledgeBaseSdk from "../knowledgeBase"
+import { processEnvironmentVariable } from "../../../utils"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
@@ -108,6 +109,14 @@ const decodeConfigSecrets = (
   }
 }
 
+const resolveCredentialFields = async (
+  credentialFields: Record<string, string>
+) => {
+  return await processEnvironmentVariable({
+    ...credentialFields,
+  })
+}
+
 const ensureDefaultUniqueness = async (excludeId?: string) => {
   const db = context.getWorkspaceDB()
   const result = await db.allDocs<CustomAIProviderConfig>(
@@ -194,10 +203,14 @@ export async function create(
 
   let modelId
   if (!isBBAI || isSelfhost) {
+    const resolvedCredentialFields = await resolveCredentialFields(
+      config.credentialsFields
+    )
+
     await liteLLM.validateConfig({
       provider: config.provider,
       name: config.model,
-      credentialFields: config.credentialsFields,
+      credentialFields: resolvedCredentialFields,
       configType: config.configType,
     })
 
@@ -205,7 +218,7 @@ export async function create(
       configId,
       provider: config.provider,
       model: config.model,
-      credentialFields: config.credentialsFields,
+      credentialFields: resolvedCredentialFields,
       configType: config.configType,
       reasoningEffort: config.reasoningEffort,
     })
@@ -313,10 +326,14 @@ export async function update(
     (isSelfhost || !isBBAI)
 
   if (shouldUpdateLiteLLM) {
+    const resolvedCredentialFields = await resolveCredentialFields(
+      updatedConfig.credentialsFields
+    )
+
     await liteLLM.validateConfig({
       provider: updatedConfig.provider,
       name: updatedConfig.model,
-      credentialFields: updatedConfig.credentialsFields,
+      credentialFields: resolvedCredentialFields,
       configType: updatedConfig.configType,
     })
   }
@@ -338,12 +355,16 @@ export async function update(
 
   if (shouldUpdateLiteLLM) {
     try {
+      const resolvedCredentialFields = await resolveCredentialFields(
+        updatedConfig.credentialsFields
+      )
+
       await liteLLM.updateModel({
         configId: id,
         llmModelId: updatedConfig.liteLLMModelId,
         provider: updatedConfig.provider,
         name: updatedConfig.model,
-        credentialFields: updatedConfig.credentialsFields,
+        credentialFields: resolvedCredentialFields,
         configType: updatedConfig.configType,
         reasoningEffort: updatedConfig.reasoningEffort,
       })
