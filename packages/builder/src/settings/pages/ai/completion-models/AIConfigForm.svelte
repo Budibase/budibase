@@ -142,7 +142,7 @@
         })
         notifications.success(`Configuration created`)
       }
-      bb.settings(`/ai-config/${draft.configType}`)
+      bb.settings(`/connections/${draft.configType}`)
     } catch (err: any) {
       notifications.error(err.message || `Failed to save configuration`)
     } finally {
@@ -164,7 +164,7 @@
         try {
           await aiConfigsStore.deleteConfig(configId)
           notifications.success(`Configuration deleted`)
-          bb.settings(`/ai-config/${draft.configType}`)
+          bb.settings(`/connections/${draft.configType}`)
         } catch (err: any) {
           notifications.error(err.message || `Failed to delete configuration`)
         }

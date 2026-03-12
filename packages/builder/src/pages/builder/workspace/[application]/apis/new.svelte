@@ -5,7 +5,7 @@
 
 <NoResults
   ctaText="Create your first connection"
-  onCtaClick={() => bb.settings("/connections/create")}
+  onCtaClick={() => bb.settings("/connections/apis/create")}
   resourceType="api"
 >
   No connections yet! Build your first connection to get started.

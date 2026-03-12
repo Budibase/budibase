@@ -57,7 +57,7 @@
         disabled: false,
         callback:
           datasource.source === "REST"
-            ? () => bb.settings(`/connections/${datasource._id}`)
+            ? () => bb.settings(`/connections/apis/${datasource._id}`)
             : editModal.show,
       },
       {

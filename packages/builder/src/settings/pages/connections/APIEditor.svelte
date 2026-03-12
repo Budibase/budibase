@@ -115,7 +115,7 @@
     datasource === undefined &&
     initialised
   ) {
-    bb.settings("/connections")
+    bb.settings("/connections/apis")
   }
 
   $: templateStaticVariableKeys = getTemplateStaticVariableKeys(
@@ -788,7 +788,7 @@
 <DeleteDataConfirmationModal
   bind:this={deleteModal}
   source={datasource}
-  onDeleted={() => bb.settings("/connections")}
+  onDeleted={() => bb.settings("/connections/apis")}
 />
 
 <style>

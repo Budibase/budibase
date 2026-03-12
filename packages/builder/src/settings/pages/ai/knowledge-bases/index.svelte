@@ -55,7 +55,7 @@
 
   function createKnowledgeBase() {
     knowledgeBaseStore.clearFormDraft()
-    bb.settings(`/ai-config/knowledge-bases/new`)
+    bb.settings(`/connections/knowledge-bases/new`)
   }
 
   function editKnowledgeBase(row: { _id?: string }) {
@@ -63,11 +63,11 @@
       return
     }
     knowledgeBaseStore.clearFormDraft()
-    bb.settings(`/ai-config/knowledge-bases/${row._id}`)
+    bb.settings(`/connections/knowledge-bases/${row._id}`)
   }
 
   function createEmbeddingModel() {
-    bb.settings(`/ai-config/knowledge-bases/embedding/new`, {
+    bb.settings(`/connections/knowledge-bases/embedding/new`, {
       type: AIConfigType.EMBEDDINGS,
     })
   }
@@ -76,20 +76,20 @@
     if (!row._id) {
       return
     }
-    bb.settings(`/ai-config/knowledge-bases/embedding/${row._id}`, {
+    bb.settings(`/connections/knowledge-bases/embedding/${row._id}`, {
       type: AIConfigType.EMBEDDINGS,
     })
   }
 
   function createVectorDb() {
-    bb.settings(`/ai-config/knowledge-bases/vectordb/new`)
+    bb.settings(`/connections/knowledge-bases/vectordb/new`)
   }
 
   function editVectorDb(row: { _id?: string }) {
     if (!row._id) {
       return
     }
-    bb.settings(`/ai-config/knowledge-bases/vectordb/${row._id}`)
+    bb.settings(`/connections/knowledge-bases/vectordb/${row._id}`)
   }
 
   onMount(async () => {

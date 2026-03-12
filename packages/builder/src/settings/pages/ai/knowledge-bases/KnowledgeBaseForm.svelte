@@ -126,7 +126,7 @@
       const isCreation = knowledgeBaseId === "new"
       if (!isCreation && !config) {
         notifications.error("Knowledge base not found")
-        bb.settings(`/ai-config/knowledge-bases`)
+        bb.settings(`/connections/knowledge-bases`)
         return
       }
 
@@ -179,7 +179,7 @@
         notifications.success("Knowledge base created")
       }
       knowledgeBaseStore.clearFormDraft()
-      bb.settings(`/ai-config/knowledge-bases/${draft._id}`)
+      bb.settings(`/connections/knowledge-bases/${draft._id}`)
     } catch (err: any) {
       notifications.error(err.message || "Failed to save knowledge base")
     } finally {
@@ -189,12 +189,12 @@
 
   function createNewEmbeddingModel() {
     knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-    bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}/embedding/new`)
+    bb.settings(`/connections/knowledge-bases/${knowledgeBaseId}/embedding/new`)
   }
 
   function createNewVectorDb() {
     knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-    bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}/vectordb/new`)
+    bb.settings(`/connections/knowledge-bases/${knowledgeBaseId}/vectordb/new`)
   }
 
   async function deleteKnowledgeBase() {
@@ -212,7 +212,7 @@
           await knowledgeBaseStore.delete(knowledgeBaseId)
           knowledgeBaseStore.clearFormDraft()
           notifications.success("Knowledge base deleted")
-          bb.settings(`/ai-config/knowledge-bases`)
+          bb.settings(`/connections/knowledge-bases`)
         } catch (err: any) {
           notifications.error(err.message || "Failed to delete knowledge base")
         }

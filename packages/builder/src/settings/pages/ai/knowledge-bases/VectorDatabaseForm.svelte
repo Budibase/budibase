@@ -69,7 +69,7 @@
       const isCreation = id === "new"
       if (!isCreation && id && !configs.find(db => db._id === id)) {
         notifications.error("Vector database not found")
-        bb.settings("/ai-config/knowledge-bases")
+        bb.settings("/connections/knowledge-bases")
         return
       }
 

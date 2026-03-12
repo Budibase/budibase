@@ -127,7 +127,7 @@
         files: knowledgeBase.files.length,
         onToggle: toggleKnowledgeBase,
         onManage: (knowledgeBaseId: string) =>
-          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`),
+          bb.settings(`/connections/knowledge-bases/${knowledgeBaseId}`),
       }))
       .sort((a, b) => a.name.localeCompare(b.name))
   )
@@ -170,7 +170,7 @@
         to enable document search.
       </div>
       <Button
-        on:click={() => bb.settings("/ai-config/knowledge-bases/new")}
+        on:click={() => bb.settings("/connections/knowledge-bases/new")}
         size="S"
         cta>Create knowledge base</Button
       >
@@ -183,7 +183,7 @@
         icon="plus"
         size="S"
         secondary
-        on:click={() => bb.settings("/ai-config/knowledge-bases/new")}
+        on:click={() => bb.settings("/connections/knowledge-bases/new")}
         >Add knowledge base</Button
       >
     </div>
