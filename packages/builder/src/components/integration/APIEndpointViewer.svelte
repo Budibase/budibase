@@ -397,8 +397,8 @@
         customBaseUrl = fullPath.slice(0, slashIdx)
         customPath = fullPath.slice(slashIdx)
       } else {
-        customBaseUrl = (datasource as Datasource)?.config?.url ?? ""
-        customPath = fullPath
+        customBaseUrl = fullPath
+        customPath = ""
       }
     }
   }
@@ -998,10 +998,9 @@
       <div class="save-btn">
         <Button
           cta
-          disabled={!queryDirty ||
-            savingQuery ||
-            (isNewQuery && !isCustomMode && !selectedEndpointOption) ||
-            (isNewQuery && isCustomMode && !effectivePath)}
+          disabled={savingQuery ||
+            (!isNewQuery && !queryDirty) ||
+            (isNewQuery && (isCustomMode ? !effectivePath : !selectedEndpointOption))}
           on:click={() => saveQuery()}
         >
           Save
