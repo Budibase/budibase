@@ -219,6 +219,12 @@
     border-bottom: none;
   }
 
+  .step--expanded {
+    background: var(--spectrum-global-color-gray-100);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 8px;
+  }
+
   .step-header {
     display: grid;
     grid-template-columns: 34px minmax(0, 1fr) auto;
@@ -231,11 +237,16 @@
     text-align: left;
     cursor: pointer;
     transition: background 130ms ease-out;
+    border-radius: 8px;
   }
 
-  .step-header:hover,
-  .step--expanded .step-header {
+  .step-header:hover {
     background: var(--spectrum-global-color-gray-100);
+  }
+
+  .step--expanded .step-header {
+    background: transparent;
+    border-radius: 8px 8px 0 0;
   }
 
   .step-number {
@@ -367,7 +378,6 @@
     display: flex;
     align-items: center;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
   .panel-title {
@@ -471,7 +481,7 @@
     border-radius: 6px;
     overflow: auto;
     max-height: 220px;
-    background: var(--background-alt);
+    background: var(--background);
     scrollbar-width: thin;
   }
 
