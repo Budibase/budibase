@@ -187,32 +187,14 @@
     }
   }
 
-  function openEmbeddingModel() {
+  function createNewEmbeddingModel() {
     knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-    const currentKnowledgeBaseId = knowledgeBaseId || "new"
-    if (draft.embeddingModel) {
-      bb.settings(
-        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/${draft.embeddingModel}`
-      )
-      return
-    }
-    bb.settings(
-      `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/embedding/new`
-    )
+    bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}/embedding/new`)
   }
 
-  function openVectorDb() {
+  function createNewVectorDb() {
     knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-    const currentKnowledgeBaseId = knowledgeBaseId || "new"
-    if (draft.vectorDb) {
-      bb.settings(
-        `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/${draft.vectorDb}`
-      )
-      return
-    }
-    bb.settings(
-      `/ai-config/knowledge-bases/${currentKnowledgeBaseId}/vectordb/new`
-    )
+    bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}/vectordb/new`)
   }
 
   async function deleteKnowledgeBase() {
@@ -279,11 +261,7 @@
         ? "Remove all files to change the embedding model."
         : ""}
     />
-    <ActionButton
-      icon={draft.embeddingModel ? "pencil" : "Add"}
-      size="M"
-      on:click={openEmbeddingModel}
-    />
+    <ActionButton icon={"Add"} size="M" on:click={createNewEmbeddingModel} />
   </div>
 
   <div class="select">
@@ -300,11 +278,7 @@
         ? "Remove all files to change the vector database."
         : ""}
     />
-    <ActionButton
-      icon={draft.vectorDb ? "pencil" : "Add"}
-      size="M"
-      on:click={openVectorDb}
-    />
+    <ActionButton icon={"Add"} size="M" on:click={createNewVectorDb} />
   </div>
 
   <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} {hasReferenceChanges} />
