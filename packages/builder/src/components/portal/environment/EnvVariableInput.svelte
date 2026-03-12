@@ -29,10 +29,6 @@
 
   let modal = $state<Modal>()
 
-  if (type === "number") {
-    value = 123
-  }
-
   async function handleUpgradePanel() {
     await environment.upgradePanelOpened()
     licensing.goToUpgradePage()
