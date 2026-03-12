@@ -8,29 +8,9 @@
   type IconSize = "XXS" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL"
   type IconWeight = "regular" | "bold" | "fill"
 
-  const ICON_SIZES: IconSize[] = [
-    "XXS",
-    "XS",
-    "S",
-    "M",
-    "L",
-    "XL",
-    "XXL",
-    "XXXL",
-  ]
-  const ICON_WEIGHTS: IconWeight[] = ["regular", "bold", "fill"]
-
-  const isIconSize = (value: string): value is IconSize => {
-    return ICON_SIZES.includes(value as IconSize)
-  }
-
-  const isIconWeight = (value: string): value is IconWeight => {
-    return ICON_WEIGHTS.includes(value as IconWeight)
-  }
-
   export let type: "button" | "submit" | "reset" | undefined = undefined
   export let disabled = false
-  export let size: string = "M"
+  export let size: IconSize = "M"
   export let cta = false
   export let primary = false
   export let secondary = false
@@ -39,26 +19,20 @@
   export let quiet = false
   export let icon: string | undefined = undefined
   export let iconColor: string | undefined = undefined
-  export let iconWeight: string = "regular"
+  export let iconWeight: IconWeight = "regular"
   export let active = false
-  export let tooltip: string | null | undefined = undefined
-  export let tooltipPosition: TooltipPosition | undefined = undefined
+  export let tooltip: string | null = ""
+  export let tooltipPosition: TooltipPosition = TooltipPosition.Top
   export let newStyles = true
   export let id: string | undefined = undefined
   export let ref: HTMLButtonElement | undefined = undefined
   export let reverse = false
 
   const dispatch = createEventDispatcher<{ click: undefined }>()
-
-  $: normalizedSize = size.toUpperCase()
-  $: iconSize = isIconSize(normalizedSize) ? normalizedSize : "M"
-  $: normalizedIconWeight = isIconWeight(iconWeight) ? iconWeight : "regular"
+  $: tooltipText = tooltip ?? ""
 </script>
 
-<AbsTooltip
-  text={tooltip || ""}
-  position={tooltipPosition || TooltipPosition.Top}
->
+<AbsTooltip text={tooltipText} position={tooltipPosition}>
   <button
     {id}
     {type}
@@ -72,7 +46,7 @@
     class:new-styles={newStyles}
     class:active
     class:is-disabled={disabled}
-    class="spectrum-Button spectrum-Button--size{normalizedSize}"
+    class="spectrum-Button spectrum-Button--size{size}"
     on:click|preventDefault={() => {
       if (!disabled) {
         dispatch("click")
@@ -86,9 +60,9 @@
       <span class="icon">
         <Icon
           name={icon}
-          size={iconSize}
+          size={size}
           color={iconColor}
-          weight={normalizedIconWeight}
+          weight={iconWeight}
         />
       </span>
     {/if}
