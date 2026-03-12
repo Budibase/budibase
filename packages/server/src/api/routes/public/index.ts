@@ -17,18 +17,10 @@ import tableEndpoints from "./tables"
 import userEndpoints from "./users"
 import viewEndpoints from "./views"
 import workspaceEndpoints from "./workspaces"
+import { getPublicApiRedisConfig } from "./redisConfig"
+import Router from "@koa/router"
 // below imports don't have declaration files
-const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
-
-interface KoaRateLimitOptions {
-  socket: {
-    host: string
-    port: number
-  }
-  password?: string
-  database?: number
-}
 
 const PREFIX = "/api/public/v1"
 
@@ -46,23 +38,11 @@ if (!env.DISABLE_RATE_LIMITING) {
   }
 
   if (!env.isTest()) {
-    const { password, host, port } = redis.utils.getRedisConnectionDetails()
-    let options: KoaRateLimitOptions = {
-      socket: {
-        host: host,
-        port: port,
-      },
-    }
-
-    if (password) {
-      options.password = password
-    }
-
-    if (!env.REDIS_CLUSTERED) {
-      // Can't set direct redis db in clustered env
-      options.database = SelectableDatabase.RATE_LIMITING
-    }
-    rateLimitStore = new Stores.Redis(options)
+    rateLimitStore = new Stores.Redis(
+      getPublicApiRedisConfig(
+        !env.REDIS_CLUSTERED ? SelectableDatabase.RATE_LIMITING : undefined
+      )
+    )
     RateLimit.defaultOptions({
       store: rateLimitStore,
     })
