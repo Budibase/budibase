@@ -102,6 +102,9 @@
       path = e.currentTarget.value
       dispatch("pathChange", path)
     }}
+    on:blur={e => {
+      dispatch("pathCommit", e.currentTarget.value)
+    }}
   />
 
   {#if verbOpen}

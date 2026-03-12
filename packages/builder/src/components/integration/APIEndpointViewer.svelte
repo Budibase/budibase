@@ -1052,10 +1052,22 @@
               customBaseUrl = e.detail
             }}
             on:pathChange={e => {
-              customPath = e.detail
-              const [base, qs] = (e.detail ?? "").split("?")
+              customPath = e.detail ?? ""
+              const [base] = customPath.split("?")
               if (editableQuery) editableQuery.fields.path = base
-              if (qs) queryParams = restUtils.breakQueryString(qs)
+            }}
+            on:pathCommit={e => {
+              const [base, qs] = (e.detail ?? "").split("?")
+              if (!qs) return
+              customPath = base
+              if (editableQuery) editableQuery.fields.path = base
+              queryParams = {
+                ...(queryParams ?? {}),
+                ...runtimeToReadableMap(
+                  mergedBindings,
+                  restUtils.breakQueryString(qs)
+                ),
+              }
             }}
           />
         </div>
