@@ -120,7 +120,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends software-proper
 
 # Patch Debian packages that have available security fixes (libssl3, openssl,
 # libpng16-16, libgnutls30).
-RUN apt-get update && \
+RUN apt-mark hold couchdb && \
+    apt-get update && \
     apt-get upgrade -y --no-install-recommends && \
     rm -rf /var/lib/apt/lists/
 
