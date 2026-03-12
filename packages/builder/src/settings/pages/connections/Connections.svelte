@@ -63,6 +63,7 @@
     </RouteActions>
     <div class="setting-spacing">
       <Table
+        compact
         hideHeader
         rounded
         data={filteredConnections}
