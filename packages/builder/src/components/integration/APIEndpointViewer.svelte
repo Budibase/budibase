@@ -1000,7 +1000,8 @@
           cta
           disabled={savingQuery ||
             (!isNewQuery && !queryDirty) ||
-            (isNewQuery && (isCustomMode ? !effectivePath : !selectedEndpointOption))}
+            (isNewQuery &&
+              (isCustomMode ? !effectivePath : !selectedEndpointOption))}
           on:click={() => saveQuery()}
         >
           Save
