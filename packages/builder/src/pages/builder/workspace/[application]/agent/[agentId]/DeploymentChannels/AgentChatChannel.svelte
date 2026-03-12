@@ -5,7 +5,7 @@
   import { chatAppsStore, currentChatApp } from "@/stores/portal"
   import { helpers } from "@budibase/shared-core"
   import { params } from "@roxi/routify"
-  import VersionModal from "@/components/deploy/VersionModal.svelte"
+  import AgentChatVersionModal from "./AgentChatVersionModal.svelte"
   import AgentSettingsModal from "../../../chat/_components/AgentSettingsModal.svelte"
   import BudibaseLogo from "assets/bb-emblem.svg"
 
@@ -20,10 +20,7 @@
     "Agent chat settings saved and published"
   const AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE =
     "Failed to save agent chat settings"
-  const MIN_AGENT_CHAT_CLIENT_VERSION = "3.30.0"
-  const AGENT_CHAT_UPDATE_UNAVAILABLE_MESSAGE =
-    "Agent chat requires client version " +
-    `${MIN_AGENT_CHAT_CLIENT_VERSION}+ but no newer client version is available on this instance`
+  const MIN_AGENT_CHAT_CLIENT_VERSION = "999.0.0"
 
   type ShowUI = { show: () => void }
 
@@ -128,10 +125,7 @@
     $appStore.version,
     MIN_AGENT_CHAT_CLIENT_VERSION
   )
-  $: canUpdateClientVersion =
-    !!$appStore.upgradableVersion &&
-    !!$appStore.version &&
-    $appStore.upgradableVersion !== $appStore.version
+  $: requiresClientUpdate = !isChatRouteSupported
 
   $: chatUrl = $appStore.url
     ? `${helpers.appChatUrl($appStore.url)}/agent/${encodeURIComponent(agentId)}`
@@ -278,9 +272,6 @@
 
     event.preventDefault()
     versionModal?.show()
-    if (!canUpdateClientVersion) {
-      notifications.warning(AGENT_CHAT_UPDATE_UNAVAILABLE_MESSAGE)
-    }
   }
 </script>
 
@@ -300,12 +291,13 @@
     {#if enabled && chatUrl}
       <a
         class="chat-link"
+        class:update-link={requiresClientUpdate}
         href={chatUrl}
         target="_blank"
         rel="noreferrer"
         on:click={onOpenChat}
       >
-        Open chat
+        {requiresClientUpdate ? "Requires update" : "Open chat"}
       </a>
     {/if}
     <ActionButton
@@ -335,7 +327,10 @@
   }}
 />
 
-<VersionModal hideIcon bind:this={versionModal} />
+<AgentChatVersionModal
+  requiredVersion={MIN_AGENT_CHAT_CLIENT_VERSION}
+  bind:this={versionModal}
+/>
 
 <style>
   .integration-row {
@@ -379,5 +374,14 @@
   .chat-link:hover {
     color: var(--spectrum-global-color-gray-900);
     text-decoration: underline;
+  }
+
+  .chat-link.update-link {
+    color: var(--spectrum-global-color-blue-600);
+    font-weight: 500;
+  }
+
+  .chat-link.update-link:hover {
+    color: var(--spectrum-global-color-blue-700);
   }
 </style>
