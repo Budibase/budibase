@@ -2,6 +2,7 @@
   import { gradient } from "@/actions"
   import { API } from "@/api"
   import { AGENT_CHAT_MIN_CLIENT_VERSION } from "@/constants"
+  import { isVersionAtLeast } from "@/helpers/version"
   import {
     admin,
     auth,
@@ -49,7 +50,6 @@
   let changePasswordModal: Modal
   let chatCompatibilityByAppId: Record<string, boolean> = {}
 
-  const MIN_AGENT_CHAT_CLIENT_VERSION = AGENT_CHAT_MIN_CLIENT_VERSION
   const inFlightCompatibility = new Set<string>()
 
   const { accountPortalAccountUrl, appChatUrl } = helpers
@@ -64,39 +64,6 @@
   $: hasUnknownChatCompatibility = liveChatApps.some(
     chatApp => chatCompatibilityByAppId[chatApp.appId] == null
   )
-
-  const parseVersion = (version?: string) => {
-    if (!version) {
-      return null
-    }
-
-    const match = version.trim().match(/^(\d+)\.(\d+)\.(\d+)/)
-    if (!match) {
-      return null
-    }
-
-    return match.slice(1).map(part => Number(part))
-  }
-
-  const isVersionAtLeast = (version: string | undefined, minimum: string) => {
-    const current = parseVersion(version)
-    const min = parseVersion(minimum)
-
-    if (!current || !min) {
-      return false
-    }
-
-    for (let index = 0; index < min.length; index++) {
-      if (current[index] > min[index]) {
-        return true
-      }
-      if (current[index] < min[index]) {
-        return false
-      }
-    }
-
-    return true
-  }
 
   const ensureChatAppCompatibility = async (
     chatApps: PublishedChatAppData[]
@@ -143,7 +110,7 @@
             appId,
             isVersionAtLeast(
               pkg?.application?.version,
-              MIN_AGENT_CHAT_CLIENT_VERSION
+              AGENT_CHAT_MIN_CLIENT_VERSION
             ),
           ] as const
         } catch (_error) {

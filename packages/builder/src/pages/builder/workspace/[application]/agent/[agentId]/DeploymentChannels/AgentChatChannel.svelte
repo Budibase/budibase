@@ -4,6 +4,7 @@
   import { appStore, deploymentStore } from "@/stores/builder"
   import { chatAppsStore, currentChatApp } from "@/stores/portal"
   import { AGENT_CHAT_MIN_CLIENT_VERSION } from "@/constants"
+  import { isVersionAtLeast } from "@/helpers/version"
   import { helpers } from "@budibase/shared-core"
   import { params } from "@roxi/routify"
   import AgentChatVersionModal from "./AgentChatVersionModal.svelte"
@@ -21,8 +22,6 @@
     "Agent chat settings saved and published"
   const AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE =
     "Failed to save agent chat settings"
-  const MIN_AGENT_CHAT_CLIENT_VERSION = AGENT_CHAT_MIN_CLIENT_VERSION
-
   type ShowUI = { show: () => void }
 
   export let agentId: string
@@ -39,39 +38,6 @@
   interface ChatAppAgentConfig {
     agentId: string
     isEnabled?: boolean
-  }
-
-  const parseVersion = (version?: string) => {
-    if (!version) {
-      return null
-    }
-
-    const match = version.trim().match(/^(\d+)\.(\d+)\.(\d+)/)
-    if (!match) {
-      return null
-    }
-
-    return match.slice(1).map(part => Number(part))
-  }
-
-  const isVersionAtLeast = (version: string | undefined, minimum: string) => {
-    const current = parseVersion(version)
-    const min = parseVersion(minimum)
-
-    if (!current || !min) {
-      return false
-    }
-
-    for (let index = 0; index < min.length; index++) {
-      if (current[index] > min[index]) {
-        return true
-      }
-      if (current[index] < min[index]) {
-        return false
-      }
-    }
-
-    return true
   }
 
   const isAgentEnabledInChat = (
@@ -124,7 +90,7 @@
   $: disabled = toggling || loadingChatApp || !workspaceId
   $: isChatRouteSupported = isVersionAtLeast(
     $appStore.version,
-    MIN_AGENT_CHAT_CLIENT_VERSION
+    AGENT_CHAT_MIN_CLIENT_VERSION
   )
   $: requiresClientUpdate = !isChatRouteSupported
 
