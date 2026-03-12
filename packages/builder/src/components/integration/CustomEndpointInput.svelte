@@ -67,6 +67,9 @@
         baseUrl = e.currentTarget.value
         dispatch("baseUrlChange", baseUrl)
       }}
+      on:keydown={e => {
+        if (e.key === "Enter") e.currentTarget.blur()
+      }}
     />
     {#if baseUrlOptions.length > 0}
       <div class="globe-icon">
@@ -101,6 +104,9 @@
     on:input={e => {
       path = e.currentTarget.value
       dispatch("pathChange", path)
+    }}
+    on:keydown={e => {
+      if (e.key === "Enter") e.currentTarget.blur()
     }}
     on:blur={e => {
       dispatch("pathCommit", e.currentTarget.value)
