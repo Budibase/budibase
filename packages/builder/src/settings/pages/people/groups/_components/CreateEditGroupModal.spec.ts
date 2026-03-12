@@ -20,7 +20,7 @@ import CreateEditGroupModal from "./CreateEditGroupModal.svelte"
 const buildGroup = (overrides = {}) => ({
   _id: "group-1",
   _rev: "rev-1",
-  name: "Operations",
+  name: "Actions",
   icon: "UserGroup",
   color: "#336699",
   users: [],
