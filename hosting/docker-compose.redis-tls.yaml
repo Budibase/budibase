@@ -1,0 +1,20 @@
+services:
+  redis-tls-service:
+    container_name: budi-redis-tls-dev
+    image: redis:7.4-alpine
+    restart: on-failure
+    environment:
+      REDIS_TLS_USERNAME: ${REDIS_TLS_USERNAME:-aaa}
+      REDIS_TLS_PASSWORD: ${REDIS_TLS_PASSWORD:-bbb}
+    command: ["/bin/sh", "/usr/local/bin/redis-tls-start.sh"]
+    ports:
+      - "${REDIS_TLS_PORT:-6381}:6379"
+    volumes:
+      - ./redis-tls/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./redis-tls/start.sh:/usr/local/bin/redis-tls-start.sh:ro
+      - ./redis-tls/certs:/certs:ro
+      - redis_tls_data:/data
+
+volumes:
+  redis_tls_data:
+    driver: local
