@@ -188,9 +188,7 @@ describe("/applications", () => {
     })
 
     it("creates default workspace without sample data when onboarding", async () => {
-      const name = "Welcome app"
       const newWorkspace = await config.api.workspace.create({
-        name,
         isOnboarding: "true",
       })
       expect(newWorkspace._id).toBeDefined()

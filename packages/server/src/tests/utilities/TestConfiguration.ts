@@ -691,40 +691,6 @@ export default class TestConfiguration {
     )
   }
 
-  async createWorkspaceWithOnboarding(
-    name: string,
-    url?: string
-  ): Promise<Workspace> {
-    this.devWorkspaceId = undefined
-    this.devWorkspace = await context.doInTenant(
-      this.tenantId!,
-      async () =>
-        (await this._req(workspaceController.create, {
-          name,
-          url,
-          isOnboarding: "true",
-        })) as Workspace
-    )
-    this.devWorkspaceId = this.devWorkspace.appId
-
-    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
-      .workspaceApps
-    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
-
-    return await context.doInWorkspaceContext(
-      this.devWorkspace.appId!,
-      async () => {
-        // create production app
-        this.prodWorkspace = await this.publish()
-
-        this.allWorkspaces.push(this.prodWorkspace)
-        this.allWorkspaces.push(this.devWorkspace!)
-
-        return this.devWorkspace!
-      }
-    )
-  }
-
   async publish() {
     await this._req(deployController.publishWorkspace)
     // @ts-ignore
