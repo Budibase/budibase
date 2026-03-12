@@ -10,10 +10,9 @@
 
   export interface Props {
     id?: string
-    knowledgeBaseId?: string
   }
 
-  let { id, knowledgeBaseId }: Props = $props()
+  let { id }: Props = $props()
 
   let config = $derived($vectorDbStore.configs.find(db => db._id === id))
 
@@ -102,12 +101,6 @@
         draft.port = payload.port
         captureSavedSnapshot()
         notifications.success("Vector database updated")
-
-        if (knowledgeBaseId && knowledgeBaseId !== "new") {
-          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
-        } else {
-          bb.settings(`/ai-config/knowledge-bases`)
-        }
       } else {
         const created = await vectorDbStore.create(payload)
         draft._id = created._id
@@ -123,13 +116,8 @@
             vectorDb: created._id,
           })
         }
-
-        if (knowledgeBaseId && knowledgeBaseId !== "new") {
-          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
-        } else {
-          bb.settings(`/ai-config/knowledge-bases`)
-        }
       }
+      bb.goToParent()
     } catch (err: any) {
       notifications.error(err.message || "Failed to save vector database")
     } finally {
@@ -158,7 +146,7 @@
         try {
           await vectorDbStore.delete(vectorDbId)
           notifications.success("Vector database deleted")
-          bb.settings("/ai-config/knowledge-bases")
+          bb.goToParent()
         } catch (err: any) {
           notifications.error(err.message || "Failed to delete vector database")
         }

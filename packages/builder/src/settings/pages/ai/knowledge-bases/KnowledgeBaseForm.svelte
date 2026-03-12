@@ -6,7 +6,14 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Button,
+    Helpers,
+    Input,
+    notifications,
+    Select,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
   import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
   import { routeActions } from "../.."
@@ -180,6 +187,16 @@
     }
   }
 
+  function createNewEmbeddingModel() {
+    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
+    bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}/embedding/new`)
+  }
+
+  function createNewVectorDb() {
+    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
+    bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}/vectordb/new`)
+  }
+
   async function deleteKnowledgeBase() {
     if (!draft._id) {
       return
@@ -244,6 +261,12 @@
         ? "Remove all files to change the embedding model."
         : ""}
     />
+    <ActionButton
+      icon={"Add"}
+      size="M"
+      disabled={!canEditReferences}
+      on:click={createNewEmbeddingModel}
+    />
   </div>
 
   <div class="select">
@@ -259,6 +282,12 @@
       tooltip={!canEditReferences
         ? "Remove all files to change the vector database."
         : ""}
+    />
+    <ActionButton
+      icon={"Add"}
+      size="M"
+      disabled={!canEditReferences}
+      on:click={createNewVectorDb}
     />
   </div>
 
