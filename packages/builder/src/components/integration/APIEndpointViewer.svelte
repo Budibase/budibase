@@ -129,8 +129,7 @@
   let bindingPreviewContext: Record<string, any> = {}
 
   // Custom query mode state
-  let customBaseUrl: string = ""
-  let customPath: string = ""
+  let customUrl: string = ""
 
   $: baseUrlOptions = (() => {
     const opts: { label: string; url: string }[] = []
@@ -285,7 +284,7 @@
 
   // Custom Mode Url Parsing
   $: effectivePath = isCustomMode
-    ? (customBaseUrl ?? "") + (customPath ?? "")
+    ? customUrl
     : editableQuery?.fields?.path
 
   // Generates a complete runtime-ready version of the query used to monitor the
@@ -372,30 +371,8 @@
     )
   }
 
-  // Splits a stored full URL (fields.path) into base URL and path portion
-  // for the custom mode UI. Legacy queries store the full URL in fields.path.
   const initCustomUrlFields = (fullPath: string | undefined) => {
-    if (!fullPath) {
-      customBaseUrl = (datasource as Datasource)?.config?.url ?? ""
-      customPath = ""
-      return
-    }
-    try {
-      const u = new URL(fullPath)
-      customBaseUrl = u.origin
-      customPath = u.pathname
-    } catch {
-      const schemeEnd = fullPath.indexOf("://")
-      const searchFrom = schemeEnd !== -1 ? schemeEnd + 3 : 0
-      const slashIdx = fullPath.indexOf("/", searchFrom)
-      if (slashIdx !== -1) {
-        customBaseUrl = fullPath.slice(0, slashIdx)
-        customPath = fullPath.slice(slashIdx)
-      } else {
-        customBaseUrl = (datasource as Datasource)?.config?.url ?? ""
-        customPath = fullPath
-      }
-    }
+    customUrl = fullPath || (datasource as Datasource)?.config?.url || ""
   }
 
   const resolveStoreQuery = (
@@ -996,7 +973,7 @@
           disabled={!queryDirty ||
             savingQuery ||
             (isNewQuery && !isCustomMode && !selectedEndpointOption) ||
-            (isNewQuery && isCustomMode && !customPath)}
+            (isNewQuery && isCustomMode && !customUrl)}
           on:click={() => saveQuery()}
         >
           Save
@@ -1041,18 +1018,14 @@
         <div class="picker">
           <CustomEndpointInput
             verb={editableQuery?.queryVerb ?? "read"}
-            path={customPath}
-            baseUrl={customBaseUrl}
+            url={customUrl}
             {baseUrlOptions}
             {verbOptions}
             on:verbChange={e => {
               if (editableQuery) editableQuery.queryVerb = e.detail
             }}
-            on:baseUrlChange={e => {
-              customBaseUrl = e.detail
-            }}
-            on:pathChange={e => {
-              customPath = e.detail
+            on:urlChange={e => {
+              customUrl = e.detail
               const [base, qs] = (e.detail ?? "").split("?")
               if (editableQuery) editableQuery.fields.path = base
               if (qs) queryParams = restUtils.breakQueryString(qs)
@@ -1092,12 +1065,12 @@
       </div>
       <div
         class="send"
-        class:loaded={isCustomMode ? !!customPath : !!selectedEndpointOption}
+        class:loaded={isCustomMode ? !!customUrl : !!selectedEndpointOption}
       >
         <Button
           primary
           disabled={isCustomMode
-            ? !customPath || runningQuery
+            ? !customUrl || runningQuery
             : !selectedEndpointOption || runningQuery}
           icon="paper-plane-right"
           on:click={previewQuery}
