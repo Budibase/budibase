@@ -158,7 +158,7 @@
   })
 
   $: if (chatFeatureEnabled && liveChatApps.length) {
-    void ensureChatAppCompatibility(liveChatApps)
+    ensureChatAppCompatibility(liveChatApps)
   }
 
   $: translationOverrides = (() => {
