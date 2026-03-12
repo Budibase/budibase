@@ -4,6 +4,7 @@
   import { consumeSkipUnsavedPrompt } from "@/stores/builder/queries"
 
   import {
+    ActionButton,
     Banner,
     Body,
     Button,
@@ -12,6 +13,8 @@
     Input,
     Label,
     Layout,
+    Modal,
+    ModalContent,
     notifications,
     RadioGroup,
     Select,
@@ -86,6 +89,15 @@
   let defaultAuthKey
   let lastSyncedQueryId
   let lastSyncedQueryName
+  let requestBodyModal
+  let requestBodyModalOpen = false
+  let transformerModal
+  let transformerModalOpen = false
+  const MODAL_EDITOR_MAX_LINES = 30
+  const MODAL_EDITOR_LINE_HEIGHT = 24
+  const MODAL_EDITOR_MAX_HEIGHT =
+    MODAL_EDITOR_MAX_LINES * MODAL_EDITOR_LINE_HEIGHT
+  const modalEditorMaxHeightStyle = `--modal-editor-max-height:${MODAL_EDITOR_MAX_HEIGHT}px;`
 
   $: staticVariables = datasource?.config?.staticVariables || {}
   $: if (queryId) {
@@ -270,6 +282,28 @@
   function onUpdateBody(e) {
     if (query) {
       query.fields.requestBody = e.detail.requestBody
+    }
+  }
+
+  const toggleRequestBodyModal = () => {
+    if (!requestBodyModal) {
+      return
+    }
+    if (requestBodyModalOpen) {
+      requestBodyModal.hide()
+    } else {
+      requestBodyModal.show()
+    }
+  }
+
+  const toggleTransformerModal = () => {
+    if (!transformerModal) {
+      return
+    }
+    if (transformerModalOpen) {
+      transformerModal.hide()
+    } else {
+      transformerModal.show()
     }
   }
 
@@ -682,18 +716,56 @@
             />
           </Tab>
           <Tab title="Body">
-            <RadioGroup
-              bind:value={query.fields.bodyType}
-              options={isGet ? [bodyTypes[0]] : bodyTypes}
-              direction="horizontal"
-              getOptionLabel={option => option.name}
-              getOptionValue={option => option.value}
-            />
-            <RestBodyInput
-              bodyType={query.fields.bodyType}
-              requestBody={prettyBody}
-              on:change={onUpdateBody}
-            />
+            <div class="tabHeading bodyTabHeading">
+              <div class="bodyType-radio-group">
+                <RadioGroup
+                  bind:value={query.fields.bodyType}
+                  options={isGet ? [bodyTypes[0]] : bodyTypes}
+                  direction="horizontal"
+                  getOptionLabel={option => option.name}
+                  getOptionValue={option => option.value}
+                />
+              </div>
+              <ActionButton
+                size="M"
+                quiet
+                selected={requestBodyModalOpen}
+                icon={requestBodyModalOpen
+                  ? "arrows-in-simple"
+                  : "arrows-out-simple"}
+                tooltip={requestBodyModalOpen
+                  ? "Close expanded editor"
+                  : "Edit body in modal"}
+                on:click={toggleRequestBodyModal}
+              />
+            </div>
+            {#if !requestBodyModalOpen}
+              <RestBodyInput
+                bodyType={query.fields.bodyType}
+                requestBody={prettyBody}
+                on:change={onUpdateBody}
+              />
+            {/if}
+            <Modal
+              bind:this={requestBodyModal}
+              on:show={() => (requestBodyModalOpen = true)}
+              on:hide={() => (requestBodyModalOpen = false)}
+            >
+              <ModalContent
+                size="XL"
+                title="Edit request body"
+                showConfirmButton={false}
+                showCancelButton={false}
+              >
+                <div class="modalEditor" style={modalEditorMaxHeightStyle}>
+                  <RestBodyInput
+                    bodyType={query.fields.bodyType}
+                    requestBody={prettyBody}
+                    on:change={onUpdateBody}
+                  />
+                </div>
+              </ModalContent>
+            </Modal>
           </Tab>
           <Tab title="Pagination">
             <div class="pagination">
@@ -733,6 +805,20 @@
           </Tab>
           <Tab title="Transformer">
             <Layout noPadding>
+              <div class="tabHeading headingRight">
+                <ActionButton
+                  size="M"
+                  quiet
+                  selected={transformerModalOpen}
+                  icon={transformerModalOpen
+                    ? "arrows-in-simple"
+                    : "arrows-out-simple"}
+                  tooltip={transformerModalOpen
+                    ? "Close expanded editor"
+                    : "Edit transformer in modal"}
+                  on:click={toggleTransformerModal}
+                />
+              </div>
               {#if !$flags.queryTransformerBanner}
                 <Banner
                   extraButtonText="Learn more"
@@ -743,14 +829,37 @@
                   Add a JavaScript function to transform the query result.
                 </Banner>
               {/if}
-              <div class="embed">
-                <CodeEditor
-                  value={query.transformer}
-                  mode={EditorModes.JS}
-                  aiEnabled={false}
-                  on:change={e => (query.transformer = e.detail)}
-                />
-              </div>
+              {#if !transformerModalOpen}
+                <div class="embed">
+                  <CodeEditor
+                    value={query.transformer}
+                    mode={EditorModes.JS}
+                    aiEnabled={false}
+                    on:change={e => (query.transformer = e.detail)}
+                  />
+                </div>
+              {/if}
+              <Modal
+                bind:this={transformerModal}
+                on:show={() => (transformerModalOpen = true)}
+                on:hide={() => (transformerModalOpen = false)}
+              >
+                <ModalContent
+                  size="XL"
+                  title="Edit transformer"
+                  showConfirmButton={false}
+                  showCancelButton={false}
+                >
+                  <div class="embed modalEditor" style={modalEditorMaxHeightStyle}>
+                    <CodeEditor
+                      value={query.transformer}
+                      mode={EditorModes.JS}
+                      aiEnabled={false}
+                      on:change={e => (query.transformer = e.detail)}
+                    />
+                  </div>
+                </ModalContent>
+              </Modal>
             </Layout>
           </Tab>
           <div class="auth-container">
@@ -965,6 +1074,26 @@
     justify-content: space-between;
   }
 
+  .tabHeading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-s);
+    margin-bottom: var(--spacing-s);
+  }
+
+  .headingRight {
+    justify-content: flex-end;
+  }
+
+  .bodyTabHeading .bodyType-radio-group {
+    flex: 1;
+  }
+
+  .bodyType-radio-group {
+    display: flex;
+  }
+
   .pagination {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -980,5 +1109,15 @@
   .embed :global(.cm-gutters) {
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
+  }
+
+  .modalEditor {
+    max-height: var(--modal-editor-max-height, 720px);
+    overflow: auto;
+  }
+
+  .modalEditor :global(.cm-editor),
+  .modalEditor :global(.cm-scroller) {
+    max-height: var(--modal-editor-max-height, 720px);
   }
 </style>
