@@ -1,49 +1,94 @@
 <script>
-  import "@spectrum-css/toast/dist/index-vars.css"
-  import Portal from "svelte-portal"
-  import { fly } from "svelte/transition"
-  import { Banner, BANNER_TYPES } from "@budibase/bbui"
   import { licensing } from "@/stores/portal"
 
   export let show = true
 
-  const oneDayInSeconds = 86400
+  const oneDayInMilliseconds = 86400000
+
+  const startOfDay = timestamp => {
+    const date = new Date(timestamp)
+    date.setHours(0, 0, 0, 0)
+    return date.getTime()
+  }
 
   $: license = $licensing.license
 
-  function daysUntilCancel() {
+  const getTrialCopy = () => {
     const cancelAt = license?.billing?.subscription?.cancelAt
-    const diffTime = Math.abs(cancelAt - new Date().getTime()) / 1000
-    const days = Math.floor(diffTime / oneDayInSeconds)
-    if (days === 1) {
-      return "tomorrow."
-    } else if (days === 0) {
-      return "today."
+
+    if (!cancelAt) {
+      return "Free trial"
     }
-    return `in ${days} days.`
+
+    const days = Math.max(
+      0,
+      Math.floor(
+        (startOfDay(cancelAt) - startOfDay(Date.now())) / oneDayInMilliseconds
+      )
+    )
+
+    if (days === 0) {
+      return "Free trial ends today"
+    }
+
+    if (days === 1) {
+      return "Free trial: 1 day left"
+    }
+
+    return `Free trial: ${days} days left`
   }
 </script>
 
-<Portal target=".banner-container">
-  <div class="banner">
-    {#if show}
-      <div transition:fly={{ y: -30 }}>
-        <Banner
-          type={BANNER_TYPES.INFO}
-          extraButtonAction={licensing.goToUpgradePage}
-          extraButtonText={"View plans"}
-          showCloseButton={false}
-        >
-          Your free trial will end {daysUntilCancel()}. Please select a plan.
-        </Banner>
-      </div>
-    {/if}
+{#if show}
+  <div class="trial-notice">
+    <button
+      type="button"
+      class="trial-status"
+      on:click={licensing.goToUpgradePage}
+    >
+      {getTrialCopy()}
+    </button>
+    <button
+      type="button"
+      class="trial-action"
+      on:click={licensing.goToUpgradePage}
+    >
+      View plans
+    </button>
   </div>
-</Portal>
+{/if}
 
 <style>
-  .banner {
-    pointer-events: none;
-    width: 100%;
+  .trial-notice {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-m);
+    min-width: 0;
+  }
+
+  .trial-status,
+  .trial-action {
+    border: 0;
+    background: none;
+    padding: 0;
+    margin: 0;
+    font-size: 13px;
+    line-height: 18px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .trial-status {
+    color: var(--spectrum-global-color-orange-700);
+  }
+
+  .trial-status:hover,
+  .trial-action:hover {
+    text-decoration: underline;
+  }
+
+  .trial-action {
+    color: var(--spectrum-global-color-gray-700);
+    white-space: nowrap;
   }
 </style>

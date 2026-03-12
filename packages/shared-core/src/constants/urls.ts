@@ -9,5 +9,6 @@ export const BUILDER_URLS = {
 export const ACCOUNT_PORTAL_PATHS = {
   ACCOUNT: "/portal/account",
   BILLING: "/portal/billing",
+  TENANTS: "/portal/tenants",
   UPGRADE: "/portal/upgrade",
 } as const

@@ -49,7 +49,7 @@
   $: userApps = $clientAppsStore.apps
   $: liveChatApps = $clientChatAppsStore.chatApps
   $: chatAppsLoaded = $clientChatAppsStore.loaded
-  $: chatFeatureEnabled = $featureFlags.AI_CHAT
+  $: chatFeatureEnabled = $featureFlags.AI_AGENTS
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUrl(app: EnrichedApp | PublishedWorkspaceData) {

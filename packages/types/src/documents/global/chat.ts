@@ -9,6 +9,7 @@ export interface ChatAppAgent {
   agentId: string
   isEnabled: boolean
   isDefault: boolean
+  roleId?: string
   conversationStarters?: ConversationStarter[]
 }
 

@@ -443,8 +443,9 @@ export const handleChatMessage = async ({
       parts: [{ type: "text", text: content }],
     }
 
+    const chatId = existingChat?._id ?? docIds.generateChatConversationID()
     const draftChat: ChatConversationRequest = {
-      _id: existingChat?._id,
+      _id: chatId,
       chatAppId,
       agentId,
       title: existingChat?.title || truncateTitle(content),
@@ -472,7 +473,6 @@ export const handleChatMessage = async ({
       return
     }
 
-    const chatId = existingChat?._id ?? docIds.generateChatConversationID()
     await db.put(
       prepareChatConversationForSave({
         chatId,

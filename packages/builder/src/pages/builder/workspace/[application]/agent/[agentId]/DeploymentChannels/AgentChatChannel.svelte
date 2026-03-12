@@ -190,6 +190,37 @@
       notifications.error(AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE)
     }
   }
+
+  const handleUpdateAccessRole = async (
+    targetAgentId: string,
+    roleId?: string
+  ) => {
+    if (!workspaceId || !targetAgentId) {
+      return
+    }
+
+    try {
+      const updated = await chatAppsStore.upsertAgentConfig({
+        agentId: targetAgentId,
+        updates: {
+          roleId,
+        },
+        workspaceId,
+      })
+      if (!updated) {
+        notifications.error(CHAT_UPDATE_ERROR_MESSAGE)
+        return
+      }
+      const published = await publishIfAgentLive()
+      notifications.success(
+        published
+          ? AGENT_CHAT_SETTINGS_PUBLISHED_MESSAGE
+          : AGENT_CHAT_SETTINGS_SAVED_MESSAGE
+      )
+    } catch (error) {
+      notifications.error(AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE)
+    }
+  }
 </script>
 
 <div class="integration-row">
@@ -230,6 +261,7 @@
   {defaultAgentId}
   showDefaultControls={false}
   isAgentAvailable={() => true}
+  onUpdateAccessRole={handleUpdateAccessRole}
   onUpdateConversationStarters={handleUpdateConversationStarters}
   onClose={() => {
     settingsOpen = false

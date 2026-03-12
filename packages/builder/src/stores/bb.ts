@@ -27,6 +27,7 @@ export const INITIAL_GLOBAL_STATE: BBState = {
 export class BBStore extends BudiStore<BBState> {
   constructor() {
     super(INITIAL_GLOBAL_STATE)
+    this.clearSettings = this.clearSettings.bind(this)
     this.hideSettings = this.hideSettings.bind(this)
   }
 
@@ -63,6 +64,15 @@ export class BBStore extends BudiStore<BBState> {
         },
       }))
     }
+  }
+
+  clearSettings() {
+    this.update(state => ({
+      ...state,
+      settings: {
+        open: false,
+      },
+    }))
   }
 
   hideSettings() {
