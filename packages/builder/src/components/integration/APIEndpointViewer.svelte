@@ -286,7 +286,11 @@
   // Custom Mode Url Parsing
   $: effectivePath = isCustomMode
     ? (customBaseUrl ?? "").replace(/\/$/, "") +
-      (customPath ? (customPath.startsWith("/") ? customPath : `/${customPath}`) : "")
+      (customPath
+        ? customPath.startsWith("/")
+          ? customPath
+          : `/${customPath}`
+        : "")
     : editableQuery?.fields?.path
 
   // Generates a complete runtime-ready version of the query used to monitor the
