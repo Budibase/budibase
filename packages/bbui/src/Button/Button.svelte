@@ -8,7 +8,16 @@
   type IconSize = "XXS" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL"
   type IconWeight = "regular" | "bold" | "fill"
 
-  const ICON_SIZES: IconSize[] = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"]
+  const ICON_SIZES: IconSize[] = [
+    "XXS",
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL",
+    "XXXL",
+  ]
   const ICON_WEIGHTS: IconWeight[] = ["regular", "bold", "fill"]
 
   const isIconSize = (value: string): value is IconSize => {
@@ -46,7 +55,10 @@
   $: normalizedIconWeight = isIconWeight(iconWeight) ? iconWeight : "regular"
 </script>
 
-<AbsTooltip text={tooltip || ""} position={tooltipPosition || TooltipPosition.Top}>
+<AbsTooltip
+  text={tooltip || ""}
+  position={tooltipPosition || TooltipPosition.Top}
+>
   <button
     {id}
     {type}
