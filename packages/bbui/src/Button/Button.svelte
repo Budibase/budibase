@@ -1,34 +1,52 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/button/dist/index-vars.css"
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import { TooltipPosition } from "../constants"
   import { createEventDispatcher } from "svelte"
   import Icon from "../Icon/Icon.svelte"
 
-  export let type = undefined
+  type IconSize = "XXS" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL"
+  type IconWeight = "regular" | "bold" | "fill"
+
+  const ICON_SIZES: IconSize[] = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"]
+  const ICON_WEIGHTS: IconWeight[] = ["regular", "bold", "fill"]
+
+  const isIconSize = (value: string): value is IconSize => {
+    return ICON_SIZES.includes(value as IconSize)
+  }
+
+  const isIconWeight = (value: string): value is IconWeight => {
+    return ICON_WEIGHTS.includes(value as IconWeight)
+  }
+
+  export let type: "button" | "submit" | "reset" | undefined = undefined
   export let disabled = false
-  export let size = "M"
+  export let size: string = "M"
   export let cta = false
   export let primary = false
   export let secondary = false
   export let warning = false
   export let overBackground = false
   export let quiet = false
-  export let icon = undefined
-  export let iconColor = undefined
-  export let iconWeight = "regular"
+  export let icon: string | undefined = undefined
+  export let iconColor: string | undefined = undefined
+  export let iconWeight: string = "regular"
   export let active = false
-  export let tooltip = undefined
-  export let tooltipPosition = undefined
+  export let tooltip: string | null | undefined = undefined
+  export let tooltipPosition: TooltipPosition | undefined = undefined
   export let newStyles = true
-  export let id = undefined
-  export let ref = undefined
+  export let id: string | undefined = undefined
+  export let ref: HTMLButtonElement | undefined = undefined
   export let reverse = false
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ click: undefined }>()
+
+  $: normalizedSize = size.toUpperCase()
+  $: iconSize = isIconSize(normalizedSize) ? normalizedSize : "M"
+  $: normalizedIconWeight = isIconWeight(iconWeight) ? iconWeight : "regular"
 </script>
 
-<AbsTooltip text={tooltip} position={tooltipPosition || TooltipPosition.Top}>
+<AbsTooltip text={tooltip || ""} position={tooltipPosition || TooltipPosition.Top}>
   <button
     {id}
     {type}
@@ -42,7 +60,7 @@
     class:new-styles={newStyles}
     class:active
     class:is-disabled={disabled}
-    class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
+    class="spectrum-Button spectrum-Button--size{normalizedSize}"
     on:click|preventDefault={() => {
       if (!disabled) {
         dispatch("click")
@@ -56,9 +74,9 @@
       <span class="icon">
         <Icon
           name={icon}
-          size={size.toUpperCase()}
+          size={iconSize}
           color={iconColor}
-          weight={iconWeight}
+          weight={normalizedIconWeight}
         />
       </span>
     {/if}
