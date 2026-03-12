@@ -19,6 +19,7 @@
   export let showCancelButton: boolean = true
   export let showConfirmButton: boolean = true
   export let showCloseIcon: boolean = true
+  export let closeIconName: string = "x"
   export let onConfirm: (() => Promise<any> | any) | undefined = undefined
   export let onCancel: (() => Promise<any> | any) | undefined = undefined
   export let disabled: boolean = false
@@ -152,7 +153,7 @@
       <div class="close-icon">
         <Icon
           hoverable
-          name="x"
+          name={closeIconName}
           on:click={() => cancel(ModalCancelFrom.CLOSE_BUTTON)}
         />
       </div>

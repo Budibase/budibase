@@ -756,6 +756,7 @@
                 title="Edit request body"
                 showConfirmButton={false}
                 showCancelButton={false}
+                closeIconName="arrows-in-simple"
               >
                 <div class="modalEditor" style={modalEditorMaxHeightStyle}>
                   <RestBodyInput
@@ -849,6 +850,7 @@
                   title="Edit transformer"
                   showConfirmButton={false}
                   showCancelButton={false}
+                  closeIconName="arrows-in-simple"
                 >
                   <div class="embed modalEditor" style={modalEditorMaxHeightStyle}>
                     <CodeEditor

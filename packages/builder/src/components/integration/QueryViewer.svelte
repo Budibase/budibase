@@ -283,8 +283,12 @@
             size="M"
             quiet
             selected={queryEditorModalOpen}
-            icon={queryEditorModalOpen ? "arrows-in-simple" : "arrows-out-simple"}
-            tooltip={queryEditorModalOpen ? "Close expanded editor" : "Edit query in modal"}
+            icon={queryEditorModalOpen
+              ? "arrows-in-simple"
+              : "arrows-out-simple"}
+            tooltip={queryEditorModalOpen
+              ? "Close expanded editor"
+              : "Edit query in modal"}
             on:click={toggleQueryEditorModal}
           />
         </div>
@@ -320,6 +324,7 @@
             title="Edit query"
             showConfirmButton={false}
             showCancelButton={false}
+            closeIconName="arrows-in-simple"
           >
             <div class="modalEditor" style={modalEditorMaxHeightStyle}>
               <IntegrationQueryEditor
@@ -367,7 +372,9 @@
             size="M"
             quiet
             selected={transformerModalOpen}
-            icon={transformerModalOpen ? "arrows-in-simple" : "arrows-out-simple"}
+            icon={transformerModalOpen
+              ? "arrows-in-simple"
+              : "arrows-out-simple"}
             tooltip={transformerModalOpen
               ? "Close expanded editor"
               : "Edit transformer in modal"}
@@ -397,6 +404,7 @@
             title="Edit transformer"
             showConfirmButton={false}
             showCancelButton={false}
+            closeIconName="arrows-in-simple"
           >
             <div class="modalEditor" style={modalEditorMaxHeightStyle}>
               <CodeMirrorEditor
