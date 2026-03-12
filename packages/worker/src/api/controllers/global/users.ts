@@ -778,9 +778,9 @@ export const inviteAccept = async (
         )
         const user = await tenancy.doInTenant(info.tenantId, async () => {
           const appRoles = info.apps || {}
-          const creatorAppsFromRoles = Object.entries(appRoles)
-            .filter(([_appId, role]) => role === "CREATOR")
-            .map(([appId]) => appId)
+          const creatorAppsFromRoles = Object.keys(appRoles).filter(
+            appId => appRoles[appId] === "CREATOR"
+          )
 
           const builderApps = [
             ...(info?.builder?.apps || []),
