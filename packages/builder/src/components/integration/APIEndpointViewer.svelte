@@ -285,7 +285,8 @@
 
   // Custom Mode Url Parsing
   $: effectivePath = isCustomMode
-    ? (customBaseUrl ?? "") + (customPath ?? "")
+    ? (customBaseUrl ?? "").replace(/\/$/, "") +
+      (customPath ? (customPath.startsWith("/") ? customPath : `/${customPath}`) : "")
     : editableQuery?.fields?.path
 
   // Generates a complete runtime-ready version of the query used to monitor the
@@ -383,7 +384,7 @@
     try {
       const u = new URL(fullPath)
       customBaseUrl = u.origin
-      customPath = u.pathname
+      customPath = u.pathname === "/" ? "" : u.pathname
     } catch {
       const schemeEnd = fullPath.indexOf("://")
       const searchFrom = schemeEnd !== -1 ? schemeEnd + 3 : 0
@@ -996,7 +997,7 @@
           disabled={!queryDirty ||
             savingQuery ||
             (isNewQuery && !isCustomMode && !selectedEndpointOption) ||
-            (isNewQuery && isCustomMode && !customPath)}
+            (isNewQuery && isCustomMode && !effectivePath)}
           on:click={() => saveQuery()}
         >
           Save
@@ -1104,12 +1105,12 @@
       </div>
       <div
         class="send"
-        class:loaded={isCustomMode ? !!customPath : !!selectedEndpointOption}
+        class:loaded={isCustomMode ? !!effectivePath : !!selectedEndpointOption}
       >
         <Button
           primary
           disabled={isCustomMode
-            ? !customPath || runningQuery
+            ? !effectivePath || runningQuery
             : !selectedEndpointOption || runningQuery}
           icon="paper-plane-right"
           on:click={previewQuery}
