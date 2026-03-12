@@ -14,6 +14,7 @@
   import { onMount } from "svelte"
   import ProviderModelFields from "../ProviderModelFields.svelte"
   import { routeActions } from "../.."
+  import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
 
   export interface Props {
     configId?: string
@@ -244,7 +245,7 @@
         helpText={field.tooltip ?? undefined}
       />
     {:else}
-      <Input
+      <EnvVariableInput
         label={field.label || field.key}
         type={field.field_type === "password" || field.key.includes("key")
           ? "password"
