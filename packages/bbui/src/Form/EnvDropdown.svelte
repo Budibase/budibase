@@ -4,11 +4,12 @@
   import { createEventDispatcher } from "svelte"
   import type { EnvDropdownType, LabelPosition } from "../types"
 
-  export let value: string | undefined = undefined
+  export let value: string | number | undefined = undefined
   export let label: string | undefined = undefined
   export let labelPosition: LabelPosition = "above"
   export let placeholder: string | undefined = undefined
   export let type: EnvDropdownType = "text"
+  export let description: string | undefined = undefined
   export let disabled = false
   export let readonly = false
   export let error: string | undefined = undefined
@@ -30,7 +31,7 @@
   }
 </script>
 
-<Field {helpText} {label} {labelPosition} {error} {required}>
+<Field {helpText} {label} {labelPosition} {error} {required} {description}>
   <EnvDropdown
     {updateOnChange}
     {disabled}
