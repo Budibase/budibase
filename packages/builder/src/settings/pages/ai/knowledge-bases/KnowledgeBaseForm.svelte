@@ -261,7 +261,12 @@
         ? "Remove all files to change the embedding model."
         : ""}
     />
-    <ActionButton icon={"Add"} size="M" on:click={createNewEmbeddingModel} />
+    <ActionButton
+      icon={"Add"}
+      size="M"
+      disabled={!canEditReferences}
+      on:click={createNewEmbeddingModel}
+    />
   </div>
 
   <div class="select">
@@ -278,7 +283,12 @@
         ? "Remove all files to change the vector database."
         : ""}
     />
-    <ActionButton icon={"Add"} size="M" on:click={createNewVectorDb} />
+    <ActionButton
+      icon={"Add"}
+      size="M"
+      disabled={!canEditReferences}
+      on:click={createNewVectorDb}
+    />
   </div>
 
   <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} {hasReferenceChanges} />
