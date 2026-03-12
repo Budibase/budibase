@@ -19,6 +19,16 @@ jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
   }
 })
 
+jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
+  const actual = jest.requireActual(
+    "../../../../sdk/workspace/ai/vectorDb/pgVectorDb"
+  )
+  return {
+    ...actual,
+    validatePgVectorDbConfig: jest.fn().mockResolvedValue(undefined),
+  }
+})
+
 describe("knowledge base files", () => {
   const config = new TestConfiguration()
 

@@ -65,7 +65,7 @@
   )
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
-  const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_CHAT])
+  const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_AGENTS])
 
   const channels = $derived.by<DeploymentRow[]>(() => [
     {

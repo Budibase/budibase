@@ -199,7 +199,6 @@
         enabled: { displayName: "", width: "48px" },
         name: {},
         embeddingModel: { displayName: "Embedding model" },
-
         files: { displayName: "# Files", width: "60px" },
         manage: { displayName: "", width: "88px" },
       }}

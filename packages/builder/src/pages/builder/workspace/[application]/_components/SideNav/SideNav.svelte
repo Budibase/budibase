@@ -438,7 +438,7 @@
   <CreateWorkspaceModal />
 </Modal>
 
-{#if workspaceId && $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+{#if workspaceId && $featureFlags[FeatureFlag.AI_AGENTS]}
   <Modal bind:this={createAutomationModal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -512,10 +512,10 @@
         {#if workspaceId}
           <div
             class="core-sections"
-            class:workspace_home={$featureFlags[FeatureFlag.WORKSPACE_HOME]}
+            class:workspace_home={$featureFlags[FeatureFlag.AI_AGENTS]}
           >
             <div>
-              {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+              {#if $featureFlags[FeatureFlag.AI_AGENTS]}
                 <SideNavLink
                   icon="house"
                   text="Home"

@@ -35,9 +35,9 @@
           _rev: config._rev,
           name: config.name,
           provider: provider,
-          credentialsFields: structuredClone(config.credentialsFields),
+          credentialsFields: Helpers.cloneDeep(config.credentialsFields),
           model: config.model,
-          webSearchConfig: structuredClone(config.webSearchConfig),
+          webSearchConfig: Helpers.cloneDeep(config.webSearchConfig),
           configType: config.configType,
           reasoningEffort: config.reasoningEffort,
           isDefault: config.isDefault,
@@ -142,6 +142,7 @@
         })
         notifications.success(`Configuration created`)
       }
+      bb.settings(`/ai-config/${draft.configType}`)
     } catch (err: any) {
       notifications.error(err.message || `Failed to save configuration`)
     } finally {

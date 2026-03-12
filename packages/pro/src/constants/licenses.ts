@@ -12,9 +12,9 @@ export const CLOUD_FREE_LICENSE: License = {
     usage: {
       monthly: {
         ...quotas.queries(UNLIMITED),
-        ...quotas.automations(200),
+        ...quotas.automations(UNLIMITED),
         ...quotas.budibaseAICredits(0),
-        ...quotas.actions(UNLIMITED),
+        ...quotas.actions(5000),
       },
       static: {
         ...quotas.apps(UNLIMITED),

@@ -15245,9 +15245,9 @@ homedir-polyfill@^1.0.1:
     parse-passwd "^1.0.0"
 
 hono@^4.11.4:
-  version "4.12.5"
-  resolved "https://registry.yarnpkg.com/hono/-/hono-4.12.5.tgz#8c16209b35040025d3f110d18f3b821de6cab00f"
-  integrity sha512-3qq+FUBtlTHhtYxbxheZgY8NIFnkkC/MR8u5TTsr7YZ3wixryQ3cCwn3iZbg8p8B88iDBBAYSfZDS75t8MN7Vg==
+  version "4.12.7"
+  resolved "https://registry.yarnpkg.com/hono/-/hono-4.12.7.tgz#ca000956e965c2b3d791e43540498e616d6c6442"
+  integrity sha512-jq9l1DM0zVIvsm3lv9Nw9nlJnMNPOcAtsbsgiUhWcFzPE99Gvo6yRTlszSLLYacMeQ6quHD6hMfId8crVHvexw==
 
 hosted-git-info@^2.1.4:
   version "2.8.9"
@@ -24102,10 +24102,10 @@ tar-stream@^3.0.0, tar-stream@^3.1.5:
     fast-fifo "^1.2.0"
     streamx "^2.15.0"
 
-tar@7.5.10:
-  version "7.5.10"
-  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.10.tgz#2281541123f5507db38bc6eb22619f4bbaef73ad"
-  integrity sha512-8mOPs1//5q/rlkNSPcCegA6hiHJYDmSLEI8aMH/CdSQJNWztHC9WHNam5zdQlfpTwB9Xp7IBEsHfV5LKMJGVAw==
+tar@7.5.11:
+  version "7.5.11"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.11.tgz#1250fae45d98806b36d703b30973fa8e0a6d8868"
+  integrity sha512-ChjMH33/KetonMTAtpYdgUFr0tbz69Fp2v7zWxQfYZX4g5ZN2nOBXm1R2xyA+lMIKrLKIoKAwFj93jE/avX9cQ==
   dependencies:
     "@isaacs/fs-minipass" "^4.0.0"
     chownr "^3.0.0"

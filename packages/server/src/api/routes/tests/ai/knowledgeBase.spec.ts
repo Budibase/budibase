@@ -1,6 +1,21 @@
 import { context, docIds, features } from "@budibase/backend-core"
-import { AIConfigType, FeatureFlag, VectorDbProvider } from "@budibase/types"
+import {
+  AIConfigType,
+  FeatureFlag,
+  KnowledgeBaseFileStatus,
+  VectorDbProvider,
+} from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+
+jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
+  const actual = jest.requireActual(
+    "../../../../sdk/workspace/ai/vectorDb/pgVectorDb"
+  )
+  return {
+    ...actual,
+    validatePgVectorDbConfig: jest.fn().mockResolvedValue(undefined),
+  }
+})
 
 describe("knowledge base configs", () => {
   const config = new TestConfiguration()
@@ -282,6 +297,22 @@ describe("knowledge base configs", () => {
           password: "secret",
         })
 
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const db = context.getWorkspaceDB()
+          await db.put({
+            _id: docIds.generateKnowledgeBaseFileID(created._id!),
+            knowledgeBaseId: created._id!,
+            filename: "support.txt",
+            mimetype: "text/plain",
+            size: 128,
+            objectStoreKey: "test/object-key",
+            ragSourceId: docIds.generateKnowledgeBaseFileID(created._id!),
+            status: KnowledgeBaseFileStatus.READY,
+            chunkCount: 1,
+            uploadedBy: "user_123",
+          })
+        })
+
         await config.api.knowledgeBase.update(
           {
             ...created,
@@ -289,6 +320,34 @@ describe("knowledge base configs", () => {
           },
           { status: 400 }
         )
+      })
+    })
+
+    it("allows changing embedding model or vector db before files are added", async () => {
+      await withRagEnabled(async () => {
+        const { embeddingModelId, vectorDb } = await buildDependencies()
+        const created = await config.api.knowledgeBase.create({
+          name: "Support Docs",
+          embeddingModel: embeddingModelId,
+          vectorDb: vectorDb._id!,
+        })
+
+        const otherVectorDb = await config.api.vectorDb.create({
+          name: "Secondary Vector DB",
+          provider: VectorDbProvider.PGVECTOR,
+          host: "localhost",
+          port: 5432,
+          database: "budibase",
+          user: "bb_user",
+          password: "secret",
+        })
+
+        const updated = await config.api.knowledgeBase.update({
+          ...created,
+          vectorDb: otherVectorDb._id!,
+        })
+
+        expect(updated.vectorDb).toBe(otherVectorDb._id)
       })
     })
   })

@@ -54,9 +54,9 @@ const CLOUD_QUOTAS: PlanQuotas = {
       },
     },
     constant: {
-      ...quotas.agentLogRetentionDays(30),
-      ...quotas.automationLogRetentionDays(30),
-      ...quotas.appBackupRetentionDays(30),
+      ...quotas.agentLogRetentionDays(7),
+      ...quotas.automationLogRetentionDays(7),
+      ...quotas.appBackupRetentionDays(7),
     },
   },
   [PlanType.PREMIUM_MAX]: {
@@ -78,9 +78,9 @@ const CLOUD_QUOTAS: PlanQuotas = {
       },
     },
     constant: {
-      ...quotas.agentLogRetentionDays(30),
-      ...quotas.automationLogRetentionDays(30),
-      ...quotas.appBackupRetentionDays(30),
+      ...quotas.agentLogRetentionDays(7),
+      ...quotas.automationLogRetentionDays(7),
+      ...quotas.appBackupRetentionDays(7),
     },
   },
   [PlanType.PREMIUM_PLUS_TRIAL]: {
@@ -102,9 +102,9 @@ const CLOUD_QUOTAS: PlanQuotas = {
       },
     },
     constant: {
-      ...quotas.agentLogRetentionDays(30),
-      ...quotas.automationLogRetentionDays(30),
-      ...quotas.appBackupRetentionDays(30),
+      ...quotas.agentLogRetentionDays(7),
+      ...quotas.automationLogRetentionDays(7),
+      ...quotas.appBackupRetentionDays(7),
     },
   },
   [PlanType.PRO]: {
@@ -126,9 +126,9 @@ const CLOUD_QUOTAS: PlanQuotas = {
       },
     },
     constant: {
-      ...quotas.agentLogRetentionDays(7),
-      ...quotas.automationLogRetentionDays(7),
-      ...quotas.appBackupRetentionDays(7),
+      ...quotas.agentLogRetentionDays(1),
+      ...quotas.automationLogRetentionDays(1),
+      ...quotas.appBackupRetentionDays(0),
     },
   },
   [PlanType.PRO_MAX]: {
@@ -335,7 +335,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(millions(2)),
+        ...quotas.budibaseAICredits(0),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -445,9 +445,9 @@ const SELF_QUOTAS: PlanQuotas = {
       },
     },
     constant: {
-      ...quotas.agentLogRetentionDays(90),
-      ...quotas.automationLogRetentionDays(90),
-      ...quotas.appBackupRetentionDays(365),
+      ...quotas.agentLogRetentionDays(UNLIMITED),
+      ...quotas.automationLogRetentionDays(UNLIMITED),
+      ...quotas.appBackupRetentionDays(UNLIMITED),
     },
   },
   [PlanType.ENTERPRISE_BASIC]: {
@@ -455,7 +455,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(millions(4)),
+        ...quotas.budibaseAICredits(millions(50)),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -479,7 +479,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(millions(4)),
+        ...quotas.budibaseAICredits(750000),
         ...quotas.actions(UNLIMITED),
       },
       static: {
@@ -503,7 +503,7 @@ const SELF_QUOTAS: PlanQuotas = {
       monthly: {
         ...quotas.queries(UNLIMITED),
         ...quotas.automations(UNLIMITED),
-        ...quotas.budibaseAICredits(millions(4)),
+        ...quotas.budibaseAICredits(millions(50)),
         ...quotas.actions(UNLIMITED),
       },
       static: {

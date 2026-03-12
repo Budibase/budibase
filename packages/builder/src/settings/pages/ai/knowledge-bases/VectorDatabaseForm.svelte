@@ -1,19 +1,20 @@
 <script lang="ts">
+  import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
   import { knowledgeBaseStore, vectorDbStore } from "@/stores/portal"
-  import { Button, Input, notifications } from "@budibase/bbui"
+  import { Button, Helpers, Input, notifications } from "@budibase/bbui"
   import { VectorDbProvider, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
   import { routeActions } from "../.."
 
   export interface Props {
-    configId?: string
+    id?: string
     knowledgeBaseId?: string
   }
 
-  let { configId, knowledgeBaseId }: Props = $props()
+  let { id, knowledgeBaseId }: Props = $props()
 
-  let config = $derived($vectorDbStore.configs.find(db => db._id === configId))
+  let config = $derived($vectorDbStore.configs.find(db => db._id === id))
 
   const createDraft = (): VectorDb =>
     config
@@ -31,8 +32,21 @@
   let draft = $state(createDraft())
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
-  let savedSnapshot = $state(JSON.stringify(draft))
-  let isModified = $derived(savedSnapshot !== JSON.stringify(draft))
+  let savedSnapshot = $state<typeof draft>()
+  const captureSavedSnapshot = () => {
+    savedSnapshot = Helpers.cloneDeep(draft)
+  }
+  captureSavedSnapshot()
+  let referencingKnowledgeBaseCount = $derived.by(
+    () =>
+      $knowledgeBaseStore.list.filter(
+        knowledgeBase => knowledgeBase.vectorDb === draft._id
+      ).length
+  )
+
+  let isModified = $derived(
+    JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
+  )
 
   let canSave = $derived.by(() => {
     if (isSaving || !isModified) {
@@ -49,12 +63,19 @@
 
   onMount(async () => {
     try {
-      const configs = await vectorDbStore.fetch()
-      const isCreation = configId === "new"
-      if (!isCreation && configId && !configs.find(db => db._id === configId)) {
+      const [configs] = await Promise.all([
+        vectorDbStore.fetch(),
+        knowledgeBaseStore.fetch(),
+      ])
+      const isCreation = id === "new"
+      if (!isCreation && id && !configs.find(db => db._id === id)) {
         notifications.error("Vector database not found")
         bb.settings("/ai-config/knowledge-bases")
+        return
       }
+
+      draft = createDraft()
+      captureSavedSnapshot()
     } catch (err: any) {
       notifications.error(err.message || "Failed to load vector databases")
     }
@@ -78,18 +99,20 @@
         const updated = await vectorDbStore.edit(payload)
         draft._rev = updated._rev
         draft.port = payload.port
-        savedSnapshot = JSON.stringify({ ...draft, _rev: updated._rev })
+        captureSavedSnapshot()
         notifications.success("Vector database updated")
+
+        if (knowledgeBaseId && knowledgeBaseId !== "new") {
+          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        } else {
+          bb.settings(`/ai-config/knowledge-bases`)
+        }
       } else {
         const created = await vectorDbStore.create(payload)
         draft._id = created._id
         draft._rev = created._rev
         draft.port = payload.port
-        savedSnapshot = JSON.stringify({
-          ...draft,
-          _id: created._id,
-          _rev: created._rev,
-        })
+        captureSavedSnapshot()
         notifications.success("Vector database created")
 
         const formDraft = knowledgeBaseStore.getFormDraft()
@@ -100,8 +123,10 @@
           })
         }
 
-        if (knowledgeBaseId) {
+        if (knowledgeBaseId && knowledgeBaseId !== "new") {
           bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
+        } else {
+          bb.settings(`/ai-config/knowledge-bases`)
         }
       }
     } catch (err: any) {
@@ -110,10 +135,42 @@
       isSaving = false
     }
   }
+
+  async function deleteVectorDb() {
+    if (!draft._id) {
+      return
+    }
+
+    if (referencingKnowledgeBaseCount > 0) {
+      notifications.error(
+        `This vector database can't be deleted because it's used by ${referencingKnowledgeBaseCount} knowledge base${referencingKnowledgeBaseCount === 1 ? "" : "s"}.`
+      )
+      return
+    }
+
+    const vectorDbId = draft._id
+
+    await confirm({
+      title: "Delete vector database",
+      body: "Are you sure you want to permanently delete this vector database?",
+      onConfirm: async () => {
+        try {
+          await vectorDbStore.delete(vectorDbId)
+          notifications.success("Vector database deleted")
+          bb.settings("/ai-config/knowledge-bases")
+        } catch (err: any) {
+          notifications.error(err.message || "Failed to delete vector database")
+        }
+      },
+    })
+  }
 </script>
 
 <div use:routeActions>
   <div class="actions">
+    {#if isEdit}
+      <Button on:click={deleteVectorDb} quiet overBackground>Delete</Button>
+    {/if}
     <Button on:click={saveVectorDb} cta disabled={!canSave}>
       {#if !isEdit}
         Create

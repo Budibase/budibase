@@ -1,6 +1,7 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { AIConfigType, DocumentType, KnowledgeBase } from "@budibase/types"
 import * as configSdk from "../configs"
+import * as knowledgeBaseFileSdk from "./files"
 import * as vectorDbSdk from "../vectorDb"
 
 const normalizeKnowledgeBaseName = (name: string | undefined) =>
@@ -35,6 +36,24 @@ export async function fetch(): Promise<KnowledgeBase[]> {
   return result.rows
     .map(row => row.doc)
     .filter((doc): doc is KnowledgeBase => !!doc)
+}
+
+export async function findByEmbeddingModel(
+  embeddingModelId: string
+): Promise<KnowledgeBase[]> {
+  const knowledgeBases = await fetch()
+  return knowledgeBases.filter(
+    knowledgeBase => knowledgeBase.embeddingModel === embeddingModelId
+  )
+}
+
+export async function findByVectorDb(
+  vectorDbId: string
+): Promise<KnowledgeBase[]> {
+  const knowledgeBases = await fetch()
+  return knowledgeBases.filter(
+    knowledgeBase => knowledgeBase.vectorDb === vectorDbId
+  )
 }
 
 export async function find(id: string): Promise<KnowledgeBase | undefined> {
@@ -97,14 +116,18 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
     ...config,
   }
 
-  if (
+  const referencesChanged =
     existing.embeddingModel !== updated.embeddingModel ||
     existing.vectorDb !== updated.vectorDb
-  ) {
-    throw new HTTPError(
-      "Embedding model and vector database cannot be changed after creation",
-      400
-    )
+
+  if (referencesChanged) {
+    const files = await knowledgeBaseFileSdk.listKnowledgeBaseFiles(config._id)
+    if (files.length > 0) {
+      throw new HTTPError(
+        "Embedding model and vector database cannot be changed after files are added",
+        400
+      )
+    }
   }
 
   await validateReferences(updated)

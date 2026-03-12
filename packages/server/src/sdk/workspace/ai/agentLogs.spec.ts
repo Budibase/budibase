@@ -1,10 +1,10 @@
-import fetch from "node-fetch"
 import cloneDeep from "lodash/cloneDeep"
+import nock from "nock"
 import { constants, context } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { licensing } from "@budibase/pro"
-import { getAvailableTools, getOrThrow } from "./agents"
 import { AGENT_LOG_SESSION_TABLE_ID } from "../sqs/staticTables"
+import environment from "../../../environment"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import type { AgentLogSessionIndexDoc } from "@budibase/types"
 import {
@@ -16,13 +16,6 @@ import {
   getExpiredSessions,
   oldestLogDate,
 } from "./agentLogs"
-
-jest.mock("node-fetch", () => jest.fn())
-jest.mock("./agents", () => ({
-  getAvailableTools: jest.fn(),
-  getOrThrow: jest.fn(),
-  getToolDisplayNames: jest.fn().mockReturnValue({}),
-}))
 
 function getSessionDocId(agentId: string, sessionId: string): string {
   return `agentlogsession_${encodeURIComponent(agentId)}_${encodeURIComponent(
@@ -56,7 +49,7 @@ function createSessionDoc(
   }
 }
 
-function liteLLMSummaryResponse({
+function buildLiteLLMSummaryRow({
   requestId,
   user = "bb-agent:agent-1",
 }: {
@@ -64,28 +57,21 @@ function liteLLMSummaryResponse({
   user?: string
 }) {
   return {
-    ok: true,
-    json: jest.fn().mockResolvedValue({
-      data: [
-        {
-          request_id: requestId,
-          model: "gpt-5",
-          prompt_tokens: 10,
-          completion_tokens: 20,
-          spend: 0.01,
-          status: "success",
-          startTime: "2026-03-08T10:00:00.000Z",
-          endTime: "2026-03-08T10:00:10.000Z",
-          user: "default_user_id",
-          end_user: user,
-          metadata: {},
-        },
-      ],
-    }),
-  } as any
+    request_id: requestId,
+    model: "gpt-5",
+    prompt_tokens: 10,
+    completion_tokens: 20,
+    spend: 0.01,
+    status: "success",
+    startTime: "2026-03-08T10:00:00.000Z",
+    endTime: "2026-03-08T10:00:10.000Z",
+    user: "default_user_id",
+    end_user: user,
+    metadata: {},
+  }
 }
 
-function liteLLMPayloadResponse({
+function buildLiteLLMPayload({
   requestId = "req-1",
   user = "bb-agent:agent-1",
 }: {
@@ -93,28 +79,64 @@ function liteLLMPayloadResponse({
   user?: string
 }) {
   return {
-    ok: true,
-    json: jest.fn().mockResolvedValue({
-      proxy_server_request: {
-        user,
-        model: "gpt-5",
-        messages: [
-          {
-            role: "user",
-            content: "Question",
-          },
-        ],
-      },
-      response: {
-        request_id: requestId,
-        model: "gpt-5",
-        choices: [{ message: { content: "ok" } }],
-      },
-    }),
-  } as any
+    proxy_server_request: {
+      user,
+      model: "gpt-5",
+      messages: [
+        {
+          role: "user",
+          content: "Question",
+        },
+      ],
+    },
+    response: {
+      request_id: requestId,
+      model: "gpt-5",
+      choices: [{ message: { content: "ok" } }],
+    },
+  }
 }
 
-function liteLLMSessionResponse(
+function mockLiteLLMSummary(
+  rows: Array<ReturnType<typeof buildLiteLLMSummaryRow>>,
+  {
+    times = 1,
+    onQuery,
+  }: {
+    times?: number
+    onQuery?: (query: Record<string, string | string[] | undefined>) => void
+  } = {}
+) {
+  return nock(environment.LITELLM_URL)
+    .get("/spend/logs/v2")
+    .times(times)
+    .query(query => {
+      onQuery?.(query as Record<string, string | string[] | undefined>)
+      return true
+    })
+    .reply(200, {
+      data: rows,
+      total: rows.length,
+      total_pages: 1,
+    })
+}
+
+function mockLiteLLMPayload(
+  requestId: string,
+  payload: ReturnType<typeof buildLiteLLMPayload> | null
+) {
+  const request = nock(environment.LITELLM_URL).get(
+    `/spend/logs/ui/${encodeURIComponent(requestId)}`
+  )
+
+  if (!payload) {
+    return request.reply(404)
+  }
+
+  return request.reply(200, payload)
+}
+
+function mockLiteLLMSessionRows(
   rows: Array<{
     request_id: string
     startTime: string
@@ -128,23 +150,18 @@ function liteLLMSessionResponse(
     session_id?: string
   }>
 ) {
-  return {
-    ok: true,
-    json: jest.fn().mockResolvedValue({
+  return nock(environment.LITELLM_URL)
+    .get("/spend/logs/session/ui")
+    .query(true)
+    .reply(200, {
       data: rows,
       total: rows.length,
       total_pages: 1,
-    }),
-  } as any
+    })
 }
 
 describe("agentLogs", () => {
   const config = new TestConfiguration()
-  const fetchMock = fetch as jest.MockedFunction<typeof fetch>
-  const getAvailableToolsMock = getAvailableTools as jest.MockedFunction<
-    typeof getAvailableTools
-  >
-  const getOrThrowMock = getOrThrow as jest.MockedFunction<typeof getOrThrow>
 
   const withEnvironment = async <T>(
     environment: "development" | "production",
@@ -174,6 +191,27 @@ describe("agentLogs", () => {
     })
   }
 
+  const saveAgent = async (agentId: string) => {
+    return await withWorkspace(async () => {
+      const now = new Date().toISOString()
+      const agent = {
+        _id: agentId,
+        name: "Support Agent",
+        aiconfig: "",
+        live: true,
+        icon: "robot",
+        iconColor: "#6a9bcc",
+        createdAt: now,
+        enabledTools: [],
+      }
+      const response = await context.getWorkspaceDB().put(agent)
+      return {
+        ...agent,
+        _rev: response.rev,
+      }
+    })
+  }
+
   const getSessionDoc = async (
     agentId: string,
     sessionId: string,
@@ -193,35 +231,15 @@ describe("agentLogs", () => {
   beforeEach(async () => {
     await config.newTenant()
     jest.clearAllMocks()
+    nock.cleanAll()
     jest.useFakeTimers()
     jest.setSystemTime(new Date("2026-03-09T12:00:00.000Z"))
     mocks.licenses.useUnlimited()
-
-    fetchMock.mockImplementation(async (url: any) => {
-      const path = String(url)
-      if (path.includes("/spend/logs/v2")) {
-        return liteLLMSummaryResponse({ requestId: "req-1" })
-      }
-      if (path.includes("/spend/logs/session/ui")) {
-        return liteLLMSessionResponse([])
-      }
-      if (path.includes("/spend/logs/ui/")) {
-        return liteLLMPayloadResponse({ requestId: "req-1" })
-      }
-      return {
-        ok: true,
-        json: jest.fn().mockResolvedValue([]),
-      } as any
-    })
-    getAvailableToolsMock.mockResolvedValue([])
-    getOrThrowMock.mockResolvedValue({
-      _id: "agent-1",
-      aiconfig: "config-1",
-    } as Awaited<ReturnType<typeof getOrThrow>>)
   })
 
   afterEach(() => {
     jest.useRealTimers()
+    nock.cleanAll()
   })
 
   afterAll(() => {
@@ -229,6 +247,18 @@ describe("agentLogs", () => {
   })
 
   it("indexes request/session docs idempotently", async () => {
+    jest.useRealTimers()
+    let summaryQuery: Record<string, string | string[] | undefined> | undefined
+    const summaryScope = mockLiteLLMSummary(
+      [buildLiteLLMSummaryRow({ requestId: "req-1" })],
+      {
+        times: 2,
+        onQuery: query => {
+          summaryQuery = query
+        },
+      }
+    )
+
     await withWorkspace(async () => {
       await addSessionLog({
         agentId: "agent-1",
@@ -258,15 +288,13 @@ describe("agentLogs", () => {
         requestIds: JSON.stringify(["req-1"]),
       })
     )
-    const summaryUrl = new URL(String(fetchMock.mock.calls[0]?.[0]))
-    expect(summaryUrl.pathname).toContain("/spend/logs/v2")
-    expect(summaryUrl.searchParams.get("start_date")).toBe(
-      "2026-03-08 00:00:00"
-    )
-    expect(summaryUrl.searchParams.get("end_date")).toBe("2026-03-08 23:59:59")
+    expect(summaryScope.isDone()).toBe(true)
+    expect(summaryQuery?.start_date).toBe("2026-03-08 00:00:00")
+    expect(summaryQuery?.end_date).toBe("2026-03-08 23:59:59")
   })
 
   it("returns session detail entries in chronological order", async () => {
+    jest.useRealTimers()
     await saveSessionDoc(
       createSessionDoc({
         agentId: "agent-1",
@@ -279,47 +307,32 @@ describe("agentLogs", () => {
       })
     )
 
-    fetchMock.mockImplementation(async (url: any) => {
-      const path = String(url)
-      if (path.includes("/spend/logs/session/ui")) {
-        return liteLLMSessionResponse([
-          {
-            request_id: "req-new",
-            session_id: "session-chronological",
-            startTime: "2026-03-08T11:00:00.000Z",
-            endTime: "2026-03-08T11:00:10.000Z",
-            prompt_tokens: 10,
-            completion_tokens: 20,
-            spend: 0.01,
-            model: "gpt-5",
-            end_user: "bb-agent:agent-1",
-            status: "success",
-          },
-          {
-            request_id: "req-old",
-            session_id: "session-chronological",
-            startTime: "2026-03-08T10:00:00.000Z",
-            endTime: "2026-03-08T10:00:10.000Z",
-            prompt_tokens: 10,
-            completion_tokens: 20,
-            spend: 0.01,
-            model: "gpt-5",
-            end_user: "bb-agent:agent-1",
-            status: "success",
-          },
-        ])
-      }
-      if (path.includes("/spend/logs/v2")) {
-        return liteLLMSummaryResponse({ requestId: "req-1" })
-      }
-      if (path.includes("/spend/logs/ui/")) {
-        return liteLLMPayloadResponse({ requestId: "req-1" })
-      }
-      return {
-        ok: true,
-        json: jest.fn().mockResolvedValue([]),
-      } as any
-    })
+    const sessionScope = mockLiteLLMSessionRows([
+      {
+        request_id: "req-new",
+        session_id: "session-chronological",
+        startTime: "2026-03-08T11:00:00.000Z",
+        endTime: "2026-03-08T11:00:10.000Z",
+        prompt_tokens: 10,
+        completion_tokens: 20,
+        spend: 0.01,
+        model: "gpt-5",
+        end_user: "bb-agent:agent-1",
+        status: "success",
+      },
+      {
+        request_id: "req-old",
+        session_id: "session-chronological",
+        startTime: "2026-03-08T10:00:00.000Z",
+        endTime: "2026-03-08T10:00:10.000Z",
+        prompt_tokens: 10,
+        completion_tokens: 20,
+        spend: 0.01,
+        model: "gpt-5",
+        end_user: "bb-agent:agent-1",
+        status: "success",
+      },
+    ])
 
     const detail = await withWorkspace(async () => {
       return await fetchSessionDetail(
@@ -333,6 +346,7 @@ describe("agentLogs", () => {
       "req-old",
       "req-new",
     ])
+    expect(sessionScope.isDone()).toBe(true)
   })
 
   it("rejects partially numeric bookmarks when fetching sessions", async () => {
@@ -547,8 +561,11 @@ describe("agentLogs", () => {
   })
 
   it("rejects request detail when the returned user belongs to another agent", async () => {
-    fetchMock.mockResolvedValue(
-      liteLLMPayloadResponse({
+    jest.useRealTimers()
+    const summaryScope = mockLiteLLMSummary([])
+    const payloadScope = mockLiteLLMPayload(
+      "req-1",
+      buildLiteLLMPayload({
         requestId: "req-1",
         user: "bb-agent:agent-2",
       })
@@ -562,16 +579,83 @@ describe("agentLogs", () => {
       status: 404,
       message: "Agent log detail not found",
     })
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain(
-      "/spend/logs/ui/req-1"
+    expect(summaryScope.isDone()).toBe(true)
+    expect(payloadScope.isDone()).toBe(true)
+  })
+
+  it("returns request detail using the real agent lookup path", async () => {
+    jest.useRealTimers()
+    await saveAgent("agent-1")
+    const summaryScope = mockLiteLLMSummary([
+      buildLiteLLMSummaryRow({ requestId: "req-1" }),
+    ])
+    const payloadScope = mockLiteLLMPayload(
+      "req-1",
+      buildLiteLLMPayload({ requestId: "req-1" })
     )
+
+    const detail = await withWorkspace(async () => {
+      return await fetchRequestDetail("agent-1", "req-1")
+    })
+
+    expect(detail).toEqual(
+      expect.objectContaining({
+        requestId: "req-1",
+        model: "gpt-5",
+        messages: [
+          {
+            role: "user",
+            content: "Question",
+          },
+        ],
+        response: "ok",
+        inputTokens: 10,
+        outputTokens: 20,
+        spend: 0.01,
+        inputToolCalls: [],
+        toolCalls: [],
+        toolResults: [],
+      })
+    )
+    expect(summaryScope.isDone()).toBe(true)
+    expect(payloadScope.isDone()).toBe(true)
+  })
+
+  it("accepts request detail when LiteLLM summary ownership matches the agent", async () => {
+    jest.useRealTimers()
+    await saveAgent("agent-1")
+    const summaryScope = mockLiteLLMSummary([
+      buildLiteLLMSummaryRow({
+        requestId: "req-1",
+        user: "bb-agent:agent-1",
+      }),
+    ])
+    const payloadScope = mockLiteLLMPayload(
+      "req-1",
+      buildLiteLLMPayload({
+        requestId: "req-1",
+        user: "",
+      })
+    )
+
+    await expect(
+      withWorkspace(async () => {
+        return await fetchRequestDetail("agent-1", "req-1")
+      })
+    ).resolves.toEqual(
+      expect.objectContaining({
+        requestId: "req-1",
+        response: "ok",
+      })
+    )
+    expect(summaryScope.isDone()).toBe(true)
+    expect(payloadScope.isDone()).toBe(true)
   })
 
   it("returns not found when LiteLLM does not return request detail", async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue(null),
-    } as any)
+    jest.useRealTimers()
+    const summaryScope = mockLiteLLMSummary([])
+    const payloadScope = mockLiteLLMPayload("req-missing", null)
 
     await expect(
       withWorkspace(async () => {
@@ -581,32 +665,26 @@ describe("agentLogs", () => {
       status: 404,
       message: "Agent log detail not found",
     })
+    expect(summaryScope.isDone()).toBe(true)
+    expect(payloadScope.isDone()).toBe(true)
   })
 
   it("returns live session detail when the index doc has been deleted", async () => {
-    fetchMock.mockImplementation(async (url: any) => {
-      const path = String(url)
-      if (path.includes("/spend/logs/session/ui")) {
-        return liteLLMSessionResponse([
-          {
-            request_id: "req-live",
-            session_id: "session-live",
-            startTime: "2026-03-08T11:00:00.000Z",
-            endTime: "2026-03-08T11:00:10.000Z",
-            prompt_tokens: 10,
-            completion_tokens: 20,
-            spend: 0.01,
-            model: "gpt-5",
-            end_user: "bb-agent:agent-1",
-            status: "success",
-          },
-        ])
-      }
-      return {
-        ok: true,
-        json: jest.fn().mockResolvedValue([]),
-      } as any
-    })
+    jest.useRealTimers()
+    const sessionScope = mockLiteLLMSessionRows([
+      {
+        request_id: "req-live",
+        session_id: "session-live",
+        startTime: "2026-03-08T11:00:00.000Z",
+        endTime: "2026-03-08T11:00:10.000Z",
+        prompt_tokens: 10,
+        completion_tokens: 20,
+        spend: 0.01,
+        model: "gpt-5",
+        end_user: "bb-agent:agent-1",
+        status: "success",
+      },
+    ])
 
     const detail = await withWorkspace(async () => {
       return await fetchSessionDetail("agent-1", "session-live", "production")
@@ -623,5 +701,6 @@ describe("agentLogs", () => {
         ],
       })
     )
+    expect(sessionScope.isDone()).toBe(true)
   })
 })
