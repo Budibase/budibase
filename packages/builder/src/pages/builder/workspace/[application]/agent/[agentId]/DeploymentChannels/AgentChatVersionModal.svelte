@@ -10,8 +10,6 @@
     notifications,
   } from "@budibase/bbui"
 
-  export let requiredVersion: string
-
   let updateModal: { show: () => void; hide: () => void } | undefined
 
   export function show() {

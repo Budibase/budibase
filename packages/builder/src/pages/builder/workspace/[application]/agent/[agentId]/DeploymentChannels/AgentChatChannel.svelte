@@ -3,6 +3,7 @@
   import type { ConversationStarter } from "@budibase/types"
   import { appStore, deploymentStore } from "@/stores/builder"
   import { chatAppsStore, currentChatApp } from "@/stores/portal"
+  import { AGENT_CHAT_MIN_CLIENT_VERSION } from "@/constants"
   import { helpers } from "@budibase/shared-core"
   import { params } from "@roxi/routify"
   import AgentChatVersionModal from "./AgentChatVersionModal.svelte"
@@ -20,7 +21,7 @@
     "Agent chat settings saved and published"
   const AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE =
     "Failed to save agent chat settings"
-  const MIN_AGENT_CHAT_CLIENT_VERSION = "999.0.0"
+  const MIN_AGENT_CHAT_CLIENT_VERSION = AGENT_CHAT_MIN_CLIENT_VERSION
 
   type ShowUI = { show: () => void }
 
@@ -327,10 +328,7 @@
   }}
 />
 
-<AgentChatVersionModal
-  requiredVersion={MIN_AGENT_CHAT_CLIENT_VERSION}
-  bind:this={versionModal}
-/>
+<AgentChatVersionModal bind:this={versionModal} />
 
 <style>
   .integration-row {
