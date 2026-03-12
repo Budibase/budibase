@@ -799,10 +799,13 @@ export const inviteAccept = async (
             roles: appRoles,
             tenantId: info.tenantId,
           }
-          const builder: { global: boolean; creator?: boolean; apps?: string[] } =
-            {
-              global: info?.builder?.global || false,
-            }
+          const builder: {
+            global: boolean
+            creator?: boolean
+            apps?: string[]
+          } = {
+            global: info?.builder?.global || false,
+          }
 
           if (hasCreatorPerms) {
             builder.creator = true
