@@ -15,6 +15,8 @@
   export let value: string | undefined = undefined
   export let error: string | undefined = undefined
   export let placeholder: string | undefined = undefined
+  export let required: boolean = false
+  export let description: string | undefined = undefined
 
   let modal: Modal
 
@@ -47,6 +49,8 @@
   type={type === "port" ? "text" : type}
   {error}
   {placeholder}
+  {required}
+  {description}
   variables={$environment.variables}
   environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
   showModal={() => modal.show()}
