@@ -87,7 +87,6 @@
         <Panel borderRight={false} borderBottomHeader={false} resizable={true}>
           <span class="panel-title-content" slot="panel-title-content">
             <NavHeader
-              title="API operations"
               placeholder="Search APIs"
               bind:value={searchValue}
               onAdd={() => $goto("./query/new")}
