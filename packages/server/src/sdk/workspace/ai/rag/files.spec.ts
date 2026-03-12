@@ -30,6 +30,7 @@ import {
 } from "@budibase/types"
 import { ingestKnowledgeBaseFile } from "./files"
 import { features, tenancy } from "@budibase/backend-core"
+import { processFileToChunks } from "./processors"
 
 describe("rag files", () => {
   beforeEach(() => {
@@ -89,6 +90,59 @@ describe("rag files", () => {
 
       expect(mockCreateLLM).toHaveBeenCalledTimes(1)
       expect(mockCreateLLM).toHaveBeenCalledWith("embedding_config")
+    })
+  })
+
+  describe("processFileToChunks", () => {
+    it("preserves markdown heading context for bullet facts", async () => {
+      const chunks = await processFileToChunks({
+        buffer: Buffer.from(`
+# SpongeBob SquarePants Trivia
+
+## Characters
+
+### SpongeBob SquarePants
+- His address is 124 Conch Street.
+- He has a pet snail named Gary.
+        `),
+        filename: "spongebob-trivia.md",
+      })
+
+      expect(chunks).toContain(
+        [
+          "SpongeBob SquarePants Trivia > Characters > SpongeBob SquarePants",
+          "His address is 124 Conch Street.",
+          "SpongeBob SquarePants Trivia > Characters > SpongeBob SquarePants",
+          "He has a pet snail named Gary.",
+        ].join("\n")
+      )
+    })
+
+    it("turns markdown tables into retrievable text facts", async () => {
+      const chunks = await processFileToChunks({
+        buffer: Buffer.from(`
+## Locations in Bikini Bottom
+
+| Location | Description |
+|---|---|
+| Krusty Krab | SpongeBob and Squidward's workplace |
+| Goo Lagoon | Bikini Bottom's beach and recreational area |
+        `),
+        filename: "locations.md",
+      })
+
+      expect(chunks).toContain(
+        [
+          "Locations in Bikini Bottom",
+          "Location: Krusty Krab; Description: SpongeBob and Squidward's workplace",
+        ].join("\n")
+      )
+      expect(chunks).toContain(
+        [
+          "Locations in Bikini Bottom",
+          "Location: Goo Lagoon; Description: Bikini Bottom's beach and recreational area",
+        ].join("\n")
+      )
     })
   })
 })
