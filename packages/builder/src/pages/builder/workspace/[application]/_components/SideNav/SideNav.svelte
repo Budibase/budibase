@@ -52,7 +52,6 @@
     type WorkspaceFavourite,
     PublishResourceState,
     WorkspaceResource,
-    AIConfigType,
   } from "@budibase/types"
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
