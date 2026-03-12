@@ -34,7 +34,7 @@
 
   const confirmSelection = () => {
     if (selectedTemplate) {
-      bb.settings(`/connections/new/${selectedTemplate.id}`)
+      bb.settings(`/connections/apis/new/${selectedTemplate.id}`)
       menuRef?.hide()
     }
   }

@@ -6,13 +6,13 @@
   import { VectorDbProvider, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+  import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
 
   export interface Props {
     id?: string
-    knowledgeBaseId?: string
   }
 
-  let { id, knowledgeBaseId }: Props = $props()
+  let { id }: Props = $props()
 
   let config = $derived($vectorDbStore.configs.find(db => db._id === id))
 
@@ -70,7 +70,7 @@
       const isCreation = id === "new"
       if (!isCreation && id && !configs.find(db => db._id === id)) {
         notifications.error("Vector database not found")
-        bb.settings("/ai-config/knowledge-bases")
+        bb.settings("/connections/knowledge-bases")
         return
       }
 
@@ -101,12 +101,6 @@
         draft.port = payload.port
         captureSavedSnapshot()
         notifications.success("Vector database updated")
-
-        if (knowledgeBaseId && knowledgeBaseId !== "new") {
-          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
-        } else {
-          bb.settings(`/ai-config/knowledge-bases`)
-        }
       } else {
         const created = await vectorDbStore.create(payload)
         draft._id = created._id
@@ -122,13 +116,8 @@
             vectorDb: created._id,
           })
         }
-
-        if (knowledgeBaseId && knowledgeBaseId !== "new") {
-          bb.settings(`/ai-config/knowledge-bases/${knowledgeBaseId}`)
-        } else {
-          bb.settings(`/ai-config/knowledge-bases`)
-        }
       }
+      bb.goToParent()
     } catch (err: any) {
       notifications.error(err.message || "Failed to save vector database")
     } finally {
@@ -157,7 +146,7 @@
         try {
           await vectorDbStore.delete(vectorDbId)
           notifications.success("Vector database deleted")
-          bb.settings("/ai-config/knowledge-bases")
+          bb.goToParent()
         } catch (err: any) {
           notifications.error(err.message || "Failed to delete vector database")
         }
@@ -194,14 +183,14 @@
     bind:value={draft.provider}
     disabled
   />
-  <Input
+  <EnvVariableInput
     label="Host"
     description="Hostname or IP address of your PostgreSQL instance."
     required
     bind:value={draft.host}
     placeholder="127.0.0.1"
   />
-  <Input
+  <EnvVariableInput
     label="Port"
     description="Port used by your PostgreSQL instance."
     type="number"
@@ -209,24 +198,22 @@
     bind:value={draft.port}
     placeholder="5432"
   />
-  <Input
+  <EnvVariableInput
     label="Database"
     description="Database name where vector data will be stored."
     required
     bind:value={draft.database}
   />
-  <Input
+  <EnvVariableInput
     label="User"
     description="Database user with permission to read and write vector data."
     bind:value={draft.user}
-    autocomplete={"off"}
   />
-  <Input
+  <EnvVariableInput
     label="Password"
     description="Password for the database user."
     type="password"
     bind:value={draft.password}
-    autocomplete={"off"}
   />
 </div>
 

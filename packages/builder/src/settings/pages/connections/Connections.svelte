@@ -54,7 +54,7 @@
         />
         <Button
           size="M"
-          on:click={() => bb.settings("/connections/create")}
+          on:click={() => bb.settings("/connections/apis/create")}
           cta
         >
           Add connection
@@ -63,6 +63,7 @@
     </RouteActions>
     <div class="setting-spacing">
       <Table
+        compact
         hideHeader
         rounded
         data={filteredConnections}

@@ -72,7 +72,7 @@
       {metrics ? formatMetric(metrics.operationsThisMonth) : "-"}
     </Body>
     <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      Operations this month
+      Actions this month
     </Body>
   </div>
 

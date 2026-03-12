@@ -148,14 +148,14 @@
   }
 
   const addNewConnection = () => {
-    bb.settings("/connections/create")
+    bb.settings("/connections/apis/create")
     menuRef?.hide()
   }
 
   const editConnection = (e: MouseEvent) => {
     e.stopPropagation()
     if (connection) {
-      bb.settings(`/connections/${connection.sourceId}`)
+      bb.settings(`/connections/apis/${connection.sourceId}`)
     }
   }
 

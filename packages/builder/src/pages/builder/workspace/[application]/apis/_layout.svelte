@@ -102,6 +102,7 @@
               datasourceSort={sortByDatasourceName}
               showAppUsers={false}
               showManageRoles={false}
+              noResultsText="There aren't any APIs matching that name"
             />
           </Layout>
         </Panel>

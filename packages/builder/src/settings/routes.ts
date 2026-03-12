@@ -284,63 +284,41 @@ export const workspaceRoutes = (
       path: "connections",
       icon: "cube",
       new: true,
-      component: Pages.get("connections"),
       routes: [
         {
-          title: "Create",
-          path: "create",
-          component: Pages.get("create_connection"),
-          skipNav: true,
+          path: "apis",
+          title: "APIs",
+          component: Pages.get("connections"),
+          routes: [
+            {
+              title: "Create",
+              path: "create",
+              component: Pages.get("create_connection"),
+              skipNav: true,
+            },
+            {
+              title: "New connection",
+              path: "new",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+            {
+              title: "New connection from template",
+              path: "new/:templateId",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+            {
+              title: "Connection",
+              path: ":id",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+          ],
         },
-        {
-          title: "New connection",
-          path: "new",
-          component: Pages.get("connection"),
-          skipNav: true,
-        },
-        {
-          title: "New connection from template",
-          path: "new/:templateId",
-          component: Pages.get("connection"),
-          skipNav: true,
-        },
-        {
-          title: "Connection",
-          path: ":id",
-          component: Pages.get("connection"),
-          skipNav: true,
-        },
-      ],
-    },
-    {
-      section: "Automations",
-      icon: "lightning-a",
-      path: "automations",
-      routes: [
-        {
-          path: "logs",
-          component: Pages.get("automations"),
-        },
-      ],
-    },
-    {
-      section: "Apps",
-      icon: "layout",
-      path: "app",
-      routes: [
-        { path: "pwa", component: Pages.get("pwa"), title: "PWA" },
-        { path: "embed", component: Pages.get("embed"), title: "Embed" },
-        { path: "scripts", component: Pages.get("scripts"), title: "Scripts" },
-      ],
-    },
-    {
-      section: "AI",
-      path: "ai-config",
-      icon: "sparkle",
-      routes: [
         {
           path: AIConfigType.COMPLETIONS,
-          title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI Configs" : "",
+          title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI models" : "",
           component: Pages.get("ai_configs"),
           routes: [
             {
@@ -461,6 +439,27 @@ export const workspaceRoutes = (
             },
           ],
         },
+      ],
+    },
+    {
+      section: "Automations",
+      icon: "lightning-a",
+      path: "automations",
+      routes: [
+        {
+          path: "logs",
+          component: Pages.get("automations"),
+        },
+      ],
+    },
+    {
+      section: "Apps",
+      icon: "layout",
+      path: "app",
+      routes: [
+        { path: "pwa", component: Pages.get("pwa"), title: "PWA" },
+        { path: "embed", component: Pages.get("embed"), title: "Embed" },
+        { path: "scripts", component: Pages.get("scripts"), title: "Scripts" },
       ],
     },
   ].map((entry: Route) => ({

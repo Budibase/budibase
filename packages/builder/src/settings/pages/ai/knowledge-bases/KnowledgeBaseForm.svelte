@@ -6,7 +6,14 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
-  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Button,
+    Helpers,
+    Input,
+    notifications,
+    Select,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
@@ -119,7 +126,7 @@
       const isCreation = knowledgeBaseId === "new"
       if (!isCreation && !config) {
         notifications.error("Knowledge base not found")
-        bb.settings(`/ai-config/knowledge-bases`)
+        bb.settings(`/connections/knowledge-bases`)
         return
       }
 
@@ -172,12 +179,22 @@
         notifications.success("Knowledge base created")
       }
       knowledgeBaseStore.clearFormDraft()
-      bb.settings(`/ai-config/knowledge-bases/${draft._id}`)
+      bb.settings(`/connections/knowledge-bases/${draft._id}`)
     } catch (err: any) {
       notifications.error(err.message || "Failed to save knowledge base")
     } finally {
       isSaving = false
     }
+  }
+
+  function createNewEmbeddingModel() {
+    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
+    bb.settings(`/connections/knowledge-bases/${knowledgeBaseId}/embedding/new`)
+  }
+
+  function createNewVectorDb() {
+    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
+    bb.settings(`/connections/knowledge-bases/${knowledgeBaseId}/vectordb/new`)
   }
 
   async function deleteKnowledgeBase() {
@@ -195,7 +212,7 @@
           await knowledgeBaseStore.delete(knowledgeBaseId)
           knowledgeBaseStore.clearFormDraft()
           notifications.success("Knowledge base deleted")
-          bb.settings(`/ai-config/knowledge-bases`)
+          bb.settings(`/connections/knowledge-bases`)
         } catch (err: any) {
           notifications.error(err.message || "Failed to delete knowledge base")
         }
@@ -244,6 +261,12 @@
         ? "Remove all files to change the embedding model."
         : ""}
     />
+    <ActionButton
+      icon={"Add"}
+      size="M"
+      disabled={!canEditReferences}
+      on:click={createNewEmbeddingModel}
+    />
   </div>
 
   <div class="select">
@@ -259,6 +282,12 @@
       tooltip={!canEditReferences
         ? "Remove all files to change the vector database."
         : ""}
+    />
+    <ActionButton
+      icon={"Add"}
+      size="M"
+      disabled={!canEditReferences}
+      on:click={createNewVectorDb}
     />
   </div>
 
