@@ -335,7 +335,7 @@
 
     await confirm({
       title: "Confirm Deletion",
-      body: `Deleting \"${title}\" cannot be undone. Are you sure?`,
+      body: `Deleting "${title}" cannot be undone. Are you sure?`,
       okText: "Delete chat",
       warning: true,
       onConfirm: async () => {

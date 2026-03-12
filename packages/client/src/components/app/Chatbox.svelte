@@ -25,7 +25,7 @@
   }
 
   interface ChatboxControllerWithConversationDelete extends ChatboxController {
-    deleteConversation: (conversationId: string) => Promise<void>
+    deleteConversation: (_conversationId: string) => Promise<void>
   }
 
   const API = createAPIClient({
@@ -145,7 +145,7 @@
 
     confirmationStore.actions.showConfirmation(
       "Confirm Deletion",
-      `Deleting \"${title}\" cannot be undone. Are you sure?`,
+      `Deleting "${title}" cannot be undone. Are you sure?`,
       async () => {
         await deleteConversation(event.detail.conversationId)
       },
