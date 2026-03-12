@@ -68,7 +68,7 @@
         dispatch("baseUrlChange", baseUrl)
       }}
       on:keydown={e => {
-        if (e.key === "Enter") e.currentTarget.blur()
+        if (e.key === "Enter" && !e.isComposing) e.currentTarget.blur()
       }}
     />
     {#if baseUrlOptions.length > 0}
@@ -106,7 +106,7 @@
       dispatch("pathChange", path)
     }}
     on:keydown={e => {
-      if (e.key === "Enter") e.currentTarget.blur()
+      if (e.key === "Enter" && !e.isComposing) e.currentTarget.blur()
     }}
     on:blur={e => {
       dispatch("pathCommit", e.currentTarget.value)
