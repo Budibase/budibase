@@ -12,7 +12,7 @@
 
   export let label: string = ""
   export let type: EnvDropdownType = "text"
-  export let value: string | undefined = undefined
+  export let value: string | number | undefined = undefined
   export let error: string | undefined = undefined
   export let placeholder: string | undefined = undefined
   export let required: boolean = false

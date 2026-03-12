@@ -4,7 +4,7 @@
   import { createEventDispatcher } from "svelte"
   import type { EnvDropdownType, LabelPosition } from "../types"
 
-  export let value: string | undefined = undefined
+  export let value: string | number | undefined = undefined
   export let label: string | undefined = undefined
   export let labelPosition: LabelPosition = "above"
   export let placeholder: string | undefined = undefined
