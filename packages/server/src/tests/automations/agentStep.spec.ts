@@ -72,6 +72,12 @@ function makeToolLoopAgentMock(toolResults: { toolCallId: string }[]) {
       })
       return {
         toUIMessageStream: jest.fn().mockReturnValue({}),
+        response: Promise.resolve({
+          id: "gen-test",
+          headers: {
+            "x-litellm-response-cost": "0.0001",
+          },
+        }),
         text: Promise.resolve("Agent response"),
         usage: Promise.resolve({ totalTokens: 50 }),
         output: Promise.resolve(undefined),
@@ -88,6 +94,11 @@ describe("Agent step tool call tracking", () => {
   beforeEach(() => {
     addActionMock.mockClear()
     jest.mocked(require("ai").ToolLoopAgent).mockClear()
+    jest.spyOn(console, "error").mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   it("counts each completed tool call as one action", async () => {
@@ -101,7 +112,7 @@ describe("Agent step tool call tracking", () => {
         ])
       )
 
-    await run({
+    const result = await run({
       inputs: { agentId: "agent-id", prompt: "Do things with tools" },
       appId: "test",
       context: {},
@@ -109,6 +120,7 @@ describe("Agent step tool call tracking", () => {
     })
 
     expect(addActionMock).toHaveBeenCalledTimes(3)
+    expect(result.sessionId).toEqual(expect.any(String))
   })
 
   it("counts zero extra actions when the agent makes no tool calls", async () => {

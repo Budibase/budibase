@@ -3,8 +3,11 @@
   import type { ConversationStarter } from "@budibase/types"
   import { appStore, deploymentStore } from "@/stores/builder"
   import { chatAppsStore, currentChatApp } from "@/stores/portal"
+  import { AGENT_CHAT_MIN_CLIENT_VERSION } from "@/constants"
+  import { isVersionAtLeast } from "@/helpers/version"
   import { helpers } from "@budibase/shared-core"
   import { params } from "@roxi/routify"
+  import AgentChatVersionModal from "./AgentChatVersionModal.svelte"
   import AgentSettingsModal from "../../../chat/_components/AgentSettingsModal.svelte"
   import BudibaseLogo from "assets/bb-emblem.svg"
 
@@ -19,6 +22,7 @@
     "Agent chat settings saved and published"
   const AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE =
     "Failed to save agent chat settings"
+  type ShowUI = { show: () => void }
 
   export let agentId: string
   export let agentName: string
@@ -29,6 +33,7 @@
   let attemptedWorkspaceId: string | undefined
   let currentWorkspaceId: string | undefined
   let settingsOpen = false
+  let versionModal: ShowUI | undefined
 
   interface ChatAppAgentConfig {
     agentId: string
@@ -83,6 +88,11 @@
   )?.agentId
   $: enabled = isAgentEnabledInChat(currentChatAgents, agentId)
   $: disabled = toggling || loadingChatApp || !workspaceId
+  $: isChatRouteSupported = isVersionAtLeast(
+    $appStore.version,
+    AGENT_CHAT_MIN_CLIENT_VERSION
+  )
+  $: requiresClientUpdate = !isChatRouteSupported
 
   $: chatUrl = $appStore.url
     ? `${helpers.appChatUrl($appStore.url)}/agent/${encodeURIComponent(agentId)}`
@@ -221,6 +231,15 @@
       notifications.error(AGENT_CHAT_SETTINGS_SAVE_ERROR_MESSAGE)
     }
   }
+
+  const onOpenChat = (event: MouseEvent) => {
+    if (isChatRouteSupported) {
+      return
+    }
+
+    event.preventDefault()
+    versionModal?.show()
+  }
 </script>
 
 <div class="integration-row">
@@ -237,8 +256,15 @@
   </div>
   <div class="row-action">
     {#if enabled && chatUrl}
-      <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
-        Open chat
+      <a
+        class="chat-link"
+        class:update-link={requiresClientUpdate}
+        href={chatUrl}
+        target="_blank"
+        rel="noreferrer"
+        on:click={onOpenChat}
+      >
+        {requiresClientUpdate ? "Requires update" : "Open chat"}
       </a>
     {/if}
     <ActionButton
@@ -267,6 +293,8 @@
     settingsOpen = false
   }}
 />
+
+<AgentChatVersionModal bind:this={versionModal} />
 
 <style>
   .integration-row {
@@ -310,5 +338,14 @@
   .chat-link:hover {
     color: var(--spectrum-global-color-gray-900);
     text-decoration: underline;
+  }
+
+  .chat-link.update-link {
+    color: var(--spectrum-global-color-blue-600);
+    font-weight: 500;
+  }
+
+  .chat-link.update-link:hover {
+    color: var(--spectrum-global-color-blue-700);
   }
 </style>

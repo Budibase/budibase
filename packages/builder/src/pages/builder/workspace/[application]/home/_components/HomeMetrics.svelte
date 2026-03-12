@@ -2,15 +2,25 @@
   import { Body, Icon } from "@budibase/bbui"
   import type { GetWorkspaceHomeMetricsResponse } from "@budibase/types"
   import { onMount } from "svelte"
+  import type { Route } from "@/types/routing"
 
   import { API } from "@/api"
+  import { bb } from "@/stores/bb"
+  import { flattenedRoutes } from "@/stores/routing"
 
   const GITHUB_REPO_URL = "https://github.com/Budibase/budibase"
 
   export let metrics: GetWorkspaceHomeMetricsResponse | null = null
-  export let agentsEnabled = false
+  export let showBudibaseAIMetric = true
 
   let githubStars: number | null = null
+  $: canViewOrganisationUsers = $flattenedRoutes.some(
+    (route: Route) => route.path === "/people/users"
+  )
+
+  const formatMetric = (value: number) => {
+    return new Intl.NumberFormat("en").format(value)
+  }
 
   const formatStars = (stars: number) => {
     return new Intl.NumberFormat("en", {
@@ -29,30 +39,50 @@
   })
 </script>
 
-<div class="metrics" class:three={!agentsEnabled}>
+<div class="metrics" class:three={!showBudibaseAIMetric}>
   <div class="metric-card">
-    <Body size="XL" weight="600">{metrics ? metrics.totalUsers : "-"}</Body>
-    <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      Total users
+    <Body size="XL" weight="600">
+      {metrics ? formatMetric(metrics.totalUsers) : "-"}
     </Body>
+    {#if canViewOrganisationUsers}
+      <button
+        type="button"
+        class="metric-label-link metric-label-button"
+        on:click={() => bb.settings("/people/users")}
+      >
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          Total users
+        </Body>
+        <Icon
+          name="arrow-up-right"
+          size="XS"
+          color="var(--spectrum-global-color-gray-600)"
+          weight="regular"
+        />
+      </button>
+    {:else}
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        Total users
+      </Body>
+    {/if}
   </div>
 
   <div class="metric-card">
     <Body size="XL" weight="600">
-      {metrics ? metrics.automationRunsThisMonth : "-"}
+      {metrics ? formatMetric(metrics.operationsThisMonth) : "-"}
     </Body>
     <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      Automation runs this month
+      Actions this month
     </Body>
   </div>
 
-  {#if agentsEnabled}
+  {#if showBudibaseAIMetric}
     <div class="metric-card">
       <Body size="XL" weight="600">
-        {metrics ? metrics.agentActionsThisMonth : "-"}
+        {metrics ? formatMetric(metrics.budibaseAICreditsThisMonth) : "-"}
       </Body>
       <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        Agent actions this month
+        Budibase AI credits this month
       </Body>
     </div>
   {/if}
@@ -108,6 +138,14 @@
     text-decoration: none;
     color: inherit;
     width: fit-content;
+  }
+
+  .metric-label-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font: inherit;
   }
 
   .metric-label-link:hover {

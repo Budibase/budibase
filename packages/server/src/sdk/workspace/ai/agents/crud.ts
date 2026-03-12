@@ -6,7 +6,6 @@ import type {
   UpdateAgentRequest,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
-import { listAgentFiles, removeAgentFile } from "./files"
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -85,6 +84,7 @@ const withAgentDefaults = (agent: Agent): Agent => ({
   ...agent,
   live: agent.live ?? false,
   enabledTools: agent.enabledTools || [],
+  knowledgeBases: agent.knowledgeBases || [],
   discordIntegration: decodeDiscordIntegrationSecrets(agent.discordIntegration),
   slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
 })
@@ -221,10 +221,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
-    embeddingModel: request.embeddingModel,
-    vectorDb: request.vectorDb,
-    ragMinDistance: request.ragMinDistance,
-    ragTopK: request.ragTopK,
+    knowledgeBases: request.knowledgeBases || [],
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
@@ -263,10 +260,7 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     enabledTools: source.enabledTools || [],
-    embeddingModel: source.embeddingModel,
-    vectorDb: source.vectorDb,
-    ragMinDistance: source.ragMinDistance,
-    ragTopK: source.ragTopK,
+    knowledgeBases: source.knowledgeBases || [],
   })
 }
 
@@ -285,6 +279,7 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
     ...agent,
     updatedAt: new Date().toISOString(),
     enabledTools: agent.enabledTools ?? existing?.enabledTools ?? [],
+    knowledgeBases: agent.knowledgeBases ?? existing?.knowledgeBases ?? [],
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,
@@ -315,11 +310,4 @@ export async function remove(agentId: string) {
   const agent = await getOrThrow(agentId)
 
   await db.remove(agent)
-
-  if (agent.vectorDb) {
-    const files = await listAgentFiles(agentId)
-    if (files.length > 0) {
-      await Promise.all(files.map(file => removeAgentFile(agent, file)))
-    }
-  }
 }

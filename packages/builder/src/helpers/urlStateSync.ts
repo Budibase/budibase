@@ -149,6 +149,19 @@ export const syncURLToState = <State extends Record<string, any>>(
     const urlValue = cachedParams?.[urlParam]
     const stateValue = state?.[stateKey]
 
+    const hasStateValue = stateValue != null && stateValue !== ""
+
+    if (!hasStateValue) {
+      if (fallbackUrl && !isExitingPage()) {
+        redirectUrl(fallbackUrl)
+      }
+      return
+    }
+
+    if (stateValue === urlValue) {
+      return
+    }
+
     // As the store updated, validate that the current state value is valid
     if (validate && fallbackUrl && !isExitingPage()) {
       if (!validate(stateValue)) {
@@ -158,11 +171,6 @@ export const syncURLToState = <State extends Record<string, any>>(
       }
     }
 
-    // Avoid updating the URL if not necessary to prevent a wasted render
-    // cycle
-    if (stateValue === urlValue) {
-      return
-    }
     log(`url.${urlParam} (${urlValue}) <= state.${stateKey} (${stateValue})`)
 
     // Navigate to the new URL

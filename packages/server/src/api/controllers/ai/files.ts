@@ -1,8 +1,8 @@
 import { readFile, unlink } from "node:fs/promises"
 import { HTTPError } from "@budibase/backend-core"
 import {
-  AgentFileUploadResponse,
-  FetchAgentFilesResponse,
+  FetchKnowledgeBaseFilesResponse,
+  KnowledgeBaseFileUploadResponse,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -28,25 +28,36 @@ const unlinkSafe = async (path?: string) => {
   }
 }
 
-export async function fetchAgentFiles(
-  ctx: UserCtx<void, FetchAgentFilesResponse>
+export async function fetchKnowledgeBaseFiles(
+  ctx: UserCtx<void, FetchKnowledgeBaseFilesResponse>
 ) {
-  const agentId = ctx.params.agentId
-  await sdk.ai.agents.getOrThrow(agentId)
-  const files = await sdk.ai.agents.listAgentFiles(agentId)
+  const { knowledgeBaseId } = ctx.params
+  const knowledgeBase = await sdk.ai.knowledgeBase.find(knowledgeBaseId)
+  if (!knowledgeBase) {
+    throw new HTTPError("Knowledge base not found", 404)
+  }
+  const files =
+    await sdk.ai.knowledgeBase.listKnowledgeBaseFiles(knowledgeBaseId)
   ctx.body = { files }
   ctx.status = 200
 }
 
-export async function uploadAgentFile(
-  ctx: UserCtx<void, AgentFileUploadResponse, { agentId: string }>
+export async function uploadKnowledgeBaseFile(
+  ctx: UserCtx<
+    void,
+    KnowledgeBaseFileUploadResponse,
+    { knowledgeBaseId: string }
+  >
 ) {
-  const agentId = ctx.params.agentId
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const { knowledgeBaseId } = ctx.params
+  const knowledgeBase = await sdk.ai.knowledgeBase.find(knowledgeBaseId)
+  if (!knowledgeBase) {
+    throw new HTTPError("Knowledge base not found", 404)
+  }
 
   const upload = normalizeUpload(
     ctx.request.files?.file ||
-      ctx.request.files?.agentFile ||
+      ctx.request.files?.knowledgeBaseFile ||
       ctx.request.files?.upload
   )
 
@@ -59,7 +70,7 @@ export async function uploadAgentFile(
   }
 
   const filename =
-    upload.originalFilename || upload.name || "agent-uploaded-document"
+    upload.originalFilename || upload.name || "knowledge-base-document"
   const mimetype = upload.mimetype || upload.type
   const fileSize =
     typeof upload.size === "number"
@@ -69,8 +80,8 @@ export async function uploadAgentFile(
   const buffer = await readFile(filePath)
 
   try {
-    const updated = await sdk.ai.agents.uploadAgentFile({
-      agentId: agent._id!,
+    const updated = await sdk.ai.knowledgeBase.uploadKnowledgeBaseFile({
+      knowledgeBaseId,
       filename,
       mimetype,
       size: fileSize ?? buffer.byteLength,
@@ -80,7 +91,7 @@ export async function uploadAgentFile(
     ctx.body = { file: updated }
     ctx.status = 201
   } catch (error: any) {
-    console.error("Failed to upload agent file", error)
+    console.error("Failed to upload knowledge base file", error)
     throw new HTTPError(
       error?.message || "Failed to process uploaded file",
       400
@@ -90,16 +101,23 @@ export async function uploadAgentFile(
   }
 }
 
-export async function deleteAgentFile(
-  ctx: UserCtx<void, { deleted: true }, { agentId: string; fileId: string }>
+export async function deleteKnowledgeBaseFile(
+  ctx: UserCtx<
+    void,
+    { deleted: true },
+    { knowledgeBaseId: string; fileId: string }
+  >
 ) {
-  const { agentId, fileId } = ctx.params
-  const file = await sdk.ai.agents.getAgentFileOrThrow(fileId)
-  if (file.agentId !== agentId) {
-    throw new HTTPError("File does not belong to this agent", 404)
+  const { knowledgeBaseId, fileId } = ctx.params
+  const file = await sdk.ai.knowledgeBase.getKnowledgeBaseFileOrThrow(fileId)
+  if (file.knowledgeBaseId !== knowledgeBaseId) {
+    throw new HTTPError("File does not belong to this knowledge base", 404)
   }
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-  await sdk.ai.agents.removeAgentFile(agent, file)
+  const knowledgeBase = await sdk.ai.knowledgeBase.find(knowledgeBaseId)
+  if (!knowledgeBase) {
+    throw new HTTPError("Knowledge base not found", 404)
+  }
+  await sdk.ai.knowledgeBase.removeKnowledgeBaseFile(knowledgeBase, file)
   ctx.body = { deleted: true }
   ctx.status = 200
 }

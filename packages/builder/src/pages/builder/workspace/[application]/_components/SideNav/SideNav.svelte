@@ -71,6 +71,7 @@
   export const show = () => {
     pinned.set(true)
   }
+  export let canInviteUsers = false
   export let onInviteUser: () => void = () => {}
 
   $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
@@ -438,7 +439,7 @@
   <CreateWorkspaceModal />
 </Modal>
 
-{#if workspaceId && $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+{#if workspaceId && $featureFlags[FeatureFlag.AI_AGENTS]}
   <Modal bind:this={createAutomationModal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -512,10 +513,10 @@
         {#if workspaceId}
           <div
             class="core-sections"
-            class:workspace_home={$featureFlags[FeatureFlag.WORKSPACE_HOME]}
+            class:workspace_home={$featureFlags[FeatureFlag.AI_AGENTS]}
           >
             <div>
-              {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+              {#if $featureFlags[FeatureFlag.AI_AGENTS]}
                 <SideNavLink
                   icon="house"
                   text="Home"
@@ -649,12 +650,14 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              <SideNavLink
-                icon="user-plus"
-                text="Invite users"
-                on:click={openInviteUser}
-                {collapsed}
-              />
+              {#if canInviteUsers}
+                <SideNavLink
+                  icon="user-plus"
+                  text="Invite users"
+                  on:click={openInviteUser}
+                  {collapsed}
+                />
+              {/if}
               <span class="root-nav" class:error={backupErrorCount}>
                 {#if collapsed && backupErrorCount}
                   <span class="status-indicator">

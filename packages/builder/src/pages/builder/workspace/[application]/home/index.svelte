@@ -626,8 +626,11 @@
 
   $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
 
-  $: showAgentChat = $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT
-  $: showHeaderActions = $licensing.showTrialBanner || showAgentChat
+  $: showHeaderActions = $licensing.showTrialBanner
+  $: budibaseAICreditLimit =
+    $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
+  $: showBudibaseAIMetric =
+    budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
   $: if (hasMounted) writeUrlState()
 
@@ -637,7 +640,7 @@
       return
     }
 
-    if (!$featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+    if (!$featureFlags[FeatureFlag.AI_AGENTS]) {
       goto(url("../design"))
       return
     }
@@ -682,32 +685,11 @@
       {#if showHeaderActions}
         <div class="header-actions">
           <EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
-
-          {#if showAgentChat}
-            <a
-              href={url("../chat")}
-              class="header-link header-link--with-icons"
-            >
-              <Icon
-                name="chat-circle"
-                size="XS"
-                color="#8CA171"
-                weight="fill"
-              />
-              <Body size="S">Agent chat</Body>
-              <Icon
-                name="arrow-up-right"
-                size="XS"
-                color="var(--spectrum-global-color-gray-600)"
-                weight="regular"
-              />
-            </a>
-          {/if}
         </div>
       {/if}
     </div>
 
-    <HomeMetrics {metrics} agentsEnabled={$featureFlags.AI_AGENTS} />
+    <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
     <div class="controls-row">
       <HomeControls

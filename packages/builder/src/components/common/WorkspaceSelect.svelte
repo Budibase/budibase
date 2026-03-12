@@ -5,6 +5,7 @@
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import { appStore } from "@/stores/builder"
+  import { bb } from "@/stores/bb"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
   import { appsStore, sortBy } from "@/stores/portal/apps"
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
@@ -59,6 +60,7 @@
       return
     }
     if (appId === ws.devId) return
+    bb.clearSettings()
     $goto(wsUrl)
   }
 
