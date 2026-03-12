@@ -60,7 +60,8 @@
     trigger: { width: "0.8fr", displayName: "Trigger" },
     environmentLabel: { width: "0.55fr", displayName: "Environment" },
     startTime: { width: "1fr", displayName: "Start time" },
-    operations: { width: "0.4fr", displayName: "Operations" },
+    // TODO: Rename this key when the underlying API contract changes from operations to actions. This UI change keeps the existing data shape.
+    operations: { width: "0.4fr", displayName: "Actions" },
   }
 </script>
 
