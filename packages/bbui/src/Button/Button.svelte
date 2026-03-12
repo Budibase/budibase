@@ -58,12 +58,7 @@
     {/if}
     {#if icon}
       <span class="icon">
-        <Icon
-          name={icon}
-          size={size}
-          color={iconColor}
-          weight={iconWeight}
-        />
+        <Icon name={icon} {size} color={iconColor} weight={iconWeight} />
       </span>
     {/if}
     {#if $$slots && !reverse}
