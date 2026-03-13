@@ -54,11 +54,7 @@
   let queryEditorModalOpen = false
   let transformerModal
   let transformerModalOpen = false
-  const MODAL_EDITOR_MAX_LINES = 30
-  const MODAL_EDITOR_LINE_HEIGHT = 24
-  const MODAL_EDITOR_MAX_HEIGHT =
-    MODAL_EDITOR_MAX_LINES * MODAL_EDITOR_LINE_HEIGHT
-  const modalEditorMaxHeightStyle = `--modal-editor-max-height:${MODAL_EDITOR_MAX_HEIGHT}px;`
+  const MODAL_EDITOR_HEIGHT = 500
 
   const parseQuery = query => {
     modified = false
@@ -326,15 +322,13 @@
             showCancelButton={false}
             closeIconName="arrows-in-simple"
           >
-            <div class="modalEditor" style={modalEditorMaxHeightStyle}>
-              <IntegrationQueryEditor
-                noLabel
-                {datasource}
-                bind:query={newQuery}
-                height={MODAL_EDITOR_MAX_HEIGHT}
-                schema={integration.query[newQuery.queryVerb]}
-              />
-            </div>
+            <IntegrationQueryEditor
+              noLabel
+              {datasource}
+              bind:query={newQuery}
+              height={MODAL_EDITOR_HEIGHT}
+              schema={integration.query[newQuery.queryVerb]}
+            />
           </ModalContent>
         </Modal>
 
@@ -406,14 +400,12 @@
             showCancelButton={false}
             closeIconName="arrows-in-simple"
           >
-            <div class="modalEditor" style={modalEditorMaxHeightStyle}>
-              <CodeMirrorEditor
-                height={MODAL_EDITOR_MAX_HEIGHT}
-                value={newQuery.transformer}
-                resize="vertical"
-                on:change={e => (newQuery.transformer = e.detail)}
-              />
-            </div>
+            <CodeMirrorEditor
+              height={MODAL_EDITOR_HEIGHT}
+              value={newQuery.transformer}
+              resize="vertical"
+              on:change={e => (newQuery.transformer = e.detail)}
+            />
           </ModalContent>
         </Modal>
       </div>
@@ -559,16 +551,6 @@
 
   .copy :global(p) {
     color: var(--grey-7);
-  }
-
-  .modalEditor {
-    max-height: var(--modal-editor-max-height, 720px);
-    overflow: auto;
-  }
-
-  .modalEditor :global(.cm-editor),
-  .modalEditor :global(.cm-scroller) {
-    max-height: var(--modal-editor-max-height, 720px);
   }
 
   .sidePanel {

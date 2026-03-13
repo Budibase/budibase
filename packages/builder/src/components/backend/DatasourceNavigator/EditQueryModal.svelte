@@ -39,6 +39,7 @@
 </script>
 
 <Modal bind:this={editorModal} on:show={initForm}>
+  <h2>EDIT QUERY MODAL</h2>
   <ModalContent
     bind:this={editQueryNameModal}
     title="Edit Query"

@@ -93,11 +93,7 @@
   let requestBodyModalOpen = false
   let transformerModal
   let transformerModalOpen = false
-  const MODAL_EDITOR_MAX_LINES = 30
-  const MODAL_EDITOR_LINE_HEIGHT = 24
-  const MODAL_EDITOR_MAX_HEIGHT =
-    MODAL_EDITOR_MAX_LINES * MODAL_EDITOR_LINE_HEIGHT
-  const modalEditorMaxHeightStyle = `--modal-editor-max-height:${MODAL_EDITOR_MAX_HEIGHT}px;`
+  const MODAL_EDITOR_HEIGHT = 500
 
   $: staticVariables = datasource?.config?.staticVariables || {}
   $: if (queryId) {
@@ -758,13 +754,11 @@
                 showCancelButton={false}
                 closeIconName="arrows-in-simple"
               >
-                <div class="modalEditor" style={modalEditorMaxHeightStyle}>
-                  <RestBodyInput
-                    bodyType={query.fields.bodyType}
-                    requestBody={prettyBody}
-                    on:change={onUpdateBody}
-                  />
-                </div>
+                <RestBodyInput
+                  bodyType={query.fields.bodyType}
+                  requestBody={prettyBody}
+                  on:change={onUpdateBody}
+                />
               </ModalContent>
             </Modal>
           </Tab>
@@ -852,11 +846,12 @@
                   showCancelButton={false}
                   closeIconName="arrows-in-simple"
                 >
-                  <div class="embed modalEditor" style={modalEditorMaxHeightStyle}>
+                  <div class="embed">
                     <CodeEditor
                       value={query.transformer}
                       mode={EditorModes.JS}
                       aiEnabled={false}
+                      height={MODAL_EDITOR_HEIGHT}
                       on:change={e => (query.transformer = e.detail)}
                     />
                   </div>
@@ -1111,15 +1106,5 @@
   .embed :global(.cm-gutters) {
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
-  }
-
-  .modalEditor {
-    max-height: var(--modal-editor-max-height, 720px);
-    overflow: auto;
-  }
-
-  .modalEditor :global(.cm-editor),
-  .modalEditor :global(.cm-scroller) {
-    max-height: var(--modal-editor-max-height, 720px);
   }
 </style>

@@ -25,6 +25,7 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
+  import type { ModalAPI } from "@budibase/bbui"
   import {
     BodyType,
     type Query,
@@ -105,23 +106,17 @@
     runningQuery = false
   let originalBuiltQuery: Query | undefined = undefined
   let baseUrl: string | undefined = undefined
-  let response: PreviewQueryResponse
+  let response: PreviewQueryResponse | undefined
   let query: Query | undefined
   let template: RestTemplate | undefined
   let datasource: Datasource | UIInternalDatasource | undefined
   let authConfigs: AuthConfigOption[] = []
   let defaultAuthApplied = false
   let defaultAuthKey: string | undefined = undefined
-  let requestBodyModal
+  let requestBodyModal: ModalAPI | null = null
   let requestBodyModalOpen = false
-  let transformerModal
+  let transformerModal: ModalAPI | null = null
   let transformerModalOpen = false
-  const MODAL_EDITOR_MAX_LINES = 30
-  const MODAL_EDITOR_LINE_HEIGHT = 24
-  const MODAL_EDITOR_MAX_HEIGHT =
-    MODAL_EDITOR_MAX_LINES * MODAL_EDITOR_LINE_HEIGHT
-  const modalEditorMaxHeightStyle = `--modal-editor-max-height:${MODAL_EDITOR_MAX_HEIGHT}px;`
-
   const ensureQueryDefaults = (target: Query) => {
     if (!target.fields?.disabledHeaders) {
       target.fields.disabledHeaders = {}
@@ -1031,13 +1026,11 @@
                       showCancelButton={false}
                       closeIconName="arrows-in-simple"
                     >
-                      <div class="modalEditor" style={modalEditorMaxHeightStyle}>
-                        <RestBodyInput
-                          bodyType={query?.fields.bodyType}
-                          requestBody={prettyBody}
-                          on:change={onUpdateBody}
-                        />
-                      </div>
+                      <RestBodyInput
+                        bodyType={query?.fields.bodyType}
+                        requestBody={prettyBody}
+                        on:change={onUpdateBody}
+                      />
                     </ModalContent>
                   </Modal>
                 </Tab>
@@ -1095,10 +1088,7 @@
                         showCancelButton={false}
                         closeIconName="arrows-in-simple"
                       >
-                        <div
-                          class="embed modalEditor"
-                          style={modalEditorMaxHeightStyle}
-                        >
+                        <div class="embed">
                           <CodeEditor
                             value={query?.transformer}
                             mode={EditorModes.JS}
@@ -1244,14 +1234,6 @@
   }
   .bodyType-radio-group {
     display: flex;
-  }
-  .modalEditor {
-    max-height: var(--modal-editor-max-height, 720px);
-    overflow: auto;
-  }
-  .modalEditor :global(.cm-editor),
-  .modalEditor :global(.cm-scroller) {
-    max-height: var(--modal-editor-max-height, 720px);
   }
   .wrap > .main {
     padding-top: var(--spacing-l);
