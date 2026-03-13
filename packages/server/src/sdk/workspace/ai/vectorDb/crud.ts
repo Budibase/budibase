@@ -3,8 +3,12 @@ import {
   DocumentType,
   PASSWORD_REPLACEMENT,
   SEPARATOR,
+  VectorDbProvider,
   VectorDb,
 } from "@budibase/types"
+import * as knowledgeBaseSdk from "../knowledgeBase"
+import { validatePgVectorDbConfig } from "./pgVectorDb"
+import { utils } from "@budibase/shared-core"
 
 const assertValidVectorDbId = (id: string) => {
   const prefix = `${DocumentType.VECTOR_STORE}${SEPARATOR}`
@@ -48,6 +52,15 @@ export async function create(config: VectorDb): Promise<VectorDb> {
     password: config.password,
   }
 
+  switch (newConfig.provider) {
+    case VectorDbProvider.PGVECTOR:
+      await validatePgVectorDbConfig(newConfig)
+      break
+    default:
+      utils.unreachable(newConfig.provider, { doNotThrow: true })
+      throw new HTTPError("Unsupported vector database provider", 400)
+  }
+
   const { rev } = await db.put(newConfig)
   newConfig._rev = rev
 
@@ -77,6 +90,14 @@ export async function update(config: VectorDb): Promise<VectorDb> {
     password,
   }
 
+  switch (updated.provider) {
+    case VectorDbProvider.PGVECTOR:
+      await validatePgVectorDbConfig(updated)
+      break
+    default:
+      throw new HTTPError("Unsupported vector database provider", 400)
+  }
+
   const { rev } = await db.put(updated)
   updated._rev = rev
 
@@ -85,6 +106,14 @@ export async function update(config: VectorDb): Promise<VectorDb> {
 
 export async function remove(id: string) {
   assertValidVectorDbId(id)
+  const dependentKnowledgeBases = await knowledgeBaseSdk.findByVectorDb(id)
+  if (dependentKnowledgeBases.length > 0) {
+    throw new HTTPError(
+      "Vector database cannot be deleted while it is used by a knowledge base",
+      400
+    )
+  }
+
   const db = context.getWorkspaceDB()
 
   const existing = await db.get<VectorDb>(id)

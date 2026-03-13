@@ -9,6 +9,7 @@
     provider: string
     model: string
     providers?: LLMProvider[]
+    disabled?: boolean
   }
 
   interface ModelOption {
@@ -21,7 +22,13 @@
     modelChange: string
   }>()
 
-  let { configType, provider, model, providers }: Props = $props()
+  let {
+    configType,
+    provider,
+    model,
+    providers,
+    disabled = false,
+  }: Props = $props()
 
   let providerPlaceholder = $derived(
     !providers
@@ -95,6 +102,7 @@
   loading={!providers}
   autocomplete
   searchPlaceholder="Search providers"
+  {disabled}
   on:change={handleProviderChange}
 />
 
@@ -105,5 +113,6 @@
   getOptionValue={o => o.value}
   getOptionLabel={o => o.label}
   placeholder={modelPlaceholder}
+  {disabled}
   on:change={handleModelChange}
 />

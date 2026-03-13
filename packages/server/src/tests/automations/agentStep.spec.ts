@@ -12,13 +12,6 @@ jest.mock("@budibase/pro", () => {
   }
 })
 
-jest.mock("../../sdk/workspace/ai/agentLogs", () => ({
-  createSessionLogIndexer: jest.fn(() => ({
-    addRequestId: jest.fn(),
-    index: jest.fn().mockResolvedValue(undefined),
-  })),
-}))
-
 jest.mock("../../sdk", () => ({
   __esModule: true,
   default: {
@@ -40,9 +33,6 @@ jest.mock("../../sdk", () => ({
           chat: {},
           providerOptions: undefined,
         }),
-      },
-      agentLogs: {
-        addSessionLog: jest.fn().mockResolvedValue(undefined),
       },
     },
   },
@@ -104,6 +94,11 @@ describe("Agent step tool call tracking", () => {
   beforeEach(() => {
     addActionMock.mockClear()
     jest.mocked(require("ai").ToolLoopAgent).mockClear()
+    jest.spyOn(console, "error").mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   it("counts each completed tool call as one action", async () => {

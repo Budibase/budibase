@@ -2,9 +2,21 @@ import { features } from "@budibase/backend-core"
 import {
   FeatureFlag,
   PASSWORD_REPLACEMENT,
+  AIConfigType,
   VectorDbProvider,
 } from "@budibase/types"
+import { context, docIds } from "@budibase/backend-core"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+
+jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
+  const actual = jest.requireActual(
+    "../../../../sdk/workspace/ai/vectorDb/pgVectorDb"
+  )
+  return {
+    ...actual,
+    validatePgVectorDbConfig: jest.fn().mockResolvedValue(undefined),
+  }
+})
 
 describe("vector db configs", () => {
   const config = new TestConfiguration()
@@ -73,6 +85,37 @@ describe("vector db configs", () => {
 
       const configs = await config.api.vectorDb.fetch()
       expect(configs).toHaveLength(0)
+    })
+  })
+
+  it("rejects deleting a vector db used by a knowledge base", async () => {
+    await withRagEnabled(async () => {
+      const created = await config.api.vectorDb.create(vectorDbRequest)
+      const embeddingModelId = docIds.generateAIConfigID("embedding_test")
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        await db.put({
+          _id: embeddingModelId,
+          name: "Embeddings",
+          provider: "OpenAI",
+          credentialsFields: {},
+          model: "text-embedding-3-small",
+          liteLLMModelId: "embedding-model",
+          configType: AIConfigType.EMBEDDINGS,
+        })
+      })
+
+      await config.api.knowledgeBase.create({
+        name: "Support Docs",
+        embeddingModel: embeddingModelId,
+        vectorDb: created._id!,
+      })
+
+      await config.api.vectorDb.remove(created._id!, { status: 400 })
+
+      const configs = await config.api.vectorDb.fetch()
+      expect(configs).toHaveLength(1)
     })
   })
 

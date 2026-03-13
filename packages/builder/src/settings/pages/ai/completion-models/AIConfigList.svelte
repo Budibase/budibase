@@ -35,7 +35,7 @@
   const schema = {
     icon: { width: "40px" },
     name: { width: "200px" },
-    model: {},
+    model: { width: "1fr" },
     default: { width: "120px" },
     edit: { width: "100px", align: "Right" },
   }

@@ -52,6 +52,7 @@
   export let rounded: boolean = false
   export let stickyHeader: boolean = true
   export let editColumnPosition: "left" | "right" = "left"
+  export let editColumnHeader: string = "Edit"
 
   const dispatch = createEventDispatcher<{
     click: O
@@ -419,8 +420,8 @@
                     bind:value={checkboxStatus}
                     on:change={toggleSelectAll}
                   />
-                {:else}
-                  Edit
+                {:else if editColumnHeader}
+                  {editColumnHeader}
                 {/if}
               </div>
             {/if}
@@ -478,8 +479,8 @@
                     bind:value={checkboxStatus}
                     on:change={toggleSelectAll}
                   />
-                {:else}
-                  Edit
+                {:else if editColumnHeader}
+                  {editColumnHeader}
                 {/if}
               </div>
             {/if}

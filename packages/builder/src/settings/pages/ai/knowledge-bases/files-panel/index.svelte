@@ -22,9 +22,10 @@
 
   export interface Props {
     knowledgeBaseId?: string
+    hasReferenceChanges?: boolean
   }
 
-  let { knowledgeBaseId }: Props = $props()
+  let { knowledgeBaseId, hasReferenceChanges = false }: Props = $props()
 
   const FILE_STATUS_POLL_MS = 1000
 
@@ -126,7 +127,7 @@
   })
 
   async function handleFileUpload(event: Event) {
-    if (!knowledgeBaseId) {
+    if (!knowledgeBaseId || hasReferenceChanges) {
       return
     }
     const target = event.currentTarget as HTMLInputElement
@@ -153,6 +154,12 @@
   }
 
   function handleUploadClick() {
+    if (hasReferenceChanges) {
+      notifications.info(
+        "Save your embedding model and vector database changes before uploading files"
+      )
+      return
+    }
     if (!hasEmbeddingConfig) {
       notifications.info("Add an embeddings configuration to enable uploads")
       return
@@ -199,7 +206,7 @@
       <Button
         secondary
         icon="upload"
-        disabled={!knowledgeBaseId || uploadingFile}
+        disabled={!knowledgeBaseId || uploadingFile || hasReferenceChanges}
         on:click={handleUploadClick}
         >{uploadingFile ? "Uploading..." : "Upload file"}</Button
       >
@@ -220,6 +227,11 @@
   {#if !knowledgeBaseId}
     <Label size="L" muted>
       Save the knowledge base before uploading files.
+    </Label>
+  {:else if hasReferenceChanges}
+    <Label size="L" muted>
+      Save your embedding model and vector database changes before uploading
+      files.
     </Label>
   {:else if currentFiles.length === 0}
     <Label size="L" muted>

@@ -1,7 +1,12 @@
 import { VectorDbProvider, type VectorDb as VectorDbDoc } from "@budibase/types"
 import * as crypto from "crypto"
 import { Client } from "pg"
-import { context, db as dbCore, tenancy } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  HTTPError,
+  tenancy,
+} from "@budibase/backend-core"
 import type {
   ChunkInput,
   PgVectorDbConfig,
@@ -39,6 +44,38 @@ const buildPgConnectionString = (config: VectorDbDoc) => {
     : ""
   const auth = userPart ? `${userPart}${passwordPart}@` : ""
   return `postgresql://${auth}${config.host}:${config.port}/${config.database}`
+}
+
+export const validatePgVectorDbConfig = async (config: VectorDbDoc) => {
+  const client = new Client({
+    connectionString: buildPgConnectionString(config),
+  })
+
+  try {
+    await client.connect()
+    await client.query("SELECT 1")
+    const result = await client.query(
+      "SELECT 1 FROM pg_extension WHERE extname = 'vector' LIMIT 1"
+    )
+
+    if (!result.rowCount) {
+      throw new HTTPError(
+        "The target PostgreSQL database does not have the pgvector extension installed",
+        400
+      )
+    }
+  } catch (err: any) {
+    if (err instanceof HTTPError) {
+      throw err
+    }
+    throw new HTTPError(
+      "Could not validate the configuration: " +
+        (err?.message || "Failed to connect to the vector database"),
+      400
+    )
+  } finally {
+    await client.end()
+  }
 }
 
 export const buildPgVectorDbConfig = (

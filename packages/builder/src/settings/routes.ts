@@ -13,7 +13,11 @@ import { AppMetaState } from "@/stores/builder/app"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
 import { featureFlag } from "@/helpers"
-import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
+import {
+  aiConfigsStore,
+  knowledgeBaseStore,
+  vectorDbStore,
+} from "@/stores/portal"
 import { get } from "svelte/store"
 
 const getPathId = (path: string | undefined) => {
@@ -325,6 +329,44 @@ export const appRoutes = (
           comp: Pages.get("knowledgeBases"),
           routes: [
             {
+              path: "embedding",
+              routes: [
+                {
+                  path: ":configId",
+                  title: (path: string | undefined) => {
+                    const id = getPathId(path)
+                    if (!id) {
+                      return "New embedding model"
+                    }
+                    return (
+                      get(aiConfigsStore).customConfigs.find(c => c._id === id)
+                        ?.name ?? "Embedding model"
+                    )
+                  },
+                  comp: Pages.get("embedding_model"),
+                },
+              ],
+            },
+            {
+              path: "vectordb",
+              routes: [
+                {
+                  path: ":id",
+                  title: (path: string | undefined) => {
+                    const id = getPathId(path)
+                    if (!id) {
+                      return "New vector database"
+                    }
+                    return (
+                      get(vectorDbStore).configs.find(db => db._id === id)
+                        ?.name ?? "Vector database"
+                    )
+                  },
+                  comp: Pages.get("vector_database"),
+                },
+              ],
+            },
+            {
               path: ":knowledgeBaseId",
               comp: Pages.get("knowledgeBase"),
               title: (path: string | undefined) => {
@@ -343,7 +385,17 @@ export const appRoutes = (
                   routes: [
                     {
                       path: ":configId",
-                      title: "New embedding model",
+                      title: (path: string | undefined) => {
+                        const id = getPathId(path)
+                        if (!id) {
+                          return "New embedding model"
+                        }
+                        return (
+                          get(aiConfigsStore).customConfigs.find(
+                            c => c._id === id
+                          )?.name ?? "Embedding model"
+                        )
+                      },
                       comp: Pages.get("embedding_model"),
                     },
                   ],
@@ -353,7 +405,16 @@ export const appRoutes = (
                   routes: [
                     {
                       path: ":id",
-                      title: "New vector database",
+                      title: (path: string | undefined) => {
+                        const id = getPathId(path)
+                        if (!id) {
+                          return "New vector database"
+                        }
+                        return (
+                          get(vectorDbStore).configs.find(db => db._id === id)
+                            ?.name ?? "Vector database"
+                        )
+                      },
                       comp: Pages.get("vector_database"),
                     },
                   ],
