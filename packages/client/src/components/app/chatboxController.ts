@@ -388,10 +388,16 @@ export class ChatboxController {
   }
 
   async deleteCurrentChat() {
-    await this.deleteConversation(this.state.chat?._id)
+    await this.deleteConversation(
+      this.state.chat?._id,
+      this.state.chat?.agentId
+    )
   }
 
-  async deleteConversation(conversationId?: string) {
+  async deleteConversation(
+    conversationId?: string,
+    conversationAgentId?: string
+  ) {
     const { deletingChat, chatAppId, selectedConversationId } = this.state
     if (!conversationId || deletingChat || !chatAppId) {
       return
@@ -402,6 +408,7 @@ export class ChatboxController {
       const conversationScopeAgentId = resolveConversationScopeAgentId({
         lockedAgentId: this.state.lockedAgentId,
         selectedAgentId: this.state.selectedAgentId,
+        fallbackAgentId: conversationAgentId,
       })
 
       await this.api.deleteChatConversation(
