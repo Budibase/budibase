@@ -745,13 +745,13 @@ export class RestIntegration implements IntegrationBase {
     }
 
     this.startTimeMs = performance.now()
-    const url = this.getUrl(
-      path,
-      mergedQueryString,
-      pagination,
-      paginationValues
-    )
-    if (await blacklist.isBlacklisted(url)) {
+    const url = this.getUrl(path, queryString, pagination, paginationValues)
+    const disableBlacklistForLocalDevelopment =
+      environment.isDev() && !environment.isTest()
+    if (
+      !disableBlacklistForLocalDevelopment &&
+      (await blacklist.isBlacklisted(url))
+    ) {
       throw new Error("Cannot connect to URL.")
     }
 
