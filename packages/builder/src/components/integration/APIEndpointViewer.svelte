@@ -681,7 +681,7 @@
       activity: Record<string, boolean>
     }>
   ) => {
-    queryParams = keyValueArrayToRecord(e.detail.fields)
+    queryParams = keyValueArrayToRecord(e.detail.fields, { filterEmpty: true })
   }
 
   const onUpdateBindings = (
@@ -690,7 +690,9 @@
       activity: Record<string, boolean>
     }>
   ) => {
-    const newBindings = keyValueArrayToRecord(e.detail.fields)
+    const newBindings = keyValueArrayToRecord(e.detail.fields, {
+      filterEmpty: true,
+    })
     requestBindings = newBindings
     editableQuery!.parameters = restUtils.keyValueToQueryParameters(newBindings)
   }
@@ -717,7 +719,9 @@
     }>
   ) => {
     if (editableQuery) {
-      editableQuery.fields.headers = keyValueArrayToRecord(e.detail.fields)
+      editableQuery.fields.headers = keyValueArrayToRecord(e.detail.fields, {
+        filterEmpty: true,
+      })
       editableQuery.fields.disabledHeaders = restUtils.flipHeaderState(
         e.detail.activity
       )
@@ -1175,16 +1179,14 @@
                   />
                 </Tab>
                 <Tab title="Params">
-                  {#key queryParams}
-                    <KeyValueBuilder
-                      name="param"
-                      defaults={queryParams}
-                      headings
-                      bindings={mergedBindings}
-                      context={bindingPreviewContext}
-                      on:change={onUpdateParams}
-                    />
-                  {/key}
+                  <KeyValueBuilder
+                    name="param"
+                    defaults={queryParams}
+                    headings
+                    bindings={mergedBindings}
+                    context={bindingPreviewContext}
+                    on:change={onUpdateParams}
+                  />
                 </Tab>
                 <Tab title="Headers">
                   <KeyValueBuilder
@@ -1586,7 +1588,7 @@
   }
   .query-name-input:empty::before {
     content: attr(data-placeholder);
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--spectrum-global-color-gray-500);
   }
   .query-name-input:focus {
     outline: none;
