@@ -16,6 +16,7 @@
   export const show = () => {
     name = ""
     touched = false
+    loading = false
     modal.show()
   }
   export const hide = () => {
@@ -32,11 +33,15 @@
   $: nameError = touched && !trimmedName ? "Name is required" : undefined
 
   async function createAgent() {
+    if (loading) {
+      return keepOpen
+    }
     touched = true
     if (!trimmedName) {
       return keepOpen
     }
 
+    loading = true
     const workspaceId = $appStore.appId
     try {
       const newAgent = await agentsStore.createAgent({
@@ -48,6 +53,8 @@
     } catch (_error) {
       notifications.error("Error creating agent")
       return keepOpen
+    } finally {
+      loading = false
     }
   }
 
@@ -64,7 +71,7 @@
     showConfirmButton
     showCancelButton
     showCloseIcon
-    disabled={!trimmedName}
+    disabled={loading || !trimmedName}
     onConfirm={createAgent}
   >
     <div class="agent-form">
