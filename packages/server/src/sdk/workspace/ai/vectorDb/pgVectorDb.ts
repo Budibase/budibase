@@ -7,6 +7,7 @@ import {
   HTTPError,
   tenancy,
 } from "@budibase/backend-core"
+import { processEnvironmentVariable } from "../../../utils"
 import type {
   ChunkInput,
   PgVectorDbConfig,
@@ -44,6 +45,32 @@ const buildPgConnectionString = (config: VectorDbDoc) => {
     : ""
   const auth = userPart ? `${userPart}${passwordPart}@` : ""
   return `postgresql://${auth}${config.host}:${config.port}/${config.database}`
+}
+
+export const resolvePgVectorDbConfig = async (config: VectorDbDoc) => {
+  const rawPort = config.port
+  const resolvedPortValue =
+    typeof rawPort === "string"
+      ? await processEnvironmentVariable(rawPort)
+      : rawPort
+
+  const resolvedPort =
+    typeof resolvedPortValue === "string"
+      ? Number(resolvedPortValue)
+      : resolvedPortValue
+
+  return {
+    ...config,
+    host: await processEnvironmentVariable(config.host),
+    port: Number.isFinite(resolvedPort) ? resolvedPort : config.port,
+    database: await processEnvironmentVariable(config.database),
+    user: config.user
+      ? await processEnvironmentVariable(config.user)
+      : config.user,
+    password: config.password
+      ? await processEnvironmentVariable(config.password)
+      : config.password,
+  }
 }
 
 export const validatePgVectorDbConfig = async (config: VectorDbDoc) => {
