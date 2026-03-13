@@ -59,4 +59,15 @@ describe("fetchWithBlacklist redirects", () => {
     expect(await response.json()).toEqual({ ok: true })
     expect(nock.isDone()).toEqual(true)
   })
+
+  it("does not follow non-redirect 3xx statuses", async () => {
+    nock("http://8.8.8.8")
+      .get("/start")
+      .reply(304, { ok: true }, { location: "http://1.1.1.1/target" })
+
+    const response = await fetchWithBlacklist("http://8.8.8.8/start")
+
+    expect(response.status).toEqual(304)
+    expect(nock.isDone()).toEqual(true)
+  })
 })

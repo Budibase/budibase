@@ -38,7 +38,7 @@ export async function throwIfBlacklisted(url: string) {
 }
 
 function isRedirect(status: number) {
-  return status >= 300 && status <= 399
+  return [301, 302, 303, 307, 308].includes(status)
 }
 
 const SENSITIVE_REDIRECT_HEADERS = [
