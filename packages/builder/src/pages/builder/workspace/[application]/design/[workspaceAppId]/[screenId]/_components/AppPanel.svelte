@@ -17,7 +17,8 @@
 
   let changingStatus = false
 
-  $: mobile = $previewStore.previewDevice === "mobile"
+  $: currentDevice = $previewStore.previewDevice
+  $: mobile = currentDevice === "mobile"
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
 
@@ -26,12 +27,22 @@
   $: toggleValue =
     selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
 
+  $: deviceIcon =
+    currentDevice === "mobile"
+      ? "device-mobile-camera"
+      : currentDevice === "tablet"
+        ? "device-tablet-camera"
+        : "monitor"
+
   const previewApp = () => {
     previewStore.showPreview(true)
   }
 
   const togglePreviewDevice = () => {
-    previewStore.setDevice(mobile ? "desktop" : "mobile")
+    const order = ["desktop", "tablet", "mobile"] as const
+    const currentIndex = order.indexOf(currentDevice as (typeof order)[number])
+    const nextIndex = (currentIndex + 1) % order.length
+    previewStore.setDevice(order[nextIndex])
   }
 
   const handleToggleChange = async (e: CustomEvent<boolean>) => {
@@ -85,7 +96,7 @@
             {#if $appStore.clientFeatures.devicePreview}
               <ActionButton
                 quiet
-                icon={mobile ? "device-mobile-camera" : "monitor"}
+                icon={deviceIcon}
                 on:click={togglePreviewDevice}
               />
             {/if}
