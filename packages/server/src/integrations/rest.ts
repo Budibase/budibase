@@ -745,7 +745,7 @@ export class RestIntegration implements IntegrationBase {
     }
 
     this.startTimeMs = performance.now()
-    const url = this.getUrl(path, queryString, pagination, paginationValues)
+    const url = this.getUrl(path, mergedQueryString, pagination, paginationValues)
     const disableBlacklistForLocalDevelopment =
       environment.isDev() && !environment.isTest()
     if (
