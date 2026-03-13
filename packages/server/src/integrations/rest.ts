@@ -686,7 +686,10 @@ export class RestIntegration implements IntegrationBase {
       environment.isDev() &&
       !environment.isTest() &&
       ["localhost", "127.0.0.1", "::1"].includes(hostname)
-    if (!disableBlacklistForLocalDevelopment && (await blacklist.isBlacklisted(url))) {
+    if (
+      !disableBlacklistForLocalDevelopment &&
+      (await blacklist.isBlacklisted(url))
+    ) {
       throw new Error("Cannot connect to URL.")
     }
 
