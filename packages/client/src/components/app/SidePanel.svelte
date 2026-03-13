@@ -7,6 +7,7 @@
 
   export let onClose
   export let ignoreClicksOutside
+  export let size
 
   // Automatically show and hide the side panel when inside the builder.
   // For some unknown reason, svelte reactivity breaks if we reference the
@@ -41,6 +42,22 @@
     if (open) {
       sidePanelStore.actions.setIgnoreClicksOutside(ignoreClicksOutside)
       renderKey = Math.random()
+    }
+  }
+
+  // When a side panel instance has a configured default size (from its
+  // component settings in the builder), apply it when this panel becomes
+  // visible. In the builder we want live-updating when the instance setting
+  // is changed, so always apply the instance size while in the builder. In
+  // runtime, only apply the instance size if an action didn't explicitly set
+  // a size.
+  $: if (open && size) {
+    if ($builderStore.inBuilder) {
+      sidePanelStore.actions.setSize(size)
+    } else {
+      if ($sidePanelStore.size == null) {
+        sidePanelStore.actions.setSize(size)
+      }
     }
   }
 

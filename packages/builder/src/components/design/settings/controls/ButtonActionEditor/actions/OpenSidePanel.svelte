@@ -7,6 +7,13 @@
 
   $: sidePanelOptions = getSidePanelOptions($selectedScreen)
 
+  const sizeOptions = [
+    { label: "Small", value: "small" },
+    { label: "Medium", value: "medium" },
+    { label: "Large", value: "large" },
+    { label: "Fullscreen", value: "fullscreen" },
+  ]
+
   const getSidePanelOptions = screen => {
     const sidePanelComponents = findAllMatchingComponents(
       screen.props,
@@ -22,6 +29,8 @@
 <div class="root">
   <Label small>Side Panel</Label>
   <Select bind:value={parameters.id} options={sidePanelOptions} />
+  <Label small>Size</Label>
+  <Select bind:value={parameters.size} options={sizeOptions} />
 </div>
 
 <style>

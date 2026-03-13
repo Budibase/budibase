@@ -459,7 +459,9 @@ const copyToClipboardHandler = async action => {
 const openSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
-    sidePanelStore.actions.open(id)
+    // Pass through optional size parameter (if set via the builder action)
+    const size = action.parameters?.size
+    sidePanelStore.actions.open(id, size ? { size } : undefined)
   }
 }
 

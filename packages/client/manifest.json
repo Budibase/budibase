@@ -8120,6 +8120,18 @@
         "type": "event",
         "key": "onClose",
         "label": "On close"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "small",
+        "options": [
+          { "label": "Small", "value": "small" },
+          { "label": "Medium", "value": "medium" },
+          { "label": "Large", "value": "large" },
+          { "label": "Fullscreen", "value": "fullscreen" }
+        ]
       }
     ]
   },
