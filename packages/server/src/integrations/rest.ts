@@ -681,11 +681,8 @@ export class RestIntegration implements IntegrationBase {
 
     this.startTimeMs = performance.now()
     const url = this.getUrl(path, queryString, pagination, paginationValues)
-    const hostname = new URL(url).hostname
     const disableBlacklistForLocalDevelopment =
-      environment.isDev() &&
-      !environment.isTest() &&
-      ["localhost", "127.0.0.1", "::1"].includes(hostname)
+      environment.isDev() && !environment.isTest()
     if (
       !disableBlacklistForLocalDevelopment &&
       (await blacklist.isBlacklisted(url))
