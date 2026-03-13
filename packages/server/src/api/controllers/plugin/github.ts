@@ -1,4 +1,7 @@
-import { getPluginMetadata } from "../../../utilities/fileSystem"
+import {
+  deleteFolderFileSystem,
+  getPluginMetadata,
+} from "../../../utilities/fileSystem"
 import fetch from "node-fetch"
 import { downloadUnzipTarball } from "./utils"
 
@@ -17,6 +20,7 @@ export async function request(
 
 export async function githubUpload(url: string, name = "", token = "") {
   let githubUrl = url
+  let path: string | undefined
 
   if (!githubUrl.includes("https://github.com/")) {
     throw new Error("The plugin origin must be from Github")
@@ -61,13 +65,16 @@ export async function githubUpload(url: string, name = "", token = "") {
   }
 
   try {
-    const path = await downloadUnzipTarball(
+    path = await downloadUnzipTarball(
       pluginLastReleaseTarballUrl,
       pluginName,
       headers
     )
     return await getPluginMetadata(path)
   } catch (err: any) {
+    if (path) {
+      deleteFolderFileSystem(path)
+    }
     let errMsg = err?.message || err
     if (errMsg === "unexpected response Not Found") {
       errMsg = "Github release tarball not found"

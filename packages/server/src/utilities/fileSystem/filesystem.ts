@@ -1,6 +1,6 @@
 import fs, { PathLike } from "fs"
 import { budibaseTempDir } from "../budibaseDir"
-import { join } from "path"
+import { basename, isAbsolute, join, relative, resolve, sep } from "path"
 import env from "../../environment"
 import * as tar from "tar"
 
@@ -75,25 +75,44 @@ export const streamFile = (path: string) => {
   return fs.createReadStream(path)
 }
 
-export const createTempFolder = (item: string) => {
-  const path = join(budibaseTempDir(), item)
-  try {
-    // remove old tmp directories automatically - don't combine
-    if (fs.existsSync(path)) {
-      fs.rmSync(path, { recursive: true, force: true })
-    }
-    fs.mkdirSync(path)
-  } catch (err: any) {
-    throw new Error(`Path cannot be created: ${err.message}`)
+const sanitizeTempFolderPrefix = (item: string) => {
+  const prefix = basename(item).replace(/[^a-zA-Z0-9._-]/g, "-")
+  return prefix.length ? prefix : "tmp"
+}
+
+const assertWithinTempDir = (path: string) => {
+  const tempDir = resolve(budibaseTempDir())
+  const resolvedPath = resolve(path)
+  const relativePath = relative(tempDir, resolvedPath)
+
+  if (
+    relativePath === ".." ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+  ) {
+    throw new Error("Path must be within the Budibase temp directory.")
   }
 
-  return path
+  return resolvedPath
+}
+
+export const createTempFolder = (item: string) => {
+  const path = fs.mkdtempSync(
+    join(budibaseTempDir(), `${sanitizeTempFolderPrefix(item)}-`)
+  )
+  try {
+    return assertWithinTempDir(path)
+  } catch (err: any) {
+    fs.rmSync(path, { recursive: true, force: true })
+    throw new Error(`Path cannot be created: ${err.message}`)
+  }
 }
 
 export const extractTarball = async (fromFilePath: string, toPath: string) => {
+  const safePath = assertWithinTempDir(toPath)
   await tar.extract({
     file: fromFilePath,
-    C: toPath,
+    C: safePath,
   })
 }
 
@@ -125,10 +144,12 @@ export const findFileRec = (
 /**
  * Remove a folder which is not empty from the file system
  */
-export const deleteFolderFileSystem = (path: PathLike) => {
-  if (!fs.existsSync(path)) {
+export const deleteFolderFileSystem = (path: string) => {
+  const safePath = assertWithinTempDir(path)
+
+  if (!fs.existsSync(safePath)) {
     return
   }
 
-  fs.rmSync(path, { recursive: true, force: true })
+  fs.rmSync(safePath, { recursive: true, force: true })
 }
