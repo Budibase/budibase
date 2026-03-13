@@ -3,7 +3,9 @@
   import { environment, licensing } from "@/stores/portal"
   import CreateEditVariableModal from "./CreateEditVariableModal.svelte"
   import type { CreateEnvironmentVariableRequest } from "@budibase/types"
-  import { onMount } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   type TypeValueProps =
     | { type?: "text" | "password"; value?: string }
@@ -15,6 +17,7 @@
     placeholder?: string | undefined
     required?: boolean
     description?: string | undefined
+    autocomplete?: HTMLInputElement["autocomplete"]
   }
 
   let {
@@ -25,6 +28,7 @@
     placeholder = undefined,
     required = false,
     description = undefined,
+    autocomplete = undefined,
   }: Props = $props()
 
   let modal = $state<Modal>()
@@ -37,6 +41,7 @@
   async function saveVariable(data: CreateEnvironmentVariableRequest) {
     await environment.createVariable(data)
     value = `{{ env.${data.name} }}`
+    dispatch("change", value)
     modal?.hide()
   }
 
@@ -58,6 +63,7 @@
   type={type === "port" ? "text" : type}
   {error}
   {placeholder}
+  {autocomplete}
   {required}
   {description}
   variables={$environment.variables}

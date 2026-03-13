@@ -2,6 +2,8 @@
   import { isActive, goto, params } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
   import { contextMenuStore, userSelectedResourceMap } from "@/stores/builder"
+  import { bb } from "@/stores/bb"
+  import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import NavItem from "@/components/common/NavItem.svelte"
   import { SourceName } from "@budibase/types"
@@ -19,8 +21,8 @@
   export let datasource
 
   $: templateIcon =
-    datasource?.restTemplate && $restTemplates
-      ? restTemplates.getByName(datasource.restTemplate)?.icon
+    getRestTemplateIdentifier(datasource) && $restTemplates
+      ? restTemplates.get(getRestTemplateIdentifier(datasource))?.icon
       : undefined
 
   let editModal
@@ -28,7 +30,7 @@
 
   let addQueryItem = {
     icon: "plus",
-    name: datasource?.source === "REST" ? "Add action" : "Create new query",
+    name: datasource?.source === "REST" ? "Add operation" : "Create new query",
     keyBind: null,
     visible: true,
     disabled: false,
@@ -49,11 +51,14 @@
         : []),
       {
         icon: "pencil",
-        name: "Edit",
+        name: datasource?.source === "REST" ? "Edit connection" : "Edit",
         keyBind: null,
         visible: true,
         disabled: false,
-        callback: editModal.show,
+        callback:
+          datasource.source === "REST"
+            ? () => bb.settings(`/connections/apis/${datasource._id}`)
+            : editModal.show,
       },
       {
         icon: "trash",
@@ -78,30 +83,32 @@
   }
 </script>
 
-<NavItem
-  on:contextmenu={openContextMenu}
-  border
-  text={datasource.name}
-  opened={datasource.open}
-  selected={$isActive("./datasource") && datasource.selected}
-  hovering={datasource._id === $contextMenuStore.id}
-  withArrow={true}
-  on:click
-  on:iconClick
-  selectedBy={$userSelectedResourceMap[datasource._id]}
->
-  <div class="datasource-icon" slot="icon">
-    <IntegrationIcon
-      integrationType={datasource.source}
-      schema={datasource.schema}
-      iconUrl={templateIcon}
-      size="18"
-    />
-  </div>
-  {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
-    <Icon on:click={openContextMenu} size="M" hoverable name="dots-three" />
-  {/if}
-</NavItem>
+<div class="ds-nav-item">
+  <NavItem
+    on:contextmenu={openContextMenu}
+    border
+    text={datasource.name}
+    opened={datasource.open}
+    selected={$isActive("./datasource") && datasource.selected}
+    hovering={datasource._id === $contextMenuStore.id}
+    withArrow={true}
+    on:click
+    on:iconClick
+    selectedBy={$userSelectedResourceMap[datasource._id]}
+  >
+    <div class="datasource-icon" slot="icon">
+      <IntegrationIcon
+        integrationType={datasource.source}
+        schema={datasource.schema}
+        iconUrl={templateIcon}
+        size="18"
+      />
+    </div>
+    {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
+      <Icon on:click={openContextMenu} size="M" hoverable name="dots-three" />
+    {/if}
+  </NavItem>
+</div>
 <UpdateDatasourceModal {datasource} bind:this={editModal} />
 <DeleteDataConfirmModal
   source={datasource}
@@ -113,5 +120,9 @@
     display: grid;
     place-items: center;
     flex: 0 0 24px;
+  }
+
+  .ds-nav-item :global(.nav-item.border.withActions) {
+    padding-right: var(--spacing-s);
   }
 </style>

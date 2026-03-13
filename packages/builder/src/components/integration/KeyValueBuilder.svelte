@@ -40,6 +40,8 @@
   export let compare = (option: O, value: O) => option === value
   export let context: any = null
   export let lockedKeys: string[] = []
+  export let drawerForceModal: boolean = false
+  export let drawerZIndex: number | undefined = undefined
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -102,7 +104,7 @@
       }
     }
     activity = newActivity
-    dispatch("change", fields)
+    dispatch("change", { fields, activity: newActivity })
   }
 
   function isJsonArray(value: any) {
@@ -148,6 +150,8 @@
           {allowJS}
           {allowHelpers}
           {context}
+          {drawerForceModal}
+          {drawerZIndex}
         />
       {:else}
         <Input
@@ -178,6 +182,8 @@
           {allowJS}
           {allowHelpers}
           {context}
+          {drawerForceModal}
+          {drawerZIndex}
         />
       {:else}
         <Input

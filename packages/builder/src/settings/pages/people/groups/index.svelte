@@ -18,7 +18,7 @@
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
   import { bb } from "@/stores/bb"
-  import { routeActions } from "@/settings/pages"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
 
   const DefaultGroup = {
@@ -99,20 +99,22 @@
 >
   <Layout noPadding gap="S">
     {#if $licensing.groupsEnabled}
-      <div use:routeActions class="controls">
-        <Search bind:value={searchString} placeholder="Search" />
-        {#if $licensing.groupsEnabled}
-          <!--Show the group create button-->
-          <Button
-            disabled={readonly}
-            size={"M"}
-            cta
-            on:click={showCreateGroupModal}
-          >
-            Add group
-          </Button>
-        {/if}
-      </div>
+      <RouteActions>
+        <div class="controls">
+          <Search bind:value={searchString} placeholder="Search" />
+          {#if $licensing.groupsEnabled}
+            <!--Show the group create button-->
+            <Button
+              disabled={readonly}
+              size={"M"}
+              cta
+              on:click={showCreateGroupModal}
+            >
+              Add group
+            </Button>
+          {/if}
+        </div>
+      </RouteActions>
     {/if}
 
     {#if $licensing.groupsEnabled}

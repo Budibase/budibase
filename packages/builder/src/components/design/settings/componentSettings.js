@@ -38,6 +38,7 @@ import TableConditionEditor from "./controls/TableConditionEditor.svelte"
 import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
+import { setComponentSettingsResolver } from "./componentSettingsRegistry"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -129,3 +130,5 @@ export const getComponentForSetting = setting => {
 
   return componentMap[type]
 }
+
+setComponentSettingsResolver(getComponentForSetting)

@@ -5,7 +5,7 @@
   import { Button, Helpers, Input, notifications } from "@budibase/bbui"
   import { VectorDbProvider, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
-  import { routeActions } from "../.."
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
 
   export interface Props {
@@ -70,7 +70,7 @@
       const isCreation = id === "new"
       if (!isCreation && id && !configs.find(db => db._id === id)) {
         notifications.error("Vector database not found")
-        bb.settings("/ai-config/knowledge-bases")
+        bb.settings("/connections/knowledge-bases")
         return
       }
 
@@ -155,7 +155,7 @@
   }
 </script>
 
-<div use:routeActions>
+<RouteActions>
   <div class="actions">
     {#if isEdit}
       <Button on:click={deleteVectorDb} quiet overBackground>Delete</Button>
@@ -168,7 +168,7 @@
       {/if}
     </Button>
   </div>
-</div>
+</RouteActions>
 
 <div class="form">
   <Input

@@ -1,9 +1,12 @@
 import { GetQueriesOptions, ImportInfo } from "./base"
 import {
   BodyType,
+  OpenAPIServer,
   Query,
   QueryParameter,
   RestTemplateQueryMetadata,
+  SecurityScheme,
+  OAuth2SecurityScheme,
 } from "@budibase/types"
 import { QueryVerbToHttpMethod } from "../../../../../constants"
 import { OpenAPI, OpenAPIV3 } from "openapi-types"
@@ -20,6 +23,13 @@ import { buildEndpointName } from "./utils/endpointName"
 
 type ServerObject = OpenAPIV3.ServerObject
 type ServerVariableObject = OpenAPIV3.ServerVariableObject
+
+// openapi-types is missing description on OAuth2SecurityScheme
+// but it's part of the OpenAPI 3.0 spec for all security scheme types
+// https://spec.openapis.org/oas/v3.0.0#security-scheme-object
+interface OAuth2SecuritySchemeObject extends OpenAPIV3.OAuth2SecurityScheme {
+  description?: string
+}
 
 const isReferenceObject = (
   value: unknown
@@ -304,6 +314,75 @@ export class OpenAPI3 extends OpenAPISource {
     return Array.from(new Set(this.securityHeaders.values()))
   }
 
+  getSecuritySchemes(): Record<string, SecurityScheme> | undefined {
+    const schemes = this.document.components?.securitySchemes
+    if (!schemes) {
+      return undefined
+    }
+
+    const result: Record<string, SecurityScheme> = {}
+    for (const [name, scheme] of Object.entries(schemes)) {
+      const resolved =
+        this.resolveMaybeRef<OpenAPIV3.SecuritySchemeObject>(scheme)
+      if (!resolved) {
+        continue
+      }
+
+      if (resolved.type === "apiKey") {
+        result[name] = {
+          type: "apiKey",
+          name: resolved.name,
+          in: resolved.in as "query" | "header" | "cookie",
+          description: resolved.description,
+        }
+      } else if (resolved.type === "http") {
+        result[name] = {
+          type: "http",
+          scheme: resolved.scheme,
+          bearerFormat: resolved.bearerFormat,
+          description: resolved.description,
+        }
+      } else if (resolved.type === "oauth2") {
+        const resolvedUpdated: OAuth2SecuritySchemeObject = resolved
+        const flows: OAuth2SecurityScheme = {
+          type: "oauth2",
+          flows: {},
+          description: resolvedUpdated.description,
+        }
+
+        if (resolved.flows.implicit) {
+          flows.flows.implicit = {
+            authorizationUrl: resolved.flows.implicit.authorizationUrl,
+            scopes: resolved.flows.implicit.scopes || {},
+          }
+        }
+        if (resolved.flows.password) {
+          flows.flows.password = {
+            tokenUrl: resolved.flows.password.tokenUrl,
+            scopes: resolved.flows.password.scopes || {},
+          }
+        }
+        if (resolved.flows.clientCredentials) {
+          flows.flows.clientCredentials = {
+            tokenUrl: resolved.flows.clientCredentials.tokenUrl,
+            scopes: resolved.flows.clientCredentials.scopes || {},
+          }
+        }
+        if (resolved.flows.authorizationCode) {
+          flows.flows.authorizationCode = {
+            authorizationUrl: resolved.flows.authorizationCode.authorizationUrl,
+            tokenUrl: resolved.flows.authorizationCode.tokenUrl,
+            scopes: resolved.flows.authorizationCode.scopes || {},
+          }
+        }
+
+        result[name] = flows
+      }
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined
+  }
+
   private getEndpoints = (): ImportInfo["endpoints"] => {
     const queries = this.getQueries("")
     const endpoints: ImportInfo["endpoints"] = []
@@ -345,6 +424,42 @@ export class OpenAPI3 extends OpenAPISource {
     return endpoints
   }
 
+  // Server objects cannot use $ref and cannot be stored in components
+  // they must always be defined inline
+  // https://spec.openapis.org/oas/v3.0.0#server-object
+  private getServers = (): OpenAPIServer[] | undefined => {
+    if (!this.document.servers?.length) {
+      return undefined
+    }
+
+    return this.document.servers.map((server: ServerObject) => {
+      const result: OpenAPIServer = {
+        url: this.convertPathVariables(server.url),
+      }
+
+      if (server.description) {
+        result.description = server.description
+      }
+
+      if (server.variables && Object.keys(server.variables).length > 0) {
+        result.variables = {}
+        for (const [name, variable] of Object.entries(server.variables)) {
+          result.variables[name] = {
+            default: variable.default,
+          }
+          if (variable.enum) {
+            result.variables[name].enum = variable.enum
+          }
+          if (variable.description) {
+            result.variables[name].description = variable.description
+          }
+        }
+      }
+
+      return result
+    })
+  }
+
   getInfo = (): ImportInfo => {
     const name = this.document.info.title || "OpenAPI Import"
     let url: string | undefined
@@ -362,7 +477,9 @@ export class OpenAPI3 extends OpenAPISource {
       docsUrl,
       endpoints: this.getEndpoints(),
       securityHeaders: this.getSecurityHeaders(),
+      securitySchemes: this.getSecuritySchemes(),
       staticVariables: this.getServerVariableBindings(),
+      servers: this.getServers(),
     }
   }
 

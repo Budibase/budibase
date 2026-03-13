@@ -52,7 +52,6 @@
     type WorkspaceFavourite,
     PublishResourceState,
     WorkspaceResource,
-    AIConfigType,
   } from "@budibase/types"
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
@@ -302,7 +301,7 @@
           const entry: UIFavouriteResource = {
             name: resource.name,
             icon: isRestQuery
-              ? "webhooks-logo"
+              ? "globe-simple"
               : ResourceIcons[favourite.resourceType],
           }
 
@@ -558,9 +557,6 @@
                   </MenuItem>
 
                   <MenuSeparator />
-                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-                    Connection
-                  </MenuItem>
                   <MenuItem icon="grid-nine" on:click={openCreateTable}>
                     Table
                   </MenuItem>
@@ -628,11 +624,11 @@
 
             <div class="core-secondary">
               <SideNavLink
-                icon="sparkle"
-                text="AI models"
+                icon="cube"
+                text="Connections"
                 {collapsed}
                 on:click={() => {
-                  bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)
+                  bb.settings(`/connections/apis`)
                   keepCollapsed()
                 }}
               />

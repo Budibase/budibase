@@ -24,7 +24,7 @@ describe("/oauth2", () => {
       clientId: generator.guid(),
       clientSecret: generator.hash(),
       method: generator.pickone(Object.values(OAuth2CredentialsMethod)),
-      grantType: generator.pickone(Object.values(OAuth2GrantType)),
+      grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
       ...data,
     }
     return config
@@ -407,7 +407,8 @@ describe("/oauth2", () => {
         oauth2Url: string
         clientId: string
         password: string
-        grantType: OAuth2CredentialsMethod
+        method: OAuth2CredentialsMethod
+        grantType: OAuth2GrantType
         scope: string | undefined
       },
       result: {
@@ -421,14 +422,14 @@ describe("/oauth2", () => {
       // Token request nock
       const tokenRequestNock = nock(url.origin).post(url.pathname, body => {
         return (
-          body.grant_type === "client_credentials" &&
+          body.grant_type === request.grantType &&
           (request.scope === undefined || body.scope === request.scope) &&
-          (request.grantType !== OAuth2CredentialsMethod.BODY ||
+          (request.method !== OAuth2CredentialsMethod.BODY ||
             (body.client_id === request.clientId &&
               body.client_secret === request.password))
         )
       })
-      if (request.grantType === OAuth2CredentialsMethod.HEADER) {
+      if (request.method === OAuth2CredentialsMethod.HEADER) {
         tokenRequestNock.basicAuth({
           user: request.clientId,
           pass: request.password,
@@ -461,7 +462,8 @@ describe("/oauth2", () => {
           oauth2Url: oauth2Config.url,
           clientId: oauth2Config.clientId,
           password: oauth2Config.clientSecret,
-          grantType: oauth2Config.method,
+          method: oauth2Config.method,
+          grantType: oauth2Config.grantType,
           scope: undefined,
         },
         {
@@ -489,7 +491,8 @@ describe("/oauth2", () => {
           oauth2Url: oauth2Config.url,
           clientId: oauth2Config.clientId,
           password: oauth2Config.clientSecret,
-          grantType: oauth2Config.method,
+          method: oauth2Config.method,
+          grantType: oauth2Config.grantType,
           scope,
         },
         {

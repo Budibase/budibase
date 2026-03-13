@@ -53,9 +53,10 @@ const containsActiveEntity = (
     return true
   }
 
-  // Check for a matching query
-  if (params.queryId) {
-    const query = queries.list?.find(q => q._id === params.queryId)
+  // Check for a matching query (including the selected query when on ./query/new)
+  const activeQueryId = params.queryId || queries.selectedQueryId
+  if (activeQueryId) {
+    const query = queries.list?.find(q => q._id === activeQueryId)
     return datasource._id === query?.datasourceId
   }
 
@@ -170,18 +171,27 @@ export const enrichDatasources = (
           Object.keys(table.views).length
       )
 
+    const isRESTWithNoQueries =
+      datasource.source === "REST" && dsQueries.length === 0
+
+    const datasourceNameMatches =
+      searchTerm &&
+      datasource.name?.toLowerCase().includes(searchTerm.toLowerCase())
+
     const show = !!(
-      !searchTerm ||
-      visibleDsQueries.length ||
-      visibleDsTables.length
+      !isRESTWithNoQueries &&
+      (!searchTerm ||
+        datasourceNameMatches ||
+        visibleDsQueries.length ||
+        visibleDsTables.length)
     )
     return {
       ...datasource,
       selected,
       containsSelected,
       open,
-      queries: visibleDsQueries,
-      tables: visibleDsTables,
+      queries: datasourceNameMatches ? dsQueries : visibleDsQueries,
+      tables: datasourceNameMatches ? dsTables : visibleDsTables,
       show,
     }
   })

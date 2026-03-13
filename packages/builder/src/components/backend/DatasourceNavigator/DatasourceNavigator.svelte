@@ -29,6 +29,7 @@
   export let showAppUsers = true
   export let showManageRoles = true
   export let datasourceSort
+  export let noResultsText = "There aren't any datasources matching that name"
   let toggledDatasources = {}
 
   $: enrichedDataSources = enrichDatasources(
@@ -50,7 +51,9 @@
 
   function selectDatasource(datasource) {
     openNode(datasource)
-    $goto(`./datasource/${datasource._id}`)
+    if (datasource.source !== "REST") {
+      $goto(`./datasource/${datasource._id}`)
+    }
   }
 
   const selectTable = tableId => {
@@ -122,7 +125,7 @@
   {#if showNoResults}
     <Layout paddingY="none" paddingX="L">
       <div class="no-results">
-        There aren't any datasources matching that name
+        {noResultsText}
       </div>
     </Layout>
   {/if}

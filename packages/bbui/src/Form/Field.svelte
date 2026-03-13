@@ -12,7 +12,7 @@
   export let description: string | undefined = undefined
   export let helpText: string | undefined = undefined
   export let tooltip: string | undefined = undefined
-  export let required: boolean = false
+  export let required: boolean | undefined = false
 </script>
 
 <div class="spectrum-Form-item" class:above={labelPosition === "above"}>

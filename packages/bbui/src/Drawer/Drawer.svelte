@@ -66,6 +66,7 @@
 
   export let title = ""
   export let forceModal = false
+  export let zIndex = undefined
 
   const dispatch = createEventDispatcher()
   const spacing = 11
@@ -74,12 +75,13 @@
   let drawerId = generate()
 
   $: depth = $openDrawers.length - $openDrawers.indexOf(drawerId) - 1
-  $: style = getStyle(depth, $drawerLeft, $drawerWidth, $modal)
+  $: style = getStyle(depth, $drawerLeft, $drawerWidth, $modal, zIndex)
 
-  const getStyle = (depth, left, width, modal) => {
+  const getStyle = (depth, left, width, modal, zIndex) => {
     let style = `
       --scale-factor: ${getScaleFactor(depth)};
       --spacing: ${spacing}px;
+      ${zIndex != null ? `z-index: ${zIndex};` : ""}
     `
     // Most modal styles are handled by class names
     if (modal || left == null || width == null) {
@@ -178,6 +180,7 @@
         class="underlay"
         class:hidden={!$modal}
         transition:drawerFade|local
+        style={zIndex != null ? `z-index: ${zIndex - 1}` : undefined}
       ></div>
       <div
         class="drawer"

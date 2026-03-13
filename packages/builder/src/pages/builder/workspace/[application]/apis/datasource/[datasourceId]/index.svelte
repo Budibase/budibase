@@ -1,5 +1,17 @@
 <script>
-  import DatasourcePage from "../../../data/datasource/[datasourceId]/index.svelte"
-</script>
+  import { params, redirect } from "@roxi/routify"
+  import { queries } from "@/stores/builder"
 
-<DatasourcePage />
+  $redirect
+
+  $: firstQuery = $queries.list.find(
+    q => q.datasourceId === $params.datasourceId
+  )
+  $: {
+    if (firstQuery) {
+      $redirect(`../../query/${firstQuery._id}`)
+    } else {
+      $redirect("../../query/new")
+    }
+  }
+</script>

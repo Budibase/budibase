@@ -44,13 +44,15 @@
 </script>
 
 <Panel>
-  <KeyValueBuilder
-    bind:this={addHeader}
-    object={parsedHeaders}
-    on:change={evt => onDefaultHeaderUpdate(evt.detail)}
-    noAddButton
-    bindings={restBindings}
-  />
+  {#key localUpdatedDatasource?._rev}
+    <KeyValueBuilder
+      bind:this={addHeader}
+      object={parsedHeaders}
+      on:change={evt => onDefaultHeaderUpdate(evt.detail.fields)}
+      noAddButton
+      bindings={restBindings}
+    />
+  {/key}
   <div>
     <ActionButton icon="plus" on:click={() => addHeader.addEntry()}>
       Add header

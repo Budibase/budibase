@@ -16,6 +16,10 @@
     queries,
     sortedIntegrations as integrations,
   } from "@/stores/builder"
+  import {
+    hasRestTemplate,
+    getRestTemplateIdentifier,
+  } from "@/stores/builder/datasources"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import QueryVerbBadge from "@/components/common/QueryVerbBadge.svelte"
@@ -48,8 +52,8 @@
     integration => integration.name === datasource?.source
   )
   $: template =
-    datasource?.restTemplate && $restTemplates
-      ? restTemplates.getByName(datasource.restTemplate)
+    hasRestTemplate(datasource) && $restTemplates
+      ? restTemplates.get(getRestTemplateIdentifier(datasource))
       : undefined
   $: selectedTemplateSpec = template
     ? template.specs?.find(
@@ -58,7 +62,7 @@
     : undefined
   $: templateName = template?.name
   $: templateIcon = template?.icon
-  $: isTemplateDatasource = Boolean(datasource?.restTemplate && template)
+  $: isTemplateDatasource = hasRestTemplate(datasource) && !!template
   $: templateEndpointDescription = selectedEndpoint?.description || ""
   let endpointOptions: ImportEndpoint[] = []
   let selectedEndpointId: string | undefined = undefined

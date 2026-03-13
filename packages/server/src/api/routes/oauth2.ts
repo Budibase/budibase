@@ -16,6 +16,7 @@ const baseSchema = {
     .required()
     .valid(...Object.values(OAuth2GrantType)),
   scope: Joi.string().optional(),
+  audience: Joi.string().optional(),
 }
 
 const insertSchema = Joi.object({

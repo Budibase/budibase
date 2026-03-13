@@ -11,6 +11,9 @@
   import type { Datasource, UIInternalDatasource } from "@budibase/types"
   import { onMount } from "svelte"
   import APIModal from "./_components/APIModal.svelte"
+  import { goto } from "@roxi/routify"
+
+  $goto
 
   let searchValue: string
   let panelWidth = 260
@@ -57,11 +60,19 @@
 
   const APIS_BASE_ROUTE = "/builder/workspace/:application/apis"
 
-  $: shouldRedirectToNew =
-    !hasRestDatasources && !$isActive("./new") && $isActive(APIS_BASE_ROUTE)
+  $: firstRestDatasource = restDatasources[0]
 
-  $: if (shouldRedirectToNew) {
+  $: if (
+    !hasRestDatasources &&
+    !$isActive("./new") &&
+    $isActive(APIS_BASE_ROUTE)
+  ) {
     $redirect("./new")
+  }
+
+  // When a connection is created while on the empty state, redirect to new query
+  $: if (hasRestDatasources && $isActive("./new")) {
+    $redirect(`./query/new/${firstRestDatasource._id}`)
   }
 </script>
 
@@ -69,19 +80,20 @@
 
 <!-- routify:options index=1 -->
 <div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
-  <TopBar icon="webhooks-logo" breadcrumbs={[{ text: "APIs" }]}></TopBar>
+  <TopBar icon="globe-simple" breadcrumbs={[{ text: "API explorer" }]}></TopBar>
   <div class="data">
     {#if !$isActive("./new")}
       <div class="panel-container" style="width: {panelWidth}px;" use:resizable>
         <Panel borderRight={false} borderBottomHeader={false} resizable={true}>
           <span class="panel-title-content" slot="panel-title-content">
             <NavHeader
-              title="APIs"
+              title="API operations"
               placeholder="Search APIs"
               bind:value={searchValue}
-              onAdd={() => {
-                apiModal.show()
-              }}
+              onAdd={() => $goto("./query/new")}
+              search
+              alwaysShowAdd
+              tooltip="New operation"
             />
           </span>
           <Layout paddingX="L" paddingY="none" gap="S">
@@ -91,6 +103,7 @@
               datasourceSort={sortByDatasourceName}
               showAppUsers={false}
               showManageRoles={false}
+              noResultsText="There aren't any APIs matching that name"
             />
           </Layout>
         </Panel>

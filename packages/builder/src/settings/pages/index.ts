@@ -22,6 +22,9 @@ import DiagnosticsPage from "@/settings/pages/diagnostics.svelte"
 import SystemLogsPage from "@/settings/pages/systemLogs.svelte"
 import UpgradePage from "@/settings/pages/upgrade.svelte"
 import UsagePage from "@/settings/pages/usage.svelte"
+import Connections from "@/settings/pages/connections/Connections.svelte"
+import Connection from "@/settings/pages/connections/Connection.svelte"
+import CreateConnection from "./connections/CreateConnection.svelte"
 
 // App pages
 import GeneralInfoPage from "@/settings/pages/general.svelte"
@@ -77,6 +80,9 @@ const componentMap = {
   translations: Translations,
   oauth2: OAuth2Page,
   recaptcha: Recaptcha,
+  connections: Connections,
+  connection: Connection,
+  create_connection: CreateConnection,
   embedding_model: EmbeddingModelForm,
   vector_database: VectorDatabaseForm,
 } satisfies Record<string, Component<any>>
@@ -91,23 +97,4 @@ export const Pages = {
 
     return component
   },
-}
-
-export const routeActions = (
-  node: HTMLElement,
-  target = ".route-header .page-actions"
-) => {
-  let targetEl = document.querySelector(target)
-
-  if (targetEl) {
-    targetEl.appendChild(node)
-  }
-
-  return {
-    destroy() {
-      if (node.parentNode) {
-        node.parentNode.removeChild(node)
-      }
-    },
-  }
 }

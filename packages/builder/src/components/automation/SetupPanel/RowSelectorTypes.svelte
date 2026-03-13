@@ -66,7 +66,7 @@
   }
 
   const handleMediaUpdate = e => {
-    const media = e.detail || []
+    const media = e.detail?.fields || []
     const isSingle =
       schema.type === FieldType.ATTACHMENT_SINGLE ||
       schema.type === FieldType.SIGNATURE_SINGLE

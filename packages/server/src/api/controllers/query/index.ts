@@ -158,7 +158,9 @@ export async function importInfo(
     docsUrl: info.docsUrl,
     endpoints: info.endpoints || [],
     securityHeaders: info.securityHeaders || [],
+    securitySchemes: info.securitySchemes,
     staticVariables: info.staticVariables || {},
+    servers: info.servers,
   }
 }
 
