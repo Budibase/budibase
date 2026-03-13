@@ -31,30 +31,6 @@ function getDb() {
   return context.getWorkspaceDB()
 }
 
-function normalizeName(name: string) {
-  return name.toLowerCase().trim()
-}
-
-async function guardName(name: string, id?: string) {
-  const db = getDb()
-  const automations = await db.allDocs<PersistedAutomation>(
-    getAutomationParams(null, {
-      include_docs: true,
-    })
-  )
-  const normalizedName = normalizeName(name)
-  const duplicate = automations.rows.find(
-    row =>
-      row.doc &&
-      normalizeName(row.doc.name) === normalizedName &&
-      row.doc._id !== id
-  )
-
-  if (duplicate) {
-    throw new HTTPError(`Automation with name '${name}' already exists.`, 400)
-  }
-}
-
 function cleanAutomationInputs(automation: Automation) {
   if (automation == null) {
     return automation
@@ -144,8 +120,6 @@ export async function create(automation: Automation) {
     automation._id = generateAutomationID()
   }
 
-  await guardName(automation.name, automation._id)
-
   automation.type = "automation"
   automation = hydrateAutomationSecrets(automation)
   automation = cleanAutomationInputs(automation)
@@ -174,10 +148,6 @@ export async function update(automation: Automation) {
   const oldAutomation = await db.get<Automation>(automation._id)
 
   guardInvalidUpdatesAndThrow(automation, oldAutomation)
-
-  if (normalizeName(automation.name) !== normalizeName(oldAutomation.name)) {
-    await guardName(automation.name, automation._id)
-  }
 
   automation = hydrateAutomationSecrets(automation, oldAutomation)
   automation = cleanAutomationInputs(automation)

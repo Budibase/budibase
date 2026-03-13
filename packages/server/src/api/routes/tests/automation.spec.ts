@@ -110,7 +110,7 @@ describe("/automations", () => {
       expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
     })
 
-    it("rejects creating a second automation with a duplicate name", async () => {
+    it("allows creating a second automation with a duplicate name", async () => {
       const name = "Duplicate Automation Name"
       await config.api.automation.post(
         basicAutomation({
@@ -118,17 +118,13 @@ describe("/automations", () => {
         })
       )
 
-      await config.api.automation.post(
+      const { automation } = await config.api.automation.post(
         basicAutomation({
           name,
-        }),
-        {
-          status: 400,
-          body: {
-            message: `Automation with name '${name}' already exists.`,
-          },
-        }
+        })
       )
+
+      expect(automation.name).toEqual(name)
     })
 
     it("Should ensure you can't have a branch as not a last step", async () => {
@@ -564,7 +560,7 @@ describe("/automations", () => {
       })
     })
 
-    it("rejects updating an automation to use a duplicate name", async () => {
+    it("allows updating an automation to use a duplicate name", async () => {
       const { automation: first } = await config.api.automation.post(
         basicAutomation({
           name: "Existing Automation Name",
@@ -578,12 +574,8 @@ describe("/automations", () => {
 
       second.name = first.name
 
-      await config.api.automation.update(second, {
-        status: 400,
-        body: {
-          message: `Automation with name '${first.name}' already exists.`,
-        },
-      })
+      const { automation: updated } = await config.api.automation.update(second)
+      expect(updated.name).toEqual(first.name)
     })
   })
 
