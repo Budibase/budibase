@@ -685,7 +685,7 @@ export class RestIntegration implements IntegrationBase {
     const disableBlacklistForLocalDevelopment =
       environment.isDev() &&
       !environment.isTest() &&
-      ["localhost", "127.0.0.1", "::1"].includes(hostname)
+      ["localhost", "127.0.0.1", "[::1]"].includes(hostname)
     if (
       !disableBlacklistForLocalDevelopment &&
       (await blacklist.isBlacklisted(url))
