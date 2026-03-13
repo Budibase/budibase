@@ -2,6 +2,30 @@ apiVersion: v1
 entries:
   budibase:
   - apiVersion: v2
+    appVersion: 3.33.4
+    created: "2026-03-13T10:51:22.141866739Z"
+    dependencies:
+    - condition: services.couchdb.enabled
+      name: couchdb
+      repository: https://apache.github.io/couchdb-helm
+      version: 4.5.6
+    description: Budibase is an open source low-code platform, helping thousands of
+      teams build apps for their workplace in minutes.
+    digest: 2d8fe75dbd50810c69751ad643a6ce29a03b47be07588f97fab6ae354ca2fca2
+    icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - budibase-3.0.564.tgz
+    version: 3.0.564
+  - apiVersion: v2
     appVersion: 3.33.3
     created: "2026-03-12T18:33:11.221771043Z"
     dependencies:
@@ -15908,8 +15932,8 @@ entries:
     - budibase-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v2
-    appVersion: 3.33.3
-    created: "2026-03-12T18:33:13.236322536Z"
+    appVersion: 3.33.4
+    created: "2026-03-13T10:51:24.037397598Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -15917,7 +15941,7 @@ entries:
       version: 4.5.6
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: f4f0fbafe8094bfb1f42425a1306f1f5eebbc521d73ce2978ab62f535d570aa8
+    digest: 4252f3058eb8771bf58005ab7055f6b455b0b330e9e6edc722bab0357f0ae035
     icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
     keywords:
     - low-code
@@ -30728,4 +30752,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2026-03-13T10:43:31.084340942Z"
+generated: "2026-03-13T10:51:24.034432105Z"
