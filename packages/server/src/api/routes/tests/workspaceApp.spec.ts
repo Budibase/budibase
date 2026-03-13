@@ -124,4 +124,28 @@ describe("/workspaceApp", () => {
       )
     })
   })
+
+  describe("/create", () => {
+    it("rejects duplicate app names ignoring case and whitespace", async () => {
+      await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "Customer Portal",
+          url: "/customer-portal",
+        })
+      )
+
+      await api.workspaceApp.create(
+        structures.workspaceApps.createRequest({
+          name: "  CUSTOMER PORTAL  ",
+          url: "/customer-portal-2",
+        }),
+        {
+          status: 400,
+          body: {
+            message: "App with name '  CUSTOMER PORTAL  ' is already taken.",
+          },
+        }
+      )
+    })
+  })
 })

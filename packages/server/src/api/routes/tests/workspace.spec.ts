@@ -304,6 +304,13 @@ describe("/applications", () => {
       )
     })
 
+    it("should reject with a known name ignoring case and whitespace", async () => {
+      await config.api.workspace.create(
+        { name: `  ${workspace.name.toUpperCase()}  ` },
+        { body: { message: "Workspace name is already in use." }, status: 400 }
+      )
+    })
+
     it("should reject with a known url", async () => {
       await config.api.workspace.create(
         { name: "made up", url: workspace!.url! },

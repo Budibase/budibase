@@ -83,12 +83,12 @@ describe("/automations", () => {
 
   describe("create", () => {
     it("creates an automation with no steps", async () => {
-      const { message, automation } = await config.api.automation.post(
-        newAutomation({ steps: [] })
-      )
+      const automationRequest = newAutomation({ steps: [] })
+      const { message, automation } =
+        await config.api.automation.post(automationRequest)
 
       expect(message).toEqual("Automation created successfully")
-      expect(automation.name).toEqual("My Automation")
+      expect(automation.name).toEqual(automationRequest.name)
       expect(automation._id).not.toEqual(null)
       expect(events.automation.created).toHaveBeenCalledTimes(1)
       expect(events.automation.stepCreated).not.toHaveBeenCalled()
@@ -97,15 +97,38 @@ describe("/automations", () => {
     it("creates an automation with steps", async () => {
       jest.clearAllMocks()
 
-      const { message, automation } = await config.api.automation.post(
-        newAutomation({ steps: [automationStep(), automationStep()] })
-      )
+      const automationRequest = newAutomation({
+        steps: [automationStep(), automationStep()],
+      })
+      const { message, automation } =
+        await config.api.automation.post(automationRequest)
 
       expect(message).toEqual("Automation created successfully")
-      expect(automation.name).toEqual("My Automation")
+      expect(automation.name).toEqual(automationRequest.name)
       expect(automation._id).not.toEqual(null)
       expect(events.automation.created).toHaveBeenCalledTimes(1)
       expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
+    })
+
+    it("rejects creating a second automation with a duplicate name", async () => {
+      const name = "Duplicate Automation Name"
+      await config.api.automation.post(
+        basicAutomation({
+          name,
+        })
+      )
+
+      await config.api.automation.post(
+        basicAutomation({
+          name,
+        }),
+        {
+          status: 400,
+          body: {
+            message: `Automation with name '${name}' already exists.`,
+          },
+        }
+      )
     })
 
     it("Should ensure you can't have a branch as not a last step", async () => {
@@ -405,7 +428,7 @@ describe("/automations", () => {
   describe("update", () => {
     it("updates a automations name", async () => {
       const { automation } = await config.api.automation.post(basicAutomation())
-      automation.name = "Updated Name"
+      automation.name = "Updated Name 1"
       jest.clearAllMocks()
 
       const { automation: updatedAutomation, message } =
@@ -415,7 +438,7 @@ describe("/automations", () => {
       expect(updatedAutomation._rev).toBeDefined()
       expect(updatedAutomation._rev).not.toEqual(automation._rev)
 
-      expect(updatedAutomation.name).toEqual("Updated Name")
+      expect(updatedAutomation.name).toEqual("Updated Name 1")
       expect(message).toEqual(
         `Automation ${automation._id} updated successfully.`
       )
@@ -428,7 +451,7 @@ describe("/automations", () => {
 
     it("updates a automations name using POST request", async () => {
       const { automation } = await config.api.automation.post(basicAutomation())
-      automation.name = "Updated Name"
+      automation.name = "Updated Name 2"
       jest.clearAllMocks()
 
       // the POST request will defer to the update when an id has been supplied.
@@ -439,7 +462,7 @@ describe("/automations", () => {
       expect(updatedAutomation._rev).toBeDefined()
       expect(updatedAutomation._rev).not.toEqual(automation._rev)
 
-      expect(updatedAutomation.name).toEqual("Updated Name")
+      expect(updatedAutomation.name).toEqual("Updated Name 2")
       expect(message).toEqual(
         `Automation ${automation._id} updated successfully.`
       )
@@ -537,6 +560,28 @@ describe("/automations", () => {
         status: 400,
         body: {
           message: "Field tableId is readonly and it cannot be modified",
+        },
+      })
+    })
+
+    it("rejects updating an automation to use a duplicate name", async () => {
+      const { automation: first } = await config.api.automation.post(
+        basicAutomation({
+          name: "Existing Automation Name",
+        })
+      )
+      const { automation: second } = await config.api.automation.post(
+        basicAutomation({
+          name: "Second Automation Name",
+        })
+      )
+
+      second.name = first.name
+
+      await config.api.automation.update(second, {
+        status: 400,
+        body: {
+          message: `Automation with name '${first.name}' already exists.`,
         },
       })
     })

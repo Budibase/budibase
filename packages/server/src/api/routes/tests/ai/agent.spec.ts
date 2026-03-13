@@ -34,4 +34,49 @@ describe("agent duplicate", () => {
   it("returns 404 for unknown agent", async () => {
     await config.api.agent.duplicate("ag_missing", { status: 404 })
   })
+
+  it("rejects creating a second agent with a duplicate name", async () => {
+    const name = "Duplicate Agent Name"
+    await config.api.agent.create({
+      name,
+      aiconfig: "default",
+    })
+
+    await config.api.agent.create(
+      {
+        name,
+        aiconfig: "default",
+      },
+      {
+        status: 400,
+        body: {
+          message: `Agent with name '${name}' already exists.`,
+        },
+      }
+    )
+  })
+
+  it("rejects updating an agent to use a duplicate name", async () => {
+    const first = await config.api.agent.create({
+      name: "First Agent Name",
+      aiconfig: "default",
+    })
+    const second = await config.api.agent.create({
+      name: "Second Agent Name",
+      aiconfig: "default",
+    })
+
+    await config.api.agent.update(
+      {
+        ...second,
+        name: first.name,
+      },
+      {
+        status: 400,
+        body: {
+          message: `Agent with name '${first.name}' already exists.`,
+        },
+      }
+    )
+  })
 })

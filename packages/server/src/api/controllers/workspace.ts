@@ -19,6 +19,7 @@ import {
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
 } from "@budibase/shared-core"
+import Joi from "joi"
 import type { File, Files } from "formidable"
 import {
   AddWorkspaceSampleDataResponse,
@@ -92,6 +93,14 @@ import { processMigrations } from "../../workspaceMigrations/migrationsProcessor
 import { getGlobalUser } from "../../utilities/global"
 
 const DEFAULT_WORKSPACE_NAME = "Default workspace"
+const workspaceNameSchema = Joi.string()
+  .trim()
+  .required()
+  .messages({
+    "string.base": "Name is required",
+    "string.empty": "Name is required",
+    "any.required": "Name is required",
+  })
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -131,16 +140,21 @@ function checkWorkspaceName(
   name: string,
   currentWorkspaceId?: string
 ) {
-  // TODO: Replace with Joi
-  if (!name) {
-    ctx.throw(400, "Name is required")
+  const normalizeName = (value: string) => value.toLowerCase().trim()
+  const { error } = workspaceNameSchema.validate(name)
+  if (error) {
+    ctx.throw(400, error.message)
   }
   if (currentWorkspaceId) {
     workspaces = workspaces.filter(
       (ws: Workspace) => ws.appId !== currentWorkspaceId
     )
   }
-  if (workspaces.some((app: Workspace) => app.name === name)) {
+  if (
+    workspaces.some(
+      (app: Workspace) => normalizeName(app.name) === normalizeName(name)
+    )
+  ) {
     ctx.throw(400, "Workspace name is already in use.")
   }
 }
