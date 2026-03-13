@@ -6,6 +6,7 @@
   import { VectorDbProvider, type VectorDb } from "@budibase/types"
   import { onMount } from "svelte"
   import { routeActions } from "../.."
+  import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
 
   export interface Props {
     id?: string
@@ -182,14 +183,14 @@
     bind:value={draft.provider}
     disabled
   />
-  <Input
+  <EnvVariableInput
     label="Host"
     description="Hostname or IP address of your PostgreSQL instance."
     required
     bind:value={draft.host}
     placeholder="127.0.0.1"
   />
-  <Input
+  <EnvVariableInput
     label="Port"
     description="Port used by your PostgreSQL instance."
     type="number"
@@ -197,24 +198,22 @@
     bind:value={draft.port}
     placeholder="5432"
   />
-  <Input
+  <EnvVariableInput
     label="Database"
     description="Database name where vector data will be stored."
     required
     bind:value={draft.database}
   />
-  <Input
+  <EnvVariableInput
     label="User"
     description="Database user with permission to read and write vector data."
     bind:value={draft.user}
-    autocomplete={"off"}
   />
-  <Input
+  <EnvVariableInput
     label="Password"
     description="Password for the database user."
     type="password"
     bind:value={draft.password}
-    autocomplete={"off"}
   />
 </div>
 
