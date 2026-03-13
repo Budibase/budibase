@@ -1,3 +1,6 @@
+import fs from "fs"
+import os from "os"
+import path from "path"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import * as automation from "../../index"
 import { Table } from "@budibase/types"
@@ -7,6 +10,13 @@ import { basicTable } from "../../../tests/utilities/structures"
 describe("Execute Bash Automations", () => {
   const config = new TestConfiguration()
   let table: Table
+  const writeFileScript =
+    "require('fs').writeFileSync(process.argv[1], 'initial content')"
+  const uppercaseFileScript =
+    "const fs = require('fs'); process.stdout.write(fs.readFileSync(process.argv[1], 'utf8').toUpperCase() + '\\n')"
+  const deleteFileScript = "require('fs').unlinkSync(process.argv[1])"
+  const addFiveScript =
+    "process.stdout.write(String(Number(process.argv[1]) + 5) + '\\n')"
 
   beforeAll(async () => {
     await automation.init()
@@ -24,11 +34,21 @@ describe("Execute Bash Automations", () => {
     config.end()
   })
 
+  afterEach(() => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+    if (fs.existsSync(injectedPath)) {
+      fs.unlinkSync(injectedPath)
+    }
+  })
+
   it("should use trigger data in bash command and pass output to subsequent steps", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()
       .bash(
-        { code: "echo '{{ trigger.fields.command }}'" },
+        {
+          command: "echo",
+          args: ["{{ trigger.fields.command }}"],
+        },
         { stepName: "Echo Command" }
       )
       .serverLog(
@@ -47,15 +67,24 @@ describe("Execute Bash Automations", () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()
       .bash(
-        { code: "echo 'initial content' > {{ trigger.fields.filename }}" },
+        {
+          command: "node",
+          args: ["-e", writeFileScript, "{{ trigger.fields.filename }}"],
+        },
         { stepName: "Create File" }
       )
       .bash(
-        { code: "cat {{ trigger.fields.filename }} | tr '[a-z]' '[A-Z]'" },
+        {
+          command: "node",
+          args: ["-e", uppercaseFileScript, "{{ trigger.fields.filename }}"],
+        },
         { stepName: "Transform Content" }
       )
       .bash(
-        { code: "rm {{ trigger.fields.filename }}" },
+        {
+          command: "node",
+          args: ["-e", deleteFileScript, "{{ trigger.fields.filename }}"],
+        },
         { stepName: "Cleanup" }
       )
       .test({ fields: { filename: "testfile.txt" } })
@@ -76,7 +105,10 @@ describe("Execute Bash Automations", () => {
       )
       .bash(
         {
-          code: "echo Row data: {{ steps.[Get Row].rows.[0].name }} - {{ steps.[Get Row].rows.[0].description }}",
+          command: "echo",
+          args: [
+            "Row data: {{ steps.[Get Row].rows.[0].name }} - {{ steps.[Get Row].rows.[0].description }}",
+          ],
         },
         { stepName: "Process Row Data" }
       )
@@ -98,7 +130,10 @@ describe("Execute Bash Automations", () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()
       .bash(
-        { code: "echo $(( {{ trigger.fields.threshold }} + 5 ))" },
+        {
+          command: "node",
+          args: ["-e", addFiveScript, "{{ trigger.fields.threshold }}"],
+        },
         { stepName: "Calculate Value" }
       )
       .executeScript(
@@ -121,16 +156,106 @@ describe("Execute Bash Automations", () => {
     expect(result.steps[2].outputs.message).toContain("Value was high")
   })
 
+  it("should escape unquoted bindings before executing the command", async () => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+    const payload = `hello; touch ${injectedPath}`
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash(
+        {
+          command: "echo",
+          args: ["{{ trigger.fields.command }}"],
+        },
+        { stepName: "Echo Command" }
+      )
+      .test({ fields: { command: payload } })
+
+    expect(result.steps[0].outputs.stdout).toEqual(`${payload}\n`)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it("should reject command bindings", async () => {
+    const payload = "echo"
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash(
+        {
+          command: "{{ trigger.fields.command }}",
+          args: ["hello world"],
+        },
+        { stepName: "Dynamic Command" }
+      )
+      .test({ fields: { command: payload } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(result.steps[0].outputs.stdout).toEqual(
+      "Budibase bash automation failed: Command bindings are not supported. Use the args field for dynamic values."
+    )
+  })
+
+  it("should accept args provided in the builder JSON editor shape", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash(
+        {
+          command: "echo",
+          args: {
+            value: JSON.stringify(["{{ trigger.fields.command }}"]),
+          },
+        },
+        { stepName: "JSON Editor Args" }
+      )
+      .test({ fields: { command: "hello world" } })
+
+    expect(result.steps[0].outputs.success).toEqual(true)
+    expect(result.steps[0].outputs.stdout).toEqual("hello world\n")
+  })
+
+  it("should reject invalid JSON editor args", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash(
+        {
+          command: "echo",
+          args: {
+            value: "{ invalid json }",
+          },
+        },
+        { stepName: "Invalid JSON Editor Args" }
+      )
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(result.steps[0].outputs.response).toEqual(
+      "Budibase bash automation failed: Args must be a JSON array of strings."
+    )
+  })
+
   it("should handle null values gracefully", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()
       .bash(
         // @ts-expect-error - testing null input
-        { code: null },
+        { command: null },
         { stepName: "Null Command" }
       )
       .test({ fields: {} })
 
+    expect(result.steps[0].outputs.success).toBe(false)
+    expect(result.steps[0].outputs.stdout).toBe(
+      "Budibase bash automation failed: Invalid inputs"
+    )
+  })
+
+  it("should reject empty commands as failed invalid inputs", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({ command: "   " }, { stepName: "Empty Command" })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.success).toBe(false)
     expect(result.steps[0].outputs.stdout).toBe(
       "Budibase bash automation failed: Invalid inputs"
     )
