@@ -1,7 +1,7 @@
 <script>
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
-  import { Heading, Icon, clickOutside } from "@budibase/bbui"
+  import { Heading, Icon, Button, clickOutside } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
@@ -45,6 +45,7 @@
   export let textAlign
   export let embedded = false
   export let banner
+  export let showLoginButton = true
 
   export let collapsible = false
 
@@ -234,6 +235,12 @@
     sidePanelStore.actions.close()
     modalStore.actions.close()
   }
+
+  const handleBannerActionClick = () => {
+    if (typeof banner?.action?.onClick === "function") {
+      banner.action.onClick()
+    }
+  }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -249,7 +256,14 @@
   <div class="screen-wrapper layout-body">
     {#if showBanner && (typeClass !== "left" || mobile)}
       <div class="banner" style={bannerStyle}>
-        <div class="banner-content">{banner?.text}</div>
+        <div class="banner-content">
+          {banner?.text}
+          {#if banner?.action}
+            <Button cta on:click={handleBannerActionClick}>
+              {banner.action.label}
+            </Button>
+          {/if}
+        </div>
       </div>
     {/if}
     <div class="layout-content">
@@ -330,7 +344,7 @@
                 {/if}
                 {#if !embedded}
                   <div class="user top">
-                    <UserMenu compact />
+                    <UserMenu compact {showLoginButton} />
                   </div>
                 {/if}
               </div>
@@ -365,7 +379,7 @@
 
               {#if !embedded}
                 <div class="user left" class:collapsed={navCollapsed}>
-                  <UserMenu collapsed={navCollapsed} />
+                  <UserMenu collapsed={navCollapsed} {showLoginButton} />
                   {#if logoPosition === "bottom"}
                     <div>
                       <Logo
@@ -397,7 +411,14 @@
         <div class="main-content-area">
           {#if showBanner && typeClass === "left" && !mobile}
             <div class="banner" style={bannerStyle}>
-              <div class="banner-content">{banner?.text}</div>
+              <div class="banner-content">
+                {banner?.text}
+                {#if banner?.action}
+                  <Button cta on:click={handleBannerActionClick}>
+                    {banner.action.label}
+                  </Button>
+                {/if}
+              </div>
             </div>
           {/if}
           <div class="main size--{pageWidthClass}">
@@ -478,6 +499,13 @@
     max-width: 1200px;
     margin: 0 auto;
     word-break: break-word;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+  }
+
+  .banner-content :global(.spectrum-Button) {
+    margin-left: 1em;
   }
 
   .nav-wrapper {

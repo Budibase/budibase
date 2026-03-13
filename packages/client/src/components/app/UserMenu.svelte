@@ -4,6 +4,7 @@
     UserAvatar,
     ProfileModal,
     ChangePasswordModal,
+    redirectToLoginWithReturnUrl,
   } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import { type User, type ContextUser, isSSOUser } from "@budibase/types"
@@ -17,6 +18,7 @@
 
   export let compact: boolean = false
   export let collapsed: boolean = false
+  export let showLoginButton: boolean = true
 
   const { authStore, environmentStore, notificationStore, appStore } =
     getContext("sdk")
@@ -66,6 +68,10 @@
       ? builderWorkspacesUrl(builderBaseUrl)
       : builderAppsUrl(builderBaseUrl)
     window.location.href = targetUrl
+  }
+
+  const goToLogin = () => {
+    redirectToLoginWithReturnUrl()
   }
 
   $: user = $authStore as User
@@ -141,6 +147,30 @@
       labels={passwordLabels}
     />
   </Modal>
+{:else if showLoginButton}
+  <ActionMenu align={compact ? "right" : "left"}>
+    <svelte:fragment slot="control">
+      <div class="container">
+        <Icon
+          size={collapsed ? "M" : "S"}
+          name="sign-in"
+          color="var(--navTextColor)"
+        />
+        {#if !collapsed && !compact}
+          <div class="text">
+            <div class="name">Log in</div>
+          </div>
+        {/if}
+        {#if !collapsed}
+          <Icon size="S" name="caret-down" color="var(--navTextColor)" />
+        {/if}
+      </div>
+    </svelte:fragment>
+
+    <MenuItem icon="sign-in" on:click={goToLogin} disabled={embedded}>
+      Log in
+    </MenuItem>
+  </ActionMenu>
 {/if}
 
 <style>
