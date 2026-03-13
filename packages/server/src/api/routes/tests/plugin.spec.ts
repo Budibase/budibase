@@ -29,9 +29,15 @@ import { Plugin, PluginSource, PluginType } from "@budibase/types"
 import nock from "nock"
 import * as setup from "./utilities"
 import * as github from "../../controllers/plugin/github"
+import { budibaseTempDir } from "../../../utilities/budibaseDir"
 
 const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
+const getTempDirsWithPrefix = (prefix: string) =>
+  fs
+    .readdirSync(budibaseTempDir())
+    .filter(dir => dir.startsWith(prefix))
+    .sort()
 
 describe("/plugins", () => {
   let request = setup.getRequest()
@@ -50,16 +56,19 @@ describe("/plugins", () => {
 
   const createPlugin = async (
     pluginType: "default" | "encoded" = "default",
-    status?: number
+    status?: number,
+    uploadFilename?: string
   ) => {
-    const filename =
+    const fixtureFilename =
       pluginType === "encoded"
         ? "_.-encoded-plugin-1.0.0.tar.gz"
         : "comment-box-1.0.2.tar.gz"
 
     return request
       .post(`/api/plugin/upload`)
-      .attach("file", `src/api/routes/tests/data/${filename}`)
+      .attach("file", `src/api/routes/tests/data/${fixtureFilename}`, {
+        filename: uploadFilename || undefined,
+      })
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
@@ -89,6 +98,43 @@ describe("/plugins", () => {
       let res = await createPlugin(undefined, 400)
       expect(res.body.message).toEqual("Failed to import plugin: Error")
       expect(events.plugin.imported).toHaveBeenCalledTimes(0)
+    })
+
+    it("should ignore traversal sequences in uploaded filenames", async () => {
+      const res = await createPlugin(
+        "default",
+        undefined,
+        "../../../etc/cron.d/plugin.tar.gz"
+      )
+
+      expect(res.body.plugins[0]._id).toEqual("plg_comment-box")
+      expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+    })
+
+    it("should clean up temp directories when upload extraction fails", async () => {
+      const invalidTarballPath = path.join(
+        os.tmpdir(),
+        `invalid-plugin-${Date.now()}.tar.gz`
+      )
+      const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+      const uploadFilename = `broken-plugin-${uploadId}.tar.gz`
+      const tempDirPrefix = `${uploadFilename.replace(".tar.gz", "")}-`
+      fs.writeFileSync(invalidTarballPath, "not a tarball")
+
+      try {
+        await request
+          .post("/api/plugin/upload")
+          .attach("file", invalidTarballPath, {
+            filename: uploadFilename,
+          })
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        expect(getTempDirsWithPrefix(tempDirPrefix)).toEqual([])
+      } finally {
+        fs.unlinkSync(invalidTarballPath)
+      }
     })
   })
 
@@ -238,6 +284,41 @@ describe("/plugins", () => {
       expect(plugin._id).toEqual("plg_budibase-component")
       expect(events.plugin.imported).toHaveBeenCalled()
     })
+
+    it("should clean up temp directories after a successful npm import", async () => {
+      const packageName = `budibase-component-cleanup-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 10)}`
+      const tempDirPrefix = `${packageName}-`
+
+      nock("https://registry.npmjs.org")
+        .get(`/${packageName}`)
+        .reply(200, {
+          name: packageName,
+          "dist-tags": {
+            latest: "1.0.0",
+          },
+          versions: {
+            "1.0.0": {
+              dist: {
+                tarball: `https://registry.npmjs.org/${packageName}/-/${packageName}-1.0.1.tgz`,
+              },
+            },
+          },
+        })
+        .get(`/${packageName}/-/${packageName}-1.0.1.tgz`)
+        .replyWithFile(
+          200,
+          "src/api/routes/tests/data/budibase-component-1.0.1.tgz"
+        )
+
+      await config.api.plugin.create({
+        source: PluginSource.NPM,
+        url: `https://www.npmjs.com/package/${packageName}`,
+      })
+
+      expect(getTempDirsWithPrefix(tempDirPrefix)).toEqual([])
+    })
   })
 
   describe("url", () => {
@@ -281,6 +362,7 @@ describe("/plugins", () => {
             },
           },
           directory: dir,
+          cleanupDirectory: dir,
         }
       })
 
