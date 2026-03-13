@@ -116,7 +116,7 @@ export async function fetchWithBlacklist(
     }
 
     if (redirects === maxRedirects) {
-      throw new Error("Maximum redirect reached.")
+      break
     }
 
     const location = response.headers.get("location")
