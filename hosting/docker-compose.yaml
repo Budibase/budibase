@@ -104,7 +104,7 @@ services:
 
   couchdb-service:
     restart: unless-stopped
-    image: budibase/database:2.0.0
+    image: budibase/database:2.1.0
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
