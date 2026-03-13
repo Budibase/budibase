@@ -30,7 +30,9 @@ describe("automation step outbound blacklist", () => {
         },
       })
       expect(outgoingResult.success).toBe(false)
-      expect(String(outgoingResult.response)).toContain("Cannot connect to URL.")
+      expect(String(outgoingResult.response)).toContain(
+        "Cannot connect to URL."
+      )
 
       const zapierResult = await zapier({
         inputs: {
