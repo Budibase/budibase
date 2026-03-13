@@ -241,6 +241,53 @@ describe("rest", () => {
     }
   })
 
+  it("should allow localhost requests in local development", async () => {
+    const resetBlacklistEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
+    const originalNodeEnv = process.env.NODE_ENV
+    const originalJestWorkerId = process.env.JEST_WORKER_ID
+    await blacklist.refreshBlacklist()
+
+    mockAgent!
+      .get("http://127.0.0.1:5984")
+      .intercept({ path: "/", method: "GET" })
+      .reply(200, [{ status: "ok" }], { headers: jsonHeaders })
+
+    process.env.NODE_ENV = "development"
+    process.env.JEST_WORKER_ID = "null"
+
+    try {
+      const response = await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: "test query",
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "http://127.0.0.1:5984",
+        },
+      })
+
+      expect(response.schema).toEqual({
+        status: { type: "string", name: "status" },
+      })
+    } finally {
+      if (originalNodeEnv == null) {
+        delete process.env.NODE_ENV
+      } else {
+        process.env.NODE_ENV = originalNodeEnv
+      }
+      if (originalJestWorkerId == null) {
+        delete process.env.JEST_WORKER_ID
+      } else {
+        process.env.JEST_WORKER_ID = originalJestWorkerId
+      }
+      resetBlacklistEnv()
+      await blacklist.refreshBlacklist()
+    }
+  })
+
   it("should update schema when structure changes from JSON to array", async () => {
     const datasource = await config.api.datasource.create({
       name: generator.guid(),
