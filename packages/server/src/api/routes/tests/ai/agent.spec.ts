@@ -79,4 +79,39 @@ describe("agent duplicate", () => {
       }
     )
   })
+
+  it("rejects creating an agent with a whitespace-only name", async () => {
+    await config.api.agent.create(
+      {
+        name: "   ",
+        aiconfig: "default",
+      },
+      {
+        status: 400,
+        body: {
+          message: "Agent name is required.",
+        },
+      }
+    )
+  })
+
+  it("rejects updating an agent with a whitespace-only name", async () => {
+    const created = await config.api.agent.create({
+      name: "Valid Agent Name",
+      aiconfig: "default",
+    })
+
+    await config.api.agent.update(
+      {
+        ...created,
+        name: "   ",
+      },
+      {
+        status: 400,
+        body: {
+          message: "Agent name is required.",
+        },
+      }
+    )
+  })
 })

@@ -144,6 +144,7 @@
     } catch (error) {
       console.error("Error saving app", error)
       notifications.error(getErrorMessage(error) || "Error saving app")
+      return keepOpen
     }
   }
 

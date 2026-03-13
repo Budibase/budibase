@@ -9,10 +9,15 @@ import { helpers } from "@budibase/shared-core"
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
+const NAME_REQUIRED_ERROR = "Agent name is required."
 
 const normalizeName = (name: string) => name.toLowerCase().trim()
 
 const guardName = async (name: string, id?: string) => {
+  if (!name.trim()) {
+    throw new HTTPError(NAME_REQUIRED_ERROR, 400)
+  }
+
   const agents = await fetch()
   const normalizedName = normalizeName(name)
   const duplicate = agents.find(
