@@ -383,14 +383,6 @@ const getLinkCommand = (provider: HandleChatMessageParams["provider"]) =>
     ? `${ChatCommands.LINK} or /${ChatCommands.LINK}`
     : `/${ChatCommands.LINK}`
 
-const sendLinkPrompt = async ({
-  replyLinkPrompt,
-  message,
-}: {
-  replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
-  message: LinkPromptMessage
-}) => await replyLinkPrompt(message)
-
 export const handleChatMessage = async ({
   reply,
   replyLinkPrompt,
@@ -468,10 +460,7 @@ export const handleChatMessage = async ({
           ? `Your ${providerDisplayName(provider)} account is already linked.`
           : `Link your ${providerDisplayName(provider)} account to continue chatting with this agent.`,
       })
-      await sendLinkPrompt({
-        replyLinkPrompt,
-        message: prompt,
-      })
+      await replyLinkPrompt(prompt)
       return
     }
 
@@ -480,10 +469,7 @@ export const handleChatMessage = async ({
         linkedAlready: false,
         prefix: `Your ${providerDisplayName(provider)} account is not linked yet.`,
       })
-      await sendLinkPrompt({
-        replyLinkPrompt,
-        message: prompt,
-      })
+      await replyLinkPrompt(prompt)
       return
     }
 

@@ -1,7 +1,6 @@
 import {
   configs,
   context,
-  HTTPError,
   redis,
   utils,
   type RedisClient,
@@ -104,19 +103,12 @@ const loadSession = async (token: string) => {
       getSessionCacheKey(token)
     )
 
-    if (!value) {
-      throw new HTTPError("Chat identity link session not found", 404)
-    }
-
     if (!value || Date.now() >= new Date(value.expiresAt).getTime()) {
       await clearSession(token)
       return undefined
     }
     return value
   } catch (error) {
-    if (error instanceof HTTPError) {
-      console.error(error.message)
-    }
     console.error("Failed to load chat identity link session", error)
     return undefined
   }
@@ -170,13 +162,8 @@ export const createChatIdentityLinkSession = async ({
   return session
 }
 
-export const getChatIdentityLinkSession = async (token: string) => {
-  const session = await loadSession(token)
-  if (!session) {
-    return undefined
-  }
-  return session
-}
+export const getChatIdentityLinkSession = async (token: string) =>
+  loadSession(token)
 
 export const consumeChatIdentityLinkSession = async (token: string) => {
   const session = await loadSession(token)
