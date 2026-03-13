@@ -243,17 +243,16 @@ describe("rest", () => {
 
   it("should allow localhost requests in local development", async () => {
     const resetBlacklistEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
-    const originalNodeEnv = process.env.NODE_ENV
-    const originalJestWorkerId = process.env.JEST_WORKER_ID
+    const resetDevEnv = setServerEnv({
+      NODE_ENV: "development",
+      JEST_WORKER_ID: "null",
+    })
     await blacklist.refreshBlacklist()
 
     mockAgent!
       .get("http://127.0.0.1:5984")
       .intercept({ path: "/", method: "GET" })
       .reply(200, [{ status: "ok" }], { headers: jsonHeaders })
-
-    process.env.NODE_ENV = "development"
-    process.env.JEST_WORKER_ID = "null"
 
     try {
       const response = await config.api.query.preview({
@@ -273,16 +272,7 @@ describe("rest", () => {
         status: { type: "string", name: "status" },
       })
     } finally {
-      if (originalNodeEnv == null) {
-        delete process.env.NODE_ENV
-      } else {
-        process.env.NODE_ENV = originalNodeEnv
-      }
-      if (originalJestWorkerId == null) {
-        delete process.env.JEST_WORKER_ID
-      } else {
-        process.env.JEST_WORKER_ID = originalJestWorkerId
-      }
+      resetDevEnv()
       resetBlacklistEnv()
       await blacklist.refreshBlacklist()
     }
