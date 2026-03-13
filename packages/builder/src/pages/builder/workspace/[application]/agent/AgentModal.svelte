@@ -26,6 +26,7 @@
   let modalContent: ModalContent
   let name = ""
   let touched = false
+  let loading = false
 
   $: trimmedName = name.trim()
   $: nameError = touched && !trimmedName ? "Name is required" : undefined
@@ -67,7 +68,14 @@
     onConfirm={createAgent}
   >
     <div class="agent-form">
-      <form on:submit|preventDefault={() => modalContent.confirm()}>
+      <form
+        on:submit|preventDefault={() => {
+          if (loading || !trimmedName) {
+            return
+          }
+          modalContent.confirm()
+        }}
+      >
         <Input
           label="Name"
           bind:value={name}
