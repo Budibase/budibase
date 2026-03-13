@@ -556,14 +556,14 @@
     width: 400px;
   }
   #side-panel-container.size--medium {
-    width: 600px;
+    width: 500px;
   }
   #side-panel-container.size--large {
-    width: 800px;
+    width: 625px;
   }
   #side-panel-container.size--fullscreen {
-    width: calc(100vw - 80px);
-    max-width: calc(100vw - 80px);
+    width: calc(100vw - 40px);
+    max-width: calc(100vw - 40px);
   }
   #side-panel-container.builder {
     transform: translateX(0);
