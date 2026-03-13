@@ -48,7 +48,7 @@ const buildPgConnectionString = (config: VectorDbDoc) => {
 }
 
 export const resolvePgVectorDbConfig = async (config: VectorDbDoc) => {
-  const rawPort = config.port as number | string
+  const rawPort = config.port
   const resolvedPortValue =
     typeof rawPort === "string"
       ? await processEnvironmentVariable(rawPort)

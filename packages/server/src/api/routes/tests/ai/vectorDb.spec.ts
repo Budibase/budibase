@@ -111,9 +111,9 @@ describe("vector db configs", () => {
       const created = await config.api.vectorDb.create({
         ...vectorDbRequest,
         host: "{{ env.pg_host }}",
-        port: "{{ env.pg_port }}" as any,
+        port: "{{ env.pg_port }}",
         password: "{{ env.pg_password }}",
-      } as any)
+      })
 
       expect(validatePgVectorDbConfig).toHaveBeenCalledWith(
         expect.objectContaining({
