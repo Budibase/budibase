@@ -1,5 +1,4 @@
-import fetch from "node-fetch"
-import { getFetchResponse } from "./utils"
+import { fetchWithBlacklist, getFetchResponse } from "./utils"
 import { ZapierStepInputs, ZapierStepOutputs } from "@budibase/types"
 
 export async function run({
@@ -31,7 +30,7 @@ export async function run({
   // if no values supplied
   let response
   try {
-    response = await fetch(url, {
+    response = await fetchWithBlacklist(url, {
       method: "post",
       body: JSON.stringify({
         platform: "budibase",
