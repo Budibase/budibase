@@ -1,6 +1,8 @@
 <script lang="ts">
   import { gradient } from "@/actions"
   import { API } from "@/api"
+  import { AGENT_CHAT_MIN_CLIENT_VERSION } from "@/constants"
+  import { isVersionAtLeast } from "@/helpers/version"
   import {
     admin,
     auth,
@@ -12,7 +14,11 @@
     translations,
   } from "@/stores/portal"
   import type { EnrichedApp } from "@/types"
-  import type { User } from "@budibase/types"
+  import type {
+    PublishedChatAppData,
+    PublishedWorkspaceData,
+    User,
+  } from "@budibase/types"
   import {
     ActionMenu,
     Body,
@@ -32,7 +38,6 @@
   } from "@budibase/frontend-core"
   import { helpers, sdk, resolveTranslationGroup } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import type { PublishedWorkspaceData } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import Spaceman from "assets/bb-space-man.svg"
@@ -43,14 +48,84 @@
   let loaded: boolean = false
   let userInfoModal: Modal
   let changePasswordModal: Modal
+  let chatCompatibilityByAppId: Record<string, boolean> = {}
+
+  const inFlightCompatibility = new Set<string>()
 
   const { accountPortalAccountUrl, appChatUrl } = helpers
 
   $: userApps = $clientAppsStore.apps
   $: liveChatApps = $clientChatAppsStore.chatApps
-  $: chatAppsLoaded = $clientChatAppsStore.loaded
   $: chatFeatureEnabled = $featureFlags.AI_AGENTS
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
+  $: compatibleChatApps = liveChatApps.filter(
+    chatApp => chatCompatibilityByAppId[chatApp.appId]
+  )
+  $: hasUnknownChatCompatibility = liveChatApps.some(
+    chatApp => chatCompatibilityByAppId[chatApp.appId] == null
+  )
+
+  const ensureChatAppCompatibility = async (
+    chatApps: PublishedChatAppData[]
+  ) => {
+    const chatPathByAppId = new Map<string, string>()
+    for (const chatApp of chatApps) {
+      if (chatPathByAppId.has(chatApp.appId)) {
+        continue
+      }
+      chatPathByAppId.set(chatApp.appId, appChatUrl(chatApp.url))
+    }
+
+    const uniqueAppIds = [...new Set(chatApps.map(chatApp => chatApp.appId))]
+    const pendingAppIds = uniqueAppIds.filter(
+      appId =>
+        chatCompatibilityByAppId[appId] == null &&
+        !inFlightCompatibility.has(appId)
+    )
+
+    if (!pendingAppIds.length) {
+      return
+    }
+
+    pendingAppIds.forEach(appId => inFlightCompatibility.add(appId))
+
+    const compatibilityEntries = await Promise.all(
+      pendingAppIds.map(async appId => {
+        try {
+          const response = await fetch(
+            `/api/applications/${appId}/appPackage`,
+            {
+              headers: {
+                "x-budibase-embed-location": chatPathByAppId.get(appId) || "",
+              },
+              credentials: "same-origin",
+            }
+          )
+          if (!response.ok) {
+            throw new Error("Failed to fetch app package")
+          }
+
+          const pkg = await response.json()
+          return [
+            appId,
+            isVersionAtLeast(
+              pkg?.application?.version,
+              AGENT_CHAT_MIN_CLIENT_VERSION
+            ),
+          ] as const
+        } catch (_error) {
+          return [appId, false] as const
+        } finally {
+          inFlightCompatibility.delete(appId)
+        }
+      })
+    )
+
+    chatCompatibilityByAppId = {
+      ...chatCompatibilityByAppId,
+      ...Object.fromEntries(compatibilityEntries),
+    }
+  }
 
   function getUrl(app: EnrichedApp | PublishedWorkspaceData) {
     if (app.url) {
@@ -81,6 +156,10 @@
 
     loaded = true
   })
+
+  $: if (chatFeatureEnabled && liveChatApps.length) {
+    ensureChatAppCompatibility(liveChatApps)
+  }
 
   $: translationOverrides = (() => {
     if (!$translations.loaded) {
@@ -202,50 +281,44 @@
                 </Layout>
               </div>
             {/if}
-            {#if chatFeatureEnabled && (userApps.length || !chatAppsLoaded || liveChatApps.length)}
+            {#if chatFeatureEnabled && compatibleChatApps.length}
               <Heading size="S">Chat</Heading>
               <div class="group">
                 <Layout gap="S" noPadding>
-                  {#if !chatAppsLoaded}
-                    <Body size="S">Loading chat apps...</Body>
-                  {:else if liveChatApps.length}
-                    {#each liveChatApps as chatApp (`${chatApp.chatAppId}:${chatApp.url}`)}
-                      <a
-                        class="app"
-                        target="_blank"
-                        rel="noreferrer"
-                        href={appChatUrl(chatApp.url)}
-                      >
-                        <div
-                          class="preview"
-                          use:gradient={{ seed: chatApp.name }}
-                        ></div>
-                        <div class="app-info">
-                          <Heading size="XS">{chatApp.name}</Heading>
-                          <Body size="S">
-                            {#if chatApp.updatedAt}
-                              {processStringSync(portalLabels.updatedAgo, {
-                                time:
-                                  new Date().getTime() -
-                                  new Date(chatApp.updatedAt).getTime(),
-                              })}
-                            {:else}
-                              {portalLabels.neverUpdated}
-                            {/if}
-                          </Body>
-                        </div>
-                        <div class="icon-muted">
-                          <Icon name="caret-right" />
-                        </div>
-                      </a>
-                    {/each}
-                  {:else}
-                    <Body size="S">No live chat apps yet.</Body>
-                  {/if}
+                  {#each compatibleChatApps as chatApp (`${chatApp.chatAppId}:${chatApp.url}`)}
+                    <a
+                      class="app"
+                      target="_blank"
+                      rel="noreferrer"
+                      href={appChatUrl(chatApp.url)}
+                    >
+                      <div
+                        class="preview"
+                        use:gradient={{ seed: chatApp.name }}
+                      ></div>
+                      <div class="app-info">
+                        <Heading size="XS">{chatApp.name}</Heading>
+                        <Body size="S">
+                          {#if chatApp.updatedAt}
+                            {processStringSync(portalLabels.updatedAgo, {
+                              time:
+                                new Date().getTime() -
+                                new Date(chatApp.updatedAt).getTime(),
+                            })}
+                          {:else}
+                            {portalLabels.neverUpdated}
+                          {/if}
+                        </Body>
+                      </div>
+                      <div class="icon-muted">
+                        <Icon name="caret-right" />
+                      </div>
+                    </a>
+                  {/each}
                 </Layout>
               </div>
             {/if}
-            {#if !userApps.length && (!chatFeatureEnabled || (chatAppsLoaded && !liveChatApps.length))}
+            {#if !userApps.length && (!chatFeatureEnabled || (!hasUnknownChatCompatibility && !compatibleChatApps.length))}
               <Layout gap="XS" noPadding>
                 <Heading size="S">{portalLabels.noAppsHeading}</Heading>
                 <Body size="S">{portalLabels.noAppsDescription}</Body>
