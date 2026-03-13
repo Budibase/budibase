@@ -1,3 +1,4 @@
+import { ChatCommands } from "@budibase/shared-core"
 import type { ChatConversation, SlackConversationScope } from "@budibase/types"
 import {
   extractSlackMessageContent,
@@ -29,13 +30,15 @@ const makeChat = (
 
 describe("slack webhook helpers", () => {
   it("strips Slack mentions from message text", () => {
-    expect(stripSlackMentions("<@U123> ask hello")).toEqual("ask hello")
+    expect(stripSlackMentions(`<@U123> ${ChatCommands.ASK} hello`)).toEqual(
+      `${ChatCommands.ASK} hello`
+    )
   })
 
   it.each([
     ["hello there", "hello there"],
-    ["ask hello there", "ask hello there"],
-    ["/new start fresh", "/new start fresh"],
+    [`${ChatCommands.ASK} hello there`, `${ChatCommands.ASK} hello there`],
+    [`/${ChatCommands.NEW} start fresh`, `/${ChatCommands.NEW} start fresh`],
     ["<@U123> follow up", "follow up"],
     ["<@U123|budibase> follow up", "follow up"],
     ["contact me at alice@example.com", "contact me at alice@example.com"],

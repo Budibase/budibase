@@ -1,9 +1,13 @@
 import { context, HTTPError } from "@budibase/backend-core"
+import {
+  ChatCommands,
+  SupportedChatCommand,
+  SupportedChatCommands,
+} from "@budibase/shared-core"
 import type {
   ChatConversationChannel,
   Ctx,
   MSTeamsActivity,
-  MSTeamsCommand,
   MSTeamsConversationScope,
 } from "@budibase/types"
 import { Chat, type Thread, type Message } from "chat"
@@ -11,6 +15,7 @@ import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
 import { handleChatMessage } from "./chatHandler"
 import { getTeamsState } from "./chatState"
+import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
@@ -38,26 +43,31 @@ export const parseTeamsCommand = (
   text?: string,
   entities?: MSTeamsActivity["entities"]
 ): {
-  command: MSTeamsCommand
+  command: SupportedChatCommand
   content: string
 } => {
   const normalized = stripTeamsMentions(text || "", entities)
   if (!normalized) {
-    return { command: "unsupported" as const, content: "" }
+    return { command: ChatCommands.UNSUPPORTED, content: "" }
   }
-  const match = normalized.match(/^\/?(ask|new)\b(?:\s+(.*))?$/i)
+  const match = normalized.match(
+    new RegExp(`^/?(${SupportedChatCommands.join("|")})\\b(?:\\s+(.*))?$`, "i")
+  )
   if (!match) {
-    return { command: "ask" as const, content: normalized }
+    return { command: ChatCommands.ASK, content: normalized }
   }
   const commandName = match[1]?.toLowerCase()
   const content = (match[2] || "").trim()
-  if (commandName === "new") {
-    return { command: "new" as const, content }
+  if (commandName === ChatCommands.NEW) {
+    return { command: ChatCommands.NEW, content }
   }
-  if (commandName === "ask") {
-    return { command: "ask" as const, content }
+  if (commandName === ChatCommands.ASK) {
+    return { command: ChatCommands.ASK, content }
   }
-  return { command: "ask" as const, content: normalized }
+  if (commandName === ChatCommands.LINK) {
+    return { command: ChatCommands.LINK, content }
+  }
+  return { command: ChatCommands.ASK, content: normalized }
 }
 
 export const splitTeamsMessage = (
@@ -113,9 +123,9 @@ const createTeamsMessageHandler = ({
 
     // Parse command from the Chat SDK's normalized text (mentions already stripped)
     const { command, content } = parseTeamsCommand(messageText, raw?.entities)
-    if (command === "unsupported") {
+    if (command === ChatCommands.UNSUPPORTED) {
       await thread.post(
-        'Send a message to chat, or "new" to start a new conversation.'
+        `Send a message to chat, or "${ChatCommands.NEW}" to start a new conversation.`
       )
       return
     }
@@ -168,6 +178,19 @@ const createTeamsMessageHandler = ({
             await thread.post(chunk)
           }
         },
+        replyLinkPrompt: async prompt => {
+          const delivery = await postLinkPromptPrivately({
+            target: thread,
+            user: message.author,
+            text: prompt.text,
+            linkUrl: prompt.linkUrl,
+          })
+          if (!delivery.delivered) {
+            await thread.post(
+              "I couldn't send a private Budibase link. Please try again in a direct message."
+            )
+          }
+        },
         workspaceId,
         chatAppId,
         agentId,
@@ -189,8 +212,6 @@ const createTeamsMessageHandler = ({
     }
   }
 }
-
-// --- Main webhook handler ---
 
 export async function MSTeamsWebhook(
   ctx: Ctx<

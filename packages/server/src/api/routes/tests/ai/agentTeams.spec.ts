@@ -6,7 +6,12 @@ interface MockWebhookChatPayload {
 }
 
 jest.mock("chat", () => {
+  const actual = jest.requireActual("../../../../../__mocks__/chat")
+  const toMessageText = (value: unknown) =>
+    typeof value === "string" ? value : JSON.stringify(value)
+
   return {
+    ...actual,
     Chat: class MockChat {
       private messageHandler:
         | ((thread: any, message: any) => Promise<void>)
@@ -57,8 +62,16 @@ jest.mock("chat", () => {
           const messages: string[] = []
           if (this.messageHandler) {
             const thread = {
-              post: async (text: string) => {
-                messages.push(text)
+              post: async (message: unknown) => {
+                messages.push(toMessageText(message))
+              },
+              postEphemeral: async (
+                _user: unknown,
+                message: unknown,
+                _options: { fallbackToDM: boolean }
+              ) => {
+                messages.push(toMessageText(message))
+                return { usedFallback: false }
               },
               subscribe: async () => {},
             }
@@ -110,7 +123,9 @@ jest.mock("../../../controllers/ai/chatConversations", () => {
   }
 })
 
+import sdk from "../../../../sdk"
 import { context, docIds } from "@budibase/backend-core"
+import { ChatCommands } from "@budibase/shared-core"
 import {
   DocumentType,
   type Agent,
@@ -120,6 +135,13 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
 
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
+
+const extractLinkUrl = (messages: string[]) => {
+  const urls = messages
+    .flatMap(message => message.match(/https?:\/\/[^\s"\\]+/g) || [])
+    .filter(url => url.includes("/api/chat-links/"))
+  return urls[0]
+}
 
 describe("agent teams integration provisioning", () => {
   const config = new TestConfiguration()
@@ -266,19 +288,76 @@ describe("agent teams integration provisioning", () => {
       })
       const channel = await config.api.agent.provisionMSTeamsChannel(agent._id!)
       await config.publish()
-      return { agent, chatAppId: channel.chatAppId }
+      const linkExternalUser = async (
+        externalUserId: string,
+        providerTenantId = "tenant-1"
+      ) => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+            provider: "msteams",
+            externalUserId,
+            providerTenantId,
+            globalUserId: config.getUser()._id!,
+            linkedBy: config.getUser()._id!,
+          })
+        })
+      }
+      return { agent, chatAppId: channel.chatAppId, linkExternalUser }
     }
 
-    it("creates a conversation from an incoming ask message", async () => {
+    it(`returns a private link prompt for ${ChatCommands.LINK} and /${ChatCommands.LINK} commands`, async () => {
       const { agent, chatAppId } = await setupProvisionedTeamsAgent()
       const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
 
       const response = await postTeamsMessage({
         path,
         body: {
+          id: "activity-link-1",
+          type: "message",
+          text: ChatCommands.LINK,
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+    })
+
+    it("blocks unlinked users and guides them to link first", async () => {
+      const { agent, chatAppId } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-ask-unlinked",
+          type: "message",
+          text: `${ChatCommands.ASK} hello teams`,
+          from: { id: "user-unlinked", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(response.body.messages.join(" ")).toContain(ChatCommands.LINK)
+      expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+    })
+
+    it(`creates a conversation from an incoming ${ChatCommands.ASK} message`, async () => {
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
           id: "activity-ask-1",
           type: "message",
-          text: "ask hello teams",
+          text: `${ChatCommands.ASK} hello teams`,
           from: { id: "user-1", name: "Teams User" },
           conversation: { id: "conversation-1", conversationType: "personal" },
           channelData: { tenant: { id: "tenant-1" } },
@@ -296,19 +375,22 @@ describe("agent teams integration provisioning", () => {
       const conversations = await fetchConversations()
       expect(conversations).toHaveLength(1)
       expect(conversations[0]?.channel?.provider).toEqual("msteams")
+      expect(conversations[0]?.userId).toEqual(config.getUser()._id)
       expect(conversations[0]?.messages).toHaveLength(2)
     })
 
     it("reuses the existing conversation for subsequent messages in the same scope", async () => {
-      const { agent, chatAppId } = await setupProvisionedTeamsAgent()
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedTeamsAgent()
       const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
 
       await postTeamsMessage({
         path,
         body: {
           id: "activity-ask-1",
           type: "message",
-          text: "ask first",
+          text: `${ChatCommands.ASK} first`,
           from: { id: "user-1", name: "Teams User" },
           conversation: { id: "conversation-1", conversationType: "personal" },
           channelData: { tenant: { id: "tenant-1" } },
@@ -320,7 +402,7 @@ describe("agent teams integration provisioning", () => {
         body: {
           id: "activity-ask-2",
           type: "message",
-          text: "ask second",
+          text: `${ChatCommands.ASK} second`,
           from: { id: "user-1", name: "Teams User" },
           conversation: { id: "conversation-1", conversationType: "personal" },
           channelData: { tenant: { id: "tenant-1" } },
@@ -341,15 +423,17 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("starts a new empty conversation for /new without calling chat completion", async () => {
-      const { agent, chatAppId } = await setupProvisionedTeamsAgent()
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedTeamsAgent()
       const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      await linkExternalUser("user-1")
 
       const response = await postTeamsMessage({
         path,
         body: {
           id: "activity-new-1",
           type: "message",
-          text: "new",
+          text: ChatCommands.NEW,
           from: { id: "user-1", name: "Teams User" },
           conversation: { id: "conversation-1", conversationType: "personal" },
           channelData: { tenant: { id: "tenant-1" } },

@@ -2,6 +2,11 @@ import crypto from "crypto"
 
 type AnyFn = (...args: any[]) => any
 
+interface MockCardElement {
+  type: string
+  [key: string]: unknown
+}
+
 interface ChatOptions {
   userName?: string
   adapters?: Record<string, unknown>
@@ -125,6 +130,37 @@ export class Chat {
   }
 }
 
+export const Card = (
+  options: Record<string, unknown> = {}
+): MockCardElement => ({
+  type: "card",
+  ...options,
+})
+
+export const CardText = (text: string): MockCardElement => ({
+  type: "text",
+  text,
+})
+
+export const Actions = (children: unknown[]): MockCardElement => ({
+  type: "actions",
+  children,
+})
+
+export const LinkButton = (
+  options: Record<string, unknown>
+): MockCardElement => ({
+  type: "link_button",
+  ...options,
+})
+
+export const CardLink = (
+  options: Record<string, unknown>
+): MockCardElement => ({
+  type: "card_link",
+  ...options,
+})
+
 export interface Message {
   text?: string
   raw?: unknown
@@ -135,7 +171,12 @@ export interface Message {
 }
 
 export interface Thread {
-  post: (text: string) => Promise<void>
+  post: (message: string | MockCardElement) => Promise<void>
+  postEphemeral?: (
+    user: string | { userId?: string },
+    message: string | MockCardElement,
+    options: { fallbackToDM: boolean }
+  ) => Promise<{ usedFallback: boolean } | null>
 }
 
 export interface SlashCommandEvent {
@@ -147,6 +188,11 @@ export interface SlashCommandEvent {
     userName?: string
   }
   channel: {
-    post: (text: string) => Promise<void>
+    post: (message: string | MockCardElement) => Promise<void>
+    postEphemeral?: (
+      user: string | { userId?: string },
+      message: string | MockCardElement,
+      options: { fallbackToDM: boolean }
+    ) => Promise<{ usedFallback: boolean } | null>
   }
 }

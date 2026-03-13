@@ -1,5 +1,12 @@
 import { v4 } from "uuid"
-import { context, docIds, HTTPError, redis } from "@budibase/backend-core"
+import {
+  configs,
+  context,
+  docIds,
+  HTTPError,
+  redis,
+} from "@budibase/backend-core"
+import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import type { RedisClient } from "@budibase/backend-core"
 import type {
   ChatApp,
@@ -9,6 +16,9 @@ import type {
   ContextUser,
 } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
+import sdk from "../../../sdk"
+import { getGlobalUser } from "../../../utilities/global"
+import { canAccessChatAppAgentForUser } from "../ai/chatApps"
 import {
   webhookChat,
   prepareChatConversationForSave,
@@ -39,6 +49,11 @@ interface ConversationScope {
   channelId?: string
   threadId?: string
   conversationId?: string
+}
+
+interface LinkPromptMessage {
+  text: string
+  linkUrl: string
 }
 
 const getCacheKey = ({
@@ -337,11 +352,12 @@ const getIdleTimeoutMs = (configMinutes?: number) => {
 
 export interface HandleChatMessageParams {
   reply: (text: string) => Promise<void>
+  replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
   chatAppId: string
   agentId: string
   provider: "discord" | "msteams" | "slack"
-  command: "ask" | "new"
+  command: SupportedChatCommand
   content: string
   user: {
     externalUserId: string
@@ -352,8 +368,32 @@ export interface HandleChatMessageParams {
   idleTimeoutMinutes?: number
 }
 
+const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
+  if (provider === "discord") {
+    return "Discord"
+  }
+  if (provider === "msteams") {
+    return "Teams"
+  }
+  return "Slack"
+}
+
+const getLinkCommand = (provider: HandleChatMessageParams["provider"]) =>
+  provider === "msteams"
+    ? `${ChatCommands.LINK} or /${ChatCommands.LINK}`
+    : `/${ChatCommands.LINK}`
+
+const sendLinkPrompt = async ({
+  replyLinkPrompt,
+  message,
+}: {
+  replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
+  message: LinkPromptMessage
+}) => await replyLinkPrompt(message)
+
 export const handleChatMessage = async ({
   reply,
+  replyLinkPrompt,
   workspaceId,
   chatAppId,
   agentId,
@@ -365,8 +405,6 @@ export const handleChatMessage = async ({
   scope,
   idleTimeoutMinutes,
 }: HandleChatMessageParams): Promise<void> => {
-  const userId = `${provider}:${user.externalUserId}`
-
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
     const db = context.getWorkspaceDB()
@@ -385,7 +423,118 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (command === "new" && !content) {
+    const existingLink = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+      provider,
+      externalUserId: user.externalUserId,
+      teamId: channel.teamId,
+      providerTenantId: channel.tenantId,
+    })
+
+    const createLinkPromptMessage = async ({
+      linkedAlready,
+      prefix,
+    }: {
+      linkedAlready: boolean
+      prefix: string
+    }): Promise<LinkPromptMessage> => {
+      const session =
+        await sdk.ai.chatIdentityLinks.createChatIdentityLinkSession({
+          workspaceId,
+          provider,
+          externalUserId: user.externalUserId,
+          externalUserName: user.displayName,
+          teamId: channel.teamId,
+          guildId: channel.guildId,
+          providerTenantId: channel.tenantId,
+        })
+
+      const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+      const linkUrl = `${platformUrl.replace(/\/$/, "")}/api/chat-links/${workspaceId}/${session.token}/handoff`
+
+      const suffix = linkedAlready
+        ? "Completing this link will replace the previous Budibase user mapping."
+        : `Run ${getLinkCommand(provider)} any time to generate a fresh link.`
+
+      return {
+        text: `${prefix} ${suffix}`,
+        linkUrl,
+      }
+    }
+
+    if (command === ChatCommands.LINK) {
+      const prompt = await createLinkPromptMessage({
+        linkedAlready: !!existingLink,
+        prefix: existingLink
+          ? `Your ${providerDisplayName(provider)} account is already linked.`
+          : `Link your ${providerDisplayName(provider)} account to continue chatting with this agent.`,
+      })
+      await sendLinkPrompt({
+        replyLinkPrompt,
+        message: prompt,
+      })
+      return
+    }
+
+    if (!existingLink) {
+      const prompt = await createLinkPromptMessage({
+        linkedAlready: false,
+        prefix: `Your ${providerDisplayName(provider)} account is not linked yet.`,
+      })
+      await sendLinkPrompt({
+        replyLinkPrompt,
+        message: prompt,
+      })
+      return
+    }
+
+    let linkedUser: ContextUser
+    try {
+      linkedUser = await getGlobalUser(existingLink.globalUserId)
+    } catch (error) {
+      console.error("Failed to resolve linked chat identity user", error)
+      await reply(
+        `Your ${providerDisplayName(provider)} account link is stale. Run ${getLinkCommand(
+          provider
+        )} to reconnect it.`
+      )
+      return
+    }
+
+    const linkedUserId = linkedUser._id
+    if (!linkedUserId) {
+      await reply(
+        `Your ${providerDisplayName(provider)} account link is invalid. Run ${getLinkCommand(
+          provider
+        )} to reconnect it.`
+      )
+      return
+    }
+
+    const chatAgentConfig = chatApp.agents?.find(
+      agent => agent.agentId === agentId
+    )
+    if (!chatAgentConfig) {
+      await reply("Agent is not enabled for this chat app.")
+      return
+    }
+
+    const hasAccess = await canAccessChatAppAgentForUser(
+      {
+        user: linkedUser,
+        roleId: linkedUser.roleId ?? undefined,
+      },
+      chatAgentConfig
+    )
+    if (!hasAccess) {
+      await reply(
+        "Your linked Budibase account does not have access to this agent."
+      )
+      return
+    }
+
+    const userId = linkedUserId
+
+    if (command === ChatCommands.NEW && !content) {
       const chatId = docIds.generateChatConversationID()
       await db.put(
         prepareChatConversationForSave({
@@ -411,7 +560,7 @@ export const handleChatMessage = async ({
       })
       const msg =
         provider === "discord"
-          ? "Started a new conversation. Use /ask with a message."
+          ? `Started a new conversation. Use /${ChatCommands.ASK} with a message.`
           : "Started a new conversation. Send a message to continue."
       await reply(msg)
       return
@@ -420,14 +569,14 @@ export const handleChatMessage = async ({
     if (!content) {
       const msg =
         provider === "discord"
-          ? "Please provide a message after /ask."
-          : 'Please provide a message after "ask", or just send a normal message.'
+          ? `Please provide a message after /${ChatCommands.ASK}.`
+          : `Please provide a message after "${ChatCommands.ASK}", or just send a normal message.`
       await reply(msg)
       return
     }
 
     const existingChat =
-      command === "new"
+      command === ChatCommands.NEW
         ? undefined
         : await findConversation({
             db,
@@ -453,17 +602,9 @@ export const handleChatMessage = async ({
       channel,
     }
 
-    const contextUser: ContextUser = {
-      _id: userId,
-      tenantId: context.getTenantId(),
-      email: `${provider}+${user.externalUserId}@example.invalid`,
-      roles: {},
-      userId: user.externalUserId,
-      firstName: user.displayName,
-    }
     let result: Awaited<ReturnType<typeof webhookChat>>
     try {
-      result = await webhookChat({ chat: draftChat, user: contextUser })
+      result = await webhookChat({ chat: draftChat, user: linkedUser })
     } catch (error) {
       const message =
         error instanceof HTTPError

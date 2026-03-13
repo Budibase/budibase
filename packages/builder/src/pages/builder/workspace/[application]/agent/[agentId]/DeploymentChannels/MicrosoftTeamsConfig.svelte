@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
+  import { ChatCommands } from "@budibase/shared-core"
   import type {
     Agent,
     ProvisionAgentMSTeamsChannelResponse,
@@ -12,8 +13,8 @@
     toOptionalValue,
   } from "./utils"
 
-  const MS_TEAMS_NEW_COMMAND = "new"
-  const MS_TEAMS_ASK_COMMAND = "ask"
+  const MS_TEAMS_NEW_COMMAND = ChatCommands.NEW
+  const MS_TEAMS_ASK_COMMAND = ChatCommands.ASK
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()

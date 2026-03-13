@@ -42,6 +42,7 @@ export enum DocumentType {
   AGENT = "agent",
   CHAT_APP = "chatapp",
   CHAT_CONVERSATION = "chatconvo",
+  CHAT_IDENTITY_LINK = "chatidentitylink",
   AGENT_TOOL_SOURCE = "agenttoolsource",
   AGENT_FILE = "agentfile",
   AGENT_LOG_SESSION = "agentlogsession",

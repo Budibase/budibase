@@ -52,8 +52,6 @@ export interface MSTeamsConversationScope {
   externalUserId: string
 }
 
-export type MSTeamsCommand = "ask" | "new" | "unsupported"
-
 export interface ResolvedMSTeamsIntegration {
   appId: string
   appPassword: string

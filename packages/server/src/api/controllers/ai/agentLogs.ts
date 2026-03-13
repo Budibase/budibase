@@ -115,7 +115,7 @@ export async function fetchAgentLogs(
   ) {
     throw new HTTPError("startDate query must be before endDate query", 400)
   }
-
+  console.log("fetching sessions")
   ctx.body = await sdk.ai.agentLogs.fetchSessions(
     agentId,
     sanitizedStartDate,

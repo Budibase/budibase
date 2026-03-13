@@ -1,4 +1,5 @@
 import { context, HTTPError } from "@budibase/backend-core"
+import { ChatCommands } from "@budibase/shared-core"
 import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
 import type {
@@ -11,6 +12,7 @@ import { Chat, type Message, type Thread } from "chat"
 import sdk from "../../../sdk"
 import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
+import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
 import { pickLatestConversation } from "./utils"
 
@@ -19,15 +21,6 @@ const SLACK_FALLBACK_ERROR_MESSAGE =
 
 export const isSlackDirectMessage = (event?: SlackEvent) =>
   event?.channel_type === "im" || !!event?.channel?.startsWith("D")
-
-export const stripSlackMentions = (text: string) =>
-  text
-    .replace(/<@[A-Z0-9]+(?:\|[^>]+)?>/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-
-export const extractSlackMessageContent = (text?: string) =>
-  stripSlackMentions(text || "")
 
 export const matchesSlackConversationScope = ({
   chat,
@@ -66,6 +59,110 @@ export const pickSlackConversation = ({
     nowMs,
   })
 
+type SlackReplyTarget = {
+  post: (message: string) => Promise<unknown>
+  postEphemeral: (
+    user: string | Message["author"],
+    message: unknown,
+    options: { fallbackToDM: boolean }
+  ) => Promise<unknown>
+}
+
+type SlackCommandRaw = SlackEvent & Record<string, string | undefined>
+
+const handleSlackInput = async ({
+  target,
+  author,
+  raw,
+  command,
+  content,
+  workspaceId,
+  chatAppId,
+  agentId,
+  idleTimeoutMinutes,
+  channelId,
+  threadId,
+}: {
+  target: SlackReplyTarget
+  author: Message["author"]
+  raw?: SlackCommandRaw
+  command: typeof ChatCommands.ASK | typeof ChatCommands.LINK
+  content: string
+  workspaceId: string
+  chatAppId: string
+  agentId: string
+  idleTimeoutMinutes?: number
+  channelId?: string
+  threadId?: string
+}) => {
+  const resolvedChannelId = raw?.channel?.trim() || channelId?.trim() || ""
+  const externalUserId = raw?.user?.trim() || author.userId
+  const displayName = author.fullName || author.userName || externalUserId
+  const teamId = raw?.team_id?.trim() || raw?.team?.trim()
+
+  if (!resolvedChannelId) {
+    await target.post("Missing Slack channel information.")
+    return
+  }
+  if (!externalUserId) {
+    await target.post("Missing Slack user information.")
+    return
+  }
+
+  const channel: ChatConversationChannel = {
+    provider: "slack",
+    channelId: resolvedChannelId,
+    threadId,
+    teamId,
+    externalUserId,
+    externalUserName: displayName,
+  }
+
+  const scope: SlackConversationScope = {
+    chatAppId,
+    agentId,
+    channelId: resolvedChannelId,
+    threadId,
+    externalUserId,
+  }
+
+  try {
+    await handleChatMessage({
+      reply: async text => {
+        await target.post(text)
+      },
+      replyLinkPrompt: async prompt => {
+        const delivery = await postLinkPromptPrivately({
+          target,
+          user: author,
+          text: prompt.text,
+          linkUrl: prompt.linkUrl,
+        })
+        if (!delivery.delivered) {
+          await target.post(
+            "I couldn't send a private Budibase link. Please try again in a direct message."
+          )
+        }
+      },
+      workspaceId,
+      chatAppId,
+      agentId,
+      provider: "slack",
+      command,
+      content,
+      user: { externalUserId, displayName },
+      channel,
+      scope,
+      idleTimeoutMinutes,
+    })
+  } catch (error) {
+    console.error("Slack webhook processing failed", error)
+    const msg =
+      error instanceof HTTPError ? error.message : SLACK_FALLBACK_ERROR_MESSAGE
+    await target.post(msg)
+  }
+}
+
 const createSlackMessageHandler = ({
   workspaceId,
   chatAppId,
@@ -78,70 +175,26 @@ const createSlackMessageHandler = ({
   idleTimeoutMinutes?: number
 }) => {
   return async (thread: Thread, message: Message) => {
-    const raw = message.raw as SlackEvent | undefined
-    const content = extractSlackMessageContent(message.text || "")
-    if (!content) {
+    const raw = message.raw as SlackCommandRaw | undefined
+    if (!message.text) {
       await thread.post("Send a message to continue.")
       return
     }
 
-    const channelId = raw?.channel?.trim() || thread.channelId?.trim() || ""
-    const threadId = thread.id?.trim()
-    const externalUserId = raw?.user?.trim() || message.author.userId
-    const displayName =
-      message.author.fullName || message.author.userName || externalUserId
-    const teamId = raw?.team_id?.trim() || raw?.team?.trim()
-
-    if (!channelId) {
-      await thread.post("Missing Slack channel information.")
-      return
-    }
-    if (!externalUserId) {
-      await thread.post("Missing Slack user information.")
-      return
-    }
-
-    const channel: ChatConversationChannel = {
-      provider: "slack",
-      channelId,
-      threadId: threadId || undefined,
-      teamId,
-      externalUserId,
-      externalUserName: displayName,
-    }
-
-    const scope: SlackConversationScope = {
+    const threadId = thread.id
+    await handleSlackInput({
+      target: thread as SlackReplyTarget,
+      author: message.author,
+      raw,
+      command: ChatCommands.ASK,
+      content: message.text,
+      workspaceId,
       chatAppId,
       agentId,
-      channelId,
+      idleTimeoutMinutes,
+      channelId: thread.channelId,
       threadId: threadId || undefined,
-      externalUserId,
-    }
-
-    try {
-      await handleChatMessage({
-        reply: async (text: string) => {
-          await thread.post(text)
-        },
-        workspaceId,
-        chatAppId,
-        agentId,
-        provider: "slack",
-        command: "ask",
-        content,
-        user: { externalUserId, displayName },
-        channel,
-        scope,
-        idleTimeoutMinutes,
-      })
-    } catch (error) {
-      console.error("Slack webhook processing failed", error)
-      const msg =
-        error instanceof HTTPError
-          ? error.message
-          : SLACK_FALLBACK_ERROR_MESSAGE
-      await thread.post(msg)
-    }
+    })
   }
 }
 
@@ -184,6 +237,30 @@ export async function slackWebhook(
         agentId,
         idleTimeoutMinutes,
       })
+
+      chat.onSlashCommand(`/${ChatCommands.LINK}`, async event => {
+        const raw = (event.raw || {}) as SlackCommandRaw
+        await handleSlackInput({
+          target: event.channel as SlackReplyTarget,
+          author: {
+            userId: event.user.userId || "",
+            userName: event.user.userName,
+            fullName: event.user.fullName,
+          },
+          raw: {
+            ...raw,
+            channel: raw.channel || raw.channel_id,
+            user: raw.user || raw.user_id,
+          },
+          command: ChatCommands.LINK,
+          content: event.text || "",
+          workspaceId,
+          chatAppId,
+          agentId,
+          idleTimeoutMinutes,
+        })
+      })
+
       chat.onNewMention(handler)
       chat.onSubscribedMessage(handler)
       chat.onNewMessage(/./, async (thread, message) => {
