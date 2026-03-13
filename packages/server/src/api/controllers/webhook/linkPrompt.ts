@@ -8,7 +8,7 @@ import {
   type CardElement,
 } from "chat"
 
-interface PrivatePostTarget {
+export interface PrivatePostTarget {
   post: (message: string | CardElement) => Promise<unknown>
   postEphemeral: (
     user: string | Author,
@@ -63,9 +63,8 @@ export const postLinkPromptPrivately = async ({
     if (response) {
       return {
         delivered: true,
-        usedDirectMessageFallback: !!(
-          response as { usedFallback?: boolean }
-        ).usedFallback,
+        usedDirectMessageFallback: !!(response as { usedFallback?: boolean })
+          .usedFallback,
       }
     }
   } catch (error) {
