@@ -1,5 +1,4 @@
-import fetch from "node-fetch"
-import { getFetchResponse, throwIfBlacklisted } from "./utils"
+import { fetchWithBlacklist, getFetchResponse } from "./utils"
 import {
   ExternalAppStepOutputs,
   JSONValue,
@@ -51,8 +50,7 @@ export async function run({
   }
   let response
   try {
-    await throwIfBlacklisted(url)
-    response = await fetch(url, {
+    response = await fetchWithBlacklist(url, {
       method: "post",
       body: JSON.stringify({
         ...payload,

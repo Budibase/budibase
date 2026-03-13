@@ -1,5 +1,4 @@
-import fetch from "node-fetch"
-import { getFetchResponse, throwIfBlacklisted } from "./utils"
+import { fetchWithBlacklist, getFetchResponse } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
   ExternalAppStepOutputs,
@@ -66,8 +65,7 @@ export async function run({
     if (request.body) {
       JSON.parse(request.body)
     }
-    await throwIfBlacklisted(url)
-    const response = await fetch(url, request)
+    const response = await fetchWithBlacklist(url, request)
     const { status, message } = await getFetchResponse(response)
     return {
       httpStatus: status,

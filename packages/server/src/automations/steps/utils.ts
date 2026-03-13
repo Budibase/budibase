@@ -1,6 +1,6 @@
 import { blacklist } from "@budibase/backend-core"
 import { ContextEmitter } from "@budibase/types"
-import { Response } from "node-fetch"
+import fetch, { RequestInit, Response } from "node-fetch"
 import environment from "../../environment"
 
 export function hasNullFilters(filters: any[] = []) {
@@ -35,6 +35,69 @@ export async function throwIfBlacklisted(url: string) {
   ) {
     throw new Error("Cannot connect to URL.")
   }
+}
+
+function isRedirect(status: number) {
+  return status >= 300 && status <= 399
+}
+
+function nextRequestForRedirect(
+  request: RedirectSafeRequest,
+  responseStatus: number
+): RedirectSafeRequest {
+  const method = request.method?.toUpperCase() || "GET"
+  const shouldChangeToGet =
+    responseStatus === 303 ||
+    ((responseStatus === 301 || responseStatus === 302) && method === "POST")
+
+  if (!shouldChangeToGet) {
+    return request
+  }
+
+  return {
+    ...request,
+    body: undefined,
+    method: "GET",
+    redirect: "manual",
+  }
+}
+
+interface RedirectSafeRequest extends RequestInit {
+  redirect: "manual"
+}
+
+export async function fetchWithBlacklist(
+  url: string,
+  request: RequestInit = {}
+): Promise<Response> {
+  const maxRedirects = 5
+  let nextUrl = url
+  let nextRequest: RedirectSafeRequest = {
+    ...request,
+    redirect: "manual",
+  }
+
+  for (let redirects = 0; redirects <= maxRedirects; redirects++) {
+    await throwIfBlacklisted(nextUrl)
+    const response = await fetch(nextUrl, nextRequest)
+    if (!isRedirect(response.status)) {
+      return response
+    }
+
+    if (redirects === maxRedirects) {
+      throw new Error("Maximum redirect reached.")
+    }
+
+    const location = response.headers.get("location")
+    if (!location) {
+      return response
+    }
+
+    nextUrl = new URL(location, nextUrl).toString()
+    nextRequest = nextRequestForRedirect(nextRequest, response.status)
+  }
+
+  throw new Error("Maximum redirect reached.")
 }
 
 // need to make sure all ctx structures have the

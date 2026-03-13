@@ -86,6 +86,92 @@ describe("automation step outbound blacklist", () => {
     }
   })
 
+  it("should block redirects to localhost for all outbound webhook style steps", async () => {
+    const restoreCoreEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
+    await blacklist.refreshBlacklist()
+
+    const safeUrl = "http://8.8.8.8"
+    const redirectPath = "/safe-redirect"
+    const blockedUrl = "http://127.0.0.1:5984/target"
+
+    nock(safeUrl).persist().get(redirectPath).reply(302, undefined, {
+      location: blockedUrl,
+    })
+    nock(safeUrl).persist().post(redirectPath).reply(302, undefined, {
+      location: blockedUrl,
+    })
+
+    // Vulnerable code would follow this and return success.
+    nock("http://127.0.0.1:5984").persist().get("/target").reply(200, {
+      ok: true,
+    })
+
+    try {
+      const outgoingResult = await outgoingWebhook({
+        inputs: {
+          requestMethod: RequestType.GET,
+          url: `${safeUrl}${redirectPath}`,
+          requestBody: "",
+          headers: {},
+        },
+      })
+      expect(outgoingResult.success).toBe(false)
+      expect(String(outgoingResult.response)).toContain(
+        "Cannot connect to URL."
+      )
+
+      const zapierResult = await zapier({
+        inputs: {
+          url: `${safeUrl}${redirectPath}`,
+          body: null,
+        },
+      })
+      expect(zapierResult.success).toBe(false)
+      expect(zapierResult.response).toBe("Cannot connect to URL.")
+
+      const n8nResult = await n8n({
+        inputs: {
+          url: `${safeUrl}${redirectPath}`,
+          method: HttpMethod.POST,
+          authorization: "",
+          body: { value: "{}" },
+        },
+      })
+      expect(n8nResult.success).toBe(false)
+      expect(n8nResult.response).toBe("Cannot connect to URL.")
+
+      const slackResult = await slack({
+        inputs: {
+          url: `${safeUrl}${redirectPath}`,
+          text: "test",
+        },
+      })
+      expect(slackResult.success).toBe(false)
+      expect(slackResult.response).toBe("Cannot connect to URL.")
+
+      const discordResult = await discord({
+        inputs: {
+          url: `${safeUrl}${redirectPath}`,
+          content: "test",
+        },
+      })
+      expect(discordResult.success).toBe(false)
+      expect(discordResult.response).toBe("Cannot connect to URL.")
+
+      const makeResult = await make({
+        inputs: {
+          url: `${safeUrl}${redirectPath}`,
+          body: { value: "{}" },
+        },
+      })
+      expect(makeResult.success).toBe(false)
+      expect(makeResult.response).toBe("Cannot connect to URL.")
+    } finally {
+      restoreCoreEnv()
+      await blacklist.refreshBlacklist()
+    }
+  })
+
   it("should allow localhost requests in local development", async () => {
     const restoreCoreEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
     const restoreServerEnv = setServerEnv({
