@@ -74,4 +74,21 @@ describe("ChatboxController.deleteConversation", () => {
     )
     expect(fetchChatHistory).toHaveBeenLastCalledWith(chatAppId, "agent-b")
   })
+
+  it("falls back to selected agent when conversation agent is missing", async () => {
+    const { controller, chatAppId, deleteChatConversation, fetchChatHistory } =
+      createController()
+
+    await controller.init("workspace-1")
+    await controller.selectAgent("agent-a")
+
+    await controller.deleteConversation("conversation-a")
+
+    expect(deleteChatConversation).toHaveBeenCalledWith(
+      "conversation-a",
+      chatAppId,
+      "agent-a"
+    )
+    expect(fetchChatHistory).toHaveBeenLastCalledWith(chatAppId, "agent-a")
+  })
 })

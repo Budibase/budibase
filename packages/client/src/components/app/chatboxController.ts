@@ -407,8 +407,7 @@ export class ChatboxController {
     try {
       const conversationScopeAgentId = resolveConversationScopeAgentId({
         lockedAgentId: this.state.lockedAgentId,
-        selectedAgentId: this.state.selectedAgentId,
-        fallbackAgentId: conversationAgentId,
+        selectedAgentId: conversationAgentId || this.state.selectedAgentId,
       })
 
       await this.api.deleteChatConversation(
