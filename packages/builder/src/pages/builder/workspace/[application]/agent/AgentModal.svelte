@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getErrorMessage } from "@/helpers/errors"
   import { appStore } from "@/stores/builder"
   import { agentsStore, aiConfigsStore } from "@/stores/portal"
   import {
@@ -50,8 +51,8 @@
       })
       modal.hide()
       goto(`/builder/workspace/${workspaceId}/agent/${newAgent._id}/config`)
-    } catch (_error) {
-      notifications.error("Error creating agent")
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Error creating agent")
       return keepOpen
     } finally {
       loading = false

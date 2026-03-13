@@ -1,5 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
+  import { getErrorMessage } from "@/helpers/errors"
   import { appsStore, auth } from "@/stores/portal"
   import {
     Input,
@@ -82,8 +83,8 @@
       }
       onDuplicateSuccess()
       notifications.success("App duplicated successfully")
-    } catch (err) {
-      notifications.error("Error duplicating app")
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Error duplicating app")
       duplicating = false
     }
   }
