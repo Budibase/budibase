@@ -43,9 +43,7 @@
       notifications.success(`Automation ${name} created`)
       goto(`/builder/workspace/${workspaceId}/automation/${automation._id}`)
     } catch (error) {
-      notifications.error(
-        getErrorMessage(error) || "Error creating automation"
-      )
+      notifications.error(getErrorMessage(error) || "Error creating automation")
     }
   }
 

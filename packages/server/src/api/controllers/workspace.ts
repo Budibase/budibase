@@ -93,14 +93,11 @@ import { processMigrations } from "../../workspaceMigrations/migrationsProcessor
 import { getGlobalUser } from "../../utilities/global"
 
 const DEFAULT_WORKSPACE_NAME = "Default workspace"
-const workspaceNameSchema = Joi.string()
-  .trim()
-  .required()
-  .messages({
-    "string.base": "Name is required",
-    "string.empty": "Name is required",
-    "any.required": "Name is required",
-  })
+const workspaceNameSchema = Joi.string().trim().required().messages({
+  "string.base": "Name is required",
+  "string.empty": "Name is required",
+  "any.required": "Name is required",
+})
 
 // utility function, need to do away with this
 async function getLayouts() {
