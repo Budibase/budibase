@@ -537,6 +537,7 @@ type LiteLLMModelCostMap = Record<
   {
     litellm_provider?: string | string[] | null
     mode?: string | string[] | null
+    supports_reasoning?: boolean | null
   }
 >
 
