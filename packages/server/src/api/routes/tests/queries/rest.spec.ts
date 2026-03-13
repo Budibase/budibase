@@ -2,9 +2,10 @@ import * as setup from "../utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { BodyType, Datasource, SourceName } from "@budibase/types"
 import { getCachedVariable } from "../../../../threads/utils"
+import { blacklist, setEnv as setCoreEnv } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
-import { setEnv } from "../../../../environment"
+import { setEnv as setServerEnv } from "../../../../environment"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
 
 describe("rest", () => {
@@ -120,7 +121,7 @@ describe("rest", () => {
   }
 
   beforeAll(async () => {
-    restoreEnv = setEnv({ REST_REJECT_UNAUTHORIZED: false })
+    restoreEnv = setServerEnv({ REST_REJECT_UNAUTHORIZED: false })
     config = setup.getConfig()
     await config.init()
     datasource = await config.api.datasource.create({
@@ -150,7 +151,7 @@ describe("rest", () => {
 
   it("should automatically retry on fail with cached dynamics", async () => {
     const basedOnQuery = await createQuery({
-      path: "one.example.com",
+      path: "example.com",
     })
 
     let cached = await getCachedVariable(basedOnQuery._id!, "foo")
@@ -176,10 +177,10 @@ describe("rest", () => {
     const body1 = [{ name: "one" }]
     const body2 = [{ name: "two" }]
     mockAgent!
-      .get("http://one.example.com")
+      .get("http://example.com")
       .intercept({ path: "/", method: "GET" })
       .reply(200, body1, { headers: jsonHeaders })
-    const twoExample = mockAgent!.get("http://two.example.com")
+    const twoExample = mockAgent!.get("http://example.org")
     twoExample
       .intercept({ path: "/", method: "GET", query: { test: "one" } })
       .reply(500, { message: "fail" }, { headers: jsonHeaders })
@@ -196,7 +197,7 @@ describe("rest", () => {
       schema: {},
       readable: true,
       fields: {
-        path: "two.example.com",
+        path: "example.org",
         queryString: "test={{ foo }}",
       },
     })
@@ -207,6 +208,37 @@ describe("rest", () => {
     cached = await getCachedVariable(basedOnQuery._id!, "foo")
     expect(cached.rows.length).toEqual(1)
     expect(cached.rows[0].name).toEqual("one")
+  })
+
+  it("should block localhost requests when BLACKLIST_IPS is unset", async () => {
+    const resetBlacklistEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
+    await blacklist.refreshBlacklist()
+
+    try {
+      await config.api.query.preview(
+        {
+          datasourceId: datasource._id!,
+          name: "test query",
+          parameters: [],
+          queryVerb: "read",
+          transformer: "",
+          schema: {},
+          readable: true,
+          fields: {
+            path: "http://127.0.0.1:5984",
+          },
+        },
+        {
+          status: 400,
+          body: {
+            message: "Cannot connect to URL.",
+          },
+        }
+      )
+    } finally {
+      resetBlacklistEnv()
+      await blacklist.refreshBlacklist()
+    }
   })
 
   it("should update schema when structure changes from JSON to array", async () => {

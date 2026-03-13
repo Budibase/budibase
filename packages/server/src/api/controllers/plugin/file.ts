@@ -1,5 +1,6 @@
 import {
   createTempFolder,
+  deleteFolderFileSystem,
   getPluginMetadata,
   extractTarball,
 } from "../../../utilities/fileSystem"
@@ -13,7 +14,12 @@ export async function fileUpload(file: KoaFile) {
     throw new Error("Plugin must be compressed into a gzipped tarball.")
   }
   const path = createTempFolder(file.name.split(".tar.gz")[0])
-  await extractTarball(file.path, path)
 
-  return await getPluginMetadata(path)
+  try {
+    await extractTarball(file.path, path)
+    return await getPluginMetadata(path)
+  } catch (err) {
+    deleteFolderFileSystem(path)
+    throw err
+  }
 }

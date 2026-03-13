@@ -854,12 +854,15 @@ class Orchestrator {
 
       let inputs = cloneDeep(step.inputs)
       if (
+        step.stepId !== AutomationActionStepId.EXECUTE_BASH &&
         step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2 &&
         step.stepId !== AutomationActionStepId.EXTRACT_STATE
       ) {
         // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
         // "..." }}` template, and expects to receive it that way in the
-        // function that runs it. So we skip this next bit for that step.
+        // function that runs it. EXECUTE_BASH also handles its own templating
+        // so it can reject bindings in the command name while still allowing
+        // templated args. So we skip this next bit for those steps.
         inputs = await processObject(inputs, ctx)
       }
 
