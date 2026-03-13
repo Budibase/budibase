@@ -1,6 +1,6 @@
 import { blacklist } from "@budibase/backend-core"
 import { ContextEmitter } from "@budibase/types"
-import fetch, { RequestInit, Response } from "node-fetch"
+import fetch, { Headers, RequestInit, Response } from "node-fetch"
 import environment from "../../environment"
 
 export function hasNullFilters(filters: any[] = []) {
@@ -39,6 +39,37 @@ export async function throwIfBlacklisted(url: string) {
 
 function isRedirect(status: number) {
   return status >= 300 && status <= 399
+}
+
+const SENSITIVE_REDIRECT_HEADERS = [
+  "authorization",
+  "cookie",
+  "cookie2",
+  "proxy-authorization",
+]
+
+function shouldStripSensitiveHeadersForRedirect(
+  currentUrl: string,
+  redirectUrl: string
+) {
+  return new URL(currentUrl).origin !== new URL(redirectUrl).origin
+}
+
+function stripSensitiveHeadersForRedirect(
+  request: RedirectSafeRequest
+): RedirectSafeRequest {
+  if (!request.headers) {
+    return request
+  }
+
+  const headers = new Headers(request.headers)
+  SENSITIVE_REDIRECT_HEADERS.forEach(header => {
+    headers.delete(header)
+  })
+  return {
+    ...request,
+    headers,
+  }
 }
 
 function nextRequestForRedirect(
@@ -93,8 +124,12 @@ export async function fetchWithBlacklist(
       return response
     }
 
-    nextUrl = new URL(location, nextUrl).toString()
+    const redirectUrl = new URL(location, nextUrl).toString()
     nextRequest = nextRequestForRedirect(nextRequest, response.status)
+    if (shouldStripSensitiveHeadersForRedirect(nextUrl, redirectUrl)) {
+      nextRequest = stripSensitiveHeadersForRedirect(nextRequest)
+    }
+    nextUrl = redirectUrl
   }
 
   throw new Error("Maximum redirect reached.")
