@@ -1,5 +1,5 @@
 import fetch from "node-fetch"
-import { getFetchResponse } from "./utils"
+import { getFetchResponse, throwIfBlacklisted } from "./utils"
 import { ExternalAppStepOutputs, SlackStepInputs } from "@budibase/types"
 
 export async function run({
@@ -17,6 +17,7 @@ export async function run({
   }
   let response
   try {
+    await throwIfBlacklisted(url)
     response = await fetch(url, {
       method: "post",
       body: JSON.stringify({

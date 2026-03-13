@@ -1,5 +1,5 @@
 import fetch, { HeadersInit } from "node-fetch"
-import { getFetchResponse } from "./utils"
+import { getFetchResponse, throwIfBlacklisted } from "./utils"
 import {
   HttpMethod,
   ExternalAppStepOutputs,
@@ -50,6 +50,7 @@ export async function run({
   }
 
   try {
+    await throwIfBlacklisted(url)
     response = await fetch(url, request)
   } catch (err: any) {
     return {

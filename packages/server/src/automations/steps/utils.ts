@@ -1,5 +1,7 @@
+import { blacklist } from "@budibase/backend-core"
 import { ContextEmitter } from "@budibase/types"
 import { Response } from "node-fetch"
+import environment from "../../environment"
 
 export function hasNullFilters(filters: any[] = []) {
   return (
@@ -22,6 +24,17 @@ export async function getFetchResponse(fetched: Response) {
     message = "Failed to retrieve response"
   }
   return { status, message }
+}
+
+export async function throwIfBlacklisted(url: string) {
+  const disableBlacklistForLocalDevelopment =
+    environment.isDev() && !environment.isTest()
+  if (
+    !disableBlacklistForLocalDevelopment &&
+    (await blacklist.isBlacklisted(url))
+  ) {
+    throw new Error("Cannot connect to URL.")
+  }
 }
 
 // need to make sure all ctx structures have the
