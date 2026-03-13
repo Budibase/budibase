@@ -1,6 +1,7 @@
 import { constants, db as dbCore } from "@budibase/backend-core"
 import {
   DuplicateWorkspaceResponse,
+  OnboardingWorkspaceRequest,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
   UpdateWorkspaceRequest,
@@ -17,11 +18,14 @@ import { Expectations, RequestOpts, TestAPI } from "./base"
 
 export class WorkspaceAPI extends TestAPI {
   create = async (
-    app: CreateWorkspaceRequest,
+    app: CreateWorkspaceRequest | OnboardingWorkspaceRequest,
     expectations?: Expectations
   ): Promise<Workspace> => {
-    const files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
-    delete app.fileToImport
+    let files = {}
+    if (app.isOnboarding !== "true") {
+      files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
+      delete app.fileToImport
+    }
     return await this._post<Workspace>("/api/applications", {
       fields: app,
       files,
