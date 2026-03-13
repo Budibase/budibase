@@ -62,7 +62,7 @@ export const resolvePgVectorDbConfig = async (config: VectorDbDoc) => {
   return {
     ...config,
     host: await processEnvironmentVariable(config.host),
-    port: Number.isNaN(resolvedPort) ? config.port : resolvedPort,
+    port: Number.isFinite(resolvedPort) ? resolvedPort : config.port,
     database: await processEnvironmentVariable(config.database),
     user: config.user
       ? await processEnvironmentVariable(config.user)
