@@ -65,7 +65,7 @@
       value = signatureAttachment
     } catch (error) {
       $notifications.error(error.message || "Failed to save signature")
-      value = []
+      value = null
     }
   }}
   title={meta.name}

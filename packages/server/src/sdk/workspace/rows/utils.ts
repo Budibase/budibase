@@ -207,6 +207,7 @@ export async function validate({
   const errors: Record<string, any> = {}
   const disallowArrayTypes = [
     FieldType.ATTACHMENT_SINGLE,
+    FieldType.SIGNATURE_SINGLE,
     FieldType.BB_REFERENCE_SINGLE,
   ]
   for (let fieldName of Object.keys(table.schema)) {
