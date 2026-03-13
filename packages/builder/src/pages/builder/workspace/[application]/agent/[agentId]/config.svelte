@@ -1,5 +1,14 @@
 <script lang="ts">
-  import { Body, notifications, Select, Button, Icon } from "@budibase/bbui"
+  import {
+    Body,
+    notifications,
+    Select,
+    Button,
+    Icon,
+    Modal,
+    ModalContent,
+    TextArea,
+  } from "@budibase/bbui"
   import {
     AIConfigType,
     ToolType,
@@ -18,6 +27,7 @@
     queries,
   } from "@/stores/builder"
   import { onDestroy, onMount, untrack } from "svelte"
+  import { API } from "@/api"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
@@ -100,6 +110,10 @@ Any constraints the agent must follow.
 
   // Web search Config
   let webSearchConfigModal = $state<WebSearchConfigModal>()
+  let generateInstructionsModal = $state<Modal>()
+  let generateInstructionsPrompt = $state("")
+  let generatedInstructions = $state("")
+  let generatingInstructions = $state(false)
   let lastWebSearchConfigId: string | undefined = $state()
   let pendingWebSearchInsert = $state(false)
   let webSearchConfig = $derived(
@@ -221,6 +235,12 @@ Any constraints the agent must follow.
         availableTools.find(tool => tool.runtimeBinding === runtimeBinding)
       )
       .filter((tool): tool is AgentTool => !!tool)
+  )
+  let enabledToolReferences = $derived(
+    includedToolsWithDetails
+      .map(tool => tool.readableBinding)
+      .filter((binding): binding is string => !!binding)
+      .map(binding => `{{ ${binding} }}`)
   )
 
   let filteredTools = $derived.by(() => {
@@ -615,6 +635,46 @@ Any constraints the agent must follow.
     webSearchConfigModal?.show()
   }
 
+  function hideGenerateInstructionsModal() {
+    generateInstructionsModal?.hide()
+    generatedInstructions = ""
+  }
+
+  function applyGeneratedInstructions() {
+    draft.promptInstructions = generatedInstructions
+    hideGenerateInstructionsModal()
+    notifications.success("Instructions updated successfully")
+  }
+
+  async function generateInstructions() {
+    if (generatingInstructions) {
+      return
+    }
+
+    generatingInstructions = true
+
+    try {
+      const { instructions } = await API.generateAgentInstructions({
+        aiconfigId: draft.aiconfig,
+        prompt: generateInstructionsPrompt,
+        agentName: draft.name,
+        goal: draft.goal,
+        toolReferences: enabledToolReferences,
+      })
+
+      notifications.success("Instructions generated successfully")
+      generatedInstructions = instructions
+    } catch (error: any) {
+      notifications.error(
+        error?.message ||
+          error?.json?.message ||
+          "Error generating instructions"
+      )
+    } finally {
+      generatingInstructions = false
+    }
+  }
+
   async function saveAgent({
     showNotifications = true,
   }: {
@@ -800,14 +860,24 @@ Any constraints the agent must follow.
 </div>
 
 <div class="section">
-  <div class="section-header">
-    <Body size="S" color="var(--spectrum-global-color-gray-900)"
-      >Instructions</Body
+  <div class="section-header section-header-actions">
+    <div class="section-header-copy">
+      <Body size="S" color="var(--spectrum-global-color-gray-900)"
+        >Instructions</Body
+      >
+      <Body size="S" color="var(--spectrum-global-color-gray-700)">
+        Set the rules for how the AI agent responds, uses tools, and structures
+        output.
+      </Body>
+    </div>
+    <Button
+      secondary
+      size="S"
+      icon="sparkle"
+      on:click={() => generateInstructionsModal?.show()}
     >
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Set the rules for how the AI agent responds, uses tools, and structures
-      output.
-    </Body>
+      Generate
+    </Button>
   </div>
   <div class="prompt-editor-wrapper">
     <div class="prompt-editor">
@@ -844,6 +914,65 @@ Any constraints the agent must follow.
   bind:this={webSearchConfigModal}
   aiconfigId={draft.aiconfig}
 />
+
+<Modal
+  bind:this={generateInstructionsModal}
+  on:hide={() => {
+    generatedInstructions = ""
+  }}
+>
+  <ModalContent
+    title={generatedInstructions
+      ? "Review Generated Instructions"
+      : "Generate Instructions"}
+    size="M"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    {#if generatedInstructions}
+      <TextArea
+        label="Generated instructions"
+        value={generatedInstructions}
+        minHeight={220}
+        readonly
+      />
+      <div class="generate-instructions-actions">
+        <Button secondary on:click={hideGenerateInstructionsModal}
+          >Cancel</Button
+        >
+        <Button cta on:click={applyGeneratedInstructions}
+          >Replace current</Button
+        >
+      </div>
+    {:else}
+      <TextArea
+        label="Prompt"
+        bind:value={generateInstructionsPrompt}
+        minHeight={140}
+        placeholder="Describe what kind of instructions you want to generate..."
+      />
+      <div class="generate-instructions-actions">
+        <Button
+          secondary
+          disabled={generatingInstructions}
+          on:click={hideGenerateInstructionsModal}
+        >
+          Cancel
+        </Button>
+        <Button
+          cta
+          icon="sparkle"
+          disabled={generatingInstructions ||
+            !generateInstructionsPrompt.trim()}
+          on:click={generateInstructions}
+        >
+          {generatingInstructions ? "Generating..." : "Generate"}
+        </Button>
+      </div>
+    {/if}
+  </ModalContent>
+</Modal>
 
 <style>
   :global(.tools-popover-container .spectrum-Popover) {
@@ -1057,6 +1186,28 @@ Any constraints the agent must follow.
     flex-direction: column;
     gap: 2px;
     max-width: 600px;
+  }
+
+  .section-header-actions {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    max-width: none;
+  }
+
+  .section-header-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 600px;
+  }
+
+  .generate-instructions-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-s);
+    margin-top: var(--spacing-m);
   }
 
   .llm-header > :global(.spectrum-Body):first-child {

@@ -71,6 +71,7 @@ builderAdminRoutes
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
 
 builderAdminRoutes
+  .post("/api/ai/agent-instructions", ai.generateAgentInstructions)
   .post("/api/ai/tables", ai.generateTables)
   .get("/api/configs", ai.fetchAIConfigs)
   .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)

@@ -80,6 +80,18 @@ export interface GenerateTablesResponse {
   createdTables: { id: string; name: string }[]
 }
 
+export interface GenerateAgentInstructionsRequest {
+  aiconfigId: string
+  prompt: string
+  agentName?: string
+  goal?: string
+  toolReferences: string[]
+}
+
+export interface GenerateAgentInstructionsResponse {
+  instructions: string
+}
+
 export interface UploadFileRequest {
   data: string
   filename: string
