@@ -19,6 +19,7 @@ import {
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
 } from "@budibase/shared-core"
+import Joi from "joi"
 import type { File, Files } from "formidable"
 import {
   AddWorkspaceSampleDataResponse,
@@ -92,6 +93,12 @@ import { processMigrations } from "../../workspaceMigrations/migrationsProcessor
 import { getGlobalUser } from "../../utilities/global"
 
 const DEFAULT_WORKSPACE_NAME = "Default workspace"
+const workspaceNameSchema = Joi.string().trim().required().messages({
+  "string.base": "Name is required",
+  "string.empty": "Name is required",
+  "any.required": "Name is required",
+})
+const normalizeWorkspaceName = (value: string) => value.toLowerCase().trim()
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -130,32 +137,41 @@ function checkWorkspaceName(
   workspaces: Workspace[],
   name: string,
   currentWorkspaceId?: string
-) {
-  // TODO: Replace with Joi
-  if (!name) {
-    ctx.throw(400, "Name is required")
+): string {
+  const { error, value } = workspaceNameSchema.validate(name)
+  if (error) {
+    ctx.throw(400, error.message)
   }
+  const trimmedName = value as string
   if (currentWorkspaceId) {
     workspaces = workspaces.filter(
       (ws: Workspace) => ws.appId !== currentWorkspaceId
     )
   }
-  if (workspaces.some((app: Workspace) => app.name === name)) {
+  if (
+    workspaces.some(
+      (app: Workspace) =>
+        normalizeWorkspaceName(app.name) === normalizeWorkspaceName(trimmedName)
+    )
+  ) {
     ctx.throw(400, "Workspace name is already in use.")
   }
+  return trimmedName
 }
 
 function getOnboardingWorkspaceName(workspaces: Workspace[]) {
-  if (
-    !workspaces.some(workspace => workspace.name === DEFAULT_WORKSPACE_NAME)
-  ) {
+  const hasWorkspaceName = (name: string) =>
+    workspaces.some(
+      workspace =>
+        normalizeWorkspaceName(workspace.name) === normalizeWorkspaceName(name)
+    )
+
+  if (!hasWorkspaceName(DEFAULT_WORKSPACE_NAME)) {
     return DEFAULT_WORKSPACE_NAME
   }
 
   let suffix = 2
-  while (
-    workspaces.some(workspace => workspace.name === `Workspace ${suffix}`)
-  ) {
+  while (hasWorkspaceName(`Workspace ${suffix}`)) {
     suffix++
   }
   return `Workspace ${suffix}`
@@ -578,11 +594,11 @@ async function performWorkspaceCreate(
   const useTemplate = body.useTemplate === "true"
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
 
-  const workspaceName = isOnboarding
+  let workspaceName = isOnboarding
     ? getOnboardingWorkspaceName(workspaces)
     : body.name
 
-  checkWorkspaceName(ctx, workspaces, workspaceName)
+  workspaceName = checkWorkspaceName(ctx, workspaces, workspaceName)
   const appUrl = sdk.workspaces.getAppUrl({ name: workspaceName, url })
   checkWorkspaceUrl(ctx, workspaces, appUrl)
 
@@ -878,10 +894,11 @@ export async function update(
     dev: true,
   })
   // validation
-  const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url
+  let name = ctx.request.body.name
+  const possibleUrl = ctx.request.body.url
   if (name) {
-    checkWorkspaceName(ctx, workspaces, name, ctx.params.appId)
+    name = checkWorkspaceName(ctx, workspaces, name, ctx.params.appId)
+    ctx.request.body.name = name
   }
   const url = sdk.workspaces.getAppUrl({ name, url: possibleUrl })
   if (url) {
@@ -1141,7 +1158,8 @@ export async function importToWorkspace(
 export async function duplicateWorkspace(
   ctx: UserCtx<DuplicateWorkspaceRequest, DuplicateWorkspaceResponse>
 ) {
-  const { name: appName, url: possibleUrl } = ctx.request.body
+  let { name: appName } = ctx.request.body
+  const { url: possibleUrl } = ctx.request.body
   const { appId: sourceAppId } = ctx.params
   const [workspace] = await dbCore.getWorkspacesByIDs([sourceAppId])
 
@@ -1153,7 +1171,7 @@ export async function duplicateWorkspace(
     dev: true,
   })
 
-  checkWorkspaceName(ctx, workspaces, appName)
+  appName = checkWorkspaceName(ctx, workspaces, appName)
   const url = sdk.workspaces.getAppUrl({ name: appName, url: possibleUrl })
   checkWorkspaceUrl(ctx, workspaces, url)
 

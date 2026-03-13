@@ -1,4 +1,5 @@
 <script>
+  import { getErrorMessage } from "@/helpers/errors"
   import { automationStore } from "@/stores/builder"
   import {
     notifications,
@@ -33,7 +34,7 @@
       notifications.success(`Automation ${name} updated successfully`)
       hide()
     } catch (error) {
-      notifications.error("Error saving automation")
+      notifications.error(getErrorMessage(error) || "Error saving automation")
     }
   }
 

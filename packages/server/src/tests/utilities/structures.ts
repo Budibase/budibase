@@ -212,7 +212,7 @@ export function rowActionAutomation() {
 
 export function basicAutomation(opts?: DeepPartial<Automation>): Automation {
   const baseAutomation: Automation = {
-    name: "My Automation",
+    name: generator.guid(),
     screenId: "kasdkfldsafkl",
     live: true,
     uiTree: {},
@@ -254,7 +254,7 @@ export function loopAutomation(
     }
   }
   const automation: any = {
-    name: "looping",
+    name: `looping-${generator.guid().slice(0, 8)}`,
     type: "automation",
     definition: {
       steps: [
@@ -306,7 +306,7 @@ export function loopAutomation(
 export function collectAutomation(opts?: DeepPartial<Automation>): Automation {
   const baseAutomation: Automation = {
     appId: "appId",
-    name: "looping",
+    name: `looping-${generator.guid().slice(0, 8)}`,
     type: "automation",
     definition: {
       steps: [
@@ -360,7 +360,7 @@ export function collectAutomation(opts?: DeepPartial<Automation>): Automation {
 
 export function filterAutomation(opts?: DeepPartial<Automation>): Automation {
   const automation: Automation = {
-    name: "looping",
+    name: `looping-${generator.guid().slice(0, 8)}`,
     type: "automation",
     appId: "appId",
     definition: {
@@ -406,7 +406,7 @@ export function updateRowAutomationWithFilters(
   tableId: string
 ): Automation {
   return {
-    name: "updateRowWithFilters",
+    name: `updateRowWithFilters-${generator.guid().slice(0, 8)}`,
     type: "automation",
     appId,
     definition: {

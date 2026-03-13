@@ -9,6 +9,25 @@ import { helpers } from "@budibase/shared-core"
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
+const NAME_REQUIRED_ERROR = "Agent name is required."
+
+const normalizeName = (name: string) => name.toLowerCase().trim()
+
+const guardName = async (name: string, id?: string) => {
+  if (!name.trim()) {
+    throw new HTTPError(NAME_REQUIRED_ERROR, 400)
+  }
+
+  const agents = await fetch()
+  const normalizedName = normalizeName(name)
+  const duplicate = agents.find(
+    agent => normalizeName(agent.name) === normalizedName && agent._id !== id
+  )
+
+  if (duplicate) {
+    throw new HTTPError(`Agent with name '${name}' already exists.`, 400)
+  }
+}
 
 const encodeSecret = (value?: string): string | undefined => {
   if (!value || value.startsWith(SECRET_ENCODING_PREFIX)) {
@@ -208,6 +227,8 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
   const db = context.getWorkspaceDB()
   const now = new Date().toISOString()
 
+  await guardName(request.name)
+
   const agent: Agent = {
     _id: docIds.generateAgentID(),
     name: request.name,
@@ -273,6 +294,13 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
   const db = context.getWorkspaceDB()
   const existingRaw = await db.tryGet<Agent>(_id)
   const existing = existingRaw ? withAgentDefaults(existingRaw) : undefined
+
+  if (
+    existing &&
+    normalizeName(agent.name) !== normalizeName(existing.name || "")
+  ) {
+    await guardName(agent.name, _id)
+  }
 
   const updated: Agent = {
     ...existing,
