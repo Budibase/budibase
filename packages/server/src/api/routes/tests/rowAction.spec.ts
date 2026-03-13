@@ -284,13 +284,14 @@ describe("/rowsActions", () => {
       )
     })
 
-    it("can create row actions between different tables", async () => {
+    it("can reuse row action names between different tables", async () => {
       const otherTable = await config.api.table.save(
         setup.structures.basicTable()
       )
 
-      await createRowAction(tableId, createRowActionRequest())
-      await createRowAction(otherTable._id!, createRowActionRequest())
+      const action = await createRowAction(tableId, createRowActionRequest())
+
+      await createRowAction(otherTable._id!, { name: action.name })
     })
 
     it("an automation is created when creating a new row action", async () => {
