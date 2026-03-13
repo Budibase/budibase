@@ -91,6 +91,7 @@ globals:
   # @ignore (used for making internal API calls to the account portal when hosting in k8s)
   internalAccountPortalUrl: ""
   # @ignore (only needs to be set in our cloud environment)
+  # @deprecated use internalRpcKey
   accountPortalApiKey: ""
   # -- Sets the domain attribute of the cookie that Budibase uses to store session information.
   # See <https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent>
@@ -124,12 +125,17 @@ globals:
   apiEncryptionKey: ""
   # -- API key used for internal Budibase API calls. You don't need to set this
   # if `createSecrets` is true.
+  # @deprecated use internalRpcKey
   internalApiKey: ""
+  # -- Unified RPC key used for internal service communication. Consolidates
+  # all other internal API keys.
+  internalRpcKey: ""
   # -- Secret used for signing JWTs. You don't need to set this if `createSecrets` is true.
   jwtSecret: ""
 
   # -- A fallback value for `internalApiKey`. If you're rotating your encryption key, you can
   # set this to the old value for the duration of the rotation.
+  # @deprecated use internalRpcKey
   internalApiKeyFallback: ""
   # -- A fallback value for `jwtSecret`. If you're rotating your JWT secret, you can set this
   # to the old value for the duration of the rotation.

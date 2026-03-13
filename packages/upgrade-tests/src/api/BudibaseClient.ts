@@ -55,9 +55,12 @@ export class BudibaseClient {
         throw new Error("BUDIBASE_URL environment variable is required")
       }
 
-      const apiKey = process.env.INTERNAL_API_KEY
+      const apiKey =
+        process.env.INTERNAL_RPC_KEY || process.env.INTERNAL_API_KEY
       if (!apiKey) {
-        throw new Error("INTERNAL_API_KEY environment variable is required")
+        throw new Error(
+          "INTERNAL_RPC_KEY or INTERNAL_API_KEY environment variable is required"
+        )
       }
 
       const appId = process.env.TEST_APP_ID
@@ -229,9 +232,11 @@ export class BudibaseClient {
       throw new Error("BUDIBASE_URL environment variable is required")
     }
 
-    const apiKey = process.env.INTERNAL_API_KEY
+    const apiKey = process.env.INTERNAL_RPC_KEY || process.env.INTERNAL_API_KEY
     if (!apiKey) {
-      throw new Error("INTERNAL_API_KEY environment variable is required")
+      throw new Error(
+        "INTERNAL_RPC_KEY or INTERNAL_API_KEY environment variable is required"
+      )
     }
 
     return new BudibaseClient({

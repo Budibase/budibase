@@ -171,7 +171,10 @@ export function openJwt<T>(token?: string): T | undefined {
 }
 
 export function isValidInternalAPIKey(apiKey: string) {
-  if (env.INTERNAL_API_KEY && env.INTERNAL_API_KEY === apiKey) {
+  if (
+    (env.INTERNAL_RPC_KEY && env.INTERNAL_RPC_KEY === apiKey) ||
+    (env.INTERNAL_API_KEY && env.INTERNAL_API_KEY === apiKey)
+  ) {
     return true
   }
   // fallback to enable rotation

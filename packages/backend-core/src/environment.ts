@@ -179,7 +179,12 @@ const environment = {
   MINIO_URL: process.env.MINIO_URL,
   MINIO_ENABLED: process.env.MINIO_ENABLED || 1,
   S3_IGNORE_SELF_SIGNED: process.env.S3_IGNORE_SELF_SIGNED,
-  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+  INTERNAL_RPC_KEY:
+    process.env.INTERNAL_RPC_KEY || process.env.INTERNAL_API_KEY,
+  /** @deprecated use INTERNAL_RPC_KEY */
+  INTERNAL_API_KEY:
+    process.env.INTERNAL_RPC_KEY || process.env.INTERNAL_API_KEY,
+  /** @deprecated use INTERNAL_RPC_KEY */
   INTERNAL_API_KEY_FALLBACK: process.env.INTERNAL_API_KEY_FALLBACK,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ACCOUNT_PORTAL_URL:
@@ -188,7 +193,9 @@ const environment = {
     process.env.INTERNAL_ACCOUNT_PORTAL_URL ||
     process.env.ACCOUNT_PORTAL_URL ||
     "https://account.budibase.app",
-  ACCOUNT_PORTAL_API_KEY: process.env.ACCOUNT_PORTAL_API_KEY || "",
+  /** @deprecated use INTERNAL_RPC_KEY */
+  ACCOUNT_PORTAL_API_KEY:
+    process.env.INTERNAL_RPC_KEY || process.env.ACCOUNT_PORTAL_API_KEY || "",
   BUDICLOUD_URL: process.env.BUDICLOUD_URL || "https://budibase.app",
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   SELF_HOSTED: selfHosted,
@@ -312,6 +319,7 @@ export const SECRETS: EnvironmentKey[] = [
   "COUCH_DB_SQL_URL",
   "COUCH_DB_URL",
   "GOOGLE_CLIENT_SECRET",
+  "INTERNAL_RPC_KEY",
   "INTERNAL_API_KEY_FALLBACK",
   "INTERNAL_API_KEY",
   "JWT_SECRET",
@@ -332,6 +340,26 @@ for (let [key, value] of Object.entries(environment)) {
   if (value === "false") {
     // @ts-ignore
     environment[key] = 0
+  }
+}
+
+const isDeprecationWarningDisabled = !!process.env.DISABLE_DEPRECATION_WARNINGS
+
+if (!isDeprecationWarningDisabled) {
+  if (process.env.INTERNAL_API_KEY) {
+    console.warn(
+      "INTERNAL_API_KEY is deprecated and will be removed in a future release. Please use INTERNAL_RPC_KEY instead."
+    )
+  }
+  if (process.env.INTERNAL_API_KEY_FALLBACK) {
+    console.warn(
+      "INTERNAL_API_KEY_FALLBACK is deprecated and will be removed in a future release. Please use INTERNAL_RPC_KEY instead."
+    )
+  }
+  if (process.env.ACCOUNT_PORTAL_API_KEY) {
+    console.warn(
+      "ACCOUNT_PORTAL_API_KEY is deprecated and will be removed in a future release. Please use INTERNAL_RPC_KEY instead."
+    )
   }
 }
 

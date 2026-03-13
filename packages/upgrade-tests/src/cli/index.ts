@@ -126,6 +126,7 @@ program
         image: `budibase/budibase:${options.from}`,
         env: {
           INTERNAL_API_KEY: config.internalApiKey,
+          INTERNAL_RPC_KEY: config.internalApiKey,
           MULTI_TENANCY: "0",
           SELF_HOSTED: "1",
           REDIS_PASSWORD: "budibase",
@@ -230,6 +231,7 @@ program
         image,
         env: {
           INTERNAL_API_KEY: config.internalApiKey,
+          INTERNAL_RPC_KEY: config.internalApiKey,
           MULTI_TENANCY: "0",
           SELF_HOSTED: "1",
           REDIS_PASSWORD: "budibase",
