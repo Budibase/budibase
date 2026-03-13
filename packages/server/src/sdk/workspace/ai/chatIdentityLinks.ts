@@ -1,10 +1,4 @@
-import {
-  configs,
-  context,
-  redis,
-  utils,
-  type RedisClient,
-} from "@budibase/backend-core"
+import { context, redis, utils, type RedisClient } from "@budibase/backend-core"
 import type {
   ChatIdentityLink,
   ChatIdentityLinkLookupInput,
@@ -99,9 +93,9 @@ const loadSession = async (token: string) => {
   const client = await getChatLinkSessionCacheClient()
 
   try {
-    const value = await client.get<ChatIdentityLinkSession>(
+    const value = (await client.get(
       getSessionCacheKey(token)
-    )
+    )) as ChatIdentityLinkSession | null
 
     if (!value || Date.now() >= new Date(value.expiresAt).getTime()) {
       await clearSession(token)
