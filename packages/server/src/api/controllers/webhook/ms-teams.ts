@@ -185,6 +185,10 @@ const createTeamsMessageHandler = ({
             text: prompt.text,
             linkUrl: prompt.linkUrl,
           })
+          if (delivery.usedDirectMessageFallback) {
+            await thread.post("I sent you a DM with your Budibase link.")
+            return
+          }
           if (!delivery.delivered) {
             await thread.post(
               "I couldn't send a private Budibase link. Please try again in a direct message."

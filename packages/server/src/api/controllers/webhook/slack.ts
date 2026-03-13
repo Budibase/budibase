@@ -65,6 +65,7 @@ type SlackCommand = typeof ChatCommands.ASK | typeof ChatCommands.LINK
 
 type SlackInput = {
   target: SlackReplyTarget
+  privateTarget: SlackReplyTarget
   author: Message["author"]
   command: SlackCommand
   content: string
@@ -87,6 +88,7 @@ const createSlackInputHandler = ({
 }) => {
   return async ({
     target,
+    privateTarget,
     author,
     command,
     content,
@@ -121,11 +123,15 @@ const createSlackInputHandler = ({
         },
         replyLinkPrompt: async prompt => {
           const delivery = await postLinkPromptPrivately({
-            target,
+            target: privateTarget,
             user: author,
             text: prompt.text,
             linkUrl: prompt.linkUrl,
           })
+          if (delivery.usedDirectMessageFallback) {
+            await target.post("I sent you a DM with your Budibase link.")
+            return
+          }
           if (!delivery.delivered) {
             await target.post(
               "I couldn't send a private Budibase link. Please try again in a direct message."
@@ -146,7 +152,9 @@ const createSlackInputHandler = ({
     } catch (error) {
       console.error("Slack webhook processing failed", error)
       const msg =
-        error instanceof HTTPError ? error.message : SLACK_FALLBACK_ERROR_MESSAGE
+        error instanceof HTTPError
+          ? error.message
+          : SLACK_FALLBACK_ERROR_MESSAGE
       await target.post(msg)
     }
   }
@@ -168,6 +176,7 @@ const createSlackMessageHandler = (
 
     await handleSlackInput({
       target: thread as SlackReplyTarget,
+      privateTarget: thread.channel as SlackReplyTarget,
       author: message.author,
       command: ChatCommands.ASK,
       content: message.text,
@@ -235,6 +244,7 @@ export async function slackWebhook(
           }
           await handleSlackInput({
             target: event.channel as SlackReplyTarget,
+            privateTarget: event.channel as SlackReplyTarget,
             author: event.user,
             command: ChatCommands.LINK,
             content: event.text,

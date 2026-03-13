@@ -5,6 +5,8 @@ interface MockWebhookChatPayload {
   }
 }
 
+let teamsPostEphemeralResult = { usedFallback: false }
+
 jest.mock("chat", () => {
   const actual = jest.requireActual("../../../../../__mocks__/chat")
   const toMessageText = (value: unknown) =>
@@ -70,8 +72,10 @@ jest.mock("chat", () => {
                 message: unknown,
                 _options: { fallbackToDM: boolean }
               ) => {
-                messages.push(toMessageText(message))
-                return { usedFallback: false }
+                if (!teamsPostEphemeralResult.usedFallback) {
+                  messages.push(toMessageText(message))
+                }
+                return teamsPostEphemeralResult
               },
               subscribe: async () => {},
             }
@@ -149,6 +153,7 @@ describe("agent teams integration provisioning", () => {
   beforeEach(async () => {
     await config.newTenant()
     mockedWebhookChat.mockClear()
+    teamsPostEphemeralResult = { usedFallback: false }
   })
 
   afterAll(() => {
@@ -344,6 +349,35 @@ describe("agent teams integration provisioning", () => {
       expect(mockedWebhookChat).not.toHaveBeenCalled()
       expect(response.body.messages.join(" ")).toContain(ChatCommands.LINK)
       expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+    })
+
+    it("acknowledges when the link prompt falls back to a DM", async () => {
+      teamsPostEphemeralResult = { usedFallback: true }
+
+      const { agent, chatAppId } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-link-fallback",
+          type: "message",
+          text: `${ChatCommands.ASK} hello teams`,
+          from: { id: "user-unlinked", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "channel" },
+          channelData: {
+            channel: { id: "channel-1" },
+            team: { id: "team-1" },
+            tenant: { id: "tenant-1" },
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "I sent you a DM with your Budibase link."
+      )
+      expect(extractLinkUrl(response.body.messages)).toBeUndefined()
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
     })
 
     it(`creates a conversation from an incoming ${ChatCommands.ASK} message`, async () => {
