@@ -18,6 +18,8 @@
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationHistory: ConversationListItem[] = []
   export let selectedConversationId: string | undefined
+  export let logoUrl: string | undefined = undefined
+  export let logoAlt = "Budibase"
   export let hideAgents = false
 
   $: defaultAgent =
@@ -39,6 +41,12 @@
 
 <div class="chat-nav-shell">
   <div class="chat-nav-content">
+    {#if logoUrl}
+      <div class="list-section chat-logo-section">
+        <img class="chat-logo" src={logoUrl} alt={logoAlt} />
+      </div>
+    {/if}
+
     {#if defaultAgent?.agentId}
       <div class="list-section">
         <button
@@ -124,6 +132,20 @@
 
   .list-section + .list-section {
     padding-top: 0;
+  }
+
+  .chat-logo-section {
+    padding-bottom: var(--spacing-s);
+    align-items: flex-start;
+  }
+
+  .chat-logo {
+    height: 28px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0;
   }
 
   .new-chat {
