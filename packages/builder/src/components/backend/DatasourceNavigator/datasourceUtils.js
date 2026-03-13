@@ -1,5 +1,14 @@
 import { TableNames } from "@/constants"
-import { INTERNAL_TABLE_SOURCE_ID } from "@budibase/types"
+import { DEFAULT_BB_DATASOURCE_ID } from "@/constants/backend"
+import { INTERNAL_TABLE_SOURCE_ID, SourceName } from "@budibase/types"
+
+export const canCreateDatasourceQuery = datasource => {
+  return (
+    datasource?._id !== INTERNAL_TABLE_SOURCE_ID &&
+    datasource?._id !== DEFAULT_BB_DATASOURCE_ID &&
+    datasource?.source !== SourceName.GOOGLE_SHEETS
+  )
+}
 
 const showDatasourceOpen = ({
   selected,

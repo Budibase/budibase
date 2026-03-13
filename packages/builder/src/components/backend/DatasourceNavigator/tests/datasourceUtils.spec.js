@@ -1,6 +1,46 @@
-import { enrichDatasources } from "../datasourceUtils"
+import { DEFAULT_BB_DATASOURCE_ID } from "@/constants/backend"
+import { INTERNAL_TABLE_SOURCE_ID } from "@budibase/types"
+import { canCreateDatasourceQuery, enrichDatasources } from "../datasourceUtils"
 
 describe("datasourceUtils", () => {
+  describe("canCreateDatasourceQuery", () => {
+    it("returns false for internal datasource", () => {
+      expect(
+        canCreateDatasourceQuery({
+          _id: INTERNAL_TABLE_SOURCE_ID,
+          source: "POSTGRES",
+        })
+      ).toBe(false)
+    })
+
+    it("returns false for sample data datasource", () => {
+      expect(
+        canCreateDatasourceQuery({
+          _id: DEFAULT_BB_DATASOURCE_ID,
+          source: "POSTGRES",
+        })
+      ).toBe(false)
+    })
+
+    it("returns false for Google Sheets datasource", () => {
+      expect(
+        canCreateDatasourceQuery({
+          _id: "google_sheets_ds",
+          source: "GOOGLE_SHEETS",
+        })
+      ).toBe(false)
+    })
+
+    it("returns true for supported datasource", () => {
+      expect(
+        canCreateDatasourceQuery({
+          _id: "postgres_ds",
+          source: "POSTGRES",
+        })
+      ).toBe(true)
+    })
+  })
+
   describe("enrichDatasources", () => {
     it.each([
       ["undefined", undefined],
