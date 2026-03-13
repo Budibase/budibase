@@ -1,11 +1,8 @@
-import { ChatCommands } from "@budibase/shared-core"
 import type { ChatConversation, SlackConversationScope } from "@budibase/types"
 import {
-  extractSlackMessageContent,
   isSlackDirectMessage,
   matchesSlackConversationScope,
   pickSlackConversation,
-  stripSlackMentions,
 } from "../slack"
 
 const makeChat = (
@@ -29,25 +26,6 @@ const makeChat = (
 })
 
 describe("slack webhook helpers", () => {
-  it("strips Slack mentions from message text", () => {
-    expect(stripSlackMentions(`<@U123> ${ChatCommands.ASK} hello`)).toEqual(
-      `${ChatCommands.ASK} hello`
-    )
-  })
-
-  it.each([
-    ["hello there", "hello there"],
-    [`${ChatCommands.ASK} hello there`, `${ChatCommands.ASK} hello there`],
-    [`/${ChatCommands.NEW} start fresh`, `/${ChatCommands.NEW} start fresh`],
-    ["<@U123> follow up", "follow up"],
-    ["<@U123|budibase> follow up", "follow up"],
-    ["contact me at alice@example.com", "contact me at alice@example.com"],
-    ["compare foo@bar and @alice", "compare foo@bar and @alice"],
-    ["<@U123>   ", ""],
-  ] as const)("extracts message content %s", (text, expected) => {
-    expect(extractSlackMessageContent(text)).toEqual(expected)
-  })
-
   it("detects direct-message slack events", () => {
     expect(isSlackDirectMessage({ type: "message", channel_type: "im" })).toBe(
       true
