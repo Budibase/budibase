@@ -7,6 +7,7 @@ import {
 } from "@budibase/types"
 import tracer from "dd-trace"
 import sdk from "../../sdk"
+import { LiteLLMStatus } from "../../sdk/workspace/ai/configs/litellm"
 
 type AIProvider =
   | "OpenAI"
@@ -121,10 +122,24 @@ const migration = async () => {
       workspaceId: context.getWorkspaceId(),
     })
 
+    const liteLLMStatus = await sdk.ai.configs.getLiteLLMStatus()
+
+    if (liteLLMStatus === LiteLLMStatus.NOT_CONFIGURED) {
+      span.addTags({
+        skipped: true,
+        skipReason: `litellm_${liteLLMStatus}`,
+      })
+      console.warn(
+        `Skipping AI config migration for workspace "${context.getWorkspaceId()}": LiteLLM status is "${liteLLMStatus}"`
+      )
+      return
+    }
+
     const legacyConfig = await configs.getConfig<AIConfig>(ConfigType.AI)
     if (!legacyConfig?.config) {
       span.addTags({
         hasLegacyConfig: false,
+        skipped: false,
         processedProviders: 0,
         createdConfigs: 0,
         skippedExisting: 0,
@@ -206,6 +221,7 @@ const migration = async () => {
 
     span.addTags({
       hasLegacyConfig: true,
+      skipped: false,
       existingConfigs: existingConfigs.length,
       processedProviders,
       createdConfigs,

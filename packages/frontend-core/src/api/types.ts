@@ -35,6 +35,7 @@ import { UserEndpoints } from "./user"
 import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
 import { AgentEndpoints } from "./agents"
+import { AgentLogEndpoints } from "./agentLogs"
 import { ChatAppEndpoints } from "./chatApps"
 import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
@@ -45,6 +46,7 @@ import { WorkspaceHomeEndpoints } from "./workspaceHome"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
 import { VectorDbEndpoints } from "./vectorDbs"
+import { KnowledgeBaseEndpoints } from "./knowledgeBases"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -116,6 +118,7 @@ export type APIError = {
 export type APIClient = BaseAPIClient &
   AIEndpoints &
   AgentEndpoints &
+  AgentLogEndpoints &
   ChatAppEndpoints &
   AnalyticsEndpoints &
   AppEndpoints &
@@ -161,4 +164,5 @@ export type APIClient = BaseAPIClient &
     recaptcha: RecaptchaEndpoints
     aiConfig: AIConfigEndpoints
     vectorDb: VectorDbEndpoints
+    knowledgeBase: KnowledgeBaseEndpoints
   }

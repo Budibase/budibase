@@ -167,7 +167,7 @@
     !user || canWorkspaceRoleOverrideGlobalRole(users.getUserRole(user))
   )
   const disableRole = $derived(
-    disableFields ||
+    readonly ||
       isTenantOwner ||
       user?._id === $auth.user?._id ||
       !canEditWorkspaceRole

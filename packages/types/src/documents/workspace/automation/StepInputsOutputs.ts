@@ -286,6 +286,7 @@ export type AgentStepOutputs = {
   success: boolean
   response?: string
   message?: UIMessage
+  sessionId?: string
   usage?: LanguageModelUsage
   output?: Record<string, any>
 }

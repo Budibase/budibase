@@ -296,6 +296,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
           const response = await clientApp.acquireTokenByClientCredential({
             scopes: ["https://database.windows.net/.default"],
+            azureRegion: "DisableMsalForceRegion",
           })
 
           clientCfg.authentication = {

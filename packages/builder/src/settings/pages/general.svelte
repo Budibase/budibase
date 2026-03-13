@@ -12,7 +12,7 @@
     isOnlyUser,
     recaptchaStore,
   } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
+  import { appsStore, featureFlags } from "@/stores/portal"
   import { admin } from "@/stores/portal/admin"
   import { licensing } from "@/stores/portal/licensing"
   import {
@@ -24,6 +24,7 @@
     Layout,
     Modal,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import CloneResourcesModal from "../_components/CloneResourcesModal.svelte"
 
@@ -39,6 +40,13 @@
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
+  $: hasOnlyOneWorkspace = $appsStore.apps.length <= 1
+  $: disableDeleteWorkspace = !$isOnlyUser || hasOnlyOneWorkspace
+  $: deleteWorkspaceTooltip = hasOnlyOneWorkspace
+    ? "At least one workspace is required."
+    : !$isOnlyUser
+      ? "Unavailable - another user is editing this workspace"
+      : undefined
 
   const exportApp = (opts: { published: any }) => {
     exportPublishedVersion = !!opts?.published
@@ -241,13 +249,12 @@
   <div class="row">
     <Button
       warning
-      disabled={!$isOnlyUser}
+      disabled={disableDeleteWorkspace}
       on:click={() => {
         deleteModal.show()
       }}
-      tooltip={$isOnlyUser
-        ? undefined
-        : "Unavailable - another user is editing this workspace"}
+      tooltip={deleteWorkspaceTooltip}
+      tooltipPosition={TooltipPosition.Right}
     >
       Delete workspace
     </Button>

@@ -28,6 +28,16 @@ const HELPER_TOOL_NAMES = new Set([
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
   HELPER_TOOL_NAMES.has(tool.name)
 
+export function getToolDisplayNames(
+  tools: AiToolDefinition[]
+): Record<string, string> {
+  return Object.fromEntries(
+    tools.flatMap(tool =>
+      tool.readableName ? [[tool.name, tool.readableName]] : []
+    )
+  )
+}
+
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
     name: tool.name,
@@ -129,6 +139,7 @@ export async function buildPromptAndTools(
 ): Promise<{
   systemPrompt: string
   tools: ToolSet
+  toolDisplayNames: Record<string, string>
 }> {
   const { baseSystemPrompt, includeGoal = true } = options
 
@@ -151,6 +162,7 @@ export async function buildPromptAndTools(
   return {
     systemPrompt,
     tools: toToolSet(enabledTools),
+    toolDisplayNames: getToolDisplayNames(enabledTools),
   }
 }
 
