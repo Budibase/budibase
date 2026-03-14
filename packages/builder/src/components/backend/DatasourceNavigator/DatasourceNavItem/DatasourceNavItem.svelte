@@ -3,8 +3,8 @@
   import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
   import { contextMenuStore, userSelectedResourceMap } from "@/stores/builder"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import { canCreateDatasourceQuery } from "@/components/backend/DatasourceNavigator/datasourceUtils"
   import NavItem from "@/components/common/NavItem.svelte"
-  import { SourceName } from "@budibase/types"
 
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import { Icon } from "@budibase/bbui"
@@ -43,10 +43,7 @@
 
   const getContextMenuItems = () => {
     return [
-      ...(datasource._id !== BUDIBASE_INTERNAL_DB_ID &&
-      datasource.source !== SourceName.GOOGLE_SHEETS
-        ? [addQueryItem]
-        : []),
+      ...(canCreateDatasourceQuery(datasource) ? [addQueryItem] : []),
       {
         icon: "pencil",
         name: "Edit",
