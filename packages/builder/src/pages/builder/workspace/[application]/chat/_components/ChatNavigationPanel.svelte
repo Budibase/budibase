@@ -16,13 +16,18 @@
 
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationHistory: ConversationListItem[] = []
+  export let deletingChat = false
   export let selectedConversationId: string | undefined
+  export let selectedAgentName: string | undefined
 </script>
 
 <SharedChatNavigationPanel
   {enabledAgentList}
   {conversationHistory}
+  {deletingChat}
   {selectedConversationId}
+  {selectedAgentName}
   on:agentSelected
   on:conversationSelected
+  on:conversationDeleted
 />

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte"
-  import { Body, Button, Icon, ProgressCircle } from "@budibase/bbui"
+  import { Body, Icon } from "@budibase/bbui"
   import type { ChatConversation, DraftChatConversation } from "@budibase/types"
   import Chatbox from "./index.svelte"
 
@@ -21,7 +21,6 @@
   }
 
   export let selectedAgentId: string | null = null
-  export let selectedAgentName: string = ""
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationStarters: { prompt: string }[] = []
   export let agentAvailability: AgentAvailability = "ready"
@@ -29,14 +28,12 @@
   export let chat: ChatConversationLike
   export let loading: boolean = false
   export let suppressAgentPicker: boolean = false
-  export let deletingChat: boolean = false
   export let workspaceId: string
   export let initialPrompt: string = ""
   export let userName: string = ""
 
   const dispatch = createEventDispatcher<{
     chatSaved: { chatId?: string; chat: ChatConversationLike }
-    deleteChat: undefined
     agentSelected: { agentId: string }
     startChat: { agentId: string; prompt: string }
   }>()
@@ -83,10 +80,6 @@
 
   $: readOnlyReason = getReadOnlyReason(agentAvailability)
 
-  const deleteChat = () => {
-    dispatch("deleteChat")
-  }
-
   const selectAgent = (agentId: string) => {
     dispatch("agentSelected", { agentId })
   }
@@ -122,32 +115,13 @@
 
 <div class="chat-wrapper">
   {#if selectedAgentId}
-    <div class="chat-header">
-      <div class="chat-header-agent">
-        <Body size="S">
-          {selectedAgentName || (loading ? "" : "Unknown agent")}
-        </Body>
+    {#if hasChatId(chat)}
+      <div class="chat-header">
+        <div class="chat-header-title">
+          <Body size="S">{chat.title || "Untitled Chat"}</Body>
+        </div>
       </div>
-
-      {#if hasChatId(chat)}
-        <Button
-          quiet
-          warning
-          disabled={deletingChat || loading}
-          on:click={deleteChat}
-        >
-          <span class="delete-button-content">
-            {#if deletingChat}
-              <ProgressCircle size="S" />
-              Deleting...
-            {:else}
-              <Icon name="trash" size="S" />
-              Delete chat
-            {/if}
-          </span>
-        </Button>
-      {/if}
-    </div>
+    {/if}
 
     <Chatbox
       bind:chat
@@ -161,7 +135,7 @@
   {:else if !suppressAgentPicker}
     <div class="chat-empty">
       <div class="chat-empty-greeting">
-        <Body size="XL" weight="600" serif>
+        <Body size="XL" weight="600">
           {greetingText}
         </Body>
       </div>
@@ -247,23 +221,20 @@
     border-bottom: var(--border-light);
   }
 
-  .chat-header-agent {
-    display: flex;
-    align-items: center;
+  .chat-header-title {
+    min-width: 0;
+    flex: 1 1 auto;
   }
 
-  .chat-header-agent :global(p) {
+  .chat-header-title :global(p) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 14px;
     line-height: 17px;
     letter-spacing: 0;
     font-weight: 400;
     color: var(--spectrum-alias-text-color);
-  }
-
-  .delete-button-content {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
   }
 
   .chat-empty {

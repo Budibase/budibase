@@ -91,7 +91,7 @@
   }
 
   .chat-preview-pill {
-    color: white;
+    color: var(--spectrum-alias-text-color);
     border-radius: 10px;
     font-size: 14px;
     font-weight: 500;

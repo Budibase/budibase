@@ -14,7 +14,6 @@
   }
 
   export let selectedAgentId: string | null = null
-  export let selectedAgentName: string = ""
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationStarters: { prompt: string }[] = []
   export let agentAvailability:
@@ -26,7 +25,6 @@
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
-  export let deletingChat: boolean = false
   export let workspaceId: string
   export let initialPrompt: string = ""
 
@@ -36,16 +34,13 @@
 <SharedChatConversationPanel
   bind:chat
   {selectedAgentId}
-  {selectedAgentName}
   {enabledAgentList}
   {conversationStarters}
   {agentAvailability}
   {loading}
-  {deletingChat}
   {workspaceId}
   {initialPrompt}
   {userName}
-  on:deleteChat
   on:chatSaved
   on:agentSelected
   on:startChat
