@@ -87,7 +87,11 @@ async function runBackup(
     }
   }
   try {
-    const tarPath = await opts.processing.exportAppFn(devWorkspaceId, {
+    const prodDb = dbCore.getDB(prodAppId, { skip_setup: true })
+    const prodExists = await prodDb.exists()
+    const exportAppId = prodExists ? prodAppId : devWorkspaceId
+
+    const tarPath = await opts.processing.exportAppFn(exportAppId, {
       tar: true,
     })
     const contents = await opts.processing.statsFn(devWorkspaceId)
@@ -136,6 +140,7 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
   const tenantId = tenancy.getTenantIDFromWorkspaceID(appId) as string
   return tenancy.doInTenant(tenantId, async () => {
     const devWorkspaceId = dbCore.getDevWorkspaceID(appId)
+    const prodWorkspaceId = dbCore.getProdWorkspaceID(appId)
     const tempAppId = `${devWorkspaceId}_temp_${Date.now()}`
 
     const { rev } = await backups.updateRestoreStatus(
@@ -153,8 +158,8 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
     const path = await backups.downloadAppBackup(backupId)
     let status = BackupStatus.COMPLETE
     try {
-      // import into temporary database first
-      await opts.importAppFn(tempAppId, dbCore.getDB(tempAppId), {
+      // import into temporary database first (devWorkspaceId used for prodAppId in object store upload)
+      await opts.importAppFn(devWorkspaceId, dbCore.getDB(tempAppId), {
         file: {
           type: "application/gzip",
           path,
@@ -162,12 +167,27 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
         key: path,
       })
 
-      // if import succeeds, replace the original app with the temporary one
+      // if import succeeds, replace dev and prod with the backup content
       await removeExistingApp(devWorkspaceId)
-      await new db.Replication({
+
+      const prodDb = dbCore.getDB(prodWorkspaceId, { skip_setup: true })
+      if (await prodDb.exists()) {
+        await removeExistingApp(prodWorkspaceId)
+      }
+
+      const devReplication = new db.Replication({
         source: tempAppId,
         target: devWorkspaceId,
-      }).replicate()
+      })
+      await devReplication.replicate()
+      await devReplication.close()
+
+      const prodReplication = new db.Replication({
+        source: tempAppId,
+        target: prodWorkspaceId,
+      })
+      await prodReplication.replicate()
+      await prodReplication.close()
     } catch (err: any) {
       logging.logAlert("App restore error", err)
       status = BackupStatus.FAILED
