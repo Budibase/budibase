@@ -51,19 +51,17 @@
   // is changed, so always apply the instance size while in the builder. In
   // runtime, only apply the instance size if an action didn't explicitly set
   // a size.
-  $: if (open && size) {
-    if ($builderStore.inBuilder) {
-      sidePanelStore.actions.setSize(size)
-    } else {
-      if ($sidePanelStore.size == null) {
-        sidePanelStore.actions.setSize(size)
+  //
+  // A size value of ":default" means "inherit the component's configured size"
+  // and should not override it.
+  $: {
+    const effectiveSize = size === ":default" ? null : size
+    if (open && effectiveSize) {
+      if ($builderStore.inBuilder) {
+        sidePanelStore.actions.setSize(effectiveSize)
+      } else if ($sidePanelStore.size == null) {
+        sidePanelStore.actions.setSize(effectiveSize)
       }
-    }
-  }
-
-  const handleSidePanelClose = async () => {
-    if (onClose) {
-      await onClose()
     }
   }
 
