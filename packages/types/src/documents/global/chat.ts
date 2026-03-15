@@ -1,6 +1,8 @@
 import { AgentMessageMetadata, Document } from "../../"
 import type { UIMessage } from "ai"
 
+export type ChatIdentityLinkProvider = "discord" | "msteams" | "slack"
+
 export interface ConversationStarter {
   prompt: string
 }
@@ -57,4 +59,17 @@ export type DraftChatConversation = Omit<ChatConversationRequest, "agentId"> & {
 
 export interface ChatConversation extends ChatConversationRequest {
   userId: string
+}
+
+export interface ChatIdentityLink extends Document {
+  tenantId: string
+  provider: ChatIdentityLinkProvider
+  externalUserId: string
+  globalUserId: string
+  linkedAt: string
+  linkedBy?: string
+  externalUserName?: string
+  teamId?: string
+  guildId?: string
+  providerTenantId?: string
 }

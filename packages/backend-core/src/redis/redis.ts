@@ -169,7 +169,9 @@ class RedisWrapper {
     })
   }
 
-  async get(key: string) {
+  async get(key: string): Promise<any | null>
+  async get<T>(key: string): Promise<T | null>
+  async get<T = unknown>(key: string): Promise<T | null> {
     return await this.trace("RedisWrapper.get", async span => {
       span.addTags({ key })
       const response = await this.client.get(this.prefixed(key))
@@ -181,9 +183,9 @@ class RedisWrapper {
       }
       // if its not an object just return the response
       try {
-        return JSON.parse(response!)
+        return JSON.parse(response!) as T
       } catch (err) {
-        return response
+        return response as T
       }
     })
   }

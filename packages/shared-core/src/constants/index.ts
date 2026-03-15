@@ -1,11 +1,11 @@
 export * from "./ai"
 export * from "./api"
+export * from "./chat"
 export * from "./fields"
 export * from "./rows"
 export * from "./colors"
 export * from "./themes"
 export * from "./urls"
-export * from "./discord"
 
 export const OperatorOptions = {
   Equals: {

@@ -1,7 +1,11 @@
 import * as ai from "../controllers/ai"
 import { permissions } from "@budibase/backend-core"
 import { authorizedMiddleware as authorized } from "../../middleware/authorized"
-import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
+import {
+  builderAdminRoutes,
+  endpointGroupList,
+  publicRoutes,
+} from "./endpointGroups"
 
 const userRoutes = endpointGroupList.group({
   middleware: authorized(
@@ -14,6 +18,11 @@ const userRoutes = endpointGroupList.group({
 builderAdminRoutes
   .put("/api/chatapps/:chatAppId", ai.updateChatApp)
   .post("/api/chatapps/:chatAppId/agent", ai.setChatAppAgent)
+
+publicRoutes.get(
+  "/api/chat-links/:instance/:token/handoff",
+  ai.handoffChatLinkSession
+)
 
 userRoutes
   .get("/api/chatapps", ai.fetchChatApp)

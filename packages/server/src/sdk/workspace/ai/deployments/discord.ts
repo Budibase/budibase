@@ -1,12 +1,13 @@
 import fetch from "node-fetch"
 import { HTTPError } from "@budibase/backend-core"
-import { DiscordCommands } from "@budibase/shared-core"
+import { ChatCommands } from "@budibase/shared-core"
 import type { Agent, ResolvedDiscordIntegration } from "@budibase/types"
 import * as shared from "./shared"
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10"
-export const DISCORD_ASK_COMMAND = DiscordCommands.ASK
-export const DISCORD_NEW_COMMAND = DiscordCommands.NEW
+export const DISCORD_ASK_COMMAND = ChatCommands.ASK
+export const DISCORD_NEW_COMMAND = ChatCommands.NEW
+export const DISCORD_LINK_COMMAND = ChatCommands.LINK
 
 interface DiscordCommandOption {
   type: 3
@@ -68,7 +69,7 @@ export const buildDiscordInviteUrl = (applicationId: string) =>
 
 const buildGlobalCommandPayload = (): DiscordCommandDefinition[] => [
   {
-    name: DiscordCommands.ASK,
+    name: ChatCommands.ASK,
     description: "Ask the configured Budibase agent",
     contexts: [1], // bot DM context only
     options: [
@@ -81,7 +82,7 @@ const buildGlobalCommandPayload = (): DiscordCommandDefinition[] => [
     ],
   },
   {
-    name: DiscordCommands.NEW,
+    name: ChatCommands.NEW,
     description: "Start a new conversation with the configured agent",
     contexts: [1], // bot DM context only
     options: [
@@ -92,12 +93,18 @@ const buildGlobalCommandPayload = (): DiscordCommandDefinition[] => [
         required: false,
       },
     ],
+  },
+  {
+    name: ChatCommands.LINK,
+    description: "Link your Budibase account",
+    contexts: [1], // bot DM context only
+    options: [],
   },
 ]
 
 const buildGuildCommandPayload = (): DiscordCommandDefinition[] => [
   {
-    name: DiscordCommands.ASK,
+    name: ChatCommands.ASK,
     description: "Ask the configured Budibase agent",
     options: [
       {
@@ -109,7 +116,7 @@ const buildGuildCommandPayload = (): DiscordCommandDefinition[] => [
     ],
   },
   {
-    name: DiscordCommands.NEW,
+    name: ChatCommands.NEW,
     description: "Start a new conversation with the configured agent",
     options: [
       {
@@ -119,6 +126,11 @@ const buildGuildCommandPayload = (): DiscordCommandDefinition[] => [
         required: false,
       },
     ],
+  },
+  {
+    name: ChatCommands.LINK,
+    description: "Link your Budibase account",
+    options: [],
   },
 ]
 

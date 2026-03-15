@@ -16,11 +16,13 @@ export const assertChatAppIsLiveForUser = (ctx: UserCtx, chatApp: ChatApp) => {
   }
 }
 
-const getUserRoleId = (ctx: UserCtx) =>
+export type ChatAgentAccessContext = Pick<UserCtx, "user" | "roleId">
+
+const getUserRoleId = (ctx: ChatAgentAccessContext) =>
   ctx.roleId || ctx.user?.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
 
 export const canAccessChatAppAgentForUser = async (
-  ctx: UserCtx,
+  ctx: ChatAgentAccessContext,
   chatAgent: ChatAppAgent,
   accessController?: InstanceType<typeof roles.AccessController>
 ) => {

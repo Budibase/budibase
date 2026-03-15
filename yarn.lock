@@ -2838,57 +2838,58 @@
   dependencies:
     "@bull-board/api" "5.10.2"
 
-"@chat-adapter/discord@^4.16.0":
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/discord/-/discord-4.16.0.tgz#aa5f491d1e6c49948eed29acfcd9d098fe7ae2a5"
-  integrity sha512-PJ9oFUbapM2jNOPputx0RVQUn7Tm6x8VbT73BL6IoMg+1HLDRTP48nOFsIUgTlvoxbaQ3j/qgsdcjqkG+v7faQ==
+"@chat-adapter/discord@^4.20.0":
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/discord/-/discord-4.20.0.tgz#26fd7a739e86d98e6bc24b541208725dba689745"
+  integrity sha512-iCHoxOWmHJx3Z3haxZQJwd9oq2fN/mK+oieiJ0ttL1vuJ/BDi2tnvC2hXP3X+kS1yb2Iy5sK476HeAlMu9vwzw==
   dependencies:
-    "@chat-adapter/shared" "4.16.0"
-    chat "4.16.0"
+    "@chat-adapter/shared" "4.20.0"
+    chat "4.20.0"
     discord-api-types "^0.37.119"
     discord-interactions "^4.4.0"
     discord.js "^14.25.1"
 
-"@chat-adapter/shared@4.16.0":
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/shared/-/shared-4.16.0.tgz#f05a283f1cd5b4769f26d9ad79a91f45ee62cf83"
-  integrity sha512-J/YaclwyB02+oXFKhueM5tu0qHIO1pvl0U7D1SYl8ZgoptyhLwfdG1/kEmh1o80dSwenqCF7j9Vvc/FuEYK0BA==
+"@chat-adapter/shared@4.20.0":
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/shared/-/shared-4.20.0.tgz#35f91d9eb96c1405b3d17b76d179a4d572332585"
+  integrity sha512-PaN3TADZUswD5VNV5qMS5M316PP9hp14lGHNa5SB8s7LN5PGXuXUroO0e7rjyo18i7jNKsalJUjpD/uoEg0u3Q==
   dependencies:
-    chat "4.16.0"
+    chat "4.20.0"
 
-"@chat-adapter/slack@^4.16.0":
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/slack/-/slack-4.16.0.tgz#6bf63a250240dbf26acf9dfc169e17259a6c161f"
-  integrity sha512-5/E6GAzbx3UENZFn2Q3hz5eNScML6sJlCiKTKDEjQmRDFOgg3mBdNlk/Gy7hK5GbuoEIA9BJwyCpkPKMmV2aLA==
+"@chat-adapter/slack@^4.20.0":
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/slack/-/slack-4.20.0.tgz#e83fc0ed0ebf991e3069fb8b2674cd2580b29185"
+  integrity sha512-pZruK/ndyXJcgwTQ7S9MjB31TE80REuMtcGGlZCX/iaPSZ2QYDhz2493MvtBiy2DY4dyNOk2eihsf1r9JzzhkQ==
   dependencies:
-    "@chat-adapter/shared" "4.16.0"
-    "@slack/web-api" "^7.11.0"
-    chat "4.16.0"
+    "@chat-adapter/shared" "4.20.0"
+    "@slack/web-api" "^7.14.0"
+    chat "4.20.0"
 
-"@chat-adapter/state-ioredis@^4.16.0":
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/state-ioredis/-/state-ioredis-4.16.0.tgz#bcee111091ef8b1bcaea918f624244047f5f1a18"
-  integrity sha512-h641wmE+d0cc2MIMZ56Ap0GVHYRtc+1seyfGna2UYnGSrjTNk2YPQIjH+HJcg985jat81ICWaZJJGCZoSBWCfw==
+"@chat-adapter/state-ioredis@^4.20.0":
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/state-ioredis/-/state-ioredis-4.20.0.tgz#acde0d52cfb027ad92433b9b5fa36e86e85659e9"
+  integrity sha512-wSvTkhTOWSXgI64veMapg5GT9njq/p9mCqntWXJ5xQPY+mpTVh2SjApnyajX9n86RfsGqFosV29vFZHrcWqlkA==
   dependencies:
-    chat "4.16.0"
+    chat "4.20.0"
     ioredis "^5.4.1"
 
-"@chat-adapter/state-memory@^4.16.0":
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/state-memory/-/state-memory-4.16.0.tgz#9f5a8f0c380a27dd930df78cc728746ae4b82638"
-  integrity sha512-OF1+ncPOGbHP0lplTvlfKkNizzOT6shsBt1GmJQCciyqAjoAIrj8o+Oh4RxkwI7vGEYpzgHDHz5hvn6UKAeHbA==
+"@chat-adapter/state-memory@^4.20.0":
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/state-memory/-/state-memory-4.20.0.tgz#07f4f844daf4255cd360ffe47229baabf0998da7"
+  integrity sha512-J7IowToAxfrVsCdkHSTaBEbe6MHygFr+hS+7qHMdNXaCfDCQrN/G6lB7QOxLQrPNenL8qMKWq41vsHpLbkiQTA==
   dependencies:
-    chat "4.16.0"
+    chat "4.20.0"
 
-"@chat-adapter/teams@^4.16.0":
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/@chat-adapter/teams/-/teams-4.16.0.tgz#9911731dea446c8b0bd355d3283f7ad5c321dd35"
-  integrity sha512-VlBOEhVysC4HOwtY10kpttHROLaYgWmhUJjjH/GuAfxdz2YMOIx/giyApQcMIS9rECXJ3CpG20nAwGpqujE41w==
+"@chat-adapter/teams@^4.20.0":
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/@chat-adapter/teams/-/teams-4.20.0.tgz#1b96318ff3fae15b05ee73b64cb4ffc2f2b30e73"
+  integrity sha512-Nogy0sq2mlv+ffFst5NZ+9v2QkYZ4t7bRqRFqva8TamkTl4kFok4D54ll355FG1O3lY29TrL8i500Z/TgdI89w==
   dependencies:
     "@azure/identity" "^4.13.0"
-    "@chat-adapter/shared" "4.16.0"
+    "@chat-adapter/shared" "4.20.0"
     botbuilder "^4.23.1"
-    chat "4.16.0"
+    botframework-connector "^4.23.3"
+    chat "4.20.0"
 
 "@codemirror/autocomplete@6.9.0":
   version "6.9.0"
@@ -6239,7 +6240,7 @@
   resolved "https://registry.yarnpkg.com/@slack/types/-/types-2.20.0.tgz#58428a7d31f9eb7c31f315502f84f3b7f7910282"
   integrity sha512-PVF6P6nxzDMrzPC8fSCsnwaI+kF8YfEpxf3MqXmdyjyWTYsZQURpkK7WWUWvP5QpH55pB7zyYL9Qem/xSgc5VA==
 
-"@slack/web-api@^7.11.0":
+"@slack/web-api@^7.14.0":
   version "7.14.1"
   resolved "https://registry.yarnpkg.com/@slack/web-api/-/web-api-7.14.1.tgz#38756bed0de4a9d8c8fe0e2c7f4b74a7ce67ea85"
   integrity sha512-RoygyteJeFswxDPJjUMESn9dldWVMD2xUcHHd9DenVavSfVC6FeVnSdDerOO7m8LLvw4Q132nQM4hX8JiF7dng==
@@ -10474,7 +10475,7 @@ botbuilder@^4.23.1:
     uuid "^10.0.0"
     zod "^3.23.8"
 
-botframework-connector@4.23.3:
+botframework-connector@4.23.3, botframework-connector@^4.23.3:
   version "4.23.3"
   resolved "https://registry.yarnpkg.com/botframework-connector/-/botframework-connector-4.23.3.tgz#d99dfe989c1152379efb84b286f7b7ec3331c28a"
   integrity sha512-sChwCFJr3xhcMCYChaOxJoE8/YgdjOPWzGwz5JAxZDwhbQonwYX5O/6Z9EA+wB3TCFNEh642SGeC/rOitaTnGQ==
@@ -10949,10 +10950,10 @@ chardet@^2.1.1:
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-2.1.1.tgz#5c75593704a642f71ee53717df234031e65373c8"
   integrity sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==
 
-chat@4.16.0, chat@^4.16.0:
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/chat/-/chat-4.16.0.tgz#6cf1db355d7625a506b38e4dd8352a2bd9e679fe"
-  integrity sha512-rO3lA8SX+qPYiQW41/6ft7yTHeovr4BK3kZYAuI8lxiO1XkKD7EgrUPvJp9IWzpXVrhjfUhzJxY8VgHvoy0QYA==
+chat@4.20.0, chat@^4.20.0:
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/chat/-/chat-4.20.0.tgz#3b864af1348d683d255e7857ed44c4457db9fe59"
+  integrity sha512-9/SvX0wM1AZa7VyibyVjRkb3WsbmSbIm54i1MMtzFQEj96oAisFdxkRoBKQDZ4R9tfLe7f6SOwWIHqwCGaCxoA==
   dependencies:
     "@workflow/serde" "4.1.0-beta.2"
     mdast-util-to-string "^4.0.0"
