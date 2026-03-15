@@ -412,6 +412,7 @@
     class:open={$sidePanelStore.open}
     use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
     class:builder={$builderStore.inBuilder}
+    class={"size--" + ($sidePanelStore.size || "medium")}
   >
     <div class="side-panel-header">
       <Icon
@@ -544,10 +545,25 @@
     overflow-x: hidden;
     transition: transform 130ms ease-out;
     position: absolute;
-    width: 400px;
+    /* default width matches modal medium */
+    width: 600px;
     right: 0;
     transform: translateX(100%);
     height: 100%;
+  }
+  /* Side panel size variants */
+  #side-panel-container.size--small {
+    width: 400px;
+  }
+  #side-panel-container.size--medium {
+    width: 500px;
+  }
+  #side-panel-container.size--large {
+    width: 625px;
+  }
+  #side-panel-container.size--fullscreen {
+    width: calc(100vw - 40px);
+    max-width: calc(100vw - 40px);
   }
   #side-panel-container.builder {
     transform: translateX(0);
@@ -613,24 +629,9 @@
     width: 1400px;
   }
   .size--max {
-    width: 100%;
+    width: 400px;
   }
-  .main.size--max {
-    padding: 0;
-  }
-
-  /*  Nav components */
-  .nav-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: var(--spacing-s);
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-    flex-shrink: 0;
-    align-self: flex-start;
-  }
+  /* Note: size variants are defined earlier; keep those as the source of width values. */
   .nav-toggle:hover {
     background-color: rgba(255, 255, 255, 0.25);
   }

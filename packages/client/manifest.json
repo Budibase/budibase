@@ -8108,6 +8108,7 @@
     "illegalChildren": ["section", "sidepanel", "modal"],
     "showEmptyState": false,
     "draggable": false,
+    "styles": ["background"],
     "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
     "settings": [
       {
@@ -8120,6 +8121,18 @@
         "type": "event",
         "key": "onClose",
         "label": "On close"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "small",
+        "options": [
+          { "label": "Small", "value": "small" },
+          { "label": "Medium", "value": "medium" },
+          { "label": "Large", "value": "large" },
+          { "label": "Fullscreen", "value": "fullscreen" }
+        ]
       }
     ]
   },
