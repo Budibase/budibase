@@ -278,6 +278,41 @@ describe("rest", () => {
     }
   })
 
+  it("should allow localhost requests in self-hosted when blacklist override is empty", async () => {
+    const resetBlacklistEnv = setCoreEnv({
+      BLACKLIST_IPS: "",
+      SELF_HOSTED: true,
+    })
+    await blacklist.refreshBlacklist()
+
+    mockAgent!
+      .get("http://127.0.0.1:5984")
+      .intercept({ path: "/", method: "GET" })
+      .reply(200, [{ status: "ok" }], { headers: jsonHeaders })
+
+    try {
+      const response = await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: "test query",
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "http://127.0.0.1:5984",
+        },
+      })
+
+      expect(response.schema).toEqual({
+        status: { type: "string", name: "status" },
+      })
+    } finally {
+      resetBlacklistEnv()
+      await blacklist.refreshBlacklist()
+    }
+  })
+
   it("should update schema when structure changes from JSON to array", async () => {
     const datasource = await config.api.datasource.create({
       name: generator.guid(),
