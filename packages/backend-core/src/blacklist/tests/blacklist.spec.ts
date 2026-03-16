@@ -88,6 +88,49 @@ describe("blacklist", () => {
     })
   })
 
+  describe("self-hosted blacklist override", () => {
+    let restoreEnv: (() => void) | undefined
+
+    afterEach(async () => {
+      restoreEnv?.()
+      restoreEnv = undefined
+      await refreshBlacklist()
+    })
+
+    it("should allow private IPs when self-hosted override is empty", async () => {
+      restoreEnv = setEnv({
+        SELF_HOSTED: true,
+        BLACKLIST_IPS: "",
+      })
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("192.168.1.1")).toBe(false)
+      expect(await isBlacklisted("10.0.0.1")).toBe(false)
+      expect(await isBlacklisted("172.16.0.1")).toBe(false)
+    })
+
+    it("should fail open on DNS lookup errors when self-hosted override is empty", async () => {
+      restoreEnv = setEnv({
+        SELF_HOSTED: true,
+        BLACKLIST_IPS: "",
+      })
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("https://budibase-ssrf.invalid")).toBe(false)
+    })
+
+    it("should use only configured entries when self-hosted override is set", async () => {
+      restoreEnv = setEnv({
+        SELF_HOSTED: true,
+        BLACKLIST_IPS: "1.1.1.1",
+      })
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("1.1.1.1")).toBe(true)
+      expect(await isBlacklisted("192.168.1.1")).toBe(false)
+    })
+  })
+
   describe("malformed CIDR entries", () => {
     let restoreEnv: (() => void) | undefined
 

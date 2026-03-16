@@ -18,6 +18,10 @@ const DEFAULT_BLACKLIST = [
 let blackList: net.BlockList | undefined
 const performLookup = promisify(dns.lookup)
 
+function shouldApplyDefaultBlacklist() {
+  return !(env.SELF_HOSTED && env.BLACKLIST_IPS !== undefined)
+}
+
 function getIpVersion(address: string): "ipv4" | "ipv6" {
   return net.isIP(address) === 6 ? "ipv6" : "ipv4"
 }
@@ -97,8 +101,10 @@ function addEntryToBlacklist(blockList: net.BlockList, entry: string) {
 
 export async function refreshBlacklist() {
   const next = new net.BlockList()
-  for (const entry of DEFAULT_BLACKLIST) {
-    addEntryToBlacklist(next, entry)
+  if (shouldApplyDefaultBlacklist()) {
+    for (const entry of DEFAULT_BLACKLIST) {
+      addEntryToBlacklist(next, entry)
+    }
   }
 
   const configuredBlacklist = env.BLACKLIST_IPS?.split(",") || []
@@ -133,7 +139,7 @@ export async function isBlacklisted(address: string): Promise<boolean> {
     try {
       ips = await lookup(address)
     } catch {
-      return true
+      return shouldApplyDefaultBlacklist()
     }
   } else {
     ips = [address]

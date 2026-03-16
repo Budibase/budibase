@@ -404,6 +404,25 @@ jobs:
             echo "OpenAPI specs are up to date."
           fi
 
+  build-database-image:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build budibase/database image
+        uses: docker/build-push-action@v5
+        with:
+          context: hosting/couchdb
+          push: false
+          load: true
+          tags: budibase/database:ci-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   check-client-build-size:
     runs-on: ubuntu-24.04
     steps:

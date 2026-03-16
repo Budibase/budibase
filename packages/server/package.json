@@ -91,6 +91,7 @@
     "dd-trace": "5.63.0",
     "dotenv": "8.2.0",
     "extract-zip": "^2.0.1",
+    "execa": "^5.1.1",
     "form-data": "4.0.4",
     "global-agent": "3.0.0",
     "google-auth-library": "^10.5.0",

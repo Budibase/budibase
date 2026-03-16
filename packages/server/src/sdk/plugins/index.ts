@@ -11,6 +11,7 @@ import { clientAppSocket } from "../../websockets"
 import { sdk as pro } from "@budibase/pro"
 import mappingFile from "./mapping.json"
 import sdk from "../../sdk"
+import { deleteFolderFileSystem } from "../../utilities/fileSystem"
 
 export async function fetch(type?: PluginType): Promise<Plugin[]> {
   const db = tenancy.getGlobalDB()
@@ -124,25 +125,31 @@ export async function backfillPluginOrigins() {
 }
 
 export async function processUploaded(plugin: KoaFile, source: PluginSource) {
-  const { metadata, directory } = await fileUpload(plugin)
-  pluginCore.validate(metadata.schema)
+  const { metadata, directory, cleanupDirectory } = await fileUpload(plugin)
+  try {
+    pluginCore.validate(metadata.schema)
 
-  // Only allow components in cloud
-  if (!env.SELF_HOSTED && metadata.schema?.type !== PluginType.COMPONENT) {
-    throw new Error("Only component plugins are supported outside of self-host")
+    // Only allow components in cloud
+    if (!env.SELF_HOSTED && metadata.schema?.type !== PluginType.COMPONENT) {
+      throw new Error(
+        "Only component plugins are supported outside of self-host"
+      )
+    }
+
+    // Only allow Svelte 5 plugins on this branch
+    if (
+      metadata.schema?.metadata?.svelteMajor !== 5 &&
+      metadata.schema?.type === PluginType.COMPONENT
+    ) {
+      throw new Error("Only Svelte 5 plugins are supported on this branch")
+    }
+
+    const doc = await pro.plugins.storePlugin(metadata, directory, source)
+    clientAppSocket?.emit("plugin-update", { name: doc.name, hash: doc.hash })
+    return doc
+  } finally {
+    deleteFolderFileSystem(cleanupDirectory)
   }
-
-  // Only allow Svelte 5 plugins on this branch
-  if (
-    metadata.schema?.metadata?.svelteMajor !== 5 &&
-    metadata.schema?.type === PluginType.COMPONENT
-  ) {
-    throw new Error("Only Svelte 5 plugins are supported on this branch")
-  }
-
-  const doc = await pro.plugins.storePlugin(metadata, directory, source)
-  clientAppSocket?.emit("plugin-update", { name: doc.name, hash: doc.hash })
-  return doc
 }
 
 export const enrichUsedPluginSvelteMajors = async (

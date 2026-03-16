@@ -1,6 +1,5 @@
 import {
   AutomationActionStepId,
-  AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
   AutomationStepDefinition,
@@ -9,9 +8,9 @@ import {
 
 export const definition: AutomationStepDefinition = {
   name: "Bash Scripting",
-  tagline: "Execute a bash command",
+  tagline: "Execute a system command",
   icon: "git-branch",
-  description: "Run a bash script",
+  description: "Run a command with explicit arguments",
   type: AutomationStepType.ACTION,
   internal: true,
   features: {
@@ -22,19 +21,26 @@ export const definition: AutomationStepDefinition = {
   schema: {
     inputs: {
       properties: {
-        code: {
+        command: {
           type: AutomationIOType.STRING,
-          customType: AutomationCustomIOType.CODE,
-          title: "Code",
+          title: "Command",
+          description:
+            "The executable to run. Bindings are not supported in this field.",
+        },
+        args: {
+          type: AutomationIOType.JSON,
+          title: "Arguments",
+          description:
+            "A JSON array of string arguments. Bindings are supported in each string item.",
         },
       },
-      required: ["code"],
+      required: ["command"],
     },
     outputs: {
       properties: {
         stdout: {
           type: AutomationIOType.STRING,
-          description: "Standard output of your bash command or script",
+          description: "Standard output of the executed command",
         },
         success: {
           type: AutomationIOType.BOOLEAN,

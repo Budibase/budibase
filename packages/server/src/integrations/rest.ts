@@ -751,7 +751,12 @@ export class RestIntegration implements IntegrationBase {
       pagination,
       paginationValues
     )
-    if (await blacklist.isBlacklisted(url)) {
+    const disableBlacklistForLocalDevelopment =
+      environment.isDev() && !environment.isTest()
+    if (
+      !disableBlacklistForLocalDevelopment &&
+      (await blacklist.isBlacklisted(url))
+    ) {
       throw new Error("Cannot connect to URL.")
     }
 

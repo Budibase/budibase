@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG BASEIMG=budibase/database:2.0.0
+ARG BASEIMG=budibase/database:2.1.0
 FROM node:22-slim AS build
 
 # Install node-gyp dependencies
