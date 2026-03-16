@@ -72,6 +72,9 @@ quotas.removeGroup.mockReturnValue(Promise.resolve())
 describe("Creators quotas by group assignment", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    groups.save.mockResolvedValue({ id: GROUP_ID, rev: generator.guid() })
+    groups.get.mockResolvedValue(group)
+    groups.getGroupUsers.mockResolvedValue(group.users!)
   })
 
   it("shouldn't increment creators quotas if group doesn't have creator role", async () => {
@@ -306,6 +309,28 @@ describe("Creators quotas by group assignment", () => {
         USERS_TO_REMOVE,
         CREATORS_TO_REMOVE
       )
+    })
+  })
+
+  it("shouldn't recalculate creator quotas when roles change without creator transition", async () => {
+    const tenantId = `test_tenant_${generator.guid()}`
+
+    const { context } = require("@budibase/backend-core")
+
+    await context.doInTenant(tenantId, async () => {
+      const db = context.getGlobalDB()
+      await db.put(group)
+
+      const nonCreatorRoleUpdate: UserGroup = {
+        ...group,
+        roles: { [APP_ID]: "ADMIN", [APP2_ID]: "POWER" },
+      }
+
+      await save(nonCreatorRoleUpdate)
+
+      expect(groups.getGroupUsers).not.toHaveBeenCalled()
+      expect(quotas.addUsers).not.toHaveBeenCalled()
+      expect(quotas.removeUsers).not.toHaveBeenCalled()
     })
   })
 

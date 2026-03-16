@@ -30,6 +30,8 @@
   export let titleSize
   export let showPercentage
 
+  $: hasClickAction = typeof onClick === "function"
+
   const formatPercentage = value => {
     const numericValue = Number(value)
     if (!Number.isFinite(numericValue)) {
@@ -218,7 +220,7 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {hasClickAction} />
 
 <style>
 </style>

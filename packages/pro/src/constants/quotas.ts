@@ -112,6 +112,16 @@ export const actions = (value: number) => {
 
 // Constant
 
+export const agentLogRetentionDays = (value: number) => {
+  return {
+    [ConstantQuotaName.AGENT_LOG_RETENTION_DAYS]: {
+      name: "Agent Logs",
+      value,
+      triggers: [], // n/a
+    },
+  }
+}
+
 export const automationLogRetentionDays = (value: number) => {
   return {
     [ConstantQuotaName.AUTOMATION_LOG_RETENTION_DAYS]: {

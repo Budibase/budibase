@@ -28,7 +28,7 @@ const groups = {
   getBulk: jest.fn(),
   getGroupBuilderAppIds: jest.fn(),
 }
-const features = { isSSOEnforced: jest.fn(), isAppBuildersEnabled: jest.fn() }
+const features = { isSSOEnforced: jest.fn() }
 
 describe("UserDB", () => {
   beforeAll(() => {

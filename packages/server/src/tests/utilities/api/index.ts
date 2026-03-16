@@ -1,7 +1,8 @@
 import TestConfiguration from "../TestConfiguration"
 import { AIAPI } from "./ai"
 import { AgentAPI } from "./ai/agent"
-import { AgentFilesAPI } from "./ai/agentFiles"
+import { KnowledgeBaseAPI } from "./ai/knowledgeBase"
+import { KnowledgeBaseFilesAPI } from "./ai/knowledgeBaseFiles"
 import { VectorDbAPI } from "./ai/vectorDb"
 import { AssetsAPI } from "./assets"
 import { AttachmentAPI } from "./attachment"
@@ -33,7 +34,6 @@ import { ViewV2API } from "./viewV2"
 import { WebhookAPI } from "./webhook"
 import { WorkspaceAPI } from "./workspace"
 import { WorkspaceAppAPI } from "./workspaceApp"
-import { WorkspaceConnectionAPI } from "./workspaceConnection"
 import { WorkspaceFavouriteAPI } from "./workspaceFavourite"
 
 export default class API {
@@ -66,11 +66,11 @@ export default class API {
   navigation: NavigationAPI
   recaptcha: RecaptchaAPI
   routing: RoutingAPI
-  workspaceConnection: WorkspaceConnectionAPI
   workspaceFavourites: WorkspaceFavouriteAPI
   agent: AgentAPI
   vectorDb: VectorDbAPI
-  agentFiles: AgentFilesAPI
+  knowledgeBase: KnowledgeBaseAPI
+  knowledgeBaseFiles: KnowledgeBaseFilesAPI
 
   public: {
     user: UserPublicAPI
@@ -107,11 +107,11 @@ export default class API {
     this.navigation = new NavigationAPI(config)
     this.recaptcha = new RecaptchaAPI(config)
     this.routing = new RoutingAPI(config)
-    this.workspaceConnection = new WorkspaceConnectionAPI(config)
     this.workspaceFavourites = new WorkspaceFavouriteAPI(config)
     this.agent = new AgentAPI(config)
     this.vectorDb = new VectorDbAPI(config)
-    this.agentFiles = new AgentFilesAPI(config)
+    this.knowledgeBase = new KnowledgeBaseAPI(config)
+    this.knowledgeBaseFiles = new KnowledgeBaseFilesAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),

@@ -15,7 +15,15 @@ export interface CreateWorkspaceRequest {
   fileToImport?: string
   encryptionPassword?: string
   file?: { path: string }
-  isOnboarding?: string
+  isOnboarding?: "false"
+}
+export interface OnboardingWorkspaceRequest {
+  url?: string
+  useTemplate?: string | boolean
+  templateKey?: string
+  encryptionPassword?: string
+  file?: { path: string }
+  isOnboarding: "true"
 }
 
 export interface CreateWorkspaceResponse extends Workspace {}
@@ -70,6 +78,8 @@ export interface FetchPublishedAppsResponse {
 export interface PublishedChatAppData {
   appId: string
   chatAppId: string
+  agentId: string
+  agentName: string
   name: string
   url: string
   updatedAt?: string

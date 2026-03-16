@@ -4,6 +4,13 @@
   import type { ChatConversation, DraftChatConversation } from "@budibase/types"
   import Chatbox from "./index.svelte"
 
+  type AgentAvailability =
+    | "no_selection"
+    | "deleted"
+    | "offline"
+    | "disabled"
+    | "ready"
+
   type ChatConversationLike = ChatConversation | DraftChatConversation
 
   type EnabledAgentListItem = {
@@ -17,11 +24,11 @@
   export let selectedAgentName: string = ""
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationStarters: { prompt: string }[] = []
-  export let isAgentKnown: boolean = true
-  export let isAgentLive: boolean = true
+  export let agentAvailability: AgentAvailability = "ready"
 
   export let chat: ChatConversationLike
   export let loading: boolean = false
+  export let suppressAgentPicker: boolean = false
   export let deletingChat: boolean = false
   export let workspaceId: string
   export let initialPrompt: string = ""
@@ -59,40 +66,22 @@
   $: visibleAgentList = enabledAgentList.slice(0, 3)
   $: hasEnabledAgents = enabledAgentList.length > 0
 
-  const getAgentStatus = (
-    agentId: string | null,
-    agents: EnabledAgentListItem[],
-    agentKnown: boolean,
-    agentLive: boolean
-  ): {
-    isAgentEnabled: boolean
-    readOnlyReason: "disabled" | "deleted" | "offline" | undefined
-  } => {
-    if (!agentId) {
-      return { isAgentEnabled: false, readOnlyReason: undefined }
-    }
-
-    if (!agentKnown) {
-      return { isAgentEnabled: false, readOnlyReason: "deleted" }
-    }
-
-    if (!agentLive) {
-      return { isAgentEnabled: false, readOnlyReason: "offline" }
-    }
-
-    const isAgentEnabled = agents.some(agent => agent.agentId === agentId)
-    return {
-      isAgentEnabled,
-      readOnlyReason: isAgentEnabled ? undefined : "disabled",
+  const getReadOnlyReason = (
+    availability: AgentAvailability
+  ): "disabled" | "deleted" | "offline" | undefined => {
+    switch (availability) {
+      case "deleted":
+        return "deleted"
+      case "offline":
+        return "offline"
+      case "disabled":
+        return "disabled"
+      default:
+        return undefined
     }
   }
 
-  $: ({ readOnlyReason } = getAgentStatus(
-    selectedAgentId,
-    enabledAgentList,
-    isAgentKnown,
-    isAgentLive
-  ))
+  $: readOnlyReason = getReadOnlyReason(agentAvailability)
 
   const deleteChat = () => {
     dispatch("deleteChat")
@@ -136,7 +125,7 @@
     <div class="chat-header">
       <div class="chat-header-agent">
         <Body size="S">
-          {selectedAgentName || "Unknown agent"}
+          {selectedAgentName || (loading ? "" : "Unknown agent")}
         </Body>
       </div>
 
@@ -169,7 +158,7 @@
       {readOnlyReason}
       onchatsaved={event => dispatch("chatSaved", event.detail)}
     />
-  {:else}
+  {:else if !suppressAgentPicker}
     <div class="chat-empty">
       <div class="chat-empty-greeting">
         <Body size="XL" weight="600" serif>

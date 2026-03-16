@@ -26,6 +26,8 @@
     closeColumn
   )
 
+  $: hasClickAction = typeof onClick === "function"
+
   $: options = {
     series,
     title: {
@@ -147,4 +149,4 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {hasClickAction} />

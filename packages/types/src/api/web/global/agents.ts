@@ -1,7 +1,6 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
-  AgentFile,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
@@ -28,23 +27,46 @@ export interface FetchChatAppAgentsResponse {
   agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
 }
 
-export interface SyncAgentDiscordCommandsRequest {
+interface ConfigureAgentDeploymentChannelRequest {
   chatAppId?: string
 }
 
-export interface SyncAgentDiscordCommandsResponse {
-  success: true
+interface ConfigureAgentDeploymentChannelResponse {
+  success: boolean
   chatAppId: string
+}
+
+export type SyncAgentDiscordCommandsRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface SyncAgentDiscordCommandsResponse
+  extends ConfigureAgentDeploymentChannelResponse {
   interactionsEndpointUrl: string
   inviteUrl: string
 }
 
-export interface ToggleAgentDiscordRequest {
+export type ProvisionAgentMSTeamsChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface ProvisionAgentMSTeamsChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  messagingEndpointUrl: string
+}
+
+export type ProvisionAgentSlackChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface ProvisionAgentSlackChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  messagingEndpointUrl: string
+}
+
+export interface ToggleAgentDeploymentRequest {
   enabled: boolean
 }
 
-export interface ToggleAgentDiscordResponse {
-  success: true
+export interface ToggleAgentDeploymentResponse {
+  success: boolean
   enabled: boolean
 }
 
@@ -60,11 +82,3 @@ export type UpdateAgentRequest = Omit<
   "createdAt" | "updatedAt" | "_deleted" | "createdBy"
 >
 export type UpdateAgentResponse = Agent
-
-export interface FetchAgentFilesResponse {
-  files: AgentFile[]
-}
-
-export interface AgentFileUploadResponse {
-  file: AgentFile
-}

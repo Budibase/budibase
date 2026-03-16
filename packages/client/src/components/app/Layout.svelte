@@ -107,26 +107,6 @@
     ? `${$builderStore.screen?._id}-navigation`
     : "navigation"
 
-  // Scroll navigation into view if selected.
-  // Memoize into a primitive to avoid spamming this whenever builder store
-  // changes.
-  $: selected =
-    $builderStore.inBuilder &&
-    $builderStore.selectedComponentId?.endsWith("-navigation")
-  $: {
-    if (selected) {
-      const node = document.getElementsByClassName("nav-wrapper")?.[0]
-      if (node) {
-        node.style.scrollMargin = "100px"
-        node.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-          inline: "start",
-        })
-      }
-    }
-  }
-
   const enrichNavItem = navItem => {
     const internalLink = isInternal(navItem.url)
     return {

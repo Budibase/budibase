@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Icon, Button, Modal, ModalContent, Body, Link } from "@budibase/bbui"
-  import { auth, admin, licensing } from "@/stores/portal"
+  import { auth, admin, aiStore } from "@/stores/portal"
 
   import { createEventDispatcher } from "svelte"
   import BBAI from "assets/bb-ai.svg"
@@ -24,10 +24,8 @@
   $: expanded = expandedOnly || expanded
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: accountPortal = $admin.accountPortalUrl
-  $: aiEnabled = $auth?.user?.llm
 
-  $: creditsExceeded = $licensing.aiCreditsExceeded
-  $: disabled = !aiEnabled || creditsExceeded || readonly
+  $: disabled = !$aiStore.aiEnabled || readonly
   $: animateBorder = !disabled && expanded
 
   $: canSubmit = !readonly && !!value
@@ -118,7 +116,23 @@
   </div>
   {#if expanded}
     <div class="action-buttons">
-      {#if !aiEnabled}
+      {#if $aiStore.bbaiCreditsExceeded}
+        <Button cta size="S" on:click={() => addCreditsModal.show()}>
+          Add AI credits
+        </Button>
+        <Modal bind:this={addCreditsModal}>
+          <ModalContent title="Add AI credits" showConfirmButton={false}>
+            <Body size="S">
+              {#if accountPortalAccess}
+                <Link href={"https://budibase.com/contact/"}>Contact sales</Link
+                > to unlock additional BB AI credits
+              {:else}
+                Contact your account holder to unlock additional BB AI credits
+              {/if}
+            </Body>
+          </ModalContent>
+        </Modal>
+      {:else if !$aiStore.aiEnabled}
         <Button cta size="S" on:click={() => switchOnAIModal.show()}>
           Switch on AI
         </Button>
@@ -136,22 +150,6 @@
                 </li>
               </ul>
             </div>
-          </ModalContent>
-        </Modal>
-      {:else if creditsExceeded}
-        <Button cta size="S" on:click={() => addCreditsModal.show()}>
-          Add AI credits
-        </Button>
-        <Modal bind:this={addCreditsModal}>
-          <ModalContent title="Add AI credits" showConfirmButton={false}>
-            <Body size="S">
-              {#if accountPortalAccess}
-                <Link href={"https://budibase.com/contact/"}>Contact sales</Link
-                > to unlock additional BB AI credits
-              {:else}
-                Contact your account holder to unlock additional BB AI credits
-              {/if}
-            </Body>
           </ModalContent>
         </Modal>
       {:else}

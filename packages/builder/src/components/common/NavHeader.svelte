@@ -1,6 +1,12 @@
 <script lang="ts">
   import { tick } from "svelte"
-  import { Icon, Body } from "@budibase/bbui"
+  import {
+    Icon,
+    Body,
+    AbsTooltip,
+    TooltipType,
+    TooltipPosition,
+  } from "@budibase/bbui"
   import { keyUtils } from "@/helpers/keyUtils"
 
   export let title: string
@@ -10,6 +16,8 @@
   export let search: boolean = false
   export let searchable = true
   export let showAddIcon = true
+  export let alwaysShowAdd = false
+  export let tooltip: string = ""
 
   let searchInput: HTMLInputElement
 
@@ -31,7 +39,7 @@
   }
 
   const handleAddButton = (e: Event) => {
-    if (search) {
+    if (search && !alwaysShowAdd) {
       closeSearch()
     } else {
       onAdd(e)
@@ -79,14 +87,20 @@
   {/if}
 
   {#if showAddIcon}
-    <div
-      on:click={handleAddButton}
-      on:keydown={e => keyUtils.handleEnter(() => handleAddButton(e))}
-      class="addButton"
-      class:rotate={search}
+    <AbsTooltip
+      text={tooltip}
+      position={TooltipPosition.Top}
+      type={TooltipType.Info}
     >
-      <Icon name="plus" hoverable hoverColor="var(--ink)" />
-    </div>
+      <div
+        on:click={handleAddButton}
+        on:keydown={e => keyUtils.handleEnter(() => handleAddButton(e))}
+        class="addButton"
+        class:rotate={search && !alwaysShowAdd}
+      >
+        <Icon name="plus" hoverable hoverColor="var(--ink)" />
+      </div>
+    </AbsTooltip>
   {/if}
 
   <slot name="right" />

@@ -1,25 +1,36 @@
-import { setEnv as setCoreEnv, withEnv } from "@budibase/backend-core"
+import { configs, setEnv as setCoreEnv, withEnv } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import { Model, MonthlyQuotaName, QuotaUsageType } from "@budibase/types"
+import {
+  ConfigType,
+  Model,
+  MonthlyQuotaName,
+  QuotaUsageType,
+} from "@budibase/types"
 import nock from "nock"
 import TestConfiguration from "../../..//tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 
 describe("test the openai action", () => {
   const config = new TestConfiguration()
   let resetEnv: () => void | undefined
+  let cleanupDefaultAIConfig: (() => Promise<void>) | undefined
 
   beforeAll(async () => {
     await config.init()
     await config.api.automation.deleteAll()
   })
 
-  beforeEach(() => {
-    resetEnv = setCoreEnv({ SELF_HOSTED: true, OPENAI_API_KEY: "abc123" })
+  beforeEach(async () => {
+    resetEnv = setCoreEnv({ SELF_HOSTED: true })
+    cleanupDefaultAIConfig = await setupDefaultCompletionsAIConfig(config)
+    await config.publish()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    await cleanupDefaultAIConfig?.()
+
     resetEnv()
     jest.clearAllMocks()
     nock.cleanAll()
@@ -98,6 +109,20 @@ describe("test the openai action", () => {
 
   it("should ensure that the pro AI module is called when the budibase AI features are enabled", async () => {
     mockChatGPTResponse("This is a test")
+
+    await config.doInTenant(async () => {
+      await configs.save({
+        type: ConfigType.AI,
+        config: {
+          budibaseAI: {
+            provider: "BudibaseAI",
+            name: "Budibase AI",
+            active: true,
+            isDefault: true,
+          },
+        },
+      })
+    })
 
     // We expect a non-0 AI usage here because it goes through the @budibase/pro
     // path, because we've enabled Budibase AI. The exact value depends on a

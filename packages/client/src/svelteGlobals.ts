@@ -14,6 +14,7 @@ import * as svelteTransition from "svelte/transition"
 import * as svelteAnimate from "svelte/animate"
 import * as svelteMotion from "svelte/motion"
 import * as svelteEasing from "svelte/easing"
+import * as svelteEvents from "svelte/events"
 
 // Svelte 4 (legacy) modules for backward compatibility
 import * as svelteLegacy from "svelte-legacy"
@@ -41,6 +42,7 @@ declare global {
     svelteAnimate: typeof svelteAnimate
     svelteMotion: typeof svelteMotion
     svelteEasing: typeof svelteEasing
+    svelteEvents: typeof svelteEvents
 
     // Svelte 4 legacy globals (camelCase)
     svelteLegacy: typeof svelteLegacy
@@ -69,6 +71,7 @@ window.svelteTransition = svelteTransition
 window.svelteAnimate = svelteAnimate
 window.svelteMotion = svelteMotion
 window.svelteEasing = svelteEasing
+window.svelteEvents = svelteEvents
 
 // Svelte 4 legacy globals (camelCase)
 window.svelteLegacy = svelteLegacy

@@ -7,7 +7,6 @@ import {
   SourceType,
   UsageInScreensResponse,
 } from "@budibase/types"
-import { ONBOARDING_WELCOME_SCREEN_NAME } from "../../../constants/screens"
 import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
@@ -34,8 +33,6 @@ describe("/screens", () => {
 
   beforeEach(async () => {
     await config.newTenant()
-    // Replace the regular app with an onboarding app to get sample data
-    await config.createWorkspaceWithOnboarding("test-app-with-sample")
     screen = await config.createScreen()
   })
 
@@ -44,14 +41,10 @@ describe("/screens", () => {
     return screens.splice(index, 1)[0]
   }
 
-  function withoutOnboarding(screens: Screen[]) {
-    return screens.filter(s => s.name !== ONBOARDING_WELCOME_SCREEN_NAME)
-  }
-
   describe("fetch", () => {
     it("should be able to create a screen", async () => {
       const screens = await config.api.screen.list()
-      expect(screens.length).toEqual(2)
+      expect(screens.length).toEqual(1)
       expect(screens.some(s => s._id === screen._id)).toEqual(true)
     })
 
@@ -109,7 +102,7 @@ describe("/screens", () => {
         const res = await config.withProdApp(() =>
           config.api.workspace.getDefinition(config.getProdWorkspaceId())
         )
-        const screens = withoutOnboarding(res.screens)
+        const screens = res.screens
 
         expect(screens.length).toEqual(screenIds.length)
         expect(screens.map(s => s._id).sort()).toEqual(screenIds.sort())
@@ -141,7 +134,7 @@ describe("/screens", () => {
           const res = await config.api.workspace.getDefinition(
             config.getDevWorkspaceId()
           )
-          const screens = withoutOnboarding(res.screens)
+          const screens = res.screens
 
           const screenIds = [screen._id!, screen1._id!]
           expect(screens.length).toEqual(screenIds.length)

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Updating } from "@budibase/frontend-core"
   import { redirect, params } from "@roxi/routify"
   import { get } from "svelte/store"
@@ -6,7 +6,7 @@
   import { API } from "@/api"
   import { appStore } from "@/stores/builder"
 
-  export let application
+  export let application: string
 
   // Set appId immediately so API calls have the correct context
   // Only update if it's different to avoid unnecessary re-renders

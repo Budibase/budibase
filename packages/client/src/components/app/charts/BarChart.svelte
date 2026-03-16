@@ -30,6 +30,7 @@
       : "category"
   $: xAxisFormatter = getFormatter(labelType, yAxisUnits, horizontal, "x")
   $: yAxisFormatter = getFormatter(labelType, yAxisUnits, horizontal, "y")
+  $: hasClickAction = typeof onClick === "function"
 
   $: options = {
     series,
@@ -155,4 +156,4 @@
   }
 </script>
 
-<ApexChart {options} />
+<ApexChart {options} {hasClickAction} />

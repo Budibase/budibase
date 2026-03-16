@@ -25,6 +25,10 @@ spec:
   template:
     metadata:
       annotations:
+        ad.datadoghq.com/proxy-service.logs: '[{"source":"nginx","service":"budibase-proxy"}]'
+        ad.datadoghq.com/proxy-service.check_names: '["nginx"]'
+        ad.datadoghq.com/proxy-service.init_configs: '[{}]'
+        ad.datadoghq.com/proxy-service.instances: '[{"nginx_status_url": "http://%%host%%:81/nginx_status"}]'
 {{ if .Values.services.proxy.templateAnnotations }}
 {{- toYaml .Values.services.proxy.templateAnnotations | indent 8 -}}
 {{ end }}

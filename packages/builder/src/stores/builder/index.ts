@@ -121,7 +121,6 @@ const refreshBuilderData = async () => {
     flags.fetch(),
     workspaceAppStore.fetch(),
     workspaceDeploymentStore.fetch(),
-    workspaceConnections.fetch(),
   ])
 }
 

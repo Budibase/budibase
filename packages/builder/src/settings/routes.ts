@@ -13,6 +13,23 @@ import { AppMetaState } from "@/stores/builder/app"
 import { PortalAppsStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
 import { featureFlag } from "@/helpers"
+import {
+  aiConfigsStore,
+  knowledgeBaseStore,
+  vectorDbStore,
+} from "@/stores/portal"
+import { get } from "svelte/store"
+
+const getPathId = (path: string | undefined) => {
+  if (!path) {
+    return undefined
+  }
+  const id = path.split("/").pop()
+  if (!id || id === "new") {
+    return undefined
+  }
+  return id
+}
 
 export const globalRoutes = (user: GetGlobalSelfResponse) => {
   return [
@@ -146,13 +163,6 @@ export const orgRoutes = (
       routes: emailRoutes,
     },
     {
-      section: "AI",
-      access: () => isAdmin,
-      path: "ai",
-      icon: "sparkle",
-      component: Pages.get("ai"),
-    },
-    {
       section: "Auth",
       access: () => isAdmin,
       path: "auth",
@@ -274,33 +284,160 @@ export const workspaceRoutes = (
       path: "connections",
       icon: "cube",
       new: true,
-      component: Pages.get("connections"),
       routes: [
         {
-          title: "Create",
-          path: "create",
-          component: Pages.get("create_connection"),
-          skipNav: true,
+          path: "apis",
+          title: "APIs",
+          component: Pages.get("connections"),
+          routes: [
+            {
+              title: "Create",
+              path: "create",
+              component: Pages.get("create_connection"),
+              skipNav: true,
+            },
+            {
+              title: "New connection",
+              path: "new",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+            {
+              title: "New connection from template",
+              path: "new/:templateId",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+            {
+              title: "Connection",
+              path: ":id",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+          ],
         },
         {
-          title: "New connection",
-          path: "new",
-          component: Pages.get("connection"),
-          skipNav: true,
-          props: { create: true },
+          path: AIConfigType.COMPLETIONS,
+          title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI models" : "",
+          component: Pages.get("ai_configs"),
+          routes: [
+            {
+              path: ":configId",
+              component: Pages.get("ai_config"),
+              title: (path: string | undefined) => {
+                const id = getPathId(path)
+                if (!id) {
+                  return "New"
+                }
+                return (
+                  get(aiConfigsStore).customConfigs.find(
+                    config => config._id === id
+                  )?.name ?? "AI config"
+                )
+              },
+            },
+          ],
         },
         {
-          title: "New connection from template",
-          path: "new/:templateId",
-          component: Pages.get("connection"),
-          skipNav: true,
-          props: { create: true },
-        },
-        {
-          title: "Connection",
-          path: ":id",
-          component: Pages.get("connection"),
-          skipNav: true,
+          path: "knowledge-bases",
+          title: "Knowledge bases",
+          access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
+          component: Pages.get("knowledgeBases"),
+          routes: [
+            {
+              path: "embedding",
+              routes: [
+                {
+                  path: ":configId",
+                  title: (path: string | undefined) => {
+                    const id = getPathId(path)
+                    if (!id) {
+                      return "New embedding model"
+                    }
+                    return (
+                      get(aiConfigsStore).customConfigs.find(c => c._id === id)
+                        ?.name ?? "Embedding model"
+                    )
+                  },
+                  component: Pages.get("embedding_model"),
+                },
+              ],
+            },
+            {
+              path: "vectordb",
+              routes: [
+                {
+                  path: ":id",
+                  title: (path: string | undefined) => {
+                    const id = getPathId(path)
+                    if (!id) {
+                      return "New vector database"
+                    }
+                    return (
+                      get(vectorDbStore).configs.find(db => db._id === id)
+                        ?.name ?? "Vector database"
+                    )
+                  },
+                  component: Pages.get("vector_database"),
+                },
+              ],
+            },
+            {
+              path: ":knowledgeBaseId",
+              component: Pages.get("knowledgeBase"),
+              title: (path: string | undefined) => {
+                const id = getPathId(path)
+                if (!id) {
+                  return "New"
+                }
+                return (
+                  get(knowledgeBaseStore).list.find(k => k._id === id)?.name ??
+                  "Knowledge base"
+                )
+              },
+              routes: [
+                {
+                  path: "embedding",
+                  routes: [
+                    {
+                      path: ":configId",
+                      title: (path: string | undefined) => {
+                        const id = getPathId(path)
+                        if (!id) {
+                          return "New embedding model"
+                        }
+                        return (
+                          get(aiConfigsStore).customConfigs.find(
+                            c => c._id === id
+                          )?.name ?? "Embedding model"
+                        )
+                      },
+                      component: Pages.get("embedding_model"),
+                    },
+                  ],
+                },
+                {
+                  path: "vectordb",
+                  routes: [
+                    {
+                      path: ":id",
+                      title: (path: string | undefined) => {
+                        const id = getPathId(path)
+                        if (!id) {
+                          return "New vector database"
+                        }
+                        return (
+                          get(vectorDbStore).configs.find(db => db._id === id)
+                            ?.name ?? "Vector database"
+                        )
+                      },
+                      component: Pages.get("vector_database"),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         },
       ],
     },
@@ -323,39 +460,6 @@ export const workspaceRoutes = (
         { path: "pwa", component: Pages.get("pwa"), title: "PWA" },
         { path: "embed", component: Pages.get("embed"), title: "Embed" },
         { path: "scripts", component: Pages.get("scripts"), title: "Scripts" },
-      ],
-    },
-    {
-      section: "AI config",
-      path: "ai-config",
-      icon: "sparkle",
-      access: () => featureFlag.isEnabled("AI_AGENTS"),
-      routes: [
-        {
-          path: AIConfigType.COMPLETIONS,
-          title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI Configs" : "",
-          component: Pages.get("ai_configs"),
-          routes: [
-            {
-              path: ":configId",
-              component: Pages.get("ai_config"),
-              title: "AI config",
-            },
-          ],
-        },
-        {
-          path: AIConfigType.EMBEDDINGS,
-          title: "Embeddings",
-          access: () => featureFlag.isEnabled(FeatureFlag.AI_RAG),
-          component: Pages.get("embeddings"),
-          routes: [
-            {
-              path: ":configId",
-              component: Pages.get("ai_config"),
-              title: "AI config",
-            },
-          ],
-        },
       ],
     },
   ].map((entry: Route) => ({

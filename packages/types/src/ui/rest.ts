@@ -524,7 +524,6 @@ export interface RestTemplate {
   specs: RestTemplateSpec[]
   icon: string
   operationsCount: number
-  verified?: true
 }
 
 export interface RestTemplateWithoutIcon<Name, Id = RestTemplateId> {
@@ -542,7 +541,6 @@ export interface RestTemplateGroup<
   description: string
   icon: string
   operationsCount: number
-  verified?: true
   templates: RestTemplateWithoutIcon<
     RestTemplateGroups[TemplateGroupName],
     RestTemplateGroupIds[TemplateGroupName]

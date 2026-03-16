@@ -2,19 +2,22 @@
   import { goto as gotoStore } from "@roxi/routify"
   import { Body, notifications, Layout, Button } from "@budibase/bbui"
   import { API } from "@/api"
-  import {
-    buildBuilderWorkspaceDesignRoute,
-    buildBuilderWorkspaceRoute,
-  } from "@/helpers/routes"
+  import { buildBuilderWorkspaceRoute } from "@/helpers/routes"
   import { onMount } from "svelte"
   import Spinner from "@/components/common/Spinner.svelte"
   import BBLogo from "assets/BBLogo.svelte"
-  import { appsStore } from "@/stores/portal"
+  import { appsStore, auth } from "@/stores/portal"
+  import { sdk } from "@budibase/shared-core"
 
   $: goto = $gotoStore
 
   let loading = false
   let onboardingFailed = false
+  let onboardingForbidden = false
+
+  const goToApps = () => {
+    goto("../apps")
+  }
 
   const createDefaultWorkspace = async () => {
     if (loading) {
@@ -28,32 +31,36 @@
       // Build the default workspace
       const createdWorkspace = await API.createApp(data)
 
+      if (!sdk.users.isBuilder($auth.user, createdWorkspace?.appId)) {
+        await auth.getSelf()
+      }
+
       // Ensure the apps are reloaded.
       await appsStore.load()
 
-      const pkg = await API.fetchAppPackage(createdWorkspace.instance._id)
-      const homeScreen = pkg.screens.find(screen => screen.routing?.homeScreen)
+      if (!sdk.users.isBuilder($auth.user, createdWorkspace?.appId)) {
+        goToApps()
+        return
+      }
 
-      // Send the user directly to the home screen
-      const targetRoute =
-        homeScreen?.workspaceAppId && homeScreen?._id
-          ? buildBuilderWorkspaceDesignRoute({
-              applicationId: createdWorkspace.instance._id,
-              workspaceAppId: homeScreen.workspaceAppId,
-              screenId: homeScreen._id,
-            })
-          : buildBuilderWorkspaceRoute({
-              applicationId: createdWorkspace.instance._id,
-            })
+      const targetRoute = buildBuilderWorkspaceRoute({
+        applicationId: createdWorkspace.instance._id,
+      })
 
       notifications.success(`Workspace created successfully`)
       goto(targetRoute)
     } catch (e: any) {
       loading = false
       onboardingFailed = true
-      notifications.error(
-        e.message || "There was a problem creating your workspace"
-      )
+      onboardingForbidden = e?.status === 403
+
+      if (onboardingForbidden) {
+        notifications.error("You don't have permission to create workspaces")
+      } else {
+        notifications.error(
+          e.message || "There was a problem creating your workspace"
+        )
+      }
     }
   }
 
@@ -71,8 +78,16 @@
       <Body size="M">Setting up your workspace...</Body>
       <Spinner size="10" />
     {:else if onboardingFailed}
-      <Body size="M">There was a problem.</Body>
-      <Button secondary on:click={createDefaultWorkspace}>Try again</Button>
+      <Body size="M">
+        {onboardingForbidden
+          ? "You don't have permission to create a workspace."
+          : "There was a problem."}
+      </Body>
+      {#if onboardingForbidden}
+        <Button secondary on:click={goToApps}>Go to apps</Button>
+      {:else}
+        <Button secondary on:click={createDefaultWorkspace}>Try again</Button>
+      {/if}
     {/if}
   </Layout>
 </div>

@@ -19,14 +19,30 @@ export interface ToolMetadata {
   sourceIconType?: string
 }
 
-export interface DiscordAgentIntegration {
+interface ChatAgentIntegration {
+  chatAppId?: string
+  idleTimeoutMinutes?: number
+}
+
+export interface DiscordAgentIntegration extends ChatAgentIntegration {
   applicationId?: string
   publicKey?: string
   botToken?: string
   guildId?: string
-  chatAppId?: string
-  idleTimeoutMinutes?: number
   interactionsEndpointUrl?: string
+}
+
+export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
+  appId?: string
+  appPassword?: string
+  tenantId?: string
+  messagingEndpointUrl?: string
+}
+
+export interface SlackAgentIntegration extends ChatAgentIntegration {
+  botToken?: string
+  signingSecret?: string
+  messagingEndpointUrl?: string
 }
 
 export interface Agent extends Document {
@@ -40,11 +56,10 @@ export interface Agent extends Document {
   iconColor?: string
   createdBy?: string
   enabledTools?: string[]
-  embeddingModel?: string
-  vectorDb?: string
-  ragMinDistance?: number
-  ragTopK?: number
+  knowledgeBases?: string[]
   discordIntegration?: DiscordAgentIntegration
+  MSTeamsIntegration?: MSTeamsAgentIntegration
+  slackIntegration?: SlackAgentIntegration
 }
 
 export interface AgentMessageRagSource {
@@ -56,6 +71,7 @@ export interface AgentMessageRagSource {
 
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
+  toolDisplayNames?: Record<string, string>
   createdAt?: number
   completedAt?: number
   error?: string
@@ -65,24 +81,4 @@ export interface AgentChat extends Document {
   agentId?: string
   title: string
   messages: UIMessage<AgentMessageMetadata>[]
-}
-
-export enum AgentFileStatus {
-  PROCESSING = "processing",
-  READY = "ready",
-  FAILED = "failed",
-}
-
-export interface AgentFile extends Document {
-  agentId: string
-  filename: string
-  mimetype?: string
-  size?: number
-  objectStoreKey: string
-  ragSourceId: string
-  status: AgentFileStatus
-  chunkCount: number
-  uploadedBy: string
-  errorMessage?: string
-  processedAt?: string
 }

@@ -7,11 +7,25 @@ export function aiTableResponseToTableSchema(
   structure: GenerationStructure
 ): TableSchemaFromAI[] {
   const result: TableSchemaFromAI[] = []
+  const tableNameMap = structure.tables.reduce<Record<string, string>>(
+    (acc, table) => {
+      acc[table.name.toLowerCase()] = table.name
+      return acc
+    },
+    {}
+  )
 
   const processedRelationships: string[] = []
   for (const table of structure.tables) {
     const schema = table.schema.reduce<TableSchema>((acc, field) => {
       if (field.type === FieldType.LINK) {
+        const normalizedTableName = tableNameMap[field.tableId?.toLowerCase()]
+        // Ignore links to tables that were not generated in this response.
+        // This prevents references to internal/system tables like users_table.
+        if (!normalizedTableName) {
+          return acc
+        }
+
         // Avoid circular references
         if (!processedRelationships.includes(field.relationshipId)) {
           // Reversing relationship type, as the name is confusing for the AI gets it in the wrong order
@@ -23,6 +37,7 @@ export function aiTableResponseToTableSchema(
           const { reverseFieldName, relationshipId, ...rest } = field
           acc[field.name] = {
             ...rest,
+            tableId: normalizedTableName,
             fieldName: reverseFieldName,
             relationshipType: map[field.relationshipType] as any,
           }

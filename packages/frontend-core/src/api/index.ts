@@ -47,6 +47,7 @@ import { buildMigrationEndpoints } from "./migrations"
 import { buildRowActionEndpoints } from "./rowActions"
 import { buildOAuth2Endpoints } from "./oauth2"
 import { buildAgentEndpoints } from "./agents"
+import { buildAgentLogEndpoints } from "./agentLogs"
 import { buildChatAppEndpoints } from "./chatApps"
 import { buildFeatureFlagEndpoints } from "./features"
 import { buildNavigationEndpoints } from "./navigation"
@@ -58,7 +59,7 @@ import { buildWorkspaceHomeEndpoints } from "./workspaceHome"
 import { buildRecaptchaEndpoints } from "./recaptcha"
 import { buildAIConfigEndpoints } from "./aiConfig"
 import { buildVectorDbEndpoints } from "./vectorDbs"
-import { buildWorkspaceConnectionEndpoints } from "./workspaceConnections"
+import { buildKnowledgeBaseEndpoints } from "./knowledgeBases"
 
 export type { APIClient } from "./types"
 
@@ -210,8 +211,9 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       return
     }
     const migration = response.headers.get(Header.MIGRATING_APP)
+    const shouldSkipWait = response.headers.get(Header.SKIP_MIGRATING_WAIT)
 
-    if (migration) {
+    if (migration && !shouldSkipWait) {
       config.onMigrationDetected(migration)
     }
   }
@@ -317,6 +319,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildLogsEndpoints(API),
     ...buildMigrationEndpoints(API),
     ...buildAgentEndpoints(API),
+    ...buildAgentLogEndpoints(API),
     ...buildChatAppEndpoints(API),
     ...buildFeatureFlagEndpoints(API),
     deployment: buildDeploymentEndpoints(API),
@@ -326,11 +329,11 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     navigation: buildNavigationEndpoints(API),
     workspaceApp: buildWorkspaceAppEndpoints(API),
     workspace: buildWorkspaceFavouriteEndpoints(API),
-    workspaceConnections: buildWorkspaceConnectionEndpoints(API),
     workspaceHome: buildWorkspaceHomeEndpoints(API),
     resource: buildResourceEndpoints(API),
     recaptcha: buildRecaptchaEndpoints(API),
     aiConfig: buildAIConfigEndpoints(API),
     vectorDb: buildVectorDbEndpoints(API),
+    knowledgeBase: buildKnowledgeBaseEndpoints(API),
   }
 }

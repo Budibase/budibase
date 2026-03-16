@@ -2,11 +2,12 @@
   interface Breadcrumb {
     text?: string
     url?: string
+    tag?: string
   }
 </script>
 
 <script lang="ts">
-  import { Body, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
+  import { Body, Icon, Popover, PopoverAlignment, Tag } from "@budibase/bbui"
   import PublishMenu from "./PublishMenu.svelte"
   import { deploymentStore } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
@@ -42,7 +43,14 @@
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}
       {#if breadcrumb.text}
-        <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
+        <div class="breadcrumb-item">
+          <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
+          {#if breadcrumb.tag}
+            <div class="breadcrumb-tag-wrapper">
+              <Tag emphasized>{breadcrumb.tag}</Tag>
+            </div>
+          {/if}
+        </div>
         {#if idx < breadcrumbs.length - 1}
           <div class="divider">/</div>
         {/if}
@@ -93,6 +101,19 @@
     flex-direction: row;
     align-items: center;
     gap: 6px;
+  }
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .breadcrumb-tag-wrapper :global(.spectrum-Tags-item) {
+    padding: 0 3px;
+    border-radius: 5px;
+  }
+  .breadcrumb-tag-wrapper :global(.spectrum-Tags-itemLabel) {
+    font-size: 11px;
+    line-height: 1.1;
   }
   .breadcrumbs a {
     font-size: 14px;

@@ -62,7 +62,7 @@
     })
 
   const handleTemplateSelect = (template: RestTemplate) => {
-    bb.settings(`/connections/new/${template.id}`)
+    bb.settings(`/connections/apis/new/${template.id}`)
   }
 </script>
 
@@ -76,7 +76,7 @@
       />
       <Button
         on:click={() => {
-          bb.settings("/connections/new")
+          bb.settings("/connections/apis/new")
         }}
         icon="plus"
       >

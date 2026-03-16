@@ -1,7 +1,6 @@
 import * as controller from "../controllers/webhook"
 import { webhookValidator } from "./utils/validators"
 import { builderRoutes, publicRoutes } from "./endpointGroups"
-import koaBody from "koa-body"
 
 builderRoutes
   .get("/api/webhooks", controller.fetch)
@@ -12,16 +11,17 @@ builderRoutes
 // this shouldn't have authorisation, right now its always public
 publicRoutes.post("/api/webhooks/trigger/:instance/:id", controller.trigger)
 
-const discordWebhookBodyParser = koaBody({
-  multipart: true,
-  // @ts-expect-error
-  enableTypes: ["json", "form", "text"],
-  parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
-  includeUnparsed: true,
-})
-
 publicRoutes.post(
   "/api/webhooks/discord/:instance/:chatAppId/:agentId",
-  discordWebhookBodyParser,
   controller.discord
+)
+
+publicRoutes.post(
+  "/api/webhooks/ms-teams/:instance/:chatAppId/:agentId",
+  controller.MSTeams
+)
+
+publicRoutes.post(
+  "/api/webhooks/slack/:instance/:chatAppId/:agentId",
+  controller.slack
 )

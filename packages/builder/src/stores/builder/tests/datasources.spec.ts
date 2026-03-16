@@ -202,6 +202,21 @@ describe("DatasourceStore", () => {
     })
   })
 
+  describe("fetch", () => {
+    it("populates rawList from API response", async () => {
+      const ds1 = makeDatasource({ _id: "ds1" })
+      const ds2 = makeDatasource({ _id: "ds2", source: SourceName.POSTGRES })
+      vi.mocked(API.getDatasources).mockResolvedValue([ds1, ds2])
+
+      await store.fetch()
+
+      const state = get(store.store)
+      expect(state.rawList).toHaveLength(2)
+      expect(state.rawList[0]._id).toBe("ds1")
+      expect(state.rawList[1]._id).toBe("ds2")
+    })
+  })
+
   describe("select", () => {
     it("sets selectedDatasourceId", () => {
       store.select("ds1")

@@ -589,11 +589,11 @@ Any constraints the agent must follow.
     if (!configured || !config) {
       return undefined
     }
-    if (config.provider === WebSearchProvider.EXA) {
-      return "exa_search"
-    }
-    if (config.provider === WebSearchProvider.PARALLEL) {
-      return "parallel_search"
+    if (
+      config.provider === WebSearchProvider.EXA ||
+      config.provider === WebSearchProvider.PARALLEL
+    ) {
+      return "search_web_search"
     }
     return undefined
   }
@@ -695,7 +695,7 @@ Any constraints the agent must follow.
       Select which provider and model to use for the agent.{" "}
       <button
         class="link-button"
-        onclick={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
+        onclick={() => bb.settings(`/connections/${AIConfigType.COMPLETIONS}`)}
       >
         View AI Connectors.
       </button>
@@ -710,7 +710,8 @@ Any constraints the agent must follow.
           icon="sparkle"
           iconWeight="fill"
           iconColor="#8777D1"
-          on:click={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
+          on:click={() =>
+            bb.settings(`/connections/${AIConfigType.COMPLETIONS}`)}
         >
           Connect AI Model
         </Button>

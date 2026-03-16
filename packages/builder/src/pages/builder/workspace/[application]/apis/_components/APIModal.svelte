@@ -73,12 +73,7 @@
     if (!request) {
       return undefined
     }
-    try {
-      return await queries.fetchImportInfo(request)
-    } catch (err) {
-      console.warn("Failed to load template metadata", err)
-      return undefined
-    }
+    return await queries.fetchImportInfo(request)
   }
 
   const applySecurityHeaders = (
@@ -174,15 +169,16 @@
       goto(`./datasource/${ds._id}`)
 
       notifications.success(`${selectedTemplate.name} API created`)
+      modal.hide()
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`
       )
+    } finally {
+      loading = false
+      selectedTemplate = null
+      targetSpec = null
     }
-    modal.hide()
-    loading = false
-    selectedTemplate = null
-    targetSpec = null
   }
 
   const buildDatasourceName = (

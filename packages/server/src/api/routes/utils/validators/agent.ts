@@ -4,6 +4,7 @@ import Joi from "joi"
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_AICONFIG = Joi.string().optional().allow("")
+
 const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   applicationId: OPTIONAL_STRING,
   publicKey: OPTIONAL_STRING,
@@ -11,6 +12,27 @@ const DISCORD_INTEGRATION_SCHEMA = Joi.object({
   guildId: OPTIONAL_STRING,
   chatAppId: OPTIONAL_STRING,
   interactionsEndpointUrl: OPTIONAL_STRING,
+  idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
+})
+  .optional()
+  .allow(null)
+
+const TEAMS_INTEGRATION_SCHEMA = Joi.object({
+  appId: OPTIONAL_STRING,
+  appPassword: OPTIONAL_STRING,
+  tenantId: Joi.string().required().trim().disallow(""),
+  chatAppId: OPTIONAL_STRING,
+  messagingEndpointUrl: OPTIONAL_STRING,
+  idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
+})
+  .optional()
+  .allow(null)
+
+const SLACK_INTEGRATION_SCHEMA = Joi.object({
+  botToken: OPTIONAL_STRING,
+  signingSecret: OPTIONAL_STRING,
+  chatAppId: OPTIONAL_STRING,
+  messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
 })
   .optional()
@@ -27,11 +49,10 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      embeddingModel: OPTIONAL_STRING,
-      vectorDb: OPTIONAL_STRING,
-      ragMinDistance: OPTIONAL_NUMBER.min(0).max(1),
-      ragTopK: OPTIONAL_NUMBER.integer().min(1).max(10),
+      knowledgeBases: Joi.array().items(Joi.string()).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
+      MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
+      slackIntegration: SLACK_INTEGRATION_SCHEMA,
     })
   )
 }
@@ -49,16 +70,27 @@ export function updateAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      embeddingModel: OPTIONAL_STRING,
-      vectorDb: OPTIONAL_STRING,
-      ragMinDistance: OPTIONAL_NUMBER.min(0).max(1),
-      ragTopK: OPTIONAL_NUMBER.integer().min(1).max(10),
+      knowledgeBases: Joi.array().items(Joi.string()).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
+      MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
+      slackIntegration: SLACK_INTEGRATION_SCHEMA,
     }).unknown(true)
   )
 }
 
 export function syncAgentDiscordCommandsValidator() {
+  return chatAppIdBodyValidator()
+}
+
+export function provisionAgentMSTeamsChannelValidator() {
+  return chatAppIdBodyValidator()
+}
+
+export function provisionAgentSlackChannelValidator() {
+  return chatAppIdBodyValidator()
+}
+
+function chatAppIdBodyValidator() {
   return auth.joiValidator.body(
     Joi.object({
       chatAppId: OPTIONAL_STRING,
@@ -69,6 +101,22 @@ export function syncAgentDiscordCommandsValidator() {
 }
 
 export function toggleAgentDiscordDeploymentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      enabled: Joi.boolean().required(),
+    }).required()
+  )
+}
+
+export function toggleAgentMSTeamsDeploymentValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      enabled: Joi.boolean().required(),
+    }).required()
+  )
+}
+
+export function toggleAgentSlackDeploymentValidator() {
   return auth.joiValidator.body(
     Joi.object({
       enabled: Joi.boolean().required(),

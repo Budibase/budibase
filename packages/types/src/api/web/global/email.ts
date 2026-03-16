@@ -19,6 +19,7 @@ export interface SendEmailRequest {
   subject: string
   cc?: string
   bcc?: string
+  replyTo?: string
   automation?: boolean
   invite?: EmailInvite
   attachments?: EmailAttachment[]

@@ -1,8 +1,15 @@
 <script>
   import { Heading, Body } from "@budibase/bbui"
+  import { ensureValidTheme, getThemeClassNames } from "@budibase/shared-core"
+  import { themeStore } from "@/stores"
+
+  $: resolvedTheme = ensureValidTheme($themeStore.theme)
+  $: resolvedThemeClassNames = getThemeClassNames(resolvedTheme)
 </script>
 
-<div class="chat-paused-shell">
+<div
+  class={`chat-paused-shell spectrum spectrum--medium ${resolvedThemeClassNames}`}
+>
   <div class="chat-paused-nav" aria-hidden="true">
     <div class="chat-paused-nav-header">
       <div class="chat-paused-line chat-paused-line-title"></div>
@@ -43,7 +50,7 @@
     width: 100%;
     min-width: 0;
     min-height: 0;
-    background: transparent;
+    background: var(--spectrum-alias-background-color-primary);
   }
 
   .chat-paused-nav {
@@ -55,6 +62,7 @@
     flex-direction: column;
     gap: 20px;
     box-sizing: border-box;
+    background: var(--spectrum-alias-background-color-secondary);
   }
 
   .chat-paused-nav-header {
@@ -72,8 +80,8 @@
   .chat-paused-item {
     height: 44px;
     border-radius: 10px;
-    background: var(--spectrum-global-color-gray-100);
-    border: 1px solid var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-alias-background-color-secondary);
+    border: var(--border-light);
   }
 
   .chat-paused-main {
@@ -84,6 +92,7 @@
     flex-direction: column;
     padding: 0 32px 32px;
     box-sizing: border-box;
+    background: var(--spectrum-alias-background-color-primary);
   }
 
   .chat-paused-main-header {
@@ -98,7 +107,7 @@
 
   .chat-paused-line {
     border-radius: 999px;
-    background: var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-alias-border-color);
   }
 
   .chat-paused-line-title {
@@ -137,10 +146,11 @@
     gap: var(--spacing-s);
     text-align: center;
     padding: var(--spacing-xxl) var(--spacing-xl);
+    color: var(--spectrum-alias-text-color);
   }
 
   .chat-paused-input {
-    border: var(--border-light);
+    border: 1px solid var(--spectrum-alias-border-color);
     border-radius: 12px;
     min-height: 52px;
     display: flex;

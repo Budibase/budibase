@@ -70,4 +70,19 @@ describe("buildLiteLLMParams", () => {
       extra_body: { include_reasoning: true },
     })
   })
+
+  it("adds custom_openai reasoning extra_body", () => {
+    const result = buildLiteLLMParams({
+      provider: "custom_openai",
+      name: "some-model",
+      credentialFields: {},
+      configType: AIConfigType.COMPLETIONS,
+      reasoningEffort: "medium",
+    })
+
+    expect(result).toMatchObject({
+      reasoning_effort: "medium",
+      extra_body: { include_reasoning: true },
+    })
+  })
 })

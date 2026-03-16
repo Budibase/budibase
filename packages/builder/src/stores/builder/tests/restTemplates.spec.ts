@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest"
 
-import { RestTemplatesStore } from "../restTemplates"
+import {
+  RestTemplatesStore,
+  MICROSOFT_SHAREPOINT_NAME_ALIASES,
+} from "../restTemplates"
 
 describe("RestTemplatesStore", () => {
   let store: RestTemplatesStore
@@ -16,35 +19,29 @@ describe("RestTemplatesStore", () => {
     })
 
     it("finds a top-level template by name", () => {
-      const result = store.getByName("Slack Web API")
+      const template = store.templates[0]
+      const result = store.getByName(template.name)
       expect(result).toBeDefined()
-      expect(result?.name).toBe("Slack Web API")
+      expect(result?.name).toBe(template.name)
     })
 
     it("finds a grouped template by name and includes group icon", () => {
-      const result = store.getByName("Sites")
+      const group = store.templateGroups[0]
+      const template = group.templates[0]
+      const result = store.getByName(template.name)
       expect(result).toBeDefined()
-      expect(result?.name).toBe("Sites")
+      expect(result?.name).toBe(template.name)
       expect(result?.icon).toBeDefined()
     })
 
-    it("resolves SharePoint alias 'SharePoint Sites' to 'Sites'", () => {
-      const result = store.getByName("SharePoint Sites")
-      expect(result).toBeDefined()
-      expect(result?.name).toBe("Sites")
-    })
-
-    it("resolves SharePoint alias 'SharePoint Drives' to 'Drives'", () => {
-      const result = store.getByName("SharePoint Drives")
-      expect(result).toBeDefined()
-      expect(result?.name).toBe("Drives")
-    })
-
-    it("resolves SharePoint alias 'SharePoint Shares' to 'Shares'", () => {
-      const result = store.getByName("SharePoint Shares")
-      expect(result).toBeDefined()
-      expect(result?.name).toBe("Shares")
-    })
+    it.each(Object.entries(MICROSOFT_SHAREPOINT_NAME_ALIASES))(
+      "resolves SharePoint alias '%s' to '%s'",
+      (alias, expected) => {
+        const result = store.getByName(alias)
+        expect(result).toBeDefined()
+        expect(result?.name).toBe(expected)
+      }
+    )
 
     it("returns undefined for unknown name", () => {
       expect(store.getByName("NonExistentTemplate")).toBeUndefined()
@@ -53,21 +50,27 @@ describe("RestTemplatesStore", () => {
 
   describe("getById", () => {
     it("finds a top-level template by id", () => {
-      const result = store.getById("slack-web-api")
+      const template = store.templates[0]
+      const result = store.getById(template.id)
       expect(result).toBeDefined()
-      expect(result?.name).toBe("Slack Web API")
+      expect(result?.name).toBe(template.name)
     })
 
     it("finds a grouped template by full prefixed id", () => {
-      const result = store.getById("microsoft-sharepoint-sites")
+      const group = store.templateGroups[0]
+      const template = group.templates[0]
+      // Grouped template ids are stored with the group slug already prefixed
+      const result = store.getById(template.id)
       expect(result).toBeDefined()
-      expect(result?.name).toBe("Sites")
+      expect(result?.name).toBe(template.name)
     })
 
     it("finds a grouped template using groupName prefix", () => {
-      const result = store.getById("sites", "Microsoft SharePoint")
+      const group = store.templateGroups[0]
+      const template = group.templates[0]
+      const result = store.getById(template.id, group.name)
       expect(result).toBeDefined()
-      expect(result?.name).toBe("Sites")
+      expect(result?.name).toBe(template.name)
     })
 
     it("returns undefined for unknown id", () => {
@@ -82,21 +85,26 @@ describe("RestTemplatesStore", () => {
     })
 
     it("resolves by id", () => {
-      const result = store.get("slack-web-api" as any)
+      const template = store.templates[0]
+      const result = store.get(template.id as any)
       expect(result).toBeDefined()
-      expect(result?.name).toBe("Slack Web API")
+      expect(result?.name).toBe(template.name)
     })
 
     it("falls back to name lookup when id not found", () => {
-      const result = store.get("Slack Web API" as any)
+      const template = store.templates[0]
+      const result = store.get(template.name as any)
       expect(result).toBeDefined()
-      expect(result?.name).toBe("Slack Web API")
+      expect(result?.name).toBe(template.name)
     })
 
     it("resolves legacy SharePoint aliases via name fallback", () => {
-      const result = store.get("SharePoint Sites" as any)
+      const [alias, expected] = Object.entries(
+        MICROSOFT_SHAREPOINT_NAME_ALIASES
+      )[0]
+      const result = store.get(alias as any)
       expect(result).toBeDefined()
-      expect(result?.name).toBe("Sites")
+      expect(result?.name).toBe(expected)
     })
 
     it("returns undefined for completely unknown input", () => {

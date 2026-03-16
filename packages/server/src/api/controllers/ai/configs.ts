@@ -13,6 +13,7 @@ import {
   BUDIBASE_AI_PROVIDER_ID,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { isEnvironmentVariableKey } from "../../../sdk/utils"
 
 const sanitizeConfig = async (
   config: CustomAIProviderConfig
@@ -27,17 +28,26 @@ const sanitizeConfig = async (
   const secretFields = provider.credentialFields
     .filter(f => f.field_type === "password")
     .map(f => f.key)
-  const credentialsFields = secretFields.reduce((updatedFields, field) => {
-    updatedFields[field] = PASSWORD_REPLACEMENT
-    return updatedFields
-  }, config.credentialsFields)
+  const credentialsFields = { ...config.credentialsFields }
+
+  for (const field of secretFields) {
+    if (
+      credentialsFields[field] &&
+      !isEnvironmentVariableKey(credentialsFields[field])
+    ) {
+      credentialsFields[field] = PASSWORD_REPLACEMENT
+    }
+  }
 
   const sanitized: AIConfigResponse = {
     ...config,
     credentialsFields: { ...credentialsFields },
   }
 
-  if (sanitized.webSearchConfig?.apiKey) {
+  if (
+    sanitized.webSearchConfig?.apiKey &&
+    !isEnvironmentVariableKey(sanitized.webSearchConfig.apiKey)
+  ) {
     sanitized.webSearchConfig = {
       ...sanitized.webSearchConfig,
       apiKey: PASSWORD_REPLACEMENT,

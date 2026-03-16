@@ -22,9 +22,20 @@ const BB_COMPOSE_SERVICES = [
 ]
 const BB_SINGLE_SERVICE = ["budibase"]
 
-export async function update() {
+function isSingleComposeServiceList(services: Record<string, unknown>) {
+  return Object.prototype.hasOwnProperty.call(services, "budibase")
+}
+
+export async function update(opts?: unknown) {
   const { services } = getServices(COMPOSE_PATH)
-  const isSingle = Object.keys(services).length === 1
+  const singleFlag =
+    typeof opts === "object" && opts != null && "single" in opts && !!opts.single
+  const isSingle = singleFlag || isSingleComposeServiceList(services)
+
+  if (singleFlag && !Object.prototype.hasOwnProperty.call(services, "budibase")) {
+    throw "Unable to run single-image update: no 'budibase' service found in docker-compose.yaml."
+  }
+
   await checkDockerConfigured()
   checkInitComplete()
   if (

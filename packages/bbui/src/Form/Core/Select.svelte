@@ -22,6 +22,8 @@
     option?.colour ?? undefined
   export let getOptionSubtitle = (option: O, _index?: number) =>
     option?.subtitle ?? undefined
+  export let getOptionTooltip = (option: O, _index?: number) =>
+    option?.tooltip ?? undefined
   export let showSelectedSubtitle: boolean = false
   export let compare = (option: O, value: V) => option === value
   export let useOptionIconImage = false
@@ -55,6 +57,10 @@
   $: fieldSubtitle = showSelectedSubtitle
     ? getFieldAttribute(getOptionSubtitle, value, options)
     : null
+  $: fieldTooltip =
+    value == null || value === ""
+      ? null
+      : getFieldAttribute(getOptionTooltip, value, options)
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
@@ -124,6 +130,7 @@
   {getOptionIcon}
   {getOptionColour}
   {getOptionSubtitle}
+  {getOptionTooltip}
   {useOptionIconImage}
   {isOptionEnabled}
   {tooltipMessage}
@@ -141,5 +148,6 @@
   {customPopoverHeight}
   {searchPlaceholder}
   {hideChevron}
+  {fieldTooltip}
   {wrapText}
 />

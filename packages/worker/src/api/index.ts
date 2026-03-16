@@ -42,10 +42,6 @@ const PUBLIC_ENDPOINTS = [
     method: "POST",
   },
   {
-    route: "/api/global/users/sso",
-    method: "POST",
-  },
-  {
     route: "/api/global/users/invite/accept",
     method: "POST",
   },

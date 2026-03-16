@@ -37,9 +37,10 @@ export async function init(opts: any) {
   let type, isSingle, watchDir, genUser, port, silent
   if (typeof opts === "string") {
     type = opts
+    isSingle = type === "single"
   } else {
     type = opts["init"]
-    isSingle = opts["single"]
+    isSingle = opts["single"] || type === "single"
     watchDir = opts["watchPluginDir"]
     genUser = opts["genUser"]
     port = opts["port"]
@@ -48,8 +49,11 @@ export async function init(opts: any) {
   const isQuick = type === InitType.QUICK || type === InitType.DIGITAL_OCEAN
   await checkDockerConfigured()
   if (!isQuick) {
+    const message = isSingle
+      ? "This will create a single-image docker-compose.yaml in current directory, should continue?"
+      : "This will create multiple files in current directory, should continue?"
     const shouldContinue = await confirmation(
-      "This will create multiple files in current directory, should continue?"
+      message
     )
     if (!shouldContinue) {
       console.log("Stopping.")

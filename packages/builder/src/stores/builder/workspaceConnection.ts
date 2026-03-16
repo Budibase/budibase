@@ -1,12 +1,8 @@
-import { API } from "@/api"
 import { DerivedBudiStore } from "../BudiStore"
 import type {
-  CreateWorkspaceConnectionRequest,
   Datasource,
   OAuth2Config,
   UIInternalDatasource,
-  UpdateWorkspaceConnectionRequest,
-  WorkspaceConnectionResponse,
 } from "@budibase/types"
 import type { UIWorkspaceConnection } from "@/types"
 import type { Writable } from "svelte/store"
@@ -16,7 +12,6 @@ import { datasources } from "./datasources"
 import { restTemplates } from "./restTemplates"
 
 interface WorkspaceConnectionStoreState {
-  connections: WorkspaceConnectionResponse[]
   loading: boolean
   error?: string
   selectedConnectionId: string | null
@@ -26,22 +21,6 @@ interface DerivedWorkspaceConnectionStoreState
   extends WorkspaceConnectionStoreState {
   list: UIWorkspaceConnection[]
   selected?: UIWorkspaceConnection
-}
-
-const fromWorkspaceConnection = (
-  c: WorkspaceConnectionResponse
-): UIWorkspaceConnection => {
-  const template = c.templateId
-    ? restTemplates.getById(c.templateId)
-    : undefined
-  return {
-    ...c,
-    source: "workspace_connection" as const,
-    sourceId: c._id!,
-    icon: template
-      ? { type: "asset", value: template.icon }
-      : { type: "icon", value: "lock-simple" },
-  }
 }
 
 const fromOAuth2 = (o: OAuth2Config): UIWorkspaceConnection => {
@@ -65,11 +44,12 @@ const fromRESTDatasource = (
     name: ds.name || "REST Datasource",
     icon: template
       ? { type: "asset", value: template.icon }
-      : { type: "icon", value: "webhooks-logo" },
+      : { type: "icon", value: "globe-simple" },
     auth: ds?.config?.authConfigs || [],
     props: {
       headers: ds?.config?.defaultHeaders || {},
       staticVariables: ds?.config?.staticVariables || {},
+      query: ds?.config?.defaultQueryParameters || {},
     },
   }
 }
@@ -77,16 +57,7 @@ const fromRESTDatasource = (
 const filterRESTDatasources = (
   sources: (Datasource | UIInternalDatasource)[]
 ) => {
-  return (sources || []).filter(d => {
-    // Exclude datasources created from templates - their auth should be
-    // managed via WorkspaceConnection instead
-    if (d?.restTemplateId) {
-      return false
-    }
-    const staticVars = Object.keys(d?.config?.staticVariables || {})
-    const headers = Object.keys(d?.config?.defaultHeaders || {})
-    return d?.config?.authConfigs?.length || staticVars.length || headers.length
-  })
+  return (sources || []).filter(d => d.source === "REST")
 }
 
 export class WorkspaceConnectionStore extends DerivedBudiStore<
@@ -101,7 +72,6 @@ export class WorkspaceConnectionStore extends DerivedBudiStore<
         [store, oauth2, datasources],
         ([$store, $oauth2, $ds]): DerivedWorkspaceConnectionStoreState => {
           const list: UIWorkspaceConnection[] = [
-            ...$store.connections.map(fromWorkspaceConnection),
             ...$oauth2.configs.map(fromOAuth2),
             ...filterRESTDatasources($ds.list).map(fromRESTDatasource),
           ]
@@ -121,7 +91,6 @@ export class WorkspaceConnectionStore extends DerivedBudiStore<
 
     super(
       {
-        connections: [],
         loading: false,
         selectedConnectionId: null,
       },
@@ -136,43 +105,6 @@ export class WorkspaceConnectionStore extends DerivedBudiStore<
       }
       return { ...s, selectedConnectionId: id }
     })
-  }
-
-  async fetch() {
-    this.store.update(store => ({
-      ...store,
-      loading: true,
-    }))
-    try {
-      const connections = await API.workspaceConnections.fetch()
-      this.store.update(store => ({
-        ...store,
-        connections,
-        loading: false,
-      }))
-    } catch (e: any) {
-      this.store.update(store => ({
-        ...store,
-        loading: false,
-        error: e.message,
-      }))
-    }
-  }
-
-  async create(connection: CreateWorkspaceConnectionRequest) {
-    const created = await API.workspaceConnections.create(connection)
-    await this.fetch()
-    return created
-  }
-
-  async edit(config: UpdateWorkspaceConnectionRequest) {
-    await API.workspaceConnections.update(config)
-    await this.fetch()
-  }
-
-  async delete(id: string, rev: string) {
-    await API.workspaceConnections.delete(id, rev)
-    await this.fetch()
   }
 }
 

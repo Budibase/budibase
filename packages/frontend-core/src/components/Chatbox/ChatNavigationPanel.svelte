@@ -18,6 +18,7 @@
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationHistory: ConversationListItem[] = []
   export let selectedConversationId: string | undefined
+  export let hideAgents = false
 
   $: defaultAgent =
     enabledAgentList.find(agent => agent.isDefault) || enabledAgentList[0]
@@ -52,26 +53,28 @@
       </div>
     {/if}
 
-    <div class="list-section">
-      <div class="list-title">Agents</div>
-      {#if enabledAgentList.length}
-        {#each enabledAgentList as agent (agent.agentId)}
-          <button
-            class="list-item list-item-button"
-            on:click={() => selectAgent(agent.agentId)}
-          >
-            <span class="list-item-icon">
-              <Icon name={agent.icon || "robot"} size="S" />
-            </span>
-            {agent.name}
-          </button>
-        {/each}
-      {:else}
-        <Body size="XS" color="var(--spectrum-global-color-gray-500)">
-          No agents
-        </Body>
-      {/if}
-    </div>
+    {#if !hideAgents}
+      <div class="list-section">
+        <div class="list-title">Agents</div>
+        {#if enabledAgentList.length}
+          {#each enabledAgentList as agent (agent.agentId)}
+            <button
+              class="list-item list-item-button"
+              on:click={() => selectAgent(agent.agentId)}
+            >
+              <span class="list-item-icon">
+                <Icon name={agent.icon || "robot"} size="S" />
+              </span>
+              {agent.name}
+            </button>
+          {/each}
+        {:else}
+          <Body size="XS" color="var(--spectrum-global-color-gray-500)">
+            No agents
+          </Body>
+        {/if}
+      </div>
+    {/if}
 
     <div class="list-section">
       <div class="list-title">Recent Chats</div>

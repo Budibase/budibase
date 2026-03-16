@@ -43,6 +43,7 @@ import {
 import merge from "lodash/merge"
 import nock from "nock"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 
 const descriptions = datasourceDescribe({ plus: true })
@@ -937,11 +938,12 @@ if (descriptions.length) {
           isInternal &&
             describe("AI fields", () => {
               let envCleanup: () => void
+              let cleanupDefaultAIConfig: (() => Promise<void>) | undefined
               beforeAll(() => {
                 mocks.licenses.useBudibaseAI()
                 mocks.licenses.useAICustomConfigs()
                 envCleanup = setEnv({
-                  OPENAI_API_KEY: "sk-abcdefghijklmnopqrstuvwxyz1234567890abcd",
+                  SELF_HOSTED: false,
                 })
 
                 // Ensure MockAgent is installed for OpenAI interceptors
@@ -968,10 +970,18 @@ if (descriptions.length) {
                 mockChatGPTResponse(responseFunction)
               })
 
-              afterAll(() => {
+              beforeAll(async () => {
+                cleanupDefaultAIConfig =
+                  await setupDefaultCompletionsAIConfig(config)
+              })
+
+              afterAll(async () => {
                 nock.cleanAll()
                 envCleanup()
                 mocks.licenses.useCloudFree()
+                if (cleanupDefaultAIConfig) {
+                  await cleanupDefaultAIConfig()
+                }
               })
 
               it("can use AI fields in view calculations", async () => {
