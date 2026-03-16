@@ -161,7 +161,8 @@ class SeaTableIntegration implements IntegrationBase {
       })
       return res.data.first_row ?? res.data
     } catch (err) {
-      console.error("Error creating row in SeaTable", err)
+      const message = err instanceof Error ? err.message : "Unknown error"
+      console.error("Error creating row in SeaTable:", message)
       throw err
     }
   }
@@ -181,7 +182,8 @@ class SeaTableIntegration implements IntegrationBase {
       const res = await this.http!.get("/rows/", { params })
       return res.data.rows ?? []
     } catch (err) {
-      console.error("Error reading from SeaTable", err)
+      const message = err instanceof Error ? err.message : "Unknown error"
+      console.error("Error reading from SeaTable:", message)
       return []
     }
   }
@@ -200,7 +202,8 @@ class SeaTableIntegration implements IntegrationBase {
       })
       return res.data
     } catch (err) {
-      console.error("Error updating row in SeaTable", err)
+      const message = err instanceof Error ? err.message : "Unknown error"
+      console.error("Error updating row in SeaTable:", message)
       throw err
     }
   }
@@ -214,7 +217,8 @@ class SeaTableIntegration implements IntegrationBase {
       })
       return res.data
     } catch (err) {
-      console.error("Error deleting row from SeaTable", err)
+      const message = err instanceof Error ? err.message : "Unknown error"
+      console.error("Error deleting row from SeaTable:", message)
       throw err
     }
   }
