@@ -22323,16 +22323,6 @@ remark-stringify@^11.0.0:
     mdast-util-to-markdown "^2.0.0"
     unified "^11.0.0"
 
-remark@^15.0.1:
-  version "15.0.1"
-  resolved "https://registry.yarnpkg.com/remark/-/remark-15.0.1.tgz#ac7e7563260513b66426bc47f850e7aa5862c37c"
-  integrity sha512-Eht5w30ruCXgFmxVUSlNWQ9iiimq07URKeFS3hNc8cUWy1llX4KDWfyEDZRycMc+znsN9Ux5/tJ/BFdgdOwA3A==
-  dependencies:
-    "@types/mdast" "^4.0.0"
-    remark-parse "^11.0.0"
-    remark-stringify "^11.0.0"
-    unified "^11.0.0"
-
 remend@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/remend/-/remend-1.2.1.tgz#95facafcc603313738d1b6ccf1d08a3a35902595"

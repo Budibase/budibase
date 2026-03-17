@@ -1,4 +1,4 @@
-import { remark } from "remark"
+import { unified } from "unified"
 import remarkGfm from "remark-gfm"
 import remarkParse from "remark-parse"
 import { chunkDocument, getDefaultChunkSize } from "../shared"
@@ -21,7 +21,7 @@ interface MdTable extends MdNode {
 }
 
 const parseMarkdown = (content: string) =>
-  remark().use(remarkParse).use(remarkGfm).parse(content) as MdNode
+  unified().use(remarkParse).use(remarkGfm).parse(content)
 
 const normalizeMarkdownText = (value: string) =>
   value.replace(/\s+/g, " ").replace(/\|/g, " ").trim()

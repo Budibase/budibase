@@ -130,7 +130,6 @@
     "pouchdb-all-dbs": "1.1.1",
     "pouchdb-find": "9.0.0",
     "redis": "4",
-    "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "semver": "^7.5.4",
