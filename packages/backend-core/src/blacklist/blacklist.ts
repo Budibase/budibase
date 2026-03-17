@@ -126,7 +126,7 @@ export async function refreshBlacklist() {
   if (shouldApplyDefaultBlacklist()) {
     for (const entry of DEFAULT_BLACKLIST) {
       const [ip] = entry.trim().split("/")
-      if (nextAllow.check(ip)) {
+      if (nextAllow.check(ip, getIpVersion(ip))) {
         continue
       }
       addEntryToBlacklist(next, entry)
