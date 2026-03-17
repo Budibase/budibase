@@ -15,7 +15,9 @@ const DEFAULT_BLACKLIST = [
   "fe80::/10",
 ] as const
 
-let blackList: net.BlockList | undefined
+let defaultBlackList: net.BlockList | undefined
+let configuredBlackList: net.BlockList | undefined
+let defaultAllowList: net.BlockList | undefined
 const performLookup = promisify(dns.lookup)
 
 function shouldApplyDefaultBlacklist() {
@@ -99,64 +101,52 @@ function addEntryToBlacklist(blockList: net.BlockList, entry: string) {
   }
 }
 
+async function addConfiguredEntries(
+  blockList: net.BlockList,
+  entries: string[]
+) {
+  for (const entry of entries) {
+    const trimmed = entry.trim()
+    if (!trimmed) {
+      continue
+    }
+
+    const [ip] = trimmed.split("/")
+    if (net.isIP(ip)) {
+      addEntryToBlacklist(blockList, trimmed)
+      continue
+    }
+
+    const addresses = await lookup(trimmed)
+    for (const address of addresses) {
+      addEntryToBlacklist(blockList, address)
+    }
+  }
+}
+
 export async function refreshBlacklist() {
-  const next = new net.BlockList()
+  const nextDefault = new net.BlockList()
+  const nextConfigured = new net.BlockList()
   const nextAllow = new net.BlockList()
 
   const configuredAllowlist =
     env.DEFAULT_BLACKLIST_IPS_ALLOWLIST?.split(",") || []
-  for (const entry of configuredAllowlist) {
-    const trimmed = entry.trim()
-    if (!trimmed) {
-      continue
-    }
-
-    const [ip] = trimmed.split("/")
-    if (net.isIP(ip)) {
-      addEntryToBlacklist(nextAllow, trimmed)
-      continue
-    }
-
-    const addresses = await lookup(trimmed)
-    for (const address of addresses) {
-      addEntryToBlacklist(nextAllow, address)
-    }
-  }
+  await addConfiguredEntries(nextAllow, configuredAllowlist)
 
   if (shouldApplyDefaultBlacklist()) {
-    for (const entry of DEFAULT_BLACKLIST) {
-      const [ip] = entry.trim().split("/")
-      if (nextAllow.check(ip, getIpVersion(ip))) {
-        continue
-      }
-      addEntryToBlacklist(next, entry)
-    }
+    await addConfiguredEntries(nextDefault, [...DEFAULT_BLACKLIST])
   }
 
   const configuredBlacklist = env.BLACKLIST_IPS?.split(",") || []
-  for (const entry of configuredBlacklist) {
-    const trimmed = entry.trim()
-    if (!trimmed) {
-      continue
-    }
+  await addConfiguredEntries(nextConfigured, configuredBlacklist)
 
-    const [ip] = trimmed.split("/")
-    if (net.isIP(ip)) {
-      addEntryToBlacklist(next, trimmed)
-      continue
-    }
-
-    const addresses = await lookup(trimmed)
-    for (const address of addresses) {
-      addEntryToBlacklist(next, address)
-    }
-  }
-
-  blackList = next
+  defaultBlackList = nextDefault
+  configuredBlackList = nextConfigured
+  defaultAllowList = nextAllow
 }
 
 export async function isBlacklisted(address: string): Promise<boolean> {
-  if (!blackList) {
+  if (!defaultBlackList || !configuredBlackList || !defaultAllowList) {
     await refreshBlacklist()
   }
 
@@ -170,5 +160,16 @@ export async function isBlacklisted(address: string): Promise<boolean> {
   } else {
     ips = [address]
   }
-  return ips.some(ip => blackList!.check(ip, getIpVersion(ip)))
+
+  if (ips.some(ip => configuredBlackList!.check(ip, getIpVersion(ip)))) {
+    return true
+  }
+
+  return ips.some(ip => {
+    const ipVersion = getIpVersion(ip)
+    if (!defaultBlackList!.check(ip, ipVersion)) {
+      return false
+    }
+    return !defaultAllowList!.check(ip, ipVersion)
+  })
 }

@@ -136,6 +136,22 @@ describe("blacklist", () => {
       expect(await isBlacklisted("1.1.1.1")).toBe(true)
       expect(await isBlacklisted("192.168.1.1")).toBe(false)
     })
+
+    it("should support ip, cidr and url entries in BLACKLIST_IPS", async () => {
+      restoreEnv = setEnv({
+        SELF_HOSTED: true,
+        BLACKLIST_IPS:
+          "1.1.1.1,5.5.5.0/24,https://127.0.0.1:5984/some/path?x=1",
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST: undefined,
+      })
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("1.1.1.1")).toBe(true)
+      expect(await isBlacklisted("1.1.1.2")).toBe(false)
+      expect(await isBlacklisted("5.5.5.42")).toBe(true)
+      expect(await isBlacklisted("5.5.6.1")).toBe(false)
+      expect(await isBlacklisted("127.0.0.1")).toBe(true)
+    })
   })
 
   describe("blacklist allowlist overrides", () => {
@@ -159,6 +175,18 @@ describe("blacklist", () => {
       expect(await isBlacklisted("192.168.1.1")).toBe(true)
     })
 
+    it("should allow CIDR subsets within default private ranges", async () => {
+      restoreEnv = setEnv({
+        BLACKLIST_IPS: undefined,
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST: "10.10.0.0/16",
+        SELF_HOSTED: false,
+      })
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("10.10.1.1")).toBe(false)
+      expect(await isBlacklisted("10.11.1.1")).toBe(true)
+    })
+
     it("should ignore DEFAULT_BLACKLIST_IPS_ALLOWLIST when BLACKLIST_IPS is set", async () => {
       restoreEnv = setEnv({
         BLACKLIST_IPS: "1.1.1.1",
@@ -168,6 +196,23 @@ describe("blacklist", () => {
       await refreshBlacklist()
 
       expect(await isBlacklisted("1.1.1.1")).toBe(true)
+    })
+
+    it("should support ip, cidr and url entries in DEFAULT_BLACKLIST_IPS_ALLOWLIST", async () => {
+      restoreEnv = setEnv({
+        SELF_HOSTED: false,
+        BLACKLIST_IPS: undefined,
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST:
+          "10.0.0.1,10.10.0.0/16,https://127.0.0.1:5984",
+      })
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("10.0.0.1")).toBe(false)
+      expect(await isBlacklisted("10.0.0.2")).toBe(true)
+      expect(await isBlacklisted("10.10.2.3")).toBe(false)
+      expect(await isBlacklisted("10.11.2.3")).toBe(true)
+      expect(await isBlacklisted("127.0.0.1")).toBe(false)
+      expect(await isBlacklisted("192.168.1.1")).toBe(true)
     })
   })
 
