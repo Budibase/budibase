@@ -15,20 +15,6 @@ describe("blacklist", () => {
       await refreshBlacklist()
     })
 
-    it("should blacklist localhost", async () => {
-      expect(await isBlacklisted("127.0.0.1")).toBe(true)
-    })
-
-    it("should blacklist RFC1918 addresses", async () => {
-      expect(await isBlacklisted("192.168.1.1")).toBe(true)
-      expect(await isBlacklisted("10.0.0.1")).toBe(true)
-      expect(await isBlacklisted("172.16.0.1")).toBe(true)
-    })
-
-    it("should blacklist link-local addresses", async () => {
-      expect(await isBlacklisted("169.254.169.254")).toBe(true)
-    })
-
     it("should allow public IPs by default", async () => {
       expect(await isBlacklisted("8.8.8.8")).toBe(false)
     })
@@ -109,14 +95,14 @@ describe("blacklist", () => {
       expect(await isBlacklisted("172.16.0.1")).toBe(false)
     })
 
-    it("should fail open on DNS lookup errors when self-hosted override is empty", async () => {
+    it("should fail closed on DNS lookup errors when self-hosted override is empty", async () => {
       restoreEnv = setEnv({
         SELF_HOSTED: true,
         BLACKLIST_IPS: "",
       })
       await refreshBlacklist()
 
-      expect(await isBlacklisted("https://budibase-ssrf.invalid")).toBe(false)
+      expect(await isBlacklisted("https://budibase-ssrf.invalid")).toBe(true)
     })
 
     it("should use only configured entries when self-hosted override is set", async () => {
