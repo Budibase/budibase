@@ -12,6 +12,7 @@ import rest from "./rest"
 import googlesheets from "./googlesheets"
 import firebase from "./firebase"
 import redis from "./redis"
+import seatable from "./seatable"
 import snowflake from "./snowflake"
 import oracle from "./oracle"
 import {
@@ -39,6 +40,7 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.FIRESTORE]: firebase.schema,
   [SourceName.GOOGLE_SHEETS]: googlesheets.schema,
   [SourceName.REDIS]: redis.schema,
+  [SourceName.SEATABLE]: seatable.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
   [SourceName.ORACLE]: oracle.schema,
   /* deprecated - not available through UI */
@@ -71,6 +73,7 @@ const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
     [SourceName.FIRESTORE]: firebase.integration,
     [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
     [SourceName.REDIS]: redis.integration,
+    [SourceName.SEATABLE]: seatable.integration,
     [SourceName.SNOWFLAKE]: snowflake.integration,
     [SourceName.ORACLE]: oracle.integration,
     /* deprecated - not available through UI */

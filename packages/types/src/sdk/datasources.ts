@@ -63,6 +63,7 @@ export enum SourceName {
   REDIS = "REDIS",
   REST = "REST",
   S3 = "S3",
+  SEATABLE = "SEATABLE",
   SNOWFLAKE = "SNOWFLAKE",
   SQL_SERVER = "SQL_SERVER",
 }
