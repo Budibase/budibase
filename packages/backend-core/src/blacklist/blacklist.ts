@@ -3,24 +3,8 @@ import net from "net"
 import env from "../environment"
 import { promisify } from "util"
 
-const DEFAULT_BLACKLIST = [
-  "127.0.0.0/8",
-  "10.0.0.0/8",
-  "172.16.0.0/12",
-  "192.168.0.0/16",
-  "169.254.0.0/16",
-  "0.0.0.0/8",
-  "::1/128",
-  "fc00::/7",
-  "fe80::/10",
-] as const
-
 let blackList: net.BlockList | undefined
 const performLookup = promisify(dns.lookup)
-
-function shouldApplyDefaultBlacklist() {
-  return !(env.SELF_HOSTED && env.BLACKLIST_IPS !== undefined)
-}
 
 function getIpVersion(address: string): "ipv4" | "ipv6" {
   return net.isIP(address) === 6 ? "ipv6" : "ipv4"
@@ -101,12 +85,6 @@ function addEntryToBlacklist(blockList: net.BlockList, entry: string) {
 
 export async function refreshBlacklist() {
   const next = new net.BlockList()
-  if (shouldApplyDefaultBlacklist()) {
-    for (const entry of DEFAULT_BLACKLIST) {
-      addEntryToBlacklist(next, entry)
-    }
-  }
-
   const configuredBlacklist = env.BLACKLIST_IPS?.split(",") || []
   for (const entry of configuredBlacklist) {
     const trimmed = entry.trim()
@@ -139,7 +117,7 @@ export async function isBlacklisted(address: string): Promise<boolean> {
     try {
       ips = await lookup(address)
     } catch {
-      return shouldApplyDefaultBlacklist()
+      return true
     }
   } else {
     ips = [address]
