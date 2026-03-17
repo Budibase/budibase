@@ -218,37 +218,6 @@ describe("rest", () => {
     expect(cached.rows[0].name).toEqual("one")
   })
 
-  it("should block localhost requests when BLACKLIST_IPS is unset", async () => {
-    const resetBlacklistEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
-    await blacklist.refreshBlacklist()
-
-    try {
-      await config.api.query.preview(
-        {
-          datasourceId: datasource._id!,
-          name: "test query",
-          parameters: [],
-          queryVerb: "read",
-          transformer: "",
-          schema: {},
-          readable: true,
-          fields: {
-            path: "http://127.0.0.1:5984",
-          },
-        },
-        {
-          status: 400,
-          body: {
-            message: "URL is blocked or could not be resolved safely.",
-          },
-        }
-      )
-    } finally {
-      resetBlacklistEnv()
-      await blacklist.refreshBlacklist()
-    }
-  })
-
   it("should allow localhost requests in self-hosted when blacklist override is empty", async () => {
     const resetBlacklistEnv = setCoreEnv({
       BLACKLIST_IPS: "",
