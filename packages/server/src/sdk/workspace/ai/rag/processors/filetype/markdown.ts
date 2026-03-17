@@ -1,50 +1,11 @@
-import { unified } from "unified"
-import remarkGfm from "remark-gfm"
-import remarkParse from "remark-parse"
+import MarkdownIt from "markdown-it"
 import { chunkDocument, getDefaultChunkSize } from "../shared"
 import type { RagFileProcessor, RagProcessInput } from "../types"
 
-interface MdNode {
-  type: string
-  depth?: number
-  value?: string
-  alt?: string
-  title?: string | null
-  children?: MdNode[]
-}
-
-interface MdTable extends MdNode {
-  children: Array<{
-    type: "tableRow"
-    children: Array<{ type: "tableCell"; children?: MdNode[] }>
-  }>
-}
-
-const parseMarkdown = (content: string) =>
-  unified().use(remarkParse).use(remarkGfm).parse(content)
+const markdownParser = new MarkdownIt()
 
 const normalizeMarkdownText = (value: string) =>
   value.replace(/\s+/g, " ").replace(/\|/g, " ").trim()
-
-const extractNodeText = (node?: MdNode): string => {
-  if (!node) {
-    return ""
-  }
-
-  if (typeof node.value === "string") {
-    return node.value
-  }
-
-  if (node.type === "image") {
-    return node.alt || ""
-  }
-
-  if (Array.isArray(node.children)) {
-    return node.children.map(extractNodeText).join("")
-  }
-
-  return ""
-}
 
 const buildContextualFact = (context: string[], text: string) => {
   const normalizedText = normalizeMarkdownText(text)
@@ -72,22 +33,104 @@ const pushChunk = (chunks: string[], facts: string[]) => {
   }
 }
 
-const extractTableFacts = (table: MdTable, context: string[]) => {
-  const [headerRow, ...bodyRows] = table.children || []
-  if (!headerRow || bodyRows.length === 0) {
-    return []
+const collectUntilClose = (
+  tokens: MarkdownIt.Token[],
+  start: number,
+  closeType: string
+) => {
+  const values: string[] = []
+  let index = start + 1
+  while (index < tokens.length) {
+    const token = tokens[index]
+    if (token.type === closeType) {
+      return {
+        value: values.join(" "),
+        nextIndex: index,
+      }
+    }
+    if (
+      token.type === "inline" ||
+      token.type === "fence" ||
+      token.type === "code_block"
+    ) {
+      values.push(token.content)
+    }
+    index += 1
+  }
+  return {
+    value: values.join(" "),
+    nextIndex: index - 1,
+  }
+}
+
+const parseTableFacts = (
+  tokens: MarkdownIt.Token[],
+  startIndex: number,
+  context: string[]
+) => {
+  const headers: string[] = []
+  const rows: string[][] = []
+  let currentRow: string[] = []
+  let inHead = false
+  let index = startIndex + 1
+
+  while (index < tokens.length) {
+    const token = tokens[index]
+
+    if (token.type === "table_close") {
+      break
+    }
+
+    if (token.type === "thead_open") {
+      inHead = true
+      index += 1
+      continue
+    }
+
+    if (token.type === "thead_close") {
+      inHead = false
+      index += 1
+      continue
+    }
+
+    if (token.type === "tr_open") {
+      currentRow = []
+      index += 1
+      continue
+    }
+
+    if (token.type === "tr_close") {
+      if (inHead) {
+        headers.splice(0, headers.length, ...currentRow)
+      } else if (currentRow.length > 0) {
+        rows.push(currentRow)
+      }
+      index += 1
+      continue
+    }
+
+    if (token.type === "th_open") {
+      const { value, nextIndex } = collectUntilClose(tokens, index, "th_close")
+      currentRow.push(normalizeMarkdownText(value))
+      index = nextIndex + 1
+      continue
+    }
+
+    if (token.type === "td_open") {
+      const { value, nextIndex } = collectUntilClose(tokens, index, "td_close")
+      currentRow.push(normalizeMarkdownText(value))
+      index = nextIndex + 1
+      continue
+    }
+
+    index += 1
   }
 
-  const headers = headerRow.children.map(cell =>
-    normalizeMarkdownText(extractNodeText(cell))
-  )
-
-  return bodyRows
+  const facts = rows
     .map(row => {
-      const values = row.children
-        .map((cell, index) => {
-          const header = headers[index]
-          const text = normalizeMarkdownText(extractNodeText(cell))
+      const values = row
+        .map((text, columnIndex) => {
+          const header = headers[columnIndex]
           if (!header || !text) {
             return null
           }
@@ -99,60 +142,102 @@ const extractTableFacts = (table: MdTable, context: string[]) => {
       return buildContextualFact(context, values)
     })
     .filter((value): value is string => !!value)
+
+  return {
+    facts,
+    nextIndex: index,
+  }
 }
 
 export const markdownProcessor: RagFileProcessor = {
   async process(input: RagProcessInput) {
     const content = input.buffer.toString("utf-8")
-    const tree = parseMarkdown(content)
-    const children = tree.children || []
-    if (children.length === 0) {
+    const tokens = markdownParser.parse(content, {})
+    if (tokens.length === 0) {
       return chunkDocument(content)
     }
 
     const chunks: string[] = []
     const context: string[] = []
     const facts: string[] = []
+    let listDepth = 0
 
-    for (const node of children) {
-      if (node.type === "heading") {
+    for (let index = 0; index < tokens.length; index += 1) {
+      const token = tokens[index]
+
+      if (token.type === "heading_open") {
         pushChunk(chunks, facts)
-        const level = node.depth || 1
-        const heading = normalizeMarkdownText(extractNodeText(node))
-        if (!heading) {
-          continue
-        }
-        context.splice(Math.max(0, level - 1))
-        context[level - 1] = heading
-        continue
-      }
-
-      if (node.type === "table") {
-        pushChunk(chunks, facts)
-        chunks.push(...extractTableFacts(node as MdTable, context))
-        continue
-      }
-
-      if (node.type === "list") {
-        for (const item of node.children || []) {
-          const fact = buildContextualFact(context, extractNodeText(item))
-          if (fact) {
-            facts.push(fact)
-          }
+        const headingLevel =
+          Number.parseInt((token.tag || "h1").replace("h", ""), 10) || 1
+        const nextToken = tokens[index + 1]
+        const heading = normalizeMarkdownText(
+          nextToken?.type === "inline" ? nextToken.content : ""
+        )
+        if (heading) {
+          context.splice(Math.max(0, headingLevel - 1))
+          context[headingLevel - 1] = heading
         }
         continue
       }
 
-      if (node.type === "paragraph" || node.type === "blockquote") {
-        const fact = buildContextualFact(context, extractNodeText(node))
+      if (token.type === "table_open") {
+        pushChunk(chunks, facts)
+        const { facts: tableFacts, nextIndex } = parseTableFacts(
+          tokens,
+          index,
+          context
+        )
+        chunks.push(...tableFacts)
+        index = nextIndex
+        continue
+      }
+
+      if (
+        token.type === "bullet_list_open" ||
+        token.type === "ordered_list_open"
+      ) {
+        listDepth += 1
+        continue
+      }
+
+      if (
+        token.type === "bullet_list_close" ||
+        token.type === "ordered_list_close"
+      ) {
+        listDepth = Math.max(0, listDepth - 1)
+        continue
+      }
+
+      if (token.type === "list_item_open") {
+        const { value, nextIndex } = collectUntilClose(
+          tokens,
+          index,
+          "list_item_close"
+        )
+        const fact = buildContextualFact(context, value)
         if (fact) {
           facts.push(fact)
         }
+        index = nextIndex
         continue
       }
 
-      if (node.type === "code") {
-        const fact = buildContextualFact(context, extractNodeText(node))
+      if (token.type === "paragraph_open" && listDepth === 0) {
+        const { value, nextIndex } = collectUntilClose(
+          tokens,
+          index,
+          "paragraph_close"
+        )
+        const fact = buildContextualFact(context, value)
+        if (fact) {
+          facts.push(fact)
+        }
+        index = nextIndex
+        continue
+      }
+
+      if (token.type === "fence" || token.type === "code_block") {
+        const fact = buildContextualFact(context, token.content)
         if (fact) {
           facts.push(fact)
         }

@@ -14,14 +14,14 @@ describe("markdownProcessor", () => {
       `),
     })
 
-    expect(chunks).toContain(
+    expect(chunks).toEqual([
       [
         "SpongeBob SquarePants Trivia > Characters > SpongeBob SquarePants",
         "His address is 124 Conch Street.",
         "SpongeBob SquarePants Trivia > Characters > SpongeBob SquarePants",
         "He has a pet snail named Gary.",
-      ].join("\n")
-    )
+      ].join("\n"),
+    ])
   })
 
   it("keeps formatted heading text in context", async () => {
@@ -33,9 +33,11 @@ describe("markdownProcessor", () => {
       `),
     })
 
-    expect(chunks).toContain(
-      ["The Krusty Krab Menu v2", "Signature item: Krabby Patty"].join("\n")
-    )
+    expect(chunks).toEqual([
+      ["> The **Krusty Krab** Menu `v2`", "Signature item: Krabby Patty"].join(
+        "\n"
+      ),
+    ])
   })
 
   it("turns markdown tables into retrievable facts", async () => {
@@ -50,17 +52,9 @@ describe("markdownProcessor", () => {
       `),
     })
 
-    expect(chunks).toContain(
-      [
-        "Locations in Bikini Bottom",
-        "Location: Krusty Krab; Description: SpongeBob and Squidward's workplace",
-      ].join("\n")
-    )
-    expect(chunks).toContain(
-      [
-        "Locations in Bikini Bottom",
-        "Location: Goo Lagoon; Description: Bikini Bottom's beach and recreational area",
-      ].join("\n")
-    )
+    expect(chunks).toEqual([
+      " > Locations in Bikini Bottom\nLocation: Krusty Krab; Description: SpongeBob and Squidward's workplace",
+      " > Locations in Bikini Bottom\nLocation: Goo Lagoon; Description: Bikini Bottom's beach and recreational area",
+    ])
   })
 })
