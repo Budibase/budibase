@@ -120,6 +120,24 @@ describe("rag files", () => {
       )
     })
 
+    it("keeps formatted heading text in context", async () => {
+      const chunks = await processFileToChunks({
+        buffer: Buffer.from(`
+## The **Krusty Krab** Menu \`v2\`
+
+- Signature item: Krabby Patty
+        `),
+        filename: "menu.md",
+      })
+
+      expect(chunks).toContain(
+        [
+          "The Krusty Krab Menu v2",
+          "Signature item: Krabby Patty",
+        ].join("\n")
+      )
+    })
+
     it("turns markdown tables into retrievable text facts", async () => {
       const chunks = await processFileToChunks({
         buffer: Buffer.from(`

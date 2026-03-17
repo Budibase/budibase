@@ -1,4 +1,3 @@
-import { toString } from "mdast-util-to-string"
 import { remark } from "remark"
 import remarkGfm from "remark-gfm"
 import remarkParse from "remark-parse"
@@ -8,6 +7,9 @@ import type { RagFileProcessor, RagProcessInput } from "../types"
 interface MdNode {
   type: string
   depth?: number
+  value?: string
+  alt?: string
+  title?: string | null
   children?: MdNode[]
 }
 
@@ -23,6 +25,26 @@ const parseMarkdown = (content: string) =>
 
 const normalizeMarkdownText = (value: string) =>
   value.replace(/\s+/g, " ").replace(/\|/g, " ").trim()
+
+const extractNodeText = (node?: MdNode): string => {
+  if (!node) {
+    return ""
+  }
+
+  if (typeof node.value === "string") {
+    return node.value
+  }
+
+  if (node.type === "image") {
+    return node.alt || ""
+  }
+
+  if (Array.isArray(node.children)) {
+    return node.children.map(extractNodeText).join("")
+  }
+
+  return ""
+}
 
 const buildContextualFact = (context: string[], text: string) => {
   const normalizedText = normalizeMarkdownText(text)
@@ -57,7 +79,7 @@ const extractTableFacts = (table: MdTable, context: string[]) => {
   }
 
   const headers = headerRow.children.map(cell =>
-    normalizeMarkdownText(toString(cell))
+    normalizeMarkdownText(extractNodeText(cell))
   )
 
   return bodyRows
@@ -65,7 +87,7 @@ const extractTableFacts = (table: MdTable, context: string[]) => {
       const values = row.children
         .map((cell, index) => {
           const header = headers[index]
-          const text = normalizeMarkdownText(toString(cell))
+          const text = normalizeMarkdownText(extractNodeText(cell))
           if (!header || !text) {
             return null
           }
@@ -96,7 +118,7 @@ export const markdownProcessor: RagFileProcessor = {
       if (node.type === "heading") {
         pushChunk(chunks, facts)
         const level = node.depth || 1
-        const heading = normalizeMarkdownText(toString(node))
+        const heading = normalizeMarkdownText(extractNodeText(node))
         if (!heading) {
           continue
         }
@@ -113,7 +135,7 @@ export const markdownProcessor: RagFileProcessor = {
 
       if (node.type === "list") {
         for (const item of node.children || []) {
-          const fact = buildContextualFact(context, toString(item))
+          const fact = buildContextualFact(context, extractNodeText(item))
           if (fact) {
             facts.push(fact)
           }
@@ -122,7 +144,7 @@ export const markdownProcessor: RagFileProcessor = {
       }
 
       if (node.type === "paragraph" || node.type === "blockquote") {
-        const fact = buildContextualFact(context, toString(node))
+        const fact = buildContextualFact(context, extractNodeText(node))
         if (fact) {
           facts.push(fact)
         }
@@ -130,7 +152,7 @@ export const markdownProcessor: RagFileProcessor = {
       }
 
       if (node.type === "code") {
-        const fact = buildContextualFact(context, toString(node))
+        const fact = buildContextualFact(context, extractNodeText(node))
         if (fact) {
           facts.push(fact)
         }
