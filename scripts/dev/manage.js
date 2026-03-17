@@ -40,7 +40,7 @@ async function init() {
     BB_ADMIN_USER_PASSWORD: "cheekychuckles",
     LITELLM_MASTER_KEY: "budibase",
     LITELLM_SALT_KEY: "budibase",
-    DEFAULT_BLACKLIST_IPS_ALLOWLIST: "127.0.0.1",
+    DEFAULT_BLACKLIST_IPS_ALLOWLIST: "127.0.0.1,::1",
   }
 
   config = { ...config, ...existingConfig }
