@@ -757,7 +757,7 @@ export class RestIntegration implements IntegrationBase {
       !disableBlacklistForLocalDevelopment &&
       (await blacklist.isBlacklisted(url))
     ) {
-      throw new Error("Cannot connect to URL.")
+      throw new Error("URL resolved to a blacklisted IP address.")
     }
 
     // Configure dispatcher for proxy and/or TLS settings
