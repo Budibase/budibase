@@ -751,13 +751,8 @@ export class RestIntegration implements IntegrationBase {
       pagination,
       paginationValues
     )
-    const disableBlacklistForLocalDevelopment =
-      environment.isDev() && !environment.isTest()
-    if (
-      !disableBlacklistForLocalDevelopment &&
-      (await blacklist.isBlacklisted(url))
-    ) {
-      throw new Error("Cannot connect to URL.")
+    if (await blacklist.isBlacklisted(url)) {
+      throw new Error("URL resolved to a blacklisted IP address.")
     }
 
     // Configure dispatcher for proxy and/or TLS settings
