@@ -101,8 +101,34 @@ function addEntryToBlacklist(blockList: net.BlockList, entry: string) {
 
 export async function refreshBlacklist() {
   const next = new net.BlockList()
+  const nextAllow = new net.BlockList()
+
+  const configuredAllowlist =
+    env.DEFAULT_BLACKLIST_IPS_ALLOWLIST?.split(",") || []
+  for (const entry of configuredAllowlist) {
+    const trimmed = entry.trim()
+    if (!trimmed) {
+      continue
+    }
+
+    const [ip] = trimmed.split("/")
+    if (net.isIP(ip)) {
+      addEntryToBlacklist(nextAllow, trimmed)
+      continue
+    }
+
+    const addresses = await lookup(trimmed)
+    for (const address of addresses) {
+      addEntryToBlacklist(nextAllow, address)
+    }
+  }
+
   if (shouldApplyDefaultBlacklist()) {
     for (const entry of DEFAULT_BLACKLIST) {
+      const [ip] = entry.trim().split("/")
+      if (nextAllow.check(ip)) {
+        continue
+      }
       addEntryToBlacklist(next, entry)
     }
   }

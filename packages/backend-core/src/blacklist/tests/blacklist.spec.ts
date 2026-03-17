@@ -6,7 +6,10 @@ describe("blacklist", () => {
     let restoreEnv: (() => void) | undefined
 
     beforeAll(async () => {
-      restoreEnv = setEnv({ BLACKLIST_IPS: undefined })
+      restoreEnv = setEnv({
+        BLACKLIST_IPS: undefined,
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST: undefined,
+      })
       await refreshBlacklist()
     })
 
@@ -48,6 +51,7 @@ describe("blacklist", () => {
     beforeAll(async () => {
       restoreEnv = setEnv({
         BLACKLIST_IPS: "www.google.com,192.168.1.1,1.1.1.1",
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST: undefined,
       })
       await refreshBlacklist()
     })
@@ -101,6 +105,7 @@ describe("blacklist", () => {
       restoreEnv = setEnv({
         SELF_HOSTED: true,
         BLACKLIST_IPS: "",
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST: undefined,
       })
       await refreshBlacklist()
 
@@ -113,6 +118,7 @@ describe("blacklist", () => {
       restoreEnv = setEnv({
         SELF_HOSTED: true,
         BLACKLIST_IPS: "",
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST: undefined,
       })
       await refreshBlacklist()
 
@@ -123,11 +129,45 @@ describe("blacklist", () => {
       restoreEnv = setEnv({
         SELF_HOSTED: true,
         BLACKLIST_IPS: "1.1.1.1",
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST: undefined,
       })
       await refreshBlacklist()
 
       expect(await isBlacklisted("1.1.1.1")).toBe(true)
       expect(await isBlacklisted("192.168.1.1")).toBe(false)
+    })
+  })
+
+  describe("blacklist allowlist overrides", () => {
+    let restoreEnv: (() => void) | undefined
+
+    afterEach(async () => {
+      restoreEnv?.()
+      restoreEnv = undefined
+      await refreshBlacklist()
+    })
+
+    it("should allow explicitly allowed private ranges", async () => {
+      restoreEnv = setEnv({
+        BLACKLIST_IPS: undefined,
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST: "10.0.0.0/8",
+        SELF_HOSTED: false,
+      })
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("10.0.0.1")).toBe(false)
+      expect(await isBlacklisted("192.168.1.1")).toBe(true)
+    })
+
+    it("should ignore DEFAULT_BLACKLIST_IPS_ALLOWLIST when BLACKLIST_IPS is set", async () => {
+      restoreEnv = setEnv({
+        BLACKLIST_IPS: "1.1.1.1",
+        DEFAULT_BLACKLIST_IPS_ALLOWLIST: "1.1.1.1",
+        SELF_HOSTED: false,
+      })
+      await refreshBlacklist()
+
+      expect(await isBlacklisted("1.1.1.1")).toBe(true)
     })
   })
 
