@@ -19,7 +19,10 @@ let blackList: net.BlockList | undefined
 const performLookup = promisify(dns.lookup)
 
 function shouldApplyDefaultBlacklist() {
-  return !(env.SELF_HOSTED && env.BLACKLIST_IPS !== undefined)
+  if (env.SELF_HOSTED) {
+    return false
+  }
+  return env.BLACKLIST_IPS === undefined
 }
 
 function getIpVersion(address: string): "ipv4" | "ipv6" {
