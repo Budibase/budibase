@@ -45,6 +45,7 @@ const selectFallbackCandidates = (
   const secondBest = sorted[1]
   if (
     secondBest &&
+    secondBest.sourceId !== best.sourceId &&
     secondBest.distance - best.distance < DEFAULT_RAG_FALLBACK_DISTANCE_GAP
   ) {
     return []
