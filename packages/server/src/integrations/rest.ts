@@ -752,7 +752,7 @@ export class RestIntegration implements IntegrationBase {
       paginationValues
     )
     if (await blacklist.isBlacklisted(url)) {
-      throw new Error("URL resolved to a blacklisted IP address.")
+      throw new Error("URL is blocked or could not be resolved safely.")
     }
 
     // Configure dispatcher for proxy and/or TLS settings

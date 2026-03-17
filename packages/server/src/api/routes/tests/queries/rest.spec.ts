@@ -239,7 +239,7 @@ describe("rest", () => {
         {
           status: 400,
           body: {
-            message: "URL resolved to a blacklisted IP address.",
+            message: "URL is blocked or could not be resolved safely.",
           },
         }
       )
