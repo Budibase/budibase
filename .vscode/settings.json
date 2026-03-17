@@ -11,6 +11,11 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "debug.javascript.terminalOptions": {
+    "sourceMaps": true,
+    "resolveSourceMapLocations": [
+      "${workspaceFolder}/packages/**",
+      "!**/node_modules/**"
+    ],
     "skipFiles": [
       "${workspaceFolder}/packages/backend-core/node_modules/**",
       "<node_internals>/**"
