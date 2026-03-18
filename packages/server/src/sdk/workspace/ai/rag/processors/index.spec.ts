@@ -44,7 +44,9 @@ teams:
       filename: "service.yaml",
     })
 
-    expect(chunks).toContain("service.name: Customer Support\nservice.region: EMEA")
+    expect(chunks).toContain(
+      "service.name: Customer Support\nservice.region: EMEA"
+    )
     expect(chunks).toContain("teams: support-ops, security-ops")
   })
 

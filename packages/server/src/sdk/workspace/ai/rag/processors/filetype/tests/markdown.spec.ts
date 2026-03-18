@@ -37,9 +37,7 @@ describe("markdownProcessor", () => {
       [
         "> The **Incident Response** Runbook `v2`",
         "Escalation path: Security Operations",
-      ].join(
-        "\n"
-      ),
+      ].join("\n"),
     ])
   })
 
