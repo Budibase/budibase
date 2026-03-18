@@ -4,22 +4,22 @@ describe("markdownProcessor", () => {
   it("preserves heading context for list facts", async () => {
     const chunks = await markdownProcessor.process({
       buffer: Buffer.from(`
-# SpongeBob SquarePants Trivia
+# Product Support Knowledge Base
 
-## Characters
+## Account Management
 
-### SpongeBob SquarePants
-- His address is 124 Conch Street.
-- He has a pet snail named Gary.
+### Password Reset Policy
+- Users can reset passwords from the account security page.
+- Password reset links expire after 30 minutes.
       `),
     })
 
     expect(chunks).toEqual([
       [
-        "SpongeBob SquarePants Trivia > Characters > SpongeBob SquarePants",
-        "His address is 124 Conch Street.",
-        "SpongeBob SquarePants Trivia > Characters > SpongeBob SquarePants",
-        "He has a pet snail named Gary.",
+        "Product Support Knowledge Base > Account Management > Password Reset Policy",
+        "Users can reset passwords from the account security page.",
+        "Product Support Knowledge Base > Account Management > Password Reset Policy",
+        "Password reset links expire after 30 minutes.",
       ].join("\n"),
     ])
   })
@@ -27,14 +27,17 @@ describe("markdownProcessor", () => {
   it("keeps formatted heading text in context", async () => {
     const chunks = await markdownProcessor.process({
       buffer: Buffer.from(`
-## The **Krusty Krab** Menu \`v2\`
+## The **Incident Response** Runbook \`v2\`
 
-- Signature item: Krabby Patty
+- Escalation path: Security Operations
       `),
     })
 
     expect(chunks).toEqual([
-      ["> The **Krusty Krab** Menu `v2`", "Signature item: Krabby Patty"].join(
+      [
+        "> The **Incident Response** Runbook `v2`",
+        "Escalation path: Security Operations",
+      ].join(
         "\n"
       ),
     ])
@@ -43,18 +46,18 @@ describe("markdownProcessor", () => {
   it("turns markdown tables into retrievable facts", async () => {
     const chunks = await markdownProcessor.process({
       buffer: Buffer.from(`
-## Locations in Bikini Bottom
+## Regional Offices
 
 | Location | Description |
 |---|---|
-| Krusty Krab | SpongeBob and Squidward's workplace |
-| Goo Lagoon | Bikini Bottom's beach and recreational area |
+| Paris | European support and compliance operations |
+| New York | North American customer success operations |
       `),
     })
 
     expect(chunks).toEqual([
-      " > Locations in Bikini Bottom\nLocation: Krusty Krab; Description: SpongeBob and Squidward's workplace",
-      " > Locations in Bikini Bottom\nLocation: Goo Lagoon; Description: Bikini Bottom's beach and recreational area",
+      " > Regional Offices\nLocation: Paris; Description: European support and compliance operations",
+      " > Regional Offices\nLocation: New York; Description: North American customer success operations",
     ])
   })
 })

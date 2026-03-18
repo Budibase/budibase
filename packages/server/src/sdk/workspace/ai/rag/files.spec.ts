@@ -100,23 +100,23 @@ describe("rag files", () => {
     it("preserves markdown heading context for bullet facts", async () => {
       const chunks = await processFileToChunks({
         buffer: Buffer.from(`
-# SpongeBob SquarePants Trivia
+# Product Support Knowledge Base
 
-## Characters
+## Account Management
 
-### SpongeBob SquarePants
-- His address is 124 Conch Street.
-- He has a pet snail named Gary.
+### Password Reset Policy
+- Users can reset passwords from the account security page.
+- Password reset links expire after 30 minutes.
         `),
-        filename: "spongebob-trivia.md",
+        filename: "account-policy.md",
       })
 
       expect(chunks).toContain(
         [
-          "SpongeBob SquarePants Trivia > Characters > SpongeBob SquarePants",
-          "His address is 124 Conch Street.",
-          "SpongeBob SquarePants Trivia > Characters > SpongeBob SquarePants",
-          "He has a pet snail named Gary.",
+          "Product Support Knowledge Base > Account Management > Password Reset Policy",
+          "Users can reset passwords from the account security page.",
+          "Product Support Knowledge Base > Account Management > Password Reset Policy",
+          "Password reset links expire after 30 minutes.",
         ].join("\n")
       )
     })
@@ -124,41 +124,44 @@ describe("rag files", () => {
     it("keeps formatted heading text in context", async () => {
       const chunks = await processFileToChunks({
         buffer: Buffer.from(`
-## The **Krusty Krab** Menu \`v2\`
+## The **Incident Response** Runbook \`v2\`
 
-- Signature item: Krabby Patty
+- Escalation path: Security Operations
         `),
-        filename: "menu.md",
+        filename: "incident-runbook.md",
       })
 
       expect(chunks).toContain(
-        ["The Krusty Krab Menu v2", "Signature item: Krabby Patty"].join("\n")
+        [
+          "> The **Incident Response** Runbook `v2`",
+          "Escalation path: Security Operations",
+        ].join("\n")
       )
     })
 
     it("turns markdown tables into retrievable text facts", async () => {
       const chunks = await processFileToChunks({
         buffer: Buffer.from(`
-## Locations in Bikini Bottom
+## Regional Offices
 
 | Location | Description |
 |---|---|
-| Krusty Krab | SpongeBob and Squidward's workplace |
-| Goo Lagoon | Bikini Bottom's beach and recreational area |
+| Paris | European support and compliance operations |
+| New York | North American customer success operations |
         `),
-        filename: "locations.md",
+        filename: "regional-offices.md",
       })
 
       expect(chunks).toContain(
         [
-          "Locations in Bikini Bottom",
-          "Location: Krusty Krab; Description: SpongeBob and Squidward's workplace",
+          " > Regional Offices",
+          "Location: Paris; Description: European support and compliance operations",
         ].join("\n")
       )
       expect(chunks).toContain(
         [
-          "Locations in Bikini Bottom",
-          "Location: Goo Lagoon; Description: Bikini Bottom's beach and recreational area",
+          " > Regional Offices",
+          "Location: New York; Description: North American customer success operations",
         ].join("\n")
       )
     })
@@ -171,7 +174,7 @@ describe("rag files", () => {
           {
             source: "rag_source_123",
             chunkText:
-              "SpongeBob SquarePants Trivia > Characters > SpongeBob SquarePants\nHis address is 124 Conch Street.",
+              "Product Support Knowledge Base > Account Management > Password Reset Policy\nUsers can reset passwords from the account security page.",
             chunkHash: "chunk-1",
             distance: 0.42,
           },
@@ -191,7 +194,7 @@ describe("rag files", () => {
         {
           _id: "file_123",
           knowledgeBaseId: "kb_123",
-          filename: "spongebob-trivia.md",
+          filename: "account-policy.md",
           objectStoreKey: "key",
           ragSourceId: "rag_source_123",
           status: KnowledgeBaseFileStatus.READY,
@@ -208,21 +211,23 @@ describe("rag files", () => {
         features.testutils.withFeatureFlags(
           "tenant",
           { [FeatureFlag.AI_RAG]: true },
-          () => retrieveContextForAgent(agent, "What is SpongeBob's address?")
+          () => retrieveContextForAgent(agent, "How can users reset their password?")
         )
       )
 
       expect(vectorDb.queryNearest).toHaveBeenCalledWith(
         [0.1, 0.2, 0.3],
         ["rag_source_123"],
-        8
+        20
       )
-      expect(result.text).toContain("His address is 124 Conch Street.")
+      expect(result.text).toContain(
+        "Users can reset passwords from the account security page."
+      )
       expect(result.sources).toEqual([
         {
           sourceId: "rag_source_123",
           fileId: "file_123",
-          filename: "spongebob-trivia.md",
+          filename: "account-policy.md",
           chunkCount: 1,
         },
       ])
@@ -259,7 +264,7 @@ describe("rag files", () => {
         {
           _id: "file_123",
           knowledgeBaseId: "kb_123",
-          filename: "spongebob-trivia.md",
+          filename: "account-policy.md",
           objectStoreKey: "key",
           ragSourceId: "rag_source_123",
           status: KnowledgeBaseFileStatus.READY,
@@ -276,7 +281,7 @@ describe("rag files", () => {
         features.testutils.withFeatureFlags(
           "tenant",
           { [FeatureFlag.AI_RAG]: true },
-          () => retrieveContextForAgent(agent, "What is SpongeBob's address?")
+          () => retrieveContextForAgent(agent, "How can users reset their password?")
         )
       )
 
@@ -328,7 +333,7 @@ describe("rag files", () => {
       expect(vectorDb.queryNearest).toHaveBeenCalled()
     })
 
-    it("does not use fallback when nearest candidates are ambiguous", async () => {
+    it("uses fallback when nearest candidates are close but from the same source", async () => {
       const vectorDb = {
         queryNearest: jest.fn().mockResolvedValue([
           {
@@ -359,7 +364,7 @@ describe("rag files", () => {
         {
           _id: "file_123",
           knowledgeBaseId: "kb_123",
-          filename: "spongebob-trivia.md",
+          filename: "account-policy.md",
           objectStoreKey: "key",
           ragSourceId: "rag_source_123",
           status: KnowledgeBaseFileStatus.READY,
@@ -380,7 +385,16 @@ describe("rag files", () => {
         )
       )
 
-      expect(result).toEqual({ text: "", chunks: [], sources: [] })
+      expect(result.text).toContain("Ambiguous chunk 1")
+      expect(result.text).toContain("Ambiguous chunk 2")
+      expect(result.sources).toEqual([
+        {
+          sourceId: "rag_source_123",
+          fileId: "file_123",
+          filename: "account-policy.md",
+          chunkCount: 2,
+        },
+      ])
     })
   })
 })
