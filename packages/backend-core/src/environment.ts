@@ -345,7 +345,10 @@ for (let [key, value] of Object.entries(environment)) {
   }
 }
 
-const isDeprecationWarningDisabled = !!process.env.DISABLE_DEPRECATION_WARNINGS
+const isDeprecationWarningDisabled =
+  process.env.DISABLE_DEPRECATION_WARNINGS !== undefined &&
+  process.env.DISABLE_DEPRECATION_WARNINGS !== "false" &&
+  process.env.DISABLE_DEPRECATION_WARNINGS !== "0"
 
 if (!isDeprecationWarningDisabled) {
   if (process.env.INTERNAL_API_KEY) {
