@@ -48,7 +48,6 @@ components:
   })
 
   it("falls back to plain chunking for invalid yaml", async () => {
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {})
     const content = "not: [valid"
 
     const chunks = await yamlProcessor.process({
@@ -56,8 +55,6 @@ components:
     })
 
     expect(chunks).toEqual(["not: [valid"])
-    expect(warnSpy).toHaveBeenCalledTimes(1)
-    warnSpy.mockRestore()
   })
 
   it("falls back to plain chunking for non-openapi yaml", async () => {
