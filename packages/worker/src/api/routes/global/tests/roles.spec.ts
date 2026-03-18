@@ -45,6 +45,26 @@ async function updateAppMetadata(
   })
 }
 
+async function addUsersTable(roleInclusion: string[]) {
+  await workspaceDb.put({
+    _id: "ta_users",
+    type: "table",
+    name: "Users",
+    sourceType: "internal",
+    sourceId: "bb_internal",
+    schema: {
+      roleId: {
+        name: "roleId",
+        type: "options",
+        constraints: {
+          type: "string",
+          inclusion: roleInclusion,
+        },
+      },
+    },
+  })
+}
+
 describe("/api/global/roles", () => {
   const config = new TestConfiguration()
 
@@ -101,6 +121,44 @@ describe("/api/global/roles", () => {
         ])
       }
     )
+
+    it("includes POWER role for v3+ apps when users table references POWER with custom roles", async () => {
+      await updateAppMetadata({ creationVersion: "3.0.0" })
+      await addUsersTable([
+        roles.BUILTIN_ROLE_IDS.ADMIN,
+        roles.BUILTIN_ROLE_IDS.POWER,
+        roles.BUILTIN_ROLE_IDS.BASIC,
+        roles.BUILTIN_ROLE_IDS.PUBLIC,
+        ROLE_NAME,
+      ])
+      const res = await config.api.roles.get()
+
+      expect(res.body[workspaceId].roles.map((r: any) => r._id)).toEqual([
+        ROLE_NAME,
+        roles.BUILTIN_ROLE_IDS.ADMIN,
+        roles.BUILTIN_ROLE_IDS.POWER,
+        roles.BUILTIN_ROLE_IDS.BASIC,
+        roles.BUILTIN_ROLE_IDS.PUBLIC,
+      ])
+    })
+
+    it("does not include POWER for v3+ apps when users table only has builtin roles", async () => {
+      await updateAppMetadata({ creationVersion: "3.0.0" })
+      await addUsersTable([
+        roles.BUILTIN_ROLE_IDS.ADMIN,
+        roles.BUILTIN_ROLE_IDS.POWER,
+        roles.BUILTIN_ROLE_IDS.BASIC,
+        roles.BUILTIN_ROLE_IDS.PUBLIC,
+      ])
+      const res = await config.api.roles.get()
+
+      expect(res.body[workspaceId].roles.map((r: any) => r._id)).toEqual([
+        ROLE_NAME,
+        roles.BUILTIN_ROLE_IDS.ADMIN,
+        roles.BUILTIN_ROLE_IDS.BASIC,
+        roles.BUILTIN_ROLE_IDS.PUBLIC,
+      ])
+    })
 
     it.each(["2.9.0", "1.0.0", "0.0.0", "2.32.17+2146.b125a7c"])(
       "include POWER roles before v3 (%s)",

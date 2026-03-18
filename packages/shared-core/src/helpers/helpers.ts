@@ -129,3 +129,9 @@ export const escapeHtml = (str: string | undefined | null): string => {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;")
 }
+
+/**
+ * Normalizes a string for case-insensitive comparisons.
+ */
+export const normalizeForComparison = (value: string) =>
+  value.toLowerCase().trim()

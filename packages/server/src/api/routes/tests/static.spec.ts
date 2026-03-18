@@ -234,17 +234,13 @@ describe("/static", () => {
     it("should move permanently from base call (public call)", async () => {
       const res = await request.get(`/`)
       expect(res.status).toEqual(301)
-      expect(res.text).toEqual(
-        `Redirecting to <a href="/builder">/builder</a>.`
-      )
+      expect(res.text).toEqual("Redirecting to /builder.")
     })
 
     it("should not error when trying to get 'apple-touch-icon.png' (public call)", async () => {
       const res = await request.get(`/apple-touch-icon.png`)
       expect(res.status).toEqual(302)
-      expect(res.text).toEqual(
-        `Redirecting to <a href="/builder/bblogo.png">/builder/bblogo.png</a>.`
-      )
+      expect(res.text).toEqual("Redirecting to /builder/bblogo.png.")
     })
   })
 

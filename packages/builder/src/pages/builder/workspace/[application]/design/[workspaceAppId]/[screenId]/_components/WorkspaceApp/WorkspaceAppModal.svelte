@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getErrorMessage } from "@/helpers/errors"
   import { buildLiveUrl } from "@/helpers/urls"
   import { appStore, screenStore, workspaceAppStore } from "@/stores/builder"
   import * as screenTemplating from "@/templates/screenTemplating"
@@ -35,6 +36,7 @@
 
   const requiredString = (errorMessage: string) =>
     z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
+  const normalize = (value: string) => value.trim().toLowerCase()
 
   let validationState: {
     errors: Partial<Record<keyof WorkspaceApp, string>>
@@ -47,8 +49,8 @@
         val =>
           !$workspaceAppStore.workspaceApps
             .filter(a => a._id !== workspaceApp._id)
-            .map(a => a.name.toLowerCase())
-            .includes(val.toLowerCase()),
+            .map(a => normalize(a.name))
+            .includes(normalize(val)),
         {
           message: "This name is already taken.",
         }
@@ -62,8 +64,8 @@
           val =>
             !$workspaceAppStore.workspaceApps
               .filter(a => a._id !== workspaceApp._id)
-              .map(a => a.url.toLowerCase())
-              .includes(val.toLowerCase()),
+              .map(a => normalize(a.url))
+              .includes(normalize(val)),
           {
             message: "This url is already taken.",
           }
@@ -73,9 +75,10 @@
     const validationResult = validator.safeParse(workspaceApp)
     validationState.errors = {}
     if (!validationResult.success) {
-      validationState.errors = Object.entries(
-        validationResult.error.formErrors.fieldErrors
-      ).reduce<Record<string, string>>((acc, [field, errors]) => {
+      const flattenedErrors = validationResult.error.flatten().fieldErrors
+      validationState.errors = Object.entries(flattenedErrors).reduce<
+        Record<string, string>
+      >((acc, [field, errors]) => {
         if (errors[0]) {
           acc[field] = errors[0]
         }
@@ -138,9 +141,9 @@
         })
         notifications.success("App updated successfully")
       }
-    } catch (e: any) {
-      console.error("Error saving app", e)
-      notifications.error(`Error saving app: ${e.message}`)
+    } catch (error) {
+      console.error("Error saving app", error)
+      notifications.error(getErrorMessage(error) || "Error saving app")
     }
   }
 
