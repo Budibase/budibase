@@ -1078,6 +1078,7 @@ async function main() {
     let guardrailTotal = 0
     let guardrailPassed = 0
     let guardrailFailed = false
+    let guardrailFailureReason: string | undefined
     let retrievalCoverageTotal = 0
     let retrievalCoveragePassed = 0
 
@@ -1147,9 +1148,11 @@ async function main() {
           )
         } else {
           guardrailFailed = true
+          guardrailFailureReason = `no-context guard failed for case '${testCase.id}': ${deterministicResult.detail}`
           console.log(
             red(`GUARD FAIL ${testCase.id}: ${deterministicResult.detail}`)
           )
+          break
         }
         continue
       }
@@ -1165,12 +1168,13 @@ async function main() {
       const hasRetrievedContext = sourceHints.length > 0 && contexts.length > 0
       if (!hasRetrievedContext) {
         guardrailFailed = true
+        guardrailFailureReason = `retrieval_coverage guard failed for case '${testCase.id}'`
         console.log(
           red(
             `GUARD FAIL ${testCase.id}: retrieval_coverage requires at least one retrieved source/context`
           )
         )
-        continue
+        break
       }
       retrievalCoveragePassed += 1
 
@@ -1205,7 +1209,13 @@ async function main() {
 
     let failed = guardrailFailed
 
-    if (samples.length === 0) {
+    if (guardrailFailed) {
+      console.log(
+        red(
+          `Stopping eval due to guardrail failure${guardrailFailureReason ? `: ${guardrailFailureReason}` : ""}`
+        )
+      )
+    } else if (samples.length === 0) {
       console.log(
         yellow(
           "Skipping RAGAS aggregate scoring because no informational RAG samples were collected"
