@@ -1,10 +1,10 @@
 import { roles, utils } from "@budibase/backend-core"
-import { BASE_LAYOUT_PROP_IDS, EMPTY_LAYOUT } from "../../constants/layouts"
+import { BASE_LAYOUT_PROP_IDS, EMPTY_LAYOUT } from "../../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
 import {
   BUILTIN_ACTION_DEFINITIONS,
   TRIGGER_DEFINITIONS,
-} from "../../automations"
+} from "../../../automations"
 import {
   AIOperationEnum,
   AutoFieldSubType,
@@ -39,14 +39,16 @@ import {
   CreateEnvironmentVariableRequest,
   Screen,
 } from "@budibase/types"
-import { LoopInput } from "../../definitions/automations"
+import { LoopInput } from "../../../definitions/automations"
 import { merge } from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 export {
   createTableScreen,
   createQueryScreen,
   createViewScreen,
-} from "./structures/screens"
+} from "./screens"
+
+export * as ai from "./ai"
 
 const { BUILTIN_ROLE_IDS } = roles
 

@@ -46,10 +46,11 @@ import {
 import { ingestKnowledgeBaseFile, retrieveContextForAgent } from "./files"
 import { features, tenancy } from "@budibase/backend-core"
 import { processFileToChunks } from "./processors"
+import { structures } from "../../../../api/routes/tests/utilities"
 
 describe("rag files", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
   })
 
   function setMockCreateVectorDb(vectorDb: Partial<VectorDbClient>) {
@@ -79,20 +80,18 @@ describe("rag files", () => {
         queryNearest: jest.fn(),
       } satisfies VectorDbClient
 
+      const kb = structures.ai.knowledgeBase.basicKnowledgeBase()
+      const kbId = kb._id!
+
       setMockCreateVectorDb(vectorDb)
       setMockCreateLLM({
         embedding: {} as LLMResponse["embedding"],
       })
       setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
-      setMockKnowledgeBaseFind({
-        _id: "kb_123",
-        name: "KB",
-        embeddingModel: "embedding_config",
-        vectorDb: "vector_db_config",
-      })
+      setMockKnowledgeBaseFind(kb)
 
       const knowledgeBase: KnowledgeBase = {
-        _id: "kb_123",
+        _id: kbId,
         name: "Knowledge Base",
         embeddingModel: "embedding_config",
         vectorDb: "vector_db",
@@ -100,7 +99,7 @@ describe("rag files", () => {
 
       const knowledgeBaseFile: KnowledgeBaseFile = {
         _id: "file_123",
-        knowledgeBaseId: "kb_123",
+        knowledgeBaseId: kbId,
         filename: "test.txt",
         objectStoreKey: "key",
         ragSourceId: "rag_source_123",
@@ -212,19 +211,17 @@ describe("rag files", () => {
         ]),
       }
 
+      const kb = structures.ai.knowledgeBase.basicKnowledgeBase()
+      const kbId = kb._id!
+
       setMockCreateVectorDb(vectorDb)
       setMockCreateLLM({ embedding: {} as LLMResponse["embedding"] })
       setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
-      setMockKnowledgeBaseFind({
-        _id: "kb_123",
-        name: "KB",
-        embeddingModel: "embedding_config",
-        vectorDb: "vector_db_config",
-      })
+      setMockKnowledgeBaseFind(kb)
       mockListKnowledgeBaseFiles.mockResolvedValue([
         {
           _id: "file_123",
-          knowledgeBaseId: "kb_123",
+          knowledgeBaseId: kbId,
           filename: "account-policy.md",
           objectStoreKey: "key",
           ragSourceId: "rag_source_123",
@@ -234,9 +231,7 @@ describe("rag files", () => {
         },
       ])
 
-      const agent = {
-        knowledgeBases: ["kb_123"],
-      } as any
+      const agent = structures.ai.agents.basicAgent({ knowledgeBases: [kbId] })
 
       const result = await tenancy.doInTenant("tenant", () =>
         features.testutils.withFeatureFlags(
@@ -286,19 +281,17 @@ describe("rag files", () => {
         ]),
       }
 
+      const kb = structures.ai.knowledgeBase.basicKnowledgeBase()
+      const kbId = kb._id!
+
       setMockCreateVectorDb(vectorDb)
       setMockCreateLLM({ embedding: {} as LLMResponse["embedding"] })
       setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
-      setMockKnowledgeBaseFind({
-        _id: "kb_123",
-        name: "KB",
-        embeddingModel: "embedding_config",
-        vectorDb: "vector_db_config",
-      })
+      setMockKnowledgeBaseFind(kb)
       mockListKnowledgeBaseFiles.mockResolvedValue([
         {
           _id: "file_123",
-          knowledgeBaseId: "kb_123",
+          knowledgeBaseId: kbId,
           filename: "account-policy.md",
           objectStoreKey: "key",
           ragSourceId: "rag_source_123",
@@ -308,9 +301,7 @@ describe("rag files", () => {
         },
       ])
 
-      const agent = {
-        knowledgeBases: ["kb_123"],
-      } as any
+      const agent = structures.ai.agents.basicAgent({ knowledgeBases: [kbId] })
 
       const result = await tenancy.doInTenant("tenant", () =>
         features.testutils.withFeatureFlags(
@@ -346,19 +337,27 @@ describe("rag files", () => {
         ]),
       }
 
+      const kb = structures.ai.knowledgeBase.basicKnowledgeBase()
+      const kbId = kb._id!
+
       setMockCreateVectorDb(vectorDb)
       setMockCreateLLM({ embedding: {} as LLMResponse["embedding"] })
       setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
-      setMockKnowledgeBaseFind({
-        _id: "kb_123",
-        name: "KB",
-        embeddingModel: "embedding_config",
-        vectorDb: "vector_db_config",
-      })
+      setMockKnowledgeBaseFind(kb)
+      mockListKnowledgeBaseFiles.mockResolvedValue([
+        {
+          _id: "file_123",
+          knowledgeBaseId: kbId,
+          filename: "account-policy.md",
+          objectStoreKey: "key",
+          ragSourceId: "rag_source_123",
+          status: KnowledgeBaseFileStatus.READY,
+          chunkCount: 2,
+          uploadedBy: "user_123",
+        },
+      ])
 
-      const agent = {
-        knowledgeBases: ["kb_123"],
-      } as any
+      const agent = structures.ai.agents.basicAgent({ knowledgeBases: [kbId] })
 
       const result = await tenancy.doInTenant("tenant", () =>
         features.testutils.withFeatureFlags(
@@ -390,19 +389,17 @@ describe("rag files", () => {
         ]),
       }
 
+      const kb = structures.ai.knowledgeBase.basicKnowledgeBase()
+      const kbId = kb._id!
+
       setMockCreateVectorDb(vectorDb)
       setMockCreateLLM({ embedding: {} as LLMResponse["embedding"] })
       setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
-      setMockKnowledgeBaseFind({
-        _id: "kb_123",
-        name: "KB",
-        embeddingModel: "embedding_config",
-        vectorDb: "vector_db_config",
-      })
+      setMockKnowledgeBaseFind(kb)
       mockListKnowledgeBaseFiles.mockResolvedValue([
         {
           _id: "file_123",
-          knowledgeBaseId: "kb_123",
+          knowledgeBaseId: kbId,
           filename: "account-policy.md",
           objectStoreKey: "key",
           ragSourceId: "rag_source_123",
@@ -412,9 +409,7 @@ describe("rag files", () => {
         },
       ])
 
-      const agent = {
-        knowledgeBases: ["kb_123"],
-      } as any
+      const agent = structures.ai.agents.basicAgent({ knowledgeBases: [kbId] })
 
       const result = await tenancy.doInTenant("tenant", () =>
         features.testutils.withFeatureFlags(
