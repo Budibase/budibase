@@ -16,50 +16,69 @@ describe("rag processors", () => {
   it("uses the markdown parser for markdown files", async () => {
     const chunks = await processFileToChunks({
       buffer: Buffer.from(`
-## The **Krusty Krab** Menu \`v2\`
+## The **Incident Response** Runbook \`v2\`
 
-- Signature item: Krabby Patty
+- Escalation path: Security Operations
       `),
       filename: "menu.md",
     })
 
     expect(chunks).toContain(
-      ["The Krusty Krab Menu v2", "Signature item: Krabby Patty"].join("\n")
+      [
+        "> The **Incident Response** Runbook `v2`",
+        "Escalation path: Security Operations",
+      ].join("\n")
     )
   })
 
-  it("uses the yaml parser for OpenAPI yaml files", async () => {
+  it("uses the yaml parser for yaml files", async () => {
     const chunks = await processFileToChunks({
       buffer: Buffer.from(`
-openapi: 3.0.0
-info:
-  title: Pets API
-  version: 1.2.3
-paths:
-  /pets:
-    get:
-      summary: List pets
-      tags: [pets]
-      parameters:
-        - name: limit
-          in: query
-          required: false
-      responses:
-        "200":
-          description: Success
+service:
+  name: Customer Support
+  region: EMEA
+teams:
+  - support-ops
+  - security-ops
       `),
-      filename: "openapi.yaml",
+      filename: "service.yaml",
+    })
+
+    expect(chunks).toContain("service.name: Customer Support\nservice.region: EMEA")
+    expect(chunks).toContain("teams: support-ops, security-ops")
+  })
+
+  it("uses the markdown parser from mime type for extensionless files", async () => {
+    const chunks = await processFileToChunks({
+      buffer: Buffer.from(`
+## The **Incident Response** Runbook \`v2\`
+
+- Escalation path: Security Operations
+      `),
+      filename: "knowledge_base_upload",
+      mimetype: "text/markdown",
     })
 
     expect(chunks).toContain(
       [
-        "GET /pets",
-        "List pets",
-        "Tags: pets",
-        "Parameters: limit (query) - optional",
-        "Responses: 200: Success",
+        "> The **Incident Response** Runbook `v2`",
+        "Escalation path: Security Operations",
       ].join("\n")
     )
+  })
+
+  it("uses the yaml parser from mime type for extensionless files", async () => {
+    const chunks = await processFileToChunks({
+      buffer: Buffer.from(`
+name: Customer Support
+region: EMEA
+      `),
+      filename: "knowledge_base_upload",
+      mimetype: "application/x-yaml",
+    })
+
+    expect(chunks).toContain("name: Customer Support")
+    expect(chunks).toContain("region: EMEA")
   })
 
   it("uses the pdf parser when mime type is pdf", async () => {

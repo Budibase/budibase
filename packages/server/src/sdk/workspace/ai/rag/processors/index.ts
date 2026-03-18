@@ -15,6 +15,13 @@ const processorByExtension: Record<string, RagFileProcessor> = {
 
 const processorByMimeType: Record<string, RagFileProcessor> = {
   "application/pdf": pdfProcessor,
+  "text/markdown": markdownProcessor,
+  "text/x-markdown": markdownProcessor,
+  "application/markdown": markdownProcessor,
+  "application/x-yaml": yamlProcessor,
+  "application/yaml": yamlProcessor,
+  "text/yaml": yamlProcessor,
+  "text/x-yaml": yamlProcessor,
 }
 
 const resolveProcessor = (
