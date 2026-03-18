@@ -142,7 +142,6 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
   OperatorOptions.ContainsAny.value,
-  OperatorOptions.In.value,
 ] as (keyof SearchQueryFields)[]
 
 export function recurseLogicalOperators(
