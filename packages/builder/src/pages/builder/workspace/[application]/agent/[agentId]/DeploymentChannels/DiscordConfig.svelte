@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
-  import { DiscordCommands } from "@budibase/shared-core"
+  import { ChatCommands } from "@budibase/shared-core"
   import type { Agent, SyncAgentDiscordCommandsResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
@@ -10,8 +10,9 @@
     toOptionalValue,
   } from "./utils"
 
-  const DISCORD_ASK_COMMAND = DiscordCommands.ASK
-  const DISCORD_NEW_COMMAND = DiscordCommands.NEW
+  const DISCORD_ASK_COMMAND = ChatCommands.ASK
+  const DISCORD_NEW_COMMAND = ChatCommands.NEW
+  const DISCORD_LINK_COMMAND = ChatCommands.LINK
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling Discord."
 
@@ -197,10 +198,15 @@
     {#if isConnected}
       <div class="synced-info">
         <Body size="S"
-          >Commands synced: /{DISCORD_ASK_COMMAND} and /{DISCORD_NEW_COMMAND}</Body
+          >Commands synced: /{DISCORD_ASK_COMMAND}, /{DISCORD_NEW_COMMAND}, and
+          /{DISCORD_LINK_COMMAND}</Body
         >
       </div>
-      <CopyInput label="Webhook URL" value={webhookUrl} disabled />
+      <CopyInput
+        label="Interactions endpoint URL"
+        value={webhookUrl}
+        disabled
+      />
     {/if}
   {/snippet}
 </ChannelConfigLayout>

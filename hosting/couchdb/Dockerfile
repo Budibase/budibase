@@ -79,6 +79,9 @@ RUN set -eux; \
 # apt clean-up
     rm -rf /var/lib/apt/lists/*;
 
+# Upgrade npm to pick up patched transitive dependencies (tar, minimatch, glob).
+RUN npm install -g npm@latest && npm cache clean --force
+
 # Add configuration
 COPY --chown=couchdb:couchdb couch/10-docker-default.ini /opt/couchdb/etc/default.d/
 # COPY --chown=couchdb:couchdb vm.args /opt/couchdb/etc/
@@ -106,18 +109,28 @@ EXPOSE 4984
 
 RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common wget unzip curl && \
     wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - && \
-    apt-add-repository 'deb http://security.debian.org/debian-security bookworm-security/updates main' && \
-    apt-add-repository 'deb http://archive.debian.org/debian stretch-backports main' && \
     apt-add-repository 'deb https://packages.adoptium.net/artifactory/deb bookworm main' && \
     apt-get update && apt-get install -y --no-install-recommends temurin-8-jdk && \
+    # Remove software-properties-common and its python3 dependency tree
+    apt-get remove -y --purge software-properties-common python3.11 python3.11-minimal \
+        libpython3.11-minimal libpython3.11-stdlib python3-cryptography python3-apt \
+        python-apt-common && \
+    apt-get autoremove -y --purge && \
+    rm -rf /var/lib/apt/lists/
+
+# Patch Debian packages that have available security fixes (libssl3, openssl,
+# libpng16-16, libgnutls30).
+RUN apt-mark hold couchdb && \
+    apt-get update && \
+    apt-get upgrade -y --no-install-recommends && \
     rm -rf /var/lib/apt/lists/
 
 # setup clouseau
 WORKDIR /
-RUN wget https://github.com/cloudant-labs/clouseau/releases/download/2.21.0/clouseau-2.21.0-dist.zip && \
-  unzip clouseau-2.21.0-dist.zip && \
-  mv clouseau-2.21.0 /opt/clouseau && \
-  rm clouseau-2.21.0-dist.zip
+RUN wget https://github.com/cloudant-labs/clouseau/releases/download/2.25.0/clouseau-2.25.0-dist.zip && \
+  unzip clouseau-2.25.0-dist.zip && \
+  mv clouseau-2.25.0 /opt/clouseau && \
+  rm clouseau-2.25.0-dist.zip
 
 WORKDIR /opt/clouseau
 RUN mkdir ./bin

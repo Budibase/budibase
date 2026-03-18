@@ -147,7 +147,7 @@
   <script
     id="budibase-client-script"
     type="module"
-    src={`/api/assets/${props.workspaceId}/client?${props.clientCacheKey}`}
+    src={props.clientLibPath}
     data-plugin-scripts={JSON.stringify(
       props.usedPlugins?.map(plugin => plugin.jsUrl) ?? []
     )}

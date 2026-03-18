@@ -1,7 +1,12 @@
 import stream from "node:stream"
 import { Workspace } from "../../../documents"
 
-export type ServeAppResponse = string | Workspace
+interface ServeAppWorkspaceResponse extends Workspace {
+  clientLibPath?: string
+  clientCacheKey?: string
+}
+
+export type ServeAppResponse = string | ServeAppWorkspaceResponse
 
 interface BuilderPreview extends Workspace {
   builderPreview: boolean

@@ -1,9 +1,11 @@
 <script lang="ts">
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
-  import type { BulkUserCreated } from "@budibase/types"
+  import type { BulkUserCreated, InviteUsersResponse } from "@budibase/types"
   import { onMount } from "svelte"
   import { OnboardingType } from "@/constants"
   import AddUserModal from "@/settings/pages/people/users/_components/AddUserModal.svelte"
+  import InvitedModal from "@/settings/pages/people/users/_components/InvitedModal.svelte"
+  import PasswordModal from "@/settings/pages/people/users/_components/PasswordModal.svelte"
   import {
     assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
@@ -18,7 +20,21 @@
   export let onHide: () => void = () => {}
 
   let createUserModal: Modal
+  let inviteConfirmationModal: Modal
+  let passwordConfirmationModal: Modal
   let isOpened = false
+  let showingInviteConfirmation = false
+  let showingPasswordConfirmation = false
+  let inviteUsersResponse: InviteUsersResponse = {
+    successful: [],
+    unsuccessful: [],
+  }
+  let createUsersResponse: BulkUserCreated = {
+    successful: [],
+    unsuccessful: [],
+  }
+  let addedToWorkspaceEmails: string[] = []
+  let createdUsers: UserData["users"] = []
 
   $: currentWorkspaceId = $appStore.appId
     ? sdk.applications.getProdAppID($appStore.appId)
@@ -56,8 +72,9 @@
       assignToWorkspace
     )
 
-    await users.invite(payload)
-    notifications.success("User invite successful")
+    inviteUsersResponse = await users.invite(payload)
+    showingInviteConfirmation = true
+    inviteConfirmationModal.show()
   }
 
   const createUsers = async (userData: UserData) => {
@@ -66,6 +83,8 @@
       currentWorkspaceId
     )
     const usersForCreation = { ...userData, users: result.usersToInvite }
+    createdUsers = usersForCreation.users
+    addedToWorkspaceEmails = result.addedToWorkspaceEmails
 
     if (result.assignedCount && !usersForCreation.users.length) {
       notifications.success("Users added to workspace")
@@ -81,28 +100,29 @@
     }
 
     const assignToWorkspace = userData.assignToWorkspace ?? true
-    let response: BulkUserCreated = { successful: [], unsuccessful: [] }
-    response = (await users.create(usersForCreation)) || response
-
-    if (!response.successful?.length) {
-      throw new Error("No users were created")
+    createUsersResponse = (await users.create(usersForCreation)) || {
+      successful: [],
+      unsuccessful: [],
     }
 
-    if (!assignToWorkspace || !currentWorkspaceId) {
-      notifications.success("Successfully created user")
-      return
-    }
-
-    const assignmentResult = await assignCreatedUsersToWorkspace(
-      response.successful,
-      usersForCreation.users,
-      currentWorkspaceId
-    )
-    if (assignmentResult.failedCount) {
-      notifications.error("Error adding some users to workspace")
+    if (
+      assignToWorkspace &&
+      currentWorkspaceId &&
+      createUsersResponse.successful?.length
+    ) {
+      const assignmentResult = await assignCreatedUsersToWorkspace(
+        createUsersResponse.successful,
+        usersForCreation.users,
+        currentWorkspaceId
+      )
+      if (assignmentResult.failedCount) {
+        notifications.error("Error adding some users to workspace")
+      }
     }
 
     notifications.success("Successfully created user")
+    showingPasswordConfirmation = true
+    passwordConfirmationModal.show()
   }
 
   const showOnboardingTypeModal = async (
@@ -132,11 +152,24 @@
       return
     }
     isOpened = false
+    if (showingInviteConfirmation || showingPasswordConfirmation) {
+      return
+    }
     onHide()
   }
 
   const showModal = () => {
     isOpened = true
+  }
+
+  const hideInviteConfirmationModal = () => {
+    showingInviteConfirmation = false
+    onHide()
+  }
+
+  const hidePasswordConfirmationModal = () => {
+    showingPasswordConfirmation = false
+    onHide()
   }
 
   onMount(() => {
@@ -157,5 +190,24 @@
     useWorkspaceInviteModal={true}
     assignToWorkspace={true}
     inviteTitle="Invite users to workspace"
+  />
+</Modal>
+
+<Modal
+  bind:this={inviteConfirmationModal}
+  on:hide={hideInviteConfirmationModal}
+>
+  <InvitedModal {inviteUsersResponse} />
+</Modal>
+
+<Modal
+  bind:this={passwordConfirmationModal}
+  disableCancel={true}
+  on:hide={hidePasswordConfirmationModal}
+>
+  <PasswordModal
+    {createUsersResponse}
+    userData={createdUsers}
+    {addedToWorkspaceEmails}
   />
 </Modal>

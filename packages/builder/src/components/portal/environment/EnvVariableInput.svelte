@@ -1,22 +1,37 @@
 <script lang="ts">
-  import {
-    EnvDropdown,
-    Modal,
-    notifications,
-    type EnvDropdownType,
-  } from "@budibase/bbui"
+  import { EnvDropdown, Modal, notifications } from "@budibase/bbui"
   import { environment, licensing } from "@/stores/portal"
   import CreateEditVariableModal from "./CreateEditVariableModal.svelte"
   import type { CreateEnvironmentVariableRequest } from "@budibase/types"
-  import { onMount } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
-  export let label: string = ""
-  export let type: EnvDropdownType = "text"
-  export let value: string | undefined = undefined
-  export let error: string | undefined = undefined
-  export let placeholder: string | undefined = undefined
+  const dispatch = createEventDispatcher()
 
-  let modal: Modal
+  type TypeValueProps =
+    | { type?: "text" | "password"; value?: string }
+    | { type: "number" | "port"; value?: string | number }
+
+  type Props = TypeValueProps & {
+    label?: string
+    error?: string | undefined
+    placeholder?: string | undefined
+    required?: boolean
+    description?: string | undefined
+    autocomplete?: HTMLInputElement["autocomplete"]
+  }
+
+  let {
+    label = "",
+    type = "text",
+    value = $bindable(),
+    error = undefined,
+    placeholder = undefined,
+    required = false,
+    description = undefined,
+    autocomplete = undefined,
+  }: Props = $props()
+
+  let modal = $state<Modal>()
 
   async function handleUpgradePanel() {
     await environment.upgradePanelOpened()
@@ -26,7 +41,8 @@
   async function saveVariable(data: CreateEnvironmentVariableRequest) {
     await environment.createVariable(data)
     value = `{{ env.${data.name} }}`
-    modal.hide()
+    dispatch("change", value)
+    modal?.hide()
   }
 
   onMount(async () => {
@@ -47,9 +63,12 @@
   type={type === "port" ? "text" : type}
   {error}
   {placeholder}
+  {autocomplete}
+  {required}
+  {description}
   variables={$environment.variables}
   environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
-  showModal={() => modal.show()}
+  showModal={() => modal?.show()}
   {handleUpgradePanel}
 />
 

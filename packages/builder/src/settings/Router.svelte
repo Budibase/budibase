@@ -13,25 +13,28 @@
   const routing = writable<Routing>({})
   setContext("routing", routing)
 
-  // Load the comp
+  // Load the component
   let page: Component<Record<string, unknown>> | undefined
 
   $: memoRoute.set(route)
 
   $: entry = $memoRoute?.entry
   $: path = entry?.path
-  $: comp = entry?.comp
+  $: component = entry?.component
+
+  // Route props.
+  $: props = entry?.props
 
   $: params = { ...($memoRoute?.params || {}) }
   $: routing.update(state => ({ ...state, params: { ...params } }))
 
-  $: if (path && comp) {
-    page = comp
+  $: if (path && component) {
+    page = component
   }
 </script>
 
 {#if page}
   {#key path}
-    <svelte:component this={page} {...params} />
+    <svelte:component this={page} {...props} {...params} />
   {/key}
 {/if}

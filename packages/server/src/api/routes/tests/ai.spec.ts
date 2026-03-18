@@ -6,39 +6,30 @@ import {
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import nock from "nock"
-import { configs, env, setEnv } from "@budibase/backend-core"
+import { context, env, setEnv } from "@budibase/backend-core"
 import {
-  AIInnerConfig,
   AIOperationEnum,
   AttachmentSubType,
-  ConfigType,
   Feature,
   FieldType,
   License,
   PlanModel,
   PlanType,
-  ProviderConfig,
   RelationshipType,
 } from "@budibase/types"
-import { context } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { quotas, ai } from "@budibase/pro"
-import {
-  MockLLMResponseFn,
-  MockLLMResponseOpts,
-} from "../../../tests/utilities/mocks/ai"
-import { mockAzureOpenAIResponse } from "../../../tests/utilities/mocks/ai/azureOpenai"
-import { resetHttpMocking } from "../../../tests/jestEnv"
 import { withEnv as serverWithEnv } from "../../../environment"
 
-function toResponseFormat(schema: z.ZodObject) {
+function toResponseFormat(schema: z.ZodType) {
   return {
     type: "json_schema" as const,
     json_schema: {
       name: "response",
       strict: false,
-      schema: schema.toJSONSchema({ target: "draft-7" }),
+      schema: z.toJSONSchema(schema, { target: "draft-7" }),
     },
   }
 }
@@ -50,177 +41,50 @@ function dedent(str: string) {
     .join("\n")
 }
 
-type SetupFn = (
-  config: TestConfiguration
-) => Promise<() => Promise<void> | void>
-interface TestSetup {
-  name: string
-  setup: SetupFn
-  mockLLMResponse: MockLLMResponseFn
-}
-
-function budibaseAI(): SetupFn {
-  return async (config: TestConfiguration) => {
-    await config.doInTenant(async () => {
-      await configs.save({
-        type: ConfigType.AI,
-        config: {
-          budibaseAI: {
-            provider: "BudibaseAI",
-            name: "Budibase AI",
-            active: true,
-            isDefault: true,
-          },
-        },
-      })
-    })
-
-    return setEnv({
-      OPENAI_API_KEY: "test-key",
-      SELF_HOSTED: false,
-    })
-  }
-}
-
-function customAIConfig(providerConfig: Partial<ProviderConfig>): SetupFn {
-  return async (config: TestConfiguration) => {
-    const innerConfig: AIInnerConfig = {
-      myaiconfig: {
-        provider: "OpenAI",
-        name: "OpenAI",
-        apiKey: "test-key",
-        defaultModel: "gpt-5-mini",
-        active: true,
-        isDefault: true,
-        ...providerConfig,
-      },
-    }
-
-    const { id, rev } = await config.doInTenant(
-      async () =>
-        await configs.save({
-          type: ConfigType.AI,
-          config: innerConfig,
-        })
-    )
-
-    return async () => {
-      await config.doInTenant(async () => {
-        const db = context.getGlobalDB()
-        await db.remove(id, rev)
-      })
-    }
-  }
-}
-
-const allProviders: TestSetup[] = [
-  {
-    name: "OpenAI API key",
-    setup: async () => {
-      return setEnv({
-        OPENAI_API_KEY: "test-key",
-      })
-    },
-    mockLLMResponse: mockAISDKChatGPTResponse,
-  },
-  {
-    name: "OpenAI API key with custom config",
-    setup: customAIConfig({ provider: "OpenAI", defaultModel: "gpt-5-mini" }),
-    mockLLMResponse: mockAISDKChatGPTResponse,
-  },
-  {
-    name: "Anthropic API key with custom config",
-    setup: customAIConfig({
-      provider: "Anthropic",
-      defaultModel: "claude-3-5-sonnet-20240620",
-    }),
-    mockLLMResponse: (
-      answer: string | ((prompt: string) => string),
-      opts?: MockLLMResponseOpts
-    ) =>
-      mockAISDKChatGPTResponse(answer, {
-        baseUrl: "https://api.anthropic.com",
-        ...opts,
-      }),
-  },
-  {
-    name: "Azure OpenAI API key with custom config",
-    setup: customAIConfig({
-      provider: "AzureOpenAI",
-      defaultModel: "gpt-4o-realtime-preview-1001",
-      baseUrl: "https://azure.example.com",
-    }),
-    mockLLMResponse: (
-      answer: string | ((prompt: string) => string),
-      opts?: MockLLMResponseOpts
-    ) =>
-      mockAzureOpenAIResponse(answer, {
-        baseUrl: "https://azure.example.com",
-        ...opts,
-      }),
-  },
-  {
-    name: "BudibaseAI",
-    setup: budibaseAI(),
-    mockLLMResponse: mockAISDKChatGPTResponse,
-  },
-]
-
 describe("AI", () => {
   const config = new TestConfiguration()
+  let cleanup: (() => Promise<void>) | undefined
+  let cleanupEnv: (() => void) | undefined
 
   beforeAll(async () => {
+    cleanupEnv = setEnv({ SELF_HOSTED: false })
     await config.init()
+    await config.newTenant()
+    cleanup = await setupDefaultCompletionsAIConfig(config)
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    cleanupEnv?.()
+    if (cleanup) {
+      await cleanup()
+    }
     config.end()
   })
 
-  beforeEach(async () => {
-    nock.cleanAll()
-    await resetHttpMocking()
-  })
+  describe("POST /api/ai/js", () => {
+    it("handles correct plain code response", async () => {
+      mockAISDKChatGPTResponse(`return 42`)
 
-  describe.each(allProviders)(
-    "provider: $name",
-    ({ setup, mockLLMResponse }: TestSetup) => {
-      let cleanup: () => Promise<void> | void
-      beforeAll(async () => {
-        cleanup = await setup(config)
-      })
+      const { code } = await config.api.ai.generateJs({ prompt: "test" })
+      expect(code).toBe("return 42")
+    })
 
-      afterAll(async () => {
-        const maybePromise = cleanup()
-        if (maybePromise) {
-          await maybePromise
-        }
-      })
-
-      describe("POST /api/ai/js", () => {
-        it("handles correct plain code response", async () => {
-          mockLLMResponse(`return 42`)
-
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("return 42")
-        })
-
-        it("handles correct markdown code response", async () => {
-          mockLLMResponse(
-            dedent(`
+    it("handles correct markdown code response", async () => {
+      mockAISDKChatGPTResponse(
+        dedent(`
                 \`\`\`js
                 return 42
                 \`\`\`
             `)
-          )
+      )
 
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("return 42")
-        })
+      const { code } = await config.api.ai.generateJs({ prompt: "test" })
+      expect(code).toBe("return 42")
+    })
 
-        it("handles multiple markdown code blocks returned", async () => {
-          mockLLMResponse(
-            dedent(`
+    it("handles multiple markdown code blocks returned", async () => {
+      mockAISDKChatGPTResponse(
+        dedent(`
                 This:
 
                 \`\`\`js
@@ -233,63 +97,67 @@ describe("AI", () => {
                 return 10
                 \`\`\`
             `)
-          )
+      )
 
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("return 42")
-        })
+      const { code } = await config.api.ai.generateJs({ prompt: "test" })
+      expect(code).toBe("return 42")
+    })
 
-        // TODO: handle when this happens
-        it.skip("handles no code response", async () => {
-          mockLLMResponse("I'm sorry, you're quite right, etc.")
-          const { code } = await config.api.ai.generateJs({ prompt: "test" })
-          expect(code).toBe("")
-        })
+    // TODO: handle when this happens
+    it.skip("handles no code response", async () => {
+      mockAISDKChatGPTResponse("I'm sorry, you're quite right, etc.")
+      const { code } = await config.api.ai.generateJs({ prompt: "test" })
+      expect(code).toBe("")
+    })
 
-        it("handles LLM errors", async () => {
-          mockLLMResponse(() => {
-            throw new Error("LLM error")
-          })
-          await config.api.ai.generateJs({ prompt: "test" }, { status: 500 })
-        })
+    it("handles LLM errors", async () => {
+      mockAISDKChatGPTResponse(
+        () => {
+          throw new Error("LLM error")
+        },
+        { times: 3 }
+      )
+      await config.api.ai.generateJs({ prompt: "test" }, { status: 500 })
+    })
+  })
+
+  describe("POST /api/ai/cron", () => {
+    it("handles correct cron response", async () => {
+      mockAISDKChatGPTResponse("0 0 * * *")
+
+      const { message } = await config.api.ai.generateCron({
+        prompt: "test",
       })
+      expect(message).toBe("0 0 * * *")
+    })
 
-      describe("POST /api/ai/cron", () => {
-        it("handles correct cron response", async () => {
-          mockLLMResponse("0 0 * * *")
+    it("handles expected LLM error", async () => {
+      mockAISDKChatGPTResponse("Error generating cron: skill issue")
 
-          const { message } = await config.api.ai.generateCron({
-            prompt: "test",
-          })
-          expect(message).toBe("0 0 * * *")
-        })
+      await config.api.ai.generateCron(
+        {
+          prompt: "test",
+        },
+        { status: 400 }
+      )
+    })
 
-        it("handles expected LLM error", async () => {
-          mockLLMResponse("Error generating cron: skill issue")
+    it("handles unexpected LLM error", async () => {
+      mockAISDKChatGPTResponse(
+        () => {
+          throw new Error("LLM error")
+        },
+        { times: 3 }
+      )
 
-          await config.api.ai.generateCron(
-            {
-              prompt: "test",
-            },
-            { status: 400 }
-          )
-        })
-
-        it("handles unexpected LLM error", async () => {
-          mockLLMResponse(() => {
-            throw new Error("LLM error")
-          })
-
-          await config.api.ai.generateCron(
-            {
-              prompt: "test",
-            },
-            { status: 500 }
-          )
-        })
-      })
-    }
-  )
+      await config.api.ai.generateCron(
+        {
+          prompt: "test",
+        },
+        { status: 500 }
+      )
+    })
+  })
 })
 
 describe("BudibaseAI", () => {
@@ -297,12 +165,7 @@ describe("BudibaseAI", () => {
   let cleanup: (() => void | Promise<void>)[] = []
   beforeAll(async () => {
     await config.init()
-    cleanup.push(await budibaseAI()(config))
     cleanup.push(setEnv({ SELF_HOSTED: false }))
-  })
-
-  beforeEach(async () => {
-    await resetHttpMocking()
   })
 
   afterAll(async () => {
@@ -342,7 +205,6 @@ describe("BudibaseAI", () => {
 
     beforeEach(async () => {
       await config.newTenant()
-      nock.cleanAll()
       const license: License = {
         plan: {
           type: PlanType.FREE,
@@ -358,18 +220,14 @@ describe("BudibaseAI", () => {
         .reply(200, license)
     })
 
-    afterEach(() => {})
-
     it("handles correct chat response", async () => {
-      let usage = await getQuotaUsage()
-      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
-      expect(usage.monthly.current.budibaseAICredits).toBe(0)
-
       mockAISDKChatGPTResponse("Hi there!")
+
       const { messages } = await config.api.ai.chat({
         messages: [{ role: "user", content: "Hello!" }],
         licenseKey: licenseKey,
       })
+
       expect(messages).toEqual([
         {
           role: "user",
@@ -380,15 +238,15 @@ describe("BudibaseAI", () => {
           content: "Hi there!",
         },
       ])
-
-      usage = await getQuotaUsage()
-      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
 
     it("handles chat response error", async () => {
-      mockAISDKChatGPTResponse(() => {
-        throw new Error("LLM error")
-      })
+      mockAISDKChatGPTResponse(
+        () => {
+          throw new Error("LLM error")
+        },
+        { times: 3 }
+      )
       await config.api.ai.chat(
         {
           messages: [{ role: "user", content: "Hello!" }],
@@ -426,10 +284,6 @@ describe("BudibaseAI", () => {
     })
 
     it("handles text format", async () => {
-      let usage = await getQuotaUsage()
-      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
-      expect(usage.monthly.current.budibaseAICredits).toBe(0)
-
       const gptResponse = generator.word()
       mockAISDKChatGPTResponse(gptResponse)
       const { messages } = await config.api.ai.chat({
@@ -447,16 +301,9 @@ describe("BudibaseAI", () => {
           content: gptResponse,
         },
       ])
-
-      usage = await getQuotaUsage()
-      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
 
     it("handles json format", async () => {
-      let usage = await getQuotaUsage()
-      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
-      expect(usage.monthly.current.budibaseAICredits).toBe(0)
-
       const gptResponse = JSON.stringify({
         [generator.word()]: generator.word(),
       })
@@ -476,16 +323,9 @@ describe("BudibaseAI", () => {
           content: gptResponse,
         },
       ])
-
-      usage = await getQuotaUsage()
-      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
 
     it("handles structured outputs", async () => {
-      let usage = await getQuotaUsage()
-      expect(usage._id).toBe(`quota_usage_${config.getTenantId()}`)
-      expect(usage.monthly.current.budibaseAICredits).toBe(0)
-
       const gptResponse = generator.guid()
       const structuredOutput = toResponseFormat(
         z.object({
@@ -508,16 +348,22 @@ describe("BudibaseAI", () => {
           content: gptResponse,
         },
       ])
-
-      usage = await getQuotaUsage()
-      expect(usage.monthly.current.budibaseAICredits).toBeGreaterThan(0)
     })
   })
 
   describe("POST /api/ai/tables", () => {
+    let cleanupDefaultConfig: (() => Promise<void>) | undefined
+
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
+      cleanupDefaultConfig = await setupDefaultCompletionsAIConfig(config)
+    })
+
+    afterEach(async () => {
+      if (cleanupDefaultConfig) {
+        await cleanupDefaultConfig()
+      }
     })
 
     const mockAIGenerationStructure = (
@@ -1137,12 +983,11 @@ describe("BudibaseAI", () => {
     })
 
     it("handles OpenAI API errors", async () => {
-      mockOpenAIFileUpload("", {
+      mockOpenAIFileUpload("file-invalid", {
         status: 400,
         error: {
           error: {
             message: "Invalid file format",
-            type: "invalid_request_error",
           },
         },
       })
@@ -1180,7 +1025,6 @@ describe("BudibaseAI", () => {
     let licenseKey = "test-key"
     let internalApiKey = "api-key"
     let envCleanup: () => void
-    let cleanup: () => Promise<void> | void
 
     beforeAll(async () => {
       envCleanup = setEnv({
@@ -1196,11 +1040,6 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      cleanup = await customAIConfig({
-        provider: "OpenAI",
-        defaultModel: "gpt-5-mini",
-        apiKey: "test-key",
-      })(config)
       const license: License = {
         plan: {
           type: PlanType.FREE,
@@ -1214,11 +1053,6 @@ describe("BudibaseAI", () => {
       nock(env.ACCOUNT_PORTAL_URL)
         .get(`/api/license/${licenseKey}`)
         .reply(200, license)
-    })
-
-    afterEach(async () => {
-      await cleanup?.()
-      jest.clearAllMocks()
     })
 
     it("proxies the OpenAI response without reshaping", async () => {

@@ -28,6 +28,7 @@ export enum MonthlyQuotaName {
 }
 
 export enum ConstantQuotaName {
+  AGENT_LOG_RETENTION_DAYS = "agentLogRetentionDays",
   AUTOMATION_LOG_RETENTION_DAYS = "automationLogRetentionDays",
   APP_BACKUPS_RETENTION_DAYS = "appBackupRetentionDays",
 }
@@ -78,6 +79,7 @@ export type StaticQuotas = {
 }
 
 export type ConstantQuotas = {
+  [ConstantQuotaName.AGENT_LOG_RETENTION_DAYS]: Quota
   [ConstantQuotaName.AUTOMATION_LOG_RETENTION_DAYS]: Quota
   [ConstantQuotaName.APP_BACKUPS_RETENTION_DAYS]: Quota
 }

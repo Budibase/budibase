@@ -12,7 +12,7 @@
     const { appId } = $appStore
     if (!appId) return
 
-    if ($featureFlags[FeatureFlag.WORKSPACE_HOME]) {
+    if ($featureFlags[FeatureFlag.AI_AGENTS]) {
       $redirect(`./home${window.location.search}`)
       return
     }

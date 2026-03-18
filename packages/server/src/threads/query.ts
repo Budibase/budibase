@@ -318,6 +318,7 @@ class QueryRunner {
     if (!datasource || !datasource.config) {
       return parameters
     }
+
     const staticVars = datasource.config.staticVariables || {}
     const dynamicVars = datasource.config.dynamicVariables || []
     for (let [staticBindingKey, staticBindingValue] of Object.entries(

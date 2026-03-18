@@ -70,6 +70,8 @@
   export const show = () => {
     pinned.set(true)
   }
+  export let canInviteUsers = false
+  export let canManageConnections = false
   export let onInviteUser: () => void = () => {}
 
   $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
@@ -300,7 +302,7 @@
           const entry: UIFavouriteResource = {
             name: resource.name,
             icon: isRestQuery
-              ? "webhooks-logo"
+              ? "globe-simple"
               : ResourceIcons[favourite.resourceType],
           }
 
@@ -437,7 +439,7 @@
   <CreateWorkspaceModal />
 </Modal>
 
-{#if workspaceId && $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+{#if workspaceId && $featureFlags[FeatureFlag.AI_AGENTS]}
   <Modal bind:this={createAutomationModal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -511,10 +513,10 @@
         {#if workspaceId}
           <div
             class="core-sections"
-            class:workspace_home={$featureFlags[FeatureFlag.WORKSPACE_HOME]}
+            class:workspace_home={$featureFlags[FeatureFlag.AI_AGENTS]}
           >
             <div>
-              {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+              {#if $featureFlags[FeatureFlag.AI_AGENTS]}
                 <SideNavLink
                   icon="house"
                   text="Home"
@@ -556,9 +558,6 @@
                   </MenuItem>
 
                   <MenuSeparator />
-                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-                    Connection
-                  </MenuItem>
                   <MenuItem icon="grid-nine" on:click={openCreateTable}>
                     Table
                   </MenuItem>
@@ -625,15 +624,17 @@
             </div>
 
             <div class="core-secondary">
-              <SideNavLink
-                icon="sparkle"
-                text="AI models"
-                {collapsed}
-                on:click={() => {
-                  bb.settings("/ai")
-                  keepCollapsed()
-                }}
-              />
+              {#if canManageConnections}
+                <SideNavLink
+                  icon="cube"
+                  text="Connections"
+                  {collapsed}
+                  on:click={() => {
+                    bb.settings(`/connections/apis`)
+                    keepCollapsed()
+                  }}
+                />
+              {/if}
               <SideNavLink
                 icon="globe-simple"
                 text="API explorer"
@@ -648,12 +649,14 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              <SideNavLink
-                icon="user-plus"
-                text="Invite user"
-                on:click={openInviteUser}
-                {collapsed}
-              />
+              {#if canInviteUsers}
+                <SideNavLink
+                  icon="user-plus"
+                  text="Invite users"
+                  on:click={openInviteUser}
+                  {collapsed}
+                />
+              {/if}
               <span class="root-nav" class:error={backupErrorCount}>
                 {#if collapsed && backupErrorCount}
                   <span class="status-indicator">

@@ -104,6 +104,7 @@ typings/
 
 bin/
 hosting/.generated*
+hosting/redis-tls/certs/
 stats.html
 
 

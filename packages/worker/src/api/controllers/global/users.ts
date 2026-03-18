@@ -777,27 +777,52 @@ export const inviteAccept = async (
           resolvedTenantId
         )
         const user = await tenancy.doInTenant(info.tenantId, async () => {
+          const appRoles = info.apps || {}
+          const creatorAppsFromRoles = Object.keys(appRoles).filter(
+            appId => appRoles[appId] === "CREATOR"
+          )
+
+          const builderApps = [
+            ...(info?.builder?.apps || []),
+            ...creatorAppsFromRoles,
+          ]
+          const uniqueBuilderApps = [...new Set(builderApps)]
+          const hasCreatorPerms =
+            !!info?.builder?.creator || creatorAppsFromRoles.length > 0
+
           let request: any = {
             firstName,
             lastName,
             password,
             email,
             admin: { global: info?.admin?.global || false },
-            roles: info.apps,
+            roles: appRoles,
             tenantId: info.tenantId,
           }
-          const builder: { global: boolean; apps?: string[] } = {
+          const builder: {
+            global: boolean
+            creator?: boolean
+            apps?: string[]
+          } = {
             global: info?.builder?.global || false,
           }
 
-          if (info?.builder?.apps) {
-            builder.apps = info.builder.apps
-            request.builder = builder
+          if (hasCreatorPerms) {
+            builder.creator = true
           }
-          delete info.apps
+          if (uniqueBuilderApps.length) {
+            builder.apps = uniqueBuilderApps
+          }
+
+          const cleanedInviteInfo = { ...info }
+          delete cleanedInviteInfo.apps
+          delete cleanedInviteInfo.builder
           request = {
             ...request,
-            ...info,
+            ...cleanedInviteInfo,
+          }
+          if (info?.builder || hasCreatorPerms || uniqueBuilderApps.length) {
+            request.builder = builder
           }
 
           const saved = await userSdk.db.save(request)

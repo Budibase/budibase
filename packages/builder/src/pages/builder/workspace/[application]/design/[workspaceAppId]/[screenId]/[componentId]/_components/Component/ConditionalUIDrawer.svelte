@@ -14,7 +14,7 @@
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { QueryUtils, Constants } from "@budibase/frontend-core"
   import { selectedComponent, componentStore } from "@/stores/builder"
-  import { getComponentForSetting } from "@/components/design/settings/componentSettings"
+  import { getComponentForSetting } from "@/components/design/settings/componentSettingsRegistry"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
 
   export let conditions = []

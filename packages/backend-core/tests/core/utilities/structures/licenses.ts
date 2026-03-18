@@ -99,6 +99,11 @@ export function quotas(): Quotas {
       },
     },
     constant: {
+      agentLogRetentionDays: {
+        name: "Agent Logs",
+        value: 1,
+        triggers: [],
+      },
       automationLogRetentionDays: {
         name: "Automation Logs",
         value: 1,

@@ -50,6 +50,7 @@ export class Thread {
       const workerOpts: FarmOptions = {
         autoStart: true,
         maxConcurrentWorkers: this.count,
+        maxCallsPerWorker: env.MAX_WORKER_RUNS || Infinity,
         workerOptions: {
           env: {
             ...process.env,
