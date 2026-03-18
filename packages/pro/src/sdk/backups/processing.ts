@@ -9,6 +9,8 @@ import {
   BackupStatus,
   BackupTrigger,
   BackupType,
+  DocumentType,
+  Workspace,
   WorkspaceBackupContents,
   WorkspaceBackupQueueData,
 } from "@budibase/types"
@@ -48,6 +50,27 @@ type RunBackupOpts = {
 async function removeExistingApp(devId: string) {
   const devDb = dbCore.getDB(devId, { skip_setup: true })
   await devDb.destroy()
+}
+
+async function updateWorkspaceMetadataAppId(
+  workspaceId: string,
+  appId: string
+) {
+  const workspaceDb = dbCore.getDB(workspaceId)
+  if (!(await workspaceDb.exists())) {
+    return
+  }
+  const metadata = await workspaceDb.tryGet<Workspace>(
+    DocumentType.WORKSPACE_METADATA
+  )
+  if (!metadata) {
+    return
+  }
+  metadata.appId = appId
+  if (metadata.instance) {
+    metadata.instance._id = appId
+  }
+  await workspaceDb.put(metadata)
 }
 
 const DELETE_BATCH_SIZE = 1000
@@ -212,6 +235,9 @@ async function runBackup(
 ) {
   const devWorkspaceId = dbCore.getDevWorkspaceID(appId),
     prodAppId = dbCore.getProdWorkspaceID(appId)
+  const backupSourceWorkspaceId = (await dbCore.dbExists(prodAppId))
+    ? prodAppId
+    : devWorkspaceId
   const timestamp = new Date().toISOString()
   const updateMetadata = async (
     status: BackupStatus,
@@ -241,7 +267,7 @@ async function runBackup(
     }
   }
   try {
-    const tarPath = await opts.processing.exportAppFn(devWorkspaceId, {
+    const tarPath = await opts.processing.exportAppFn(backupSourceWorkspaceId, {
       tar: true,
     })
     const contents = await opts.processing.statsFn(devWorkspaceId)
@@ -290,6 +316,8 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
   const tenantId = tenancy.getTenantIDFromWorkspaceID(appId) as string
   return tenancy.doInTenant(tenantId, async () => {
     const devWorkspaceId = dbCore.getDevWorkspaceID(appId)
+    const prodWorkspaceId = dbCore.getProdWorkspaceID(appId)
+    const isPublished = await dbCore.dbExists(prodWorkspaceId)
     const tempAppId = `${devWorkspaceId}_temp_${Date.now()}`
 
     const { rev } = await backups.updateRestoreStatus(
@@ -330,6 +358,17 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
         tempAppId,
         devWorkspaceId
       )
+
+      if (isPublished) {
+        await updateWorkspaceMetadataAppId(tempAppId, prodWorkspaceId)
+        await removeExistingApp(prodWorkspaceId)
+        await new db.Replication({
+          source: tempAppId,
+          target: prodWorkspaceId,
+        }).replicate()
+      }
+
+      await updateWorkspaceMetadataAppId(tempAppId, devWorkspaceId)
 
       // if import succeeds, replace the original app with the temporary one
       await removeExistingApp(devWorkspaceId)

@@ -1,6 +1,6 @@
 import { context, events } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
-import { DocumentType, Workspace } from "@budibase/types"
+import { BackupStatus, DocumentType, Workspace } from "@budibase/types"
 import path from "path"
 import { Readable, Writable } from "stream"
 import { pipeline } from "stream/promises"
@@ -15,6 +15,27 @@ mocks.licenses.useBackups()
 
 describe("/backups", () => {
   let config = setup.getConfig()
+
+  async function waitForRestoreToComplete(
+    appId: string,
+    restoreId: string
+  ): Promise<BackupStatus> {
+    for (let i = 0; i < 30; i++) {
+      const response = await config.getRequest()!
+        .post(`/api/apps/${appId}/backups/search`)
+        .set(await config.defaultHeaders())
+        .send({})
+      const restore = response.body?.data?.find((b: any) => b._id === restoreId)
+      if (
+        restore?.status === BackupStatus.COMPLETE ||
+        restore?.status === BackupStatus.FAILED
+      ) {
+        return restore.status
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+    throw new Error("Restore did not complete")
+  }
 
   afterAll(() => {
     setup.afterAll()
@@ -191,6 +212,63 @@ describe("/backups", () => {
         exportRes.backupId
       )
       await config.api.backup.importBackup(workspaceId, exportRes.backupId)
+    })
+
+    it("should restore production attachment values from a backup", async () => {
+      const workspaceId = config.getDevWorkspaceId()
+      const table = await config.api.table.save(
+        setup.structures.basicTableWithAttachmentField()
+      )
+      await config.api.table.publish(table._id!)
+
+      const prodHeaders = await config.defaultHeaders({}, true)
+      const [attachment] = await config.withHeaders(prodHeaders, async () =>
+        config.api.attachment.upload(
+          table._id!,
+          "prod-file.txt",
+          Buffer.from("prod-content")
+        )
+      )
+
+      const prodRow = await config.withHeaders(prodHeaders, async () =>
+        config.api.row.save(table._id!, {
+          single_file_attachment: attachment,
+        })
+      )
+      expect(prodRow.single_file_attachment?.key).toBeDefined()
+
+      const exportRes = await config.api.backup.createBackup(workspaceId)
+      await config.api.backup.waitForBackupToComplete(workspaceId, exportRes.backupId)
+
+      await config.withHeaders(prodHeaders, async () =>
+        config.api.row.patch(table._id!, {
+          _id: prodRow._id,
+          single_file_attachment: null,
+        })
+      )
+      let prodRows = await config.api.row.fetchProd(table._id!)
+      expect(prodRows[0].single_file_attachment).toBeFalsy()
+
+      const restoreRes = await config.api.backup.importBackup(
+        workspaceId,
+        exportRes.backupId
+      )
+      const restoreStatus = await waitForRestoreToComplete(
+        workspaceId,
+        restoreRes.restoreId
+      )
+      expect(restoreStatus).toEqual(BackupStatus.COMPLETE)
+
+      const devRows = await config.api.row.fetch(table._id!)
+      expect(devRows[0].single_file_attachment?.key).toBeDefined()
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        const db = context.getWorkspaceDB()
+        const metadata = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
+        expect(metadata.appId).toEqual(workspaceId)
+      })
+
+      prodRows = await config.api.row.fetchProd(table._id!)
+      expect(prodRows[0].single_file_attachment?.key).toBeDefined()
     })
   })
 

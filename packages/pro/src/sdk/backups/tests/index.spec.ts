@@ -227,6 +227,22 @@ describe("backups", () => {
     })
   })
 
+  it("should export production data for published workspaces", async () => {
+    await config.doInTenant(async () => {
+      const devWorkspaceId = db.getDevWorkspaceID(config.workspaceId)
+      await db.getDB(config.workspaceId).put({
+        _id: "published-workspace-marker",
+        type: "app",
+      })
+
+      await createBackup({ workspaceId: devWorkspaceId })
+
+      expect(exportAppFn).toHaveBeenCalledWith(config.workspaceId, {
+        tar: true,
+      })
+    })
+  })
+
   it("should call importAppFn with dev workspace id, not temp app id", async () => {
     await config.doInTenant(async () => {
       const restore = await createRestore()
