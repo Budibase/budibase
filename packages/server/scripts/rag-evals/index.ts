@@ -669,6 +669,13 @@ function withSettingsSuffix(baseName: string, suffix: string): string {
   return `${baseName} ${suffix}`
 }
 
+function fingerprint(value: unknown, length = 12): string {
+  return createHash("sha256")
+    .update(JSON.stringify(value))
+    .digest("hex")
+    .slice(0, length)
+}
+
 function mean(numbers: number[]) {
   if (numbers.length === 0) {
     return 0
@@ -820,53 +827,74 @@ async function main() {
   const docSignatures: string[] = []
   for (const path of documentPaths) {
     const text = readFileSync(path).toString("utf-8")
+    const relativeFilename = relative(dataDir, path) || basename(path)
     const contentHash = createHash("sha256")
       .update(text)
       .digest("hex")
       .slice(0, 16)
-    docSignatures.push(`${path}:${contentHash}`)
+    docSignatures.push(`${relativeFilename}:${contentHash}`)
     docTextByFilename.set(basename(path), text)
   }
   docSignatures.sort((a, b) => a.localeCompare(b))
 
-  const settingsSuffix = createHash("sha256")
-    .update(
-      JSON.stringify({
-        provider: runtimeEnv.provider,
-        chatModel,
-        embeddingModel,
-        vectorDbHost: runtimeEnv.vectorDbHost,
-        vectorDbPort: runtimeEnv.vectorDbPort,
-        vectorDbDatabase: runtimeEnv.vectorDbDatabase,
-        vectorDbUser: runtimeEnv.vectorDbUser,
-        documents: docSignatures,
-      })
-    )
-    .digest("hex")
-    .slice(0, 12)
+  const completionFingerprint = fingerprint({
+    provider: runtimeEnv.provider,
+    chatModel,
+    openAIBaseUrl: runtimeEnv.openAIBaseUrl,
+  })
+
+  const embeddingFingerprint = fingerprint({
+    provider: runtimeEnv.provider,
+    embeddingModel,
+    openAIBaseUrl: runtimeEnv.openAIBaseUrl,
+  })
+
+  const vectorDbFingerprint = fingerprint({
+    provider: "pgvector",
+    host: runtimeEnv.vectorDbHost,
+    port: runtimeEnv.vectorDbPort,
+    database: runtimeEnv.vectorDbDatabase,
+    user: runtimeEnv.vectorDbUser,
+  })
+
+  const knowledgeBaseFingerprint = fingerprint({
+    embeddingFingerprint,
+    vectorDbFingerprint,
+    documents: docSignatures,
+  })
+
+  const agentFingerprint = fingerprint({
+    completionFingerprint,
+    knowledgeBaseFingerprint,
+  })
 
   const completionConfigName = withSettingsSuffix(
     runtimeEnv.completionConfigName,
-    settingsSuffix
+    completionFingerprint
   )
   const embeddingConfigName = withSettingsSuffix(
     runtimeEnv.embeddingConfigName,
-    settingsSuffix
+    embeddingFingerprint
   )
   const vectorDbName = withSettingsSuffix(
     runtimeEnv.vectorDbName,
-    settingsSuffix
+    vectorDbFingerprint
   )
   const knowledgeBaseName = withSettingsSuffix(
     runtimeEnv.knowledgeBaseName,
-    settingsSuffix
+    knowledgeBaseFingerprint
   )
-  const agentName = withSettingsSuffix(runtimeEnv.agentName, settingsSuffix)
+  const agentName = withSettingsSuffix(runtimeEnv.agentName, agentFingerprint)
 
-  console.log(cyan(`Settings scope suffix: ${settingsSuffix}`))
+  console.log(section("Resource Fingerprints"))
+  console.log(cyan(`Completion: ${completionFingerprint}`))
+  console.log(cyan(`Embedding: ${embeddingFingerprint}`))
+  console.log(cyan(`Vector DB: ${vectorDbFingerprint}`))
+  console.log(cyan(`Knowledge Base: ${knowledgeBaseFingerprint}`))
+  console.log(cyan(`Agent: ${agentFingerprint}`))
   console.log(
     cyan(
-      "Using mandatory unique resource names per provider/model/vector DB/doc set"
+      "Reusing/creating resources by settings fingerprint (KB includes uploaded file signatures)"
     )
   )
 
