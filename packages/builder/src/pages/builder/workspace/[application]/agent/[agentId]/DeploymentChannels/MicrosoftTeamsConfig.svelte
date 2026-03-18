@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
+  import { ChatCommands } from "@budibase/shared-core"
   import type {
     Agent,
     ProvisionAgentMSTeamsChannelResponse,
@@ -12,8 +13,8 @@
     toOptionalValue,
   } from "./utils"
 
-  const MS_TEAMS_NEW_COMMAND = "new"
-  const MS_TEAMS_ASK_COMMAND = "ask"
+  const MS_TEAMS_NEW_COMMAND = ChatCommands.NEW
+  const MS_TEAMS_LINK_COMMAND = ChatCommands.LINK
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()
@@ -126,11 +127,13 @@
   {/snippet}
 
   {#snippet response()}
-    <Body size="S">
-      Use `{MS_TEAMS_ASK_COMMAND}` to ask a question.
-    </Body>
+    <Body size="S">Send a normal message to ask a question.</Body>
     <Body size="S">
       Use `{MS_TEAMS_NEW_COMMAND}` to start a new conversation.
+    </Body>
+    <Body size="S">
+      Use `{MS_TEAMS_LINK_COMMAND}` or `/{MS_TEAMS_LINK_COMMAND}` to link or
+      refresh your Budibase account.
     </Body>
 
     <CopyInput

@@ -1,4 +1,5 @@
 <script>
+  import { getErrorMessage } from "@/helpers/errors"
   import { goto as gotoStore } from "@roxi/routify"
   import { appStore, automationStore } from "@/stores/builder"
   import {
@@ -42,7 +43,7 @@
       notifications.success(`Automation ${name} created`)
       goto(`/builder/workspace/${workspaceId}/automation/${automation._id}`)
     } catch (error) {
-      notifications.error("Error creating automation")
+      notifications.error(getErrorMessage(error) || "Error creating automation")
     }
   }
 

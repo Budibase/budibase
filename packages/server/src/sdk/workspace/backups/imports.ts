@@ -179,15 +179,26 @@ export function getListOfAppsInMulti(tmpPath: string) {
   return fs.readdirSync(tmpPath).filter(dir => dir !== GLOBAL_DB_EXPORT_FILE)
 }
 
+export interface ImportAppOpts {
+  updateAttachmentColumns?: boolean
+  importObjStoreContents?: boolean
+  objectStoreAppId?: string
+}
+
 export async function importApp(
   appId: string,
   db: Database,
   template: TemplateType,
-  opts: {
-    updateAttachmentColumns: boolean
-  } = { updateAttachmentColumns: true }
+  opts: ImportAppOpts = {}
 ) {
-  let prodAppId = dbCore.getProdWorkspaceID(appId)
+  const importOpts: ImportAppOpts = {
+    updateAttachmentColumns: true,
+    importObjStoreContents: true,
+    ...opts,
+  }
+  const prodAppId = dbCore.getProdWorkspaceID(appId)
+  const objectStoreWorkspaceId = importOpts.objectStoreAppId ?? appId
+  const objectStoreProdAppId = dbCore.getProdWorkspaceID(objectStoreWorkspaceId)
   let dbStream: fs.ReadStream
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
@@ -214,7 +225,7 @@ export async function importApp(
       )
     }
     // have to handle object import
-    {
+    if (importOpts.importObjStoreContents) {
       const promises = []
       const excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
 
@@ -223,7 +234,7 @@ export async function importApp(
         if (excludedFiles.includes(filename)) {
           continue
         }
-        filename = join(prodAppId, filename)
+        filename = join(objectStoreProdAppId, filename)
         if ((await fsp.lstat(path)).isDirectory()) {
           promises.push(
             objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
@@ -245,13 +256,13 @@ export async function importApp(
       await utils.parallelForeach(
         objectStore.listAllObjects(
           objectStore.ObjectStoreBuckets.APPS,
-          prodAppId
+          objectStoreProdAppId
         ),
         async file => {
           if (
             file.Key &&
             !uploadedFiles.includes(
-              file.Key.replace(new RegExp(`^${prodAppId}/`), "")
+              file.Key.replace(new RegExp(`^${objectStoreProdAppId}/`), "")
             )
           ) {
             filesToDelete.push(file.Key)
@@ -271,12 +282,11 @@ export async function importApp(
   } else {
     dbStream = await getTemplateStream(template)
   }
-  // @ts-ignore
   const { ok } = await db.load(dbStream)
   if (!ok) {
     throw "Error loading database dump from template."
   }
-  if (opts.updateAttachmentColumns) {
+  if (importOpts.updateAttachmentColumns) {
     await updateAttachmentColumns(prodAppId, db)
   }
   await updateAutomations(prodAppId, db)

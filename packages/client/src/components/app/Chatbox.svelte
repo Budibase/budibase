@@ -9,7 +9,7 @@
     getThemeClassNames,
   } from "@budibase/shared-core"
   import type { ChatConversation } from "@budibase/types"
-  import { appStore, authStore, themeStore } from "@/stores"
+  import { appStore, authStore, confirmationStore, themeStore } from "@/stores"
   import {
     ChatboxController,
     type ChatboxState,
@@ -22,6 +22,13 @@
     firstName?: string
     lastName?: string
     email?: string
+  }
+
+  interface ChatboxControllerWithConversationDelete extends ChatboxController {
+    deleteConversation: (
+      _conversationId: string,
+      _conversationAgentId?: string
+    ) => Promise<void>
   }
 
   const API = createAPIClient({
@@ -95,6 +102,10 @@
     agentIconColors,
   })
 
+  const deleteConversation = (
+    controller as ChatboxControllerWithConversationDelete
+  ).deleteConversation.bind(controller)
+
   const applyState = (state: ChatboxState) => {
     const next = state as ChatboxState & {
       filteredConversationHistory: ChatConversation[]
@@ -127,8 +138,28 @@
 
   const unsubscribe = controller.subscribe(applyState)
 
-  const handleDeleteChat = async () => {
-    await controller.deleteCurrentChat()
+  const handleDeleteConversation = async (
+    event: CustomEvent<{ conversationId: string }>
+  ) => {
+    const conversation = filteredConversationHistory.find(
+      item => item._id === event.detail.conversationId
+    )
+    const conversationAgentId = conversation?.agentId
+    const title = conversation?.title || "Untitled Chat"
+
+    confirmationStore.actions.showConfirmation(
+      "Confirm Deletion",
+      `Deleting "${title}" cannot be undone. Are you sure?`,
+      async () => {
+        await deleteConversation(
+          event.detail.conversationId,
+          conversationAgentId
+        )
+      },
+      undefined,
+      "Delete chat",
+      "Cancel"
+    )
   }
 
   const handleChatSaved = async (
@@ -186,18 +217,19 @@
     <ChatNavigationPanel
       {enabledAgentList}
       conversationHistory={filteredConversationHistory}
+      {deletingChat}
       {selectedConversationId}
+      {selectedAgentName}
       hideAgents={isLockedAgentMode}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
+      on:conversationDeleted={handleDeleteConversation}
     />
 
     <ChatConversationPanel
       bind:chat
-      {deletingChat}
       {enabledAgentList}
       {selectedAgentId}
-      {selectedAgentName}
       {workspaceId}
       {userName}
       {conversationStarters}
@@ -205,7 +237,6 @@
       {initialPrompt}
       {loading}
       {suppressAgentPicker}
-      on:deleteChat={handleDeleteChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}
       on:startChat={handleStartChat}
@@ -222,6 +253,13 @@
     height: 100%;
     min-width: 0;
     min-height: 0;
+    --chat-font-sans: "Inter", sans-serif;
+    --font-sans: var(--chat-font-sans);
+    --font-serif: var(--chat-font-sans);
+    --font-accent: var(--chat-font-sans);
+    --spectrum-alias-body-text-font-family: var(--chat-font-sans);
+    --spectrum-global-font-family-base: var(--chat-font-sans);
+    font-family: var(--chat-font-sans);
   }
 
   .chat-empty-state {

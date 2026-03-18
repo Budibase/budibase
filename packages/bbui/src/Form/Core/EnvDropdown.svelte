@@ -15,6 +15,8 @@
   export let updateOnChange: boolean = true
   export let align: string | undefined = undefined
   export let autofocus: boolean = false
+  export let autocomplete: HTMLInputElement["autocomplete"] | undefined =
+    undefined
   export let variables
   export let showModal: () => void
   export let environmentVariablesEnabled
@@ -129,6 +131,7 @@
       style={align ? `text-align: ${align};` : ""}
       class="spectrum-Textfield-input"
       inputmode={type === "number" ? "decimal" : "text"}
+      {autocomplete}
     />
   </div>
   {#if open}

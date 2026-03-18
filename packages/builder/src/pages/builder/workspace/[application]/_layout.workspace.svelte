@@ -23,6 +23,8 @@
   let sideNav: SideNav
   let showInviteUsersModal = false
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
+  $: canManageConnections =
+    $auth.user != null && sdk.users.canCreateApps($auth.user)
   $: if ($bb.settings.open && showInviteUsersModal) {
     showInviteUsersModal = false
   }
@@ -67,6 +69,7 @@
   <SideNav
     bind:this={sideNav}
     {canInviteUsers}
+    {canManageConnections}
     onInviteUser={() => {
       if (canInviteUsers) {
         showInviteUsersModal = true

@@ -5,9 +5,15 @@ import {
   HTTPError,
 } from "@budibase/backend-core"
 import type { ChatApp } from "@budibase/types"
+import { AgentChannelProvider } from "@budibase/types"
 import * as chatApps from "../chatApps"
 
-export type ChatWebhookProvider = "discord" | "ms-teams" | "slack"
+/** Webhook URL path segment (ms-teams uses hyphen, provider value uses msteams) */
+export const WEBHOOK_PATH_BY_PROVIDER: Record<AgentChannelProvider, string> = {
+  [AgentChannelProvider.DISCORD]: "discord",
+  [AgentChannelProvider.MSTEAMS]: "ms-teams",
+  [AgentChannelProvider.SLACK]: "slack",
+}
 
 const enableAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
   const existingAgents = chatApp.agents || []
@@ -83,7 +89,7 @@ export const buildWebhookUrl = async ({
   agentId,
   useProdWorkspaceId = false,
 }: {
-  provider: ChatWebhookProvider
+  provider: AgentChannelProvider
   chatAppId: string
   agentId: string
   useProdWorkspaceId?: boolean
@@ -96,11 +102,12 @@ export const buildWebhookUrl = async ({
   const targetWorkspaceId = useProdWorkspaceId
     ? dbCore.getProdWorkspaceID(workspaceId)
     : workspaceId
-  return `${platformUrl.replace(/\/$/, "")}/api/webhooks/${provider}/${targetWorkspaceId}/${chatAppId}/${agentId}`
+  const pathSegment = WEBHOOK_PATH_BY_PROVIDER[provider]
+  return `${platformUrl.replace(/\/$/, "")}/api/webhooks/${pathSegment}/${targetWorkspaceId}/${chatAppId}/${agentId}`
 }
 
 export const buildProviderWebhookUrl = async (
-  provider: ChatWebhookProvider,
+  provider: AgentChannelProvider,
   chatAppId: string,
   agentId: string
 ) =>

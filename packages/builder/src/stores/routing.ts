@@ -8,7 +8,7 @@ import { appStore } from "@/stores/builder/app"
 import { setSettingsRouteResolver } from "@/stores/bb"
 import { appsStore } from "@/stores/portal/apps"
 import {
-  appRoutes,
+  workspaceRoutes,
   filterRoutes,
   globalRoutes,
   orgRoutes,
@@ -24,7 +24,7 @@ export const permittedRoutes = derived(
     }
     const routes = [
       ...globalRoutes(user),
-      ...appRoutes($appStore, $appsStore),
+      ...workspaceRoutes($appStore, $appsStore, user),
       ...orgRoutes(user, $admin),
     ]
     return filterRoutes(routes)

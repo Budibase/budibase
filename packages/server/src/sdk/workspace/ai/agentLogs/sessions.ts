@@ -31,7 +31,6 @@ export async function fetchSessions(
     clearOldHistory(developmentDb),
     clearOldHistory(productionDb),
   ])
-
   const [developmentRows, productionRows] = await Promise.all([
     listSessionIndexDocs({
       agentId,

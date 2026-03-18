@@ -962,6 +962,27 @@ if (descriptions.length) {
                     }
                   )
                 })
+
+                it("should return 400 when searching with an invalid operator", async () => {
+                  await config.api.row.search(
+                    tableOrViewId,
+                    {
+                      query: {
+                        $where: "function(){return true}",
+                      } as SearchFilters,
+                    },
+                    {
+                      status: 400,
+                      body: {
+                        message: expect.stringContaining("$where"),
+                      },
+                    }
+                  )
+
+                  await expectQuery({
+                    equal: { name: "foo" },
+                  }).toContainExactly([{ name: "foo" }])
+                })
               })
 
               describe("notEqual", () => {

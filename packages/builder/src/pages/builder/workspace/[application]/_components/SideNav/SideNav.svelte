@@ -52,7 +52,6 @@
     type WorkspaceFavourite,
     PublishResourceState,
     WorkspaceResource,
-    AIConfigType,
   } from "@budibase/types"
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
@@ -72,6 +71,7 @@
     pinned.set(true)
   }
   export let canInviteUsers = false
+  export let canManageConnections = false
   export let onInviteUser: () => void = () => {}
 
   $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
@@ -302,7 +302,7 @@
           const entry: UIFavouriteResource = {
             name: resource.name,
             icon: isRestQuery
-              ? "webhooks-logo"
+              ? "globe-simple"
               : ResourceIcons[favourite.resourceType],
           }
 
@@ -558,9 +558,6 @@
                   </MenuItem>
 
                   <MenuSeparator />
-                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-                    Connection
-                  </MenuItem>
                   <MenuItem icon="grid-nine" on:click={openCreateTable}>
                     Table
                   </MenuItem>
@@ -627,15 +624,17 @@
             </div>
 
             <div class="core-secondary">
-              <SideNavLink
-                icon="sparkle"
-                text="AI models"
-                {collapsed}
-                on:click={() => {
-                  bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)
-                  keepCollapsed()
-                }}
-              />
+              {#if canManageConnections}
+                <SideNavLink
+                  icon="cube"
+                  text="Connections"
+                  {collapsed}
+                  on:click={() => {
+                    bb.settings(`/connections/apis`)
+                    keepCollapsed()
+                  }}
+                />
+              {/if}
               <SideNavLink
                 icon="globe-simple"
                 text="API explorer"

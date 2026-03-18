@@ -1,5 +1,6 @@
 export * as agents from "./agents"
 export * as chatApps from "./chatApps"
+export * as chatIdentityLinks from "./chatIdentityLinks"
 export * as configs from "./configs"
 export * as deployments from "./deployments"
 export * as helpers from "./helpers"

@@ -114,6 +114,10 @@
   :global(.EasyMDEContainer .cm-s-easymde .cm-url) {
     color: var(--spectrum-global-color-gray-500);
   }
+  /* Markdown italics in the editor */
+  :global(.EasyMDEContainer .cm-s-easymde .cm-em) {
+    font-style: italic !important;
+  }
   /* Full preview window */
   :global(.EasyMDEContainer .editor-preview) {
     background: var(--spectrum-global-color-gray-50);
@@ -161,6 +165,13 @@
   }
   :global(.EasyMDEContainer a:hover) {
     color: var(--primaryColorHover);
+  }
+  /* Markdown italics */
+  :global(.EasyMDEContainer .editor-preview em),
+  :global(.EasyMDEContainer .editor-preview i),
+  :global(.EasyMDEContainer .editor-preview-side em),
+  :global(.EasyMDEContainer .editor-preview-side i) {
+    font-style: italic !important;
   }
   /* Allow full screen offset */
   :global(.EasyMDEContainer .editor-toolbar.fullscreen) {

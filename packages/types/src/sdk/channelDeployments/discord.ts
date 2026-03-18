@@ -41,8 +41,6 @@ export interface DiscordConversationScope {
   externalUserId: string
 }
 
-export type DiscordCommand = "ask" | "new" | "unsupported"
-
 export interface ResolvedDiscordIntegration {
   applicationId: string
   botToken: string

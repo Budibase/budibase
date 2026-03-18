@@ -1,12 +1,29 @@
 import { db, HTTPError } from "@budibase/backend-core"
 import {
   FieldType,
+  isArraySearchOperator,
+  isBasicSearchOperator,
   isLogicalSearchOperator,
+  isRangeSearchOperator,
   SearchFilters,
   Table,
 } from "@budibase/types"
 import sdk from "../.."
 import { isInternal } from "../tables/utils"
+
+const ALLOWED_FILTER_META_KEYS: (keyof SearchFilters)[] = [
+  "allOr",
+  "fuzzyOr",
+  "onEmptyFilter",
+  "documentType",
+]
+
+const isAllowedFilterKey = (key: string): boolean =>
+  ALLOWED_FILTER_META_KEYS.includes(key as keyof SearchFilters) ||
+  isBasicSearchOperator(key) ||
+  isArraySearchOperator(key) ||
+  isRangeSearchOperator(key) ||
+  isLogicalSearchOperator(key)
 
 export const validateFilters = (
   filters: SearchFilters,
@@ -14,6 +31,14 @@ export const validateFilters = (
 ) => {
   validFields = validFields.map(f => f.toLowerCase())
   for (const key of Object.keys(filters || {}) as (keyof SearchFilters)[]) {
+    if (!isAllowedFilterKey(key)) {
+      throw new HTTPError(`Invalid filter operator: ${key}`, 400)
+    }
+
+    if (ALLOWED_FILTER_META_KEYS.includes(key)) {
+      continue
+    }
+
     if (isLogicalSearchOperator(key)) {
       const filter = filters[key]
       if (!filter) {

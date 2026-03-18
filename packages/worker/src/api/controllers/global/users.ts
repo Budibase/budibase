@@ -112,7 +112,7 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
       email: user.email,
     }
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -146,7 +146,7 @@ export const changeTenantOwnerEmail = async (
     }
     ctx.status = 200
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -178,7 +178,7 @@ export const addSsoSupport = async (
     })
     ctx.body = { message: "SSO support added." }
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -271,7 +271,7 @@ export const adminUser = async (
         email: finalUser.email,
       }
     } catch (err: any) {
-      ctx.throw(err.status || 400, err)
+      ctx.throw(err.status || 400, err?.message || err)
     }
   })
 }
@@ -283,7 +283,7 @@ export const countByWorkspace = async (
   try {
     ctx.body = await userSdk.db.countUsersByWorkspace(workspaceId)
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -848,10 +848,13 @@ export const inviteAccept = async (
   } catch (err: any) {
     if (err.code === APIWarningCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
-      ctx.throw(400, err)
+      ctx.throw(400, err?.message || err)
     }
     console.warn("Error inviting user", err)
-    ctx.throw(400, err || "Unable to create new user, invitation invalid.")
+    ctx.throw(
+      400,
+      err?.message || err || "Unable to create new user, invitation invalid."
+    )
   }
 }
 

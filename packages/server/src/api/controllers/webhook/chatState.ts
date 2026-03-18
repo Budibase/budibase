@@ -1,10 +1,10 @@
 import { redis } from "@budibase/backend-core"
+import { AgentChannelProvider } from "@budibase/types"
 import { createIoRedisState } from "@chat-adapter/state-ioredis"
 import { createMemoryState } from "@chat-adapter/state-memory"
 import { ConsoleLogger, type StateAdapter } from "chat"
 
 const CHAT_SDK_KEY_PREFIX = "budibase:chat-sdk"
-type WebhookProvider = "discord" | "msteams" | "slack"
 type IoRedisClient = Extract<
   Parameters<typeof createIoRedisState>[0],
   { client: unknown }
@@ -12,11 +12,12 @@ type IoRedisClient = Extract<
 
 const isTestEnvironment = () => process.env.NODE_ENV === "test"
 
-const stateByProvider: Partial<Record<WebhookProvider, Promise<StateAdapter>>> =
-  {}
+const stateByProvider: Partial<
+  Record<AgentChannelProvider, Promise<StateAdapter>>
+> = {}
 
 const createWebhookState = async (
-  provider: WebhookProvider
+  provider: AgentChannelProvider
 ): Promise<StateAdapter> => {
   if (isTestEnvironment()) {
     return createMemoryState()
@@ -37,7 +38,7 @@ const createWebhookState = async (
   })
 }
 
-const getWebhookState = async (provider: WebhookProvider) => {
+const getWebhookState = async (provider: AgentChannelProvider) => {
   if (!stateByProvider[provider]) {
     stateByProvider[provider] = createWebhookState(provider)
   }
@@ -49,6 +50,7 @@ const getWebhookState = async (provider: WebhookProvider) => {
   }
 }
 
-export const getDiscordState = () => getWebhookState("discord")
-export const getTeamsState = () => getWebhookState("msteams")
-export const getSlackState = () => getWebhookState("slack")
+export const getDiscordState = () =>
+  getWebhookState(AgentChannelProvider.DISCORD)
+export const getTeamsState = () => getWebhookState(AgentChannelProvider.MSTEAMS)
+export const getSlackState = () => getWebhookState(AgentChannelProvider.SLACK)

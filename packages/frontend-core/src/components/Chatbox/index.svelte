@@ -806,6 +806,14 @@
     flex-direction: column;
     overflow-y: auto;
     min-height: 0;
+    font-family: var(--chat-font-sans, var(--font-sans));
+    --font-serif: var(--chat-font-sans, var(--font-sans));
+    --font-accent: var(--chat-font-sans, var(--font-sans));
+    --spectrum-alias-body-text-font-family: var(
+      --chat-font-sans,
+      var(--font-sans)
+    );
+    --spectrum-global-font-family-base: var(--chat-font-sans, var(--font-sans));
   }
   .chatbox {
     display: flex;

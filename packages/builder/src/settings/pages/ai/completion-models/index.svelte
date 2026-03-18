@@ -61,7 +61,7 @@
   ])
 
   function createAIConfig() {
-    bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}/new`, {
+    bb.settings(`/connections/${AIConfigType.COMPLETIONS}/new`, {
       type: AIConfigType.COMPLETIONS,
     })
   }

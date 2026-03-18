@@ -38,7 +38,6 @@
   const excludedRoleIds = [
     ...builtInEndUserRoles,
     Constants.Roles.PUBLIC,
-    Constants.Roles.POWER,
     Constants.Roles.CREATOR,
     Constants.Roles.GROUP,
   ]

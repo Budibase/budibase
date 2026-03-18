@@ -14,7 +14,7 @@
   import { BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
   import { onMount } from "svelte"
   import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
-  import { routeActions } from ".."
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import ProviderModelFields from "./ProviderModelFields.svelte"
 
   interface Props {
@@ -212,7 +212,7 @@
   }
 </script>
 
-<div use:routeActions>
+<RouteActions>
   <div class="actions">
     {#if isEdit}
       <Button on:click={deleteConfig} quiet overBackground>Delete</Button>
@@ -225,7 +225,7 @@
       {/if}
     </Button>
   </div>
-</div>
+</RouteActions>
 
 <div class="form">
   {#if !isManagedProvider}

@@ -16,10 +16,11 @@ import {
 import { groups, licensing, quotas } from "@budibase/pro"
 import {
   DefaultAppTheme,
+  helpers,
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
 } from "@budibase/shared-core"
-import type { File, Files } from "formidable"
+import Joi from "joi"
 import {
   AddWorkspaceSampleDataResponse,
   BBReferenceFieldSubType,
@@ -51,6 +52,7 @@ import {
   UpdateWorkspaceResponse,
   UserCtx,
   Workspace,
+  KoaFile,
   OnboardingWorkspaceRequest,
 } from "@budibase/types"
 import { cleanupAutomations } from "../../automations/utils"
@@ -92,6 +94,11 @@ import { processMigrations } from "../../workspaceMigrations/migrationsProcessor
 import { getGlobalUser } from "../../utilities/global"
 
 const DEFAULT_WORKSPACE_NAME = "Default workspace"
+const workspaceNameSchema = Joi.string().trim().required().messages({
+  "string.base": "Name is required",
+  "string.empty": "Name is required",
+  "any.required": "Name is required",
+})
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -130,32 +137,45 @@ function checkWorkspaceName(
   workspaces: Workspace[],
   name: string,
   currentWorkspaceId?: string
-) {
-  // TODO: Replace with Joi
-  if (!name) {
-    ctx.throw(400, "Name is required")
+): string {
+  const { error, value } = workspaceNameSchema.validate(name)
+  if (error) {
+    ctx.throw(400, error.message)
   }
+  const trimmedName = value as string
   if (currentWorkspaceId) {
     workspaces = workspaces.filter(
       (ws: Workspace) => ws.appId !== currentWorkspaceId
     )
   }
-  if (workspaces.some((app: Workspace) => app.name === name)) {
+  const normalizedName = helpers.normalizeForComparison(trimmedName)
+  if (
+    workspaces.some(
+      (app: Workspace) =>
+        helpers.normalizeForComparison(app.name) === normalizedName
+    )
+  ) {
     ctx.throw(400, "Workspace name is already in use.")
   }
+  return trimmedName
 }
 
 function getOnboardingWorkspaceName(workspaces: Workspace[]) {
-  if (
-    !workspaces.some(workspace => workspace.name === DEFAULT_WORKSPACE_NAME)
-  ) {
+  const hasWorkspaceName = (name: string) => {
+    const normalizedName = helpers.normalizeForComparison(name)
+
+    return workspaces.some(
+      workspace =>
+        helpers.normalizeForComparison(workspace.name) === normalizedName
+    )
+  }
+
+  if (!hasWorkspaceName(DEFAULT_WORKSPACE_NAME)) {
     return DEFAULT_WORKSPACE_NAME
   }
 
   let suffix = 2
-  while (
-    workspaces.some(workspace => workspace.name === `Workspace ${suffix}`)
-  ) {
+  while (hasWorkspaceName(`Workspace ${suffix}`)) {
     suffix++
   }
   return `Workspace ${suffix}`
@@ -170,6 +190,10 @@ interface AppTemplate {
   }
   key?: string
 }
+
+const getUploadedFilePath = (file: KoaFile) => file.filepath
+
+const getUploadedFileType = (file: KoaFile) => file.mimetype
 
 async function createInstance(appId: string, template: AppTemplate) {
   const db = context.getWorkspaceDB()
@@ -528,7 +552,7 @@ export async function fetchAppPackage(
       !isChatRoute &&
       (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev))
     ) {
-      ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
+      ctx.throw(404, "No matching workspace app found for URL path: " + urlPath)
     }
 
     if (matchedWorkspaceApp) {
@@ -578,11 +602,11 @@ async function performWorkspaceCreate(
   const useTemplate = body.useTemplate === "true"
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
 
-  const workspaceName = isOnboarding
+  let workspaceName = isOnboarding
     ? getOnboardingWorkspaceName(workspaces)
     : body.name
 
-  checkWorkspaceName(ctx, workspaces, workspaceName)
+  workspaceName = checkWorkspaceName(ctx, workspaces, workspaceName)
   const appUrl = sdk.workspaces.getAppUrl({ name: workspaceName, url })
   checkWorkspaceUrl(ctx, workspaces, appUrl)
 
@@ -591,8 +615,21 @@ async function performWorkspaceCreate(
     key: templateKey,
   }
   if (ctx.request.files && ctx.request.files.fileToImport) {
+    const fileToImport = ctx.request.files.fileToImport
+    if (Array.isArray(fileToImport)) {
+      ctx.throw(400, "Must only supply one app export")
+    }
+    const path = getUploadedFilePath(fileToImport)
+    const type = getUploadedFileType(fileToImport)
+    if (!path) {
+      ctx.throw(400, "Must supply export file to import")
+    }
+    if (!type) {
+      ctx.throw(400, "Must supply export file content type")
+    }
     instanceConfig.file = {
-      ...(ctx.request.files.fileToImport as any),
+      type,
+      path,
       password: encryptionPassword,
     }
   } else if (typeof body.file?.path === "string") {
@@ -878,10 +915,11 @@ export async function update(
     dev: true,
   })
   // validation
-  const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url
+  let name = ctx.request.body.name
+  const possibleUrl = ctx.request.body.url
   if (name) {
-    checkWorkspaceName(ctx, workspaces, name, ctx.params.appId)
+    name = checkWorkspaceName(ctx, workspaces, name, ctx.params.appId)
+    ctx.request.body.name = name
   }
   const url = sdk.workspaces.getAppUrl({ name, url: possibleUrl })
   if (url) {
@@ -1101,9 +1139,9 @@ export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   }
 }
 
-type WorkspaceImportFiles = Files & {
-  appExport?: File | File[]
-  file?: File | File[]
+type WorkspaceImportFiles = {
+  appExport?: KoaFile | KoaFile[]
+  file?: KoaFile | KoaFile[]
 }
 
 export async function importToWorkspace(
@@ -1119,9 +1157,17 @@ export async function importToWorkspace(
   if (Array.isArray(workspaceExport)) {
     ctx.throw(400, "Must only supply one app export")
   }
+  const path = getUploadedFilePath(workspaceExport)
+  const type = getUploadedFileType(workspaceExport)
+  if (!path) {
+    ctx.throw(400, "Must supply export file to import")
+  }
+  if (!type) {
+    ctx.throw(400, "Must supply export file content type")
+  }
   const fileAttributes = {
-    type: workspaceExport.type!,
-    path: workspaceExport.path!,
+    type,
+    path,
   }
   try {
     await sdk.workspaces.updateWithExport(workspaceId, fileAttributes, password)
@@ -1141,7 +1187,8 @@ export async function importToWorkspace(
 export async function duplicateWorkspace(
   ctx: UserCtx<DuplicateWorkspaceRequest, DuplicateWorkspaceResponse>
 ) {
-  const { name: appName, url: possibleUrl } = ctx.request.body
+  let { name: appName } = ctx.request.body
+  const { url: possibleUrl } = ctx.request.body
   const { appId: sourceAppId } = ctx.params
   const [workspace] = await dbCore.getWorkspacesByIDs([sourceAppId])
 
@@ -1153,7 +1200,7 @@ export async function duplicateWorkspace(
     dev: true,
   })
 
-  checkWorkspaceName(ctx, workspaces, appName)
+  appName = checkWorkspaceName(ctx, workspaces, appName)
   const url = sdk.workspaces.getAppUrl({ name: appName, url: possibleUrl })
   checkWorkspaceUrl(ctx, workspaces, url)
 
