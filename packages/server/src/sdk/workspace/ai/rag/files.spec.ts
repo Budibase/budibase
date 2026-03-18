@@ -1,27 +1,38 @@
-const mockCreateVectorDb = jest.fn()
-const mockEmbedMany = jest.fn()
-const mockCreateLLM = jest.fn()
-const mockKnowledgeBaseFind = jest.fn()
-const mockListKnowledgeBaseFiles = jest.fn()
+import type { createVectorDb, VectorDbClient } from "../vectorDb/utils"
+import type { embedMany, EmbedManyResult } from "ai"
+import type { createLLM } from "../llm"
+import type { find, listKnowledgeBaseFiles } from "../knowledgeBase"
+
+const mockCreateVectorDb = jest.fn() as jest.MockedFunction<
+  typeof createVectorDb
+>
+const mockEmbedMany = jest.fn() as jest.MockedFunction<typeof embedMany>
+const mockCreateLLM = jest.fn() as jest.MockedFunction<typeof createLLM>
+const mockKnowledgeBaseFind = jest.fn() as jest.MockedFunction<typeof find>
+const mockListKnowledgeBaseFiles = jest.fn() as jest.MockedFunction<
+  typeof listKnowledgeBaseFiles
+>
 
 jest.mock("../vectorDb/utils", () => ({
-  createVectorDb: (...args: any[]) => mockCreateVectorDb(...args),
+  createVectorDb: (...args: Parameters<typeof createVectorDb>) =>
+    mockCreateVectorDb(...args),
 }))
 
 jest.mock("ai", () => ({
   tool: jest.fn(),
-  embedMany: (...args: any[]) => mockEmbedMany(...args),
+  embedMany: (...args: Parameters<typeof embedMany>) => mockEmbedMany(...args),
 }))
 
 jest.mock("../llm", () => ({
-  createLLM: (...args: any[]) => mockCreateLLM(...args),
+  createLLM: (...args: Parameters<typeof createLLM>) => mockCreateLLM(...args),
 }))
 
 jest.mock("..", () => ({
   knowledgeBase: {
-    find: (...args: any[]) => mockKnowledgeBaseFind(...args),
-    listKnowledgeBaseFiles: (...args: any[]) =>
-      mockListKnowledgeBaseFiles(...args),
+    find: (...args: Parameters<typeof find>) => mockKnowledgeBaseFind(...args),
+    listKnowledgeBaseFiles: (
+      ...args: Parameters<typeof listKnowledgeBaseFiles>
+    ) => mockListKnowledgeBaseFiles(...args),
   },
 }))
 
@@ -30,6 +41,7 @@ import {
   KnowledgeBase,
   KnowledgeBaseFile,
   KnowledgeBaseFileStatus,
+  LLMResponse,
 } from "@budibase/types"
 import { ingestKnowledgeBaseFile, retrieveContextForAgent } from "./files"
 import { features, tenancy } from "@budibase/backend-core"
@@ -40,6 +52,22 @@ describe("rag files", () => {
     jest.clearAllMocks()
   })
 
+  function setMockCreateVectorDb(vectorDb: Partial<VectorDbClient>) {
+    mockCreateVectorDb.mockResolvedValue(vectorDb as VectorDbClient)
+  }
+
+  function setMockCreateLLM(llm: Partial<LLMResponse>) {
+    mockCreateLLM.mockResolvedValue(llm as LLMResponse)
+  }
+
+  function setMockEmbedMany(embeddings: Partial<EmbedManyResult>) {
+    mockEmbedMany.mockResolvedValue(embeddings as EmbedManyResult)
+  }
+
+  function setMockKnowledgeBaseFind(kb: KnowledgeBase) {
+    mockKnowledgeBaseFind.mockResolvedValue(kb)
+  }
+
   describe("ingestKnowledgeBaseFile", () => {
     it("uses the embedding model config for embeddings", async () => {
       const vectorDb = {
@@ -48,12 +76,15 @@ describe("rag files", () => {
           inserted: 1,
           total: 1,
         }),
-      }
+        queryNearest: jest.fn(),
+      } satisfies VectorDbClient
 
-      mockCreateVectorDb.mockResolvedValue(vectorDb)
-      mockCreateLLM.mockResolvedValue({ embedding: "mock-embedding-model" })
-      mockEmbedMany.mockResolvedValue({ embeddings: [[0.1, 0.2, 0.3]] })
-      mockKnowledgeBaseFind.mockResolvedValue({
+      setMockCreateVectorDb(vectorDb)
+      setMockCreateLLM({
+        embedding: {} as LLMResponse["embedding"],
+      })
+      setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
+      setMockKnowledgeBaseFind({
         _id: "kb_123",
         name: "KB",
         embeddingModel: "embedding_config",
@@ -181,10 +212,10 @@ describe("rag files", () => {
         ]),
       }
 
-      mockCreateVectorDb.mockResolvedValue(vectorDb)
-      mockCreateLLM.mockResolvedValue({ embedding: "mock-embedding-model" })
-      mockEmbedMany.mockResolvedValue({ embeddings: [[0.1, 0.2, 0.3]] })
-      mockKnowledgeBaseFind.mockResolvedValue({
+      setMockCreateVectorDb(vectorDb)
+      setMockCreateLLM({ embedding: {} as LLMResponse["embedding"] })
+      setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
+      setMockKnowledgeBaseFind({
         _id: "kb_123",
         name: "KB",
         embeddingModel: "embedding_config",
@@ -211,7 +242,11 @@ describe("rag files", () => {
         features.testutils.withFeatureFlags(
           "tenant",
           { [FeatureFlag.AI_RAG]: true },
-          () => retrieveContextForAgent(agent, "How can users reset their password?")
+          () =>
+            retrieveContextForAgent(
+              agent,
+              "How can users reset their password?"
+            )
         )
       )
 
@@ -251,10 +286,10 @@ describe("rag files", () => {
         ]),
       }
 
-      mockCreateVectorDb.mockResolvedValue(vectorDb)
-      mockCreateLLM.mockResolvedValue({ embedding: "mock-embedding-model" })
-      mockEmbedMany.mockResolvedValue({ embeddings: [[0.1, 0.2, 0.3]] })
-      mockKnowledgeBaseFind.mockResolvedValue({
+      setMockCreateVectorDb(vectorDb)
+      setMockCreateLLM({ embedding: {} as LLMResponse["embedding"] })
+      setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
+      setMockKnowledgeBaseFind({
         _id: "kb_123",
         name: "KB",
         embeddingModel: "embedding_config",
@@ -281,7 +316,11 @@ describe("rag files", () => {
         features.testutils.withFeatureFlags(
           "tenant",
           { [FeatureFlag.AI_RAG]: true },
-          () => retrieveContextForAgent(agent, "How can users reset their password?")
+          () =>
+            retrieveContextForAgent(
+              agent,
+              "How can users reset their password?"
+            )
         )
       )
 
@@ -307,10 +346,10 @@ describe("rag files", () => {
         ]),
       }
 
-      mockCreateVectorDb.mockResolvedValue(vectorDb)
-      mockCreateLLM.mockResolvedValue({ embedding: "mock-embedding-model" })
-      mockEmbedMany.mockResolvedValue({ embeddings: [[0.1, 0.2, 0.3]] })
-      mockKnowledgeBaseFind.mockResolvedValue({
+      setMockCreateVectorDb(vectorDb)
+      setMockCreateLLM({ embedding: {} as LLMResponse["embedding"] })
+      setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
+      setMockKnowledgeBaseFind({
         _id: "kb_123",
         name: "KB",
         embeddingModel: "embedding_config",
@@ -351,10 +390,10 @@ describe("rag files", () => {
         ]),
       }
 
-      mockCreateVectorDb.mockResolvedValue(vectorDb)
-      mockCreateLLM.mockResolvedValue({ embedding: "mock-embedding-model" })
-      mockEmbedMany.mockResolvedValue({ embeddings: [[0.1, 0.2, 0.3]] })
-      mockKnowledgeBaseFind.mockResolvedValue({
+      setMockCreateVectorDb(vectorDb)
+      setMockCreateLLM({ embedding: {} as LLMResponse["embedding"] })
+      setMockEmbedMany({ embeddings: [[0.1, 0.2, 0.3]] })
+      setMockKnowledgeBaseFind({
         _id: "kb_123",
         name: "KB",
         embeddingModel: "embedding_config",
