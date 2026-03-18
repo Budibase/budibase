@@ -35,6 +35,7 @@
   } from "@budibase/bbui"
   import {
     FeatureFlag,
+    type FetchChatAppAgentsResponse,
     type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
@@ -48,6 +49,7 @@
     type WorkspaceFavourite,
     type WorkspaceResource,
   } from "@budibase/types"
+  import { helpers } from "@budibase/shared-core"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import { getHomeTypeIcon, getHomeTypeIconColor } from "./_components/rows"
   import {
@@ -65,6 +67,12 @@
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
   type HomeCreate = "app" | "automation" | "agent"
+
+  interface HomeChatLink {
+    agentId: string
+    name: string
+    path: string
+  }
 
   $beforeUrlChange
 
@@ -97,6 +105,7 @@
   let typeFilter: HomeType = "all"
   let searchTerm = ""
   let metrics: GetWorkspaceHomeMetricsResponse | null = null
+  let accessibleChatAgents: FetchChatAppAgentsResponse["agents"] = []
 
   let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
@@ -614,6 +623,37 @@
     }
   }
 
+  const loadAccessibleChatAgents = async () => {
+    const workspaceId = $appStore.appId
+    if (!workspaceId || !$featureFlags.AI_AGENTS) {
+      accessibleChatAgents = []
+      return
+    }
+
+    try {
+      const chatApp = await API.fetchChatApp(workspaceId)
+      const chatAppId = chatApp?._id
+      if (!chatAppId) {
+        accessibleChatAgents = []
+        return
+      }
+
+      const { agents } = await API.fetchChatAppAgents(chatAppId)
+      accessibleChatAgents = agents.filter(agent => agent.live)
+    } catch (err) {
+      console.error(err)
+      accessibleChatAgents = []
+    }
+  }
+
+  const openChatPath = (path: string) => {
+    if (!path || typeof window === "undefined") {
+      return
+    }
+
+    window.open(path, "_blank", "noopener,noreferrer")
+  }
+
   $: baseRows = buildHomeRows({
     apps: $workspaceAppStore.workspaceApps,
     automations: $automationStore.automations,
@@ -626,7 +666,36 @@
 
   $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
 
-  $: showHeaderActions = $licensing.showTrialBanner
+  $: workspaceChatLinks = (() => {
+    const workspaceUrl = $appStore.url
+    if (!workspaceUrl || !$featureFlags.AI_AGENTS) {
+      return [] as HomeChatLink[]
+    }
+
+    const linksByAgentId = new Map<string, HomeChatLink>()
+    for (const agent of accessibleChatAgents) {
+      if (!agent._id) {
+        continue
+      }
+
+      linksByAgentId.set(agent._id, {
+        agentId: agent._id,
+        name: agent.name || "Unnamed agent",
+        path: helpers.agentChatUrl(workspaceUrl, agent._id),
+      })
+    }
+
+    return [...linksByAgentId.values()].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    )
+  })()
+
+  $: singleWorkspaceChatLink =
+    workspaceChatLinks.length === 1 ? workspaceChatLinks[0] : null
+  $: hasMultipleWorkspaceChatLinks = workspaceChatLinks.length > 1
+
+  $: showAgentChat = workspaceChatLinks.length > 0
+  $: showHeaderActions = $licensing.showTrialBanner || showAgentChat
   $: budibaseAICreditLimit =
     $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
   $: showBudibaseAIMetric =
@@ -666,6 +735,7 @@
     await Promise.all([
       $featureFlags.AI_AGENTS ? agentsStore.fetchAgents() : Promise.resolve(),
       loadMetrics(),
+      loadAccessibleChatAgents(),
     ])
   })
 </script>
@@ -685,6 +755,63 @@
       {#if showHeaderActions}
         <div class="header-actions">
           <EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
+
+          {#if showAgentChat}
+            {#if singleWorkspaceChatLink}
+              <a
+                href={singleWorkspaceChatLink.path}
+                class="header-link header-link--with-icons"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Icon
+                  name="chat-circle"
+                  size="XS"
+                  color="#8CA171"
+                  weight="fill"
+                />
+                <Body size="S">Open chat</Body>
+                <Icon
+                  name="arrow-up-right"
+                  size="XS"
+                  color="var(--spectrum-global-color-gray-600)"
+                  weight="regular"
+                />
+              </a>
+            {:else if hasMultipleWorkspaceChatLinks}
+              <ActionMenu align={PopoverAlignment.Right} animate={false}>
+                <button
+                  slot="control"
+                  class="header-link header-link--with-icons"
+                  type="button"
+                >
+                  <Icon
+                    name="chat-circle"
+                    size="XS"
+                    color="#8CA171"
+                    weight="fill"
+                  />
+                  <Body size="S">Open chat</Body>
+                  <Icon
+                    name="caret-down"
+                    size="XS"
+                    color="var(--spectrum-global-color-gray-600)"
+                    weight="regular"
+                  />
+                </button>
+
+                {#each workspaceChatLinks as chatLink (chatLink.agentId)}
+                  <MenuItem
+                    icon="sparkle"
+                    iconWeight="fill"
+                    on:click={() => openChatPath(chatLink.path)}
+                  >
+                    {chatLink.name}
+                  </MenuItem>
+                {/each}
+              </ActionMenu>
+            {/if}
+          {/if}
         </div>
       {/if}
     </div>
