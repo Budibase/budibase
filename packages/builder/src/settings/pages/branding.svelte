@@ -16,7 +16,7 @@
   import { organisation } from "@/stores/portal/organisation"
   import { licensing } from "@/stores/portal/licensing"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
-  import { routeActions } from "@/settings/pages"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
 
   import { API } from "@/api"
   import { onMount } from "svelte"
@@ -377,7 +377,7 @@
         </div>
       </div>
       <div class="buttons">
-        <div use:routeActions class="controls">
+        <RouteActions>
           <Button
             on:click={saveConfig}
             cta
@@ -385,7 +385,7 @@
           >
             Save
           </Button>
-        </div>
+        </RouteActions>
       </div>
     </Layout>
   {/if}

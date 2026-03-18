@@ -1,20 +1,22 @@
+import { Workspace } from "@budibase/types"
 import * as setup from "./utilities"
 import { roles, db as dbCore } from "@budibase/backend-core"
 
 describe("/api/applications/:appId/sync", () => {
   let config = setup.getConfig()
-  let app
+  let workspace: Workspace
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
     await config.init()
-    app = await config.createWorkspaceWithOnboarding()
+    workspace = await config.createWorkspace()
+    await config.publish()
     // create some users which we will use throughout the tests
     await config.createUser({
       email: "sync1@example.com",
       roles: {
-        [app._id!]: roles.BUILTIN_ROLE_IDS.BASIC,
+        [workspace._id!]: roles.BUILTIN_ROLE_IDS.BASIC,
       },
     })
   })

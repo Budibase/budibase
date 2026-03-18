@@ -2,27 +2,28 @@ import { embedMany } from "ai"
 import * as crypto from "crypto"
 import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
-import { features } from "@budibase/backend-core"
 import {
-  AgentFileStatus,
   AgentMessageRagSource,
-  FeatureFlag,
   type Agent,
-  type AgentFile,
+  type KnowledgeBase,
+  type KnowledgeBaseFile,
+  KnowledgeBaseFileStatus,
 } from "@budibase/types"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
-import { agents } from ".."
+import { knowledgeBase as knowledgeBaseSdk } from ".."
 import { createLLM } from "../llm"
+
+interface RagFileInput {
+  filename?: string
+  mimetype?: string
+  ragSourceId: string
+}
 
 const DEFAULT_CHUNK_SIZE = 1500
 const DEFAULT_CHUNK_OVERLAP = 200
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
-
-const ensureRagEnabled = async () => {
-  if (!(await features.isEnabled(FeatureFlag.AI_RAG))) {
-    throw new Error("RAG feature is disabled")
-  }
-}
+const DEFAULT_RAG_TOP_K = 4
+const DEFAULT_RAG_MIN_SIMILARITY = 0.7
 
 const textFileExtensions = new Set([
   ".txt",
@@ -192,6 +193,29 @@ const getEmbeddingModel = async (configId: string) => {
   return embedding
 }
 
+const resolveKnowledgeBasesForAgent = async (
+  agent: Agent
+): Promise<KnowledgeBase[]> => {
+  const knowledgeBaseIds = (agent.knowledgeBases || []).filter(Boolean)
+  if (knowledgeBaseIds.length === 0) {
+    throw new Error("No knowledge base is configured for this agent")
+  }
+
+  const knowledgeBases: KnowledgeBase[] = []
+  for (const knowledgeBaseId of knowledgeBaseIds) {
+    const config = await knowledgeBaseSdk.find(knowledgeBaseId)
+    if (config) {
+      knowledgeBases.push(config)
+    }
+  }
+
+  if (knowledgeBases.length === 0) {
+    throw new Error("No valid knowledge base is configured for this agent")
+  }
+
+  return knowledgeBases
+}
+
 const embedChunks = async (
   configId: string,
   chunks: string[],
@@ -212,7 +236,7 @@ const embedChunks = async (
   return embeddings
 }
 
-const isPdfFile = (file?: AgentFile) => {
+const isPdfFile = (file?: Pick<RagFileInput, "filename" | "mimetype">) => {
   if (!file) {
     return false
   }
@@ -224,7 +248,10 @@ const isPdfFile = (file?: AgentFile) => {
   return ext === "pdf" || ext === ".pdf"
 }
 
-const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
+const getTextFromBuffer = async (
+  buffer: Buffer,
+  file: Pick<RagFileInput, "filename" | "mimetype">
+) => {
   if (isPdfFile(file)) {
     const parser = new PDFParse({ data: buffer as any })
     const parsed = await parser.getText()
@@ -241,39 +268,34 @@ const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
   return buffer.toString("utf-8")
 }
 
-export const ingestAgentFile = async (
-  agent: Agent,
-  agentFile: AgentFile,
+export const ingestKnowledgeBaseFile = async (
+  knowledgeBase: KnowledgeBase,
+  knowledgeBaseFile: RagFileInput,
   fileBuffer: Buffer
 ): Promise<{
   inserted: number
   total: number
 }> => {
-  await ensureRagEnabled()
-  const { _id: agentId } = agent
-  if (!agentId) {
-    throw new Error("Agent id not set")
+  const knowledgeBaseId = knowledgeBase._id
+  if (!knowledgeBaseId) {
+    throw new Error("Knowledge base id not set")
   }
 
-  if (!agent.embeddingModel) {
-    throw new Error("Embedding model is not set")
-  }
-
-  const content = await getTextFromBuffer(fileBuffer, agentFile)
-  const chunks = createChunksFromContent(content, agentFile.filename)
+  const content = await getTextFromBuffer(fileBuffer, knowledgeBaseFile)
+  const chunks = createChunksFromContent(content, knowledgeBaseFile.filename)
 
   const vectorDb = await createVectorDb({
-    agentId: agent._id!,
-    vectorDbId: agent.vectorDb,
+    namespaceId: knowledgeBaseId,
+    vectorDbId: knowledgeBase.vectorDb,
   })
 
   if (chunks.length === 0) {
     // This will ensure any existing chunks for the source are removed
-    await vectorDb.deleteBySourceIds([agentFile.ragSourceId])
+    await vectorDb.deleteBySourceIds([knowledgeBaseFile.ragSourceId])
     return { inserted: 0, total: 0 }
   }
 
-  const embeddings = await embedChunks(agent.embeddingModel, chunks)
+  const embeddings = await embedChunks(knowledgeBase.embeddingModel, chunks)
   if (embeddings.length !== chunks.length) {
     throw new Error("Embedding response size mismatch")
   }
@@ -284,21 +306,27 @@ export const ingestAgentFile = async (
     embedding: embeddings[index],
   }))
 
-  return await vectorDb.upsertSourceChunks(agentFile.ragSourceId, payloads)
+  return await vectorDb.upsertSourceChunks(
+    knowledgeBaseFile.ragSourceId,
+    payloads
+  )
 }
 
-export const deleteAgentFileChunks = async (
-  agent: Agent,
+export const deleteKnowledgeBaseFileChunks = async (
+  knowledgeBase: KnowledgeBase,
   sourceIds: string[]
 ) => {
-  await ensureRagEnabled()
   if (!sourceIds || sourceIds.length === 0) {
     return
   }
+  const knowledgeBaseId = knowledgeBase._id
+  if (!knowledgeBaseId) {
+    throw new Error("Knowledge base id not set")
+  }
 
   const vectorDb = await createVectorDb({
-    agentId: agent._id!,
-    vectorDbId: agent.vectorDb,
+    namespaceId: knowledgeBaseId,
+    vectorDbId: knowledgeBase.vectorDb,
   })
   await vectorDb.deleteBySourceIds(sourceIds)
 }
@@ -319,77 +347,86 @@ export const retrieveContextForAgent = async (
   agent: Agent,
   question: string
 ): Promise<RetrievedContextResult> => {
-  await ensureRagEnabled()
   if (!question || question.trim().length === 0) {
     return { text: "", chunks: [], sources: [] }
   }
 
-  const agentId = agent._id
-  if (!agentId) {
-    throw new Error("Agent id not set")
+  const knowledgeBases = await resolveKnowledgeBasesForAgent(agent)
+  const maxDistance = 1 - DEFAULT_RAG_MIN_SIMILARITY
+  const retrieved: Array<RetrievedContextChunk & { distance: number }> = []
+  const files: KnowledgeBaseFile[] = []
+
+  for (const knowledgeBase of knowledgeBases) {
+    const knowledgeBaseId = knowledgeBase._id
+    if (!knowledgeBaseId) {
+      continue
+    }
+
+    const knowledgeBaseFiles =
+      await knowledgeBaseSdk.listKnowledgeBaseFiles(knowledgeBaseId)
+    files.push(...knowledgeBaseFiles)
+
+    const readyFileSources = knowledgeBaseFiles
+      .filter(
+        file =>
+          file.status === KnowledgeBaseFileStatus.READY && file.ragSourceId
+      )
+      .map(file => file.ragSourceId)
+
+    if (readyFileSources.length === 0) {
+      continue
+    }
+
+    const [queryEmbedding] = await embedChunks(
+      knowledgeBase.embeddingModel,
+      [question],
+      1
+    )
+    if (!queryEmbedding?.length) {
+      throw new Error("Embedding response missing dimensions")
+    }
+
+    const vectorDb = await createVectorDb({
+      namespaceId: knowledgeBaseId,
+      vectorDbId: knowledgeBase.vectorDb,
+    })
+    const rows = await vectorDb.queryNearest(
+      queryEmbedding,
+      readyFileSources,
+      DEFAULT_RAG_TOP_K
+    )
+
+    retrieved.push(
+      ...rows
+        .filter(row => row.distance <= maxDistance)
+        .map(row => ({
+          sourceId: row.source,
+          chunkText: row.chunkText,
+          chunkHash: row.chunkHash,
+          distance: row.distance,
+        }))
+    )
   }
 
-  if (!agent.ragTopK || !agent.ragMinDistance) {
-    throw new Error("RAG settings not properly configured")
-  }
-
-  if (!agent.embeddingModel) {
-    throw new Error("Embedding model is not set")
-  }
-
-  const agentFiles = await agents.listAgentFiles(agent._id!)
-  const readyFileSources = agentFiles
-    .filter(file => file.status === AgentFileStatus.READY && file.ragSourceId)
-    .map(file => file.ragSourceId)
-
-  if (readyFileSources.length === 0) {
+  if (retrieved.length === 0) {
     return { text: "", chunks: [], sources: [] }
   }
 
-  const [queryEmbedding] = await embedChunks(
-    agent.embeddingModel,
-    [question],
-    1
-  )
-  if (!queryEmbedding?.length) {
-    throw new Error("Embedding response missing dimensions")
-  }
-
-  const vectorDb = await createVectorDb({
-    agentId,
-    vectorDbId: agent.vectorDb,
-  })
-  const rows = await vectorDb.queryNearest(
-    queryEmbedding,
-    readyFileSources,
-    agent.ragTopK
-  )
-  if (rows.length === 0) {
-    return { text: "", chunks: [], sources: [] }
-  }
-
-  const maxDistance = 1 - agent.ragMinDistance
-  const filtered = rows.filter(row => row.distance <= maxDistance)
-  if (filtered.length === 0) {
-    return { text: "", chunks: [], sources: [] }
-  }
-
-  const chunks: RetrievedContextChunk[] = filtered.map(row => ({
-    sourceId: row.source,
-    chunkText: row.chunkText,
-    chunkHash: row.chunkHash,
-  }))
+  const chunks: RetrievedContextChunk[] = retrieved
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, DEFAULT_RAG_TOP_K)
+    .map(({ distance: _distance, ...chunk }) => chunk)
 
   return {
     text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
     chunks,
-    sources: toSourceMetadata(chunks, agentFiles),
+    sources: toSourceMetadata(chunks, files),
   }
 }
 
 const toSourceMetadata = (
   chunks: RetrievedContextChunk[],
-  files: AgentFile[]
+  files: KnowledgeBaseFile[]
 ): AgentMessageRagSource[] => {
   const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
   const summary = new Map<string, AgentMessageRagSource>()

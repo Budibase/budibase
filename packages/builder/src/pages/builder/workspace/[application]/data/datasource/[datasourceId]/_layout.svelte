@@ -1,6 +1,7 @@
 <script>
   import { syncURLToState } from "@/helpers/urlStateSync"
-  import { builderStore, datasources } from "@/stores/builder"
+  import { builderStore, datasources, queries } from "@/stores/builder"
+  import { IntegrationTypes } from "@/constants/backend"
   import * as routify from "@roxi/routify"
   import { params } from "@roxi/routify"
   import { onDestroy } from "svelte"
@@ -18,6 +19,19 @@
 
   $: datasourceId = $datasources.selectedDatasourceId
   $: builderStore.selectResource(datasourceId)
+  $: {
+    const ds = $datasources.selected
+    if (ds?.source === IntegrationTypes.REST) {
+      const firstQuery = $queries.list.find(q => q.datasourceId === ds._id)
+      if (firstQuery) {
+        $redirect(
+          `/builder/workspace/${$params.application}/apis/query/${firstQuery._id}`
+        )
+      } else {
+        $redirect(`/builder/workspace/${$params.application}/apis/query/new`)
+      }
+    }
+  }
 
   const stopSyncing = syncURLToState({
     urlParam: "datasourceId",

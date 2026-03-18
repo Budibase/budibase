@@ -1,10 +1,9 @@
-import { cache, context, docIds } from "@budibase/backend-core"
+import { cache, context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   Document,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
 } from "@budibase/types"
-import { HttpError } from "koa"
 import fetch, { RequestInit } from "node-fetch"
 import { get } from "."
 import { processEnvironmentVariable } from "../../utils"
@@ -22,6 +21,7 @@ async function fetchToken(config: {
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
   scope?: string
+  audience?: string
 }) {
   config = await processEnvironmentVariable(config)
 
@@ -55,6 +55,9 @@ async function fetchToken(config: {
   if (config.scope) {
     bodyParams.scope = config.scope
   }
+  if (config.audience) {
+    bodyParams.audience = config.audience
+  }
   fetchConfig.body = new URLSearchParams(bodyParams)
 
   const resp = await fetch(config.url, fetchConfig)
@@ -71,32 +74,58 @@ const trackUsage = async (id: string) => {
   })
 }
 
+async function fetchAndParseToken(config: {
+  url: string
+  clientId: string
+  clientSecret: string
+  method: OAuth2CredentialsMethod
+  grantType: OAuth2GrantType
+  scope?: string
+  audience?: string
+}): Promise<{ value: string; ttl: number }> {
+  const resp = await fetchToken(config)
+  const jsonResponse = await resp.json()
+  if (!resp.ok) {
+    const message = jsonResponse.error_description ?? resp.statusText
+    throw new Error(`Error fetching oauth2 token: ${message}`)
+  }
+  const token = `${jsonResponse.token_type} ${jsonResponse.access_token}`
+  const ttl = jsonResponse.expires_in ?? -1
+  return { value: token, ttl }
+}
+
 export async function getToken(id: string) {
   const token = await cache.withCacheWithDynamicTTL(
     cache.CacheKey.OAUTH2_TOKEN(id),
     async () => {
       const config = await get(id)
       if (!config) {
-        throw new HttpError(`oAuth config ${id} count not be found`)
+        throw new HTTPError(`oAuth config ${id} could not be found`, 400)
       }
-
-      const resp = await fetchToken(config)
-
-      const jsonResponse = await resp.json()
-      if (!resp.ok) {
-        const message = jsonResponse.error_description ?? resp.statusText
-
-        throw new Error(`Error fetching oauth2 token: ${message}`)
-      }
-
-      const token = `${jsonResponse.token_type} ${jsonResponse.access_token}`
-      const ttl = jsonResponse.expires_in ?? -1
-      return { value: token, ttl }
+      return fetchAndParseToken(config)
     }
   )
 
   await trackUsage(id)
   return token
+}
+
+export async function getTokenFromConfig(
+  cacheKey: string,
+  config: {
+    url: string
+    clientId: string
+    clientSecret: string
+    method: OAuth2CredentialsMethod
+    grantType: OAuth2GrantType
+    scope?: string
+    audience?: string
+  }
+): Promise<string> {
+  return cache.withCacheWithDynamicTTL(
+    cache.CacheKey.OAUTH2_TOKEN(cacheKey),
+    () => fetchAndParseToken(config)
+  )
 }
 
 export async function validateConfig(config: {
@@ -106,6 +135,7 @@ export async function validateConfig(config: {
   method: OAuth2CredentialsMethod
   grantType: OAuth2GrantType
   scope?: string
+  audience?: string
 }): Promise<{ valid: boolean; message?: string }> {
   try {
     const resp = await fetchToken(config)

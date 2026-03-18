@@ -22,7 +22,8 @@ type LiteLLMFetch = (
 export const createLiteLLMOpenAI = async (
   aiConfig: CustomAIProviderConfig,
   sessionId?: string,
-  span?: tracer.Span
+  span?: tracer.Span,
+  agentId?: string
 ): Promise<LLMResponse> => {
   const { apiKey, baseUrl } = await getLiteLLMModelSettings()
 
@@ -47,7 +48,7 @@ export const createLiteLLMOpenAI = async (
     apiKey,
     baseURL: baseUrl,
     name: "litellm",
-    fetch: createLiteLLMFetch(sessionId, aiConfig),
+    fetch: createLiteLLMFetch(sessionId, aiConfig, agentId),
   }
 
   const llm = createOpenAI(clientConfig)
@@ -70,7 +71,8 @@ export const createLiteLLMOpenAI = async (
 
 function createLiteLLMFetch(
   sessionId?: string,
-  aiConfig?: CustomAIProviderConfig
+  aiConfig?: CustomAIProviderConfig,
+  agentId?: string
 ): typeof fetch {
   const shouldSyncCredits =
     !!aiConfig &&
@@ -101,6 +103,10 @@ function createLiteLLMFetch(
             ...body.metadata,
             session_id: sessionId,
           }
+        }
+
+        if (!body.user && agentId) {
+          body.user = `bb-agent:${agentId}`
         }
 
         modifiedInit = { ...init, body: JSON.stringify(body) }

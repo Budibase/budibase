@@ -5,6 +5,7 @@ import {
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
+import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import { basicTableWithAttachmentField } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
@@ -21,6 +22,7 @@ async function uploadTestFile(filename: string, content?: string) {
 describe("test the extract file data action", () => {
   const config = new TestConfiguration()
   let resetEnv: () => void | undefined
+  let cleanupDefaultAIConfig: (() => Promise<void>) | undefined
 
   beforeAll(async () => {
     await config.init()
@@ -29,10 +31,15 @@ describe("test the extract file data action", () => {
   beforeEach(async () => {
     await config.api.table.save(basicTableWithAttachmentField())
     await config.api.automation.deleteAll()
-    resetEnv = setCoreEnv({ SELF_HOSTED: true, OPENAI_API_KEY: "abc123" })
+    resetEnv = setCoreEnv({ SELF_HOSTED: false })
+    cleanupDefaultAIConfig = await setupDefaultCompletionsAIConfig(config)
+    await config.publish()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    if (cleanupDefaultAIConfig) {
+      await cleanupDefaultAIConfig()
+    }
     resetEnv()
     jest.clearAllMocks()
     nock.cleanAll()

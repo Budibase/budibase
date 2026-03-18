@@ -40,7 +40,7 @@ services:
   couchdb-service:
     container_name: budi-couchdb3-dev
     restart: on-failure
-    image: budibase/database:2.0.0
+    image: budibase/database:2.1.0
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
@@ -63,7 +63,7 @@ services:
 
   litellm-service:
     container_name: budi-litellm-dev
-    image: docker.litellm.ai/berriai/litellm:v1.81.12-stable.1
+    image: docker.litellm.ai/berriai/litellm:v1.81.14-stable
     ports:
       - "${LITELLM_PORT:-4000}:4000"
     volumes:

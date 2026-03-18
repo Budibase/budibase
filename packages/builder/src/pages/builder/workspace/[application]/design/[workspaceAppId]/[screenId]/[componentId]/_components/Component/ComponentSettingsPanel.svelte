@@ -1,4 +1,5 @@
 <script>
+  import "@/components/design/settings/componentSettings"
   import Panel from "@/components/design/Panel.svelte"
   import {
     selectedScreen,

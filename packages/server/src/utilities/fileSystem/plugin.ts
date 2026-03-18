@@ -9,7 +9,8 @@ const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 const AUTOMATION_PATH = join(budibaseTempDir(), "automation")
 
 export const getPluginMetadata = async (
-  path: string
+  path: string,
+  cleanupDirectory = path
 ): Promise<PluginUpload> => {
   let pkg: Package
   let schema: PluginSchema
@@ -32,7 +33,11 @@ export const getPluginMetadata = async (
     )
   }
 
-  return { metadata: { package: pkg, schema }, directory: path }
+  return {
+    metadata: { package: pkg, schema },
+    directory: path,
+    cleanupDirectory,
+  }
 }
 
 async function getPluginImpl(path: string, plugin: Plugin) {

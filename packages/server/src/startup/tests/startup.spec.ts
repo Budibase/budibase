@@ -1,7 +1,7 @@
 import { structures } from "@budibase/backend-core/tests"
 import { withEnv } from "../../environment"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { startup } from "../index"
+import { getState, startup } from "../index"
 import {
   users,
   utils,
@@ -18,6 +18,7 @@ describe("check BB_ADMIN environment variables", () => {
 
   beforeEach(() => {
     nock.cleanAll()
+    jest.restoreAllMocks()
   })
 
   it("should be able to create a user with the BB_ADMIN environment variables", async () => {
@@ -55,5 +56,65 @@ describe("check BB_ADMIN environment variables", () => {
           )
       )
     })
+  })
+
+  it("waits for LiteLLM readiness before marking startup as ready", async () => {
+    let requestCount = 0
+    const liteLLMScope = nock("https://api.openai.com")
+      .persist()
+      .get("/v1/health/liveliness")
+      .reply(() => {
+        requestCount++
+        return requestCount === 1 ? [503, "not ready"] : [200, "ok"]
+      })
+
+    await withEnv(
+      {
+        LITELLM_MASTER_KEY: "test-master-key",
+        LITELLM_READINESS_TIMEOUT_MS: 200,
+        LITELLM_READINESS_POLL_MS: 10,
+      },
+      async () => {
+        await startup({ force: true })
+      }
+    )
+
+    expect(liteLLMScope.isDone()).toBe(true)
+    expect(requestCount).toBeGreaterThan(1)
+    expect(getState()).toBe("ready")
+  })
+
+  it("keeps startup ready when LiteLLM is unavailable", async () => {
+    await withEnv(
+      {
+        LITELLM_READINESS_TIMEOUT_MS: 50,
+        LITELLM_READINESS_POLL_MS: 10,
+      },
+      async () => {
+        await startup({ force: true })
+      }
+    )
+
+    expect(getState()).toBe("ready")
+  })
+
+  it("keeps startup ready when LiteLLM is present but does not become ready", async () => {
+    nock("https://api.openai.com")
+      .persist()
+      .get("/v1/health/liveliness")
+      .reply(503)
+
+    await withEnv(
+      {
+        LITELLM_MASTER_KEY: "test-master-key",
+        LITELLM_READINESS_TIMEOUT_MS: 50,
+        LITELLM_READINESS_POLL_MS: 10,
+      },
+      async () => {
+        await startup({ force: true })
+      }
+    )
+
+    expect(getState()).toBe("ready")
   })
 })

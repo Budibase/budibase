@@ -10,7 +10,7 @@
     type InviteWithCode,
   } from "@budibase/types"
   import { onMount } from "svelte"
-  import { routeActions } from "../.."
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
@@ -18,11 +18,9 @@
   type ParsedInvite = {
     _id: string
     email: string
-    builder?: {
-      apps: string[]
-    }
+    builder?: InviteWithCode["info"]["builder"]
+    admin?: InviteWithCode["info"]["admin"]
     userGroups?: string[]
-    apps?: string[]
   }
 
   let selectedInvites: ParsedInvite[] = []
@@ -39,7 +37,7 @@
   $: schema = {
     email: {
       sortable: false,
-      width: "2fr",
+      width: "1fr",
       minWidth: "200px",
     },
     role: {
@@ -50,10 +48,6 @@
     ...($licensing.groupsEnabled && {
       userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
     }),
-    apps: {
-      sortable: false,
-      width: "1fr",
-    },
   }
 
   $: pendingSchema = getPendingSchema(schema)
@@ -62,17 +56,14 @@
 
   const invitesToSchema = (invites: InviteWithCode[]): ParsedInvite[] => {
     return invites.map(invite => {
-      const { admin, builder, userGroups, apps } = invite.info
+      const { admin, builder, userGroups } = invite.info
 
       return {
         _id: invite.code,
         email: invite.email,
-        builder: {
-          apps: builder?.apps || [],
-        },
-        admin,
+        builder: builder ? { ...builder } : undefined,
+        admin: admin ? { ...admin } : undefined,
         userGroups: userGroups,
-        apps: apps ? [...new Set(Object.keys(apps))] : undefined,
       }
     })
   }
@@ -114,7 +105,7 @@
 
 <Layout noPadding>
   {#if selectedInvites.length > 0}
-    <div use:routeActions class="delete-btn">
+    <RouteActions>
       <DeleteRowsButton
         item="invite"
         confirmationTitle="Confirm Deletion"
@@ -123,7 +114,7 @@
         selectedRows={[...selectedInvites]}
         deleteRows={deleteUsers}
       />
-    </div>
+    </RouteActions>
   {/if}
   <Table
     bind:selectedRows={selectedInvites}

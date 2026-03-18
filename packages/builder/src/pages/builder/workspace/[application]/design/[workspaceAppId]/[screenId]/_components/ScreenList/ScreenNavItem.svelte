@@ -45,6 +45,10 @@
   }
 
   const deleteScreen = async () => {
+    if (!deletionAllowed) {
+      return
+    }
+
     try {
       await screenStore.delete(screen)
       notifications.success("Deleted screen successfully")

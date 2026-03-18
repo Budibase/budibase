@@ -38,8 +38,13 @@ export type ExternalAppStepOutputs = {
   success: boolean
 }
 
+export type JSONEditorInput<T> = {
+  value?: T | string
+}
+
 export type BashStepInputs = {
-  code: string
+  command: string
+  args?: string[] | JSONEditorInput<string[]>
 }
 
 export type BashStepOutputs = BaseAutomationOutputs & {
@@ -281,6 +286,7 @@ export type AgentStepOutputs = {
   success: boolean
   response?: string
   message?: UIMessage
+  sessionId?: string
   usage?: LanguageModelUsage
   output?: Record<string, any>
 }

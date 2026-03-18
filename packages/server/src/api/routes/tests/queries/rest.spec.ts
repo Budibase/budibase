@@ -1,10 +1,19 @@
 import * as setup from "../utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { BodyType, Datasource, SourceName } from "@budibase/types"
+import {
+  BodyType,
+  Datasource,
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+  RestAuthType,
+  SourceName,
+} from "@budibase/types"
+import nock from "nock"
 import { getCachedVariable } from "../../../../threads/utils"
-import { generator } from "@budibase/backend-core/tests"
+import { blacklist, setEnv as setCoreEnv } from "@budibase/backend-core"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
-import { setEnv } from "../../../../environment"
+import { setEnv as setServerEnv } from "../../../../environment"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
 
 describe("rest", () => {
@@ -120,7 +129,7 @@ describe("rest", () => {
   }
 
   beforeAll(async () => {
-    restoreEnv = setEnv({ REST_REJECT_UNAUTHORIZED: false })
+    restoreEnv = setServerEnv({ REST_REJECT_UNAUTHORIZED: false })
     config = setup.getConfig()
     await config.init()
     datasource = await config.api.datasource.create({
@@ -150,7 +159,7 @@ describe("rest", () => {
 
   it("should automatically retry on fail with cached dynamics", async () => {
     const basedOnQuery = await createQuery({
-      path: "one.example.com",
+      path: "example.com",
     })
 
     let cached = await getCachedVariable(basedOnQuery._id!, "foo")
@@ -176,10 +185,10 @@ describe("rest", () => {
     const body1 = [{ name: "one" }]
     const body2 = [{ name: "two" }]
     mockAgent!
-      .get("http://one.example.com")
+      .get("http://example.com")
       .intercept({ path: "/", method: "GET" })
       .reply(200, body1, { headers: jsonHeaders })
-    const twoExample = mockAgent!.get("http://two.example.com")
+    const twoExample = mockAgent!.get("http://example.org")
     twoExample
       .intercept({ path: "/", method: "GET", query: { test: "one" } })
       .reply(500, { message: "fail" }, { headers: jsonHeaders })
@@ -196,7 +205,7 @@ describe("rest", () => {
       schema: {},
       readable: true,
       fields: {
-        path: "two.example.com",
+        path: "example.org",
         queryString: "test={{ foo }}",
       },
     })
@@ -207,6 +216,109 @@ describe("rest", () => {
     cached = await getCachedVariable(basedOnQuery._id!, "foo")
     expect(cached.rows.length).toEqual(1)
     expect(cached.rows[0].name).toEqual("one")
+  })
+
+  it("should block localhost requests when BLACKLIST_IPS is unset", async () => {
+    const resetBlacklistEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
+    await blacklist.refreshBlacklist()
+
+    try {
+      await config.api.query.preview(
+        {
+          datasourceId: datasource._id!,
+          name: "test query",
+          parameters: [],
+          queryVerb: "read",
+          transformer: "",
+          schema: {},
+          readable: true,
+          fields: {
+            path: "http://127.0.0.1:5984",
+          },
+        },
+        {
+          status: 400,
+          body: {
+            message: "Cannot connect to URL.",
+          },
+        }
+      )
+    } finally {
+      resetBlacklistEnv()
+      await blacklist.refreshBlacklist()
+    }
+  })
+
+  it("should allow localhost requests in local development", async () => {
+    const resetBlacklistEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
+    const resetDevEnv = setServerEnv({
+      NODE_ENV: "development",
+      JEST_WORKER_ID: "null",
+    })
+    await blacklist.refreshBlacklist()
+
+    mockAgent!
+      .get("http://127.0.0.1:5984")
+      .intercept({ path: "/", method: "GET" })
+      .reply(200, [{ status: "ok" }], { headers: jsonHeaders })
+
+    try {
+      const response = await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: "test query",
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "http://127.0.0.1:5984",
+        },
+      })
+
+      expect(response.schema).toEqual({
+        status: { type: "string", name: "status" },
+      })
+    } finally {
+      resetDevEnv()
+      resetBlacklistEnv()
+      await blacklist.refreshBlacklist()
+    }
+  })
+
+  it("should allow localhost requests in self-hosted when blacklist override is empty", async () => {
+    const resetBlacklistEnv = setCoreEnv({
+      BLACKLIST_IPS: "",
+      SELF_HOSTED: true,
+    })
+    await blacklist.refreshBlacklist()
+
+    mockAgent!
+      .get("http://127.0.0.1:5984")
+      .intercept({ path: "/", method: "GET" })
+      .reply(200, [{ status: "ok" }], { headers: jsonHeaders })
+
+    try {
+      const response = await config.api.query.preview({
+        datasourceId: datasource._id!,
+        name: "test query",
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "http://127.0.0.1:5984",
+        },
+      })
+
+      expect(response.schema).toEqual({
+        status: { type: "string", name: "status" },
+      })
+    } finally {
+      resetBlacklistEnv()
+      await blacklist.refreshBlacklist()
+    }
   })
 
   it("should update schema when structure changes from JSON to array", async () => {
@@ -779,6 +891,557 @@ describe("rest", () => {
         path: "www.example.com",
         queryString: "emptyParam1={{emptyParam1}}&emptyParam2={{emptyParam2}}",
       },
+    })
+  })
+
+  describe("datasource auth and connection properties", () => {
+    it("should merge datasource defaultHeaders into the request", async () => {
+      const ds = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "datasource",
+        source: SourceName.REST,
+        config: {
+          defaultHeaders: {
+            "X-Connection-Header": "from-connection",
+          },
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Basic",
+              type: RestAuthType.BASIC,
+              config: { username: "user", password: "pass" },
+            },
+          ],
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            "x-connection-header": "from-connection",
+          },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: ds._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+        },
+      })
+    })
+
+    it("should merge datasource defaultQueryParameters into the request", async () => {
+      const ds = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "datasource",
+        source: SourceName.REST,
+        config: {
+          defaultQueryParameters: {
+            apiVersion: "v2",
+          },
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Basic",
+              type: RestAuthType.BASIC,
+              config: { username: "user", password: "pass" },
+            },
+          ],
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          query: { apiVersion: "v2" },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: ds._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+        },
+      })
+    })
+
+    it("should apply datasource basic auth to the request", async () => {
+      const authId = generator.guid()
+      const ds = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "datasource",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: authId,
+              name: "Basic Auth",
+              type: RestAuthType.BASIC,
+              config: { username: "myuser", password: "mypass" },
+            },
+          ],
+        },
+      })
+
+      const expectedAuth = Buffer.from("myuser:mypass").toString("base64")
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            authorization: `Basic ${expectedAuth}`,
+          },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: ds._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authConfigId: authId,
+        },
+      })
+    })
+
+    it("should apply datasource bearer auth to the request", async () => {
+      const authId = generator.guid()
+      const ds = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "datasource",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: authId,
+              name: "Bearer Auth",
+              type: RestAuthType.BEARER,
+              config: { token: "my-bearer-token" },
+            },
+          ],
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            authorization: "Bearer my-bearer-token",
+          },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: ds._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authConfigId: authId,
+        },
+      })
+    })
+
+    it("should apply datasource inline OAuth2 auth config to the request", async () => {
+      const authId = generator.guid()
+      const ds = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "datasource",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: authId,
+              name: "OAuth2 Auth",
+              type: RestAuthType.OAUTH2,
+              url: "https://auth.example.com/token",
+              clientId: "my-client-id",
+              clientSecret: "my-client-secret",
+              method: OAuth2CredentialsMethod.BODY,
+              grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+            },
+          ],
+        },
+      })
+
+      nock("https://auth.example.com").post("/token").reply(200, {
+        access_token: "oauth-access-token",
+        token_type: "Bearer",
+        expires_in: 3600,
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: { authorization: "Bearer oauth-access-token" },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: ds._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          authConfigId: authId,
+          authConfigType: RestAuthType.OAUTH2,
+        },
+      })
+    })
+
+    it("query-level headers override datasource defaultHeaders", async () => {
+      const ds = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "datasource",
+        source: SourceName.REST,
+        config: {
+          defaultHeaders: {
+            "X-Shared": "from-connection",
+            "X-Only-Connection": "conn-value",
+          },
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Basic",
+              type: RestAuthType.BASIC,
+              config: { username: "u", password: "p" },
+            },
+          ],
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          headers: {
+            "x-shared": "from-query",
+            "x-only-connection": "conn-value",
+            "x-only-query": "query-value",
+          },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: ds._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          headers: {
+            "X-Shared": "from-query",
+            "X-Only-Query": "query-value",
+          },
+        },
+      })
+    })
+
+    it("query-level query params override datasource defaultQueryParameters", async () => {
+      const ds = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "datasource",
+        source: SourceName.REST,
+        config: {
+          defaultQueryParameters: {
+            format: "json",
+            version: "1",
+          },
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Basic",
+              type: RestAuthType.BASIC,
+              config: { username: "u", password: "p" },
+            },
+          ],
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          query: { format: "xml", version: "1" },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: ds._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          queryString: "format=xml",
+        },
+      })
+    })
+
+    it("should use datasource staticVariables in query bindings", async () => {
+      const ds = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "datasource",
+        source: SourceName.REST,
+        config: {
+          staticVariables: {
+            companyId: "acme-123",
+          },
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Basic",
+              type: RestAuthType.BASIC,
+              config: { username: "u", password: "p" },
+            },
+          ],
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({
+          path: "/",
+          method: "GET",
+          query: { company: "acme-123" },
+        })
+        .reply(200, { ok: true }, { headers: jsonHeaders })
+
+      await config.api.query.preview({
+        datasourceId: ds._id!,
+        name: generator.guid(),
+        parameters: [{ name: "companyId", default: "{{ companyId }}" }],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          queryString: "company={{companyId}}",
+        },
+      })
+    })
+
+    it("should resolve env var bindings in datasource defaultHeaders", async () => {
+      const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
+      mocks.licenses.useEnvironmentVariables()
+      try {
+        await config.api.environment.create({
+          name: "API_TOKEN",
+          production: "resolved-token-value",
+          development: "resolved-token-value",
+        })
+
+        const ds = await config.api.datasource.create({
+          name: generator.guid(),
+          type: "datasource",
+          source: SourceName.REST,
+          config: {
+            defaultHeaders: {
+              "X-Api-Token": "{{ env.API_TOKEN }}",
+            },
+            authConfigs: [
+              {
+                _id: generator.guid(),
+                name: "Bearer",
+                type: RestAuthType.BEARER,
+                config: { token: "static-token" },
+              },
+            ],
+          },
+        })
+
+        mockAgent!
+          .get("http://www.example.com")
+          .intercept({
+            path: "/",
+            method: "GET",
+            headers: {
+              "x-api-token": "resolved-token-value",
+            },
+          })
+          .reply(200, { ok: true }, { headers: jsonHeaders })
+
+        await config.api.query.preview({
+          datasourceId: ds._id!,
+          name: generator.guid(),
+          parameters: [],
+          queryVerb: "read",
+          transformer: "",
+          schema: {},
+          readable: true,
+          fields: {
+            path: "www.example.com",
+          },
+        })
+      } finally {
+        await config.api.environment.destroy("API_TOKEN")
+        restoreCoreEnv()
+      }
+    })
+
+    it("should resolve env var bindings in datasource auth config", async () => {
+      const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
+      mocks.licenses.useEnvironmentVariables()
+      try {
+        await config.api.environment.create({
+          name: "AUTH_PASS",
+          production: "env-password",
+          development: "env-password",
+        })
+
+        const authId = generator.guid()
+        const ds = await config.api.datasource.create({
+          name: generator.guid(),
+          type: "datasource",
+          source: SourceName.REST,
+          config: {
+            authConfigs: [
+              {
+                _id: authId,
+                name: "Basic Auth",
+                type: RestAuthType.BASIC,
+                config: {
+                  username: "env-user",
+                  password: "{{ env.AUTH_PASS }}",
+                },
+              },
+            ],
+          },
+        })
+
+        const expectedAuth = Buffer.from("env-user:env-password").toString(
+          "base64"
+        )
+        mockAgent!
+          .get("http://www.example.com")
+          .intercept({
+            path: "/",
+            method: "GET",
+            headers: {
+              authorization: `Basic ${expectedAuth}`,
+            },
+          })
+          .reply(200, { ok: true }, { headers: jsonHeaders })
+
+        await config.api.query.preview({
+          datasourceId: ds._id!,
+          name: generator.guid(),
+          parameters: [],
+          queryVerb: "read",
+          transformer: "",
+          schema: {},
+          readable: true,
+          fields: {
+            path: "www.example.com",
+            authConfigId: authId,
+          },
+        })
+      } finally {
+        await config.api.environment.destroy("AUTH_PASS")
+        restoreCoreEnv()
+      }
+    })
+
+    it("should resolve env var bindings in datasource staticVariables", async () => {
+      const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
+      mocks.licenses.useEnvironmentVariables()
+      try {
+        await config.api.environment.create({
+          name: "TENANT_ID",
+          production: "env-tenant-42",
+          development: "env-tenant-42",
+        })
+
+        const ds = await config.api.datasource.create({
+          name: generator.guid(),
+          type: "datasource",
+          source: SourceName.REST,
+          config: {
+            staticVariables: {
+              tenantId: "{{ env.TENANT_ID }}",
+            },
+            authConfigs: [
+              {
+                _id: generator.guid(),
+                name: "Basic",
+                type: RestAuthType.BASIC,
+                config: { username: "u", password: "p" },
+              },
+            ],
+          },
+        })
+
+        mockAgent!
+          .get("http://www.example.com")
+          .intercept({
+            path: "/",
+            method: "GET",
+            query: { tenant: "env-tenant-42" },
+          })
+          .reply(200, { ok: true }, { headers: jsonHeaders })
+
+        await config.api.query.preview({
+          datasourceId: ds._id!,
+          name: generator.guid(),
+          parameters: [{ name: "tenantId", default: "{{ tenantId }}" }],
+          queryVerb: "read",
+          transformer: "",
+          schema: {},
+          readable: true,
+          fields: {
+            path: "www.example.com",
+            queryString: "tenant={{tenantId}}",
+          },
+        })
+      } finally {
+        await config.api.environment.destroy("TENANT_ID")
+        restoreCoreEnv()
+      }
     })
   })
 })

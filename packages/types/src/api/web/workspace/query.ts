@@ -4,7 +4,9 @@ import {
   Query,
   QueryPreview,
   QuerySchema,
+  SecurityScheme,
 } from "../../../documents"
+import { OpenAPIServer } from "../../../ui/rest"
 
 export type FetchQueriesResponse = Query[]
 
@@ -30,7 +32,9 @@ export interface ImportRestQueryInfoResponse {
   docsUrl?: string
   endpoints: ImportEndpoint[]
   securityHeaders?: string[]
+  securitySchemes?: Record<string, SecurityScheme>
   staticVariables?: Record<string, string>
+  servers?: OpenAPIServer[]
 }
 export interface ImportRestQueryResponse {
   errorQueries: Query[]

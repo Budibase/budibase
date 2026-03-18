@@ -5,6 +5,7 @@ import {
   Integration,
   IntegrationBase,
   JSONValue,
+  OAuth2RestAuthConfig,
   PaginationConfig,
   PaginationValues,
   QueryType,
@@ -22,7 +23,7 @@ import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
-import { helpers, utils } from "@budibase/shared-core"
+import { helpers } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getDispatcher } from "../utilities"
 import {
@@ -35,6 +36,22 @@ import {
   MockAgent,
 } from "undici"
 import environment from "../environment"
+
+interface AuthConfig {
+  type: string
+  config: {
+    username?: string
+    password?: string
+    token?: string
+    key?: string
+    value?: string
+    location?: string
+  }
+}
+
+type ResolvedAuthConfig =
+  | { type: "auth"; auth: AuthConfig }
+  | { type: "oauth2"; sourceId: string }
 
 const coreFields = {
   path: {
@@ -588,45 +605,85 @@ export class RestIntegration implements IntegrationBase {
     return input
   }
 
+  buildBasicAuthHeader(username: string, password: string): string {
+    return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`
+  }
+
+  buildBearerAuthHeader(token: string): string {
+    return `Bearer ${token}`
+  }
+
+  private buildHeadersFromAuthConfig(auth: AuthConfig): Record<string, string> {
+    const { type, config } = auth
+    switch (type) {
+      case RestAuthType.BASIC:
+        return {
+          Authorization: this.buildBasicAuthHeader(
+            config.username!,
+            config.password!
+          ),
+        }
+      case RestAuthType.BEARER:
+        return { Authorization: this.buildBearerAuthHeader(config.token!) }
+      case RestAuthType.OAUTH2:
+        // Token already includes "Bearer " prefix from OAuth2 response
+        return { Authorization: config.token! }
+      // We dont currently support this but it is available and outlined
+      // in supported openapi specs.
+      case "apiKey":
+        if (config.location === "header") {
+          return { [config.key!]: config.value! }
+        }
+        return {}
+      default:
+        return {}
+    }
+  }
+
+  private async resolveAuthConfig(
+    authConfigId?: string,
+    authConfigType?: RestAuthType
+  ): Promise<ResolvedAuthConfig | null> {
+    if (!authConfigId) return null
+    if (authConfigType === RestAuthType.OAUTH2) {
+      return { type: "oauth2", sourceId: authConfigId }
+    }
+    if (!this.config.authConfigs) return null
+    const authConfig = this.config.authConfigs.find(
+      c => c._id === authConfigId && c.type !== RestAuthType.OAUTH2
+    )
+    if (!authConfig) return null
+    return { type: "auth", auth: authConfig as AuthConfig }
+  }
+
   async getAuthHeaders(
     authConfigId?: string,
     authConfigType?: RestAuthType
   ): Promise<Record<string, string>> {
-    if (!authConfigId) {
-      return {}
-    }
-
-    if (authConfigType === RestAuthType.OAUTH2) {
-      return { Authorization: await sdk.oauth2.getToken(authConfigId) }
-    }
-
-    if (!this.config.authConfigs) {
-      return {}
-    }
-
-    const headers: Record<string, string> = {}
-    const authConfig = this.config.authConfigs.filter(
-      c => c._id === authConfigId
-    )[0]
-    // check the config still exists before proceeding
-    // if not - do nothing
-    if (authConfig) {
-      const { type, config } = authConfig
-      switch (type) {
-        case RestAuthType.BASIC:
-          headers.Authorization = `Basic ${Buffer.from(
-            `${config.username}:${config.password}`
-          ).toString("base64")}`
-          break
-        case RestAuthType.BEARER:
-          headers.Authorization = `Bearer ${config.token}`
-          break
-        default:
-          throw utils.unreachable(type)
+    if (authConfigId && authConfigType === RestAuthType.OAUTH2) {
+      const inlineOAuth2 = this.config.authConfigs?.find(
+        c => c._id === authConfigId && c.type === RestAuthType.OAUTH2
+      )
+      if (inlineOAuth2) {
+        const token = await sdk.oauth2.getTokenFromConfig(
+          authConfigId,
+          inlineOAuth2 as OAuth2RestAuthConfig
+        )
+        return { Authorization: token }
       }
     }
 
-    return headers
+    const resolved = await this.resolveAuthConfig(authConfigId, authConfigType)
+
+    if (!resolved) {
+      return {}
+    }
+
+    if (resolved.type === "oauth2") {
+      return { Authorization: await sdk.oauth2.getToken(resolved.sourceId) }
+    }
+
+    return this.buildHeadersFromAuthConfig(resolved.auth)
   }
 
   async _req(query: RestQuery, retry401 = true): Promise<ParsedResponse> {
@@ -679,9 +736,27 @@ export class RestIntegration implements IntegrationBase {
       input.extraHttpOptions = { insecureHTTPParser: true }
     }
 
+    const defaultQueryParameters = this.config.defaultQueryParameters || {}
+    let mergedQueryString = queryString
+    if (Object.keys(defaultQueryParameters).length > 0) {
+      const queryParams = queryString ? qs.decode(queryString) : {}
+      const merged = { ...defaultQueryParameters, ...queryParams }
+      mergedQueryString = qs.encode(merged)
+    }
+
     this.startTimeMs = performance.now()
-    const url = this.getUrl(path, queryString, pagination, paginationValues)
-    if (await blacklist.isBlacklisted(url)) {
+    const url = this.getUrl(
+      path,
+      mergedQueryString,
+      pagination,
+      paginationValues
+    )
+    const disableBlacklistForLocalDevelopment =
+      environment.isDev() && !environment.isTest()
+    if (
+      !disableBlacklistForLocalDevelopment &&
+      (await blacklist.isBlacklisted(url))
+    ) {
       throw new Error("Cannot connect to URL.")
     }
 
@@ -739,13 +814,11 @@ export class RestIntegration implements IntegrationBase {
       }
       throw error
     }
-    if (
-      response.status === 401 &&
-      authConfigType === RestAuthType.OAUTH2 &&
-      retry401
-    ) {
-      await sdk.oauth2.cleanStoredToken(authConfigId!)
-      return await this._req(query, false)
+    if (response.status === 401 && retry401) {
+      if (authConfigType === RestAuthType.OAUTH2 && authConfigId) {
+        await sdk.oauth2.cleanStoredToken(authConfigId)
+        return await this._req(query, false)
+      }
     }
     return await this.parseResponse(response, pagination)
   }

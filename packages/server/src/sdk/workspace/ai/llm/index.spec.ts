@@ -82,6 +82,7 @@ describe("createLLM", () => {
         "budibase/gpt-5-mini",
         "session-1",
         undefined,
+        undefined,
         undefined
       )
       expect(createLiteLLMOpenAI).not.toHaveBeenCalled()
@@ -106,7 +107,8 @@ describe("createLLM", () => {
         "budibase/gpt-5-mini",
         "session-1",
         undefined,
-        "high"
+        "high",
+        undefined
       )
       expect(throwIfBudibaseAICreditsExceededMock).toHaveBeenCalledTimes(1)
     })
@@ -127,6 +129,7 @@ describe("createLLM", () => {
     expect(createLiteLLMOpenAI).toHaveBeenCalledWith(
       expect.objectContaining({ provider: "openai" }),
       "session-1",
+      undefined,
       undefined
     )
     expect(createBBAIClient).not.toHaveBeenCalled()

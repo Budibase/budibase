@@ -7,7 +7,6 @@ import {
   SourceType,
   UsageInScreensResponse,
 } from "@budibase/types"
-import { ONBOARDING_WELCOME_SCREEN_NAME } from "../../../constants/screens"
 import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
@@ -38,10 +37,6 @@ describe("/screens", () => {
   function popRandomScreen(screens: Screen[]) {
     const index = Math.floor(Math.random() * screens.length)
     return screens.splice(index, 1)[0]
-  }
-
-  function withoutOnboarding(screens: Screen[]) {
-    return screens.filter(s => s.name !== ONBOARDING_WELCOME_SCREEN_NAME)
   }
 
   describe("fetch", () => {
@@ -109,7 +104,7 @@ describe("/screens", () => {
         const res = await config.withProdApp(() =>
           config.api.workspace.getDefinition(config.getProdWorkspaceId())
         )
-        const screens = withoutOnboarding(res.screens)
+        const screens = res.screens
 
         expect(screens.length).toEqual(screenIds.length)
         expect(screens.map(s => s._id).sort()).toEqual(screenIds.sort())
@@ -141,7 +136,7 @@ describe("/screens", () => {
           const res = await config.api.workspace.getDefinition(
             config.getDevWorkspaceId()
           )
-          const screens = withoutOnboarding(res.screens)
+          const screens = res.screens
 
           const screenIds = [screen._id!, screen1._id!]
           expect(screens.length).toEqual(screenIds.length)

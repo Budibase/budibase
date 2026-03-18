@@ -1,5 +1,9 @@
 import { HTTPError } from "@budibase/backend-core"
-import type { Agent, ResolvedMSTeamsIntegration } from "@budibase/types"
+import {
+  AgentChannelProvider,
+  type Agent,
+  type ResolvedMSTeamsIntegration,
+} from "@budibase/types"
 import * as shared from "./shared"
 
 export const validateMSTeamsIntegration = (
@@ -40,4 +44,9 @@ export const resolveChatAppForAgent = async (
 export const buildMSTeamsWebhookUrl = async (
   chatAppId: string,
   agentId: string
-) => await shared.buildProviderWebhookUrl("ms-teams", chatAppId, agentId)
+) =>
+  await shared.buildProviderWebhookUrl(
+    AgentChannelProvider.MSTEAMS,
+    chatAppId,
+    agentId
+  )

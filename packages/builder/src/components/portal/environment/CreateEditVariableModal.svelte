@@ -22,8 +22,12 @@
   let productionValue: string
   let developmentValue: string
   let useProductionValue = true
+  let submitted = false
 
   const HasSpacesRegex = /[\\"\s]/
+
+  $: invalidName = HasSpacesRegex.test(name)
+  $: disabled = invalidName || !productionValue
 
   const deleteVariable = async (name: string) => {
     try {
@@ -36,6 +40,7 @@
   }
 
   const saveVariable = async () => {
+    submitted = true
     try {
       await save({
         name,
@@ -50,7 +55,7 @@
 </script>
 
 <ModalContent
-  disabled={HasSpacesRegex.test(name)}
+  {disabled}
   onConfirm={() => saveVariable()}
   title={!row ? "Add new environment variable" : "Edit environment variable"}
 >
@@ -58,7 +63,8 @@
     disabled={!!row}
     label="Name"
     bind:value={name}
-    error={HasSpacesRegex.test(name) ? "Must not include spaces" : undefined}
+    required={!row}
+    error={invalidName ? "Must not include spaces" : undefined}
   />
   <div>
     <Heading size="XS">Production</Heading>
@@ -72,6 +78,8 @@
       }}
       value={productionValue}
       autocomplete="new-password"
+      required={!row}
+      error={submitted && !row && !productionValue ? "Required" : undefined}
     />
   </div>
   <div>

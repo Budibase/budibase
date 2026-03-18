@@ -51,7 +51,7 @@
   } from "@budibase/types"
   import { InternalTable } from "@budibase/types"
   import type { UserInfo } from "@/types"
-  import { routeActions } from "@/settings/pages"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import {
     assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
@@ -548,9 +548,12 @@
       .slice(0, length)
   }
 
-  const onRowClick = ({ detail }: { detail: User }) => {
+  const onRowClick = ({ detail }: { detail: EnrichedUser }) => {
     if (isWorkspaceOnly) {
-      selectedWorkspaceUser = detail
+      selectedWorkspaceUser = {
+        ...detail,
+        userGroups: detail.userGroups.map(g => g._id!),
+      }
       editWorkspaceUserModal.show()
       return
     }
@@ -600,53 +603,55 @@
       Upgrade your plan to re-activate your account."
     />
   {/if}
-  <div use:routeActions class="controls">
-    {#if !readonly}
-      <div class="buttons">
-        {#if selectedRows.length > 0}
-          <DeleteRowsButton
-            item="user"
-            action={isWorkspaceOnly ? "Remove" : "Delete"}
-            confirmationTitle={isWorkspaceOnly
-              ? "Confirm user removal"
-              : "Confirm user deletion"}
-            confirmationButtonText={isWorkspaceOnly
-              ? "Remove users"
-              : "Delete users"}
-            on:updaterows
-            selectedRows={[...selectedRows]}
-            deleteRows={deleteUsers}
-          />
-        {:else}
-          <Search bind:value={searchEmail} placeholder="Search" />
-          {#if !isWorkspaceOnly}
-            <ActionButton
-              size="M"
-              quiet
-              on:click={$licensing.userLimitReached
-                ? userLimitReachedModal.show
-                : importUsersModal.show}
-              disabled={readonly}
-            >
-              <Icon name={"upload-simple"} size="M" />
-            </ActionButton>
+  <RouteActions>
+    <div class="controls">
+      {#if !readonly}
+        <div class="buttons">
+          {#if selectedRows.length > 0}
+            <DeleteRowsButton
+              item="user"
+              action={isWorkspaceOnly ? "Remove" : "Delete"}
+              confirmationTitle={isWorkspaceOnly
+                ? "Confirm user removal"
+                : "Confirm user deletion"}
+              confirmationButtonText={isWorkspaceOnly
+                ? "Remove users"
+                : "Delete users"}
+              on:updaterows
+              selectedRows={[...selectedRows]}
+              deleteRows={deleteUsers}
+            />
+          {:else}
+            <Search bind:value={searchEmail} placeholder="Search" />
+            {#if !isWorkspaceOnly}
+              <ActionButton
+                size="M"
+                quiet
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : importUsersModal.show}
+                disabled={readonly}
+              >
+                <Icon name={"upload-simple"} size="M" />
+              </ActionButton>
+            {/if}
+            {#if isWorkspaceOnly}
+              <Button
+                size="M"
+                disabled={readonly}
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : createUserModal.show}
+                cta
+              >
+                Invite to workspace
+              </Button>
+            {/if}
           {/if}
-          {#if isWorkspaceOnly}
-            <Button
-              size="M"
-              disabled={readonly}
-              on:click={$licensing.userLimitReached
-                ? userLimitReachedModal.show
-                : createUserModal.show}
-              cta
-            >
-              Invite to workspace
-            </Button>
-          {/if}
-        {/if}
-      </div>
-    {/if}
-  </div>
+        </div>
+      {/if}
+    </div>
+  </RouteActions>
   <div class="table-wrap" style={`min-height: ${TABLE_MIN_HEIGHT}px;`}>
     <Table
       on:click={onRowClick}

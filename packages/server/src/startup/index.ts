@@ -51,8 +51,47 @@ const INITIALISED_QUEUES: Required<QueueInitOptions> = {
   dev: false,
 }
 
+class LiteLLMReadinessTimeoutError extends Error {
+  constructor(public readonly timeoutMs: number) {
+    super(`LiteLLM did not become ready within ${timeoutMs}ms`)
+    this.name = "LiteLLMReadinessTimeoutError"
+  }
+}
+
 export function getState(): State {
   return STATE
+}
+
+async function waitForLiteLLMReadiness() {
+  if (!env.LITELLM_MASTER_KEY) {
+    return
+  }
+
+  const timeoutMs = env.LITELLM_READINESS_TIMEOUT_MS
+  const pollMs = env.LITELLM_READINESS_POLL_MS
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), pollMs)
+    const status = await sdk.ai.configs.getLiteLLMStatus({
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+
+    if (status === sdk.ai.configs.LiteLLMStatus.OK) {
+      console.log(`LiteLLM ready after waiting ${Date.now() - start}ms`)
+      return
+    }
+
+    if (status === sdk.ai.configs.LiteLLMStatus.NOT_CONFIGURED) {
+      console.warn(`LiteLLM not configured ${Date.now() - start}ms`)
+      return
+    }
+
+    await new Promise(resolve => setTimeout(resolve, pollMs))
+  }
+
+  throw new LiteLLMReadinessTimeoutError(timeoutMs)
 }
 
 async function initRoutes(app: Koa) {
@@ -152,6 +191,7 @@ export async function startup(
     return
   }
   STATE = "starting"
+
   printFeatures()
   if (env.BUDIBASE_ENVIRONMENT) {
     console.log(`service running environment: "${env.BUDIBASE_ENVIRONMENT}"`)
@@ -258,5 +298,17 @@ export async function startup(
   console.log("Initialising JS runner")
   jsRunner.init()
 
+  console.log("Waiting for LiteLLM readiness")
+
+  await waitForLiteLLMReadiness().catch(e => {
+    if (e instanceof LiteLLMReadinessTimeoutError) {
+      console.warn(e.message)
+      return
+    }
+
+    console.warn("Error waiting for LiteLLM readiness", e)
+  })
+
+  console.log("Server ready!")
   STATE = "ready"
 }

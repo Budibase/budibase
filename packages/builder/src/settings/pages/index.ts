@@ -13,9 +13,6 @@ import EmailPage from "@/settings/pages/email.svelte"
 import EmailTemplatesPage from "@/settings/pages/email/EmailTemplates.svelte"
 import EmailTemplatePage from "@/settings/pages/email/Template.svelte"
 import AuditLogsPage from "@/settings/pages/auditLogs/index.svelte"
-import AIPage from "@/settings/pages/ai/index.svelte"
-import AIConfigsPage from "@/settings/pages/ai/configs.svelte"
-import EmbeddingsPage from "@/settings/pages/ai/embeddings.svelte"
 import AuthPage from "@/settings/pages/auth/index.svelte"
 import OrgPage from "@/settings/pages/organisation.svelte"
 import BrandingPage from "@/settings/pages/branding.svelte"
@@ -25,6 +22,9 @@ import DiagnosticsPage from "@/settings/pages/diagnostics.svelte"
 import SystemLogsPage from "@/settings/pages/systemLogs.svelte"
 import UpgradePage from "@/settings/pages/upgrade.svelte"
 import UsagePage from "@/settings/pages/usage.svelte"
+import Connections from "@/settings/pages/connections/Connections.svelte"
+import Connection from "@/settings/pages/connections/Connection.svelte"
+import CreateConnection from "./connections/CreateConnection.svelte"
 
 // App pages
 import GeneralInfoPage from "@/settings/pages/general.svelte"
@@ -38,7 +38,12 @@ import OAuth2Page from "@/settings/pages/oauth2/index.svelte"
 import Recaptcha from "@/settings/pages/recaptcha.svelte"
 
 // AI config
-import AIConfigForm from "@/settings/pages/ai/AIConfigForm.svelte"
+import AIConfigsPage from "@/settings/pages/ai/completion-models/index.svelte"
+import AIConfigForm from "@/settings/pages/ai/completion-models/AIConfigForm.svelte"
+import KnowledgeBasesPage from "@/settings/pages/ai/knowledge-bases/index.svelte"
+import KnowledgeBaseForm from "@/settings/pages/ai/knowledge-bases/KnowledgeBaseForm.svelte"
+import EmbeddingModelForm from "@/settings/pages/ai/knowledge-bases/EmbeddingModelForm.svelte"
+import VectorDatabaseForm from "@/settings/pages/ai/knowledge-bases/VectorDatabaseForm.svelte"
 
 const componentMap = {
   profile: ProfilePage,
@@ -53,10 +58,10 @@ const componentMap = {
   email_templates: EmailTemplatesPage,
   email_template: EmailTemplatePage,
   audit_logs: AuditLogsPage,
-  ai: AIPage,
   ai_configs: AIConfigsPage,
   ai_config: AIConfigForm,
-  embeddings: EmbeddingsPage,
+  knowledgeBases: KnowledgeBasesPage,
+  knowledgeBase: KnowledgeBaseForm,
   auth: AuthPage,
   org: OrgPage,
   branding: BrandingPage,
@@ -75,6 +80,11 @@ const componentMap = {
   translations: Translations,
   oauth2: OAuth2Page,
   recaptcha: Recaptcha,
+  connections: Connections,
+  connection: Connection,
+  create_connection: CreateConnection,
+  embedding_model: EmbeddingModelForm,
+  vector_database: VectorDatabaseForm,
 } satisfies Record<string, Component<any>>
 
 export const Pages = {
@@ -87,23 +97,4 @@ export const Pages = {
 
     return component
   },
-}
-
-export const routeActions = (
-  node: HTMLElement,
-  target = ".route-header .page-actions"
-) => {
-  let targetEl = document.querySelector(target)
-
-  if (targetEl) {
-    targetEl.appendChild(node)
-  }
-
-  return {
-    destroy() {
-      if (node.parentNode) {
-        node.parentNode.removeChild(node)
-      }
-    },
-  }
 }

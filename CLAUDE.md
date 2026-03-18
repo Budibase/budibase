@@ -75,9 +75,10 @@
 - The product is split up by app, so to find things like data sources and
   automations you must first make sure to select an app.
 
-## LiteLLM 
-- The LiteLLM API is available when in local development at localhost:4000 
-- The auth token is `sk-1234`
+## LiteLLM
+
+- The LiteLLM API is available when in local development at localhost:4000
+- The auth token is `budibase`
 
 ## Misc
 
@@ -88,17 +89,17 @@
 
 ### Services overview
 
-| Service | Port | Notes |
-|---------|------|-------|
-| Nginx proxy (main entry) | 10000 | Routes to builder, server, worker, CouchDB, MinIO |
-| Builder (Vite/Svelte) | 3000 | Frontend dev server |
-| Server (Koa) | 4001 | Backend API for apps |
-| Worker | 4002 | Background jobs; note `.env` sets `WORKER_PORT=4002`, not 4003 |
-| CouchDB | 4005 | Primary database |
-| CouchDB SQS | 4006 | |
-| Redis | 6379 | Cache, sessions, queues |
-| MinIO | 4004 | S3-compatible object storage |
-| LiteLLM (optional) | 4000 | AI proxy; see `## LiteLLM` section above for auth token |
+| Service                  | Port  | Notes                                                          |
+| ------------------------ | ----- | -------------------------------------------------------------- |
+| Nginx proxy (main entry) | 10000 | Routes to builder, server, worker, CouchDB, MinIO              |
+| Builder (Vite/Svelte)    | 3000  | Frontend dev server                                            |
+| Server (Koa)             | 4001  | Backend API for apps                                           |
+| Worker                   | 4002  | Background jobs; note `.env` sets `WORKER_PORT=4002`, not 4003 |
+| CouchDB                  | 4005  | Primary database                                               |
+| CouchDB SQS              | 4006  |                                                                |
+| Redis                    | 6379  | Cache, sessions, queues                                        |
+| MinIO                    | 4004  | S3-compatible object storage                                   |
+| LiteLLM (optional)       | 4000  | AI proxy; see `## LiteLLM` section above for auth token        |
 
 ### Starting the dev environment
 

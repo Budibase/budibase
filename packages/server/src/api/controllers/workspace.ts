@@ -51,12 +51,12 @@ import {
   UpdateWorkspaceResponse,
   UserCtx,
   Workspace,
+  OnboardingWorkspaceRequest,
 } from "@budibase/types"
 import { cleanupAutomations } from "../../automations/utils"
 import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import { createOnboardingWelcomeScreen } from "../../constants/screens"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import {
   DocumentType,
@@ -143,6 +143,22 @@ function checkWorkspaceName(
   if (workspaces.some((app: Workspace) => app.name === name)) {
     ctx.throw(400, "Workspace name is already in use.")
   }
+}
+
+function getOnboardingWorkspaceName(workspaces: Workspace[]) {
+  if (
+    !workspaces.some(workspace => workspace.name === DEFAULT_WORKSPACE_NAME)
+  ) {
+    return DEFAULT_WORKSPACE_NAME
+  }
+
+  let suffix = 2
+  while (
+    workspaces.some(workspace => workspace.name === `Workspace ${suffix}`)
+  ) {
+    suffix++
+  }
+  return `Workspace ${suffix}`
 }
 
 interface AppTemplate {
@@ -244,35 +260,6 @@ async function addSampleDataDocs() {
   }
 }
 
-async function createOnboardingDefaultWorkspaceApp(
-  name: string
-): Promise<string> {
-  const workspaceApp = await sdk.workspaceApps.create({
-    name: name,
-    url: "/",
-    navigation: {
-      ...defaultAppNavigator(name),
-      links: [],
-    },
-    disabled: false,
-    isDefault: true,
-  })
-
-  return workspaceApp._id!
-}
-
-async function addOnboardingWelcomeScreen() {
-  const workspaceApps = await sdk.workspaceApps.fetch(context.getWorkspaceDB())
-  const workspaceApp = workspaceApps.find(wa => wa.isDefault)
-
-  if (!workspaceApp) {
-    throw new Error("Default workspace app not found")
-  }
-
-  const screen = createOnboardingWelcomeScreen(workspaceApp._id!)
-  await sdk.screens.create(screen)
-}
-
 export const addSampleData = async (
   ctx: UserCtx<void, AddWorkspaceSampleDataResponse>
 ) => {
@@ -331,20 +318,44 @@ export async function fetchClientChatApps(
 
   const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
   for (const workspace of workspaces) {
-    const { chatApp, workspaceAgents } = await context.doInWorkspaceContext(
-      workspace.appId,
-      async () => {
+    const isBuilderOrAdmin = users.isAdminOrBuilder(ctx.user, workspace.appId)
+    const workspaceRoleId =
+      ctx.user?.roles?.[workspace.appId] || roles.BUILTIN_ROLE_IDS.PUBLIC
+
+    const { chatApp, workspaceAgents, accessibleEnabledAgentIds } =
+      await context.doInWorkspaceContext(workspace.appId, async () => {
         const [chatApp, workspaceAgents] = await Promise.all([
           sdk.ai.chatApps.getSingle(),
           sdk.ai.agents.fetch(),
         ])
 
+        const accessController = new roles.AccessController()
+        const accessibleEnabledAgentIds = new Set<string>()
+
+        for (const chatAgent of chatApp?.agents || []) {
+          if (!chatAgent.isEnabled) {
+            continue
+          }
+
+          const canAccessAgent =
+            isBuilderOrAdmin ||
+            !chatAgent.roleId ||
+            (await accessController.hasAccess(
+              chatAgent.roleId,
+              workspaceRoleId
+            ))
+
+          if (canAccessAgent) {
+            accessibleEnabledAgentIds.add(chatAgent.agentId)
+          }
+        }
+
         return {
           chatApp,
           workspaceAgents,
+          accessibleEnabledAgentIds: [...accessibleEnabledAgentIds],
         }
-      }
-    )
+      })
 
     if (!chatApp?.live || !chatApp._id) {
       continue
@@ -357,7 +368,8 @@ export async function fetchClientChatApps(
     )
 
     const enabledChatAgents = (chatApp.agents || []).filter(
-      agent => agent.isEnabled
+      agent =>
+        agent.isEnabled && accessibleEnabledAgentIds.includes(agent.agentId)
     )
 
     for (const chatAgent of enabledChatAgents) {
@@ -551,22 +563,27 @@ export async function fetchAppPackage(
 }
 
 async function performWorkspaceCreate(
-  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
+  ctx: UserCtx<
+    CreateWorkspaceRequest | OnboardingWorkspaceRequest,
+    CreateWorkspaceResponse
+  >
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
   })
   const { body } = ctx.request
-  const { name, url, encryptionPassword, templateKey } = body
+  const { url, encryptionPassword, templateKey } = body
 
   const isOnboarding = body.isOnboarding === "true"
   const useTemplate = body.useTemplate === "true"
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
 
-  const appName = isOnboarding ? DEFAULT_WORKSPACE_NAME : name
+  const workspaceName = isOnboarding
+    ? getOnboardingWorkspaceName(workspaces)
+    : body.name
 
-  checkWorkspaceName(ctx, workspaces, appName)
-  const appUrl = sdk.workspaces.getAppUrl({ name: appName, url })
+  checkWorkspaceName(ctx, workspaces, workspaceName)
+  const appUrl = sdk.workspaces.getAppUrl({ name: workspaceName, url })
   checkWorkspaceUrl(ctx, workspaces, appUrl)
 
   const instanceConfig: AppTemplate = {
@@ -604,7 +621,7 @@ async function performWorkspaceCreate(
       type: "app",
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
-      name: appName,
+      name: workspaceName,
       url: appUrl,
       template: templateKey,
       instance,
@@ -612,7 +629,7 @@ async function performWorkspaceCreate(
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       status: WorkspaceStatus.DEV,
-      navigation: defaultAppNavigator(name),
+      navigation: defaultAppNavigator(workspaceName),
       theme: DefaultAppTheme,
       customTheme: {
         primaryColor: "var(--spectrum-global-color-blue-700)",
@@ -672,20 +689,6 @@ async function performWorkspaceCreate(
 
     if (!isImport) {
       await uploadAppFiles(workspaceId)
-    }
-
-    // Add sample datasource and example screen for non-templates/non-imports, or onboarding welcome screen for onboarding flow
-    if (isOnboarding) {
-      try {
-        await addSampleDataDocs()
-        await createOnboardingDefaultWorkspaceApp("Welcome app")
-        await addOnboardingWelcomeScreen()
-
-        // Fetch the latest version of the workspace after these changes
-        newWorkspace = await sdk.workspaces.metadata.get()
-      } catch (err) {
-        ctx.throw(400, "App created, but failed to add onboarding screens")
-      }
     }
 
     const latestMigrationId = workspaceMigrations.getLatestEnabledMigrationId()

@@ -374,6 +374,36 @@ describe("/api/global/users", () => {
       expect(events.user.invited).toHaveBeenCalledTimes(2)
     })
 
+    it("should persist invited creator app access when accepting the invite", async () => {
+      const email = structures.users.newEmail()
+      const workspaceId = "app_creator_invite_workspace"
+      const request = [
+        {
+          email,
+          userInfo: {
+            builder: { creator: true },
+            apps: {
+              [workspaceId]: "CREATOR",
+            },
+          },
+        },
+      ]
+
+      await config.api.users.sendMultiUserInvite(request)
+
+      const emailCall = sendMailMock.mock.calls[0][0]
+      const code = emailCall.html
+        .split("http://localhost:10000/builder/invite?code=")[1]
+        .split('"')[0]
+        .split("&")[0]
+      await config.api.users.acceptInvite(code)
+
+      const user = await config.getUser(email)
+      expect(user?.roles?.[workspaceId]).toBe("CREATOR")
+      expect(user?.builder?.creator).toBe(true)
+      expect(user?.builder?.apps).toEqual([workspaceId])
+    })
+
     it("should not be able to generate an invitation for existing user", async () => {
       const request = [{ email: config.user!.email, userInfo: {} }]
 

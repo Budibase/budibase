@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
+  import { ChatCommands } from "@budibase/shared-core"
   import type {
     Agent,
     ProvisionAgentSlackChannelResponse,
@@ -12,6 +13,7 @@
     toOptionalValue,
   } from "./utils"
 
+  const SLACK_LINK_COMMAND = ChatCommands.LINK
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()
@@ -111,8 +113,11 @@
 
   {#snippet response()}
     <Body size="S">
-      Mention the bot in a channel or send it a DM. Slack threads are used as
-      the conversation boundary automatically.
+      Mention the bot in a channel or send it a DM to ask a question. Slack
+      threads are used as the conversation boundary automatically.
+    </Body>
+    <Body size="S">
+      Use `/{SLACK_LINK_COMMAND}` to link or refresh your Budibase account.
     </Body>
 
     <CopyInput

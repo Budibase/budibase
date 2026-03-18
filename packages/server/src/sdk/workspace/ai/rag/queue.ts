@@ -1,9 +1,13 @@
 import type { Job } from "bull"
 import { context, objectStore, queue, utils } from "@budibase/backend-core"
-import { Agent, AgentFile, AgentFileStatus } from "@budibase/types"
+import {
+  KnowledgeBase,
+  KnowledgeBaseFile,
+  KnowledgeBaseFileStatus,
+} from "@budibase/types"
 import { ObjectStoreBuckets } from "../../../../constants"
-import { ingestAgentFile } from "./files"
-import { agents } from ".."
+import { ingestKnowledgeBaseFile } from "./files"
+import { knowledgeBase } from ".."
 
 const DEFAULT_CONCURRENCY = 2
 const DEFAULT_BACKOFF_MS = utils.Duration.fromSeconds(10).toMs()
@@ -11,7 +15,7 @@ const DEFAULT_TIMEOUT_MS = utils.Duration.fromMinutes(10).toMs()
 
 export interface RagIngestionJob {
   workspaceId: string
-  agentId: string
+  knowledgeBaseId: string
   fileId: string
   objectStoreKey?: string
 }
@@ -37,7 +41,7 @@ export function getQueue() {
         },
         jobTags: data => ({
           workspaceId: data.workspaceId,
-          agentId: data.agentId,
+          knowledgeBaseId: data.knowledgeBaseId,
           fileId: data.fileId,
         }),
       }
@@ -55,13 +59,20 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
     ragQueueInitialised = true
 
     return getQueue().process(concurrency, async job => {
-      const { workspaceId, agentId, fileId, objectStoreKey } = job.data
+      const { workspaceId, knowledgeBaseId, fileId, objectStoreKey } = job.data
       await context.doInWorkspaceContext(workspaceId, async () => {
-        let agent: Agent
-        let agentFile: AgentFile
+        let knowledgeBaseConfig: KnowledgeBase | undefined
+        let knowledgeBaseFile: KnowledgeBaseFile | undefined
+
+        knowledgeBaseConfig = await knowledgeBase.find(knowledgeBaseId)
+        if (!knowledgeBaseConfig) {
+          await job.discard()
+          return
+        }
 
         try {
-          agent = await agents.getOrThrow(agentId)
+          knowledgeBaseFile =
+            await knowledgeBase.getKnowledgeBaseFileOrThrow(fileId)
         } catch (error: any) {
           if (error?.status === 404) {
             await job.discard()
@@ -70,34 +81,34 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
           throw error
         }
 
-        try {
-          agentFile = await agents.getAgentFileOrThrow(fileId)
-        } catch (error: any) {
-          if (error?.status === 404) {
-            await job.discard()
-            return
-          }
-          throw error
+        if (!knowledgeBaseFile) {
+          await job.discard()
+          return
         }
 
-        if (!agentFile.objectStoreKey && objectStoreKey) {
-          agentFile.objectStoreKey = objectStoreKey
+        if (!knowledgeBaseFile.objectStoreKey && objectStoreKey) {
+          knowledgeBaseFile.objectStoreKey = objectStoreKey
         }
 
-        if (!agentFile.objectStoreKey) {
-          throw new Error("Agent file does not have an object store key")
+        if (!knowledgeBaseFile.objectStoreKey) {
+          throw new Error("RAG file does not have an object store key")
         }
 
         try {
-          const buffer = await loadFileBuffer(agentFile.objectStoreKey)
-          const result = await ingestAgentFile(agent, agentFile, buffer)
-          agentFile.status = AgentFileStatus.READY
-          agentFile.chunkCount = result.total
-          agentFile.processedAt = new Date().toISOString()
-          agentFile.errorMessage = undefined
-          await agents.updateAgentFile(agentFile)
+          const buffer = await loadFileBuffer(knowledgeBaseFile.objectStoreKey)
+          const result = await ingestKnowledgeBaseFile(
+            knowledgeBaseConfig,
+            knowledgeBaseFile,
+            buffer
+          )
+
+          knowledgeBaseFile.status = KnowledgeBaseFileStatus.READY
+          knowledgeBaseFile.chunkCount = result.total
+          knowledgeBaseFile.processedAt = new Date().toISOString()
+          knowledgeBaseFile.errorMessage = undefined
+          await knowledgeBase.updateKnowledgeBaseFile(knowledgeBaseFile)
         } catch (error: any) {
-          await handleProcessingError(agentFile, job, error)
+          await handleProcessingError(knowledgeBaseFile, job, error)
           throw error
         }
       })
@@ -108,7 +119,7 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
   }
 }
 
-export async function enqueueAgentFileIngestion(job: RagIngestionJob) {
+export async function enqueueRagFileIngestion(job: RagIngestionJob) {
   init()
   return await getQueue().add(job, { jobId: job.fileId })
 }
@@ -127,7 +138,7 @@ const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {
 }
 
 const handleProcessingError = async (
-  agentFile: AgentFile,
+  file: KnowledgeBaseFile,
   job: Job<RagIngestionJob>,
   error: any
 ) => {
@@ -138,8 +149,8 @@ const handleProcessingError = async (
     return
   }
 
-  agentFile.status = AgentFileStatus.FAILED
-  agentFile.errorMessage = error?.message || "Failed to process uploaded file"
-  agentFile.chunkCount = 0
-  await agents.updateAgentFile(agentFile)
+  file.status = KnowledgeBaseFileStatus.FAILED
+  file.errorMessage = error?.message || "Failed to process uploaded file"
+  file.chunkCount = 0
+  await knowledgeBase.updateKnowledgeBaseFile(file)
 }

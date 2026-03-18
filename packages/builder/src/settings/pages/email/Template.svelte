@@ -15,7 +15,7 @@
   import type { Template, GlobalTemplateBinding } from "@budibase/types"
   import { type Routing } from "@/types/routing"
   import { type Readable } from "svelte/store"
-  import { routeActions } from ".."
+  import RouteActions from "@/settings/components/RouteActions.svelte"
 
   const routing: Readable<Routing> = getContext("routing")
 
@@ -198,9 +198,9 @@
     </Tabs>
   </div>
 
-  <div use:routeActions>
+  <RouteActions>
     <Button cta on:click={saveTemplate}>Save</Button>
-  </div>
+  </RouteActions>
 </Layout>
 
 <style>

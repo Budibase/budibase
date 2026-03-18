@@ -17,6 +17,7 @@
     automationStore,
     queries,
   } from "@/stores/builder"
+  import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { onDestroy, onMount, untrack } from "svelte"
   import { bb } from "@/stores/bb"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
@@ -352,8 +353,8 @@ Any constraints the agent must follow.
 
     if (sourceType === ToolType.REST_QUERY) {
       const ds = $datasources.list.find(d => d.name === sourceLabel)
-      const templateIconUrl = ds?.restTemplate
-        ? restTemplates.getByName(ds.restTemplate)?.icon
+      const templateIconUrl = getRestTemplateIdentifier(ds)
+        ? restTemplates.get(getRestTemplateIdentifier(ds))?.icon
         : undefined
 
       if (templateIconUrl) {
@@ -694,7 +695,7 @@ Any constraints the agent must follow.
       Select which provider and model to use for the agent.{" "}
       <button
         class="link-button"
-        onclick={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
+        onclick={() => bb.settings(`/connections/${AIConfigType.COMPLETIONS}`)}
       >
         View AI Connectors.
       </button>
@@ -709,7 +710,8 @@ Any constraints the agent must follow.
           icon="sparkle"
           iconWeight="fill"
           iconColor="#8777D1"
-          on:click={() => bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)}
+          on:click={() =>
+            bb.settings(`/connections/${AIConfigType.COMPLETIONS}`)}
         >
           Connect AI Model
         </Button>

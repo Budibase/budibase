@@ -1,4 +1,4 @@
-import { WorkspaceBackupContents } from "@budibase/types"
+import { Database, WorkspaceBackupContents } from "@budibase/types"
 
 export interface InitOpts {
   backups?: BackupInitOpts
@@ -18,11 +18,18 @@ export interface ImportAppConfig {
   key: string
 }
 
+export interface ImportAppOpts {
+  updateAttachmentColumns?: boolean
+  importObjStoreContents?: boolean
+  objectStoreAppId?: string
+}
+
 type ExportAppFn = (devAppId: string, opts: { tar: boolean }) => Promise<string>
 type ImportAppFn = (
-  devAppId: string,
-  db: any,
-  config: ImportAppConfig
+  targetWorkspaceId: string,
+  destinationDb: Database,
+  config: ImportAppConfig,
+  opts?: ImportAppOpts
 ) => Promise<string>
 type StatsFn = (devAppId: string) => Promise<WorkspaceBackupContents>
 

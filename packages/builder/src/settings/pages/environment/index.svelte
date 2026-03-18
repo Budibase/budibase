@@ -13,7 +13,7 @@
   import CreateEditVariableModal from "@/components/portal/environment/CreateEditVariableModal.svelte"
   import EditVariableColumn from "./_components/EditVariableColumn.svelte"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
-  import { routeActions } from "@/settings/pages"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
 
   const customRenderers = [{ column: "edit", component: EditVariableColumn }]
 
@@ -80,11 +80,11 @@
     />
   {/if}
 
-  <div use:routeActions>
+  <RouteActions>
     <Button size="M" on:click={modal.show} cta disabled={noEncryptionKey}>
       Add Variable
     </Button>
-  </div>
+  </RouteActions>
 
   <Layout noPadding>
     <Table

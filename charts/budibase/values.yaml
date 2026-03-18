@@ -743,7 +743,7 @@ couchdb:
     # @ignore
     repository: budibase/database
     # @ignore
-    tag: "2.0.0"
+    tag: "2.1.0"
     # @ignore
     pullPolicy: Always
 

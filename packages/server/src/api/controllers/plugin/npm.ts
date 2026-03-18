@@ -1,4 +1,7 @@
-import { getPluginMetadata } from "../../../utilities/fileSystem"
+import {
+  deleteFolderFileSystem,
+  getPluginMetadata,
+} from "../../../utilities/fileSystem"
 import fetch from "node-fetch"
 import { join } from "path"
 import { downloadUnzipTarball } from "./utils"
@@ -36,6 +39,10 @@ export async function npmUpload(url: string, name: string, headers = {}) {
 
   const path = await downloadUnzipTarball(npmTarballUrl, pluginName, headers)
   const pluginRoot = join(path, "package", "dist")
-
-  return await getPluginMetadata(pluginRoot)
+  try {
+    return await getPluginMetadata(pluginRoot, path)
+  } catch (err) {
+    deleteFolderFileSystem(path)
+    throw err
+  }
 }

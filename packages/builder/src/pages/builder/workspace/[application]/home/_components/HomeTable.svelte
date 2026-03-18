@@ -23,12 +23,16 @@
   export let searchTerm = ""
   export let sortColumn: HomeSortColumn
   export let sortOrder: HomeSortOrder
+  export let agentsEnabled = false
 
   const dispatch = createEventDispatcher<{
     openRow: HomeRow
     clearSearch: void
     resetFilters: void
     sortChange: HomeSortColumn
+    createAgent: void
+    createAutomation: void
+    createApp: void
     openContextMenu: {
       row: HomeRow
       x: number
@@ -57,85 +61,89 @@
 
 <div class="table-wrapper">
   <div class="table" class:table--loading={loading}>
-    <div class="table-header" role="row">
-      <button
-        type="button"
-        class="header-cell"
-        on:click={() => headerClick("name")}
-      >
-        <span>Name</span>
-        <span
-          class="sort-indicator"
-          class:sort-indicator--active={isSorted("name")}
-          class:sort-indicator--up={isSorted("name") && sortOrder === "desc"}
+    {#if allRowsCount > 0}
+      <div class="table-header" role="row">
+        <button
+          type="button"
+          class="header-cell"
+          on:click={() => headerClick("name")}
         >
-          <Icon
-            name="caret-down"
-            size="S"
-            color="var(--spectrum-global-color-gray-700)"
-          />
-        </span>
-      </button>
+          <span>Name</span>
+          <span
+            class="sort-indicator"
+            class:sort-indicator--active={isSorted("name")}
+            class:sort-indicator--up={isSorted("name") && sortOrder === "desc"}
+          >
+            <Icon
+              name="caret-down"
+              size="S"
+              color="var(--spectrum-global-color-gray-700)"
+            />
+          </span>
+        </button>
 
-      <button
-        type="button"
-        class="header-cell header-cell--with-icon"
-        on:click={() => headerClick("type")}
-      >
-        <span>Type</span>
-        <span
-          class="sort-indicator"
-          class:sort-indicator--active={isSorted("type")}
-          class:sort-indicator--up={isSorted("type") && sortOrder === "desc"}
+        <button
+          type="button"
+          class="header-cell header-cell--with-icon"
+          on:click={() => headerClick("type")}
         >
-          <Icon
-            name="caret-down"
-            size="S"
-            color="var(--spectrum-global-color-gray-700)"
-          />
-        </span>
-      </button>
+          <span>Type</span>
+          <span
+            class="sort-indicator"
+            class:sort-indicator--active={isSorted("type")}
+            class:sort-indicator--up={isSorted("type") && sortOrder === "desc"}
+          >
+            <Icon
+              name="caret-down"
+              size="S"
+              color="var(--spectrum-global-color-gray-700)"
+            />
+          </span>
+        </button>
 
-      <button
-        type="button"
-        class="header-cell header-cell--with-icon"
-        on:click={() => headerClick("status")}
-      >
-        <span>Status</span>
-        <span
-          class="sort-indicator"
-          class:sort-indicator--active={isSorted("status")}
-          class:sort-indicator--up={isSorted("status") && sortOrder === "desc"}
+        <button
+          type="button"
+          class="header-cell header-cell--with-icon"
+          on:click={() => headerClick("status")}
         >
-          <Icon
-            name="caret-down"
-            size="S"
-            color="var(--spectrum-global-color-gray-700)"
-          />
-        </span>
-      </button>
+          <span>Status</span>
+          <span
+            class="sort-indicator"
+            class:sort-indicator--active={isSorted("status")}
+            class:sort-indicator--up={isSorted("status") &&
+              sortOrder === "desc"}
+          >
+            <Icon
+              name="caret-down"
+              size="S"
+              color="var(--spectrum-global-color-gray-700)"
+            />
+          </span>
+        </button>
 
-      <button
-        type="button"
-        class="header-cell header-cell--with-icon"
-        on:click={() => headerClick("updated")}
-      >
-        <span>Updated</span>
-        <span
-          class="sort-indicator"
-          class:sort-indicator--active={isSorted("updated")}
-          class:sort-indicator--up={isSorted("updated") && sortOrder === "desc"}
+        <button
+          type="button"
+          class="header-cell header-cell--with-icon"
+          on:click={() => headerClick("updated")}
         >
-          <Icon
-            name="caret-down"
-            size="S"
-            color="var(--spectrum-global-color-gray-700)"
-          />
-        </span>
-      </button>
+          <span>Updated</span>
+          <span
+            class="sort-indicator"
+            class:sort-indicator--active={isSorted("updated")}
+            class:sort-indicator--up={isSorted("updated") &&
+              sortOrder === "desc"}
+          >
+            <Icon
+              name="caret-down"
+              size="S"
+              color="var(--spectrum-global-color-gray-700)"
+            />
+          </span>
+        </button>
 
-      <div class="header-cell header-cell--actions" aria-hidden="true"></div>
-    </div>
+        <div class="header-cell header-cell--actions" aria-hidden="true"></div>
+      </div>
+    {/if}
 
     <div class="table-body" class:table-body--empty={!rows.length}>
       {#each rows as row (row._id)}
@@ -219,9 +227,13 @@
             {typeFilter}
             {searchTerm}
             {allRowsCount}
+            {agentsEnabled}
             filteredRowsCount={rows.length}
             on:clearSearch={() => dispatch("clearSearch")}
             on:resetFilters={() => dispatch("resetFilters")}
+            on:createAgent={() => dispatch("createAgent")}
+            on:createAutomation={() => dispatch("createAutomation")}
+            on:createApp={() => dispatch("createApp")}
           />
         </div>
       {/if}

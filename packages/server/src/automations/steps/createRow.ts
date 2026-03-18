@@ -41,7 +41,7 @@ export async function run({
       inputs.row.tableId!,
       inputs.row
     )
-    await save(ctx)
+    await save(ctx, { isAutomation: true })
     return {
       row: inputs.row,
       response: ctx.body,
