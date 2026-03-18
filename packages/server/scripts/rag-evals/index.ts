@@ -1078,6 +1078,8 @@ async function main() {
     let guardrailTotal = 0
     let guardrailPassed = 0
     let guardrailFailed = false
+    let retrievalCoverageTotal = 0
+    let retrievalCoveragePassed = 0
 
     for (const testCase of evalConfig.cases) {
       const createdConversation = await api.request<any>(
@@ -1159,6 +1161,19 @@ async function main() {
         )
         .filter((value): value is string => !!value)
 
+      retrievalCoverageTotal += 1
+      const hasRetrievedContext = sourceHints.length > 0 && contexts.length > 0
+      if (!hasRetrievedContext) {
+        guardrailFailed = true
+        console.log(
+          red(
+            `GUARD FAIL ${testCase.id}: retrieval_coverage requires at least one retrieved source/context`
+          )
+        )
+        continue
+      }
+      retrievalCoveragePassed += 1
+
       samples.push({
         caseId: testCase.id,
         question: testCase.question,
@@ -1180,6 +1195,12 @@ async function main() {
       console.log(`Total: ${guardrailTotal}`)
       console.log(`Passed: ${guardrailPassed}`)
       console.log(`Failed: ${guardrailTotal - guardrailPassed}`)
+    }
+    if (retrievalCoverageTotal > 0) {
+      console.log(section("Retrieval Coverage Guardrails"))
+      console.log(`Total: ${retrievalCoverageTotal}`)
+      console.log(`Passed: ${retrievalCoveragePassed}`)
+      console.log(`Failed: ${retrievalCoverageTotal - retrievalCoveragePassed}`)
     }
 
     let failed = guardrailFailed
