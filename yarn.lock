@@ -17300,7 +17300,7 @@ json5@^1.0.2:
   dependencies:
     minimist "^1.2.0"
 
-json5@^2.2.1, json5@^2.2.2, json5@^2.2.3:
+json5@^2.2.2, json5@^2.2.3:
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/json5/-/json5-2.2.3.tgz#78cd6f1a19bdc12b73db5ad0c61efd66c1e29283"
   integrity sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==
@@ -24644,15 +24644,6 @@ ts-node@10.8.1:
     make-error "^1.1.1"
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
-
-tsconfig-paths@4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-4.0.0.tgz#1082f5d99fd127b72397eef4809e4dd06d229b64"
-  integrity sha512-SLBg2GBKlR6bVtMgJJlud/o3waplKtL7skmLkExomIiaAtLGtVsoXIqP3SYdjbcH9lq/KVv7pMZeCBpLYOit6Q==
-  dependencies:
-    json5 "^2.2.1"
-    minimist "^1.2.6"
-    strip-bom "^3.0.0"
 
 tsconfig-paths@^3.10.1, tsconfig-paths@^3.15.0:
   version "3.15.0"
