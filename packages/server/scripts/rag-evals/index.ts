@@ -213,15 +213,15 @@ function getRuntimeEnv(): RuntimeEnv {
     ragasDockerImage:
       getOptionalEnv("RAG_EVAL_RAGAS_DOCKER_IMAGE") || "ragas-app",
     ragasMinContextPrecision:
-      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_CONTEXT_PRECISION") || 0.75,
+      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_CONTEXT_PRECISION") ?? 0.75,
     ragasMinContextRecall:
-      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_CONTEXT_RECALL") || 0.9,
+      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_CONTEXT_RECALL") ?? 0.9,
     ragasMinFaithfulness:
-      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_FAITHFULNESS") || 0.75,
+      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_FAITHFULNESS") ?? 0.75,
     ragasMinAnswerRelevancy:
-      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_ANSWER_RELEVANCY") || 0.7,
+      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_ANSWER_RELEVANCY") ?? 0.7,
     ragasMinAnswerCorrectness:
-      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_ANSWER_CORRECTNESS") || 0.7,
+      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_ANSWER_CORRECTNESS") ?? 0.7,
     ragasThreshold: parseOptionalNumber("RAG_EVAL_RAGAS_THRESHOLD"),
   }
 }
@@ -683,6 +683,38 @@ function mean(numbers: number[]) {
   return numbers.reduce((acc, n) => acc + n, 0) / numbers.length
 }
 
+function summarizeMetricAvailability(
+  ragas: RagasOutput,
+  metricNames: string[]
+): Array<{
+  metricName: string
+  present: number
+  total: number
+  ratio: number
+}> {
+  const rows = ragas.byCase || []
+  const total = rows.length
+  if (total === 0) {
+    return []
+  }
+
+  return metricNames.map(metricName => {
+    let present = 0
+    for (const row of rows) {
+      const value = row[metricName]
+      if (typeof value === "number" && Number.isFinite(value)) {
+        present += 1
+      }
+    }
+    return {
+      metricName,
+      present,
+      total,
+      ratio: present / total,
+    }
+  })
+}
+
 function evaluateMetricRails(
   runtimeEnv: RuntimeEnv,
   aggregate: Record<string, number>
@@ -760,14 +792,9 @@ function runRagas(runtimeEnv: RuntimeEnv, samples: RagasSample[]): RagasOutput {
       `OPENAI_API_BASE=${runtimeEnv.openAIBaseUrl}`,
       "-v",
       `${outputDir}:/work`,
-      "-v",
-      `${__dirname}:/runner`,
       runtimeEnv.ragasDockerImage,
-      "sh",
-      "-lc",
-      [
-        `python /runner/ragas_runner.py /work/${basename(inputPath)} /work/${basename(outputPath)}`,
-      ].join(" && "),
+      `/work/${basename(inputPath)}`,
+      `/work/${basename(outputPath)}`,
     ],
     {
       encoding: "utf-8",
@@ -1234,6 +1261,32 @@ async function main() {
       for (const metricName of metricNames) {
         const value = aggregate[metricName]
         console.log(`${metricName}: ${value.toFixed(4)}`)
+      }
+
+      const expectedMetrics = [
+        "context_precision",
+        "context_recall",
+        "faithfulness",
+        "answer_relevancy",
+        "answer_correctness",
+      ]
+      const availability = summarizeMetricAvailability(ragas, expectedMetrics)
+      if (availability.length > 0) {
+        console.log(section("RAGAS Metric Availability"))
+        for (const item of availability) {
+          console.log(
+            `${item.metricName}: ${item.present}/${item.total} (${(
+              item.ratio * 100
+            ).toFixed(1)}%)`
+          )
+          if (item.ratio < 0.9) {
+            console.log(
+              yellow(
+                `Metric ${item.metricName} is unstable (<90% present); keep its rail opt-in`
+              )
+            )
+          }
+        }
       }
 
       const overall = mean(metricNames.map(name => aggregate[name]))

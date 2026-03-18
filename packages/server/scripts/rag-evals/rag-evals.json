@@ -8,7 +8,7 @@
     {
       "id": "password-reset-expiry",
       "question": "How long do password reset links remain valid?",
-      "reference": "30 minutes",
+      "reference": "Password reset links expire after 30 minutes.",
       "expectation": {
         "containsAny": ["30 minutes"],
         "sourceIncludesAny": ["customer-support-operations-handbook.md"]
@@ -17,7 +17,7 @@
     {
       "id": "failed-login-lockout",
       "question": "After how many failed login attempts is an account locked?",
-      "reference": "5 failed login attempts",
+      "reference": "Accounts are locked after 5 failed login attempts.",
       "expectation": {
         "containsAny": ["5 failed login attempts"],
         "sourceIncludesAny": ["customer-support-operations-handbook.md"]
@@ -26,7 +26,7 @@
     {
       "id": "billing-contact-email",
       "question": "Which email should billing questions be sent to?",
-      "reference": "billing@example.com",
+      "reference": "Billing questions should be routed to billing@example.com.",
       "expectation": {
         "containsAny": ["billing@example.com"],
         "sourceIncludesAny": ["customer-support-operations-handbook.md"]
@@ -35,7 +35,7 @@
     {
       "id": "invoice-generation-date",
       "question": "When are invoices generated?",
-      "reference": "the 1st day of each month",
+      "reference": "Invoices are generated on the 1st day of each month.",
       "expectation": {
         "containsAny": ["1st day of each month", "first day of each month"],
         "sourceIncludesAny": ["customer-support-operations-handbook.md"]
@@ -44,7 +44,7 @@
     {
       "id": "sev1-response-target",
       "question": "What is the first response target for a SEV-1 incident?",
-      "reference": "15 minutes",
+      "reference": "First response target for SEV-1 incidents is 15 minutes.",
       "expectation": {
         "containsAny": ["15 minutes"],
         "sourceIncludesAny": ["customer-support-operations-handbook.md"]
@@ -53,7 +53,7 @@
     {
       "id": "urgent-queue-identifier",
       "question": "What is the internal queue identifier for urgent support cases?",
-      "reference": "SUPPORT-P1",
+      "reference": "The internal queue identifier for urgent cases is SUPPORT-P1.",
       "expectation": {
         "containsAny": ["SUPPORT-P1"],
         "sourceIncludesAny": ["customer-support-operations-handbook.md"]

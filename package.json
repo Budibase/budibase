@@ -103,7 +103,7 @@
     "submodules:load": "git submodule init && git submodule update && yarn",
     "submodules:unload": "git submodule deinit --all && yarn",
     "add-workspace-migration": "node scripts/add-workspace-migration.js --title",
-    "rag:evals": "docker build -t ragas-app -f packages/server/scripts/rag-evals/ragas.Dockerfile . && NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" ts-node --transpileOnly -r tsconfig-paths/register --project ./tsconfig.build.json ./packages/server/scripts/rag-evals/index.ts"
+    "rag:evals": "docker build -t ragas-app -f packages/server/scripts/rag-evals/ragas.Dockerfile packages/server/scripts/rag-evals && NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" ts-node --transpileOnly -r tsconfig-paths/register --project ./tsconfig.build.json ./packages/server/scripts/rag-evals/index.ts"
   },
   "workspaces": {
     "packages": [

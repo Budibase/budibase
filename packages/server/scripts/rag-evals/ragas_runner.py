@@ -71,9 +71,7 @@ def _to_json_safe(value: Any) -> Any:
     return value
 
 
-def _to_rows(samples: List[Dict[str, Any]], schema: str) -> Dict[str, List[Any]]:
-    if schema != "modern":
-        raise RuntimeError(f"Unsupported schema: {schema}")
+def _to_rows(samples: List[Dict[str, Any]]) -> Dict[str, List[Any]]:
     return {
         "user_input": [row["question"] for row in samples],
         "response": [row["answer"] for row in samples],
@@ -97,13 +95,10 @@ def _evaluate(
     dataset = Dataset.from_dict(rows)
     result = evaluate(dataset=dataset, metrics=metric_list)
 
-    pandas_rows: List[Dict[str, Any]] = []
-    if hasattr(result, "to_pandas"):
-        try:
-            frame = result.to_pandas()
-            pandas_rows = frame.to_dict(orient="records")
-        except Exception:
-            pandas_rows = []
+    scores = getattr(result, "scores", None)
+    if not isinstance(scores, list):
+        raise RuntimeError("RAGAS result.scores is not available")
+    case_rows = [row for row in scores if isinstance(row, dict)]
 
     aggregates: Dict[str, float] = {}
     metric_names = [
@@ -114,26 +109,14 @@ def _evaluate(
         "faithfulness",
     ]
 
-    if pandas_rows:
+    if case_rows:
         for metric_name in metric_names:
-            values = [_safe_float(row.get(metric_name)) for row in pandas_rows]
+            values = [_safe_float(row.get(metric_name)) for row in case_rows]
             metric_mean = _mean(values)
             if math.isfinite(metric_mean):
                 aggregates[metric_name] = metric_mean
 
-    if not aggregates:
-        maybe_dict = {}
-        if isinstance(result, dict):
-            maybe_dict = result
-        elif hasattr(result, "__dict__"):
-            maybe_dict = dict(getattr(result, "__dict__", {}))
-
-        for metric_name in metric_names:
-            value = _safe_float(maybe_dict.get(metric_name))
-            if math.isfinite(value):
-                aggregates[metric_name] = value
-
-    return aggregates, pandas_rows, {"repr": repr(result)}
+    return aggregates, case_rows, {"repr": repr(result)}
 
 
 def main():
@@ -155,23 +138,20 @@ def main():
     evaluate = deps["evaluate"]
     metrics = deps["metrics"]
 
-    schema = "modern"
     try:
-        rows = _to_rows(samples, schema)
+        rows = _to_rows(samples)
         aggregates, by_case, raw = _evaluate(evaluate, Dataset, metrics, rows)
     except Exception as err:
-        raise RuntimeError(f"RAGAS evaluation failed for schema '{schema}': {err}")
+        raise RuntimeError(f"RAGAS evaluation failed: {err}")
 
     if not aggregates:
-        raise RuntimeError(
-            f"RAGAS evaluation returned no aggregate metrics for schema '{schema}'"
-        )
+        raise RuntimeError("RAGAS evaluation returned no aggregate metrics")
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(
             _to_json_safe(
                 {
-                    "schema": schema,
+                    "schema": "modern",
                     "aggregate": aggregates,
                     "byCase": by_case,
                     "raw": raw,
