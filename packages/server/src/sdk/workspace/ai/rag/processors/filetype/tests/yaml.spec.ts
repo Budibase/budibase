@@ -59,14 +59,14 @@ components:
 
   it("falls back to plain chunking for non-openapi yaml", async () => {
     const content = `
-name: SpongeBob
-city: Bikini Bottom
+name: Customer Support
+region: EMEA
     `
 
     const chunks = await yamlProcessor.process({
       buffer: Buffer.from(content),
     })
 
-    expect(chunks).toEqual(["name: SpongeBob\ncity: Bikini Bottom"])
+    expect(chunks).toEqual(["name: Customer Support\nregion: EMEA"])
   })
 })
