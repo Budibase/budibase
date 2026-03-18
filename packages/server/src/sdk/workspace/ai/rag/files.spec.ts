@@ -20,7 +20,8 @@ jest.mock("../llm", () => ({
 jest.mock("..", () => ({
   knowledgeBase: {
     find: (...args: any[]) => mockKnowledgeBaseFind(...args),
-    listKnowledgeBaseFiles: (...args: any[]) => mockListKnowledgeBaseFiles(...args),
+    listKnowledgeBaseFiles: (...args: any[]) =>
+      mockListKnowledgeBaseFiles(...args),
   },
 }))
 
@@ -131,10 +132,7 @@ describe("rag files", () => {
       })
 
       expect(chunks).toContain(
-        [
-          "The Krusty Krab Menu v2",
-          "Signature item: Krabby Patty",
-        ].join("\n")
+        ["The Krusty Krab Menu v2", "Signature item: Krabby Patty"].join("\n")
       )
     })
 
