@@ -72,14 +72,8 @@ def _to_json_safe(value: Any) -> Any:
 
 
 def _to_rows(samples: List[Dict[str, Any]], schema: str) -> Dict[str, List[Any]]:
-    if schema == "legacy":
-        return {
-            "question": [row["question"] for row in samples],
-            "answer": [row["answer"] for row in samples],
-            "contexts": [row.get("contexts", []) for row in samples],
-            "ground_truth": [row.get("reference", "") or "" for row in samples],
-            "case_id": [row.get("caseId", "") for row in samples],
-        }
+    if schema != "modern":
+        raise RuntimeError(f"Unsupported schema: {schema}")
     return {
         "user_input": [row["question"] for row in samples],
         "response": [row["answer"] for row in samples],
@@ -161,32 +155,32 @@ def main():
     evaluate = deps["evaluate"]
     metrics = deps["metrics"]
 
-    errors = []
-    for schema in ["legacy", "modern"]:
-        try:
-            rows = _to_rows(samples, schema)
-            aggregates, by_case, raw = _evaluate(evaluate, Dataset, metrics, rows)
-            if aggregates:
-                with open(output_path, "w", encoding="utf-8") as f:
-                    json.dump(
-                        _to_json_safe(
-                            {
-                            "schema": schema,
-                            "aggregate": aggregates,
-                            "byCase": by_case,
-                            "raw": raw,
-                            }
-                        ),
-                        f,
-                        indent=2,
-                        allow_nan=False,
-                    )
-                return
-            errors.append(f"Schema '{schema}' returned no aggregates")
-        except Exception as err:
-            errors.append(f"Schema '{schema}' failed: {err}")
+    schema = "modern"
+    try:
+        rows = _to_rows(samples, schema)
+        aggregates, by_case, raw = _evaluate(evaluate, Dataset, metrics, rows)
+    except Exception as err:
+        raise RuntimeError(f"RAGAS evaluation failed for schema '{schema}': {err}")
 
-    raise RuntimeError("RAGAS evaluation failed. " + " | ".join(errors))
+    if not aggregates:
+        raise RuntimeError(
+            f"RAGAS evaluation returned no aggregate metrics for schema '{schema}'"
+        )
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(
+            _to_json_safe(
+                {
+                    "schema": schema,
+                    "aggregate": aggregates,
+                    "byCase": by_case,
+                    "raw": raw,
+                }
+            ),
+            f,
+            indent=2,
+            allow_nan=False,
+        )
 
 
 if __name__ == "__main__":
