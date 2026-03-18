@@ -131,17 +131,19 @@ class SeaTableIntegration implements IntegrationBase {
 
     const baseToken = res.data.access_token
     this.baseUuid = res.data.dtable_uuid
+    const dtableServer: string = res.data.dtable_server ?? ""
 
-    if (!baseToken || !this.baseUuid) {
+    if (!baseToken || !this.baseUuid || !dtableServer) {
       throw new Error(
-        "SeaTable token exchange failed – missing access_token or dtable_uuid"
+        "SeaTable token exchange failed – missing access_token, dtable_uuid, or dtable_server"
       )
     }
 
     this.tokenExpiresAt = Date.now() + 59 * 60 * 1000
 
+    const baseURL = `${dtableServer.replace(/\/$/, "")}/api/v2/dtables/${this.baseUuid}`
     this.http = axios.create({
-      baseURL: `${this.serverUrl}/api-gateway/api/v2/dtables/${this.baseUuid}`,
+      baseURL,
       timeout: 30_000,
       headers: { Authorization: `Bearer ${baseToken}` },
     })
@@ -167,7 +169,6 @@ class SeaTableIntegration implements IntegrationBase {
       const res = await this.http!.post("/rows/", {
         table_name: table,
         rows: [json],
-        convert_keys: true,
       })
       return res.data.first_row ?? res.data
     } catch (err) {
@@ -194,7 +195,7 @@ class SeaTableIntegration implements IntegrationBase {
     } catch (err) {
       const message = sanitizeError(err)
       console.error("Error reading from SeaTable:", message)
-      return []
+      throw new Error(message)
     }
   }
 

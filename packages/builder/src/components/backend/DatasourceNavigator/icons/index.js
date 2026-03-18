@@ -14,6 +14,7 @@ import Oracle from "./Oracle.svelte"
 import GoogleSheets from "./GoogleSheets.svelte"
 import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
+import SeaTable from "./SeaTable.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Custom from "./Custom.svelte"
 
@@ -34,6 +35,7 @@ const ICONS = {
   GOOGLE_SHEETS: GoogleSheets,
   FIRESTORE: Firebase,
   REDIS: Redis,
+  SEATABLE: SeaTable,
   SNOWFLAKE: Snowflake,
   CUSTOM: Custom,
 }
