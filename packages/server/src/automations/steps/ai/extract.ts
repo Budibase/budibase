@@ -1,5 +1,4 @@
 import { objectStore } from "@budibase/backend-core"
-import { ai } from "@budibase/pro"
 import {
   DocumentSourceType,
   ExtractFileDataStepInputs,
@@ -244,15 +243,11 @@ export async function run({
     const output = getOutputFromSchema(inputs.schema)
     const modelMessages = buildExtractModelMessages(extractInput)
     const providerOptions = llm.providerOptions?.(false)
-    const response = await ai.runWithReasoningEffortFallback({
+    const response = await generateText({
+      model: llm.chat,
+      messages: modelMessages,
       providerOptions,
-      run: opts =>
-        generateText({
-          model: llm.chat,
-          messages: modelMessages,
-          providerOptions: opts,
-          output,
-        }),
+      output,
     })
     if (!response.output || response.output.data == null) {
       throw new Error("Could not parse AI response as valid JSON.")

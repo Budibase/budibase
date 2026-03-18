@@ -1,16 +1,18 @@
 import { context, HTTPError } from "@budibase/backend-core"
-import type {
-  ChatConversationChannel,
-  Ctx,
-  MSTeamsActivity,
-  MSTeamsCommand,
-  MSTeamsConversationScope,
+import { ChatCommands, SupportedChatCommand } from "@budibase/shared-core"
+import {
+  AgentChannelProvider,
+  type ChatConversationChannel,
+  type Ctx,
+  type MSTeamsActivity,
+  type MSTeamsConversationScope,
 } from "@budibase/types"
 import { Chat, type Thread, type Message } from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
 import { handleChatMessage } from "./chatHandler"
 import { getTeamsState } from "./chatState"
+import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
@@ -38,26 +40,43 @@ export const parseTeamsCommand = (
   text?: string,
   entities?: MSTeamsActivity["entities"]
 ): {
-  command: MSTeamsCommand
+  command: SupportedChatCommand
   content: string
 } => {
   const normalized = stripTeamsMentions(text || "", entities)
   if (!normalized) {
-    return { command: "unsupported" as const, content: "" }
+    return { command: ChatCommands.UNSUPPORTED, content: "" }
   }
-  const match = normalized.match(/^\/?(ask|new)\b(?:\s+(.*))?$/i)
-  if (!match) {
-    return { command: "ask" as const, content: normalized }
+  const lower = normalized.toLowerCase()
+
+  if (
+    lower === ChatCommands.NEW ||
+    lower === `/${ChatCommands.NEW}` ||
+    lower.startsWith(`/${ChatCommands.NEW} `)
+  ) {
+    return {
+      command: ChatCommands.NEW,
+      content: normalized.replace(
+        new RegExp(`^/?${ChatCommands.NEW}\\s*`, "i"),
+        ""
+      ),
+    }
   }
-  const commandName = match[1]?.toLowerCase()
-  const content = (match[2] || "").trim()
-  if (commandName === "new") {
-    return { command: "new" as const, content }
+  if (
+    lower === ChatCommands.LINK ||
+    lower === `/${ChatCommands.LINK}` ||
+    lower.startsWith(`/${ChatCommands.LINK} `)
+  ) {
+    return {
+      command: ChatCommands.LINK,
+      content: normalized.replace(
+        new RegExp(`^/?${ChatCommands.LINK}\\s*`, "i"),
+        ""
+      ),
+    }
   }
-  if (commandName === "ask") {
-    return { command: "ask" as const, content }
-  }
-  return { command: "ask" as const, content: normalized }
+
+  return { command: ChatCommands.ASK, content: normalized }
 }
 
 export const splitTeamsMessage = (
@@ -96,6 +115,19 @@ export const isTeamsLifecycleActivity = (activity: MSTeamsActivity) =>
   isTeamsInstallAddedActivity(activity) ||
   isTeamsBotAddedToConversation(activity)
 
+export const isTeamsMentionActivity = (activity?: MSTeamsActivity) => {
+  const recipientId = activity?.recipient?.id?.trim()
+  if (!recipientId) {
+    return false
+  }
+
+  return (activity?.entities || []).some(
+    entity =>
+      entity.type?.toLowerCase() === "mention" &&
+      entity.mentioned?.id?.trim() === recipientId
+  )
+}
+
 const createTeamsMessageHandler = ({
   workspaceId,
   chatAppId,
@@ -111,16 +143,16 @@ const createTeamsMessageHandler = ({
     const raw = message.raw as MSTeamsActivity | undefined
     const messageText = message.text || ""
 
-    // Parse command from the Chat SDK's normalized text (mentions already stripped)
     const { command, content } = parseTeamsCommand(messageText, raw?.entities)
-    if (command === "unsupported") {
+    if (command === ChatCommands.UNSUPPORTED) {
       await thread.post(
-        'Send a message to chat, or "new" to start a new conversation.'
+        `Send a message to chat, or "${ChatCommands.NEW}" to start a new conversation.`
       )
       return
     }
 
     const conversationId = raw?.conversation?.id?.trim() || ""
+    const threadId = thread.id
     const externalUserId =
       raw?.from?.aadObjectId?.trim() ||
       raw?.from?.id?.trim() ||
@@ -140,12 +172,17 @@ const createTeamsMessageHandler = ({
       await thread.post("Missing Teams user information.")
       return
     }
+    if (!threadId) {
+      await thread.post("Missing Teams thread information.")
+      return
+    }
 
     const channel: ChatConversationChannel = {
-      provider: "msteams",
+      provider: AgentChannelProvider.MSTEAMS,
       conversationId,
       conversationType,
       channelId,
+      threadId,
       teamId,
       tenantId,
       externalUserId,
@@ -156,11 +193,14 @@ const createTeamsMessageHandler = ({
       chatAppId,
       agentId,
       conversationId,
+      threadId,
       channelId,
       externalUserId,
     }
 
     try {
+      await thread.subscribe()
+
       await handleChatMessage({
         reply: async (text: string) => {
           const chunks = splitTeamsMessage(text)
@@ -168,10 +208,27 @@ const createTeamsMessageHandler = ({
             await thread.post(chunk)
           }
         },
+        replyLinkPrompt: async prompt => {
+          const delivery = await postLinkPromptPrivately({
+            target: thread,
+            user: message.author,
+            text: prompt.text,
+            linkUrl: prompt.linkUrl,
+          })
+          if (delivery.usedDirectMessageFallback) {
+            await thread.post("I sent you a DM with your Budibase link.")
+            return
+          }
+          if (!delivery.delivered) {
+            await thread.post(
+              "I couldn't send a private Budibase link. Please try again in a direct message."
+            )
+          }
+        },
         workspaceId,
         chatAppId,
         agentId,
-        provider: "msteams",
+        provider: AgentChannelProvider.MSTEAMS,
         command,
         content,
         user: { externalUserId, displayName },
@@ -189,8 +246,6 @@ const createTeamsMessageHandler = ({
     }
   }
 }
-
-// --- Main webhook handler ---
 
 export async function MSTeamsWebhook(
   ctx: Ctx<
@@ -233,9 +288,20 @@ export async function MSTeamsWebhook(
         agentId,
         idleTimeoutMinutes,
       })
+      chat.onDirectMessage(async (thread, message) => {
+        await handler(thread, message)
+      })
       chat.onNewMention(handler)
+      chat.onNewMessage(/./, async (thread, message) => {
+        if (
+          message.isMention ||
+          !isTeamsMentionActivity(message.raw as MSTeamsActivity | undefined)
+        ) {
+          return
+        }
+        await handler(thread, message)
+      })
       chat.onSubscribedMessage(handler)
-      chat.onNewMessage(/./, handler)
 
       return request => chat.webhooks.teams(request)
     },

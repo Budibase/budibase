@@ -9,7 +9,7 @@ const PROVIDER = Joi.string()
   .required()
 
 const HOST = Joi.string().required()
-const PORT = Joi.number().integer().required()
+const PORT = Joi.alternatives(Joi.number().integer(), Joi.string()).required()
 const DATABASE = Joi.string().required()
 
 export function createVectorDbValidator() {

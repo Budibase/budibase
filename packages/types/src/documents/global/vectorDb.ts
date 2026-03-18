@@ -8,7 +8,7 @@ export interface VectorDb extends Document {
   name: string
   provider: VectorDbProvider
   host: string
-  port: number
+  port: string | number
   database: string
   user?: string
   password?: string

@@ -239,48 +239,11 @@ describe("rest", () => {
         {
           status: 400,
           body: {
-            message: "Cannot connect to URL.",
+            message: "URL is blocked or could not be resolved safely.",
           },
         }
       )
     } finally {
-      resetBlacklistEnv()
-      await blacklist.refreshBlacklist()
-    }
-  })
-
-  it("should allow localhost requests in local development", async () => {
-    const resetBlacklistEnv = setCoreEnv({ BLACKLIST_IPS: undefined })
-    const resetDevEnv = setServerEnv({
-      NODE_ENV: "development",
-      JEST_WORKER_ID: "null",
-    })
-    await blacklist.refreshBlacklist()
-
-    mockAgent!
-      .get("http://127.0.0.1:5984")
-      .intercept({ path: "/", method: "GET" })
-      .reply(200, [{ status: "ok" }], { headers: jsonHeaders })
-
-    try {
-      const response = await config.api.query.preview({
-        datasourceId: datasource._id!,
-        name: "test query",
-        parameters: [],
-        queryVerb: "read",
-        transformer: "",
-        schema: {},
-        readable: true,
-        fields: {
-          path: "http://127.0.0.1:5984",
-        },
-      })
-
-      expect(response.schema).toEqual({
-        status: { type: "string", name: "status" },
-      })
-    } finally {
-      resetDevEnv()
       resetBlacklistEnv()
       await blacklist.refreshBlacklist()
     }

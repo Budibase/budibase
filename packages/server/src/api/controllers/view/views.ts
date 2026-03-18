@@ -125,12 +125,15 @@ export async function exportView(ctx: Ctx) {
 
   if (format === Format.CSV) {
     ctx.attachment(`${viewName}.csv`)
+    ctx.type = "text/csv"
     ctx.body = apiFileReturn(csv(Object.keys(schema), exportRows))
   } else if (format === Format.JSON) {
     ctx.attachment(`${viewName}.json`)
+    ctx.type = "application/json"
     ctx.body = apiFileReturn(json(exportRows))
   } else if (format === Format.JSON_WITH_SCHEMA) {
     ctx.attachment(`${viewName}.json`)
+    ctx.type = "application/json"
     ctx.body = apiFileReturn(jsonWithSchema(schema, exportRows))
   } else {
     throw "Format not recognised"

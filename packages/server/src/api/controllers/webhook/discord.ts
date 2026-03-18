@@ -1,10 +1,12 @@
 import { context, HTTPError } from "@budibase/backend-core"
-import type {
-  ChatConversation,
-  ChatConversationChannel,
-  Ctx,
-  DiscordConversationScope,
-  DiscordInteraction,
+import { ChatCommands, SupportedChatCommands } from "@budibase/shared-core"
+import {
+  AgentChannelProvider,
+  type ChatConversation,
+  type ChatConversationChannel,
+  type Ctx,
+  type DiscordConversationScope,
+  type DiscordInteraction,
 } from "@budibase/types"
 import { Chat } from "chat"
 import { createDiscordAdapter } from "@chat-adapter/discord"
@@ -12,6 +14,7 @@ import sdk from "../../../sdk"
 import { pickLatestConversation } from "./utils"
 import { handleChatMessage } from "./chatHandler"
 import { getDiscordState } from "./chatState"
+import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
 
 // --- Exported helpers (used by tests) ---
@@ -27,7 +30,7 @@ export const matchesDiscordConversationScope = ({
   if (
     chat.chatAppId !== scope.chatAppId ||
     chat.agentId !== scope.agentId ||
-    ch?.provider !== "discord" ||
+    ch?.provider !== AgentChannelProvider.DISCORD ||
     ch?.channelId !== scope.channelId ||
     (ch?.threadId || undefined) !== scope.threadId
   ) {
@@ -99,62 +102,99 @@ export async function discordWebhook(
         logger: "silent",
       })
 
-      chat.onSlashCommand(["/ask", "/new"], async event => {
-        const interaction = event.raw as DiscordInteraction
-        const command = event.command === "/new" ? "new" : "ask"
-        const channelId = interaction.channel_id
-        if (!channelId) return
+      chat.onSlashCommand(
+        SupportedChatCommands.map(command => `/${command}`),
+        async event => {
+          const interaction = event.raw as DiscordInteraction
+          const normalizedCommand = event.command
+            ?.replace(/^\//, "")
+            .toLowerCase()
+          const command =
+            normalizedCommand === ChatCommands.NEW
+              ? ChatCommands.NEW
+              : normalizedCommand === ChatCommands.LINK
+                ? ChatCommands.LINK
+                : ChatCommands.ASK
+          const channelId = interaction.channel_id
+          if (!channelId) return
 
-        const userId = event.user.userId
-        const displayName =
-          event.user.fullName || event.user.userName || userId || ""
+          const userId = event.user.userId
+          const displayName =
+            event.user.fullName || event.user.userName || userId || ""
 
-        const channel: ChatConversationChannel = {
-          provider: "discord",
-          channelId,
-          threadId: interaction.thread_id,
-          guildId: interaction.guild_id,
-          externalUserId: userId,
-          externalUserName: displayName,
-        }
+          const channel: ChatConversationChannel = {
+            provider: AgentChannelProvider.DISCORD,
+            channelId,
+            threadId: interaction.thread_id,
+            guildId: interaction.guild_id,
+            externalUserId: userId,
+            externalUserName: displayName,
+          }
 
-        const scope: DiscordConversationScope = {
-          chatAppId,
-          agentId,
-          channelId,
-          threadId: interaction.thread_id,
-          externalUserId: userId || "",
-        }
-
-        try {
-          await handleChatMessage({
-            reply: async (text: string) => {
-              await event.channel.post(text)
-            },
-            workspaceId,
+          const scope: DiscordConversationScope = {
             chatAppId,
             agentId,
-            provider: "discord",
-            command,
-            content: event.text || "",
-            user: { externalUserId: userId || "", displayName },
-            channel,
-            scope,
-            idleTimeoutMinutes,
-          })
-        } catch (error) {
-          console.error("Discord webhook processing failed", error)
-          const msg =
-            error instanceof HTTPError
-              ? error.message
-              : "Sorry, something went wrong while processing your request."
+            channelId,
+            threadId: interaction.thread_id,
+            externalUserId: userId || "",
+          }
+
           try {
-            await event.channel.post(msg)
-          } catch {
-            throw new Error("Failed to send error to discord")
+            await handleChatMessage({
+              reply: async (text: string) => {
+                await event.channel.post(text)
+              },
+              replyLinkPrompt: async message => {
+                const delivery = await postLinkPromptPrivately({
+                  target: event.channel,
+                  user: event.user,
+                  text: message.text,
+                  linkUrl: message.linkUrl,
+                })
+                if (delivery.usedDirectMessageFallback) {
+                  try {
+                    await event.channel.post(
+                      "I sent you a DM with your Budibase link."
+                    )
+                  } catch (error) {
+                    console.error(
+                      "Failed to post Discord link acknowledgement",
+                      error
+                    )
+                  }
+                  return
+                }
+                if (!delivery.delivered) {
+                  await event.channel.post(
+                    "I couldn't send a private Budibase link. Please try again in a direct message."
+                  )
+                }
+              },
+              workspaceId,
+              chatAppId,
+              agentId,
+              provider: AgentChannelProvider.DISCORD,
+              command,
+              content: event.text || "",
+              user: { externalUserId: userId || "", displayName },
+              channel,
+              scope,
+              idleTimeoutMinutes,
+            })
+          } catch (error) {
+            console.error("Discord webhook processing failed", error)
+            const msg =
+              error instanceof HTTPError
+                ? error.message
+                : "Sorry, something went wrong while processing your request."
+            try {
+              await event.channel.post(msg)
+            } catch {
+              throw new Error("Failed to send error to discord")
+            }
           }
         }
-      })
+      )
 
       return request => chat.webhooks.discord(request)
     },

@@ -7,7 +7,14 @@
     Toggle,
     notifications,
   } from "@budibase/bbui"
-  import { FeatureFlag, type Agent, type DeploymentRow } from "@budibase/types"
+  import {
+    AgentChannelProvider,
+    DEPLOYMENT_CHANNEL_IDS,
+    DEPLOYMENT_ID_TO_PROVIDER,
+    FeatureFlag,
+    type Agent,
+    type DeploymentRow,
+  } from "@budibase/types"
   import { selectedAgent, agentsStore, featureFlags } from "@/stores/portal"
   import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
@@ -67,45 +74,66 @@
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
   const agentChatEnabled = $derived(!!$featureFlags[FeatureFlag.AI_AGENTS])
 
-  const channels = $derived.by<DeploymentRow[]>(() => [
-    {
-      id: "discord",
+  const channelMetadata: Record<
+    AgentChannelProvider,
+    { name: string; logo: string; details: string }
+  > = {
+    [AgentChannelProvider.DISCORD]: {
       name: "Discord",
       logo: DiscordLogo,
-      status: discordEnabled ? "Enabled" : "Disabled",
       details: "Allow this agent to respond in Discord channels and threads",
-      configurable: true,
     },
-    {
-      id: "MSTeams",
+    [AgentChannelProvider.MSTEAMS]: {
       name: "Microsoft Teams",
       logo: MSTeamsLogo,
-      status: MSTeamsEnabled ? "Enabled" : "Disabled",
       details:
         "Configure this agent for Microsoft Teams personal, group, and team chats",
-      configurable: true,
     },
-    {
-      id: "slack",
+    [AgentChannelProvider.SLACK]: {
       name: "Slack",
       logo: SlackLogo,
-      status: slackEnabled ? "Enabled" : "Disabled",
       details:
         "Allow this agent to respond in Slack channels, threads, and DMs",
-      configurable: true,
     },
-  ])
+  }
+
+  const channelStatus = $derived.by(
+    () =>
+      ({
+        [AgentChannelProvider.DISCORD]: discordEnabled ? "Enabled" : "Disabled",
+        [AgentChannelProvider.MSTEAMS]: MSTeamsEnabled ? "Enabled" : "Disabled",
+        [AgentChannelProvider.SLACK]: slackEnabled ? "Enabled" : "Disabled",
+      }) as const
+  )
+
+  const channels = $derived.by<DeploymentRow[]>(() =>
+    (
+      [
+        AgentChannelProvider.DISCORD,
+        AgentChannelProvider.MSTEAMS,
+        AgentChannelProvider.SLACK,
+      ] as const
+    ).map(provider => ({
+      id: DEPLOYMENT_CHANNEL_IDS[provider],
+      name: channelMetadata[provider].name,
+      logo: channelMetadata[provider].logo,
+      status: channelStatus[provider],
+      details: channelMetadata[provider].details,
+      configurable: true,
+    }))
+  )
 
   const onConfigureChannel = (channel: DeploymentRow) => {
-    if (channel.id === "discord") {
+    const provider = DEPLOYMENT_ID_TO_PROVIDER[channel.id]
+    if (provider === AgentChannelProvider.DISCORD) {
       discordModal?.show()
       return
     }
-    if (channel.id === "MSTeams") {
+    if (provider === AgentChannelProvider.MSTEAMS) {
       MSTeamsModal?.show()
       return
     }
-    if (channel.id === "slack") {
+    if (provider === AgentChannelProvider.SLACK) {
       slackModal?.show()
       return
     }
@@ -122,7 +150,8 @@
     }
     toggling = true
     try {
-      if (channel.id === "discord") {
+      const provider = DEPLOYMENT_ID_TO_PROVIDER[channel.id]
+      if (provider === AgentChannelProvider.DISCORD) {
         if (isChannelEnabled) {
           await agentsStore.toggleDiscordDeployment(currentAgent._id, false)
           notifications.success("Discord channel disabled")
@@ -132,7 +161,7 @@
         } else {
           discordModal?.show()
         }
-      } else if (channel.id === "MSTeams") {
+      } else if (provider === AgentChannelProvider.MSTEAMS) {
         if (isChannelEnabled) {
           await agentsStore.toggleMSTeamsDeployment(currentAgent._id, false)
           notifications.success("Microsoft Teams channel disabled")
@@ -142,7 +171,7 @@
         } else {
           MSTeamsModal?.show()
         }
-      } else if (channel.id === "slack") {
+      } else if (provider === AgentChannelProvider.SLACK) {
         if (isChannelEnabled) {
           await agentsStore.toggleSlackDeployment(currentAgent._id, false)
           notifications.success("Slack channel disabled")

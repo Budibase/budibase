@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@types/jsonwebtoken": "9.0.3",
-    "@types/koa": "2.13.4",
+    "@types/koa": "3.0.1",
     "@types/koa__router": "12.0.5",
     "@types/lodash": "4.14.200",
     "@types/node-fetch": "2.6.4",

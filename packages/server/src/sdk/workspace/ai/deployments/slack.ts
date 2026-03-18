@@ -1,5 +1,9 @@
 import { HTTPError } from "@budibase/backend-core"
-import type { Agent, ResolvedSlackIntegration } from "@budibase/types"
+import {
+  AgentChannelProvider,
+  type Agent,
+  type ResolvedSlackIntegration,
+} from "@budibase/types"
 import * as shared from "./shared"
 
 export const validateSlackIntegration = (
@@ -38,4 +42,9 @@ export const resolveChatAppForAgent = async (
 export const buildSlackWebhookUrl = async (
   chatAppId: string,
   agentId: string
-) => await shared.buildProviderWebhookUrl("slack", chatAppId, agentId)
+) =>
+  await shared.buildProviderWebhookUrl(
+    AgentChannelProvider.SLACK,
+    chatAppId,
+    agentId
+  )

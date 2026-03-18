@@ -1,7 +1,7 @@
 import crypto from "crypto"
 import nock from "nock"
 import { db, encryption } from "@budibase/backend-core"
-import { DiscordCommands } from "@budibase/shared-core"
+import { ChatCommands } from "@budibase/shared-core"
 import type { Agent } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
@@ -88,16 +88,22 @@ describe("agent discord integration sync", () => {
         const commands = payload as Array<{ name: string; contexts?: number[] }>
         return (
           Array.isArray(commands) &&
-          commands.length === 2 &&
+          commands.length === 3 &&
           commands.some(
             command =>
-              command.name === DiscordCommands.ASK &&
+              command.name === ChatCommands.ASK &&
               command.contexts?.includes(1) &&
               !command.contexts?.includes(0)
           ) &&
           commands.some(
             command =>
-              command.name === DiscordCommands.NEW &&
+              command.name === ChatCommands.NEW &&
+              command.contexts?.includes(1) &&
+              !command.contexts?.includes(0)
+          ) &&
+          commands.some(
+            command =>
+              command.name === ChatCommands.LINK &&
               command.contexts?.includes(1) &&
               !command.contexts?.includes(0)
           )
@@ -105,8 +111,9 @@ describe("agent discord integration sync", () => {
       })
       .matchHeader("authorization", "Bot bot-secret")
       .reply(200, [
-        { id: "cmd-1", name: DiscordCommands.ASK },
-        { id: "cmd-2", name: DiscordCommands.NEW },
+        { id: "cmd-1", name: ChatCommands.ASK },
+        { id: "cmd-2", name: ChatCommands.NEW },
+        { id: "cmd-3", name: ChatCommands.LINK },
       ])
     const guildScope = nock("https://discord.com")
       .put(
@@ -115,16 +122,18 @@ describe("agent discord integration sync", () => {
           const commands = payload as Array<{ name: string }>
           return (
             Array.isArray(commands) &&
-            commands.length === 2 &&
-            commands.some(command => command.name === DiscordCommands.ASK) &&
-            commands.some(command => command.name === DiscordCommands.NEW)
+            commands.length === 3 &&
+            commands.some(command => command.name === ChatCommands.ASK) &&
+            commands.some(command => command.name === ChatCommands.NEW) &&
+            commands.some(command => command.name === ChatCommands.LINK)
           )
         }
       )
       .matchHeader("authorization", "Bot bot-secret")
       .reply(200, [
-        { id: "cmd-1", name: DiscordCommands.ASK },
-        { id: "cmd-2", name: DiscordCommands.NEW },
+        { id: "cmd-1", name: ChatCommands.ASK },
+        { id: "cmd-2", name: ChatCommands.NEW },
+        { id: "cmd-3", name: ChatCommands.LINK },
       ])
 
     const result = await config.api.agent.syncDiscordCommands(agent._id!)

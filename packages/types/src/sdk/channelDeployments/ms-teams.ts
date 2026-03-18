@@ -48,11 +48,10 @@ export interface MSTeamsConversationScope {
   chatAppId: string
   agentId: string
   conversationId: string
+  threadId: string
   channelId?: string
   externalUserId: string
 }
-
-export type MSTeamsCommand = "ask" | "new" | "unsupported"
 
 export interface ResolvedMSTeamsIntegration {
   appId: string
