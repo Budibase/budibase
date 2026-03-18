@@ -1,50 +1,32 @@
 import { yamlProcessor } from "../yaml"
 
 describe("yamlProcessor", () => {
-  it("extracts OpenAPI chunks from yaml", async () => {
+  it("extracts structured chunks from nested yaml", async () => {
     const chunks = await yamlProcessor.process({
       buffer: Buffer.from(`
-openapi: 3.0.0
-info:
-  title: Pets API
-  version: 1.2.3
-paths:
-  /pets:
-    get:
-      summary: List pets
-      tags: [pets]
-      parameters:
-        - name: limit
-          in: query
-          required: false
-      responses:
-        "200":
-          description: Success
-components:
-  schemas:
-    Pet:
-      description: A pet object
-      properties:
-        id:
-          type: string
+service:
+  name: Customer Support
+  region: EMEA
+  sla:
+    firstResponseMinutes: 15
+teams:
+  - support-ops
+  - security-ops
+contacts:
+  primary:
+    email: support@example.com
       `),
     })
 
     expect(chunks).toContain(
-      ["OpenAPI 3.0.0", "Title: Pets API", "Version: 1.2.3"].join("\n")
-    )
-    expect(chunks).toContain(
       [
-        "GET /pets",
-        "List pets",
-        "Tags: pets",
-        "Parameters: limit (query) - optional",
-        "Responses: 200: Success",
+        "service.name: Customer Support",
+        "service.region: EMEA",
+        "service.sla.firstResponseMinutes: 15",
       ].join("\n")
     )
-    expect(chunks).toContain(
-      ["Schema: Pet", "A pet object", "Properties: id"].join("\n")
-    )
+    expect(chunks).toContain("teams: support-ops, security-ops")
+    expect(chunks).toContain("contacts.primary.email: support@example.com")
   })
 
   it("falls back to plain chunking for invalid yaml", async () => {
@@ -57,16 +39,31 @@ components:
     expect(chunks).toEqual(["not: [valid"])
   })
 
-  it("falls back to plain chunking for non-openapi yaml", async () => {
+  it("extracts structured chunks for simple yaml", async () => {
     const content = `
 name: Customer Support
 region: EMEA
+features:
+  - case-routing
+  - sla-tracking
+contacts:
+  primary:
+    email: support@example.com
+    phone: "+33 1 00 00 00 00"
     `
 
     const chunks = await yamlProcessor.process({
       buffer: Buffer.from(content),
     })
 
-    expect(chunks).toEqual(["name: Customer Support\nregion: EMEA"])
+    expect(chunks).toContain("name: Customer Support")
+    expect(chunks).toContain("region: EMEA")
+    expect(chunks).toContain("features: case-routing, sla-tracking")
+    expect(chunks).toContain(
+      [
+        "contacts.primary.email: support@example.com",
+        "contacts.primary.phone: +33 1 00 00 00 00",
+      ].join("\n")
+    )
   })
 })

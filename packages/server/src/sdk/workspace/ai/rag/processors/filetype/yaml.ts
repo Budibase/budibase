@@ -2,100 +2,86 @@ import { parse as parseYaml } from "yaml"
 import { chunkDocument, getDefaultChunkSize } from "../shared"
 import type { RagFileProcessor, RagProcessInput } from "../types"
 
-const formatParameters = (parameters: any[] = []) => {
-  if (!Array.isArray(parameters) || parameters.length === 0) {
-    return "None"
-  }
-  return parameters
-    .map(param => {
-      const location = param?.in ? `(${param.in})` : ""
-      const required = param?.required ? "required" : "optional"
-      return `${param?.name ?? "unknown"} ${location} - ${required}`
-    })
-    .join("; ")
+type YamlScalar = string | number | boolean | null
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null
 }
 
-const formatResponses = (responses: Record<string, any> = {}) => {
-  const entries = Object.entries(responses)
-  if (entries.length === 0) {
-    return "None"
+const isYamlScalar = (value: unknown): value is YamlScalar => {
+  return (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  )
+}
+
+const scalarToString = (value: YamlScalar): string => {
+  if (value === null) {
+    return "null"
   }
-  return entries
-    .map(
-      ([status, response]) =>
-        `${status}: ${response?.description ?? "No description"}`
+  return String(value)
+}
+
+const flattenYaml = (value: unknown, path: string[] = []): string[] => {
+  if (isYamlScalar(value)) {
+    const key = path.join(".") || "value"
+    return [`${key}: ${scalarToString(value)}`]
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      const key = path.join(".") || "value"
+      return [`${key}: []`]
+    }
+
+    if (value.every(isYamlScalar)) {
+      const key = path.join(".") || "value"
+      const rendered = value
+        .map(item => scalarToString(item as YamlScalar))
+        .join(", ")
+      return [`${key}: ${rendered}`]
+    }
+
+    return value.flatMap((item, index) =>
+      flattenYaml(item, [...path, `[${index}]`])
     )
-    .join("; ")
+  }
+
+  if (isRecord(value)) {
+    const entries = Object.entries(value)
+    if (entries.length === 0) {
+      const key = path.join(".") || "value"
+      return [`${key}: {}`]
+    }
+    return entries.flatMap(([key, child]) => flattenYaml(child, [...path, key]))
+  }
+
+  const key = path.join(".") || "value"
+  return [`${key}: ${String(value)}`]
 }
 
-const buildOpenApiChunks = (doc: Record<string, any>) => {
-  if (!doc || typeof doc !== "object") {
+const buildYamlChunks = (doc: unknown): string[] => {
+  if (isYamlScalar(doc)) {
+    return [`value: ${scalarToString(doc)}`]
+  }
+
+  if (Array.isArray(doc)) {
+    const lines = flattenYaml(doc)
+    return lines.length > 0 ? [lines.join("\n")] : []
+  }
+
+  if (!isRecord(doc)) {
     return []
   }
 
-  const chunks: string[] = []
+  const chunks = Object.entries(doc).map(([topLevelKey, value]) => {
+    const lines = flattenYaml(value, [topLevelKey])
+    return lines.join("\n")
+  })
 
-  if (doc.info) {
-    chunks.push(
-      [
-        `OpenAPI ${doc.openapi ?? ""}`.trim(),
-        doc.info.title ? `Title: ${doc.info.title}` : null,
-        doc.info.version ? `Version: ${doc.info.version}` : null,
-        doc.info.description ?? null,
-      ]
-        .filter(Boolean)
-        .join("\n")
-    )
-  }
-
-  if (doc.paths && typeof doc.paths === "object") {
-    for (const [pathKey, methods] of Object.entries<any>(doc.paths)) {
-      if (!methods || typeof methods !== "object") {
-        continue
-      }
-      for (const [method, definition] of Object.entries<any>(methods)) {
-        if (!definition || typeof definition !== "object") {
-          continue
-        }
-        chunks.push(
-          [
-            `${method.toUpperCase()} ${pathKey}`,
-            definition.summary ??
-              definition.operationId ??
-              "No summary provided",
-            definition.description ?? "",
-            Array.isArray(definition.tags)
-              ? `Tags: ${definition.tags.join(", ")}`
-              : "",
-            `Parameters: ${formatParameters(definition.parameters)}`,
-            `Responses: ${formatResponses(definition.responses)}`,
-          ]
-            .filter(Boolean)
-            .join("\n")
-        )
-      }
-    }
-  }
-
-  if (doc.components?.schemas) {
-    for (const [schemaName, schemaDef] of Object.entries<any>(
-      doc.components.schemas
-    )) {
-      const props =
-        schemaDef?.properties && typeof schemaDef.properties === "object"
-          ? Object.keys(schemaDef.properties).join(", ")
-          : "No properties listed"
-      chunks.push(
-        [
-          `Schema: ${schemaName}`,
-          schemaDef?.description ?? "No description",
-          `Properties: ${props}`,
-        ].join("\n")
-      )
-    }
-  }
-
-  return chunks
+  return chunks.filter(Boolean)
 }
 
 export const yamlProcessor: RagFileProcessor = {
@@ -104,9 +90,9 @@ export const yamlProcessor: RagFileProcessor = {
 
     try {
       const parsed = parseYaml(content)
-      const openApiChunks = buildOpenApiChunks(parsed)
-      if (openApiChunks.length > 0) {
-        return openApiChunks.flatMap(chunk =>
+      const genericChunks = buildYamlChunks(parsed)
+      if (genericChunks.length > 0) {
+        return genericChunks.flatMap(chunk =>
           chunk.length > getDefaultChunkSize() ? chunkDocument(chunk) : [chunk]
         )
       }
