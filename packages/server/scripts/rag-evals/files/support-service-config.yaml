@@ -1,0 +1,12 @@
+service:
+  name: Customer Support Platform
+  escalationEmail: incident-response@example.com
+  onCallRotation: follow-the-sun
+sla:
+  sev1FirstResponseMinutes: 15
+  sev2FirstResponseMinutes: 60
+  sev3FirstResponseBusinessDays: 1
+regions:
+  - EMEA
+  - AMER
+  - APAC

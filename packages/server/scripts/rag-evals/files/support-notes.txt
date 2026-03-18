@@ -1,0 +1,6 @@
+Support Operations Notes
+
+1. Standard refund window is 30 days from invoice date.
+2. Billing escalation phone number is +1-555-0100.
+3. Priority queue for severe outages is SUPPORT-P1.
+4. Weekend emergency mailbox is weekend-support@example.com.
