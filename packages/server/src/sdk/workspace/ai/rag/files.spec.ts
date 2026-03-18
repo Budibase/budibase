@@ -145,6 +145,10 @@ describe("rag files", () => {
         [
           "Product Support Knowledge Base > Account Management > Password Reset Policy",
           "Users can reset passwords from the account security page.",
+        ].join("\n")
+      )
+      expect(chunks).toContain(
+        [
           "Product Support Knowledge Base > Account Management > Password Reset Policy",
           "Password reset links expire after 30 minutes.",
         ].join("\n")

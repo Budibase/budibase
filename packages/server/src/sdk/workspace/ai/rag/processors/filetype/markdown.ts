@@ -21,15 +21,18 @@ const pushChunk = (chunks: string[], facts: string[]) => {
   if (facts.length === 0) {
     return
   }
-  const block = facts.join("\n").trim()
+  const pendingFacts = [...facts]
   facts.length = 0
-  if (!block) {
-    return
-  }
-  if (block.length > getDefaultChunkSize()) {
-    chunks.push(...chunkDocument(block))
-  } else {
-    chunks.push(block)
+  for (const fact of pendingFacts) {
+    const normalized = fact.trim()
+    if (!normalized) {
+      continue
+    }
+    if (normalized.length > getDefaultChunkSize()) {
+      chunks.push(...chunkDocument(normalized))
+    } else {
+      chunks.push(normalized)
+    }
   }
 }
 
