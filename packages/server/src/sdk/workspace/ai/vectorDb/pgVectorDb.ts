@@ -15,7 +15,7 @@ import type {
   ChunkInput,
   PgVectorDbConfig,
   QueryResultRow,
-  VectorDb,
+  VectorDbClient,
 } from "./types"
 
 const vectorLiteral = (values: number[]) =>
@@ -121,7 +121,7 @@ export const buildPgVectorDbConfig = (
   })
 }
 
-class PgVectorDb implements VectorDb {
+class PgVectorDb implements VectorDbClient {
   private readonly tableName: string
 
   constructor(private readonly config: PgVectorDbConfig) {

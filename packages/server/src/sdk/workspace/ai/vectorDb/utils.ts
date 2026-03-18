@@ -1,6 +1,6 @@
 import { VectorDbProvider } from "@budibase/types"
 import { buildPgVectorDbConfig, resolvePgVectorDbConfig } from "./pgVectorDb"
-import type { VectorDb as VectorDbClient } from "./types"
+import type { VectorDbClient } from "./types"
 import { utils } from "@budibase/shared-core"
 import sdk from "../../.."
 
