@@ -225,7 +225,7 @@ describe("agentLogs", () => {
   }
 
   beforeAll(async () => {
-    await config.init("agent-logs")
+    await config.init()
   })
 
   beforeEach(async () => {

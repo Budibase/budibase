@@ -1019,7 +1019,7 @@ describe("Agent chat tool call tracking", () => {
   }
 
   beforeAll(async () => {
-    await config.init("chat-conversation-quota")
+    await config.init()
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
