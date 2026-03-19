@@ -21,6 +21,10 @@ const isYamlScalar = (value: unknown): value is YamlScalar => {
   )
 }
 
+const isSet = (value: unknown): value is Set<unknown> => {
+  return value instanceof Set
+}
+
 const scalarToString = (value: YamlScalar): string => {
   if (value === null) {
     return "null"
@@ -60,6 +64,35 @@ const flattenYaml = (
     }
 
     const lines = value.flatMap((item, index) =>
+      flattenYaml(item, [...path, `[${index}]`], ancestors)
+    )
+    ancestors.delete(value)
+    return lines
+  }
+
+  if (isSet(value)) {
+    if (ancestors.has(value)) {
+      const key = path.join(".") || "value"
+      return [`${key}: [Circular]`]
+    }
+    ancestors.add(value)
+    const items = Array.from(value.values())
+    if (items.length === 0) {
+      const key = path.join(".") || "value"
+      ancestors.delete(value)
+      return [`${key}: []`]
+    }
+
+    if (items.every(isYamlScalar)) {
+      const key = path.join(".") || "value"
+      const rendered = items
+        .map(item => scalarToString(item as YamlScalar))
+        .join(", ")
+      ancestors.delete(value)
+      return [`${key}: ${rendered}`]
+    }
+
+    const lines = items.flatMap((item, index) =>
       flattenYaml(item, [...path, `[${index}]`], ancestors)
     )
     ancestors.delete(value)

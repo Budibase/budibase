@@ -91,7 +91,7 @@ set: !!set
 
     const text = chunks.join("\n")
     expect(text).toContain("ts: ")
-    expect(text).toContain("set: [object Set]")
+    expect(text).toContain("set: red, blue")
     expect(text).not.toContain("ts: {}")
     expect(text).not.toContain("set: {}")
   })
