@@ -884,6 +884,7 @@ async function main() {
     port: runtimeEnv.vectorDbPort,
     database: runtimeEnv.vectorDbDatabase,
     user: runtimeEnv.vectorDbUser,
+    password: runtimeEnv.vectorDbPassword,
   })
 
   const knowledgeBaseFingerprint = fingerprint({
