@@ -78,4 +78,21 @@ node: &node
 
     expect(chunks).toContain("node.name: root\nnode.self: [Circular]")
   })
+
+  it("does not flatten tagged yaml values as empty objects", async () => {
+    const chunks = await yamlProcessor.process({
+      buffer: Buffer.from(`
+ts: !!timestamp 2020-01-02T03:04:05Z
+set: !!set
+  ? red
+  ? blue
+      `),
+    })
+
+    const text = chunks.join("\n")
+    expect(text).toContain("ts: ")
+    expect(text).toContain("set: [object Set]")
+    expect(text).not.toContain("ts: {}")
+    expect(text).not.toContain("set: {}")
+  })
 })

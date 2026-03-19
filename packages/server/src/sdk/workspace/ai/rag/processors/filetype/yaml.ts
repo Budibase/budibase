@@ -5,7 +5,11 @@ import type { RagFileProcessor, RagProcessInput } from "../types"
 type YamlScalar = string | number | boolean | null
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null
+  if (typeof value !== "object" || value === null) {
+    return false
+  }
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
 }
 
 const isYamlScalar = (value: unknown): value is YamlScalar => {
