@@ -95,4 +95,16 @@ set: !!set
     expect(text).not.toContain("ts: {}")
     expect(text).not.toContain("set: {}")
   })
+
+  it("extracts structured chunks for top-level yaml sets", async () => {
+    const chunks = await yamlProcessor.process({
+      buffer: Buffer.from(`
+!!set
+? red
+? blue
+      `),
+    })
+
+    expect(chunks).toEqual(["value: red, blue"])
+  })
 })

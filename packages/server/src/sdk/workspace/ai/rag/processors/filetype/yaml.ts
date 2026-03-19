@@ -132,6 +132,11 @@ const buildYamlChunks = (doc: unknown): string[] => {
     return lines.length > 0 ? [lines.join("\n")] : []
   }
 
+  if (isSet(doc)) {
+    const lines = flattenYaml(doc)
+    return lines.length > 0 ? [lines.join("\n")] : []
+  }
+
   if (!isRecord(doc)) {
     return []
   }
