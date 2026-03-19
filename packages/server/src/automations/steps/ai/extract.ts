@@ -46,8 +46,12 @@ function toImageDataUrl(data: Buffer, value: SupportedFileType): string {
 
 async function extractPdfText(data: Buffer): Promise<string> {
   const parser = new PDFParse({ data: data as any })
-  const parsed = await parser.getText()
-  return (parsed.text || "").trim()
+  try {
+    const parsed = await parser.getText()
+    return (parsed.text || "").trim()
+  } finally {
+    await parser.destroy()
+  }
 }
 
 const MAX_INLINE_DOC_TEXT_LENGTH = 20000
