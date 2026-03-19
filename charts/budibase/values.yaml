@@ -168,8 +168,9 @@ services:
   proxy:
     # @ignore (you shouldn't need to change this)
     port: 10000
-    # -- The number of proxy replicas to run.
-    replicaCount: 1
+    # -- The number of proxy replicas to run. Must be >= 2 when
+    # podDisruptionBudget is enabled, otherwise node drains will be blocked.
+    replicaCount: 2
     # @ignore (you should never need to change this)
     upstreams:
       apps: "http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}"
@@ -178,7 +179,8 @@ services:
       couchdb: "http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}"
     # -- The time in seconds to wait before sending SIGKILL after SIGTERM.
     # Must be greater than preStopDelaySeconds to allow graceful shutdown.
-    terminationGracePeriodSeconds: 60
+    # With a 45s preStop sleep, 90s leaves 45s for the process to handle SIGTERM.
+    terminationGracePeriodSeconds: 90
     # -- Seconds to sleep before SIGTERM to allow ALB target deregistration.
     # Must exceed ALB health check detection time (healthCheckInterval × unhealthyThreshold)
     # to prevent 503s during rolling updates.
@@ -256,8 +258,9 @@ services:
   apps:
     # @ignore (you shouldn't need to change this)
     port: 4002
-    # -- The number of apps replicas to run.
-    replicaCount: 1
+    # -- The number of apps replicas to run. Must be >= 2 when
+    # podDisruptionBudget is enabled, otherwise node drains will be blocked.
+    replicaCount: 2
     # -- The log level for the apps service.
     logLevel: info
     # -- Whether or not to log HTTP requests to the apps service.
@@ -268,8 +271,9 @@ services:
     resources: {}
     # -- The amount of time to wait between requesting a shutdown and killing the
     # container. This is used to give the apps service time to finish processing
-    # any requests before shutting down. You shouldn't need to change this.
-    terminationGracePeriodSeconds: 60
+    # any requests before shutting down. With a 45s preStop sleep, 90s leaves
+    # 45s for the process to handle SIGTERM.
+    terminationGracePeriodSeconds: 90
     # -- Seconds to wait after pod is Ready before adding to endpoints.
     # Ensures pods are stable before receiving traffic.
     minReadySeconds: 10
@@ -454,8 +458,9 @@ services:
   worker:
     # @ignore (you shouldn't need to change this)
     port: 4003
-    # -- The number of worker replicas to run.
-    replicaCount: 1
+    # -- The number of worker replicas to run. Must be >= 2 when
+    # podDisruptionBudget is enabled, otherwise node drains will be blocked.
+    replicaCount: 2
     # -- The log level for the worker service.
     logLevel: info
     # -- Whether or not to log HTTP requests to the worker service.
@@ -466,9 +471,9 @@ services:
     resources: {}
     # -- The amount of time to wait between requesting a shutdown and killing
     # the container. This is used to give the worker service time to finish
-    # processing any requests before shutting down. You shouldn't need to change
-    # this.
-    terminationGracePeriodSeconds: 60
+    # processing any requests before shutting down. With a 45s preStop sleep,
+    # 90s leaves 45s for the process to handle SIGTERM.
+    terminationGracePeriodSeconds: 90
     # -- Seconds to wait after pod is Ready before adding to endpoints.
     # Ensures pods are stable before receiving traffic.
     minReadySeconds: 10
