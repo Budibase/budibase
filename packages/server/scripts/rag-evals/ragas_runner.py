@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
+import asyncio
 import json
 import math
+import os
 import sys
-from typing import Any, Dict, List
-
+from typing import Any, Dict, List, Tuple
 
 METRIC_NAMES = [
-    "answer_correctness",
-    "answer_relevancy",
+    "factual_correctness",
+    "response_relevancy",
     "context_precision",
     "context_recall",
     "faithfulness",
 ]
+DEFAULT_LLM_MODEL = "gpt-4o-mini"
+DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
 
 
 def _safe_float(value: Any) -> float:
@@ -46,16 +49,113 @@ def _to_json_safe(value: Any) -> Any:
     return value
 
 
-def _load_ragas():
+def _load_ragas() -> Tuple[List[Tuple[str, Any]], Dict[str, str]]:
     try:
-        from datasets import Dataset  # type: ignore
-        from ragas import evaluate  # type: ignore
+        from langchain_openai import OpenAIEmbeddings  # type: ignore
+        from openai import AsyncOpenAI  # type: ignore
+        from ragas import __version__ as ragas_version  # type: ignore
+        from ragas.llms import llm_factory  # type: ignore
+        from ragas.metrics import (  # type: ignore
+            ContextPrecision,
+            ContextRecall,
+            FactualCorrectness,
+            Faithfulness,
+            AnswerRelevancy,
+        )
     except Exception as err:
         raise RuntimeError(
             "Missing Python deps for RAGAS. Install with: pip install ragas datasets openai"
         ) from err
 
-    return Dataset, evaluate
+    llm_model = os.getenv("RAGAS_EVAL_LLM_MODEL", DEFAULT_LLM_MODEL)
+    embedding_model = os.getenv("RAGAS_EVAL_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
+
+    client = AsyncOpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_BASE_URL") or os.getenv("OPENAI_API_BASE"),
+    )
+    llm = llm_factory(llm_model, client=client)
+    # Response relevancy expects embed_query/embed_documents methods.
+    response_relevancy_embeddings = OpenAIEmbeddings(
+        model=embedding_model,
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_BASE_URL") or os.getenv("OPENAI_API_BASE"),
+    )
+
+    metrics: List[Tuple[str, Any]] = [
+        (
+            "factual_correctness",
+            FactualCorrectness(name="factual_correctness", llm=llm),
+        ),
+        (
+            "response_relevancy",
+            AnswerRelevancy(
+                name="response_relevancy",
+                llm=llm,
+                embeddings=response_relevancy_embeddings,
+            ),
+        ),
+        ("context_precision", ContextPrecision(llm=llm)),
+        ("context_recall", ContextRecall(name="context_recall", llm=llm)),
+        ("faithfulness", Faithfulness(name="faithfulness", llm=llm)),
+    ]
+
+    meta = {
+        "ragasVersion": str(ragas_version),
+        "llmModel": llm_model,
+        "embeddingModel": embedding_model,
+        "sampleClass": "SingleTurnSample",
+        "datasetClass": "EvaluationDataset",
+    }
+    return metrics, meta
+
+
+def _build_single_turn_sample(sample: Dict[str, Any]) -> Any:
+    from ragas import SingleTurnSample  # type: ignore
+
+    return SingleTurnSample(
+        user_input=sample.get("question", "") or "",
+        response=sample.get("answer", "") or "",
+        retrieved_contexts=sample.get("contexts", []) or [],
+        reference=sample.get("reference", "") or "",
+    )
+
+
+def _score_metric(metric: Any, sample: Any) -> float:
+    return _safe_float(asyncio.run(metric.single_turn_ascore(sample)))
+
+
+def _score_cases(
+    eval_samples: List[Any], case_ids: List[str], metric_items: List[Tuple[str, Any]]
+) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
+    by_case: List[Dict[str, Any]] = []
+    metric_errors: Dict[str, str] = {}
+
+    for index, single_turn_sample in enumerate(eval_samples):
+        row: Dict[str, Any] = {"case_id": case_ids[index]}
+        for metric_name, metric in metric_items:
+            try:
+                score = _score_metric(metric, single_turn_sample)
+                row[metric_name] = score if math.isfinite(score) else None
+            except Exception as err:
+                row[metric_name] = None
+                if metric_name not in metric_errors:
+                    metric_errors[metric_name] = str(err)
+        by_case.append(row)
+
+    return by_case, metric_errors
+
+
+def _compute_aggregate(
+    by_case: List[Dict[str, Any]], metric_names: List[str]
+) -> Dict[str, float]:
+    aggregate: Dict[str, float] = {}
+    for metric_name in metric_names:
+        values = [_safe_float(row.get(metric_name)) for row in by_case]
+        metric_mean = _mean(values)
+        if math.isfinite(metric_mean):
+            aggregate[metric_name] = metric_mean
+    return aggregate
 
 
 def main():
@@ -72,39 +172,31 @@ def main():
     if not isinstance(samples, list) or len(samples) == 0:
         raise RuntimeError("Input payload must include non-empty 'samples' array")
 
-    Dataset, evaluate = _load_ragas()
+    from ragas import EvaluationDataset  # type: ignore
 
-    rows = {
-        "user_input": [sample["question"] for sample in samples],
-        "response": [sample["answer"] for sample in samples],
-        "retrieved_contexts": [sample.get("contexts", []) for sample in samples],
-        "reference": [sample.get("reference", "") or "" for sample in samples],
-        "case_id": [sample.get("caseId", "") for sample in samples],
-    }
-
-    dataset = Dataset.from_dict(rows)
-    result = evaluate(dataset=dataset)
-
-    scores = getattr(result, "scores", None)
-    if not isinstance(scores, list):
-        raise RuntimeError("RAGAS result.scores is not available")
-
-    by_case = [row for row in scores if isinstance(row, dict)]
-    aggregate: Dict[str, float] = {}
-    for metric_name in METRIC_NAMES:
-        values = [_safe_float(row.get(metric_name)) for row in by_case]
-        metric_mean = _mean(values)
-        if math.isfinite(metric_mean):
-            aggregate[metric_name] = metric_mean
+    metrics, meta = _load_ragas()
+    eval_samples = [_build_single_turn_sample(sample) for sample in samples]
+    case_ids = [str(sample.get("caseId", "") or "") for sample in samples]
+    eval_dataset = EvaluationDataset(samples=eval_samples)
+    by_case, metric_errors = _score_cases(eval_dataset.samples, case_ids, metrics)
+    aggregate = _compute_aggregate(by_case, METRIC_NAMES)
 
     if not aggregate:
+        if metric_errors:
+            details = "; ".join(
+                f"{name}: {message}" for name, message in sorted(metric_errors.items())
+            )
+            raise RuntimeError(
+                f"RAGAS evaluation returned no aggregate metrics. Metric errors: {details}"
+            )
         raise RuntimeError("RAGAS evaluation returned no aggregate metrics")
 
     output = {
         "schema": "modern",
         "aggregate": aggregate,
         "byCase": by_case,
-        "raw": {"repr": repr(result)},
+        "diagnostics": {"metricErrors": metric_errors},
+        "raw": {"meta": meta},
     }
 
     with open(output_path, "w", encoding="utf-8") as output_file:

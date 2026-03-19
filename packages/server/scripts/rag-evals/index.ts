@@ -101,8 +101,8 @@ interface RuntimeEnv {
   ragasMinContextPrecision?: number
   ragasMinContextRecall?: number
   ragasMinFaithfulness?: number
-  ragasMinAnswerRelevancy?: number
-  ragasMinAnswerCorrectness?: number
+  ragasMinResponseRelevancy?: number
+  ragasMinFactualCorrectness?: number
   ragasThreshold?: number
 }
 
@@ -218,12 +218,10 @@ function getRuntimeEnv(): RuntimeEnv {
       parseOptionalNumber("RAG_EVAL_RAGAS_MIN_CONTEXT_RECALL") ?? 0.9,
     ragasMinFaithfulness:
       parseOptionalNumber("RAG_EVAL_RAGAS_MIN_FAITHFULNESS") ?? 0.75,
-    ragasMinAnswerRelevancy: parseOptionalNumber(
-      "RAG_EVAL_RAGAS_MIN_ANSWER_RELEVANCY"
-    ),
-    ragasMinAnswerCorrectness: parseOptionalNumber(
-      "RAG_EVAL_RAGAS_MIN_ANSWER_CORRECTNESS"
-    ),
+    ragasMinResponseRelevancy:
+      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_RESPONSE_RELEVANCY") ?? 0.7,
+    ragasMinFactualCorrectness:
+      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_FACTUAL_CORRECTNESS") ?? 0.7,
     ragasThreshold: parseOptionalNumber("RAG_EVAL_RAGAS_THRESHOLD"),
   }
 }
@@ -738,12 +736,12 @@ function evaluateMetricRails(
       min: runtimeEnv.ragasMinFaithfulness,
     },
     {
-      metricName: "answer_relevancy",
-      min: runtimeEnv.ragasMinAnswerRelevancy,
+      metricName: "response_relevancy",
+      min: runtimeEnv.ragasMinResponseRelevancy,
     },
     {
-      metricName: "answer_correctness",
-      min: runtimeEnv.ragasMinAnswerCorrectness,
+      metricName: "factual_correctness",
+      min: runtimeEnv.ragasMinFactualCorrectness,
     },
   ]
 
@@ -1272,8 +1270,8 @@ async function main() {
         "context_precision",
         "context_recall",
         "faithfulness",
-        "answer_relevancy",
-        "answer_correctness",
+        "response_relevancy",
+        "factual_correctness",
       ]
       const availability = summarizeMetricAvailability(ragas, expectedMetrics)
       if (availability.length > 0) {
