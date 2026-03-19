@@ -167,7 +167,7 @@ describe("rag files", () => {
 
       expect(chunks).toContain(
         [
-          "> The **Incident Response** Runbook `v2`",
+          "The **Incident Response** Runbook `v2`",
           "Escalation path: Security Operations",
         ].join("\n")
       )
@@ -188,13 +188,13 @@ describe("rag files", () => {
 
       expect(chunks).toContain(
         [
-          " > Regional Offices",
+          "Regional Offices",
           "Location: Paris; Description: European support and compliance operations",
         ].join("\n")
       )
       expect(chunks).toContain(
         [
-          " > Regional Offices",
+          "Regional Offices",
           "Location: New York; Description: North American customer success operations",
         ].join("\n")
       )

@@ -12,8 +12,9 @@ const buildContextualFact = (context: string[], text: string) => {
   if (!normalizedText) {
     return null
   }
-  return context.length > 0
-    ? `${context.join(" > ")}\n${normalizedText}`
+  const normalizedContext = context.filter(Boolean)
+  return normalizedContext.length > 0
+    ? `${normalizedContext.join(" > ")}\n${normalizedText}`
     : normalizedText
 }
 

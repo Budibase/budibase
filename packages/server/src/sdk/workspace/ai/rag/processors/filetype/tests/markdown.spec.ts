@@ -37,7 +37,7 @@ describe("markdownProcessor", () => {
 
     expect(chunks).toEqual([
       [
-        "> The **Incident Response** Runbook `v2`",
+        "The **Incident Response** Runbook `v2`",
         "Escalation path: Security Operations",
       ].join("\n"),
     ])
@@ -56,8 +56,8 @@ describe("markdownProcessor", () => {
     })
 
     expect(chunks).toEqual([
-      " > Regional Offices\nLocation: Paris; Description: European support and compliance operations",
-      " > Regional Offices\nLocation: New York; Description: North American customer success operations",
+      "Regional Offices\nLocation: Paris; Description: European support and compliance operations",
+      "Regional Offices\nLocation: New York; Description: North American customer success operations",
     ])
   })
 })

@@ -25,7 +25,7 @@ describe("rag processors", () => {
 
     expect(chunks).toContain(
       [
-        "> The **Incident Response** Runbook `v2`",
+        "The **Incident Response** Runbook `v2`",
         "Escalation path: Security Operations",
       ].join("\n")
     )
@@ -63,7 +63,7 @@ teams:
 
     expect(chunks).toContain(
       [
-        "> The **Incident Response** Runbook `v2`",
+        "The **Incident Response** Runbook `v2`",
         "Escalation path: Security Operations",
       ].join("\n")
     )
