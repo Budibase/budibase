@@ -112,6 +112,7 @@ describe("extract file data step unit tests", () => {
           getText: jest
             .fn()
             .mockResolvedValue({ text: "invoice number INV-1" }),
+          destroy: jest.fn(),
         }) as any
     )
 
