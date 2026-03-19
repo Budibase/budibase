@@ -218,10 +218,12 @@ function getRuntimeEnv(): RuntimeEnv {
       parseOptionalNumber("RAG_EVAL_RAGAS_MIN_CONTEXT_RECALL") ?? 0.9,
     ragasMinFaithfulness:
       parseOptionalNumber("RAG_EVAL_RAGAS_MIN_FAITHFULNESS") ?? 0.75,
-    ragasMinAnswerRelevancy:
-      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_ANSWER_RELEVANCY") ?? 0.7,
-    ragasMinAnswerCorrectness:
-      parseOptionalNumber("RAG_EVAL_RAGAS_MIN_ANSWER_CORRECTNESS") ?? 0.7,
+    ragasMinAnswerRelevancy: parseOptionalNumber(
+      "RAG_EVAL_RAGAS_MIN_ANSWER_RELEVANCY"
+    ),
+    ragasMinAnswerCorrectness: parseOptionalNumber(
+      "RAG_EVAL_RAGAS_MIN_ANSWER_CORRECTNESS"
+    ),
     ragasThreshold: parseOptionalNumber("RAG_EVAL_RAGAS_THRESHOLD"),
   }
 }
