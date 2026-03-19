@@ -16,6 +16,7 @@
     WithoutDocMetadata,
   } from "@budibase/types"
   import { getThemeClassNames } from "@budibase/shared-core"
+  import { confirm } from "@/helpers"
   import { onMount } from "svelte"
 
   import ChatConversationPanel from "./ChatConversationPanel.svelte"
@@ -227,28 +228,40 @@
     }
   }
 
-  const deleteCurrentChat = async () => {
-    if (!selectedAgentId || !chat?._id || deletingChat) {
+  const deleteConversation = async (conversationId?: string) => {
+    if (!conversationId || deletingChat) {
       return
     }
 
     deletingChat = true
 
     try {
-      await chatAppsStore.removeConversation(chat._id, $chatAppsStore.chatAppId)
-      const remainingConversations = $currentConversations
-      if (remainingConversations.length) {
-        const [nextChat] = remainingConversations
-        await selectChat(nextChat)
-      } else {
-        syncingAgentSelection = true
-        try {
-          await agentsStore.selectAgent(undefined)
-          selectedAgentId = null
-          chat = { ...INITIAL_CHAT, chatAppId: $chatAppsStore.chatAppId || "" }
-          chatAppsStore.clearCurrentConversationId()
-        } finally {
-          syncingAgentSelection = false
+      const wasSelectedConversation =
+        $chatAppsStore.currentConversationId === conversationId
+
+      await chatAppsStore.removeConversation(
+        conversationId,
+        $chatAppsStore.chatAppId
+      )
+
+      if (wasSelectedConversation) {
+        const remainingConversations = $currentConversations
+        if (remainingConversations.length) {
+          const [nextChat] = remainingConversations
+          await selectChat(nextChat)
+        } else {
+          syncingAgentSelection = true
+          try {
+            await agentsStore.selectAgent(undefined)
+            selectedAgentId = null
+            chat = {
+              ...INITIAL_CHAT,
+              chatAppId: $chatAppsStore.chatAppId || "",
+            }
+            chatAppsStore.clearCurrentConversationId()
+          } finally {
+            syncingAgentSelection = false
+          }
         }
       }
     } catch (err) {
@@ -312,6 +325,25 @@
     }
   }
 
+  const handleConversationDeleted = async (
+    event: CustomEvent<{ conversationId: string }>
+  ) => {
+    const conversation = conversationHistory.find(
+      item => item._id === event.detail.conversationId
+    )
+    const title = conversation?.title || "Untitled Chat"
+
+    await confirm({
+      title: "Confirm Deletion",
+      body: `Deleting "${title}" cannot be undone. Are you sure?`,
+      okText: "Delete chat",
+      warning: true,
+      onConfirm: async () => {
+        await deleteConversation(event.detail.conversationId)
+      },
+    })
+  }
+
   const handleStartChat = async (
     event: CustomEvent<{ agentId: string; prompt: string }>
   ) => {
@@ -337,22 +369,22 @@
     <ChatNavigationPanel
       {enabledAgentList}
       conversationHistory={filteredConversationHistory}
+      {deletingChat}
       selectedConversationId={$chatAppsStore.currentConversationId}
+      {selectedAgentName}
       on:agentSelected={handleAgentSelected}
       on:conversationSelected={handleConversationSelected}
+      on:conversationDeleted={handleConversationDeleted}
     />
 
     <ChatConversationPanel
       bind:chat
-      {deletingChat}
       {enabledAgentList}
       {selectedAgentId}
-      {selectedAgentName}
       {workspaceId}
       {conversationStarters}
       {agentAvailability}
       {initialPrompt}
-      on:deleteChat={deleteCurrentChat}
       on:chatSaved={handleChatSaved}
       on:agentSelected={handleAgentSelected}
       on:startChat={handleStartChat}
@@ -368,6 +400,13 @@
     height: 100%;
     width: 100%;
     min-width: 0;
+    --chat-font-sans: "Inter", sans-serif;
+    --font-sans: var(--chat-font-sans);
+    --font-serif: var(--chat-font-sans);
+    --font-accent: var(--chat-font-sans);
+    --spectrum-alias-body-text-font-family: var(--chat-font-sans);
+    --spectrum-global-font-family-base: var(--chat-font-sans);
+    font-family: var(--chat-font-sans);
   }
 
   .chat-empty-state {

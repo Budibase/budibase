@@ -89,7 +89,7 @@ export async function edit(
   const { body } = ctx.request
 
   if (ctx.params.id !== body._id) {
-    ctx.throw("Path and body ids do not match", 400)
+    ctx.throw(400, "Path and body ids do not match")
   }
 
   const toUpdate = {

@@ -40,6 +40,7 @@ async function init() {
     BB_ADMIN_USER_PASSWORD: "cheekychuckles",
     LITELLM_MASTER_KEY: "budibase",
     LITELLM_SALT_KEY: "budibase",
+    BLACKLIST_IPS: "",
   }
 
   config = { ...config, ...existingConfig }

@@ -45,6 +45,7 @@
 
       const targetRoute = buildBuilderWorkspaceRoute({
         applicationId: createdWorkspace.instance._id,
+        segments: ["home"],
       })
 
       notifications.success(`Workspace created successfully`)

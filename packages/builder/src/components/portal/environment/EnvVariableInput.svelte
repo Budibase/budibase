@@ -4,6 +4,7 @@
   import CreateEditVariableModal from "./CreateEditVariableModal.svelte"
   import type { CreateEnvironmentVariableRequest } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
+  import { helpers } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
 
@@ -45,6 +46,35 @@
     modal?.hide()
   }
 
+  const onInput = (e: Event) => {
+    if (
+      e.target &&
+      "value" in e.target &&
+      ["number", "port"].includes(type) &&
+      !helpers.isEnvironmentVariableKey(e.target.value) &&
+      e.target.value != null
+    ) {
+      const safeValue = Number(e.target.value)
+      e.target.value = isNaN(safeValue) ? value : safeValue
+    }
+  }
+
+  $effect(() => {
+    if (
+      ["number", "port"].includes(type) &&
+      !helpers.isEnvironmentVariableKey(value) &&
+      typeof value !== "number"
+    ) {
+      const numericValue = Number(value)
+      value =
+        typeof value === "string" && value.trim() === ""
+          ? value
+          : Number.isFinite(numericValue)
+            ? numericValue
+            : value
+    }
+  })
+
   onMount(async () => {
     try {
       // load the environment variables
@@ -55,12 +85,14 @@
   })
 </script>
 
+<!-- Type needs to always be a string, as selected env are strings. Type values are processed on onInput -->
 <EnvDropdown
   on:change
   on:blur
+  on:input={onInput}
   bind:value
   {label}
-  type={type === "port" ? "text" : type}
+  type="text"
   {error}
   {placeholder}
   {autocomplete}

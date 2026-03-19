@@ -352,7 +352,7 @@ export const SpectrumIconMap: Record<string, string> = {
   AutomatedSegment: "funnel",
   Back: "rotate-counter-clockwise",
   Back30Seconds: "rewind",
-  BackAndroid: "arrow-left",
+  BackAndroid: "backspace",
   Beaker: "beaker",
   BeakerCheck: "beaker",
   BeakerShare: "beaker",

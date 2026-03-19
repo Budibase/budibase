@@ -7,7 +7,7 @@ import {
   VectorDb,
 } from "@budibase/types"
 import * as knowledgeBaseSdk from "../knowledgeBase"
-import { validatePgVectorDbConfig } from "./pgVectorDb"
+import { resolvePgVectorDbConfig, validatePgVectorDbConfig } from "./pgVectorDb"
 import { utils } from "@budibase/shared-core"
 
 const assertValidVectorDbId = (id: string) => {
@@ -54,7 +54,7 @@ export async function create(config: VectorDb): Promise<VectorDb> {
 
   switch (newConfig.provider) {
     case VectorDbProvider.PGVECTOR:
-      await validatePgVectorDbConfig(newConfig)
+      await validatePgVectorDbConfig(await resolvePgVectorDbConfig(newConfig))
       break
     default:
       utils.unreachable(newConfig.provider, { doNotThrow: true })
@@ -92,7 +92,7 @@ export async function update(config: VectorDb): Promise<VectorDb> {
 
   switch (updated.provider) {
     case VectorDbProvider.PGVECTOR:
-      await validatePgVectorDbConfig(updated)
+      await validatePgVectorDbConfig(await resolvePgVectorDbConfig(updated))
       break
     default:
       throw new HTTPError("Unsupported vector database provider", 400)

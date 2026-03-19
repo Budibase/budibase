@@ -14,14 +14,14 @@
     "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
   "devDependencies": {
-    "@ai-sdk/provider-utils": "^4.0.15",
+    "@ai-sdk/provider-utils": "^4.0.19",
     "@budibase/nano": "10.1.5",
     "@types/json-schema": "^7.0.15",
-    "@types/koa": "2.13.4",
+    "@types/koa": "3.0.1",
     "@types/nodemailer": "^6.4.17",
     "@types/redlock": "4.0.7",
     "koa-useragent": "^4.1.0",
-    "openai": "5.12.1",
+    "openai": "6.32.0",
     "rimraf": "3.0.2",
     "zod": "^4.2.1"
   },

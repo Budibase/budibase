@@ -17,7 +17,7 @@
     Tag,
   } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
-  import { url, goto, isActive } from "@roxi/routify"
+  import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
@@ -41,7 +41,6 @@
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
   import {
-    FeatureFlag,
     type Datasource,
     type Query,
     type Table,
@@ -74,15 +73,8 @@
   export let canManageConnections = false
   export let onInviteUser: () => void = () => {}
 
-  $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
-  $: automationErrorCount = Object.keys(automationErrors).length
   $: backupErrors = getBackupErrors($enrichedApps || [], workspaceId)
   $: backupErrorCount = Object.keys(backupErrors).length
-
-  const getAutomationErrors = (apps: EnrichedApp[], workspaceId: string) => {
-    const target = apps.find(app => app.devId === workspaceId)
-    return target?.automationErrors || {}
-  }
 
   const getBackupErrors = (apps: EnrichedApp[], workspaceId: string) => {
     const target = apps.find(app => app.devId === workspaceId)
@@ -439,7 +431,7 @@
   <CreateWorkspaceModal />
 </Modal>
 
-{#if workspaceId && $featureFlags[FeatureFlag.AI_AGENTS]}
+{#if workspaceId}
   <Modal bind:this={createAutomationModal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -475,7 +467,7 @@
       <div>
         <a
           class="logo_link"
-          href={$url("./")}
+          href={$url("./home")}
           aria-label="Workspace home"
           title="Workspace home"
           on:click={keepCollapsed}
@@ -511,116 +503,62 @@
     <div class="nav_body">
       <div class="links core">
         {#if workspaceId}
-          <div
-            class="core-sections"
-            class:workspace_home={$featureFlags[FeatureFlag.AI_AGENTS]}
-          >
+          <div class="core-sections workspace_home">
             <div>
-              {#if $featureFlags[FeatureFlag.AI_AGENTS]}
-                <SideNavLink
-                  icon="house"
-                  text="Home"
-                  url={$url("./home")}
-                  {collapsed}
-                  on:click={keepCollapsed}
-                />
+              <SideNavLink
+                icon="house"
+                text="Home"
+                url={$url("./home")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
 
-                <ActionMenu
-                  align={PopoverAlignment.RightContextMenu}
-                  portalTarget={".nav .create-popover-container"}
-                  animate={false}
-                  on:open={() => (createMenuOpen = true)}
-                  on:close={() => (createMenuOpen = false)}
-                >
-                  <svelte:fragment slot="control" let:open>
-                    <SideNavLink
-                      icon="plus"
-                      text="Create"
-                      {collapsed}
-                      forceActive={open}
-                      on:click={keepCollapsed}
-                    />
-                  </svelte:fragment>
-
-                  {#if $featureFlags.AI_AGENTS}
-                    <MenuItem icon="sparkle" on:click={openCreateAgent}>
-                      Agent
-                      <div slot="right">
-                        <Tag emphasized>Beta</Tag>
-                      </div>
-                    </MenuItem>
-                  {/if}
-                  <MenuItem icon="path" on:click={openCreateAutomation}>
-                    Automation
-                  </MenuItem>
-                  <MenuItem icon="browsers" on:click={openCreateApp}>
-                    App
-                  </MenuItem>
-
-                  <MenuSeparator />
-                  <MenuItem icon="grid-nine" on:click={openCreateTable}>
-                    Table
-                  </MenuItem>
-                  <MenuItem
-                    icon="globe-simple"
-                    on:click={() => goToCreate("apis/new")}
-                  >
-                    API request
-                  </MenuItem>
-                </ActionMenu>
-              {:else}
-                <SideNavLink
-                  icon="browser"
-                  text="Apps"
-                  url={$url("./design")}
-                  {collapsed}
-                  on:click={keepCollapsed}
-                />
-                <span
-                  class="root-nav"
-                  class:selected={$isActive("./automation")}
-                >
-                  {#if collapsed && automationErrorCount}
-                    <span class="status-indicator">
-                      <StatusLight
-                        color="var(--spectrum-global-color-static-red-600)"
-                        size="M"
-                      />
-                    </span>
-                  {/if}
+              <ActionMenu
+                align={PopoverAlignment.RightContextMenu}
+                portalTarget={".nav .create-popover-container"}
+                animate={false}
+                on:open={() => (createMenuOpen = true)}
+                on:close={() => (createMenuOpen = false)}
+              >
+                <svelte:fragment slot="control" let:open>
                   <SideNavLink
-                    icon="path"
-                    text="Automations"
-                    url={$url("./automation")}
+                    icon="plus"
+                    text="Create"
                     {collapsed}
+                    forceActive={open}
                     on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      {#if automationErrorCount}
-                        <StatusLight
-                          color="var(--spectrum-global-color-static-red-600)"
-                          size="M"
-                        />
-                      {/if}
-                    </svelte:fragment>
-                  </SideNavLink>
-                </span>
+                  />
+                </svelte:fragment>
+
                 {#if $featureFlags.AI_AGENTS}
-                  <SideNavLink
-                    icon="memory"
-                    text="Agents"
-                    url={$url("./agent")}
-                    {collapsed}
-                    on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      <div class="beta-tag-wrapper">
-                        <Tag emphasized>Beta</Tag>
-                      </div>
-                    </svelte:fragment>
-                  </SideNavLink>
+                  <MenuItem icon="sparkle" on:click={openCreateAgent}>
+                    Agent
+                    <div slot="right">
+                      <Tag emphasized>Beta</Tag>
+                    </div>
+                  </MenuItem>
                 {/if}
-              {/if}
+                <MenuItem icon="path" on:click={openCreateAutomation}>
+                  Automation
+                </MenuItem>
+                <MenuItem icon="browsers" on:click={openCreateApp}>
+                  App
+                </MenuItem>
+
+                <MenuSeparator />
+                <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+                  Connection
+                </MenuItem>
+                <MenuItem icon="grid-nine" on:click={openCreateTable}>
+                  Table
+                </MenuItem>
+                <MenuItem
+                  icon="globe-simple"
+                  on:click={() => goToCreate("apis/new")}
+                >
+                  API request
+                </MenuItem>
+              </ActionMenu>
             </div>
 
             <div class="core-secondary">
@@ -704,8 +642,8 @@
                   size="XS"
                   textAlign="left"
                 >
-                  You have no favourites yet! Favourite an automation, app,
-                  table or API for quicker access.
+                  You have no favourites yet! Favourite an app, automation,
+                  agent, table or API for quicker access.
                 </Body>
                 <Link
                   href="https://docs.budibase.com/docs/favouriting-in-a-workspace"
@@ -1069,15 +1007,6 @@
     margin: 0 0 10px 0;
   }
 
-  .nav-section-title {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-  .nav-section-title hr {
-    border: none;
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    margin: 0;
-  }
   .favourite-empty-state {
     display: flex;
     flex-direction: column;
@@ -1103,9 +1032,6 @@
   }
 
   @container (max-width: 239px) {
-    .nav-section-title {
-      transition: all var(--nav-transition-ms) var(--nav-transition-ease);
-    }
     .favourite-wrapper {
       display: none;
       transition: all var(--nav-transition-ms) var(--nav-transition-ease);
@@ -1120,7 +1046,6 @@
     .nav-title,
     .logo_link :global(svg),
     .favourite-empty-state,
-    .nav-section-title,
     .favourite-wrapper {
       transition: none;
     }

@@ -2,16 +2,18 @@ import { context, docIds, roles } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
 import type {
   Agent,
+  AgentChannelProvider,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
   User,
 } from "@budibase/types"
-import type { ToolSet } from "ai"
+import type { ModelMessage, ToolSet } from "ai"
 import type { ServerResponse } from "http"
 import {
   convertToModelMessages,
   extractReasoningMiddleware,
+  pruneMessages,
   streamText,
   wrapLanguageModel,
 } from "ai"
@@ -49,6 +51,7 @@ jest.mock("ai", () => {
     ...actual,
     convertToModelMessages: jest.fn(),
     extractReasoningMiddleware: jest.fn(),
+    pruneMessages: jest.fn(),
     streamText: jest.fn(),
     wrapLanguageModel: jest.fn(),
   }
@@ -93,6 +96,7 @@ describe("chat conversations authorization", () => {
   let convoA: ChatConversation
   let convoAAgent2: ChatConversation
   let convoB: ChatConversation
+  let externalChannelConvo: ChatConversation
   let otherAppConvo: ChatConversation
 
   beforeAll(async () => {
@@ -148,6 +152,20 @@ describe("chat conversations authorization", () => {
           title: "user A conversation on agent 2",
           createdAt: now,
         }
+        externalChannelConvo = {
+          _id: docIds.generateChatConversationID(),
+          chatAppId: chatApp._id!,
+          agentId: "agent-1",
+          userId: userA._id!,
+          messages: [],
+          title: "slack conversation",
+          createdAt: now,
+          channel: {
+            provider: "slack" as AgentChannelProvider,
+            channelId: "C123",
+            externalUserId: "external-user-1",
+          },
+        }
         otherChatApp = {
           _id: docIds.generateChatAppID(),
           agents: [{ agentId: "agent-2", isEnabled: true, isDefault: false }],
@@ -167,6 +185,7 @@ describe("chat conversations authorization", () => {
         await db.put(convoA)
         await db.put(convoAAgent2)
         await db.put(convoB)
+        await db.put(externalChannelConvo)
         await db.put(otherChatApp)
         await db.put(otherAppConvo)
       }
@@ -192,6 +211,20 @@ describe("chat conversations authorization", () => {
     expect(res.body).toHaveLength(2)
     expect(res.body.map((chat: ChatConversation) => chat._id)).toEqual(
       expect.arrayContaining([convoA._id, convoAAgent2._id])
+    )
+  })
+
+  it("hides channel conversations from web chat history", async () => {
+    const headers = await headersForUser(userA)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body.map((chat: ChatConversation) => chat._id)).not.toContain(
+      externalChannelConvo._id
     )
   })
 
@@ -270,12 +303,38 @@ describe("chat conversations authorization", () => {
     expect(res.body._id).toBe(convoB._id)
   })
 
+  it("blocks access to channel conversations from web chat routes", async () => {
+    const headers = await headersForUser(userA)
+
+    const res = await config
+      .getRequest()!
+      .get(
+        `/api/chatapps/${chatApp._id}/conversations/${externalChannelConvo._id}`
+      )
+      .set(headers)
+
+    expect(res.status).toBe(404)
+  })
+
   it("blocks deleting a conversation from a different chat app", async () => {
     const headers = await headersForUser(userA)
 
     const res = await config
       .getRequest()!
       .delete(`/api/chatapps/${chatApp._id}/conversations/${otherAppConvo._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(404)
+  })
+
+  it("blocks deleting channel conversations from web chat routes", async () => {
+    const headers = await headersForUser(userA)
+
+    const res = await config
+      .getRequest()!
+      .delete(
+        `/api/chatapps/${chatApp._id}/conversations/${externalChannelConvo._id}`
+      )
       .set(headers)
 
     expect(res.status).toBe(404)
@@ -343,6 +402,182 @@ describe("prepareChatConversationForSave", () => {
 
     expect(result.createdAt).toEqual(now.toISOString())
     expect(result.updatedAt).toEqual(now.toISOString())
+  })
+
+  it("truncates large tool outputs for all persisted messages", () => {
+    const largeOutput = "a".repeat(9000)
+    const chat: ChatConversation = {
+      _id: "chat-3",
+      chatAppId: "chat-app-3",
+      agentId: "agent-3",
+      userId: "user-3",
+      title: "tool output chat",
+      messages: [
+        {
+          id: "message-1",
+          role: "assistant",
+          parts: [
+            {
+              type: "tool-search",
+              toolCallId: "call-1",
+              state: "output-available",
+              input: { query: "test" },
+              output: largeOutput,
+            },
+          ],
+        },
+        {
+          id: "message-2",
+          role: "user",
+          parts: [{ type: "text", text: "follow up" }],
+        },
+        {
+          id: "message-3",
+          role: "assistant",
+          parts: [
+            {
+              type: "tool-search",
+              toolCallId: "call-2",
+              state: "output-available",
+              input: { query: "latest" },
+              output: largeOutput,
+            },
+          ],
+        },
+      ],
+    }
+
+    const result = prepareChatConversationForSave({
+      chatId: chat._id!,
+      chatAppId: chat.chatAppId,
+      userId: chat.userId!,
+      title: chat.title,
+      messages: chat.messages,
+      chat,
+    })
+
+    const firstToolPart = result.messages[0].parts[0]
+    expect(firstToolPart).toMatchObject({
+      type: "tool-search",
+      state: "output-available",
+    })
+    expect("output" in firstToolPart && typeof firstToolPart.output).toBe(
+      "string"
+    )
+    if ("output" in firstToolPart && typeof firstToolPart.output === "string") {
+      expect(firstToolPart.output.length).toBeLessThan(8100)
+      expect(firstToolPart.output).toContain("...[truncated]")
+    }
+
+    const latestToolPart = result.messages[2].parts[0]
+    expect(latestToolPart).toMatchObject({
+      type: "tool-search",
+      state: "output-available",
+    })
+    expect("output" in latestToolPart && typeof latestToolPart.output).toBe(
+      "string"
+    )
+    if (
+      "output" in latestToolPart &&
+      typeof latestToolPart.output === "string"
+    ) {
+      expect(latestToolPart.output.length).toBeLessThan(8100)
+      expect(latestToolPart.output).toContain("...[truncated]")
+    }
+  })
+
+  it("replaces oversized structured tool outputs with a compact preview for all persisted messages", () => {
+    const largeObjectOutput = {
+      rows: Array.from({ length: 100 }, (_, index) => ({
+        id: index,
+        value: "b".repeat(200),
+      })),
+    }
+    const chat: ChatConversation = {
+      _id: "chat-4",
+      chatAppId: "chat-app-4",
+      agentId: "agent-4",
+      userId: "user-4",
+      title: "structured tool output chat",
+      messages: [
+        {
+          id: "message-1",
+          role: "assistant",
+          parts: [
+            {
+              type: "tool-search",
+              toolCallId: "call-1",
+              state: "output-available",
+              input: { query: "test" },
+              output: largeObjectOutput,
+            },
+          ],
+        },
+        {
+          id: "message-2",
+          role: "user",
+          parts: [{ type: "text", text: "follow up" }],
+        },
+        {
+          id: "message-3",
+          role: "assistant",
+          parts: [
+            {
+              type: "tool-search",
+              toolCallId: "call-2",
+              state: "output-available",
+              input: { query: "latest" },
+              output: largeObjectOutput,
+            },
+          ],
+        },
+      ],
+    }
+
+    const result = prepareChatConversationForSave({
+      chatId: chat._id!,
+      chatAppId: chat.chatAppId,
+      userId: chat.userId!,
+      title: chat.title,
+      messages: chat.messages,
+      chat,
+    })
+
+    const firstToolPart = result.messages[0].parts[0]
+    expect(firstToolPart).toMatchObject({
+      type: "tool-search",
+      state: "output-available",
+    })
+    if (
+      "output" in firstToolPart &&
+      firstToolPart.output &&
+      typeof firstToolPart.output === "object"
+    ) {
+      expect(firstToolPart.output).toMatchObject({
+        truncated: true,
+        originalType: "object",
+      })
+    } else {
+      throw new Error("Expected structured tool output to be compacted")
+    }
+
+    const latestToolPart = result.messages[2].parts[0]
+    expect(latestToolPart).toMatchObject({
+      type: "tool-search",
+      state: "output-available",
+    })
+    if (
+      "output" in latestToolPart &&
+      latestToolPart.output &&
+      typeof latestToolPart.output === "object"
+    ) {
+      expect(latestToolPart.output).toMatchObject({
+        truncated: true,
+        originalType: "object",
+      })
+    } else {
+      throw new Error("Expected latest structured tool output to be compacted")
+    }
   })
 })
 
@@ -445,6 +680,9 @@ describe("chat conversation transient behavior", () => {
         typeof convertToModelMessages
       >
     ).mockResolvedValue([])
+    ;(
+      pruneMessages as jest.MockedFunction<typeof pruneMessages>
+    ).mockReturnValue([])
     ;(streamText as jest.MockedFunction<typeof streamText>).mockImplementation(
       () =>
         ({
@@ -585,6 +823,48 @@ describe("chat conversation transient behavior", () => {
       expect.objectContaining({
         tools: undefined,
         toolChoice: "none",
+      })
+    )
+  })
+
+  it("prunes old reasoning and tool calls before sending messages to the model", async () => {
+    setupMocks()
+    const modelMessages: ModelMessage[] = [
+      { role: "user", content: "hello" },
+      { role: "assistant", content: "response" },
+    ]
+    const prunedMessages: ModelMessage[] = [{ role: "user", content: "hello" }]
+
+    jest.mocked(convertToModelMessages).mockResolvedValue(modelMessages)
+    jest.mocked(pruneMessages).mockReturnValue(prunedMessages)
+
+    const headers = await config.defaultHeaders({}, true)
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        agentId,
+        messages: [
+          {
+            id: "message-0",
+            role: "user",
+            parts: [{ type: "text", text: "hi" }],
+          },
+        ],
+      })
+
+    expect(res.status).toBe(200)
+    expect(pruneMessages).toHaveBeenCalledWith({
+      messages: modelMessages,
+      reasoning: "all",
+      toolCalls: "before-last-2-messages",
+      emptyMessages: "remove",
+    })
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: prunedMessages,
       })
     )
   })

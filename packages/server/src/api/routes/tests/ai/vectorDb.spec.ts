@@ -7,6 +7,8 @@ import {
 } from "@budibase/types"
 import { context, docIds } from "@budibase/backend-core"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { validatePgVectorDbConfig } from "../../../../sdk/workspace/ai/vectorDb/pgVectorDb"
+import { mocks } from "@budibase/backend-core/tests"
 
 jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
   const actual = jest.requireActual(
@@ -52,7 +54,9 @@ describe("vector db configs", () => {
   }
 
   beforeEach(async () => {
+    mocks.licenses.useCloudFree()
     await config.newTenant()
+    jest.clearAllMocks()
   })
 
   it("creates and lists vector db configs", async () => {
@@ -85,6 +89,48 @@ describe("vector db configs", () => {
 
       const configs = await config.api.vectorDb.fetch()
       expect(configs).toHaveLength(0)
+    })
+  })
+
+  it("resolves environment variable vector db settings before validating and preserves env passwords in responses", async () => {
+    mocks.licenses.useEnvironmentVariables()
+    await withRagEnabled(async () => {
+      await config.api.environment.create({
+        name: "pg_host",
+        production: "prod-db.internal",
+        development: "dev-db.internal",
+      })
+      await config.api.environment.create({
+        name: "pg_port",
+        production: "6432",
+        development: "5433",
+      })
+      await config.api.environment.create({
+        name: "pg_password",
+        production: "prod-secret",
+        development: "dev-secret",
+      })
+
+      const created = await config.api.vectorDb.create({
+        ...vectorDbRequest,
+        host: "{{ env.pg_host }}",
+        port: "{{ env.pg_port }}",
+        password: "{{ env.pg_password }}",
+      })
+
+      expect(validatePgVectorDbConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          host: "dev-db.internal",
+          port: 5433,
+          password: "dev-secret",
+          user: "bb_user",
+          database: "budibase",
+        })
+      )
+      expect(created.password).toBe("{{ env.pg_password }}")
+
+      const configs = await config.api.vectorDb.fetch()
+      expect(configs[0].password).toBe("{{ env.pg_password }}")
     })
   })
 

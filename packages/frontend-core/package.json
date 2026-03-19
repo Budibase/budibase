@@ -11,11 +11,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ai-sdk/svelte": "^4.0.48",
+    "@ai-sdk/svelte": "^4.0.116",
     "@budibase/bbui": "*",
     "@budibase/shared-core": "*",
     "@budibase/types": "*",
-    "ai": "^6.0.3",
+    "ai": "^6.0.116",
     "dayjs": "^1.10.8",
     "lodash": "4.17.23",
     "shortid": "2.2.15",

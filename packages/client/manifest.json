@@ -458,6 +458,31 @@
           },
           {
             "type": "select",
+            "label": "Collapsed button size",
+            "key": "collapsedSize",
+            "dependsOn": "collapsed",
+            "options": [
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              },
+              {
+                "label": "Extra Large",
+                "value": "XL"
+              }
+            ],
+            "defaultValue": "M"
+          },
+          {
+            "type": "select",
             "label": "Direction",
             "key": "direction",
             "showInBar": true,

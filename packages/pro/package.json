@@ -13,7 +13,7 @@
     "url": "https://github.com/Budibase/budibase-pro.git"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.3",
+    "@anthropic-ai/sdk": "^0.79.0",
     "@budibase/backend-core": "*",
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
@@ -26,20 +26,19 @@
     "lru-cache": "^7.14.1",
     "memorystream": "^0.3.1",
     "node-fetch": "2.6.7",
-    "openai": "5.12.1",
+    "openai": "6.32.0",
     "scim2-parse-filter": "^0.2.8",
     "zod": "^4.2.1"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "9.0.3",
-    "@types/koa": "2.13.4",
+    "@types/koa": "3.0.1",
     "@types/koa__router": "12.0.5",
     "@types/lodash": "4.14.200",
     "@types/node-fetch": "2.6.4",
     "rimraf": "3.0.2",
     "timekeeper": "^2.2.0",
-    "ts-node": "10.8.1",
-    "tsconfig-paths": "^4.2.0"
+    "ts-node": "10.8.1"
   },
   "scripts": {
     "setup": "yarn && yarn build",

@@ -131,7 +131,7 @@ export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
 
   const automation = await sdk.automations.get(ctx.params.id)
   if (coreSdk.automations.isRowAction(automation)) {
-    ctx.throw("Row actions automations cannot be deleted", 422)
+    ctx.throw(422, "Row actions automations cannot be deleted")
   }
 
   ctx.body = await sdk.automations.remove(automationId, ctx.params.rev)

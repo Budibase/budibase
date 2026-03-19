@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Icon } from "@budibase/bbui"
+  import { ActionMenu, Body, Icon, MenuItem } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   type EnabledAgentListItem = {
@@ -15,17 +15,29 @@
     title?: string
   }
 
+  type ConversationWithId = ConversationListItem & {
+    _id: string
+  }
+
   export let enabledAgentList: EnabledAgentListItem[] = []
   export let conversationHistory: ConversationListItem[] = []
   export let selectedConversationId: string | undefined
+  export let selectedAgentName: string | undefined
   export let hideAgents = false
+  export let deletingChat = false
 
   $: defaultAgent =
     enabledAgentList.find(agent => agent.isDefault) || enabledAgentList[0]
 
+  $: conversationsWithId = conversationHistory.filter(
+    (conversation): conversation is ConversationWithId =>
+      Boolean(conversation._id)
+  )
+
   const dispatch = createEventDispatcher<{
     agentSelected: { agentId: string }
     conversationSelected: { conversationId: string }
+    conversationDeleted: { conversationId: string }
   }>()
 
   const selectAgent = (agentId: string) => {
@@ -35,10 +47,20 @@
   const selectConversation = (conversationId: string) => {
     dispatch("conversationSelected", { conversationId })
   }
+
+  const deleteConversation = (conversationId: string) => {
+    dispatch("conversationDeleted", { conversationId })
+  }
 </script>
 
 <div class="chat-nav-shell">
   <div class="chat-nav-content">
+    {#if selectedAgentName}
+      <div class="list-section current-agent-section">
+        <div class="current-agent-name">{selectedAgentName}</div>
+      </div>
+    {/if}
+
     {#if defaultAgent?.agentId}
       <div class="list-section">
         <button
@@ -78,17 +100,47 @@
 
     <div class="list-section">
       <div class="list-title">Recent Chats</div>
-      {#if conversationHistory.length}
-        {#each conversationHistory as conversation}
-          {#if conversation._id}
+      {#if conversationsWithId.length}
+        {#each conversationsWithId as conversation (conversation._id)}
+          <div
+            class="conversation-row"
+            class:selected={selectedConversationId === conversation._id}
+          >
             <button
-              class="list-item list-item-button"
-              class:selected={selectedConversationId === conversation._id}
-              on:click={() => selectConversation(conversation._id!)}
+              class="list-item list-item-button conversation-button"
+              on:click={() => selectConversation(conversation._id)}
             >
-              {conversation.title || "Untitled Chat"}
+              <span class="conversation-title">
+                {conversation.title || "Untitled Chat"}
+              </span>
             </button>
-          {/if}
+
+            <ActionMenu align="right" disabled={deletingChat}>
+              <button
+                slot="control"
+                class="conversation-actions"
+                type="button"
+                aria-label={`Open actions for ${
+                  conversation.title || "Untitled Chat"
+                }`}
+              >
+                <Icon size="S" name="dots-three" />
+              </button>
+              <MenuItem
+                on:click={() => selectConversation(conversation._id)}
+                icon="chat-circle"
+              >
+                View chat
+              </MenuItem>
+              <MenuItem
+                on:click={() => deleteConversation(conversation._id)}
+                icon="trash"
+                disabled={deletingChat}
+              >
+                {deletingChat ? "Deleting..." : "Delete chat"}
+              </MenuItem>
+            </ActionMenu>
+          </div>
         {/each}
       {:else}
         <Body size="XS" color="var(--spectrum-global-color-gray-500)">
@@ -124,6 +176,17 @@
 
   .list-section + .list-section {
     padding-top: 0;
+  }
+
+  .current-agent-section {
+    padding-bottom: var(--spacing-m);
+  }
+
+  .current-agent-name {
+    font-size: 14px;
+    line-height: 17px;
+    color: var(--spectrum-global-color-gray-800);
+    padding: var(--spacing-xs) 0;
   }
 
   .new-chat {
@@ -176,6 +239,59 @@
     text-overflow: ellipsis;
   }
 
+  .conversation-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xxs);
+    min-width: 0;
+  }
+
+  .conversation-button {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .conversation-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .conversation-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--spectrum-global-color-gray-600);
+    cursor: pointer;
+    flex: 0 0 auto;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 120ms ease,
+      color 120ms ease;
+  }
+
+  .conversation-row:hover .conversation-actions,
+  .conversation-row:focus-within .conversation-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .conversation-actions:hover,
+  .conversation-actions:focus-visible {
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .conversation-actions:disabled {
+    cursor: default;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
   .list-item-icon {
     display: inline-flex;
     align-items: center;
@@ -190,9 +306,14 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
-  .list-item.selected {
+  .list-item.selected,
+  .conversation-row.selected .list-item {
     color: var(--spectrum-global-color-gray-900);
     font-weight: 600;
+  }
+
+  .conversation-row.selected .conversation-actions {
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .list-title {

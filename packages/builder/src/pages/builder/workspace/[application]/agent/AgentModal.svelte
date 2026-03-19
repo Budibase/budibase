@@ -1,33 +1,62 @@
 <script lang="ts">
+  import { getErrorMessage } from "@/helpers/errors"
   import { appStore } from "@/stores/builder"
   import { agentsStore, aiConfigsStore } from "@/stores/portal"
-  import { Input, Modal, ModalContent } from "@budibase/bbui"
+  import {
+    Input,
+    keepOpen,
+    Modal,
+    ModalContent,
+    notifications,
+  } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
   import { onMount } from "svelte"
 
   $: goto = $gotoStore
 
   export const show = () => {
+    name = ""
+    touched = false
+    loading = false
     modal.show()
   }
   export const hide = () => {
     modal.hide()
   }
 
-  $: draft = {
-    name: "",
-  }
-
   let modal: Modal
+  let modalContent: ModalContent
+  let name = ""
+  let touched = false
+  let loading = false
+
+  $: trimmedName = name.trim()
+  $: nameError = touched && !trimmedName ? "Name is required" : undefined
 
   async function createAgent() {
+    if (loading) {
+      return keepOpen
+    }
+    touched = true
+    if (!trimmedName) {
+      return keepOpen
+    }
+
+    loading = true
     const workspaceId = $appStore.appId
-    const newAgent = await agentsStore.createAgent({
-      name: draft.name,
-      live: false,
-    })
-    modal.hide()
-    goto(`/builder/workspace/${workspaceId}/agent/${newAgent._id}/config`)
+    try {
+      const newAgent = await agentsStore.createAgent({
+        name: trimmedName,
+        live: false,
+      })
+      modal.hide()
+      goto(`/builder/workspace/${workspaceId}/agent/${newAgent._id}/config`)
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Error creating agent")
+      return keepOpen
+    } finally {
+      loading = false
+    }
   }
 
   onMount(() => {
@@ -37,15 +66,32 @@
 
 <Modal bind:this={modal}>
   <ModalContent
+    bind:this={modalContent}
     title={"New agent"}
     size="M"
     showConfirmButton
     showCancelButton
     showCloseIcon
+    disabled={loading || !trimmedName}
     onConfirm={createAgent}
   >
     <div class="agent-form">
-      <Input label="Name" bind:value={draft.name} placeholder="Support agent" />
+      <form
+        on:submit|preventDefault={() => {
+          if (loading || !trimmedName) {
+            return
+          }
+          modalContent.confirm()
+        }}
+      >
+        <Input
+          label="Name"
+          bind:value={name}
+          error={nameError}
+          on:input={() => (touched = true)}
+          placeholder="Support agent"
+        />
+      </form>
     </div>
   </ModalContent>
 </Modal>
