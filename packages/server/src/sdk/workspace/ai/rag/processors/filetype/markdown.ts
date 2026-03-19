@@ -7,8 +7,23 @@ const markdownParser = new MarkdownIt()
 const normalizeMarkdownText = (value: string) =>
   value.replace(/\s+/g, " ").replace(/\|/g, " ").trim()
 
-const buildContextualFact = (context: string[], text: string) => {
-  const normalizedText = normalizeMarkdownText(text)
+const normalizeMultilineMarkdownText = (value: string) =>
+  value
+    .split(/\r?\n/)
+    .map(line => normalizeMarkdownText(line))
+    .filter(Boolean)
+    .join("\n")
+
+const buildContextualFact = (
+  context: string[],
+  text: string,
+  options?: {
+    preserveLineBreaks?: boolean
+  }
+) => {
+  const normalizedText = options?.preserveLineBreaks
+    ? normalizeMultilineMarkdownText(text)
+    : normalizeMarkdownText(text)
   if (!normalizedText) {
     return null
   }
@@ -43,10 +58,24 @@ const collectUntilClose = (
   closeType: string
 ) => {
   const values: string[] = []
+  const openType = closeType.endsWith("_close")
+    ? closeType.replace("_close", "_open")
+    : ""
+  let nestedDepth = 0
   let index = start + 1
   while (index < tokens.length) {
     const token = tokens[index]
+    if (openType && token.type === openType) {
+      nestedDepth += 1
+      index += 1
+      continue
+    }
     if (token.type === closeType) {
+      if (nestedDepth > 0) {
+        nestedDepth -= 1
+        index += 1
+        continue
+      }
       return {
         value: values.join(" "),
         nextIndex: index,
@@ -63,6 +92,74 @@ const collectUntilClose = (
   }
   return {
     value: values.join(" "),
+    nextIndex: index - 1,
+  }
+}
+
+const collectListItemFact = (tokens: MarkdownIt.Token[], start: number) => {
+  const ownValues: string[] = []
+  const childValues: string[] = []
+  let index = start + 1
+
+  while (index < tokens.length) {
+    const token = tokens[index]
+
+    if (token.type === "list_item_open") {
+      const { value, nextIndex } = collectListItemFact(tokens, index)
+      if (value) {
+        childValues.push(value)
+      }
+      index = nextIndex + 1
+      continue
+    }
+
+    if (token.type === "list_item_close") {
+      const ownValue = normalizeMarkdownText(ownValues.join(" "))
+      const normalizedChildren = childValues
+        .map(value => normalizeMultilineMarkdownText(value))
+        .filter(Boolean)
+
+      if (ownValue && normalizedChildren.length > 0) {
+        const childLines = normalizedChildren.flatMap(child => {
+          const lines = child.split("\n").filter(Boolean)
+          if (lines.length === 0) {
+            return []
+          }
+          const [first, ...rest] = lines
+          return [`- ${first}`, ...rest.map(line => `  ${line}`)]
+        })
+        return {
+          value: `${ownValue}:\n${childLines.join("\n")}`,
+          nextIndex: index,
+        }
+      }
+
+      if (ownValue) {
+        return {
+          value: ownValue,
+          nextIndex: index,
+        }
+      }
+
+      return {
+        value: normalizedChildren.join(", "),
+        nextIndex: index,
+      }
+    }
+
+    if (
+      token.type === "inline" ||
+      token.type === "fence" ||
+      token.type === "code_block"
+    ) {
+      ownValues.push(token.content)
+    }
+
+    index += 1
+  }
+
+  return {
+    value: normalizeMarkdownText(ownValues.join(" ")),
     nextIndex: index - 1,
   }
 }
@@ -213,12 +310,10 @@ export const markdownProcessor: RagFileProcessor = {
       }
 
       if (token.type === "list_item_open") {
-        const { value, nextIndex } = collectUntilClose(
-          tokens,
-          index,
-          "list_item_close"
-        )
-        const fact = buildContextualFact(context, value)
+        const { value, nextIndex } = collectListItemFact(tokens, index)
+        const fact = buildContextualFact(context, value, {
+          preserveLineBreaks: true,
+        })
         if (fact) {
           facts.push(fact)
         }

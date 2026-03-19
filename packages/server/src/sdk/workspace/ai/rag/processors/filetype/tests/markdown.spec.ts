@@ -60,4 +60,27 @@ describe("markdownProcessor", () => {
       "Regional Offices\nLocation: New York; Description: North American customer success operations",
     ])
   })
+
+  it("keeps nested list items with their parent fact", async () => {
+    const chunks = await markdownProcessor.process({
+      buffer: Buffer.from(`
+## Incident Steps
+
+- Primary runbook step
+  - Nested detail one
+  - Nested detail two
+- Secondary step
+      `),
+    })
+
+    expect(chunks).toEqual([
+      [
+        "Incident Steps",
+        ["Primary runbook step:", "- Nested detail one", "- Nested detail two"].join(
+          "\n"
+        ),
+      ].join("\n"),
+      ["Incident Steps", "Secondary step"].join("\n"),
+    ])
+  })
 })
