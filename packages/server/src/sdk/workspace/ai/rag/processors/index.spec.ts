@@ -3,6 +3,7 @@ const mockPdfGetText = jest.fn()
 jest.mock("pdf-parse", () => ({
   PDFParse: jest.fn().mockImplementation(() => ({
     getText: mockPdfGetText,
+    destroy: jest.fn(),
   })),
 }))
 
