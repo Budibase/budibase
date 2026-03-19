@@ -290,6 +290,8 @@ describe("chat route auth split", () => {
         chatApp = { ...doc, _rev: rev }
       }
     )
+
+    await config.publish()
   })
 
   afterAll(() => {
