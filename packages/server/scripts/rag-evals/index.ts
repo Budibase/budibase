@@ -869,12 +869,14 @@ async function main() {
   const completionFingerprint = fingerprint({
     provider: runtimeEnv.provider,
     chatModel,
+    openAIKey: runtimeEnv.openAIKey,
     openAIBaseUrl: runtimeEnv.openAIBaseUrl,
   })
 
   const embeddingFingerprint = fingerprint({
     provider: runtimeEnv.provider,
     embeddingModel,
+    openAIKey: runtimeEnv.openAIKey,
     openAIBaseUrl: runtimeEnv.openAIBaseUrl,
   })
 
