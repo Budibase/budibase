@@ -66,4 +66,16 @@ contacts:
       ].join("\n")
     )
   })
+
+  it("handles circular yaml aliases without overflowing the stack", async () => {
+    const chunks = await yamlProcessor.process({
+      buffer: Buffer.from(`
+node: &node
+  name: root
+  self: *node
+      `),
+    })
+
+    expect(chunks).toContain("node.name: root\nnode.self: [Circular]")
+  })
 })

@@ -24,15 +24,25 @@ const scalarToString = (value: YamlScalar): string => {
   return String(value)
 }
 
-const flattenYaml = (value: unknown, path: string[] = []): string[] => {
+const flattenYaml = (
+  value: unknown,
+  path: string[] = [],
+  ancestors = new WeakSet<object>()
+): string[] => {
   if (isYamlScalar(value)) {
     const key = path.join(".") || "value"
     return [`${key}: ${scalarToString(value)}`]
   }
 
   if (Array.isArray(value)) {
+    if (ancestors.has(value)) {
+      const key = path.join(".") || "value"
+      return [`${key}: [Circular]`]
+    }
+    ancestors.add(value)
     if (value.length === 0) {
       const key = path.join(".") || "value"
+      ancestors.delete(value)
       return [`${key}: []`]
     }
 
@@ -41,21 +51,34 @@ const flattenYaml = (value: unknown, path: string[] = []): string[] => {
       const rendered = value
         .map(item => scalarToString(item as YamlScalar))
         .join(", ")
+      ancestors.delete(value)
       return [`${key}: ${rendered}`]
     }
 
-    return value.flatMap((item, index) =>
-      flattenYaml(item, [...path, `[${index}]`])
+    const lines = value.flatMap((item, index) =>
+      flattenYaml(item, [...path, `[${index}]`], ancestors)
     )
+    ancestors.delete(value)
+    return lines
   }
 
   if (isRecord(value)) {
+    if (ancestors.has(value)) {
+      const key = path.join(".") || "value"
+      return [`${key}: [Circular]`]
+    }
+    ancestors.add(value)
     const entries = Object.entries(value)
     if (entries.length === 0) {
       const key = path.join(".") || "value"
+      ancestors.delete(value)
       return [`${key}: {}`]
     }
-    return entries.flatMap(([key, child]) => flattenYaml(child, [...path, key]))
+    const lines = entries.flatMap(([key, child]) =>
+      flattenYaml(child, [...path, key], ancestors)
+    )
+    ancestors.delete(value)
+    return lines
   }
 
   const key = path.join(".") || "value"
