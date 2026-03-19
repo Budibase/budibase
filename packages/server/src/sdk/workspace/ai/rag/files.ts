@@ -21,9 +21,7 @@ interface RagFileInput {
 const DEFAULT_EMBEDDING_BATCH_SIZE = 64
 const DEFAULT_RAG_RETRIEVAL_TOP_K = 20
 const DEFAULT_RAG_CONTEXT_TOP_K = 8
-const DEFAULT_RAG_MIN_SIMILARITY = 0.7
-const DEFAULT_RAG_FALLBACK_MAX_DISTANCE = 0.45
-const DEFAULT_RAG_FALLBACK_DISTANCE_GAP = 0.05
+const DEFAULT_RAG_MIN_SIMILARITY = 0.6
 
 const hashChunk = (chunk: string) => {
   return crypto.createHash("sha256").update(chunk).digest("hex")
@@ -31,32 +29,6 @@ const hashChunk = (chunk: string) => {
 const getEmbeddingModel = async (configId: string) => {
   const { embedding } = await createLLM(configId)
   return embedding
-}
-
-const selectFallbackCandidates = (
-  candidates: Array<RetrievedContextChunk & { distance: number }>
-) => {
-  const sorted = [...candidates].sort((a, b) => a.distance - b.distance)
-  const best = sorted[0]
-  if (!best || best.distance > DEFAULT_RAG_FALLBACK_MAX_DISTANCE) {
-    return []
-  }
-
-  const secondBest = sorted[1]
-  if (
-    secondBest &&
-    secondBest.sourceId !== best.sourceId &&
-    secondBest.distance - best.distance < DEFAULT_RAG_FALLBACK_DISTANCE_GAP
-  ) {
-    return []
-  }
-
-  const maxDistance = Math.min(
-    DEFAULT_RAG_FALLBACK_MAX_DISTANCE,
-    best.distance + DEFAULT_RAG_FALLBACK_DISTANCE_GAP
-  )
-
-  return sorted.filter(candidate => candidate.distance <= maxDistance)
 }
 
 const resolveKnowledgeBasesForAgent = async (
@@ -258,20 +230,7 @@ export const retrieveContextForAgent = async (
   }
 
   if (retrieved.length === 0) {
-    const selectedFallback = selectFallbackCandidates(fallbackCandidates)
-    if (!selectedFallback || selectedFallback.length === 0) {
-      return { text: "", chunks: [], sources: [] }
-    }
-
-    const chunks: RetrievedContextChunk[] = selectedFallback
-      .slice(0, DEFAULT_RAG_CONTEXT_TOP_K)
-      .map(({ distance: _distance, ...chunk }) => chunk)
-
-    return {
-      text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
-      chunks,
-      sources: toSourceMetadata(chunks, files),
-    }
+    return { text: "", chunks: [], sources: [] }
   }
 
   const selected = retrieved
