@@ -14,20 +14,28 @@ const normalizeMultilineMarkdownText = (value: string) =>
     .filter(Boolean)
     .join("\n")
 
-const buildContextualFact = (
-  context: string[],
-  text: string,
-  options?: {
-    preserveLineBreaks?: boolean
-  }
-) => {
-  const normalizedText = options?.preserveLineBreaks
-    ? normalizeMultilineMarkdownText(text)
-    : normalizeMarkdownText(text)
+const isContentToken = (tokenType: string) =>
+  tokenType === "inline" || tokenType === "fence" || tokenType === "code_block"
+
+const normalizeContext = (context: string[]) => context.filter(Boolean)
+
+const buildContextualFact = (context: string[], text: string) => {
+  const normalizedText = normalizeMarkdownText(text)
   if (!normalizedText) {
     return null
   }
-  const normalizedContext = context.filter(Boolean)
+  const normalizedContext = normalizeContext(context)
+  return normalizedContext.length > 0
+    ? `${normalizedContext.join(" > ")}\n${normalizedText}`
+    : normalizedText
+}
+
+const buildContextualMultilineFact = (context: string[], text: string) => {
+  const normalizedText = normalizeMultilineMarkdownText(text)
+  if (!normalizedText) {
+    return null
+  }
+  const normalizedContext = normalizeContext(context)
   return normalizedContext.length > 0
     ? `${normalizedContext.join(" > ")}\n${normalizedText}`
     : normalizedText
@@ -81,11 +89,7 @@ const collectUntilClose = (
         nextIndex: index,
       }
     }
-    if (
-      token.type === "inline" ||
-      token.type === "fence" ||
-      token.type === "code_block"
-    ) {
+    if (isContentToken(token.type)) {
       values.push(token.content)
     }
     index += 1
@@ -120,14 +124,9 @@ const collectListItemFact = (tokens: MarkdownIt.Token[], start: number) => {
         .filter(Boolean)
 
       if (ownValue && normalizedChildren.length > 0) {
-        const childLines = normalizedChildren.flatMap(child => {
-          const lines = child.split("\n").filter(Boolean)
-          if (lines.length === 0) {
-            return []
-          }
-          const [first, ...rest] = lines
-          return [`- ${first}`, ...rest.map(line => `  ${line}`)]
-        })
+        const childLines = normalizedChildren.flatMap(child =>
+          formatChildLines(child)
+        )
         return {
           value: `${ownValue}:\n${childLines.join("\n")}`,
           nextIndex: index,
@@ -147,11 +146,7 @@ const collectListItemFact = (tokens: MarkdownIt.Token[], start: number) => {
       }
     }
 
-    if (
-      token.type === "inline" ||
-      token.type === "fence" ||
-      token.type === "code_block"
-    ) {
+    if (isContentToken(token.type)) {
       ownValues.push(token.content)
     }
 
@@ -162,6 +157,15 @@ const collectListItemFact = (tokens: MarkdownIt.Token[], start: number) => {
     value: normalizeMarkdownText(ownValues.join(" ")),
     nextIndex: index - 1,
   }
+}
+
+const formatChildLines = (childValue: string) => {
+  const lines = childValue.split("\n").filter(Boolean)
+  if (lines.length === 0) {
+    return []
+  }
+  const [first, ...rest] = lines
+  return [`- ${first}`, ...rest.map(line => `  ${line}`)]
 }
 
 const parseTableFacts = (
@@ -311,9 +315,7 @@ export const markdownProcessor: RagFileProcessor = {
 
       if (token.type === "list_item_open") {
         const { value, nextIndex } = collectListItemFact(tokens, index)
-        const fact = buildContextualFact(context, value, {
-          preserveLineBreaks: true,
-        })
+        const fact = buildContextualMultilineFact(context, value)
         if (fact) {
           facts.push(fact)
         }
