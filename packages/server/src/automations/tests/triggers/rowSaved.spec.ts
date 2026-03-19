@@ -10,6 +10,7 @@ describe("row saved trigger", () => {
   let automation: Automation
 
   beforeAll(async () => {
+    config.initQueues({ pro: false, events: true, rag: false, dev: false })
     await config.init()
     await config.publish()
     table = await config.api.table.save(basicTable())
