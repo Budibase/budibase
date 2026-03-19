@@ -9,11 +9,11 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/success-codes: '200'
     alb.ingress.kubernetes.io/healthcheck-path: '/health'
-    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds={{ .Values.awsAlbIngress.deregistrationDelay }}
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds={{ .Values.awsAlbIngress.deregistrationDelay }},slow_start.duration_seconds=30
     {{- if .Values.awsAlbIngress.certificateArn }}
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.awsAlbIngress.certificateArn }} 
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.awsAlbIngress.certificateArn }}
     {{- end }}
     {{- if .Values.awsAlbIngress.sslPolicy }}
     alb.ingress.kubernetes.io/ssl-policy: {{ .Values.awsAlbIngress.sslPolicy }}
