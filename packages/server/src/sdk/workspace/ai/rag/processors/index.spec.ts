@@ -83,6 +83,39 @@ region: EMEA
     expect(chunks).toContain("region: EMEA")
   })
 
+  it("uses the markdown parser when mime type has content-type parameters", async () => {
+    const chunks = await processFileToChunks({
+      buffer: Buffer.from(`
+## The **Incident Response** Runbook \`v2\`
+
+- Escalation path: Security Operations
+      `),
+      filename: "knowledge_base_upload",
+      mimetype: "text/markdown; charset=utf-8",
+    })
+
+    expect(chunks).toContain(
+      [
+        "The **Incident Response** Runbook `v2`",
+        "Escalation path: Security Operations",
+      ].join("\n")
+    )
+  })
+
+  it("uses the yaml parser when mime type has content-type parameters", async () => {
+    const chunks = await processFileToChunks({
+      buffer: Buffer.from(`
+name: Customer Support
+region: EMEA
+      `),
+      filename: "knowledge_base_upload",
+      mimetype: "application/x-yaml; charset=utf-8",
+    })
+
+    expect(chunks).toContain("name: Customer Support")
+    expect(chunks).toContain("region: EMEA")
+  })
+
   it("uses the pdf parser when mime type is pdf", async () => {
     mockPdfGetText.mockResolvedValue({ text: "Parsed PDF content" })
 

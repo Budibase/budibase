@@ -27,7 +27,7 @@ const processorByMimeType: Record<string, RagFileProcessor> = {
 const resolveProcessor = (
   file?: Pick<RagProcessInput, "filename" | "mimetype">
 ) => {
-  const mimeType = file?.mimetype?.toLowerCase()
+  const mimeType = file?.mimetype?.toLowerCase().split(";")[0]?.trim()
   if (mimeType && processorByMimeType[mimeType]) {
     return processorByMimeType[mimeType]
   }
