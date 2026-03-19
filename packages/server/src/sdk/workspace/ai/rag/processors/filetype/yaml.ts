@@ -1,16 +1,9 @@
-import { parse as parseYaml } from "yaml"
+import { isAlias, isMap, isPair, isScalar, isSeq, parseDocument } from "yaml"
 import { chunkDocument, getDefaultChunkSize } from "../shared"
 import type { RagFileProcessor, RagProcessInput } from "../types"
 
 type YamlScalar = string | number | boolean | null
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  if (typeof value !== "object" || value === null) {
-    return false
-  }
-  const prototype = Object.getPrototypeOf(value)
-  return prototype === Object.prototype || prototype === null
-}
+type YamlDocument = ReturnType<typeof parseDocument>
 
 const isYamlScalar = (value: unknown): value is YamlScalar => {
   return (
@@ -21,132 +14,182 @@ const isYamlScalar = (value: unknown): value is YamlScalar => {
   )
 }
 
-const isSet = (value: unknown): value is Set<unknown> => {
-  return value instanceof Set
-}
-
-const scalarToString = (value: YamlScalar): string => {
+const scalarToString = (value: unknown): string => {
   if (value === null) {
     return "null"
   }
   return String(value)
 }
 
-const flattenYaml = (
-  value: unknown,
-  path: string[] = [],
-  ancestors = new WeakSet<object>()
-): string[] => {
-  if (isYamlScalar(value)) {
-    const key = path.join(".") || "value"
-    return [`${key}: ${scalarToString(value)}`]
-  }
+const pathToKey = (path: string[]) => path.join(".") || "value"
 
-  if (Array.isArray(value)) {
-    if (ancestors.has(value)) {
-      const key = path.join(".") || "value"
-      return [`${key}: [Circular]`]
-    }
-    ancestors.add(value)
-    if (value.length === 0) {
-      const key = path.join(".") || "value"
-      ancestors.delete(value)
-      return [`${key}: []`]
-    }
-
-    if (value.every(isYamlScalar)) {
-      const key = path.join(".") || "value"
-      const rendered = value
-        .map(item => scalarToString(item as YamlScalar))
-        .join(", ")
-      ancestors.delete(value)
-      return [`${key}: ${rendered}`]
-    }
-
-    const lines = value.flatMap((item, index) =>
-      flattenYaml(item, [...path, `[${index}]`], ancestors)
-    )
-    ancestors.delete(value)
-    return lines
-  }
-
-  if (isSet(value)) {
-    if (ancestors.has(value)) {
-      const key = path.join(".") || "value"
-      return [`${key}: [Circular]`]
-    }
-    ancestors.add(value)
-    const items = Array.from(value.values())
-    if (items.length === 0) {
-      const key = path.join(".") || "value"
-      ancestors.delete(value)
-      return [`${key}: []`]
-    }
-
-    if (items.every(isYamlScalar)) {
-      const key = path.join(".") || "value"
-      const rendered = items
-        .map(item => scalarToString(item as YamlScalar))
-        .join(", ")
-      ancestors.delete(value)
-      return [`${key}: ${rendered}`]
-    }
-
-    const lines = items.flatMap((item, index) =>
-      flattenYaml(item, [...path, `[${index}]`], ancestors)
-    )
-    ancestors.delete(value)
-    return lines
-  }
-
-  if (isRecord(value)) {
-    if (ancestors.has(value)) {
-      const key = path.join(".") || "value"
-      return [`${key}: [Circular]`]
-    }
-    ancestors.add(value)
-    const entries = Object.entries(value)
-    if (entries.length === 0) {
-      const key = path.join(".") || "value"
-      ancestors.delete(value)
-      return [`${key}: {}`]
-    }
-    const lines = entries.flatMap(([key, child]) =>
-      flattenYaml(child, [...path, key], ancestors)
-    )
-    ancestors.delete(value)
-    return lines
-  }
-
-  const key = path.join(".") || "value"
-  return [`${key}: ${String(value)}`]
+const isYamlSetMap = (node: unknown) => {
+  return isMap(node) && node.tag === "tag:yaml.org,2002:set"
 }
 
-const buildYamlChunks = (doc: unknown): string[] => {
-  if (isYamlScalar(doc)) {
-    return [`value: ${scalarToString(doc)}`]
+const scalarFromNode = (
+  node: unknown,
+  doc: YamlDocument,
+  aliasStack = new Set<string>()
+): YamlScalar | undefined => {
+  if (node === null) {
+    return null
   }
 
-  if (Array.isArray(doc)) {
-    const lines = flattenYaml(doc)
-    return lines.length > 0 ? [lines.join("\n")] : []
+  if (isScalar(node)) {
+    return isYamlScalar(node.value) ? node.value : undefined
   }
 
-  if (isSet(doc)) {
-    const lines = flattenYaml(doc)
-    return lines.length > 0 ? [lines.join("\n")] : []
+  if (isAlias(node)) {
+    if (aliasStack.has(node.source)) {
+      return undefined
+    }
+    aliasStack.add(node.source)
+    const resolved = node.resolve(doc)
+    const value = scalarFromNode(resolved, doc, aliasStack)
+    aliasStack.delete(node.source)
+    return value
   }
 
-  if (!isRecord(doc)) {
+  return undefined
+}
+
+const keyFromNode = (node: unknown, doc: YamlDocument): string => {
+  const scalarValue = scalarFromNode(node, doc)
+  if (scalarValue !== undefined) {
+    return scalarToString(scalarValue)
+  }
+
+  if (isScalar(node)) {
+    return scalarToString(node.value)
+  }
+
+  return scalarToString(node)
+}
+
+const flattenYamlNode = (
+  node: unknown,
+  path: string[] = [],
+  doc: YamlDocument,
+  ancestors = new WeakSet<object>()
+): string[] => {
+  const key = pathToKey(path)
+
+  if (node === null) {
+    return [`${key}: null`]
+  }
+
+  if (isAlias(node)) {
+    const resolved = node.resolve(doc)
+    if (!resolved) {
+      return [`${key}: [UnresolvedAlias]`]
+    }
+    if ((isMap(resolved) || isSeq(resolved)) && ancestors.has(resolved)) {
+      return [`${key}: [Circular]`]
+    }
+    return flattenYamlNode(resolved, path, doc, ancestors)
+  }
+
+  if (isScalar(node)) {
+    return [`${key}: ${scalarToString(node.value)}`]
+  }
+
+  if (isSeq(node)) {
+    if (ancestors.has(node)) {
+      return [`${key}: [Circular]`]
+    }
+
+    ancestors.add(node)
+    if (node.items.length === 0) {
+      ancestors.delete(node)
+      return [`${key}: []`]
+    }
+
+    const scalarItems = node.items.map(item => scalarFromNode(item, doc))
+    if (scalarItems.every(item => item !== undefined)) {
+      const rendered = scalarItems.map(item => scalarToString(item)).join(", ")
+      ancestors.delete(node)
+      return [`${key}: ${rendered}`]
+    }
+
+    const lines = node.items.flatMap((item, index) =>
+      flattenYamlNode(item, [...path, `[${index}]`], doc, ancestors)
+    )
+    ancestors.delete(node)
+    return lines
+  }
+
+  if (isMap(node)) {
+    if (ancestors.has(node)) {
+      return [`${key}: [Circular]`]
+    }
+
+    ancestors.add(node)
+    if (node.items.length === 0) {
+      ancestors.delete(node)
+      return [`${key}: []`]
+    }
+
+    if (isYamlSetMap(node)) {
+      const setKeys = node.items
+        .filter(isPair)
+        .map(pair => scalarFromNode(pair.key, doc))
+
+      if (setKeys.length > 0 && setKeys.every(value => value !== undefined)) {
+        const rendered = setKeys.map(value => scalarToString(value)).join(", ")
+        ancestors.delete(node)
+        return [`${key}: ${rendered}`]
+      }
+    }
+
+    const lines = node.items.flatMap((item, index) => {
+      if (!isPair(item)) {
+        return flattenYamlNode(item, [...path, `[${index}]`], doc, ancestors)
+      }
+
+      if (isYamlSetMap(node)) {
+        return flattenYamlNode(
+          item.key,
+          [...path, `[${index}]`],
+          doc,
+          ancestors
+        )
+      }
+
+      const entryKey = keyFromNode(item.key, doc)
+      return flattenYamlNode(item.value, [...path, entryKey], doc, ancestors)
+    })
+
+    ancestors.delete(node)
+    return lines
+  }
+
+  return [`${key}: ${scalarToString(node)}`]
+}
+
+const buildYamlChunks = (doc: YamlDocument): string[] => {
+  const root = doc.contents
+  if (!root) {
     return []
   }
 
-  const chunks = Object.entries(doc).map(([topLevelKey, value]) => {
-    const lines = flattenYaml(value, [topLevelKey])
-    return lines.join("\n")
-  })
+  if (isMap(root) && !isYamlSetMap(root)) {
+    const chunks = root.items.flatMap((item, index) => {
+      if (!isPair(item)) {
+        const lines = flattenYamlNode(item, [`[${index}]`], doc)
+        return lines.length > 0 ? [lines.join("\n")] : []
+      }
 
-  return chunks.filter(Boolean)
+      const topLevelKey = keyFromNode(item.key, doc)
+      const lines = flattenYamlNode(item.value, [topLevelKey], doc)
+      return lines.length > 0 ? [lines.join("\n")] : []
+    })
+
+    return chunks.filter(Boolean)
+  }
+
+  const lines = flattenYamlNode(root, [], doc)
+  return lines.length > 0 ? [lines.join("\n")] : []
 }
 
 export const yamlProcessor: RagFileProcessor = {
@@ -154,10 +197,14 @@ export const yamlProcessor: RagFileProcessor = {
     const content = input.buffer.toString("utf-8")
 
     try {
-      const parsed = parseYaml(content)
-      const genericChunks = buildYamlChunks(parsed)
-      if (genericChunks.length > 0) {
-        return genericChunks.flatMap(chunk =>
+      const doc = parseDocument(content)
+      if (doc.errors.length > 0) {
+        throw doc.errors[0]
+      }
+
+      const chunks = buildYamlChunks(doc)
+      if (chunks.length > 0) {
+        return chunks.flatMap(chunk =>
           chunk.length > getDefaultChunkSize() ? chunkDocument(chunk) : [chunk]
         )
       }
