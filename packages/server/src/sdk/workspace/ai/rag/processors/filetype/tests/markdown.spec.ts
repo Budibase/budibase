@@ -76,9 +76,11 @@ describe("markdownProcessor", () => {
     expect(chunks).toEqual([
       [
         "Incident Steps",
-        ["Primary runbook step:", "- Nested detail one", "- Nested detail two"].join(
-          "\n"
-        ),
+        [
+          "Primary runbook step:",
+          "- Nested detail one",
+          "- Nested detail two",
+        ].join("\n"),
       ].join("\n"),
       ["Incident Steps", "Secondary step"].join("\n"),
     ])
