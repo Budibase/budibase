@@ -2,6 +2,30 @@ apiVersion: v1
 entries:
   budibase:
   - apiVersion: v2
+    appVersion: 3.34.3
+    created: "2026-03-19T11:35:31.099091605Z"
+    dependencies:
+    - condition: services.couchdb.enabled
+      name: couchdb
+      repository: https://apache.github.io/couchdb-helm
+      version: 4.5.6
+    description: Budibase is an open source low-code platform, helping thousands of
+      teams build apps for their workplace in minutes.
+    digest: ff1cf5d22a1bd596ad317298cd27ebcc8c02f70373939bb1e4aa8205fbb800ab
+    icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - budibase-3.0.569.tgz
+    version: 3.0.569
+  - apiVersion: v2
     appVersion: 3.34.2
     created: "2026-03-18T13:41:45.490865465Z"
     dependencies:
@@ -16028,8 +16052,8 @@ entries:
     - budibase-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v2
-    appVersion: 3.34.2
-    created: "2026-03-18T13:41:48.482551298Z"
+    appVersion: 3.34.3
+    created: "2026-03-19T11:35:34.023200185Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -16037,7 +16061,7 @@ entries:
       version: 4.5.6
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: b932a5ca2beec444aacbd83a3f6174082bc7267bc16502cca4596810fc3e2b2a
+    digest: c9aa5f8525410db80b903b2352213b8c866426f1a682b687da63a35d91a68b5f
     icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
     keywords:
     - low-code
@@ -31688,4 +31712,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2026-03-19T11:26:03.124199804Z"
+generated: "2026-03-19T11:35:34.017390098Z"
