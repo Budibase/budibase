@@ -127,7 +127,7 @@ const flattenYamlNode = (
     ancestors.add(node)
     if (node.items.length === 0) {
       ancestors.delete(node)
-      return [`${key}: []`]
+      return [`${key}: ${isYamlSetMap(node) ? "[]" : "{}"}`]
     }
 
     if (isYamlSetMap(node)) {

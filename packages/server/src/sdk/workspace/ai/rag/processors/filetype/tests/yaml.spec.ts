@@ -107,4 +107,16 @@ set: !!set
 
     expect(chunks).toEqual(["value: red, blue"])
   })
+
+  it("preserves empty object and array distinctions", async () => {
+    const chunks = await yamlProcessor.process({
+      buffer: Buffer.from(`
+emptyObject: {}
+emptyArray: []
+      `),
+    })
+
+    expect(chunks).toContain("emptyObject: {}")
+    expect(chunks).toContain("emptyArray: []")
+  })
 })
