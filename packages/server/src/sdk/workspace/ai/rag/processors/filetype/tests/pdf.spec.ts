@@ -7,6 +7,7 @@ jest.mock("pdf-parse", () => ({
 }))
 
 import { pdfProcessor } from "../pdf"
+import { PDFParse } from "pdf-parse"
 
 describe("pdfProcessor", () => {
   beforeEach(() => {
@@ -16,12 +17,14 @@ describe("pdfProcessor", () => {
   it("chunks parsed pdf text", async () => {
     const text = "Parsed PDF content"
     mockPdfGetText.mockResolvedValue({ text })
+    const buffer = Buffer.from("fake pdf bytes")
 
     const chunks = await pdfProcessor.process({
-      buffer: Buffer.from("fake pdf bytes"),
+      buffer,
     })
 
     expect(chunks).toEqual(["Parsed PDF content"])
+    expect(PDFParse).toHaveBeenCalledWith({ data: buffer })
   })
 
   it("returns empty chunks when parsed pdf text is empty", async () => {
