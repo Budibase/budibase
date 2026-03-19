@@ -85,7 +85,9 @@
   }
 
   const getWorkspaceUrl = (app: any) => {
-    return app.editable ? `/builder/workspace/${app.devId}` : `/app${app.url}`
+    return app.editable
+      ? `/builder/workspace/${app.devId}/home`
+      : `/app${app.url}`
   }
 
   const matchesFilter = (name: string, term: string) =>

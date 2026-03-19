@@ -1,10 +1,7 @@
 <script lang="ts">
-  import { goto as gotoStore } from "@roxi/routify"
-  import { onMount } from "svelte"
+  import { redirect } from "@roxi/routify"
 
-  $: goto = $gotoStore
+  $redirect
 
-  onMount(() => {
-    goto("../home")
-  })
+  $redirect("../home")
 </script>

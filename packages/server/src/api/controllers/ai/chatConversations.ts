@@ -200,6 +200,7 @@ const isChatOutsideRequestedScope = ({
   chatAppId: string
   requestedAgentId?: string
 }) =>
+  !!chat.channel ||
   chat.chatAppId !== chatAppId ||
   !matchesRequestedAgentScope(chat, requestedAgentId)
 
@@ -214,6 +215,7 @@ const matchesChatHistoryScope = ({
   userId: string
   requestedAgentId?: string
 }) =>
+  !chat.channel &&
   chat.chatAppId === chatAppId &&
   (!chat.userId || chat.userId === userId) &&
   matchesRequestedAgentScope(chat, requestedAgentId)
