@@ -38,7 +38,7 @@ import {
 } from "../../../sdk/workspace/ai/agents"
 import { createSessionLogIndexer } from "../../../sdk/workspace/ai/agentLogs"
 import { sdk as usersSdk } from "@budibase/shared-core"
-import { retrieveContextForAgent } from "../../../sdk/workspace/ai/rag"
+import { createRetrievalProviderForAgent } from "../../../sdk/workspace/ai/retrieval"
 import {
   assertChatAppIsLiveForUser,
   canAccessChatAppAgentForUser,
@@ -308,7 +308,11 @@ export async function webhookChat({
 
   if (ragEnabled && agent.knowledgeBases?.length && latestQuestion) {
     try {
-      const result = await retrieveContextForAgent(agent, latestQuestion)
+      const provider = await createRetrievalProviderForAgent(agent)
+      const result = await provider.retrieveContextForAgent(
+        agent,
+        latestQuestion
+      )
       retrievedContext = result.text
     } catch (error) {
       console.error("Failed to retrieve agent context", error)
@@ -521,7 +525,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   if (ragEnabled && agent.knowledgeBases?.length && latestQuestion) {
     try {
-      const result = await retrieveContextForAgent(agent, latestQuestion)
+      const provider = await createRetrievalProviderForAgent(agent)
+      const result = await provider.retrieveContextForAgent(
+        agent,
+        latestQuestion
+      )
       retrievedContext = result.text
       ragSourcesMetadata = result.sources
     } catch (error) {
