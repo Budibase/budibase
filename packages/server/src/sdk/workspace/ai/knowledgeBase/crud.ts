@@ -3,29 +3,27 @@ import {
   AIConfigType,
   DocumentType,
   KnowledgeBase,
-  RetrievalBackend,
+  KnowledgeBaseType,
 } from "@budibase/types"
+import { utils } from "@budibase/shared-core"
 import * as configSdk from "../configs"
 import * as knowledgeBaseFileSdk from "./files"
 import * as vectorDbSdk from "../vectorDb"
-import { utils } from "@budibase/shared-core"
 
 const normalizeKnowledgeBaseName = (name: string | undefined) =>
   name?.trim().toLowerCase() || ""
 
 const validateReferences = async ({
-  retrievalBackend,
+  type,
   embeddingModel,
   vectorDb,
-}: Pick<KnowledgeBase, "retrievalBackend"> &
+}: Pick<KnowledgeBase, "type"> &
   Partial<Pick<KnowledgeBase, "embeddingModel" | "vectorDb">>) => {
-  switch (retrievalBackend) {
-    case RetrievalBackend.MANAGED_FILE_SEARCH:
-      return
-    case RetrievalBackend.BUDIBASE_VECTOR: {
+  switch (type) {
+    case KnowledgeBaseType.LOCAL: {
       if (!embeddingModel || !vectorDb) {
         throw new HTTPError(
-          "Embedding model and vector store are required for vector-based knowledge bases",
+          "Embedding model and vector store are required for local knowledge bases",
           400
         )
       }
@@ -44,11 +42,14 @@ const validateReferences = async ({
       }
       return
     }
-    default: {
-      throw utils.unreachable(retrievalBackend, {
-        message: "Unsupported retrieval backend",
+    case KnowledgeBaseType.SHAREPOINT:
+    case KnowledgeBaseType.GOOGLE_DRIVE:
+    case KnowledgeBaseType.CONFLUENCE:
+      return
+    default:
+      throw utils.unreachable(type, {
+        message: "Unsupported knowledge base type",
       })
-    }
   }
 }
 
@@ -57,29 +58,32 @@ const normalizeKnowledgeBase = (
   id: string,
   rev?: string
 ): KnowledgeBase => {
-  switch (source.retrievalBackend) {
-    case RetrievalBackend.BUDIBASE_VECTOR:
+  switch (source.type) {
+    case KnowledgeBaseType.LOCAL:
       return {
         _id: id,
         ...(rev ? { _rev: rev } : {}),
         name: source.name.trim(),
-        retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+        type: KnowledgeBaseType.LOCAL,
         embeddingModel: source.embeddingModel,
         vectorDb: source.vectorDb,
       }
-    case RetrievalBackend.MANAGED_FILE_SEARCH:
+    case KnowledgeBaseType.SHAREPOINT:
+    case KnowledgeBaseType.GOOGLE_DRIVE:
+    case KnowledgeBaseType.CONFLUENCE:
       return {
         _id: id,
         ...(rev ? { _rev: rev } : {}),
         name: source.name.trim(),
-        retrievalBackend: RetrievalBackend.MANAGED_FILE_SEARCH,
-        managedRetrievalProvider: source.managedRetrievalProvider,
+        type: source.type,
+        connectionId: source.connectionId,
+        scope: source.scope,
         managedRetrievalIndexId: source.managedRetrievalIndexId,
       }
-    default: {
-      const _exhaustive: never = source
-      throw new HTTPError(`Unsupported retrieval backend: ${_exhaustive}`, 400)
-    }
+    default:
+      throw utils.unreachable(source, {
+        message: "Unsupported knowledge base type",
+      })
   }
 }
 
@@ -101,7 +105,9 @@ export async function findByEmbeddingModel(
 ): Promise<KnowledgeBase[]> {
   const knowledgeBases = await fetch()
   return knowledgeBases.filter(
-    knowledgeBase => knowledgeBase.embeddingModel === embeddingModelId
+    knowledgeBase =>
+      knowledgeBase.type === KnowledgeBaseType.LOCAL &&
+      knowledgeBase.embeddingModel === embeddingModelId
   )
 }
 
@@ -110,7 +116,9 @@ export async function findByVectorDb(
 ): Promise<KnowledgeBase[]> {
   const knowledgeBases = await fetch()
   return knowledgeBases.filter(
-    knowledgeBase => knowledgeBase.vectorDb === vectorDbId
+    knowledgeBase =>
+      knowledgeBase.type === KnowledgeBaseType.LOCAL &&
+      knowledgeBase.vectorDb === vectorDbId
   )
 }
 
@@ -145,10 +153,7 @@ export async function create(config: KnowledgeBase): Promise<KnowledgeBase> {
   await validateReferences(config)
   await ensureUniqueName(config.name)
 
-  const newConfig = normalizeKnowledgeBase(
-    config,
-    docIds.generateKnowledgeBaseID()
-  )
+  const newConfig = normalizeKnowledgeBase(config, docIds.generateKnowledgeBaseID())
 
   const { rev } = await db.put(newConfig)
   newConfig._rev = rev
@@ -167,26 +172,26 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
     throw new HTTPError("Knowledge base not found", 404)
   }
 
-  const merged = {
-    ...existing,
-    ...config,
-  }
   const updated = normalizeKnowledgeBase(
-    merged as KnowledgeBase,
+    {
+      ...existing,
+      ...config,
+    },
     existing._id!,
     existing._rev
   )
 
   const referencesChanged =
+    existing.type !== updated.type ||
     existing.embeddingModel !== updated.embeddingModel ||
     existing.vectorDb !== updated.vectorDb ||
-    existing.retrievalBackend !== updated.retrievalBackend
+    existing.connectionId !== updated.connectionId
 
   if (referencesChanged) {
     const files = await knowledgeBaseFileSdk.listKnowledgeBaseFiles(config._id)
     if (files.length > 0) {
       throw new HTTPError(
-        "Embedding model and vector database cannot be changed after files are added",
+        "Knowledge base type or references cannot be changed after files are added",
         400
       )
     }
@@ -194,7 +199,6 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
 
   await validateReferences(updated)
   await ensureUniqueName(updated.name, updated._id)
-  updated.name = updated.name.trim()
 
   const { rev } = await db.put(updated)
   updated._rev = rev
@@ -204,7 +208,6 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
 
 export async function remove(id: string) {
   const db = context.getWorkspaceDB()
-
   const existing = await db.get<KnowledgeBase>(id)
   await db.remove(existing)
 }

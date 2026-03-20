@@ -3,7 +3,6 @@ import { AIAPI } from "./ai"
 import { AgentAPI } from "./ai/agent"
 import { KnowledgeBaseAPI } from "./ai/knowledgeBase"
 import { KnowledgeBaseFilesAPI } from "./ai/knowledgeBaseFiles"
-import { KnowledgeSourceAPI } from "./ai/knowledgeSource"
 import { VectorDbAPI } from "./ai/vectorDb"
 import { AssetsAPI } from "./assets"
 import { AttachmentAPI } from "./attachment"
@@ -72,7 +71,6 @@ export default class API {
   vectorDb: VectorDbAPI
   knowledgeBase: KnowledgeBaseAPI
   knowledgeBaseFiles: KnowledgeBaseFilesAPI
-  knowledgeSource: KnowledgeSourceAPI
 
   public: {
     user: UserPublicAPI
@@ -114,7 +112,6 @@ export default class API {
     this.vectorDb = new VectorDbAPI(config)
     this.knowledgeBase = new KnowledgeBaseAPI(config)
     this.knowledgeBaseFiles = new KnowledgeBaseFilesAPI(config)
-    this.knowledgeSource = new KnowledgeSourceAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),

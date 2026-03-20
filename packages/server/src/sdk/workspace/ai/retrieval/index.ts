@@ -1,7 +1,7 @@
 import {
   type Agent,
   type KnowledgeBase,
-  RetrievalBackend,
+  KnowledgeBaseType,
 } from "@budibase/types"
 import { knowledgeBase } from ".."
 import { BudibaseVectorRetrievalProvider } from "./providers/budibaseVector"
@@ -9,16 +9,16 @@ import { ManagedFileSearchRetrievalProvider } from "./providers/managedFileSearc
 import type { RetrievalProvider } from "./types"
 import { utils } from "@budibase/shared-core"
 
-const getRetrievalBackend = (config: KnowledgeBase | undefined) => {
+const getKnowledgeBaseType = (config: KnowledgeBase | undefined) => {
   if (!config) {
     throw new Error("Knowledge base not found for retrieval")
   }
 
-  if (!config.retrievalBackend) {
-    throw new Error(`Knowledge base ${config._id} has no retrieval backend`)
+  if (!config.type) {
+    throw new Error(`Knowledge base ${config._id} has no knowledge type`)
   }
 
-  return config.retrievalBackend
+  return config.type
 }
 
 export const createRetrievalProviderForAgent = async (
@@ -35,22 +35,24 @@ export const createRetrievalProviderForAgent = async (
     )
   )
 
-  const hasManagedFileSearchKnowledgeBase = knowledgeBases.some(kb => {
-    const backend = getRetrievalBackend(kb)
-    switch (backend) {
-      case RetrievalBackend.MANAGED_FILE_SEARCH:
+  const hasConnectorKnowledgeBase = knowledgeBases.some(kb => {
+    const type = getKnowledgeBaseType(kb)
+    switch (type) {
+      case KnowledgeBaseType.SHAREPOINT:
+      case KnowledgeBaseType.GOOGLE_DRIVE:
+      case KnowledgeBaseType.CONFLUENCE:
         return true
-      case RetrievalBackend.BUDIBASE_VECTOR:
+      case KnowledgeBaseType.LOCAL:
         return false
       default: {
-        throw utils.unreachable(backend, {
-          message: `Unsupported retrieval backend: ${backend}`,
+        throw utils.unreachable(type, {
+          message: `Unsupported knowledge base type: ${type}`,
         })
       }
     }
   })
 
-  if (hasManagedFileSearchKnowledgeBase) {
+  if (hasConnectorKnowledgeBase) {
     return new ManagedFileSearchRetrievalProvider()
   }
 

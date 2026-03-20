@@ -25,10 +25,6 @@ import {
   createKnowledgeBaseValidator,
   updateKnowledgeBaseValidator,
 } from "./utils/validators/knowledgeBase"
-import {
-  createKnowledgeSourceValidator,
-  updateKnowledgeSourceValidator,
-} from "./utils/validators/knowledgeSource"
 
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
@@ -112,18 +108,6 @@ aiRagBuilderAdminRoutes
     ai.updateKnowledgeBase
   )
   .delete("/api/knowledge-base/:id", ai.deleteKnowledgeBase)
-  .get("/api/knowledge-source", ai.fetchKnowledgeSources)
-  .post(
-    "/api/knowledge-source",
-    createKnowledgeSourceValidator(),
-    ai.createKnowledgeSource
-  )
-  .put(
-    "/api/knowledge-source",
-    updateKnowledgeSourceValidator(),
-    ai.updateKnowledgeSource
-  )
-  .delete("/api/knowledge-source/:id", ai.deleteKnowledgeSource)
 
 builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
 

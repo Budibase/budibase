@@ -170,7 +170,3 @@ export const generateVectorDbID = () => {
 export const generateKnowledgeBaseID = () => {
   return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
 }
-
-export const generateKnowledgeSourceID = (knowledgeBaseId: string) => {
-  return `${DocumentType.KNOWLEDGE_SOURCE}${SEPARATOR}${knowledgeBaseId}${SEPARATOR}${newid()}`
-}

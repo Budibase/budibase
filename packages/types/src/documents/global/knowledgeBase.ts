@@ -1,27 +1,30 @@
 import { Document } from "../.."
 
-export enum RetrievalBackend {
-  BUDIBASE_VECTOR = "budibase_vector",
-  MANAGED_FILE_SEARCH = "managed_file_search",
-}
-
-export enum ManagedRetrievalProvider {
-  GOOGLE_FILE_SEARCH = "google_file_search",
+export enum KnowledgeBaseType {
+  LOCAL = "local",
+  SHAREPOINT = "sharepoint",
+  GOOGLE_DRIVE = "google_drive",
+  CONFLUENCE = "confluence",
 }
 
 export interface VectorKnowledgeBase extends Document {
   name: string
-  retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR
+  type: KnowledgeBaseType.LOCAL
   embeddingModel: string
   vectorDb: string
-  managedRetrievalProvider?: never
+  connectionId?: never
+  scope?: never
   managedRetrievalIndexId?: never
 }
 
 export interface ManagedFileSearchKnowledgeBase extends Document {
   name: string
-  retrievalBackend: RetrievalBackend.MANAGED_FILE_SEARCH
-  managedRetrievalProvider: ManagedRetrievalProvider
+  type:
+    | KnowledgeBaseType.SHAREPOINT
+    | KnowledgeBaseType.GOOGLE_DRIVE
+    | KnowledgeBaseType.CONFLUENCE
+  connectionId: string
+  scope?: Record<string, unknown>
   managedRetrievalIndexId?: string
   embeddingModel?: never
   vectorDb?: never
