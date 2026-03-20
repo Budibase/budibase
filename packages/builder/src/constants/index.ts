@@ -66,7 +66,6 @@ export const PlanModel = {
 }
 
 export const CHANGELOG_URL = "https://github.com/Budibase/budibase/releases"
-export const AGENT_CHAT_MIN_CLIENT_VERSION = "3.30.0"
 export const DISCORD_URL = "https://discord.com/invite/ZepTmGbtfF"
 export const DOCUMENTATION_URL = "https://docs.budibase.com/docs"
 export const GITHUB_DISCUSSIONS_URL =

@@ -29,6 +29,7 @@
     "@budibase/string-templates": "*",
     "@budibase/types": "*",
     "@spectrum-css/card": "3.0.3",
+    "@spectrum-css/tag": "3.0.0",
     "@svelte-put/qr": "^1.2.1",
     "apexcharts": "^3.48.0",
     "dayjs": "^1.10.8",
