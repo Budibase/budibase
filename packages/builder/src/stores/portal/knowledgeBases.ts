@@ -31,7 +31,13 @@ interface DerivedKnowledgeBaseState {
 type KnowledgeBaseFormDraft = Partial<
   Pick<
     KnowledgeBase,
-    "_id" | "_rev" | "name" | "retrievalBackend" | "embeddingModel" | "vectorDb"
+    | "_id"
+    | "_rev"
+    | "name"
+    | "type"
+    | "embeddingModel"
+    | "vectorDb"
+    | "connectionId"
   >
 >
 

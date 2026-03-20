@@ -2,11 +2,15 @@ import {
   CreateKnowledgeBaseRequest,
   FetchKnowledgeBaseFilesResponse,
   KnowledgeBase,
+  KnowledgeBaseType,
   KnowledgeBaseFileUploadResponse,
   KnowledgeBaseListResponse,
+  ManagedFileSearchKnowledgeBase,
   UpdateKnowledgeBaseRequest,
+  VectorKnowledgeBase,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
+import { utils } from "@budibase/shared-core"
 
 export interface KnowledgeBaseEndpoints {
   fetch: () => Promise<KnowledgeBaseListResponse>
@@ -36,17 +40,43 @@ export const buildKnowledgeBaseEndpoints = (
   },
 
   create: async config => {
-    return await API.post({
-      url: "/api/knowledge-base",
-      body: config,
-    })
+    const { type } = config
+    switch (type) {
+      case KnowledgeBaseType.LOCAL:
+        return await API.post<VectorKnowledgeBase, KnowledgeBase>({
+          url: "/api/knowledge-base",
+          body: config,
+        })
+      case KnowledgeBaseType.SHAREPOINT:
+      case KnowledgeBaseType.GOOGLE_DRIVE:
+      case KnowledgeBaseType.CONFLUENCE:
+        return await API.post<ManagedFileSearchKnowledgeBase, KnowledgeBase>({
+          url: "/api/knowledge-base",
+          body: config,
+        })
+      default:
+        throw utils.unreachable(type)
+    }
   },
 
   update: async config => {
-    return await API.put({
-      url: "/api/knowledge-base",
-      body: config,
-    })
+    const { type } = config
+    switch (type) {
+      case KnowledgeBaseType.LOCAL:
+        return await API.put<VectorKnowledgeBase, KnowledgeBase>({
+          url: "/api/knowledge-base",
+          body: config,
+        })
+      case KnowledgeBaseType.SHAREPOINT:
+      case KnowledgeBaseType.GOOGLE_DRIVE:
+      case KnowledgeBaseType.CONFLUENCE:
+        return await API.put<ManagedFileSearchKnowledgeBase, KnowledgeBase>({
+          url: "/api/knowledge-base",
+          body: config,
+        })
+      default:
+        throw utils.unreachable(type)
+    }
   },
 
   delete: async id => {

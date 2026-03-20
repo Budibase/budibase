@@ -14,7 +14,7 @@
     notifications,
     Select,
   } from "@budibase/bbui"
-  import { RetrievalBackend } from "@budibase/types"
+  import { KnowledgeBaseType } from "@budibase/types"
   import { onMount } from "svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
@@ -35,17 +35,24 @@
           _id: config._id,
           _rev: config._rev,
           name: config.name,
-          retrievalBackend: config.retrievalBackend,
-          embeddingModel: config.embeddingModel,
-          vectorDb: config.vectorDb,
+          type: config.type,
+          embeddingModel:
+            config.type === KnowledgeBaseType.LOCAL
+              ? config.embeddingModel
+              : "",
+          vectorDb:
+            config.type === KnowledgeBaseType.LOCAL ? config.vectorDb : "",
+          connectionId:
+            config.type !== KnowledgeBaseType.LOCAL ? config.connectionId : "",
         }
       : {
           _id: undefined as string | undefined,
           _rev: undefined as string | undefined,
           name: "",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: "",
           vectorDb: "",
+          connectionId: "",
         }
 
   let draft = $state(createDraft())
@@ -62,8 +69,10 @@
   )
   let hasReferenceChanges = $derived.by(
     () =>
+      savedSnapshot?.type !== draft.type ||
       savedSnapshot?.embeddingModel !== draft.embeddingModel ||
-      savedSnapshot?.vectorDb !== draft.vectorDb
+      savedSnapshot?.vectorDb !== draft.vectorDb ||
+      savedSnapshot?.connectionId !== draft.connectionId
   )
 
   let embeddingModelOptions = $derived(
@@ -74,7 +83,10 @@
   let vectorDbOptions = $derived(
     [...$vectorDbStore.configs].sort((a, b) => a.name.localeCompare(b.name))
   )
-  let canEditReferences = $derived((config?.files.length || 0) === 0)
+  let isLocalType = $derived(draft.type === KnowledgeBaseType.LOCAL)
+  let canEditReferences = $derived(
+    draft.type !== KnowledgeBaseType.LOCAL || (config?.files.length || 0) === 0
+  )
   let duplicateNameError = $derived.by(() => {
     const normalizedDraftName = draft.name?.trim().toLowerCase()
     if (!normalizedDraftName) {
@@ -96,12 +108,15 @@
     if (isSaving || !isModified) {
       return false
     }
-    return (
-      !!draft.name?.trim() &&
-      !duplicateNameError &&
-      !!draft.embeddingModel?.trim() &&
-      !!draft.vectorDb?.trim()
-    )
+    if (!draft.name?.trim() || duplicateNameError) {
+      return false
+    }
+
+    if (draft.type === KnowledgeBaseType.LOCAL) {
+      return !!draft.embeddingModel?.trim() && !!draft.vectorDb?.trim()
+    }
+
+    return !!draft.connectionId?.trim()
   })
 
   let embeddingModelSelectOptions = $derived(
@@ -117,6 +132,13 @@
       value: option._id || "",
     }))
   )
+
+  const typeOptions = [
+    { label: "Local files", value: KnowledgeBaseType.LOCAL },
+    { label: "SharePoint", value: KnowledgeBaseType.SHAREPOINT },
+    { label: "Google Drive", value: KnowledgeBaseType.GOOGLE_DRIVE },
+    { label: "Confluence", value: KnowledgeBaseType.CONFLUENCE },
+  ]
 
   onMount(async () => {
     try {
@@ -158,25 +180,41 @@
       isSaving = true
 
       if (draft._id && draft._rev) {
-        const updated = await knowledgeBaseStore.edit({
-          _id: draft._id,
-          _rev: draft._rev,
-          name: draft.name || "",
-          retrievalBackend: draft.retrievalBackend,
-          embeddingModel: draft.embeddingModel || "",
-          vectorDb: draft.vectorDb || "",
-        })
+        const updated =
+          draft.type === KnowledgeBaseType.LOCAL
+            ? await knowledgeBaseStore.edit({
+                _id: draft._id,
+                _rev: draft._rev,
+                name: draft.name || "",
+                type: KnowledgeBaseType.LOCAL,
+                embeddingModel: draft.embeddingModel || "",
+                vectorDb: draft.vectorDb || "",
+              })
+            : await knowledgeBaseStore.edit({
+                _id: draft._id,
+                _rev: draft._rev,
+                name: draft.name || "",
+                type: draft.type,
+                connectionId: draft.connectionId || "",
+              })
 
         draft._rev = updated._rev
         captureSavedSnapshot()
         notifications.success("Knowledge base updated")
       } else {
-        const created = await knowledgeBaseStore.create({
-          name: draft.name || "",
-          retrievalBackend: draft.retrievalBackend,
-          embeddingModel: draft.embeddingModel || "",
-          vectorDb: draft.vectorDb || "",
-        })
+        const created =
+          draft.type === KnowledgeBaseType.LOCAL
+            ? await knowledgeBaseStore.create({
+                name: draft.name || "",
+                type: KnowledgeBaseType.LOCAL,
+                embeddingModel: draft.embeddingModel || "",
+                vectorDb: draft.vectorDb || "",
+              })
+            : await knowledgeBaseStore.create({
+                name: draft.name || "",
+                type: draft.type,
+                connectionId: draft.connectionId || "",
+              })
 
         draft._id = created._id
         draft._rev = created._rev
@@ -252,51 +290,76 @@
     placeholder="HR Policies"
   />
 
-  <div class="select">
-    <Select
-      label="Embedding model"
-      description="Models used to convert text into vector embeddings for search and retrieval."
-      required
-      bind:value={draft.embeddingModel}
-      options={embeddingModelSelectOptions}
-      getOptionValue={option => option.value}
-      getOptionLabel={option => option.label}
-      disabled={!canEditReferences}
-      tooltip={!canEditReferences
-        ? "Remove all files to change the embedding model."
-        : ""}
-    />
-    <ActionButton
-      icon={"Add"}
-      size="M"
-      disabled={!canEditReferences}
-      on:click={createNewEmbeddingModel}
-    />
-  </div>
+  <Select
+    label="Knowledge type"
+    description="Choose where this knowledge base retrieves content from."
+    required
+    bind:value={draft.type}
+    options={typeOptions}
+    getOptionValue={option => option.value}
+    getOptionLabel={option => option.label}
+  />
 
-  <div class="select">
-    <Select
-      label="Vector database"
-      description="Databases optimized for storing and querying vector embeddings. We support PGVector."
-      required
-      bind:value={draft.vectorDb}
-      options={vectorDbSelectOptions}
-      getOptionValue={option => option.value}
-      getOptionLabel={option => option.label}
-      disabled={!canEditReferences}
-      tooltip={!canEditReferences
-        ? "Remove all files to change the vector database."
-        : ""}
-    />
-    <ActionButton
-      icon={"Add"}
-      size="M"
-      disabled={!canEditReferences}
-      on:click={createNewVectorDb}
-    />
-  </div>
+  {#if isLocalType}
+    <div class="select">
+      <Select
+        label="Embedding model"
+        description="Models used to convert text into vector embeddings for search and retrieval."
+        required
+        bind:value={draft.embeddingModel}
+        options={embeddingModelSelectOptions}
+        getOptionValue={option => option.value}
+        getOptionLabel={option => option.label}
+        disabled={!canEditReferences}
+        tooltip={!canEditReferences
+          ? "Remove all files to change the embedding model."
+          : ""}
+      />
+      <ActionButton
+        icon={"Add"}
+        size="M"
+        disabled={!canEditReferences}
+        on:click={createNewEmbeddingModel}
+      />
+    </div>
 
-  <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} {hasReferenceChanges} />
+    <div class="select">
+      <Select
+        label="Vector database"
+        description="Databases optimized for storing and querying vector embeddings. We support PGVector."
+        required
+        bind:value={draft.vectorDb}
+        options={vectorDbSelectOptions}
+        getOptionValue={option => option.value}
+        getOptionLabel={option => option.label}
+        disabled={!canEditReferences}
+        tooltip={!canEditReferences
+          ? "Remove all files to change the vector database."
+          : ""}
+      />
+      <ActionButton
+        icon={"Add"}
+        size="M"
+        disabled={!canEditReferences}
+        on:click={createNewVectorDb}
+      />
+    </div>
+  {:else}
+    <Input
+      label="Connection ID"
+      description="Reference for the connector account/config to sync this source."
+      required
+      bind:value={draft.connectionId}
+      placeholder="connector-connection-id"
+    />
+  {/if}
+
+  {#if isLocalType}
+    <KnowledgeBaseFilesPanel
+      knowledgeBaseId={draft._id}
+      {hasReferenceChanges}
+    />
+  {/if}
 </div>
 
 <style>
