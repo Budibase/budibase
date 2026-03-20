@@ -10,7 +10,7 @@ import {
   CreateAIConfigRequest,
   FeatureFlag,
   LiteLLMKeyConfig,
-  RetrievalBackend,
+  KnowledgeBaseType,
   VectorDbProvider,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
@@ -926,7 +926,7 @@ describe("BudibaseAI", () => {
 
           await config.api.knowledgeBase.create({
             name: "Support Docs",
-            retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+            type: KnowledgeBaseType.LOCAL,
             embeddingModel: created._id!,
             vectorDb: vectorDb._id!,
           })

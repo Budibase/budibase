@@ -27,7 +27,7 @@ import {
   KnowledgeBase,
   KnowledgeBaseFile,
   KnowledgeBaseFileStatus,
-  RetrievalBackend,
+  KnowledgeBaseType,
 } from "@budibase/types"
 import { ingestKnowledgeBaseFile } from "./files"
 import { features, tenancy } from "@budibase/backend-core"
@@ -60,7 +60,7 @@ describe("rag files", () => {
       const knowledgeBase: KnowledgeBase = {
         _id: "kb_123",
         name: "Knowledge Base",
-        retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+        type: KnowledgeBaseType.LOCAL,
         embeddingModel: "embedding_config",
         vectorDb: "vector_db",
       }

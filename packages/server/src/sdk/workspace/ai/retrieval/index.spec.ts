@@ -1,7 +1,7 @@
 import {
   type Agent,
   type KnowledgeBase,
-  RetrievalBackend,
+  KnowledgeBaseType,
 } from "@budibase/types"
 import { knowledgeBase } from ".."
 import { createRetrievalProviderForAgent } from "./index"
@@ -36,7 +36,7 @@ describe("createRetrievalProviderForAgent", () => {
     findKnowledgeBaseMock.mockResolvedValueOnce({
       _id: "knowledgebase_1",
       name: "Support Docs",
-      retrievalBackend: RetrievalBackend.MANAGED_FILE_SEARCH,
+      type: KnowledgeBaseType.GOOGLE_DRIVE,
     } as unknown as KnowledgeBase)
 
     const provider = await createRetrievalProviderForAgent(
@@ -47,7 +47,7 @@ describe("createRetrievalProviderForAgent", () => {
     expect(findKnowledgeBaseMock).toHaveBeenCalledWith("knowledgebase_1")
   })
 
-  it("throws when retrieval backend is absent", async () => {
+  it("throws when knowledge type is absent", async () => {
     findKnowledgeBaseMock.mockResolvedValueOnce({
       _id: "knowledgebase_1",
       name: "Support Docs",
@@ -55,7 +55,7 @@ describe("createRetrievalProviderForAgent", () => {
 
     await expect(
       createRetrievalProviderForAgent(buildAgent(["knowledgebase_1"]))
-    ).rejects.toThrow("Knowledge base knowledgebase_1 has no retrieval backend")
+    ).rejects.toThrow("Knowledge base knowledgebase_1 has no knowledge type")
   })
 
   it("throws when lookup returns no matching knowledge bases", async () => {
@@ -71,12 +71,12 @@ describe("createRetrievalProviderForAgent", () => {
       .mockResolvedValueOnce({
         _id: "knowledgebase_1",
         name: "Ops KB",
-        retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+        type: KnowledgeBaseType.LOCAL,
       } as KnowledgeBase)
       .mockResolvedValueOnce({
         _id: "knowledgebase_2",
         name: "Docs KB",
-        retrievalBackend: RetrievalBackend.MANAGED_FILE_SEARCH,
+        type: KnowledgeBaseType.GOOGLE_DRIVE,
       } as unknown as KnowledgeBase)
 
     const provider = await createRetrievalProviderForAgent(

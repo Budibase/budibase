@@ -4,7 +4,7 @@ import {
   FeatureFlag,
   type KnowledgeBase,
   KnowledgeBaseFileStatus,
-  RetrievalBackend,
+  KnowledgeBaseType,
   type VectorKnowledgeBase,
   VectorDbProvider,
 } from "@budibase/types"
@@ -26,7 +26,7 @@ describe("knowledge base configs", () => {
   const asVectorKnowledgeBase = (
     knowledgeBase: KnowledgeBase
   ): VectorKnowledgeBase => {
-    if (knowledgeBase.retrievalBackend !== RetrievalBackend.BUDIBASE_VECTOR) {
+    if (knowledgeBase.type !== KnowledgeBaseType.LOCAL) {
       throw new Error("Expected a vector knowledge base")
     }
     return knowledgeBase
@@ -91,7 +91,7 @@ describe("knowledge base configs", () => {
 
         const created = await config.api.knowledgeBase.create({
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: embeddingModelId,
           vectorDb: vectorDb._id!,
         })
@@ -106,7 +106,7 @@ describe("knowledge base configs", () => {
         await config.api.knowledgeBase.create(
           {
             name: "Incomplete",
-            retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+            type: KnowledgeBaseType.LOCAL,
             embeddingModel: "",
             vectorDb: "",
           },
@@ -121,7 +121,7 @@ describe("knowledge base configs", () => {
         await config.api.knowledgeBase.create(
           {
             name: "Invalid Vector DB",
-            retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+            type: KnowledgeBaseType.LOCAL,
             embeddingModel: embeddingModelId,
             vectorDb: "vectordb_missing",
           },
@@ -136,7 +136,7 @@ describe("knowledge base configs", () => {
         await config.api.knowledgeBase.create(
           {
             name: "Invalid Embedding",
-            retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+            type: KnowledgeBaseType.LOCAL,
             embeddingModel: "aiconfig_missing",
             vectorDb: vectorDb._id!,
           },
@@ -174,7 +174,7 @@ describe("knowledge base configs", () => {
         await config.api.knowledgeBase.create(
           {
             name: "Invalid Embedding Type",
-            retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+            type: KnowledgeBaseType.LOCAL,
             embeddingModel: completionsModelId,
             vectorDb: vectorDb._id!,
           },
@@ -205,7 +205,7 @@ describe("knowledge base configs", () => {
         await config.api.knowledgeBase.create(
           {
             name: "Invalid Vector DB Type",
-            retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+            type: KnowledgeBaseType.LOCAL,
             embeddingModel: embeddingModelId,
             vectorDb: completionsModelId,
           },
@@ -220,7 +220,7 @@ describe("knowledge base configs", () => {
 
         await config.api.knowledgeBase.create({
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: embeddingModelId,
           vectorDb: vectorDb._id!,
         })
@@ -228,7 +228,7 @@ describe("knowledge base configs", () => {
         await config.api.knowledgeBase.create(
           {
             name: " support docs ",
-            retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+            type: KnowledgeBaseType.LOCAL,
             embeddingModel: embeddingModelId,
             vectorDb: vectorDb._id!,
           },
@@ -244,7 +244,7 @@ describe("knowledge base configs", () => {
         const { embeddingModelId, vectorDb } = await buildDependencies()
         await config.api.knowledgeBase.create({
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: embeddingModelId,
           vectorDb: vectorDb._id!,
         })
@@ -263,7 +263,7 @@ describe("knowledge base configs", () => {
         const { embeddingModelId, vectorDb } = await buildDependencies()
         const created = await config.api.knowledgeBase.create({
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: embeddingModelId,
           vectorDb: vectorDb._id!,
         })
@@ -282,13 +282,13 @@ describe("knowledge base configs", () => {
         const { embeddingModelId, vectorDb } = await buildDependencies()
         await config.api.knowledgeBase.create({
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: embeddingModelId,
           vectorDb: vectorDb._id!,
         })
         const created = await config.api.knowledgeBase.create({
           name: "HR Policies",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: embeddingModelId,
           vectorDb: vectorDb._id!,
         })
@@ -309,7 +309,7 @@ describe("knowledge base configs", () => {
         const { embeddingModelId, vectorDb } = await buildDependencies()
         const created = await config.api.knowledgeBase.create({
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: embeddingModelId,
           vectorDb: vectorDb._id!,
         })
@@ -356,7 +356,7 @@ describe("knowledge base configs", () => {
         const { embeddingModelId, vectorDb } = await buildDependencies()
         const created = await config.api.knowledgeBase.create({
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: embeddingModelId,
           vectorDb: vectorDb._id!,
         })
@@ -388,7 +388,7 @@ describe("knowledge base configs", () => {
         const { embeddingModelId, vectorDb } = await buildDependencies()
         const created = await config.api.knowledgeBase.create({
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: embeddingModelId,
           vectorDb: vectorDb._id!,
         })
@@ -408,7 +408,7 @@ describe("knowledge base configs", () => {
       await config.api.knowledgeBase.create(
         {
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: "aiconfig_test",
           vectorDb: "vectordb_test",
         },
@@ -419,7 +419,7 @@ describe("knowledge base configs", () => {
           _id: "kb_test",
           _rev: "1-test",
           name: "Support Docs",
-          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+          type: KnowledgeBaseType.LOCAL,
           embeddingModel: "aiconfig_test",
           vectorDb: "vectordb_test",
         },

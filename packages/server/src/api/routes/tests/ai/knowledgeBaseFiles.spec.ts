@@ -5,7 +5,7 @@ import {
   AIConfigType,
   FeatureFlag,
   KnowledgeBaseFileStatus,
-  RetrievalBackend,
+  KnowledgeBaseType,
   VectorDbProvider,
 } from "@budibase/types"
 import environment from "../../../../environment"
@@ -126,7 +126,7 @@ describe("knowledge base files", () => {
 
     return await config.api.knowledgeBase.create({
       name: "Support KB",
-      retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
+      type: KnowledgeBaseType.LOCAL,
       embeddingModel: embeddings._id!,
       vectorDb: vectorDb._id!,
     })
