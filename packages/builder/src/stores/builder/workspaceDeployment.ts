@@ -12,6 +12,8 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
     this.reset = this.reset.bind(this)
     this.setAutomationUnpublishedChanges =
       this.setAutomationUnpublishedChanges.bind(this)
+    this.setWorkspaceAppUnpublishedChanges =
+      this.setWorkspaceAppUnpublishedChanges.bind(this)
   }
 
   async fetch() {
@@ -39,6 +41,20 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
         }
       }
       state.automations[automationId].unpublishedChanges = true
+      return state
+    })
+  }
+
+  setWorkspaceAppUnpublishedChanges(workspaceAppId: string) {
+    this.store.update(state => {
+      if (!state.workspaceApps[workspaceAppId]) {
+        state.workspaceApps[workspaceAppId] = {
+          published: false,
+          name: "Workspace app",
+          state: PublishResourceState.DISABLED,
+        }
+      }
+      state.workspaceApps[workspaceAppId].unpublishedChanges = true
       return state
     })
   }

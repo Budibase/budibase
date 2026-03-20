@@ -12,6 +12,7 @@
     automationStore,
     workspaceAppStore,
     appStore,
+    workspaceDeploymentStore,
   } from "@/stores/builder"
   import { agentsStore, featureFlags } from "@/stores/portal"
   import { FeatureFlag, PluginType, type Plugin } from "@budibase/types"
@@ -101,6 +102,20 @@
     pluginWarningModal?.hide()
     await publishWithoutChecks()
   }
+
+  $: automationChanges = $automationStore.automations.filter(
+    automation => automation.publishStatus?.unpublishedChanges
+  ).length
+  $: workspaceAppChanges = $workspaceAppStore.workspaceApps.filter(
+    workspaceApp => workspaceApp.publishStatus?.unpublishedChanges
+  ).length
+  $: tableChanges = Object.values($workspaceDeploymentStore.tables).filter(
+    table => table.unpublishedChanges
+  ).length
+  $: changeCount =
+    automationChanges + workspaceAppChanges + tableChanges + agentChanges
+  $: publishButtonText =
+    changeCount > 0 ? `Publish changes (${changeCount})` : "Publish"
 </script>
 
 <div
@@ -113,7 +128,7 @@
   on:keydown={e => e.key === "Enter" && publish()}
 >
   <Icon size="M" name="arrow-circle-up" />
-  <span>Publish</span>
+  <span>{publishButtonText}</span>
 </div>
 
 <Popover

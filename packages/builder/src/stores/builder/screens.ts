@@ -10,6 +10,7 @@ import {
   previewStore,
   selectedComponent,
   workspaceAppStore,
+  workspaceDeploymentStore,
 } from "@/stores/builder"
 import { createHistoryStore, HistoryStore } from "@/stores/builder/history"
 import { API } from "@/api"
@@ -278,6 +279,12 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     if (savedScreen.pluginAdded) {
       await appStore.refresh()
+    }
+
+    if (savedScreen.workspaceAppId) {
+      workspaceDeploymentStore.setWorkspaceAppUnpublishedChanges(
+        savedScreen.workspaceAppId
+      )
     }
 
     await appStore.refreshAppNav()
