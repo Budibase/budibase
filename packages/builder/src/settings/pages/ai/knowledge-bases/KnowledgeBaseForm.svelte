@@ -14,6 +14,7 @@
     notifications,
     Select,
   } from "@budibase/bbui"
+  import { RetrievalBackend } from "@budibase/types"
   import { onMount } from "svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
@@ -34,6 +35,7 @@
           _id: config._id,
           _rev: config._rev,
           name: config.name,
+          retrievalBackend: config.retrievalBackend,
           embeddingModel: config.embeddingModel,
           vectorDb: config.vectorDb,
         }
@@ -41,6 +43,7 @@
           _id: undefined as string | undefined,
           _rev: undefined as string | undefined,
           name: "",
+          retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
           embeddingModel: "",
           vectorDb: "",
         }
@@ -159,6 +162,7 @@
           _id: draft._id,
           _rev: draft._rev,
           name: draft.name || "",
+          retrievalBackend: draft.retrievalBackend,
           embeddingModel: draft.embeddingModel || "",
           vectorDb: draft.vectorDb || "",
         })
@@ -169,6 +173,7 @@
       } else {
         const created = await knowledgeBaseStore.create({
           name: draft.name || "",
+          retrievalBackend: draft.retrievalBackend,
           embeddingModel: draft.embeddingModel || "",
           vectorDb: draft.vectorDb || "",
         })

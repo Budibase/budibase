@@ -1,17 +1,24 @@
-import type { Agent, KnowledgeBase } from "@budibase/types"
+import {
+  type Agent,
+  type KnowledgeBase,
+  RetrievalBackend,
+} from "@budibase/types"
 import { knowledgeBase } from ".."
 import { BudibaseVectorRetrievalProvider } from "./providers/budibaseVector"
 import { ManagedFileSearchRetrievalProvider } from "./providers/managedFileSearch"
 import type { RetrievalProvider } from "./types"
-
-const MANAGED_FILE_SEARCH_BACKEND = "managed_file_search"
+import { utils } from "@budibase/shared-core"
 
 const getRetrievalBackend = (config: KnowledgeBase | undefined) => {
   if (!config) {
-    return undefined
+    throw new Error("Knowledge base not found for retrieval")
   }
 
-  return Reflect.get(config, "retrievalBackend")
+  if (!config.retrievalBackend) {
+    throw new Error(`Knowledge base ${config._id} has no retrieval backend`)
+  }
+
+  return config.retrievalBackend
 }
 
 export const createRetrievalProviderForAgent = async (
@@ -19,7 +26,7 @@ export const createRetrievalProviderForAgent = async (
 ): Promise<RetrievalProvider> => {
   const knowledgeBaseIds = (agent.knowledgeBases || []).filter(Boolean)
   if (knowledgeBaseIds.length === 0) {
-    return new BudibaseVectorRetrievalProvider()
+    throw new Error("No knowledge bases configured for agent retrieval")
   }
 
   const knowledgeBases = await Promise.all(
@@ -28,9 +35,20 @@ export const createRetrievalProviderForAgent = async (
     )
   )
 
-  const hasManagedFileSearchKnowledgeBase = knowledgeBases.some(
-    kb => getRetrievalBackend(kb) === MANAGED_FILE_SEARCH_BACKEND
-  )
+  const hasManagedFileSearchKnowledgeBase = knowledgeBases.some(kb => {
+    const backend = getRetrievalBackend(kb)
+    switch (backend) {
+      case RetrievalBackend.MANAGED_FILE_SEARCH:
+        return true
+      case RetrievalBackend.BUDIBASE_VECTOR:
+        return false
+      default: {
+        throw utils.unreachable(backend, {
+          message: `Unsupported retrieval backend: ${backend}`,
+        })
+      }
+    }
+  })
 
   if (hasManagedFileSearchKnowledgeBase) {
     return new ManagedFileSearchRetrievalProvider()

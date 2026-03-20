@@ -8,7 +8,7 @@ import {
 import { DerivedBudiStore } from "../BudiStore"
 import { derived, Writable } from "svelte/store"
 
-interface KnowledgeBaseWithFiles extends KnowledgeBase {
+type KnowledgeBaseWithFiles = KnowledgeBase & {
   files: KnowledgeBaseFile[]
 }
 
@@ -29,7 +29,10 @@ interface DerivedKnowledgeBaseState {
 }
 
 type KnowledgeBaseFormDraft = Partial<
-  Pick<KnowledgeBase, "_id" | "_rev" | "name" | "embeddingModel" | "vectorDb">
+  Pick<
+    KnowledgeBase,
+    "_id" | "_rev" | "name" | "retrievalBackend" | "embeddingModel" | "vectorDb"
+  >
 >
 
 export class KnowledgeBaseStore extends DerivedBudiStore<
