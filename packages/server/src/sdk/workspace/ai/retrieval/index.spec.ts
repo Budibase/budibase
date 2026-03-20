@@ -1,7 +1,10 @@
-import type { Agent, KnowledgeBase } from "@budibase/types"
+import {
+  type Agent,
+  type KnowledgeBase,
+  RetrievalBackend,
+} from "@budibase/types"
 import { knowledgeBase } from ".."
 import { createRetrievalProviderForAgent } from "./index"
-import { BudibaseVectorRetrievalProvider } from "./providers/budibaseVector"
 import { ManagedFileSearchRetrievalProvider } from "./providers/managedFileSearch"
 
 jest.mock("..", () => ({
@@ -22,10 +25,10 @@ describe("createRetrievalProviderForAgent", () => {
     jest.clearAllMocks()
   })
 
-  it("defaults to budibase vector when an agent has no knowledge bases", async () => {
-    const provider = await createRetrievalProviderForAgent(buildAgent())
-
-    expect(provider).toBeInstanceOf(BudibaseVectorRetrievalProvider)
+  it("throws when an agent has no knowledge bases", async () => {
+    await expect(createRetrievalProviderForAgent(buildAgent())).rejects.toThrow(
+      "No knowledge bases configured for agent retrieval"
+    )
     expect(findKnowledgeBaseMock).not.toHaveBeenCalled()
   })
 
@@ -33,7 +36,7 @@ describe("createRetrievalProviderForAgent", () => {
     findKnowledgeBaseMock.mockResolvedValueOnce({
       _id: "knowledgebase_1",
       name: "Support Docs",
-      retrievalBackend: "managed_file_search",
+      retrievalBackend: RetrievalBackend.MANAGED_FILE_SEARCH,
     } as unknown as KnowledgeBase)
 
     const provider = await createRetrievalProviderForAgent(
@@ -44,27 +47,23 @@ describe("createRetrievalProviderForAgent", () => {
     expect(findKnowledgeBaseMock).toHaveBeenCalledWith("knowledgebase_1")
   })
 
-  it("defaults to budibase vector when retrieval backend is absent", async () => {
+  it("throws when retrieval backend is absent", async () => {
     findKnowledgeBaseMock.mockResolvedValueOnce({
       _id: "knowledgebase_1",
       name: "Support Docs",
-    } as KnowledgeBase)
+    } as unknown as KnowledgeBase)
 
-    const provider = await createRetrievalProviderForAgent(
-      buildAgent(["knowledgebase_1"])
-    )
-
-    expect(provider).toBeInstanceOf(BudibaseVectorRetrievalProvider)
+    await expect(
+      createRetrievalProviderForAgent(buildAgent(["knowledgebase_1"]))
+    ).rejects.toThrow("Knowledge base knowledgebase_1 has no retrieval backend")
   })
 
-  it("defaults to budibase vector when lookup returns no matching knowledge bases", async () => {
+  it("throws when lookup returns no matching knowledge bases", async () => {
     findKnowledgeBaseMock.mockResolvedValue(undefined)
 
-    const provider = await createRetrievalProviderForAgent(
-      buildAgent(["knowledgebase_missing"])
-    )
-
-    expect(provider).toBeInstanceOf(BudibaseVectorRetrievalProvider)
+    await expect(
+      createRetrievalProviderForAgent(buildAgent(["knowledgebase_missing"]))
+    ).rejects.toThrow("Knowledge base not found for retrieval")
   })
 
   it("uses managed file search when one of multiple knowledge bases is managed", async () => {
@@ -72,11 +71,12 @@ describe("createRetrievalProviderForAgent", () => {
       .mockResolvedValueOnce({
         _id: "knowledgebase_1",
         name: "Ops KB",
+        retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
       } as KnowledgeBase)
       .mockResolvedValueOnce({
         _id: "knowledgebase_2",
         name: "Docs KB",
-        retrievalBackend: "managed_file_search",
+        retrievalBackend: RetrievalBackend.MANAGED_FILE_SEARCH,
       } as unknown as KnowledgeBase)
 
     const provider = await createRetrievalProviderForAgent(

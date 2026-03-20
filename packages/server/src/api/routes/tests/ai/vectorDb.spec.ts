@@ -3,6 +3,7 @@ import {
   FeatureFlag,
   PASSWORD_REPLACEMENT,
   AIConfigType,
+  RetrievalBackend,
   VectorDbProvider,
 } from "@budibase/types"
 import { context, docIds } from "@budibase/backend-core"
@@ -154,6 +155,7 @@ describe("vector db configs", () => {
 
       await config.api.knowledgeBase.create({
         name: "Support Docs",
+        retrievalBackend: RetrievalBackend.BUDIBASE_VECTOR,
         embeddingModel: embeddingModelId,
         vectorDb: created._id!,
       })
