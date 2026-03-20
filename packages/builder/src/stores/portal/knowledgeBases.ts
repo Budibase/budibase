@@ -1,8 +1,10 @@
 import { API } from "@/api"
 import {
   CreateKnowledgeBaseRequest,
+  FetchSharePointSitesResponse,
   KnowledgeBase,
   KnowledgeBaseFile,
+  SyncKnowledgeBaseResponse,
   UpdateKnowledgeBaseRequest,
 } from "@budibase/types"
 import { DerivedBudiStore } from "../BudiStore"
@@ -38,6 +40,7 @@ type KnowledgeBaseFormDraft = Partial<
     | "embeddingModel"
     | "vectorDb"
     | "connectionId"
+    | "scope"
   >
 >
 
@@ -152,6 +155,16 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
       return state
     })
     await this.fetch()
+  }
+
+  sync = async (id: string): Promise<SyncKnowledgeBaseResponse> => {
+    return await API.knowledgeBase.sync(id)
+  }
+
+  fetchSharePointSites = async (
+    id: string
+  ): Promise<FetchSharePointSitesResponse> => {
+    return await API.knowledgeBase.fetchSharePointSites(id)
   }
 
   setFormDraft = (draft: KnowledgeBaseFormDraft) => {

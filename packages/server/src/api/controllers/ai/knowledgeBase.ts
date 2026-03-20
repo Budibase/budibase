@@ -1,7 +1,9 @@
 import {
   CreateKnowledgeBaseRequest,
+  FetchSharePointSitesResponse,
   KnowledgeBase,
   KnowledgeBaseListResponse,
+  SyncKnowledgeBaseResponse,
   UpdateKnowledgeBaseRequest,
   UserCtx,
 } from "@budibase/types"
@@ -37,4 +39,18 @@ export const deleteKnowledgeBase = async (
   const { id } = ctx.params
   await sdk.ai.knowledgeBase.remove(id)
   ctx.body = { deleted: true }
+}
+
+export const syncKnowledgeBase = async (
+  ctx: UserCtx<void, SyncKnowledgeBaseResponse, { id: string }>
+) => {
+  const { id } = ctx.params
+  ctx.body = await sdk.ai.knowledgeBase.sync(id)
+}
+
+export const fetchKnowledgeBaseSharePointSites = async (
+  ctx: UserCtx<void, FetchSharePointSitesResponse, { id: string }>
+) => {
+  const { id } = ctx.params
+  ctx.body = await sdk.ai.knowledgeBase.fetchSharePointSites(id)
 }

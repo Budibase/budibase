@@ -1,11 +1,13 @@
 import {
   CreateKnowledgeBaseRequest,
+  FetchSharePointSitesResponse,
   FetchKnowledgeBaseFilesResponse,
   KnowledgeBase,
   KnowledgeBaseType,
   KnowledgeBaseFileUploadResponse,
   KnowledgeBaseListResponse,
   ManagedFileSearchKnowledgeBase,
+  SyncKnowledgeBaseResponse,
   UpdateKnowledgeBaseRequest,
   VectorKnowledgeBase,
 } from "@budibase/types"
@@ -17,6 +19,10 @@ export interface KnowledgeBaseEndpoints {
   create: (config: CreateKnowledgeBaseRequest) => Promise<KnowledgeBase>
   update: (config: UpdateKnowledgeBaseRequest) => Promise<KnowledgeBase>
   delete: (id: string) => Promise<{ deleted: true }>
+  sync: (knowledgeBaseId: string) => Promise<SyncKnowledgeBaseResponse>
+  fetchSharePointSites: (
+    knowledgeBaseId: string
+  ) => Promise<FetchSharePointSitesResponse>
   fetchFiles: (
     knowledgeBaseId: string
   ) => Promise<FetchKnowledgeBaseFilesResponse>
@@ -88,6 +94,18 @@ export const buildKnowledgeBaseEndpoints = (
   fetchFiles: async knowledgeBaseId => {
     return await API.get({
       url: `/api/knowledge-base/${knowledgeBaseId}/files`,
+    })
+  },
+
+  sync: async knowledgeBaseId => {
+    return await API.post<null, SyncKnowledgeBaseResponse>({
+      url: `/api/knowledge-base/${knowledgeBaseId}/sync`,
+    })
+  },
+
+  fetchSharePointSites: async knowledgeBaseId => {
+    return await API.get({
+      url: `/api/knowledge-base/${knowledgeBaseId}/sharepoint/sites`,
     })
   },
 

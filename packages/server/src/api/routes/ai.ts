@@ -107,6 +107,11 @@ aiRagBuilderAdminRoutes
     updateKnowledgeBaseValidator(),
     ai.updateKnowledgeBase
   )
+  .post("/api/knowledge-base/:id/sync", ai.syncKnowledgeBase)
+  .get(
+    "/api/knowledge-base/:id/sharepoint/sites",
+    ai.fetchKnowledgeBaseSharePointSites
+  )
   .delete("/api/knowledge-base/:id", ai.deleteKnowledgeBase)
 
 builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)

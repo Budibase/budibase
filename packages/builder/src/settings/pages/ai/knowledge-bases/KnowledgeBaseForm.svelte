@@ -1,6 +1,7 @@
 <script lang="ts">
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
+  import { datasources, oauth2, workspaceConnections } from "@/stores/builder"
   import {
     aiConfigsStore,
     knowledgeBaseStore,
@@ -14,7 +15,7 @@
     notifications,
     Select,
   } from "@budibase/bbui"
-  import { KnowledgeBaseType } from "@budibase/types"
+  import { KnowledgeBaseType, type SharePointSiteReference } from "@budibase/types"
   import { onMount } from "svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
@@ -44,6 +45,7 @@
             config.type === KnowledgeBaseType.LOCAL ? config.vectorDb : "",
           connectionId:
             config.type !== KnowledgeBaseType.LOCAL ? config.connectionId : "",
+          scope: config.type !== KnowledgeBaseType.LOCAL ? config.scope : undefined,
         }
       : {
           _id: undefined as string | undefined,
@@ -53,12 +55,18 @@
           embeddingModel: "",
           vectorDb: "",
           connectionId: "",
+          scope: undefined as Record<string, unknown> | undefined,
         }
 
   let draft = $state(createDraft())
 
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
+  let isSyncing = $state(false)
+  let isLoadingSharePointSites = $state(false)
+  let sharePointSites = $state<SharePointSiteReference[]>([])
+  let selectedSharePointSiteId = $state("")
+  let lastLoadedSharePointSitesKey = $state("")
   let savedSnapshot = $state<typeof draft>()
   const captureSavedSnapshot = () => {
     savedSnapshot = Helpers.cloneDeep(draft)
@@ -72,7 +80,9 @@
       savedSnapshot?.type !== draft.type ||
       savedSnapshot?.embeddingModel !== draft.embeddingModel ||
       savedSnapshot?.vectorDb !== draft.vectorDb ||
-      savedSnapshot?.connectionId !== draft.connectionId
+      savedSnapshot?.connectionId !== draft.connectionId ||
+      JSON.stringify(savedSnapshot?.scope || {}) !==
+        JSON.stringify(draft.scope || {})
   )
 
   let embeddingModelOptions = $derived(
@@ -119,6 +129,13 @@
     return !!draft.connectionId?.trim()
   })
 
+  let sharePointSiteOptions = $derived(
+    sharePointSites.map(site => ({
+      label: site.webUrl ? `${site.name} (${site.webUrl})` : site.name,
+      value: site.id,
+    }))
+  )
+
   let embeddingModelSelectOptions = $derived(
     embeddingModelOptions.map(option => ({
       label: option.name,
@@ -140,12 +157,62 @@
     { label: "Confluence", value: KnowledgeBaseType.CONFLUENCE },
   ]
 
+  const matchConnectionForType = (
+    connection: { name: string; templateId?: string; source: string },
+    type: Exclude<KnowledgeBaseType, KnowledgeBaseType.LOCAL>
+  ) => {
+    if (connection.source !== "datasource") {
+      return false
+    }
+
+    const templateId = connection.templateId?.toLowerCase() || ""
+    const connectionName = connection.name?.toLowerCase() || ""
+
+    switch (type) {
+      case KnowledgeBaseType.SHAREPOINT:
+        return templateId.includes("sharepoint") || connectionName.includes("sharepoint")
+      case KnowledgeBaseType.GOOGLE_DRIVE:
+        return (
+          (templateId.includes("google") && templateId.includes("drive")) ||
+          (connectionName.includes("google") && connectionName.includes("drive"))
+        )
+      case KnowledgeBaseType.CONFLUENCE:
+        return templateId.includes("confluence") || connectionName.includes("confluence")
+    }
+  }
+
+  let connectorConnections = $derived.by(() => {
+    if (draft.type === KnowledgeBaseType.LOCAL) {
+      return []
+    }
+
+    const connectorType = draft.type
+    const datasourceConnections = $workspaceConnections.list.filter(
+      connection => connection.source === "datasource"
+    )
+
+    const typeConnections = datasourceConnections.filter(connection =>
+      matchConnectionForType(connection, connectorType)
+    )
+
+    return typeConnections.length > 0 ? typeConnections : datasourceConnections
+  })
+
+  let connectionSelectOptions = $derived(
+    connectorConnections.map(connection => ({
+      label: `${connection.name} (${connection.sourceId})`,
+      value: connection.sourceId,
+    }))
+  )
+
   onMount(async () => {
     try {
       await Promise.all([
         aiConfigsStore.fetch(),
         knowledgeBaseStore.fetch(),
         vectorDbStore.fetch(),
+        datasources.fetch(),
+        oauth2.fetch(),
       ])
 
       const isCreation = knowledgeBaseId === "new"
@@ -166,6 +233,14 @@
           ...persistedDraft,
         }
       }
+      selectedSharePointSiteId =
+        draft.type === KnowledgeBaseType.SHAREPOINT &&
+        draft.scope &&
+        typeof draft.scope.siteId === "string"
+          ? draft.scope.siteId
+          : ""
+
+      await refreshSharePointSitesForSelection()
     } catch (err: any) {
       notifications.error(
         err.message || "Failed to load knowledge base settings"
@@ -196,6 +271,7 @@
                 name: draft.name || "",
                 type: draft.type,
                 connectionId: draft.connectionId || "",
+                scope: draft.scope,
               })
 
         draft._rev = updated._rev
@@ -214,6 +290,7 @@
                 name: draft.name || "",
                 type: draft.type,
                 connectionId: draft.connectionId || "",
+                scope: draft.scope,
               })
 
         draft._id = created._id
@@ -240,6 +317,51 @@
     bb.settings(`/connections/knowledge-bases/${knowledgeBaseId}/vectordb/new`)
   }
 
+  function openConnections() {
+    bb.settings(`/connections/apis`)
+  }
+
+  const handleKnowledgeTypeChange = (type: KnowledgeBaseType) => {
+    draft.type = type
+
+    if (type !== KnowledgeBaseType.SHAREPOINT) {
+      sharePointSites = []
+      selectedSharePointSiteId = ""
+      return
+    }
+
+    lastLoadedSharePointSitesKey = ""
+    refreshSharePointSitesForSelection().catch(() => undefined)
+  }
+
+  const handleConnectionChange = (connectionId: string) => {
+    draft.connectionId = connectionId
+
+    if (draft.type !== KnowledgeBaseType.SHAREPOINT) {
+      return
+    }
+
+    updateSelectedSharePointSite("")
+    lastLoadedSharePointSitesKey = ""
+    refreshSharePointSitesForSelection().catch(() => undefined)
+  }
+
+  const updateSelectedSharePointSite = (siteId: string) => {
+    selectedSharePointSiteId = siteId
+    const selectedSite = sharePointSites.find(site => site.id === siteId)
+    if (!selectedSite) {
+      draft.scope = undefined
+      return
+    }
+
+    draft.scope = {
+      ...(draft.scope || {}),
+      siteId: selectedSite.id,
+      siteName: selectedSite.name,
+      siteWebUrl: selectedSite.webUrl,
+    }
+  }
+
   async function deleteKnowledgeBase() {
     if (!draft._id) {
       return
@@ -261,6 +383,61 @@
         }
       },
     })
+  }
+
+  async function syncKnowledgeBase() {
+    if (!draft._id) {
+      return
+    }
+
+    try {
+      isSyncing = true
+      const result = await knowledgeBaseStore.sync(draft._id)
+      notifications.success(
+        `Fetched ${result.files.length} file references from connector`
+      )
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to sync knowledge base")
+    } finally {
+      isSyncing = false
+    }
+  }
+
+  async function refreshSharePointSitesForSelection() {
+    if (draft.type !== KnowledgeBaseType.SHAREPOINT) {
+      return
+    }
+    if (!draft._id || !draft.connectionId?.trim()) {
+      sharePointSites = []
+      selectedSharePointSiteId = ""
+      return
+    }
+
+    const syncKey = `${draft._id}:${draft.connectionId}`
+    if (lastLoadedSharePointSitesKey === syncKey) {
+      return
+    }
+
+    try {
+      isLoadingSharePointSites = true
+      const response = await knowledgeBaseStore.fetchSharePointSites(draft._id)
+      sharePointSites = response.sites
+      lastLoadedSharePointSitesKey = syncKey
+
+      if (
+        selectedSharePointSiteId &&
+        !response.sites.some(site => site.id === selectedSharePointSiteId)
+      ) {
+        updateSelectedSharePointSite("")
+      }
+      if (!selectedSharePointSiteId && response.sites.length === 1) {
+        updateSelectedSharePointSite(response.sites[0].id)
+      }
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to fetch SharePoint sites")
+    } finally {
+      isLoadingSharePointSites = false
+    }
   }
 </script>
 
@@ -294,10 +471,11 @@
     label="Knowledge type"
     description="Choose where this knowledge base retrieves content from."
     required
-    bind:value={draft.type}
+    value={draft.type}
     options={typeOptions}
     getOptionValue={option => option.value}
     getOptionLabel={option => option.label}
+    on:change={({ detail }) => handleKnowledgeTypeChange(detail)}
   />
 
   {#if isLocalType}
@@ -345,13 +523,51 @@
       />
     </div>
   {:else}
-    <Input
-      label="Connection ID"
-      description="Reference for the connector account/config to sync this source."
-      required
-      bind:value={draft.connectionId}
-      placeholder="connector-connection-id"
-    />
+    <Button
+      disabled={!draft._id || isSyncing}
+      on:click={syncKnowledgeBase}
+    >
+      {isSyncing ? "Syncing..." : "Sync now"}
+    </Button>
+
+    {#if connectionSelectOptions.length > 0}
+      <div class="select">
+        <Select
+          label="Connection"
+          description="Choose an existing connection for this knowledge base source."
+          required
+          value={draft.connectionId}
+          options={connectionSelectOptions}
+          getOptionValue={option => option.value}
+          getOptionLabel={option => option.label}
+          on:change={({ detail }) => handleConnectionChange(detail)}
+        />
+        <ActionButton icon={"Edit"} size="M" on:click={openConnections} />
+      </div>
+    {:else}
+      <Input
+        label="Connection ID"
+        description="No matching connections found. Paste a connection ID or create one in Connections."
+        required
+        bind:value={draft.connectionId}
+        placeholder="connector-connection-id"
+      />
+    {/if}
+
+    {#if draft.type === KnowledgeBaseType.SHAREPOINT}
+      <Select
+        label="SharePoint site"
+        description={isLoadingSharePointSites
+          ? "Loading sites from selected connection..."
+          : "Pick the site this knowledge base should sync from."}
+        value={selectedSharePointSiteId}
+        options={sharePointSiteOptions}
+        getOptionValue={option => option.value}
+        getOptionLabel={option => option.label}
+        disabled={!draft.connectionId || isLoadingSharePointSites}
+        on:change={({ detail }) => updateSelectedSharePointSite(detail)}
+      />
+    {/if}
   {/if}
 
   {#if isLocalType}
