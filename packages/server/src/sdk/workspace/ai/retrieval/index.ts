@@ -13,11 +13,6 @@ const getKnowledgeBaseType = (config: KnowledgeBase | undefined) => {
   if (!config) {
     throw new Error("Knowledge base not found for retrieval")
   }
-
-  if (!config.type) {
-    throw new Error(`Knowledge base ${config._id} has no knowledge type`)
-  }
-
   return config.type
 }
 

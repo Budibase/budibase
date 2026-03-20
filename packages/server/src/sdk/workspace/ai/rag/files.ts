@@ -7,7 +7,9 @@ import {
   type Agent,
   type KnowledgeBase,
   type KnowledgeBaseFile,
+  KnowledgeBaseType,
   KnowledgeBaseFileStatus,
+  type VectorKnowledgeBase,
 } from "@budibase/types"
 import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
 import { knowledgeBase as knowledgeBaseSdk } from ".."
@@ -193,18 +195,28 @@ const getEmbeddingModel = async (configId: string) => {
   return embedding
 }
 
+function assertLocalKnowledgeBase(
+  knowledgeBase: KnowledgeBase
+): asserts knowledgeBase is VectorKnowledgeBase {
+  if (knowledgeBase.type !== KnowledgeBaseType.LOCAL) {
+    throw new Error(
+      `Knowledge base ${knowledgeBase._id} is not configured for vector retrieval`
+    )
+  }
+}
+
 const resolveKnowledgeBasesForAgent = async (
   agent: Agent
-): Promise<KnowledgeBase[]> => {
+): Promise<VectorKnowledgeBase[]> => {
   const knowledgeBaseIds = (agent.knowledgeBases || []).filter(Boolean)
   if (knowledgeBaseIds.length === 0) {
     throw new Error("No knowledge base is configured for this agent")
   }
 
-  const knowledgeBases: KnowledgeBase[] = []
+  const knowledgeBases: VectorKnowledgeBase[] = []
   for (const knowledgeBaseId of knowledgeBaseIds) {
     const config = await knowledgeBaseSdk.find(knowledgeBaseId)
-    if (config) {
+    if (config && config.type === KnowledgeBaseType.LOCAL) {
       knowledgeBases.push(config)
     }
   }
@@ -280,6 +292,7 @@ export const ingestKnowledgeBaseFile = async (
   if (!knowledgeBaseId) {
     throw new Error("Knowledge base id not set")
   }
+  assertLocalKnowledgeBase(knowledgeBase)
 
   const content = await getTextFromBuffer(fileBuffer, knowledgeBaseFile)
   const chunks = createChunksFromContent(content, knowledgeBaseFile.filename)
@@ -323,6 +336,7 @@ export const deleteKnowledgeBaseFileChunks = async (
   if (!knowledgeBaseId) {
     throw new Error("Knowledge base id not set")
   }
+  assertLocalKnowledgeBase(knowledgeBase)
 
   const vectorDb = await createVectorDb({
     namespaceId: knowledgeBaseId,

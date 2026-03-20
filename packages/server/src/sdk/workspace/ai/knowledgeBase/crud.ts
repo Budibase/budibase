@@ -153,7 +153,10 @@ export async function create(config: KnowledgeBase): Promise<KnowledgeBase> {
   await validateReferences(config)
   await ensureUniqueName(config.name)
 
-  const newConfig = normalizeKnowledgeBase(config, docIds.generateKnowledgeBaseID())
+  const newConfig = normalizeKnowledgeBase(
+    config,
+    docIds.generateKnowledgeBaseID()
+  )
 
   const { rev } = await db.put(newConfig)
   newConfig._rev = rev
@@ -172,14 +175,7 @@ export async function update(config: KnowledgeBase): Promise<KnowledgeBase> {
     throw new HTTPError("Knowledge base not found", 404)
   }
 
-  const updated = normalizeKnowledgeBase(
-    {
-      ...existing,
-      ...config,
-    },
-    existing._id!,
-    existing._rev
-  )
+  const updated = normalizeKnowledgeBase(config, existing._id!, existing._rev)
 
   const referencesChanged =
     existing.type !== updated.type ||

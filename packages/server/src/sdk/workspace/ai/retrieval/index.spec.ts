@@ -47,7 +47,7 @@ describe("createRetrievalProviderForAgent", () => {
     expect(findKnowledgeBaseMock).toHaveBeenCalledWith("knowledgebase_1")
   })
 
-  it("throws when knowledge type is absent", async () => {
+  it("throws when knowledge type is unsupported", async () => {
     findKnowledgeBaseMock.mockResolvedValueOnce({
       _id: "knowledgebase_1",
       name: "Support Docs",
@@ -55,7 +55,7 @@ describe("createRetrievalProviderForAgent", () => {
 
     await expect(
       createRetrievalProviderForAgent(buildAgent(["knowledgebase_1"]))
-    ).rejects.toThrow("Knowledge base knowledgebase_1 has no knowledge type")
+    ).rejects.toThrow("Unsupported knowledge base type")
   })
 
   it("throws when lookup returns no matching knowledge bases", async () => {
