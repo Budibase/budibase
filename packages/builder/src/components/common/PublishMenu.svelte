@@ -112,8 +112,7 @@
   $: tableChanges = Object.values($workspaceDeploymentStore.tables).filter(
     table => table.unpublishedChanges
   ).length
-  $: changeCount =
-    automationChanges + workspaceAppChanges + tableChanges + agentChanges
+  $: changeCount = automationChanges + workspaceAppChanges + tableChanges
   $: publishButtonText =
     changeCount > 0 ? `Publish changes (${changeCount})` : "Publish"
 </script>
