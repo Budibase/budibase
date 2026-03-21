@@ -43,7 +43,11 @@ Plans:
   3. Trivy 0.68.1 scan of all three locally built images reports zero HIGH/CRITICAL findings
   4. Grype 0.109.0 scan of all three locally built images reports zero HIGH/CRITICAL findings
   5. Images built from Dockerfile.hardened carry a non-root USER directive
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Create generation script and produce all 3 Dockerfile.hardened files
+- [ ] 02-02-PLAN.md — Build hardened images and verify with Trivy/Grype scans
 
 ### Phase 3: CI/CD Pipeline and Cross-Repo Dispatch
 **Goal**: Every Budibase app and database release automatically triggers a hardened image build that scans clean and publishes to Docker Hub with `{version}-hardened` tags, with all workflow files in place for budibase-deploys bootstrap
@@ -64,5 +68,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. npm Vulnerability Patching | 0/2 | Planning complete | - |
-| 2. Hardened Dockerfiles and OS Patching | 0/TBD | Not started | - |
+| 2. Hardened Dockerfiles and OS Patching | 0/2 | Planning complete | - |
 | 3. CI/CD Pipeline and Cross-Repo Dispatch | 0/TBD | Not started | - |
