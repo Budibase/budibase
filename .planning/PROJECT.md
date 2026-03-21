@@ -12,11 +12,11 @@ Every hardened image passes Trivy and Grype HIGH/CRITICAL scans with zero findin
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Fix all HIGH/CRITICAL npm vulnerabilities via package.hardened.json resolutions — Phase 1
 
 ### Active
 
-- [ ] Fix all HIGH/CRITICAL npm vulnerabilities identified in scans (fast-xml-parser, axios, tar, minimatch, koa, glob, @budibase/server advisories)
+- [x] Fix all HIGH/CRITICAL npm vulnerabilities identified in scans (fast-xml-parser, axios, tar, minimatch, koa, glob) — completed Phase 1
 - [ ] Fix all HIGH/CRITICAL OS-level vulnerabilities (zlib CVE-2026-22184, curl CVE-2026-3805)
 - [ ] Create Dockerfile.hardened for packages/server (budibase/apps)
 - [ ] Create Dockerfile.hardened for packages/worker (budibase/worker)
@@ -88,4 +88,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-21 after initialization*
+*Last updated: 2026-03-21 after Phase 1 completion*
