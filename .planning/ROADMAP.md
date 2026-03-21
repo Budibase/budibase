@@ -27,7 +27,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Running the same version check inside the built image for axios, tar, minimatch, koa, and glob returns versions at or above their respective fix thresholds
   3. `packages/server` and `packages/worker` each have a `package.hardened.json` with a `resolutions` block covering all six npm CVE groups
   4. Running Trivy 0.68.1 against a locally built server or worker image built from `package.hardened.json` reports zero HIGH/CRITICAL npm findings
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Create generation script and package.hardened.json files for server and worker
+- [ ] 01-02-PLAN.md — Validate yarn install with hardened package files produces correct versions
 
 ### Phase 2: Hardened Dockerfiles and OS Patching
 **Goal**: Three Dockerfile.hardened variants exist for server, worker, and couchdb — each building an image that eliminates all remaining OS-level CVEs and integrates the Phase 1 npm patches — verified clean against both Trivy 0.68.1 and Grype 0.109.0
@@ -59,6 +63,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. npm Vulnerability Patching | 0/TBD | Not started | - |
+| 1. npm Vulnerability Patching | 0/2 | Planning complete | - |
 | 2. Hardened Dockerfiles and OS Patching | 0/TBD | Not started | - |
 | 3. CI/CD Pipeline and Cross-Repo Dispatch | 0/TBD | Not started | - |
