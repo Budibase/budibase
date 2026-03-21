@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-npm-vulnerability-patching 01-01-PLAN.md
-last_updated: "2026-03-21T13:28:14.541Z"
+stopped_at: Completed 01-npm-vulnerability-patching 01-02-PLAN.md
+last_updated: "2026-03-21T13:32:42.233Z"
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -47,6 +47,7 @@ Plan: 2 of 2
 
 *Updated after each plan completion*
 | Phase 01-npm-vulnerability-patching P01 | 1 | 2 tasks | 3 files |
+| Phase 01-npm-vulnerability-patching P02 | 3 | 1 tasks | 0 files |
 
 ## Accumulated Context
 
@@ -59,6 +60,8 @@ Recent decisions affecting current work:
 - npm overrides via package.hardened.json — Root resolutions don't reach Docker builds; must use per-package file explicitly COPY'd into build context
 - HIGH+CRITICAL scope only — Medium/Low opportunistic only
 - [Phase 01-npm-vulnerability-patching]: package.hardened.json uses jq to merge resolutions block into service package.json — no @budibase/* entries in resolutions, all original fields preserved
+- [Phase 01-npm-vulnerability-patching]: tar resolution (>=7.5.11) installs tar@7.5.11 in server; worker has no tar in dep tree — both acceptable
+- [Phase 01-npm-vulnerability-patching]: fast-xml-parser, axios, minimatch, glob absent from worker dep tree — no vulnerable versions in worker
 
 ### Pending Todos
 
@@ -73,6 +76,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T13:28:14.540Z
-Stopped at: Completed 01-npm-vulnerability-patching 01-01-PLAN.md
+Last session: 2026-03-21T13:32:42.230Z
+Stopped at: Completed 01-npm-vulnerability-patching 01-02-PLAN.md
 Resume file: None

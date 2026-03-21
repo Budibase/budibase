@@ -9,14 +9,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### NPM Vulnerability Remediation
 
-- [ ] **NPM-01**: fast-xml-parser upgraded to >=4.5.4 in all images (fixes CRITICAL XSS CVE-2026-25896 + HIGH DoS CVE-2026-26278)
-- [ ] **NPM-02**: axios upgraded to >=1.13.5 in all images (fixes HIGH SSRF CVE-2025-27152, HIGH DoS CVE-2025-58754, HIGH proto pollution CVE-2026-25639)
-- [ ] **NPM-03**: tar upgraded to >=7.5.11 in all images (fixes 6 HIGH path traversal CVEs)
-- [ ] **NPM-04**: minimatch upgraded to >=9.0.7 in all images (fixes 3 HIGH ReDoS CVEs)
-- [ ] **NPM-05**: koa upgraded to >=2.16.4 in all images (fixes HIGH host header injection CVE-2026-27959)
-- [ ] **NPM-06**: glob upgraded to >=10.5.0 in all images (fixes HIGH command injection CVE-2025-64756)
-- [ ] **NPM-07**: package.hardened.json files created for server and worker with yarn resolutions targeting all HIGH/CRITICAL npm CVEs
-- [ ] **NPM-08**: Hardened Dockerfiles COPY package.hardened.json and merge resolutions before yarn install
+- [x] **NPM-01**: fast-xml-parser upgraded to >=4.5.4 in all images (fixes CRITICAL XSS CVE-2026-25896 + HIGH DoS CVE-2026-26278)
+- [x] **NPM-02**: axios upgraded to >=1.13.5 in all images (fixes HIGH SSRF CVE-2025-27152, HIGH DoS CVE-2025-58754, HIGH proto pollution CVE-2026-25639)
+- [x] **NPM-03**: tar upgraded to >=7.5.11 in all images (fixes 6 HIGH path traversal CVEs)
+- [x] **NPM-04**: minimatch upgraded to >=9.0.7 in all images (fixes 3 HIGH ReDoS CVEs)
+- [x] **NPM-05**: koa upgraded to >=2.16.4 in all images (fixes HIGH host header injection CVE-2026-27959)
+- [x] **NPM-06**: glob upgraded to >=10.5.0 in all images (fixes HIGH command injection CVE-2025-64756)
+- [x] **NPM-07**: package.hardened.json files created for server and worker with yarn resolutions targeting all HIGH/CRITICAL npm CVEs
+- [x] **NPM-08**: Hardened Dockerfiles COPY package.hardened.json and merge resolutions before yarn install
 
 ### OS Vulnerability Remediation
 
@@ -76,14 +76,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| NPM-01 | Phase 1 | Pending |
-| NPM-02 | Phase 1 | Pending |
-| NPM-03 | Phase 1 | Pending |
-| NPM-04 | Phase 1 | Pending |
-| NPM-05 | Phase 1 | Pending |
-| NPM-06 | Phase 1 | Pending |
-| NPM-07 | Phase 1 | Pending |
-| NPM-08 | Phase 1 | Pending |
+| NPM-01 | Phase 1 | Complete |
+| NPM-02 | Phase 1 | Complete |
+| NPM-03 | Phase 1 | Complete |
+| NPM-04 | Phase 1 | Complete |
+| NPM-05 | Phase 1 | Complete |
+| NPM-06 | Phase 1 | Complete |
+| NPM-07 | Phase 1 | Complete |
+| NPM-08 | Phase 1 | Complete |
 | OS-01 | Phase 2 | Pending |
 | OS-02 | Phase 2 | Pending |
 | OS-03 | Phase 2 | Pending |

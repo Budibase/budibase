@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Create generation script and package.hardened.json files for server and worker
-- [ ] 01-02-PLAN.md — Validate yarn install with hardened package files produces correct versions
+- [x] 01-02-PLAN.md — Validate yarn install with hardened package files produces correct versions
 
 ### Phase 2: Hardened Dockerfiles and OS Patching
 **Goal**: Three Dockerfile.hardened variants exist for server, worker, and couchdb — each building an image that eliminates all remaining OS-level CVEs and integrates the Phase 1 npm patches — verified clean against both Trivy 0.68.1 and Grype 0.109.0
