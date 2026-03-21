@@ -43,10 +43,10 @@ Plans:
   3. Trivy 0.68.1 scan of all three locally built images reports zero HIGH/CRITICAL findings
   4. Grype 0.109.0 scan of all three locally built images reports zero HIGH/CRITICAL findings
   5. Images built from Dockerfile.hardened carry a non-root USER directive
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 02-01-PLAN.md — Create generation script and produce all 3 Dockerfile.hardened files
+- [x] 02-01-PLAN.md — Create generation script and produce all 3 Dockerfile.hardened files
 - [ ] 02-02-PLAN.md — Build hardened images and verify with Trivy/Grype scans
 
 ### Phase 3: CI/CD Pipeline and Cross-Repo Dispatch
@@ -68,5 +68,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. npm Vulnerability Patching | 0/2 | Planning complete | - |
-| 2. Hardened Dockerfiles and OS Patching | 0/2 | Planning complete | - |
+| 2. Hardened Dockerfiles and OS Patching | 1/2 | In Progress|  |
 | 3. CI/CD Pipeline and Cross-Repo Dispatch | 0/TBD | Not started | - |

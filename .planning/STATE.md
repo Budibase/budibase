@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-21T13:50:36.477Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-21T23:06:56.389Z"
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Every hardened image passes Trivy and Grype HIGH/CRITICAL scans with zero findings
-**Current focus:** Phase 01 — npm-vulnerability-patching
+**Current focus:** Phase 02 — hardened-dockerfiles-and-os-patching
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (hardened-dockerfiles-and-os-patching) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Plan: Not started
 *Updated after each plan completion*
 | Phase 01-npm-vulnerability-patching P01 | 1 | 2 tasks | 3 files |
 | Phase 01-npm-vulnerability-patching P02 | 3 | 1 tasks | 0 files |
+| Phase 02-hardened-dockerfiles-and-os-patching P01 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -62,6 +63,9 @@ Recent decisions affecting current work:
 - [Phase 01-npm-vulnerability-patching]: package.hardened.json uses jq to merge resolutions block into service package.json — no @budibase/* entries in resolutions, all original fields preserved
 - [Phase 01-npm-vulnerability-patching]: tar resolution (>=7.5.11) installs tar@7.5.11 in server; worker has no tar in dep tree — both acceptable
 - [Phase 01-npm-vulnerability-patching]: fast-xml-parser, axios, minimatch, glob absent from worker dep tree — no vulnerable versions in worker
+- [Phase 02-hardened-dockerfiles-and-os-patching]: Python3 heredoc in bash for Dockerfile generation (BSD sed incompatible with multiline i-commands)
+- [Phase 02-hardened-dockerfiles-and-os-patching]: OS patch anchored before # handle node-gyp comment (not FROM) to preserve LABEL ordering
+- [Phase 02-hardened-dockerfiles-and-os-patching]: CouchDB Dockerfile.hardened is header-only — existing apt-mark hold + apt-get upgrade already covers Debian CVEs
 
 ### Pending Todos
 
@@ -76,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T13:50:36.475Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-hardened-dockerfiles-and-os-patching/02-CONTEXT.md
+Last session: 2026-03-21T23:06:56.387Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None
