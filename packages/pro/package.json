@@ -13,7 +13,6 @@
     "url": "https://github.com/Budibase/budibase-pro.git"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.79.0",
     "@budibase/backend-core": "*",
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
@@ -21,7 +20,6 @@
     "@koa/router": "15.3.0",
     "bull": "4.10.1",
     "dd-trace": "5.56.0",
-    "joi": "17.6.0",
     "jsonwebtoken": "9.0.2",
     "lru-cache": "^7.14.1",
     "memorystream": "^0.3.1",
@@ -33,7 +31,6 @@
   "devDependencies": {
     "@types/jsonwebtoken": "9.0.3",
     "@types/koa": "3.0.1",
-    "@types/koa__router": "12.0.5",
     "@types/lodash": "4.14.200",
     "@types/node-fetch": "2.6.4",
     "rimraf": "3.0.2",
