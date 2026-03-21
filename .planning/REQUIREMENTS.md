@@ -76,36 +76,36 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| NPM-01 | Pending | Pending |
-| NPM-02 | Pending | Pending |
-| NPM-03 | Pending | Pending |
-| NPM-04 | Pending | Pending |
-| NPM-05 | Pending | Pending |
-| NPM-06 | Pending | Pending |
-| NPM-07 | Pending | Pending |
-| NPM-08 | Pending | Pending |
-| OS-01 | Pending | Pending |
-| OS-02 | Pending | Pending |
-| OS-03 | Pending | Pending |
-| DOCK-01 | Pending | Pending |
-| DOCK-02 | Pending | Pending |
-| DOCK-03 | Pending | Pending |
-| DOCK-04 | Pending | Pending |
-| DOCK-05 | Pending | Pending |
-| DOCK-06 | Pending | Pending |
-| CI-01 | Pending | Pending |
-| CI-02 | Pending | Pending |
-| CI-03 | Pending | Pending |
-| CI-04 | Pending | Pending |
-| CI-05 | Pending | Pending |
-| CI-06 | Pending | Pending |
-| CI-07 | Pending | Pending |
+| NPM-01 | Phase 1 | Pending |
+| NPM-02 | Phase 1 | Pending |
+| NPM-03 | Phase 1 | Pending |
+| NPM-04 | Phase 1 | Pending |
+| NPM-05 | Phase 1 | Pending |
+| NPM-06 | Phase 1 | Pending |
+| NPM-07 | Phase 1 | Pending |
+| NPM-08 | Phase 1 | Pending |
+| OS-01 | Phase 2 | Pending |
+| OS-02 | Phase 2 | Pending |
+| OS-03 | Phase 2 | Pending |
+| DOCK-01 | Phase 2 | Pending |
+| DOCK-02 | Phase 2 | Pending |
+| DOCK-03 | Phase 2 | Pending |
+| DOCK-04 | Phase 2 | Pending |
+| DOCK-05 | Phase 2 | Pending |
+| DOCK-06 | Phase 2 | Pending |
+| CI-01 | Phase 3 | Pending |
+| CI-02 | Phase 3 | Pending |
+| CI-03 | Phase 3 | Pending |
+| CI-04 | Phase 3 | Pending |
+| CI-05 | Phase 3 | Pending |
+| CI-06 | Phase 3 | Pending |
+| CI-07 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 24 total
-- Mapped to phases: 0
-- Unmapped: 24
+- Mapped to phases: 24
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-21*
-*Last updated: 2026-03-21 after initial definition*
+*Last updated: 2026-03-21 after roadmap creation*
