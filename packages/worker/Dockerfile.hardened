@@ -79,7 +79,8 @@ ENV DD_GIT_COMMIT_SHA=$GIT_COMMIT_SHA
 ENV DD_VERSION=$BUDIBASE_VERSION
 
 # Smoke test: verify native addons survive OS package upgrade
-RUN node -e "require('bcrypt'); require('isolated-vm'); console.log('native addons OK')"
+# Note: worker does not depend on isolated-vm, so only bcrypt is checked here
+RUN node -e "require('bcrypt'); console.log('native addons OK')"
 
 # Drop to non-root user (DOCK-05)
 # node user (UID 1000) pre-exists in node:22-alpine
