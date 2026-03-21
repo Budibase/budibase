@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Create generation script and package.hardened.json files for server and worker
+- [x] 01-01-PLAN.md — Create generation script and package.hardened.json files for server and worker
 - [ ] 01-02-PLAN.md — Validate yarn install with hardened package files produces correct versions
 
 ### Phase 2: Hardened Dockerfiles and OS Patching

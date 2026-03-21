@@ -2,16 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-21T13:09:54.020Z"
-last_activity: 2026-03-21 — Roadmap created
+status: unknown
+stopped_at: Completed 01-npm-vulnerability-patching 01-01-PLAN.md
+last_updated: "2026-03-21T13:28:14.541Z"
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,16 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Every hardened image passes Trivy and Grype HIGH/CRITICAL scans with zero findings
-**Current focus:** Phase 1 — npm Vulnerability Patching
+**Current focus:** Phase 01 — npm-vulnerability-patching
 
 ## Current Position
 
-Phase: 1 of 3 (npm Vulnerability Patching)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-21 — Roadmap created
-
-Progress: [░░░░░░░░░░] 0%
+Phase: 01 (npm-vulnerability-patching) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -52,6 +46,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01-npm-vulnerability-patching P01 | 1 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -63,6 +58,7 @@ Recent decisions affecting current work:
 - Separate Dockerfile.hardened files — Keep standard images untouched, hardened as overlay
 - npm overrides via package.hardened.json — Root resolutions don't reach Docker builds; must use per-package file explicitly COPY'd into build context
 - HIGH+CRITICAL scope only — Medium/Low opportunistic only
+- [Phase 01-npm-vulnerability-patching]: package.hardened.json uses jq to merge resolutions block into service package.json — no @budibase/* entries in resolutions, all original fields preserved
 
 ### Pending Todos
 
@@ -77,6 +73,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T13:09:54.014Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-npm-vulnerability-patching/01-CONTEXT.md
+Last session: 2026-03-21T13:28:14.540Z
+Stopped at: Completed 01-npm-vulnerability-patching 01-01-PLAN.md
+Resume file: None
