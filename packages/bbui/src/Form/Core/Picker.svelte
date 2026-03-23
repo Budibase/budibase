@@ -24,6 +24,7 @@
   export let id: string | undefined = undefined
   export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = false
+  export let bordered: boolean = true
   export let fieldText: string = ""
   export let fieldIcon: PickerIconInput = undefined
   export let fieldColour: string = ""
@@ -47,6 +48,8 @@
     option?.colour ?? undefined
   export let getOptionSubtitle = (option: O, _index?: number) =>
     option?.subtitle ?? undefined
+  export let getOptionTooltip = (option: O, _index?: number) =>
+    option?.tooltip ?? undefined
   export let useOptionIconImage = false
   export let open: boolean = false
   export let readonly: boolean = false
@@ -75,6 +78,8 @@
   export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
   export let hideChevron: boolean = false
+  export let wrapText: boolean = false
+  export let fieldTooltip: string | null = null
 
   const maxHeight = 360
   const VIRTUALIZATION_THRESHOLD = 200
@@ -114,7 +119,8 @@
     searchTerm,
     getOptionLabel
   )
-  $: virtualizationEnabled = filteredOptions.length > VIRTUALIZATION_THRESHOLD
+  $: virtualizationEnabled =
+    !wrapText && filteredOptions.length > VIRTUALIZATION_THRESHOLD
   $: {
     if (!virtualizationEnabled) {
       virtualizedOptions = filteredOptions.map((option, idx) => ({
@@ -226,6 +232,7 @@
 <button
   {id}
   class="spectrum-Picker spectrum-Picker--size{size}"
+  class:has-border={bordered}
   class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-open={open}
@@ -252,6 +259,8 @@
     class:is-placeholder={isPlaceholder}
     class:auto-width={autoWidth}
     class:has-subtitle={!!fieldSubtitle}
+    class:wrap-text={wrapText}
+    title={fieldTooltip}
   >
     <span class="picker-label-text">{fieldText}</span>
     {#if fieldSubtitle}
@@ -277,6 +286,10 @@
   <div
     class="popover-content"
     class:auto-width={autoWidth}
+    class:wrap-text={wrapText}
+    class:size-s={size === "S"}
+    class:size-m={size === "M"}
+    class:size-l={size === "L"}
     use:clickOutside={() => {
       open = false
     }}
@@ -345,6 +358,7 @@
           ></li>
         {/if}
         {#each virtualizedOptions as { option, idx } (getOptionValue(option, idx) ?? idx)}
+          {@const optionTooltip = getOptionTooltip(option, idx)}
           {@const optionIcon = resolveIcon(getOptionIcon(option, idx))}
           <li
             class="spectrum-Menu-item"
@@ -356,6 +370,7 @@
             on:mouseenter={e => onOptionMouseenter(e, option)}
             on:mouseleave={e => onOptionMouseleave(e, option)}
             class:is-disabled={!isOptionEnabled(option)}
+            title={optionTooltip ?? undefined}
           >
             {#if optionIcon}
               <span class="option-extra icon">
@@ -425,8 +440,13 @@
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
+  }
+  .spectrum-Picker.has-border {
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
+  }
+  .spectrum-Picker--quiet {
+    padding: 0 8px;
   }
   .spectrum-Picker-label.auto-width {
     margin-right: var(--spacing-xs);
@@ -480,6 +500,30 @@
   }
   .spectrum-Menu-item.is-disabled {
     pointer-events: none;
+  }
+
+  .spectrum-Picker-label.wrap-text {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    width: auto;
+  }
+  .spectrum-Picker-label.wrap-text .picker-label-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .popover-content.wrap-text .spectrum-Menu-item {
+    height: auto;
+    min-height: var(--spectrum-menu-item-height);
+    align-items: flex-start;
+  }
+  .popover-content.wrap-text .spectrum-Menu-itemLabel {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    width: auto;
+    flex: 1 1 auto;
   }
 
   /* Search styles inside popover */
@@ -558,6 +602,18 @@
     line-height: 15px;
     color: var(--spectrum-global-color-gray-600);
     font-weight: 500;
+  }
+  .spectrum-Picker--sizeL
+    .spectrum-Picker-label.has-subtitle
+    .picker-label-text,
+  .spectrum-Picker--sizeL .picker-label-subtitle {
+    font-size: 14px;
+    line-height: 18px;
+  }
+  .popover-content.size-l .spectrum-Menu-itemLabel,
+  .popover-content.size-l .subtitle-text {
+    font-size: 14px;
+    line-height: 18px;
   }
 
   .select-all-item {

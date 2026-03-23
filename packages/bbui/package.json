@@ -27,7 +27,6 @@
     "dist"
   ],
   "dependencies": {
-    "@adobe/spectrum-css-workflow-icons": "1.2.1",
     "@budibase/shared-core": "*",
     "@budibase/string-templates": "*",
     "@spectrum-css/accordion": "3.0.24",
@@ -57,14 +56,12 @@
     "@spectrum-css/progresscircle": "1.0.2",
     "@spectrum-css/radio": "3.0.2",
     "@spectrum-css/search": "3.0.2",
-    "@spectrum-css/sidenav": "3.0.2",
     "@spectrum-css/slider": "3.0.1",
     "@spectrum-css/statuslight": "3.0.2",
     "@spectrum-css/stepper": "3.0.3",
     "@spectrum-css/switch": "1.0.2",
     "@spectrum-css/table": "3.0.1",
     "@spectrum-css/tabs": "3.2.12",
-    "@spectrum-css/tag": "3.0.0",
     "@spectrum-css/tags": "3.0.2",
     "@spectrum-css/textfield": "3.0.1",
     "@spectrum-css/toast": "3.0.1",
@@ -77,7 +74,6 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.10.8",
     "easymde": "^2.16.1",
-    "svelte-dnd-action": "^0.9.8",
     "svelte-portal": "^2.2.1"
   },
   "resolutions": {

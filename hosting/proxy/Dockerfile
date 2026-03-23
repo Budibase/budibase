@@ -1,5 +1,21 @@
 FROM nginx:latest
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        procps \
+        iproute2 \
+        curl \
+        dnsutils \
+        netcat-openbsd \
+        openssl \
+        lsof \
+        strace \
+        jq \
+        less \
+        coreutils \
+        tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
 # nginx.conf
 # use the default nginx behaviour for *.template files which are processed with envsubst
 # override the output dir to output directly to /etc/nginx instead of /etc/nginx/conf.d

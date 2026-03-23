@@ -1,7 +1,24 @@
-import { match, MatchedRoute } from "@/types/routing"
-import { BudiStore } from "./BudiStore"
+import type { MatchedRoute } from "@/types/routing"
 import { get } from "svelte/store"
-import { flattenedRoutes } from "@/stores/routing"
+import { BudiStore } from "./BudiStore"
+
+type SettingsRouteResolver = (path: string) => MatchedRoute | null
+
+let settingsRouteResolver: SettingsRouteResolver | null = null
+
+export const setSettingsRouteResolver = (resolver: SettingsRouteResolver) => {
+  settingsRouteResolver = resolver
+}
+
+const resolvePathParams = (
+  path: string | undefined,
+  params: Record<string, string>
+) => {
+  if (!path) {
+    return path
+  }
+  return path.replace(/:([^/]+)/g, (_match, key) => params[key] ?? `:${key}`)
+}
 
 export interface Settings {
   open: boolean
@@ -21,16 +38,16 @@ export const INITIAL_GLOBAL_STATE: BBState = {
 export class BBStore extends BudiStore<BBState> {
   constructor() {
     super(INITIAL_GLOBAL_STATE)
-
+    this.clearSettings = this.clearSettings.bind(this)
     this.hideSettings = this.hideSettings.bind(this)
+    this.goToParent = this.goToParent.bind(this)
   }
 
   reset() {
     this.store.set({ ...INITIAL_GLOBAL_STATE })
   }
 
-  settings(path?: string) {
-    // Just open the settings and allow it to defer to its default path
+  settings(path?: string, params?: Record<string, any>) {
     if (!path) {
       this.update(state => ({
         ...state,
@@ -42,18 +59,32 @@ export class BBStore extends BudiStore<BBState> {
       return
     }
 
-    const matchedRoute = match(path, get(flattenedRoutes))
-
+    const matchedRoute = settingsRouteResolver?.(path)
     if (matchedRoute) {
       this.update(state => ({
         ...state,
         settings: {
           ...state.settings,
-          route: matchedRoute,
+          route: {
+            ...matchedRoute,
+            params: {
+              ...matchedRoute.params,
+              ...(params || {}),
+            },
+          },
           open: true,
         },
       }))
     }
+  }
+
+  clearSettings() {
+    this.update(state => ({
+      ...state,
+      settings: {
+        open: false,
+      },
+    }))
   }
 
   hideSettings() {
@@ -64,6 +95,18 @@ export class BBStore extends BudiStore<BBState> {
         open: false,
       },
     }))
+  }
+
+  goToParent() {
+    const route = get(this.store).settings.route
+    const parentRoute = route?.entry.crumbs?.at(-2)
+    const parentPath = resolvePathParams(parentRoute?.path, route?.params || {})
+
+    if (!parentPath) {
+      console.error("Parent from route not valid", { route })
+      return
+    }
+    this.settings(parentPath)
   }
 }
 

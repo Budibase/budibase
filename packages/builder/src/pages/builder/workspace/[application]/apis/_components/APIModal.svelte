@@ -73,12 +73,7 @@
     if (!request) {
       return undefined
     }
-    try {
-      return await queries.fetchImportInfo(request)
-    } catch (err) {
-      console.warn("Failed to load template metadata", err)
-      return undefined
-    }
+    return await queries.fetchImportInfo(request)
   }
 
   const applySecurityHeaders = (
@@ -160,9 +155,9 @@
         integration: restIntegration,
         config,
         name: buildDatasourceName(selectedTemplate, targetSpec),
-        ...(template.restTemplateName && targetSpec?.version
+        ...(template.restTemplateId && targetSpec?.version
           ? {
-              restTemplate: template.restTemplateName,
+              restTemplateId: template.restTemplateId,
               restTemplateVersion: targetSpec.version,
             }
           : {}),
@@ -174,15 +169,16 @@
       goto(`./datasource/${ds._id}`)
 
       notifications.success(`${selectedTemplate.name} API created`)
+      modal.hide()
     } catch (error: any) {
       notifications.error(
         `Error importing template - ${error?.message || "Unknown error"}`
       )
+    } finally {
+      loading = false
+      selectedTemplate = null
+      targetSpec = null
     }
-    modal.hide()
-    loading = false
-    selectedTemplate = null
-    targetSpec = null
   }
 
   const buildDatasourceName = (
@@ -204,7 +200,7 @@
         description: event.detail.template.description,
         specs: event.detail.template.specs,
         icon: event.detail.template.icon,
-        restTemplateName: event.detail.template.name,
+        restTemplateId: event.detail.template.id,
       })
       return
     }
@@ -233,7 +229,7 @@
       description: selectedTemplate.description,
       specs: selectedTemplate.specs,
       icon: group.icon,
-      restTemplateName: selectedTemplate.name,
+      restTemplateId: selectedTemplate.id,
     })
   }
 </script>

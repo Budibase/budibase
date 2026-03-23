@@ -1,4 +1,5 @@
 import { FieldType } from "@budibase/types"
+import type { DateFieldMetadata } from "@budibase/types"
 
 import { generateColumnDefinition } from "../../integrations/utils/utils"
 
@@ -34,5 +35,47 @@ describe("generateColumnDefinition tinyint handling", () => {
     })
 
     expect(schema.type).toEqual(FieldType.NUMBER)
+  })
+})
+
+describe("generateColumnDefinition time handling", () => {
+  const baseConfig = {
+    autocolumn: false,
+    name: "col",
+    presence: false,
+  }
+
+  it("marks time columns as time-only", () => {
+    const schema = generateColumnDefinition({
+      ...baseConfig,
+      externalType: "time",
+    })
+    const dateSchema = schema as DateFieldMetadata
+
+    expect(dateSchema.type).toEqual(FieldType.DATETIME)
+    expect(dateSchema.timeOnly).toBe(true)
+    expect(dateSchema.dateOnly).toBe(false)
+  })
+
+  it("marks time with precision columns as time-only", () => {
+    const schema = generateColumnDefinition({
+      ...baseConfig,
+      externalType: "time(6)",
+    })
+    const dateSchema = schema as DateFieldMetadata
+
+    expect(dateSchema.type).toEqual(FieldType.DATETIME)
+    expect(dateSchema.timeOnly).toBe(true)
+  })
+
+  it("does not treat timestamp as time-only", () => {
+    const schema = generateColumnDefinition({
+      ...baseConfig,
+      externalType: "timestamp",
+    })
+    const dateSchema = schema as DateFieldMetadata
+
+    expect(dateSchema.type).toEqual(FieldType.DATETIME)
+    expect(dateSchema.timeOnly).toBe(false)
   })
 })

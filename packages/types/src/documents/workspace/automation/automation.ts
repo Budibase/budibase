@@ -129,6 +129,7 @@ export interface SendEmailOpts {
   info?: any
   cc?: string
   bcc?: string
+  replyTo?: string
   automation?: boolean
   invite?: EmailInvite
   attachments?: EmailAttachment[]

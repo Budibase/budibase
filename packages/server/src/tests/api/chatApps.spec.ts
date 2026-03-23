@@ -1,5 +1,5 @@
-import { context, docIds } from "@budibase/backend-core"
-import type { ChatApp } from "@budibase/types"
+import { context, docIds, roles } from "@budibase/backend-core"
+import type { Agent, ChatApp, ChatConversation, User } from "@budibase/types"
 import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 
@@ -127,6 +127,59 @@ describe("chat apps validation", () => {
 
     expect(res.status).toBe(400)
   })
+
+  it("persists roleId for agents", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        },
+      ],
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.agents[0].roleId).toBe(roles.BUILTIN_ROLE_IDS.BASIC)
+  })
+
+  it("normalizes empty roleId to unrestricted", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          roleId: "   ",
+        },
+      ],
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.agents[0].roleId).toBeUndefined()
+  })
+
+  it("rejects non-string roleId", async () => {
+    const res = await updateChatApp({
+      _id: chatApp._id,
+      _rev: chatApp._rev,
+      agents: [
+        {
+          agentId: "agent-1",
+          isEnabled: true,
+          isDefault: false,
+          roleId: 123,
+        },
+      ],
+    })
+
+    expect(res.status).toBe(400)
+  })
 })
 
 describe("chat apps create validation", () => {
@@ -153,5 +206,433 @@ describe("chat apps create validation", () => {
         )
       }
     )
+  })
+})
+
+describe("chat route auth split", () => {
+  const config = new TestConfiguration()
+  let chatApp: ChatApp
+  let basicUser: User
+  let agentId: string
+  let disabledAgentId: string
+  let restrictedAgentId: string
+
+  beforeAll(async () => {
+    await config.init("chat-route-auth-split")
+    basicUser = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: false },
+      admin: { global: false },
+    })
+
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        const agent: Agent = {
+          _id: docIds.generateAgentID(),
+          name: "Support agent",
+          aiconfig: "",
+          live: true,
+          icon: "robot",
+          iconColor: "#6a9bcc",
+          createdAt: now,
+          enabledTools: [],
+        }
+        await db.put(agent)
+        agentId = agent._id!
+
+        const disabledAgent: Agent = {
+          _id: docIds.generateAgentID(),
+          name: "Disabled support agent",
+          aiconfig: "",
+          live: true,
+          icon: "robot",
+          iconColor: "#9f8cd1",
+          createdAt: now,
+          enabledTools: [],
+        }
+        await db.put(disabledAgent)
+        disabledAgentId = disabledAgent._id!
+
+        const restrictedAgent: Agent = {
+          _id: docIds.generateAgentID(),
+          name: "Restricted support agent",
+          aiconfig: "",
+          live: true,
+          icon: "robot",
+          iconColor: "#a56f6f",
+          createdAt: now,
+          enabledTools: [],
+        }
+        await db.put(restrictedAgent)
+        restrictedAgentId = restrictedAgent._id!
+
+        const doc: ChatApp = {
+          _id: docIds.generateChatAppID(),
+          agents: [
+            { agentId, isEnabled: true, isDefault: true },
+            { agentId: disabledAgentId, isEnabled: false, isDefault: false },
+            {
+              agentId: restrictedAgentId,
+              isEnabled: true,
+              isDefault: false,
+              roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+            },
+          ],
+          live: true,
+          createdAt: now,
+          updatedAt: now,
+        }
+        const { rev } = await db.put(doc)
+        chatApp = { ...doc, _rev: rev }
+      }
+    )
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  const headersForUser = async (user: User) =>
+    await config.withUser(user, async () => config.defaultHeaders({}, true))
+
+  const setChatAppLive = async (live: boolean) => {
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const existing = await db.get<ChatApp>(chatApp._id!)
+        const updated: ChatApp = {
+          ...existing,
+          live,
+          updatedAt: new Date().toISOString(),
+        }
+        const { rev } = await db.put(updated)
+        chatApp = { ...updated, _rev: rev }
+      }
+    )
+  }
+
+  const createConversation = async (title: string) => {
+    let conversation: ChatConversation | undefined
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const db = context.getWorkspaceDB()
+        const now = new Date().toISOString()
+        const doc: ChatConversation = {
+          _id: docIds.generateChatConversationID(),
+          chatAppId: chatApp._id!,
+          agentId,
+          userId: basicUser._id!,
+          messages: [],
+          title,
+          createdAt: now,
+          updatedAt: now,
+        }
+        await db.put(doc)
+        conversation = doc
+      }
+    )
+    return conversation!
+  }
+
+  it("allows basic users to access GET /api/chatapps", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config.getRequest()!.get("/api/chatapps").set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body?._id).toBe(chatApp._id)
+    expect(
+      (res.body.agents || [])
+        .filter((agent: { isEnabled: boolean }) => agent.isEnabled)
+        .map((agent: { agentId: string }) => agent.agentId)
+    ).not.toContain(restrictedAgentId)
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body?._id).toBe(chatApp._id)
+  })
+
+  it("returns 404 when GET /api/chatapps/:chatAppId targets a missing chat app", async () => {
+    const headers = await headersForUser(basicUser)
+    const missingChatAppId = docIds.generateChatAppID()
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${missingChatAppId}`)
+      .set(headers)
+
+    expect(res.status).toBe(404)
+  })
+
+  it("blocks basic users from GET /api/chatapps/:chatAppId when chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(basicUser)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(403)
+
+    await setChatAppLive(true)
+  })
+
+  it("allows builders to access GET /api/chatapps/:chatAppId when chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(config.getUser())
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+
+    await setChatAppLive(true)
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId/agents", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/agents`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body.agents).toHaveLength(1)
+    expect(res.body.agents[0]).toEqual({
+      _id: agentId,
+      name: "Support agent",
+      icon: "robot",
+      iconColor: "#6a9bcc",
+      live: true,
+    })
+    expect(res.body.agents[0]).not.toHaveProperty("aiconfig")
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).not.toContain(disabledAgentId)
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).not.toContain(restrictedAgentId)
+  })
+
+  it("allows builders to see role-restricted agents", async () => {
+    const headers = await headersForUser(config.getUser())
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/agents`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).toContain(restrictedAgentId)
+  })
+
+  it("hides role-restricted chat links in /api/client/chatapps", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .get("/api/client/chatapps")
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    const currentChatEntries = res.body.chatApps.filter(
+      (entry: { chatAppId: string }) => entry.chatAppId === chatApp._id
+    )
+    expect(
+      currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
+    ).toContain(agentId)
+    expect(
+      currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
+    ).not.toContain(restrictedAgentId)
+  })
+
+  it("includes role-restricted chat links for builders in /api/client/chatapps", async () => {
+    const headers = await headersForUser(config.getUser())
+    const res = await config
+      .getRequest()!
+      .get("/api/client/chatapps")
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    const currentChatEntries = res.body.chatApps.filter(
+      (entry: { chatAppId: string }) => entry.chatAppId === chatApp._id
+    )
+    expect(
+      currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
+    ).toContain(restrictedAgentId)
+  })
+
+  it("blocks basic users from PUT /api/chatapps/:chatAppId", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .put(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+      .send({
+        _id: chatApp._id,
+        _rev: chatApp._rev,
+        agents: chatApp.agents,
+      })
+
+    expect(res.status).toBe(403)
+  })
+
+  it("blocks basic users from POST /api/chatapps/:chatAppId/agent", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/agent`)
+      .set(headers)
+      .send({ agentId })
+
+    expect(res.status).toBe(403)
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId/conversations", async () => {
+    const headers = await headersForUser(basicUser)
+    const conversation = await createConversation("history conversation")
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body.map((chat: ChatConversation) => chat._id)).toContain(
+      conversation._id
+    )
+  })
+
+  it("blocks basic users from GET /api/chatapps/:chatAppId/conversations when chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(basicUser)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+
+    expect(res.status).toBe(403)
+
+    await setChatAppLive(true)
+  })
+
+  it("allows basic users to access GET /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
+    const headers = await headersForUser(basicUser)
+    const conversation = await createConversation("single conversation")
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/conversations/${conversation._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(res.body._id).toBe(conversation._id)
+  })
+
+  it("allows basic users to access POST /api/chatapps/:chatAppId/conversations", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId,
+        title: "basic user conversation",
+      })
+
+    expect(res.status).toBe(201)
+    expect(res.body.chatAppId).toBe(chatApp._id)
+    expect(res.body.agentId).toBe(agentId)
+  })
+
+  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations for role-restricted agents", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId: restrictedAgentId,
+        title: "restricted conversation",
+      })
+
+    expect(res.status).toBe(403)
+  })
+
+  it("allows basic users to access DELETE /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
+    const headers = await headersForUser(basicUser)
+    const conversation = await createConversation("delete conversation")
+    const res = await config
+      .getRequest()!
+      .delete(`/api/chatapps/${chatApp._id}/conversations/${conversation._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(204)
+  })
+
+  it("allows basic users to access POST /api/chatapps/:chatAppId/conversations/:chatConversationId/stream", async () => {
+    const headers = await headersForUser(basicUser)
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        chatAppId: "mismatched-chat-app-id",
+        agentId,
+        messages: [],
+      })
+
+    expect(res.status).toBe(400)
+  })
+
+  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations/:chatConversationId/stream when chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(basicUser)
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId,
+        messages: [],
+      })
+
+    expect(res.status).toBe(403)
+
+    await setChatAppLive(true)
+  })
+
+  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations/:chatConversationId/stream for role-restricted agents", async () => {
+    const headers = await headersForUser(basicUser)
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        chatAppId: chatApp._id,
+        agentId: restrictedAgentId,
+        messages: [],
+      })
+
+    expect(res.status).toBe(403)
   })
 })

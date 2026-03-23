@@ -1,22 +1,148 @@
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  encryption,
+  env,
+  HTTPError,
+} from "@budibase/backend-core"
+import { licensing } from "@budibase/pro"
 import {
   AIConfigType,
-  LLMProviderField,
+  BUDIBASE_AI_PROVIDER_ID,
   CustomAIProviderConfig,
   DocumentType,
   LLMProvider,
+  LLMProviderField,
   PASSWORD_REPLACEMENT,
   RequiredKeys,
 } from "@budibase/types"
-import environment from "../../../../environment"
 import * as liteLLM from "./litellm"
+import * as knowledgeBaseSdk from "../knowledgeBase"
+import { processEnvironmentVariable } from "../../../utils"
 
-const withDefaults = (
+const SECRET_ENCODING_PREFIX = "bbai_enc::"
+
+const normalizeProviderModelId = (
+  modelId: string,
+  providerId: string
+): string => {
+  const providerPrefix = `${providerId}/`
+  return modelId.startsWith(providerPrefix)
+    ? modelId.slice(providerPrefix.length)
+    : modelId
+}
+
+const encodeSecret = (value: string): string => {
+  if (!value || value.startsWith(SECRET_ENCODING_PREFIX)) {
+    return value
+  }
+  return `${SECRET_ENCODING_PREFIX}${encryption.encrypt(value)}`
+}
+
+const decodeSecret = (value: string): string => {
+  if (!value || !value.startsWith(SECRET_ENCODING_PREFIX)) {
+    return value
+  }
+  return encryption.decrypt(value.slice(SECRET_ENCODING_PREFIX.length))
+}
+
+const getPasswordCredentialFieldKeys = async (
+  providerId: string
+): Promise<Set<string>> => {
+  const providers = await fetchLiteLLMProviders()
+  const provider = providers.find(p => p.id === providerId)
+  return new Set(
+    provider?.credentialFields
+      .filter(field => field.field_type === "password")
+      .map(field => field.key) || []
+  )
+}
+
+const encodeConfigSecrets = async (
+  config: Pick<
+    CustomAIProviderConfig,
+    "provider" | "credentialsFields" | "webSearchConfig"
+  >
+) => {
+  const passwordKeys = await getPasswordCredentialFieldKeys(config.provider)
+  return {
+    credentialsFields: Object.fromEntries(
+      Object.entries(config.credentialsFields || {}).map(([key, value]) => [
+        key,
+        typeof value === "string" && passwordKeys.has(key)
+          ? encodeSecret(value)
+          : value,
+      ])
+    ),
+    webSearchConfig: config.webSearchConfig
+      ? {
+          ...config.webSearchConfig,
+          apiKey: config.webSearchConfig.apiKey
+            ? encodeSecret(config.webSearchConfig.apiKey)
+            : config.webSearchConfig.apiKey,
+        }
+      : undefined,
+  }
+}
+
+const decodeConfigSecrets = (
   config: CustomAIProviderConfig
-): CustomAIProviderConfig => ({
-  ...config,
-  configType: config.configType ?? AIConfigType.COMPLETIONS,
-})
+): CustomAIProviderConfig => {
+  return {
+    ...config,
+    credentialsFields: Object.fromEntries(
+      Object.entries(config.credentialsFields || {}).map(([key, value]) => [
+        key,
+        typeof value === "string" ? decodeSecret(value) : value,
+      ])
+    ),
+    ...(config.webSearchConfig
+      ? {
+          webSearchConfig: {
+            ...config.webSearchConfig,
+            apiKey: config.webSearchConfig.apiKey
+              ? decodeSecret(config.webSearchConfig.apiKey)
+              : config.webSearchConfig.apiKey,
+          },
+        }
+      : {}),
+  }
+}
+
+const resolveCredentialFields = async (
+  credentialFields: Record<string, string>
+) => {
+  return await processEnvironmentVariable({
+    ...credentialFields,
+  })
+}
+
+const ensureDefaultUniqueness = async (excludeId?: string) => {
+  const db = context.getWorkspaceDB()
+  const result = await db.allDocs<CustomAIProviderConfig>(
+    docIds.getDocParams(DocumentType.AI_CONFIG, undefined, {
+      include_docs: true,
+    })
+  )
+
+  const docsToUpdate = result.rows
+    .map(row => row.doc)
+    .filter((doc): doc is CustomAIProviderConfig => !!doc)
+    .filter(
+      doc =>
+        doc.configType === AIConfigType.COMPLETIONS &&
+        doc.isDefault === true &&
+        doc._id !== excludeId
+    )
+    .map(doc => ({
+      ...doc,
+      isDefault: false,
+    }))
+
+  for (const doc of docsToUpdate) {
+    await db.put(doc)
+  }
+}
 
 export async function fetch(): Promise<CustomAIProviderConfig[]> {
   const db = context.getWorkspaceDB()
@@ -29,7 +155,7 @@ export async function fetch(): Promise<CustomAIProviderConfig[]> {
   return result.rows
     .map(row => row.doc)
     .filter((doc): doc is CustomAIProviderConfig => !!doc)
-    .map(withDefaults)
+    .map(config => decodeConfigSecrets(config))
 }
 
 export async function find(
@@ -37,24 +163,71 @@ export async function find(
 ): Promise<CustomAIProviderConfig | undefined> {
   const db = context.getWorkspaceDB()
   const result = await db.tryGet<CustomAIProviderConfig>(id)
-  return result ? withDefaults(result) : result
+  return result ? decodeConfigSecrets(result) : undefined
 }
 
 export async function create(
-  config: CustomAIProviderConfig
+  config: Pick<
+    CustomAIProviderConfig,
+    | "model"
+    | "provider"
+    | "credentialsFields"
+    | "configType"
+    | "reasoningEffort"
+    | "webSearchConfig"
+    | "name"
+    | "isDefault"
+  >
 ): Promise<CustomAIProviderConfig> {
   const db = context.getWorkspaceDB()
 
-  const modelId = await liteLLM.addModel({
-    provider: config.provider,
-    model: config.model,
-    credentialFields: config.credentialsFields,
-    configType: config.configType,
-    reasoningEffort: config.reasoningEffort,
-  })
+  const isBBAI = config.provider === BUDIBASE_AI_PROVIDER_ID
+  const isSelfhost = env.SELF_HOSTED
+
+  if (isBBAI && isSelfhost) {
+    const baseUrl = env.BUDICLOUD_URL.endsWith("/")
+      ? env.BUDICLOUD_URL
+      : `${env.BUDICLOUD_URL}/`
+    config.credentialsFields.api_base = new URL("api/ai", baseUrl).toString()
+    const licenseKey = await licensing.keys.getLicenseKey()
+    if (!licenseKey) {
+      throw new HTTPError("No license key found", 422)
+    }
+    config.credentialsFields.api_key = licenseKey
+  }
+
+  const configId =
+    config.provider === BUDIBASE_AI_PROVIDER_ID
+      ? docIds.generateAIConfigID("bbai")
+      : docIds.generateAIConfigID()
+
+  let modelId
+  if (!isBBAI || isSelfhost) {
+    const resolvedCredentialFields = await resolveCredentialFields(
+      config.credentialsFields
+    )
+
+    await liteLLM.validateConfig({
+      provider: config.provider,
+      name: config.model,
+      credentialFields: resolvedCredentialFields,
+      configType: config.configType,
+    })
+
+    modelId = await liteLLM.addModel({
+      configId,
+      provider: config.provider,
+      model: config.model,
+      credentialFields: resolvedCredentialFields,
+      configType: config.configType,
+      reasoningEffort: config.reasoningEffort,
+    })
+  } else {
+    modelId = BUDIBASE_AI_PROVIDER_ID
+  }
 
   const newConfig: CustomAIProviderConfig = {
-    _id: docIds.generateAIConfigID(),
+    _id: configId,
     name: config.name,
     provider: config.provider,
     credentialsFields: config.credentialsFields,
@@ -63,10 +236,22 @@ export async function create(
     ...(config.webSearchConfig && { webSearchConfig: config.webSearchConfig }),
     configType: config.configType,
     reasoningEffort: config.reasoningEffort,
+    isDefault: config.isDefault,
   }
 
-  const { rev } = await db.put(newConfig)
+  const encodedConfig: CustomAIProviderConfig = {
+    ...newConfig,
+    ...(await encodeConfigSecrets(newConfig)),
+  }
+  const { rev } = await db.put(encodedConfig)
   newConfig._rev = rev
+
+  if (
+    newConfig.configType === AIConfigType.COMPLETIONS &&
+    newConfig.isDefault === true
+  ) {
+    await ensureDefaultUniqueness(newConfig._id)
+  }
 
   await liteLLM.syncKeyModels()
 
@@ -74,7 +259,19 @@ export async function create(
 }
 
 export async function update(
-  config: CustomAIProviderConfig
+  config: Pick<
+    CustomAIProviderConfig,
+    | "_id"
+    | "_rev"
+    | "name"
+    | "provider"
+    | "credentialsFields"
+    | "model"
+    | "configType"
+    | "reasoningEffort"
+    | "webSearchConfig"
+    | "isDefault"
+  >
 ): Promise<CustomAIProviderConfig> {
   const id = config._id
   if (!id) {
@@ -108,11 +305,8 @@ export async function update(
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
     ...config,
+    isDefault: config.isDefault ?? existing.isDefault,
   }
-
-  const db = context.getWorkspaceDB()
-  const { rev } = await db.put(updatedConfig)
-  updatedConfig._rev = rev
 
   function getLiteLLMAwareFields(config: CustomAIProviderConfig) {
     return {
@@ -124,26 +318,64 @@ export async function update(
     }
   }
 
+  const isBBAI = config.provider === BUDIBASE_AI_PROVIDER_ID
+  const isSelfhost = env.SELF_HOSTED
   const shouldUpdateLiteLLM =
     JSON.stringify(getLiteLLMAwareFields(updatedConfig)) !==
-    JSON.stringify(getLiteLLMAwareFields(existing))
+      JSON.stringify(getLiteLLMAwareFields(existing)) &&
+    (isSelfhost || !isBBAI)
+
+  if (shouldUpdateLiteLLM) {
+    const resolvedCredentialFields = await resolveCredentialFields(
+      updatedConfig.credentialsFields
+    )
+
+    await liteLLM.validateConfig({
+      provider: updatedConfig.provider,
+      name: updatedConfig.model,
+      credentialFields: resolvedCredentialFields,
+      configType: updatedConfig.configType,
+    })
+  }
+
+  const db = context.getWorkspaceDB()
+  const encodedConfig: CustomAIProviderConfig = {
+    ...updatedConfig,
+    ...(await encodeConfigSecrets(updatedConfig)),
+  }
+  const { rev } = await db.put(encodedConfig)
+  updatedConfig._rev = rev
+
+  if (
+    updatedConfig.configType === AIConfigType.COMPLETIONS &&
+    updatedConfig.isDefault === true
+  ) {
+    await ensureDefaultUniqueness(updatedConfig._id)
+  }
 
   if (shouldUpdateLiteLLM) {
     try {
+      const resolvedCredentialFields = await resolveCredentialFields(
+        updatedConfig.credentialsFields
+      )
+
       await liteLLM.updateModel({
+        configId: id,
         llmModelId: updatedConfig.liteLLMModelId,
         provider: updatedConfig.provider,
         name: updatedConfig.model,
-        credentialFields: updatedConfig.credentialsFields,
+        credentialFields: resolvedCredentialFields,
         configType: updatedConfig.configType,
         reasoningEffort: updatedConfig.reasoningEffort,
       })
       await liteLLM.syncKeyModels()
     } catch (err) {
-      await db.put({
+      const rollbackConfig: CustomAIProviderConfig = {
         ...existing,
+        ...(await encodeConfigSecrets(existing)),
         _rev: updatedConfig._rev,
-      })
+      }
+      await db.put(rollbackConfig)
       throw err
     }
   }
@@ -152,6 +384,15 @@ export async function update(
 }
 
 export async function remove(id: string) {
+  const dependentKnowledgeBases =
+    await knowledgeBaseSdk.findByEmbeddingModel(id)
+  if (dependentKnowledgeBases.length > 0) {
+    throw new HTTPError(
+      "Embedding model cannot be deleted while it is used by a knowledge base",
+      400
+    )
+  }
+
   const db = context.getWorkspaceDB()
 
   const existing = await db.get<CustomAIProviderConfig>(id)
@@ -160,44 +401,81 @@ export async function remove(id: string) {
   await liteLLM.syncKeyModels()
 }
 
-export async function getLiteLLMModelConfigOrThrow(configId: string): Promise<{
-  modelName: string
-  modelId: string
-  apiKey: string
-  baseUrl: string
-}> {
-  const aiConfig = await find(configId)
-
-  if (!aiConfig) {
-    throw new HTTPError("Config not found", 400)
-  }
-
-  const { secretKey } = await liteLLM.getKeySettings()
-  if (!secretKey) {
-    throw new HTTPError(
-      "LiteLLM should be configured. Contact support if the issue persists.",
-      500
-    )
-  }
-
-  return {
-    modelName: aiConfig.model,
-    modelId: aiConfig.liteLLMModelId,
-    apiKey: secretKey,
-    baseUrl: environment.LITELLM_URL,
-  }
-}
-
 let liteLLMProviders: LLMProvider[]
 
 export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
   if (!liteLLMProviders?.length) {
-    const providers = await liteLLM.fetchPublicProviders()
+    const [providers, modelCostMap] = await Promise.all([
+      liteLLM.fetchPublicProviders(),
+      liteLLM.fetchPublicModelCostMap(),
+    ])
+
     liteLLMProviders = providers.map(provider => {
+      const modelsByType = Object.entries(modelCostMap).reduce<{
+        completions: string[]
+        embeddings: string[]
+      }>(
+        (acc, [modelId, metadata]) => {
+          const modelProvider = metadata?.litellm_provider
+          const isMatchingProvider = Array.isArray(modelProvider)
+            ? modelProvider.includes(provider.litellm_provider)
+            : typeof modelProvider === "string"
+              ? modelProvider
+                  .split(",")
+                  .map(value => value.trim())
+                  .includes(provider.litellm_provider)
+              : false
+
+          if (!isMatchingProvider) {
+            return acc
+          }
+
+          const normalizedModelId = normalizeProviderModelId(
+            modelId,
+            provider.litellm_provider
+          )
+
+          const modelModes = Array.isArray(metadata?.mode)
+            ? metadata.mode
+            : typeof metadata?.mode === "string"
+              ? metadata.mode.split(",")
+              : []
+          const normalizedModes = modelModes.map(mode =>
+            mode.trim().toLowerCase()
+          )
+
+          if (normalizedModes.includes("embedding")) {
+            acc.embeddings.push(normalizedModelId)
+          }
+
+          if (
+            !normalizedModes.length ||
+            normalizedModes.some(mode =>
+              ["chat", "completion", "responses"].includes(mode)
+            )
+          ) {
+            acc.completions.push(normalizedModelId)
+          }
+
+          return acc
+        },
+        { completions: [], embeddings: [] }
+      )
+
+      const models = {
+        completions: [...new Set(modelsByType.completions)].sort((a, b) =>
+          a.localeCompare(b)
+        ),
+        embeddings: [...new Set(modelsByType.embeddings)].sort((a, b) =>
+          a.localeCompare(b)
+        ),
+      }
+
       const mapProvider: RequiredKeys<LLMProvider> = {
         id: provider.provider,
         displayName: provider.provider_display_name,
         externalProvider: provider.litellm_provider,
+        models,
         credentialFields: provider.credential_fields.map(f => {
           const field: RequiredKeys<LLMProviderField> = {
             key: f.key,
@@ -214,6 +492,27 @@ export async function fetchLiteLLMProviders(): Promise<LLMProvider[]> {
       }
       return mapProvider
     })
+
+    liteLLMProviders.push({
+      id: BUDIBASE_AI_PROVIDER_ID,
+      displayName: "Budibase AI",
+      externalProvider: "custom_openai",
+      models: {
+        completions: ["budibase/v1"],
+        embeddings: [],
+      },
+      credentialFields: [
+        { key: "api_key", label: "api_key", field_type: "password" },
+      ],
+    })
   }
   return liteLLMProviders
 }
+
+export async function getLiteLLMStatus(args?: {
+  signal?: AbortSignal
+}): Promise<liteLLM.LiteLLMStatus> {
+  return liteLLM.getLiteLLMStatus(args)
+}
+
+export { LiteLLMStatus } from "./litellm"

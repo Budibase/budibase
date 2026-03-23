@@ -32,10 +32,6 @@ export class ConfigAPI extends TestAPI {
       .expect("Content-Type", /json/)
   }
 
-  getAIConfig = async () => {
-    return await this.getConfig(ConfigType.AI)
-  }
-
   getConfig = async <T extends ConfigType>(type: T) => {
     const resp = await this.request
       .get(`/api/global/configs/${type}`)

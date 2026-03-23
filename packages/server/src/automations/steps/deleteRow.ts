@@ -36,7 +36,7 @@ export async function run({
   })
 
   try {
-    await destroy(ctx)
+    await destroy(ctx, { isAutomation: true })
     return {
       response: ctx.body,
       row: ctx.row,

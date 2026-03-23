@@ -28,7 +28,14 @@ export function watch() {
           const split = path.split("/")
           const name = split[split.length - 1]
           console.log("Importing plugin:", path)
-          await processUploaded({ name, path }, PluginSource.FILE)
+          await processUploaded(
+            {
+              originalFilename: name,
+              filepath: path,
+              mimetype: "application/gzip",
+            },
+            PluginSource.FILE
+          )
         } catch (err: any) {
           const message = err?.message ? err?.message : err
           console.error("Failed to import plugin:", message)

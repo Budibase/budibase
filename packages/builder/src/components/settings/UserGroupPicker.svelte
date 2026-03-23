@@ -1,33 +1,61 @@
-<script>
+<script lang="ts">
   import { Icon, Search, Layout } from "@budibase/bbui"
+  import type { ComponentType } from "svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let searchTerm = ""
-  export let selected
-  export let list = []
-  export let labelKey
-  export let iconComponent = null
-  export let extractIconProps = x => x
+  interface PickerItem {
+    _id: string
+    [key: string]: unknown
+  }
 
-  const dispatch = createEventDispatcher()
+  interface EnrichedPickerItem extends PickerItem {
+    selected: boolean
+  }
+
+  export let searchTerm = ""
+  export let selected: string[] | undefined = undefined
+  export let list: PickerItem[] = []
+  export let labelKey: string
+  export let iconComponent: ComponentType | null = null
+  export let extractIconProps: (
+    _item: EnrichedPickerItem
+  ) => Record<string, unknown> = item => item
+
+  const dispatch = createEventDispatcher<{
+    select: string
+    deselect: string
+  }>()
 
   $: enrichedList = enrich(list, selected)
-  $: sortedList = sort(enrichedList)
+  $: filteredList = filter(enrichedList, searchTerm)
+  $: sortedList = sort(filteredList)
 
-  const enrich = (list, selected) => {
+  const getLabel = (item: PickerItem | EnrichedPickerItem): string => {
+    return String(item[labelKey] ?? "")
+  }
+
+  const enrich = (
+    list: PickerItem[],
+    selected: string[] | undefined
+  ): EnrichedPickerItem[] => {
     return list.map(item => {
       return {
         ...item,
-        selected: selected?.find(x => x === item._id) != null,
+        selected: selected?.includes(item._id) ?? false,
       }
     })
   }
 
-  const sort = list => {
+  const sort = (list: EnrichedPickerItem[]): EnrichedPickerItem[] => {
     let sortedList = list.slice()
     sortedList.sort((a, b) => {
       if (a.selected === b.selected) {
-        return a[labelKey] < b[labelKey] ? -1 : 1
+        const aLabel = getLabel(a)
+        const bLabel = getLabel(b)
+        if (aLabel === bLabel) {
+          return 0
+        }
+        return aLabel < bLabel ? -1 : 1
       } else if (a.selected) {
         return -1
       } else if (b.selected) {
@@ -36,6 +64,17 @@
       return 0
     })
     return sortedList
+  }
+
+  const filter = (
+    list: EnrichedPickerItem[],
+    searchTerm: string
+  ): EnrichedPickerItem[] => {
+    const search = searchTerm.toLowerCase().trim()
+    if (!search) {
+      return list
+    }
+    return list.filter(item => getLabel(item).toLowerCase().includes(search))
   }
 </script>
 

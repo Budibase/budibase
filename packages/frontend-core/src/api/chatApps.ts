@@ -3,9 +3,11 @@ import {
   ChatConversation,
   ChatConversationRequest,
   CreateChatConversationRequest,
+  FetchChatAppAgentsResponse,
   ChatApp,
   ChatAppAgent,
   FetchAgentHistoryResponse,
+  FetchPublishedChatAppsResponse,
   UpdateChatAppRequest,
   AgentMessageMetadata,
 } from "@budibase/types"
@@ -21,13 +23,19 @@ export interface ChatAppEndpoints {
   ) => Promise<AsyncIterable<UIMessage<AgentMessageMetadata>>>
   deleteChatConversation: (
     chatConversationId: string,
-    chatAppId: string
+    chatAppId: string,
+    agentId?: string
   ) => Promise<void>
   fetchChatConversation: (
     chatAppId: string,
-    chatConversationId: string
+    chatConversationId: string,
+    agentId?: string
   ) => Promise<ChatConversation>
-  fetchChatHistory: (chatAppId: string) => Promise<FetchAgentHistoryResponse>
+  fetchChatAppAgents: (chatAppId: string) => Promise<FetchChatAppAgentsResponse>
+  fetchChatHistory: (
+    chatAppId: string,
+    agentId?: string
+  ) => Promise<FetchAgentHistoryResponse>
   fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
   setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatAppAgent>
   createChatConversation: (
@@ -35,6 +43,9 @@ export interface ChatAppEndpoints {
     workspaceId?: string
   ) => Promise<ChatConversation>
   updateChatApp: (chatApp: UpdateChatAppRequest) => Promise<ChatApp>
+  getPublishedChatApps: () => Promise<
+    FetchPublishedChatAppsResponse["chatApps"]
+  >
 }
 
 const throwOnErrorChunk = () =>
@@ -46,6 +57,15 @@ const throwOnErrorChunk = () =>
       controller.enqueue(chunk)
     },
   })
+
+const withAgentIdQuery = (url: string, agentId?: string) => {
+  if (!agentId) {
+    return url
+  }
+
+  const query = new URLSearchParams({ agentId })
+  return `${url}?${query.toString()}`
+}
 
 export const buildChatAppEndpoints = (
   API: BaseAPIClient
@@ -96,25 +116,42 @@ export const buildChatAppEndpoints = (
 
   deleteChatConversation: async (
     chatConversationId: string,
-    chatAppId: string
+    chatAppId: string,
+    agentId?: string
   ) => {
     return await API.delete({
-      url: `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+      url: withAgentIdQuery(
+        `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+        agentId
+      ),
     })
   },
 
   fetchChatConversation: async (
     chatAppId: string,
-    chatConversationId: string
+    chatConversationId: string,
+    agentId?: string
   ) => {
     return await API.get({
-      url: `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+      url: withAgentIdQuery(
+        `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
+        agentId
+      ),
     })
   },
 
-  fetchChatHistory: async (chatAppId: string) => {
+  fetchChatAppAgents: async (chatAppId: string) => {
     return await API.get({
-      url: `/api/chatapps/${chatAppId}/conversations`,
+      url: `/api/chatapps/${chatAppId}/agents`,
+    })
+  },
+
+  fetchChatHistory: async (chatAppId: string, agentId?: string) => {
+    return await API.get({
+      url: withAgentIdQuery(
+        `/api/chatapps/${chatAppId}/conversations`,
+        agentId
+      ),
     })
   },
 
@@ -188,5 +225,12 @@ export const buildChatAppEndpoints = (
       url: `/api/chatapps/${chatApp._id}`,
       body: chatApp as any,
     })
+  },
+
+  getPublishedChatApps: async () => {
+    const response = await API.get<FetchPublishedChatAppsResponse>({
+      url: "/api/client/chatapps",
+    })
+    return response.chatApps
   },
 })

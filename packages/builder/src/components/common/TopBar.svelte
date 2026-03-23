@@ -2,11 +2,12 @@
   interface Breadcrumb {
     text?: string
     url?: string
+    tag?: string
   }
 </script>
 
 <script lang="ts">
-  import { Body, Icon, Popover, PopoverAlignment } from "@budibase/bbui"
+  import { Body, Icon, Popover, PopoverAlignment, Tag } from "@budibase/bbui"
   import PublishMenu from "./PublishMenu.svelte"
   import { deploymentStore } from "@/stores/builder"
   import type { PopoverAPI } from "@budibase/bbui"
@@ -14,7 +15,7 @@
 
   $url
 
-  export let icon: string
+  export let icon: string | undefined = undefined
   export let breadcrumbs: Breadcrumb[]
   export let showPublish = true
 
@@ -34,10 +35,22 @@
 </script>
 
 <div class="top-bar">
+  {#if icon}
+    <div class="icon-container">
+      <Icon name={icon} size="M" weight="regular" />
+    </div>
+  {/if}
   <div class="breadcrumbs">
     {#each breadcrumbs as breadcrumb, idx}
       {#if breadcrumb.text}
-        <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
+        <div class="breadcrumb-item">
+          <a href={$url(breadcrumb.url || "./")}>{breadcrumb.text}</a>
+          {#if breadcrumb.tag}
+            <div class="breadcrumb-tag-wrapper">
+              <Tag emphasized>{breadcrumb.tag}</Tag>
+            </div>
+          {/if}
+        </div>
         {#if idx < breadcrumbs.length - 1}
           <div class="divider">/</div>
         {/if}
@@ -89,6 +102,19 @@
     align-items: center;
     gap: 6px;
   }
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .breadcrumb-tag-wrapper :global(.spectrum-Tags-item) {
+    padding: 0 3px;
+    border-radius: 5px;
+  }
+  .breadcrumb-tag-wrapper :global(.spectrum-Tags-itemLabel) {
+    font-size: 11px;
+    line-height: 1.1;
+  }
   .breadcrumbs a {
     font-size: 14px;
     font-weight: 500 !important;
@@ -106,5 +132,11 @@
     display: flex;
     gap: var(--spacing-s);
     padding: var(--spacing-m);
+  }
+  .icon-container {
+    padding: 3px;
+    border-radius: 6px;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-200);
   }
 </style>

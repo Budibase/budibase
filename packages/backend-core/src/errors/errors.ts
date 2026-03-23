@@ -85,9 +85,9 @@ export class HTTPError extends BudibaseError {
     let code = ErrorCode.HTTP
     try {
       const error = JSON.parse(body)
-      message = error.message
-      httpStatus = error.status
-      code = error.error?.code
+      message = error.error?.message || error.message
+      httpStatus = error.status ?? resp.status
+      code = error.error?.code ?? resp.statusText
     } catch (e) {
       // ignore
     }
@@ -110,6 +110,12 @@ export class NotFoundError extends HTTPError {
 export class BadRequestError extends HTTPError {
   constructor(message: string) {
     super(message, 400)
+  }
+}
+
+export class ActiveContentFileError extends BadRequestError {
+  constructor(fileName: string) {
+    super(`File "${fileName}" contains active content which is not permitted`)
   }
 }
 

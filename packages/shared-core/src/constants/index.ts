@@ -1,5 +1,6 @@
 export * from "./ai"
 export * from "./api"
+export * from "./chat"
 export * from "./fields"
 export * from "./rows"
 export * from "./colors"

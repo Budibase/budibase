@@ -1,14 +1,14 @@
 export enum PlanType {
   FREE = "free",
-  /** @deprecated */
   PRO = "pro",
+  PRO_MAX = "pro_max",
   /** @deprecated */
   TEAM = "team",
   /** @deprecated */
   PREMIUM = "premium",
   PREMIUM_PLUS = "premium_plus",
+  PREMIUM_MAX = "premium_max",
   PREMIUM_PLUS_TRIAL = "premium_plus_trial",
-  /** @deprecated */
   BUSINESS = "business",
   ENTERPRISE_BASIC = "enterprise_basic",
   ENTERPRISE_BASIC_TRIAL = "enterprise_basic_trial",

@@ -30,6 +30,10 @@ export const definition: AutomationStepDefinition = {
           type: AutomationIOType.STRING,
           title: "Send From",
         },
+        replyTo: {
+          type: AutomationIOType.STRING,
+          title: "Reply To",
+        },
         cc: {
           type: AutomationIOType.STRING,
           title: "CC",

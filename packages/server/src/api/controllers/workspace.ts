@@ -16,10 +16,11 @@ import {
 import { groups, licensing, quotas } from "@budibase/pro"
 import {
   DefaultAppTheme,
+  helpers,
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
 } from "@budibase/shared-core"
-import type { File, Files } from "formidable"
+import Joi from "joi"
 import {
   AddWorkspaceSampleDataResponse,
   BBReferenceFieldSubType,
@@ -34,6 +35,7 @@ import {
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
   FetchPublishedAppsResponse,
+  FetchPublishedChatAppsResponse,
   FetchWorkspacesResponse,
   FieldType,
   ImportToUpdateWorkspaceRequest,
@@ -50,12 +52,13 @@ import {
   UpdateWorkspaceResponse,
   UserCtx,
   Workspace,
+  KoaFile,
+  OnboardingWorkspaceRequest,
 } from "@budibase/types"
 import { cleanupAutomations } from "../../automations/utils"
 import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
 import { defaultAppNavigator } from "../../constants/definitions"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import { createOnboardingWelcomeScreen } from "../../constants/screens"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import {
   DocumentType,
@@ -91,6 +94,11 @@ import { processMigrations } from "../../workspaceMigrations/migrationsProcessor
 import { getGlobalUser } from "../../utilities/global"
 
 const DEFAULT_WORKSPACE_NAME = "Default workspace"
+const workspaceNameSchema = Joi.string().trim().required().messages({
+  "string.base": "Name is required",
+  "string.empty": "Name is required",
+  "any.required": "Name is required",
+})
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -129,19 +137,48 @@ function checkWorkspaceName(
   workspaces: Workspace[],
   name: string,
   currentWorkspaceId?: string
-) {
-  // TODO: Replace with Joi
-  if (!name) {
-    ctx.throw(400, "Name is required")
+): string {
+  const { error, value } = workspaceNameSchema.validate(name)
+  if (error) {
+    ctx.throw(400, error.message)
   }
+  const trimmedName = value as string
   if (currentWorkspaceId) {
     workspaces = workspaces.filter(
       (ws: Workspace) => ws.appId !== currentWorkspaceId
     )
   }
-  if (workspaces.some((app: Workspace) => app.name === name)) {
+  const normalizedName = helpers.normalizeForComparison(trimmedName)
+  if (
+    workspaces.some(
+      (app: Workspace) =>
+        helpers.normalizeForComparison(app.name) === normalizedName
+    )
+  ) {
     ctx.throw(400, "Workspace name is already in use.")
   }
+  return trimmedName
+}
+
+function getOnboardingWorkspaceName(workspaces: Workspace[]) {
+  const hasWorkspaceName = (name: string) => {
+    const normalizedName = helpers.normalizeForComparison(name)
+
+    return workspaces.some(
+      workspace =>
+        helpers.normalizeForComparison(workspace.name) === normalizedName
+    )
+  }
+
+  if (!hasWorkspaceName(DEFAULT_WORKSPACE_NAME)) {
+    return DEFAULT_WORKSPACE_NAME
+  }
+
+  let suffix = 2
+  while (hasWorkspaceName(`Workspace ${suffix}`)) {
+    suffix++
+  }
+  return `Workspace ${suffix}`
 }
 
 interface AppTemplate {
@@ -153,6 +190,10 @@ interface AppTemplate {
   }
   key?: string
 }
+
+const getUploadedFilePath = (file: KoaFile) => file.filepath
+
+const getUploadedFileType = (file: KoaFile) => file.mimetype
 
 async function createInstance(appId: string, template: AppTemplate) {
   const db = context.getWorkspaceDB()
@@ -243,35 +284,6 @@ async function addSampleDataDocs() {
   }
 }
 
-async function createOnboardingDefaultWorkspaceApp(
-  name: string
-): Promise<string> {
-  const workspaceApp = await sdk.workspaceApps.create({
-    name: name,
-    url: "/",
-    navigation: {
-      ...defaultAppNavigator(name),
-      links: [],
-    },
-    disabled: false,
-    isDefault: true,
-  })
-
-  return workspaceApp._id!
-}
-
-async function addOnboardingWelcomeScreen() {
-  const workspaceApps = await sdk.workspaceApps.fetch(context.getWorkspaceDB())
-  const workspaceApp = workspaceApps.find(wa => wa.isDefault)
-
-  if (!workspaceApp) {
-    throw new Error("Default workspace app not found")
-  }
-
-  const screen = createOnboardingWelcomeScreen(workspaceApp._id!)
-  await sdk.screens.create(screen)
-}
-
 export const addSampleData = async (
   ctx: UserCtx<void, AddWorkspaceSampleDataResponse>
 ) => {
@@ -318,6 +330,91 @@ export async function fetchClientApps(
   }
 
   ctx.body = { apps: result }
+}
+
+export async function fetchClientChatApps(
+  ctx: UserCtx<void, FetchPublishedChatAppsResponse>
+) {
+  const workspaces = await sdk.workspaces.fetch(
+    WorkspaceStatus.DEPLOYED,
+    ctx.user
+  )
+
+  const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
+  for (const workspace of workspaces) {
+    const isBuilderOrAdmin = users.isAdminOrBuilder(ctx.user, workspace.appId)
+    const workspaceRoleId =
+      ctx.user?.roles?.[workspace.appId] || roles.BUILTIN_ROLE_IDS.PUBLIC
+
+    const { chatApp, workspaceAgents, accessibleEnabledAgentIds } =
+      await context.doInWorkspaceContext(workspace.appId, async () => {
+        const [chatApp, workspaceAgents] = await Promise.all([
+          sdk.ai.chatApps.getSingle(),
+          sdk.ai.agents.fetch(),
+        ])
+
+        const accessController = new roles.AccessController()
+        const accessibleEnabledAgentIds = new Set<string>()
+
+        for (const chatAgent of chatApp?.agents || []) {
+          if (!chatAgent.isEnabled) {
+            continue
+          }
+
+          const canAccessAgent =
+            isBuilderOrAdmin ||
+            !chatAgent.roleId ||
+            (await accessController.hasAccess(
+              chatAgent.roleId,
+              workspaceRoleId
+            ))
+
+          if (canAccessAgent) {
+            accessibleEnabledAgentIds.add(chatAgent.agentId)
+          }
+        }
+
+        return {
+          chatApp,
+          workspaceAgents,
+          accessibleEnabledAgentIds: [...accessibleEnabledAgentIds],
+        }
+      })
+
+    if (!chatApp?.live || !chatApp._id) {
+      continue
+    }
+
+    const workspaceAgentsById = new Map(
+      workspaceAgents
+        .filter(agent => agent._id)
+        .map(agent => [agent._id!, agent])
+    )
+
+    const enabledChatAgents = (chatApp.agents || []).filter(
+      agent =>
+        agent.isEnabled && accessibleEnabledAgentIds.includes(agent.agentId)
+    )
+
+    for (const chatAgent of enabledChatAgents) {
+      const workspaceAgent = workspaceAgentsById.get(chatAgent.agentId)
+      if (!workspaceAgent?.live) {
+        continue
+      }
+
+      chatApps.push({
+        appId: workspace.appId,
+        chatAppId: chatApp._id,
+        agentId: chatAgent.agentId,
+        agentName: workspaceAgent.name,
+        name: workspaceAgent.name,
+        url: `${workspace.url}/agent/${chatAgent.agentId}`.replace(/\/$/, ""),
+        updatedAt: chatApp.updatedAt || workspace.updatedAt,
+      })
+    }
+  }
+
+  ctx.body = { chatApps }
 }
 
 export async function fetchAppDefinition(
@@ -434,18 +531,38 @@ export async function fetchAppPackage(
     const urlPath =
       embedPath ||
       (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
+    const normalizedUrlPath = urlPath.split("?")[0].replace(/\/$/, "")
+    const isChatRoute =
+      normalizedUrlPath.startsWith("/app-chat/") ||
+      /\/_chat(?:\/.*)?$/.test(normalizedUrlPath)
 
-    const matchedWorkspaceApp =
+    let matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
+    if (!matchedWorkspaceApp) {
+      const chatPath = urlPath.replace(/\/_chat(?:\/.*)?$/, "")
+      if (chatPath !== urlPath) {
+        matchedWorkspaceApp =
+          await sdk.workspaceApps.getMatchedWorkspaceApp(chatPath)
+      }
+    }
 
     // disabled workspace apps should appear to not exist
     // if the dev workspace is being served, allow the request regardless
-    if (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev)) {
-      ctx.throw("No matching workspace app found for URL path: " + urlPath, 404)
+    if (
+      !isChatRoute &&
+      (!matchedWorkspaceApp || (matchedWorkspaceApp.disabled && !isDev))
+    ) {
+      ctx.throw(404, "No matching workspace app found for URL path: " + urlPath)
     }
-    screens = screens.filter(s => s.workspaceAppId === matchedWorkspaceApp._id)
 
-    application.navigation = matchedWorkspaceApp.navigation
+    if (matchedWorkspaceApp) {
+      screens = screens.filter(
+        s => s.workspaceAppId === matchedWorkspaceApp._id
+      )
+      application.navigation = matchedWorkspaceApp.navigation
+    } else {
+      screens = []
+    }
   }
 
   const clientLibPath = await objectStore.clientLibraryUrl(
@@ -470,22 +587,27 @@ export async function fetchAppPackage(
 }
 
 async function performWorkspaceCreate(
-  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
+  ctx: UserCtx<
+    CreateWorkspaceRequest | OnboardingWorkspaceRequest,
+    CreateWorkspaceResponse
+  >
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
   })
   const { body } = ctx.request
-  const { name, url, encryptionPassword, templateKey } = body
+  const { url, encryptionPassword, templateKey } = body
 
   const isOnboarding = body.isOnboarding === "true"
   const useTemplate = body.useTemplate === "true"
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
 
-  const appName = isOnboarding ? DEFAULT_WORKSPACE_NAME : name
+  let workspaceName = isOnboarding
+    ? getOnboardingWorkspaceName(workspaces)
+    : body.name
 
-  checkWorkspaceName(ctx, workspaces, appName)
-  const appUrl = sdk.workspaces.getAppUrl({ name: appName, url })
+  workspaceName = checkWorkspaceName(ctx, workspaces, workspaceName)
+  const appUrl = sdk.workspaces.getAppUrl({ name: workspaceName, url })
   checkWorkspaceUrl(ctx, workspaces, appUrl)
 
   const instanceConfig: AppTemplate = {
@@ -493,8 +615,21 @@ async function performWorkspaceCreate(
     key: templateKey,
   }
   if (ctx.request.files && ctx.request.files.fileToImport) {
+    const fileToImport = ctx.request.files.fileToImport
+    if (Array.isArray(fileToImport)) {
+      ctx.throw(400, "Must only supply one app export")
+    }
+    const path = getUploadedFilePath(fileToImport)
+    const type = getUploadedFileType(fileToImport)
+    if (!path) {
+      ctx.throw(400, "Must supply export file to import")
+    }
+    if (!type) {
+      ctx.throw(400, "Must supply export file content type")
+    }
     instanceConfig.file = {
-      ...(ctx.request.files.fileToImport as any),
+      type,
+      path,
       password: encryptionPassword,
     }
   } else if (typeof body.file?.path === "string") {
@@ -523,7 +658,7 @@ async function performWorkspaceCreate(
       type: "app",
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
-      name: appName,
+      name: workspaceName,
       url: appUrl,
       template: templateKey,
       instance,
@@ -531,7 +666,7 @@ async function performWorkspaceCreate(
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       status: WorkspaceStatus.DEV,
-      navigation: defaultAppNavigator(name),
+      navigation: defaultAppNavigator(workspaceName),
       theme: DefaultAppTheme,
       customTheme: {
         primaryColor: "var(--spectrum-global-color-blue-700)",
@@ -591,20 +726,6 @@ async function performWorkspaceCreate(
 
     if (!isImport) {
       await uploadAppFiles(workspaceId)
-    }
-
-    // Add sample datasource and example screen for non-templates/non-imports, or onboarding welcome screen for onboarding flow
-    if (isOnboarding) {
-      try {
-        await addSampleDataDocs()
-        await createOnboardingDefaultWorkspaceApp("Welcome app")
-        await addOnboardingWelcomeScreen()
-
-        // Fetch the latest version of the workspace after these changes
-        newWorkspace = await sdk.workspaces.metadata.get()
-      } catch (err) {
-        ctx.throw(400, "App created, but failed to add onboarding screens")
-      }
     }
 
     const latestMigrationId = workspaceMigrations.getLatestEnabledMigrationId()
@@ -794,10 +915,11 @@ export async function update(
     dev: true,
   })
   // validation
-  const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url
+  let name = ctx.request.body.name
+  const possibleUrl = ctx.request.body.url
   if (name) {
-    checkWorkspaceName(ctx, workspaces, name, ctx.params.appId)
+    name = checkWorkspaceName(ctx, workspaces, name, ctx.params.appId)
+    ctx.request.body.name = name
   }
   const url = sdk.workspaces.getAppUrl({ name, url: possibleUrl })
   if (url) {
@@ -1017,9 +1139,9 @@ export async function sync(ctx: UserCtx<void, SyncWorkspaceResponse>) {
   }
 }
 
-type WorkspaceImportFiles = Files & {
-  appExport?: File | File[]
-  file?: File | File[]
+type WorkspaceImportFiles = {
+  appExport?: KoaFile | KoaFile[]
+  file?: KoaFile | KoaFile[]
 }
 
 export async function importToWorkspace(
@@ -1035,9 +1157,17 @@ export async function importToWorkspace(
   if (Array.isArray(workspaceExport)) {
     ctx.throw(400, "Must only supply one app export")
   }
+  const path = getUploadedFilePath(workspaceExport)
+  const type = getUploadedFileType(workspaceExport)
+  if (!path) {
+    ctx.throw(400, "Must supply export file to import")
+  }
+  if (!type) {
+    ctx.throw(400, "Must supply export file content type")
+  }
   const fileAttributes = {
-    type: workspaceExport.type!,
-    path: workspaceExport.path!,
+    type,
+    path,
   }
   try {
     await sdk.workspaces.updateWithExport(workspaceId, fileAttributes, password)
@@ -1057,7 +1187,8 @@ export async function importToWorkspace(
 export async function duplicateWorkspace(
   ctx: UserCtx<DuplicateWorkspaceRequest, DuplicateWorkspaceResponse>
 ) {
-  const { name: appName, url: possibleUrl } = ctx.request.body
+  let { name: appName } = ctx.request.body
+  const { url: possibleUrl } = ctx.request.body
   const { appId: sourceAppId } = ctx.params
   const [workspace] = await dbCore.getWorkspacesByIDs([sourceAppId])
 
@@ -1069,7 +1200,7 @@ export async function duplicateWorkspace(
     dev: true,
   })
 
-  checkWorkspaceName(ctx, workspaces, appName)
+  appName = checkWorkspaceName(ctx, workspaces, appName)
   const url = sdk.workspaces.getAppUrl({ name: appName, url: possibleUrl })
   checkWorkspaceUrl(ctx, workspaces, url)
 

@@ -25,6 +25,7 @@ spec:
   template:
     metadata:
       annotations:
+        ad.datadoghq.com/bbapps.logs: '[{"source":"nodejs"}]'
 {{ if .Values.services.apps.templateAnnotations }}
 {{- toYaml .Values.services.apps.templateAnnotations | indent 8 -}}
 {{ end }}

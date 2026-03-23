@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { capitalise } from "@/helpers"
   import { roles } from "@/stores/builder"
-  import { licensing } from "@/stores/portal"
   import type { PopoverAlignment } from "@budibase/bbui"
   import { FancySelect, Select } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
@@ -21,6 +19,7 @@
   export let placeholder: string | boolean = false
   export let autoWidth: boolean = false
   export let quiet: boolean = false
+  export let bordered: boolean = true
   export let allowPublic: boolean = true
   export let allowRemove: boolean = false
   export let disabled: boolean = false
@@ -33,16 +32,6 @@
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
-  const subType = $licensing.license?.plan?.type ?? null
-
-  $: isPremiumOrAbove = [
-    Constants.PlanType.PREMIUM,
-    Constants.PlanType.PREMIUM_PLUS,
-    Constants.PlanType.ENTERPRISE,
-    Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
-    // @ts-expect-error this is not in the enum anymore, but it might be in some licences
-    Constants.PlanType.ENTERPRISE_BASIC,
-  ].includes(subType)
 
   $: enrichLabel = (label: string) =>
     labelPrefix ? `${labelPrefix} ${label}` : label
@@ -90,11 +79,10 @@
     }))
 
     // Add creator if required
-    if (allowCreator || isPremiumOrAbove) {
+    if (allowCreator) {
       options.unshift({
         _id: Constants.Roles.CREATOR,
         name: "Can edit",
-        tag: isPremiumOrAbove ? null : capitalise(Constants.PlanType.PREMIUM),
       })
     }
 
@@ -152,7 +140,7 @@
     getOptionColour={getColor}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return isPremiumOrAbove
+        return allowCreator
       }
       return true
     }}
@@ -162,6 +150,7 @@
   <Select
     {autoWidth}
     {quiet}
+    {bordered}
     {disabled}
     {align}
     {footer}
@@ -174,7 +163,7 @@
     getOptionIcon={getIcon}
     isOptionEnabled={option => {
       if (option._id === Constants.Roles.CREATOR) {
-        return isPremiumOrAbove
+        return allowCreator
       }
       return option.enabled !== false
     }}

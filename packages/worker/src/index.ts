@@ -1,7 +1,4 @@
-if (process.env.DD_APM_ENABLED) {
-  require("./ddApm")
-}
-
+import "./ddApm"
 // need to load environment first
 import {
   auth,
@@ -20,7 +17,7 @@ import { bootstrap } from "global-agent"
 import http from "http"
 import gracefulShutdown from "http-graceful-shutdown"
 import Application, { Middleware } from "koa"
-import koaBody from "koa-body"
+import koaBody, { HttpMethodEnum } from "koa-body"
 import RedisStore from "koa-redis"
 import api from "./api"
 import { loadTemplateConfig } from "./constants/templates"
@@ -55,7 +52,12 @@ app.use(handleScimBody)
 app.use(
   koaBody({
     multipart: true,
-    parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
+    parsedMethods: [
+      HttpMethodEnum.POST,
+      HttpMethodEnum.PUT,
+      HttpMethodEnum.PATCH,
+      HttpMethodEnum.DELETE,
+    ],
   })
 )
 

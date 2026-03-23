@@ -42,7 +42,7 @@
 </script>
 
 <div bind:this={popoverAnchor}>
-  <Button on:click={popover.show()} cta>Add user</Button>
+  <Button on:click={() => popover?.show()} cta>Assign user</Button>
 </div>
 <Popover align="left" bind:this={popover} anchor={popoverAnchor}>
   <UserGroupPicker

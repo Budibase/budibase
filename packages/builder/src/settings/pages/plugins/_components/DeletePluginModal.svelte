@@ -6,6 +6,8 @@
   export let plugin
 
   let dispatch = createEventDispatcher()
+  $: usedInApps = plugin?.usedInApps || []
+  $: isUsedInApps = usedInApps.length > 0
 
   async function deletePlugin() {
     try {
@@ -27,8 +29,22 @@
   confirmText="Delete plugin"
   cancelText="Cancel"
   showCloseIcon={false}
+  disabled={false}
 >
   <Body>
     Are you sure you want to delete <strong>{plugin?.name}</strong>?
+    {#if isUsedInApps}
+      <div>
+        This plugin is currently used in {usedInApps.length} app{usedInApps.length ===
+        1
+          ? ""
+          : "s"}:
+        <ul>
+          {#each usedInApps as appName}
+            <li>{appName}</li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
   </Body>
 </ModalContent>

@@ -20,6 +20,9 @@ function getSecrets(opts = { single: false }) {
     "MINIO_SECRET_KEY",
     "REDIS_PASSWORD",
     "INTERNAL_API_KEY",
+    "LITELLM_MASTER_KEY",
+    "LITELLM_SALT_KEY",
+    "LITELLM_DB_PASSWORD",
   ]
   const obj: Record<string, string> = {}
   secrets.forEach(secret => (obj[secret] = randomString.generate()))
@@ -66,6 +69,9 @@ function getEnv(port: number) {
     MINIO_PORT: 4004,
     COUCH_DB_PORT: 4005,
     REDIS_PORT: 6379,
+    LITELLM_PORT: 4000,
+    LITELLM_DB_NAME: "litellm",
+    LITELLM_DB_USER: "llmproxy",
     WATCHTOWER_PORT: 6161,
     BUDIBASE_ENVIRONMENT: "PRODUCTION",
   })

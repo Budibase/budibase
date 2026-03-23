@@ -1,13 +1,19 @@
 import * as automationUtils from "../../automationUtils"
 import { getErrorMessage } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
   AgentStepInputs,
   AgentStepOutputs,
   AutomationStepInputBase,
 } from "@budibase/types"
-import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+import {
+  findIncompleteToolCalls,
+  formatIncompleteToolCallError,
+  updatePendingToolCalls,
+} from "../../../sdk/workspace/ai/agents"
+import { createSessionLogIndexer } from "../../../sdk/workspace/ai/agentLogs"
 import {
   ToolLoopAgent,
   stepCountIs,
@@ -46,10 +52,19 @@ export async function run({
   }
 
   const sessionId = v4()
+  const operationStartedAt = new Date().toISOString()
 
   return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
     async agentSpan => {
+      const sessionLogIndexer = createSessionLogIndexer({
+        agentId,
+        sessionId,
+        firstInput: prompt,
+        errorLabel: "automation agent",
+        startedAt: operationStartedAt,
+      })
+
       try {
         const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
@@ -79,26 +94,18 @@ export async function run({
         const { systemPrompt, tools } =
           await sdk.ai.agents.buildPromptAndTools(agentConfig)
 
-        const { modelId, apiKey, baseUrl, modelName } =
-          await sdk.ai.configs.getLiteLLMModelConfigOrThrow(
-            agentConfig.aiconfig
-          )
-
         tracer.llmobs.annotate(agentSpan, {
           metadata: {
-            modelId,
-            modelName,
-            baseUrl,
-            envLiteLLMUrl: env.LITELLM_URL,
             toolCount: Object.keys(tools).length,
           },
         })
 
-        const litellm = ai.createLiteLLMOpenAI({
-          apiKey,
-          baseUrl,
-          fetch: sdk.ai.agents.createLiteLLMFetch(sessionId),
-        })
+        const { chat, providerOptions } = await sdk.ai.llm.createLLM(
+          agentConfig.aiconfig,
+          sessionId,
+          agentSpan,
+          agentId
+        )
 
         let outputOption = undefined
         if (
@@ -113,18 +120,33 @@ export async function run({
           outputOption = Output.object({ schema: jsonSchema(normalizedSchema) })
         }
 
+        const pendingToolCalls = new Set<string>()
+        const hasTools = Object.keys(tools).length > 0
         const agent = new ToolLoopAgent({
           model: wrapLanguageModel({
-            model: litellm.chat(modelId),
+            model: chat,
             middleware: extractReasoningMiddleware({
               tagName: "think",
             }),
           }),
           instructions: systemPrompt || undefined,
-          tools,
+          tools: hasTools ? tools : undefined,
+          toolChoice: hasTools ? "auto" : "none",
           stopWhen: stepCountIs(30),
-          providerOptions: ai.getLiteLLMProviderOptions(),
+          providerOptions: providerOptions?.(hasTools),
           output: outputOption,
+          async onStepFinish({ content, toolCalls, toolResults, response }) {
+            sessionLogIndexer.addRequestId(response?.id)
+            updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+            for (const part of content) {
+              if (part.type === "tool-error") {
+                pendingToolCalls.delete(part.toolCallId)
+              }
+            }
+            for (const _toolResult of toolResults) {
+              await quotas.addAction(async () => {})
+            }
+          },
         })
 
         const streamResult = await agent.stream({ prompt })
@@ -145,6 +167,28 @@ export async function run({
           assistantMessage = uiMessage
         }
 
+        const incompleteTools = assistantMessage
+          ? findIncompleteToolCalls([assistantMessage])
+          : []
+        const responseMetadata = {
+          requestId: (await streamResult.response).id ?? undefined,
+        }
+        if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
+          sessionLogIndexer.addRequestId(responseMetadata.requestId)
+          const errorMessage = formatIncompleteToolCallError(incompleteTools)
+          await sessionLogIndexer.index()
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: errorMessage,
+            tags: { error: "1", "error.type": "IncompleteToolCall" },
+          })
+          return {
+            success: false,
+            response: errorMessage,
+            message: assistantMessage,
+            sessionId,
+          }
+        }
+
         let responseText: string | undefined
         let textExtractionError: string | undefined
         try {
@@ -155,6 +199,8 @@ export async function run({
 
         const error = streamingError || textExtractionError
         if (error && !responseText) {
+          sessionLogIndexer.addRequestId(responseMetadata.requestId)
+          await sessionLogIndexer.index()
           tracer.llmobs.annotate(agentSpan, {
             outputData: error,
             tags: { error: "1", "error.type": "StreamingError" },
@@ -162,9 +208,13 @@ export async function run({
           return {
             success: false,
             response: error,
+            message: assistantMessage,
+            sessionId,
           }
         }
         const usage = await streamResult.usage
+        sessionLogIndexer.addRequestId(responseMetadata.requestId)
+        await sessionLogIndexer.index()
         const output = outputOption
           ? ((await streamResult.output) as Record<string, any>)
           : undefined
@@ -179,10 +229,12 @@ export async function run({
           response: responseText,
           usage,
           message: assistantMessage,
+          sessionId,
           output,
         }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
+        await sessionLogIndexer.index()
 
         tracer.llmobs.annotate(agentSpan, {
           outputData: errorMessage,
@@ -203,6 +255,7 @@ export async function run({
         return {
           success: false,
           response: errorMessage,
+          sessionId,
         }
       }
     }

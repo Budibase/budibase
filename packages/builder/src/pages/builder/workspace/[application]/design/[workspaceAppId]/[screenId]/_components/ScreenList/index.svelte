@@ -17,6 +17,7 @@
 
   $: allScreens = $workspaceAppStore.selectedWorkspaceApp?.screens || []
   $: filteredScreens = getFilteredScreens(allScreens, searchValue)
+  $: deletionAllowed = allScreens.length > 1
 
   $: workspaceAppId = $workspaceAppStore.selectedWorkspaceApp?._id || ""
 
@@ -54,7 +55,7 @@
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
     {#if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
-        <ScreenNavItem {screen} deletionAllowed />
+        <ScreenNavItem {screen} {deletionAllowed} />
       {/each}
     {:else}
       <Layout paddingY="none" paddingX="L">

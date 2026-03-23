@@ -1,5 +1,4 @@
-import fetch from "node-fetch"
-import { getFetchResponse } from "./utils"
+import { fetchWithBlacklist, getFetchResponse } from "./utils"
 import { ExternalAppStepOutputs, DiscordStepInputs } from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
@@ -26,7 +25,7 @@ export async function run({
   }
   let response
   try {
-    response = await fetch(url, {
+    response = await fetchWithBlacklist(url, {
       method: "post",
       body: JSON.stringify({
         username,

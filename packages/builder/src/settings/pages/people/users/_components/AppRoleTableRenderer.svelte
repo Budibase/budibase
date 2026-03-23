@@ -5,6 +5,7 @@
   import { capitalise } from "@/helpers"
 
   export let value
+  export let row
 
   $: role = $roles.find(x => x._id === value)
 
@@ -15,16 +16,18 @@
   }
 </script>
 
-{#if value === Constants.Roles.GROUP}
-  Controlled by group
-{:else if value === Constants.Roles.CREATOR}
-  Can edit
-{:else}
-  <StatusLight
-    square
-    color={role?.uiMetadata.color ||
-      "var(--spectrum-global-color-static-magenta-400)"}
-  >
-    Can use as {getRoleLabel(value)}
-  </StatusLight>
+{#if !row?.__skeleton}
+  {#if value === Constants.Roles.GROUP}
+    Controlled by group
+  {:else if value === Constants.Roles.CREATOR}
+    Can edit
+  {:else}
+    <StatusLight
+      square
+      color={role?.uiMetadata.color ||
+        "var(--spectrum-global-color-static-magenta-400)"}
+    >
+      Can use as {getRoleLabel(value)}
+    </StatusLight>
+  {/if}
 {/if}

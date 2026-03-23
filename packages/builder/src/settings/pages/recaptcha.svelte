@@ -16,7 +16,7 @@
   import { writable, get } from "svelte/store"
   import { onMount } from "svelte"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
-  import { routeActions } from "."
+  import RouteActions from "@/settings/components/RouteActions.svelte"
 
   $redirect
 
@@ -110,7 +110,7 @@
       </div>
     </div>
     {#if recaptchaEnabled}
-      <div use:routeActions>
+      <RouteActions>
         <Button
           disabled={loading || !configComplete}
           on:click={() => saveConfig()}
@@ -118,7 +118,7 @@
         >
           Save
         </Button>
-      </div>
+      </RouteActions>
     {/if}
   </Layout>
 </LockedFeature>

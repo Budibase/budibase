@@ -22,6 +22,8 @@
     option?.colour ?? undefined
   export let getOptionSubtitle = (option: O, _index?: number) =>
     option?.subtitle ?? undefined
+  export let getOptionTooltip = (option: O, _index?: number) =>
+    option?.tooltip ?? undefined
   export let showSelectedSubtitle: boolean = false
   export let compare = (option: O, value: V) => option === value
   export let useOptionIconImage = false
@@ -33,6 +35,7 @@
   export let readonly: boolean = false
   export let size: "S" | "M" | "L" = "M"
   export let quiet: boolean = false
+  export let bordered: boolean = true
   export let autoWidth: boolean = false
   export let autocomplete: boolean = false
   export let sort: boolean = false
@@ -46,6 +49,7 @@
   export let customPopoverHeight: string | undefined = undefined
   export let searchPlaceholder: string = "Search"
   export let hideChevron: boolean = false
+  export let wrapText: boolean = false
 
   const dispatch = createEventDispatcher()
 
@@ -53,6 +57,10 @@
   $: fieldSubtitle = showSelectedSubtitle
     ? getFieldAttribute(getOptionSubtitle, value, options)
     : null
+  $: fieldTooltip =
+    value == null || value === ""
+      ? null
+      : getFieldAttribute(getOptionTooltip, value, options)
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
@@ -104,6 +112,7 @@
   bind:searchTerm
   on:loadMore
   {size}
+  {bordered}
   {quiet}
   {id}
   {disabled}
@@ -121,6 +130,7 @@
   {getOptionIcon}
   {getOptionColour}
   {getOptionSubtitle}
+  {getOptionTooltip}
   {useOptionIconImage}
   {isOptionEnabled}
   {tooltipMessage}
@@ -138,4 +148,6 @@
   {customPopoverHeight}
   {searchPlaceholder}
   {hideChevron}
+  {fieldTooltip}
+  {wrapText}
 />

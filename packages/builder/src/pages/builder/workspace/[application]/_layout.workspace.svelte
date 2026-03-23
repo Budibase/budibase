@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { sdk } from "@budibase/shared-core"
   import {
     initialise,
     reset,
@@ -7,17 +8,29 @@
     deploymentStore,
     appStore,
   } from "@/stores/builder"
-  import { appsStore, admin } from "@/stores/portal"
+  import { appsStore, admin, aiConfigsStore, auth } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
   import { Heading, Layout, Body } from "@budibase/bbui"
   import { API } from "@/api"
-  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
+  import InviteUsersModal from "./_components/InviteUsersModal.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
+  import { onMount } from "svelte"
 
   export let application: string
 
   let promise = getPackage(application)
   let sideNav: SideNav
+  let showInviteUsersModal = false
+  $: canInviteUsers = sdk.users.isAdmin($auth.user)
+  $: canManageConnections =
+    $auth.user != null && sdk.users.canCreateApps($auth.user)
+  $: if ($bb.settings.open && showInviteUsersModal) {
+    showInviteUsersModal = false
+  }
+  $: if (!canInviteUsers && showInviteUsersModal) {
+    showInviteUsersModal = false
+  }
 
   async function getPackage(appId: string) {
     try {
@@ -42,14 +55,27 @@
       throw error
     }
   }
+
+  onMount(() => {
+    aiConfigsStore.init()
+  })
 </script>
 
-{#if $builderStore.builderSidePanel}
-  <BuilderSidePanel />
+{#if canInviteUsers && showInviteUsersModal}
+  <InviteUsersModal onHide={() => (showInviteUsersModal = false)} />
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
-  <SideNav bind:this={sideNav} />
+  <SideNav
+    bind:this={sideNav}
+    {canInviteUsers}
+    {canManageConnections}
+    onInviteUser={() => {
+      if (canInviteUsers) {
+        showInviteUsersModal = true
+      }
+    }}
+  />
   {#await promise}
     <div class="loading"></div>
   {:then _}
@@ -95,6 +121,7 @@
   }
   .root {
     flex: 1;
+    min-height: 0;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -107,6 +134,7 @@
   }
   .body {
     flex: 1 1 auto;
+    min-height: 0;
     width: 0;
     z-index: 1;
     display: flex;

@@ -5,6 +5,7 @@
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
   import { appStore } from "@/stores/builder"
+  import { bb } from "@/stores/bb"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
   import { appsStore, sortBy } from "@/stores/portal/apps"
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
@@ -37,6 +38,10 @@
   $: apps = $enrichedApps
   $: appId = $appStore.appId
   $: currentSort = $sortBy
+  $: canManageWorkspaceCreation =
+    !!$auth.user && sdk.users.canCreateApps($auth.user)
+  $: showCreateWorkspace = canManageWorkspaceCreation && !$licensing.isFreePlan
+  $: showUpgradeWorkspace = canManageWorkspaceCreation && $licensing.isFreePlan
 
   $: filtered = apps?.filter(app => matchesFilter(app.name, filter)) || []
   $: favourites = filtered.filter(app => app.favourite)
@@ -55,6 +60,7 @@
       return
     }
     if (appId === ws.devId) return
+    bb.clearSettings()
     $goto(wsUrl)
   }
 
@@ -79,7 +85,9 @@
   }
 
   const getWorkspaceUrl = (app: any) => {
-    return app.editable ? `/builder/workspace/${app.devId}` : `/app${app.url}`
+    return app.editable
+      ? `/builder/workspace/${app.devId}/home`
+      : `/app${app.url}`
   }
 
   const matchesFilter = (name: string, term: string) =>
@@ -178,7 +186,7 @@
       on:keydown={onFilterKeydown}
     />
     <div class="header-actions">
-      {#if $auth.user && sdk.users.canCreateApps($auth.user) && !$licensing.isFreePlan}
+      {#if showCreateWorkspace}
         <Icon
           name="plus"
           size="M"
@@ -189,8 +197,16 @@
             workspaceMenu?.hide()
           }}
         />
+      {:else if showUpgradeWorkspace}
+        <Icon
+          name="plus"
+          size="M"
+          hoverable
+          tooltip="Upgrade to unlock multiple workspaces"
+          on:click={licensing.goToUpgradePage}
+        />
       {:else}
-        <span class="header-actions-spacer" aria-hidden="true"></span>
+        <div class="header-actions-spacer" aria-hidden="true"></div>
       {/if}
       <WorkspaceSortMenu
         {currentSort}
@@ -329,7 +345,7 @@
     display: flex;
     align-items: center;
     background: var(--spectrum-global-color-gray-200);
-    border-radius: 8px;
+    border-radius: 6px;
     justify-content: space-between;
     cursor: pointer;
     transition: background-color 130ms ease-in-out;
@@ -345,7 +361,7 @@
     display: flex;
     gap: var(--spacing-s);
     align-items: center;
-    font-size: var(--font-size-m);
+    font-size: 13px;
     flex: 1 1 0;
     min-width: 0;
     overflow: hidden;
@@ -358,8 +374,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .workspace-menu-text :global(i) {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
   .workspace-menu-text:hover {
-    border-radius: 8px 0 0 8px;
+    border-radius: 6px 0 0 6px;
   }
   .workspace-menu.disabled .workspace-menu-text:hover {
     border-radius: 0;
@@ -382,12 +403,13 @@
     outline: none;
     background: transparent;
     color: var(--spectrum-global-color-gray-900);
+    width: 100px;
   }
 
   .header-actions {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-s);
   }
   .header-actions > :global(*),
   .header-actions-spacer {

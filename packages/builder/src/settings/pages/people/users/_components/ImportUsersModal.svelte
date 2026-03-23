@@ -2,11 +2,11 @@
   import {
     Body,
     ModalContent,
-    RadioGroup,
     Multiselect,
     notifications,
     Icon,
   } from "@budibase/bbui"
+  import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { groups } from "@/stores/portal/groups"
   import { licensing } from "@/stores/portal/licensing"
   import { admin } from "@/stores/portal/admin"
@@ -26,17 +26,13 @@
   let csvString: string | undefined = undefined
   let userEmails: string[] = []
   let userGroups: string[] = []
-  let usersRole: string | undefined = undefined
+  let usersRole: string = Constants.BudibaseRoles.AppUser
   let invalidEmails: string[] = []
 
   $: userCount = ($licensing?.userCount || 0) + userEmails.length
   $: exceed = licensing.usersLimitExceeded(userCount)
   $: importDisabled =
     !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
-  $: roleOptions = Constants.BudibaseRoleOptions.map(option => ({
-    ...option,
-    label: `${option.label} - ${option.subtitle}`,
-  }))
 
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
 
@@ -98,7 +94,11 @@
   cancelText="Cancel"
   showCloseIcon={false}
   onConfirm={() =>
-    createUsersFromCsv({ userEmails, usersRole: usersRole || "", userGroups })}
+    createUsersFromCsv({
+      userEmails,
+      usersRole: usersRole || "",
+      userGroups,
+    })}
   disabled={importDisabled}
 >
   <Body size="S">Import your users email addresses from a CSV file</Body>
@@ -117,8 +117,10 @@
       users. Upgrade your plan to add more users
     </div>
   {/if}
-  <RadioGroup bind:value={usersRole} options={roleOptions} />
-
+  <GlobalRoleSelect
+    bind:value={usersRole}
+    options={Constants.BudibaseRoleOptions}
+  />
   {#if $licensing?.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}

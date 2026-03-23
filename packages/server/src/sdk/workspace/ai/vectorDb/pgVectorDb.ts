@@ -1,28 +1,39 @@
-import type { VectorDb as VectorDbDoc } from "@budibase/types"
+import { VectorDbProvider, type VectorDb as VectorDbDoc } from "@budibase/types"
 import * as crypto from "crypto"
 import { Client } from "pg"
+import {
+  context,
+  db as dbCore,
+  HTTPError,
+  tenancy,
+} from "@budibase/backend-core"
+import {
+  isEnvironmentVariableKey,
+  processEnvironmentVariable,
+} from "../../../utils"
 import type {
   ChunkInput,
   PgVectorDbConfig,
   QueryResultRow,
   VectorDb,
 } from "./types"
-import { context } from "@budibase/backend-core"
 
 const vectorLiteral = (values: number[]) =>
   `[${values.map(value => Number(value) || 0).join(",")}]`
 
-const TABLE_PREFIX = "bb_agent_chunks_"
+const TABLE_PREFIX = "bb_chunks_"
 const TABLE_HASH_LENGTH = 10
 
-const buildAgentTableName = (agentId: string) => {
-  const normalized = agentId
+const buildAgentTableName = (namespaceId: string) => {
+  const normalized = namespaceId
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
+  const currentWorkspaceId = context.getOrThrowWorkspaceId()
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(currentWorkspaceId)
   const hash = crypto
     .createHash("sha256")
-    .update(`${context.getOrThrowWorkspaceId()}:${agentId}`)
+    .update(`${tenancy.getTenantId()}:${prodWorkspaceId}:${namespaceId}`)
     .digest("hex")
     .slice(0, TABLE_HASH_LENGTH)
   const maxBaseLength = 63 - TABLE_PREFIX.length - 1 - TABLE_HASH_LENGTH
@@ -39,18 +50,78 @@ const buildPgConnectionString = (config: VectorDbDoc) => {
   return `postgresql://${auth}${config.host}:${config.port}/${config.database}`
 }
 
-export const buildPgVectorDbConfig = (
-  config: VectorDbDoc,
-  options: { agentId: string }
-): PgVectorDbConfig => {
+const resolvePort = async (portConfig: string | number): Promise<number> => {
+  if (typeof portConfig === "number") {
+    return portConfig
+  }
+
+  if (!isEnvironmentVariableKey(portConfig)) {
+    return Number(portConfig)
+  }
+
+  const envVariableValue = await processEnvironmentVariable(portConfig)
+  return Number(envVariableValue)
+}
+
+export const resolvePgVectorDbConfig = async (config: VectorDbDoc) => {
   return {
-    provider: "pgvector",
-    databaseUrl: buildPgConnectionString(config),
-    tableName: buildAgentTableName(options.agentId),
+    ...config,
+    host: await processEnvironmentVariable(config.host),
+    port: await resolvePort(config.port),
+    database: await processEnvironmentVariable(config.database),
+    user: config.user
+      ? await processEnvironmentVariable(config.user)
+      : config.user,
+    password: config.password
+      ? await processEnvironmentVariable(config.password)
+      : config.password,
   }
 }
 
-export class PgVectorDb implements VectorDb {
+export const validatePgVectorDbConfig = async (config: VectorDbDoc) => {
+  const client = new Client({
+    connectionString: buildPgConnectionString(config),
+  })
+
+  try {
+    await client.connect()
+    await client.query("SELECT 1")
+    const result = await client.query(
+      "SELECT 1 FROM pg_extension WHERE extname = 'vector' LIMIT 1"
+    )
+
+    if (!result.rowCount) {
+      throw new HTTPError(
+        "The target PostgreSQL database does not have the pgvector extension installed",
+        400
+      )
+    }
+  } catch (err: any) {
+    if (err instanceof HTTPError) {
+      throw err
+    }
+    throw new HTTPError(
+      "Could not validate the configuration: " +
+        (err?.message || "Failed to connect to the vector database"),
+      400
+    )
+  } finally {
+    await client.end()
+  }
+}
+
+export const buildPgVectorDbConfig = (
+  config: VectorDbDoc,
+  options: { namespaceId: string }
+) => {
+  return new PgVectorDb({
+    provider: VectorDbProvider.PGVECTOR,
+    databaseUrl: buildPgConnectionString(config),
+    tableName: buildAgentTableName(options.namespaceId),
+  })
+}
+
+class PgVectorDb implements VectorDb {
   private readonly tableName: string
 
   constructor(private readonly config: PgVectorDbConfig) {
@@ -73,26 +144,38 @@ export class PgVectorDb implements VectorDb {
   }
 
   private async ensureSchema(client: Client, embeddingDimensions: number) {
+    const buildIndexName = (tableName: string, suffix: string) => {
+      const hash = crypto
+        .createHash("sha256")
+        .update(`${tableName}:${suffix}`)
+        .digest("hex")
+        .slice(0, 20)
+      return `bb_sc_idx_${hash}`
+    }
+
     await client.query("CREATE EXTENSION IF NOT EXISTS vector")
     await client.query(`
-      CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        id SERIAL PRIMARY KEY,
-        source TEXT NOT NULL,
-        chunk_hash TEXT UNIQUE NOT NULL,
-        chunk_text TEXT NOT NULL,
-        embedding vector(${embeddingDimensions}) NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      )
-    `)
+        CREATE TABLE IF NOT EXISTS ${this.tableName} (
+          id SERIAL PRIMARY KEY,
+          source TEXT NOT NULL,
+          chunk_hash TEXT NOT NULL,
+          chunk_text TEXT NOT NULL,
+          embedding vector(${embeddingDimensions}) NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `)
     await client.query(
-      `CREATE INDEX IF NOT EXISTS ${this.tableName}_source_idx ON ${this.tableName} (source)`
+      `CREATE UNIQUE INDEX IF NOT EXISTS ${buildIndexName(this.tableName, "source_chunk_hash_uq")} ON ${this.tableName} (source, chunk_hash)`
     )
     await client.query(`
-      CREATE INDEX IF NOT EXISTS ${this.tableName}_embedding_idx
-      ON ${this.tableName}
-      USING ivfflat (embedding vector_cosine_ops)
-      WITH (lists = 100)
-    `)
+        CREATE INDEX IF NOT EXISTS ${buildIndexName(
+          this.tableName,
+          "embedding"
+        )}
+        ON ${this.tableName}
+        USING ivfflat (embedding vector_cosine_ops)
+        WITH (lists = 100)
+      `)
   }
 
   async upsertSourceChunks(
@@ -133,10 +216,9 @@ export class PgVectorDb implements VectorDb {
             `
               INSERT INTO ${this.tableName} (source, chunk_hash, chunk_text, embedding)
               VALUES ($1, $2, $3, $4::vector)
-              ON CONFLICT (chunk_hash) DO UPDATE
+              ON CONFLICT (source, chunk_hash) DO UPDATE
                 SET chunk_text = EXCLUDED.chunk_text,
-                    embedding = EXCLUDED.embedding,
-                    source = EXCLUDED.source
+                    embedding = EXCLUDED.embedding
             `,
             [sourceId, chunk.hash, chunk.text, vectorLiteral(chunk.embedding)]
           )
@@ -156,11 +238,20 @@ export class PgVectorDb implements VectorDb {
     if (!sourceIds || sourceIds.length === 0) {
       return
     }
+
     await this.withClient(async client => {
-      await client.query(
-        `DELETE FROM ${this.tableName} WHERE source = ANY($1::text[])`,
-        [sourceIds]
-      )
+      try {
+        await client.query(
+          `DELETE FROM ${this.tableName} WHERE source = ANY($1::text[])`,
+          [sourceIds]
+        )
+      } catch (error: any) {
+        if (error?.code === "42P01") {
+          // Table does not exist
+          return
+        }
+        throw error
+      }
     })
   }
 

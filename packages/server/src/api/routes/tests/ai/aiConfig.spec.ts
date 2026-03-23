@@ -1,16 +1,45 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { db, docIds } from "@budibase/backend-core"
+import { db, docIds, encryption, features } from "@budibase/backend-core"
 import {
   CustomAIProviderConfig,
+  BUDIBASE_AI_PROVIDER_ID,
   PASSWORD_REPLACEMENT,
   WebSearchProvider,
   AIConfigType,
   CreateAIConfigRequest,
+  FeatureFlag,
   LiteLLMKeyConfig,
+  VectorDbProvider,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import environment from "../../../../environment"
+import { licensing } from "@budibase/pro"
+import { mocks } from "@budibase/backend-core/tests"
+
+jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
+  const actual = jest.requireActual(
+    "../../../../sdk/workspace/ai/vectorDb/pgVectorDb"
+  )
+  return {
+    ...actual,
+    validatePgVectorDbConfig: jest.fn().mockResolvedValue(undefined),
+  }
+})
+
+jest.mock("@budibase/pro", () => {
+  const actual = jest.requireActual("@budibase/pro")
+  return {
+    ...actual,
+    licensing: {
+      ...actual.licensing,
+      keys: {
+        ...actual.licensing.keys,
+        getLicenseKey: jest.fn(),
+      },
+    },
+  }
+})
 
 const mockLiteLLMProviders = () =>
   nock(environment.LITELLM_URL)
@@ -26,11 +55,53 @@ const mockLiteLLMProviders = () =>
           { key: "api_base", label: "Base URL", field_type: "text" },
         ],
       },
+      {
+        provider: "groq",
+        provider_display_name: "Groq",
+        litellm_provider: "groq",
+        credential_fields: [
+          { key: "api_key", label: "API Key", field_type: "password" },
+        ],
+      },
     ])
+
+const mockLiteLLMModelCostMap = () =>
+  nock(environment.LITELLM_URL)
+    .persist()
+    .get("/public/litellm_model_cost_map")
+    .reply(200, {
+      "gpt-4o-mini": { litellm_provider: "openai", mode: "chat" },
+      "text-embedding-3-small": {
+        litellm_provider: "openai",
+        mode: "embedding",
+      },
+      "claude-3-5-haiku": { litellm_provider: "anthropic", mode: "chat" },
+      "gpt-4o": { litellm_provider: ["openai", "azure"], mode: "responses" },
+      "groq/qwen/qwen3-32b": { litellm_provider: "groq", mode: "chat" },
+    })
+
+const mockLiteLLMTeam = () =>
+  nock(environment.LITELLM_URL)
+    .persist()
+    .post("/team/new")
+    .reply(200, { team_id: "tenant-team-default" })
+
+const passwordMatch = (plain: string, encoded: string) => {
+  if (!encoded.startsWith("bbai_enc::")) {
+    throw new Error("Encoded password not properly configured.")
+  }
+
+  const matches = encryption.compare(
+    plain,
+    encoded.substring("bbai_enc::".length)
+  )
+  return matches
+}
 
 describe("BudibaseAI", () => {
   const config = new TestConfiguration()
   beforeAll(async () => {
+    mocks.licenses.useEnvironmentVariables()
     await config.init()
   })
 
@@ -57,7 +128,6 @@ describe("BudibaseAI", () => {
         api_key: "sk-test-key",
         api_base: "https://api.openai.com",
       },
-      liteLLMModelId: "",
       configType: AIConfigType.COMPLETIONS,
     }
 
@@ -66,6 +136,29 @@ describe("BudibaseAI", () => {
       nock.cleanAll()
 
       mockLiteLLMProviders()
+      mockLiteLLMModelCostMap()
+      mockLiteLLMTeam()
+    })
+
+    it("fetches provider-specific models from LiteLLM cost map", async () => {
+      const providers = await config.api.ai.fetchProviders()
+      const openAIProvider = providers.find(
+        provider => provider.id === "OpenAI"
+      )
+      expect(openAIProvider).toMatchObject({
+        models: {
+          completions: ["gpt-4o", "gpt-4o-mini"],
+          embeddings: ["text-embedding-3-small"],
+        },
+      })
+
+      const groqProvider = providers.find(provider => provider.id === "groq")
+      expect(groqProvider).toMatchObject({
+        models: {
+          completions: ["qwen/qwen3-32b"],
+          embeddings: [],
+        },
+      })
     })
 
     it("creates a custom config and sanitizes the API key", async () => {
@@ -88,9 +181,6 @@ describe("BudibaseAI", () => {
       expect(created._id).toBeDefined()
       expect(created.liteLLMModelId).toBe("model-1")
       expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
-      expect(
-        (await getPersistedConfigAI(created._id))?.credentialsFields.api_key
-      ).toBe(defaultRequest.credentialsFields?.api_key)
       expect(liteLLMScope.isDone()).toBe(true)
 
       const configsResponse = await config.api.ai.fetchConfigs()
@@ -99,10 +189,112 @@ describe("BudibaseAI", () => {
       expect(configsResponse[0].credentialsFields.api_key).toBe(
         PASSWORD_REPLACEMENT
       )
+
+      const persistedConfig = await getPersistedConfigAI(created._id)
       expect(
-        (await getPersistedConfigAI(configsResponse[0]._id))?.credentialsFields
-          .api_key
-      ).toBe(defaultRequest.credentialsFields?.api_key)
+        passwordMatch(
+          defaultRequest.credentialsFields!.api_key,
+          persistedConfig.credentialsFields!.api_key
+        )
+      ).toBeTrue()
+    })
+
+    it("resolves environment variable credentials before validating and creating a model", async () => {
+      await config.api.environment.create({
+        name: "openai_key",
+        production: "prod-openai-key",
+        development: "dev-openai-key",
+      })
+
+      const liteLLMScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-env-create", key: "secret-env-create" })
+        .post("/health/test_connection", body => {
+          expect(body).toMatchObject({
+            litellm_params: expect.objectContaining({
+              api_key: "dev-openai-key",
+            }),
+          })
+          return true
+        })
+        .reply(200, { status: "success" })
+        .post("/model/new", body => {
+          expect(body).toMatchObject({
+            litellm_params: expect.objectContaining({
+              api_key: "dev-openai-key",
+            }),
+          })
+          return true
+        })
+        .reply(200, { model_id: "model-env-create" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        credentialsFields: {
+          ...defaultRequest.credentialsFields,
+          api_key: "{{ env.openai_key }}",
+        },
+      })
+
+      expect(created.credentialsFields.api_key).toBe("{{ env.openai_key }}")
+      expect(liteLLMScope.isDone()).toBe(true)
+
+      const fetchedConfigs = await config.api.ai.fetchConfigs()
+      expect(fetchedConfigs[0].credentialsFields.api_key).toBe(
+        "{{ env.openai_key }}"
+      )
+
+      const persistedConfig = await getPersistedConfigAI(created._id)
+      expect(
+        passwordMatch(
+          "{{ env.openai_key }}",
+          persistedConfig.credentialsFields.api_key
+        )
+      ).toBeTrue()
+    })
+
+    it("sanitizes Budibase AI license key in API responses", async () => {
+      const getLicenseKeyMock = licensing.keys
+        .getLicenseKey as jest.MockedFunction<
+        typeof licensing.keys.getLicenseKey
+      >
+      getLicenseKeyMock.mockResolvedValue("license-key-1")
+
+      const liteLLMScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-bb-1", key: "secret-bb-1" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-bb-1" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        name: "Budibase AI Config",
+        provider: BUDIBASE_AI_PROVIDER_ID,
+        model: "gpt-4o-mini",
+        credentialsFields: {},
+        configType: AIConfigType.COMPLETIONS,
+      })
+
+      expect(liteLLMScope.isDone()).toBe(true)
+      expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
+      const persistedConfig = await getPersistedConfigAI(created._id)
+      expect(
+        passwordMatch(
+          "license-key-1",
+          persistedConfig.credentialsFields.api_key
+        )
+      ).toBeTrue()
+
+      const configsResponse = await config.api.ai.fetchConfigs()
+      expect(configsResponse).toHaveLength(1)
+      expect(configsResponse[0].credentialsFields.api_key).toBe(
+        PASSWORD_REPLACEMENT
+      )
     })
 
     it("updates a custom config while preserving the stored API key", async () => {
@@ -142,8 +334,11 @@ describe("BudibaseAI", () => {
       expect(updated.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
 
       expect(
-        (await getPersistedConfigAI(updated._id))?.credentialsFields.api_key
-      ).toBe(defaultRequest.credentialsFields?.api_key)
+        passwordMatch(
+          defaultRequest.credentialsFields!.api_key,
+          (await getPersistedConfigAI(updated._id)).credentialsFields.api_key
+        )
+      ).toBeTrue()
 
       const storedConfig = await config.doInContext(
         config.getDevWorkspaceId(),
@@ -153,9 +348,12 @@ describe("BudibaseAI", () => {
             .get<CustomAIProviderConfig>(created._id!)
         }
       )
-      expect(storedConfig.credentialsFields.api_key).toBe(
-        defaultRequest.credentialsFields?.api_key
-      )
+      expect(
+        passwordMatch(
+          defaultRequest.credentialsFields!.api_key,
+          storedConfig.credentialsFields.api_key
+        )
+      ).toBeTrue()
 
       const configsResponse = await config.api.ai.fetchConfigs()
       expect(configsResponse).toHaveLength(1)
@@ -165,9 +363,113 @@ describe("BudibaseAI", () => {
       )
 
       expect(
-        (await getPersistedConfigAI(configsResponse[0]._id))?.credentialsFields
-          .api_key
-      ).toBe(defaultRequest.credentialsFields?.api_key)
+        passwordMatch(
+          defaultRequest.credentialsFields!.api_key,
+          (await getPersistedConfigAI(configsResponse[0]._id)).credentialsFields
+            .api_key
+        )
+      ).toBeTrue()
+    })
+
+    it("resolves environment variable credentials before validating and updating a model", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-env-update", key: "secret-env-update" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-env-update" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({ ...defaultRequest })
+      expect(creationScope.isDone()).toBe(true)
+
+      await config.api.environment.create({
+        name: "updated_openai_key",
+        production: "prod-updated-openai-key",
+        development: "dev-updated-openai-key",
+      })
+
+      const updateScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection", body => {
+          expect(body).toMatchObject({
+            litellm_params: expect.objectContaining({
+              api_key: "dev-updated-openai-key",
+            }),
+          })
+          return true
+        })
+        .reply(200, { status: "success" })
+        .patch(`/model/${created.liteLLMModelId}/update`, body => {
+          expect(body).toMatchObject({
+            litellm_params: expect.objectContaining({
+              api_key: "dev-updated-openai-key",
+            }),
+          })
+          return true
+        })
+        .reply(200, { status: "success" })
+        .post("/key/update", body => {
+          expect(body).toMatchObject({
+            key: "key-env-update",
+            models: ["model-env-update"],
+          })
+          return true
+        })
+        .reply(200, { status: "success" })
+
+      const updated = await config.api.ai.updateConfig({
+        ...created,
+        credentialsFields: {
+          ...created.credentialsFields,
+          api_key: "{{ env.updated_openai_key }}",
+        },
+      })
+
+      expect(updateScope.isDone()).toBe(true)
+      expect(updated.credentialsFields.api_key).toBe(
+        "{{ env.updated_openai_key }}"
+      )
+      const fetchedConfigs = await config.api.ai.fetchConfigs()
+      expect(fetchedConfigs[0].credentialsFields.api_key).toBe(
+        "{{ env.updated_openai_key }}"
+      )
+      expect(
+        passwordMatch(
+          "{{ env.updated_openai_key }}",
+          (await getPersistedConfigAI(updated._id)).credentialsFields.api_key
+        )
+      ).toBeTrue()
+    })
+
+    it("preserves existing isDefault when omitted in update payload", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-default", key: "secret-default" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-default" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        isDefault: true,
+      })
+      expect(creationScope.isDone()).toBe(true)
+
+      const { isDefault: _isDefault, ...updateWithoutIsDefault } = created
+      const updated = await config.api.ai.updateConfig({
+        ...updateWithoutIsDefault,
+        name: "Updated Without Default Field",
+      })
+
+      expect(updated.isDefault).toBe(true)
+
+      const persisted = await getPersistedConfigAI(updated._id)
+      expect(persisted.isDefault).toBe(true)
     })
 
     it("updates web search config without calling LiteLLM", async () => {
@@ -218,7 +520,114 @@ describe("BudibaseAI", () => {
             .tryGet<CustomAIProviderConfig>(created._id!)
         }
       )
-      expect(storedConfig?.webSearchConfig?.apiKey).toBe(newWebSearchApiKey)
+      expect(
+        passwordMatch(newWebSearchApiKey, storedConfig!.webSearchConfig!.apiKey)
+      ).toBeTrue()
+    })
+
+    it("does not persist update changes when LiteLLM validation fails", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-validation-fail", key: "secret-vf" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-validation-fail" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        name: "Initial Config",
+      })
+      expect(creationScope.isDone()).toBe(true)
+
+      const persistedBefore = await getPersistedConfigAI(created._id)
+
+      const validationFailureScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, {
+          status: "error",
+          result: { error: "invalid credentials" },
+        })
+
+      const errorResponse: any = await config.api.ai.updateConfig(
+        {
+          ...created,
+          name: "Updated Config",
+          model: "gpt-4.1",
+          credentialsFields: {
+            ...created.credentialsFields,
+            api_key: PASSWORD_REPLACEMENT,
+          },
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(validationFailureScope.isDone()).toBe(true)
+      expect(errorResponse.message).toBe(
+        "Error validating configuration: invalid credentials"
+      )
+
+      const persistedAfter = await getPersistedConfigAI(created._id)
+      expect(persistedAfter._rev).toBe(persistedBefore._rev)
+      expect(persistedAfter.name).toBe("Initial Config")
+      expect(persistedAfter.model).toBe(defaultRequest.model)
+    })
+
+    it("rolls back update when LiteLLM model update fails", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-update-fail", key: "secret-uf" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-update-fail" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        name: "Initial Config",
+      })
+      expect(creationScope.isDone()).toBe(true)
+
+      const persistedBefore = await getPersistedConfigAI(created._id)
+
+      const updateFailureScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .patch(`/model/${created.liteLLMModelId}/update`)
+        .reply(200, {
+          status: "error",
+          result: { error: "litellm unavailable" },
+        })
+
+      const errorResponse: any = await config.api.ai.updateConfig(
+        {
+          ...created,
+          name: "Updated Config",
+          model: "gpt-4.1",
+          credentialsFields: {
+            ...created.credentialsFields,
+            api_key: PASSWORD_REPLACEMENT,
+          },
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(updateFailureScope.isDone()).toBe(true)
+      expect(errorResponse.message).toBe(
+        "Error updating configuration: litellm unavailable"
+      )
+
+      const persistedAfter = await getPersistedConfigAI(created._id)
+      expect(persistedAfter.name).toBe(persistedBefore.name)
+      expect(persistedAfter.model).toBe(persistedBefore.model)
     })
 
     it("deletes a custom config and syncs LiteLLM models", async () => {
@@ -323,7 +732,9 @@ describe("BudibaseAI", () => {
             .tryGet<CustomAIProviderConfig>(created._id!)
         }
       )
-      expect(storedConfig?.webSearchConfig?.apiKey).toBe(webSearchApiKey)
+      expect(
+        passwordMatch(webSearchApiKey, storedConfig!.webSearchConfig!.apiKey)
+      ).toBeTrue()
     })
   })
 
@@ -345,6 +756,7 @@ describe("BudibaseAI", () => {
       nock.cleanAll()
 
       mockLiteLLMProviders()
+      mockLiteLLMTeam()
     })
 
     it("creates an embedding config", async () => {
@@ -371,8 +783,11 @@ describe("BudibaseAI", () => {
       expect(created.liteLLMModelId).toBe("embed-model-1")
       expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
       expect(
-        (await getPersistedConfigAI(created._id))?.credentialsFields.api_key
-      ).toBe(defaultEmbeddingRequest.credentialsFields.api_key)
+        passwordMatch(
+          defaultEmbeddingRequest.credentialsFields.api_key,
+          (await getPersistedConfigAI(created._id)).credentialsFields.api_key
+        )
+      ).toBeTrue()
 
       expect(creationScope.isDone()).toBe(true)
       expect(embeddingValidationScope.isDone()).toBe(true)
@@ -470,6 +885,61 @@ describe("BudibaseAI", () => {
         configsResponse.filter(c => c.configType === AIConfigType.EMBEDDINGS)
       ).toHaveLength(0)
     })
+
+    it("rejects deleting an embedding config used by a knowledge base", async () => {
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_RAG]: true },
+        async () => {
+          const creationValidationScope = nock(environment.LITELLM_URL)
+            .post("/v1/embeddings")
+            .reply(200, { data: [] })
+
+          const creationScope = nock(environment.LITELLM_URL)
+            .post("/key/generate")
+            .reply(200, { token_id: "embed-key-4", key: "embed-secret-4" })
+            .post("/model/new")
+            .reply(200, { model_id: "embed-validation-5" })
+            .post("/model/delete")
+            .reply(200, { status: "success" })
+            .post("/model/new")
+            .reply(200, { model_id: "embed-model-4" })
+            .post("/key/update")
+            .reply(200, { status: "success" })
+
+          const created = await config.api.ai.createConfig({
+            ...defaultEmbeddingRequest,
+          })
+          expect(creationScope.isDone()).toBe(true)
+          expect(creationValidationScope.isDone()).toBe(true)
+
+          const vectorDb = await config.api.vectorDb.create({
+            name: "Primary Vector DB",
+            provider: VectorDbProvider.PGVECTOR,
+            host: "localhost",
+            port: 5432,
+            database: "budibase",
+            user: "bb_user",
+            password: "secret",
+          })
+
+          await config.api.knowledgeBase.create({
+            name: "Support Docs",
+            embeddingModel: created._id!,
+            vectorDb: vectorDb._id!,
+          })
+
+          await config.api.ai.deleteConfig(created._id!, { status: 400 })
+
+          const configsResponse = await config.api.ai.fetchConfigs()
+          expect(
+            configsResponse.filter(
+              c => c.configType === AIConfigType.EMBEDDINGS
+            )
+          ).toHaveLength(1)
+        }
+      )
+    })
   })
 
   describe("workspace-specific LiteLLM key", () => {
@@ -481,7 +951,6 @@ describe("BudibaseAI", () => {
         api_key: "sk-test-key",
         api_base: "https://api.openai.com",
       },
-      liteLLMModelId: "",
       configType: AIConfigType.COMPLETIONS,
     }
 
@@ -489,6 +958,7 @@ describe("BudibaseAI", () => {
       await config.newTenant()
       nock.cleanAll()
       mockLiteLLMProviders()
+      mockLiteLLMTeam()
     })
 
     async function getLiteLLMKeyDoc(): Promise<LiteLLMKeyConfig | undefined> {
@@ -543,8 +1013,8 @@ describe("BudibaseAI", () => {
       expect(keyDoc?.keyId).toBe("reused-key")
     })
 
-    it("uses the prod workspace ID as the key alias", async () => {
-      const expectedAlias = config.getProdWorkspaceId()
+    it("prefixes the key alias with tenant and workspace IDs", async () => {
+      const expectedAlias = `${config.getTenantId()}:${config.getProdWorkspaceId()}`
 
       const keyGenerateScope = nock(environment.LITELLM_URL)
         .post("/key/generate", body => {
@@ -564,6 +1034,104 @@ describe("BudibaseAI", () => {
       await config.api.ai.createConfig({ ...defaultRequest })
 
       expect(keyGenerateScope.isDone()).toBe(true)
+    })
+
+    it("creates a team per tenant and assigns keys to it", async () => {
+      nock.cleanAll()
+      mockLiteLLMProviders()
+      const expectedTeamAlias = config.getTenantId()
+      const expectedKeyAlias = `${config.getTenantId()}:${config.getProdWorkspaceId()}`
+
+      const teamScope = nock(environment.LITELLM_URL)
+        .post("/team/new", body => {
+          expect(body.team_alias).toBe(expectedTeamAlias)
+          return true
+        })
+        .reply(200, { team_id: "tenant-team-1" })
+
+      const keyScope = nock(environment.LITELLM_URL)
+        .post("/key/generate", body => {
+          expect(body.key_alias).toBe(expectedKeyAlias)
+          expect(body.team_id).toBe("tenant-team-1")
+          return true
+        })
+        .reply(200, { token_id: "team-key-1", key: "team-secret-1" })
+
+      nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-team-1" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      await config.api.ai.createConfig({ ...defaultRequest })
+
+      expect(teamScope.isDone()).toBe(true)
+      expect(keyScope.isDone()).toBe(true)
+
+      const keyDoc = await getLiteLLMKeyDoc()
+      expect(keyDoc?.teamId).toBe("tenant-team-1")
+    })
+
+    it("backfills team on existing keys without rotating the key", async () => {
+      nock.cleanAll()
+      mockLiteLLMProviders()
+
+      const existingKeyId = "legacy-key-id"
+      const existingSecret = "legacy-secret-key"
+      const expectedTeamAlias = config.getTenantId()
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const keyDocId = docIds.getLiteLLMKeyID()
+        await context.getWorkspaceDB().put<LiteLLMKeyConfig>({
+          _id: keyDocId,
+          keyId: existingKeyId,
+          secretKey: existingSecret,
+          teamId: undefined as any, // Force missing values
+        })
+      })
+
+      const teamScope = nock(environment.LITELLM_URL)
+        .post("/team/new", body => {
+          expect(body.team_alias).toBe(expectedTeamAlias)
+          return true
+        })
+        .reply(200, { team_id: "tenant-team-backfill" })
+
+      const assignTeamScope = nock(environment.LITELLM_URL)
+        .post("/key/update", body => {
+          expect(body.key).toBe(existingKeyId)
+          expect(body.team_id).toBe("tenant-team-backfill")
+          expect(body.models).toBeUndefined()
+          return true
+        })
+        .reply(200, { status: "success" })
+
+      nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-backfill-1" })
+
+      const syncModelsScope = nock(environment.LITELLM_URL)
+        .post("/key/update", body => {
+          expect(body.key).toBe(existingKeyId)
+          expect(body.models).toContain("model-backfill-1")
+          return true
+        })
+        .reply(200, { status: "success" })
+
+      await config.api.ai.createConfig({ ...defaultRequest })
+
+      expect(teamScope.isDone()).toBe(true)
+      expect(assignTeamScope.isDone()).toBe(true)
+      expect(syncModelsScope.isDone()).toBe(true)
+
+      const keyDoc = await getLiteLLMKeyDoc()
+      expect(keyDoc?.keyId).toBe(existingKeyId)
+      expect(keyDoc?.secretKey).toBe(existingSecret)
+      expect(keyDoc?.teamId).toBe("tenant-team-backfill")
     })
 
     it("syncs the key with model IDs from the workspace", async () => {

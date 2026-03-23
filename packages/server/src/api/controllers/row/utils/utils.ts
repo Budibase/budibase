@@ -51,7 +51,7 @@ export async function processRelationshipFields(
         }
       }
       // process additional types
-      relatedRow = processDates(table, relatedRow)
+      relatedRow = processDates(linkedTable, relatedRow)
       relatedRow = await processFormulas(linkedTable, relatedRow)
       row[relationship.column][key] = relatedRow
     }

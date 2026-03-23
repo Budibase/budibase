@@ -137,12 +137,18 @@ export const generateAgentToolSourceID = () => {
   return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
 }
 
-export const generateAgentFileID = (agentId: string) => {
-  return `${DocumentType.AGENT_FILE}${SEPARATOR}${agentId}${SEPARATOR}${newid()}`
+export const generateKnowledgeBaseFileID = (knowledgeBaseId: string) => {
+  return `${DocumentType.KNOWLEDGE_BASE_FILE}${SEPARATOR}${knowledgeBaseId}${SEPARATOR}${newid()}`
+}
+const isKnowledgeBaseFileIDRegex = new RegExp(
+  `^${DocumentType.KNOWLEDGE_BASE_FILE}${SEPARATOR}.+`
+)
+export const isKnowledgeBaseFileID = (id: string) => {
+  return isKnowledgeBaseFileIDRegex.test(id)
 }
 
-export const generateAIConfigID = () => {
-  return `${DocumentType.AI_CONFIG}${SEPARATOR}${newid()}`
+export const generateAIConfigID = (id = newid()) => {
+  return `${DocumentType.AI_CONFIG}${SEPARATOR}${id}`
 }
 
 export const getLiteLLMKeyID = () => {
@@ -159,4 +165,8 @@ export const generateWorkspaceFavouriteID = () => {
 
 export const generateVectorDbID = () => {
   return `${DocumentType.VECTOR_STORE}${SEPARATOR}${newid()}`
+}
+
+export const generateKnowledgeBaseID = () => {
+  return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
 }

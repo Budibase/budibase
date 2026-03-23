@@ -4,7 +4,7 @@
   import { utils } from "@budibase/shared-core"
   import { canBeDisplayColumn } from "@budibase/frontend-core"
   import { API } from "@/api"
-  import { parseFile } from "./utils"
+  import { getValidationRows, parseFile } from "./utils"
 
   export let rows = []
   export let schema = {}
@@ -112,9 +112,11 @@
     rows = rawRows.map(row => utils.trimOtherProps(row, Object.keys(schema)))
 
     // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
+    const validationRows = getValidationRows(rows)
+    const newValidateHash =
+      JSON.stringify(validationRows) + JSON.stringify(schema)
     if (newValidateHash !== validateHash) {
-      validate(rows, schema)
+      validate(validationRows, schema)
     }
     validateHash = newValidateHash
   }
@@ -143,11 +145,14 @@
     }
   }
 
-  async function validate(rows, schema) {
+  async function validate(rowsToValidate, schema) {
     loading = true
     try {
-      if (rows.length > 0) {
-        const response = await API.validateNewTableImport(rows, schema)
+      if (rowsToValidate.length > 0) {
+        const response = await API.validateNewTableImport(
+          rowsToValidate,
+          schema
+        )
         validation = response.schemaValidation
         allValid = response.allValid
         errors = response.errors

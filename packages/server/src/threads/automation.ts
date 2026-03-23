@@ -563,7 +563,9 @@ class Orchestrator {
         const step = steps[stepIndex]
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
-            const branchResults = await this.executeBranchStep(ctx, step)
+            const branchResults = await quotas.addAction(() =>
+              this.executeBranchStep(ctx, step)
+            )
             ctx._stepResults.push(...branchResults)
             results.push(...branchResults)
             if (branchResults[0]) {
@@ -589,6 +591,12 @@ class Orchestrator {
               addToContext(step, result, true)
             }
             this.reportStepProgress(step, progressStatus(result), result, ctx)
+            if (
+              result.outputs.success === false &&
+              result.outputs.status == null
+            ) {
+              return results
+            }
             stepIndex++
             break
           }
@@ -610,6 +618,14 @@ class Orchestrator {
             const latest = results.at(-1)
             if (latest) {
               this.reportStepProgress(step, progressStatus(latest), latest, ctx)
+              if (
+                step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
+                latest.outputs.success === false &&
+                (latest.outputs.status === AutomationStatus.ERROR ||
+                  latest.outputs.status === AutomationStatus.STOPPED_ERROR)
+              ) {
+                return results
+              }
             }
             stepIndex++
             break
@@ -741,6 +757,20 @@ class Orchestrator {
                 )
               )
             }
+
+            if (this.stopped) {
+              const output = automationUtils.buildLoopOutput(
+                storage,
+                undefined,
+                iterations + 1
+              )
+              output.status = AutomationStatus.STOPPED
+              span.addTags({
+                status: AutomationStatus.STOPPED,
+                iterations: iterations + 1,
+              })
+              return stepSuccess(step, output)
+            }
           } finally {
             // Restore the previous loop context (for nested loops)
             ctx.loop = savedLoopContext
@@ -824,12 +854,15 @@ class Orchestrator {
 
       let inputs = cloneDeep(step.inputs)
       if (
+        step.stepId !== AutomationActionStepId.EXECUTE_BASH &&
         step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2 &&
         step.stepId !== AutomationActionStepId.EXTRACT_STATE
       ) {
         // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
         // "..." }}` template, and expects to receive it that way in the
-        // function that runs it. So we skip this next bit for that step.
+        // function that runs it. EXECUTE_BASH also handles its own templating
+        // so it can reject bindings in the command name while still allowing
+        // templated args. So we skip this next bit for those steps.
         inputs = await processObject(inputs, ctx)
       }
 
@@ -862,6 +895,13 @@ class Orchestrator {
       ) {
         this.stopped = true
         ;(outputs as any).status = AutomationStatus.STOPPED
+      }
+      if (
+        step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
+        "status" in outputs &&
+        outputs.status === AutomationStatus.STOPPED
+      ) {
+        this.stopped = true
       }
 
       span.addTags({ outputsKeys: Object.keys(outputs) })

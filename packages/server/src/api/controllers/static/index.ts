@@ -1,10 +1,13 @@
 import { PutObjectCommand, S3 } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import {
+  ActiveContentFileError,
   BadRequestError,
   configs,
   context,
+  env as envCore,
   objectStore,
+  roles,
   utils,
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
@@ -46,6 +49,79 @@ import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
 import AppComponent from "./templates/BudibaseApp.svelte"
 import { render } from "svelte/server"
 
+const ACTIVE_CONTENT_EXTENSIONS = new Set([
+  "html",
+  "htm",
+  "svg",
+  "svgz",
+  "xhtml",
+  "mhtml",
+  "shtml",
+])
+
+const ACTIVE_CONTENT_MIME_TYPES = [
+  "text/html",
+  "image/svg+xml",
+  "application/xhtml+xml",
+]
+
+const MAX_SNIFF_BYTES = 4096
+const GLOBAL_CLIENT_ASSET_ID = "global"
+
+const detectActiveContent = async (filePath: fs.PathLike) => {
+  const handle = await fsp.open(filePath, "r")
+  try {
+    const buffer = new Uint8Array(MAX_SNIFF_BYTES)
+    const { bytesRead } = await handle.read(buffer, 0, MAX_SNIFF_BYTES, 0)
+    if (!bytesRead) {
+      return false
+    }
+    const sample = Buffer.from(buffer)
+      .toString("utf8", 0, bytesRead)
+      .trimStart()
+      .toLowerCase()
+    return (
+      sample.startsWith("<!doctype html") ||
+      sample.startsWith("<html") ||
+      sample.startsWith("<svg") ||
+      /<svg[\s>]/i.test(sample) ||
+      /<script[\s>]/i.test(sample)
+    )
+  } finally {
+    await handle.close()
+  }
+}
+
+const getUploadFilename = (file: unknown) => {
+  if (!file || typeof file !== "object") {
+    return undefined
+  }
+  const upload = file as {
+    originalFilename?: string | null
+  }
+  return upload.originalFilename || undefined
+}
+
+const getUploadPath = (file: unknown) => {
+  if (!file || typeof file !== "object") {
+    return undefined
+  }
+  const upload = file as {
+    filepath?: string
+  }
+  return upload.filepath
+}
+
+const getUploadMimeType = (file: unknown) => {
+  if (!file || typeof file !== "object") {
+    return undefined
+  }
+  const upload = file as {
+    mimetype?: string | null
+  }
+  return upload.mimetype || undefined
+}
+
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
 ) {
@@ -58,26 +134,62 @@ export const uploadFile = async function (
 
   ctx.body = await Promise.all(
     files.map(async file => {
-      if (!file.name) {
+      const fileName = getUploadFilename(file)
+      const filePath = getUploadPath(file)
+      const rawMimeType = getUploadMimeType(file)
+      if (!fileName) {
         throw new BadRequestError(
           "Attempted to upload a file without a filename"
         )
       }
+      if (!filePath) {
+        throw new BadRequestError("Attempted to upload a file without a path")
+      }
 
-      const extension = [...file.name.split(".")].pop()
+      const extension = [...fileName.split(".")].pop()
       if (!extension) {
         throw new BadRequestError(
-          `File "${file.name}" has no extension, an extension is required to upload a file`
+          `File "${fileName}" has no extension, an extension is required to upload a file`
         )
       }
 
+      const extensionLower = extension.toLowerCase()
+      const isPublicUser =
+        ctx.roleId === roles.BUILTIN_ROLE_IDS.PUBLIC ||
+        ctx.user?.roleId === roles.BUILTIN_ROLE_IDS.PUBLIC
+      const enforceInvalidExtension = isPublicUser || !env.SELF_HOSTED
       if (
-        !env.SELF_HOSTED &&
-        InvalidFileExtensions.includes(extension.toLowerCase())
+        enforceInvalidExtension &&
+        InvalidFileExtensions.includes(extensionLower)
       ) {
         throw new BadRequestError(
-          `File "${file.name}" has an invalid extension: "${extension}"`
+          `File "${fileName}" has an invalid extension: "${extension}"`
         )
+      }
+
+      if (isPublicUser) {
+        if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
+          throw new ActiveContentFileError(fileName)
+        }
+
+        const mimeType =
+          typeof rawMimeType === "string"
+            ? rawMimeType.toLowerCase()
+            : undefined
+        if (
+          mimeType &&
+          ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
+        ) {
+          throw new ActiveContentFileError(fileName)
+        }
+
+        if (
+          filePath &&
+          (typeof filePath === "string" || Buffer.isBuffer(filePath)) &&
+          (await detectActiveContent(filePath))
+        ) {
+          throw new ActiveContentFileError(fileName)
+        }
       }
 
       // filenames converted to UUIDs so they are unique
@@ -88,13 +200,13 @@ export const uploadFile = async function (
       const response = await objectStore.upload({
         bucket: ObjectStoreBuckets.APPS,
         filename: s3Key,
-        path: file.path,
-        type: file.type,
+        path: filePath,
+        type: rawMimeType,
       })
 
       return {
         size: file.size,
-        name: file.name,
+        name: fileName,
         url: await objectStore.getAppFileUrl(s3Key),
         extension,
         key: response.Key!,
@@ -109,7 +221,9 @@ export async function processPWAZip(ctx: UserCtx) {
     ctx.throw(400, "No file or multiple files provided")
   }
 
-  if (!file.path || !file.name?.toLowerCase().endsWith(".zip")) {
+  const filePath = getUploadPath(file)
+  const fileName = getUploadFilename(file)
+  if (!filePath || !fileName?.toLowerCase().endsWith(".zip")) {
     ctx.throw(400, "Invalid file - must be a zip file")
   }
 
@@ -117,7 +231,7 @@ export async function processPWAZip(ctx: UserCtx) {
   try {
     await fsp.mkdir(tempDir, { recursive: true })
 
-    await extract(file.path, { dir: tempDir })
+    await extract(filePath, { dir: tempDir })
     const iconsJsonPath = join(tempDir, "icons.json")
 
     if (!fs.existsSync(iconsJsonPath)) {
@@ -141,7 +255,14 @@ export async function processPWAZip(ctx: UserCtx) {
     const appId = context.getProdWorkspaceId()
 
     for (const icon of iconsData.icons) {
-      if (!icon.src || !icon.sizes || !fs.existsSync(join(baseDir, icon.src))) {
+      const resolvedSrc = icon.src ? path.resolve(baseDir, icon.src) : undefined
+      if (
+        !icon.src ||
+        !icon.sizes ||
+        !resolvedSrc ||
+        !resolvedSrc.startsWith(baseDir + path.sep) ||
+        !fs.existsSync(resolvedSrc)
+      ) {
         continue
       }
 
@@ -154,7 +275,7 @@ export async function processPWAZip(ctx: UserCtx) {
         const result = await objectStore.upload({
           bucket: ObjectStoreBuckets.APPS,
           filename: key,
-          path: join(baseDir, icon.src),
+          path: resolvedSrc,
           type: mimeType,
         })
 
@@ -205,6 +326,9 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
+  const normalizedPath = ctx.path.replace(/\/$/, "")
+  const isChatRoute =
+    normalizedPath === "/app-chat" || normalizedPath.startsWith("/app-chat/")
   const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
     isWorkspaceFullyMigrated(workspaceId),
     configs.getSettingsConfigDoc(),
@@ -223,6 +347,12 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
     const appInfo = await sdk.workspaces.metadata.get()
+    const clientVersion = isChatRoute ? envCore.VERSION : appInfo.version
+    const clientCacheKey = await objectStore.getClientCacheKey(clientVersion)
+    const clientAssetScopeId = isChatRoute
+      ? GLOBAL_CLIENT_ASSET_ID
+      : workspaceId
+    const clientLibPath = `/api/assets/${clientAssetScopeId}/client?${clientCacheKey}`
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
@@ -242,10 +372,13 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
-      const appName = workspaceApp?.name || `${appInfo.name}`
+      const appName = isChatRoute
+        ? "Chat"
+        : workspaceApp?.name || `${appInfo.name}`
+      const appTitle = isChatRoute ? "Chat" : branding?.platformTitle || appName
       const nonce = ctx.state.nonce || ""
       let props: BudibaseAppProps = {
-        title: branding?.platformTitle || appName,
+        title: appTitle,
         showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
         sideNav,
@@ -254,13 +387,15 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
-        metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
-        clientCacheKey: await objectStore.getClientCacheKey(appInfo.version),
+        metaTitle: isChatRoute
+          ? "Chat"
+          : branding?.metaTitle || `${appName} - built with Budibase`,
+        clientCacheKey,
+        clientLibPath,
         usedPlugins: plugins,
-        favicon:
-          branding.faviconUrl !== ""
-            ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
-            : "",
+        favicon: branding.faviconUrl
+          ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
+          : "",
         appMigrating: !fullyMigrated,
         recaptchaKey: recaptchaConfig?.config.siteKey,
         nonce,
@@ -322,7 +457,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       })
     } else {
       // just return the app info for jest to assert on
-      ctx.body = appInfo
+      ctx.body = { ...appInfo, clientCacheKey, clientLibPath }
     }
   } catch (error: any) {
     let msg = "An unknown error occurred"
@@ -386,6 +521,11 @@ function serveLocalFile(ctx: Ctx, fileName: string) {
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
+  const appId = ctx.params.appId
+  if (appId === GLOBAL_CLIENT_ASSET_ID) {
+    return serveLocalFile(ctx, "budibase-client.js")
+  }
+
   const workspaceId = context.getWorkspaceId()
 
   if (!workspaceId) {
@@ -409,6 +549,10 @@ export const serve3rdPartyFile = async function (ctx: Ctx) {
   const file = Array.isArray(ctx.params.file)
     ? ctx.params.file.join("/")
     : ctx.params.file
+  const appId = ctx.params.appId
+  if (appId === GLOBAL_CLIENT_ASSET_ID) {
+    return serveLocalFile(ctx, file)
+  }
 
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {

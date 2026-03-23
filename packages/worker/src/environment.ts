@@ -101,9 +101,6 @@ const environment = {
   PASSWORD_RESET_RATE_IP_WINDOW_SECONDS:
     parseIntSafe(process.env.PASSWORD_RESET_RATE_IP_WINDOW_SECONDS) || 900,
 
-  // Budibase AI
-  BUDIBASE_AI_API_KEY: process.env.BUDIBASE_AI_API_KEY,
-  BUDIBASE_AI_DEFAULT_MODEL: process.env.BUDIBASE_AI_DEFAULT_MODEL,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore

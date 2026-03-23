@@ -29,6 +29,7 @@ interface LicensingState {
   isFreePlan: boolean
   isEnterprisePlan: boolean
   isBusinessPlan: boolean
+  isEnterpriseTrial: boolean
   // features
   groupsEnabled: boolean
   backupsEnabled: boolean
@@ -36,8 +37,6 @@ interface LicensingState {
   pwaEnabled: boolean
   scimEnabled: boolean
   environmentVariablesEnabled: boolean
-  budibaseAIEnabled: boolean
-  customAIConfigsEnabled: boolean
   auditLogsEnabled: boolean
   customAppScriptsEnabled: boolean
   syncAutomationsEnabled: boolean
@@ -78,6 +77,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       isFreePlan: true,
       isEnterprisePlan: true,
       isBusinessPlan: true,
+      isEnterpriseTrial: false,
       // features
       groupsEnabled: false,
       backupsEnabled: false,
@@ -85,8 +85,6 @@ class LicensingStore extends BudiStore<LicensingState> {
       pwaEnabled: false,
       scimEnabled: false,
       environmentVariablesEnabled: false,
-      budibaseAIEnabled: false,
-      customAIConfigsEnabled: false,
       auditLogsEnabled: false,
       customAppScriptsEnabled: false,
       syncAutomationsEnabled: false,
@@ -175,7 +173,8 @@ class LicensingStore extends BudiStore<LicensingState> {
     const adminStore = get(admin)
     if (authStore?.user?.accountPortalAccess) {
       window.location.href = accountPortalUpgradeUrl(
-        adminStore.accountPortalUrl
+        adminStore.accountPortalUrl,
+        authStore?.user?.tenantId
       )
     } else {
       bb.settings("/upgrade")
@@ -213,10 +212,6 @@ class LicensingStore extends BudiStore<LicensingState> {
     const triggerAutomationRunEnabled = features.includes(
       Constants.Features.TRIGGER_AUTOMATION_RUN
     )
-    const perAppBuildersEnabled = features.includes(
-      Constants.Features.APP_BUILDERS
-    )
-    const budibaseAIEnabled = features.includes(Constants.Features.BUDIBASE_AI)
     const customAppScriptsEnabled = features.includes(
       Constants.Features.CUSTOM_APP_SCRIPTS
     )
@@ -238,14 +233,12 @@ class LicensingStore extends BudiStore<LicensingState> {
         backupsEnabled,
         brandingEnabled,
         pwaEnabled,
-        budibaseAIEnabled,
         scimEnabled,
         environmentVariablesEnabled,
         auditLogsEnabled,
         enforceableSSO,
         syncAutomationsEnabled,
         triggerAutomationRunEnabled,
-        perAppBuildersEnabled,
         customAppScriptsEnabled,
         pdfEnabled,
         recaptchaEnabled,

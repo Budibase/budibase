@@ -32,6 +32,7 @@
   export let helpText: string | undefined = undefined
   export let showSelectAll: boolean = false
   export let selectAllText: string = "Select all"
+  export let wrapText: boolean = false
 
   let fieldState: FieldState | undefined
   let fieldApi: FieldApi | undefined
@@ -101,6 +102,7 @@
         searchPlaceholder={pickerLabels.searchPlaceholder}
         {showSelectAll}
         {selectAllText}
+        {wrapText}
       />
     {:else if optionsType === "checkbox"}
       <CoreCheckboxGroup

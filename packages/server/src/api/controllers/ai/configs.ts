@@ -8,15 +8,16 @@ import {
   UserCtx,
   AIConfigType,
   RequiredKeys,
-  WithoutDocMetadata,
-  ToDocUpdateMetadata,
   LLMProvidersResponse,
+  AIConfigResponse,
+  BUDIBASE_AI_PROVIDER_ID,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { isEnvironmentVariableKey } from "../../../sdk/utils"
 
 const sanitizeConfig = async (
   config: CustomAIProviderConfig
-): Promise<CustomAIProviderConfig> => {
+): Promise<AIConfigResponse> => {
   const providers = await sdk.ai.configs.fetchLiteLLMProviders()
   const provider = providers.find(p => p.id === config.provider)
 
@@ -27,17 +28,26 @@ const sanitizeConfig = async (
   const secretFields = provider.credentialFields
     .filter(f => f.field_type === "password")
     .map(f => f.key)
-  const credentialsFields = secretFields.reduce((updatedFields, field) => {
-    updatedFields[field] = PASSWORD_REPLACEMENT
-    return updatedFields
-  }, config.credentialsFields)
+  const credentialsFields = { ...config.credentialsFields }
 
-  const sanitized: CustomAIProviderConfig = {
-    ...config,
-    credentialsFields,
+  for (const field of secretFields) {
+    if (
+      credentialsFields[field] &&
+      !isEnvironmentVariableKey(credentialsFields[field])
+    ) {
+      credentialsFields[field] = PASSWORD_REPLACEMENT
+    }
   }
 
-  if (sanitized.webSearchConfig?.apiKey) {
+  const sanitized: AIConfigResponse = {
+    ...config,
+    credentialsFields: { ...credentialsFields },
+  }
+
+  if (
+    sanitized.webSearchConfig?.apiKey &&
+    !isEnvironmentVariableKey(sanitized.webSearchConfig.apiKey)
+  ) {
     sanitized.webSearchConfig = {
       ...sanitized.webSearchConfig,
       apiKey: PASSWORD_REPLACEMENT,
@@ -61,11 +71,13 @@ export const fetchAIConfigs = async (
 export const fetchAIProviders = async (
   ctx: UserCtx<void, LLMProvidersResponse>
 ) => {
-  ctx.body = await sdk.ai.configs.fetchLiteLLMProviders()
+  const allProviders = await sdk.ai.configs.fetchLiteLLMProviders()
+  const providers = allProviders.filter(p => p.id !== BUDIBASE_AI_PROVIDER_ID)
+  ctx.body = providers
 }
 
 export const createAIConfig = async (
-  ctx: UserCtx<CreateAIConfigRequest, CustomAIProviderConfig>
+  ctx: UserCtx<CreateAIConfigRequest, AIConfigResponse>
 ) => {
   const body = ctx.request.body
 
@@ -73,19 +85,19 @@ export const createAIConfig = async (
     throw new HTTPError("Config name is required", 400)
   }
 
-  const configType = body.configType ?? AIConfigType.COMPLETIONS
+  const createRequest: RequiredKeys<
+    Parameters<typeof sdk.ai.configs.create>[0]
+  > = {
+    name: body.name,
+    provider: body.provider,
+    credentialsFields: body.credentialsFields,
+    model: body.model,
 
-  const createRequest: RequiredKeys<WithoutDocMetadata<CreateAIConfigRequest>> =
-    {
-      name: body.name,
-      provider: body.provider,
-      credentialsFields: body.credentialsFields,
-      model: body.model,
-      liteLLMModelId: body.liteLLMModelId,
-      webSearchConfig: body.webSearchConfig,
-      configType,
-      reasoningEffort: body.reasoningEffort,
-    }
+    webSearchConfig: body.webSearchConfig,
+    configType: body.configType,
+    reasoningEffort: body.reasoningEffort,
+    isDefault: body.isDefault,
+  }
 
   const newConfig = await sdk.ai.configs.create(createRequest)
 
@@ -93,7 +105,7 @@ export const createAIConfig = async (
 }
 
 export const updateAIConfig = async (
-  ctx: UserCtx<UpdateAIConfigRequest, CustomAIProviderConfig>
+  ctx: UserCtx<UpdateAIConfigRequest, AIConfigResponse>
 ) => {
   const body = ctx.request.body
 
@@ -112,7 +124,7 @@ export const updateAIConfig = async (
   const configType = body.configType ?? AIConfigType.COMPLETIONS
 
   const updateRequest: RequiredKeys<
-    ToDocUpdateMetadata<UpdateAIConfigRequest>
+    RequiredKeys<Parameters<typeof sdk.ai.configs.update>[0]>
   > = {
     _id: body._id,
     _rev: body._rev,
@@ -120,10 +132,11 @@ export const updateAIConfig = async (
     provider: body.provider,
     credentialsFields: body.credentialsFields,
     model: body.model,
-    liteLLMModelId: body.liteLLMModelId,
+
     webSearchConfig: body.webSearchConfig,
     configType,
     reasoningEffort: body.reasoningEffort,
+    isDefault: body.isDefault,
   }
 
   const updatedConfig = await sdk.ai.configs.update(updateRequest)

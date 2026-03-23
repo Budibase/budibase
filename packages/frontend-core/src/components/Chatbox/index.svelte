@@ -5,6 +5,7 @@
     Icon,
     ProgressCircle,
     Body,
+    Helpers,
   } from "@budibase/bbui"
   import type {
     ChatConversation,
@@ -15,6 +16,8 @@
   import { tick } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
+  import { formatToolName } from "../../utils/aiTools"
+  import ReasoningStatus from "./ReasoningStatus.svelte"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -25,16 +28,18 @@
   } from "ai"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
-
   interface Props {
     workspaceId: string
     chat: ChatConversationLike
     persistConversation?: boolean
     conversationStarters?: { prompt: string }[]
+    initialPrompt?: string
     onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     isAgentPreviewChat?: boolean
+    readOnly?: boolean
+    readOnlyReason?: "disabled" | "deleted" | "offline"
   }
 
   let {
@@ -42,8 +47,11 @@
     chat = $bindable(),
     persistConversation = true,
     conversationStarters = [],
+    initialPrompt = "",
     onchatsaved,
     isAgentPreviewChat = false,
+    readOnly = false,
+    readOnlyReason,
   }: Props = $props()
 
   let API = $state(
@@ -56,11 +64,20 @@
     })
   )
 
+  const createStableSessionId = () =>
+    isAgentPreviewChat ? `chat-preview:${Helpers.uuid()}` : Helpers.uuid()
+
+  let stableSessionId = $state(createStableSessionId())
   let chatAreaElement = $state<HTMLDivElement>()
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
   let inputValue = $state("")
-  let reasoningTimers = $state<Record<string, number>>({})
+  let lastInitialPrompt = $state("")
+  let isPreparingResponse = $state(false)
+
+  const resetPendingResponse = () => {
+    isPreparingResponse = false
+  }
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? [])
@@ -73,58 +90,53 @@
       part => isReasoningUIPart(part) && part.state === "streaming"
     )
 
+  const hasVisibleAssistantContent = (
+    message: UIMessage<AgentMessageMetadata>
+  ) => {
+    if (getReasoningText(message).trim()) {
+      return true
+    }
+
+    if (
+      (message.parts ?? []).some(
+        part =>
+          (isTextUIPart(part) && part.text.trim().length > 0) ||
+          isToolUIPart(part)
+      )
+    ) {
+      return true
+    }
+
+    return Boolean(message.metadata?.ragSources?.length)
+  }
+
   const hasToolError = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? []).some(
       part => isToolUIPart(part) && part.state === "output-error"
     )
 
-  $effect(() => {
-    const interval = setInterval(() => {
-      let updated = false
-      const newTimers = { ...reasoningTimers }
+  const getMessageError = (message: UIMessage<AgentMessageMetadata>) =>
+    message.metadata?.error
 
-      for (const message of messages) {
-        if (message.role !== "assistant") continue
-        const createdAt = message.metadata?.createdAt
-        const completedAt = message.metadata?.completedAt
-        const id = `${message.id}-reasoning`
+  const getToolDisplayName = (
+    message: UIMessage<AgentMessageMetadata>,
+    rawToolName: string
+  ) => {
+    const { metadata } = message
+    if (!metadata) {
+      return undefined
+    }
 
-        if (!createdAt) continue
+    const toolDisplayNames = Reflect.get(metadata, "toolDisplayNames")
+    const displayName =
+      toolDisplayNames !== undefined
+        ? Reflect.get(toolDisplayNames, rawToolName)
+        : undefined
 
-        if (completedAt) {
-          const finalElapsed = (completedAt - createdAt) / 1000
-          if (newTimers[id] !== finalElapsed) {
-            newTimers[id] = finalElapsed
-            updated = true
-          }
-          continue
-        }
+    return displayName
+  }
 
-        const toolError = hasToolError(message)
-        if (toolError) {
-          if (newTimers[id] == null) {
-            newTimers[id] = (Date.now() - createdAt) / 1000
-            updated = true
-          }
-          continue
-        }
-
-        if (isReasoningStreaming(message)) {
-          const newElapsed = (Date.now() - createdAt) / 1000
-          if (newTimers[id] !== newElapsed) {
-            newTimers[id] = newElapsed
-            updated = true
-          }
-        }
-      }
-
-      if (updated) {
-        reasoningTimers = newTimers
-      }
-    }, 100)
-
-    return () => clearInterval(interval)
-  })
+  const PREVIEW_CHAT_APP_ID = "agent-preview"
 
   let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
@@ -135,8 +147,21 @@
     }
     inputValue = starterPrompt
     await sendMessage()
-    tick().then(() => textareaElement?.focus())
   }
+
+  $effect(() => {
+    if (!initialPrompt) {
+      lastInitialPrompt = ""
+      return
+    }
+
+    if (initialPrompt === lastInitialPrompt) {
+      return
+    }
+
+    lastInitialPrompt = initialPrompt
+    applyConversationStarter(initialPrompt)
+  })
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
@@ -151,6 +176,8 @@
             chatAppId,
             agentId: chat?.agentId,
             transient: !persistConversation,
+            isPreview: isAgentPreviewChat,
+            sessionId: stableSessionId,
             title: chat?.title,
             messages,
           },
@@ -159,9 +186,14 @@
     }),
     messages: chat?.messages || [],
     onFinish: async () => {
+      isPreparingResponse = false
+
       if (persistConversation && !chat._id && chat.chatAppId) {
         try {
-          const history = await API.fetchChatHistory(chat.chatAppId)
+          const history = await API.fetchChatHistory(
+            chat.chatAppId,
+            chat.agentId
+          )
           const msgs = chatInstance.messages
           const lastMessageId = msgs[msgs.length - 1]?.id
           const savedConversation =
@@ -180,32 +212,61 @@
 
       chat = { ...chat, messages: chatInstance.messages }
       onchatsaved?.({ detail: { chatId: chat._id, chat } })
-
-      await tick()
-      textareaElement?.focus()
     },
     onError: error => {
+      resetPendingResponse()
+
       console.error(error)
-      notifications.error(error.message || "Failed to send message")
+      let message = error.message || "Failed to send message"
+      try {
+        const parsed = JSON.parse(message)
+        if (parsed?.message) {
+          message = parsed.message
+        }
+      } catch {
+        // not JSON, use as-is
+      }
+      notifications.error(message)
     },
   })
 
   let messages = $derived(chatInstance.messages)
+  let lastMessage = $derived(messages[messages.length - 1])
+  let lastAssistantMessage = $derived(
+    messages.findLast(message => message.role === "assistant")
+  )
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
-  let hasMessages = $derived(Boolean(chat?.messages?.length))
+  let isRequestPending = $derived(isPreparingResponse || isBusy)
+  let showPendingAssistantState = $derived(
+    isPreparingResponse || (isBusy && lastMessage?.role === "user")
+  )
+  let canStart = $derived(inputValue.trim().length > 0)
+  let hasMessages = $derived(messages.length > 0)
   let showConversationStarters = $derived(
-    !isBusy &&
+    !isRequestPending &&
       !hasMessages &&
       conversationStarters.length > 0 &&
-      !isAgentPreviewChat
+      !isAgentPreviewChat &&
+      !readOnly
+  )
+  let readOnlyMessage = $derived(
+    readOnlyReason === "deleted"
+      ? "This agent was deleted. Select another agent to resume chatting."
+      : readOnlyReason === "offline"
+        ? "This agent is no longer live. Make it live in Settings to resume chatting."
+        : "This agent is disabled. Enable it in Settings to resume chatting."
   )
 
   let lastChatId = $state<string | undefined>(chat?._id)
   $effect(() => {
     if (chat?._id !== lastChatId) {
       lastChatId = chat?._id
+      stableSessionId = createStableSessionId()
+      if (!isPreparingResponse) {
+        resetPendingResponse()
+      }
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
     }
@@ -229,6 +290,15 @@
       resolvedChatAppId = chat.chatAppId
       return chat.chatAppId
     }
+
+    if (isAgentPreviewChat) {
+      resolvedChatAppId = PREVIEW_CHAT_APP_ID
+      if (chat) {
+        chat = { ...chat, chatAppId: PREVIEW_CHAT_APP_ID }
+      }
+      return PREVIEW_CHAT_APP_ID
+    }
+
     try {
       const chatApp = await API.fetchChatApp(workspaceId)
       if (chatApp?._id) {
@@ -258,6 +328,10 @@
   }
 
   const handleKeyDown = async (event: KeyboardEvent) => {
+    if (readOnly) {
+      return
+    }
+
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
       await sendMessage()
@@ -265,6 +339,25 @@
   }
 
   const sendMessage = async () => {
+    if (readOnly) {
+      return
+    }
+
+    const text = inputValue.trim()
+    if (!text) {
+      return
+    }
+
+    const failToStartResponse = (message: string, error?: unknown) => {
+      resetPendingResponse()
+      if (error) {
+        console.error(error)
+      }
+      notifications.error(message)
+    }
+
+    isPreparingResponse = true
+
     const chatAppIdFromEnsure = await ensureChatApp()
 
     if (!chat) {
@@ -275,18 +368,20 @@
     const agentId = chat.agentId
 
     if (!chatAppId) {
-      notifications.error("Chat app could not be created")
+      failToStartResponse("Chat app could not be created")
       return
     }
 
     if (!agentId) {
-      notifications.error("Agent is required to start a chat")
+      failToStartResponse("Agent is required to start a chat")
       return
     }
 
     resolvedChatAppId = chatAppId
 
-    if (
+    if (isAgentPreviewChat) {
+      resolvedConversationId = chat._id
+    } else if (
       persistConversation &&
       !chat._id &&
       (!chat.messages || chat.messages.length === 0)
@@ -303,19 +398,24 @@
           err instanceof Error
             ? err.message
             : "Could not start a new chat conversation"
-        console.error(err)
-        notifications.error(errorMessage)
+        failToStartResponse(errorMessage, err)
         return
       }
     } else if (chat._id) {
       resolvedConversationId = chat._id
     }
 
-    const text = inputValue.trim()
-    if (!text) return
-
     inputValue = ""
     chatInstance.sendMessage({ text })
+    isPreparingResponse = false
+  }
+
+  const handlePromptAction = async () => {
+    if (isBusy) {
+      await chatInstance.stop()
+      return
+    }
+    await sendMessage()
   }
 
   const toggleTool = (toolId: string) => {
@@ -346,10 +446,17 @@
     if (!mounted) {
       mounted = true
       ensureChatApp()
-      tick().then(() => {
-        textareaElement?.focus()
-      })
     }
+  })
+
+  $effect(() => {
+    if (readOnly || isRequestPending) {
+      return
+    }
+
+    tick().then(() => {
+      textareaElement?.focus()
+    })
   })
 
   $effect(() => {
@@ -385,7 +492,7 @@
           {/each}
         </div>
       </div>
-    {:else}
+    {:else if !hasMessages && !isRequestPending}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -408,164 +515,204 @@
       {:else if message.role === "assistant"}
         {@const reasoningText = getReasoningText(message)}
         {@const reasoningId = `${message.id}-reasoning`}
+        {@const pendingAssistant =
+          isBusy &&
+          lastAssistantMessage?.id === message.id &&
+          !hasVisibleAssistantContent(message)}
         {@const toolError = hasToolError(message)}
+        {@const messageError = getMessageError(message)}
         {@const reasoningStreaming = isReasoningStreaming(message)}
         {@const isThinking =
-          reasoningStreaming && !toolError && !message.metadata?.completedAt}
-        <div class="message assistant">
-          {#if reasoningText}
-            <div class="reasoning-part">
-              <button
-                class="reasoning-toggle"
-                type="button"
-                onclick={() =>
+          (reasoningStreaming || pendingAssistant) &&
+          !toolError &&
+          !messageError &&
+          !message.metadata?.completedAt}
+        {#if hasVisibleAssistantContent(message) || pendingAssistant}
+          <div class="message assistant">
+            {#if reasoningText || pendingAssistant}
+              <ReasoningStatus
+                thinking={isThinking}
+                label={isThinking ? "Thinking" : "Thought"}
+                interactive={!!reasoningText}
+                expanded={Boolean(expandedTools[reasoningId])}
+                content={reasoningText}
+                ontoggle={() =>
                   (expandedTools = {
                     ...expandedTools,
                     [reasoningId]: !expandedTools[reasoningId],
                   })}
-              >
-                <span class="reasoning-icon" class:shimmer={isThinking}>
-                  <Icon
-                    name="brain"
-                    size="M"
-                    color="var(--spectrum-global-color-gray-600)"
-                  />
-                </span>
-                <span class="reasoning-label" class:shimmer={isThinking}>
-                  {isThinking ? "Thinking" : "Thought for"}
-                  {#if reasoningTimers[reasoningId]}
-                    <span class="reasoning-timer"
-                      >{reasoningTimers[reasoningId].toFixed(1)}s</span
-                    >
-                  {/if}
-                </span>
-              </button>
-              {#if expandedTools[reasoningId]}
-                <div class="reasoning-content">{reasoningText}</div>
-              {/if}
-            </div>
-          {/if}
-          {#each message.parts ?? [] as part, partIndex}
-            {#if isTextUIPart(part)}
-              <MarkdownViewer value={part.text} />
-            {:else if isToolUIPart(part)}
-              {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
-              {@const isRunning =
-                part.state === "input-streaming" ||
-                part.state === "input-available"}
-              {@const isSuccess = part.state === "output-available"}
-              {@const isError = part.state === "output-error"}
-              <div class="tool-part" class:tool-running={isRunning}>
-                <button
-                  class="tool-header"
-                  class:tool-header-expanded={expandedTools[toolId]}
-                  type="button"
-                  onclick={() => toggleTool(toolId)}
-                >
-                  <span
-                    class="tool-chevron"
-                    class:expanded={expandedTools[toolId]}
+              />
+            {/if}
+            {#each message.parts ?? [] as part, partIndex}
+              {#if isTextUIPart(part)}
+                <MarkdownViewer value={part.text} />
+              {:else if isToolUIPart(part)}
+                {@const rawToolName = getToolName(part)}
+                {@const displayToolName = formatToolName(
+                  rawToolName,
+                  getToolDisplayName(message, rawToolName)
+                )}
+                {@const toolId = `${message.id}-${rawToolName}-${partIndex}`}
+                {@const isRunning =
+                  part.state === "input-streaming" ||
+                  part.state === "input-available"}
+                {@const isSuccess = part.state === "output-available"}
+                {@const isError = part.state === "output-error"}
+                <div class="tool-part" class:tool-running={isRunning}>
+                  <button
+                    class="tool-header"
+                    class:tool-header-expanded={expandedTools[toolId]}
+                    type="button"
+                    onclick={() => toggleTool(toolId)}
                   >
-                    <span class="tool-chevron-icon tool-chevron-icon-default">
-                      <Icon
-                        name="globe-simple"
-                        size="M"
-                        weight="regular"
-                        color="var(--spectrum-global-color-gray-600)"
-                      />
-                    </span>
-                    <span class="tool-chevron-icon tool-chevron-icon-expanded">
-                      <Icon
-                        name="minus"
-                        size="M"
-                        weight="regular"
-                        color="var(--spectrum-global-color-gray-600)"
-                      />
-                    </span>
-                  </span>
-                  <span class="tool-call-label">Tool call</span>
-                  <div class="tool-name-wrapper">
-                    <span class="tool-name">{getToolName(part)}</span>
-                  </div>
-                  {#if isRunning || isError}
-                    <span class="tool-status">
-                      {#if isRunning}
-                        <ProgressCircle size="S" />
-                      {:else if isError}
+                    <span
+                      class="tool-chevron"
+                      class:expanded={expandedTools[toolId]}
+                    >
+                      <span class="tool-chevron-icon tool-chevron-icon-default">
                         <Icon
-                          name="x"
-                          size="S"
-                          color="var(--spectrum-global-color-red-600)"
+                          name="wrench"
+                          size="M"
+                          weight="regular"
+                          color="var(--spectrum-global-color-gray-600)"
                         />
-                      {/if}
+                      </span>
+                      <span
+                        class="tool-chevron-icon tool-chevron-icon-expanded"
+                      >
+                        <Icon
+                          name="minus"
+                          size="M"
+                          weight="regular"
+                          color="var(--spectrum-global-color-gray-600)"
+                        />
+                      </span>
                     </span>
+                    <span class="tool-call-label">Tool call</span>
+                    <div class="tool-name-wrapper">
+                      <span class="tool-name-primary"
+                        >{displayToolName.primary}</span
+                      >
+                    </div>
+                    {#if isRunning || isError || isSuccess}
+                      <span class="tool-status">
+                        {#if isRunning}
+                          <ProgressCircle size="S" />
+                        {:else if isError}
+                          <Icon
+                            name="x"
+                            size="S"
+                            color="var(--spectrum-global-color-red-600)"
+                          />
+                        {:else if isSuccess}
+                          <Icon
+                            name="check"
+                            size="S"
+                            color="var(--spectrum-global-color-green-600)"
+                          />
+                        {/if}
+                      </span>
+                    {/if}
+                  </button>
+                  {#if expandedTools[toolId]}
+                    <div class="tool-details">
+                      {#if part.input}
+                        <div class="tool-section">
+                          <div class="tool-section-label">Input</div>
+                          <pre class="tool-section-content">{formatToolOutput(
+                              part.input
+                            )}</pre>
+                        </div>
+                      {/if}
+                      {#if isSuccess && part.output}
+                        <div class="tool-section">
+                          <div class="tool-section-label">Output</div>
+                          <pre class="tool-section-content">{formatToolOutput(
+                              part.output
+                            )}</pre>
+                        </div>
+                      {:else if isError && part.errorText}
+                        <div class="tool-section tool-error">
+                          <div class="tool-section-label">Error</div>
+                          <pre
+                            class="tool-section-content error-content">{part.errorText}</pre>
+                        </div>
+                      {/if}
+                    </div>
                   {/if}
-                </button>
-                {#if expandedTools[toolId]}
-                  <div class="tool-details">
-                    {#if part.input}
-                      <div class="tool-section">
-                        <div class="tool-section-label">Input</div>
-                        <pre class="tool-section-content">{formatToolOutput(
-                            part.input
-                          )}</pre>
-                      </div>
-                    {/if}
-                    {#if isSuccess && part.output}
-                      <div class="tool-section">
-                        <div class="tool-section-label">Output</div>
-                        <pre class="tool-section-content">{formatToolOutput(
-                            part.output
-                          )}</pre>
-                      </div>
-                    {:else if isError && part.errorText}
-                      <div class="tool-section tool-error">
-                        <div class="tool-section-label">Error</div>
-                        <pre
-                          class="tool-section-content error-content">{part.errorText}</pre>
-                      </div>
-                    {/if}
-                  </div>
-                {/if}
+                </div>
+              {/if}
+            {/each}
+            {#if message.metadata?.ragSources?.length}
+              <div class="sources">
+                <div class="sources-title">Sources</div>
+                <ul>
+                  {#each message.metadata.ragSources as source (source.sourceId)}
+                    <li class="source-item">
+                      <span class="source-name"
+                        >{source.filename || source.sourceId}</span
+                      >
+                      {#if source.chunkCount > 0}
+                        <span class="source-count"
+                          >({source.chunkCount} chunk{source.chunkCount === 1
+                            ? ""
+                            : "s"})</span
+                        >
+                      {/if}
+                    </li>
+                  {/each}
+                </ul>
               </div>
             {/if}
-          {/each}
-          {#if message.metadata?.ragSources?.length}
-            <div class="sources">
-              <div class="sources-title">Sources</div>
-              <ul>
-                {#each message.metadata.ragSources as source (source.sourceId)}
-                  <li class="source-item">
-                    <span class="source-name"
-                      >{source.filename || source.sourceId}</span
-                    >
-                    {#if source.chunkCount > 0}
-                      <span class="source-count"
-                        >({source.chunkCount} chunk{source.chunkCount === 1
-                          ? ""
-                          : "s"})</span
-                      >
-                    {/if}
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-        </div>
+          </div>
+        {/if}
       {/if}
     {/each}
+    {#if showPendingAssistantState}
+      <div class="message assistant assistant-loading" aria-live="polite">
+        <ReasoningStatus thinking={true} label="Thinking" />
+      </div>
+    {/if}
   </div>
 
-  <div class="input-wrapper">
-    <textarea
-      bind:value={inputValue}
-      bind:this={textareaElement}
-      class="input spectrum-Textfield-input"
-      onkeydown={handleKeyDown}
-      placeholder="Ask anything"
-      disabled={isBusy}
-    ></textarea>
-  </div>
+  {#if readOnly}
+    <div class="input-wrapper">
+      <div class="read-only-notice">
+        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          {readOnlyMessage}
+        </Body>
+      </div>
+    </div>
+  {:else}
+    <div class="input-wrapper">
+      <div class="input-container">
+        <textarea
+          bind:value={inputValue}
+          bind:this={textareaElement}
+          class="input spectrum-Textfield-input"
+          onkeydown={handleKeyDown}
+          placeholder="Ask..."
+          disabled={isRequestPending}
+        ></textarea>
+        <button
+          type="button"
+          class="prompt-action"
+          class:running={isRequestPending}
+          onclick={handlePromptAction}
+          aria-label={isBusy ? "Pause response" : "Start response"}
+          disabled={isPreparingResponse || (!isBusy && !canStart)}
+        >
+          {#if isBusy}
+            <Icon name="stop" size="M" weight="fill" color="#ffffff" />
+          {:else if isPreparingResponse}
+            <ProgressCircle size="S" />
+          {:else}
+            <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
+          {/if}
+        </button>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -575,6 +722,14 @@
     flex-direction: column;
     overflow-y: auto;
     min-height: 0;
+    font-family: var(--chat-font-sans, var(--font-sans));
+    --font-serif: var(--chat-font-sans, var(--font-sans));
+    --font-accent: var(--chat-font-sans, var(--font-sans));
+    --spectrum-alias-body-text-font-family: var(
+      --chat-font-sans,
+      var(--font-sans)
+    );
+    --spectrum-global-font-family-base: var(--chat-font-sans, var(--font-sans));
   }
   .chatbox {
     display: flex;
@@ -602,36 +757,45 @@
   .starter-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
+    align-items: center;
+    gap: var(--spacing-xl);
+    margin: auto 0;
   }
 
   .starter-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--spectrum-global-color-gray-600);
+    font-size: 14px;
+    letter-spacing: 0;
+    color: var(--spectrum-global-color-gray-700);
+    text-align: center;
   }
 
   .starter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--spacing-s);
+    gap: var(--spacing-m);
+    width: min(520px, 100%);
+    margin: 0 auto;
   }
 
   .starter-card {
-    border: 1px solid var(--grey-3);
+    border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 12px;
     padding: var(--spacing-m);
-    background: var(--grey-2);
-    color: var(--spectrum-global-color-gray-900);
+    background: var(--spectrum-global-color-gray-50);
+    color: var(--spectrum-global-color-gray-800);
     font: inherit;
-    text-align: left;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: center;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .starter-card:hover {
-    border-color: var(--grey-4);
-    background: var(--grey-1);
+    border-color: var(--spectrum-global-color-gray-300);
+    background: var(--spectrum-global-color-gray-100);
   }
 
   .message {
@@ -648,7 +812,7 @@
   .message.user {
     border-radius: 8px;
     align-self: flex-end;
-    background-color: #215f9e33;
+    background-color: var(--spectrum-alias-background-color-secondary);
     font-size: 14px;
     color: var(--spectrum-global-color-gray-800);
   }
@@ -674,27 +838,71 @@
     line-height: 1.4;
   }
 
+  .read-only-notice {
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 10px;
+    padding: var(--spacing-m);
+    background-color: var(--spectrum-global-color-gray-50);
+    text-align: center;
+  }
+
+  .input-container {
+    position: relative;
+    width: 100%;
+  }
+
   .input {
     width: 100%;
-    height: 100px;
+    height: 80px;
     top: 0;
     resize: none;
     padding: 20px;
     font-size: 16px;
     background-color: var(--spectrum-global-color-gray-200);
-    color: var(--grey-9);
+    color: var(--spectrum-alias-text-color);
     border-radius: 10px;
     border: 1px solid var(--spectrum-global-color-gray-300) !important;
     outline: none;
-    min-height: 100px;
+    min-height: 80px;
   }
 
   .input:focus {
-    border: 1px solid #215f9e33 !important;
+    border: 1px solid var(--spectrum-alias-border-color-mouse-focus) !important;
   }
 
   .input::placeholder {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .prompt-action {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: #f2f2f2;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s ease;
+  }
+
+  .prompt-action:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .prompt-action.running {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .prompt-action:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 
   /* Style the markdown tool sections in assistant messages */
@@ -809,18 +1017,17 @@
 
   .tool-name-wrapper {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    padding: 3px 6px;
+    align-items: flex-start;
+    padding: 6px 8px;
     background-color: var(--spectrum-global-color-gray-200);
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
-  .tool-name {
-    font-family: var(--font-mono), monospace;
+  .tool-name-primary {
     font-size: 13px;
     color: var(--spectrum-global-color-gray-800);
-    font-weight: 400;
+    font-weight: 600;
+    line-height: 1.2;
   }
 
   .tool-status {
@@ -889,65 +1096,6 @@
   .error-content {
     border-color: var(--spectrum-global-color-red-400);
     color: var(--spectrum-global-color-red-700);
-  }
-
-  /* Reasoning parts styling */
-  .reasoning-part {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .reasoning-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0;
-    margin: 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  .reasoning-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .reasoning-label {
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .reasoning-timer {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
-    font-weight: 400;
-  }
-
-  .reasoning-label.shimmer,
-  .reasoning-icon.shimmer {
-    animation: shimmer 2s ease-in-out infinite;
-  }
-
-  .reasoning-content {
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-600);
-    font-style: italic;
-    line-height: 1.4;
-  }
-
-  @keyframes shimmer {
-    0%,
-    100% {
-      opacity: 0.6;
-    }
-    50% {
-      opacity: 1;
-    }
   }
 
   .sources {

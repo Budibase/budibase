@@ -4,14 +4,18 @@ import {
   context,
   db,
   events,
-  HTTPError,
   locks,
   platform,
   tenancy,
   users,
 } from "@budibase/backend-core"
-import { features, groups as proGroups } from "@budibase/pro"
-import { BpmStatusKey, BpmStatusValue, utils } from "@budibase/shared-core"
+import { db as proDb } from "@budibase/pro"
+import {
+  BpmStatusKey,
+  BpmStatusValue,
+  dataFilters,
+  utils,
+} from "@budibase/shared-core"
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
@@ -51,6 +55,7 @@ import {
   UnsavedUser,
   UpdateInviteResponse,
   User,
+  UserGroup,
   UserCtx,
   UserIdentifier,
 } from "@budibase/types"
@@ -107,7 +112,7 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
       email: user.email,
     }
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -141,13 +146,16 @@ export const changeTenantOwnerEmail = async (
     }
     ctx.status = 200
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
 export const addSsoSupport = async (
   ctx: Ctx<AddSSoUserRequest, AddSSoUserResponse>
 ) => {
+  if (!ctx.internal) {
+    ctx.throw(403, "Unauthorized")
+  }
   const { email, ssoId } = ctx.request.body
   try {
     const [userByEmail] = await users.getExistingPlatformUsers([email])
@@ -170,7 +178,7 @@ export const addSsoSupport = async (
     })
     ctx.body = { message: "SSO support added." }
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -263,17 +271,19 @@ export const adminUser = async (
         email: finalUser.email,
       }
     } catch (err: any) {
-      ctx.throw(err.status || 400, err)
+      ctx.throw(err.status || 400, err?.message || err)
     }
   })
 }
 
-export const countByApp = async (ctx: UserCtx<void, CountUserResponse>) => {
-  const appId = ctx.params.appId
+export const countByWorkspace = async (
+  ctx: UserCtx<void, CountUserResponse>
+) => {
+  const workspaceId = ctx.params.workspaceId
   try {
-    ctx.body = await userSdk.db.countUsersByApp(appId)
+    ctx.body = await userSdk.db.countUsersByWorkspace(workspaceId)
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -360,6 +370,44 @@ export const search = async (
 }
 
 const DEFAULT_USER_LIMIT = 8
+const GLOBAL_PERMISSION_USER_PAGE_LIMIT = 1000
+
+const getGlobalPermissionUsers = async () => {
+  const globalDb = context.getGlobalDB()
+  const globalPermissionUsers = new Map<string, User>()
+  let bookmark: string | undefined
+  let nextBookmark: string | undefined
+
+  do {
+    const response = await globalDb.find<User>({
+      selector: {
+        _id: {
+          $regex: `^${db.DocumentType.USER}${db.SEPARATOR}`,
+        },
+        $or: [{ "admin.global": true }, { "builder.global": true }],
+      },
+      limit: GLOBAL_PERMISSION_USER_PAGE_LIMIT,
+      ...(bookmark ? { bookmark } : {}),
+    })
+
+    for (const user of response.docs) {
+      if (user?._id) {
+        globalPermissionUsers.set(user._id, user)
+      }
+    }
+
+    nextBookmark =
+      response.docs.length === GLOBAL_PERMISSION_USER_PAGE_LIMIT
+        ? response.bookmark
+        : undefined
+    if (!nextBookmark || nextBookmark === bookmark) {
+      break
+    }
+    bookmark = nextBookmark
+  } while (bookmark)
+
+  return [...globalPermissionUsers.values()]
+}
 
 const searchWorkspaceUsers = async (
   body: SearchUsersRequest
@@ -369,12 +417,57 @@ const searchWorkspaceUsers = async (
     return { data: [], hasNextPage: false }
   }
 
+  const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
   const limit = body.limit ?? DEFAULT_USER_LIMIT
   const query = body.query
-  const filtered: User[] = []
-  let cursor = body.bookmark
-  let nextPage: string | undefined
-  const groupAccessCache = new Map<string, boolean>()
+  const globalDb = context.getGlobalDB()
+
+  const [workspaceUsers, globalPermissionUsers, workspaceGroups] =
+    await Promise.all([
+      db.queryGlobalView<User>(
+        db.ViewName.USER_BY_WORKSPACE,
+        db.getUsersByWorkspaceParams(prodWorkspaceId, {
+          include_docs: true,
+        }),
+        undefined,
+        { arrayResponse: true }
+      ) as Promise<User[]>,
+      getGlobalPermissionUsers(),
+      globalDb
+        .allDocs<UserGroup>(
+          db.getDocParams(db.DocumentType.GROUP, null, {
+            include_docs: true,
+          })
+        )
+        .then(
+          response =>
+            response.rows
+              .map(row => row.doc)
+              .filter(group => !!group?.roles?.[prodWorkspaceId]) as UserGroup[]
+        ),
+    ])
+
+  const workspaceGroupIds = workspaceGroups.map(group => group._id!)
+  const workspaceGroupIdSet = new Set(workspaceGroupIds)
+
+  let groupUsers: User[] = []
+  if (workspaceGroupIds.length) {
+    const usersByGroup = await Promise.all(
+      workspaceGroupIds.map(groupId => proDb.groups.getGroupUsers(groupId))
+    )
+    const groupUserIds = [
+      ...new Set(
+        usersByGroup
+          .flat()
+          .map(user => user._id)
+          .filter(Boolean)
+      ),
+    ] as string[]
+
+    if (groupUserIds.length) {
+      groupUsers = await userSdk.db.bulkGet(groupUserIds)
+    }
+  }
 
   const getBookmarkValue = (user: User) => {
     if (query?.string?.email && user.email) {
@@ -383,73 +476,54 @@ const searchWorkspaceUsers = async (
     return user._id
   }
 
-  const hydrateGroupAccess = async (usersToCheck: User[]) => {
-    const missingGroupIds = new Set<string>()
-    for (const user of usersToCheck) {
-      for (const groupId of user.userGroups || []) {
-        if (!groupAccessCache.has(groupId)) {
-          missingGroupIds.add(groupId)
-        }
-      }
-    }
-
-    if (!missingGroupIds.size) {
-      return
-    }
-
-    const groupIdList = [...missingGroupIds]
-    const groups = await proGroups.getBulk(groupIdList, { enriched: false })
-    groups.forEach((group, index) => {
-      const groupId = group?._id || groupIdList[index]
-      const hasAccess = !!group?.roles?.[workspaceId]
-      groupAccessCache.set(groupId, hasAccess)
-    })
-  }
-
   const hasWorkspaceAccess = (user: User) => {
-    if (users.isAdminOrBuilder(user, workspaceId)) {
+    if (users.isAdminOrBuilder(user, prodWorkspaceId)) {
       return true
     }
-    if (user.roles?.[workspaceId]) {
+    if (user.roles?.[prodWorkspaceId]) {
       return true
     }
     return (user.userGroups || []).some(groupId =>
-      groupAccessCache.get(groupId)
+      workspaceGroupIdSet.has(groupId)
     )
   }
 
-  while (filtered.length <= limit) {
-    const page = await userSdk.core.paginatedUsers({
-      bookmark: cursor,
-      query,
-      limit,
-    })
-
-    if (!page.data?.length) {
-      break
+  const dedupedUsers = new Map<string, User>()
+  for (const user of [
+    ...workspaceUsers,
+    ...globalPermissionUsers,
+    ...groupUsers,
+  ]) {
+    if (user?._id) {
+      dedupedUsers.set(user._id, user)
     }
-
-    await hydrateGroupAccess(page.data)
-
-    for (const user of page.data) {
-      if (!hasWorkspaceAccess(user)) {
-        continue
-      }
-      filtered.push(user)
-      if (filtered.length === limit + 1) {
-        nextPage = getBookmarkValue(user)
-        break
-      }
-    }
-
-    if (filtered.length === limit + 1 || !page.hasNextPage) {
-      break
-    }
-    cursor = page.nextPage
   }
 
-  const hasNextPage = filtered.length > limit
-  const data = hasNextPage ? filtered.slice(0, limit) : filtered
+  let filtered = [...dedupedUsers.values()].filter(hasWorkspaceAccess)
+
+  if (query) {
+    filtered = dataFilters.search(filtered, { query }).rows
+  }
+
+  filtered.sort((userA, userB) => {
+    if (query?.string?.email) {
+      const emailA = userA.email?.toLowerCase() || ""
+      const emailB = userB.email?.toLowerCase() || ""
+      if (emailA !== emailB) {
+        return emailA.localeCompare(emailB)
+      }
+    }
+    return (userA._id || "").localeCompare(userB._id || "")
+  })
+
+  const bookmark = body.bookmark
+  const pagedUsers = bookmark
+    ? filtered.filter(user => (getBookmarkValue(user) || "") >= bookmark)
+    : filtered
+  const pageData = pagedUsers.slice(0, limit + 1)
+  const hasNextPage = pageData.length > limit
+  const data = hasNextPage ? pageData.slice(0, limit) : pageData
+  const nextPage = hasNextPage ? getBookmarkValue(pageData[limit]) : undefined
 
   for (let user of data) {
     if (user) {
@@ -589,11 +663,12 @@ export const inviteMultiple = async (
 export const removeMultipleInvites = async (
   ctx: Ctx<DeleteInviteUsersRequest, DeleteInviteUsersResponse>
 ) => {
+  const tenantId = context.getTenantId()
   const inviteCodesToRemove = ctx.request.body.map(
     (invite: DeleteInviteUserRequest) => invite.code
   )
   for (const code of inviteCodesToRemove) {
-    await cache.invite.deleteCode(code)
+    await cache.invite.deleteCode(code, tenantId)
   }
   ctx.body = {
     message: "User invites successfully removed.",
@@ -602,9 +677,13 @@ export const removeMultipleInvites = async (
 
 export const checkInvite = async (ctx: UserCtx<void, CheckInviteResponse>) => {
   const { code } = ctx.params
+  const tenantId =
+    typeof ctx.request.query.tenantId === "string"
+      ? ctx.request.query.tenantId
+      : undefined
   let invite
   try {
-    invite = await cache.invite.getCode(code)
+    invite = await cache.invite.getCode(code, tenantId)
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
@@ -637,7 +716,8 @@ export const addWorkspaceIdToInvite = async (
   const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
 
   try {
-    const invite = await cache.invite.getCode(code)
+    const tenantId = context.getTenantId()
+    const invite = await cache.invite.getCode(code, tenantId)
     invite.info.apps ??= {}
     invite.info.apps[prodWorkspaceId] = role
 
@@ -660,7 +740,8 @@ export const removeWorkspaceIdFromInvite = async (
   const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
 
   try {
-    const invite = await cache.invite.getCode(code)
+    const tenantId = context.getTenantId()
+    const invite = await cache.invite.getCode(code, tenantId)
     invite.info.apps ??= {}
     delete invite.info.apps[prodWorkspaceId]
 
@@ -674,7 +755,13 @@ export const removeWorkspaceIdFromInvite = async (
 export const inviteAccept = async (
   ctx: Ctx<AcceptUserInviteRequest, AcceptUserInviteResponse>
 ) => {
-  const { inviteCode, password, firstName, lastName } = ctx.request.body
+  const { inviteCode, password, firstName, lastName, tenantId } =
+    ctx.request.body
+  const queryTenantId =
+    typeof ctx.request.query.tenantId === "string"
+      ? ctx.request.query.tenantId
+      : undefined
+  const resolvedTenantId = tenantId || queryTenantId
   try {
     await locks.doWithLock(
       {
@@ -685,29 +772,57 @@ export const inviteAccept = async (
       },
       async () => {
         // info is an extension of the user object that was stored by global
-        const { email, info } = await cache.invite.getCode(inviteCode)
+        const { email, info } = await cache.invite.getCode(
+          inviteCode,
+          resolvedTenantId
+        )
         const user = await tenancy.doInTenant(info.tenantId, async () => {
+          const appRoles = info.apps || {}
+          const creatorAppsFromRoles = Object.keys(appRoles).filter(
+            appId => appRoles[appId] === "CREATOR"
+          )
+
+          const builderApps = [
+            ...(info?.builder?.apps || []),
+            ...creatorAppsFromRoles,
+          ]
+          const uniqueBuilderApps = [...new Set(builderApps)]
+          const hasCreatorPerms =
+            !!info?.builder?.creator || creatorAppsFromRoles.length > 0
+
           let request: any = {
             firstName,
             lastName,
             password,
             email,
             admin: { global: info?.admin?.global || false },
-            roles: info.apps,
+            roles: appRoles,
             tenantId: info.tenantId,
           }
-          const builder: { global: boolean; apps?: string[] } = {
+          const builder: {
+            global: boolean
+            creator?: boolean
+            apps?: string[]
+          } = {
             global: info?.builder?.global || false,
           }
 
-          if (info?.builder?.apps) {
-            builder.apps = info.builder.apps
-            request.builder = builder
+          if (hasCreatorPerms) {
+            builder.creator = true
           }
-          delete info.apps
+          if (uniqueBuilderApps.length) {
+            builder.apps = uniqueBuilderApps
+          }
+
+          const cleanedInviteInfo = { ...info }
+          delete cleanedInviteInfo.apps
+          delete cleanedInviteInfo.builder
           request = {
             ...request,
-            ...info,
+            ...cleanedInviteInfo,
+          }
+          if (info?.builder || hasCreatorPerms || uniqueBuilderApps.length) {
+            request.builder = builder
           }
 
           const saved = await userSdk.db.save(request)
@@ -715,7 +830,7 @@ export const inviteAccept = async (
           return saved
         })
 
-        await cache.invite.deleteCode(inviteCode)
+        await cache.invite.deleteCode(inviteCode, resolvedTenantId)
 
         // make sure onboarding flow is cleared
         ctx.cookies.set(BpmStatusKey.ONBOARDING, BpmStatusValue.COMPLETED, {
@@ -733,10 +848,13 @@ export const inviteAccept = async (
   } catch (err: any) {
     if (err.code === APIWarningCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
-      ctx.throw(400, err)
+      ctx.throw(400, err?.message || err)
     }
     console.warn("Error inviting user", err)
-    ctx.throw(400, err || "Unable to create new user, invitation invalid.")
+    ctx.throw(
+      400,
+      err?.message || err || "Unable to create new user, invitation invalid."
+    )
   }
 }
 
@@ -780,10 +898,6 @@ async function handleUserWorkspacePermission(
     existingUser.roles[prodWorkspaceId] = role
   } else {
     delete existingUser.roles[prodWorkspaceId]
-  }
-
-  if (role === "CREATOR" && !(await features.isAppBuildersEnabled())) {
-    throw new HTTPError("Feature not enabled, please check license", 400)
   }
 
   const creatorForApps = Object.entries(existingUser.roles)

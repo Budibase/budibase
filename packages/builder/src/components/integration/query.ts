@@ -1,3 +1,5 @@
+import { findHBSBlocks } from "@budibase/string-templates"
+import { v4 as uuid } from "uuid"
 import restUtils from "@/helpers/data/utils"
 import {
   runtimeToReadableMap,
@@ -155,9 +157,11 @@ export function buildQueryBindings(
   datasource: any,
   requestBindings: Record<string, any>,
   globalDynamicBindings: Record<string, any>,
-  dynamicVariables?: Record<string, any>
+  dynamicVariables?: Record<string, any>,
+  connectionStaticVariables?: Record<string, any>
 ) {
   const staticVariables = datasource?.config?.staticVariables || {}
+  const connectionStatic = connectionStaticVariables || {}
   const restBindings = getRestBindings() as EnrichedBinding[]
 
   const customRequestBindings = toBindingsArray(
@@ -174,12 +178,19 @@ export function buildQueryBindings(
 
   const dataSourceStaticBindings = toBindingsArray(
     staticVariables,
-    "Datasource.Static",
-    "Datasource Static"
+    "Connection.Static",
+    "Connection Static"
+  ) as EnrichedBinding[]
+
+  const connectionStaticBindings = toBindingsArray(
+    connectionStatic,
+    "Connection.Static",
+    "Connection Static"
   ) as EnrichedBinding[]
 
   const mergedBindings: EnrichedBinding[] = [
     ...dataSourceStaticBindings,
+    ...connectionStaticBindings,
     ...restBindings,
     ...customRequestBindings,
     ...globalDynamicRequestBindings,
@@ -189,6 +200,7 @@ export function buildQueryBindings(
     requestBindings,
     globalDynamicBindings,
     staticVariables,
+    connectionStatic,
   ]
 
   if (dynamicVariables) {
@@ -201,6 +213,7 @@ export function buildQueryBindings(
     customRequestBindings,
     globalDynamicRequestBindings,
     dataSourceStaticBindings,
+    connectionStaticBindings,
     restBindings,
     mergedBindings,
     bindingPreviewContext,
@@ -441,13 +454,74 @@ export function getSelectedQuery(queryId: string, datasourceId: string) {
 }
 
 export function keyValueArrayToRecord(
-  items: Array<{ name: string; value: any }>
+  items: Array<{ name: string; value: any }>,
+  options?: {
+    transform?: (value: any) => any
+    filterEmpty?: boolean
+  }
 ): Record<string, any> {
   return items.reduce(
     (acc, { name, value }) => {
-      acc[name] = value
+      const key = options?.filterEmpty ? (name ?? "").toString().trim() : name
+
+      if (options?.filterEmpty && key === "") {
+        return acc
+      }
+
+      acc[key] = options?.transform ? options.transform(value) : value
       return acc
     },
     {} as Record<string, any>
   )
+}
+
+export function isValidEndpointUrl(url: string | undefined): boolean {
+  if (!url || /\s/.test(url)) return false
+  if (!/^(https?:\/\/|\{\{)/.test(url)) return false
+  if (findHBSBlocks(url).length > 0) return true
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Replaces the origin of `currentUrl` with `newBase`, preserving the path,
+ * query string, hash, and any HBS template blocks (including port-position ones).
+ */
+export function applyBaseUrl(currentUrl: string, newBase: string): string {
+  const nonce = uuid().replace(/-/g, "")
+  const blocks = findHBSBlocks(currentUrl)
+  const portBlocks: string[] = []
+
+  // Substitute HBS blocks in port position with ':0' so new URL() can parse it
+  let parseable = currentUrl
+  parseable = parseable.replace(/:(\{\{[^}]+\}\})/g, (_, block) => {
+    portBlocks.push(block)
+    return ":0"
+  })
+
+  const placeholder = (i: number) => `hbs${nonce}${i}`
+  const pathBlocks = blocks.filter(b => !portBlocks.includes(b))
+  parseable = pathBlocks.reduce(
+    (s, block, i) => s.replace(block, placeholder(i)),
+    parseable
+  )
+
+  const restore = (s: string) =>
+    pathBlocks.reduce((r, block, i) => r.replace(placeholder(i), block), s)
+
+  const base = newBase.replace(/\/$/, "")
+  try {
+    const parsed = new URL(parseable)
+    const path = parsed.pathname === "/" ? "" : parsed.pathname
+    return base + restore(path + parsed.search + parsed.hash)
+  } catch {
+    if (parseable.startsWith("/")) {
+      return base + restore(parseable)
+    }
+    return base
+  }
 }

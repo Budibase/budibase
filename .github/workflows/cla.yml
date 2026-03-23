@@ -24,7 +24,7 @@ jobs:
           path-to-document: 'https://github.com/budibase/budibase/blob/next/.github/cla/individual-cla.md' # e.g. a CLA or a DCO document
           # branch should not be protected
           branch: 'next'
-          allowlist: user1,bot*
+          allowlist: user1,bot*,cursoragent
 
          #below are the optional inputs - If the optional inputs are not given, then default values will be taken
           #remote-organization-name: enter the remote organization name where the signatures should be stored (Default is storing the signatures in the same repository)

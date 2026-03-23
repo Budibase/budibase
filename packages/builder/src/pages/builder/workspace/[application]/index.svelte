@@ -1,18 +1,10 @@
-<script>
+<script lang="ts">
   import { redirect } from "@roxi/routify"
-  import { screenStore, appStore } from "@/stores/builder"
   import { onMount } from "svelte"
 
   $redirect
 
   onMount(() => {
-    const { screens } = $screenStore
-    const { appId } = $appStore
-    if (!appId) return
-    if (screens && screens.length > 0) {
-      $redirect("./design")
-    } else {
-      $redirect("./data")
-    }
+    $redirect(`./home${window.location.search}`)
   })
 </script>

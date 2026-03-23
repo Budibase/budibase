@@ -17,6 +17,7 @@ import * as accountSdk from "../accounts"
 import * as cache from "../cache"
 import { getGlobalDB, getIdentity, getTenantId } from "../context"
 import * as dbUtils from "../db"
+import { getUsersByWorkspaceParams } from "../docIds/params"
 import env from "../environment"
 import { EmailUnavailableError, HTTPError } from "../errors"
 import * as platform from "../platform"
@@ -62,7 +63,7 @@ type CreateAdminUserOpts = {
   firstName?: string
   lastName?: string
 }
-type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
+type FeatureFns = { isSSOEnforced: FeatureFn }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
   const userId = dbUser._id as string
@@ -181,10 +182,18 @@ export class UserDB {
     return response.rows.map(row => row.doc!)
   }
 
-  static async countUsersByApp(appId: string) {
-    let response: any = await usersCore.searchGlobalUsersByApp(appId, {})
+  static async countUsersByWorkspace(workspaceId: string) {
+    if (typeof workspaceId !== "string" || !workspaceId) {
+      throw new Error("Must provide a string based workspace ID")
+    }
+    const response = await dbUtils.queryGlobalViewRaw<User>(
+      dbUtils.ViewName.USER_BY_WORKSPACE,
+      getUsersByWorkspaceParams(workspaceId, {
+        include_docs: false,
+      })
+    )
     return {
-      userCount: response.length,
+      userCount: response.rows.length,
     }
   }
 
@@ -403,7 +412,7 @@ export class UserDB {
           // TODO: Refactor to bulk insert users into the info db
           // instead of relying on looping tenant creation
           await platform.users.addUser(tenantId, user._id!, user.email)
-          await eventHelpers.handleSaveEvents(user, undefined)
+          await eventHelpers.handleSaveEvents(user, undefined, account)
         }
 
         const saved = usersToBulkSave.map(user => {

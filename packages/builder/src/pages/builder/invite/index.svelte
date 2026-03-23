@@ -19,7 +19,13 @@
 
   $: goto = $gotoStore
 
-  const inviteCode = $params["?code"]
+  let inviteCode
+  let inviteTenantId
+  const getQueryParam = key => {
+    return new URLSearchParams(window.location.search).get(key) || undefined
+  }
+  $: inviteCode = $params["?code"] || getQueryParam("code")
+  $: inviteTenantId = $params["?tenantId"] || getQueryParam("tenantId")
   let form
   let formData = {}
   let onboarding = false
@@ -37,11 +43,13 @@
     onboarding = true
     try {
       const { password, firstName, lastName } = formData
+      const resolvedTenantId = inviteTenantId || $auth?.tenantId
       const user = await users.acceptInvite(
         inviteCode,
         password,
         firstName,
-        lastName
+        lastName,
+        resolvedTenantId
       )
       notifications.success("Invitation accepted successfully")
       auth.setOrg(user.tenantId)
@@ -54,13 +62,21 @@
 
   async function getInvite() {
     try {
-      const invite = await users.fetchInvite(inviteCode)
+      const resolvedTenantId = inviteTenantId || $auth?.tenantId
+      const invite = await users.fetchInvite(inviteCode, resolvedTenantId)
       if (invite?.email) {
         formData.email = invite?.email
       }
       if ($organisation.isSSOEnforced) {
         // auto accept invite and redirect to login
-        await users.acceptInvite(inviteCode)
+        const resolvedTenantId = inviteTenantId || $auth?.tenantId
+        await users.acceptInvite(
+          inviteCode,
+          undefined,
+          undefined,
+          undefined,
+          resolvedTenantId
+        )
         goto("../auth")
       }
     } catch (error) {
@@ -80,6 +96,7 @@
 
   onMount(async () => {
     try {
+      await auth.checkQueryString()
       await organisation.init()
       await getInvite()
       loaded = true

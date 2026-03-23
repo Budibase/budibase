@@ -1,6 +1,7 @@
+import { roles } from "@budibase/backend-core"
 import { withEnv } from "../../../environment"
 import * as setup from "./utilities"
-import { APIError } from "@budibase/types"
+import { APIError, PermissionLevel } from "@budibase/types"
 
 describe("/api/applications/:appId/sync", () => {
   let config = setup.getConfig()
@@ -59,6 +60,42 @@ describe("/api/applications/:appId/sync", () => {
         }
       )) as unknown as APIError
       expect(resp.message).toContain("No file provided")
+    })
+  })
+
+  describe("/api/attachments/:tableId/upload", () => {
+    let tableId: string
+
+    beforeAll(async () => {
+      const table = await config.createTable()
+      tableId = table._id!
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        resourceId: tableId,
+        level: PermissionLevel.WRITE,
+      })
+      await config.publish()
+    })
+
+    it("should reject active content for public users", async () => {
+      await config.withHeaders(config.publicHeaders(), async () => {
+        let resp = (await config.api.attachment.upload(
+          tableId,
+          "image.png",
+          Buffer.from("<svg><script>alert(1)</script></svg>"),
+          { status: 400 }
+        )) as unknown as APIError
+        expect(resp.message).toContain("active content")
+      })
+    })
+
+    it("should allow active content for authenticated users", async () => {
+      const resp = await config.api.attachment.upload(
+        tableId,
+        "image.png",
+        Buffer.from("<svg><script>alert(1)</script></svg>")
+      )
+      expect(resp.length).toBe(1)
     })
   })
 })

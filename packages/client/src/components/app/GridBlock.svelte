@@ -1,11 +1,13 @@
 <script>
   // NOTE: this is not a block - it's just named as such to avoid confusing users,
   // because it functions similarly to one
-  import { getContext, onMount } from "svelte"
+  import { getContext, onDestroy, onMount } from "svelte"
   import { get, derived, readable } from "svelte/store"
   import { featuresStore } from "@/stores"
+  import { createAutoRefresh } from "@/utils/autoRefresh"
   import { Grid } from "@budibase/frontend-core"
   import { processStringSync } from "@budibase/string-templates"
+  import { enrichGridConditions } from "@/utils/conditions"
   import { UILogicalOperator, EmptyFilterOption } from "@budibase/types"
 
   // table is actually any datasource, but called table for legacy compatibility
@@ -24,6 +26,7 @@
   export let buttons = null
   export let buttonsCollapsed = false
   export let buttonsCollapsedText = null
+  export let autoRefresh = null
 
   const context = getContext("context")
   const component = getContext("component")
@@ -42,6 +45,7 @@
 
   let grid
   let gridContext
+  const autoRefreshActions = createAutoRefresh()
   let minHeight = 0
 
   let filterExtensions = {}
@@ -86,6 +90,12 @@
   ]
 
   $: extendedFilter = extendFilter(initialFilter, filterExtensions)
+  $: autoRefreshEnabled =
+    !$builderStore.inBuilder || !$builderStore.selectedComponentId
+  $: autoRefreshActions.setUp(
+    autoRefreshEnabled ? autoRefresh : null,
+    gridContext?.rows?.actions?.refreshData
+  )
 
   /**
    *
@@ -169,7 +179,7 @@
         displayName: column.label,
         order: idx,
         visible: !!column.active,
-        conditions: enrichConditions(column.conditions, context),
+        conditions: enrichGridConditions(column.conditions, context),
         format: createFormatter(column),
 
         // Small hack to ensure we react to all changes, as our
@@ -181,19 +191,6 @@
       }
     })
     return overrides
-  }
-
-  const enrichConditions = (conditions, context) => {
-    return conditions?.map(condition => {
-      return {
-        ...condition,
-        referenceValue: processStringSync(
-          condition.referenceValue || "",
-          context
-        ),
-        newValue: processStringSync(condition.newValue || "", context),
-      }
-    })
   }
 
   const createFormatter = column => {
@@ -215,7 +212,7 @@
         type: settings.type,
         icon: settings.icon,
         getRowConditions: row =>
-          enrichConditions(settings.conditions, { [id]: row }),
+          enrichGridConditions(settings.conditions, { ...$context, [id]: row }),
         conditions: settings.conditions,
         onClick: async row => {
           // Create a fake, ephemeral context to run the buttons actions/conditions with
@@ -257,6 +254,10 @@
   onMount(() => {
     gridContext = grid.getContext()
     gridContext.minHeight.subscribe($height => (minHeight = $height))
+  })
+
+  onDestroy(() => {
+    autoRefreshActions.clear()
   })
 </script>
 

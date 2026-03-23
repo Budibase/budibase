@@ -12,7 +12,6 @@
   import {
     automationStore,
     previewStore,
-    builderStore,
     sortedScreens,
     appStore,
     datasources,
@@ -22,6 +21,7 @@
     viewsV2,
   } from "@/stores/builder"
   import { themeStore, featureFlags } from "@/stores/portal"
+  import { bb } from "@/stores/bb"
   import { getContext } from "svelte"
   import { ThemeOptions, BUILDER_URLS } from "@budibase/shared-core"
   import { FeatureFlag } from "@budibase/types"
@@ -43,7 +43,7 @@
       name: "Invite users and manage app access",
       description: "",
       icon: "user",
-      action: () => builderStore.showBuilderSidePanel(),
+      action: () => bb.settings("/people/workspace"),
       requiresApp: true,
     },
     ...navigationCommands(),
@@ -100,7 +100,9 @@
   ]
   $: enrichedCommands = commands.map(cmd => ({
     ...cmd,
-    searchValue: `${cmd.type} ${cmd.name}`.toLowerCase().replace(/_/g, " "),
+    searchValue: `${cmd.type} ${cmd.name} ${cmd.codeName || ""}`
+      .toLowerCase()
+      .replace(/_/g, " "),
   }))
   $: results = filterResults(enrichedCommands, search, inApp)
   $: categories = groupResults(results)
@@ -112,17 +114,29 @@
         url: BUILDER_URLS.WORKSPACES,
       },
       {
+        name: "Home",
+        url: "/builder/workspace/:application/home",
+      },
+      {
         name: "Data",
         url: "/builder/workspace/:application/data",
       },
       {
-        name: "Design",
-        url: "/builder/workspace/:application/design",
+        name: "Apps",
+        url: "/builder/workspace/:application/home?type=app",
       },
       {
         name: "Automations",
-        url: "/builder/workspace/:application/automation",
+        url: "/builder/workspace/:application/home?type=automation",
       },
+      ...($featureFlags.AI_AGENTS
+        ? [
+            {
+              name: "Agents",
+              url: "/builder/workspace/:application/home?type=agent",
+            },
+          ]
+        : []),
     ]
     return routes.map(route => ({
       type: "Navigate",
@@ -144,7 +158,7 @@
       name: datasource.name,
       icon:
         datasource.source === IntegrationTypes.REST
-          ? "webhooks-logo"
+          ? "globe-simple"
           : "database",
       action: () =>
         $goto(
@@ -281,7 +295,8 @@
       .filter(([flag]) => flag !== FeatureFlag.DEBUG_UI)
       .map(([flag, value]) => ({
         type: "Feature Flag",
-        name: `${value ? "Disable" : "Enable"} <code>${flag}</code>`,
+        name: value ? "Disable" : "Enable",
+        codeName: flag,
         icon: "flag",
         action: () => {
           featureFlags.setFlag(flag, !value)
@@ -397,8 +412,10 @@
                 <Icon size="M" name={command.icon} />
                 <strong>{command.type}:&nbsp;</strong>
                 <div class="name">
-                  <!--eslint-disable-next-line svelte/no-at-html-tags-->
-                  {@html command.name}
+                  {command.name}
+                  {#if command.codeName}
+                    <code>{command.codeName}</code>
+                  {/if}
                 </div>
               </div>
             {/each}
@@ -476,6 +493,7 @@
     white-space: nowrap;
   }
   .name :global(code) {
+    margin-left: 4px;
     font-size: 12px;
     background: var(--background-alt);
     padding: 4px;

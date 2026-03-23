@@ -12,7 +12,7 @@
     deploymentStore,
     workspaceDeploymentStore,
   } from "@/stores/builder"
-  import { themeStore, admin, licensing } from "@/stores/portal"
+  import { themeStore, admin, aiStore } from "@/stores/portal"
   import { TableNames } from "@/constants"
   import { Grid, gridClipboard } from "@budibase/frontend-core"
   import type { Store as GridStore } from "@budibase/frontend-core/src/components/grid/stores"
@@ -59,6 +59,7 @@
   let productionEmpty = false
   let productionHasRows = true
   let productionRowUnsubscribe: (() => void) | null = null
+  let highlightUsersAccessButton = false
 
   const dataLayoutContext = getContext("data-layout") as {
     registerGridDispatch?: Function
@@ -126,6 +127,9 @@
   $: if (id !== previousTableId) {
     missingProductionDefinition = false
     previousTableId = id
+  }
+  $: if (!isUsersTable || !$appStore.features.disableUserMetadata) {
+    highlightUsersAccessButton = false
   }
   $: hasStaticFormulas = Object.values($tables.selected?.schema || {}).some(
     field =>
@@ -253,6 +257,12 @@
     }
   }
 
+  const handleGridRowClick = () => {
+    if (isUsersTable && $appStore.features.disableUserMetadata) {
+      highlightUsersAccessButton = true
+    }
+  }
+
   const publishProductionTable = async (seedProductionTables: boolean) => {
     if (tablePublishing) {
       return
@@ -328,20 +338,25 @@
         schemaOverrides={isUsersTable ? userSchemaOverrides : null}
         showAvatars={false}
         isCloud={$admin.cloud}
-        aiEnabled={$licensing.customAIConfigsEnabled ||
-          $licensing.budibaseAIEnabled}
+        aiEnabled={$aiStore.aiEnabled}
         {buttons}
         buttonsCollapsed
         canHideColumns={false}
         externalClipboard={externalClipboardData}
         on:updatedatasource={handleGridTableUpdate}
         on:definitionMissing={handleDefinitionMissing}
+        on:rowclick={handleGridRowClick}
       >
         <!-- Controls -->
         <svelte:fragment slot="controls">
           {#if !isProductionMode}
             {#if isUsersTable && $appStore.features.disableUserMetadata}
-              <GridUsersTableButton />
+              <GridUsersTableButton
+                highlighted={highlightUsersAccessButton}
+                on:manage={() => {
+                  highlightUsersAccessButton = false
+                }}
+              />
             {/if}
             <GridManageAccessButton />
             {#if relationshipsEnabled}

@@ -252,6 +252,12 @@
     padding: var(--spacing-l);
   }
 
+  .agent-link {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--spacing-m);
+  }
+
   .issue {
     display: flex;
     gap: var(--spacing-s);

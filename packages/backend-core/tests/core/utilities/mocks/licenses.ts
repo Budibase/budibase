@@ -95,16 +95,16 @@ export const useExpandedPublicApi = () => {
   return useFeature(Feature.EXPANDED_PUBLIC_API)
 }
 
+export const useWorkspaceImportExport = () => {
+  return useFeature(Feature.WORKSPACE_IMPORT_EXPORT)
+}
+
 export const useScimIntegration = () => {
   return useFeature(Feature.SCIM)
 }
 
 export const useSyncAutomations = () => {
   return useFeature(Feature.SYNC_AUTOMATIONS)
-}
-
-export const useAppBuilders = () => {
-  return useFeature(Feature.APP_BUILDERS)
 }
 
 export const useRecaptcha = () => {
@@ -136,6 +136,12 @@ export const useAICustomConfigs = () => {
 export const setAutomationLogsQuota = (value: number) => {
   const license = cloneDeep(UNLIMITED_LICENSE)
   license.quotas.constant.automationLogRetentionDays.value = value
+  return useLicense(license)
+}
+
+export const setAgentLogsQuota = (value: number) => {
+  const license = cloneDeep(UNLIMITED_LICENSE)
+  license.quotas.constant.agentLogRetentionDays.value = value
   return useLicense(license)
 }
 

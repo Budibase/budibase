@@ -111,7 +111,7 @@
   }
 
   const navItemClick = (route: Route) => {
-    const { routes } = route
+    const { routes, component } = route
     let path
 
     // Handle urls
@@ -125,7 +125,10 @@
       return
     }
 
-    if (routes?.length) {
+    if (component) {
+      // If there's a component at the section level, render it
+      path = route.path
+    } else if (routes?.length) {
       // Default to first route
       const landing = routes?.[0]
       // NOTE - route.path can be optional
@@ -214,7 +217,7 @@
                       {#if route.icon && isSettingIcon(route.icon)}
                         <div class="custom-icon">
                           <svelte:component
-                            this={route.icon.comp}
+                            this={route.icon.component}
                             {...route.icon.props}
                           />
                         </div>
@@ -252,6 +255,11 @@
 </div>
 
 <style>
+  .settings-wrap {
+    --settings-nav-transition-ms: 160ms;
+    --settings-nav-transition-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
   .status-indicator {
     position: absolute;
     top: -10px;
@@ -263,7 +271,10 @@
     border: 0.5px solid #5645a1;
   }
 
-  .root-nav .status-indicator :global(.spectrum-StatusLight::before) {
+  .groups.full
+    .root-nav
+    .status-indicator
+    :global(.spectrum-StatusLight::before) {
     border: unset;
   }
 
@@ -329,8 +340,8 @@
     opacity: 0;
     visibility: hidden;
     transition:
-      opacity 0ms,
-      visibility 0ms;
+      opacity 120ms var(--settings-nav-transition-ease),
+      visibility 0ms linear 120ms;
     position: absolute;
   }
 
@@ -338,8 +349,9 @@
     opacity: 1;
     visibility: visible;
     transition:
-      opacity 200ms ease-in,
-      visibility 0ms;
+      opacity var(--settings-nav-transition-ms)
+        var(--settings-nav-transition-ease),
+      visibility 0ms linear 0ms;
     position: static;
   }
 
@@ -347,17 +359,28 @@
     opacity: 1;
     visibility: visible;
     transition:
-      opacity 200ms ease-in,
-      visibility 0ms;
+      opacity var(--settings-nav-transition-ms)
+        var(--settings-nav-transition-ease),
+      visibility 0ms linear 0ms;
   }
 
   .groups.full .group-title .placeholder {
     opacity: 0;
     visibility: hidden;
     transition:
-      opacity 0ms,
-      visibility 0ms;
+      opacity 120ms var(--settings-nav-transition-ease),
+      visibility 0ms linear 120ms;
     position: absolute;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .group-title .group-title-text,
+    .groups.full .group-title .group-title-text,
+    .placeholder,
+    .groups.full .group-title .placeholder,
+    .setting-main .setting-page {
+      transition: none;
+    }
   }
 
   .group-title :global(p) {
@@ -414,14 +437,15 @@
   }
 
   .custom-icon {
-    flex: 0 0 24px;
+    flex: 0 0 20px;
+    width: 20px;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
     color: var(--spectrum-global-color-gray-600);
     order: 1;
-    margin-right: 2px;
+    margin-right: 0;
   }
 
   .spectrum-Dialog-content :global(.modal_sidebar_wrapper .nav) {

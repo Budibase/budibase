@@ -1,7 +1,43 @@
-import { constants } from "@budibase/backend-core"
+import { constants, objectStore } from "@budibase/backend-core"
 import { Datasource, SourceName } from "@budibase/types"
+import fsp from "fs/promises"
+import path from "path"
+import { tmpdir } from "os"
 import { setEnv } from "../../../environment"
+import * as fileSystem from "../../../utilities/fileSystem"
 import { afterAll as _afterAll, getConfig, getRequest } from "./utilities"
+
+jest.mock("extract-zip", () => jest.fn())
+
+jest.mock("../../../utilities/fileSystem", () => {
+  const actual = jest.requireActual("../../../utilities/fileSystem")
+  return {
+    ...actual,
+    shouldServeLocally: jest.fn(actual.shouldServeLocally),
+  }
+})
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    context: {
+      ...actual.context,
+      getProdWorkspaceId: jest.fn().mockReturnValue("app_prod_test123"),
+    },
+    objectStore: {
+      ...actual.objectStore,
+      upload: jest.fn(),
+    },
+  }
+})
+
+import extract from "extract-zip"
+
+const mockedUpload = objectStore.upload as jest.MockedFunction<
+  typeof objectStore.upload
+>
+const mockedExtract = extract as jest.MockedFunction<typeof extract>
 
 describe("/static", () => {
   let request = getRequest()
@@ -26,13 +62,34 @@ describe("/static", () => {
     it("should serve the app by url", async () => {
       const headers = config.defaultHeaders()
       delete headers[constants.Header.APP_ID]
+      const workspaceId = config.getProdWorkspaceId()
 
       const res = await request
         .get(`/app${config.getProdWorkspace().url}`)
         .set(headers)
         .expect(200)
 
-      expect(res.body.appId).toBe(config.prodWorkspaceId)
+      expect(res.body.appId).toBe(workspaceId)
+      expect(res.body.clientLibPath).toContain(
+        `/api/assets/${workspaceId}/client?`
+      )
+    })
+
+    it("should serve app-chat with the global client library path", async () => {
+      const headers = config.defaultHeaders()
+      delete headers[constants.Header.APP_ID]
+      const workspaceId = config.getProdWorkspaceId()
+
+      const res = await request
+        .get(`/app-chat${config.getProdWorkspace().url}`)
+        .set(headers)
+        .expect(200)
+
+      expect(res.body.appId).toBe(workspaceId)
+      expect(res.body.clientLibPath).toContain("/api/assets/global/client?")
+      expect(res.body.clientLibPath).not.toContain(
+        `/api/assets/${workspaceId}/client?`
+      )
     })
 
     it("should serve the app preview by id", async () => {
@@ -147,21 +204,164 @@ describe("/static", () => {
     })
   })
 
+  describe("/api/assets/:appId/client", () => {
+    it("should serve the global client library without an app ID header", async () => {
+      const headers = config.defaultHeaders()
+      delete headers[constants.Header.APP_ID]
+      const shouldServeLocallyMock =
+        fileSystem.shouldServeLocally as jest.MockedFunction<
+          typeof fileSystem.shouldServeLocally
+        >
+      shouldServeLocallyMock.mockClear()
+      const getReadStreamSpy = jest.spyOn(objectStore, "getReadStream")
+
+      try {
+        const res = await request
+          .get("/api/assets/global/client")
+          .set(headers)
+          .expect(200)
+
+        expect(res.headers["content-type"]).toContain("javascript")
+        expect(shouldServeLocallyMock).not.toHaveBeenCalled()
+        expect(getReadStreamSpy).not.toHaveBeenCalled()
+      } finally {
+        getReadStreamSpy.mockRestore()
+      }
+    })
+  })
+
   describe("/", () => {
     it("should move permanently from base call (public call)", async () => {
       const res = await request.get(`/`)
       expect(res.status).toEqual(301)
-      expect(res.text).toEqual(
-        `Redirecting to <a href="/builder">/builder</a>.`
-      )
+      expect(res.text).toEqual("Redirecting to /builder.")
     })
 
     it("should not error when trying to get 'apple-touch-icon.png' (public call)", async () => {
       const res = await request.get(`/apple-touch-icon.png`)
       expect(res.status).toEqual(302)
-      expect(res.text).toEqual(
-        `Redirecting to <a href="/builder/bblogo.png">/builder/bblogo.png</a>.`
-      )
+      expect(res.text).toEqual("Redirecting to /builder/bblogo.png.")
+    })
+  })
+
+  describe("processPWAZip", () => {
+    let tempDir: string
+
+    beforeEach(async () => {
+      jest.clearAllMocks()
+      tempDir = path.join(tmpdir(), `pwa-test-${Date.now()}`)
+      await fsp.mkdir(tempDir, { recursive: true })
+
+      mockedExtract.mockImplementation(async (_zipPath: string, opts: any) => {
+        await fsp.mkdir(opts.dir, { recursive: true })
+        await fsp.cp(tempDir, opts.dir, { recursive: true })
+      })
+    })
+
+    afterEach(async () => {
+      await fsp.rm(tempDir, { recursive: true, force: true })
+    })
+
+    describe("path traversal prevention", () => {
+      it("skips icons whose src attempts to escape the zip directory via ../ traversal", async () => {
+        const sensitiveDir = path.join(tmpdir(), `sensitive-${Date.now()}`)
+        await fsp.mkdir(sensitiveDir, { recursive: true })
+        const sensitiveFile = path.join(sensitiveDir, "secret.png")
+        await fsp.writeFile(sensitiveFile, "sensitive-data")
+
+        try {
+          const relativePath = path.relative(tempDir, sensitiveFile)
+          const iconsJson = {
+            icons: [
+              {
+                src: relativePath, // e.g. "../../sensitive-.../secret.png"
+                sizes: "192x192",
+                type: "image/png",
+              },
+            ],
+          }
+          await fsp.writeFile(
+            path.join(tempDir, "icons.json"),
+            JSON.stringify(iconsJson)
+          )
+
+          const res = await request
+            .post("/api/pwa/process-zip")
+            .attach("file", Buffer.from("fake-zip"), "icons.zip")
+            .set(config.defaultHeaders())
+
+          expect(res.status).toEqual(500)
+          expect(res.body.message).toMatch(
+            "No valid icons found in the zip file"
+          )
+          expect(mockedUpload).not.toHaveBeenCalled()
+        } finally {
+          await fsp.rm(sensitiveDir, { recursive: true, force: true })
+        }
+      })
+
+      it("accepts icons whose src stays within the zip directory", async () => {
+        const iconFile = path.join(tempDir, "icon-192.png")
+        await fsp.writeFile(iconFile, "fake-png-data")
+
+        const iconsJson = {
+          icons: [
+            {
+              src: "icon-192.png",
+              sizes: "192x192",
+              type: "image/png",
+            },
+          ],
+        }
+        await fsp.writeFile(
+          path.join(tempDir, "icons.json"),
+          JSON.stringify(iconsJson)
+        )
+
+        mockedUpload.mockResolvedValue({
+          Key: "app_prod_test123/pwa/some-uuid.png",
+        } as any)
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+          .expect(200)
+
+        expect(mockedUpload).toHaveBeenCalledTimes(1)
+        expect(res.body.icons).toEqual([
+          {
+            src: "app_prod_test123/pwa/some-uuid.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+        ])
+      })
+
+      it("skips icons with an absolute src path outside the zip directory", async () => {
+        const iconsJson = {
+          icons: [
+            {
+              src: "/etc/passwd",
+              sizes: "192x192",
+              type: "image/png",
+            },
+          ],
+        }
+        await fsp.writeFile(
+          path.join(tempDir, "icons.json"),
+          JSON.stringify(iconsJson)
+        )
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+
+        expect(res.status).toEqual(500)
+        expect(res.body.message).toMatch("No valid icons found in the zip file")
+        expect(mockedUpload).not.toHaveBeenCalled()
+      })
     })
   })
 })

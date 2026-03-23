@@ -11,6 +11,15 @@ export interface RestQueryToolsConfig {
   datasourceName?: string
 }
 
+interface QueryToolOptions {
+  query: Query
+  sourceType: ToolType
+  sourceLabel?: string
+  sourceIconType?: string
+  description: string
+  namePrefix: "rest" | "ds"
+}
+
 type RestQueryToolResult =
   | {
       success: true
@@ -22,11 +31,24 @@ type RestQueryToolResult =
       error: string
     }
 
-const sanitiseToolName = (name: string): string => {
-  if (name.length > 64) {
-    return name.substring(0, 64) + "..."
-  }
-  return name.replace(/[^a-zA-Z0-9_-]/g, "_")
+const sanitiseNameSegment = (name: string, maxLength: number): string => {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "")
+    .substring(0, maxLength)
+}
+
+const buildScopedToolName = (
+  query: Query,
+  datasourceName: string | undefined,
+  prefix: QueryToolOptions["namePrefix"]
+): string => {
+  const datasourceSegment =
+    sanitiseNameSegment(datasourceName || "datasource", 20) || "datasource"
+  const querySegment = sanitiseNameSegment(query.name || "query", 24) || "query"
+  return `${prefix}_${datasourceSegment}_${querySegment}`
 }
 
 const buildParametersSchema = (query: Query) => {
@@ -42,22 +64,24 @@ const buildParametersSchema = (query: Query) => {
   return z.object(schemaFields)
 }
 
-export const createRestQueryTool = (
-  query: Query,
-  datasourceName?: string
-): AiToolDefinition => {
-  const toolName = sanitiseToolName(query.name)
+const createQueryTool = ({
+  query,
+  sourceType,
+  sourceLabel,
+  sourceIconType,
+  description,
+  namePrefix,
+}: QueryToolOptions): AiToolDefinition => {
+  const toolName = buildScopedToolName(query, sourceLabel, namePrefix)
   const parametersSchema = buildParametersSchema(query)
-
-  const description = query.restTemplateMetadata?.description
-    ? `${query.name}: ${query.restTemplateMetadata.description}`
-    : `Execute REST query: ${query.name}`
 
   return {
     name: toolName,
+    readableName: query.name,
     description,
-    sourceType: ToolType.REST_QUERY,
-    sourceLabel: datasourceName || "API",
+    sourceType,
+    sourceLabel,
+    sourceIconType,
     tool: tool({
       description,
       inputSchema: parametersSchema,
@@ -90,4 +114,36 @@ export const createRestQueryTool = (
       },
     }),
   }
+}
+
+export const createRestQueryTool = (
+  query: Query,
+  datasourceName?: string
+): AiToolDefinition => {
+  const description = query.restTemplateMetadata?.description
+    ? `${query.name}: ${query.restTemplateMetadata.description}`
+    : `Execute REST query: ${query.name}`
+
+  return createQueryTool({
+    query,
+    description,
+    sourceType: ToolType.REST_QUERY,
+    sourceLabel: datasourceName || "API",
+    namePrefix: "rest",
+  })
+}
+
+export const createDatasourceQueryTool = (
+  query: Query,
+  datasourceName?: string,
+  sourceIconType?: string
+): AiToolDefinition => {
+  return createQueryTool({
+    query,
+    description: `Execute datasource query: ${query.name}`,
+    sourceType: ToolType.DATASOURCE_QUERY,
+    sourceLabel: datasourceName || "Datasource",
+    sourceIconType,
+    namePrefix: "ds",
+  })
 }

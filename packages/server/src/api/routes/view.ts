@@ -9,27 +9,26 @@ import { paramResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { builderRoutes, publicRoutes } from "./endpointGroups"
 
-publicRoutes
-  .get(
-    "/api/v2/views/:viewId",
-    recaptcha,
-    authorizedResource(
-      permissions.PermissionType.VIEW,
-      permissions.PermissionLevel.READ,
-      "viewId"
-    ),
-    viewController.v2.get
-  )
-  .get(
-    "/api/views/:viewName",
-    recaptcha,
-    paramResource("viewName"),
-    authorized(
-      permissions.PermissionType.TABLE,
-      permissions.PermissionLevel.READ
-    ),
-    rowController.fetchLegacyView
-  )
+publicRoutes.get(
+  "/api/v2/views/:viewId",
+  recaptcha,
+  authorizedResource(
+    permissions.PermissionType.VIEW,
+    permissions.PermissionLevel.READ,
+    "viewId"
+  ),
+  viewController.v2.get
+)
+publicRoutes.get(
+  "/api/views/:viewName",
+  recaptcha,
+  paramResource("viewName"),
+  authorized(
+    permissions.PermissionType.TABLE,
+    permissions.PermissionLevel.READ
+  ),
+  rowController.fetchLegacyView
+)
 
 builderRoutes
   .get("/api/v2/views", viewController.v2.fetch)

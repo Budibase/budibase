@@ -52,21 +52,22 @@ export const BudibaseRoleOptionsOld = [
 ]
 export const BudibaseRoleOptions = [
   {
-    label: "Tenant admin",
+    label: "Organisation admin",
     value: BudibaseRoles.Admin,
-    subtitle: "Has full access to all workspaces in your tenant",
+    subtitle: "Can change settings and access all workspaces.",
     sortOrder: 1,
   },
   {
     label: "Creator",
     value: BudibaseRoles.Creator,
-    subtitle: "Can create and edit apps they have access to",
+    subtitle:
+      "Builder access. Can create/edit everything within assigned workspace.",
     sortOrder: 2,
   },
   {
-    label: "App user",
+    label: "End user",
     value: BudibaseRoles.AppUser,
-    subtitle: "Can only use published apps they have access to",
+    subtitle: "No builder access. Can only access published apps and agents.",
     sortOrder: 3,
   },
 ]
@@ -87,6 +88,7 @@ export const PlanType = {
   BUSINESS: "business",
   PREMIUM: "premium",
   PREMIUM_PLUS: "premium_plus",
+  PREMIUM_PLUS_TRIAL: "premium_plus_trial",
   ENTERPRISE: "enterprise",
   ENTERPRISE_BASIC_TRIAL: "enterprise_basic_trial",
 }

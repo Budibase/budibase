@@ -29,6 +29,7 @@
   export let showAppUsers = true
   export let showManageRoles = true
   export let datasourceSort
+  export let noResultsText = "There aren't any datasources matching that name"
   let toggledDatasources = {}
 
   $: enrichedDataSources = enrichDatasources(
@@ -50,7 +51,9 @@
 
   function selectDatasource(datasource) {
     openNode(datasource)
-    $goto(`./datasource/${datasource._id}`)
+    if (datasource.source !== "REST") {
+      $goto(`./datasource/${datasource._id}`)
+    }
   }
 
   const selectTable = tableId => {
@@ -70,7 +73,7 @@
     toggledDatasources[datasource._id] = !datasource.open
   }
 
-  const appUsersTableName = "App users"
+  const appUsersTableName = "End users"
   $: showAppUsersTable =
     showAppUsers &&
     (!searchTerm ||
@@ -100,7 +103,7 @@
   {#if showManageRoles}
     <NavItem
       icon="user-gear"
-      text="Manage roles"
+      text="Custom roles"
       selected={$isActive("./roles")}
       on:click={() => $goto("./roles")}
       selectedBy={$userSelectedResourceMap.roles}
@@ -122,7 +125,7 @@
   {#if showNoResults}
     <Layout paddingY="none" paddingX="L">
       <div class="no-results">
-        There aren't any datasources matching that name
+        {noResultsText}
       </div>
     </Layout>
   {/if}

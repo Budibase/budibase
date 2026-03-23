@@ -45,11 +45,9 @@ describe("oauth2 utils", () => {
   })
 
   describe.each(
-    Object.values(OAuth2CredentialsMethod).flatMap(method =>
-      Object.values(OAuth2GrantType).map<
-        [OAuth2CredentialsMethod, OAuth2GrantType]
-      >(grantType => [method, grantType])
-    )
+    Object.values(OAuth2CredentialsMethod).map<
+      [OAuth2CredentialsMethod, OAuth2GrantType]
+    >(method => [method, OAuth2GrantType.CLIENT_CREDENTIALS])
   )("generateToken (in %s, grant type %s)", (method, grantType) => {
     it("successfully generates tokens", async () => {
       const response = await config.doInContext(
