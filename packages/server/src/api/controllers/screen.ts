@@ -194,7 +194,10 @@ async function shouldPreserveHomeScreen(
   existingScreen: Screen | undefined,
   incomingScreen: Screen
 ) {
-  if (!existingScreen?.routing.homeScreen || incomingScreen.routing.homeScreen) {
+  if (
+    !existingScreen?.routing.homeScreen ||
+    incomingScreen.routing.homeScreen
+  ) {
     return false
   }
 

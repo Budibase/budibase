@@ -219,7 +219,9 @@ describe("/screens", () => {
       expect(updatedOther.routing.homeScreen).toBe(false)
 
       const refreshed = await config.api.screen.list()
-      const persistedHome = refreshed.find(screen => screen._id === savedHome._id)
+      const persistedHome = refreshed.find(
+        screen => screen._id === savedHome._id
+      )
       const persistedOther = refreshed.find(
         screen => screen._id === savedOther._id
       )

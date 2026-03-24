@@ -296,7 +296,9 @@ describe("Screens store", () => {
     expect(bb.store.screens[2]).toStrictEqual(existingScreens[2].json())
   })
 
-  it("Syncs any additional updated screens returned from save", async ({ bb }) => {
+  it("Syncs any additional updated screens returned from save", async ({
+    bb,
+  }) => {
     const existingScreens = Array(2)
       .fill()
       .map(() => {
@@ -306,7 +308,9 @@ describe("Screens store", () => {
         return screenDoc
       })
 
-    const [homeScreen, targetScreen] = existingScreens.map(screen => screen.json())
+    const [homeScreen, targetScreen] = existingScreens.map(screen =>
+      screen.json()
+    )
     homeScreen.routing.homeScreen = true
     targetScreen.routing.homeScreen = false
 

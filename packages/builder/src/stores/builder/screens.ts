@@ -251,7 +251,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Save screen
     const creatingNewScreen = screen._id === undefined
-    const saveResponse = await API.saveScreen({ ...screen, navigationLinkLabel })
+    const saveResponse = await API.saveScreen({
+      ...screen,
+      navigationLinkLabel,
+    })
     const { updatedScreens = [], ...savedScreen } = saveResponse
 
     // Update state
@@ -465,7 +468,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
       Helpers.deepSet(screen, name, value)
     }
     await this.patch(patchFn, screen._id)
-    const updatedScreen = get(this.store).screens.find(s => s._id === screen._id)
+    const updatedScreen = get(this.store).screens.find(
+      s => s._id === screen._id
+    )
 
     // Only reconcile home screens when the saved screen is actually marked as
     // home, otherwise unrelated edits would clear the current home screen.
