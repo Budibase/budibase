@@ -19,17 +19,12 @@ import { AgentChannelProvider, DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
 import { getGlobalUser } from "../../../utilities/global"
 import { canAccessChatAppAgentForUser } from "../ai/chatApps"
-import {
-  webhookChat,
-  prepareChatConversationForSave,
-  truncateTitle,
-} from "../ai/chatConversations"
+import { webhookChat } from "../ai/chatConversations"
 import {
   isConversationExpired,
   pickLatestConversation,
   touchConversationCache,
 } from "./utils"
-
 const DEFAULT_IDLE_TIMEOUT_MS = 45 * 60 * 1000
 const DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 const CONVERSATION_SCOPE_CACHE_KEY_PREFIX = "chatConversationScope"
@@ -524,7 +519,7 @@ export const handleChatMessage = async ({
     if (command === ChatCommands.NEW && !content) {
       const chatId = docIds.generateChatConversationID()
       await db.put(
-        prepareChatConversationForSave({
+        sdk.ai.chatConversations.prepareChatConversationForSave({
           chatId,
           chatAppId,
           userId,
@@ -584,7 +579,8 @@ export const handleChatMessage = async ({
       _id: chatId,
       chatAppId,
       agentId,
-      title: existingChat?.title || truncateTitle(content),
+      title:
+        existingChat?.title || sdk.ai.chatConversations.truncateTitle(content),
       messages: [...(existingChat?.messages || []), userMessage],
       channel,
     }
@@ -602,7 +598,7 @@ export const handleChatMessage = async ({
     }
 
     await db.put(
-      prepareChatConversationForSave({
+      sdk.ai.chatConversations.prepareChatConversationForSave({
         chatId,
         chatAppId,
         userId,
