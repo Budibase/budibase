@@ -56,8 +56,12 @@
     OAuth2GrantType,
   } from "@budibase/types"
 
+  import { tick } from "svelte"
   import KeyValueBuilder from "@/components/integration/KeyValueBuilder.svelte"
-  import { keyValueArrayToRecord } from "@/components/integration/query"
+  import {
+    keyValueArrayToRecord,
+    isValidEndpointUrl,
+  } from "@/components/integration/query"
   import ViewDynamicVariables from "@/pages/builder/workspace/[application]/data/datasource/[datasourceId]/_components/panels/Variables/ViewDynamicVariables.svelte"
   import DeleteDataConfirmationModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
 
@@ -334,7 +338,7 @@
     const ds = await datasources.create({
       integration: restIntegration,
       config: {
-        url: data.baseUrl || "",
+        url: normaliseBaseUrl(data.baseUrl || "") ?? "",
         authConfigs: data.authConfigs || [],
         staticVariables: data.staticVariables || {},
         defaultHeaders: data.defaultHeaders || {},
@@ -360,7 +364,7 @@
       name: data.name!,
       config: {
         ...datasource.config,
-        url: data.baseUrl,
+        url: normaliseBaseUrl(data.baseUrl ?? "") ?? data.baseUrl,
         authConfigs: data.authConfigs,
         staticVariables: data.staticVariables,
         defaultHeaders: data.defaultHeaders,
@@ -372,7 +376,8 @@
 
     const resp = await API.updateDatasource(updatedDatasource)
     datasources.replaceDatasource(resp.datasource._id!, resp.datasource)
-    originalData = cloneDeep(data)
+    await tick()
+    init(false, selected)
     notifications.success("API updated")
   }
 
@@ -402,8 +407,20 @@
     notifications.success("Settings saved")
   }
 
-  const validateName = () => {
-    const newErrors = { ...errors }
+  const normaliseBaseUrl = (url: string) => {
+    if (!isValidEndpointUrl(url)) return null
+    return url.replace(/\/$/, "")
+  }
+
+  const validateBaseUrl = (newErrors: Record<string, string>) => {
+    if (data.baseUrl && normaliseBaseUrl(data.baseUrl) === null) {
+      newErrors.baseUrl = "Must be a valid http or https URL"
+    } else {
+      delete newErrors.baseUrl
+    }
+  }
+
+  const validateName = (newErrors: Record<string, string>) => {
     if (!data.name) {
       newErrors.name = "Name is required"
     } else if (
@@ -415,12 +432,13 @@
     } else {
       delete newErrors.name
     }
-    errors = newErrors
   }
 
   const onSave = async () => {
-    validateName()
-    errors = { ...errors }
+    const newErrors = { ...errors }
+    validateName(newErrors)
+    validateBaseUrl(newErrors)
+    errors = newErrors
     if (Object.keys(errors).length > 0 || !validateAuth()) {
       return
     }
@@ -516,26 +534,48 @@
             Open in API Editor
           </Button>
         {/if}
-        <Button size="M" disabled={!hasChanges || saving} on:click={onSave} cta>
+        <Button
+          size="M"
+          disabled={!hasChanges || saving || Object.keys(errors).length > 0}
+          on:click={onSave}
+          cta
+        >
           Save
         </Button>
       </div>
     </RouteActions>
     <div class="details-box">
-      <div class="details-box-name">
-        <Input
-          label="Display name"
-          placeholder="Type here..."
-          value={data.name}
-          on:change={e => {
-            data.name = e.detail
-            data = { ...data }
-          }}
-          on:blur={validateName}
-          error={errors.name}
-          required
-        />
-      </div>
+      <Input
+        label="Display name"
+        placeholder="Type here..."
+        value={data.name}
+        on:change={e => {
+          data.name = e.detail
+          data = { ...data }
+        }}
+        on:blur={() => {
+          const e = { ...errors }
+          validateName(e)
+          errors = e
+        }}
+        error={errors.name}
+        required
+      />
+      <ServerUrlInput
+        label="Base URL"
+        value={data.baseUrl ?? ""}
+        servers={openApiInfo?.servers ?? []}
+        error={errors.baseUrl}
+        on:change={e => {
+          data.baseUrl = e.detail
+          data = { ...data }
+        }}
+        on:blur={() => {
+          const e = { ...errors }
+          validateBaseUrl(e)
+          errors = e
+        }}
+      />
     </div>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -635,7 +675,7 @@
           {/if}
         </Layout>
       {:else if mode === "advanced"}
-        <div class="details-box">
+        <div class="details-box details-box--no-padding">
           <div class="settings-item first">
             <div class="settings-item-text">
               <span>Reject Unauthorized</span>
@@ -671,15 +711,6 @@
       {:else}
         <Layout gap="M" noPadding>
           <Divider noMargin noGrid size="S" />
-          <ServerUrlInput
-            label="Base URL"
-            value={data.baseUrl ?? ""}
-            servers={openApiInfo?.servers ?? []}
-            on:change={e => {
-              data.baseUrl = e.detail
-              data = { ...data }
-            }}
-          />
           <Layout gap="XXS" noPadding>
             <div class="prop-table-header">
               <Label>URL parameters</Label>
@@ -846,16 +877,18 @@
   .details-box {
     display: flex;
     flex-direction: column;
+    gap: var(--spacing-l);
+    padding: var(--spacing-l);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-m);
-    overflow: hidden;
   }
 
-  .details-box-name {
-    padding: var(--spacing-l);
+  .details-box--no-padding {
+    padding: 0;
+    gap: 0;
   }
 
-  .details-box-name :global(label) {
+  .details-box :global(label) {
     margin-top: 0;
     padding-top: 0;
   }

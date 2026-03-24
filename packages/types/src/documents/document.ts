@@ -19,7 +19,7 @@ export enum DocumentType {
   PLUGIN = "plg",
   DATASOURCE = "datasource",
   DATASOURCE_PLUS = "datasource_plus",
-  APP_BACKUP = "backup",
+  WORKSPACE_BACKUP = "backup",
   TABLE = "ta",
   ROW = "ro",
   AUTOMATION = "au",

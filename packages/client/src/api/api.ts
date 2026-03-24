@@ -1,4 +1,8 @@
-import { createAPIClient } from "@budibase/frontend-core"
+import {
+  createAPIClient,
+  sessionBannerStore,
+  redirectToLoginWithReturnUrl,
+} from "@budibase/frontend-core"
 import { authStore } from "../stores/auth"
 import {
   notificationStore,
@@ -71,10 +75,8 @@ export const API = createAPIClient({
       return
     }
 
-    // Notify all errors
+    // Notify all errors, but show a persistent banner for 401/403 (session not authenticated)
     if (message && !suppressErrors) {
-      // Don't notify if the URL contains the word analytics as it may be
-      // blocked by browser extensions
       let ignore = false
       for (let ignoreUrl of ignoreErrorUrls) {
         if (url?.includes(ignoreUrl)) {
@@ -90,6 +92,15 @@ export const API = createAPIClient({
               `${field} ${validationErrors[field]}`
             )
           }
+        } else if (status === 401 || status === 403) {
+          sessionBannerStore.set({
+            text: "Session not authenticated",
+            variant: "session-not-authenticated",
+            action: {
+              label: "Log in",
+              onClick: () => redirectToLoginWithReturnUrl(),
+            },
+          })
         } else {
           notificationStore.actions.error(message)
         }

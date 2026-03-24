@@ -131,7 +131,10 @@
         <Icon
           tooltip="Documentation"
           on:click={() =>
-            window.open("https://docs.budibase.com/docs/agents", "_blank")}
+            window.open(
+              "https://docs.budibase.com/docs/agent-building-101",
+              "_blank"
+            )}
           name="info"
           size="M"
           color="var(--spectrum-global-color-gray-600)"

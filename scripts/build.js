@@ -60,7 +60,7 @@ const svelteCompilePlugin = {
 
 let { argv } = require("yargs")
 
-async function runBuild(entry, outfile) {
+async function runBuild(entry, outfile, opts = {}) {
   const isDev = !process.env.CI
 
   console.log(`Building in mode dev mode: ${isDev}`)
@@ -71,6 +71,7 @@ async function runBuild(entry, outfile) {
     process.cwd(),
     tsconfig
   )
+  const external = Array.isArray(opts.external) ? opts.external : []
 
   const sharedConfig = {
     entryPoints: [entry],
@@ -98,27 +99,7 @@ async function runBuild(entry, outfile) {
     ],
     preserveSymlinks: true,
     metafile: true,
-    external: [
-      "deasync",
-      "mock-aws-s3",
-      "nock",
-      "bull",
-      "pouchdb",
-      "bcrypt",
-      "bcryptjs",
-      "graphql/*",
-      "bson",
-      "better-sqlite3",
-      "sqlite3",
-      "mysql",
-      "mysql2",
-      "oracle",
-      "oracledb",
-      "pg",
-      "pg-query-stream",
-      "pg-native",
-      "botbuilder",
-    ],
+    external,
   }
 
   await mkdir("dist", { recursive: true })

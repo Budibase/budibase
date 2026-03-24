@@ -29,37 +29,109 @@ env:
   HUSKY: 0
 
 jobs:
-  lint:
+  install-deps:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
-      - run: yarn --frozen-lockfile
+
+      - name: Restore hoisted node_modules cache
+        id: hoisted-modules-cache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+
+      - name: Install dependencies
+        if: steps.hoisted-modules-cache-restore.outputs.cache-hit != 'true'
+        run: yarn --frozen-lockfile
+
+      - name: Save hoisted node_modules cache
+        if: steps.hoisted-modules-cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+
+  lint:
+    runs-on: ubuntu-24.04
+    needs: install-deps
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+      - name: Restore hoisted node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
       - run: yarn lint
+
+  litellm-version-sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Verify LiteLLM versions are synchronized
+        run: yarn check:litellm-version
 
   build:
     runs-on: ubuntu-24.04
+    needs:
+      - install-deps
+      - compute-affected-jobs
+    if: needs.compute-affected-jobs.outputs.run_build == 'true'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
+          fetch-depth: 2
+
+      - name: Fetch base branch for affected tasks
+        if: env.ONLY_AFFECTED_TASKS == 'true'
+        run: git fetch --no-tags --depth=1 origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
-      - run: yarn --frozen-lockfile
+      - name: Restore hoisted node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
 
       # Run build all the projects
       - name: Build
@@ -77,9 +149,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+        uses: actions/checkout@v6
 
       - name: Use Node.js 22.x
         uses: azure/setup-helm@v3
@@ -87,18 +157,25 @@ jobs:
 
   test-libraries:
     runs-on: ubuntu-24.04
+    needs:
+      - install-deps
+      - compute-affected-jobs
+    if: needs.compute-affected-jobs.outputs.run_test_libraries == 'true'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
+          fetch-depth: 2
+
+      - name: Fetch base branch for affected tasks
+        if: env.ONLY_AFFECTED_TASKS == 'true'
+        run: git fetch --no-tags --depth=1 origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
       - name: Pull testcontainers images
         run: |
           docker pull testcontainers/ryuk:0.5.1 &
@@ -107,7 +184,15 @@ jobs:
 
           wait $(jobs -p)
 
-      - run: yarn --frozen-lockfile
+      - name: Restore hoisted node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
+
       - name: Test
         run: |
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
@@ -118,35 +203,61 @@ jobs:
             yarn test -- --scope=@budibase/builder --scope=@budibase/client --scope=@budibase/frontend-core --no-prefix
           fi
 
-  check-affected-tests-to-run:
-    name: Check affected tests to run
+  compute-affected-jobs:
+    name: Compute affected jobs
     runs-on: ubuntu-24.04
+    needs: install-deps
     outputs:
+      run_build: ${{ steps.affected.outputs.run_build }}
+      run_test_libraries: ${{ steps.affected.outputs.run_test_libraries }}
       run_worker_tests: ${{ steps.affected.outputs.run_worker_tests }}
       run_server_tests: ${{ steps.affected.outputs.run_server_tests }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
+          fetch-depth: 2
+
+      - name: Fetch base branch for affected tasks
+        if: env.ONLY_AFFECTED_TASKS == 'true'
+        run: git fetch --no-tags --depth=1 origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
-      - run: yarn --frozen-lockfile
+      - name: Restore hoisted node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
 
       - name: Check affected tests
         id: affected
         run: |
+          # Defaults for non-PR workflows.
+          RUN_BUILD="true"
+          RUN_TEST_LIBRARIES="true"
           # This gates whole package test jobs (worker/server) based on Nx affected projects.
           # Example: if a PR changes only FE projects, server/worker test jobs are skipped.
           RUN_WORKER_TESTS="true"
           RUN_SERVER_TESTS="true"
 
           if ${{ env.ONLY_AFFECTED_TASKS }}; then
+            AFFECTED_BUILD=$(yarn --silent nx show projects --affected -t build --base=${{ env.NX_BASE_BRANCH }})
+            if [ -z "$AFFECTED_BUILD" ]; then
+              RUN_BUILD="false"
+            fi
+
+            AFFECTED_LIBRARY_TESTS=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} --exclude='@budibase/server,@budibase/worker,@budibase/upgrade-tests')
+            if [ -z "$AFFECTED_LIBRARY_TESTS" ]; then
+              RUN_TEST_LIBRARIES="false"
+            fi
+
             AFFECTED_WORKER=$(yarn --silent nx show projects --affected -t test --base=${{ env.NX_BASE_BRANCH }} -p @budibase/worker)
             if [ -z "$AFFECTED_WORKER" ]; then
               RUN_WORKER_TESTS="false"
@@ -158,43 +269,56 @@ jobs:
             fi
           fi
 
+          echo "run_build=$RUN_BUILD" >> $GITHUB_OUTPUT
+          echo "run_test_libraries=$RUN_TEST_LIBRARIES" >> $GITHUB_OUTPUT
           echo "run_worker_tests=$RUN_WORKER_TESTS" >> $GITHUB_OUTPUT
           echo "run_server_tests=$RUN_SERVER_TESTS" >> $GITHUB_OUTPUT
+          echo "run_build=$RUN_BUILD"
+          echo "run_test_libraries=$RUN_TEST_LIBRARIES"
           echo "run_worker_tests=$RUN_WORKER_TESTS"
           echo "run_server_tests=$RUN_SERVER_TESTS"
 
   test-worker:
     runs-on: ubuntu-24.04
-    needs: check-affected-tests-to-run
+    needs:
+      - install-deps
+      - compute-affected-jobs
     steps:
       - name: Skip worker tests
-        if: needs.check-affected-tests-to-run.outputs.run_worker_tests != 'true'
+        if: needs.compute-affected-jobs.outputs.run_worker_tests != 'true'
         run: echo "Skipping worker tests because @budibase/worker is not affected."
 
       - name: Checkout repo
-        if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
-        uses: actions/checkout@v4
+        if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
 
       - name: Use Node.js 22.x
-        if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
-        uses: actions/setup-node@v4
+        if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
-      - if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
-        run: yarn --frozen-lockfile
+      - name: Restore hoisted node_modules cache
+        if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
       - name: Test worker
-        if: needs.check-affected-tests-to-run.outputs.run_worker_tests == 'true'
+        if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
         run: |
           cd packages/worker
           yarn test --reporters=default --reporters=github-actions
 
   test-server:
     runs-on: ubuntu-24.04
-    needs: check-affected-tests-to-run
+    needs:
+      - install-deps
+      - compute-affected-jobs
     strategy:
       matrix:
         include:
@@ -253,35 +377,40 @@ jobs:
             shard_total: 4
     steps:
       - name: Skip server tests
-        if: needs.check-affected-tests-to-run.outputs.run_server_tests != 'true'
+        if: needs.compute-affected-jobs.outputs.run_server_tests != 'true'
         run: echo "Skipping server tests because @budibase/server is not affected."
 
       - name: Checkout repo
-        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
-        uses: actions/checkout@v4
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
 
       - name: Use Node.js 22.x
-        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
-        uses: actions/setup-node@v4
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
 
-      - if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
-        run: yarn --frozen-lockfile
+      - name: Restore hoisted node_modules cache
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
 
       - name: Load dotenv
-        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
         id: dotenv
-        uses: falti/dotenv-action@v1.1.3
+        uses: falti/dotenv-action@v1.2.0
         with:
           path: ./packages/server/images-sha.env
 
       - name: Pull testcontainers images
-        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
         run: |
           if [ "${{ matrix.datasource }}" == "mssql" ]; then
             docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
@@ -301,35 +430,22 @@ jobs:
             docker pull elasticsearch@${{ steps.dotenv.outputs.ELASTICSEARCH_SHA }}
           elif [ "${{ matrix.datasource }}" == "dynamodb" ]; then
             docker pull amazon/dynamodb-local@${{ steps.dotenv.outputs.DYNAMODB_SHA }}
+          elif [ "${{ matrix.datasource }}" == "none" ]; then
+            docker pull ${{ steps.dotenv.outputs.KEYCLOAK_IMAGE }} &
           fi
           docker pull minio/minio &
           docker pull redis &
           docker pull testcontainers/ryuk:0.5.1 &
           docker pull budibase/couchdb:v3.3.3-sqs-v2.1.1 &
-          docker pull ${{ steps.dotenv.outputs.KEYCLOAK_IMAGE }} &
 
           wait $(jobs -p)
 
       - name: Build client library - necessary for component tests
-        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true' && matrix.datasource == 'none'
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true' && matrix.datasource == 'none'
         run: yarn build:client
 
-      - name: Set up PostgreSQL 16
-        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true' && matrix.datasource == 'postgres'
-        run: |
-          sudo systemctl stop postgresql
-          sudo apt-get remove --purge -y postgresql* libpq-dev
-          sudo rm -rf /etc/postgresql /var/lib/postgresql
-          sudo apt-get autoremove -y
-          sudo apt-get autoclean
-
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          sudo apt-get update
-          sudo apt-get install -y postgresql-16
-
       - name: Test server
-        if: needs.check-affected-tests-to-run.outputs.run_server_tests == 'true'
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
         env:
           DATASOURCE: ${{ matrix.datasource }}
           JEST_SHARD_INDEX: ${{ matrix.shard_index }}
@@ -353,18 +469,26 @@ jobs:
 
   check-lockfile:
     runs-on: ubuntu-24.04
+    needs: install-deps
     if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
+      - name: Restore hoisted node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
       - run: yarn install
       - name: Check for yarn.lock changes
         run: |
@@ -377,18 +501,25 @@ jobs:
 
   check-openapi-specs:
     runs-on: ubuntu-24.04
+    needs: install-deps
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
-      - run: yarn --frozen-lockfile
+      - name: Restore hoisted node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
 
       - name: Generate OpenAPI specs
         run: yarn build:specs
@@ -408,7 +539,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -425,18 +556,25 @@ jobs:
 
   check-client-build-size:
     runs-on: ubuntu-24.04
+    needs: install-deps
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: yarn
-      - run: yarn --frozen-lockfile
+      - name: Restore hoisted node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
 
       - name: Build client library
         run: yarn build:client

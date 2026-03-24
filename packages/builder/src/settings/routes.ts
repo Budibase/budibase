@@ -318,7 +318,7 @@ export const workspaceRoutes = (
         },
         {
           path: AIConfigType.COMPLETIONS,
-          title: featureFlag.isEnabled(FeatureFlag.AI_RAG) ? "AI models" : "",
+          title: "AI models",
           component: Pages.get("ai_configs"),
           routes: [
             {

@@ -17,6 +17,7 @@
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
   import { formatToolName } from "../../utils/aiTools"
+  import ReasoningStatus from "./ReasoningStatus.svelte"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -72,33 +73,10 @@
   let expandedTools = $state<Record<string, boolean>>({})
   let inputValue = $state("")
   let lastInitialPrompt = $state("")
-  let reasoningTimers = $state<Record<string, number>>({})
   let isPreparingResponse = $state(false)
-  let isHoldingFirstResponse = $state(false)
-  let firstResponseHoldTimer: ReturnType<typeof setTimeout> | undefined
-
-  const MIN_FIRST_RESPONSE_LOADING_MS = 1000
-
-  const clearFirstResponseHold = () => {
-    if (firstResponseHoldTimer) {
-      clearTimeout(firstResponseHoldTimer)
-      firstResponseHoldTimer = undefined
-    }
-    isHoldingFirstResponse = false
-  }
 
   const resetPendingResponse = () => {
-    clearFirstResponseHold()
     isPreparingResponse = false
-  }
-
-  const holdFirstResponse = () => {
-    clearFirstResponseHold()
-    isHoldingFirstResponse = true
-    firstResponseHoldTimer = setTimeout(() => {
-      isHoldingFirstResponse = false
-      firstResponseHoldTimer = undefined
-    }, MIN_FIRST_RESPONSE_LOADING_MS)
   }
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
@@ -111,6 +89,26 @@
     (message.parts ?? []).some(
       part => isReasoningUIPart(part) && part.state === "streaming"
     )
+
+  const hasVisibleAssistantContent = (
+    message: UIMessage<AgentMessageMetadata>
+  ) => {
+    if (getReasoningText(message).trim()) {
+      return true
+    }
+
+    if (
+      (message.parts ?? []).some(
+        part =>
+          (isTextUIPart(part) && part.text.trim().length > 0) ||
+          isToolUIPart(part)
+      )
+    ) {
+      return true
+    }
+
+    return Boolean(message.metadata?.ragSources?.length)
+  }
 
   const hasToolError = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? []).some(
@@ -137,54 +135,6 @@
 
     return displayName
   }
-
-  $effect(() => {
-    const interval = setInterval(() => {
-      let updated = false
-      const newTimers = { ...reasoningTimers }
-
-      for (const message of messages) {
-        if (message.role !== "assistant") continue
-        const createdAt = message.metadata?.createdAt
-        const completedAt = message.metadata?.completedAt
-        const id = `${message.id}-reasoning`
-
-        if (!createdAt) continue
-
-        if (completedAt) {
-          const finalElapsed = (completedAt - createdAt) / 1000
-          if (newTimers[id] !== finalElapsed) {
-            newTimers[id] = finalElapsed
-            updated = true
-          }
-          continue
-        }
-
-        const toolError = hasToolError(message)
-        if (toolError) {
-          if (newTimers[id] == null) {
-            newTimers[id] = (Date.now() - createdAt) / 1000
-            updated = true
-          }
-          continue
-        }
-
-        if (isReasoningStreaming(message)) {
-          const newElapsed = (Date.now() - createdAt) / 1000
-          if (newTimers[id] !== newElapsed) {
-            newTimers[id] = newElapsed
-            updated = true
-          }
-        }
-      }
-
-      if (updated) {
-        reasoningTimers = newTimers
-      }
-    }, 100)
-
-    return () => clearInterval(interval)
-  })
 
   const PREVIEW_CHAT_APP_ID = "agent-preview"
 
@@ -281,28 +231,19 @@
   })
 
   let messages = $derived(chatInstance.messages)
-  let lastVisibleMessage = $derived(
-    isHoldingFirstResponse
-      ? messages.findLast(message => message.role !== "assistant")
-      : messages[messages.length - 1]
+  let lastMessage = $derived(messages[messages.length - 1])
+  let lastAssistantMessage = $derived(
+    messages.findLast(message => message.role === "assistant")
   )
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
-  let isRequestPending = $derived(
-    isPreparingResponse || isHoldingFirstResponse || isBusy
-  )
+  let isRequestPending = $derived(isPreparingResponse || isBusy)
   let showPendingAssistantState = $derived(
-    isPreparingResponse ||
-      ((isBusy || isHoldingFirstResponse) &&
-        lastVisibleMessage?.role === "user")
+    isPreparingResponse || (isBusy && lastMessage?.role === "user")
   )
   let canStart = $derived(inputValue.trim().length > 0)
-  let hasMessages = $derived(
-    messages.some(
-      message => !isHoldingFirstResponse || message.role !== "assistant"
-    )
-  )
+  let hasMessages = $derived(messages.length > 0)
   let showConversationStarters = $derived(
     !isRequestPending &&
       !hasMessages &&
@@ -415,11 +356,7 @@
       notifications.error(message)
     }
 
-    const isFirstMessage = !messages.length
     isPreparingResponse = true
-    if (isFirstMessage) {
-      holdFirstResponse()
-    }
 
     const chatAppIdFromEnsure = await ensureChatApp()
 
@@ -575,186 +512,165 @@
         <div class="message user">
           <MarkdownViewer value={getUserMessageText(message)} />
         </div>
-      {:else if message.role === "assistant" && !isHoldingFirstResponse}
+      {:else if message.role === "assistant"}
         {@const reasoningText = getReasoningText(message)}
         {@const reasoningId = `${message.id}-reasoning`}
+        {@const pendingAssistant =
+          isBusy &&
+          lastAssistantMessage?.id === message.id &&
+          !hasVisibleAssistantContent(message)}
         {@const toolError = hasToolError(message)}
         {@const messageError = getMessageError(message)}
         {@const reasoningStreaming = isReasoningStreaming(message)}
         {@const isThinking =
-          reasoningStreaming &&
+          (reasoningStreaming || pendingAssistant) &&
           !toolError &&
           !messageError &&
           !message.metadata?.completedAt}
-        <div class="message assistant">
-          {#if reasoningText}
-            <div class="reasoning-part">
-              <button
-                class="reasoning-toggle"
-                type="button"
-                onclick={() =>
+        {#if hasVisibleAssistantContent(message) || pendingAssistant}
+          <div class="message assistant">
+            {#if reasoningText || pendingAssistant}
+              <ReasoningStatus
+                thinking={isThinking}
+                label={isThinking ? "Thinking" : "Thought"}
+                interactive={!!reasoningText}
+                expanded={Boolean(expandedTools[reasoningId])}
+                content={reasoningText}
+                ontoggle={() =>
                   (expandedTools = {
                     ...expandedTools,
                     [reasoningId]: !expandedTools[reasoningId],
                   })}
-              >
-                <span class="reasoning-icon" class:shimmer={isThinking}>
-                  <Icon
-                    name="brain"
-                    size="M"
-                    color="var(--spectrum-global-color-gray-600)"
-                  />
-                </span>
-                <span class="reasoning-label" class:shimmer={isThinking}>
-                  {isThinking ? "Thinking" : "Thought for"}
-                  {#if reasoningTimers[reasoningId]}
-                    <span class="reasoning-timer"
-                      >{reasoningTimers[reasoningId].toFixed(1)}s</span
-                    >
-                  {/if}
-                </span>
-              </button>
-              {#if expandedTools[reasoningId]}
-                <div class="reasoning-content">{reasoningText}</div>
-              {/if}
-            </div>
-          {/if}
-          {#each message.parts ?? [] as part, partIndex}
-            {#if isTextUIPart(part)}
-              <MarkdownViewer value={part.text} />
-            {:else if isToolUIPart(part)}
-              {@const rawToolName = getToolName(part)}
-              {@const displayToolName = formatToolName(
-                rawToolName,
-                getToolDisplayName(message, rawToolName)
-              )}
-              {@const toolId = `${message.id}-${rawToolName}-${partIndex}`}
-              {@const isRunning =
-                part.state === "input-streaming" ||
-                part.state === "input-available"}
-              {@const isSuccess = part.state === "output-available"}
-              {@const isError = part.state === "output-error"}
-              <div class="tool-part" class:tool-running={isRunning}>
-                <button
-                  class="tool-header"
-                  class:tool-header-expanded={expandedTools[toolId]}
-                  type="button"
-                  onclick={() => toggleTool(toolId)}
-                >
-                  <span
-                    class="tool-chevron"
-                    class:expanded={expandedTools[toolId]}
+              />
+            {/if}
+            {#each message.parts ?? [] as part, partIndex}
+              {#if isTextUIPart(part)}
+                <MarkdownViewer value={part.text} />
+              {:else if isToolUIPart(part)}
+                {@const rawToolName = getToolName(part)}
+                {@const displayToolName = formatToolName(
+                  rawToolName,
+                  getToolDisplayName(message, rawToolName)
+                )}
+                {@const toolId = `${message.id}-${rawToolName}-${partIndex}`}
+                {@const isRunning =
+                  part.state === "input-streaming" ||
+                  part.state === "input-available"}
+                {@const isSuccess = part.state === "output-available"}
+                {@const isError = part.state === "output-error"}
+                <div class="tool-part" class:tool-running={isRunning}>
+                  <button
+                    class="tool-header"
+                    class:tool-header-expanded={expandedTools[toolId]}
+                    type="button"
+                    onclick={() => toggleTool(toolId)}
                   >
-                    <span class="tool-chevron-icon tool-chevron-icon-default">
-                      <Icon
-                        name="wrench"
-                        size="M"
-                        weight="regular"
-                        color="var(--spectrum-global-color-gray-600)"
-                      />
-                    </span>
-                    <span class="tool-chevron-icon tool-chevron-icon-expanded">
-                      <Icon
-                        name="minus"
-                        size="M"
-                        weight="regular"
-                        color="var(--spectrum-global-color-gray-600)"
-                      />
-                    </span>
-                  </span>
-                  <span class="tool-call-label">Tool call</span>
-                  <div class="tool-name-wrapper">
-                    <span class="tool-name-primary"
-                      >{displayToolName.primary}</span
+                    <span
+                      class="tool-chevron"
+                      class:expanded={expandedTools[toolId]}
                     >
-                  </div>
-                  {#if isRunning || isError || isSuccess}
-                    <span class="tool-status">
-                      {#if isRunning}
-                        <ProgressCircle size="S" />
-                      {:else if isError}
+                      <span class="tool-chevron-icon tool-chevron-icon-default">
                         <Icon
-                          name="x"
-                          size="S"
-                          color="var(--spectrum-global-color-red-600)"
+                          name="wrench"
+                          size="M"
+                          weight="regular"
+                          color="var(--spectrum-global-color-gray-600)"
                         />
-                      {:else if isSuccess}
+                      </span>
+                      <span
+                        class="tool-chevron-icon tool-chevron-icon-expanded"
+                      >
                         <Icon
-                          name="check"
-                          size="S"
-                          color="var(--spectrum-global-color-green-600)"
+                          name="minus"
+                          size="M"
+                          weight="regular"
+                          color="var(--spectrum-global-color-gray-600)"
                         />
-                      {/if}
+                      </span>
                     </span>
+                    <span class="tool-call-label">Tool call</span>
+                    <div class="tool-name-wrapper">
+                      <span class="tool-name-primary"
+                        >{displayToolName.primary}</span
+                      >
+                    </div>
+                    {#if isRunning || isError || isSuccess}
+                      <span class="tool-status">
+                        {#if isRunning}
+                          <ProgressCircle size="S" />
+                        {:else if isError}
+                          <Icon
+                            name="x"
+                            size="S"
+                            color="var(--spectrum-global-color-red-600)"
+                          />
+                        {:else if isSuccess}
+                          <Icon
+                            name="check"
+                            size="S"
+                            color="var(--spectrum-global-color-green-600)"
+                          />
+                        {/if}
+                      </span>
+                    {/if}
+                  </button>
+                  {#if expandedTools[toolId]}
+                    <div class="tool-details">
+                      {#if part.input}
+                        <div class="tool-section">
+                          <div class="tool-section-label">Input</div>
+                          <pre class="tool-section-content">{formatToolOutput(
+                              part.input
+                            )}</pre>
+                        </div>
+                      {/if}
+                      {#if isSuccess && part.output}
+                        <div class="tool-section">
+                          <div class="tool-section-label">Output</div>
+                          <pre class="tool-section-content">{formatToolOutput(
+                              part.output
+                            )}</pre>
+                        </div>
+                      {:else if isError && part.errorText}
+                        <div class="tool-section tool-error">
+                          <div class="tool-section-label">Error</div>
+                          <pre
+                            class="tool-section-content error-content">{part.errorText}</pre>
+                        </div>
+                      {/if}
+                    </div>
                   {/if}
-                </button>
-                {#if expandedTools[toolId]}
-                  <div class="tool-details">
-                    {#if part.input}
-                      <div class="tool-section">
-                        <div class="tool-section-label">Input</div>
-                        <pre class="tool-section-content">{formatToolOutput(
-                            part.input
-                          )}</pre>
-                      </div>
-                    {/if}
-                    {#if isSuccess && part.output}
-                      <div class="tool-section">
-                        <div class="tool-section-label">Output</div>
-                        <pre class="tool-section-content">{formatToolOutput(
-                            part.output
-                          )}</pre>
-                      </div>
-                    {:else if isError && part.errorText}
-                      <div class="tool-section tool-error">
-                        <div class="tool-section-label">Error</div>
-                        <pre
-                          class="tool-section-content error-content">{part.errorText}</pre>
-                      </div>
-                    {/if}
-                  </div>
-                {/if}
+                </div>
+              {/if}
+            {/each}
+            {#if message.metadata?.ragSources?.length}
+              <div class="sources">
+                <div class="sources-title">Sources</div>
+                <ul>
+                  {#each message.metadata.ragSources as source (source.sourceId)}
+                    <li class="source-item">
+                      <span class="source-name"
+                        >{source.filename || source.sourceId}</span
+                      >
+                      {#if source.chunkCount > 0}
+                        <span class="source-count"
+                          >({source.chunkCount} chunk{source.chunkCount === 1
+                            ? ""
+                            : "s"})</span
+                        >
+                      {/if}
+                    </li>
+                  {/each}
+                </ul>
               </div>
             {/if}
-          {/each}
-          {#if message.metadata?.ragSources?.length}
-            <div class="sources">
-              <div class="sources-title">Sources</div>
-              <ul>
-                {#each message.metadata.ragSources as source (source.sourceId)}
-                  <li class="source-item">
-                    <span class="source-name"
-                      >{source.filename || source.sourceId}</span
-                    >
-                    {#if source.chunkCount > 0}
-                      <span class="source-count"
-                        >({source.chunkCount} chunk{source.chunkCount === 1
-                          ? ""
-                          : "s"})</span
-                      >
-                    {/if}
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-        </div>
+          </div>
+        {/if}
       {/if}
     {/each}
     {#if showPendingAssistantState}
       <div class="message assistant assistant-loading" aria-live="polite">
-        <div class="reasoning-part">
-          <button class="reasoning-toggle" type="button" disabled>
-            <span class="reasoning-icon shimmer">
-              <Icon
-                name="brain"
-                size="M"
-                color="var(--spectrum-global-color-gray-600)"
-              />
-            </span>
-            <span class="reasoning-label shimmer">Thinking</span>
-          </button>
-        </div>
+        <ReasoningStatus thinking={true} label="Thinking" />
       </div>
     {/if}
   </div>
@@ -910,14 +826,6 @@
     color: var(--spectrum-global-color-gray-800);
     line-height: 1.4;
     max-width: 100%;
-  }
-
-  .assistant-loading {
-    min-height: 24px;
-  }
-
-  .assistant-loading .reasoning-toggle {
-    cursor: default;
   }
 
   .input-wrapper {
@@ -1188,65 +1096,6 @@
   .error-content {
     border-color: var(--spectrum-global-color-red-400);
     color: var(--spectrum-global-color-red-700);
-  }
-
-  /* Reasoning parts styling */
-  .reasoning-part {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .reasoning-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0;
-    margin: 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  .reasoning-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .reasoning-label {
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .reasoning-timer {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
-    font-weight: 400;
-  }
-
-  .reasoning-label.shimmer,
-  .reasoning-icon.shimmer {
-    animation: shimmer 2s ease-in-out infinite;
-  }
-
-  .reasoning-content {
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-600);
-    font-style: italic;
-    line-height: 1.4;
-  }
-
-  @keyframes shimmer {
-    0%,
-    100% {
-      opacity: 0.6;
-    }
-    50% {
-      opacity: 1;
-    }
   }
 
   .sources {

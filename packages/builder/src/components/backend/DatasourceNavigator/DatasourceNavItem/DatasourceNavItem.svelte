@@ -1,12 +1,14 @@
-<script>
+<script lang="ts">
   import { isActive, goto, params } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "@/constants/backend"
   import { contextMenuStore, userSelectedResourceMap } from "@/stores/builder"
   import { bb } from "@/stores/bb"
   import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import { canCreateDatasourceQuery } from "@/components/backend/DatasourceNavigator/datasourceUtils"
   import NavItem from "@/components/common/NavItem.svelte"
-  import { SourceName } from "@budibase/types"
+  import type { MenuItem } from "@/types"
+  import type { Datasource, UIInternalDatasource } from "@budibase/types"
 
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import { Icon } from "@budibase/bbui"
@@ -18,46 +20,55 @@
 
   $isActive
 
-  export let datasource
+  type DatasourceNavItemDatasource = (Datasource | UIInternalDatasource) & {
+    schema?: unknown
+    open?: boolean
+    selected?: boolean
+  }
 
+  interface ModalRef {
+    show: () => void
+  }
+
+  export let datasource: DatasourceNavItemDatasource
+  $: datasourceId = datasource._id || ""
+
+  $: restTemplateIdentifier = getRestTemplateIdentifier(datasource)
   $: templateIcon =
-    getRestTemplateIdentifier(datasource) && $restTemplates
-      ? restTemplates.get(getRestTemplateIdentifier(datasource))?.icon
+    restTemplateIdentifier && $restTemplates
+      ? restTemplates.get(restTemplateIdentifier)?.icon
       : undefined
 
-  let editModal
-  let deleteConfirmationModal
+  let editModal!: ModalRef
+  let deleteConfirmationModal!: ModalRef
 
-  let addQueryItem = {
+  const addQueryItem: MenuItem = {
     icon: "plus",
-    name: datasource?.source === "REST" ? "Add operation" : "Create new query",
+    name: datasource.source === "REST" ? "Add operation" : "Create new query",
     keyBind: null,
     visible: true,
     disabled: false,
     callback: () => {
-      const section = datasource?.source === "REST" ? "apis" : "data"
+      const section = datasource.source === "REST" ? "apis" : "data"
       $goto(`/builder/workspace/:application/${section}/query/new/:id`, {
         application: $params.application,
-        id: datasource._id,
+        id: datasourceId,
       })
     },
   }
 
-  const getContextMenuItems = () => {
+  const getContextMenuItems = (): MenuItem[] => {
     return [
-      ...(datasource._id !== BUDIBASE_INTERNAL_DB_ID &&
-      datasource.source !== SourceName.GOOGLE_SHEETS
-        ? [addQueryItem]
-        : []),
+      ...(canCreateDatasourceQuery(datasource) ? [addQueryItem] : []),
       {
         icon: "pencil",
-        name: datasource?.source === "REST" ? "Edit connection" : "Edit",
+        name: datasource.source === "REST" ? "Edit connection" : "Edit",
         keyBind: null,
         visible: true,
         disabled: false,
         callback:
           datasource.source === "REST"
-            ? () => bb.settings(`/connections/apis/${datasource._id}`)
+            ? () => bb.settings(`/connections/apis/${datasourceId}`)
             : editModal.show,
       },
       {
@@ -71,15 +82,15 @@
     ]
   }
 
-  const openContextMenu = e => {
-    if (datasource._id === BUDIBASE_INTERNAL_DB_ID) {
+  const openContextMenu = (e: MouseEvent) => {
+    if (datasourceId === BUDIBASE_INTERNAL_DB_ID || !datasourceId) {
       return
     }
     e.preventDefault()
     e.stopPropagation()
 
     const items = getContextMenuItems()
-    contextMenuStore.open(datasource._id, items, { x: e.clientX, y: e.clientY })
+    contextMenuStore.open(datasourceId, items, { x: e.clientX, y: e.clientY })
   }
 </script>
 
@@ -87,14 +98,14 @@
   <NavItem
     on:contextmenu={openContextMenu}
     border
-    text={datasource.name}
+    text={datasource.name || ""}
     opened={datasource.open}
     selected={$isActive("./datasource") && datasource.selected}
-    hovering={datasource._id === $contextMenuStore.id}
+    hovering={datasourceId === $contextMenuStore.id}
     withArrow={true}
     on:click
     on:iconClick
-    selectedBy={$userSelectedResourceMap[datasource._id]}
+    selectedBy={$userSelectedResourceMap[datasourceId]}
   >
     <div class="datasource-icon" slot="icon">
       <IntegrationIcon
@@ -104,7 +115,7 @@
         size="18"
       />
     </div>
-    {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
+    {#if datasourceId !== BUDIBASE_INTERNAL_DB_ID}
       <Icon on:click={openContextMenu} size="M" hoverable name="dots-three" />
     {/if}
   </NavItem>

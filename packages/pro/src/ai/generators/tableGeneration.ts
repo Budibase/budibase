@@ -1,6 +1,6 @@
 import { HTTPError } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import type { LLMProviderOptions, LLMResponse, Message } from "@budibase/types"
+import type { LLMResponse, Message } from "@budibase/types"
 import { generateText, Output, type ModelMessage } from "ai"
 import { LLMRequest } from "../llm"
 
@@ -15,7 +15,6 @@ import {
   tableDataStructuredOutput,
 } from "../structuredOutputs"
 import { TableSchemaFromAI } from "../types"
-import { runWithReasoningEffortFallback } from "../reasoningFallback"
 
 interface Delegates {
   generateTablesDelegate: (
@@ -146,19 +145,12 @@ export class TableGeneration {
   ): Promise<T> {
     const providerOptions = this.aiModel.providerOptions?.(false)
 
-    const run = async (opts?: LLMProviderOptions) => {
-      return generateText({
+    try {
+      const result = await generateText({
         model: this.aiModel.chat,
         messages: this.toModelMessages(request.messages),
         output: Output.object({ schema }),
-        providerOptions: opts,
-      })
-    }
-
-    try {
-      const result = await runWithReasoningEffortFallback({
         providerOptions,
-        run,
       })
       return result.output
     } catch (err: unknown) {

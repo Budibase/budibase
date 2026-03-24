@@ -7,9 +7,10 @@ import {
   VectorDbListResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { isEnvironmentVariableKey } from "../../../sdk/utils"
 
 const sanitize = (config: VectorDb): VectorDb => {
-  if (!config.password) {
+  if (!config.password || isEnvironmentVariableKey(config.password)) {
     return config
   }
   return {

@@ -17,7 +17,13 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { agentsStore, auth, featureFlags, licensing } from "@/stores/portal"
+  import {
+    agentsStore,
+    appsStore,
+    auth,
+    featureFlags,
+    licensing,
+  } from "@/stores/portal"
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
@@ -29,12 +35,12 @@
     MenuSeparator,
     Modal,
     type ModalAPI,
+    Notification,
     notifications,
     PopoverAlignment,
     Tag,
   } from "@budibase/bbui"
   import {
-    FeatureFlag,
     type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
@@ -50,11 +56,7 @@
   } from "@budibase/types"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import { getHomeTypeIcon, getHomeTypeIconColor } from "./_components/rows"
-  import {
-    beforeUrlChange,
-    goto as gotoStore,
-    url as urlStore,
-  } from "@roxi/routify"
+  import { goto as gotoStore, url as urlStore } from "@roxi/routify"
   import { onMount } from "svelte"
   import {
     buildHomeRows,
@@ -63,10 +65,6 @@
   } from "./_components/rows"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
-
-  type HomeCreate = "app" | "automation" | "agent"
-
-  $beforeUrlChange
 
   $: goto = $gotoStore
   $: url = $urlStore
@@ -138,47 +136,6 @@
     return null
   }
 
-  const normaliseCreate = (value: string | null): HomeCreate | null => {
-    if (!value) {
-      return null
-    }
-    if (value === "app" || value === "automation") {
-      return value
-    }
-    if (value === "agent" && $featureFlags.AI_AGENTS) {
-      return value
-    }
-    return null
-  }
-
-  const consumeCreateParam = (urlString?: string) => {
-    if (typeof window === "undefined") {
-      return
-    }
-
-    const parsed = new URL(urlString ?? window.location.href)
-    const create = normaliseCreate(parsed.searchParams.get("create"))
-    if (!create) {
-      return
-    }
-
-    if (create === "automation") {
-      createAutomation()
-    } else if (create === "app") {
-      createApp()
-    } else if (create === "agent") {
-      createAgent()
-    }
-
-    parsed.searchParams.delete("create")
-    const query = parsed.searchParams.toString()
-    history.replaceState(
-      {},
-      "",
-      `${parsed.pathname}${query ? `?${query}` : ""}`
-    )
-  }
-
   const normaliseSortColumn = (value: string | null): HomeSortColumn | null => {
     if (!value) {
       return null
@@ -209,7 +166,6 @@
       return {
         q: "",
         type: null as HomeType | null,
-        create: null as HomeCreate | null,
         sort: null as HomeSortColumn | null,
         order: null as HomeSortOrder | null,
       }
@@ -219,8 +175,7 @@
     const type = normaliseType(params.get("type"))
     const sort = normaliseSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
-    const create = normaliseCreate(params.get("create"))
-    return { q, type, sort, order, create }
+    return { q, type, sort, order }
   }
 
   const writeUrlState = () => {
@@ -231,7 +186,6 @@
     const params = new URLSearchParams(window.location.search)
 
     params.delete("create")
-
     const q = searchTerm.trim()
     if (!q) {
       params.delete("q")
@@ -261,31 +215,6 @@
     const next = `${window.location.pathname}${query ? `?${query}` : ""}`
     history.replaceState({}, "", next)
   }
-
-  $beforeUrlChange((event: { url?: string } | undefined) => {
-    if (typeof window === "undefined") {
-      return true
-    }
-
-    const nextUrl = typeof event?.url === "string" ? event.url : ""
-    if (!nextUrl) {
-      return true
-    }
-
-    const parsed = new URL(nextUrl, window.location.origin)
-    if (!parsed.pathname.endsWith("/home")) {
-      return true
-    }
-
-    if (!parsed.searchParams.get("create")) {
-      return true
-    }
-
-    setTimeout(() => {
-      consumeCreateParam(parsed.toString())
-    }, 0)
-    return true
-  })
 
   const setTypeFilter = (value: string) => {
     const normalised = normaliseType(value)
@@ -625,6 +554,16 @@
   $: allRows = sortHomeRows(baseRows, { sortColumn, sortOrder })
 
   $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
+  $: targetApp = $appsStore.apps.find(app => app.devId === $appStore.appId)
+  $: automationErrorEntries = Object.entries(targetApp?.automationErrors || {})
+    .filter(([, logIds]) => logIds.length > 0)
+    .map(([automationId, logIds]) => ({
+      automationId,
+      errorCount: logIds.length,
+      automation: $automationStore.automations.find(
+        automation => automation._id === automationId
+      ),
+    }))
 
   $: showHeaderActions = $licensing.showTrialBanner
   $: budibaseAICreditLimit =
@@ -634,14 +573,21 @@
 
   $: if (hasMounted) writeUrlState()
 
+  const goToAutomationError = (automationId: string) => {
+    goto(url(`../automation/${automationId}`))
+  }
+
+  const automationErrorMessage = (
+    automationName: string | undefined,
+    errorCount: number
+  ) => {
+    const name = automationName || "Automation"
+    return `${name} - Automation error${errorCount > 1 ? ` (${errorCount})` : ""}`
+  }
+
   onMount(async () => {
     const workspaceId = $appStore.appId
     if (!workspaceId) {
-      return
-    }
-
-    if (!$featureFlags[FeatureFlag.AI_AGENTS]) {
-      goto(url("../design"))
       return
     }
 
@@ -660,7 +606,6 @@
     }
 
     hasMounted = true
-    consumeCreateParam()
     writeUrlState()
 
     await Promise.all([
@@ -688,6 +633,25 @@
         </div>
       {/if}
     </div>
+
+    {#if automationErrorEntries.length}
+      <div class="automation-errors">
+        {#each automationErrorEntries as entry (entry.automationId)}
+          <Notification
+            wide
+            dismissable
+            type="error"
+            icon="Alert"
+            action={() => goToAutomationError(entry.automationId)}
+            actionMessage={entry.errorCount > 1 ? "View errors" : "View error"}
+            message={automationErrorMessage(
+              entry.automation?.name,
+              entry.errorCount
+            )}
+          />
+        {/each}
+      </div>
+    {/if}
 
     <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
@@ -872,6 +836,12 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
+  }
+
+  .automation-errors {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
   }
 
   .header {

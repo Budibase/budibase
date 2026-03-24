@@ -4,8 +4,7 @@
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import {
-    Constants,
-    CookieUtils,
+    redirectToLoginWithReturnUrl,
     invalidationMessage,
     popNumSessionsInvalidated,
   } from "@budibase/frontend-core"
@@ -32,6 +31,7 @@
     recaptchaStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
+  import SessionAuthBanner from "./overlay/SessionAuthBanner.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
   import PeekScreenDisplay from "./overlay/PeekScreenDisplay.svelte"
   import InstallPrompt from "./overlay/InstallPrompt.svelte"
@@ -62,6 +62,8 @@
   import PausedChat from "./app/PausedChat.svelte"
 
   // Provide contexts
+
+  $: layoutInstance = $screenStore.activeLayout?.props
   const context = createContextStore()
   setContext("sdk", SDK)
   setContext("component", writable({ id: null, ancestors: [] }))
@@ -116,9 +118,7 @@
       } else {
         // If they have no screens and are not logged in, it probably means
         // they should log in to gain access
-        const returnUrl = `${window.location.pathname}${window.location.hash}`
-        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
-        window.location = "/builder/auth/login"
+        redirectToLoginWithReturnUrl()
       }
     }
   }
@@ -258,6 +258,9 @@
                       >
                         <!-- Actual app -->
                         <div id="app-root">
+                          <div class="banner-container"></div>
+                          <SessionAuthBanner />
+
                           {#if showDevTools}
                             <DevToolsHeader />
                           {/if}
@@ -323,7 +326,7 @@
                                 {#key $screenStore.activeLayout._id}
                                   <Component
                                     isLayout
-                                    instance={$screenStore.activeLayout.props}
+                                    instance={layoutInstance}
                                   />
                                 {/key}
 

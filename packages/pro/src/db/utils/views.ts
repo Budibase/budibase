@@ -3,7 +3,7 @@ import { context, db as dbCore, tenancy } from "@budibase/backend-core"
 const { ViewName, AutomationViewMode, SEPARATOR, DocumentType, createView } =
   dbCore
 const LOG_PREFIX = DocumentType.AUTOMATION_LOG + SEPARATOR
-const APP_BACKUP_PREFIX = DocumentType.APP_BACKUP + SEPARATOR
+const WORKSPACE_BACKUP_PREFIX = DocumentType.WORKSPACE_BACKUP + SEPARATOR
 
 /**
  * A separate view that allows us to perform queries by the automation ID and time series, while the
@@ -26,14 +26,14 @@ export async function createLogByAutomationView() {
   await createView(db, viewJs, ViewName.AUTOMATION_LOGS)
 }
 
-export async function createAppBackupTriggerView() {
+export async function createWorkspaceBackupTriggerView() {
   const db = tenancy.getGlobalDB()
   const viewJs = `function(doc) {
-    if (doc._id.startsWith("${APP_BACKUP_PREFIX}") && doc.type && doc.trigger) {
+    if (doc._id.startsWith("${WORKSPACE_BACKUP_PREFIX}") && doc.type && doc.trigger) {
       let full = doc.appId + "${SEPARATOR}"
       full += doc.trigger.toLowerCase() + "${SEPARATOR}"
       full += doc.type.toLowerCase() + "${SEPARATOR}"
-      emit("${APP_BACKUP_PREFIX}" + full + doc.timestamp) 
+      emit("${WORKSPACE_BACKUP_PREFIX}" + full + doc.timestamp) 
     }
   }`
   await createView(db, viewJs, ViewName.WORKSPACE_BACKUP_BY_TRIGGER)

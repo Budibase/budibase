@@ -14,10 +14,10 @@ import sdk from "../../sdk"
 export async function exportAppDump(
   ctx: Ctx<ExportWorkspaceDumpRequest, ExportWorkspaceDumpResponse>
 ) {
-  const { appId } = ctx.query as any
+  const { appId: workspaceId } = ctx.query as any
   const { excludeRows, encryptPassword } = ctx.request.body
 
-  const [workspace] = await db.getWorkspacesByIDs([appId])
+  const [workspace] = await db.getWorkspacesByIDs([workspaceId])
   const workspaceName = workspace.name
 
   // remove the 120 second limit for the request
@@ -26,13 +26,13 @@ export async function exportAppDump(
   const extension = encryptPassword ? "enc.tar.gz" : "tar.gz"
   const backupIdentifier = `${workspaceName}-export-${new Date().getTime()}.${extension}`
   ctx.attachment(backupIdentifier)
-  ctx.body = await sdk.backups.streamExportApp({
-    appId,
+  ctx.body = await sdk.backups.streamExportWorkspace({
+    workspaceId,
     excludeRows,
     encryptPassword,
   })
 
-  await context.doInWorkspaceContext(appId, async () => {
+  await context.doInWorkspaceContext(workspaceId, async () => {
     const appDb = context.getWorkspaceDB()
     const app = await appDb.get<Workspace>(DocumentType.WORKSPACE_METADATA)
     await events.app.exported(app)

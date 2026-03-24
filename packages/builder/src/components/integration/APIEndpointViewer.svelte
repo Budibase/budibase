@@ -66,6 +66,7 @@
     runQuery,
     keyValueArrayToRecord,
     getDefaultRestAuthConfig,
+    isValidEndpointUrl,
   } from "./query"
   import restUtils from "@/helpers/data/utils"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
@@ -127,21 +128,10 @@
   let restBindings: EnrichedBinding[] = []
   let mergedBindings: EnrichedBinding[] = []
   let bindingPreviewContext: Record<string, any> = {}
+  let baseUrlOptions: { label: string; url: string }[] = []
 
   // Custom query mode state
-  let customBaseUrl: string = ""
-  let customPath: string = ""
-
-  $: baseUrlOptions = (() => {
-    const opts: { label: string; url: string }[] = []
-    const connUrl = (datasource as Datasource)?.config?.url as
-      | string
-      | undefined
-    if (connUrl) {
-      opts.push({ label: "Connection default", url: connUrl })
-    }
-    return opts
-  })()
+  let customUrl: string = ""
 
   $: selectedDatasourceId = datasourceId || _pickedDatasourceId
 
@@ -200,9 +190,19 @@
   }
 
   $: datasourceLookupId = selectedDatasourceId || storeQuery?.datasourceId
-  $: datasource = structuredClone(
-    $datasources.list.find(d => d._id === datasourceLookupId)
-  )
+  $: {
+    datasource = structuredClone(
+      $datasources.list.find(d => d._id === datasourceLookupId)
+    )
+    const connUrl = getDatasourceBaseUrl(datasource)
+    baseUrlOptions = connUrl
+      ? [{ label: "Connection base url", url: connUrl }]
+      : []
+  }
+
+  $: if (!hasRestTemplate(datasource) && isNewQuery) {
+    customUrl = getDatasourceBaseUrl(datasource) || ""
+  }
 
   $: if (editableQuery && datasource && isNewQuery && !selectedAuth) {
     const withAuth = applyDefaultAuth(editableQuery, datasource)
@@ -284,14 +284,17 @@
   )
 
   // Custom Mode Url Parsing
-  $: effectivePath = isCustomMode
-    ? (customBaseUrl ?? "").replace(/\/$/, "") +
-      (customPath
-        ? customPath.startsWith("/")
-          ? customPath
-          : `/${customPath}`
-        : "")
-    : editableQuery?.fields?.path
+  $: effectivePath = isCustomMode ? customUrl : editableQuery?.fields?.path
+
+  $: isValidCustomUrl = !isCustomMode || isValidEndpointUrl(effectivePath)
+  $: existingQueryUnchanged = !isNewQuery && !queryDirty
+  $: newQueryIncomplete =
+    isNewQuery && (isCustomMode ? !effectivePath : !selectedEndpointOption)
+  $: saveDisabled =
+    savingQuery ||
+    existingQueryUnchanged ||
+    newQueryIncomplete ||
+    !isValidCustomUrl
 
   // Generates a complete runtime-ready version of the query used to monitor the
   // current edit state.
@@ -377,31 +380,13 @@
     )
   }
 
-  // Splits a stored full URL (fields.path) into base URL and path portion
-  // for the custom mode UI. Legacy queries store the full URL in fields.path.
   const initCustomUrlFields = (fullPath: string | undefined) => {
-    if (!fullPath) {
-      customBaseUrl = (datasource as Datasource)?.config?.url ?? ""
-      customPath = ""
-      return
-    }
-    try {
-      const u = new URL(fullPath)
-      customBaseUrl = u.origin
-      customPath = u.pathname === "/" ? "" : u.pathname
-    } catch {
-      const schemeEnd = fullPath.indexOf("://")
-      const searchFrom = schemeEnd !== -1 ? schemeEnd + 3 : 0
-      const slashIdx = fullPath.indexOf("/", searchFrom)
-      if (slashIdx !== -1) {
-        customBaseUrl = fullPath.slice(0, slashIdx)
-        customPath = fullPath.slice(slashIdx)
-      } else {
-        customBaseUrl = fullPath
-        customPath = ""
-      }
-    }
+    customUrl = fullPath || getDatasourceBaseUrl(datasource) || ""
   }
+
+  const getDatasourceBaseUrl = (
+    ds: Datasource | UIInternalDatasource | undefined
+  ): string | undefined => (ds as Datasource)?.config?.url as string | undefined
 
   const resolveStoreQuery = (
     list: Query[] | undefined,
@@ -945,28 +930,22 @@
   <div class="heading">
     <div class="api-details">
       {#if editableQuery}
-        {#key builtQuery?.name}
-          <!-- svelte-ignore a11y-interactive-supports-focus -->
-          <span
-            class="query-name-input"
-            role="textbox"
-            contenteditable="plaintext-only"
-            data-placeholder="Untitled request"
-            on:keydown={e => {
-              if (e.key === "Enter") {
-                e.preventDefault()
-                e.currentTarget.blur()
-              }
-            }}
-            on:blur={e => {
-              const name = e.currentTarget.textContent || ""
-              e.currentTarget.textContent = name
-              if (editableQuery) {
-                editableQuery = { ...editableQuery, name }
-              }
-            }}>{editableQuery.name}</span
-          >
-        {/key}
+        <input
+          class="query-name-input"
+          placeholder="Untitled request"
+          value={editableQuery.name}
+          on:keydown={e => {
+            if (e.key === "Enter") {
+              e.preventDefault()
+              e.currentTarget.blur()
+            }
+          }}
+          on:blur={e => {
+            if (editableQuery) {
+              editableQuery = { ...editableQuery, name: e.currentTarget.value }
+            }
+          }}
+        />
       {/if}
     </div>
     <div class="actions">
@@ -996,14 +975,7 @@
         {/if}
       </div>
       <div class="save-btn">
-        <Button
-          cta
-          disabled={savingQuery ||
-            (!isNewQuery && !queryDirty) ||
-            (isNewQuery &&
-              (isCustomMode ? !effectivePath : !selectedEndpointOption))}
-          on:click={() => saveQuery()}
-        >
+        <Button cta disabled={saveDisabled} on:click={() => saveQuery()}>
           Save
         </Button>
       </div>
@@ -1045,33 +1017,29 @@
       {#if isCustomMode}
         <div class="picker">
           <CustomEndpointInput
+            disabled={!datasource}
             verb={editableQuery?.queryVerb ?? "read"}
-            path={customPath}
-            baseUrl={customBaseUrl}
+            url={customUrl}
             {baseUrlOptions}
             {verbOptions}
             on:verbChange={e => {
               if (editableQuery) editableQuery.queryVerb = e.detail
             }}
-            on:baseUrlChange={e => {
-              customBaseUrl = e.detail
+            on:urlChange={e => {
+              customUrl = e.detail
+              if (editableQuery)
+                editableQuery.fields.path = (e.detail ?? "").split("?")[0]
             }}
-            on:pathChange={e => {
-              customPath = e.detail ?? ""
-              const [base] = customPath.split("?")
-              if (editableQuery) editableQuery.fields.path = base
-            }}
-            on:pathCommit={e => {
+            on:urlCommit={e => {
               const [base, qs] = (e.detail ?? "").split("?")
-              if (!qs) return
-              customPath = base
               if (editableQuery) editableQuery.fields.path = base
-              queryParams = {
-                ...(queryParams ?? {}),
-                ...runtimeToReadableMap(
+              if (qs) {
+                customUrl = base
+                const newParams = runtimeToReadableMap(
                   mergedBindings,
                   restUtils.breakQueryString(qs)
-                ),
+                )
+                queryParams = { ...(queryParams ?? {}), ...newParams }
               }
             }}
           />
@@ -1081,6 +1049,18 @@
           <Select
             on:change={e => {
               selectedEndpointOption = e.detail
+              if (!e.detail) {
+                endpoints = undefined
+                endpointLoadError = undefined
+                queryParams = undefined
+                originalBuiltQuery = undefined
+                if (editableQuery) {
+                  editableQuery = getSelectedQuery(
+                    "",
+                    editableQuery.datasourceId
+                  ) as Query
+                }
+              }
             }}
             value={selectedEndpointOption}
             options={endpointOptions}
@@ -1109,12 +1089,12 @@
       </div>
       <div
         class="send"
-        class:loaded={isCustomMode ? !!effectivePath : !!selectedEndpointOption}
+        class:loaded={isCustomMode ? !!customUrl : !!selectedEndpointOption}
       >
         <Button
           primary
           disabled={isCustomMode
-            ? !effectivePath || runningQuery
+            ? !customUrl || runningQuery
             : !selectedEndpointOption || runningQuery}
           icon="paper-plane-right"
           on:click={previewQuery}
@@ -1132,7 +1112,7 @@
   <div class="wrap">
     <div class="main">
       <Layout noPadding>
-        {#if !isCustomMode}
+        {#if !isCustomMode && selectedEndpointOption}
           <div class="details">
             <Layout noPadding gap="XS">
               <Heading size="XS">{selectedEndpointOption?.name || ""}</Heading>
@@ -1170,8 +1150,9 @@
                     ]}
                     context={bindingPreviewContext}
                     on:change={onUpdateBindings}
-                    actionButtonDisabled={!isCustomMode &&
-                      !selectedEndpointOption}
+                    actionButtonDisabled={isCustomMode
+                      ? !datasource
+                      : !selectedEndpointOption}
                   />
                 </Tab>
                 <Tab title="Params">
@@ -1477,12 +1458,15 @@
   .side-bar-content {
     flex: 1;
     overflow-y: auto;
-    padding: var(--spacing-m) var(--spacing-xl);
+    padding: var(--spacing-m) var(--spacing-xl) var(--spacing-xl)
+      var(--spacing-xl);
   }
   .side-bar-content > div,
-  .side-bar-content > div :global(> .container) {
+  .side-bar-content > div :global(> .container),
+  .side-bar-content > div :global(> .panel) {
     height: 100%;
   }
+
   .actions .grouped {
     display: flex;
     gap: var(--spacing-m);
@@ -1558,15 +1542,17 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    gap: var(--spacing-xl);
   }
   .api-details {
+    flex: 1;
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: var(--spacing-m);
   }
   .query-name-input {
-    min-width: 300px;
+    flex: 1;
     color: var(--spectrum-global-color-gray-900);
     font-family: inherit;
     font-size: 18px;
@@ -1579,20 +1565,22 @@
     padding: 4px 6px;
     margin-left: -6px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     cursor: text;
     transition:
       background-color 150ms,
       border-color 150ms;
   }
-  .query-name-input:empty::before {
-    content: attr(data-placeholder);
-    color: var(--spectrum-global-color-gray-900);
+  .query-name-input::placeholder {
+    color: var(--spectrum-global-color-gray-600);
   }
   .query-name-input:focus {
     outline: none;
     margin-left: 0;
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-global-color-gray-400);
+    text-overflow: clip;
   }
   .actions {
     display: flex;

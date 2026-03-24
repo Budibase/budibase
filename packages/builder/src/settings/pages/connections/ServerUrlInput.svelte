@@ -8,6 +8,7 @@
   export let label: string = "Base URL"
   export let servers: OpenAPIServer[] = []
   export let disabled: boolean = false
+  export let error: string = ""
 
   const dispatch = createEventDispatcher()
 
@@ -58,6 +59,7 @@
       class="spectrum-Textfield"
       class:is-focused={focus}
       class:is-disabled={disabled}
+      class:is-invalid={!!error}
     >
       <div class="inline-icon">
         <Icon
@@ -78,7 +80,10 @@
           dispatch("change", value)
         }}
         on:focus={() => (focus = true)}
-        on:blur={() => (focus = false)}
+        on:blur={() => {
+          focus = false
+          dispatch("blur")
+        }}
         placeholder={firstServerUrl}
       />
     </div>
@@ -116,6 +121,9 @@
       </div>
     {/if}
   </div>
+  {#if error}
+    <div class="error">{error}</div>
+  {/if}
 </div>
 
 <style>
@@ -182,5 +190,10 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .error {
+    color: var(--spectrum-semantic-negative-color-default);
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
 </style>

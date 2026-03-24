@@ -1,6 +1,5 @@
 <script lang="ts">
   import { API } from "@/api"
-  import { getErrorMessage } from "@/helpers/errors"
   import { appsStore, auth } from "@/stores/portal"
   import {
     Input,
@@ -82,9 +81,9 @@
         await auth.getSelf()
       }
       onDuplicateSuccess()
-      notifications.success("App duplicated successfully")
-    } catch (error) {
-      notifications.error(getErrorMessage(error) || "Error duplicating app")
+      notifications.success("Workspace duplicated successfully")
+    } catch (err) {
+      notifications.error("Error duplicating workspace")
       duplicating = false
     }
   }
@@ -114,7 +113,7 @@
 </script>
 
 <ModalContent
-  title={"Duplicate App"}
+  title={"Duplicate Workspace"}
   onConfirm={async () => {
     validation.check({
       ...$values,
