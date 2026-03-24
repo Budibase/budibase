@@ -415,7 +415,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
       ...new Set(
         screensToDelete
           .map(screen => screen.workspaceAppId)
-          .filter((workspaceAppId): workspaceAppId is string => !!workspaceAppId)
+          .filter(
+            (workspaceAppId): workspaceAppId is string => !!workspaceAppId
+          )
       ),
     ]
     workspaceAppIds.forEach(workspaceAppId => {

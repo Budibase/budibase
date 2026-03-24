@@ -1,11 +1,4 @@
-import {
-  it,
-  expect,
-  describe,
-  beforeEach,
-  vi,
-  type TestContext,
-} from "vitest"
+import { it, expect, describe, beforeEach, vi, type TestContext } from "vitest"
 import { get, writable } from "svelte/store"
 import { API } from "@/api"
 import { Constants } from "@budibase/frontend-core"
