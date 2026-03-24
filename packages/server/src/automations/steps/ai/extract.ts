@@ -6,7 +6,13 @@ import {
   LLMResponse,
   SupportedFileType,
 } from "@budibase/types"
-import { generateText, Output, type ModelMessage, type UserContent } from "ai"
+import {
+  generateText,
+  Output,
+  type Experimental_DownloadFunction,
+  type ModelMessage,
+  type UserContent,
+} from "ai"
 import fetch from "node-fetch"
 import { PDFParse } from "pdf-parse"
 import { Readable } from "stream"
@@ -68,6 +74,27 @@ function buildExtractPrompt() {
     'If no matching data is found, return {"data": []}.',
   ].join("\n\n")
 }
+
+const downloadAssetsForExtract: Experimental_DownloadFunction =
+  async requests =>
+    Promise.all(
+      requests.map(async ({ url, isUrlSupportedByModel }) => {
+        if (url.protocol === "data:") {
+          return null
+        }
+        if (isUrlSupportedByModel) {
+          return null
+        }
+        const response = await fetch(url)
+        if (!response.ok) {
+          throw new Error(`Failed to download asset: ${response.statusText}`)
+        }
+        return {
+          data: new Uint8Array(await response.arrayBuffer()),
+          mediaType: response.headers.get("content-type") ?? undefined,
+        }
+      })
+    )
 
 function buildExtractModelMessages(input: ExtractInput): ModelMessage[] {
   const prompt = buildExtractPrompt()
@@ -248,6 +275,7 @@ export async function run({
       messages: modelMessages,
       providerOptions,
       output,
+      experimental_download: downloadAssetsForExtract,
     })
     if (!response.output || response.output.data == null) {
       throw new Error("Could not parse AI response as valid JSON.")
