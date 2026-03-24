@@ -3,10 +3,10 @@
   import { clickOutside, Icon, ActionMenu, MenuItem } from "@budibase/bbui"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
   import { customQueryIconColor } from "@/helpers/data/utils"
+  import { applyBaseUrl } from "./query"
 
   export let verb: string = "read"
-  export let path: string = ""
-  export let baseUrl: string = ""
+  export let url: string = ""
   export let baseUrlOptions: { label: string; url: string }[] = []
   export let verbOptions: { value: string; label: string }[] = []
   export let disabled: boolean = false
@@ -14,8 +14,7 @@
   const dispatch = createEventDispatcher()
 
   let verbOpen = false
-  let pathInputEl: HTMLInputElement
-  let baseUrlInputEl: HTMLInputElement
+  let urlInputEl: HTMLInputElement
 
   $: verbColor = customQueryIconColor(verb)
   $: httpVerb = verbOptions.find(o => o.value === verb)?.label ?? verb
@@ -24,13 +23,13 @@
     verb = value
     dispatch("verbChange", value)
     verbOpen = false
-    pathInputEl?.focus()
+    urlInputEl?.focus()
   }
 
-  const selectBaseUrl = (url: string) => {
-    baseUrl = url
-    dispatch("baseUrlChange", url)
-    baseUrlInputEl?.focus()
+  const selectBaseUrl = (newBase: string) => {
+    url = applyBaseUrl(url, newBase)
+    dispatch("urlChange", url)
+    urlInputEl?.focus()
   }
 </script>
 
@@ -55,21 +54,22 @@
 
   <div class="divider"></div>
 
-  <div class="base-url-section" class:has-globe={baseUrlOptions.length > 0}>
+  <div class="url-section" class:has-globe={baseUrlOptions.length > 0}>
     <input
-      bind:this={baseUrlInputEl}
-      class="base-url-input"
+      bind:this={urlInputEl}
+      class="url-input"
       type="text"
-      value={baseUrl}
-      placeholder="https://api.example.com"
+      value={url}
+      placeholder="https://api.example.com/api/v1/endpoint"
       {disabled}
       on:input={e => {
-        baseUrl = e.currentTarget.value
-        dispatch("baseUrlChange", baseUrl)
+        url = e.currentTarget.value
+        dispatch("urlChange", url)
       }}
       on:keydown={e => {
         if (e.key === "Enter" && !e.isComposing) e.currentTarget.blur()
       }}
+      on:blur={() => dispatch("urlCommit", url)}
     />
     {#if baseUrlOptions.length > 0}
       <div class="globe-icon">
@@ -91,27 +91,6 @@
       </div>
     {/if}
   </div>
-
-  <div class="divider"></div>
-
-  <input
-    bind:this={pathInputEl}
-    class="path-input"
-    type="text"
-    value={path}
-    placeholder="/api/v1/endpoint"
-    {disabled}
-    on:input={e => {
-      path = e.currentTarget.value
-      dispatch("pathChange", path)
-    }}
-    on:keydown={e => {
-      if (e.key === "Enter" && !e.isComposing) e.currentTarget.blur()
-    }}
-    on:blur={e => {
-      dispatch("pathCommit", e.currentTarget.value)
-    }}
-  />
 
   {#if verbOpen}
     <div class="dropdown verb-dropdown spectrum-Popover is-open">
@@ -186,19 +165,19 @@
     flex-shrink: 0;
   }
 
-  .base-url-section {
+  .url-section {
     display: flex;
     align-items: center;
+    flex: 1;
     min-width: 0;
     position: relative;
     overflow: hidden;
     height: 100%;
   }
 
-  .base-url-input {
-    field-sizing: content;
-    min-width: 4ch;
-    max-width: 40cqi; /* Witchcraft */
+  .url-input {
+    flex: 1;
+    min-width: 0;
     height: 100%;
     border: none;
     outline: none;
@@ -208,10 +187,10 @@
     font-size: var(--spectrum-alias-font-size-default);
     color: var(--spectrum-alias-text-color);
   }
-  .base-url-input::placeholder {
+  .url-input::placeholder {
     color: var(--spectrum-alias-text-color-disabled);
   }
-  .base-url-section.has-globe .base-url-input {
+  .url-section.has-globe .url-input {
     padding-right: 28px;
   }
 
@@ -240,24 +219,8 @@
     pointer-events: none;
     transition: opacity 130ms ease-out;
   }
-  .base-url-section:focus-within .globe-icon::before {
+  .url-section:focus-within .globe-icon::before {
     opacity: 0;
-  }
-
-  .path-input {
-    flex: 1;
-    min-width: 0;
-    height: 100%;
-    border: none;
-    outline: none;
-    background: transparent;
-    padding: 0 var(--spacing-m);
-    font-family: var(--font-sans);
-    font-size: var(--spectrum-alias-font-size-default);
-    color: var(--spectrum-alias-text-color);
-  }
-  .path-input::placeholder {
-    color: var(--spectrum-alias-text-color-disabled);
   }
 
   .dropdown {

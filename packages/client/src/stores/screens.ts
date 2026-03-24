@@ -149,9 +149,14 @@ const createScreenStore = () => {
           embedded: $appStore.embedded,
         }
         if (activeScreen?.showNavigation) {
+          const navigationSettings = {
+            ...($appStore.application?.navigation || {}),
+            ...($builderStore.navigation || {}),
+          }
+
           layoutSettings = {
             ...layoutSettings,
-            ...($builderStore.navigation || $appStore.application?.navigation),
+            ...navigationSettings,
           }
 
           // Default navigation to top

@@ -368,7 +368,7 @@ export const publishWorkspaceInternal = async (
             : undefined
 
         if (await backups.isEnabled()) {
-          await backups.triggerAppBackup(prodId, BackupTrigger.PUBLISH, {
+          await backups.triggerWorkspaceBackup(prodId, BackupTrigger.PUBLISH, {
             createdBy: ctx.user._id,
           })
         }

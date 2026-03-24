@@ -90,7 +90,7 @@ describe("backups", () => {
       if (!opts.trigger) {
         opts.trigger = BackupTrigger.PUBLISH
       }
-      const { id } = await backups.storeAppBackupMetadata(
+      const { id } = await backups.storeWorkspaceBackupMetadata(
         {
           appId: opts.workspaceId,
           trigger: opts.trigger,
@@ -115,7 +115,7 @@ describe("backups", () => {
         opts.workspaceId = config.workspaceId
       }
 
-      let backupId = await backups.triggerAppBackup(
+      let backupId = await backups.triggerWorkspaceBackup(
         opts.workspaceId,
         BackupTrigger.MANUAL,
         { createdBy: USER_ID, name: "test" }
@@ -125,7 +125,7 @@ describe("backups", () => {
         await waitForQueue()
       }
 
-      return backups.getAppBackup(backupId!)
+      return backups.getWorkspaceBackup(backupId!)
     })
   }
 
@@ -142,43 +142,43 @@ describe("backups", () => {
       await waitForQueue()
 
       // create restore
-      const response = await backups.triggerAppRestore(
+      const response = await backups.triggerWorkspaceRestore(
         workspaceId,
         backup._id,
         "backup restore",
         USER_ID
       )
-      const restore = await backups.getAppBackup(response!.restoreId)
+      const restore = await backups.getWorkspaceBackup(response!.restoreId)
       expect(restore).toBeDefined()
       expect(restore.status).toEqual(BackupStatus.PENDING)
       // wait for processing
       await waitForQueue()
       // return processed result
-      return backups.getAppBackup(response!.restoreId)
+      return backups.getWorkspaceBackup(response!.restoreId)
     })
   }
 
   // Disable date mocking
   tk.reset()
 
-  const exportAppFn = jest.fn(),
-    importAppFn = jest.fn(),
+  const exportWorkspaceFn = jest.fn(),
+    importWorkspaceFn = jest.fn(),
     statsFn = jest.fn()
 
   beforeAll(async () => {
     mocks.licenses.useBackups()
     await backups.init({
       processing: {
-        exportAppFn,
-        importAppFn,
+        exportWorkspaceFn,
+        importWorkspaceFn,
         statsFn,
       },
     })
   })
 
   beforeEach(() => {
-    exportAppFn.mockReset().mockReturnValue("/path")
-    importAppFn.mockReset().mockImplementation()
+    exportWorkspaceFn.mockReset().mockReturnValue("/path")
+    importWorkspaceFn.mockReset().mockImplementation()
     statsFn.mockReset().mockImplementation()
     mockedObjectStore.listAllObjects
       .mockReset()
@@ -223,22 +223,22 @@ describe("backups", () => {
       expect(backup.status).toEqual(BackupStatus.COMPLETE)
       await waitForQueue()
       expect(backup._id).toBeDefined()
-      expect(exportAppFn).toHaveBeenCalledTimes(1)
+      expect(exportWorkspaceFn).toHaveBeenCalledTimes(1)
     })
   })
 
-  it("should call importAppFn with dev workspace id, not temp app id", async () => {
+  it("should call importWorkspaceFn with dev workspace id, not temp workspace id", async () => {
     await config.doInTenant(async () => {
       const restore = await createRestore()
-      const processedRestore = await backups.getAppBackup(restore._id)
+      const processedRestore = await backups.getWorkspaceBackup(restore._id)
       const [importWorkspaceId, importDb, _config, importOpts] =
-        importAppFn.mock.calls[0]
+        importWorkspaceFn.mock.calls[0]
       const devWorkspaceId = db.getDevWorkspaceID(config.workspaceId)
       const tempAppId = importDb.name
 
       expect(processedRestore._id).toBeDefined()
-      expect(exportAppFn).toHaveBeenCalledTimes(2)
-      expect(importAppFn).toHaveBeenCalledTimes(1)
+      expect(exportWorkspaceFn).toHaveBeenCalledTimes(2)
+      expect(importWorkspaceFn).toHaveBeenCalledTimes(1)
       expect(importWorkspaceId).toEqual(devWorkspaceId)
       expect(importWorkspaceId).not.toEqual(tempAppId)
       expect(importDb.name).toMatch(new RegExp(`^${devWorkspaceId}_temp_`))
@@ -267,7 +267,7 @@ describe("backups", () => {
           key === `${config.workspaceId}/attachments/shared.txt`
       )
 
-      const response = await backups.triggerAppRestore(
+      const response = await backups.triggerWorkspaceRestore(
         config.workspaceId,
         backup._id,
         "backup restore",
@@ -275,7 +275,9 @@ describe("backups", () => {
       )
       await waitForQueue()
 
-      const processedRestore = await backups.getAppBackup(response!.restoreId)
+      const processedRestore = await backups.getWorkspaceBackup(
+        response!.restoreId
+      )
       const targetUploads = mockedObjectStore.streamUpload.mock.calls.filter(
         ([args]) =>
           args.bucket === objectStore.ObjectStoreBuckets.APPS &&
@@ -304,7 +306,7 @@ describe("backups", () => {
       mockedObjectStore.objectExists.mockResolvedValue(false)
 
       try {
-        const response = await backups.triggerAppRestore(
+        const response = await backups.triggerWorkspaceRestore(
           config.workspaceId,
           backup._id,
           "backup restore",
@@ -312,7 +314,9 @@ describe("backups", () => {
         )
         await waitForQueue()
 
-        const processedRestore = await backups.getAppBackup(response!.restoreId)
+        const processedRestore = await backups.getWorkspaceBackup(
+          response!.restoreId
+        )
         const targetUploads = mockedObjectStore.streamUpload.mock.calls.filter(
           ([args]) =>
             args.bucket === objectStore.ObjectStoreBuckets.APPS &&
@@ -357,7 +361,7 @@ describe("backups", () => {
       )
 
       try {
-        const response = await backups.triggerAppRestore(
+        const response = await backups.triggerWorkspaceRestore(
           config.workspaceId,
           backup._id,
           "backup restore",
@@ -365,7 +369,9 @@ describe("backups", () => {
         )
         await waitForQueue()
 
-        const processedRestore = await backups.getAppBackup(response!.restoreId)
+        const processedRestore = await backups.getWorkspaceBackup(
+          response!.restoreId
+        )
         const targetUploads = mockedObjectStore.streamUpload.mock.calls.filter(
           ([args]) =>
             args.bucket === objectStore.ObjectStoreBuckets.APPS &&
@@ -415,14 +421,16 @@ describe("backups", () => {
       })
 
       try {
-        const response = await backups.triggerAppRestore(
+        const response = await backups.triggerWorkspaceRestore(
           config.workspaceId,
           backup._id,
           "backup restore",
           USER_ID
         )
         await waitForQueue()
-        const processedRestore = await backups.getAppBackup(response!.restoreId)
+        const processedRestore = await backups.getWorkspaceBackup(
+          response!.restoreId
+        )
 
         expect(processedRestore.status).toEqual(BackupStatus.FAILED)
         expect(replicateSpy).not.toHaveBeenCalled()
@@ -446,9 +454,9 @@ describe("backups", () => {
       const backup = await createBackup()
       await waitForQueue()
 
-      importAppFn.mockRejectedValue(new Error("Import failed"))
+      importWorkspaceFn.mockRejectedValue(new Error("Import failed"))
       // Trigger restore which should fail
-      const response = await backups.triggerAppRestore(
+      const response = await backups.triggerWorkspaceRestore(
         config.workspaceId,
         backup._id,
         "backup restore",
@@ -457,9 +465,11 @@ describe("backups", () => {
       await waitForQueue()
 
       // Verify restore failed
-      const processedRestore = await backups.getAppBackup(response!.restoreId)
+      const processedRestore = await backups.getWorkspaceBackup(
+        response!.restoreId
+      )
       expect(processedRestore.status).toEqual(BackupStatus.FAILED)
-      expect(importAppFn).toHaveBeenCalledTimes(1)
+      expect(importWorkspaceFn).toHaveBeenCalledTimes(1)
 
       // Verify dev workspace database is not deleted
       expect(await db.getDB(devWorkspaceId).allDocs({})).toEqual({
@@ -499,7 +509,7 @@ describe("backups", () => {
     await config.doInTenant(async () => {
       const id = await storeBackup()
       expect(id).toBeDefined()
-      const metadata = await backups.getAppBackup(id)
+      const metadata = await backups.getWorkspaceBackup(id)
       expect(metadata.filename).toEqual("test.tar.gz")
     })
   })
@@ -507,10 +517,10 @@ describe("backups", () => {
   it("should be able to update backup status", async () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
-      const before = await backups.getAppBackup(backup._id)
+      const before = await backups.getWorkspaceBackup(backup._id)
       // @ts-ignore
       await backups.updateBackupStatus(before._id, BackupStatus.FAILED)
-      const metadata = await backups.getAppBackup(backup._id)
+      const metadata = await backups.getWorkspaceBackup(backup._id)
       expect(metadata.status).toEqual(BackupStatus.FAILED)
     })
   })
@@ -523,7 +533,7 @@ describe("backups", () => {
         restore._rev!,
         BackupStatus.FAILED
       )
-      const updated = await backups.getAppBackup(restore._id)
+      const updated = await backups.getWorkspaceBackup(restore._id)
       expect(updated.status).toEqual(BackupStatus.FAILED)
     })
   })
@@ -532,7 +542,7 @@ describe("backups", () => {
     await config.doInTenant(async () => {
       let backup = await createBackup()
       expect(backup).toBeDefined()
-      backup = await backups.getAppBackup(backup._id)
+      backup = await backups.getWorkspaceBackup(backup._id)
       expect(backup.status).toEqual(BackupStatus.COMPLETE)
       expect(backup.name).toEqual("test")
     })
@@ -541,8 +551,8 @@ describe("backups", () => {
   it("should be able to update an workspace backup", async () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
-      await backups.updateAppBackup(backup._id, "new name")
-      const updated = await backups.getAppBackup(backup._id)
+      await backups.updateWorkspaceBackup(backup._id, "new name")
+      const updated = await backups.getWorkspaceBackup(backup._id)
       expect(updated.name).toEqual("new name")
     })
   })
@@ -550,10 +560,10 @@ describe("backups", () => {
   it("should be able to delete a backup", async () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
-      await backups.deleteAppBackup(backup._id)
+      await backups.deleteWorkspaceBackup(backup._id)
       let cantFind = false
       try {
-        await backups.getAppBackup(backup._id)
+        await backups.getWorkspaceBackup(backup._id)
       } catch (err: any) {
         if (err.status === 404) {
           cantFind = true
@@ -576,7 +586,7 @@ describe("backups", () => {
     it("should be able to fetch a list of backups when empty", async () => {
       await config.doInTenant(async () => {
         const workspaceId = "app_searchEmpty"
-        const response = await backups.fetchAppBackups(workspaceId, {
+        const response = await backups.fetchWorkspaceBackups(workspaceId, {
           startDate,
           endDate,
         })
@@ -606,7 +616,7 @@ describe("backups", () => {
           type: BackupType.RESTORE,
         })
 
-        const response = await backups.fetchAppBackups(workspaceId, {
+        const response = await backups.fetchWorkspaceBackups(workspaceId, {
           startDate,
           endDate,
           trigger: BackupTrigger.MANUAL,
@@ -629,10 +639,10 @@ describe("backups", () => {
           limit: 8,
           paginate: true,
         }
-        const resp1 = await backups.fetchAppBackups(workspaceId, opts)
+        const resp1 = await backups.fetchWorkspaceBackups(workspaceId, opts)
         expect(resp1.data.length).toEqual(8)
         expect(resp1.hasNextPage).toEqual(true)
-        const resp2 = await backups.fetchAppBackups(workspaceId, {
+        const resp2 = await backups.fetchWorkspaceBackups(workspaceId, {
           ...opts,
           page: resp1.nextPage,
         })

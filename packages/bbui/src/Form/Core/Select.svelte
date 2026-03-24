@@ -48,7 +48,6 @@
   export let onOptionMouseleave = () => {}
   export let customPopoverHeight: string | undefined = undefined
   export let searchPlaceholder: string = "Search"
-  export let hideChevron: boolean = false
   export let wrapText: boolean = false
 
   const dispatch = createEventDispatcher()
@@ -147,7 +146,6 @@
   {loading}
   {customPopoverHeight}
   {searchPlaceholder}
-  {hideChevron}
   {fieldTooltip}
   {wrapText}
 />

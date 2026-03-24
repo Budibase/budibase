@@ -85,6 +85,8 @@
     "build:digitalocean": "cd hosting/digitalocean && ./build.sh && cd -",
     "build:docker:single:multiarch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/single/Dockerfile -t budibase:latest .",
     "build:docker:single": "./scripts/build-single-image.sh",
+    "check:litellm-version": "node ./scripts/syncLiteLLMVersion.js --check",
+    "sync:litellm-version": "node ./scripts/syncLiteLLMVersion.js",
     "build:docker:dependencies": "docker build -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest ./hosting",
     "publish:docker:couch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/couchdb/Dockerfile -t budibase/database:latest -t budibase/database:2.1.0 --push ./hosting/couchdb",
     "publish:docker:dependencies": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest -t budibase/dependencies:v3.2.1 --push ./hosting",

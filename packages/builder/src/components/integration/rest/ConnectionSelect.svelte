@@ -192,7 +192,12 @@
   {disabled}
 >
   <svelte:fragment slot="control" let:open>
-    <div class="picker-button" class:has-value={!!connection} class:open>
+    <div
+      class="picker-button"
+      class:has-value={!!connection}
+      class:open
+      class:disabled
+    >
       <ActionButton icon={buttonIcon ? undefined : fallbackIcon} quiet>
         <div class="selected-option" title={buttonLabel} class:faded={open}>
           <span class="selected-option-left">
@@ -350,7 +355,9 @@
 
   .picker-button {
     border-radius: 6px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    height: 40px;
+    box-sizing: border-box;
     transition:
       background 130ms ease-out,
       border-color 130ms ease-out;
@@ -359,8 +366,15 @@
   .picker-button.has-value {
     background: var(--spectrum-global-color-gray-75);
   }
-  .picker-button:hover {
+  .picker-button:not(.disabled):hover {
     background: var(--spectrum-global-color-gray-200);
+    cursor: pointer;
+  }
+  .picker-button.disabled :global(*:not(.edit-link)) {
+    cursor: default;
+  }
+  .picker-button.disabled :global(.spectrum-ActionButton--quiet:hover) {
+    color: var(--spectrum-alias-text-color);
   }
   .picker-button :global(.spectrum-ActionButton) {
     border: none !important;

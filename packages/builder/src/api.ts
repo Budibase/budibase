@@ -10,13 +10,19 @@ import { sdk, Header, ClientHeader } from "@budibase/shared-core"
 
 const newClient = (opts?: { production?: boolean }) =>
   createAPIClient({
-    attachHeaders: headers => {
+    attachHeaders: (headers, request) => {
+      const isWorkspaceDeleteRequest =
+        request?.method === "DELETE" &&
+        /^\/api\/applications\/app_dev_/.test(request.url)
+
       // Attach app ID header from store
       let appId = get(appStore).appId
       if (appId) {
-        headers[Header.APP_ID] = opts?.production
-          ? sdk.applications.getProdAppID(appId)
-          : appId
+        if (!isWorkspaceDeleteRequest) {
+          headers[Header.APP_ID] = opts?.production
+            ? sdk.applications.getProdAppID(appId)
+            : appId
+        }
         headers[Header.CLIENT] = ClientHeader.BUILDER
       }
 

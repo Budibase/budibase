@@ -1204,7 +1204,7 @@ export async function duplicateWorkspace(
   const url = sdk.workspaces.getAppUrl({ name: appName, url: possibleUrl })
   checkWorkspaceUrl(ctx, workspaces, url)
 
-  const tmpPath = await sdk.backups.exportApp(sourceAppId, {
+  const tmpPath = await sdk.backups.exportWorkspace(sourceAppId, {
     excludeRows: false,
     tar: false,
   })

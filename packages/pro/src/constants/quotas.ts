@@ -134,7 +134,7 @@ export const automationLogRetentionDays = (value: number) => {
 
 export const appBackupRetentionDays = (value: number) => {
   return {
-    [ConstantQuotaName.APP_BACKUPS_RETENTION_DAYS]: {
+    [ConstantQuotaName.WORKSPACE_BACKUPS_RETENTION_DAYS]: {
       name: "App Backups",
       value,
       triggers: [], // n/a

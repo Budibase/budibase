@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, HTTPError, logging } from "@budibase/backend-core"
 import {
   getTableIdFromViewId,
   helpers,
@@ -378,12 +378,41 @@ export async function enrichSchema(
     tableId: string,
     viewFields: Record<string, RelationSchemaField>
   ) {
-    let relTable = tables
-      ? tables?.find(t => t._id === tableId)
-      : await sdk.tables.getTable(tableId)
-    if (!relTable) {
-      throw new Error("Cannot enrich relationship, table not found")
+    let relTable
+    try {
+      relTable = tables?.find(t => t._id === tableId)
+      if (!relTable && !tables) {
+        relTable = await sdk.tables.getTable(tableId)
+      }
+      if (!relTable) {
+        throw new Error("Cannot enrich relationship, table not found")
+      }
+    } catch (err) {
+      const recoverableError = err as {
+        reason?: string
+        status?: number
+        statusCode?: number
+        message?: string
+      }
+
+      if (
+        recoverableError.reason !== "deleted" &&
+        recoverableError.status !== 404 &&
+        recoverableError.statusCode !== 404 &&
+        recoverableError.message !==
+          "Cannot enrich relationship, table not found" &&
+        !recoverableError.message?.startsWith("Unable to find table named")
+      ) {
+        throw err
+      }
+
+      logging.logWarn(
+        `Skipping broken relationship during view enrichment for view "${view.name}" (${view.id}) and related table "${tableId}"`,
+        err
+      )
+      return viewFields as Record<string, ViewV2ColumnEnriched>
     }
+
     const result: Record<string, ViewV2ColumnEnriched> = {}
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]

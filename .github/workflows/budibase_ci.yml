@@ -87,6 +87,22 @@ jobs:
           fail-on-cache-miss: true
       - run: yarn lint
 
+  litellm-version-sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Verify LiteLLM versions are synchronized
+        run: yarn check:litellm-version
+
   build:
     runs-on: ubuntu-24.04
     needs:

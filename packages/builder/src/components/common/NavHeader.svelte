@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { keyUtils } from "@/helpers/keyUtils"
 
-  export let title: string
+  export let title: string | undefined = undefined
   export let placeholder: string = ""
   export let value: string | undefined = undefined
   export let onAdd: (_e: Event) => void
@@ -33,7 +33,7 @@
   }
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
+    if (e.key === "Escape" && search && title) {
       closeSearch()
     }
   }

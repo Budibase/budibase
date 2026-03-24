@@ -1,4 +1,5 @@
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
+import { ImportWorkspaceFn } from "@budibase/pro"
 import { utils } from "@budibase/shared-core"
 import {
   Automation,
@@ -185,12 +186,12 @@ export interface ImportAppOpts {
   objectStoreAppId?: string
 }
 
-export async function importApp(
-  appId: string,
-  db: Database,
-  template: TemplateType,
-  opts: ImportAppOpts = {}
-) {
+export const importApp: ImportWorkspaceFn = async (
+  appId,
+  db,
+  template,
+  opts = {}
+) => {
   const importOpts: ImportAppOpts = {
     updateAttachmentColumns: true,
     importObjStoreContents: true,
