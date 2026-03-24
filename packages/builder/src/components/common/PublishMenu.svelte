@@ -12,7 +12,6 @@
     automationStore,
     workspaceAppStore,
     appStore,
-    workspaceDeploymentStore,
   } from "@/stores/builder"
   import { agentsStore, featureFlags } from "@/stores/portal"
   import { FeatureFlag, PluginType, type Plugin } from "@budibase/types"
@@ -109,10 +108,7 @@
   $: workspaceAppChanges = $workspaceAppStore.workspaceApps.filter(
     workspaceApp => workspaceApp.publishStatus?.unpublishedChanges
   ).length
-  $: tableChanges = Object.values($workspaceDeploymentStore.tables).filter(
-    table => table.unpublishedChanges
-  ).length
-  $: changeCount = automationChanges + workspaceAppChanges + tableChanges
+  $: changeCount = automationChanges + workspaceAppChanges
   $: publishButtonText =
     changeCount > 0 ? `Publish changes (${changeCount})` : "Publish"
 </script>
