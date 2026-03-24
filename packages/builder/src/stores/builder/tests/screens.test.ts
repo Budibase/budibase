@@ -1,8 +1,25 @@
-import { it, expect, describe, beforeEach, vi } from "vitest"
+import {
+  it,
+  expect,
+  describe,
+  beforeEach,
+  vi,
+  type TestContext,
+} from "vitest"
 import { get, writable } from "svelte/store"
 import { API } from "@/api"
 import { Constants } from "@budibase/frontend-core"
-import { componentStore, appStore, workspaceAppStore } from "@/stores/builder"
+import type {
+  ComponentDefinition,
+  FetchAppPackageResponse,
+  Screen,
+} from "@budibase/types"
+import {
+  componentStore,
+  appStore,
+  workspaceAppStore,
+  workspaceDeploymentStore,
+} from "@/stores/builder"
 import { initialScreenState, ScreenStore } from "@/stores/builder/screens"
 import {
   getScreenFixture,
@@ -15,8 +32,26 @@ import {
 
 const COMP_PREFIX = "@budibase/standard-components"
 
+const makeAppPackage = (screens: Screen[]): FetchAppPackageResponse => {
+  return { screens } as unknown as FetchAppPackageResponse
+}
+
+interface BbContext {
+  store: {
+    screens: Screen[]
+    selectedScreenId?: string
+  }
+  screenStore: ScreenStore
+}
+
+declare module "vitest" {
+  interface TestContext {
+    bb: BbContext
+  }
+}
+
 vi.mock("@/stores/builder", async () => {
-  const mockAppStore = writable()
+  const mockAppStore = writable({ features: {} })
   const mockComponentStore = writable()
   const mockLayoutStore = writable()
 
@@ -43,6 +78,10 @@ vi.mock("@/stores/builder", async () => {
     refresh: vi.fn(),
   }
 
+  const workspaceDeploymentStore = {
+    setWorkspaceAppUnpublishedChanges: vi.fn(),
+  }
+
   return {
     componentStore,
     appStore,
@@ -52,6 +91,7 @@ vi.mock("@/stores/builder", async () => {
       subscribe: mockComponentStore.subscribe,
     },
     workspaceAppStore,
+    workspaceDeploymentStore,
   }
 })
 
@@ -75,8 +115,11 @@ vi.mock("@/api", () => {
 })
 
 describe("Screens store", () => {
-  beforeEach(async ctx => {
+  beforeEach((ctx: TestContext) => {
     vi.clearAllMocks()
+    vi.spyOn(API, "fetchAppRoutes").mockResolvedValue({
+      routes: {},
+    })
 
     const screenStore = new ScreenStore()
     ctx.bb = {
@@ -95,10 +138,10 @@ describe("Screens store", () => {
     expect(bb.store.screens.length).toBe(0)
 
     const screens = Array(2)
-      .fill()
+      .fill(null)
       .map(() => getScreenFixture().json())
 
-    bb.screenStore.syncAppScreens({ screens })
+    bb.screenStore.syncAppScreens(makeAppPackage(screens))
 
     expect(bb.store.screens).toStrictEqual(screens)
   })
@@ -107,10 +150,10 @@ describe("Screens store", () => {
     expect(bb.store.screens.length).toBe(0)
 
     const screens = Array(2)
-      .fill()
+      .fill(null)
       .map(() => getScreenFixture().json())
 
-    bb.screenStore.syncAppScreens({ screens })
+    bb.screenStore.syncAppScreens(makeAppPackage(screens))
     expect(bb.store.screens).toStrictEqual(screens)
 
     bb.screenStore.update(state => ({
@@ -125,23 +168,23 @@ describe("Screens store", () => {
 
   it("Marks a valid screen as selected", ({ bb }) => {
     const screens = Array(2)
-      .fill()
+      .fill(null)
       .map(() => getScreenFixture().json())
 
-    bb.screenStore.syncAppScreens({ screens })
+    bb.screenStore.syncAppScreens(makeAppPackage(screens))
     expect(bb.store.screens.length).toBe(2)
 
-    bb.screenStore.select(screens[0]._id)
+    bb.screenStore.select(screens[0]._id!)
 
     expect(bb.store.selectedScreenId).toEqual(screens[0]._id)
   })
 
   it("Skip selecting a screen if it is not present", ({ bb }) => {
     const screens = Array(2)
-      .fill()
+      .fill(null)
       .map(() => getScreenFixture().json())
 
-    bb.screenStore.syncAppScreens({ screens })
+    bb.screenStore.syncAppScreens(makeAppPackage(screens))
     expect(bb.store.screens.length).toBe(2)
 
     bb.screenStore.select("screen_abc")
@@ -158,12 +201,14 @@ describe("Screens store", () => {
     bb,
   }) => {
     const coreScreen = getScreenFixture()
-    const formBlock = getComponentFixture(`${COMP_PREFIX}/formblock`)
+    const formBlock = getComponentFixture(`${COMP_PREFIX}/formblock`)!
 
     coreScreen.addChild(formBlock)
 
     const defSpy = vi.spyOn(componentStore, "getDefinition")
-    defSpy.mockReturnValueOnce(COMPONENT_DEFINITIONS.formblock)
+    defSpy.mockReturnValueOnce(
+      COMPONENT_DEFINITIONS.formblock as unknown as ComponentDefinition
+    )
 
     bb.screenStore.validate(coreScreen.json())
 
@@ -173,8 +218,8 @@ describe("Screens store", () => {
   it("Reject an attempt to nest invalid components", ({ bb }) => {
     const coreScreen = getScreenFixture()
 
-    const formOne = getComponentFixture(`${COMP_PREFIX}/form`)
-    const formTwo = getComponentFixture(`${COMP_PREFIX}/form`)
+    const formOne = getComponentFixture(`${COMP_PREFIX}/form`)!
+    const formTwo = getComponentFixture(`${COMP_PREFIX}/form`)!
 
     formOne.addChild(formTwo)
     coreScreen.addChild(formOne)
@@ -182,7 +227,10 @@ describe("Screens store", () => {
     const defSpy = vi
       .spyOn(componentStore, "getDefinition")
       .mockImplementation(comp => {
-        const defMap = componentDefinitionMap()
+        const defMap = componentDefinitionMap() as Record<
+          string,
+          ComponentDefinition
+        >
         return defMap[comp]
       })
 
@@ -196,12 +244,12 @@ describe("Screens store", () => {
   it("Reject an attempt to deeply nest invalid components", ({ bb }) => {
     const coreScreen = getScreenFixture()
 
-    const formOne = getComponentFixture(`${COMP_PREFIX}/form`)
-    const formTwo = getComponentFixture(`${COMP_PREFIX}/form`)
+    const formOne = getComponentFixture(`${COMP_PREFIX}/form`)!
+    const formTwo = getComponentFixture(`${COMP_PREFIX}/form`)!
 
     const components = Array(10)
-      .fill()
-      .map(() => getComponentFixture(`${COMP_PREFIX}/container`))
+      .fill(null)
+      .map(() => getComponentFixture(`${COMP_PREFIX}/container`)!)
 
     components.splice(5, 0, formOne)
     components.push(formTwo)
@@ -214,7 +262,10 @@ describe("Screens store", () => {
     const defSpy = vi
       .spyOn(componentStore, "getDefinition")
       .mockImplementation(comp => {
-        const defMap = componentDefinitionMap()
+        const defMap = componentDefinitionMap() as Record<
+          string,
+          ComponentDefinition
+        >
         return defMap[comp]
       })
 
@@ -229,11 +280,9 @@ describe("Screens store", () => {
     bb,
   }) => {
     const coreScreen = getScreenFixture()
-    const formOne = getComponentFixture(`${COMP_PREFIX}/form`)
+    const formOne = getComponentFixture(`${COMP_PREFIX}/form`)!
 
     coreScreen.addChild(formOne)
-
-    appStore.set({ features: { componentValidation: false } })
 
     expect(bb.store.screens.length).toBe(0)
 
@@ -243,7 +292,7 @@ describe("Screens store", () => {
     // We dont care for this test
     const saveSpy = vi.spyOn(API, "saveScreen").mockResolvedValue(newDoc)
     vi.spyOn(API, "fetchAppRoutes").mockResolvedValue({
-      routes: [],
+      routes: {},
     })
     await bb.screenStore.save(coreScreen.json())
 
@@ -265,7 +314,7 @@ describe("Screens store", () => {
 
   it("Sync an updated screen to the screen store on save", async ({ bb }) => {
     const existingScreens = Array(4)
-      .fill()
+      .fill(null)
       .map(() => {
         const screenDoc = getScreenFixture()
         const existingDocId = getScreenDocId()
@@ -279,7 +328,7 @@ describe("Screens store", () => {
     }))
 
     // Modify the fixture screen
-    const form = getComponentFixture(`${COMP_PREFIX}/form`)
+    const form = getComponentFixture(`${COMP_PREFIX}/form`)!
     existingScreens[2].addChild(form)
 
     const saveSpy = vi
@@ -297,10 +346,12 @@ describe("Screens store", () => {
   })
 
   it("Proceed to patch if appropriate config are supplied", async ({ bb }) => {
-    vi.spyOn(bb.screenStore, "sequentialScreenPatch").mockImplementation(() => {
-      return false
-    })
-    const noop = () => {}
+    vi.spyOn(bb.screenStore, "sequentialScreenPatch").mockImplementation(
+      async () => {
+        return
+      }
+    )
+    const noop = () => true
 
     await bb.screenStore.patch(noop, "test")
     expect(bb.screenStore.sequentialScreenPatch).toHaveBeenCalledWith(
@@ -313,7 +364,7 @@ describe("Screens store", () => {
     bb,
   }) => {
     vi.spyOn(bb.screenStore, "sequentialScreenPatch")
-    await bb.screenStore.patch()
+    await bb.screenStore.patch(undefined as unknown as (screen: Screen) => true)
     expect(bb.screenStore.sequentialScreenPatch).not.toBeCalled()
   })
 
@@ -321,9 +372,9 @@ describe("Screens store", () => {
     bb,
   }) => {
     vi.spyOn(bb.screenStore, "sequentialScreenPatch")
-    await bb.screenStore.patch()
+    await bb.screenStore.patch(() => true)
 
-    const noop = () => {}
+    const noop = () => true
     bb.screenStore.update(state => ({
       ...state,
       selectedScreenId: "screen_123",
@@ -339,16 +390,16 @@ describe("Screens store", () => {
   // Used by the websocket
   it("Ignore a call to replace if no screenId is provided", ({ bb }) => {
     const existingScreens = Array(4)
-      .fill()
+      .fill(null)
       .map(() => {
         const screenDoc = getScreenFixture()
         const existingDocId = getScreenDocId()
         screenDoc._json._id = existingDocId
         return screenDoc.json()
       })
-    bb.screenStore.syncAppScreens({ screens: existingScreens })
+    bb.screenStore.syncAppScreens(makeAppPackage(existingScreens))
 
-    bb.screenStore.replace()
+    bb.screenStore.replace("", undefined as unknown as Screen)
 
     expect(bb.store.screens).toStrictEqual(existingScreens)
   })
@@ -357,16 +408,19 @@ describe("Screens store", () => {
     bb,
   }) => {
     const existingScreens = Array(4)
-      .fill()
+      .fill(null)
       .map(() => {
         const screenDoc = getScreenFixture()
         const existingDocId = getScreenDocId()
         screenDoc._json._id = existingDocId
         return screenDoc.json()
       })
-    bb.screenStore.syncAppScreens({ screens: existingScreens })
+    bb.screenStore.syncAppScreens(makeAppPackage(existingScreens))
 
-    bb.screenStore.replace(existingScreens[1]._id)
+    bb.screenStore.replace(
+      existingScreens[1]._id!,
+      undefined as unknown as Screen
+    )
 
     const filtered = existingScreens.filter(
       screen => screen._id != existingScreens[1]._id
@@ -376,7 +430,7 @@ describe("Screens store", () => {
 
   it("Replace an existing screen with a new version of itself", ({ bb }) => {
     const existingScreens = Array(4)
-      .fill()
+      .fill(null)
       .map(() => {
         const screenDoc = getScreenFixture()
         const existingDocId = getScreenDocId()
@@ -389,10 +443,13 @@ describe("Screens store", () => {
       screens: existingScreens.map(screen => screen.json()),
     }))
 
-    const formBlock = getComponentFixture(`${COMP_PREFIX}/formblock`)
+    const formBlock = getComponentFixture(`${COMP_PREFIX}/formblock`)!
     existingScreens[2].addChild(formBlock)
 
-    bb.screenStore.replace(existingScreens[2]._id, existingScreens[2].json())
+    bb.screenStore.replace(
+      existingScreens[2]._json._id!,
+      existingScreens[2].json()
+    )
 
     expect(bb.store.screens.length).toBe(4)
   })
@@ -401,7 +458,7 @@ describe("Screens store", () => {
     bb,
   }) => {
     const existingScreens = Array(4)
-      .fill()
+      .fill(null)
       .map(() => {
         const screenDoc = getScreenFixture()
         const existingDocId = getScreenDocId()
@@ -425,7 +482,7 @@ describe("Screens store", () => {
 
   it("Delete a single screen and remove it from the store", async ({ bb }) => {
     const existingScreens = Array(3)
-      .fill()
+      .fill(null)
       .map(() => {
         const screenDoc = getScreenFixture()
         const existingDocId = getScreenDocId()
@@ -443,24 +500,51 @@ describe("Screens store", () => {
 
     await bb.screenStore.delete(existingScreens[2].json())
 
-    vi.spyOn(API, "fetchAppRoutes").mockResolvedValue({
-      routes: [],
-    })
-
     expect(deleteSpy).toBeCalled()
     expect(refreshWorkspaceAppSpy).toHaveBeenCalledOnce()
 
     expect(bb.store.screens.length).toBe(2)
 
     // Just confirm that the routes at are being initialised
-    expect(get(appStore).routes).toEqual([])
+    expect(get(appStore).routes).toEqual({})
+  })
+
+  it("Delete marks workspace app unpublished changes", async ({ bb }) => {
+    const existingScreens = Array(3)
+      .fill(null)
+      .map(() => {
+        const screenDoc = getScreenFixture()
+        const existingDocId = getScreenDocId()
+        screenDoc._json._id = existingDocId
+        return screenDoc
+      })
+
+    existingScreens[2]._json.workspaceAppId = "workspace-app-1"
+
+    bb.screenStore.update(state => ({
+      ...state,
+      screens: existingScreens.map(screen => screen.json()),
+    }))
+
+    vi.spyOn(API, "deleteScreen").mockResolvedValue({
+      message: "",
+    })
+
+    await bb.screenStore.delete(existingScreens[2].json())
+
+    expect(
+      workspaceDeploymentStore.setWorkspaceAppUnpublishedChanges
+    ).toHaveBeenCalledOnce()
+    expect(
+      workspaceDeploymentStore.setWorkspaceAppUnpublishedChanges
+    ).toHaveBeenCalledWith("workspace-app-1")
   })
 
   it("Upon delete, reset selected screen and component ids if the screen was selected", async ({
     bb,
   }) => {
     const existingScreens = Array(3)
-      .fill()
+      .fill(null)
       .map(() => {
         const screenDoc = getScreenFixture()
         const existingDocId = getScreenDocId()
@@ -490,7 +574,7 @@ describe("Screens store", () => {
     bb,
   }) => {
     const existingScreens = Array(3)
-      .fill()
+      .fill(null)
       .map(() => {
         const screenDoc = getScreenFixture()
         const existingDocId = getScreenDocId()
@@ -509,7 +593,7 @@ describe("Screens store", () => {
 
     const deleteSpy = vi.spyOn(API, "deleteScreen")
 
-    await bb.screenStore.delete(targets)
+    await bb.screenStore.delete(targets as unknown as Screen)
 
     expect(deleteSpy).not.toHaveBeenCalled()
     expect(bb.store.screens.length).toBe(3)
@@ -544,7 +628,7 @@ describe("Screens store", () => {
     bb,
   }) => {
     const existingScreens = Array(3)
-      .fill()
+      .fill(null)
       .map(() => {
         const screenDoc = getScreenFixture()
         const existingDocId = getScreenDocId()
@@ -569,7 +653,13 @@ describe("Screens store", () => {
 
     vi.spyOn(bb.screenStore, "patch").mockImplementation(
       async (patchFn, screenId) => {
+        if (!screenId) {
+          return
+        }
         const target = bb.store.screens.find(screen => screen._id === screenId)
+        if (!target) {
+          return
+        }
         patchFn(target)
 
         await bb.screenStore.replace(screenId, target)
@@ -601,7 +691,7 @@ describe("Screens store", () => {
 
     // Build 12 screens, 3 of each role
     const existingScreens = Array(12)
-      .fill()
+      .fill(null)
       .map((_, idx) => {
         const screenDoc = getScreenFixture()
         screenDoc.role(expectedRoles[idx % 4])
@@ -630,7 +720,13 @@ describe("Screens store", () => {
 
     vi.spyOn(bb.screenStore, "patch").mockImplementation(
       async (patchFn, screenId) => {
+        if (!screenId) {
+          return
+        }
         const target = bb.store.screens.find(screen => screen._id === screenId)
+        if (!target) {
+          return
+        }
         patchFn(target)
 
         await bb.screenStore.replace(screenId, target)
@@ -640,13 +736,16 @@ describe("Screens store", () => {
     // ADMIN homeScreen updated from 0 to 2
     await bb.screenStore.updateSetting(sorted[2], "routing.homeScreen", true)
 
-    const results = bb.store.screens.reduce((acc, screen) => {
-      if (screen.routing.homeScreen) {
-        acc[screen.routing.roleId] = acc[screen.routing.roleId] || []
-        acc[screen.routing.roleId].push(screen)
-      }
-      return acc
-    }, {})
+    const results = bb.store.screens.reduce(
+      (acc: Record<string, Screen[]>, screen: Screen) => {
+        if (screen.routing.homeScreen) {
+          acc[screen.routing.roleId] = acc[screen.routing.roleId] || []
+          acc[screen.routing.roleId].push(screen)
+        }
+        return acc
+      },
+      {}
+    )
 
     const screens = bb.store.screens
     // Should still only be one of each homescreen
@@ -680,11 +779,11 @@ describe("Screens store", () => {
     const saveSpy = vi
       .spyOn(bb.screenStore, "save")
       .mockImplementation(async () => {
-        return
+        return original
       })
 
     // A screen with this Id does not exist
-    await bb.screenStore.sequentialScreenPatch(() => {}, "123")
+    await bb.screenStore.sequentialScreenPatch(() => true, "123")
     expect(saveSpy).not.toBeCalled()
   })
 
@@ -705,7 +804,7 @@ describe("Screens store", () => {
     const saveSpy = vi
       .spyOn(bb.screenStore, "save")
       .mockImplementation(async () => {
-        return
+        return original
       })
 
     // Returning false from the patch will abort the save
@@ -733,11 +832,12 @@ describe("Screens store", () => {
     const saveSpy = vi
       .spyOn(bb.screenStore, "save")
       .mockImplementation(async () => {
-        return
+        return original
       })
 
     await bb.screenStore.sequentialScreenPatch(screen => {
       screen.name = "updated"
+      return true
     }, existingDocId)
 
     expect(saveSpy).toBeCalledWith({

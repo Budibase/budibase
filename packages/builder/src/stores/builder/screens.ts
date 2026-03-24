@@ -411,6 +411,17 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
     await Promise.all(promises)
 
+    const workspaceAppIds = [
+      ...new Set(
+        screensToDelete
+          .map(screen => screen.workspaceAppId)
+          .filter((workspaceAppId): workspaceAppId is string => !!workspaceAppId)
+      ),
+    ]
+    workspaceAppIds.forEach(workspaceAppId => {
+      workspaceDeploymentStore.setWorkspaceAppUnpublishedChanges(workspaceAppId)
+    })
+
     await appStore.refreshAppNav()
     await workspaceAppStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
