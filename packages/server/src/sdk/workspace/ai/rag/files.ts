@@ -1,6 +1,5 @@
 import { embedMany } from "ai"
 import * as crypto from "crypto"
-import { PDFParse } from "pdf-parse"
 import { parse as parseYaml } from "yaml"
 import {
   AgentMessageRagSource,
@@ -37,6 +36,16 @@ const textFileExtensions = new Set([
 ])
 
 const yamlExtensions = new Set([".yaml", ".yml"])
+
+let pdfParsePromise: Promise<typeof import("pdf-parse")> | undefined
+
+const getPdfParse = async () => {
+  if (!pdfParsePromise) {
+    pdfParsePromise = import("pdf-parse")
+  }
+
+  return await pdfParsePromise
+}
 
 const hashChunk = (chunk: string) => {
   return crypto.createHash("sha256").update(chunk).digest("hex")
@@ -253,6 +262,7 @@ const getTextFromBuffer = async (
   file: Pick<RagFileInput, "filename" | "mimetype">
 ) => {
   if (isPdfFile(file)) {
+    const { PDFParse } = await getPdfParse()
     const parser = new PDFParse({ data: buffer as any })
     const parsed = await parser.getText()
     return (parsed.text || "").trim()
