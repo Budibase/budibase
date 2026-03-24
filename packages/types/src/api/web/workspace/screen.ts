@@ -12,7 +12,9 @@ export type FetchScreenResponse = Screen[]
 export interface SaveScreenRequest extends Screen {
   navigationLinkLabel?: string
 }
-export interface SaveScreenResponse extends Screen {}
+export interface SaveScreenResponse extends Screen {
+  updatedScreens?: Screen[]
+}
 
 export interface DeleteScreenResponse {
   message: string

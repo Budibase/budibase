@@ -11,11 +11,14 @@ export async function ensureHomepageUniqueness(screen: Screen) {
     s => s.routing.homeScreen && s.routing.roleId === screen.routing.roleId
   )
   if (!toModify.length) {
-    return
+    return []
   }
 
+  const updatedScreens: Screen[] = []
   for (const screen of toModify) {
     screen.routing.homeScreen = false
-    await sdk.screens.update(screen)
+    updatedScreens.push(await sdk.screens.update(screen))
   }
+
+  return updatedScreens
 }

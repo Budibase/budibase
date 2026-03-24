@@ -1,4 +1,4 @@
-import { Screen, UsageInScreensResponse } from "@budibase/types"
+import { SaveScreenResponse, Screen, UsageInScreensResponse } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 import { TEST_WORKSPACEAPPID_PLACEHOLDER } from "../structures"
 
@@ -10,12 +10,12 @@ export class ScreenAPI extends TestAPI {
   save = async (
     screen: Screen,
     expectations?: Expectations
-  ): Promise<Screen> => {
+  ): Promise<SaveScreenResponse> => {
     if (screen.workspaceAppId === TEST_WORKSPACEAPPID_PLACEHOLDER) {
       screen.workspaceAppId = this.config.getDefaultWorkspaceAppId()
     }
 
-    return await this._post<Screen>(`/api/screens`, {
+    return await this._post<SaveScreenResponse>(`/api/screens`, {
       expectations,
       body: screen,
     })

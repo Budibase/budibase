@@ -13,6 +13,7 @@ import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 const {
   basicScreen,
+  powerScreen,
   createTableScreen,
   createViewScreen,
   createQueryScreen,
@@ -171,6 +172,86 @@ describe("/screens", () => {
       expect(responseScreen._rev).toBeDefined()
       expect(responseScreen.name).toEqual(screen.name)
       expect(events.screen.created).not.toHaveBeenCalled()
+    })
+
+    it("should preserve homeScreen when updating a home screen route", async () => {
+      const powerHome = powerScreen("/power-home")
+      powerHome.routing.homeScreen = true
+
+      const savedScreen = await config.api.screen.save(powerHome)
+
+      const updatedScreen = await config.api.screen.save({
+        ...savedScreen,
+        routing: {
+          ...savedScreen.routing,
+          route: "/power-home-updated",
+          homeScreen: false,
+        },
+      })
+
+      expect(updatedScreen.routing.homeScreen).toBe(true)
+      expect(updatedScreen.routing.route).toBe("/power-home-updated")
+
+      const refreshed = await config.api.screen.list()
+      const persisted = refreshed.find(screen => screen._id === savedScreen._id)
+
+      expect(persisted?.routing.homeScreen).toBe(true)
+      expect(persisted?.routing.route).toBe("/power-home-updated")
+    })
+
+    it("should not clear the current home screen when updating another screen", async () => {
+      const powerHome = powerScreen("/power-home")
+      powerHome.routing.homeScreen = true
+      const savedHome = await config.api.screen.save(powerHome)
+
+      const otherPowerScreen = powerScreen("/power-other")
+      otherPowerScreen.routing.homeScreen = false
+      const savedOther = await config.api.screen.save(otherPowerScreen)
+
+      const updatedOther = await config.api.screen.save({
+        ...savedOther,
+        routing: {
+          ...savedOther.routing,
+          route: "/power-other-updated",
+        },
+      })
+
+      expect(updatedOther.routing.homeScreen).toBe(false)
+
+      const refreshed = await config.api.screen.list()
+      const persistedHome = refreshed.find(screen => screen._id === savedHome._id)
+      const persistedOther = refreshed.find(
+        screen => screen._id === savedOther._id
+      )
+
+      expect(persistedHome?.routing.homeScreen).toBe(true)
+      expect(persistedOther?.routing.homeScreen).toBe(false)
+      expect(persistedOther?.routing.route).toBe("/power-other-updated")
+    })
+
+    it("should return updated screens when switching the home screen", async () => {
+      const powerHome = powerScreen("/power-home")
+      powerHome.routing.homeScreen = true
+      const savedHome = await config.api.screen.save(powerHome)
+
+      const otherPowerScreen = powerScreen("/power-other")
+      otherPowerScreen.routing.homeScreen = false
+      const savedOther = await config.api.screen.save(otherPowerScreen)
+
+      const switchedHome = await config.api.screen.save({
+        ...savedOther,
+        routing: {
+          ...savedOther.routing,
+          homeScreen: true,
+        },
+      })
+
+      expect(switchedHome.updatedScreens).toBeDefined()
+      expect(switchedHome.updatedScreens).toHaveLength(1)
+      expect(switchedHome.updatedScreens?.[0]._id).toBe(savedHome._id)
+      expect(switchedHome.updatedScreens?.[0]._rev).toBeDefined()
+      expect(switchedHome.updatedScreens?.[0].routing.homeScreen).toBe(false)
+      expect(switchedHome.routing.homeScreen).toBe(true)
     })
 
     it("should apply authorization to endpoint", async () => {

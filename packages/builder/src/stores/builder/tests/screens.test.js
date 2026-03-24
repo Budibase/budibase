@@ -296,6 +296,57 @@ describe("Screens store", () => {
     expect(bb.store.screens[2]).toStrictEqual(existingScreens[2].json())
   })
 
+  it("Syncs any additional updated screens returned from save", async ({ bb }) => {
+    const existingScreens = Array(2)
+      .fill()
+      .map(() => {
+        const screenDoc = getScreenFixture()
+        const existingDocId = getScreenDocId()
+        screenDoc._json._id = existingDocId
+        return screenDoc
+      })
+
+    const [homeScreen, targetScreen] = existingScreens.map(screen => screen.json())
+    homeScreen.routing.homeScreen = true
+    targetScreen.routing.homeScreen = false
+
+    bb.screenStore.update(state => ({
+      ...state,
+      screens: [homeScreen, targetScreen],
+    }))
+
+    const updatedTargetScreen = {
+      ...targetScreen,
+      _rev: "2-target",
+      routing: {
+        ...targetScreen.routing,
+        homeScreen: true,
+      },
+    }
+    const updatedHomeScreen = {
+      ...homeScreen,
+      _rev: "2-home",
+      routing: {
+        ...homeScreen.routing,
+        homeScreen: false,
+      },
+    }
+
+    vi.spyOn(API, "saveScreen").mockResolvedValue({
+      ...updatedTargetScreen,
+      updatedScreens: [updatedHomeScreen],
+    })
+
+    await bb.screenStore.save(targetScreen)
+
+    expect(
+      bb.store.screens.find(screen => screen._id === updatedTargetScreen._id)
+    ).toStrictEqual(updatedTargetScreen)
+    expect(
+      bb.store.screens.find(screen => screen._id === updatedHomeScreen._id)
+    ).toStrictEqual(updatedHomeScreen)
+  })
+
   it("Proceed to patch if appropriate config are supplied", async ({ bb }) => {
     vi.spyOn(bb.screenStore, "sequentialScreenPatch").mockImplementation(() => {
       return false
@@ -587,6 +638,50 @@ describe("Screens store", () => {
 
     // The previous home screen for the BASIC role is now unset
     expect(bb.store.screens[1].routing.homeScreen).toBe(false)
+  })
+
+  it("Does not clear the current home screen when updating another screen", async ({
+    bb,
+  }) => {
+    const existingScreens = Array(3)
+      .fill()
+      .map(() => {
+        const screenDoc = getScreenFixture()
+        const existingDocId = getScreenDocId()
+        screenDoc._json._id = existingDocId
+        return screenDoc
+      })
+
+    const storeScreens = existingScreens
+      .map(screen => screen.json())
+      .filter(screen => screen.routing.roleId == Constants.Roles.BASIC)
+
+    storeScreens[0].routing.homeScreen = true
+
+    await bb.screenStore.update(state => ({
+      ...state,
+      screens: storeScreens,
+    }))
+
+    vi.spyOn(bb.screenStore, "patch").mockImplementation(
+      async (patchFn, screenId) => {
+        const target = bb.store.screens.find(screen => screen._id === screenId)
+        patchFn(target)
+
+        await bb.screenStore.replace(screenId, target)
+        return target
+      }
+    )
+
+    await bb.screenStore.updateSetting(
+      storeScreens[1],
+      "routing.route",
+      "/updated"
+    )
+
+    expect(bb.store.screens[0].routing.homeScreen).toBe(true)
+    expect(bb.store.screens[1].routing.homeScreen).toBeFalsy()
+    expect(bb.store.screens[1].routing.route).toBe("/updated")
   })
 
   it("Ensure only one homescreen per role when updating screen setting. Multiple screen roles", async ({

@@ -47,10 +47,17 @@ export async function save(
   }
 
   const isCreation = !screen._id
+  const existingScreen =
+    !isCreation && screen._id ? await db.get<Screen>(screen._id) : undefined
+
+  if (await shouldPreserveHomeScreen(existingScreen, screen)) {
+    screen.routing.homeScreen = true
+  }
 
   const savedScreen = isCreation
     ? await sdk.screens.create(screen)
     : await sdk.screens.update(screen)
+  let updatedScreens: Screen[] = []
 
   // Find any custom components being used
   let pluginNames: string[] = []
@@ -95,7 +102,7 @@ export async function save(
   }
 
   if (screen.routing.homeScreen) {
-    await sdk.screens.ensureHomepageUniqueness(screen)
+    updatedScreens = await sdk.screens.ensureHomepageUniqueness(savedScreen)
   }
 
   if (isCreation) {
@@ -120,7 +127,9 @@ export async function save(
   ctx.body = {
     ...savedScreen,
     pluginAdded,
+    updatedScreens,
   }
+  updatedScreens.forEach(screen => builderSocket?.emitScreenUpdate(ctx, screen))
   builderSocket?.emitScreenUpdate(ctx, savedScreen)
 }
 
@@ -179,4 +188,29 @@ export async function usage(ctx: UserCtx<void, UsageInScreensResponse>) {
     sourceType,
     screens: response,
   }
+}
+
+async function shouldPreserveHomeScreen(
+  existingScreen: Screen | undefined,
+  incomingScreen: Screen
+) {
+  if (!existingScreen?.routing.homeScreen || incomingScreen.routing.homeScreen) {
+    return false
+  }
+
+  const sameDestination =
+    existingScreen.workspaceAppId === incomingScreen.workspaceAppId &&
+    existingScreen.routing.roleId === incomingScreen.routing.roleId
+  if (!sameDestination) {
+    return false
+  }
+
+  const allScreens = await sdk.screens.fetch()
+  return !allScreens.some(
+    screen =>
+      screen._id !== incomingScreen._id &&
+      screen.workspaceAppId === incomingScreen.workspaceAppId &&
+      screen.routing.roleId === incomingScreen.routing.roleId &&
+      screen.routing.homeScreen
+  )
 }

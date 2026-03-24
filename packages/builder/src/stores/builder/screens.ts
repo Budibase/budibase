@@ -251,16 +251,18 @@ export class ScreenStore extends BudiStore<ScreenState> {
 
     // Save screen
     const creatingNewScreen = screen._id === undefined
-    const savedScreen = await API.saveScreen({ ...screen, navigationLinkLabel })
+    const saveResponse = await API.saveScreen({ ...screen, navigationLinkLabel })
+    const { updatedScreens = [], ...savedScreen } = saveResponse
 
     // Update state
     this.update(state => {
-      // Update screen object
-      const idx = state.screens.findIndex(x => x._id === savedScreen._id)
-      if (idx !== -1) {
-        state.screens.splice(idx, 1, savedScreen)
-      } else {
-        state.screens.push(savedScreen)
+      for (const screen of [savedScreen, ...updatedScreens]) {
+        const idx = state.screens.findIndex(x => x._id === screen._id)
+        if (idx !== -1) {
+          state.screens.splice(idx, 1, screen)
+        } else {
+          state.screens.push(screen)
+        }
       }
 
       // Select the new screen if creating a new one
@@ -463,16 +465,21 @@ export class ScreenStore extends BudiStore<ScreenState> {
       Helpers.deepSet(screen, name, value)
     }
     await this.patch(patchFn, screen._id)
+    const updatedScreen = get(this.store).screens.find(s => s._id === screen._id)
 
-    // Ensure we don't have more than one home screen for this new role.
-    // This could happen after updating multiple different settings.
+    // Only reconcile home screens when the saved screen is actually marked as
+    // home, otherwise unrelated edits would clear the current home screen.
+    if (!updatedScreen?.routing.homeScreen) {
+      return
+    }
+
     this.store.update(state => {
       const otherHomeScreens = state.screens.filter(s => {
         return (
-          s.workspaceAppId === screen.workspaceAppId &&
-          s.routing.roleId === screen.routing.roleId &&
+          s.workspaceAppId === updatedScreen.workspaceAppId &&
+          s.routing.roleId === updatedScreen.routing.roleId &&
           s.routing.homeScreen &&
-          s._id !== screen._id
+          s._id !== updatedScreen._id
         )
       })
 
