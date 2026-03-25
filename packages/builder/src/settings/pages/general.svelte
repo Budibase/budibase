@@ -56,7 +56,7 @@
     $appStore.effectiveClientVersionPolicy || "pinned"
   $: displayClientVersionPolicy =
     selectedClientVersionPolicy || effectiveClientVersionPolicy
-  $: canEditClientVersionPolicy = $isOnlyUser && !savingClientVersionPolicy
+  $: canEditClientVersionPolicy = $isOnlyUser
   $: clientVersionPolicyOptions = [
     {
       label: `Pinned (${pinnedVersion})`,
@@ -120,6 +120,10 @@
   const updateClientVersionPolicy = async (
     event: CustomEvent<"pinned" | "auto_latest">
   ) => {
+    if (savingClientVersionPolicy) {
+      return
+    }
+
     await saveClientVersionPolicy(event.detail)
   }
 </script>
