@@ -127,7 +127,7 @@ export async function save(
   ctx.body = {
     ...savedScreen,
     pluginAdded,
-    updatedScreens,
+    ...(updatedScreens.length ? { updatedScreens } : {}),
   }
   updatedScreens.forEach(screen => builderSocket?.emitScreenUpdate(ctx, screen))
   builderSocket?.emitScreenUpdate(ctx, savedScreen)
