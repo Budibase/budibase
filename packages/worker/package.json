@@ -37,7 +37,7 @@
     "@types/global-agent": "2.1.1",
     "bcrypt": "6.0.0",
     "bull": "4.10.1",
-    "dd-trace": "5.92.0",
+    "dd-trace": "5.63.0",
     "dotenv": "8.6.0",
     "email-validator": "^2.0.4",
     "global-agent": "3.0.0",
