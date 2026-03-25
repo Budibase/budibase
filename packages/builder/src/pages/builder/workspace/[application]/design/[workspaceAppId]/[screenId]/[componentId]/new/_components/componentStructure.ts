@@ -80,6 +80,7 @@ export function getComponentStructure({ chatbox } = { chatbox: false }) {
         "bbreferencefield",
         "ratingfield",
         "slider",
+        "emailfield",
       ],
     },
     {

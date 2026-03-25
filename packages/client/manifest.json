@@ -9817,5 +9817,15 @@
         ]
       }
     ]
+  },
+  "emailfield": {
+    "name": "Email field",
+    "description": "A text field specifically for email addresses",
+    "icon": "envelope",
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    }
   }
 }
