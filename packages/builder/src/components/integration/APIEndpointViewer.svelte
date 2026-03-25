@@ -1023,7 +1023,13 @@
             {baseUrlOptions}
             {verbOptions}
             on:verbChange={e => {
-              if (editableQuery) editableQuery.queryVerb = e.detail
+              if (editableQuery) {
+                editableQuery.queryVerb = e.detail
+                if (e.detail === "read") {
+                  editableQuery.fields.bodyType = BodyType.NONE
+                  editableQuery.fields.requestBody = undefined
+                }
+              }
             }}
             on:urlChange={e => {
               customUrl = e.detail
@@ -1069,7 +1075,6 @@
             compare={compareEndpoints}
             disabled={endpointsLoading || !selectedDatasourceId}
             readonly={!!editableQuery?._id}
-            hideChevron={!!editableQuery?._id}
             loading={endpointsLoading}
             autocomplete={true}
           />
@@ -1502,6 +1507,17 @@
   .request .picker :global(.spectrum-Picker),
   .endpoint {
     height: 40px;
+  }
+  .request .picker :global(.spectrum-Picker.is-readonly:hover),
+  .request
+    .picker
+    :global(.spectrum-Picker.is-readonly:hover .spectrum-Picker-label),
+  .request
+    .picker
+    :global(.spectrum-Picker.is-readonly:hover .spectrum-Picker-menuIcon) {
+    background: unset;
+    color: unset;
+    cursor: default;
   }
   .endpoint {
     border: 0.5px dashed var(--spectrum-global-color-gray-300);

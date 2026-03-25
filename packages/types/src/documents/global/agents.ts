@@ -52,6 +52,7 @@ export interface Agent extends Document {
   promptInstructions?: string
   goal?: string
   live?: boolean
+  publishedAt?: string
   icon?: string
   iconColor?: string
   createdBy?: string

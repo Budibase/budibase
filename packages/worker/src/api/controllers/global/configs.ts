@@ -653,7 +653,7 @@ export async function upload(ctx: UserCtx<void, UploadConfigFileResponse>) {
   const result = await objectStore.upload({
     bucket,
     filename: key,
-    path: file.path,
+    path: file.filepath,
     type: file.type,
   })
 

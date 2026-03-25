@@ -1,6 +1,16 @@
 import { MAX_SESSIONS_PER_USER } from "@budibase/shared-core"
+import * as Constants from "../constants"
+import * as CookieUtils from "./cookies"
 
 const SESSIONS_INVALIDATED_KEY = "bb-sessions-invalidated"
+
+export function redirectToLoginWithReturnUrl(returnUrl?: string) {
+  const resolvedReturnUrl =
+    returnUrl ??
+    `${window.location.pathname}${window.location.search}${window.location.hash}`
+  CookieUtils.setCookie(Constants.Cookies.ReturnUrl, resolvedReturnUrl)
+  window.location.href = "/builder/auth/login"
+}
 
 // export function checkIfSessionsInvalidatedAndNotify() {
 export function popNumSessionsInvalidated() {

@@ -160,9 +160,4 @@
   .wrap :global(label) {
     text-transform: capitalize;
   }
-
-  .wrap :global(.option-extra img.icon-dims),
-  :global(.popover-content .option-extra img.icon-dims) {
-    width: 30px;
-  }
 </style>

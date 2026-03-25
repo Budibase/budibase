@@ -123,3 +123,14 @@ export function toggleAgentSlackDeploymentValidator() {
     }).required()
   )
 }
+
+export function generateAgentInstructionsValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      prompt: Joi.string().trim().disallow("").required(),
+      agentName: OPTIONAL_STRING,
+      goal: OPTIONAL_STRING,
+      toolReferences: Joi.array().items(Joi.string()).optional(),
+    }).required()
+  )
+}

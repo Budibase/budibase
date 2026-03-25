@@ -114,4 +114,24 @@ describe("agent duplicate", () => {
       }
     )
   })
+
+  it("keeps publication history after pausing a live agent", async () => {
+    const created = await config.api.agent.create({
+      name: "Status Agent",
+      aiconfig: "default",
+    })
+    expect(created.publishedAt).toBeUndefined()
+
+    const published = await config.api.agent.update({
+      ...created,
+      live: true,
+    })
+    expect(published.publishedAt).toBeDefined()
+
+    const stopped = await config.api.agent.update({
+      ...published,
+      live: false,
+    })
+    expect(stopped.publishedAt).toEqual(published.publishedAt)
+  })
 })
