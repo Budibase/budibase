@@ -10,6 +10,7 @@ export enum PlanType {
   PREMIUM_MAX = "premium_max",
   PREMIUM_PLUS_TRIAL = "premium_plus_trial",
   BUSINESS = "business",
+  BUSINESS_PLUS = "business_plus",
   ENTERPRISE_BASIC = "enterprise_basic",
   ENTERPRISE_BASIC_TRIAL = "enterprise_basic_trial",
   ENTERPRISE = "enterprise",

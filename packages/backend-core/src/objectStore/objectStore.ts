@@ -18,7 +18,6 @@ import tracer from "dd-trace"
 import fs, { PathLike, ReadStream } from "fs"
 import fsp from "fs/promises"
 import https from "https"
-import fetch from "node-fetch"
 import { join } from "path"
 import stream, { Readable } from "stream"
 import { pipeline } from "stream/promises"
@@ -28,6 +27,7 @@ import { v4 } from "uuid"
 import zlib from "zlib"
 import { WORKSPACE_DEV_PREFIX, WORKSPACE_PREFIX } from "../db"
 import env from "../environment"
+import { fetchWithBlacklist } from "../utils/outboundFetch"
 import { bucketTTLConfig, budibaseTempDir } from "./utils"
 
 // use this as a temporary store of buckets that are being created
@@ -700,7 +700,7 @@ export async function downloadTarballDirect(
   headers = {}
 ) {
   path = sanitizeKey(path)
-  const response = await fetch(url, { headers })
+  const response = await fetchWithBlacklist(url, { headers })
   if (!response.ok) {
     throw new Error(`unexpected response ${response.statusText}`)
   }
@@ -715,7 +715,7 @@ export async function downloadTarball(
 ) {
   bucketName = sanitizeBucket(bucketName)
   path = sanitizeKey(path)
-  const response = await fetch(url)
+  const response = await fetchWithBlacklist(url)
   if (!response.ok) {
     throw new Error(`unexpected response ${response.statusText}`)
   }

@@ -5,6 +5,7 @@ import * as ai from "../controllers/ai"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 import {
   createAgentValidator,
+  generateAgentInstructionsValidator,
   provisionAgentSlackChannelValidator,
   provisionAgentMSTeamsChannelValidator,
   syncAgentDiscordCommandsValidator,
@@ -71,6 +72,11 @@ builderAdminRoutes
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
 
 builderAdminRoutes
+  .post(
+    "/api/ai/agent-instructions",
+    generateAgentInstructionsValidator(),
+    ai.generateAgentInstructions
+  )
   .post("/api/ai/tables", ai.generateTables)
   .get("/api/configs", ai.fetchAIConfigs)
   .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)

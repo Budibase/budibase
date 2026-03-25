@@ -148,7 +148,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     description: uiMetadata?.description || "Custom role",
     color: uiMetadata?.color || RoleColor.DEFAULT_CUSTOM,
   }).addInheritance(inherits)
-  if (dbRole?.permissions && !role.permissions) {
+  if (dbRole?.permissions) {
     role.permissions = dbRole.permissions
   }
 
@@ -163,7 +163,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     ctx.throw(400, "Role inheritance contains a loop, this is not supported")
   }
 
-  const foundRev = _rev || dbRole?._rev
+  const foundRev = dbRole?._rev || _rev
   if (foundRev) {
     role._rev = foundRev
   }

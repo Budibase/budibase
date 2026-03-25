@@ -18,6 +18,7 @@ import { PDFParse } from "pdf-parse"
 import { Readable } from "stream"
 import { buffer } from "stream/consumers"
 import * as automationUtils from "../../automationUtils"
+import { fetchWithBlacklist } from "../utils"
 import sdk from "../../../sdk"
 import z from "zod"
 
@@ -140,7 +141,7 @@ async function processUrlFile(
   fileType: SupportedFileType,
   llm: LLMResponse
 ): Promise<ExtractInput> {
-  const response = await fetch(fileUrl)
+  const response = await fetchWithBlacklist(fileUrl)
   if (!response.ok) {
     throw new Error(`Failed to fetch file from URL: ${response.statusText}`)
   }
@@ -163,7 +164,7 @@ async function processUrlFile(
     }
   } catch (error) {
     if (shouldInlineFileAfterUploadFailure(error)) {
-      const fallbackResponse = await fetch(fileUrl)
+      const fallbackResponse = await fetchWithBlacklist(fileUrl)
       if (!fallbackResponse.ok) {
         throw new Error(
           `Failed to fetch file from URL: ${fallbackResponse.statusText}`

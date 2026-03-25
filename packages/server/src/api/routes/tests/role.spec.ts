@@ -1,5 +1,9 @@
 import { db as dbCore, events, roles } from "@budibase/backend-core"
-import { BuiltinPermissionID, PermissionLevel } from "@budibase/types"
+import {
+  BuiltinPermissionID,
+  PermissionLevel,
+  type Workspace,
+} from "@budibase/types"
 import * as setup from "./utilities"
 
 const { basicRole } = setup.structures
@@ -9,6 +13,21 @@ const LOOP_ERROR = "Role inheritance contains a loop, this is not supported"
 
 describe("/roles", () => {
   let config = setup.getConfig()
+
+  const setWorkspaceCreationVersion = async (version: string) => {
+    const workspaceIds = [
+      config.getDevWorkspaceId(),
+      config.getProdWorkspaceId(),
+    ]
+    for (const workspaceId of workspaceIds) {
+      const db = dbCore.getDB(workspaceId)
+      const metadata = await db.get<Workspace>(
+        dbCore.DocumentType.WORKSPACE_METADATA
+      )
+      metadata.creationVersion = version
+      await db.put(metadata)
+    }
+  }
 
   afterAll(setup.afterAll)
 
@@ -197,22 +216,58 @@ describe("/roles", () => {
       })
       expect(updatedRes.permissionId).toEqual(BuiltinPermissionID.READ_ONLY)
     })
+
+    it("handles stale revisions when updating inheritance and preserves permissions", async () => {
+      const inheritedRole = await config.api.roles.save({
+        ...basicRole(),
+        name: "inherited_role",
+      })
+      const parentRole = await config.api.roles.save({
+        ...basicRole(),
+        name: "parent_role",
+        inherits: [BUILTIN_ROLE_IDS.BASIC, inheritedRole._id!],
+      })
+      const staleParentRole = {
+        ...parentRole,
+        inherits: [BUILTIN_ROLE_IDS.BASIC],
+      }
+
+      const table = await config.createTable()
+      await config.api.permission.add({
+        roleId: parentRole._id!,
+        resourceId: table._id!,
+        level: PermissionLevel.READ,
+      })
+
+      const updatedRole = await config.api.roles.save(staleParentRole, {
+        status: 200,
+      })
+      expect(updatedRole.inherits).toEqual([BUILTIN_ROLE_IDS.BASIC])
+
+      const fetchedRole = await config.api.roles.find(parentRole._id!, {
+        status: 200,
+      })
+      expect(fetchedRole.permissions[table._id!]).toEqual([
+        PermissionLevel.READ,
+      ])
+    })
   })
 
   describe("fetch", () => {
     beforeAll(async () => {
       // Recreate the app
       await config.newTenant()
+      await setWorkspaceCreationVersion("3.0.0")
     })
 
-    it("should list custom roles, plus 2 default roles", async () => {
+    it("should list custom roles and not include POWER in new workspaces", async () => {
       const customRole = await config.createRole()
 
       const res = await config.api.roles.fetch({
         status: 200,
       })
 
-      expect(res.length).toBe(5)
+      expect(res.length).toBe(4)
 
       const adminRole = res.find(r => r._id === BUILTIN_ROLE_IDS.ADMIN)
       expect(adminRole).toBeDefined()
@@ -220,9 +275,7 @@ describe("/roles", () => {
       expect(adminRole!.permissionId).toEqual(BuiltinPermissionID.ADMIN)
 
       const powerUserRole = res.find(r => r._id === BUILTIN_ROLE_IDS.POWER)
-      expect(powerUserRole).toBeDefined()
-      expect(powerUserRole!.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
-      expect(powerUserRole!.permissionId).toEqual(BuiltinPermissionID.POWER)
+      expect(powerUserRole).toBeUndefined()
 
       const customRoleFetched = res.find(r => r._id === customRole.name)
       expect(customRoleFetched).toBeDefined()
@@ -290,6 +343,7 @@ describe("/roles", () => {
     beforeAll(async () => {
       // new app, reset roles
       await config.newTenant()
+      await setWorkspaceCreationVersion("3.0.0")
       // create one custom role
       await config.createRole()
     })
@@ -299,7 +353,7 @@ describe("/roles", () => {
         const res = await config.api.roles.accessible({
           status: 200,
         })
-        expect(res.length).toBe(5)
+        expect(res.length).toBe(4)
         expect(typeof res[0]).toBe("string")
       })
     })
@@ -393,7 +447,7 @@ describe("/roles", () => {
         const res = await config.api.roles.accessible({
           status: 200,
         })
-        expect(res).toEqual([role3, role1, "BASIC", "PUBLIC", role2, "POWER"])
+        expect(res).toEqual([role3, role1, "BASIC", "PUBLIC", role2])
       })
     })
   })

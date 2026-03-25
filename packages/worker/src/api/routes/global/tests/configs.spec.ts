@@ -454,6 +454,30 @@ describe("configs", () => {
     })
   })
 
+  describe("POST /api/global/configs/upload/:type/:name", () => {
+    it("should upload an OIDC logo and store the key in config", async () => {
+      const logoName = "test-logo.png"
+      const res = await config.api.configs
+        .uploadOIDCLogo(logoName, Buffer.from("fake-png-data"), logoName)
+        .expect(200)
+
+      expect(res.body.message).toBe(
+        "File has been uploaded and url stored to config."
+      )
+
+      const oidcLogosConfig = await config.api.configs.getConfig(
+        ConfigType.OIDC_LOGOS
+      )
+      expect(oidcLogosConfig.config[logoName]).toBeDefined()
+    })
+
+    it("should return 400 when multiple files are uploaded", async () => {
+      await config.api.configs
+        .uploadOIDCLogoMultiple("test-logo.png")
+        .expect(400)
+    })
+  })
+
   describe("GET /api/global/configs/public/translations", () => {
     beforeEach(async () => {
       await config.deleteConfig(ConfigType.TRANSLATIONS)
