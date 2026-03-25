@@ -3,11 +3,20 @@ import { SocketSession } from "../../sdk"
 
 export type WorkspaceMetadataErrors = { [key: string]: string[] }
 export type TranslationOverrides = Record<string, string>
+export type ClientVersionPolicy = "pinned" | "auto_latest"
+export type ClientVersionPolicySource = "workspace" | "default"
+
+export const isClientVersionPolicy = (
+  value: unknown
+): value is ClientVersionPolicy => value === "pinned" || value === "auto_latest"
 
 export interface Workspace extends Document {
   appId: string
   type: string
   version: string
+  clientVersionPolicyOverride?: ClientVersionPolicy
+  effectiveClientVersionPolicy?: ClientVersionPolicy
+  clientVersionPolicySource?: ClientVersionPolicySource
   componentLibraries: string[]
   name: string
   url: string | undefined

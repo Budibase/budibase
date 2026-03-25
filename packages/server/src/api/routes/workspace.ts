@@ -13,6 +13,7 @@ builderRoutes
     controller.update
   )
   .post("/api/applications/:appId/client/update", controller.updateClient)
+  .put("/api/applications/:appId/client/policy", controller.updateClientPolicy)
   .post("/api/applications/:appId/client/revert", controller.revertClient)
   .post("/api/applications/:appId/sample", controller.addSampleData)
   .post(

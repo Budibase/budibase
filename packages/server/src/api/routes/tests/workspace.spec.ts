@@ -173,6 +173,26 @@ describe("/applications", () => {
       await checkTableCount(1) // users table
     })
 
+    it("defaults client policy to auto_latest for new cloud workspaces", async () => {
+      const newWorkspace = await withEnv({ SELF_HOSTED: "0" }, () =>
+        config.api.workspace.create({
+          name: generateAppName(),
+        })
+      )
+
+      expect(newWorkspace.clientVersionPolicyOverride).toBe("auto_latest")
+    })
+
+    it("defaults client policy to pinned for self-hosted workspaces", async () => {
+      const newWorkspace = await withEnv({ SELF_HOSTED: "1" }, () =>
+        config.api.workspace.create({
+          name: generateAppName(),
+        })
+      )
+
+      expect(newWorkspace.clientVersionPolicyOverride).toBeUndefined()
+    })
+
     it("trims workspace name before saving when creating", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: "  Trimmed Workspace  ",
@@ -883,6 +903,24 @@ describe("/applications", () => {
       expect(res.application.appId).toEqual(config.getDevWorkspaceId())
     })
 
+    it("should resolve pinned client policy by default", async () => {
+      const res = await config.api.workspace.getAppPackage(workspace.appId)
+
+      expect(res.application.effectiveClientVersionPolicy).toBe("pinned")
+      expect(res.application.clientVersionPolicySource).toBe("default")
+    })
+
+    it("should resolve workspace override client policy", async () => {
+      await config.api.workspace.updateClientPolicy(workspace.appId, {
+        clientVersionPolicyOverride: "auto_latest",
+      })
+
+      const res = await config.api.workspace.getAppPackage(workspace.appId)
+
+      expect(res.application.effectiveClientVersionPolicy).toBe("auto_latest")
+      expect(res.application.clientVersionPolicySource).toBe("workspace")
+    })
+
     it("should retrieve all the screens for builder calls", async () => {
       await config.api.screen.save(basicScreen())
       await config.api.screen.save(basicScreen())
@@ -1414,6 +1452,17 @@ describe("/applications", () => {
   })
 
   describe("manage client library version", () => {
+    it("should be able to update workspace client policy override", async () => {
+      const updated = await config.api.workspace.updateClientPolicy(
+        workspace.appId,
+        {
+          clientVersionPolicyOverride: "auto_latest",
+        }
+      )
+
+      expect(updated.clientVersionPolicyOverride).toBe("auto_latest")
+    })
+
     it("should be able to update the app client library version", async () => {
       await config.api.workspace.updateClient(workspace.appId)
       expect(events.app.versionUpdated).toHaveBeenCalledTimes(1)

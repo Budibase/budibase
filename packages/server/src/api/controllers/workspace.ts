@@ -48,12 +48,15 @@ import {
   SyncWorkspaceResponse,
   UnpublishWorkspaceResponse,
   UpdateAppClientResponse,
+  UpdateWorkspaceClientVersionPolicyRequest,
+  UpdateWorkspaceClientVersionPolicyResponse,
   UpdateWorkspaceRequest,
   UpdateWorkspaceResponse,
   UserCtx,
   Workspace,
   KoaFile,
   OnboardingWorkspaceRequest,
+  isClientVersionPolicy,
 } from "@budibase/types"
 import { cleanupAutomations } from "../../automations/utils"
 import { DEFAULT_BB_DATASOURCE_ID, USERS_TABLE_SCHEMA } from "../../constants"
@@ -88,6 +91,7 @@ import {
 import { doesUserHaveLock } from "../../utilities/redis"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { removeWorkspaceFromUserRoles } from "../../utilities/workerRequests"
+import { resolveWorkspaceClientVersionPolicy } from "../../utilities/clientVersionPolicy"
 import { builderSocket } from "../../websockets"
 import * as workspaceMigrations from "../../workspaceMigrations"
 import { processMigrations } from "../../workspaceMigrations/migrationsProcessor"
@@ -517,6 +521,10 @@ export async function fetchAppPackage(
     await resolveGlobalTranslationOverrides(application)
   application.translationOverrides = translationOverrides
 
+  const { policy, source } = resolveWorkspaceClientVersionPolicy(application)
+  application.effectiveClientVersionPolicy = policy
+  application.clientVersionPolicySource = source
+
   // Enrich plugin URLs
   application.usedPlugins = await objectStore.enrichPluginURLs(
     application.usedPlugins
@@ -697,11 +705,15 @@ async function performWorkspaceCreate(
         disableUserMetadata: true,
         skeletonLoader: true,
       },
+      clientVersionPolicyOverride: undefined,
       creationVersion: undefined,
     }
 
     if (!isImport) {
       newWorkspace.creationVersion = envCore.VERSION
+      if (!env.SELF_HOSTED) {
+        newWorkspace.clientVersionPolicyOverride = "auto_latest"
+      }
     }
 
     const existing = await sdk.workspaces.metadata.tryGet()
@@ -716,6 +728,7 @@ async function performWorkspaceCreate(
         "icon",
         "snippets",
         "scripts",
+        "clientVersionPolicyOverride",
         "creationVersion",
       ]
       keys.forEach(key => {
@@ -995,6 +1008,42 @@ export async function updateClient(
     currentVersion,
     updatedToVersion
   )
+  ctx.body = updatedWorkspace
+}
+
+export async function updateClientPolicy(
+  ctx: UserCtx<
+    UpdateWorkspaceClientVersionPolicyRequest,
+    UpdateWorkspaceClientVersionPolicyResponse
+  >
+) {
+  const requestBody = (ctx.request.body ||
+    {}) as UpdateWorkspaceClientVersionPolicyRequest
+
+  if (
+    !Object.prototype.hasOwnProperty.call(
+      requestBody,
+      "clientVersionPolicyOverride"
+    )
+  ) {
+    ctx.throw(400, "'clientVersionPolicyOverride' must be provided")
+  }
+
+  const { clientVersionPolicyOverride } = requestBody
+  if (
+    clientVersionPolicyOverride != null &&
+    !isClientVersionPolicy(clientVersionPolicyOverride)
+  ) {
+    ctx.throw(400, "Invalid client version policy")
+  }
+
+  const updatedWorkspace = await updateWorkspacePackage(
+    {
+      clientVersionPolicyOverride: clientVersionPolicyOverride ?? undefined,
+    },
+    ctx.params.appId
+  )
+  await events.app.updated(updatedWorkspace)
   ctx.body = updatedWorkspace
 }
 

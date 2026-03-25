@@ -21,6 +21,8 @@ import {
   RevertWorkspaceResponse,
   UnpublishWorkspaceResponse,
   UpdateAppClientResponse,
+  UpdateWorkspaceClientVersionPolicyRequest,
+  UpdateWorkspaceClientVersionPolicyResponse,
   UpdateWorkspaceRequest,
   UpdateWorkspaceResponse,
 } from "@budibase/types"
@@ -38,6 +40,10 @@ export interface AppEndpoints {
     opts?: PublishWorkspaceRequest
   ) => Promise<PublishWorkspaceResponse>
   revertAppChanges: (appId: string) => Promise<RevertWorkspaceResponse>
+  updateAppClientPolicy: (
+    appId: string,
+    body: UpdateWorkspaceClientVersionPolicyRequest
+  ) => Promise<UpdateWorkspaceClientVersionPolicyResponse>
   updateAppClientVersion: (appId: string) => Promise<UpdateAppClientResponse>
   revertAppClientVersion: (appId: string) => Promise<RevertAppClientResponse>
   releaseAppLock: (appId: string) => Promise<ClearDevLockResponse>
@@ -107,6 +113,13 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   revertAppChanges: async appId => {
     return await API.post({
       url: `/api/dev/${appId}/revert`,
+    })
+  },
+
+  updateAppClientPolicy: async (appId, body) => {
+    return await API.put({
+      url: `/api/applications/${appId}/client/policy`,
+      body,
     })
   },
 

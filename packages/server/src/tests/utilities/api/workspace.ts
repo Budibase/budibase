@@ -4,6 +4,8 @@ import {
   OnboardingWorkspaceRequest,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
+  UpdateWorkspaceClientVersionPolicyRequest,
+  UpdateWorkspaceClientVersionPolicyResponse,
   UpdateWorkspaceRequest,
   UpdateWorkspaceResponse,
   WithRequired,
@@ -180,6 +182,23 @@ export class WorkspaceAPI extends TestAPI {
       },
       expectations,
     })
+  }
+
+  updateClientPolicy = async (
+    appId: string,
+    body: UpdateWorkspaceClientVersionPolicyRequest,
+    expectations?: Expectations
+  ): Promise<UpdateWorkspaceClientVersionPolicyResponse> => {
+    return await this._put<UpdateWorkspaceClientVersionPolicyResponse>(
+      `/api/applications/${appId}/client/policy`,
+      {
+        body,
+        headers: {
+          [constants.Header.APP_ID]: appId,
+        },
+        expectations,
+      }
+    )
   }
 
   revertClient = async (appId: string): Promise<void> => {

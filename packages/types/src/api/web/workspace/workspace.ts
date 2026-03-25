@@ -1,5 +1,10 @@
 import { ReadStream } from "fs"
-import type { Layout, Screen, Workspace } from "../../../documents"
+import type {
+  ClientVersionPolicy,
+  Layout,
+  Screen,
+  Workspace,
+} from "../../../documents"
 import type { PlanType } from "../../../sdk"
 
 export interface SyncWorkspaceResponse {
@@ -91,6 +96,10 @@ export interface FetchPublishedChatAppsResponse {
 
 export interface UpdateWorkspaceRequest extends Partial<Workspace> {}
 export interface UpdateWorkspaceResponse extends Workspace {}
+export interface UpdateWorkspaceClientVersionPolicyRequest {
+  clientVersionPolicyOverride?: ClientVersionPolicy | null
+}
+export interface UpdateWorkspaceClientVersionPolicyResponse extends Workspace {}
 export interface UpdateAppClientResponse extends Workspace {}
 export interface RevertAppClientResponse extends Workspace {}
 
