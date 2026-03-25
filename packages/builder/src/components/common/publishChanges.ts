@@ -12,7 +12,9 @@ interface PublishChangeCountParams {
 
 const countUnpublishedResources = (
   resources: Record<string, UnpublishedResource>
-) => Object.values(resources).filter(resource => resource.unpublishedChanges).length
+) =>
+  Object.values(resources).filter(resource => resource.unpublishedChanges)
+    .length
 
 export const getPublishChangeCount = ({
   automations,
