@@ -2530,6 +2530,7 @@ const automationActions = (store: AutomationStore) => ({
   },
 
   delete: async (automation: Automation) => {
+    const automationId = automation._id
     const isRowAction = sdk.automations.isRowAction(automation)
     if (isRowAction) {
       const rowAction = automation.definition.trigger as RowActionTrigger
@@ -2551,7 +2552,10 @@ const automationActions = (store: AutomationStore) => ({
       }
       return state
     })
-    await deploymentStore.publishApp()
+
+    if (automationId) {
+      workspaceDeploymentStore.setAutomationUnpublishedChanges(automationId)
+    }
   },
 
   /**

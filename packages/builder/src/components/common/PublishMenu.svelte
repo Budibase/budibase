@@ -106,10 +106,10 @@
 
   $: tableCount = Object.keys($workspaceDeploymentStore.tables).length
   $: changeCount = getPublishChangeCount({
-    automations: $automationStore.automations,
-    workspaceApps: $workspaceAppStore.workspaceApps,
+    automations: $workspaceDeploymentStore.automations,
+    workspaceApps: $workspaceDeploymentStore.workspaceApps,
     tables: $workspaceDeploymentStore.tables,
-    agents: $agentsStore.agents,
+    agents: $workspaceDeploymentStore.agents,
     agentsEnabled: $featureFlags[FeatureFlag.AI_AGENTS],
   })
   $: publishButtonText = getPublishButtonText(changeCount)

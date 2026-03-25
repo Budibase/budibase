@@ -160,10 +160,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
         workspaceApps: state.workspaceApps.filter(app => app._id !== id),
       }
     })
-
-    const { deploymentStore } = await import("./deployment")
-
-    await deploymentStore.publishApp()
+    workspaceDeploymentStore.setWorkspaceAppUnpublishedChanges(id)
     appStore.refresh()
   }
 

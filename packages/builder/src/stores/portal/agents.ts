@@ -137,6 +137,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   deleteAgent = async (agentId: string) => {
     await API.deleteAgent(agentId)
+    workspaceDeploymentStore.setAgentUnpublishedChanges(agentId)
     await this.fetchAgents()
   }
 

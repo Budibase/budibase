@@ -1,29 +1,18 @@
 interface UnpublishedResource {
-  publishStatus?: {
-    unpublishedChanges?: boolean
-  }
-  disabled?: boolean
-  live?: boolean
-}
-
-interface UnpublishedTable {
   unpublishedChanges?: boolean
 }
 
 interface PublishChangeCountParams {
-  automations: UnpublishedResource[]
-  workspaceApps: UnpublishedResource[]
-  tables: Record<string, UnpublishedTable>
-  agents: UnpublishedResource[]
+  automations: Record<string, UnpublishedResource>
+  workspaceApps: Record<string, UnpublishedResource>
+  tables: Record<string, UnpublishedResource>
+  agents: Record<string, UnpublishedResource>
   agentsEnabled: boolean
 }
 
-const countUnpublishedResources = (resources: UnpublishedResource[]) =>
-  resources.filter(resource => resource.publishStatus?.unpublishedChanges)
-    .length
-
-const countUnpublishedTables = (tables: Record<string, UnpublishedTable>) =>
-  Object.values(tables).filter(table => table.unpublishedChanges).length
+const countUnpublishedResources = (
+  resources: Record<string, UnpublishedResource>
+) => Object.values(resources).filter(resource => resource.unpublishedChanges).length
 
 export const getPublishChangeCount = ({
   automations,
@@ -34,7 +23,7 @@ export const getPublishChangeCount = ({
 }: PublishChangeCountParams) => {
   const automationChanges = countUnpublishedResources(automations)
   const workspaceAppChanges = countUnpublishedResources(workspaceApps)
-  const tableChanges = countUnpublishedTables(tables)
+  const tableChanges = countUnpublishedResources(tables)
   const agentChanges = agentsEnabled ? countUnpublishedResources(agents) : 0
 
   return automationChanges + workspaceAppChanges + tableChanges + agentChanges
