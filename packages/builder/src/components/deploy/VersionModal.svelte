@@ -35,6 +35,11 @@
       $appStore.upgradableVersion !== $appStore.version) ||
     $admin.isDev
   $: revertAvailable = $appStore.revertableVersion != null
+  $: clientVersionPolicy = $appStore.effectiveClientVersionPolicy || "pinned"
+  $: clientVersionPolicySource =
+    $appStore.clientVersionPolicySource || "default"
+  $: isAutoLatest = clientVersionPolicy === "auto_latest"
+  $: canManuallyUpdate = !isAutoLatest && updateAvailable
 
   const refreshAppPackage = async () => {
     try {
@@ -46,6 +51,11 @@
   }
 
   const update = async () => {
+    if (isAutoLatest) {
+      updateModal.hide()
+      return
+    }
+
     try {
       await API.updateAppClientVersion(appId)
 
@@ -63,6 +73,11 @@
 
   let reverting = false
   const revert = async () => {
+    if (isAutoLatest) {
+      updateModal.hide()
+      return
+    }
+
     reverting = true
     try {
       await API.revertAppClientVersion(appId)
@@ -81,19 +96,19 @@
   }
 </script>
 
-{#if !hideIcon && updateAvailable}
+{#if !hideIcon && canManuallyUpdate}
   <StatusLight hoverable on:click={updateModal.show} notice>Update</StatusLight>
 {/if}
 <Modal bind:this={updateModal}>
   <ModalContent
     title={"Client version"}
     confirmText="Update"
-    cancelText={updateAvailable ? "Cancel" : "Close"}
+    cancelText={canManuallyUpdate ? "Cancel" : "Close"}
     onConfirm={update}
-    showConfirmButton={updateAvailable}
+    showConfirmButton={canManuallyUpdate}
   >
     <div slot="footer">
-      {#if revertAvailable}
+      {#if revertAvailable && !isAutoLatest}
         <Button quiet secondary on:click={revert} disabled={reverting}>
           {#if reverting}
             <ProgressCircle overBackground={true} size="S" />
@@ -103,7 +118,11 @@
         </Button>
       {/if}
     </div>
-    {#if updateAvailable}
+    {#if isAutoLatest}
+      <Body size="S">
+        This workspace follows the latest client version automatically.
+      </Body>
+    {:else if updateAvailable}
       <Body size="S">
         This workspace is currently using version
         <b>{$appStore.version}</b>, but version
@@ -121,6 +140,10 @@
       <span class="changelog-link-size">
         <Link href={CHANGELOG_URL} target="_blank">here</Link>
       </span>
+    </Body>
+    <Body size="S">
+      Client update mode: <b>{clientVersionPolicy}</b> (source:
+      <b>{clientVersionPolicySource}</b>).
     </Body>
     {#if revertAvailable}
       <Body size="S">

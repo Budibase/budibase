@@ -2,6 +2,8 @@ import { API } from "@/api"
 import {
   AppScript,
   AutomationSettings,
+  ClientVersionPolicy,
+  ClientVersionPolicySource,
   Plugin,
   PWAManifest,
   UpdateWorkspaceRequest,
@@ -47,6 +49,9 @@ export interface AppMetaState {
   usedPlugins: Plugin[]
   automations: AutomationSettings
   routes: { [key: string]: any }
+  clientVersionPolicyOverride?: ClientVersionPolicy
+  effectiveClientVersionPolicy: ClientVersionPolicy
+  clientVersionPolicySource: ClientVersionPolicySource
   version?: string
   revertableVersion?: string
   upgradableVersion?: string
@@ -86,6 +91,8 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
   usedPlugins: [],
   automations: {},
   routes: {},
+  effectiveClientVersionPolicy: "pinned",
+  clientVersionPolicySource: "default",
   pwa: {
     name: "",
     short_name: "",
@@ -117,6 +124,14 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       url: workspace.url || "",
       libraries: workspace.componentLibraries,
       version: workspace.version,
+      clientVersionPolicyOverride: workspace.clientVersionPolicyOverride,
+      effectiveClientVersionPolicy:
+        workspace.effectiveClientVersionPolicy ||
+        workspace.clientVersionPolicyOverride ||
+        "pinned",
+      clientVersionPolicySource:
+        workspace.clientVersionPolicySource ||
+        (workspace.clientVersionPolicyOverride ? "workspace" : "default"),
       appInstance: workspace.instance,
       revertableVersion: workspace.revertableVersion,
       upgradableVersion: workspace.upgradableVersion,
@@ -175,6 +190,14 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
 
   async updateApp(updates: UpdateWorkspaceRequest) {
     const app = await API.saveAppMetadata(get(this.store).appId, updates)
+    this.syncApp(app)
+  }
+
+  async updateClientPolicy(policy: ClientVersionPolicy) {
+    const appId = get(this.store).appId
+    const app = await API.updateAppClientPolicy(appId, {
+      clientVersionPolicyOverride: policy === "pinned" ? null : policy,
+    })
     this.syncApp(app)
   }
 

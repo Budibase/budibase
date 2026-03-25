@@ -12,8 +12,7 @@
     isOnlyUser,
     recaptchaStore,
   } from "@/stores/builder"
-  import { appsStore, featureFlags } from "@/stores/portal"
-  import { admin } from "@/stores/portal/admin"
+  import { appsStore } from "@/stores/portal"
   import { licensing } from "@/stores/portal/licensing"
   import {
     Body,
@@ -22,8 +21,10 @@
     Heading,
     Icon,
     Layout,
+    Label,
     Modal,
     notifications,
+    RadioGroup,
     TooltipPosition,
   } from "@budibase/bbui"
   import CloneResourcesModal from "../_components/CloneResourcesModal.svelte"
@@ -36,8 +37,40 @@
   let revertModal: RevertModal
   let deleteModal: DeleteModal
   let cloneResourcesModal: CloneResourcesModal
+  let selectedClientVersionPolicy: "pinned" | "auto_latest" = "pinned"
+  let savingClientVersionPolicy = false
 
-  $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
+  let clientVersionPolicyOptions: {
+    label: string
+    subtitle: string
+    value: string
+    disabled: boolean
+  }[] = []
+
+  $: updateAvailable =
+    !!$appStore.upgradableVersion &&
+    !!$appStore.version &&
+    $appStore.upgradableVersion !== $appStore.version
+  $: pinnedVersion = $appStore.version || "-"
+  $: effectiveClientVersionPolicy =
+    $appStore.effectiveClientVersionPolicy || "pinned"
+  $: displayClientVersionPolicy =
+    selectedClientVersionPolicy || effectiveClientVersionPolicy
+  $: canEditClientVersionPolicy = $isOnlyUser && !savingClientVersionPolicy
+  $: clientVersionPolicyOptions = [
+    {
+      label: `Pinned (${pinnedVersion})`,
+      subtitle: "Use this workspace version and update manually",
+      value: "pinned",
+      disabled: !canEditClientVersionPolicy,
+    },
+    {
+      label: "Auto latest",
+      subtitle: "Always follow the latest client version automatically",
+      value: "auto_latest",
+      disabled: !canEditClientVersionPolicy,
+    },
+  ]
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
   $: hasOnlyOneWorkspace = $appsStore.apps.length <= 1
@@ -47,6 +80,9 @@
     : !$isOnlyUser
       ? "Unavailable - another user is editing this workspace"
       : undefined
+  $: if (!savingClientVersionPolicy) {
+    selectedClientVersionPolicy = effectiveClientVersionPolicy
+  }
 
   const exportApp = (opts: { published: any }) => {
     exportPublishedVersion = !!opts?.published
@@ -61,6 +97,30 @@
     } catch (err: any) {
       notifications.error(`Failed to set recaptcha state: ${err.message}`)
     }
+  }
+
+  const saveClientVersionPolicy = async (policy: "pinned" | "auto_latest") => {
+    if (policy === effectiveClientVersionPolicy) {
+      return
+    }
+
+    savingClientVersionPolicy = true
+    try {
+      await appStore.updateClientPolicy(policy)
+      notifications.success("Client update mode saved")
+    } catch (err: any) {
+      notifications.error(
+        `Failed to save client update mode: ${err?.message || err}`
+      )
+    } finally {
+      savingClientVersionPolicy = false
+    }
+  }
+
+  const updateClientVersionPolicy = async (
+    event: CustomEvent<"pinned" | "auto_latest">
+  ) => {
+    await saveClientVersionPolicy(event.detail)
   }
 </script>
 
@@ -110,21 +170,21 @@
   <Divider noMargin id="version" />
   <Layout gap="XS" noPadding>
     <Heading size="S">Client version</Heading>
-    {#if $admin.isDev && !$featureFlags.DEV_USE_CLIENT_FROM_STORAGE}
-      <Body size="S">
-        You're running the latest client version from your file system, as
-        you're in developer mode.
-        <br />
-        Use the flag DEV_USE_CLIENT_FROM_STORAGE to load from minio instead.
-      </Body>
-    {:else if updateAvailable}
-      <Body size="S">
-        The workspace is currently using version
-        <strong>{$appStore.version}</strong>
-        but version <strong>{$appStore.upgradableVersion}</strong> is available.
-        <br />
-        Updates can contain new features, performance improvements and bug fixes.
-      </Body>
+    <div class="policy-controls">
+      <div class="policy-mode-select">
+        <Label size="L">Client update mode</Label>
+        <RadioGroup
+          bind:value={selectedClientVersionPolicy}
+          options={clientVersionPolicyOptions}
+          getOptionLabel={option => option.label}
+          getOptionSubtitle={option => option.subtitle}
+          getOptionValue={option => option.value}
+          getOptionDisabled={option => option.disabled}
+          on:change={updateClientVersionPolicy}
+        />
+      </div>
+    </div>
+    {#if displayClientVersionPolicy !== "auto_latest" && updateAvailable}
       <div class="buttons">
         <Button
           cta
@@ -137,26 +197,7 @@
           Update version
         </Button>
       </div>
-    {:else if $admin.isDev}
-      <Body size="S">
-        <strong> Dev mode is enabled.</strong>
-        <br />
-        The workspace is currently using the latest version, but you can load your
-        local changes.
-      </Body>
-      <div class="buttons">
-        <Button
-          cta
-          on:click={versionModal.show}
-          disabled={!$isOnlyUser}
-          tooltip={$isOnlyUser
-            ? null
-            : "Unavailable - another user is editing this app"}
-        >
-          Publish local changes
-        </Button>
-      </div>
-    {:else}
+    {:else if displayClientVersionPolicy !== "auto_latest"}
       <Body size="S">
         The workspace is currently using version
         <strong>{$appStore.version}</strong>.
@@ -298,5 +339,13 @@
   }
   .buttons {
     margin-top: var(--spacing-xl);
+  }
+  .policy-controls {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: flex-end;
+  }
+  .policy-mode-select {
+    width: 260px;
   }
 </style>

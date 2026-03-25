@@ -69,6 +69,9 @@ describe("Application Meta Store", () => {
 
     const {
       version,
+      clientVersionPolicyOverride,
+      effectiveClientVersionPolicy,
+      clientVersionPolicySource,
       instance,
       revertableVersion,
       upgradableVersion,
@@ -92,6 +95,9 @@ describe("Application Meta Store", () => {
       clientLibPath,
       libraries: componentLibraries,
       version,
+      clientVersionPolicyOverride,
+      effectiveClientVersionPolicy,
+      clientVersionPolicySource,
       appInstance: instance,
       revertableVersion,
       upgradableVersion,
