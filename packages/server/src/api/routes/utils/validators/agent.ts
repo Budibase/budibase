@@ -134,3 +134,27 @@ export function generateAgentInstructionsValidator() {
     }).required()
   )
 }
+
+const OPTIONAL_ASSERTION_LIST = Joi.array()
+  .items(Joi.string().trim().disallow(""))
+  .optional()
+
+const AGENT_EVAL_CASE_SCHEMA = Joi.object({
+  id: Joi.string().optional(),
+  name: Joi.string().required(),
+  prompt: Joi.string().required(),
+  assertions: Joi.object({
+    exact: OPTIONAL_STRING,
+    contains: OPTIONAL_ASSERTION_LIST,
+    notContains: OPTIONAL_ASSERTION_LIST,
+  }).required(),
+}).required()
+
+export function updateAgentEvalSuiteValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      _rev: OPTIONAL_STRING,
+      cases: Joi.array().items(AGENT_EVAL_CASE_SCHEMA).required(),
+    }).required()
+  )
+}

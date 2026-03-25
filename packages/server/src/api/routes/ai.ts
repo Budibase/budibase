@@ -12,6 +12,7 @@ import {
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
+  updateAgentEvalSuiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 import {
@@ -70,6 +71,13 @@ builderAdminRoutes
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
   .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
+  .get("/api/agent/:agentId/evals", ai.fetchAgentEvalSuite)
+  .put(
+    "/api/agent/:agentId/evals",
+    updateAgentEvalSuiteValidator(),
+    ai.updateAgentEvalSuite
+  )
+  .post("/api/agent/:agentId/evals/run", ai.runAgentEvalSuite)
 
 builderAdminRoutes
   .post(

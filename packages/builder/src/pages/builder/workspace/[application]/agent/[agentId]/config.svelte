@@ -660,7 +660,11 @@ Any constraints the agent must follow.
   })
 
   onDestroy(() => {
+    const shouldFlushSave = !!autoSaveTimeout
     clearAutoSave()
+    if (shouldFlushSave) {
+      saveAgent({ showNotifications: false })
+    }
   })
 </script>
 

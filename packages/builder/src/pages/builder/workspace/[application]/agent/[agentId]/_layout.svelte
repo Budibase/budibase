@@ -40,6 +40,9 @@
     if ($isActive("./deployment")) {
       return "Deployment"
     }
+    if ($isActive("./evals")) {
+      return "Evals"
+    }
     if ($isActive("./logs")) {
       return "Logs"
     }
@@ -120,6 +123,13 @@
       </ActionButton>
       <ActionButton
         quiet
+        selected={activeTab === "Evals"}
+        on:click={() => $goto("./evals")}
+      >
+        Evals
+      </ActionButton>
+      <ActionButton
+        quiet
         selected={activeTab === "Logs"}
         on:click={() => $goto("./logs")}
       >
@@ -152,14 +162,17 @@
       >
     </div>
   </div>
-  <div class="config-page" class:full-width={activeTab === "Logs"}>
+  <div
+    class="config-page"
+    class:full-width={activeTab === "Logs" || activeTab === "Evals"}
+  >
     <div
       class="config-content"
-      class:full-width={activeTab === "Logs"}
-      class:logs-tab={activeTab === "Logs"}
+      class:full-width={activeTab === "Logs" || activeTab === "Evals"}
+      class:logs-tab={activeTab === "Logs" || activeTab === "Evals"}
     >
       <div class="config-form">
-        {#if activeTab === "Logs"}
+        {#if activeTab === "Logs" || activeTab === "Evals"}
           <!-- svelte-ignore slot_element_deprecated -->
           <slot />
         {:else}
@@ -170,7 +183,7 @@
         {/if}
       </div>
     </div>
-    {#if activeTab !== "Logs"}
+    {#if activeTab !== "Logs" && activeTab !== "Evals"}
       <div class="config-preview">
         <AgentChatPanel
           agentId={currentAgent?._id}

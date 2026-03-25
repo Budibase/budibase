@@ -47,6 +47,7 @@
       "Automation",
       "Chat",
       "Chat Preview",
+      "Eval",
       "Discord",
       "Microsoft Teams",
       "Slack",

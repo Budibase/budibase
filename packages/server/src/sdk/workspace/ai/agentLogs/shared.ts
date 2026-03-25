@@ -83,6 +83,10 @@ export function extractError(
 }
 
 export function determineTrigger(sessionId: string): string {
+  if (sessionId.startsWith("eval:")) {
+    return "Eval"
+  }
+
   if (isPreviewSession(sessionId)) {
     return "Chat Preview"
   }
