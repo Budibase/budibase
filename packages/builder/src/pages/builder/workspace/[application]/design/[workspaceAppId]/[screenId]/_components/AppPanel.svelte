@@ -22,8 +22,7 @@
 
   $: liveUrl = $selectedAppUrls.liveUrl
 
-  $: isLive =
-    selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
+  $: isLive = !selectedWorkspaceApp?.disabled
 
   const previewApp = () => {
     previewStore.showPreview(true)
