@@ -10,6 +10,7 @@ import {
   type UIWorkspaceApp,
   type WorkspaceFavourite,
 } from "@budibase/types"
+import { getAgentStatusLabel, getPublishResourceStatusLabel } from "./status"
 
 interface BuildHomeRowsParams {
   apps: UIWorkspaceApp[]
@@ -89,9 +90,9 @@ const getUpdatedTimestamp = (row: HomeRow) => {
 
 const getStatusSortValue = (row: HomeRow) => {
   if (row.type === "app" || row.type === "automation") {
-    return `${row.status}`.toLowerCase()
+    return getPublishResourceStatusLabel(row.resource.publishStatus)
   }
-  return row.live ? "live" : "draft"
+  return getAgentStatusLabel(row.resource)
 }
 
 const getSortValue = (row: HomeRow, column: HomeSortColumn) => {
