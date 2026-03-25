@@ -12,7 +12,6 @@
   } from "@budibase/bbui"
   import { memo } from "@budibase/frontend-core"
   import {
-    PublishResourceState,
     AutomationStatus,
     type UIAutomation,
     type LayoutDirection,
@@ -104,7 +103,7 @@
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
-  $: isLive = automation.publishStatus.state === PublishResourceState.PUBLISHED
+  $: isLive = !automation.disabled
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set($selectedAutomation.data || automation)
@@ -254,9 +253,7 @@
   const handleToggleLive = async () => {
     try {
       changingStatus = true
-      await automationStore.actions.toggleDisabled(automation._id!, {
-        publish: true,
-      })
+      await automationStore.actions.toggleDisabled(automation._id!)
     } finally {
       changingStatus = false
     }

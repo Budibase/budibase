@@ -167,7 +167,13 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     appStore.refresh()
   }
 
-  async toggleDisabled(workspaceAppId: string, state: boolean) {
+  async toggleDisabled(
+    workspaceAppId: string,
+    state: boolean,
+    opts?: {
+      publish?: boolean
+    }
+  ) {
     const workspaceApp = get(this.store).workspaceApps.find(
       app => app._id === workspaceAppId
     )
@@ -180,8 +186,12 @@ export class WorkspaceAppStore extends DerivedBudiStore<
       disabled: state,
     })
 
-    const { deploymentStore } = await import("./deployment")
-    await deploymentStore.publishApp()
+    const publish = opts?.publish ?? !state
+    if (publish) {
+      const { deploymentStore } = await import("./deployment")
+      await deploymentStore.publishApp()
+      return
+    }
   }
 
   replaceDatasource(_id: string, workspaceApp: WorkspaceApp) {

@@ -2192,11 +2192,11 @@ const automationActions = (store: AutomationStore) => ({
   ) => {
     let automation: Automation | undefined
     try {
-      const publish = opts?.publish ?? true
       automation = store.actions.getDefinition(automationId)
       if (!automation) {
         return
       }
+      const publish = opts?.publish ?? automation.disabled
       const updatedAutomation = cloneDeep(automation)
       updatedAutomation.disabled = !automation.disabled
 
@@ -2206,7 +2206,9 @@ const automationActions = (store: AutomationStore) => ({
         store.actions.select(response.automation._id!)
         await deploymentStore.publishApp()
       } else {
-        await store.actions.save(updatedAutomation)
+        const response = await API.updateAutomation(updatedAutomation)
+        store.actions.replace(response.automation._id!, response.automation)
+        store.actions.select(response.automation._id!)
       }
 
       notifications.success(
