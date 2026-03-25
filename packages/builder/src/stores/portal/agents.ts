@@ -103,9 +103,16 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return createdWithPublishStatus
   }
 
-  updateAgent = async (agent: UpdateAgentRequest) => {
+  updateAgent = async (
+    agent: UpdateAgentRequest,
+    opts?: {
+      markUnpublishedChanges?: boolean
+    }
+  ) => {
     const updated = await API.updateAgent(agent)
-    workspaceDeploymentStore.setAgentUnpublishedChanges(updated._id!)
+    if (opts?.markUnpublishedChanges !== false) {
+      workspaceDeploymentStore.setAgentUnpublishedChanges(updated._id!)
+    }
     const updatedWithPublishStatus = withPublishStatus(updated)
     this.update(state => {
       const index = state.agents.findIndex(a => a._id === updated._id)

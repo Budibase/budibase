@@ -17,6 +17,7 @@
   import { agentsStore, featureFlags } from "@/stores/portal"
   import { FeatureFlag, PluginType, type Plugin } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
+  import { getPublishButtonText, getPublishChangeCount } from "./publishChanges"
 
   let actionMenu: any
   let publishPopoverAnchor: HTMLElement | undefined
@@ -103,25 +104,15 @@
     await publishWithoutChecks()
   }
 
-  $: automationChanges = $automationStore.automations.filter(
-    automation => automation.publishStatus?.unpublishedChanges
-  ).length
-  $: workspaceAppChanges = $workspaceAppStore.workspaceApps.filter(
-    workspaceApp => workspaceApp.publishStatus?.unpublishedChanges
-  ).length
-  $: tableChanges = Object.values($workspaceDeploymentStore.tables).filter(
-    table => table.unpublishedChanges
-  ).length
   $: tableCount = Object.keys($workspaceDeploymentStore.tables).length
-  $: agentChanges = $featureFlags[FeatureFlag.AI_AGENTS]
-    ? $agentsStore.agents.filter(
-        agent => agent.publishStatus.unpublishedChanges
-      ).length
-    : 0
-  $: changeCount =
-    automationChanges + workspaceAppChanges + tableChanges + agentChanges
-  $: publishButtonText =
-    changeCount > 0 ? `Publish changes (${changeCount})` : "Publish"
+  $: changeCount = getPublishChangeCount({
+    automations: $automationStore.automations,
+    workspaceApps: $workspaceAppStore.workspaceApps,
+    tables: $workspaceDeploymentStore.tables,
+    agents: $agentsStore.agents,
+    agentsEnabled: $featureFlags[FeatureFlag.AI_AGENTS],
+  })
+  $: publishButtonText = getPublishButtonText(changeCount)
 </script>
 
 <div

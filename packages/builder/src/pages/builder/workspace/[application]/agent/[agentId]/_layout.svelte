@@ -61,12 +61,19 @@
     try {
       togglingLive = true
 
-      await agentsStore.updateAgent({
-        ...currentAgent,
-        ...agentUpdateOverrides,
-        live: nextLive,
-      })
-      await deploymentStore.publishApp()
+      await agentsStore.updateAgent(
+        {
+          ...currentAgent,
+          ...agentUpdateOverrides,
+          live: nextLive,
+        },
+        {
+          markUnpublishedChanges: false,
+        }
+      )
+      if (nextLive) {
+        await deploymentStore.publishApp()
+      }
       await agentsStore.fetchAgents()
 
       notifications.success(
