@@ -1,12 +1,12 @@
 import {
   WorkspaceResource,
-  type Agent,
   type HomeRow,
   type HomeRowType,
   type HomeSortColumn,
   type HomeSortOrder,
   type HomeType,
   type UIAutomation,
+  type UIAgent,
   type UIWorkspaceApp,
   type WorkspaceFavourite,
 } from "@budibase/types"
@@ -15,7 +15,7 @@ import { getAgentStatusLabel, getPublishResourceStatusLabel } from "./status"
 interface BuildHomeRowsParams {
   apps: UIWorkspaceApp[]
   automations: UIAutomation[]
-  agents: Agent[]
+  agents: UIAgent[]
   agentsEnabled: boolean
   getFavourite: (
     resourceType: WorkspaceResource,

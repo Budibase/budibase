@@ -6,20 +6,23 @@ interface WorkspaceDeploymentStoreState extends PublishStatusResponse {}
 
 export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStoreState> {
   constructor() {
-    super({ automations: {}, workspaceApps: {}, tables: {} })
+    super({ agents: {}, automations: {}, workspaceApps: {}, tables: {} })
 
     this.fetch = this.fetch.bind(this)
     this.reset = this.reset.bind(this)
+    this.setAgentUnpublishedChanges = this.setAgentUnpublishedChanges.bind(this)
     this.setAutomationUnpublishedChanges =
       this.setAutomationUnpublishedChanges.bind(this)
+    this.setTableUnpublishedChanges = this.setTableUnpublishedChanges.bind(this)
     this.setWorkspaceAppUnpublishedChanges =
       this.setWorkspaceAppUnpublishedChanges.bind(this)
   }
 
   async fetch() {
-    const { automations, workspaceApps, tables } =
+    const { agents, automations, workspaceApps, tables } =
       await API.deployment.getPublishStatus()
     this.store.update(state => {
+      state.agents = agents
       state.automations = automations
       state.workspaceApps = workspaceApps
       state.tables = tables
@@ -28,7 +31,21 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
   }
 
   reset() {
-    this.store.set({ automations: {}, workspaceApps: {}, tables: {} })
+    this.store.set({ agents: {}, automations: {}, workspaceApps: {}, tables: {} })
+  }
+
+  setAgentUnpublishedChanges(agentId: string) {
+    this.store.update(state => {
+      if (!state.agents[agentId]) {
+        state.agents[agentId] = {
+          published: false,
+          name: "Agent",
+          state: PublishResourceState.DISABLED,
+        }
+      }
+      state.agents[agentId].unpublishedChanges = true
+      return state
+    })
   }
 
   setAutomationUnpublishedChanges(automationId: string) {
@@ -41,6 +58,20 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
         }
       }
       state.automations[automationId].unpublishedChanges = true
+      return state
+    })
+  }
+
+  setTableUnpublishedChanges(tableId: string) {
+    this.store.update(state => {
+      if (!state.tables[tableId]) {
+        state.tables[tableId] = {
+          published: false,
+          name: "Table",
+          state: PublishResourceState.DISABLED,
+        }
+      }
+      state.tables[tableId].unpublishedChanges = true
       return state
     })
   }

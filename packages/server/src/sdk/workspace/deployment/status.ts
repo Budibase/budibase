@@ -1,5 +1,6 @@
 import { context } from "@budibase/backend-core"
 import {
+  Agent,
   Automation,
   PublishResourceState,
   PublishStatusResource,
@@ -26,30 +27,36 @@ export async function status() {
   const productionExists =
     await sdk.workspaces.isWorkspacePublished(prodWorkspaceId)
   type State = {
+    agents: Agent[]
     automations: Automation[]
     workspaceApps: WorkspaceApp[]
     screens: Screen[]
     tables: Table[]
   }
   const developmentState: State = {
+    agents: [],
     automations: [],
     workspaceApps: [],
     screens: [],
     tables: [],
   }
   const productionState: State = {
+    agents: [],
     automations: [],
     workspaceApps: [],
     screens: [],
     tables: [],
   }
   const updateState = async (state: State) => {
-    const [automations, workspaceApps, screens, tables] = await Promise.all([
-      sdk.automations.fetch(),
-      sdk.workspaceApps.fetch(),
-      sdk.screens.fetch(),
-      sdk.tables.getAllInternalTables(),
-    ])
+    const [agents, automations, workspaceApps, screens, tables] =
+      await Promise.all([
+        sdk.ai.agents.fetch(),
+        sdk.automations.fetch(),
+        sdk.workspaceApps.fetch(),
+        sdk.screens.fetch(),
+        sdk.tables.getAllInternalTables(),
+      ])
+    state.agents = agents
     state.automations = automations
     state.workspaceApps = workspaceApps
     state.screens = screens
@@ -76,6 +83,7 @@ export async function status() {
     productionState.workspaceApps.map(w => w._id)
   )
   const prodTableIds = new Set(productionState.tables.map(t => t._id))
+  const prodAgentIds = new Set(productionState.agents.map(agent => agent._id))
 
   const processResource = (
     map: Record<string, PublishStatusResource>,
@@ -137,5 +145,15 @@ export async function status() {
     }
   }
 
-  return { automations, workspaceApps, tables }
+  const agents: Record<string, PublishStatusResource> = {}
+  for (const agent of developmentState.agents) {
+    processResource(agents, prodAgentIds, {
+      _id: agent._id,
+      name: agent.name,
+      updatedAt: agent.updatedAt,
+      disabled: agent.live !== true,
+    })
+  }
+
+  return { agents, automations, workspaceApps, tables }
 }

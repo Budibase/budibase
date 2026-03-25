@@ -13,6 +13,7 @@ import { get, derived, Writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "@/api"
 import { DerivedBudiStore } from "@/stores/BudiStore"
+import { workspaceDeploymentStore } from "./workspaceDeployment"
 
 function pickFallbackDisplayField(
   draft: SaveTableRequest,
@@ -132,6 +133,7 @@ export class TableStore extends DerivedBudiStore<
     }
 
     const savedTable = await API.saveTable(updatedTable)
+    workspaceDeploymentStore.setTableUnpublishedChanges(savedTable._id!)
     this.replaceTable(savedTable._id, savedTable)
     this.select(savedTable._id)
     // make sure tables up to date (related)
@@ -161,11 +163,13 @@ export class TableStore extends DerivedBudiStore<
 
   async delete(table: { _id: string; _rev: string }) {
     await API.deleteTable(table._id, table._rev)
+    workspaceDeploymentStore.setTableUnpublishedChanges(table._id)
     this.replaceTable(table._id, null)
   }
 
   async duplicate(tableId: string) {
     const duplicatedTable = await API.duplicateTable(tableId)
+    workspaceDeploymentStore.setTableUnpublishedChanges(duplicatedTable._id!)
     this.replaceTable(duplicatedTable._id, duplicatedTable)
     this.select(duplicatedTable._id)
     return duplicatedTable

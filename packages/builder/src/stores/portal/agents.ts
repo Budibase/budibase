@@ -1,25 +1,42 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
+import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import {
   Agent,
   CreateAgentRequest,
+  PublishResourceState,
+  PublishStatusResource,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
+  UIAgent,
   UpdateAgentRequest,
   ToolMetadata,
 } from "@budibase/types"
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 
 interface AgentStoreState {
-  agents: Agent[]
+  agents: UIAgent[]
   currentAgentId?: string
   tools: ToolMetadata[]
   agentsLoaded: boolean
 }
+
+const getAgentPublishStatus = (agent: Agent): PublishStatusResource =>
+  get(workspaceDeploymentStore).agents[agent._id!] || {
+    published: false,
+    name: agent.name,
+    state: PublishResourceState.DISABLED,
+    unpublishedChanges: true,
+  }
+
+const withPublishStatus = (agent: Agent): UIAgent => ({
+  ...agent,
+  publishStatus: getAgentPublishStatus(agent),
+})
 
 export class AgentsStore extends BudiStore<AgentStoreState> {
   constructor() {
@@ -27,6 +44,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       agents: [],
       tools: [],
       agentsLoaded: false,
+    })
+
+    workspaceDeploymentStore.subscribe(() => {
+      this.update(state => {
+        state.agents = state.agents.map(withPublishStatus)
+        return state
+      })
     })
   }
 
@@ -37,11 +61,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   fetchAgents = async () => {
     const { agents } = await API.fetchAgents()
     this.update(state => {
-      state.agents = agents
+      state.agents = agents.map(withPublishStatus)
       state.agentsLoaded = true
       return state
     })
-    return agents
+    return agents.map(withPublishStatus)
   }
 
   selectAgent = async (agentId: string | undefined) => {
@@ -70,32 +94,38 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   createAgent = async (agent: CreateAgentRequest) => {
     const created = await API.createAgent(agent)
+    workspaceDeploymentStore.setAgentUnpublishedChanges(created._id!)
+    const createdWithPublishStatus = withPublishStatus(created)
     this.update(state => {
-      state.agents = [...state.agents, created]
+      state.agents = [...state.agents, createdWithPublishStatus]
       return state
     })
-    return created
+    return createdWithPublishStatus
   }
 
   updateAgent = async (agent: UpdateAgentRequest) => {
     const updated = await API.updateAgent(agent)
+    workspaceDeploymentStore.setAgentUnpublishedChanges(updated._id!)
+    const updatedWithPublishStatus = withPublishStatus(updated)
     this.update(state => {
       const index = state.agents.findIndex(a => a._id === updated._id)
       if (index !== -1) {
-        state.agents[index] = updated
+        state.agents[index] = updatedWithPublishStatus
       }
       return state
     })
-    return updated
+    return updatedWithPublishStatus
   }
 
   duplicateAgent = async (agentId: string) => {
     const duplicated = await API.duplicateAgent(agentId)
+    workspaceDeploymentStore.setAgentUnpublishedChanges(duplicated._id!)
+    const duplicatedWithPublishStatus = withPublishStatus(duplicated)
     this.update(state => {
-      state.agents = [...state.agents, duplicated]
+      state.agents = [...state.agents, duplicatedWithPublishStatus]
       return state
     })
-    return duplicated
+    return duplicatedWithPublishStatus
   }
 
   deleteAgent = async (agentId: string) => {
@@ -104,9 +134,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   private runAndRefreshAgents = async <T>(
-    action: () => Promise<T>
+    action: () => Promise<T>,
+    agentId?: string
   ): Promise<T> => {
     const result = await action()
+    if (agentId) {
+      workspaceDeploymentStore.setAgentUnpublishedChanges(agentId)
+    }
     await this.fetchAgents()
     return result
   }
@@ -116,7 +150,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     body?: SyncAgentDiscordCommandsRequest
   ): Promise<SyncAgentDiscordCommandsResponse> =>
     await this.runAndRefreshAgents(() =>
-      API.syncAgentDiscordCommands(agentId, body)
+      API.syncAgentDiscordCommands(agentId, body),
+      agentId
     )
 
   provisionMSTeamsChannel = async (
@@ -124,7 +159,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     body?: ProvisionAgentMSTeamsChannelRequest
   ): Promise<ProvisionAgentMSTeamsChannelResponse> =>
     await this.runAndRefreshAgents(() =>
-      API.provisionAgentMSTeamsChannel(agentId, body)
+      API.provisionAgentMSTeamsChannel(agentId, body),
+      agentId
     )
 
   provisionSlackChannel = async (
@@ -132,22 +168,26 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     body?: ProvisionAgentSlackChannelRequest
   ): Promise<ProvisionAgentSlackChannelResponse> =>
     await this.runAndRefreshAgents(() =>
-      API.provisionAgentSlackChannel(agentId, body)
+      API.provisionAgentSlackChannel(agentId, body),
+      agentId
     )
 
   toggleDiscordDeployment = async (agentId: string, enabled: boolean) =>
     await this.runAndRefreshAgents(() =>
-      API.toggleAgentDiscordDeployment(agentId, enabled)
+      API.toggleAgentDiscordDeployment(agentId, enabled),
+      agentId
     )
 
   toggleMSTeamsDeployment = async (agentId: string, enabled: boolean) =>
     await this.runAndRefreshAgents(() =>
-      API.toggleAgentMSTeamsDeployment(agentId, enabled)
+      API.toggleAgentMSTeamsDeployment(agentId, enabled),
+      agentId
     )
 
   toggleSlackDeployment = async (agentId: string, enabled: boolean) =>
     await this.runAndRefreshAgents(() =>
-      API.toggleAgentSlackDeployment(agentId, enabled)
+      API.toggleAgentSlackDeployment(agentId, enabled),
+      agentId
     )
 }
 export const agentsStore = new AgentsStore()

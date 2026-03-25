@@ -11,10 +11,15 @@
     deploymentStore,
     automationStore,
     workspaceAppStore,
+    workspaceDeploymentStore,
     appStore,
   } from "@/stores/builder"
   import { agentsStore, featureFlags } from "@/stores/portal"
-  import { FeatureFlag, PluginType, type Plugin } from "@budibase/types"
+  import {
+    FeatureFlag,
+    PluginType,
+    type Plugin,
+  } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
 
   let actionMenu: any
@@ -108,7 +113,16 @@
   $: workspaceAppChanges = $workspaceAppStore.workspaceApps.filter(
     workspaceApp => workspaceApp.publishStatus?.unpublishedChanges
   ).length
-  $: changeCount = automationChanges + workspaceAppChanges
+  $: tableChanges = Object.values($workspaceDeploymentStore.tables).filter(
+    table => table.unpublishedChanges
+  ).length
+  $: tableCount = Object.keys($workspaceDeploymentStore.tables).length
+  $: agentChanges = $featureFlags[FeatureFlag.AI_AGENTS]
+    ? $agentsStore.agents.filter(agent => agent.publishStatus.unpublishedChanges)
+        .length
+    : 0
+  $: changeCount =
+    automationChanges + workspaceAppChanges + tableChanges + agentChanges
   $: publishButtonText =
     changeCount > 0 ? `Publish changes (${changeCount})` : "Publish"
 </script>
@@ -145,6 +159,10 @@
       {/if}
       {#if $workspaceAppStore.workspaceApps.length}
         Apps published: {$workspaceAppStore.workspaceApps.length}
+        <br />
+      {/if}
+      {#if tableCount}
+        Tables published: {tableCount}
         <br />
       {/if}
       {#if $featureFlags[FeatureFlag.AI_AGENTS] && $agentsStore.agents.length}

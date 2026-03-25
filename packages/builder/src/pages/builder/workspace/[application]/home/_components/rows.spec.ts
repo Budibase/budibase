@@ -1,7 +1,7 @@
 import {
   WorkspaceResource,
-  type Agent,
   type HomeRow,
+  type UIAgent,
   type WorkspaceFavourite,
 } from "@budibase/types"
 import { sortHomeRows } from "./rows"
@@ -36,7 +36,7 @@ const buildAgentRow = ({
   live: true,
   updatedAt,
   createdAt,
-  resource: {} as Agent,
+  resource: {} as UIAgent,
   favourite: buildFavourite(id, favouriteId),
   icon: "sparkle",
   iconColor: "#BDB0F5",

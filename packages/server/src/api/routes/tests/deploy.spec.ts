@@ -189,6 +189,34 @@ describe("/api/deploy", () => {
       })
     })
 
+    it("returns agent publish status and unpublished changes", async () => {
+      const agent = await config.api.agent.create({
+        name: "Support Agent",
+        aiconfig: "default",
+        live: false,
+      })
+
+      let res = await config.api.deploy.publishStatus()
+      expect(res.agents[agent._id!]).toEqual({
+        published: false,
+        name: agent.name,
+        unpublishedChanges: true,
+        state: "disabled",
+      })
+
+      await config.api.workspace.publish(config.devWorkspace!.appId)
+
+      res = await config.api.deploy.publishStatus()
+      expect(res.agents[agent._id!]).toEqual({
+        publishedAt: expect.any(String),
+        published: true,
+        name: agent.name,
+        unpublishedChanges: false,
+        state: "disabled",
+      })
+      expect(res.agents[agent._id!].lastDeployedLiveAt).toBeUndefined()
+    })
+
     it("handles app with disabled automation/workspace app", async () => {
       const table = await config.api.table.save(basicTable())
 

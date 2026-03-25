@@ -1,5 +1,6 @@
 import type { PublishResourceState } from "../../api"
-import type { Agent, WorkspaceFavourite } from "../../documents"
+import type { WorkspaceFavourite } from "../../documents"
+import type { UIAgent } from "../agents"
 import type { UIAutomation } from "../stores/automations"
 import type { UIWorkspaceApp } from "../workspaceApps"
 
@@ -35,7 +36,7 @@ export interface AutomationRow extends HomeRowBase {
 
 export interface AgentRow extends HomeRowBase {
   type: "agent"
-  resource: Agent
+  resource: UIAgent
   live: boolean
 }
 

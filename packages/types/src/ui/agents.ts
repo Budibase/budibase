@@ -1,4 +1,5 @@
-import { ToolMetadata } from "../documents"
+import { PublishStatusResource } from "../api"
+import { Agent, ToolMetadata } from "../documents"
 
 export interface EnrichedTool extends ToolMetadata {
   readableBinding: string
@@ -14,4 +15,8 @@ export interface DeploymentRow {
   status: "Enabled" | "Disabled"
   details: string
   configurable?: boolean
+}
+
+export interface UIAgent extends Agent {
+  publishStatus: PublishStatusResource
 }

@@ -602,12 +602,6 @@ Any constraints the agent must follow.
   }) {
     if (!currentAgent) return
     if (saving) return
-    if (!draft.aiconfig) {
-      if (showNotifications) {
-        notifications.error("Please select an AI model")
-      }
-      return
-    }
 
     saving = true
     try {
