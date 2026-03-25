@@ -15,11 +15,7 @@
     appStore,
   } from "@/stores/builder"
   import { agentsStore, featureFlags } from "@/stores/portal"
-  import {
-    FeatureFlag,
-    PluginType,
-    type Plugin,
-  } from "@budibase/types"
+  import { FeatureFlag, PluginType, type Plugin } from "@budibase/types"
   import type { PopoverAPI } from "@budibase/bbui"
 
   let actionMenu: any
@@ -118,8 +114,9 @@
   ).length
   $: tableCount = Object.keys($workspaceDeploymentStore.tables).length
   $: agentChanges = $featureFlags[FeatureFlag.AI_AGENTS]
-    ? $agentsStore.agents.filter(agent => agent.publishStatus.unpublishedChanges)
-        .length
+    ? $agentsStore.agents.filter(
+        agent => agent.publishStatus.unpublishedChanges
+      ).length
     : 0
   $: changeCount =
     automationChanges + workspaceAppChanges + tableChanges + agentChanges

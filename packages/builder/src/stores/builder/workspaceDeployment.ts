@@ -31,7 +31,12 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
   }
 
   reset() {
-    this.store.set({ agents: {}, automations: {}, workspaceApps: {}, tables: {} })
+    this.store.set({
+      agents: {},
+      automations: {},
+      workspaceApps: {},
+      tables: {},
+    })
   }
 
   setAgentUnpublishedChanges(agentId: string) {

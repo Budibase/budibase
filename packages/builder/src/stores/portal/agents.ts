@@ -149,8 +149,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     agentId: string,
     body?: SyncAgentDiscordCommandsRequest
   ): Promise<SyncAgentDiscordCommandsResponse> =>
-    await this.runAndRefreshAgents(() =>
-      API.syncAgentDiscordCommands(agentId, body),
+    await this.runAndRefreshAgents(
+      () => API.syncAgentDiscordCommands(agentId, body),
       agentId
     )
 
@@ -158,8 +158,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
   ): Promise<ProvisionAgentMSTeamsChannelResponse> =>
-    await this.runAndRefreshAgents(() =>
-      API.provisionAgentMSTeamsChannel(agentId, body),
+    await this.runAndRefreshAgents(
+      () => API.provisionAgentMSTeamsChannel(agentId, body),
       agentId
     )
 
@@ -167,26 +167,26 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
   ): Promise<ProvisionAgentSlackChannelResponse> =>
-    await this.runAndRefreshAgents(() =>
-      API.provisionAgentSlackChannel(agentId, body),
+    await this.runAndRefreshAgents(
+      () => API.provisionAgentSlackChannel(agentId, body),
       agentId
     )
 
   toggleDiscordDeployment = async (agentId: string, enabled: boolean) =>
-    await this.runAndRefreshAgents(() =>
-      API.toggleAgentDiscordDeployment(agentId, enabled),
+    await this.runAndRefreshAgents(
+      () => API.toggleAgentDiscordDeployment(agentId, enabled),
       agentId
     )
 
   toggleMSTeamsDeployment = async (agentId: string, enabled: boolean) =>
-    await this.runAndRefreshAgents(() =>
-      API.toggleAgentMSTeamsDeployment(agentId, enabled),
+    await this.runAndRefreshAgents(
+      () => API.toggleAgentMSTeamsDeployment(agentId, enabled),
       agentId
     )
 
   toggleSlackDeployment = async (agentId: string, enabled: boolean) =>
-    await this.runAndRefreshAgents(() =>
-      API.toggleAgentSlackDeployment(agentId, enabled),
+    await this.runAndRefreshAgents(
+      () => API.toggleAgentSlackDeployment(agentId, enabled),
       agentId
     )
 }
