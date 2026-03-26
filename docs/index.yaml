@@ -2,6 +2,30 @@ apiVersion: v1
 entries:
   budibase:
   - apiVersion: v2
+    appVersion: 3.34.11
+    created: "2026-03-26T17:13:54.980978171Z"
+    dependencies:
+    - condition: services.couchdb.enabled
+      name: couchdb
+      repository: https://apache.github.io/couchdb-helm
+      version: 4.5.6
+    description: Budibase is an open source low-code platform, helping thousands of
+      teams build apps for their workplace in minutes.
+    digest: 71ce9d34b0b2e6697910219063dcfa388af80ee813a8b35b24bb6c8dc21aa4b8
+    icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - budibase-3.0.577.tgz
+    version: 3.0.577
+  - apiVersion: v2
     appVersion: 3.34.10
     created: "2026-03-26T08:59:23.209175489Z"
     dependencies:
@@ -16220,8 +16244,8 @@ entries:
     - budibase-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v2
-    appVersion: 3.34.10
-    created: "2026-03-26T08:59:25.431203844Z"
+    appVersion: 3.34.11
+    created: "2026-03-26T17:13:57.302798958Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -16229,7 +16253,7 @@ entries:
       version: 4.5.6
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: 4724fc0b56369d8780d9522f450836b18013834ef20f1850b8f8e07b253b8220
+    digest: e0a684d01bc2ba1e532ec606a6afe8fe17d356c24899665675c7bf70425440e1
     icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
     keywords:
     - low-code
@@ -32936,4 +32960,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2026-03-26T17:13:25.288693248Z"
+generated: "2026-03-26T17:13:57.297493341Z"
