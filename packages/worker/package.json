@@ -37,7 +37,7 @@
     "@types/global-agent": "2.1.1",
     "bcrypt": "6.0.0",
     "bull": "4.10.1",
-    "dd-trace": "5.92.0",
+    "dd-trace": "5.63.0",
     "dotenv": "8.6.0",
     "email-validator": "^2.0.4",
     "global-agent": "3.0.0",
@@ -60,7 +60,7 @@
     "scim2-parse-filter": "^0.2.8",
     "scim-patch": "^0.8.1",
     "uuid": "^8.3.2",
-    "yaml": "^2.8.2"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "9.0.3",

@@ -34,7 +34,7 @@
     "pouchdb": "9.0.0",
     "randomstring": "1.1.5",
     "tar": "7.5.11",
-    "yaml": "^2.8.2"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/node-fetch": "2.6.4",

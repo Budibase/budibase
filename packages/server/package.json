@@ -83,7 +83,7 @@
     "csvtojson": "2.0.13",
     "curlconverter": "3.21.0",
     "dayjs": "^1.10.8",
-    "dd-trace": "5.92.0",
+    "dd-trace": "5.63.0",
     "dotenv": "8.2.0",
     "extract-zip": "^2.0.1",
     "execa": "^5.1.1",
@@ -133,7 +133,7 @@
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xml2js": "0.6.2",
-    "yaml": "^2.8.2",
+    "yaml": "^2.8.3",
     "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {

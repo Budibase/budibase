@@ -630,6 +630,58 @@ describe("BudibaseAI", () => {
       expect(persistedAfter.model).toBe(persistedBefore.model)
     })
 
+    it("sanitizes non-2xx LiteLLM update errors", async () => {
+      const creationScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, {
+          token_id: "key-update-fail-sanitized",
+          key: "secret-update-fail-sanitized",
+        })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-update-fail-sanitized" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        name: "Initial Config",
+      })
+      expect(creationScope.isDone()).toBe(true)
+
+      const updateFailureScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .patch(`/model/${created.liteLLMModelId}/update`)
+        .reply(400, {
+          error: {
+            message:
+              'litellm.NotFoundError: OpenAIException - The model `gpt-5-minia` does not exist or you do not have access to it. stack trace: Traceback (most recent call last): File "/usr/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 923, in acompletion',
+          },
+        })
+
+      const errorResponse: any = await config.api.ai.updateConfig(
+        {
+          ...created,
+          name: "Updated Config",
+          model: "gpt-5-minia",
+          credentialsFields: {
+            ...created.credentialsFields,
+            api_key: PASSWORD_REPLACEMENT,
+          },
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(updateFailureScope.isDone()).toBe(true)
+      expect(errorResponse.message).toBe(
+        "Error updating configuration: The model `gpt-5-minia` does not exist or you do not have access to it."
+      )
+    })
+
     it("deletes a custom config and syncs LiteLLM models", async () => {
       const creationScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
@@ -689,6 +741,34 @@ describe("BudibaseAI", () => {
 
       const configsResponse = await config.api.ai.fetchConfigs()
       expect(configsResponse).toHaveLength(0)
+    })
+
+    it("sanitizes verbose LiteLLM stack traces in validation errors", async () => {
+      const failingScope = nock(environment.LITELLM_URL)
+        .post("/health/test_connection")
+        .reply(200, {
+          status: "error",
+          result: {
+            error:
+              'litellm.NotFoundError: OpenAIException - The model `gpt-5-minia` does not exist or you do not have access to it. stack trace: Traceback (most recent call last): File "/usr/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 923, in acompletion',
+          },
+        })
+
+      const errorResponse: any = await config.api.ai.createConfig(
+        {
+          ...defaultRequest,
+          name: "Missing Model Config",
+          model: "gpt-5-minia",
+        },
+        {
+          status: 400,
+        }
+      )
+
+      expect(failingScope.isDone()).toBe(true)
+      expect(errorResponse.message).toBe(
+        "Error validating configuration: The model `gpt-5-minia` does not exist or you do not have access to it."
+      )
     })
 
     it("sanitizes web search config API key", async () => {

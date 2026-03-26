@@ -1,11 +1,20 @@
-import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
+import {
+  db as dbCore,
+  docIds,
+  encryption,
+  objectStore,
+} from "@budibase/backend-core"
 import { ImportWorkspaceFn } from "@budibase/pro"
 import { utils } from "@budibase/shared-core"
 import {
   Automation,
   AutomationTriggerStepId,
+  BUDIBASE_AI_PROVIDER_ID,
+  CustomAIProviderConfig,
   Database,
+  DocumentType,
   FieldType,
+  LiteLLMKeyConfig,
   Row,
   RowAttachment,
   WebhookTriggerInputs,
@@ -17,6 +26,7 @@ import * as tar from "tar"
 import { v4 as uuid } from "uuid"
 import sdk from "../.."
 import { ObjectStoreBuckets } from "../../../constants"
+import environment from "../../../environment"
 import { getAutomationParams } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { downloadTemplate } from "../../../utilities/fileSystem"
@@ -184,6 +194,56 @@ export interface ImportAppOpts {
   updateAttachmentColumns?: boolean
   importObjStoreContents?: boolean
   objectStoreAppId?: string
+  preserveLiteLLMConfig?: boolean
+}
+
+export const IMPORT_PENDING_LITELLM_MODEL_ID =
+  "__bb_import_pending_litellm_model__"
+
+async function sanitizeLiteLLMImportData(db: Database) {
+  console.log("Starting LiteLLM import sanitization", {
+    dbName: db.name,
+  })
+  const keyDocId = docIds.getLiteLLMKeyID()
+  const keyDoc = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
+  if (keyDoc) {
+    await db.remove(keyDoc)
+    console.log("Removed LiteLLM key config from imported data", {
+      dbName: db.name,
+      keyDocId,
+    })
+  }
+
+  const aiConfigs = await db.allDocs<CustomAIProviderConfig>(
+    docIds.getDocParams(DocumentType.AI_CONFIG, undefined, {
+      include_docs: true,
+    })
+  )
+
+  const updatedAIConfigs = aiConfigs.rows
+    .map(row => row.doc)
+    .filter((doc): doc is CustomAIProviderConfig => !!doc)
+    .map(doc => ({
+      ...doc,
+      liteLLMModelId:
+        doc.provider === BUDIBASE_AI_PROVIDER_ID && !environment.SELF_HOSTED
+          ? doc.liteLLMModelId
+          : IMPORT_PENDING_LITELLM_MODEL_ID,
+    }))
+
+  if (updatedAIConfigs.length) {
+    await db.bulkDocs(updatedAIConfigs)
+  }
+
+  console.log("Finished LiteLLM import sanitization", {
+    dbName: db.name,
+    aiConfigCount: updatedAIConfigs.length,
+    preservedBudibaseAIConfigCount: updatedAIConfigs.filter(
+      c =>
+        c.provider === BUDIBASE_AI_PROVIDER_ID &&
+        c.liteLLMModelId !== IMPORT_PENDING_LITELLM_MODEL_ID
+    ).length,
+  })
 }
 
 export const importApp: ImportWorkspaceFn = async (
@@ -195,6 +255,7 @@ export const importApp: ImportWorkspaceFn = async (
   const importOpts: ImportAppOpts = {
     updateAttachmentColumns: true,
     importObjStoreContents: true,
+    preserveLiteLLMConfig: false,
     ...opts,
   }
   const prodAppId = dbCore.getProdWorkspaceID(appId)
@@ -291,6 +352,12 @@ export const importApp: ImportWorkspaceFn = async (
     await updateAttachmentColumns(prodAppId, db)
   }
   await updateAutomations(prodAppId, db)
+  if (!importOpts.preserveLiteLLMConfig) {
+    await sanitizeLiteLLMImportData(db)
+  }
+
+  await sdk.ai.configs.reconcileLiteLLMModels()
+
   // clear up afterward
   if (tmpPath) {
     await fsp.rm(tmpPath, { recursive: true, force: true })

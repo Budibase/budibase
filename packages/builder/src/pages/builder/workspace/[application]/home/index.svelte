@@ -577,6 +577,19 @@
     goto(url(`../automation/${automationId}`))
   }
 
+  const dismissAutomationError = async (automationId: string) => {
+    try {
+      await automationStore.actions.clearLogErrors({
+        automationId,
+        appId: $appStore.appId,
+      })
+      await appsStore.load()
+    } catch (err) {
+      console.error(err)
+      notifications.error("Error dismissing automation error")
+    }
+  }
+
   const automationErrorMessage = (
     automationName: string | undefined,
     errorCount: number
@@ -648,6 +661,7 @@
               entry.automation?.name,
               entry.errorCount
             )}
+            on:dismiss={() => dismissAutomationError(entry.automationId)}
           />
         {/each}
       </div>

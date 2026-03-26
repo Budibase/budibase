@@ -243,7 +243,10 @@ describe("backups", () => {
       expect(importWorkspaceId).not.toEqual(tempAppId)
       expect(importDb.name).toMatch(new RegExp(`^${devWorkspaceId}_temp_`))
       expect(importOpts).toEqual(
-        expect.objectContaining({ objectStoreAppId: tempAppId })
+        expect.objectContaining({
+          objectStoreAppId: tempAppId,
+          preserveLiteLLMConfig: true,
+        })
       )
     })
   })

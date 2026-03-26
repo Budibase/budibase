@@ -180,7 +180,7 @@
         order: idx,
         visible: !!column.active,
         conditions: enrichGridConditions(column.conditions, context),
-        format: createFormatter(column),
+        format: createFormatter(column, context),
 
         // Small hack to ensure we react to all changes, as our
         // memoization cannot compare differences in functions
@@ -193,11 +193,12 @@
     return overrides
   }
 
-  const createFormatter = column => {
+  const createFormatter = (column, context) => {
     if (typeof column.format !== "string" || !column.format.trim().length) {
       return null
     }
-    return row => processStringSync(column.format, { [id]: row })
+    const snippets = context?.snippets
+    return row => processStringSync(column.format, { [id]: row, snippets })
   }
 
   const enrichButtons = buttons => {
