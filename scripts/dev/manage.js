@@ -40,7 +40,6 @@ async function init() {
     BB_ADMIN_USER_PASSWORD: "cheekychuckles",
     TRIGGER_API_URL: "http://localhost:3040",
     TRIGGER_SECRET_KEY: "",
-    TRIGGER_TASK_AUTOMATION_ID: "",
     LITELLM_MASTER_KEY: "budibase",
     LITELLM_SALT_KEY: "budibase",
     BLACKLIST_IPS: "",

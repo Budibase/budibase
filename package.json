@@ -70,6 +70,8 @@
     "dev:server": "yarn dev:init && yarn run kill-server && lerna run --stream dev --scope @budibase/worker --scope @budibase/server",
     "dev:built": "yarn dev:init && yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
     "dev:docker": "./scripts/devDocker.sh",
+    "trigger:dev": "npx trigger.dev@latest dev --config trigger.config.ts",
+    "trigger:deploy": "npx trigger.dev@latest deploy --config trigger.config.ts",
     "test": "lerna run --concurrency 1 --stream test",
     "test:containers:kill": "./scripts/killTestcontainers.sh",
     "lint:eslint": "eslint packages --max-warnings=0",

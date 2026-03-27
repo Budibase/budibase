@@ -2,12 +2,15 @@ import { queue } from "@budibase/backend-core"
 import { AutomationData } from "@budibase/types"
 import Router from "@koa/router"
 import * as automation from "../threads/automation"
+import { DEFAULT_TRIGGER_AUTOMATION_TASK_ID } from "./triggerTask"
 
 export const automationQueue = new queue.BudibaseQueue<AutomationData>(
   queue.JobQueue.AUTOMATION,
   {
     removeStalledCb: job => automation.removeStalled(job),
-    triggerTaskId: process.env.TRIGGER_TASK_AUTOMATION_ID,
+    triggerTaskId:
+      process.env.TRIGGER_TASK_AUTOMATION_ID ||
+      DEFAULT_TRIGGER_AUTOMATION_TASK_ID,
     jobTags: (job: AutomationData) => {
       return {
         "automation.id": job.automation._id,
