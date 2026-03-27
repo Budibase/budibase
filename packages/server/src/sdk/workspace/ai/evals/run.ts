@@ -1,15 +1,22 @@
 import { features, getErrorMessage, HTTPError } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import type {
   Agent,
   AgentEvalCase,
   AgentEvalCaseResult,
+  AgentEvalJudgeResult,
   AgentEvalRun,
+  AgentEvalSnapshot,
+  AgentEvalSuite,
   ContextUser,
   FeatureFlag,
 } from "@budibase/types"
 import {
+  Output,
+  ToolLoopAgent,
   extractReasoningMiddleware,
+  jsonSchema,
   stepCountIs,
   streamText,
   wrapLanguageModel,
@@ -22,9 +29,41 @@ import {
 } from "../agents"
 import { createSessionLogIndexer } from "../agentLogs"
 import { retrieveContextForAgent } from "../rag"
-import { evaluateResponse, validateEvalCase } from "./assertions"
-import { fetchSuite, saveLatestRun } from "./crud"
+import {
+  evaluateResponse,
+  normalizeJudgeAssertion,
+  validateEvalCase,
+} from "./assertions"
+import { fetchSuite, saveRun } from "./crud"
 import { v4 } from "uuid"
+
+type EvalLLM = Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+type SessionLogIndexer = ReturnType<typeof createSessionLogIndexer>
+
+interface JudgeOutput {
+  passed: boolean
+  reason: string
+}
+
+const judgeOutputSchema =
+  helpers.structuredOutput.normalizeSchemaForStructuredOutput({
+    type: "object",
+    properties: {
+      passed: {
+        type: "boolean",
+      },
+      reason: {
+        type: "string",
+      },
+    },
+    required: ["passed", "reason"],
+  })
+
+const judgeInstructions = `You are grading an AI agent response against a user-defined rubric.
+Use only the rubric, the original prompt, and the response.
+Do not invent extra requirements.
+Return passed=true only when the response clearly satisfies the rubric.
+Keep the reason concise and specific.`
 
 const buildRetrievedContextMessage = (
   retrievedContext: string
@@ -37,6 +76,26 @@ const buildRetrievedContextMessage = (
         },
       ]
     : []
+
+const buildJudgePrompt = ({
+  prompt,
+  response,
+  rubric,
+}: {
+  prompt: string
+  response: string
+  rubric: string
+}) => `Rubric:
+${rubric}
+
+User prompt:
+${prompt}
+
+Agent response:
+${response}`
+
+const normalizeJudgeReason = (reason?: string) =>
+  reason?.trim() || "Judge did not return a reason."
 
 async function getRetrievedAgentContext(agent: Agent, latestQuestion: string) {
   if (
@@ -53,6 +112,99 @@ async function getRetrievedAgentContext(agent: Agent, latestQuestion: string) {
   } catch (error) {
     console.error("Failed to retrieve eval context", error)
     return ""
+  }
+}
+
+const buildRunSnapshot = ({
+  agent,
+  suite,
+}: {
+  agent: Agent
+  suite: AgentEvalSuite
+}): AgentEvalSnapshot => ({
+  agentId: agent._id!,
+  agentName: agent.name,
+  agentRev: agent._rev,
+  agentUpdatedAt: agent.updatedAt,
+  suiteRev: suite._rev,
+  aiconfig: agent.aiconfig,
+  promptInstructions: agent.promptInstructions,
+  goal: agent.goal,
+  enabledTools: [...(agent.enabledTools || [])],
+  knowledgeBases: [...(agent.knowledgeBases || [])],
+})
+
+async function runJudge({
+  llm,
+  prompt,
+  response,
+  rubric,
+  requestIds,
+  sessionLogIndexer,
+}: {
+  llm: EvalLLM
+  prompt: string
+  response: string
+  rubric: string
+  requestIds: Set<string>
+  sessionLogIndexer: SessionLogIndexer
+}): Promise<AgentEvalJudgeResult> {
+  const judge = new ToolLoopAgent({
+    model: wrapLanguageModel({
+      model: llm.chat,
+      middleware: extractReasoningMiddleware({
+        tagName: "think",
+      }),
+    }),
+    instructions: judgeInstructions,
+    stopWhen: stepCountIs(1),
+    providerOptions: llm.providerOptions?.(false),
+    output: Output.object({ schema: jsonSchema(judgeOutputSchema) }),
+    async onStepFinish({ response }) {
+      if (response?.id) {
+        requestIds.add(response.id)
+        sessionLogIndexer.addRequestId(response.id)
+      }
+    },
+  })
+
+  const result = await judge.stream({
+    prompt: buildJudgePrompt({
+      prompt,
+      response,
+      rubric,
+    }),
+  })
+
+  const [judgeOutputResult, judgeResponseResult] = await Promise.allSettled([
+    result.output as Promise<JudgeOutput>,
+    result.response,
+  ])
+
+  const responseId =
+    judgeResponseResult.status === "fulfilled"
+      ? (judgeResponseResult.value?.id ?? undefined)
+      : undefined
+  if (responseId) {
+    requestIds.add(responseId)
+    sessionLogIndexer.addRequestId(responseId)
+  }
+
+  if (judgeOutputResult.status === "rejected") {
+    throw judgeOutputResult.reason
+  }
+  if (judgeResponseResult.status === "rejected") {
+    throw judgeResponseResult.reason
+  }
+
+  const output = judgeOutputResult.value
+  if (!output || typeof output.passed !== "boolean") {
+    throw new Error("Judge did not return a valid verdict.")
+  }
+
+  return {
+    status: output.passed ? "passed" : "failed",
+    reason: normalizeJudgeReason(output.reason),
   }
 }
 
@@ -175,8 +327,6 @@ async function runCase({
       sessionLogIndexer.addRequestId(responseId)
     }
 
-    await sessionLogIndexer.index()
-
     if (pendingToolCalls.size > 0) {
       throw new Error(formatIncompleteToolCallError([]))
     }
@@ -192,6 +342,53 @@ async function runCase({
       assertions: testCase.assertions,
       response,
     })
+    let judge: AgentEvalJudgeResult | undefined
+    const judgeAssertion = normalizeJudgeAssertion(testCase.assertions.judge)
+
+    if (judgeAssertion?.rubric) {
+      try {
+        judge = await runJudge({
+          llm,
+          prompt: testCase.prompt,
+          response,
+          rubric: judgeAssertion.rubric,
+          requestIds,
+          sessionLogIndexer,
+        })
+      } catch (error) {
+        await sessionLogIndexer.index()
+
+        const completedAt = new Date().toISOString()
+        return {
+          caseId: testCase.id,
+          name: testCase.name,
+          prompt: testCase.prompt,
+          response,
+          status: "error",
+          failures,
+          judge: {
+            status: "error",
+            error: getErrorMessage(error),
+          },
+          sessionId,
+          requestIds: [...requestIds],
+          startedAt,
+          completedAt,
+          durationMs: Date.now() - startedAtMs,
+          error: `Judge failed: ${getErrorMessage(error)}`,
+        }
+      }
+    }
+
+    if (judge?.status === "failed") {
+      failures.push({
+        type: "judge",
+        message: judge.reason || "Judge failed this response.",
+      })
+    }
+
+    await sessionLogIndexer.index()
+
     const completedAt = new Date().toISOString()
 
     return {
@@ -201,6 +398,7 @@ async function runCase({
       response,
       status: failures.length > 0 ? "failed" : "passed",
       failures,
+      judge,
       sessionId,
       requestIds: [...requestIds],
       startedAt,
@@ -248,6 +446,7 @@ export async function runSuite({
   const runId = v4()
   const startedAt = new Date().toISOString()
   const results: AgentEvalCaseResult[] = []
+  const snapshot = buildRunSnapshot({ agent, suite })
 
   for (const testCase of suite.cases) {
     results.push(
@@ -263,7 +462,7 @@ export async function runSuite({
   const completedAt = new Date().toISOString()
   const passed = results.filter(result => result.status === "passed").length
 
-  return await saveLatestRun({
+  return await saveRun({
     agentId,
     runId,
     total: results.length,
@@ -271,6 +470,7 @@ export async function runSuite({
     failed: results.length - passed,
     startedAt,
     completedAt,
+    snapshot,
     results,
   })
 }

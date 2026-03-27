@@ -1,5 +1,6 @@
 import {
   evaluateResponse,
+  normalizeJudgeAssertion,
   normalizeAssertions,
   validateEvalCase,
 } from "./assertions"
@@ -11,11 +12,25 @@ describe("agent eval assertions", () => {
         exact: "  ",
         contains: ["  employee  ", ""],
         notContains: ["  error ", "   "],
+        judge: {
+          rubric: "  be polite  ",
+        },
       })
     ).toEqual({
       contains: ["employee"],
       notContains: ["error"],
+      judge: {
+        rubric: "be polite",
+      },
     })
+  })
+
+  it("normalizes a blank judge rubric away", () => {
+    expect(
+      normalizeJudgeAssertion({
+        rubric: "   ",
+      })
+    ).toBeUndefined()
   })
 
   it("validates that a case has a prompt and at least one assertion", () => {
@@ -31,9 +46,24 @@ describe("agent eval assertions", () => {
       {
         type: "invalid",
         message:
-          "At least one assertion is required. Add an exact, contains, or not-contains check.",
+          "At least one assertion is required. Add an exact, contains, not-contains, or judge check.",
       },
     ])
+  })
+
+  it("accepts a case with only a judge rubric", () => {
+    expect(
+      validateEvalCase({
+        id: "case-1",
+        name: "Case 1",
+        prompt: "Say hello",
+        assertions: {
+          judge: {
+            rubric: "The response should be friendly.",
+          },
+        },
+      })
+    ).toEqual([])
   })
 
   it("compares responses case-insensitively with normalized whitespace", () => {

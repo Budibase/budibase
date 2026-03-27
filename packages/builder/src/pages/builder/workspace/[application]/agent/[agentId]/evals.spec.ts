@@ -46,6 +46,9 @@ describe("agent evals page", () => {
             prompt: "Who is the product manager?",
             assertions: {
               contains: ["Alice"],
+              judge: {
+                rubric: "The answer should identify the correct person.",
+              },
             },
           },
         ],
@@ -58,6 +61,13 @@ describe("agent evals page", () => {
         failed: 0,
         startedAt: "2025-01-01T00:00:00.000Z",
         completedAt: "2025-01-01T00:00:01.000Z",
+        snapshot: {
+          agentId: "agent-1",
+          agentName: "Support Agent",
+          aiconfig: "config-1",
+          enabledTools: [],
+          knowledgeBases: [],
+        },
         results: [
           {
             caseId: "case-1",
@@ -66,6 +76,10 @@ describe("agent evals page", () => {
             response: "Alice is the product manager.",
             status: "passed",
             failures: [],
+            judge: {
+              status: "passed",
+              reason: "The response identifies the correct person.",
+            },
             sessionId: "eval:run-1:case-1",
             requestIds: [],
             startedAt: "2025-01-01T00:00:00.000Z",
@@ -74,6 +88,7 @@ describe("agent evals page", () => {
           },
         ],
       },
+      recentRuns: [],
     })
     updateAgentEvalSuite.mockResolvedValue({
       agentId: "agent-1",
@@ -88,6 +103,13 @@ describe("agent evals page", () => {
         failed: 0,
         startedAt: "2025-01-01T00:00:00.000Z",
         completedAt: "2025-01-01T00:00:01.000Z",
+        snapshot: {
+          agentId: "agent-1",
+          agentName: "Support Agent",
+          aiconfig: "config-1",
+          enabledTools: [],
+          knowledgeBases: [],
+        },
         results: [],
       },
     })
@@ -100,8 +122,14 @@ describe("agent evals page", () => {
       expect(fetchAgentEvalSuite).toHaveBeenCalledWith("agent-1")
     })
 
-    expect(await screen.findByText("Employee lookup")).toBeInTheDocument()
-    expect(screen.getAllByText("Passed")).toHaveLength(2)
+    expect(await screen.findAllByText("Employee lookup")).toHaveLength(2)
+    expect(screen.getAllByText("Passed").length).toBeGreaterThanOrEqual(2)
+    expect(
+      screen.getByDisplayValue("The answer should identify the correct person.")
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText("The response identifies the correct person.")
+    ).toBeInTheDocument()
     expect(
       screen.getByText("Alice is the product manager.")
     ).toBeInTheDocument()

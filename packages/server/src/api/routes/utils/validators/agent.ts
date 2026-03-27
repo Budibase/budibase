@@ -138,6 +138,9 @@ export function generateAgentInstructionsValidator() {
 const OPTIONAL_ASSERTION_LIST = Joi.array()
   .items(Joi.string().trim().disallow(""))
   .optional()
+const OPTIONAL_JUDGE_ASSERTION = Joi.object({
+  rubric: Joi.string().trim().disallow("").required(),
+}).optional()
 
 const AGENT_EVAL_CASE_SCHEMA = Joi.object({
   id: Joi.string().optional(),
@@ -147,6 +150,7 @@ const AGENT_EVAL_CASE_SCHEMA = Joi.object({
     exact: OPTIONAL_STRING,
     contains: OPTIONAL_ASSERTION_LIST,
     notContains: OPTIONAL_ASSERTION_LIST,
+    judge: OPTIONAL_JUDGE_ASSERTION,
   }).required(),
 }).required()
 

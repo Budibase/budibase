@@ -15,6 +15,7 @@ jest.mock("../../../sdk", () => ({
       evals: {
         fetchSuite: jest.fn(),
         fetchLatestRun: jest.fn(),
+        fetchRuns: jest.fn(),
         saveSuite: jest.fn(),
         runSuite: jest.fn(),
       },
@@ -33,6 +34,7 @@ describe("agent eval controllers", () => {
   it("fetches suite and latest run", async () => {
     sdk.ai.evals.fetchSuite.mockResolvedValue({ agentId: "agent-1", cases: [] })
     sdk.ai.evals.fetchLatestRun.mockResolvedValue(null)
+    sdk.ai.evals.fetchRuns.mockResolvedValue([])
 
     const ctx: Partial<UserCtx<void, FetchAgentEvalSuiteResponse, any>> = {
       params: { agentId: "agent-1" },
@@ -45,6 +47,7 @@ describe("agent eval controllers", () => {
     expect(ctx.body).toEqual({
       suite: { agentId: "agent-1", cases: [] },
       latestRun: null,
+      recentRuns: [],
     })
   })
 
@@ -56,7 +59,12 @@ describe("agent eval controllers", () => {
           id: "case-1",
           name: "Case 1",
           prompt: "Who?",
-          assertions: { contains: ["Alice"] },
+          assertions: {
+            contains: ["Alice"],
+            judge: {
+              rubric: "The answer should be correct and concise.",
+            },
+          },
         },
       ],
     })
@@ -70,7 +78,12 @@ describe("agent eval controllers", () => {
               id: "case-1",
               name: "Case 1",
               prompt: "Who?",
-              assertions: { contains: ["Alice"] },
+              assertions: {
+                contains: ["Alice"],
+                judge: {
+                  rubric: "The answer should be correct and concise.",
+                },
+              },
             },
           ],
         },
@@ -99,7 +112,32 @@ describe("agent eval controllers", () => {
       failed: 0,
       startedAt: "2025-01-01T00:00:00.000Z",
       completedAt: "2025-01-01T00:00:01.000Z",
-      results: [],
+      snapshot: {
+        agentId: "agent-1",
+        agentName: "Agent 1",
+        aiconfig: "config-1",
+        enabledTools: [],
+        knowledgeBases: [],
+      },
+      results: [
+        {
+          caseId: "case-1",
+          name: "Case 1",
+          prompt: "Who?",
+          response: "Alice",
+          status: "passed",
+          failures: [],
+          judge: {
+            status: "passed",
+            reason: "The response matches the rubric.",
+          },
+          sessionId: "eval:run-1:case-1",
+          requestIds: [],
+          startedAt: "2025-01-01T00:00:00.000Z",
+          completedAt: "2025-01-01T00:00:01.000Z",
+          durationMs: 1000,
+        },
+      ],
     })
 
     const ctx: any = {
