@@ -13,7 +13,11 @@ import { Duration } from "../utils"
 import * as timers from "../timers"
 import tracer from "dd-trace"
 import sizeof from "object-sizeof"
-import { configure as configureTrigger } from "@trigger.dev/sdk/v3"
+import {
+  configure as configureTrigger,
+  runs as triggerRuns,
+  tasks as triggerTasks,
+} from "@trigger.dev/sdk/v3"
 
 export type * from "./types"
 
@@ -86,6 +90,7 @@ export interface BudibaseQueueOpts<T> {
   maxStalledCount?: number
   jobOptions?: JobOptions
   jobTags?: (job: T) => Record<string, any>
+  triggerTaskId?: string
 }
 
 export class BudibaseQueue<T> {
@@ -224,10 +229,106 @@ export class BudibaseQueue<T> {
         sizeof(data),
         this.metricTags()
       )
+      if (this.shouldUseTriggerTask(opts)) {
+        return await this.withMetrics("queue.add.trigger", () =>
+          this.addToTriggerTask(data, opts)
+        )
+      }
       return await this.withMetrics("queue.add", () =>
         this.queue.add(data, opts)
       )
     })
+  }
+
+  /**
+   * Force dispatching to Trigger.dev. This is used for cases where we still
+   * rely on local queue scheduling (for example repeat jobs), but execution
+   * should happen through a Trigger task.
+   */
+  async trigger(data: T, opts?: JobOptions): Promise<Job<T>> {
+    if (!this.isTriggerTaskAvailable()) {
+      throw new Error(
+        `Trigger task dispatch unavailable for queue "${this.jobQueue}"`
+      )
+    }
+    return this.withMetrics("queue.add.trigger", () =>
+      this.addToTriggerTask(data, opts)
+    )
+  }
+
+  isTriggerTaskAvailable() {
+    if (env.isTest()) {
+      return false
+    }
+    return !!(triggerConfigured && this.opts.triggerTaskId)
+  }
+
+  private shouldUseTriggerTask(opts?: JobOptions) {
+    if (!this.isTriggerTaskAvailable()) {
+      return false
+    }
+    // Repeatable scheduling remains on the local queue path for now.
+    if (opts?.repeat) {
+      return false
+    }
+    return true
+  }
+
+  private async addToTriggerTask(data: T, opts?: JobOptions): Promise<Job<T>> {
+    const taskId = this.opts.triggerTaskId
+    if (!taskId) {
+      throw new Error("Missing trigger task ID for Trigger queue dispatch")
+    }
+
+    const queueName = this.jobQueue
+    const payload = {
+      queueName,
+      job: {
+        data,
+        opts: opts || {},
+        timestamp: Date.now(),
+      },
+    }
+    const handle = await triggerTasks.trigger(taskId, payload, {
+      ...(opts?.delay ? { delay: `${opts.delay}ms` } : {}),
+      ...(opts?.attempts ? { maxAttempts: opts.attempts } : {}),
+      ...(opts?.jobId ? { idempotencyKey: String(opts.jobId) } : {}),
+      queue: queueName,
+    })
+
+    const jobId = handle.id
+    const job: Job<T> = {
+      id: jobId,
+      timestamp: payload.job.timestamp,
+      queue: this.queue,
+      data,
+      opts: opts || {},
+      attemptsMade: 0,
+      discard: async () => {},
+      remove: async () => {
+        await triggerRuns.cancel(jobId)
+      },
+      finished: async () => {
+        const run = await triggerRuns.poll(jobId)
+        if (run.isSuccess) {
+          return run.output
+        }
+        const reason = run.error?.message || `Trigger run ended with ${run.status}`
+        throw new Error(reason)
+      },
+    }
+
+    return this.withQueueRef(job)
+  }
+
+  private withQueueRef<TJob extends object>(job: TJob): TJob {
+    Object.defineProperty(job, "queue", {
+      value: this.queue,
+      enumerable: false,
+      configurable: true,
+      writable: true,
+    })
+    return job
   }
 
   private withMetrics<T>(name: string, cb: () => Promise<T>) {

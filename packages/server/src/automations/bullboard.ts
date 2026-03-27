@@ -7,6 +7,7 @@ export const automationQueue = new queue.BudibaseQueue<AutomationData>(
   queue.JobQueue.AUTOMATION,
   {
     removeStalledCb: job => automation.removeStalled(job),
+    triggerTaskId: process.env.TRIGGER_TASK_AUTOMATION_ID,
     jobTags: (job: AutomationData) => {
       return {
         "automation.id": job.automation._id,
