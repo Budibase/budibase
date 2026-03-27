@@ -29,6 +29,7 @@ import {
   disableAllCrons,
   enableCronOrEmailTrigger,
 } from "../../../automations/utils"
+import { deployTriggerTasksOnPublish } from "../../../automations/triggerDeployment"
 import {
   DocumentType,
   getAutomationParams,
@@ -539,6 +540,12 @@ export const publishWorkspaceInternal = async (
 
   deployment.setStatus(DeploymentStatus.SUCCESS)
   await storeDeploymentHistory(deployment)
+
+  try {
+    await deployTriggerTasksOnPublish()
+  } catch (err) {
+    console.warn("Unable to deploy Trigger tasks on publish", err)
+  }
 
   await events.app.published(migrationResult.app)
 
