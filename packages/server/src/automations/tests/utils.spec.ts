@@ -23,7 +23,7 @@ jest.mock("@budibase/pro", () => ({
 jest.mock("../bullboard", () => ({
   automationQueue: {
     add: jest.fn(),
-    getBullQueue: jest.fn(),
+    getQueue: jest.fn(),
   },
 }))
 
@@ -45,8 +45,8 @@ jest.mock("@budibase/backend-core", () => {
 const mockAdd = automationQueue.add as MockedFunction<
   typeof automationQueue.add
 >
-const mockGetBullQueue = automationQueue.getBullQueue as MockedFunction<
-  typeof automationQueue.getBullQueue
+const mockGetQueue = automationQueue.getQueue as MockedFunction<
+  typeof automationQueue.getQueue
 >
 const mockDoWithDB = dbCore.doWithDB as MockedFunction<typeof dbCore.doWithDB>
 const mockNewId = coreUtils.newid as MockedFunction<typeof coreUtils.newid>
@@ -139,11 +139,11 @@ describe("enableCronOrEmailTrigger", () => {
         { key: "repeat:legacy:123:::* * * * 1" },
         { key: "repeat:legacy2:123:::0 0 * * *" },
       ])
-    mockGetBullQueue.mockReturnValue({
-      ...(automationQueue.getBullQueue() ?? {}),
+    mockGetQueue.mockReturnValue({
+      ...(automationQueue.getQueue() ?? {}),
       removeRepeatableByKey: mockRemoveRepeatableByKey,
       getRepeatableJobs: mockGetRepeatableJobs,
-    } as ReturnType<typeof automationQueue.getBullQueue>)
+    } as ReturnType<typeof automationQueue.getQueue>)
 
     await enableCronOrEmailTrigger("app_dev_123", automation)
 

@@ -3,6 +3,7 @@ import {
   db as dbCore,
   logging,
   objectStore,
+  queue,
   tenancy,
 } from "@budibase/backend-core"
 import {
@@ -12,14 +13,13 @@ import {
   WorkspaceBackupContents,
   WorkspaceBackupQueueData,
 } from "@budibase/types"
-import { Job } from "bull"
 import fs from "fs"
 import { BackupProcessingOpts } from "../../types"
 import backups from "./backup"
 import { getBackupQueue } from "./queue"
 
 export async function init(opts: BackupProcessingOpts) {
-  getBackupQueue().process(async (job: Job) => {
+  getBackupQueue().process(async (job: queue.Job) => {
     const data = job.data as WorkspaceBackupQueueData
     try {
       if (data.export) {
@@ -281,7 +281,7 @@ async function runBackup(
   }
 }
 
-async function importProcessor(job: Job, opts: BackupProcessingOpts) {
+async function importProcessor(job: queue.Job, opts: BackupProcessingOpts) {
   const data: WorkspaceBackupQueueData = job.data
   const appId = data.appId,
     backupId = data.import!.backupId,
@@ -387,7 +387,7 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
   })
 }
 
-async function exportProcessor(job: Job, opts: BackupProcessingOpts) {
+async function exportProcessor(job: queue.Job, opts: BackupProcessingOpts) {
   const data: WorkspaceBackupQueueData = job.data
   const appId = data.appId,
     trigger = data.export!.trigger,

@@ -1,4 +1,4 @@
-import { Queue } from "bull"
+import { Queue } from "../../../src/queue"
 
 export async function processMessages(queue: Queue) {
   do {

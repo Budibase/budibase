@@ -61,6 +61,108 @@ services:
     volumes:
       - redis_data:/data
 
+  trigger-webapp:
+    container_name: budi-trigger-dev
+    restart: on-failure
+    image: ghcr.io/triggerdotdev/trigger.dev:${TRIGGER_IMAGE_TAG:-v3}
+    environment:
+      PORT: 3030
+      REMIX_APP_PORT: 3030
+      NODE_ENV: production
+      RUNTIME_PLATFORM: docker-compose
+      V3_ENABLED: "true"
+      INTERNAL_OTEL_TRACE_DISABLED: "1"
+      INTERNAL_OTEL_TRACE_LOGGING_ENABLED: "0"
+      LOGIN_ORIGIN: ${TRIGGER_API_URL:-http://localhost:3040}
+      APP_ORIGIN: ${TRIGGER_API_URL:-http://localhost:3040}
+      DEV_OTEL_EXPORTER_OTLP_ENDPOINT: ${TRIGGER_API_URL:-http://localhost:3040}/otel
+      ELECTRIC_ORIGIN: http://trigger-electric:3000
+      POSTGRES_USER: ${TRIGGER_DB_USER:-budibase}
+      POSTGRES_PASSWORD: ${TRIGGER_DB_PASSWORD:-budibase}
+      POSTGRES_DB: ${TRIGGER_DB_NAME:-trigger}
+      DATABASE_HOST: trigger-postgres:5432
+      DATABASE_URL: postgresql://${TRIGGER_DB_USER:-budibase}:${TRIGGER_DB_PASSWORD:-budibase}@trigger-postgres:5432/${TRIGGER_DB_NAME:-trigger}
+      DIRECT_URL: postgresql://${TRIGGER_DB_USER:-budibase}:${TRIGGER_DB_PASSWORD:-budibase}@trigger-postgres:5432/${TRIGGER_DB_NAME:-trigger}
+      REDIS_HOST: trigger-redis
+      REDIS_PORT: 6379
+      REDIS_TLS_DISABLED: "true"
+      MAGIC_LINK_SECRET: ${TRIGGER_MAGIC_LINK_SECRET:-trigger-secret}
+      SESSION_SECRET: ${TRIGGER_SESSION_SECRET:-trigger-secret}
+      ENCRYPTION_KEY: ${TRIGGER_ENCRYPTION_KEY:-ae13021afef0819c3a307ad487071c06}
+      PROVIDER_SECRET: ${TRIGGER_PROVIDER_SECRET:-trigger-provider-secret}
+      COORDINATOR_SECRET: ${TRIGGER_COORDINATOR_SECRET:-trigger-coordinator-secret}
+    ports:
+      - "${TRIGGER_PORT:-3040}:3030"
+    depends_on:
+      - trigger-postgres
+      - trigger-redis
+      - trigger-electric
+
+  trigger-postgres:
+    container_name: budi-trigger-postgres-dev
+    restart: on-failure
+    image: postgres:16
+    command:
+      - -c
+      - wal_level=logical
+    environment:
+      POSTGRES_DB: ${TRIGGER_DB_NAME:-trigger}
+      POSTGRES_USER: ${TRIGGER_DB_USER:-budibase}
+      POSTGRES_PASSWORD: ${TRIGGER_DB_PASSWORD:-budibase}
+    volumes:
+      - trigger_postgres_data:/var/lib/postgresql/data
+
+  trigger-redis:
+    container_name: budi-trigger-redis-dev
+    restart: on-failure
+    image: redis:7
+    volumes:
+      - trigger_redis_data:/data
+
+  trigger-electric:
+    container_name: budi-trigger-electric-dev
+    restart: on-failure
+    image: electricsql/electric:latest
+    environment:
+      DATABASE_URL: postgresql://${TRIGGER_DB_USER:-budibase}:${TRIGGER_DB_PASSWORD:-budibase}@trigger-postgres:5432/${TRIGGER_DB_NAME:-trigger}?sslmode=disable
+    depends_on:
+      - trigger-postgres
+
+  trigger-docker-provider:
+    container_name: budi-trigger-docker-provider-dev
+    restart: on-failure
+    image: ghcr.io/triggerdotdev/provider/docker:${TRIGGER_IMAGE_TAG:-v3}
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      PLATFORM_HOST: trigger-webapp
+      PLATFORM_WS_PORT: 3030
+      SECURE_CONNECTION: "false"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${TRIGGER_API_URL:-http://localhost:3040}/otel
+      PLATFORM_SECRET: ${TRIGGER_PROVIDER_SECRET:-trigger-provider-secret}
+    depends_on:
+      - trigger-webapp
+
+  trigger-coordinator:
+    container_name: budi-trigger-coordinator-dev
+    restart: on-failure
+    image: ghcr.io/triggerdotdev/coordinator:${TRIGGER_IMAGE_TAG:-v3}
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      PLATFORM_HOST: trigger-webapp
+      PLATFORM_WS_PORT: 3030
+      SECURE_CONNECTION: "false"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${TRIGGER_API_URL:-http://localhost:3040}/otel
+      PLATFORM_SECRET: ${TRIGGER_COORDINATOR_SECRET:-trigger-coordinator-secret}
+      HTTP_SERVER_PORT: 9020
+      COORDINATOR_HOST: 127.0.0.1
+      COORDINATOR_PORT: 9020
+    depends_on:
+      - trigger-webapp
+
   litellm-service:
     container_name: budi-litellm-dev
     image: ghcr.io/berriai/litellm:main-v1.81.14-stable
@@ -103,4 +205,8 @@ volumes:
   minio_data:
     driver: local
   redis_data:
+    driver: local
+  trigger_postgres_data:
+    driver: local
+  trigger_redis_data:
     driver: local

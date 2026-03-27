@@ -150,7 +150,7 @@ describe("knowledge base files", () => {
       expect(upload.file.status).toBe(KnowledgeBaseFileStatus.PROCESSING)
       expect(upload.file.filename).toBe("notes.txt")
 
-      await utils.queue.processMessages(getQueue().getBullQueue())
+      await utils.queue.processMessages(getQueue().getQueue())
 
       expect(ingestSpy).toHaveBeenCalled()
       const { files } = await config.api.knowledgeBaseFiles.fetch(
@@ -178,7 +178,7 @@ describe("knowledge base files", () => {
         }
       )
 
-      await utils.queue.processMessages(getQueue().getBullQueue())
+      await utils.queue.processMessages(getQueue().getQueue())
 
       const response = await config.api.knowledgeBaseFiles.remove(
         knowledgeBase._id!,

@@ -41,7 +41,7 @@ export async function rehydrateScheduledTriggers() {
     return
   }
 
-  const queue = automationQueue.getBullQueue()
+  const queue = automationQueue.getQueue()
   const repeatableJobs = await queue.getRepeatableJobs()
 
   const scheduled = new Set<string>()

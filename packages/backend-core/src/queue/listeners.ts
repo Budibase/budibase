@@ -1,4 +1,4 @@
-import { Job, JobId, Queue } from "bull"
+import { Job, JobId, Queue } from "./types"
 import * as context from "../context"
 import { JobQueue } from "./constants"
 
@@ -42,11 +42,11 @@ function getLogParams(
   } = {},
   extra: any = {}
 ) {
-  const message = `[BULL] ${eventType}=${event}`
+  const message = `[TRIGGER] ${eventType}=${event}`
   const err = opts.error
 
   const bullLog = {
-    _logKey: "bull",
+    _logKey: "trigger",
     eventType,
     event,
     job: opts.job,
@@ -135,7 +135,10 @@ function logging(queue: Queue, jobQueue: JobQueue) {
       console.error(...getLogParams(eventType, BullEvent.ERROR, { error }))
     })
 
-  if (process.env.NODE_DEBUG?.includes("bull")) {
+  if (
+    process.env.NODE_DEBUG?.includes("trigger") ||
+    process.env.NODE_DEBUG?.includes("queue")
+  ) {
     queue
       .on(BullEvent.WAITING, (jobId: JobId) => {
         // A Job is waiting to be processed as soon as a worker is idling.

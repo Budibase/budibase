@@ -14,7 +14,6 @@ import {
 } from "@budibase/types"
 import { Knex } from "knex"
 import { getQueue } from "../.."
-import { Job } from "bull"
 import { helpers } from "@budibase/shared-core"
 import { queue } from "@budibase/backend-core"
 
@@ -32,17 +31,17 @@ export function afterAll() {
 }
 
 export function getTestQueue(): queue.InMemoryQueue<AutomationData> {
-  return getQueue().getBullQueue() as unknown as queue.InMemoryQueue<AutomationData>
+  return getQueue().getQueue() as unknown as queue.InMemoryQueue<AutomationData>
 }
 
-export function triggerCron(message: Job<AutomationData>) {
+export function triggerCron(message: queue.Job<AutomationData>) {
   if (!message.opts?.repeat || !("cron" in message.opts.repeat)) {
     throw new Error("Expected cron message")
   }
   getTestQueue().manualTrigger(message.id)
 }
 
-export function triggerEMail(message: Job<AutomationData>) {
+export function triggerEMail(message: queue.Job<AutomationData>) {
   getTestQueue().manualTrigger(message.id)
 }
 
@@ -61,10 +60,10 @@ export async function runInProd(fn: () => unknown) {
 }
 
 export async function captureAllAutomationRemovals(f: () => Promise<unknown>) {
-  const messages: Job<AutomationData>[] = []
-  const queue = getQueue().getBullQueue()
+  const messages: queue.Job<AutomationData>[] = []
+  const queue = getQueue().getQueue()
 
-  const messageListener = async (message: Job<AutomationData>) => {
+  const messageListener = async (message: queue.Job<AutomationData>) => {
     messages.push(message)
   }
 
@@ -95,10 +94,10 @@ export async function captureAutomationRemovals(
 }
 
 export async function captureAllAutomationMessages(f: () => Promise<unknown>) {
-  const messages: Job<AutomationData>[] = []
-  const queue = getQueue().getBullQueue()
+  const messages: queue.Job<AutomationData>[] = []
+  const queue = getQueue().getQueue()
 
-  const messageListener = async (message: Job<AutomationData>) => {
+  const messageListener = async (message: queue.Job<AutomationData>) => {
     messages.push(message)
   }
 
@@ -136,7 +135,7 @@ export async function captureAllAutomationResults(
   f: () => Promise<unknown>
 ): Promise<queue.TestQueueMessage<AutomationData>[]> {
   const runs: queue.TestQueueMessage<AutomationData>[] = []
-  const queue = getQueue().getBullQueue()
+  const queue = getQueue().getQueue()
   let messagesOutstanding = 0
 
   const completedListener = async (

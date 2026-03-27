@@ -1,4 +1,3 @@
-import type { Job } from "bull"
 import { context, objectStore, queue, utils } from "@budibase/backend-core"
 import {
   KnowledgeBase,
@@ -139,7 +138,7 @@ const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {
 
 const handleProcessingError = async (
   file: KnowledgeBaseFile,
-  job: Job<RagIngestionJob>,
+  job: queue.Job<RagIngestionJob>,
   error: any
 ) => {
   const attempts = job.opts.attempts || 1

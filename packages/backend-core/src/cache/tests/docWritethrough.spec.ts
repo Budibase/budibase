@@ -19,7 +19,7 @@ const initialTime = Date.now()
 
 async function waitForQueueCompletion() {
   await utils.queue.processMessages(
-    DocWritethroughProcessor.queue.getBullQueue()
+    DocWritethroughProcessor.queue.getQueue()
   )
 }
 

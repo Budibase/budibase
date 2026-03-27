@@ -1,21 +1,21 @@
 import env from "../environment"
-import { getRedisOptions } from "../redis/utils"
 import { JobQueue } from "./constants"
 import InMemoryQueue from "./inMemoryQueue"
-import BullQueue, {
+import {
   Queue,
   QueueOptions,
   JobOptions,
   Job,
   DoneCallback,
-} from "bull"
+} from "./types"
 import { addListeners, StalledFn } from "./listeners"
 import { Duration } from "../utils"
 import * as timers from "../timers"
 import tracer from "dd-trace"
 import sizeof from "object-sizeof"
+import { configure as configureTrigger } from "@trigger.dev/sdk/v3"
 
-export type { QueueOptions, Queue, JobOptions } from "bull"
+export type * from "./types"
 
 // the queue lock is held for 5 minutes
 const QUEUE_LOCK_MS = Duration.fromMinutes(5).toMs()
@@ -25,6 +25,7 @@ const QUEUE_LOCK_RENEW_INTERNAL_MS = Duration.fromSeconds(30).toMs()
 const CLEANUP_PERIOD_MS = Duration.fromSeconds(60).toMs()
 let QUEUES: Queue[] = []
 let cleanupInterval: NodeJS.Timeout
+let triggerConfigured = false
 
 async function cleanup() {
   for (let queue of QUEUES) {
@@ -103,9 +104,7 @@ export class BudibaseQueue<T> {
   }
 
   private initQueue() {
-    const redisOpts = getRedisOptions()
     const queueConfig: QueueOptions = {
-      redis: redisOpts,
       settings: {
         maxStalledCount: this.opts.maxStalledCount
           ? this.opts.maxStalledCount
@@ -113,24 +112,14 @@ export class BudibaseQueue<T> {
         lockDuration: QUEUE_LOCK_MS,
         lockRenewTime: QUEUE_LOCK_RENEW_INTERNAL_MS,
       },
+      manualRepeatableJobs: env.isTest(),
     }
     if (this.opts.jobOptions) {
       queueConfig.defaultJobOptions = this.opts.jobOptions
     }
-    let queue: Queue<T>
-    if (!env.isTest()) {
-      queue = new BullQueue(this.jobQueue, queueConfig)
-    } else if (
-      process.env.BULL_TEST_REDIS_PORT &&
-      !isNaN(+process.env.BULL_TEST_REDIS_PORT)
-    ) {
-      queue = new BullQueue(this.jobQueue, {
-        ...queueConfig,
-        redis: { host: "localhost", port: +process.env.BULL_TEST_REDIS_PORT },
-      })
-    } else {
-      queue = new InMemoryQueue(this.jobQueue, queueConfig) as any
-    }
+    this.configureTriggerClient()
+
+    const queue: Queue<T> = new InMemoryQueue<T>(this.jobQueue, queueConfig)
 
     addListeners(queue, this.jobQueue, this.opts.removeStalledCb)
     QUEUES.push(queue)
@@ -144,7 +133,7 @@ export class BudibaseQueue<T> {
     return queue
   }
 
-  getBullQueue() {
+  getQueue() {
     return this.queue
   }
 
@@ -255,6 +244,28 @@ export class BudibaseQueue<T> {
 
   whenCurrentJobsFinished() {
     return this.queue.whenCurrentJobsFinished()
+  }
+
+  private configureTriggerClient() {
+    if (triggerConfigured) {
+      return
+    }
+
+    const accessToken = process.env.TRIGGER_SECRET_KEY
+    if (!accessToken) {
+      return
+    }
+
+    const baseURL = process.env.TRIGGER_API_URL
+    try {
+      configureTrigger({
+        accessToken,
+        ...(baseURL ? { baseURL } : {}),
+      })
+      triggerConfigured = true
+    } catch (err) {
+      console.warn("Unable to configure Trigger.dev SDK client", err)
+    }
   }
 }
 

@@ -70,8 +70,8 @@ async function getMetadata(
   email: string,
   workspaceId = config.devWorkspaceId!
 ) {
-  await utils.queue.processMessages(events.asyncEventQueue.getBullQueue())
-  await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
+  await utils.queue.processMessages(events.asyncEventQueue.getQueue())
+  await utils.queue.processMessages(UserSyncProcessor.queue.getQueue())
 
   const metadata: UserMetadata[] = await context.doInContext(workspaceId, () =>
     rawUserMetadata()
@@ -273,12 +273,12 @@ describe("user sync batching", () => {
 
     mockSync.mockClear()
 
-    await UserSyncProcessor.queue.getBullQueue().pause()
+    await UserSyncProcessor.queue.getQueue().pause()
     await processor.add(["batch-user-1"])
     await processor.add(["batch-user-2"])
     await processor.add(["batch-user-1"])
-    await UserSyncProcessor.queue.getBullQueue().resume()
-    await utils.queue.processMessages(UserSyncProcessor.queue.getBullQueue())
+    await UserSyncProcessor.queue.getQueue().resume()
+    await utils.queue.processMessages(UserSyncProcessor.queue.getQueue())
 
     expect(mockSync).toHaveBeenCalledTimes(1)
     expect(mockSync).toHaveBeenCalledWith(["batch-user-1", "batch-user-2"])

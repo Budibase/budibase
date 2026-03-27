@@ -38,6 +38,8 @@ async function init() {
     BUDICLOUD_URL: "https://budibaseqa.app",
     BB_ADMIN_USER_EMAIL: "local@budibase.com",
     BB_ADMIN_USER_PASSWORD: "cheekychuckles",
+    TRIGGER_API_URL: "http://localhost:3040",
+    TRIGGER_SECRET_KEY: "",
     LITELLM_MASTER_KEY: "budibase",
     LITELLM_SALT_KEY: "budibase",
     BLACKLIST_IPS: "",

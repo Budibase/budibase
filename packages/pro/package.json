@@ -18,7 +18,6 @@
     "@budibase/string-templates": "*",
     "@budibase/types": "*",
     "@koa/router": "15.3.0",
-    "bull": "4.10.1",
     "dd-trace": "5.56.0",
     "jsonwebtoken": "9.0.2",
     "lru-cache": "^7.14.1",

@@ -61,7 +61,7 @@ describe("backups", () => {
 
   async function waitForQueue() {
     await testUtils.queue.processMessages(
-      backups.getBackupQueue().getBullQueue()
+      backups.getBackupQueue().getQueue()
     )
   }
 

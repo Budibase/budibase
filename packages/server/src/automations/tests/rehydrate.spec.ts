@@ -1,11 +1,8 @@
 import "@budibase/backend-core/tests"
-import { GenericContainer, StartedTestContainer } from "testcontainers"
 
 jest.setTimeout(60_000)
 
 describe("rehydrateScheduledTriggers (integration)", () => {
-  let redis: StartedTestContainer | undefined
-
   const loadModules = async () => {
     const { default: TestConfiguration } = await import(
       "../../tests/utilities/TestConfiguration"
@@ -33,28 +30,20 @@ describe("rehydrateScheduledTriggers (integration)", () => {
   let modules: Awaited<ReturnType<typeof loadModules>>
 
   const originalEnv = {
-    BULL_TEST_REDIS_PORT: process.env.BULL_TEST_REDIS_PORT,
     MULTI_TENANCY: process.env.MULTI_TENANCY,
     SELF_HOSTED: process.env.SELF_HOSTED,
     FORKED_PROCESS: process.env.FORKED_PROCESS,
   }
 
   beforeAll(async () => {
-    redis = await new GenericContainer("redis").withExposedPorts(6379).start()
-
-    process.env.BULL_TEST_REDIS_PORT = `${redis.getMappedPort(6379)}`
     delete process.env.FORKED_PROCESS
 
     modules = await loadModules()
   })
 
   afterAll(async () => {
-    // Close Bull queues while Redis is still running to avoid connection errors.
     if (modules?.coreQueue) {
       await modules.coreQueue.shutdown()
-    }
-    if (redis) {
-      await redis.stop()
     }
     for (const [key, value] of Object.entries(originalEnv)) {
       if (value == null) {
@@ -96,7 +85,7 @@ describe("rehydrateScheduledTriggers (integration)", () => {
 
       await config.api.workspace.publish()
 
-      const queue = automationQueue.getBullQueue()
+      const queue = automationQueue.getQueue()
       const initialRepeatables = await queue.getRepeatableJobs()
       expect(
         initialRepeatables.some(

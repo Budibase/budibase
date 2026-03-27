@@ -1,5 +1,4 @@
 import { queue, logging } from "@budibase/backend-core"
-import { Job } from "bull"
 import { processMigrations } from "./migrationsProcessor"
 
 const MAX_ATTEMPTS = 3
@@ -21,7 +20,7 @@ const appMigrationQueue = new queue.BudibaseQueue<AppMigrationJob>(
       removeOnFail: true,
     },
     maxStalledCount: MAX_ATTEMPTS,
-    removeStalledCb: async (job: Job) => {
+    removeStalledCb: async (job: queue.Job) => {
       logging.logAlert(
         `App migration failed, queue job ID: ${job.id} - reason: ${job.failedReason}`
       )
@@ -33,7 +32,7 @@ export function init() {
   return appMigrationQueue.process(MIGRATION_CONCURRENCY, processMessage)
 }
 
-async function processMessage(job: Job<AppMigrationJob>) {
+async function processMessage(job: queue.Job<AppMigrationJob>) {
   const { appId } = job.data
 
   await processMigrations(appId)

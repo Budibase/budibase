@@ -22,7 +22,7 @@ export const router: Router = new Router()
 
 router.get("/health", async ctx => {
   if (automationsEnabled()) {
-    if (!(await automationQueue.getBullQueue().isReady())) {
+    if (!(await automationQueue.getQueue().isReady())) {
       ctx.status = 503
       return
     }

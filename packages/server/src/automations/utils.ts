@@ -1,4 +1,4 @@
-import { context, db as dbCore, utils } from "@budibase/backend-core"
+import { context, db as dbCore, queue, utils } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import {
@@ -11,7 +11,6 @@ import {
   MetadataType,
   TestAutomationRequest,
 } from "@budibase/types"
-import { JobId } from "bull"
 import tracer from "dd-trace"
 import { getAutomationMetadataParams } from "../db/utils"
 import { automationsEnabled } from "../features"
@@ -52,10 +51,10 @@ async function removeLegacyRepeatableJob(
 ) {
   let count = 0
   try {
-    const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
+    const jobs = await automationQueue.getQueue().getRepeatableJobs()
     for (let job of jobs) {
       if (job.key.includes(legacyJobId)) {
-        await automationQueue.getBullQueue().removeRepeatableByKey(job.key)
+        await automationQueue.getQueue().removeRepeatableByKey(job.key)
         count++
       }
     }
@@ -77,7 +76,7 @@ function loggingArgs(job: AutomationJob) {
       trigger: job.data.automation.definition.trigger.event,
     },
     {
-      _logKey: "bull",
+      _logKey: "trigger",
       jobId: job.id,
     },
   ]
@@ -196,17 +195,17 @@ export async function updateTestHistory(
 // end the repetition and the job itself
 export async function disableAllCrons(appId: string) {
   const promises = []
-  const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
+  const jobs = await automationQueue.getQueue().getRepeatableJobs()
   for (let job of jobs) {
     if (
       job.key.includes(`${appId}_cron`) ||
       job.key.includes(`${appId}_email`)
     ) {
       promises.push(
-        automationQueue.getBullQueue().removeRepeatableByKey(job.key)
+        automationQueue.getQueue().removeRepeatableByKey(job.key)
       )
       if (job.id) {
-        promises.push(automationQueue.getBullQueue().removeJobs(job.id))
+        promises.push(automationQueue.getQueue().removeJobs(job.id))
       }
     }
   }
@@ -214,11 +213,11 @@ export async function disableAllCrons(appId: string) {
   return { count: results.length / 2 }
 }
 
-export async function disableCronById(jobId: JobId) {
-  const jobs = await automationQueue.getBullQueue().getRepeatableJobs()
+export async function disableCronById(jobId: queue.JobId) {
+  const jobs = await automationQueue.getQueue().getRepeatableJobs()
   for (const job of jobs) {
     if (job.id === jobId) {
-      await automationQueue.getBullQueue().removeRepeatableByKey(job.key)
+      await automationQueue.getQueue().removeRepeatableByKey(job.key)
     }
   }
   console.log(`jobId=${jobId} disabled`)

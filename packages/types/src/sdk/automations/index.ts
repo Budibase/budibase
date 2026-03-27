@@ -4,7 +4,38 @@ import {
   Row,
   UserBindings,
 } from "../../documents"
-import { Job } from "bull"
+
+export interface QueueJobOptions {
+  attempts?: number
+  backoff?: number | { type?: string; delay?: number }
+  delay?: number
+  jobId?: string | number
+  lifo?: boolean
+  preventParsingData?: boolean
+  priority?: number
+  removeOnComplete?: boolean | number
+  removeOnFail?: boolean | number
+  repeat?: {
+    cron?: string
+    every?: number
+    tz?: string
+    endDate?: string | number | Date
+  }
+  stackTraceLimit?: number
+  timeout?: number
+}
+
+export interface QueueJob<T = any> {
+  id: string | number
+  name?: string
+  timestamp: number
+  data: T
+  opts: QueueJobOptions
+  attemptsMade: number
+  failedReason?: string
+  discard: () => Promise<void>
+  finished: () => Promise<any>
+}
 
 export interface AutomationDataEvent {
   appId?: string
@@ -29,4 +60,4 @@ export interface AutomationRowEvent {
   oldRow: Row
 }
 
-export type AutomationJob = Job<AutomationData>
+export type AutomationJob = QueueJob<AutomationData>

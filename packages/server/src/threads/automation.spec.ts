@@ -2,6 +2,7 @@ import { context } from "@budibase/backend-core"
 import {
   AutomationActionStepId,
   AutomationData,
+  AutomationJob,
   AutomationStep,
   AutomationEventType,
   AutomationStepType,
@@ -9,7 +10,6 @@ import {
   AutomationTriggerStepId,
   AutomationStepResult,
 } from "@budibase/types"
-import { Job } from "bull"
 import { BUILTIN_ACTION_DEFINITIONS, TRIGGER_DEFINITIONS } from "../automations"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import { basicAutomation } from "../tests/utilities/structures"
@@ -89,7 +89,7 @@ describe("automation thread", () => {
           timestamp: Date.now(),
         },
       },
-    } as Job<AutomationData>
+    } as AutomationJob
 
     const result = await executeInThread(job)
 
@@ -136,7 +136,7 @@ describe("automation thread", () => {
           appId: prodAppId,
         },
       },
-    } as Job<AutomationData>
+    } as AutomationJob
 
     const result = await executeInThread(job)
 
@@ -207,7 +207,7 @@ describe("automation thread", () => {
           appId,
         },
       },
-    } as Job<AutomationData>
+    } as AutomationJob
 
     const progressEvents: AutomationTestProgressEvent[] = []
     await executeInThread(job, {

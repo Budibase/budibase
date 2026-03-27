@@ -33,7 +33,6 @@ import {
   LoopV2Step,
   LoopV2StepInputs,
 } from "@budibase/types"
-import { Job } from "bull"
 import tracer from "dd-trace"
 import { cloneDeep } from "lodash/fp"
 import * as actions from "../automations/actions"
@@ -56,7 +55,7 @@ const CRON_STEP_ID = automations.triggers.definitions.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 const ERROR_PREVIEW_LENGTH = 512
 
-function getAutomationLogContext(job: Job<AutomationData>) {
+function getAutomationLogContext(job: AutomationJob) {
   const appId = job.data.event.appId
   const automationId = job.data.automation?._id
   const tenantId = context.getTenantIDFromWorkspaceID(appId!)
@@ -251,7 +250,7 @@ function setTriggerOutput(result: AutomationResults, outputs: any) {
   result.steps[0] = result.trigger
 }
 
-async function reloadAutomation(job: Job<AutomationData>) {
+async function reloadAutomation(job: AutomationJob) {
   const trigger = job.data.automation?.definition?.trigger
   if (!trigger || (!isCronTrigger(trigger) && !isEmailTrigger(trigger))) {
     return
@@ -911,7 +910,7 @@ class Orchestrator {
 }
 
 export async function execute(
-  job: Job<AutomationData>,
+  job: AutomationJob,
   callback: WorkerCallback
 ) {
   const workspaceId = job.data.event.appId
@@ -942,7 +941,7 @@ export async function execute(
           console.error(
             "automation worker failed",
             { _logKey: "automation", ...getAutomationLogContext(job) },
-            { _logKey: "bull", jobId: job.id },
+            { _logKey: "trigger", jobId: job.id },
             { _logKey: "error", ...getErrorLogDetails(err) }
           )
           callback(err)
@@ -953,7 +952,7 @@ export async function execute(
 }
 
 export async function executeInThread(
-  job: Job<AutomationData>,
+  job: AutomationJob,
   opts: { onProgress?: (event: AutomationTestProgressEvent) => void } = {}
 ): Promise<AutomationResults> {
   const workspaceId = job.data.event.appId
@@ -976,7 +975,7 @@ export async function executeInThread(
   })
 }
 
-export const removeStalled = async (job: Job<AutomationData>) => {
+export const removeStalled = async (job: AutomationJob) => {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")

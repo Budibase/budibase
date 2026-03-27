@@ -1,8 +1,16 @@
 import events from "events"
 import { newid, timeout } from "../utils"
-import { Queue, QueueOptions, JobOptions } from "./queue"
 import { helpers } from "@budibase/shared-core"
-import { Job, JobId, JobInformation, DoneCallback } from "bull"
+import {
+  Queue,
+  QueueOptions,
+  JobOptions,
+  Job,
+  JobId,
+  JobInformation,
+  DoneCallback,
+} from "./types"
+import cronParser from "cron-parser"
 
 function jobToJobInformation(job: Job): JobInformation {
   let cron = ""
@@ -15,9 +23,9 @@ function jobToJobInformation(job: Job): JobInformation {
     endDate = repeat.endDate ? new Date(repeat.endDate).getTime() : Date.now()
     tz = repeat.tz
     if ("cron" in repeat) {
-      cron = repeat.cron
+      cron = repeat.cron || ""
     } else {
-      every = repeat.every
+      every = repeat.every ?? -1
     }
   }
 
@@ -36,14 +44,22 @@ function jobToJobInformation(job: Job): JobInformation {
 export interface TestQueueMessage<T = any>
   extends Pick<
     Job<T>,
-    "id" | "timestamp" | "queue" | "data" | "opts" | "discard"
+    | "id"
+    | "timestamp"
+    | "queue"
+    | "data"
+    | "opts"
+    | "discard"
+    | "remove"
+    | "attemptsMade"
+    | "failedReason"
   > {
   manualTrigger?: boolean
   _isDiscarded?: boolean
 }
 
 /**
- * This is designed to replicate Bull (https://github.com/OptimalBits/bull) in
+ * This is a lightweight in-memory queue used for tests and local execution.
  * memory as a sort of mock.  It is relatively simple, using an event emitter
  * internally to register when messages are available to the consumers - in can
  * support many inputs and many consumers.
@@ -53,15 +69,19 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   _opts?: QueueOptions
   _messages: TestQueueMessage<T>[]
   _queuedJobIds: Set<string>
-  _emitter: NodeJS.EventEmitter<{
-    message: [TestQueueMessage<T>]
-    completed: [Job<T>, any]
-    removed: [TestQueueMessage<T>]
-    error: [Job<T>, Error]
-  }>
+  _scheduledRepeatables: Map<string, NodeJS.Timeout>
+  _scheduledDelayedJobs: Set<NodeJS.Timeout>
+  _emitter: events.EventEmitter
+  _processor?: (job: Job<T>, done?: DoneCallback) => Promise<void>
+  _concurrency: number
+  _runningCount: number
+  _pending: TestQueueMessage<T>[]
+  _paused: boolean
+  _manualRepeatableJobs: boolean
   _runCount: number
   _addCount: number
-  _attempts: number
+  _completedResults: Map<string, any>
+  _failedResults: Map<string, Error>
 
   /**
    * The constructor the queue, exactly the same as that of Bulls.
@@ -74,10 +94,33 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     this._opts = opts
     this._messages = []
     this._emitter = new events.EventEmitter()
+    this._scheduledRepeatables = new Map()
+    this._scheduledDelayedJobs = new Set()
+    this._concurrency = 1
+    this._runningCount = 0
+    this._pending = []
+    this._paused = false
+    this._manualRepeatableJobs =
+      opts?.manualRepeatableJobs ?? !!process.env.JEST_WORKER_ID
     this._runCount = 0
     this._addCount = 0
     this._queuedJobIds = new Set<string>()
-    this._attempts = opts?.defaultJobOptions?.attempts || 1
+    this._completedResults = new Map()
+    this._failedResults = new Map()
+  }
+
+  get name() {
+    return this._name
+  }
+
+  private withQueueRef<TJob extends object>(job: TJob): TJob {
+    Object.defineProperty(job, "queue", {
+      value: this as unknown as Queue<T>,
+      enumerable: false,
+      configurable: true,
+      writable: true,
+    })
+    return job
   }
 
   /**
@@ -89,71 +132,15 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
    * a lot more information about the queue and current status of Bull cluster.
    */
   async process(concurrencyOrFunc: number | any, func?: any) {
-    func = typeof concurrencyOrFunc === "number" ? func : concurrencyOrFunc
-    this._emitter.on("message", async message => {
-      // For the purpose of testing, don't trigger cron jobs immediately.
-      // Require the test to trigger them manually with timestamps.
-      if (!message.manualTrigger && message.opts?.repeat != null) {
-        return
-      }
-
-      function execute() {
-        if (func.length === 1) {
-          // Simulating bull, if there is not a "done" callback, execution will resolve then the function is processed
-          return func(message)
-        }
-        return new Promise((resolve, reject) => {
-          const done: DoneCallback = (err?: Error | null, result?: any) => {
-            if (err) {
-              reject(err)
-            } else {
-              resolve(result)
-            }
-          }
-          func(message, done)
-        })
-      }
-
-      const maxAttempts = this._attempts
-
-      async function retryFunc(fnc: any, attempt = 0) {
-        try {
-          return await fnc
-        } catch (e: any) {
-          attempt++
-          if (attempt < maxAttempts && !message._isDiscarded) {
-            await helpers.wait(100 * attempt)
-            return await retryFunc(execute(), attempt)
-          } else {
-            throw e
-          }
-        }
-      }
-
-      try {
-        const result = await retryFunc(execute())
-        this._emitter.emit("completed", message as Job<T>, result)
-
-        const indexToRemove = this._messages.indexOf(message)
-        if (indexToRemove === -1) {
-          throw "Failed deleting a processed message"
-        }
-        this._messages.splice(indexToRemove, 1)
-      } catch (e: any) {
-        console.error(e)
-        this._emitter.emit("error", message as Job<T>, e)
-      }
-
-      this._runCount++
-      const jobId = message.opts?.jobId?.toString()
-      if (jobId && message.opts?.removeOnComplete) {
-        this._queuedJobIds.delete(jobId)
-      }
-    })
+    this._concurrency =
+      typeof concurrencyOrFunc === "number" ? concurrencyOrFunc : 1
+    this._processor =
+      typeof concurrencyOrFunc === "number" ? func : concurrencyOrFunc
+    this.drain()
   }
 
   async isReady() {
-    return this as any
+    return true
   }
 
   /**
@@ -169,12 +156,20 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       throw new Error("doesn't support named jobs")
     }
 
-    const opts = optsOrT as JobOptions
+    const opts = {
+      ...(this._opts?.defaultJobOptions || {}),
+      ...((optsOrT as JobOptions) || {}),
+    }
 
     const jobId = opts?.jobId?.toString()
     if (jobId && this._queuedJobIds.has(jobId)) {
       console.log(`Ignoring already queued job ${jobId}`)
-      return
+      return {
+        id: jobId,
+        finished: async () => undefined,
+        discard: async () => {},
+        remove: async () => {},
+      } as Job<T>
     }
 
     if (typeof data !== "object") {
@@ -184,70 +179,130 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
       this._queuedJobIds.add(jobId)
     }
 
-    const messageId = newid()
-
-    const pushMessage = () => {
-      const message: TestQueueMessage = {
+    const messageId = jobId || newid()
+    const message = this.withQueueRef(
+      {
         id: messageId,
         timestamp: Date.now(),
-        queue: this as unknown as Queue,
         data,
         opts,
+        attemptsMade: 0,
         discard: async () => {
           message._isDiscarded = true
         },
+        remove: async () => {
+          this.removeMessageById(message.id)
+        },
+      } as TestQueueMessage<T>
+    )
+    this._messages.push(message)
+    if (this._messages.length > 1000) {
+      this._messages.shift()
+    }
+    this._addCount++
+    this._emitter.emit("message", message)
+
+    const isRepeatable = opts?.repeat != null
+
+    if (isRepeatable) {
+      if (!this._manualRepeatableJobs) {
+        this.scheduleNextRepeat(message)
       }
-      this._messages.push(message)
-      if (this._messages.length > 1000) {
-        this._messages.shift()
+    } else {
+      let delayTimer: NodeJS.Timeout | undefined
+      const pushMessage = () => {
+        if (delayTimer) {
+          this._scheduledDelayedJobs.delete(delayTimer)
+        }
+        this.enqueue(message)
       }
-      this._addCount++
-      this._emitter.emit("message", message)
+      const delay = opts?.delay
+      if (delay) {
+        delayTimer = setTimeout(pushMessage, delay)
+        this._scheduledDelayedJobs.add(delayTimer)
+      } else {
+        this.enqueue(message)
+      }
     }
 
-    const delay = opts?.delay
-    if (delay) {
-      setTimeout(pushMessage, delay)
-    } else {
-      pushMessage()
-    }
-    return {
-      id: jobId,
+    return this.withQueueRef({
+      id: messageId,
+      data,
+      opts,
+      timestamp: message.timestamp,
+      attemptsMade: message.attemptsMade,
+      discard: async () => {
+        message._isDiscarded = true
+      },
+      remove: async () => {
+        this.removeMessageById(message.id)
+      },
       finished: () =>
         new Promise((resolve, reject) => {
-          const errorHandler = (job: Job<T>, error: Error) => {
-            if (job.id !== messageId) {
+          if (this._failedResults.has(messageId.toString())) {
+            const err = this._failedResults.get(messageId.toString())
+            this._failedResults.delete(messageId.toString())
+            reject(err)
+            return
+          }
+          if (this._completedResults.has(messageId.toString())) {
+            const result = this._completedResults.get(messageId.toString())
+            this._completedResults.delete(messageId.toString())
+            resolve(result)
+            return
+          }
+
+          const failedHandler = (job: Job<T>, error: Error) => {
+            if (job.id?.toString() !== messageId.toString()) {
               return
             }
-            this._emitter.off("error", errorHandler)
+            this._emitter.off("failed", failedHandler)
             this._emitter.off("completed", completedHandler)
             reject(error)
           }
 
           const completedHandler = (job: Job<T>, result: any) => {
-            if (job.id !== messageId) {
+            if (job.id?.toString() !== messageId.toString()) {
               return
             }
-            this._emitter.off("error", errorHandler)
+            this._emitter.off("failed", failedHandler)
             this._emitter.off("completed", completedHandler)
             resolve(result)
           }
 
-          this._emitter.on("error", errorHandler)
+          this._emitter.on("failed", failedHandler)
           this._emitter.on("completed", completedHandler)
         }),
-    } as any
+    } as Job<T>)
   }
 
   /**
-   * replicating the close function from bull, which waits for jobs to finish.
+   * Replicates queue shutdown by clearing scheduled jobs.
    */
-  async close() {}
+  async close() {
+    for (const timer of this._scheduledRepeatables.values()) {
+      clearTimeout(timer)
+    }
+    this._scheduledRepeatables.clear()
+    for (const timer of this._scheduledDelayedJobs) {
+      clearTimeout(timer)
+    }
+    this._scheduledDelayedJobs.clear()
+  }
 
   async removeRepeatableByKey(id: string) {
+    const timer = this._scheduledRepeatables.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      this._scheduledRepeatables.delete(id)
+    }
     for (const [idx, message] of this._messages.entries()) {
-      if (message.id === id) {
+      if (message.id?.toString() === id.toString()) {
         this._messages.splice(idx, 1)
+        const jobId = message.opts?.jobId?.toString()
+        if (jobId) {
+          this._queuedJobIds.delete(jobId)
+        }
         this._emitter.emit("removed", message)
         return
       }
@@ -255,20 +310,38 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   }
 
   async removeJobs(_pattern: string) {
-    // no-op
+    for (let idx = this._messages.length - 1; idx >= 0; idx--) {
+      const message = this._messages[idx]
+      if (message.id?.toString() === _pattern.toString()) {
+        this._messages.splice(idx, 1)
+        this._pending = this._pending.filter(
+          p => p.id?.toString() !== _pattern.toString()
+        )
+        const timer = this._scheduledRepeatables.get(_pattern.toString())
+        if (timer) {
+          clearTimeout(timer)
+          this._scheduledRepeatables.delete(_pattern.toString())
+        }
+        const jobId = message.opts?.jobId?.toString()
+        if (jobId) {
+          this._queuedJobIds.delete(jobId)
+        }
+      }
+    }
   }
 
   /**
    * Implemented for tests
    */
   async clean() {
+    this._emitter.emit("cleaned", [], "completed")
     return []
   }
 
   async getJob(id: JobId) {
     for (const message of this._messages) {
       if (message.id === id) {
-        return message as Job
+        return message as Job<T>
       }
     }
     return null
@@ -277,7 +350,12 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   manualTrigger(id: JobId) {
     for (const message of this._messages) {
       if (message.id === id) {
-        this._emitter.emit("message", { ...message, manualTrigger: true })
+        this.enqueue(
+          this.withQueueRef({
+            ...message,
+            manualTrigger: true,
+          } as TestQueueMessage<T>)
+        )
         return
       }
     }
@@ -285,19 +363,17 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   }
 
   on(event: string, callback: (...args: any[]) => void): Queue {
-    // @ts-expect-error - this callback can be one of many types
     this._emitter.on(event, callback)
     return this as unknown as Queue
   }
 
   off(event: string, callback: (...args: any[]) => void): Queue {
-    // @ts-expect-error - this callback can be one of many types
     this._emitter.off(event, callback)
     return this as unknown as Queue
   }
 
   async count() {
-    return this._messages.length
+    return this._messages.filter(message => !message.opts?.repeat).length
   }
 
   async getCompletedCount() {
@@ -307,17 +383,221 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   async getRepeatableJobs() {
     return this._messages
       .filter(job => job.opts?.repeat != null)
-      .map(job => jobToJobInformation(job as Job))
+      .map(job => jobToJobInformation(job as Job<T>))
+  }
+
+  async getWaiting(start = 0, end = this._pending.length - 1) {
+    return this._pending.slice(start, end + 1) as Job<T>[]
   }
 
   async whenCurrentJobsFinished() {
     do {
       await timeout(50)
-    } while (this.hasRunningJobs())
+    } while (this.hasRunningJobs() || this._pending.length > 0)
   }
 
   private hasRunningJobs() {
-    return this._addCount > this._runCount
+    return this._runningCount > 0 || this._scheduledDelayedJobs.size > 0
+  }
+
+  async pause() {
+    this._paused = true
+    this._emitter.emit("paused")
+  }
+
+  async resume() {
+    this._paused = false
+    this._emitter.emit("resumed")
+    this.drain()
+  }
+
+  private enqueue(message: TestQueueMessage<T>) {
+    this._pending.push(message)
+    this._emitter.emit("waiting", message.id)
+    this.drain()
+  }
+
+  private drain() {
+    if (!this._processor || this._paused) {
+      return
+    }
+
+    while (
+      this._runningCount < this._concurrency &&
+      this._pending.length > 0 &&
+      !this._paused
+    ) {
+      const message = this._pending.shift()
+      if (!message) {
+        return
+      }
+      this.executeMessage(message)
+    }
+  }
+
+  private async executeMessage(message: TestQueueMessage<T>) {
+    if (!this._processor) {
+      return
+    }
+
+    this._runningCount++
+    try {
+      try {
+        await this.executeWithRetry(message)
+        this._runCount++
+        if (!message.opts?.repeat) {
+          this.removeMessageById(message.id)
+        }
+        this._emitter.emit("drained")
+      } catch {
+        // Failure state has already been emitted by executeWithRetry.
+      }
+    } finally {
+      this._runningCount--
+      this.drain()
+    }
+  }
+
+  private async executeWithRetry(message: TestQueueMessage<T>) {
+    const maxAttempts =
+      message.opts?.attempts ?? this._opts?.defaultJobOptions?.attempts ?? 1
+    const job = this.withQueueRef({
+      ...message,
+      attemptsMade: 0,
+      discard: async () => {
+        job._isDiscarded = true
+      },
+      remove: async () => {
+        this.removeMessageById(job.id)
+      },
+    } as TestQueueMessage<T>)
+
+    const execute = () => {
+      if (!this._processor) {
+        throw new Error("Queue processor not configured")
+      }
+      this._emitter.emit("active", job)
+      if (this._processor.length <= 1) {
+        return this._processor(job as Job<T>)
+      }
+      return new Promise((resolve, reject) => {
+        const done: DoneCallback = (err?: Error | null, result?: any) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(result)
+          }
+        }
+        this._processor?.(job as Job<T>, done).catch(reject)
+      })
+    }
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        job.attemptsMade = attempt
+        const result = await execute()
+        this._completedResults.set(job.id.toString(), result)
+        this._failedResults.delete(job.id.toString())
+        this._emitter.emit("completed", job, result)
+        this.removeQueuedIdOnCompletion(job)
+        return
+      } catch (err: any) {
+        job.failedReason = err?.message || `${err}`
+        const isFinalAttempt = attempt + 1 >= maxAttempts
+        if (!isFinalAttempt && !job._isDiscarded) {
+          await helpers.wait(this.getRetryDelay(job, attempt + 1))
+          continue
+        }
+        this._failedResults.set(job.id.toString(), err)
+        this._completedResults.delete(job.id.toString())
+        this._emitter.emit("failed", job, err)
+        this._emitter.emit("error", err)
+        this.removeQueuedIdOnFailure(job)
+        throw err
+      }
+    }
+  }
+
+  private removeQueuedIdOnCompletion(job: TestQueueMessage<T>) {
+    const jobId = job.opts?.jobId?.toString()
+    if (jobId && job.opts?.removeOnComplete) {
+      this._queuedJobIds.delete(jobId)
+    }
+  }
+
+  private removeQueuedIdOnFailure(job: TestQueueMessage<T>) {
+    const jobId = job.opts?.jobId?.toString()
+    if (jobId && job.opts?.removeOnFail) {
+      this._queuedJobIds.delete(jobId)
+    }
+    if (!job.opts?.repeat && job.opts?.removeOnFail !== false) {
+      this.removeMessageById(job.id)
+    }
+  }
+
+  private removeMessageById(id: JobId) {
+    const idx = this._messages.findIndex(job => job.id?.toString() === `${id}`)
+    if (idx !== -1) {
+      this._messages.splice(idx, 1)
+    }
+    this._pending = this._pending.filter(job => job.id?.toString() !== `${id}`)
+  }
+
+  private getRetryDelay(job: TestQueueMessage<T>, attempt: number) {
+    const backoff = job.opts?.backoff
+    if (typeof backoff === "number") {
+      return backoff
+    }
+    if (
+      backoff &&
+      typeof backoff === "object" &&
+      backoff.type === "exponential"
+    ) {
+      const delay = backoff.delay || 100
+      return delay * Math.max(1, attempt)
+    }
+    if (backoff && typeof backoff === "object" && backoff.delay) {
+      return backoff.delay
+    }
+    return 100 * Math.max(1, attempt)
+  }
+
+  private scheduleNextRepeat(message: TestQueueMessage<T>) {
+    const id = message.id.toString()
+    const existing = this._scheduledRepeatables.get(id)
+    if (existing) {
+      clearTimeout(existing)
+    }
+
+    const delay = this.getNextRepeatDelay(message.opts)
+    if (delay == null) {
+      return
+    }
+
+    const timer = setTimeout(() => {
+      this.enqueue(message)
+      this.scheduleNextRepeat(message)
+    }, delay)
+    this._scheduledRepeatables.set(id, timer)
+  }
+
+  private getNextRepeatDelay(opts?: JobOptions): number | null {
+    const repeat = opts?.repeat
+    if (!repeat) {
+      return null
+    }
+
+    if (typeof repeat.every === "number" && repeat.every > 0) {
+      return repeat.every
+    }
+
+    if (repeat.cron) {
+      const expression = cronParser.parseExpression(repeat.cron)
+      const next = expression.next().getTime()
+      return Math.max(0, next - Date.now())
+    }
+
+    return null
   }
 }
 
