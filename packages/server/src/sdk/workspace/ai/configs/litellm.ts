@@ -9,6 +9,7 @@ import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
+  KnowledgeBaseType,
   LiteLLMKeyConfig,
   ReasoningEffort,
   LockName,
@@ -19,9 +20,34 @@ import { buildLiteLLMParams } from "../helpers/litellm"
 import fetch from "node-fetch"
 import env from "../../../../environment"
 import * as configSdk from "../configs"
+import sdk from "../../.."
 
 const liteLLMUrl = env.LITELLM_URL
 const liteLLMAuthorizationHeader = `Bearer ${env.LITELLM_MASTER_KEY}`
+
+function sanitizeLiteLLMErrorMessage(message?: string): string | undefined {
+  if (!message) {
+    return
+  }
+
+  const hasTraceback =
+    /stack trace:|Traceback \(most recent call last\):/i.test(message)
+
+  let cleaned = message
+    .split(/stack trace:/i)[0]
+    .split(/Traceback \(most recent call last\):/i)[0]
+    .replace(/\s+/g, " ")
+    .trim()
+
+  if (hasTraceback) {
+    cleaned = cleaned
+      .replace(/^litellm\.[\w.]+:\s*/i, "")
+      .replace(/^[\w.]+Exception\s*-\s*/i, "")
+      .trim()
+  }
+
+  return cleaned || message
+}
 
 export enum LiteLLMStatus {
   OK = "ok",
@@ -268,11 +294,27 @@ export async function updateModel({
     `${liteLLMUrl}/model/${llmModelId}/update`,
     requestOptions
   )
-  const json = await res.json()
-  if (json.status === "error") {
-    const trimmedError = json.result.error.split("\n")[0] || json.result.error
+  if (!res.ok) {
+    const json = await res.json()
+    const message = sanitizeLiteLLMErrorMessage(
+      json.error?.message || json.result?.error
+    )
 
-    throw new HTTPError(`Error updating configuration: ${trimmedError}`, 400)
+    throw new HTTPError(
+      [`Error updating configuration`, message].filter(Boolean).join(": "),
+      res.status || 400
+    )
+  }
+
+  const json = await res.json()
+  if (json?.status && json.status !== "success") {
+    const message = sanitizeLiteLLMErrorMessage(
+      json.error?.message || json.result?.error
+    )
+    throw new HTTPError(
+      ["Error updating configuration", message].filter(Boolean).join(": "),
+      400
+    )
   }
 }
 
@@ -359,6 +401,7 @@ async function validateCompletionsModel(model: {
     `${liteLLMUrl}/health/test_connection`,
     requestOptions
   )
+
   if (res.status !== 200) {
     const text = await res.text()
     if (text.includes("DB not connected")) {
@@ -369,11 +412,17 @@ async function validateCompletionsModel(model: {
     }
     throw new HTTPError(text, 500)
   }
-  const json = await res.json()
-  if (json.status === "error") {
-    const trimmedError = json.result.error.split("\n")[0] || json.result.error
 
-    throw new HTTPError(`Error validating configuration: ${trimmedError}`, 400)
+  const json = await res.json()
+  if (json?.status !== "success") {
+    const message = [
+      "Error validating configuration",
+      sanitizeLiteLLMErrorMessage(json.error?.message || json.result?.error),
+    ]
+      .filter(Boolean)
+      .join(": ")
+
+    throw new HTTPError(message, 400)
   }
 }
 
@@ -459,10 +508,12 @@ export async function getKeySettings(): Promise<{
 async function updateKey({
   keyId,
   modelIds,
+  vectorStoreIds,
   teamId,
 }: {
   keyId: string
   modelIds?: string[]
+  vectorStoreIds?: string[]
   teamId?: string
 }) {
   const requestOptions = {
@@ -474,31 +525,121 @@ async function updateKey({
     body: JSON.stringify({
       key: keyId,
       ...(modelIds ? { models: modelIds } : {}),
+      ...(vectorStoreIds ? { vector_store_ids: vectorStoreIds } : {}),
       ...(teamId ? { team_id: teamId } : {}),
     }),
   }
 
   const res = await fetch(`${liteLLMUrl}/key/update`, requestOptions)
   const json = await res.json()
-  if (json.status === "error") {
-    const trimmedError = json.result.error.split("\n")[0] || json.result.error
+  if (!res.ok) {
+    const message = ["Error syncing keys", json.error?.message]
+      .filter(Boolean)
+      .join(": ")
 
-    throw new HTTPError(`Error syncing keys: ${trimmedError}`, 400)
+    throw new HTTPError(message, res.status || 400)
   }
 }
 
-export async function syncKeyModels() {
+function isMissingVirtualKeyError(error: any): boolean {
+  const message = `${error?.message || ""}`.toLowerCase()
+  const status = error?.status
+
+  return status === 401 && message.includes("user key does not exist in db")
+}
+
+async function regenerateWorkspaceKey() {
+  const db = context.getWorkspaceDB()
+  const keyDocId = docIds.getLiteLLMKeyID()
+  const workspaceId = context.getProdWorkspaceId()
+
+  if (!workspaceId) {
+    throw new HTTPError("Workspace ID is required to configure LiteLLM", 400)
+  }
+
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.LITELLM_KEY,
+      type: LockType.AUTO_EXTEND,
+      resource: workspaceId,
+    },
+    async () => {
+      const existing = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
+      const teamId = existing?.teamId || (await getOrCreateTenantTeam()).id
+      const key = await generateKey(getKeyAlias(workspaceId), teamId)
+      const updatedConfig: LiteLLMKeyConfig = {
+        _id: keyDocId,
+        _rev: existing?._rev,
+        keyId: key.id,
+        secretKey: key.secret,
+        teamId,
+      }
+      const { rev } = await db.put(updatedConfig)
+      return {
+        ...updatedConfig,
+        _rev: rev,
+      }
+    }
+  )
+
+  return result
+}
+
+export async function syncKeyVectorStores() {
+  const kbs = await sdk.ai.knowledgeBase.fetch()
+  const vectorStoreIds = kbs
+    .filter(kb => kb.type === KnowledgeBaseType.GEMINI)
+    .map(kb => kb.config.googleFileStoreId)
+    .filter((id): id is string => !!id)
+    .sort()
+
   const { keyId } = await getKeySettings()
+  await updateKey({
+    keyId,
+    vectorStoreIds,
+  })
+}
+
+export async function syncKeyModels() {
+  let { keyId } = await getKeySettings()
 
   const aiConfigs = await configSdk.fetch()
   const modelIds = aiConfigs
     .map(c => c.liteLLMModelId)
     .filter((id): id is string => !!id)
 
-  await updateKey({
-    keyId,
-    modelIds,
-  })
+  let success = false
+  try {
+    await updateKey({
+      keyId,
+      modelIds,
+    })
+    success = true
+  } catch (err: any) {
+    if (!isMissingVirtualKeyError(err)) {
+      throw err
+    }
+  }
+
+  if (!success) {
+    const keyRes = await fetch(`${liteLLMUrl}/key/info?key=${keyId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: liteLLMAuthorizationHeader,
+      },
+    })
+    if (keyRes.status !== 404) {
+      throw new Error("Key already exists, cannot be recreated")
+    }
+
+    const regeneratedKey = await regenerateWorkspaceKey()
+    keyId = regeneratedKey.keyId
+    await updateKey({
+      keyId,
+      modelIds,
+    })
+  }
 }
 
 type LiteLLMPublicProvider = {

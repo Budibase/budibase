@@ -1,36 +1,18 @@
 import { Document } from "../.."
 
 export enum KnowledgeBaseType {
-  LOCAL = "local",
-  SHAREPOINT = "sharepoint",
-  GOOGLE_DRIVE = "google_drive",
-  CONFLUENCE = "confluence",
+  GEMINI = "gemini",
 }
 
-export interface VectorKnowledgeBase extends Document {
+export interface GeminiKnowledgeBase extends Document {
   name: string
-  type: KnowledgeBaseType.LOCAL
-  embeddingModel: string
-  vectorDb: string
-  connectionId?: never
-  scope?: never
-  managedRetrievalIndexId?: never
+  type: KnowledgeBaseType.GEMINI
+  config: {
+    googleFileStoreId: string
+  }
 }
 
-export interface ManagedFileSearchKnowledgeBase extends Document {
-  name: string
-  type:
-    | KnowledgeBaseType.SHAREPOINT
-    | KnowledgeBaseType.GOOGLE_DRIVE
-    | KnowledgeBaseType.CONFLUENCE
-  connectionId: string
-  scope?: Record<string, unknown>
-  managedRetrievalIndexId?: string
-  embeddingModel?: never
-  vectorDb?: never
-}
-
-export type KnowledgeBase = VectorKnowledgeBase | ManagedFileSearchKnowledgeBase
+export type KnowledgeBase = GeminiKnowledgeBase
 
 export enum KnowledgeBaseFileStatus {
   PROCESSING = "processing",
@@ -46,7 +28,6 @@ export interface KnowledgeBaseFile extends Document {
   objectStoreKey: string
   ragSourceId: string
   status: KnowledgeBaseFileStatus
-  chunkCount: number
   uploadedBy: string
   errorMessage?: string
   processedAt?: string

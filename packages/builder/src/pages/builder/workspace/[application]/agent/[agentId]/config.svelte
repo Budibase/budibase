@@ -24,6 +24,7 @@
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
   import ToolsDropdown from "./ToolsDropdown.svelte"
   import ToolIcon from "./ToolIcon.svelte"
+  import GenerateInstructionsControl from "./GenerateInstructionsControl.svelte"
   import type { AgentTool } from "./toolTypes"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
   import {
@@ -43,6 +44,7 @@
   import { goto } from "@roxi/routify"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
   import { shouldAutoSelectAgentModel } from "./configUtils"
+  import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
 
   $goto
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
@@ -223,7 +225,6 @@ Any constraints the agent must follow.
       )
       .filter((tool): tool is AgentTool => !!tool)
   )
-
   let filteredTools = $derived.by(() => {
     return availableTools.filter(tool => {
       const query = toolSearch.toLowerCase()
@@ -560,28 +561,6 @@ Any constraints the agent must follow.
     insertToolBinding(tool.readableBinding)
   }
 
-  function normaliseBinding(binding: string) {
-    return binding
-      .replace(/^\s*\{\{\s*/, "")
-      .replace(/\s*\}\}\s*$/, "")
-      .trim()
-  }
-
-  function getIncludedToolRuntimeBindings(
-    prompt: string | undefined | null,
-    bindingsMap: Record<string, string>
-  ) {
-    const matches = (prompt || "").match(/\{\{[^}]+\}\}/g) || []
-    return Array.from(
-      new Set(
-        matches
-          .map(normaliseBinding)
-          .map(binding => bindingsMap[binding])
-          .filter(Boolean)
-      )
-    )
-  }
-
   function getWebSearchRuntimeBinding(
     configured?: boolean,
     config?: typeof webSearchConfig
@@ -838,6 +817,17 @@ Any constraints the agent must follow.
       <span class="bindings-bar-text"
         >Use <code>{`{{`}</code> to add to tools & knowledge sources</span
       >
+      <GenerateInstructionsControl
+        agentName={draft.name}
+        goal={draft.goal}
+        promptInstructions={draft.promptInstructions}
+        {promptBindings}
+        bindingIcons={readableToIcon}
+        onApplyInstructions={instructions => {
+          draft.promptInstructions = instructions
+          scheduleSave(true)
+        }}
+      />
     </div>
   </div>
 </div>

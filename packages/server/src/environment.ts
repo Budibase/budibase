@@ -171,6 +171,7 @@ const environment = {
   BBAI_LITELLM_KEY: process.env.BBAI_LITELLM_KEY,
   TABLE_GENERATION_TIMEOUT_MS:
     process.env.TABLE_GENERATION_TIMEOUT_MS || "240000",
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

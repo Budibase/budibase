@@ -5,7 +5,7 @@
   import {
     notifications,
     Modal,
-    Toggle,
+    Button,
     ActionButton,
     Switcher,
     StatusLight,
@@ -35,7 +35,6 @@
     type GraphBuildDeps,
   } from "./AutomationStepHelpers"
 
-  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { createFlowChartDnD } from "./FlowCanvas/FlowChartDnD"
   import TestDataModal from "./TestDataModal.svelte"
@@ -105,8 +104,7 @@
 
   $: $automationStore.showTestModal === true && testDataModal.show()
 
-  $: displayToggleValue =
-    automation.publishStatus.state === PublishResourceState.PUBLISHED
+  $: isLive = automation.publishStatus.state === PublishResourceState.PUBLISHED
 
   // Memo auto - selectedAutomation
   $: memoAutomation.set($selectedAutomation.data || automation)
@@ -253,10 +251,12 @@
     automationStore.actions.setViewMode(ViewMode.EDITOR)
   }
 
-  const handleToggleChange = async () => {
+  const handleToggleLive = async () => {
     try {
       changingStatus = true
-      await automationStore.actions.toggleDisabled(automation._id!)
+      await automationStore.actions.toggleDisabled(automation._id!, {
+        publish: true,
+      })
     } finally {
       changingStatus = false
     }
@@ -333,16 +333,18 @@
       Run test
     </ActionButton>
 
-    <PublishStatusBadge
-      status={automation.publishStatus.state}
-      loading={changingStatus}
-    />
     <div class="toggle-active setting-spacing">
-      <Toggle
-        on:change={handleToggleChange}
+      <Button
+        primary={!isLive}
+        secondary={isLive}
+        icon={isLive ? "stop" : "play"}
+        iconColor={isLive ? "" : "var(--bb-blue)"}
+        iconWeight="fill"
         disabled={!automation?.definition?.trigger || changingStatus}
-        value={displayToggleValue}
-      />
+        on:click={handleToggleLive}
+      >
+        {isLive ? "Stop" : "Set live"}
+      </Button>
     </div>
   </div>
 </div>

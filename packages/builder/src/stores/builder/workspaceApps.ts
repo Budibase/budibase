@@ -182,7 +182,6 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
     const { deploymentStore } = await import("./deployment")
     await deploymentStore.publishApp()
-    await workspaceDeploymentStore.fetch()
   }
 
   replaceDatasource(_id: string, workspaceApp: WorkspaceApp) {

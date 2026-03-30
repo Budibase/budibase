@@ -52,6 +52,7 @@ export interface Agent extends Document {
   promptInstructions?: string
   goal?: string
   live?: boolean
+  publishedAt?: string
   icon?: string
   iconColor?: string
   createdBy?: string
@@ -66,7 +67,6 @@ export interface AgentMessageRagSource {
   sourceId: string
   fileId?: string
   filename?: string
-  chunkCount: number
 }
 
 export interface AgentMessageMetadata {

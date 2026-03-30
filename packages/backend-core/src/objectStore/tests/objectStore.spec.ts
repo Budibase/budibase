@@ -1,10 +1,24 @@
 import { Upload } from "@aws-sdk/lib-storage"
 import { PassThrough } from "stream"
 import { structures } from "../../../tests"
-import { streamUpload, streamUploadMany, upload } from "../objectStore"
+import {
+  downloadTarball,
+  downloadTarballDirect,
+  streamUpload,
+  streamUploadMany,
+  upload,
+} from "../objectStore"
+import { fetchWithBlacklist } from "../../utils/outboundFetch"
 
 // Get mock instances
 const mockUpload = Upload as jest.MockedClass<typeof Upload>
+const fetchWithBlacklistMock = fetchWithBlacklist as jest.MockedFunction<
+  typeof fetchWithBlacklist
+>
+
+jest.mock("../../utils/outboundFetch", () => ({
+  fetchWithBlacklist: jest.fn(),
+}))
 
 describe("objectStore", () => {
   beforeEach(() => {
@@ -372,6 +386,37 @@ describe("objectStore", () => {
           CacheControl: "max-age=3600",
         },
       })
+    })
+  })
+
+  describe("safe outbound fetch usage", () => {
+    it("uses fetchWithBlacklist in downloadTarballDirect", async () => {
+      fetchWithBlacklistMock.mockRejectedValue(
+        new Error("URL is blocked or could not be resolved safely.")
+      )
+
+      await expect(
+        downloadTarballDirect("http://169.254.169.254/metadata/v1/", "tmp")
+      ).rejects.toThrow("URL is blocked or could not be resolved safely.")
+
+      expect(fetchWithBlacklistMock).toHaveBeenCalledWith(
+        "http://169.254.169.254/metadata/v1/",
+        { headers: {} }
+      )
+    })
+
+    it("uses fetchWithBlacklist in downloadTarball", async () => {
+      fetchWithBlacklistMock.mockRejectedValue(
+        new Error("URL is blocked or could not be resolved safely.")
+      )
+
+      await expect(
+        downloadTarball("http://169.254.169.254/metadata/v1/", "bucket", "tmp")
+      ).rejects.toThrow("URL is blocked or could not be resolved safely.")
+
+      expect(fetchWithBlacklistMock).toHaveBeenCalledWith(
+        "http://169.254.169.254/metadata/v1/"
+      )
     })
   })
 })

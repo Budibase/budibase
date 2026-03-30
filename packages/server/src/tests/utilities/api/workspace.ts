@@ -11,6 +11,7 @@ import {
   type CreateWorkspaceRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
+  type FetchMicrofrontendBootstrapResponse,
   type FetchPublishedAppsResponse,
 } from "@budibase/types"
 import { WorkspaceStatus } from "../../../db/utils"
@@ -154,6 +155,22 @@ export class WorkspaceAPI extends TestAPI {
     return await this._get<FetchAppPackageResponse>(
       `/api/applications/${appId}/appPackage`,
       opts
+    )
+  }
+
+  getMicrofrontendBootstrap = async (
+    appPath: string,
+    opts?: RequestOpts
+  ): Promise<FetchMicrofrontendBootstrapResponse> => {
+    return await this._get<FetchMicrofrontendBootstrapResponse>(
+      "/api/microfrontend/bootstrap",
+      {
+        ...opts,
+        query: {
+          ...(opts?.query || {}),
+          appPath,
+        },
+      }
     )
   }
 

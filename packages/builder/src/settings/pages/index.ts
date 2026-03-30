@@ -42,8 +42,6 @@ import AIConfigsPage from "@/settings/pages/ai/completion-models/index.svelte"
 import AIConfigForm from "@/settings/pages/ai/completion-models/AIConfigForm.svelte"
 import KnowledgeBasesPage from "@/settings/pages/ai/knowledge-bases/index.svelte"
 import KnowledgeBaseForm from "@/settings/pages/ai/knowledge-bases/KnowledgeBaseForm.svelte"
-import EmbeddingModelForm from "@/settings/pages/ai/knowledge-bases/EmbeddingModelForm.svelte"
-import VectorDatabaseForm from "@/settings/pages/ai/knowledge-bases/VectorDatabaseForm.svelte"
 
 const componentMap = {
   profile: ProfilePage,
@@ -83,8 +81,6 @@ const componentMap = {
   connections: Connections,
   connection: Connection,
   create_connection: CreateConnection,
-  embedding_model: EmbeddingModelForm,
-  vector_database: VectorDatabaseForm,
 } satisfies Record<string, Component<any>>
 
 export const Pages = {

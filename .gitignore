@@ -116,3 +116,5 @@ budibase-datasource
 .nx
 .claude
 .opencode
+.env
+docker-compose.yaml

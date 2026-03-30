@@ -260,6 +260,8 @@ if [[ -z "${LITELLM_MASTER_KEY}" || -z "${LITELLM_SALT_KEY}" ]]; then
     exit 1
 fi
 
+export USE_PRISMA_MIGRATE="True"
+
 upsert_env_var() {
     local name="$1"
     local value="$2"
@@ -307,6 +309,27 @@ pm2 start /opt/venv/litellm/bin/litellm \
   --restart-delay 5000 \
   --time \
   -- -c "${LITELLM_CONFIG_PATH}"
+
+echo "Waiting for LiteLLM to become ready..."
+litellm_ready_timeout="${LITELLM_READY_TIMEOUT_SECONDS:-120}"
+litellm_wait_seconds=0
+litellm_ready="false"
+until [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/health/liveliness) -eq 200 ]]; do
+    litellm_wait_seconds=$((litellm_wait_seconds + 1))
+    if [[ "${litellm_wait_seconds}" -ge "${litellm_ready_timeout}" ]]; then
+        echo "Timed out waiting for LiteLLM readiness after ${litellm_ready_timeout}s. Continuing startup without waiting further."
+        break
+    fi
+    sleep 1
+done
+if [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/health/liveliness) -eq 200 ]]; then
+    litellm_ready="true"
+fi
+if [[ "${litellm_ready}" == "true" ]]; then
+    echo "LiteLLM is ready."
+else
+    echo "LiteLLM is not ready yet. App and worker will still start."
+fi
 
 pushd app
 pm2 start --name app "yarn run:docker"

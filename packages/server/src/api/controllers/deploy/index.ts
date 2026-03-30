@@ -368,7 +368,7 @@ export const publishWorkspaceInternal = async (
             : undefined
 
         if (await backups.isEnabled()) {
-          await backups.triggerAppBackup(prodId, BackupTrigger.PUBLISH, {
+          await backups.triggerWorkspaceBackup(prodId, BackupTrigger.PUBLISH, {
             createdBy: ctx.user._id,
           })
         }
@@ -472,18 +472,32 @@ export const publishWorkspaceInternal = async (
             ? tables.filter(table => tablesToPublish.has(table._id!))
             : tables
         const automationIds = automations.map(auto => auto._id!)
+        const deployedAutomationIds = automations
+          .filter(auto => auto.disabled !== true)
+          .map(auto => auto._id!)
         const workspaceAppIds = workspaceApps.map(app => app._id!)
+        const deployedWorkspaceAppIds = workspaceApps
+          .filter(app => app.disabled !== true)
+          .map(app => app._id!)
         const tableIds = tablesMarkedForPublish.map(table => table._id!)
         const fullMap = [
           ...(automationIds ?? []),
           ...(workspaceAppIds ?? []),
           ...(tableIds ?? []),
         ]
+        const deployedMap = [
+          ...(deployedAutomationIds ?? []),
+          ...(deployedWorkspaceAppIds ?? []),
+          ...(tableIds ?? []),
+        ]
+        const publishedAt = new Date().toISOString()
         appDoc.resourcesPublishedAt = {
           ...prodAppDoc?.resourcesPublishedAt,
-          ...Object.fromEntries(
-            fullMap.map(id => [id, new Date().toISOString()])
-          ),
+          ...Object.fromEntries(fullMap.map(id => [id, publishedAt])),
+        }
+        appDoc.resourcesDeployedAt = {
+          ...prodAppDoc?.resourcesDeployedAt,
+          ...Object.fromEntries(deployedMap.map(id => [id, publishedAt])),
         }
         delete appDoc.automationErrors
         await db.put(appDoc)

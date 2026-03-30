@@ -16,6 +16,7 @@
     getSchemaForDatasource,
     getDatasourceForProvider,
   } from "@/dataBinding"
+  import { getConstraintsForType } from "./constraints"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
 
@@ -23,111 +24,6 @@
   export let rules = []
   export let bindings = []
   export let type
-
-  const Constraints = {
-    Required: {
-      label: "Required",
-      value: "required",
-    },
-    MinLength: {
-      label: "Min length",
-      value: "minLength",
-    },
-    MaxLength: {
-      label: "Max length",
-      value: "maxLength",
-    },
-    MaxValue: {
-      label: "Max value",
-      value: "maxValue",
-    },
-    MinValue: {
-      label: "Min value",
-      value: "minValue",
-    },
-    Equal: {
-      label: "Must equal",
-      value: "equal",
-    },
-    NotEqual: {
-      label: "Must not equal",
-      value: "notEqual",
-    },
-    Regex: {
-      label: "Must match regex",
-      value: "regex",
-    },
-    NotRegex: {
-      label: "Must not match regex",
-      value: "notRegex",
-    },
-    Contains: {
-      label: "Must contain",
-      value: "contains",
-    },
-    NotContains: {
-      label: "Must not contain",
-      value: "notContains",
-    },
-    MaxFileSize: {
-      label: "Max file size (MB)",
-      value: "maxFileSize",
-    },
-    MaxUploadSize: {
-      label: "Max total upload size (MB)",
-      value: "maxUploadSize",
-    },
-  }
-  const ConstraintMap = {
-    ["string"]: [
-      Constraints.Required,
-      Constraints.MaxLength,
-      Constraints.Equal,
-      Constraints.NotEqual,
-      Constraints.Regex,
-      Constraints.NotRegex,
-    ],
-    ["number"]: [
-      Constraints.Required,
-      Constraints.MaxValue,
-      Constraints.MinValue,
-      Constraints.Equal,
-      Constraints.NotEqual,
-    ],
-    ["boolean"]: [
-      Constraints.Required,
-      Constraints.Equal,
-      Constraints.NotEqual,
-    ],
-    ["datetime"]: [
-      Constraints.Required,
-      Constraints.MaxValue,
-      Constraints.MinValue,
-      Constraints.Equal,
-      Constraints.NotEqual,
-    ],
-    ["attachment"]: [
-      Constraints.Required,
-      Constraints.MaxFileSize,
-      Constraints.MaxUploadSize,
-    ],
-    ["attachment_single"]: [Constraints.Required, Constraints.MaxUploadSize],
-    ["signature_single"]: [Constraints.Required],
-    ["link"]: [
-      Constraints.Required,
-      Constraints.Contains,
-      Constraints.NotContains,
-      Constraints.MinLength,
-      Constraints.MaxLength,
-    ],
-    ["array"]: [
-      Constraints.Required,
-      Constraints.MinLength,
-      Constraints.MaxLength,
-      Constraints.Contains,
-      Constraints.NotContains,
-    ],
-  }
 
   const resolveDatasource = (selectedScreen, componentInstance, parent) => {
     return (
@@ -141,10 +37,6 @@
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: fieldType = type?.split("/")[1] || "string"
   $: constraintOptions = getConstraintsForType(fieldType)
-
-  const getConstraintsForType = type => {
-    return ConstraintMap[type]
-  }
 
   const getDataSourceSchema = (asset, component) => {
     if (!asset || !component) {
@@ -186,6 +78,14 @@
     }
 
     // String length constraint
+    if (exists(constraints.length?.minimum)) {
+      const length = constraints.length.minimum
+      rules.push({
+        constraint: "minLength",
+        value: length,
+        error: `Minimum ${length} characters`,
+      })
+    }
     if (exists(constraints.length?.maximum)) {
       const length = constraints.length.maximum
       rules.push({

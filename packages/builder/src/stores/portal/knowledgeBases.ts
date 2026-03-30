@@ -1,10 +1,8 @@
 import { API } from "@/api"
 import {
   CreateKnowledgeBaseRequest,
-  FetchSharePointSitesResponse,
   KnowledgeBase,
   KnowledgeBaseFile,
-  SyncKnowledgeBaseResponse,
   UpdateKnowledgeBaseRequest,
 } from "@budibase/types"
 import { DerivedBudiStore } from "../BudiStore"
@@ -30,26 +28,10 @@ interface DerivedKnowledgeBaseState {
   selectedKnowledgeBase: KnowledgeBaseWithFiles | undefined
 }
 
-type KnowledgeBaseFormDraft = Partial<
-  Pick<
-    KnowledgeBase,
-    | "_id"
-    | "_rev"
-    | "name"
-    | "type"
-    | "embeddingModel"
-    | "vectorDb"
-    | "connectionId"
-    | "scope"
-  >
->
-
 export class KnowledgeBaseStore extends DerivedBudiStore<
   KnowledgeBaseState,
   DerivedKnowledgeBaseState
 > {
-  private formDraft: KnowledgeBaseFormDraft | undefined
-
   constructor() {
     const makeDerivedStore = (store: Writable<KnowledgeBaseState>) => {
       return derived(store, $state => {
@@ -155,28 +137,6 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
       return state
     })
     await this.fetch()
-  }
-
-  sync = async (id: string): Promise<SyncKnowledgeBaseResponse> => {
-    return await API.knowledgeBase.sync(id)
-  }
-
-  fetchSharePointSites = async (
-    id: string
-  ): Promise<FetchSharePointSitesResponse> => {
-    return await API.knowledgeBase.fetchSharePointSites(id)
-  }
-
-  setFormDraft = (draft: KnowledgeBaseFormDraft) => {
-    this.formDraft = draft
-  }
-
-  getFormDraft = (): KnowledgeBaseFormDraft | undefined => {
-    return this.formDraft
-  }
-
-  clearFormDraft = () => {
-    this.formDraft = undefined
   }
 
   selectKnowledgeBase = (knowledgeBaseId?: string) => {

@@ -18,7 +18,6 @@
     "ai": "^6.0.116",
     "dayjs": "^1.10.8",
     "lodash": "4.17.23",
-    "shortid": "2.2.15",
     "socket.io-client": "^4.7.5"
   },
   "devDependencies": {

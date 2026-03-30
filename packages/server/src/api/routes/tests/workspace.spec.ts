@@ -3,7 +3,7 @@ import { USERS_TABLE_SCHEMA } from "../../../constants"
 import { setEnv, withEnv } from "../../../environment"
 
 import { Header, context, db, events, roles } from "@budibase/backend-core"
-import { structures } from "@budibase/backend-core/tests"
+import { mocks, structures } from "@budibase/backend-core/tests"
 import {
   type Workspace,
   BuiltinPermissionID,
@@ -51,6 +51,7 @@ describe("/applications", () => {
   }
 
   beforeEach(async () => {
+    mocks.licenses.useCloudFree()
     await createNewApp()
     jest.clearAllMocks()
     nock.cleanAll()
@@ -114,6 +115,8 @@ describe("/applications", () => {
     })
 
     it("should only return apps a user has access to through a custom role on a group", async () => {
+      mocks.licenses.useUnlimited()
+
       let user = await config.createUser({
         builder: { global: false },
         admin: { global: false },
@@ -540,9 +543,12 @@ describe("/applications", () => {
         await config.api.workspace.update(sourceWorkspace.appId, { scripts })
       })
 
-      const exportPath = await sdk.backups.exportApp(sourceWorkspace.appId, {
-        tar: true,
-      })
+      const exportPath = await sdk.backups.exportWorkspace(
+        sourceWorkspace.appId,
+        {
+          tar: true,
+        }
+      )
 
       const newWorkspace = await config.api.workspace.createFromImport({
         name: generateAppName(),
@@ -918,6 +924,8 @@ describe("/applications", () => {
     })
 
     it("should allow users in multiple groups with different roles to access all permitted screens", async () => {
+      mocks.licenses.useUnlimited()
+
       const hrRole = await config.api.roles.save({
         name: `HR_${structures.generator.guid().replace(/[^a-zA-Z0-9]/g, "")}`,
         inherits: [roles.BUILTIN_ROLE_IDS.BASIC],
@@ -1215,6 +1223,53 @@ describe("/applications", () => {
             )
           )
         })
+      })
+    })
+  })
+
+  describe("fetchMicrofrontendBootstrap", () => {
+    it("should resolve bootstrap data for a published app path", async () => {
+      mocks.licenses.useMicrofrontend()
+
+      await config.publish()
+      const appPath = `/app${config.prodWorkspace?.url}`
+
+      const res = await config.api.workspace.getMicrofrontendBootstrap(
+        appPath,
+        {
+          publicUser: true,
+        }
+      )
+
+      expect(res.appId).toEqual(config.getProdWorkspaceId())
+      expect(res.clientLibPath).toContain("/api/assets/")
+    })
+
+    it("should return 404 for unknown app paths", async () => {
+      mocks.licenses.useMicrofrontend()
+
+      await config.api.workspace.getMicrofrontendBootstrap(
+        "/app/does-not-exist",
+        {
+          publicUser: true,
+          expectations: {
+            status: 404,
+          },
+        }
+      )
+    })
+
+    it("should return 403 when license is not enterprise", async () => {
+      mocks.licenses.useCloudFree()
+
+      await config.publish()
+      const appPath = `/app${config.prodWorkspace?.url}`
+
+      await config.api.workspace.getMicrofrontendBootstrap(appPath, {
+        publicUser: true,
+        expectations: {
+          status: 403,
+        },
       })
     })
   })
@@ -1569,6 +1624,24 @@ describe("/applications", () => {
       expect(events.app.deleted).toHaveBeenCalledTimes(1)
 
       migrationsModule.MIGRATIONS.pop()
+    })
+
+    it("should reject delete when APP_ID header conflicts with path appId", async () => {
+      const secondWorkspace = await config.api.workspace.create({
+        name: generateAppName(),
+      })
+
+      await config.withHeaders(
+        { [Header.APP_ID]: workspace.appId },
+        async () => {
+          await config.api.workspace.delete(secondWorkspace.appId, {
+            status: 403,
+            body: { message: "App id conflict" },
+          })
+        }
+      )
+
+      expect(events.app.deleted).not.toHaveBeenCalled()
     })
   })
 

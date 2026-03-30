@@ -2184,26 +2184,39 @@ const automationActions = (store: AutomationStore) => ({
     return response
   },
 
-  toggleDisabled: async (automationId: string) => {
+  toggleDisabled: async (
+    automationId: string,
+    opts?: {
+      publish?: boolean
+    }
+  ) => {
     let automation: Automation | undefined
     try {
+      const publish = opts?.publish ?? true
       automation = store.actions.getDefinition(automationId)
       if (!automation) {
         return
       }
-      automation.disabled = !automation.disabled
-      await store.actions.save(automation)
-      await deploymentStore.publishApp()
+      const updatedAutomation = cloneDeep(automation)
+      updatedAutomation.disabled = !automation.disabled
+
+      if (publish) {
+        const response = await API.updateAutomation(updatedAutomation)
+        store.actions.replace(response.automation._id!, response.automation)
+        store.actions.select(response.automation._id!)
+        await deploymentStore.publishApp()
+      } else {
+        await store.actions.save(updatedAutomation)
+      }
+
       notifications.success(
         `Automation ${
-          automation.disabled ? "disabled" : "enabled"
+          updatedAutomation.disabled ? "disabled" : "enabled"
         } successfully`
       )
-
-      await workspaceDeploymentStore.fetch()
     } catch (error) {
       notifications.error(
-        `Error ${automation?.disabled ? "disabling" : "enabling"} automation`
+        `Error ${automation?.disabled ? "enabling" : "disabling"} automation`
       )
     }
   },

@@ -77,7 +77,6 @@
   export let indeterminate: boolean = false
   export let allSelected: boolean = false
   export let toggleSelectAll: () => void = () => {}
-  export let hideChevron: boolean = false
   export let wrapText: boolean = false
   export let fieldTooltip: string | null = null
 
@@ -236,6 +235,7 @@
   class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-open={open}
+  class:is-readonly={readonly}
   aria-haspopup="listbox"
   on:click={onClick}
   bind:this={button}
@@ -267,7 +267,7 @@
       <span class="picker-label-subtitle">{fieldSubtitle}</span>
     {/if}
   </span>
-  {#if !hideChevron}
+  {#if !readonly}
     <Icon name="caret-down" size="S" />
   {/if}
 </button>

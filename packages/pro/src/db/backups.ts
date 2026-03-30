@@ -18,7 +18,7 @@ import {
 import { GENERIC_PAGE_SIZE } from "../constants"
 import { pagination } from "./utils/pagination"
 import { getOldestRetentionDate } from "./utils/retention"
-import { createAppBackupTriggerView } from "./utils/views"
+import { createWorkspaceBackupTriggerView } from "./utils/views"
 
 type FilterOpts = {
   startDate?: string
@@ -28,20 +28,22 @@ type FilterOpts = {
 }
 
 export async function oldestBackupDate() {
-  return getOldestRetentionDate(ConstantQuotaName.APP_BACKUPS_RETENTION_DAYS)
+  return getOldestRetentionDate(
+    ConstantQuotaName.WORKSPACE_BACKUPS_RETENTION_DAYS
+  )
 }
 
-const APP_BACKUP_PREFIX = `${dbCore.DocumentType.APP_BACKUP}${dbCore.SEPARATOR}`
+const WORKSPACE_BACKUP_PREFIX = `${dbCore.DocumentType.WORKSPACE_BACKUP}${dbCore.SEPARATOR}`
 
-async function getAppBackupParams(
-  appId: string,
+async function getWorkspaceBackupParams(
+  workspaceId: string,
   filters: FilterOpts,
   otherProps: DatabaseQueryOpts = {}
 ) {
   const maxStartDate = await oldestBackupDate()
-  const prodAppId = dbCore.getProdWorkspaceID(appId)
-  let startKey = prodAppId,
-    endKey = prodAppId
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  let startKey = prodWorkspaceId,
+    endKey = prodWorkspaceId
   if (filters.trigger && filters.type) {
     let basePart = `${dbCore.SEPARATOR}${filters.trigger}`
     basePart += `${dbCore.SEPARATOR}${filters.type}`
@@ -61,12 +63,12 @@ async function getAppBackupParams(
   return {
     ...otherProps,
     descending: true,
-    startkey: `${APP_BACKUP_PREFIX}${startKey}${dbCore.UNICODE_MAX}`,
-    endkey: `${APP_BACKUP_PREFIX}${endKey}`,
+    startkey: `${WORKSPACE_BACKUP_PREFIX}${startKey}${dbCore.UNICODE_MAX}`,
+    endkey: `${WORKSPACE_BACKUP_PREFIX}${endKey}`,
   }
 }
 
-async function getAppBackupsByTrigger(
+async function getWorkspaceBackupsByTrigger(
   db: Database,
   params: DatabaseQueryOpts
 ): Promise<AllDocsResponse<WorkspaceBackup>> {
@@ -78,26 +80,29 @@ async function getAppBackupsByTrigger(
     return backups
   } catch (err: any) {
     if (err != null && err.error === "not_found") {
-      await createAppBackupTriggerView()
-      return getAppBackupsByTrigger(db, params)
+      await createWorkspaceBackupTriggerView()
+      return getWorkspaceBackupsByTrigger(db, params)
     } else {
       throw err
     }
   }
 }
 
-export function generateAppBackupID(appId: string, timestamp: string) {
-  return `${APP_BACKUP_PREFIX}${appId}${dbCore.SEPARATOR}${timestamp}`
+export function generateWorkspaceBackupID(
+  workspace: string,
+  timestamp: string
+) {
+  return `${WORKSPACE_BACKUP_PREFIX}${workspace}${dbCore.SEPARATOR}${timestamp}`
 }
 
-export async function fetchAppBackups(
-  appId: string,
+export async function fetchWorkspaceBackups(
+  workspaceId: string,
   opts: BackupFetchOpts = {}
 ) {
   const db = tenancy.getGlobalDB()
   let backups
   const pageSize = opts.limit || GENERIC_PAGE_SIZE
-  const params = await getAppBackupParams(appId, opts, {
+  const params = await getWorkspaceBackupParams(workspaceId, opts, {
     include_docs: true,
     limit: pageSize + 1,
   })
@@ -107,7 +112,7 @@ export async function fetchAppBackups(
   if (!opts.trigger || !opts.type) {
     backups = await db.allDocs<WorkspaceBackup>(params)
   } else {
-    backups = await getAppBackupsByTrigger(db, params)
+    backups = await getWorkspaceBackupsByTrigger(db, params)
   }
   const pageData = pagination(backups, {
     paginate: opts.paginate,
@@ -134,46 +139,49 @@ export async function fetchAppBackups(
   return pageData
 }
 
-export async function storeAppBackupMetadata(
+export async function storeWorkspaceBackupMetadata(
   metadata: WorkspaceBackupMetadata,
   opts: { filename?: string; docId?: string; docRev?: string } = {}
 ) {
   const db = tenancy.getGlobalDB()
-  const prodAppId = dbCore.getProdWorkspaceID(metadata.appId)
-  let _id = generateAppBackupID(prodAppId, metadata.timestamp)
-  const appBackupDoc: WorkspaceBackup = {
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(metadata.appId)
+  let _id = generateWorkspaceBackupID(prodWorkspaceId, metadata.timestamp)
+  const workspaceBackupDoc: WorkspaceBackup = {
     ...metadata,
     _id,
-    appId: prodAppId,
+    appId: prodWorkspaceId,
     name: metadata.name,
   }
-  appBackupDoc._id = opts.docId || appBackupDoc._id
-  appBackupDoc._rev = opts.docRev || appBackupDoc._rev
+  workspaceBackupDoc._id = opts.docId || workspaceBackupDoc._id
+  workspaceBackupDoc._rev = opts.docRev || workspaceBackupDoc._rev
   if (opts.filename) {
-    appBackupDoc.filename = opts.filename
+    workspaceBackupDoc.filename = opts.filename
   }
   if (metadata.createdBy) {
-    appBackupDoc.createdBy = dbCore.getGlobalIDFromUserMetadataID(
+    workspaceBackupDoc.createdBy = dbCore.getGlobalIDFromUserMetadataID(
       metadata.createdBy as string
     )
   }
-  return (await db.put(appBackupDoc)) as PutResponse
+  return (await db.put(workspaceBackupDoc)) as PutResponse
 }
 
-export async function updateAppBackupMetadata(backupId: string, name: string) {
+export async function updateWorkspaceBackupMetadata(
+  backupId: string,
+  name: string
+) {
   const db = tenancy.getGlobalDB()
   const metadata = (await db.get(backupId)) as WorkspaceBackup
   metadata.name = name
   return (await db.put(metadata)) as PutResponse
 }
 
-export async function deleteAppBackupMetadata(backupId: string) {
+export async function deleteWorkspaceBackupMetadata(backupId: string) {
   const db = tenancy.getGlobalDB()
   const backupDoc = await db.get<WorkspaceBackup>(backupId)
   await db.remove(backupDoc._id, backupDoc._rev)
 }
 
-export async function getAppBackupMetadata(backupId: string) {
+export async function getWorkspaceBackupMetadata(backupId: string) {
   const db = tenancy.getGlobalDB()
   return (await db.get(backupId)) as WorkspaceBackup
 }

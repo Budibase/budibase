@@ -26,7 +26,6 @@
     "build:oss": "node ./scripts/build.js",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --paths null && tsc -p tsconfig.test.json --paths null",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
-    "check:dependencies": "node ../../scripts/depcheck.js",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
   },
@@ -41,7 +40,6 @@
     "@budibase/types": "*",
     "@govtechsg/passport-openidconnect": "1.0.3",
     "aws-cloudfront-sign": "3.0.2",
-    "aws-sdk": "2.1692.0",
     "bcrypt": "6.0.0",
     "bull": "4.10.1",
     "correlation-id": "4.0.0",

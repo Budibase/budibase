@@ -49,7 +49,12 @@
   ]
 
   const requiredString = (errorMessage: string) =>
-    z.string({ required_error: errorMessage }).trim().min(1, errorMessage)
+    z
+      .string({
+        error: issue => (issue.input === undefined ? errorMessage : undefined),
+      })
+      .trim()
+      .min(1, errorMessage)
 
   const validateConfig = (config: Partial<OAuth2Config>) => {
     const validator = z.object({

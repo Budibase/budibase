@@ -97,6 +97,7 @@ describe("/api/deploy", () => {
 
       expect(res.automations[automation._id!]).toEqual({
         publishedAt: expect.any(String),
+        lastDeployedLiveAt: expect.any(String),
         published: true,
         name: automation.name,
         unpublishedChanges: false,
@@ -104,6 +105,7 @@ describe("/api/deploy", () => {
       })
       expect(res.workspaceApps[workspaceApp._id!]).toEqual({
         publishedAt: expect.any(String),
+        lastDeployedLiveAt: expect.any(String),
         published: true,
         name: workspaceApp.name,
         unpublishedChanges: false,
@@ -111,6 +113,7 @@ describe("/api/deploy", () => {
       })
       expect(res.tables[table._id!]).toEqual({
         publishedAt: expect.any(String),
+        lastDeployedLiveAt: expect.any(String),
         published: true,
         name: table.name,
         unpublishedChanges: false,
@@ -159,6 +162,7 @@ describe("/api/deploy", () => {
         published: true,
         name: publishedAutomation.name,
         publishedAt: expect.any(String),
+        lastDeployedLiveAt: expect.any(String),
         unpublishedChanges: false,
         state: "published",
       })
@@ -166,6 +170,7 @@ describe("/api/deploy", () => {
         published: true,
         name: publishedWorkspaceApp.name,
         publishedAt: expect.any(String),
+        lastDeployedLiveAt: expect.any(String),
         unpublishedChanges: false,
         state: "published",
       })
@@ -217,6 +222,29 @@ describe("/api/deploy", () => {
         unpublishedChanges: false,
         state: "disabled",
       })
+    })
+
+    it("does not mark never-enabled automations as deployed", async () => {
+      const table = await config.api.table.save(basicTable())
+
+      const { automation } = await createAutomationBuilder(config)
+        .onRowSaved({ tableId: table._id! })
+        .serverLog({ text: "Disabled automation" })
+        .save({ disabled: true })
+
+      await config.api.workspace.publish(config.devWorkspace!.appId)
+
+      const res = await config.api.deploy.publishStatus()
+      expect(res.automations[automation._id!]).toEqual({
+        published: true,
+        publishedAt: expect.any(String),
+        name: automation.name,
+        unpublishedChanges: false,
+        state: "disabled",
+      })
+      expect(
+        res.automations[automation._id!].lastDeployedLiveAt
+      ).toBeUndefined()
     })
 
     it("returns only development resources that exist", async () => {

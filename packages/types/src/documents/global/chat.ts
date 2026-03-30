@@ -67,6 +67,12 @@ export interface ChatConversationRequest extends Document {
   channel?: ChatConversationChannel
 }
 
+export interface WebhookChatCompleteResult {
+  messages: ChatConversation["messages"]
+  assistantText: string
+  title?: string
+}
+
 export type CreateChatConversationRequest = Pick<
   ChatConversationRequest,
   "chatAppId" | "agentId" | "title"

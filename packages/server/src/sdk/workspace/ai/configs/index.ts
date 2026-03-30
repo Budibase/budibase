@@ -17,8 +17,8 @@ import {
   RequiredKeys,
 } from "@budibase/types"
 import * as liteLLM from "./litellm"
-import * as knowledgeBaseSdk from "../knowledgeBase"
 import { processEnvironmentVariable } from "../../../utils"
+import { IMPORT_PENDING_LITELLM_MODEL_ID } from "../../backups/constants"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
@@ -384,21 +384,120 @@ export async function update(
 }
 
 export async function remove(id: string) {
-  const dependentKnowledgeBases =
-    await knowledgeBaseSdk.findByEmbeddingModel(id)
-  if (dependentKnowledgeBases.length > 0) {
-    throw new HTTPError(
-      "Embedding model cannot be deleted while it is used by a knowledge base",
-      400
-    )
-  }
-
   const db = context.getWorkspaceDB()
 
   const existing = await db.get<CustomAIProviderConfig>(id)
   await db.remove(existing)
 
   await liteLLM.syncKeyModels()
+}
+
+export async function reconcileLiteLLMModels() {
+  const workspaceId = context.getWorkspaceId()
+  const status = await getLiteLLMStatus()
+  if (status === liteLLM.LiteLLMStatus.NOT_CONFIGURED) {
+    console.log("Skipping LiteLLM reconciliation: LiteLLM is not configured", {
+      workspaceId,
+    })
+    return
+  }
+
+  const db = context.getWorkspaceDB()
+  const existingConfigs = await fetch()
+  const isSelfhost = env.SELF_HOSTED
+  console.log("Starting LiteLLM reconciliation", {
+    workspaceId,
+    configCount: existingConfigs.length,
+    isSelfhost: !!isSelfhost,
+  })
+
+  for (const existingConfig of existingConfigs) {
+    if (!existingConfig._id) {
+      continue
+    }
+
+    const isBBAI = existingConfig.provider === BUDIBASE_AI_PROVIDER_ID
+    if (isBBAI && !isSelfhost) {
+      console.log("Skipping Budibase AI config reconciliation in cloud", {
+        workspaceId,
+        configId: existingConfig._id,
+      })
+      continue
+    }
+
+    const resolvedCredentialFields = await resolveCredentialFields(
+      existingConfig.credentialsFields
+    )
+    const currentModelId = existingConfig.liteLLMModelId
+    let modelId = currentModelId
+
+    let modelAlreadyExisted = false
+
+    if (currentModelId !== IMPORT_PENDING_LITELLM_MODEL_ID) {
+      try {
+        await liteLLM.updateModel({
+          configId: existingConfig._id,
+          llmModelId: currentModelId,
+          provider: existingConfig.provider,
+          name: existingConfig.model,
+          credentialFields: resolvedCredentialFields,
+          configType: existingConfig.configType,
+          reasoningEffort: existingConfig.reasoningEffort,
+        })
+        modelAlreadyExisted = true
+        console.log("Refreshed the existing LiteLLM model", {
+          workspaceId,
+          configId: existingConfig._id,
+          modelId: currentModelId,
+        })
+      } catch (e: any) {
+        if (e.status !== 404) {
+          throw e
+        }
+        console.log("LiteLLM model not found, creating a new one", {
+          workspaceId,
+          configId: existingConfig._id,
+          modelId: currentModelId,
+        })
+      }
+    } else {
+      console.log("Config marked as pending model creation", {
+        workspaceId,
+        configId: existingConfig._id,
+      })
+    }
+
+    if (!modelAlreadyExisted) {
+      modelId = await liteLLM.addModel({
+        configId: existingConfig._id,
+        provider: existingConfig.provider,
+        model: existingConfig.model,
+        credentialFields: resolvedCredentialFields,
+        configType: existingConfig.configType,
+        reasoningEffort: existingConfig.reasoningEffort,
+      })
+      console.log("Created LiteLLM model", {
+        workspaceId,
+        configId: existingConfig._id,
+        modelId,
+      })
+    }
+
+    if (modelId !== currentModelId) {
+      const updatedConfig: CustomAIProviderConfig = {
+        ...existingConfig,
+        liteLLMModelId: modelId,
+      }
+      const encodedConfig: CustomAIProviderConfig = {
+        ...updatedConfig,
+        ...(await encodeConfigSecrets(updatedConfig)),
+      }
+      await db.put(encodedConfig)
+    }
+  }
+
+  await liteLLM.syncKeyModels()
+  console.log("Finished LiteLLM reconciliation", { workspaceId })
 }
 
 let liteLLMProviders: LLMProvider[]

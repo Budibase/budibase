@@ -88,7 +88,7 @@ services:
       - couchdb-service
 
   litellm-service:
-    image: docker.litellm.ai/berriai/litellm:1.80.15-stable.1
+    image: ghcr.io/berriai/litellm:main-v1.81.14-stable
     ports:
       - "${LITELLM_PORT:-4000}:4000"
     volumes:

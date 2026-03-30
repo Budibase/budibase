@@ -17,7 +17,13 @@
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { agentsStore, auth, featureFlags, licensing } from "@/stores/portal"
+  import {
+    agentsStore,
+    appsStore,
+    auth,
+    featureFlags,
+    licensing,
+  } from "@/stores/portal"
   import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
@@ -29,6 +35,7 @@
     MenuSeparator,
     Modal,
     type ModalAPI,
+    Notification,
     notifications,
     PopoverAlignment,
     Tag,
@@ -355,8 +362,8 @@
       const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
 
       const pause = {
-        icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
-        name: workspaceApp.disabled ? "Switch on" : "Switch off",
+        icon: workspaceApp.disabled ? "play-circle" : "stop",
+        name: workspaceApp.disabled ? "Set live" : "Stop",
         visible: true,
         callback: async () => {
           await workspaceAppStore.toggleDisabled(
@@ -412,8 +419,8 @@
       }
 
       const pause = {
-        icon: automation.disabled ? "play-circle" : "pause-circle",
-        name: automation.disabled ? "Switch on" : "Switch off",
+        icon: automation.disabled ? "play-circle" : "stop",
+        name: automation.disabled ? "Set live" : "Stop",
         keyBind: null,
         visible: true,
         disabled: !automation.definition.trigger,
@@ -547,6 +554,16 @@
   $: allRows = sortHomeRows(baseRows, { sortColumn, sortOrder })
 
   $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
+  $: targetApp = $appsStore.apps.find(app => app.devId === $appStore.appId)
+  $: automationErrorEntries = Object.entries(targetApp?.automationErrors || {})
+    .filter(([, logIds]) => logIds.length > 0)
+    .map(([automationId, logIds]) => ({
+      automationId,
+      errorCount: logIds.length,
+      automation: $automationStore.automations.find(
+        automation => automation._id === automationId
+      ),
+    }))
 
   $: showHeaderActions = $licensing.showTrialBanner
   $: budibaseAICreditLimit =
@@ -555,6 +572,31 @@
     budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
   $: if (hasMounted) writeUrlState()
+
+  const goToAutomationError = (automationId: string) => {
+    goto(url(`../automation/${automationId}`))
+  }
+
+  const dismissAutomationError = async (automationId: string) => {
+    try {
+      await automationStore.actions.clearLogErrors({
+        automationId,
+        appId: $appStore.appId,
+      })
+      await appsStore.load()
+    } catch (err) {
+      console.error(err)
+      notifications.error("Error dismissing automation error")
+    }
+  }
+
+  const automationErrorMessage = (
+    automationName: string | undefined,
+    errorCount: number
+  ) => {
+    const name = automationName || "Automation"
+    return `${name} - Automation error${errorCount > 1 ? ` (${errorCount})` : ""}`
+  }
 
   onMount(async () => {
     const workspaceId = $appStore.appId
@@ -604,6 +646,26 @@
         </div>
       {/if}
     </div>
+
+    {#if automationErrorEntries.length}
+      <div class="automation-errors">
+        {#each automationErrorEntries as entry (entry.automationId)}
+          <Notification
+            wide
+            dismissable
+            type="error"
+            icon="Alert"
+            action={() => goToAutomationError(entry.automationId)}
+            actionMessage={entry.errorCount > 1 ? "View errors" : "View error"}
+            message={automationErrorMessage(
+              entry.automation?.name,
+              entry.errorCount
+            )}
+            on:dismiss={() => dismissAutomationError(entry.automationId)}
+          />
+        {/each}
+      </div>
+    {/if}
 
     <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
@@ -788,6 +850,12 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
+  }
+
+  .automation-errors {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
   }
 
   .header {

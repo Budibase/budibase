@@ -6,7 +6,6 @@ import {
   VectorDbProvider,
   VectorDb,
 } from "@budibase/types"
-import * as knowledgeBaseSdk from "../knowledgeBase"
 import { resolvePgVectorDbConfig, validatePgVectorDbConfig } from "./pgVectorDb"
 import { utils } from "@budibase/shared-core"
 
@@ -106,13 +105,6 @@ export async function update(config: VectorDb): Promise<VectorDb> {
 
 export async function remove(id: string) {
   assertValidVectorDbId(id)
-  const dependentKnowledgeBases = await knowledgeBaseSdk.findByVectorDb(id)
-  if (dependentKnowledgeBases.length > 0) {
-    throw new HTTPError(
-      "Vector database cannot be deleted while it is used by a knowledge base",
-      400
-    )
-  }
 
   const db = context.getWorkspaceDB()
 
