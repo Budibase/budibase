@@ -17,7 +17,7 @@ jest.mock("@budibase/backend-core", () => ({
   context: {
     getWorkspaceDB: jest.fn(() => db),
   },
-  docIds: (docIds = {
+  docIds: {
     getAgentEvalSuiteID: jest.fn((agentId: string) => `suite_${agentId}`),
     getAgentEvalRunPrefix: jest.fn((agentId: string) => `run_${agentId}_`),
     getAgentEvalRunID: jest.fn(
@@ -33,7 +33,7 @@ jest.mock("@budibase/backend-core", () => ({
         return `run_${agentId}_${startedAt}_${runId}`
       }
     ),
-  }),
+  },
   HTTPError: class HTTPError extends Error {
     status: number
 
@@ -49,6 +49,8 @@ db = {
   put: jest.fn(),
   tryGet: jest.fn(),
 }
+
+docIds = jest.requireMock("@budibase/backend-core").docIds
 
 const createRun = ({
   runId,
