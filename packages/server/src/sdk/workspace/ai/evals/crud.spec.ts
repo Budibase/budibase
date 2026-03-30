@@ -1,13 +1,13 @@
 import type { AgentEvalRun } from "@budibase/types"
 import { fetchRuns, saveRun } from "./crud"
 
-var db: {
+let db: {
   allDocs: jest.Mock
   put: jest.Mock
   tryGet: jest.Mock
 }
 
-var docIds: {
+let docIds: {
   getAgentEvalSuiteID: jest.Mock
   getAgentEvalRunPrefix: jest.Mock
   getAgentEvalRunID: jest.Mock

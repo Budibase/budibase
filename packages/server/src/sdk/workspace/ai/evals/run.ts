@@ -1,7 +1,6 @@
-import { features, getErrorMessage, HTTPError } from "@budibase/backend-core"
+import { getErrorMessage, HTTPError } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
-import { FeatureFlag } from "@budibase/types"
 import type {
   Agent,
   AgentEvalCase,
@@ -32,7 +31,6 @@ import {
   updatePendingToolCalls,
 } from "../agents"
 import { createSessionLogIndexer } from "../agentLogs"
-import { retrieveContextForAgent } from "../rag"
 import {
   buildErroredReviewerResults,
   evaluateReviewer,
@@ -71,18 +69,6 @@ Use only the rubric, the case input, optional case context, and the response.
 Do not invent extra requirements.
 Return passed=true only when the response clearly satisfies the rubric.
 Keep the reason concise and specific.`
-
-const buildRetrievedContextMessage = (
-  retrievedContext: string
-): ModelMessage[] =>
-  retrievedContext
-    ? [
-        {
-          role: "system",
-          content: `Relevant knowledge:\n${retrievedContext}\n\nUse this content when answering the user.`,
-        },
-      ]
-    : []
 
 const buildCaseContextMessage = (context?: string): ModelMessage[] =>
   context
@@ -158,24 +144,6 @@ const buildAIConfigSnapshot = (
   }
 }
 
-async function getRetrievedAgentContext(agent: Agent, latestQuestion: string) {
-  if (
-    !latestQuestion ||
-    !agent.knowledgeBases?.length ||
-    !(await features.isEnabled(FeatureFlag.AI_RAG))
-  ) {
-    return ""
-  }
-
-  try {
-    const contextResult = await retrieveContextForAgent(agent, latestQuestion)
-    return contextResult.text
-  } catch (error) {
-    console.error("Failed to retrieve eval context", error)
-    return ""
-  }
-}
-
 const buildRunSnapshot = ({
   agent,
   suite,
@@ -228,8 +196,6 @@ const buildCaseResult = ({
   return {
     caseId: testCase.id,
     name: testCase.name,
-    input: caseSnapshot.input,
-    context: caseSnapshot.context,
     caseSnapshot,
     response,
     status,
@@ -373,8 +339,7 @@ async function runCase({
 
   try {
     const latestQuestion = testCase.input
-    const [retrievedContext, promptAndTools, llm] = await Promise.all([
-      getRetrievedAgentContext(agent, latestQuestion),
+    const [promptAndTools, llm] = await Promise.all([
       sdk.ai.agents.buildPromptAndTools(agent, {
         baseSystemPrompt: ai.agentSystemPrompt(user),
         includeGoal: false,
@@ -385,7 +350,6 @@ async function runCase({
     const pendingToolCalls = new Set<string>()
     const hasTools = Object.keys(promptAndTools.tools).length > 0
     const messages: ModelMessage[] = [
-      ...buildRetrievedContextMessage(retrievedContext),
       ...buildCaseContextMessage(testCase.context),
       {
         role: "user",

@@ -22,16 +22,14 @@ export async function fetchAgentEvalSuite(
   ctx: UserCtx<void, FetchAgentEvalSuiteResponse>
 ) {
   const agentId = await getAgentId(ctx)
-  const [suite, latestRun, recentRuns] = await Promise.all([
+  const [suite, runs] = await Promise.all([
     sdk.ai.evals.fetchSuite(agentId),
-    sdk.ai.evals.fetchLatestRun(agentId),
     sdk.ai.evals.fetchRuns(agentId),
   ])
 
   ctx.body = {
     suite,
-    latestRun: latestRun || null,
-    recentRuns,
+    runs,
   }
 }
 

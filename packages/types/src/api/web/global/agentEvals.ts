@@ -2,8 +2,7 @@ import { AgentEvalRun, AgentEvalSuite } from "../../../documents"
 
 export interface FetchAgentEvalSuiteResponse {
   suite: AgentEvalSuite
-  latestRun: AgentEvalRun | null
-  recentRuns: AgentEvalRun[]
+  runs: AgentEvalRun[]
 }
 
 export interface UpdateAgentEvalSuiteRequest {

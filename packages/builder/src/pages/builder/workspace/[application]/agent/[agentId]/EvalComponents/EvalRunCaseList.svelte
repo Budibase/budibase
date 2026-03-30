@@ -33,7 +33,7 @@
             <Badge {...badgeProps} size="S">{resultSummary(result)}</Badge>
           </div>
           <div class="case-item-subtitle">
-            {result.caseSnapshot?.input || result.input || "No input"}
+            {result.caseSnapshot.input || "No input"}
           </div>
         </button>
       {/each}

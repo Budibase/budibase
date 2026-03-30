@@ -2,7 +2,6 @@
   import { API } from "@/api"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import {
-    Body,
     Button,
     Heading,
     Helpers,
@@ -40,8 +39,7 @@
   })
 
   let suite = $state<AgentEvalSuite>(createEmptySuite())
-  let latestRun = $state<AgentEvalRun | null>(null)
-  let recentRuns = $state<AgentEvalRun[]>([])
+  let runs = $state<AgentEvalRun[]>([])
   let loading = $state(false)
   let saving = $state(false)
   let running = $state(false)
@@ -60,20 +58,10 @@
       .filter(t => enabled.has(t.name))
       .map(t => ({ label: t.readableName || t.name, value: t.name }))
   })
+  let latestRun = $derived(runs[0] ?? null)
   let selectedRun = $derived(
-    recentRuns.find(run => run.runId === selectedRunId) ?? latestRun
+    runs.find(run => run.runId === selectedRunId) ?? latestRun
   )
-  let availableRuns = $derived.by(() => {
-    if (!latestRun) {
-      return recentRuns
-    }
-
-    if (recentRuns.some(run => run.runId === latestRun.runId)) {
-      return recentRuns
-    }
-
-    return [latestRun, ...recentRuns]
-  })
   let latestResultsByCaseId = $derived(
     new Map((latestRun?.results ?? []).map(result => [result.caseId, result]))
   )
@@ -90,8 +78,7 @@
   )
   const resetState = (agentId?: string) => {
     suite = createEmptySuite(agentId)
-    latestRun = null
-    recentRuns = []
+    runs = []
     selectedCaseId = null
     selectedRunId = null
     selectedRunCaseId = null
@@ -126,10 +113,8 @@
     try {
       const response = await API.fetchAgentEvalSuite(agentId)
       suite = response.suite
-      latestRun = response.latestRun
-      recentRuns = response.recentRuns
-      selectedRunId =
-        response.latestRun?.runId || response.recentRuns[0]?.runId || null
+      runs = response.runs
+      selectedRunId = response.runs[0]?.runId || null
       ensureSelection()
     } catch (error) {
       console.error("Failed to load agent evaluation suite", error)
@@ -141,7 +126,7 @@
   }
 
   const updateSelectedCase = (
-    updater: (testCase: AgentEvalCase) => AgentEvalCase
+    updater: (_testCase: AgentEvalCase) => AgentEvalCase
   ) => {
     if (!selectedCaseId) {
       return
@@ -241,8 +226,7 @@
     running = true
     try {
       const { run } = await API.runAgentEvalSuite(agentId)
-      latestRun = run
-      recentRuns = [run, ...recentRuns.filter(item => item.runId !== run.runId)]
+      runs = [run, ...runs.filter(item => item.runId !== run.runId)]
       selectedRunId = run.runId
       selectedView = "Runs"
       notifications.success("Evaluation run complete")
@@ -359,7 +343,7 @@
           <div class="runs-panel">
             <div class="runs-panel-section">
               <EvalRunList
-                runs={availableRuns}
+                {runs}
                 {selectedRunId}
                 onSelectRun={runId => (selectedRunId = runId)}
               />

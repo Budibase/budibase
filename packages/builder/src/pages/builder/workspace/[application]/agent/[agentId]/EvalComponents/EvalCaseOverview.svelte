@@ -1,45 +1,35 @@
 <script lang="ts">
   import { Detail, Divider, StatusLight } from "@budibase/bbui"
   import { Duration } from "@budibase/shared-core"
-  import type {
-    AgentEvalCase,
-    AgentEvalCaseResult,
-    AgentEvalRun,
-  } from "@budibase/types"
+  import type { AgentEvalCaseResult, AgentEvalRun } from "@budibase/types"
   import { formatRunTime, resultSummary } from "./utils"
 
   type Props = {
-    selectedCase: AgentEvalCase | null
-    selectedResult: AgentEvalCaseResult | null
-    selectedRun: AgentEvalRun | null
+    selectedResult: AgentEvalCaseResult
+    selectedRun: AgentEvalRun
   }
 
-  let { selectedCase, selectedResult, selectedRun }: Props = $props()
+  let { selectedResult, selectedRun }: Props = $props()
 
-  let displayedInput = $derived(
-    selectedResult?.caseSnapshot?.input ||
-      selectedResult?.input ||
-      selectedCase?.input ||
-      "—"
-  )
+  let displayedInput = $derived(selectedResult.caseSnapshot.input || "—")
   let snapshotModelSummary = $derived(
-    selectedRun?.snapshot.aiConfig
+    selectedRun.snapshot.aiConfig
       ? [
           selectedRun.snapshot.aiConfig.provider,
           selectedRun.snapshot.aiConfig.model,
         ]
           .filter(Boolean)
           .join(" / ") || selectedRun.snapshot.aiConfig.aiConfigId
-      : selectedRun?.snapshot.aiconfig || "—"
+      : selectedRun.snapshot.aiconfig || "—"
   )
   let toolSummary = $derived(
-    selectedResult?.toolCalls?.length
+    selectedResult.toolCalls.length
       ? selectedResult.toolCalls.join(", ")
       : "No tools executed"
   )
 
   let responsePreview = $derived(
-    selectedResult?.response
+    selectedResult.response
       ? selectedResult.response.length > 200
         ? selectedResult.response.slice(0, 200) + "..."
         : selectedResult.response
@@ -56,38 +46,29 @@
     <div class="meta-row">
       <span class="meta-label">Status</span>
       <span class="meta-value">
-        {#if selectedResult}
-          <StatusLight
-            positive={selectedResult.status === "passed"}
-            negative={selectedResult.status === "failed" ||
-              selectedResult.status === "error"}
-          >
-            {resultSummary(selectedResult)}
-          </StatusLight>
-        {:else}
-          <span class="meta-muted">No result in this run</span>
-        {/if}
+        <StatusLight
+          positive={selectedResult.status === "passed"}
+          negative={selectedResult.status === "failed" ||
+            selectedResult.status === "error"}
+        >
+          {resultSummary(selectedResult)}
+        </StatusLight>
       </span>
     </div>
     <div class="meta-row">
       <span class="meta-label">Duration</span>
       <span class="meta-value">
-        {#if selectedResult}
-          {Duration.fromMilliseconds(selectedResult.durationMs).toSeconds()}
-        {:else}
-          —
-        {/if}
+        {Duration.fromMilliseconds(selectedResult.durationMs).toSeconds()}
       </span>
     </div>
     <div class="meta-row">
       <span class="meta-label">Last run</span>
-      <span class="meta-value"
-        >{formatRunTime(selectedResult?.completedAt)}</span
+      <span class="meta-value">{formatRunTime(selectedResult.completedAt)}</span
       >
     </div>
     <div class="meta-row">
       <span class="meta-label">Suite run</span>
-      <span class="meta-value">{formatRunTime(selectedRun?.completedAt)}</span>
+      <span class="meta-value">{formatRunTime(selectedRun.completedAt)}</span>
     </div>
     <div class="meta-row">
       <span class="meta-label">Model</span>
@@ -100,12 +81,8 @@
     <div class="meta-row">
       <span class="meta-label">Snapshot</span>
       <span class="meta-value">
-        {#if selectedRun?.snapshot}
-          {selectedRun.snapshot.enabledTools.length} enabled tools &bull;
-          {selectedRun.snapshot.knowledgeBases.length} KBs
-        {:else}
-          —
-        {/if}
+        {selectedRun.snapshot.enabledTools.length} enabled tools &bull;
+        {selectedRun.snapshot.knowledgeBases.length} KBs
       </span>
     </div>
   </div>
@@ -154,10 +131,6 @@
   .meta-value {
     color: var(--spectrum-global-color-gray-900);
     word-break: break-word;
-  }
-
-  .meta-muted {
-    color: var(--spectrum-global-color-gray-600);
   }
 
   .response-preview {

@@ -56,10 +56,6 @@ jest.mock("../agents", () => ({
   updatePendingToolCalls: jest.fn(),
 }))
 
-jest.mock("../rag", () => ({
-  retrieveContextForAgent: jest.fn(),
-}))
-
 jest.mock("./crud", () => ({
   fetchSuite: jest.fn(),
   saveRun: jest.fn(),
@@ -236,8 +232,6 @@ describe("agent eval runner", () => {
 
     expect(run.results[0]).toMatchObject({
       status: "passed",
-      input: "Say hello",
-      context: "Keep it brief",
       reviewerResults: [
         {
           reviewerId: "reviewer-1",

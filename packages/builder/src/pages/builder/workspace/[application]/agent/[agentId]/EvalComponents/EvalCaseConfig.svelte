@@ -30,6 +30,21 @@
 
   let reviewerChooserOpen = $state(false)
 
+  const updateField =
+    (field: "name" | "input") => (event: CustomEvent<string>) =>
+      onUpdateCase(testCase => ({ ...testCase, [field]: event.detail }))
+
+  const updateReviewerField =
+    (reviewerId: string, field: string) => (event: CustomEvent<string>) =>
+      updateReviewer(
+        reviewerId,
+        current =>
+          ({
+            ...current,
+            [field]: event.detail,
+          }) as AgentEvalReviewer
+      )
+
   const reviewerOptions: ReviewerOption[] = [
     {
       type: "exact_match",
@@ -112,22 +127,14 @@
     <Input
       label="Case name"
       value={selectedCase.name}
-      on:change={event =>
-        onUpdateCase(testCase => ({
-          ...testCase,
-          name: event.detail,
-        }))}
+      on:change={updateField("name")}
     />
 
     <TextArea
       label="Input"
       value={selectedCase.input}
       height={140}
-      on:change={event =>
-        onUpdateCase(testCase => ({
-          ...testCase,
-          input: event.detail,
-        }))}
+      on:change={updateField("input")}
     />
 
     <Divider size="S" noMargin />
@@ -193,44 +200,20 @@
             label="Expected final response"
             value={reviewer.text}
             height={90}
-            on:change={event =>
-              updateReviewer(
-                reviewer.id,
-                current =>
-                  ({
-                    ...current,
-                    text: event.detail,
-                  }) as AgentEvalReviewer
-              )}
+            on:change={updateReviewerField(reviewer.id, "text")}
           />
         {:else if reviewer.type === "contains_text"}
           <Input
             label="Text to find"
             value={reviewer.text}
-            on:change={event =>
-              updateReviewer(
-                reviewer.id,
-                current =>
-                  ({
-                    ...current,
-                    text: event.detail,
-                  }) as AgentEvalReviewer
-              )}
+            on:change={updateReviewerField(reviewer.id, "text")}
           />
         {:else if reviewer.type === "llm_judge"}
           <TextArea
             label="Rubric"
             value={reviewer.rubric}
             height={110}
-            on:change={event =>
-              updateReviewer(
-                reviewer.id,
-                current =>
-                  ({
-                    ...current,
-                    rubric: event.detail,
-                  }) as AgentEvalReviewer
-              )}
+            on:change={updateReviewerField(reviewer.id, "rubric")}
           />
         {:else if reviewer.type === "tool_used"}
           <Select
@@ -240,15 +223,7 @@
             getOptionLabel={o => o.label}
             getOptionValue={o => o.value}
             placeholder="Choose a tool"
-            on:change={event =>
-              updateReviewer(
-                reviewer.id,
-                current =>
-                  ({
-                    ...current,
-                    tool: event.detail,
-                  }) as AgentEvalReviewer
-              )}
+            on:change={updateReviewerField(reviewer.id, "tool")}
           />
         {/if}
       </div>

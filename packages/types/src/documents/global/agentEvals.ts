@@ -78,9 +78,7 @@ export interface AgentEvalSnapshot {
 export interface AgentEvalCaseResult {
   caseId: string
   name: string
-  input: string
-  context?: string
-  caseSnapshot?: AgentEvalCaseSnapshot
+  caseSnapshot: AgentEvalCaseSnapshot
   response: string
   status: "passed" | "failed" | "error"
   reviewerResults: AgentEvalReviewerResult[]

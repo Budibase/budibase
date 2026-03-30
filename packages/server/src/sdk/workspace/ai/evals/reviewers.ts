@@ -137,10 +137,14 @@ export const evaluateReviewer = ({
       return {
         reviewerId: reviewer.id,
         type: reviewer.type,
-        status: normalizedResponse.includes(normalizeResponseText(reviewer.text))
+        status: normalizedResponse.includes(
+          normalizeResponseText(reviewer.text)
+        )
           ? "passed"
           : "failed",
-        message: normalizedResponse.includes(normalizeResponseText(reviewer.text))
+        message: normalizedResponse.includes(
+          normalizeResponseText(reviewer.text)
+        )
           ? `Found "${reviewer.text}" in the final response.`
           : `Expected the final response to include "${reviewer.text}".`,
       }

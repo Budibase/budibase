@@ -41,7 +41,9 @@ export async function saveSuite({
   const existing = await db.tryGet<AgentEvalSuite>(
     docIds.getAgentEvalSuiteID(agentId)
   )
-  const normalizeReviewer = (reviewer: AgentEvalReviewer): AgentEvalReviewer => {
+  const normalizeReviewer = (
+    reviewer: AgentEvalReviewer
+  ): AgentEvalReviewer => {
     return {
       ...reviewer,
       id: reviewer.id || v4(),
@@ -80,13 +82,6 @@ export async function saveSuite({
     ...suite,
     _rev: response.rev,
   }
-}
-
-export async function fetchLatestRun(
-  agentId: string
-): Promise<AgentEvalRun | undefined> {
-  const [latestRun] = await fetchRuns(agentId, 1)
-  return latestRun
 }
 
 export async function fetchRuns(
