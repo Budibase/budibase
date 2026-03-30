@@ -25,6 +25,7 @@
   import * as routify from "@roxi/routify"
 
   const { goto } = routify
+  $goto
 
   const createEmptySuite = (agentId = ""): AgentEvalSuite => ({
     agentId,

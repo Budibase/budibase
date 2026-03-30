@@ -137,12 +137,20 @@ export const getAgentEvalSuiteID = (agentId: string) => {
   return `${DocumentType.AGENT_EVAL_SUITE}${SEPARATOR}${agentId}`
 }
 
-export const getAgentEvalRunID = (agentId: string, runId?: string) => {
-  if (!runId) {
+export const getAgentEvalRunID = (
+  agentId: string,
+  startedAt?: string,
+  runId?: string
+) => {
+  if (!startedAt) {
     return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}`
   }
 
-  return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}${SEPARATOR}${runId}`
+  if (!runId) {
+    return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}${SEPARATOR}${startedAt}`
+  }
+
+  return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}${SEPARATOR}${startedAt}${SEPARATOR}${runId}`
 }
 
 export const getAgentEvalRunPrefix = (agentId: string) => {

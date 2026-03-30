@@ -100,12 +100,17 @@ export async function fetchRuns(
     endkey: startkey,
     include_docs: true,
     descending: true,
-    limit,
   })
 
   return response.rows
     .map(row => row.doc)
     .filter((run): run is AgentEvalRun => Boolean(run))
+    .sort((a, b) => {
+      const aTime = new Date(a.completedAt || a.startedAt).getTime()
+      const bTime = new Date(b.completedAt || b.startedAt).getTime()
+      return bTime - aTime
+    })
+    .slice(0, limit)
 }
 
 export async function saveRun(
@@ -114,7 +119,7 @@ export async function saveRun(
   const db = context.getWorkspaceDB()
   const nextRun: AgentEvalRun = {
     ...run,
-    _id: docIds.getAgentEvalRunID(run.agentId, run.runId),
+    _id: docIds.getAgentEvalRunID(run.agentId, run.startedAt, run.runId),
     createdAt: run.startedAt,
     updatedAt: run.completedAt,
   }
