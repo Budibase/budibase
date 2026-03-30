@@ -32,6 +32,7 @@
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
   let ragEnabled = $derived($featureFlags[FeatureFlag.AI_RAG])
+  let evalsEnabled = $derived($featureFlags[FeatureFlag.AI_EVALS])
 
   let activeTab = $derived.by(() => {
     if (ragEnabled && $isActive("./knowledge")) {
@@ -40,7 +41,7 @@
     if ($isActive("./deployment")) {
       return "Deployment"
     }
-    if ($isActive("./evals")) {
+    if (evalsEnabled && $isActive("./evals")) {
       return "Evals"
     }
     if ($isActive("./logs")) {
@@ -52,6 +53,10 @@
 
   $effect(() => {
     if (!ragEnabled && $isActive("./knowledge")) {
+      $goto("./config")
+    }
+
+    if (!evalsEnabled && $isActive("./evals")) {
       $goto("./config")
     }
   })
@@ -121,13 +126,15 @@
       >
         Deployment
       </ActionButton>
-      <ActionButton
-        quiet
-        selected={activeTab === "Evals"}
-        on:click={() => $goto("./evals")}
-      >
-        Evals
-      </ActionButton>
+      {#if evalsEnabled}
+        <ActionButton
+          quiet
+          selected={activeTab === "Evals"}
+          on:click={() => $goto("./evals")}
+        >
+          Evals
+        </ActionButton>
+      {/if}
       <ActionButton
         quiet
         selected={activeTab === "Logs"}

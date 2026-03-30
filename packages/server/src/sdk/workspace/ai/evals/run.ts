@@ -1,19 +1,20 @@
 import { features, getErrorMessage, HTTPError } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
+import { FeatureFlag } from "@budibase/types"
 import type {
   Agent,
   AgentEvalCase,
   AgentEvalCaseSnapshot,
   AgentEvalCaseResult,
-  AgentEvalJudgeResult,
   AgentEvalModelSnapshot,
+  AgentEvalReviewer,
+  AgentEvalReviewerResult,
   AgentEvalRun,
   AgentEvalSnapshot,
   AgentEvalSuite,
   ContextUser,
   CustomAIProviderConfig,
-  FeatureFlag,
 } from "@budibase/types"
 import {
   Output,
@@ -33,11 +34,13 @@ import {
 import { createSessionLogIndexer } from "../agentLogs"
 import { retrieveContextForAgent } from "../rag"
 import {
-  evaluateResponse,
-  normalizeAssertions,
-  normalizeJudgeAssertion,
+  buildErroredReviewerResults,
+  evaluateReviewer,
+  getCaseStatus,
+  normalizeCaseContext,
+  normalizeReviewers,
   validateEvalCase,
-} from "./assertions"
+} from "./reviewers"
 import { fetchSuite, saveRun } from "./crud"
 import { v4 } from "uuid"
 
@@ -64,7 +67,7 @@ const judgeOutputSchema =
   })
 
 const judgeInstructions = `You are grading an AI agent response against a user-defined rubric.
-Use only the rubric, the original prompt, and the response.
+Use only the rubric, the case input, optional case context, and the response.
 Do not invent extra requirements.
 Return passed=true only when the response clearly satisfies the rubric.
 Keep the reason concise and specific.`
@@ -81,31 +84,61 @@ const buildRetrievedContextMessage = (
       ]
     : []
 
+const buildCaseContextMessage = (context?: string): ModelMessage[] =>
+  context
+    ? [
+        {
+          role: "system",
+          content: `Additional evaluation context:\n${context}\n\nUse this context when answering the user.`,
+        },
+      ]
+    : []
+
 const buildJudgePrompt = ({
-  prompt,
+  input,
+  context,
   response,
   rubric,
 }: {
-  prompt: string
+  input: string
+  context?: string
   response: string
   rubric: string
 }) => `Rubric:
 ${rubric}
 
-User prompt:
-${prompt}
+Case input:
+${input}
 
-Agent response:
+${context ? `Case context:\n${context}\n\n` : ""}Agent response:
 ${response}`
 
-const normalizeJudgeReason = (reason?: string) =>
-  reason?.trim() || "Judge did not return a reason."
+const normalizeReviewerMessage = (message?: string) =>
+  message?.trim() || "Reviewer did not return a message."
+
+const addRequestId = ({
+  requestIds,
+  sessionLogIndexer,
+  responseId,
+}: {
+  requestIds: Set<string>
+  sessionLogIndexer: SessionLogIndexer
+  responseId?: string
+}) => {
+  if (!responseId) {
+    return
+  }
+
+  requestIds.add(responseId)
+  sessionLogIndexer.addRequestId(responseId)
+}
 
 const buildCaseSnapshot = (testCase: AgentEvalCase): AgentEvalCaseSnapshot => ({
   id: testCase.id,
   name: testCase.name,
-  prompt: testCase.prompt,
-  assertions: normalizeAssertions(testCase.assertions),
+  input: testCase.input,
+  context: normalizeCaseContext(testCase.context),
+  reviewers: normalizeReviewers(testCase.reviewers),
 })
 
 const buildAIConfigSnapshot = (
@@ -165,21 +198,69 @@ const buildRunSnapshot = ({
   knowledgeBases: [...(agent.knowledgeBases || [])],
 })
 
+const buildCaseResult = ({
+  testCase,
+  caseSnapshot,
+  response,
+  status,
+  reviewerResults,
+  toolCalls,
+  sessionId,
+  requestIds,
+  startedAt,
+  startedAtMs,
+  error,
+}: {
+  testCase: AgentEvalCase
+  caseSnapshot: AgentEvalCaseSnapshot
+  response: string
+  status: AgentEvalCaseResult["status"]
+  reviewerResults: AgentEvalReviewerResult[]
+  toolCalls: string[]
+  sessionId: string
+  requestIds: string[]
+  startedAt: string
+  startedAtMs: number
+  error?: string
+}): AgentEvalCaseResult => {
+  const completedAt = new Date().toISOString()
+
+  return {
+    caseId: testCase.id,
+    name: testCase.name,
+    input: caseSnapshot.input,
+    context: caseSnapshot.context,
+    caseSnapshot,
+    response,
+    status,
+    reviewerResults,
+    toolCalls,
+    sessionId,
+    requestIds,
+    startedAt,
+    completedAt,
+    durationMs: Date.now() - startedAtMs,
+    ...(error ? { error } : {}),
+  }
+}
+
 async function runJudge({
   llm,
-  prompt,
+  input,
+  context,
   response,
-  rubric,
+  reviewer,
   requestIds,
   sessionLogIndexer,
 }: {
   llm: EvalLLM
-  prompt: string
+  input: string
+  context?: string
   response: string
-  rubric: string
+  reviewer: Extract<AgentEvalReviewer, { type: "llm_judge" }>
   requestIds: Set<string>
   sessionLogIndexer: SessionLogIndexer
-}): Promise<AgentEvalJudgeResult> {
+}): Promise<AgentEvalReviewerResult> {
   const judge = new ToolLoopAgent({
     model: wrapLanguageModel({
       model: llm.chat,
@@ -192,18 +273,20 @@ async function runJudge({
     providerOptions: llm.providerOptions?.(false),
     output: Output.object({ schema: jsonSchema(judgeOutputSchema) }),
     async onStepFinish({ response }) {
-      if (response?.id) {
-        requestIds.add(response.id)
-        sessionLogIndexer.addRequestId(response.id)
-      }
+      addRequestId({
+        requestIds,
+        sessionLogIndexer,
+        responseId: response?.id,
+      })
     },
   })
 
   const result = await judge.stream({
     prompt: buildJudgePrompt({
-      prompt,
+      input,
+      context,
       response,
-      rubric,
+      rubric: reviewer.rubric,
     }),
   })
 
@@ -216,10 +299,11 @@ async function runJudge({
     judgeResponseResult.status === "fulfilled"
       ? (judgeResponseResult.value?.id ?? undefined)
       : undefined
-  if (responseId) {
-    requestIds.add(responseId)
-    sessionLogIndexer.addRequestId(responseId)
-  }
+  addRequestId({
+    requestIds,
+    sessionLogIndexer,
+    responseId,
+  })
 
   if (judgeOutputResult.status === "rejected") {
     throw judgeOutputResult.reason
@@ -234,8 +318,10 @@ async function runJudge({
   }
 
   return {
+    reviewerId: reviewer.id,
+    type: reviewer.type,
     status: output.passed ? "passed" : "failed",
-    reason: normalizeJudgeReason(output.reason),
+    message: normalizeReviewerMessage(output.reason),
   }
 }
 
@@ -256,34 +342,37 @@ async function runCase({
   const startedAtMs = Date.now()
   const sessionId = `eval:${runId}:${testCase.id}`
   const requestIds = new Set<string>()
+  const executedToolCalls: string[] = []
   const sessionLogIndexer = createSessionLogIndexer({
     agentId: agent._id!,
     sessionId,
-    firstInput: testCase.prompt,
+    firstInput: testCase.input,
     errorLabel: "agent eval",
     startedAt,
   })
 
   if (validationFailures.length > 0) {
-    const completedAt = new Date().toISOString()
-    return {
-      caseId: testCase.id,
-      name: testCase.name,
-      prompt: testCase.prompt,
+    const error = validationFailures.map(failure => failure.message).join(" ")
+    return buildCaseResult({
+      testCase,
       caseSnapshot,
       response: "",
-      status: "failed",
-      failures: validationFailures,
+      status: "error",
+      reviewerResults: buildErroredReviewerResults({
+        reviewers: caseSnapshot.reviewers,
+        message: error,
+      }),
+      toolCalls: executedToolCalls,
       sessionId,
       requestIds: [],
       startedAt,
-      completedAt,
-      durationMs: Date.now() - startedAtMs,
-    }
+      error,
+      startedAtMs,
+    })
   }
 
   try {
-    const latestQuestion = testCase.prompt.trim()
+    const latestQuestion = testCase.input
     const [retrievedContext, promptAndTools, llm] = await Promise.all([
       getRetrievedAgentContext(agent, latestQuestion),
       sdk.ai.agents.buildPromptAndTools(agent, {
@@ -297,6 +386,7 @@ async function runCase({
     const hasTools = Object.keys(promptAndTools.tools).length > 0
     const messages: ModelMessage[] = [
       ...buildRetrievedContextMessage(retrievedContext),
+      ...buildCaseContextMessage(testCase.context),
       {
         role: "user",
         content: latestQuestion,
@@ -317,9 +407,15 @@ async function runCase({
       stopWhen: stepCountIs(30),
       providerOptions: llm.providerOptions?.(hasTools),
       async onStepFinish({ content, toolCalls, toolResults, response }) {
-        if (response?.id) {
-          requestIds.add(response.id)
-          sessionLogIndexer.addRequestId(response.id)
+        addRequestId({
+          requestIds,
+          sessionLogIndexer,
+          responseId: response?.id,
+        })
+        for (const toolCall of toolCalls) {
+          if (toolCall.toolName) {
+            executedToolCalls.push(toolCall.toolName)
+          }
         }
         updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
         for (const part of content) {
@@ -332,10 +428,11 @@ async function runCase({
         }
       },
       onFinish({ response }) {
-        if (response?.id) {
-          requestIds.add(response.id)
-          sessionLogIndexer.addRequestId(response.id)
-        }
+        addRequestId({
+          requestIds,
+          sessionLogIndexer,
+          responseId: response?.id,
+        })
       },
       onError({ error }) {
         console.error("Agent eval streaming error", {
@@ -355,10 +452,11 @@ async function runCase({
       responseResult.status === "fulfilled"
         ? (responseResult.value.id ?? undefined)
         : undefined
-    if (responseId) {
-      requestIds.add(responseId)
-      sessionLogIndexer.addRequestId(responseId)
-    }
+    addRequestId({
+      requestIds,
+      sessionLogIndexer,
+      responseId,
+    })
 
     if (pendingToolCalls.size > 0) {
       throw new Error(formatIncompleteToolCallError([]))
@@ -371,94 +469,83 @@ async function runCase({
     }
 
     const response = textResult.value || ""
-    const failures = evaluateResponse({
-      assertions: caseSnapshot.assertions,
-      response,
-    })
-    let judge: AgentEvalJudgeResult | undefined
-    const judgeAssertion = normalizeJudgeAssertion(caseSnapshot.assertions.judge)
+    const reviewerResults: AgentEvalReviewerResult[] = []
 
-    if (judgeAssertion?.rubric) {
-      try {
-        judge = await runJudge({
-          llm,
-          prompt: testCase.prompt,
-          response,
-          rubric: judgeAssertion.rubric,
-          requestIds,
-          sessionLogIndexer,
-        })
-      } catch (error) {
-        await sessionLogIndexer.index()
-
-        const completedAt = new Date().toISOString()
-        return {
-          caseId: testCase.id,
-          name: testCase.name,
-          prompt: testCase.prompt,
-          caseSnapshot,
-          response,
-          status: "error",
-          failures,
-          judge: {
+    for (const reviewer of caseSnapshot.reviewers) {
+      if (reviewer.type === "llm_judge") {
+        try {
+          reviewerResults.push(
+            await runJudge({
+              llm,
+              input: testCase.input,
+              context: testCase.context,
+              response,
+              reviewer,
+              requestIds,
+              sessionLogIndexer,
+            })
+          )
+        } catch (error) {
+          reviewerResults.push({
+            reviewerId: reviewer.id,
+            type: reviewer.type,
             status: "error",
-            error: getErrorMessage(error),
-          },
-          sessionId,
-          requestIds: [...requestIds],
-          startedAt,
-          completedAt,
-          durationMs: Date.now() - startedAtMs,
-          error: `Judge failed: ${getErrorMessage(error)}`,
+            message: `Judge failed: ${getErrorMessage(error)}`,
+          })
         }
+        continue
       }
-    }
 
-    if (judge?.status === "failed") {
-      failures.push({
-        type: "judge",
-        message: judge.reason || "Judge failed this response.",
-      })
+      reviewerResults.push(
+        evaluateReviewer({
+          reviewer,
+          response,
+          toolCalls: executedToolCalls,
+        })
+      )
     }
 
     await sessionLogIndexer.index()
 
-    const completedAt = new Date().toISOString()
+    const caseStatus = getCaseStatus(reviewerResults)
+    const error =
+      caseStatus === "error"
+        ? reviewerResults.find(result => result.status === "error")?.message
+        : undefined
 
-    return {
-      caseId: testCase.id,
-      name: testCase.name,
-      prompt: testCase.prompt,
+    return buildCaseResult({
+      testCase,
       caseSnapshot,
       response,
-      status: failures.length > 0 ? "failed" : "passed",
-      failures,
-      judge,
+      status: caseStatus,
+      reviewerResults,
+      toolCalls: executedToolCalls,
       sessionId,
       requestIds: [...requestIds],
       startedAt,
-      completedAt,
-      durationMs: Date.now() - startedAtMs,
-    }
+      startedAtMs,
+      error,
+    })
   } catch (error) {
     await sessionLogIndexer.index()
 
-    const completedAt = new Date().toISOString()
-    return {
-      caseId: testCase.id,
-      name: testCase.name,
-      prompt: testCase.prompt,
+    const errorMessage = getErrorMessage(error)
+    return buildCaseResult({
+      testCase,
       caseSnapshot,
       response: "",
       status: "error",
-      failures: [],
+      reviewerResults: buildErroredReviewerResults({
+        reviewers: caseSnapshot.reviewers,
+        message: errorMessage,
+      }),
+      toolCalls: executedToolCalls,
       sessionId,
       requestIds: [...requestIds],
       startedAt,
-      completedAt,
-      durationMs: Date.now() - startedAtMs,
-      error: getErrorMessage(error),
-    }
+      error: errorMessage,
+      startedAtMs,
+    })
   }
 }
 

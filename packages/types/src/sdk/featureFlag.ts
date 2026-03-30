@@ -3,6 +3,7 @@ export enum FeatureFlag {
   AI_AGENTS = "AI_AGENTS",
   AI_RAG = "AI_RAG",
   AI_AGENT_INSTRUCTIONS = "AI_AGENT_INSTRUCTIONS",
+  AI_EVALS = "AI_EVALS",
 
   // Dev
   DEBUG_UI = "DEBUG_UI",

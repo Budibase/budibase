@@ -1,3 +1,5 @@
+import type { AgentEvalReviewer } from "@budibase/types"
+
 export type EvalCaseStatus = "passed" | "failed" | "error" | "idle"
 
 export function getResultStatus(
@@ -16,9 +18,7 @@ export function getResultStatus(
   return "error"
 }
 
-export function resultSummary(
-  result?: { status: string } | null
-): string {
+export function resultSummary(result?: { status: string } | null): string {
   if (!result) {
     return "Not run yet"
   }
@@ -52,4 +52,29 @@ export function formatRunTime(dateStr?: string | null): string {
     return "—"
   }
   return new Date(dateStr).toLocaleString()
+}
+
+export function getReviewerLabel(type: AgentEvalReviewer["type"]): string {
+  switch (type) {
+    case "exact_match":
+      return "Exact match"
+    case "contains_text":
+      return "Contains text"
+    case "llm_judge":
+      return "LLM judge"
+    case "tool_used":
+      return "Tool used"
+  }
+}
+
+export function getReviewerConfigSummary(reviewer: AgentEvalReviewer): string {
+  switch (reviewer.type) {
+    case "exact_match":
+    case "contains_text":
+      return reviewer.text
+    case "llm_judge":
+      return reviewer.rubric
+    case "tool_used":
+      return reviewer.tool
+  }
 }

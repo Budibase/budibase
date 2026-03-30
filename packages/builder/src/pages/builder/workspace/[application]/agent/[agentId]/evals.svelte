@@ -1,7 +1,16 @@
 <script lang="ts">
   import { API } from "@/api"
-  import { selectedAgent } from "@/stores/portal"
-  import { Helpers, notifications } from "@budibase/bbui"
+  import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
+  import {
+    Body,
+    Button,
+    Heading,
+    Helpers,
+    Tab,
+    Tabs,
+    notifications,
+  } from "@budibase/bbui"
+  import { FeatureFlag } from "@budibase/types"
   import type {
     AgentEvalCase,
     AgentEvalCaseResult,
@@ -9,7 +18,13 @@
     AgentEvalSuite,
   } from "@budibase/types"
   import EvalCaseList from "./EvalComponents/EvalCaseList.svelte"
-  import EvalCaseDetail from "./EvalComponents/EvalCaseDetail.svelte"
+  import EvalCaseEditor from "./EvalComponents/EvalCaseEditor.svelte"
+  import EvalRunCaseList from "./EvalComponents/EvalRunCaseList.svelte"
+  import EvalRunDetail from "./EvalComponents/EvalRunDetail.svelte"
+  import EvalRunList from "./EvalComponents/EvalRunList.svelte"
+  import * as routify from "@roxi/routify"
+
+  const { goto } = routify
 
   const createEmptySuite = (agentId = ""): AgentEvalSuite => ({
     agentId,
@@ -19,10 +34,8 @@
   const createCase = (index: number): AgentEvalCase => ({
     id: Helpers.uuid(),
     name: `Case ${index + 1}`,
-    prompt: "",
-    assertions: {
-      contains: [""],
-    },
+    input: "",
+    reviewers: [],
   })
 
   let suite = $state<AgentEvalSuite>(createEmptySuite())
@@ -31,22 +44,48 @@
   let loading = $state(false)
   let saving = $state(false)
   let running = $state(false)
+  let selectedView = $state("Cases")
   let selectedCaseId = $state<string | null>(null)
   let selectedRunId = $state<string | null>(null)
+  let selectedRunCaseId = $state<string | null>(null)
   let lastAgentId = $state<string | undefined>()
+  let evalsEnabled = $derived($featureFlags[FeatureFlag.AI_EVALS])
 
   let currentAgent = $derived($selectedAgent)
+  let toolOptions = $derived.by(() => {
+    const enabled = new Set(currentAgent?.enabledTools ?? [])
+    const tools = $agentsStore.tools ?? []
+    return tools
+      .filter(t => enabled.has(t.name))
+      .map(t => ({ label: t.readableName || t.name, value: t.name }))
+  })
   let selectedRun = $derived(
     recentRuns.find(run => run.runId === selectedRunId) ?? latestRun
   )
-  let resultsByCaseId = $derived(
+  let availableRuns = $derived.by(() => {
+    if (!latestRun) {
+      return recentRuns
+    }
+
+    if (recentRuns.some(run => run.runId === latestRun.runId)) {
+      return recentRuns
+    }
+
+    return [latestRun, ...recentRuns]
+  })
+  let latestResultsByCaseId = $derived(
+    new Map((latestRun?.results ?? []).map(result => [result.caseId, result]))
+  )
+  let selectedRunResultsByCaseId = $derived(
     new Map((selectedRun?.results ?? []).map(result => [result.caseId, result]))
   )
   let selectedCase = $derived(
     suite.cases.find(testCase => testCase.id === selectedCaseId) || null
   )
-  let selectedResult = $derived<AgentEvalCaseResult | null>(
-    selectedCaseId ? (resultsByCaseId.get(selectedCaseId) ?? null) : null
+  let selectedRunCaseResult = $derived<AgentEvalCaseResult | null>(
+    selectedRunCaseId
+      ? (selectedRunResultsByCaseId.get(selectedRunCaseId) ?? null)
+      : null
   )
   const resetState = (agentId?: string) => {
     suite = createEmptySuite(agentId)
@@ -54,6 +93,7 @@
     recentRuns = []
     selectedCaseId = null
     selectedRunId = null
+    selectedRunCaseId = null
   }
 
   const ensureSelection = () => {
@@ -71,6 +111,11 @@
   }
 
   const loadSuite = async (agentId?: string) => {
+    if (!evalsEnabled) {
+      $goto("../config")
+      return
+    }
+
     if (!agentId) {
       resetState()
       return
@@ -109,12 +154,16 @@
     }
   }
 
-  const addCase = () => {
-    const nextCase = createCase(suite.cases.length)
+  const updateCases = (cases: AgentEvalCase[]) => {
     suite = {
       ...suite,
-      cases: [...suite.cases, nextCase],
+      cases,
     }
+  }
+
+  const addCase = () => {
+    const nextCase = createCase(suite.cases.length)
+    updateCases([...suite.cases, nextCase])
     selectedCaseId = nextCase.id
   }
 
@@ -127,24 +176,13 @@
       ...selectedCase,
       id: Helpers.uuid(),
       name: `${selectedCase.name} copy`,
-      assertions: {
-        exact: selectedCase.assertions.exact || "",
-        contains: [...(selectedCase.assertions.contains || [])],
-        notContains: [...(selectedCase.assertions.notContains || [])],
-        ...(selectedCase.assertions.judge
-          ? {
-              judge: {
-                rubric: selectedCase.assertions.judge.rubric,
-              },
-            }
-          : {}),
-      },
+      reviewers: selectedCase.reviewers.map(reviewer => ({
+        ...reviewer,
+        id: Helpers.uuid(),
+      })),
     }
 
-    suite = {
-      ...suite,
-      cases: [...suite.cases, duplicated],
-    }
+    updateCases([...suite.cases, duplicated])
     selectedCaseId = duplicated.id
   }
 
@@ -153,11 +191,11 @@
       return
     }
 
-    suite = {
-      ...suite,
-      cases: suite.cases.filter(testCase => testCase.id !== selectedCaseId),
-    }
-    selectedCaseId = suite.cases[0]?.id ?? null
+    const remainingCases = suite.cases.filter(
+      testCase => testCase.id !== selectedCaseId
+    )
+    updateCases(remainingCases)
+    selectedCaseId = remainingCases[0]?.id ?? null
   }
 
   const saveSuite = async ({
@@ -205,6 +243,7 @@
       latestRun = run
       recentRuns = [run, ...recentRuns.filter(item => item.runId !== run.runId)]
       selectedRunId = run.runId
+      selectedView = "Runs"
       notifications.success("Evaluation run complete")
     } catch (error) {
       console.error("Failed to run evaluation suite", error)
@@ -214,7 +253,46 @@
     }
   }
 
+  const selectRunCase = (caseId: string) => {
+    selectedRunCaseId = caseId
+
+    if (suite.cases.some(testCase => testCase.id === caseId)) {
+      selectedCaseId = caseId
+    }
+  }
+
   $effect(() => {
+    const runResults = selectedRun?.results ?? []
+
+    if (!runResults.length) {
+      selectedRunCaseId = null
+      return
+    }
+
+    if (
+      selectedRunCaseId &&
+      runResults.some(result => result.caseId === selectedRunCaseId)
+    ) {
+      return
+    }
+
+    if (
+      selectedCaseId &&
+      runResults.some(result => result.caseId === selectedCaseId)
+    ) {
+      selectedRunCaseId = selectedCaseId
+      return
+    }
+
+    selectedRunCaseId = runResults[0].caseId
+  })
+
+  $effect(() => {
+    if (!evalsEnabled) {
+      $goto("../config")
+      return
+    }
+
     const agentId = currentAgent?._id
     if (agentId === lastAgentId) {
       return
@@ -227,34 +305,82 @@
 </script>
 
 <div class="evals-container">
-  <div class="evals-split">
-    <div class="evals-list-panel">
-      <EvalCaseList
-        cases={suite.cases}
-        {resultsByCaseId}
-        {selectedCaseId}
-        {loading}
-        {saving}
-        {running}
-        onSelectCase={id => (selectedCaseId = id)}
-        onAddCase={addCase}
-        onSave={() => saveSuite()}
-        onRun={runSuite}
-      />
+  <div class="evals-header">
+    <div class="evals-header-copy">
+      <Heading size="S">Evaluation suite</Heading>
     </div>
-    <div class="detail-panel">
-      <EvalCaseDetail
-        {selectedCase}
-        {selectedResult}
-        selectedRun={selectedRun}
-        {recentRuns}
-        {selectedRunId}
-        onUpdateCase={updateSelectedCase}
-        onDuplicateCase={duplicateSelectedCase}
-        onRemoveCase={removeSelectedCase}
-        onSelectRun={runId => (selectedRunId = runId)}
-      />
+    <div class="evals-header-actions">
+      <Button
+        secondary
+        disabled={saving || loading}
+        on:click={() => saveSuite()}
+      >
+        Save
+      </Button>
+      <Button
+        primary
+        disabled={running || saving || loading}
+        on:click={runSuite}
+      >
+        {running ? "Running..." : "Run suite"}
+      </Button>
     </div>
+  </div>
+
+  <div class="mode-tabs">
+    <Tabs bind:selected={selectedView} noPadding noHorizPadding size="M">
+      <Tab title="Cases">
+        <div class="evals-split">
+          <div class="evals-list-panel">
+            <EvalCaseList
+              cases={suite.cases}
+              resultsByCaseId={latestResultsByCaseId}
+              hasLatestRun={!!latestRun}
+              {selectedCaseId}
+              {loading}
+              onSelectCase={id => (selectedCaseId = id)}
+              onAddCase={addCase}
+            />
+          </div>
+          <div class="detail-panel">
+            <EvalCaseEditor
+              {selectedCase}
+              {toolOptions}
+              onUpdateCase={updateSelectedCase}
+              onDuplicateCase={duplicateSelectedCase}
+              onRemoveCase={removeSelectedCase}
+            />
+          </div>
+        </div>
+      </Tab>
+      <Tab title="Runs">
+        <div class="evals-split">
+          <div class="runs-panel">
+            <div class="runs-panel-section">
+              <EvalRunList
+                runs={availableRuns}
+                {selectedRunId}
+                onSelectRun={runId => (selectedRunId = runId)}
+              />
+            </div>
+            <div class="runs-panel-divider"></div>
+            <div class="runs-panel-section runs-panel-section--scroll">
+              <EvalRunCaseList
+                results={selectedRun?.results ?? []}
+                selectedCaseId={selectedRunCaseId}
+                onSelectCase={selectRunCase}
+              />
+            </div>
+          </div>
+          <div class="detail-panel">
+            <EvalRunDetail
+              selectedResult={selectedRunCaseResult}
+              {selectedRun}
+            />
+          </div>
+        </div>
+      </Tab>
+    </Tabs>
   </div>
 </div>
 
@@ -265,6 +391,56 @@
     flex: 1 1 auto;
     height: 100%;
     min-height: 0;
+  }
+
+  .evals-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-l);
+    padding: var(--spacing-l);
+    flex-shrink: 0;
+  }
+
+  .evals-header-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    min-width: 0;
+  }
+
+  .evals-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    flex-shrink: 0;
+  }
+
+  .mode-tabs {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .mode-tabs > :global(.spectrum-Tabs) {
+    flex-shrink: 0;
+    padding: 0 var(--spacing-l);
+  }
+
+  .mode-tabs > :global(.spectrum-Tabs-content) {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 0;
+  }
+
+  .mode-tabs > :global(.spectrum-Tabs-content > div) {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
   }
 
   .evals-split {
@@ -288,6 +464,36 @@
     background: var(--background);
   }
 
+  .runs-panel {
+    flex: 0 0 36%;
+    min-width: 340px;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    border-right: 1px solid var(--spectrum-global-color-gray-200);
+    background: var(--background);
+    padding: var(--spacing-l);
+    gap: var(--spacing-l);
+  }
+
+  .runs-panel-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .runs-panel-section--scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .runs-panel-divider {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
   .detail-panel {
     flex: 1 1 auto;
     min-width: 0;
@@ -297,15 +503,18 @@
     scrollbar-width: thin;
   }
 
+  .runs-panel-section--scroll::-webkit-scrollbar,
   .detail-panel::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
 
+  .runs-panel-section--scroll::-webkit-scrollbar-track,
   .detail-panel::-webkit-scrollbar-track {
     background: transparent;
   }
 
+  .runs-panel-section--scroll::-webkit-scrollbar-thumb,
   .detail-panel::-webkit-scrollbar-thumb {
     background: var(--spectrum-global-color-gray-300);
     border-radius: 3px;
@@ -316,7 +525,8 @@
       flex-direction: column;
     }
 
-    .evals-list-panel {
+    .evals-list-panel,
+    .runs-panel {
       flex: none;
       min-width: 0;
       max-width: none;

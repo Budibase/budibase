@@ -1,29 +1,49 @@
 import type { ReasoningEffort } from "./ai"
 import { Document } from "../../"
 
-export interface AgentEvalAssertions {
-  exact?: string
-  contains?: string[]
-  notContains?: string[]
-  judge?: AgentEvalJudgeAssertion
-}
+export type AgentEvalReviewer =
+  | {
+      id: string
+      type: "exact_match"
+      text: string
+    }
+  | {
+      id: string
+      type: "contains_text"
+      text: string
+    }
+  | {
+      id: string
+      type: "llm_judge"
+      rubric: string
+    }
+  | {
+      id: string
+      type: "tool_used"
+      tool: string
+    }
 
-export interface AgentEvalJudgeAssertion {
-  rubric: string
+export interface AgentEvalReviewerResult {
+  reviewerId: string
+  type: AgentEvalReviewer["type"]
+  status: "passed" | "failed" | "error"
+  message?: string
 }
 
 export interface AgentEvalCase {
   id: string
   name: string
-  prompt: string
-  assertions: AgentEvalAssertions
+  input: string
+  context?: string
+  reviewers: AgentEvalReviewer[]
 }
 
 export interface AgentEvalCaseSnapshot {
   id: string
   name: string
-  prompt: string
-  assertions: AgentEvalAssertions
+  input: string
+  context?: string
+  reviewers: AgentEvalReviewer[]
 }
 
 export interface AgentEvalModelSnapshot {
@@ -39,17 +59,6 @@ export interface AgentEvalSuite extends Document {
   agentId: string
   cases: AgentEvalCase[]
   updatedBy?: string
-}
-
-export interface AgentEvalAssertionFailure {
-  type: "exact" | "contains" | "notContains" | "judge" | "invalid"
-  message: string
-}
-
-export interface AgentEvalJudgeResult {
-  status: "passed" | "failed" | "error"
-  reason?: string
-  error?: string
 }
 
 export interface AgentEvalSnapshot {
@@ -69,12 +78,13 @@ export interface AgentEvalSnapshot {
 export interface AgentEvalCaseResult {
   caseId: string
   name: string
-  prompt: string
+  input: string
+  context?: string
   caseSnapshot?: AgentEvalCaseSnapshot
   response: string
   status: "passed" | "failed" | "error"
-  failures: AgentEvalAssertionFailure[]
-  judge?: AgentEvalJudgeResult
+  reviewerResults: AgentEvalReviewerResult[]
+  toolCalls: string[]
   sessionId: string
   requestIds: string[]
   startedAt: string

@@ -1,53 +1,36 @@
 <script lang="ts">
-  import {
-    ActionButton,
-    Body,
-    Icon,
-    Tab,
-    Tabs,
-  } from "@budibase/bbui"
-  import type {
-    AgentEvalCase,
-    AgentEvalCaseResult,
-    AgentEvalRun,
-  } from "@budibase/types"
-  import EvalCaseOverview from "./EvalCaseOverview.svelte"
+  import { ActionButton, Body, Icon } from "@budibase/bbui"
+  import type { AgentEvalCase } from "@budibase/types"
   import EvalCaseConfig from "./EvalCaseConfig.svelte"
-  import EvalCaseResults from "./EvalCaseResults.svelte"
 
   type Props = {
     selectedCase: AgentEvalCase | null
-    selectedResult: AgentEvalCaseResult | null
-    selectedRun: AgentEvalRun | null
-    recentRuns: AgentEvalRun[]
-    selectedRunId: string | null
+    toolOptions: { label: string; value: string }[]
     onUpdateCase: (
-      updater: (testCase: AgentEvalCase) => AgentEvalCase
+      _updater: (_testCase: AgentEvalCase) => AgentEvalCase
     ) => void
     onDuplicateCase: () => void
     onRemoveCase: () => void
-    onSelectRun: (runId: string) => void
   }
 
   let {
     selectedCase,
-    selectedResult,
-    selectedRun,
-    recentRuns,
-    selectedRunId,
+    toolOptions,
     onUpdateCase,
     onDuplicateCase,
     onRemoveCase,
-    onSelectRun,
   }: Props = $props()
-
-  let selectedTab = $state("Overview")
 </script>
 
 {#if selectedCase}
   <div class="detail-content">
     <div class="detail-header">
-      <h3 class="detail-title">{selectedCase.name}</h3>
+      <div class="detail-heading">
+        <h3 class="detail-title">{selectedCase.name}</h3>
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          Edit the input and reviewer checks for this case.
+        </Body>
+      </div>
       <div class="editor-actions">
         <ActionButton
           quiet
@@ -64,39 +47,20 @@
       </div>
     </div>
 
-    <Tabs bind:selected={selectedTab} noPadding size="M">
-      <Tab title="Overview">
-        <EvalCaseOverview {selectedCase} {selectedResult} {selectedRun} />
-      </Tab>
-      <Tab title="Configuration">
-        <EvalCaseConfig {selectedCase} {onUpdateCase} />
-      </Tab>
-      <Tab title="Results">
-        <EvalCaseResults
-          {selectedResult}
-          {recentRuns}
-          {selectedRunId}
-          {onSelectRun}
-        />
-      </Tab>
-    </Tabs>
+    <EvalCaseConfig {selectedCase} {toolOptions} {onUpdateCase} />
   </div>
 {:else}
   <div class="detail-empty">
-    <Icon
-      name="clock"
-      size="L"
-      color="var(--spectrum-global-color-gray-500)"
-    />
+    <Icon name="clock" size="L" color="var(--spectrum-global-color-gray-500)" />
     <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      Select a case to view and edit
+      Select a case to edit its configuration
     </Body>
   </div>
 {/if}
 
 <style>
   .detail-content {
-    padding: var(--spacing-xl) var(--spacing-l);
+    padding: var(--spacing-l);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
@@ -105,8 +69,15 @@
   .detail-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--spacing-m);
+  }
+
+  .detail-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
   }
 
   .detail-title {

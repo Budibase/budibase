@@ -1,60 +1,52 @@
 <script lang="ts">
-  import {
-    ActionButton,
-    Badge,
-    Body,
-    Button,
-    Heading,
-  } from "@budibase/bbui"
+  import { ActionButton, Badge, Body, Button, Heading } from "@budibase/bbui"
   import type { AgentEvalCase, AgentEvalCaseResult } from "@budibase/types"
   import { getResultStatus, resultSummary, statusToBadgeProps } from "./utils"
 
   type Props = {
     cases: AgentEvalCase[]
     resultsByCaseId: Map<string, AgentEvalCaseResult>
+    hasLatestRun: boolean
     selectedCaseId: string | null
     loading: boolean
-    saving: boolean
-    running: boolean
-    onSelectCase: (caseId: string) => void
+    onSelectCase: (_caseId: string) => void
     onAddCase: () => void
-    onSave: () => void
-    onRun: () => void
   }
 
   let {
     cases,
     resultsByCaseId,
+    hasLatestRun,
     selectedCaseId,
     loading,
-    saving,
-    running,
     onSelectCase,
     onAddCase,
-    onSave,
-    onRun,
   }: Props = $props()
+
+  const getCaseResultLabel = (result?: AgentEvalCaseResult) => {
+    if (result) {
+      return resultSummary(result)
+    }
+
+    if (hasLatestRun) {
+      return "Not in latest run"
+    }
+
+    return "No runs yet"
+  }
 </script>
 
-<div class="list-toolbar">
-  <div class="toolbar-title">
-    <Heading size="S">Evaluation suite</Heading>
-    <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Run prompt checks against the latest saved agent draft.
+<div class="case-list-header">
+  <div class="case-list-heading">
+    <Heading size="XS">Cases</Heading>
+    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+      {#if hasLatestRun}
+        Status from the latest suite run
+      {:else}
+        Add cases, then run the suite to generate results
+      {/if}
     </Body>
   </div>
-  <div class="toolbar-actions">
-    <Button secondary disabled={saving || loading} on:click={onSave}>
-      Save
-    </Button>
-    <Button primary disabled={running || saving || loading} on:click={onRun}>
-      {running ? "Running..." : "Run suite"}
-    </Button>
-  </div>
-</div>
-
-<div class="case-list-header">
-  <Heading size="XS">Cases</Heading>
   <ActionButton quiet icon="plus" on:click={onAddCase}>Add case</ActionButton>
 </div>
 
@@ -88,10 +80,10 @@
         >
           <div class="case-item-top">
             <span class="case-item-name">{testCase.name}</span>
-            <Badge {...badgeProps} size="S">{resultSummary(result)}</Badge>
+            <Badge {...badgeProps} size="S">{getCaseResultLabel(result)}</Badge>
           </div>
           <div class="case-item-subtitle">
-            {testCase.prompt || "No prompt yet"}
+            {testCase.input || "No input yet"}
           </div>
         </button>
       {/each}
@@ -100,35 +92,20 @@
 </div>
 
 <style>
-  .list-toolbar {
+  .case-list-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: var(--spacing-l);
+    gap: var(--spacing-m);
     padding: var(--spacing-l) var(--spacing-l) var(--spacing-s);
     flex-shrink: 0;
   }
 
-  .toolbar-title {
+  .case-list-heading {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 4px;
     min-width: 0;
-  }
-
-  .toolbar-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    flex-shrink: 0;
-  }
-
-  .case-list-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--spacing-l) var(--spacing-s);
-    flex-shrink: 0;
   }
 
   .case-list-body {

@@ -89,7 +89,28 @@ describe("agent eval runner", () => {
     index: jest.fn().mockResolvedValue(undefined),
   })
 
-  const mockAgentRun = (response: string) => {
+  const setSuite = (reviewers: unknown[]) => {
+    fetchSuite.mockResolvedValue({
+      agentId: "agent-1",
+      cases: [
+        {
+          id: "case-1",
+          name: "Friendly greeting",
+          input: "Say hello",
+          context: "Keep it brief",
+          reviewers,
+        },
+      ],
+    })
+  }
+
+  const mockAgentRun = ({
+    response,
+    toolCalls = [],
+  }: {
+    response: string
+    toolCalls?: string[]
+  }) => {
     ai.streamText.mockImplementation(
       ({
         onStepFinish,
@@ -97,7 +118,7 @@ describe("agent eval runner", () => {
       }: {
         onStepFinish?: (result: {
           content: unknown[]
-          toolCalls: unknown[]
+          toolCalls: Array<{ toolName: string; toolCallId: string }>
           toolResults: unknown[]
           response: { id: string }
         }) => void
@@ -105,7 +126,10 @@ describe("agent eval runner", () => {
       }) => {
         onStepFinish?.({
           content: [],
-          toolCalls: [],
+          toolCalls: toolCalls.map((toolName, index) => ({
+            toolName,
+            toolCallId: `tool-call-${index + 1}`,
+          })),
           toolResults: [],
           response: {
             id: "agent-request",
@@ -183,22 +207,6 @@ describe("agent eval runner", () => {
       chat: {},
       providerOptions: jest.fn().mockReturnValue(undefined),
     })
-    fetchSuite.mockResolvedValue({
-      agentId: "agent-1",
-      cases: [
-        {
-          id: "case-1",
-          name: "Friendly greeting",
-          prompt: "Say hello",
-          assertions: {
-            contains: ["hello"],
-            judge: {
-              rubric: "The response should be friendly and direct.",
-            },
-          },
-        },
-      ],
-    })
     saveRun.mockImplementation(async (run: Record<string, unknown>) => ({
       ...run,
       _id: "run-doc",
@@ -206,11 +214,132 @@ describe("agent eval runner", () => {
     createSessionLogIndexer.mockImplementation(makeIndexer)
   })
 
-  it("passes a case when deterministic and judge checks both pass", async () => {
-    mockAgentRun("Hello there")
-    mockJudgeRun({
-      passed: true,
-      reason: "The response is friendly and direct.",
+  it("passes exact and contains reviewers when the response matches", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "exact_match",
+        text: "Hello there",
+      },
+      {
+        id: "reviewer-2",
+        type: "contains_text",
+        text: "hello",
+      },
+    ])
+    mockAgentRun({ response: " Hello   there " })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.results[0]).toMatchObject({
+      status: "passed",
+      input: "Say hello",
+      context: "Keep it brief",
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "exact_match",
+          status: "passed",
+        },
+        {
+          reviewerId: "reviewer-2",
+          type: "contains_text",
+          status: "passed",
+        },
+      ],
+      caseSnapshot: {
+        id: "case-1",
+        name: "Friendly greeting",
+        input: "Say hello",
+        context: "Keep it brief",
+        reviewers: [
+          {
+            id: "reviewer-1",
+            type: "exact_match",
+            text: "Hello there",
+          },
+          {
+            id: "reviewer-2",
+            type: "contains_text",
+            text: "hello",
+          },
+        ],
+      },
+      toolCalls: [],
+    })
+  })
+
+  it("fails an exact match reviewer when the final response differs", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "exact_match",
+        text: "Hello there",
+      },
+    ])
+    mockAgentRun({ response: "Hello team" })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.results[0]).toMatchObject({
+      status: "failed",
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "exact_match",
+          status: "failed",
+          message:
+            'Expected the final response to exactly match "Hello there".',
+        },
+      ],
+    })
+  })
+
+  it("fails a contains reviewer when the expected text is missing", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "contains_text",
+        text: "Alice",
+      },
+    ])
+    mockAgentRun({ response: "Bob is the manager." })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.results[0]).toMatchObject({
+      status: "failed",
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "contains_text",
+          status: "failed",
+          message: 'Expected the final response to include "Alice".',
+        },
+      ],
+    })
+  })
+
+  it("passes a tool used reviewer when the expected tool was called", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "tool_used",
+        tool: "search_rows",
+      },
+    ])
+    mockAgentRun({
+      response: "Found a result.",
+      toolCalls: ["search_rows", "get_row"],
     })
 
     const run = await runSuite({
@@ -220,22 +349,104 @@ describe("agent eval runner", () => {
 
     expect(run.results[0]).toMatchObject({
       status: "passed",
-      caseSnapshot: {
-        id: "case-1",
-        name: "Friendly greeting",
-        prompt: "Say hello",
-        assertions: {
-          contains: ["hello"],
-          judge: {
-            rubric: "The response should be friendly and direct.",
-          },
+      toolCalls: ["search_rows", "get_row"],
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "tool_used",
+          status: "passed",
         },
+      ],
+    })
+  })
+
+  it("fails a tool used reviewer when the expected tool was not called", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "tool_used",
+        tool: "search_rows",
       },
-      failures: [],
-      judge: {
-        status: "passed",
-        reason: "The response is friendly and direct.",
+    ])
+    mockAgentRun({
+      response: "Handled without a tool.",
+      toolCalls: ["list_tables"],
+    })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.results[0]).toMatchObject({
+      status: "failed",
+      toolCalls: ["list_tables"],
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "tool_used",
+          status: "failed",
+          message: 'Expected tool "search_rows" to be used.',
+        },
+      ],
+    })
+  })
+
+  it("persists mixed reviewer results and marks the case failed when any reviewer fails", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "contains_text",
+        text: "Hello",
       },
+      {
+        id: "reviewer-2",
+        type: "llm_judge",
+        rubric: "The response should be direct.",
+      },
+      {
+        id: "reviewer-3",
+        type: "tool_used",
+        tool: "search_rows",
+      },
+    ])
+    mockAgentRun({
+      response: "Hello there",
+      toolCalls: ["get_row"],
+    })
+    mockJudgeRun({
+      passed: true,
+      reason: "The response is direct.",
+    })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+    })
+
+    expect(run.results[0]).toMatchObject({
+      status: "failed",
+      toolCalls: ["get_row"],
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "contains_text",
+          status: "passed",
+          message: 'Found "Hello" in the final response.',
+        },
+        {
+          reviewerId: "reviewer-2",
+          type: "llm_judge",
+          status: "passed",
+          message: "The response is direct.",
+        },
+        {
+          reviewerId: "reviewer-3",
+          type: "tool_used",
+          status: "failed",
+          message: 'Expected tool "search_rows" to be used.',
+        },
+      ],
     })
     expect(run.snapshot.aiConfig).toEqual({
       aiConfigId: "config-1",
@@ -250,33 +461,15 @@ describe("agent eval runner", () => {
     )
   })
 
-  it("fails a case when the judge returns a failed verdict", async () => {
-    mockAgentRun("Hello there")
-    mockJudgeRun({
-      passed: false,
-      reason: "The response is friendly, but it is too vague.",
-    })
-
-    const run = await runSuite({
-      agentId: "agent-1",
-      user,
-    })
-
-    expect(run.results[0]).toMatchObject({
-      status: "failed",
-      judge: {
-        status: "failed",
-        reason: "The response is friendly, but it is too vague.",
+  it("marks the case as error when a judge reviewer errors", async () => {
+    setSuite([
+      {
+        id: "reviewer-1",
+        type: "llm_judge",
+        rubric: "The response should be direct.",
       },
-    })
-    expect(run.results[0].failures).toContainEqual({
-      type: "judge",
-      message: "The response is friendly, but it is too vague.",
-    })
-  })
-
-  it("marks the case as error when the judge call fails after a response is generated", async () => {
-    mockAgentRun("Hello there")
+    ])
+    mockAgentRun({ response: "Hello there" })
     mockJudgeRun(new Error("structured output failed"))
 
     const run = await runSuite({
@@ -287,10 +480,14 @@ describe("agent eval runner", () => {
     expect(run.results[0]).toMatchObject({
       response: "Hello there",
       status: "error",
-      judge: {
-        status: "error",
-        error: "structured output failed",
-      },
+      reviewerResults: [
+        {
+          reviewerId: "reviewer-1",
+          type: "llm_judge",
+          status: "error",
+          message: "Judge failed: structured output failed",
+        },
+      ],
       error: "Judge failed: structured output failed",
     })
   })

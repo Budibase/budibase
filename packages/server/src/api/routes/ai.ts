@@ -1,6 +1,7 @@
 import { auth } from "@budibase/backend-core"
 import { middleware } from "@budibase/pro"
 import { aiRagEnabled } from "../../middleware/aiRagEnabled"
+import { aiEvalsEnabled } from "../../middleware/aiEvalsEnabled"
 import * as ai from "../controllers/ai"
 import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 import {
@@ -71,6 +72,10 @@ builderAdminRoutes
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
   .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
+const aiEvalBuilderAdminRoutes = endpointGroupList
+  .group(auth.builderOrAdmin)
+  .addGroupMiddleware(aiEvalsEnabled)
+aiEvalBuilderAdminRoutes
   .get("/api/agent/:agentId/evals", ai.fetchAgentEvalSuite)
   .put(
     "/api/agent/:agentId/evals",

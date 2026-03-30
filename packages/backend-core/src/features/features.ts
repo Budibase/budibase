@@ -237,6 +237,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.AI_AGENTS]: true,
   [FeatureFlag.AI_RAG]: false,
   [FeatureFlag.AI_AGENT_INSTRUCTIONS]: false,
+  [FeatureFlag.AI_EVALS]: false,
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
 }

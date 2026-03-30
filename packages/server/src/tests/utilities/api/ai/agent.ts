@@ -12,6 +12,10 @@ import {
   ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
+  UpdateAgentEvalSuiteRequest,
+  UpdateAgentEvalSuiteResponse,
+  FetchAgentEvalSuiteResponse,
+  RunAgentEvalSuiteResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "../base"
 
@@ -121,6 +125,44 @@ export class AgentAPI extends TestAPI {
           ...expectations,
           status: expectations?.status || 201,
         },
+      }
+    )
+  }
+
+  fetchEvalSuite = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentEvalSuiteResponse> => {
+    return await this._get<FetchAgentEvalSuiteResponse>(
+      `/api/agent/${agentId}/evals`,
+      {
+        expectations,
+      }
+    )
+  }
+
+  updateEvalSuite = async (
+    agentId: string,
+    body: UpdateAgentEvalSuiteRequest,
+    expectations?: Expectations
+  ): Promise<UpdateAgentEvalSuiteResponse> => {
+    return await this._put<UpdateAgentEvalSuiteResponse>(
+      `/api/agent/${agentId}/evals`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  runEvalSuite = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<RunAgentEvalSuiteResponse> => {
+    return await this._post<RunAgentEvalSuiteResponse>(
+      `/api/agent/${agentId}/evals/run`,
+      {
+        expectations,
       }
     )
   }

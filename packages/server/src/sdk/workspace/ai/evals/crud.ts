@@ -2,12 +2,17 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { UNICODE_MAX } from "@budibase/types"
 import type {
   AgentEvalCase,
+  AgentEvalReviewer,
   AgentEvalRun,
   AgentEvalSuite,
   UpdateAgentEvalSuiteRequest,
 } from "@budibase/types"
 import { v4 } from "uuid"
-import { normalizeAssertions, validateEvalCase } from "./assertions"
+import {
+  normalizeCaseContext,
+  normalizeReviewers,
+  validateEvalCase,
+} from "./reviewers"
 
 const buildDefaultSuite = (agentId: string): AgentEvalSuite => ({
   _id: docIds.getAgentEvalSuiteID(agentId),
@@ -36,11 +41,20 @@ export async function saveSuite({
   const existing = await db.tryGet<AgentEvalSuite>(
     docIds.getAgentEvalSuiteID(agentId)
   )
+  const normalizeReviewer = (reviewer: AgentEvalReviewer): AgentEvalReviewer => {
+    return {
+      ...reviewer,
+      id: reviewer.id || v4(),
+    }
+  }
   const cases: AgentEvalCase[] = request.cases.map((testCase, idx) => ({
     id: testCase.id ?? v4(),
-    name: testCase.name ?? `Case ${idx + 1}`,
-    prompt: testCase.prompt ?? "",
-    assertions: normalizeAssertions(testCase.assertions),
+    name: testCase.name?.trim() || `Case ${idx + 1}`,
+    input: testCase.input ?? "",
+    context: normalizeCaseContext(testCase.context),
+    reviewers: normalizeReviewers(testCase.reviewers || []).map(
+      normalizeReviewer
+    ),
   }))
 
   for (const testCase of cases) {

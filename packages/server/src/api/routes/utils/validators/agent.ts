@@ -135,23 +135,45 @@ export function generateAgentInstructionsValidator() {
   )
 }
 
-const OPTIONAL_ASSERTION_LIST = Joi.array()
-  .items(Joi.string().trim().disallow(""))
-  .optional()
-const OPTIONAL_JUDGE_ASSERTION = Joi.object({
+const EXACT_MATCH_REVIEWER_SCHEMA = Joi.object({
+  id: Joi.string().required(),
+  type: Joi.string().valid("exact_match").required(),
+  text: Joi.string().trim().disallow("").required(),
+}).required()
+
+const CONTAINS_TEXT_REVIEWER_SCHEMA = Joi.object({
+  id: Joi.string().required(),
+  type: Joi.string().valid("contains_text").required(),
+  text: Joi.string().trim().disallow("").required(),
+}).required()
+
+const LLM_JUDGE_REVIEWER_SCHEMA = Joi.object({
+  id: Joi.string().required(),
+  type: Joi.string().valid("llm_judge").required(),
   rubric: Joi.string().trim().disallow("").required(),
-}).optional()
+}).required()
+
+const TOOL_USED_REVIEWER_SCHEMA = Joi.object({
+  id: Joi.string().required(),
+  type: Joi.string().valid("tool_used").required(),
+  tool: Joi.string().trim().disallow("").required(),
+}).required()
+
+const AGENT_EVAL_REVIEWER_SCHEMA = Joi.alternatives()
+  .try(
+    EXACT_MATCH_REVIEWER_SCHEMA,
+    CONTAINS_TEXT_REVIEWER_SCHEMA,
+    LLM_JUDGE_REVIEWER_SCHEMA,
+    TOOL_USED_REVIEWER_SCHEMA
+  )
+  .required()
 
 const AGENT_EVAL_CASE_SCHEMA = Joi.object({
   id: Joi.string().optional(),
   name: Joi.string().required(),
-  prompt: Joi.string().required(),
-  assertions: Joi.object({
-    exact: OPTIONAL_STRING,
-    contains: OPTIONAL_ASSERTION_LIST,
-    notContains: OPTIONAL_ASSERTION_LIST,
-    judge: OPTIONAL_JUDGE_ASSERTION,
-  }).required(),
+  input: Joi.string().required(),
+  context: Joi.string().allow("").optional(),
+  reviewers: Joi.array().items(AGENT_EVAL_REVIEWER_SCHEMA).required(),
 }).required()
 
 export function updateAgentEvalSuiteValidator() {

@@ -9,22 +9,33 @@
   import { formatRunTime, resultSummary } from "./utils"
 
   type Props = {
-    selectedCase: AgentEvalCase
+    selectedCase: AgentEvalCase | null
     selectedResult: AgentEvalCaseResult | null
     selectedRun: AgentEvalRun | null
   }
 
   let { selectedCase, selectedResult, selectedRun }: Props = $props()
 
-  let displayedPrompt = $derived(
-    selectedResult?.caseSnapshot?.prompt || selectedCase.prompt || "—"
+  let displayedInput = $derived(
+    selectedResult?.caseSnapshot?.input ||
+      selectedResult?.input ||
+      selectedCase?.input ||
+      "—"
   )
   let snapshotModelSummary = $derived(
     selectedRun?.snapshot.aiConfig
-      ? [selectedRun.snapshot.aiConfig.provider, selectedRun.snapshot.aiConfig.model]
+      ? [
+          selectedRun.snapshot.aiConfig.provider,
+          selectedRun.snapshot.aiConfig.model,
+        ]
           .filter(Boolean)
           .join(" / ") || selectedRun.snapshot.aiConfig.aiConfigId
       : selectedRun?.snapshot.aiconfig || "—"
+  )
+  let toolSummary = $derived(
+    selectedResult?.toolCalls?.length
+      ? selectedResult.toolCalls.join(", ")
+      : "No tools executed"
   )
 
   let responsePreview = $derived(
@@ -39,8 +50,8 @@
 <div class="overview">
   <div class="meta-grid">
     <div class="meta-row">
-      <span class="meta-label">Prompt</span>
-      <span class="meta-value">{displayedPrompt}</span>
+      <span class="meta-label">Input</span>
+      <span class="meta-value">{displayedInput}</span>
     </div>
     <div class="meta-row">
       <span class="meta-label">Status</span>
@@ -54,7 +65,7 @@
             {resultSummary(selectedResult)}
           </StatusLight>
         {:else}
-          <span class="meta-muted">Not run yet</span>
+          <span class="meta-muted">No result in this run</span>
         {/if}
       </span>
     </div>
@@ -70,17 +81,28 @@
     </div>
     <div class="meta-row">
       <span class="meta-label">Last run</span>
-      <span class="meta-value">{formatRunTime(selectedResult?.completedAt)}</span>
+      <span class="meta-value"
+        >{formatRunTime(selectedResult?.completedAt)}</span
+      >
     </div>
     <div class="meta-row">
       <span class="meta-label">Suite run</span>
       <span class="meta-value">{formatRunTime(selectedRun?.completedAt)}</span>
     </div>
     <div class="meta-row">
+      <span class="meta-label">Model</span>
+      <span class="meta-value">{snapshotModelSummary}</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-label">Tools</span>
+      <span class="meta-value">{toolSummary}</span>
+    </div>
+    <div class="meta-row">
       <span class="meta-label">Snapshot</span>
       <span class="meta-value">
         {#if selectedRun?.snapshot}
-          {snapshotModelSummary} &bull; {selectedRun.snapshot.enabledTools.length} tools &bull; {selectedRun.snapshot.knowledgeBases.length} KBs
+          {selectedRun.snapshot.enabledTools.length} enabled tools &bull;
+          {selectedRun.snapshot.knowledgeBases.length} KBs
         {:else}
           —
         {/if}
