@@ -8,41 +8,25 @@ let db: {
 }
 
 let docIds: {
-  getAgentEvalSuiteID: jest.Mock
-  getAgentEvalRunPrefix: jest.Mock
-  getAgentEvalRunID: jest.Mock
+  getAgentEvalSuiteID: (agentId: string) => string
+  getAgentEvalRunPrefix: (agentId: string) => string
+  getAgentEvalRunID: (
+    agentId: string,
+    startedAt?: string,
+    runId?: string
+  ) => string
 }
 
-jest.mock("@budibase/backend-core", () => ({
-  context: {
-    getWorkspaceDB: jest.fn(() => db),
-  },
-  docIds: {
-    getAgentEvalSuiteID: jest.fn((agentId: string) => `suite_${agentId}`),
-    getAgentEvalRunPrefix: jest.fn((agentId: string) => `run_${agentId}_`),
-    getAgentEvalRunID: jest.fn(
-      (agentId: string, startedAt?: string, runId?: string) => {
-        if (!startedAt) {
-          return `run_${agentId}`
-        }
-
-        if (!runId) {
-          return `run_${agentId}_${startedAt}`
-        }
-
-        return `run_${agentId}_${startedAt}_${runId}`
-      }
-    ),
-  },
-  HTTPError: class HTTPError extends Error {
-    status: number
-
-    constructor(message: string, status: number) {
-      super(message)
-      this.status = status
-    }
-  },
-}))
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    context: {
+      ...actual.context,
+      getWorkspaceDB: jest.fn(() => db),
+    },
+  }
+})
 
 db = {
   allDocs: jest.fn(),
@@ -107,11 +91,12 @@ describe("agent eval crud", () => {
     })
 
     const runs = await fetchRuns("agent-1", 2)
+    const runPrefix = docIds.getAgentEvalRunPrefix("agent-1")
 
     expect(runs.map(run => run.runId)).toEqual(["run-3", "run-2"])
     expect(db.allDocs).toHaveBeenCalledWith({
-      startkey: "run_agent-1_\ufff0",
-      endkey: "run_agent-1_",
+      startkey: `${runPrefix}\ufff0`,
+      endkey: runPrefix,
       include_docs: true,
       descending: true,
     })
@@ -140,14 +125,13 @@ describe("agent eval crud", () => {
       results: [],
     })
 
-    expect(docIds.getAgentEvalRunID).toHaveBeenCalledWith(
-      "agent-1",
-      "2025-01-01T00:00:00.000Z",
-      "run-1"
-    )
     expect(db.put).toHaveBeenCalledWith(
       expect.objectContaining({
-        _id: "run_agent-1_2025-01-01T00:00:00.000Z_run-1",
+        _id: docIds.getAgentEvalRunID(
+          "agent-1",
+          "2025-01-01T00:00:00.000Z",
+          "run-1"
+        ),
       })
     )
   })
