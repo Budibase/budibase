@@ -15,6 +15,26 @@ const PREMIUM_FEATURES = [
   Feature.BUDIBASE_AI,
 ]
 
+const BUSINESS_FEATURES = [
+  Feature.USER_GROUPS,
+  Feature.WORKSPACE_BACKUPS,
+  Feature.BRANDING,
+  Feature.ENFORCEABLE_SSO,
+  Feature.ENVIRONMENT_VARIABLES,
+  Feature.SYNC_AUTOMATIONS,
+  Feature.TRIGGER_AUTOMATION_RUN,
+  Feature.VIEW_PERMISSIONS,
+  Feature.VIEW_READONLY_COLUMNS,
+  Feature.AI_CUSTOM_CONFIGS,
+  Feature.CUSTOM_APP_SCRIPTS,
+  Feature.PWA,
+  Feature.PDF,
+  Feature.BUDIBASE_AI,
+  Feature.RECAPTCHA,
+  Feature.PKCE_OIDC,
+  Feature.TRANSLATIONS,
+]
+
 const SELF_FEATURES: PlanFeatures = {
   [PlanType.FREE]: [...constants.licenses.SELF_FREE_LICENSE.features],
   [PlanType.PREMIUM]: [
@@ -39,24 +59,8 @@ const SELF_FEATURES: PlanFeatures = {
   [PlanType.PRO]: PRO_FEATURES,
   [PlanType.PRO_MAX]: PRO_FEATURES,
   [PlanType.TEAM]: [Feature.USER_GROUPS, Feature.WORKSPACE_BACKUPS],
-  [PlanType.BUSINESS]: [
-    Feature.USER_GROUPS,
-    Feature.WORKSPACE_BACKUPS,
-    Feature.BRANDING,
-    Feature.ENFORCEABLE_SSO,
-    Feature.ENVIRONMENT_VARIABLES,
-    Feature.SYNC_AUTOMATIONS,
-    Feature.TRIGGER_AUTOMATION_RUN,
-    Feature.VIEW_PERMISSIONS,
-    Feature.VIEW_READONLY_COLUMNS,
-    Feature.AI_CUSTOM_CONFIGS,
-    Feature.CUSTOM_APP_SCRIPTS,
-    Feature.PWA,
-    Feature.PDF,
-    Feature.RECAPTCHA,
-    Feature.PKCE_OIDC,
-    Feature.TRANSLATIONS,
-  ],
+  [PlanType.BUSINESS]: BUSINESS_FEATURES,
+  [PlanType.BUSINESS_PLUS]: BUSINESS_FEATURES,
   [PlanType.ENTERPRISE_BASIC]: [
     Feature.USER_GROUPS,
     Feature.WORKSPACE_BACKUPS,
@@ -80,6 +84,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.RECAPTCHA,
     Feature.PKCE_OIDC,
     Feature.TRANSLATIONS,
+    Feature.MICROFRONTEND,
   ],
   [PlanType.ENTERPRISE_BASIC_TRIAL]: [
     Feature.USER_GROUPS,
@@ -104,6 +109,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.RECAPTCHA,
     Feature.PKCE_OIDC,
     Feature.TRANSLATIONS,
+    Feature.MICROFRONTEND,
   ],
   [PlanType.ENTERPRISE]: [
     Feature.USER_GROUPS,
@@ -128,6 +134,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.RECAPTCHA,
     Feature.PKCE_OIDC,
     Feature.TRANSLATIONS,
+    Feature.MICROFRONTEND,
   ],
 }
 

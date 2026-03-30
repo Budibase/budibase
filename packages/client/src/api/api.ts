@@ -27,9 +27,10 @@ export const API = createAPIClient({
     // Attach the iframe location pathname to ensure the app url is fully preserved.
     // Needed for workspace app resolution and client routing in an embed
     const appData = get(appStore)
-    if (appData.embedded) {
+    const embedLocation = window["##BUDIBASE_EMBED_LOCATION##"]
+    if (appData.embedded || embedLocation) {
       headers["x-budibase-embed-location"] =
-        window["##BUDIBASE_EMBED_LOCATION##"] || window.location.pathname
+        embedLocation || window.location.pathname
     }
 
     // Attach client header if not inside the builder preview

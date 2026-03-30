@@ -65,7 +65,7 @@
         } satisfies RequiredKeys<UpdateAIConfigRequest>)
       : ({
           provider: provider ?? "",
-          name: isManagedProvider ? "bbai" : "",
+          name: isManagedProvider ? "Budibase AI" : "",
           model: isManagedProvider ? "budibase/v1" : "",
           configType,
           credentialsFields: {},

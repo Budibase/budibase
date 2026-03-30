@@ -448,9 +448,14 @@ export async function publish(
     )
   }
 
+  const publishedAt = new Date().toISOString()
   metadata.resourcesPublishedAt = {
     ...metadata.resourcesPublishedAt,
-    [tableId]: new Date().toISOString(),
+    [tableId]: publishedAt,
+  }
+  metadata.resourcesDeployedAt = {
+    ...metadata.resourcesDeployedAt,
+    [tableId]: publishedAt,
   }
 
   const prodDb = context.getProdWorkspaceDB()

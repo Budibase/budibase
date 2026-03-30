@@ -10,10 +10,9 @@
   } from "@/stores/builder"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider, Icon, Toggle } from "@budibase/bbui"
+  import { ActionButton, Button, Divider, Icon } from "@budibase/bbui"
   import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
-  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
 
   let changingStatus = false
 
@@ -23,7 +22,7 @@
 
   $: liveUrl = $selectedAppUrls.liveUrl
 
-  $: toggleValue =
+  $: isLive =
     selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
 
   const previewApp = () => {
@@ -34,7 +33,7 @@
     previewStore.setDevice(mobile ? "desktop" : "mobile")
   }
 
-  const handleToggleChange = async (e: CustomEvent<boolean>) => {
+  const handleToggleLive = async () => {
     if (!selectedWorkspaceApp) {
       return
     }
@@ -42,10 +41,7 @@
     try {
       changingStatus = true
 
-      await workspaceAppStore.toggleDisabled(
-        selectedWorkspaceApp._id!,
-        !e.detail
-      )
+      await workspaceAppStore.toggleDisabled(selectedWorkspaceApp._id!, isLive)
     } finally {
       changingStatus = false
     }
@@ -102,17 +98,18 @@
         <div class="divider-container">
           <Divider size="S" vertical />
         </div>
-        <div class="workspace-info-toggle">
-          <PublishStatusBadge
-            status={selectedWorkspaceApp.publishStatus.state}
-            loading={changingStatus}
-          />
-          <Toggle
-            noPadding
-            on:change={handleToggleChange}
-            value={toggleValue}
+        <div class="workspace-live-toggle">
+          <Button
+            primary={!isLive}
+            secondary={isLive}
+            icon={isLive ? "stop" : "play"}
+            iconColor={isLive ? "" : "var(--bb-blue)"}
+            iconWeight="fill"
+            on:click={handleToggleLive}
             disabled={changingStatus}
-          />
+          >
+            {isLive ? "Stop" : "Set live"}
+          </Button>
         </div>
       </div>
     </div>
@@ -159,12 +156,11 @@
     gap: 6px;
   }
 
-  .workspace-info-toggle {
+  .workspace-live-toggle {
     display: flex;
     align-items: center;
     justify-content: right;
-    gap: var(--spacing-m);
-    width: 100px;
+    min-width: 96px;
   }
 
   .workspace-info {

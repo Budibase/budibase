@@ -5,8 +5,6 @@
 
   const dispatch = createEventDispatcher()
 
-  let last
-
   export let value
   export let disabled = false
   export let editable = true
@@ -21,9 +19,10 @@
   }
 
   export function toFile() {
-    const data = canvasContext
-      .getImageData(0, 0, width, height)
-      .data.some(channel => channel !== 0)
+    const pixelWidth = canvasRef?.width || width
+    const pixelHeight = canvasRef?.height || height
+    const imageData = canvasContext.getImageData(0, 0, pixelWidth, pixelHeight)
+    const data = imageData.data.some(channel => channel !== 0)
 
     if (!data) {
       return
@@ -75,42 +74,18 @@
     updated = false
   }
 
-  $: if (last) {
-    dispatch("update")
-  }
-
   onMount(() => {
     if (!editable) {
       return
     }
 
-    const getPos = e => {
-      let rect = canvasRef.getBoundingClientRect()
-      const canvasX = e.offsetX || e.targetTouches?.[0].pageX - rect.left
-      const canvasY = e.offsetY || e.targetTouches?.[0].pageY - rect.top
-
-      return { x: canvasX, y: canvasY }
-    }
-
-    const checkUp = e => {
-      last = getPos(e)
-    }
-
-    canvasRef.addEventListener("pointerdown", e => {
-      const current = getPos(e)
-      //If the cursor didn't move at all, block the default pointerdown
-      if (last?.x === current?.x && last?.y === current?.y) {
-        e.preventDefault()
-        e.stopImmediatePropagation()
-      }
-    })
-
-    document.addEventListener("pointerup", checkUp)
-
     signature = new Atrament(canvasRef, {
       width,
       height,
       color: "white",
+    })
+    signature.addEventListener("dirty", () => {
+      dispatch("update")
     })
 
     signature.weight = 4
@@ -129,7 +104,6 @@
 
     return () => {
       signature.destroy()
-      document.removeEventListener("pointerup", checkUp)
     }
   })
 </script>
@@ -202,7 +176,7 @@
 </div>
 
 <style>
-  .indicator-overlay {
+  .canvas-wrap .indicator-overlay {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -254,7 +228,7 @@
     position: absolute;
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    pointer-events: none !important;
     padding: var(--spectrum-global-dimension-size-150);
     text-align: right;
     z-index: 2;

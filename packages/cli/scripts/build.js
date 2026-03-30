@@ -9,8 +9,6 @@ const externals = [
   "mysql",
   "pg",
   "pg-query-stream",
-  "dd-trace",
-  "dd-trace/*",
 ]
 
 coreBuild("./src/index.ts", "./dist/index.js", { external: externals })

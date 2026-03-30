@@ -96,17 +96,11 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
 
         try {
           const buffer = await loadFileBuffer(knowledgeBaseFile.objectStoreKey)
-          const result = await ingestKnowledgeBaseFile(
+          await ingestKnowledgeBaseFile(
             knowledgeBaseConfig,
             knowledgeBaseFile,
             buffer
           )
-
-          knowledgeBaseFile.status = KnowledgeBaseFileStatus.READY
-          knowledgeBaseFile.chunkCount = result.total
-          knowledgeBaseFile.processedAt = new Date().toISOString()
-          knowledgeBaseFile.errorMessage = undefined
-          await knowledgeBase.updateKnowledgeBaseFile(knowledgeBaseFile)
         } catch (error: any) {
           await handleProcessingError(knowledgeBaseFile, job, error)
           throw error
@@ -151,6 +145,5 @@ const handleProcessingError = async (
 
   file.status = KnowledgeBaseFileStatus.FAILED
   file.errorMessage = error?.message || "Failed to process uploaded file"
-  file.chunkCount = 0
   await knowledgeBase.updateKnowledgeBaseFile(file)
 }

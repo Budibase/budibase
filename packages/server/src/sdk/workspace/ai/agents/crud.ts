@@ -236,6 +236,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
     promptInstructions: request.promptInstructions,
     live: request.live ?? false,
+    publishedAt: request.live ? now : undefined,
     icon: request.icon,
     iconColor: request.iconColor,
     goal: request.goal,
@@ -303,10 +304,11 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
     await guardName(agent.name, _id)
   }
 
+  const now = new Date().toISOString()
   const updated: Agent = {
     ...existing,
     ...agent,
-    updatedAt: new Date().toISOString(),
+    updatedAt: now,
     enabledTools: agent.enabledTools ?? existing?.enabledTools ?? [],
     knowledgeBases: agent.knowledgeBases ?? existing?.knowledgeBases ?? [],
     discordIntegration: mergeDiscordIntegration({
@@ -322,6 +324,12 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
       incoming: agent.slackIntegration,
     }),
   }
+
+  const hasBeenPublished =
+    !!existing?.publishedAt || existing?.live === true || updated.live === true
+  updated.publishedAt = hasBeenPublished
+    ? existing?.publishedAt || now
+    : undefined
 
   const { rev } = await db.put({
     ...updated,

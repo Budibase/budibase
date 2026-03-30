@@ -108,22 +108,12 @@
       : selectedKnowledgeBases.filter(id => id !== knowledgeBaseId)
     scheduleSave(true)
   }
-  let embeddingNameById = $derived(
-    new Map(
-      $aiConfigsStore.customConfigs.map(config => [
-        config._id,
-        config.name || "",
-      ])
-    )
-  )
   let tableRows = $derived.by(() =>
     knowledgeBases
       .map(knowledgeBase => ({
         ...knowledgeBase,
         enabled: selectedKnowledgeBases.includes(knowledgeBase._id || ""),
-        embeddingModel:
-          embeddingNameById.get(knowledgeBase.embeddingModel) ||
-          knowledgeBase.embeddingModel,
+        type: "Gemini",
         files: knowledgeBase.files.length,
         onToggle: toggleKnowledgeBase,
         onManage: (knowledgeBaseId: string) =>
@@ -177,7 +167,7 @@
     </div>
   {:else if knowledgeBases.length > 0}
     <div class="knowledge-header">
-      <Body size="XS">Knowledge bases</Body>
+      <div></div>
 
       <Button
         icon="plus"
@@ -198,8 +188,7 @@
       schema={{
         enabled: { displayName: "", width: "48px" },
         name: {},
-        embeddingModel: { displayName: "Embedding model" },
-        files: { displayName: "# Files", width: "60px" },
+        files: { displayName: "# Files", width: "100px" },
         manage: { displayName: "", width: "88px" },
       }}
       {customRenderers}

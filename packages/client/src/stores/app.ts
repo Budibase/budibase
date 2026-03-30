@@ -41,8 +41,11 @@ const createAppStore = () => {
     }
     try {
       const appDefinition = await API.fetchAppPackage(appId)
+      const currentState = get(store)
       store.set({
         ...initialState,
+        embedded: currentState.embedded,
+        inIframe: currentState.inIframe,
         ...appDefinition,
         appId: appDefinition?.application?.appId,
       })

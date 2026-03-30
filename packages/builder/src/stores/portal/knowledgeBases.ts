@@ -8,7 +8,7 @@ import {
 import { DerivedBudiStore } from "../BudiStore"
 import { derived, Writable } from "svelte/store"
 
-interface KnowledgeBaseWithFiles extends KnowledgeBase {
+type KnowledgeBaseWithFiles = KnowledgeBase & {
   files: KnowledgeBaseFile[]
 }
 
@@ -28,16 +28,10 @@ interface DerivedKnowledgeBaseState {
   selectedKnowledgeBase: KnowledgeBaseWithFiles | undefined
 }
 
-type KnowledgeBaseFormDraft = Partial<
-  Pick<KnowledgeBase, "_id" | "_rev" | "name" | "embeddingModel" | "vectorDb">
->
-
 export class KnowledgeBaseStore extends DerivedBudiStore<
   KnowledgeBaseState,
   DerivedKnowledgeBaseState
 > {
-  private formDraft: KnowledgeBaseFormDraft | undefined
-
   constructor() {
     const makeDerivedStore = (store: Writable<KnowledgeBaseState>) => {
       return derived(store, $state => {
@@ -143,18 +137,6 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
       return state
     })
     await this.fetch()
-  }
-
-  setFormDraft = (draft: KnowledgeBaseFormDraft) => {
-    this.formDraft = draft
-  }
-
-  getFormDraft = (): KnowledgeBaseFormDraft | undefined => {
-    return this.formDraft
-  }
-
-  clearFormDraft = () => {
-    this.formDraft = undefined
   }
 
   selectKnowledgeBase = (knowledgeBaseId?: string) => {

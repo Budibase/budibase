@@ -6,14 +6,12 @@
     knowledgeBaseStore,
     vectorDbStore,
   } from "@/stores/portal"
+  import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
   import {
-    ActionButton,
-    Button,
-    Helpers,
-    Input,
-    notifications,
-    Select,
-  } from "@budibase/bbui"
+    KnowledgeBaseType,
+    type CreateKnowledgeBaseRequest,
+    type UpdateKnowledgeBaseRequest,
+  } from "@budibase/types"
   import { onMount } from "svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import KnowledgeBaseFilesPanel from "./files-panel/index.svelte"
@@ -22,34 +20,39 @@
     knowledgeBaseId: string
   }
 
+  interface KnowledgeBaseFormDraft {
+    _id?: string
+    _rev?: string
+    name: string
+    type: KnowledgeBaseType
+  }
+
   let { knowledgeBaseId }: Props = $props()
 
   let config = $derived(
     $knowledgeBaseStore.list.find(kb => kb._id === knowledgeBaseId)
   )
 
-  const createDraft = () =>
+  const createDraft = (): KnowledgeBaseFormDraft =>
     config?._id
       ? {
           _id: config._id,
           _rev: config._rev,
           name: config.name,
-          embeddingModel: config.embeddingModel,
-          vectorDb: config.vectorDb,
+          type: config.type,
         }
       : {
-          _id: undefined as string | undefined,
-          _rev: undefined as string | undefined,
+          _id: undefined,
+          _rev: undefined,
           name: "",
-          embeddingModel: "",
-          vectorDb: "",
+          type: KnowledgeBaseType.GEMINI,
         }
 
-  let draft = $state(createDraft())
+  let draft = $state<KnowledgeBaseFormDraft>(createDraft())
 
   let isEdit = $derived(!!draft._id)
   let isSaving = $state(false)
-  let savedSnapshot = $state<typeof draft>()
+  let savedSnapshot = $state<KnowledgeBaseFormDraft>()
   const captureSavedSnapshot = () => {
     savedSnapshot = Helpers.cloneDeep(draft)
   }
@@ -57,21 +60,7 @@
   let isModified = $derived(
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
   )
-  let hasReferenceChanges = $derived.by(
-    () =>
-      savedSnapshot?.embeddingModel !== draft.embeddingModel ||
-      savedSnapshot?.vectorDb !== draft.vectorDb
-  )
 
-  let embeddingModelOptions = $derived(
-    [...$aiConfigsStore.customConfigsPerType.embeddings].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    )
-  )
-  let vectorDbOptions = $derived(
-    [...$vectorDbStore.configs].sort((a, b) => a.name.localeCompare(b.name))
-  )
-  let canEditReferences = $derived((config?.files.length || 0) === 0)
   let duplicateNameError = $derived.by(() => {
     const normalizedDraftName = draft.name?.trim().toLowerCase()
     if (!normalizedDraftName) {
@@ -93,27 +82,12 @@
     if (isSaving || !isModified) {
       return false
     }
-    return (
-      !!draft.name?.trim() &&
-      !duplicateNameError &&
-      !!draft.embeddingModel?.trim() &&
-      !!draft.vectorDb?.trim()
-    )
+    return !!draft.name?.trim() && !duplicateNameError
   })
 
-  let embeddingModelSelectOptions = $derived(
-    embeddingModelOptions.map(option => ({
-      label: option.name,
-      value: option._id || "",
-    }))
-  )
-
-  let vectorDbSelectOptions = $derived(
-    vectorDbOptions.map(option => ({
-      label: option.name,
-      value: option._id || "",
-    }))
-  )
+  let knowledgeBaseTypeOptions = [
+    { label: "Gemini", value: KnowledgeBaseType.GEMINI },
+  ]
 
   onMount(async () => {
     try {
@@ -131,16 +105,7 @@
       }
 
       draft = createDraft()
-      const persistedDraft = isCreation
-        ? knowledgeBaseStore.getFormDraft()
-        : undefined
       captureSavedSnapshot()
-      if (persistedDraft) {
-        draft = {
-          ...draft,
-          ...persistedDraft,
-        }
-      }
     } catch (err: any) {
       notifications.error(
         err.message || "Failed to load knowledge base settings"
@@ -155,46 +120,36 @@
       isSaving = true
 
       if (draft._id && draft._rev) {
-        const updated = await knowledgeBaseStore.edit({
+        const payload: UpdateKnowledgeBaseRequest = {
           _id: draft._id,
           _rev: draft._rev,
-          name: draft.name || "",
-          embeddingModel: draft.embeddingModel || "",
-          vectorDb: draft.vectorDb || "",
-        })
+          name: draft.name,
+          type: KnowledgeBaseType.GEMINI,
+        }
+        const updated = await knowledgeBaseStore.edit(payload)
 
         draft._rev = updated._rev
         captureSavedSnapshot()
         notifications.success("Knowledge base updated")
       } else {
-        const created = await knowledgeBaseStore.create({
+        const payload: CreateKnowledgeBaseRequest = {
           name: draft.name || "",
-          embeddingModel: draft.embeddingModel || "",
-          vectorDb: draft.vectorDb || "",
-        })
+          type: KnowledgeBaseType.GEMINI,
+        }
+
+        const created = await knowledgeBaseStore.create(payload)
 
         draft._id = created._id
         draft._rev = created._rev
         captureSavedSnapshot()
         notifications.success("Knowledge base created")
       }
-      knowledgeBaseStore.clearFormDraft()
       bb.settings(`/connections/knowledge-bases/${draft._id}`)
     } catch (err: any) {
       notifications.error(err.message || "Failed to save knowledge base")
     } finally {
       isSaving = false
     }
-  }
-
-  function createNewEmbeddingModel() {
-    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-    bb.settings(`/connections/knowledge-bases/${knowledgeBaseId}/embedding/new`)
-  }
-
-  function createNewVectorDb() {
-    knowledgeBaseStore.setFormDraft(Helpers.cloneDeep(draft))
-    bb.settings(`/connections/knowledge-bases/${knowledgeBaseId}/vectordb/new`)
   }
 
   async function deleteKnowledgeBase() {
@@ -210,7 +165,6 @@
       onConfirm: async () => {
         try {
           await knowledgeBaseStore.delete(knowledgeBaseId)
-          knowledgeBaseStore.clearFormDraft()
           notifications.success("Knowledge base deleted")
           bb.settings(`/connections/knowledge-bases`)
         } catch (err: any) {
@@ -247,51 +201,22 @@
     placeholder="HR Policies"
   />
 
-  <div class="select">
-    <Select
-      label="Embedding model"
-      description="Models used to convert text into vector embeddings for search and retrieval."
-      required
-      bind:value={draft.embeddingModel}
-      options={embeddingModelSelectOptions}
-      getOptionValue={option => option.value}
-      getOptionLabel={option => option.label}
-      disabled={!canEditReferences}
-      tooltip={!canEditReferences
-        ? "Remove all files to change the embedding model."
-        : ""}
-    />
-    <ActionButton
-      icon={"Add"}
-      size="M"
-      disabled={!canEditReferences}
-      on:click={createNewEmbeddingModel}
-    />
-  </div>
+  {#if knowledgeBaseTypeOptions.length > 1}
+    <div class="select">
+      <Select
+        label="Knowledge base type"
+        description="Choose where retrieval is handled."
+        required
+        bind:value={draft.type}
+        options={knowledgeBaseTypeOptions}
+        getOptionValue={option => option.value}
+        getOptionLabel={option => option.label}
+        disabled={isEdit}
+      />
+    </div>
+  {/if}
 
-  <div class="select">
-    <Select
-      label="Vector database"
-      description="Databases optimized for storing and querying vector embeddings. We support PGVector."
-      required
-      bind:value={draft.vectorDb}
-      options={vectorDbSelectOptions}
-      getOptionValue={option => option.value}
-      getOptionLabel={option => option.label}
-      disabled={!canEditReferences}
-      tooltip={!canEditReferences
-        ? "Remove all files to change the vector database."
-        : ""}
-    />
-    <ActionButton
-      icon={"Add"}
-      size="M"
-      disabled={!canEditReferences}
-      on:click={createNewVectorDb}
-    />
-  </div>
-
-  <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} {hasReferenceChanges} />
+  <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} />
 </div>
 
 <style>

@@ -6,7 +6,9 @@ const budibaseTarget = "http://localhost:10000"
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: "127.0.0.1",
     port: 5173,
+    strictPort: true,
     proxy: {
       "/api": {
         target: budibaseTarget,
@@ -17,19 +19,7 @@ export default defineConfig({
         changeOrigin: true,
         ws: true,
       },
-      "/worker": {
-        target: budibaseTarget,
-        changeOrigin: true,
-      },
       "/builder": {
-        target: budibaseTarget,
-        changeOrigin: true,
-      },
-      "/app": {
-        target: budibaseTarget,
-        changeOrigin: true,
-      },
-      "/app_": {
         target: budibaseTarget,
         changeOrigin: true,
       },

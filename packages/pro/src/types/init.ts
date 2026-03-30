@@ -23,6 +23,7 @@ export interface ImportWorkspaceOpts {
   updateAttachmentColumns?: boolean
   importObjStoreContents?: boolean
   objectStoreAppId?: string
+  preserveLiteLLMConfig?: boolean
 }
 
 export type ExportWorkspaceFn = (

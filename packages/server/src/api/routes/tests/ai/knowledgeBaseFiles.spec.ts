@@ -2,22 +2,13 @@ import nock from "nock"
 import { features } from "@budibase/backend-core"
 import { utils } from "@budibase/backend-core/tests"
 import {
-  AIConfigType,
   FeatureFlag,
   KnowledgeBaseFileStatus,
-  VectorDbProvider,
+  KnowledgeBaseType,
 } from "@budibase/types"
-import environment from "../../../../environment"
-import * as ragSdk from "../../../../sdk/workspace/ai/rag"
+import environment, { setEnv } from "../../../../environment"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/queue"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-
-jest.mock("../../../../sdk/workspace/ai/rag/files", () => {
-  return {
-    ingestKnowledgeBaseFile: jest.fn(),
-    deleteKnowledgeBaseFileChunks: jest.fn(),
-  }
-})
 
 jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
   const actual = jest.requireActual(
@@ -31,6 +22,7 @@ jest.mock("../../../../sdk/workspace/ai/vectorDb/pgVectorDb", () => {
 
 describe("knowledge base files", () => {
   const config = new TestConfiguration()
+  let cleanup: ReturnType<typeof setEnv> | undefined
 
   const withRagEnabled = async <T>(f: () => Promise<T>) => {
     return await features.testutils.withFeatureFlags(
@@ -40,8 +32,13 @@ describe("knowledge base files", () => {
     )
   }
 
+  beforeAll(() => {
+    cleanup = setEnv({ GEMINI_API_KEY: "test-gemini-key" })
+  })
+
   afterAll(() => {
     config.end()
+    cleanup?.()
   })
 
   beforeEach(async () => {
@@ -82,62 +79,49 @@ describe("knowledge base files", () => {
   const createKnowledgeBase = async () => {
     mockLiteLLMProviders()
     mockLiteLLMModelCostMap()
-    const embeddingValidationScope = nock(environment.LITELLM_URL)
-      .post("/v1/embeddings")
-      .reply(200, { data: [] })
 
     const liteLLMScope = nock(environment.LITELLM_URL)
       .post("/team/new")
       .reply(200, { team_id: "team-2" })
       .post("/key/generate")
       .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
-      .post("/model/new")
-      .reply(200, { model_id: "embed-validation-2" })
-      .post("/model/delete")
-      .reply(200, { status: "success" })
-      .post("/model/new")
-      .reply(200, { model_id: "embed-model-2" })
+      .post("/v1/vector_stores")
+      .reply(200, { id: "vector-store-1" })
       .post("/key/update")
       .reply(200, { status: "success" })
 
-    const embeddings = await config.api.ai.createConfig({
-      name: "Embeddings",
-      provider: "OpenAI",
-      model: "text-embedding-3-small",
-      credentialsFields: {
-        api_key: "test",
-        api_base: "https://example.com",
-      },
-      configType: AIConfigType.EMBEDDINGS,
-    })
-    const vectorDb = await config.api.vectorDb.create({
-      name: "Knowledge Base Vector DB",
-      provider: VectorDbProvider.PGVECTOR,
-      host: "localhost",
-      port: 5432,
-      database: "budibase",
-      user: "bb_user",
-      password: "secret",
+    const kb = await config.api.knowledgeBase.create({
+      name: "Support KB",
+      type: KnowledgeBaseType.GEMINI,
     })
 
     expect(liteLLMScope.isDone()).toBe(true)
-    expect(embeddingValidationScope.isDone()).toBe(true)
-
-    return await config.api.knowledgeBase.create({
-      name: "Support KB",
-      embeddingModel: embeddings._id!,
-      vectorDb: vectorDb._id!,
-    })
+    return kb
   }
+
+  const mockGeminiIngest = (fileId: string) =>
+    nock(environment.LITELLM_URL)
+      .post("/v1/rag/ingest")
+      .reply(200, { file_id: fileId })
+
+  const mockGeminiFileDelete = (vectorStoreId: string, fileId: string) =>
+    nock(environment.LITELLM_URL)
+      .delete(
+        `/v1/vector_stores/${encodeURIComponent(vectorStoreId)}/files/${encodeURIComponent(fileId)}`
+      )
+      .reply(200, { deleted: true })
+
+  const mockGeminiFileDelete404 = (vectorStoreId: string, fileId: string) =>
+    nock(environment.LITELLM_URL)
+      .delete(
+        `/v1/vector_stores/${encodeURIComponent(vectorStoreId)}/files/${encodeURIComponent(fileId)}`
+      )
+      .reply(404, { error: "not found" })
 
   it("uploads and lists knowledge base files", async () => {
     await withRagEnabled(async () => {
-      const ingestSpy = ragSdk.ingestKnowledgeBaseFile as jest.MockedFunction<
-        typeof ragSdk.ingestKnowledgeBaseFile
-      >
-      ingestSpy.mockResolvedValue({ inserted: 1, total: 2 })
-
       const knowledgeBase = await createKnowledgeBase()
+      const ingestScope = mockGeminiIngest("gemini-file-1")
 
       const upload = await config.api.knowledgeBaseFiles.upload(
         knowledgeBase._id!,
@@ -152,24 +136,24 @@ describe("knowledge base files", () => {
 
       await utils.queue.processMessages(getQueue().getBullQueue())
 
-      expect(ingestSpy).toHaveBeenCalled()
+      expect(ingestScope.isDone()).toBe(true)
       const { files } = await config.api.knowledgeBaseFiles.fetch(
         knowledgeBase._id!
       )
       expect(files).toHaveLength(1)
       expect(files[0].status).toBe(KnowledgeBaseFileStatus.READY)
-      expect(files[0].chunkCount).toBe(2)
+      expect(files[0].ragSourceId).toBe("gemini-file-1")
     })
   })
 
   it("deletes knowledge base files", async () => {
     await withRagEnabled(async () => {
-      const ingestSpy = ragSdk.ingestKnowledgeBaseFile as jest.MockedFunction<
-        typeof ragSdk.ingestKnowledgeBaseFile
-      >
-      ingestSpy.mockResolvedValue({ inserted: 1, total: 1 })
-
       const knowledgeBase = await createKnowledgeBase()
+      const ingestScope = mockGeminiIngest("gemini-file-2")
+      const deleteScope = mockGeminiFileDelete(
+        "vector-store-1",
+        "gemini-file-2"
+      )
       const upload = await config.api.knowledgeBaseFiles.upload(
         knowledgeBase._id!,
         {
@@ -179,17 +163,92 @@ describe("knowledge base files", () => {
       )
 
       await utils.queue.processMessages(getQueue().getBullQueue())
+      expect(ingestScope.isDone()).toBe(true)
 
       const response = await config.api.knowledgeBaseFiles.remove(
         knowledgeBase._id!,
         upload.file._id!
       )
       expect(response.deleted).toBe(true)
+      expect(deleteScope.isDone()).toBe(true)
 
       const { files } = await config.api.knowledgeBaseFiles.fetch(
         knowledgeBase._id!
       )
       expect(files).toHaveLength(0)
+    })
+  })
+
+  it("deletes knowledge base files when Gemini delete returns 404", async () => {
+    await withRagEnabled(async () => {
+      const knowledgeBase = await createKnowledgeBase()
+      const ingestScope = mockGeminiIngest("gemini-file-missing")
+      const deleteScope = mockGeminiFileDelete404(
+        "vector-store-1",
+        "gemini-file-missing"
+      )
+
+      const upload = await config.api.knowledgeBaseFiles.upload(
+        knowledgeBase._id!,
+        {
+          file: fileBuffer,
+          name: "missing.txt",
+        }
+      )
+
+      await utils.queue.processMessages(getQueue().getBullQueue())
+      expect(ingestScope.isDone()).toBe(true)
+
+      const response = await config.api.knowledgeBaseFiles.remove(
+        knowledgeBase._id!,
+        upload.file._id!
+      )
+      expect(response.deleted).toBe(true)
+      expect(deleteScope.isDone()).toBe(true)
+    })
+  })
+
+  it("preserves previously allowed vector stores when creating another knowledge base", async () => {
+    await withRagEnabled(async () => {
+      mockLiteLLMProviders()
+      mockLiteLLMModelCostMap()
+
+      const liteLLMScope = nock(environment.LITELLM_URL)
+        .post("/team/new")
+        .reply(200, { team_id: "team-2" })
+        .post("/key/generate")
+        .reply(200, { token_id: "embed-key-2", key: "embed-secret-2" })
+        .post("/v1/vector_stores")
+        .reply(200, { id: "vector-store-1" })
+        .post(
+          "/key/update",
+          body =>
+            body.key === "embed-key-2" &&
+            JSON.stringify(body.vector_store_ids) ===
+              JSON.stringify(["vector-store-1"])
+        )
+        .reply(200, { status: "success" })
+        .post("/v1/vector_stores")
+        .reply(200, { id: "vector-store-2" })
+        .post(
+          "/key/update",
+          body =>
+            body.key === "embed-key-2" &&
+            JSON.stringify(body.vector_store_ids) ===
+              JSON.stringify(["vector-store-1", "vector-store-2"])
+        )
+        .reply(200, { status: "success" })
+
+      await config.api.knowledgeBase.create({
+        name: "Support KB",
+        type: KnowledgeBaseType.GEMINI,
+      })
+      await config.api.knowledgeBase.create({
+        name: "HR KB",
+        type: KnowledgeBaseType.GEMINI,
+      })
+
+      expect(liteLLMScope.isDone()).toBe(true)
     })
   })
 })

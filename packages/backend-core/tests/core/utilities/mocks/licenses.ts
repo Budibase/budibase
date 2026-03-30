@@ -131,6 +131,10 @@ export const useAICustomConfigs = () => {
   return useFeature(Feature.AI_CUSTOM_CONFIGS)
 }
 
+export const useMicrofrontend = () => {
+  return useFeature(Feature.MICROFRONTEND)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {

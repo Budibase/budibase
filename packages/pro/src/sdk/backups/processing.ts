@@ -322,6 +322,7 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
         },
         {
           objectStoreAppId: tempWorkspaceId,
+          preserveLiteLLMConfig: true,
         }
       )
       // Copy files before database cutover. We only add/overwrite desired keys

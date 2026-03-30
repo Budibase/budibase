@@ -24,6 +24,7 @@ export enum Feature {
   PWA = "pwa",
   RECAPTCHA = "recaptcha",
   PKCE_OIDC = "pkceOidc",
+  MICROFRONTEND = "microfrontend",
 }
 
 export type PlanFeatures = { [key in PlanType]: Feature[] | undefined }

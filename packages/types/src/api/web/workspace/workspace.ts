@@ -55,6 +55,12 @@ export interface FetchAppPackageResponse {
   clientCacheKey?: string
 }
 
+export interface FetchMicrofrontendBootstrapResponse {
+  appId: string
+  clientLibPath: string
+  clientCacheKey?: string
+}
+
 export interface AddWorkspaceSampleDataResponse {
   message: string
 }

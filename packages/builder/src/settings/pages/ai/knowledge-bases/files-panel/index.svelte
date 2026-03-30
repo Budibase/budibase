@@ -9,11 +9,10 @@
   } from "@budibase/bbui"
   import { helpers } from "@budibase/shared-core"
   import {
-    AIConfigType,
     KnowledgeBaseFileStatus,
     type KnowledgeBaseFile,
   } from "@budibase/types"
-  import { aiConfigsStore, knowledgeBaseStore } from "@/stores/portal"
+  import { knowledgeBaseStore } from "@/stores/portal"
   import { createPolling } from "@/utils/polling"
   import KnowledgeBaseFileDeleteRenderer from "./column-renderer/DeleteRenderer.svelte"
   import KnowledgeBaseFileNameRenderer from "./column-renderer/NameRenderer.svelte"
@@ -22,10 +21,9 @@
 
   export interface Props {
     knowledgeBaseId?: string
-    hasReferenceChanges?: boolean
   }
 
-  let { knowledgeBaseId, hasReferenceChanges = false }: Props = $props()
+  let { knowledgeBaseId }: Props = $props()
 
   const FILE_STATUS_POLL_MS = 1000
 
@@ -41,7 +39,6 @@
       displayStatus: formatFileStatus(f),
       mimetype: f.mimetype,
       errorMessage: f.errorMessage,
-      chunkCount: f.chunkCount ?? 0,
       size: helpers.formatBytes(f.size, " "),
       updatedAt: formatTimestamp(f.processedAt || f.updatedAt || f.createdAt),
       onDelete: () => removeFile(f),
@@ -63,11 +60,6 @@
     },
   ]
 
-  let hasEmbeddingConfig = $derived(
-    ($aiConfigsStore.customConfigs || []).some(
-      config => config.configType === AIConfigType.EMBEDDINGS
-    )
-  )
   let shouldPoll = $derived(
     !!knowledgeBaseId &&
       currentFiles.some(
@@ -127,7 +119,7 @@
   })
 
   async function handleFileUpload(event: Event) {
-    if (!knowledgeBaseId || hasReferenceChanges) {
+    if (!knowledgeBaseId) {
       return
     }
     const target = event.currentTarget as HTMLInputElement
@@ -154,16 +146,6 @@
   }
 
   function handleUploadClick() {
-    if (hasReferenceChanges) {
-      notifications.info(
-        "Save your embedding model and vector database changes before uploading files"
-      )
-      return
-    }
-    if (!hasEmbeddingConfig) {
-      notifications.info("Add an embeddings configuration to enable uploads")
-      return
-    }
     fileInput?.click()
   }
 
@@ -206,7 +188,7 @@
       <Button
         secondary
         icon="upload"
-        disabled={!knowledgeBaseId || uploadingFile || hasReferenceChanges}
+        disabled={!knowledgeBaseId || uploadingFile}
         on:click={handleUploadClick}
         >{uploadingFile ? "Uploading..." : "Upload file"}</Button
       >
@@ -228,11 +210,6 @@
     <Label size="L" muted>
       Save the knowledge base before uploading files.
     </Label>
-  {:else if hasReferenceChanges}
-    <Label size="L" muted>
-      Save your embedding model and vector database changes before uploading
-      files.
-    </Label>
   {:else if currentFiles.length === 0}
     <Label size="L" muted>
       No files have been uploaded for this knowledge base yet.
@@ -243,7 +220,6 @@
       schema={{
         filename: { displayName: "name", width: "minmax(0, 2fr)" },
         displayStatus: { displayName: "status", width: "130px" },
-        chunkCount: { displayName: "# chunks", width: "88px" },
         size: { width: "100px" },
         updatedAt: { displayName: "updated", width: "180px" },
         delete: { displayName: "", width: "48px", align: "Right" },

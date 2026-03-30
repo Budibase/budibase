@@ -362,8 +362,8 @@
       const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
 
       const pause = {
-        icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
-        name: workspaceApp.disabled ? "Switch on" : "Switch off",
+        icon: workspaceApp.disabled ? "play-circle" : "stop",
+        name: workspaceApp.disabled ? "Set live" : "Stop",
         visible: true,
         callback: async () => {
           await workspaceAppStore.toggleDisabled(
@@ -419,8 +419,8 @@
       }
 
       const pause = {
-        icon: automation.disabled ? "play-circle" : "pause-circle",
-        name: automation.disabled ? "Switch on" : "Switch off",
+        icon: automation.disabled ? "play-circle" : "stop",
+        name: automation.disabled ? "Set live" : "Stop",
         keyBind: null,
         visible: true,
         disabled: !automation.definition.trigger,
@@ -577,6 +577,19 @@
     goto(url(`../automation/${automationId}`))
   }
 
+  const dismissAutomationError = async (automationId: string) => {
+    try {
+      await automationStore.actions.clearLogErrors({
+        automationId,
+        appId: $appStore.appId,
+      })
+      await appsStore.load()
+    } catch (err) {
+      console.error(err)
+      notifications.error("Error dismissing automation error")
+    }
+  }
+
   const automationErrorMessage = (
     automationName: string | undefined,
     errorCount: number
@@ -648,6 +661,7 @@
               entry.automation?.name,
               entry.errorCount
             )}
+            on:dismiss={() => dismissAutomationError(entry.automationId)}
           />
         {/each}
       </div>

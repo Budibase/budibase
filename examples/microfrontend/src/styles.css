@@ -29,6 +29,19 @@ body,
   background: white;
 }
 
+.mf-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mf-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .mf-header h1 {
   margin: 0 0 6px;
   font-size: 18px;
@@ -38,6 +51,16 @@ body,
   margin: 2px 0;
   font-size: 13px;
   color: #4a5568;
+}
+
+.mf-login-button {
+  border: 1px solid #c4ccd8;
+  background: #f8fafc;
+  color: #1f2937;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .mf-canvas {

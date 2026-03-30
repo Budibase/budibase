@@ -118,4 +118,3 @@ budibase-datasource
 .opencode
 .env
 docker-compose.yaml
-.cursor

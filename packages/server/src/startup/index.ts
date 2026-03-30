@@ -164,9 +164,14 @@ export async function startup(
   // get the references to the queue promises, don't await as
   // they will never end, unless the processing stops
   let queuePromises = []
-  // configure events to use the pro audit log write
+  // configure events processors with pro dependencies
   // can't integrate directly into backend-core due to cyclic issues
-  queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
+  queuePromises.push(
+    events.processors.init(
+      pro.sdk.auditLogs.write,
+      pro.sdk.licensing.client.getLicenseKey
+    )
+  )
   queuePromises.push(rag.queue.init())
   // app migrations and automations on other service
   if (automationsEnabled()) {

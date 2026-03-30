@@ -156,7 +156,10 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   }
 
   cache.docWritethrough.init()
-  // configure events to use the pro audit log write
+  // configure events processors with pro dependencies
   // can't integrate directly into backend-core due to cyclic issues
-  await events.processors.init(proSdk.auditLogs.write)
+  await events.processors.init(
+    proSdk.auditLogs.write,
+    proSdk.licensing.client.getLicenseKey
+  )
 })
