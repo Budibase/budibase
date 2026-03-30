@@ -18,6 +18,7 @@ export interface RagIngestionJob {
   knowledgeBaseId: string
   fileId: string
   objectStoreKey?: string
+  sourceUrl?: string
 }
 
 let ragQueue: queue.BudibaseQueue<RagIngestionJob> | undefined
@@ -59,7 +60,8 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
     ragQueueInitialised = true
 
     return getQueue().process(concurrency, async job => {
-      const { workspaceId, knowledgeBaseId, fileId, objectStoreKey } = job.data
+      const { workspaceId, knowledgeBaseId, fileId, objectStoreKey, sourceUrl } =
+        job.data
       await context.doInWorkspaceContext(workspaceId, async () => {
         let knowledgeBaseConfig: KnowledgeBase | undefined
         let knowledgeBaseFile: KnowledgeBaseFile | undefined
@@ -90,12 +92,11 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
           knowledgeBaseFile.objectStoreKey = objectStoreKey
         }
 
-        if (!knowledgeBaseFile.objectStoreKey) {
-          throw new Error("RAG file does not have an object store key")
-        }
-
         try {
-          const buffer = await loadFileBuffer(knowledgeBaseFile.objectStoreKey)
+          const buffer = await loadFileBuffer({
+            sourceUrl,
+            objectStoreKey: knowledgeBaseFile.objectStoreKey,
+          })
           await ingestKnowledgeBaseFile(
             knowledgeBaseConfig,
             knowledgeBaseFile,
@@ -118,10 +119,41 @@ export async function enqueueRagFileIngestion(job: RagIngestionJob) {
   return await getQueue().add(job, { jobId: job.fileId })
 }
 
-const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {
+const loadFileBuffer = async ({
+  sourceUrl,
+  objectStoreKey,
+}: {
+  sourceUrl?: string
+  objectStoreKey?: string
+}): Promise<Buffer> => {
+  if (sourceUrl) {
+    try {
+      const response = await fetch(sourceUrl)
+      if (!response.ok) {
+        throw new Error(
+          `Failed to download ingestion source URL (${response.status})`
+        )
+      }
+      return Buffer.from(await response.arrayBuffer())
+    } catch (error) {
+      if (!objectStoreKey) {
+        throw error
+      }
+      console.log("Falling back to object store for RAG ingestion", {
+        sourceUrl,
+        objectStoreKey,
+        error,
+      })
+    }
+  }
+
+  if (!objectStoreKey) {
+    throw new Error("RAG file does not have a source URL or object store key")
+  }
+
   const { stream } = await objectStore.getReadStream(
     ObjectStoreBuckets.APPS,
-    objectKey
+    objectStoreKey
   )
 
   const chunks: Uint8Array[] = []

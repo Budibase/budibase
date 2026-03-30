@@ -10,10 +10,12 @@ interface UploadKnowledgeBaseFileInput {
   filename: string
   mimetype?: string
   size?: number
-  buffer: Buffer
+  buffer?: Buffer
+  sourceUrl?: string
   uploadedBy: string
   ragSourceId?: string
   externalSourceId?: string
+  persistInObjectStore?: boolean
 }
 
 const buildKnowledgeBaseFileObjectStoreKey = (
@@ -40,34 +42,57 @@ export const uploadKnowledgeBaseFile = async (
     fileId,
     input.filename
   )
+  if (input.buffer && input.persistInObjectStore === false) {
+    throw new HTTPError(
+      "buffer uploads must be persisted to object storage before ingestion",
+      400
+    )
+  }
+  const persistInObjectStore = input.persistInObjectStore !== false
+
+  if (persistInObjectStore && !input.buffer) {
+    throw new HTTPError("buffer is required when persistence is enabled", 400)
+  }
+
+  if (!persistInObjectStore && !input.sourceUrl) {
+    throw new HTTPError("sourceUrl is required when persistence is disabled", 400)
+  }
 
   try {
-    await objectStore.upload({
-      bucket: ObjectStoreBuckets.APPS,
-      filename: objectStoreKey,
-      body: input.buffer,
-      type: input.mimetype,
-    })
+    if (persistInObjectStore) {
+      await objectStore.upload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: objectStoreKey,
+        body: input.buffer!,
+        type: input.mimetype,
+      })
+    }
 
     const knowledgeBaseFile = await createKnowledgeBaseFile({
       id: fileId,
       knowledgeBaseId: input.knowledgeBaseId,
       filename: input.filename,
       mimetype: input.mimetype,
-      objectStoreKey,
-      size: input.size ?? input.buffer.byteLength,
+      objectStoreKey: persistInObjectStore ? objectStoreKey : "",
+      size: persistInObjectStore
+        ? input.size ?? input.buffer!.byteLength
+        : input.size,
       uploadedBy: input.uploadedBy,
       ragSourceId: input.ragSourceId,
       externalSourceId: input.externalSourceId,
     })
 
     try {
-      await enqueueRagFileIngestion({
+      const ingestionJob = {
         workspaceId,
         knowledgeBaseId: input.knowledgeBaseId,
         fileId: knowledgeBaseFile._id!,
-        objectStoreKey,
-      })
+        ...(persistInObjectStore
+          ? { objectStoreKey }
+          : { sourceUrl: input.sourceUrl! }),
+      }
+
+      await enqueueRagFileIngestion(ingestionJob)
 
       return knowledgeBaseFile
     } catch (error: any) {
@@ -78,11 +103,13 @@ export const uploadKnowledgeBaseFile = async (
       throw error
     }
   } catch (error: any) {
-    await objectStore
-      .deleteFile(ObjectStoreBuckets.APPS, objectStoreKey)
-      .catch(() => {
-        // Ignore, it might not exist
-      })
+    if (persistInObjectStore) {
+      await objectStore
+        .deleteFile(ObjectStoreBuckets.APPS, objectStoreKey)
+        .catch(() => {
+          // Ignore, it might not exist
+        })
+    }
     throw error
   }
 }

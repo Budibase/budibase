@@ -157,22 +157,14 @@ export const sync = async ({
         }
 
         try {
-          const response = await fetch(downloadUrl)
-          if (!response.ok) {
-            throw new Error(`Download failed with status ${response.status}`)
-          }
-          const arrayBuffer = await response.arrayBuffer()
-          const buffer = Buffer.from(arrayBuffer)
-          const contentType = response.headers.get("content-type") || undefined
-
           await uploadKnowledgeBaseFile({
             knowledgeBaseId,
             filename: name,
-            mimetype: file.file.mimeType || contentType,
-            size: buffer.byteLength,
-            buffer,
+            mimetype: file.file.mimeType,
+            sourceUrl: downloadUrl,
             uploadedBy: "system",
             externalSourceId,
+            persistInObjectStore: false,
           })
           existingExternalSourceIds.add(externalSourceId)
           synced++
