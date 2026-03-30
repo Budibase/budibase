@@ -19,3 +19,14 @@ export interface FetchKnowledgeBaseFilesResponse {
 export interface KnowledgeBaseFileUploadResponse {
   file: KnowledgeBaseFile
 }
+
+export interface SyncKnowledgeBaseRequest {
+  datasourceId?: string
+  siteId?: string
+}
+
+export interface SyncKnowledgeBaseResponse {
+  knowledgeBaseId: string
+  synced: number
+  failed: number
+}

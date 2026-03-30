@@ -12,6 +12,8 @@ interface UploadKnowledgeBaseFileInput {
   size?: number
   buffer: Buffer
   uploadedBy: string
+  ragSourceId?: string
+  externalSourceId?: string
 }
 
 const buildKnowledgeBaseFileObjectStoreKey = (
@@ -55,6 +57,8 @@ export const uploadKnowledgeBaseFile = async (
       objectStoreKey,
       size: input.size ?? input.buffer.byteLength,
       uploadedBy: input.uploadedBy,
+      ragSourceId: input.ragSourceId,
+      externalSourceId: input.externalSourceId,
     })
 
     try {

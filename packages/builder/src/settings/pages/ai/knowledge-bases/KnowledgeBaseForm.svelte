@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { API } from "@/api"
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
   import {
@@ -10,6 +11,9 @@
   import {
     KnowledgeBaseType,
     type CreateKnowledgeBaseRequest,
+    type Datasource,
+    type SharePointKnowledgeBaseSource,
+    SourceName,
     type UpdateKnowledgeBaseRequest,
   } from "@budibase/types"
   import { onMount } from "svelte"
@@ -25,6 +29,7 @@
     _rev?: string
     name: string
     type: KnowledgeBaseType
+    sharepointSources: SharePointKnowledgeBaseSource[]
   }
 
   let { knowledgeBaseId }: Props = $props()
@@ -40,12 +45,14 @@
           _rev: config._rev,
           name: config.name,
           type: config.type,
+          sharepointSources: Helpers.cloneDeep(config.sharepointSources || []),
         }
       : {
           _id: undefined,
           _rev: undefined,
           name: "",
           type: KnowledgeBaseType.GEMINI,
+          sharepointSources: [],
         }
 
   let draft = $state<KnowledgeBaseFormDraft>(createDraft())
@@ -82,12 +89,26 @@
     if (isSaving || !isModified) {
       return false
     }
-    return !!draft.name?.trim() && !duplicateNameError
+    const hasInvalidSharePointSource = draft.sharepointSources.some(
+      source => !source.datasourceId?.trim() || !source.siteId?.trim()
+    )
+    return (
+      !!draft.name?.trim() && !duplicateNameError && !hasInvalidSharePointSource
+    )
   })
 
   let knowledgeBaseTypeOptions = [
     { label: "Gemini", value: KnowledgeBaseType.GEMINI },
   ]
+  let datasources = $state<Datasource[]>([])
+  let datasourceOptions = $derived(
+    datasources
+      .filter(datasource => datasource.source === SourceName.REST)
+      .map(datasource => ({
+        label: datasource.name || datasource._id || "Untitled connection",
+        value: datasource._id || "",
+      }))
+  )
 
   onMount(async () => {
     try {
@@ -96,6 +117,7 @@
         knowledgeBaseStore.fetch(),
         vectorDbStore.fetch(),
       ])
+      datasources = await API.getDatasources()
 
       const isCreation = knowledgeBaseId === "new"
       if (!isCreation && !config) {
@@ -125,6 +147,7 @@
           _rev: draft._rev,
           name: draft.name,
           type: KnowledgeBaseType.GEMINI,
+          sharepointSources: draft.sharepointSources,
         }
         const updated = await knowledgeBaseStore.edit(payload)
 
@@ -135,6 +158,7 @@
         const payload: CreateKnowledgeBaseRequest = {
           name: draft.name || "",
           type: KnowledgeBaseType.GEMINI,
+          sharepointSources: draft.sharepointSources,
         }
 
         const created = await knowledgeBaseStore.create(payload)
@@ -143,6 +167,19 @@
         draft._rev = created._rev
         captureSavedSnapshot()
         notifications.success("Knowledge base created")
+      }
+      if (draft._id && draft.sharepointSources.length > 0) {
+        try {
+          const syncResult = await knowledgeBaseStore.sync(draft._id)
+          notifications.success(
+            `SharePoint sync complete (${syncResult.synced} synced, ${syncResult.failed} failed)`
+          )
+        } catch (syncError: any) {
+          notifications.warning(
+            syncError.message ||
+              "Knowledge base saved, but SharePoint sync did not complete"
+          )
+        }
       }
       bb.settings(`/connections/knowledge-bases/${draft._id}`)
     } catch (err: any) {
@@ -173,6 +210,40 @@
       },
     })
   }
+
+  function addSharePointSource() {
+    draft.sharepointSources = [
+      ...draft.sharepointSources,
+      { datasourceId: "", siteId: "" },
+    ]
+  }
+
+  function removeSharePointSource(index: number) {
+    draft.sharepointSources = draft.sharepointSources.filter(
+      (_, i) => i !== index
+    )
+  }
+
+  async function syncSharePointSources() {
+    if (!draft._id) {
+      notifications.warning("Save the knowledge base before syncing")
+      return
+    }
+    if (draft.sharepointSources.length === 0) {
+      notifications.warning("Add at least one SharePoint source to sync")
+      return
+    }
+
+    try {
+      const syncResult = await knowledgeBaseStore.sync(draft._id)
+      await knowledgeBaseStore.fetchFiles(draft._id)
+      notifications.success(
+        `SharePoint sync complete (${syncResult.synced} synced, ${syncResult.failed} failed)`
+      )
+    } catch (err: any) {
+      notifications.error(err.message || "Failed to sync SharePoint sources")
+    }
+  }
 </script>
 
 <RouteActions>
@@ -188,6 +259,9 @@
         Save
       {/if}
     </Button>
+    {#if isEdit}
+      <Button on:click={syncSharePointSources}>Sync SharePoint now</Button>
+    {/if}
   </div>
 </RouteActions>
 
@@ -216,6 +290,36 @@
     </div>
   {/if}
 
+  <div class="sharepoint-section">
+    <div class="sharepoint-header">
+      <h4>SharePoint sources</h4>
+      <Button size="S" on:click={addSharePointSource}>Add source</Button>
+    </div>
+    {#if draft.sharepointSources.length === 0}
+      <p class="muted">
+        No SharePoint sources configured. Local files can still be uploaded
+        below.
+      </p>
+    {:else}
+      {#each draft.sharepointSources as source, index}
+        <div class="sharepoint-row">
+          <Select
+            label="Connection"
+            bind:value={source.datasourceId}
+            options={datasourceOptions}
+            getOptionValue={option => option.value}
+            getOptionLabel={option => option.label}
+          />
+          <Input label="Site ID" bind:value={source.siteId} />
+          <Input label="Site name (optional)" bind:value={source.siteName} />
+          <Button on:click={() => removeSharePointSource(index)} quiet
+            >Remove</Button
+          >
+        </div>
+      {/each}
+    {/if}
+  </div>
+
   <KnowledgeBaseFilesPanel knowledgeBaseId={draft._id} />
 </div>
 
@@ -239,5 +343,33 @@
 
   .select :global(.spectrum-Form-item) {
     flex: 1;
+  }
+
+  .sharepoint-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .sharepoint-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sharepoint-header h4 {
+    margin: 0;
+  }
+
+  .sharepoint-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: var(--spacing-s);
+    align-items: end;
+  }
+
+  .muted {
+    color: var(--spectrum-global-color-gray-700);
+    margin: 0;
   }
 </style>

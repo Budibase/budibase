@@ -5,6 +5,7 @@ import {
   GeminiKnowledgeBase,
   KnowledgeBase,
   KnowledgeBaseType,
+  SharePointKnowledgeBaseSource,
   UpdateKnowledgeBaseRequest,
 } from "@budibase/types"
 import {
@@ -16,6 +17,32 @@ import { utils } from "@budibase/shared-core"
 
 const normalizeKnowledgeBaseName = (name: string | undefined) =>
   name?.trim().toLowerCase() || ""
+
+const normalizeSharePointSources = (
+  sources: SharePointKnowledgeBaseSource[] | undefined
+): SharePointKnowledgeBaseSource[] => {
+  if (!Array.isArray(sources) || sources.length === 0) {
+    return []
+  }
+
+  const deduped = new Map<string, SharePointKnowledgeBaseSource>()
+  for (const source of sources) {
+    const datasourceId = source.datasourceId?.trim()
+    const siteId = source.siteId?.trim()
+    if (!datasourceId || !siteId) {
+      continue
+    }
+    const key = `${datasourceId}:${siteId}`
+    deduped.set(key, {
+      ...source,
+      datasourceId,
+      siteId,
+      siteName: source.siteName?.trim() || undefined,
+    })
+  }
+
+  return Array.from(deduped.values())
+}
 
 export async function fetch(): Promise<KnowledgeBase[]> {
   const db = context.getWorkspaceDB()
@@ -73,6 +100,7 @@ export async function create(
         _id: docIds.generateKnowledgeBaseID(),
         name: config.name.trim(),
         type: KnowledgeBaseType.GEMINI,
+        sharepointSources: normalizeSharePointSources(config.sharepointSources),
         config: {
           googleFileStoreId,
         },
@@ -128,6 +156,7 @@ export async function update(
         ...existing,
         ...config,
         type: KnowledgeBaseType.GEMINI,
+        sharepointSources: normalizeSharePointSources(config.sharepointSources),
         config: { googleFileStoreId: existing.config.googleFileStoreId },
       } satisfies GeminiKnowledgeBase
       break

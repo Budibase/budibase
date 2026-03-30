@@ -1,5 +1,7 @@
 import {
   cache,
+  context,
+  db as dbCore,
   env as coreEnv,
   events,
   features,
@@ -32,6 +34,7 @@ import { rag } from "../sdk/workspace/ai"
 
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
+const SHAREPOINT_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000
 
 class LiteLLMReadinessTimeoutError extends Error {
   constructor(public readonly timeoutMs: number) {
@@ -100,6 +103,34 @@ async function initPro() {
       },
     },
   })
+}
+
+async function syncAllConfiguredSharePointKnowledgeBasesAcrossWorkspaces() {
+  if (env.isInThread()) {
+    return
+  }
+
+  const workspaceIds = await dbCore.getAllWorkspaces({
+    dev: false,
+    idsOnly: true,
+  })
+  for (const workspaceId of workspaceIds) {
+    await context.doInWorkspaceContext(workspaceId, async () => {
+      await sdk.ai.knowledgeBase.syncAllConfiguredSharePointKnowledgeBases()
+    })
+  }
+}
+
+function scheduleSharePointKnowledgeBaseSync() {
+  if (env.isInThread() || env.isTest()) {
+    return
+  }
+
+  setInterval(() => {
+    syncAllConfiguredSharePointKnowledgeBasesAcrossWorkspaces().catch(error => {
+      console.log("Failed scheduled SharePoint knowledge base sync", error)
+    })
+  }, SHAREPOINT_SYNC_INTERVAL_MS)
 }
 
 export async function startup(
@@ -245,6 +276,8 @@ export async function startup(
 
     console.warn("Error waiting for LiteLLM readiness", e)
   })
+
+  scheduleSharePointKnowledgeBaseSync()
 
   console.log("Server ready!")
   STATE = "ready"

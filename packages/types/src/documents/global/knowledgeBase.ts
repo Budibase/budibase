@@ -4,9 +4,19 @@ export enum KnowledgeBaseType {
   GEMINI = "gemini",
 }
 
+export interface SharePointKnowledgeBaseSource {
+  datasourceId: string
+  siteId: string
+  siteName?: string
+  lastSyncedAt?: string
+  lastSyncStatus?: "success" | "failed"
+  lastSyncError?: string
+}
+
 export interface GeminiKnowledgeBase extends Document {
   name: string
   type: KnowledgeBaseType.GEMINI
+  sharepointSources?: SharePointKnowledgeBaseSource[]
   config: {
     googleFileStoreId: string
   }
@@ -27,6 +37,7 @@ export interface KnowledgeBaseFile extends Document {
   size?: number
   objectStoreKey: string
   ragSourceId: string
+  externalSourceId?: string
   status: KnowledgeBaseFileStatus
   uploadedBy: string
   errorMessage?: string

@@ -1,28 +1,24 @@
 import {
   CreateKnowledgeBaseRequest,
-  FetchSharePointSitesResponse,
   FetchKnowledgeBaseFilesResponse,
   KnowledgeBase,
-  KnowledgeBaseType,
   KnowledgeBaseFileUploadResponse,
   KnowledgeBaseListResponse,
-  ManagedFileSearchKnowledgeBase,
+  SyncKnowledgeBaseRequest,
   SyncKnowledgeBaseResponse,
   UpdateKnowledgeBaseRequest,
-  VectorKnowledgeBase,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
-import { utils } from "@budibase/shared-core"
 
 export interface KnowledgeBaseEndpoints {
   fetch: () => Promise<KnowledgeBaseListResponse>
   create: (config: CreateKnowledgeBaseRequest) => Promise<KnowledgeBase>
   update: (config: UpdateKnowledgeBaseRequest) => Promise<KnowledgeBase>
   delete: (id: string) => Promise<{ deleted: true }>
-  sync: (knowledgeBaseId: string) => Promise<SyncKnowledgeBaseResponse>
-  fetchSharePointSites: (
-    knowledgeBaseId: string
-  ) => Promise<FetchSharePointSitesResponse>
+  sync: (
+    knowledgeBaseId: string,
+    config?: SyncKnowledgeBaseRequest
+  ) => Promise<SyncKnowledgeBaseResponse>
   fetchFiles: (
     knowledgeBaseId: string
   ) => Promise<FetchKnowledgeBaseFilesResponse>
@@ -46,43 +42,17 @@ export const buildKnowledgeBaseEndpoints = (
   },
 
   create: async config => {
-    const { type } = config
-    switch (type) {
-      case KnowledgeBaseType.LOCAL:
-        return await API.post<VectorKnowledgeBase, KnowledgeBase>({
-          url: "/api/knowledge-base",
-          body: config,
-        })
-      case KnowledgeBaseType.SHAREPOINT:
-      case KnowledgeBaseType.GOOGLE_DRIVE:
-      case KnowledgeBaseType.CONFLUENCE:
-        return await API.post<ManagedFileSearchKnowledgeBase, KnowledgeBase>({
-          url: "/api/knowledge-base",
-          body: config,
-        })
-      default:
-        throw utils.unreachable(type)
-    }
+    return await API.post({
+      url: "/api/knowledge-base",
+      body: config,
+    })
   },
 
   update: async config => {
-    const { type } = config
-    switch (type) {
-      case KnowledgeBaseType.LOCAL:
-        return await API.put<VectorKnowledgeBase, KnowledgeBase>({
-          url: "/api/knowledge-base",
-          body: config,
-        })
-      case KnowledgeBaseType.SHAREPOINT:
-      case KnowledgeBaseType.GOOGLE_DRIVE:
-      case KnowledgeBaseType.CONFLUENCE:
-        return await API.put<ManagedFileSearchKnowledgeBase, KnowledgeBase>({
-          url: "/api/knowledge-base",
-          body: config,
-        })
-      default:
-        throw utils.unreachable(type)
-    }
+    return await API.put({
+      url: "/api/knowledge-base",
+      body: config,
+    })
   },
 
   delete: async id => {
@@ -97,15 +67,10 @@ export const buildKnowledgeBaseEndpoints = (
     })
   },
 
-  sync: async knowledgeBaseId => {
-    return await API.post<null, SyncKnowledgeBaseResponse>({
+  sync: async (knowledgeBaseId, config) => {
+    return await API.post<SyncKnowledgeBaseRequest, SyncKnowledgeBaseResponse>({
       url: `/api/knowledge-base/${knowledgeBaseId}/sync`,
-    })
-  },
-
-  fetchSharePointSites: async knowledgeBaseId => {
-    return await API.get({
-      url: `/api/knowledge-base/${knowledgeBaseId}/sharepoint/sites`,
+      body: config,
     })
   },
 

@@ -1,358 +1,258 @@
 import { HTTPError } from "@budibase/backend-core"
-import { utils } from "@budibase/shared-core"
 import {
-  type Datasource,
-  type FetchSharePointSitesResponse,
-  KnowledgeBaseType,
-  type ManagedKnowledgeBaseFileReference,
-  type ManagedFileSearchKnowledgeBase,
-  type RestQueryFields,
   RestAuthType,
-  type RestConfig,
-  type SharePointSiteReference,
+  SharePointKnowledgeBaseSource,
   SourceName,
+  type Datasource,
+  type RestConfig,
+  type SyncKnowledgeBaseRequest,
   type SyncKnowledgeBaseResponse,
 } from "@budibase/types"
 import { getIntegration } from "../../../../integrations"
+import { RestIntegration } from "../../../../integrations/rest"
 import sdk from "../../../index"
-import { find, update } from "./crud"
+import { listKnowledgeBaseFiles } from "./files"
+import { fetch as fetchKnowledgeBases, find, update } from "./crud"
+import { uploadKnowledgeBaseFile } from "./uploads"
 
-const DEFAULT_SYNC_LIMIT = 50
-const DEFAULT_SHAREPOINT_BASE_URL = "https://graph.microsoft.com/v1.0"
-const DEFAULT_GOOGLE_DRIVE_BASE_URL = "https://www.googleapis.com/drive/v3"
+const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
+const DEFAULT_PAGE_SIZE = 200
 
-interface ConnectorSyncConfig {
-  path: string
-  queryString?: string
+interface SharePointDriveItem {
+  id?: string
+  name?: string
+  file?: {
+    mimeType?: string
+  }
+  "@microsoft.graph.downloadUrl"?: string
 }
 
-const readScopeString = (
-  knowledgeBase: ManagedFileSearchKnowledgeBase,
-  key: string
-) => {
-  const value = knowledgeBase.scope?.[key]
-  return typeof value === "string" && value.trim() ? value.trim() : undefined
+interface SharePointDriveChildrenResponse {
+  value?: SharePointDriveItem[]
 }
 
-const getConnectorSyncConfig = (
-  knowledgeBase: ManagedFileSearchKnowledgeBase
-): ConnectorSyncConfig => {
-  const siteId = readScopeString(knowledgeBase, "siteId")
-  const scopePath = readScopeString(knowledgeBase, "path")
-  const scopeQuery = readScopeString(knowledgeBase, "queryString")
-
-  if (scopePath) {
-    return { path: scopePath, queryString: scopeQuery }
-  }
-
-  switch (knowledgeBase.type) {
-    case KnowledgeBaseType.SHAREPOINT:
-      if (siteId) {
-        return {
-          path: `/sites/${siteId}/drive/root/children`,
-          queryString: `$top=${DEFAULT_SYNC_LIMIT}`,
-        }
-      }
-      return {
-        path: "/sites",
-        queryString: `$search=*&$top=${DEFAULT_SYNC_LIMIT}`,
-      }
-    case KnowledgeBaseType.GOOGLE_DRIVE:
-      return {
-        path: "/files",
-        queryString: `pageSize=${DEFAULT_SYNC_LIMIT}&fields=files(id,name,mimeType,modifiedTime,webViewLink)`,
-      }
-    case KnowledgeBaseType.CONFLUENCE:
-      return {
-        path: "/wiki/api/v2/pages",
-        queryString: `limit=${DEFAULT_SYNC_LIMIT}`,
-      }
-    default:
-      throw utils.unreachable(knowledgeBase.type)
-  }
-}
-
-const isAbsoluteUrl = (value: string) =>
-  value.startsWith("http://") || value.startsWith("https://")
-
-const resolveBaseUrl = (
-  knowledgeBase: ManagedFileSearchKnowledgeBase,
-  datasourceConfig: RestConfig
-) => {
-  const configuredUrl = datasourceConfig.url?.trim()
-  if (configuredUrl) {
-    return configuredUrl
-  }
-
-  switch (knowledgeBase.type) {
-    case KnowledgeBaseType.SHAREPOINT:
-      return DEFAULT_SHAREPOINT_BASE_URL
-    case KnowledgeBaseType.GOOGLE_DRIVE:
-      return DEFAULT_GOOGLE_DRIVE_BASE_URL
-    case KnowledgeBaseType.CONFLUENCE:
-      return undefined
-    default:
-      return undefined
-  }
-}
-
-const extractRows = (data: unknown): Record<string, unknown>[] => {
-  if (Array.isArray(data)) {
-    return data as Record<string, unknown>[]
-  }
-  if (!data || typeof data !== "object") {
-    return []
-  }
-
-  const record = data as Record<string, unknown>
-  if (Array.isArray(record.files)) {
-    return record.files as Record<string, unknown>[]
-  }
-  if (Array.isArray(record.value)) {
-    return record.value as Record<string, unknown>[]
-  }
-  if (Array.isArray(record.results)) {
-    return record.results as Record<string, unknown>[]
-  }
-  return []
-}
-
-const readString = (record: Record<string, unknown>, key: string) => {
-  const value = record[key]
-  return typeof value === "string" ? value : undefined
-}
-
-const readRecord = (record: Record<string, unknown>, key: string) => {
-  const value = record[key]
-  return value && typeof value === "object"
-    ? (value as Record<string, unknown>)
-    : undefined
-}
-
-const normalizeConnectorFiles = (
-  rows: Record<string, unknown>[]
-): ManagedKnowledgeBaseFileReference[] => {
-  const files = rows
-    .map(row => {
-      const id =
-        `${readString(row, "id") || readString(row, "_id") || readString(row, "key") || ""}`.trim()
-      const name =
-        `${readString(row, "name") || readString(row, "displayName") || readString(row, "title") || ""}`.trim()
-      if (!id || !name) {
-        return undefined
-      }
-
-      const fileRecord = readRecord(row, "file")
-      const linksRecord = readRecord(row, "_links")
-
-      return {
-        id,
-        name,
-        url:
-          readString(row, "webUrl") ||
-          readString(row, "webViewLink") ||
-          readString(linksRecord || {}, "base") ||
-          readString(row, "url"),
-        mimeType:
-          readString(row, "mimeType") ||
-          readString(fileRecord || {}, "mimeType"),
-        modifiedAt:
-          readString(row, "lastModifiedDateTime") ||
-          readString(row, "modifiedTime") ||
-          readString(row, "modifiedAt"),
-      }
-    })
-    .filter((file): file is ManagedKnowledgeBaseFileReference => !!file)
-
-  return files.slice(0, DEFAULT_SYNC_LIMIT)
-}
-
-const normalizeSharePointSites = (
-  rows: Record<string, unknown>[]
-): SharePointSiteReference[] => {
-  const sites = rows
-    .map(row => {
-      const id = `${readString(row, "id") || ""}`.trim()
-      const name =
-        `${readString(row, "displayName") || readString(row, "name") || ""}`.trim()
-      if (!id || !name) {
-        return undefined
-      }
-      return {
-        id,
-        name,
-        webUrl: readString(row, "webUrl"),
-      }
-    })
-    .filter((site): site is SharePointSiteReference => !!site)
-
-  return sites.slice(0, DEFAULT_SYNC_LIMIT)
-}
-
-const fetchDatasource = async (id: string): Promise<Datasource> => {
+const getDatasource = async (datasourceId: string): Promise<Datasource> => {
   try {
-    return await sdk.datasources.get(id, { enriched: true })
-  } catch (error) {
-    throw new HTTPError("Connection not found for knowledge base", 404)
+    return await sdk.datasources.get(datasourceId, { enriched: true })
+  } catch {
+    throw new HTTPError("Connection not found", 404)
   }
 }
 
-const fetchConnectorFiles = async (
-  knowledgeBase: ManagedFileSearchKnowledgeBase,
-  datasource: Datasource
-): Promise<ManagedKnowledgeBaseFileReference[]> => {
+const listSharePointFiles = async (
+  datasource: Datasource,
+  siteId: string
+): Promise<SharePointDriveItem[]> => {
   if (datasource.source !== SourceName.REST) {
     throw new HTTPError(
-      "Knowledge base connection must be a REST datasource",
+      "Knowledge base sync only supports REST connections",
       400
     )
   }
 
   const integration = await getIntegration(SourceName.REST)
   const datasourceConfig = (datasource.config || {}) as RestConfig
-  const { path, queryString } = getConnectorSyncConfig(knowledgeBase)
-  const baseUrl = resolveBaseUrl(knowledgeBase, datasourceConfig)
-
-  if (!baseUrl && !isAbsoluteUrl(path)) {
-    throw new HTTPError(
-      "Connector sync needs a base URL on the selected connection (or an absolute scope.path)",
-      400
-    )
-  }
-
-  const restConfig: RestConfig = {
+  const rest = new integration({
     ...datasourceConfig,
-    ...(baseUrl ? { url: baseUrl } : {}),
-  }
-  const rest = new integration(restConfig)
+    url: datasourceConfig.url?.trim() || SHAREPOINT_API_BASE,
+  }) as RestIntegration
 
   if (!rest.read) {
     throw new HTTPError("REST datasource does not support read operations", 400)
   }
 
   const authConfig = datasourceConfig.authConfigs?.[0]
-  const query: RestQueryFields = {
-    path,
-    queryString,
+  const query = {
+    path: `/sites/${siteId}/drive/root/children`,
+    queryString: `$top=${DEFAULT_PAGE_SIZE}&$select=id,name,file,etag,content.downloadUrl`,
     authConfigId: authConfig?._id,
     authConfigType: authConfig?.type as RestAuthType | undefined,
   }
-  let response
-  try {
-    response = await rest.read(query)
-  } catch (error: any) {
-    throw new HTTPError(
-      `Connector sync request failed: ${error?.message || "unknown error"}`,
-      400
-    )
-  }
 
-  return normalizeConnectorFiles(extractRows(response?.data))
+  const response = await rest.read(query)
+  const rows = (response?.data as SharePointDriveChildrenResponse)?.value
+  return Array.isArray(rows) ? rows : []
 }
 
-const assertSharePointKnowledgeBase = (
-  knowledgeBase: ManagedFileSearchKnowledgeBase
-) => {
-  if (knowledgeBase.type !== KnowledgeBaseType.SHAREPOINT) {
-    throw new HTTPError(
-      "Only SharePoint knowledge bases support site selection",
-      400
-    )
-  }
-}
-
-export const fetchSharePointSites = async (
-  id: string
-): Promise<FetchSharePointSitesResponse> => {
-  const knowledgeBase = await find(id)
+export const sync = async ({
+  knowledgeBaseId,
+  datasourceId,
+  siteId,
+}: SyncKnowledgeBaseRequest & {
+  knowledgeBaseId: string
+}): Promise<SyncKnowledgeBaseResponse> => {
+  const knowledgeBase = await find(knowledgeBaseId)
   if (!knowledgeBase) {
     throw new HTTPError("Knowledge base not found", 404)
   }
-  if (knowledgeBase.type === KnowledgeBaseType.LOCAL) {
-    throw new HTTPError(
-      "Only connector knowledge bases support site selection",
-      400
-    )
-  }
-  assertSharePointKnowledgeBase(knowledgeBase)
 
-  const datasource = await fetchDatasource(knowledgeBase.connectionId)
-  if (datasource.source !== SourceName.REST) {
+  const explicitDatasourceId = datasourceId?.trim()
+  const explicitSiteId = siteId?.trim()
+  if (!!explicitDatasourceId !== !!explicitSiteId) {
     throw new HTTPError(
-      "Knowledge base connection must be a REST datasource",
+      "datasourceId and siteId must be provided together",
       400
     )
   }
 
-  const integration = await getIntegration(SourceName.REST)
-  const datasourceConfig = (datasource.config || {}) as RestConfig
-  const restConfig: RestConfig = {
-    ...datasourceConfig,
-    url: datasourceConfig.url?.trim() || DEFAULT_SHAREPOINT_BASE_URL,
-  }
-  const rest = new integration(restConfig)
+  const sources: SharePointKnowledgeBaseSource[] = explicitDatasourceId
+    ? [{ datasourceId: explicitDatasourceId, siteId: explicitSiteId! }]
+    : knowledgeBase.sharepointSources || []
 
-  if (!rest.read) {
-    throw new HTTPError("REST datasource does not support read operations", 400)
-  }
-
-  const authConfig = datasourceConfig.authConfigs?.[0]
-  const query: RestQueryFields = {
-    path: "/sites",
-    authConfigId: authConfig?._id,
-    authConfigType: authConfig?.type as RestAuthType | undefined,
+  if (sources.length === 0) {
+    return {
+      knowledgeBaseId,
+      synced: 0,
+      failed: 0,
+    }
   }
 
-  let response
-  try {
-    response = await rest.read(query)
-  } catch (error: any) {
-    throw new HTTPError(
-      `Could not fetch SharePoint sites: ${error?.message || "unknown error"}`,
-      400
+  const existingFiles = await listKnowledgeBaseFiles(knowledgeBaseId)
+  const existingExternalSourceIds = new Set<string>(
+    existingFiles
+      .map(file => file.externalSourceId?.trim())
+      .filter((id): id is string => !!id)
+  )
+
+  let synced = 0
+  let failed = 0
+  const now = new Date().toISOString()
+  const sourceSyncResults = new Map<string, SharePointKnowledgeBaseSource>()
+
+  for (const source of sources) {
+    const currentDatasourceId = source.datasourceId?.trim()
+    const currentSiteId = source.siteId?.trim()
+    if (!currentDatasourceId || !currentSiteId) {
+      continue
+    }
+
+    const sourceKey = `${currentDatasourceId}:${currentSiteId}`
+
+    try {
+      const datasource = await getDatasource(currentDatasourceId)
+      const files = await listSharePointFiles(datasource, currentSiteId)
+
+      for (const file of files) {
+        const id = file.id?.trim()
+        const name = file.name?.trim()
+        const downloadUrl = file["@microsoft.graph.downloadUrl"]?.trim()
+
+        if (!id || !name || !file.file) {
+          continue
+        }
+        if (!downloadUrl) {
+          console.log("Skipping SharePoint file without downloadUrl", {
+            knowledgeBaseId,
+            datasourceId: currentDatasourceId,
+            siteId: currentSiteId,
+            fileId: id,
+          })
+          failed++
+          continue
+        }
+
+        const externalSourceId = `sharepoint:${currentDatasourceId}:${currentSiteId}:${id}`
+        if (existingExternalSourceIds.has(externalSourceId)) {
+          continue
+        }
+
+        try {
+          const response = await fetch(downloadUrl)
+          if (!response.ok) {
+            throw new Error(`Download failed with status ${response.status}`)
+          }
+          const arrayBuffer = await response.arrayBuffer()
+          const buffer = Buffer.from(arrayBuffer)
+          const contentType = response.headers.get("content-type") || undefined
+
+          await uploadKnowledgeBaseFile({
+            knowledgeBaseId,
+            filename: name,
+            mimetype: file.file.mimeType || contentType,
+            size: buffer.byteLength,
+            buffer,
+            uploadedBy: "system",
+            externalSourceId,
+          })
+          existingExternalSourceIds.add(externalSourceId)
+          synced++
+        } catch (error) {
+          console.log("Failed to sync SharePoint knowledge base file", {
+            knowledgeBaseId,
+            datasourceId: currentDatasourceId,
+            siteId: currentSiteId,
+            fileId: id,
+            error,
+          })
+          failed++
+        }
+      }
+
+      sourceSyncResults.set(sourceKey, {
+        ...source,
+        datasourceId: currentDatasourceId,
+        siteId: currentSiteId,
+        lastSyncedAt: now,
+        lastSyncStatus: "success",
+        lastSyncError: undefined,
+      })
+    } catch (error: any) {
+      console.log("Failed to sync SharePoint source", {
+        knowledgeBaseId,
+        datasourceId: currentDatasourceId,
+        siteId: currentSiteId,
+        error,
+      })
+      failed++
+      sourceSyncResults.set(sourceKey, {
+        ...source,
+        datasourceId: currentDatasourceId,
+        siteId: currentSiteId,
+        lastSyncedAt: now,
+        lastSyncStatus: "failed",
+        lastSyncError: error?.message || "Unknown error",
+      })
+    }
+  }
+
+  if (!explicitDatasourceId && knowledgeBase._id && knowledgeBase._rev) {
+    const persistedSources = (knowledgeBase.sharepointSources || []).map(
+      source => {
+        const sourceKey = `${source.datasourceId}:${source.siteId}`
+        return sourceSyncResults.get(sourceKey) || source
+      }
     )
+    await update({
+      ...knowledgeBase,
+      sharepointSources: persistedSources,
+    })
   }
 
   return {
-    knowledgeBaseId: id,
-    sites: normalizeSharePointSites(extractRows(response?.data)),
+    knowledgeBaseId,
+    synced,
+    failed,
   }
 }
 
-export const sync = async (id: string): Promise<SyncKnowledgeBaseResponse> => {
-  const knowledgeBase = await find(id)
-  if (!knowledgeBase) {
-    throw new HTTPError("Knowledge base not found", 404)
-  }
-
-  switch (knowledgeBase.type) {
-    case KnowledgeBaseType.LOCAL:
-      throw new HTTPError(
-        "Sync is only available for connector knowledge bases",
-        400
-      )
-    case KnowledgeBaseType.SHAREPOINT:
-    case KnowledgeBaseType.GOOGLE_DRIVE:
-    case KnowledgeBaseType.CONFLUENCE: {
-      const datasource = await fetchDatasource(knowledgeBase.connectionId)
-      const files = await fetchConnectorFiles(knowledgeBase, datasource)
-      const syncedAt = new Date().toISOString()
-
-      await update({
-        ...knowledgeBase,
-        managedRetrievalIndexId:
-          knowledgeBase.managedRetrievalIndexId ||
-          `${knowledgeBase._id}:${syncedAt}`,
-      })
-
-      return {
-        knowledgeBaseId: id,
-        knowledgeBaseType: knowledgeBase.type,
-        files,
-        fetchedAt: syncedAt,
-      }
+export const syncAllConfiguredSharePointKnowledgeBases = async () => {
+  const knowledgeBases = await fetchKnowledgeBases()
+  for (const knowledgeBase of knowledgeBases) {
+    const knowledgeBaseId = knowledgeBase._id
+    if (!knowledgeBaseId) {
+      continue
     }
-    default:
-      throw utils.unreachable(knowledgeBase)
+    if (!knowledgeBase.sharepointSources?.length) {
+      continue
+    }
+
+    try {
+      await sync({ knowledgeBaseId })
+    } catch (error) {
+      console.log("Failed to sync configured SharePoint knowledge base", {
+        knowledgeBaseId,
+        error,
+      })
+    }
   }
 }

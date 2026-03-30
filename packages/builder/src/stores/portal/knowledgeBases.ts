@@ -3,6 +3,8 @@ import {
   CreateKnowledgeBaseRequest,
   KnowledgeBase,
   KnowledgeBaseFile,
+  SyncKnowledgeBaseRequest,
+  SyncKnowledgeBaseResponse,
   UpdateKnowledgeBaseRequest,
 } from "@budibase/types"
 import { DerivedBudiStore } from "../BudiStore"
@@ -184,6 +186,15 @@ export class KnowledgeBaseStore extends DerivedBudiStore<
       ).filter(file => file._id !== fileId)
       return state
     })
+  }
+
+  sync = async (
+    knowledgeBaseId: string,
+    config?: SyncKnowledgeBaseRequest
+  ): Promise<SyncKnowledgeBaseResponse> => {
+    const response = await API.knowledgeBase.sync(knowledgeBaseId, config)
+    await this.fetchFiles(knowledgeBaseId)
+    return response
   }
 }
 

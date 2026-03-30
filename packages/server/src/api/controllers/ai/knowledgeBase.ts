@@ -1,8 +1,8 @@
 import {
   CreateKnowledgeBaseRequest,
-  FetchSharePointSitesResponse,
   KnowledgeBase,
   KnowledgeBaseListResponse,
+  SyncKnowledgeBaseRequest,
   SyncKnowledgeBaseResponse,
   UpdateKnowledgeBaseRequest,
   UserCtx,
@@ -42,15 +42,17 @@ export const deleteKnowledgeBase = async (
 }
 
 export const syncKnowledgeBase = async (
-  ctx: UserCtx<void, SyncKnowledgeBaseResponse, { id: string }>
+  ctx: UserCtx<
+    SyncKnowledgeBaseRequest,
+    SyncKnowledgeBaseResponse,
+    { id: string }
+  >
 ) => {
   const { id } = ctx.params
-  ctx.body = await sdk.ai.knowledgeBase.sync(id)
-}
-
-export const fetchKnowledgeBaseSharePointSites = async (
-  ctx: UserCtx<void, FetchSharePointSitesResponse, { id: string }>
-) => {
-  const { id } = ctx.params
-  ctx.body = await sdk.ai.knowledgeBase.fetchSharePointSites(id)
+  const { datasourceId, siteId } = ctx.request.body || {}
+  ctx.body = await sdk.ai.knowledgeBase.sync({
+    knowledgeBaseId: id,
+    datasourceId,
+    siteId,
+  })
 }
