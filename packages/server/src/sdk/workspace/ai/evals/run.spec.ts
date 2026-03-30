@@ -35,6 +35,9 @@ jest.mock("../../..", () => ({
         getOrThrow: jest.fn(),
         buildPromptAndTools: jest.fn(),
       },
+      configs: {
+        find: jest.fn(),
+      },
       llm: {
         createLLM: jest.fn(),
       },
@@ -168,6 +171,14 @@ describe("agent eval runner", () => {
       systemPrompt: "You are a helpful assistant.",
       tools: {},
     })
+    sdk.ai.configs.find.mockResolvedValue({
+      _id: "config-1",
+      name: "Primary config",
+      provider: "openai",
+      model: "gpt-5",
+      liteLLMModelId: "openai/gpt-5",
+      reasoningEffort: "medium",
+    })
     sdk.ai.llm.createLLM.mockResolvedValue({
       chat: {},
       providerOptions: jest.fn().mockReturnValue(undefined),
@@ -209,11 +220,30 @@ describe("agent eval runner", () => {
 
     expect(run.results[0]).toMatchObject({
       status: "passed",
+      caseSnapshot: {
+        id: "case-1",
+        name: "Friendly greeting",
+        prompt: "Say hello",
+        assertions: {
+          contains: ["hello"],
+          judge: {
+            rubric: "The response should be friendly and direct.",
+          },
+        },
+      },
       failures: [],
       judge: {
         status: "passed",
         reason: "The response is friendly and direct.",
       },
+    })
+    expect(run.snapshot.aiConfig).toEqual({
+      aiConfigId: "config-1",
+      name: "Primary config",
+      provider: "openai",
+      model: "gpt-5",
+      liteLLMModelId: "openai/gpt-5",
+      reasoningEffort: "medium",
     })
     expect(run.results[0].requestIds).toEqual(
       expect.arrayContaining(["agent-request", "judge-request"])

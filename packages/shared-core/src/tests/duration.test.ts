@@ -1,4 +1,4 @@
-import { Duration, DurationType } from "../Duration"
+import { Duration, DurationType } from "../duration"
 
 describe("duration", () => {
   it("should convert minutes to milliseconds", () => {

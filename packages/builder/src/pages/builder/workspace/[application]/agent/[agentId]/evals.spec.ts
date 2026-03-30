@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { render, screen, waitFor } from "@testing-library/svelte"
+import { render, screen, waitFor, fireEvent } from "@testing-library/svelte"
 import EvalsPage from "./evals.svelte"
 
 const {
@@ -34,7 +34,7 @@ vi.mock("@/api", () => ({
   },
 }))
 
-describe("agent evals page", () => {
+describe("agent evaluations page", () => {
   beforeEach(() => {
     fetchAgentEvalSuite.mockResolvedValue({
       suite: {
@@ -73,6 +73,17 @@ describe("agent evals page", () => {
             caseId: "case-1",
             name: "Employee lookup",
             prompt: "Who is the product manager?",
+            caseSnapshot: {
+              id: "case-1",
+              name: "Employee lookup",
+              prompt: "Who is the product manager?",
+              assertions: {
+                contains: ["Alice"],
+                judge: {
+                  rubric: "The answer should identify the correct person.",
+                },
+              },
+            },
             response: "Alice is the product manager.",
             status: "passed",
             failures: [],
@@ -107,6 +118,11 @@ describe("agent evals page", () => {
           agentId: "agent-1",
           agentName: "Support Agent",
           aiconfig: "config-1",
+          aiConfig: {
+            aiConfigId: "config-1",
+            provider: "openai",
+            model: "gpt-5",
+          },
           enabledTools: [],
           knowledgeBases: [],
         },
@@ -122,11 +138,18 @@ describe("agent evals page", () => {
       expect(fetchAgentEvalSuite).toHaveBeenCalledWith("agent-1")
     })
 
+    // Case name appears in list and detail header (Overview tab is default)
     expect(await screen.findAllByText("Employee lookup")).toHaveLength(2)
-    expect(screen.getAllByText("Passed").length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText("Passed").length).toBeGreaterThanOrEqual(1)
+
+    // Switch to Configuration tab to check form fields
+    await fireEvent.click(screen.getByText("Configuration"))
     expect(
       screen.getByDisplayValue("The answer should identify the correct person.")
     ).toBeInTheDocument()
+
+    // Switch to Results tab to check result details
+    await fireEvent.click(screen.getByText("Results"))
     expect(
       screen.getByText("The response identifies the correct person.")
     ).toBeInTheDocument()

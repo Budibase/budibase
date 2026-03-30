@@ -1,3 +1,4 @@
+import type { ReasoningEffort } from "./ai"
 import { Document } from "../../"
 
 export interface AgentEvalAssertions {
@@ -16,6 +17,22 @@ export interface AgentEvalCase {
   name: string
   prompt: string
   assertions: AgentEvalAssertions
+}
+
+export interface AgentEvalCaseSnapshot {
+  id: string
+  name: string
+  prompt: string
+  assertions: AgentEvalAssertions
+}
+
+export interface AgentEvalModelSnapshot {
+  aiConfigId: string
+  name?: string
+  provider?: string
+  model?: string
+  liteLLMModelId?: string
+  reasoningEffort?: ReasoningEffort
 }
 
 export interface AgentEvalSuite extends Document {
@@ -42,6 +59,7 @@ export interface AgentEvalSnapshot {
   agentUpdatedAt?: string
   suiteRev?: string
   aiconfig: string
+  aiConfig?: AgentEvalModelSnapshot
   promptInstructions?: string
   goal?: string
   enabledTools: string[]
@@ -52,6 +70,7 @@ export interface AgentEvalCaseResult {
   caseId: string
   name: string
   prompt: string
+  caseSnapshot?: AgentEvalCaseSnapshot
   response: string
   status: "passed" | "failed" | "error"
   failures: AgentEvalAssertionFailure[]

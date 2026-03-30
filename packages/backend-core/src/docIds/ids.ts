@@ -137,8 +137,16 @@ export const getAgentEvalSuiteID = (agentId: string) => {
   return `${DocumentType.AGENT_EVAL_SUITE}${SEPARATOR}${agentId}`
 }
 
-export const getAgentEvalRunID = (agentId: string) => {
-  return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}`
+export const getAgentEvalRunID = (agentId: string, runId?: string) => {
+  if (!runId) {
+    return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}`
+  }
+
+  return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}${SEPARATOR}${runId}`
+}
+
+export const getAgentEvalRunPrefix = (agentId: string) => {
+  return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}${SEPARATOR}`
 }
 
 export const generateAgentToolSourceID = () => {

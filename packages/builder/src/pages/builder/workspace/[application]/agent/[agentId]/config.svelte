@@ -546,6 +546,7 @@ Any constraints the agent must follow.
     } else {
       draft.promptInstructions =
         currentValue.slice(0, start) + wrapped + currentValue.slice(end)
+      syncEvalDraftToStore()
     }
   }
 

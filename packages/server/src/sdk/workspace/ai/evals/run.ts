@@ -4,12 +4,15 @@ import { helpers } from "@budibase/shared-core"
 import type {
   Agent,
   AgentEvalCase,
+  AgentEvalCaseSnapshot,
   AgentEvalCaseResult,
   AgentEvalJudgeResult,
+  AgentEvalModelSnapshot,
   AgentEvalRun,
   AgentEvalSnapshot,
   AgentEvalSuite,
   ContextUser,
+  CustomAIProviderConfig,
   FeatureFlag,
 } from "@budibase/types"
 import {
@@ -31,6 +34,7 @@ import { createSessionLogIndexer } from "../agentLogs"
 import { retrieveContextForAgent } from "../rag"
 import {
   evaluateResponse,
+  normalizeAssertions,
   normalizeJudgeAssertion,
   validateEvalCase,
 } from "./assertions"
@@ -97,6 +101,30 @@ ${response}`
 const normalizeJudgeReason = (reason?: string) =>
   reason?.trim() || "Judge did not return a reason."
 
+const buildCaseSnapshot = (testCase: AgentEvalCase): AgentEvalCaseSnapshot => ({
+  id: testCase.id,
+  name: testCase.name,
+  prompt: testCase.prompt,
+  assertions: normalizeAssertions(testCase.assertions),
+})
+
+const buildAIConfigSnapshot = (
+  aiConfig?: CustomAIProviderConfig
+): AgentEvalModelSnapshot | undefined => {
+  if (!aiConfig?._id) {
+    return undefined
+  }
+
+  return {
+    aiConfigId: aiConfig._id,
+    name: aiConfig.name,
+    provider: aiConfig.provider,
+    model: aiConfig.model,
+    liteLLMModelId: aiConfig.liteLLMModelId,
+    reasoningEffort: aiConfig.reasoningEffort,
+  }
+}
+
 async function getRetrievedAgentContext(agent: Agent, latestQuestion: string) {
   if (
     !latestQuestion ||
@@ -118,9 +146,11 @@ async function getRetrievedAgentContext(agent: Agent, latestQuestion: string) {
 const buildRunSnapshot = ({
   agent,
   suite,
+  aiConfig,
 }: {
   agent: Agent
   suite: AgentEvalSuite
+  aiConfig?: CustomAIProviderConfig
 }): AgentEvalSnapshot => ({
   agentId: agent._id!,
   agentName: agent.name,
@@ -128,6 +158,7 @@ const buildRunSnapshot = ({
   agentUpdatedAt: agent.updatedAt,
   suiteRev: suite._rev,
   aiconfig: agent.aiconfig,
+  aiConfig: buildAIConfigSnapshot(aiConfig),
   promptInstructions: agent.promptInstructions,
   goal: agent.goal,
   enabledTools: [...(agent.enabledTools || [])],
@@ -220,6 +251,7 @@ async function runCase({
   runId: string
 }): Promise<AgentEvalCaseResult> {
   const validationFailures = validateEvalCase(testCase)
+  const caseSnapshot = buildCaseSnapshot(testCase)
   const startedAt = new Date().toISOString()
   const startedAtMs = Date.now()
   const sessionId = `eval:${runId}:${testCase.id}`
@@ -238,6 +270,7 @@ async function runCase({
       caseId: testCase.id,
       name: testCase.name,
       prompt: testCase.prompt,
+      caseSnapshot,
       response: "",
       status: "failed",
       failures: validationFailures,
@@ -339,11 +372,11 @@ async function runCase({
 
     const response = textResult.value || ""
     const failures = evaluateResponse({
-      assertions: testCase.assertions,
+      assertions: caseSnapshot.assertions,
       response,
     })
     let judge: AgentEvalJudgeResult | undefined
-    const judgeAssertion = normalizeJudgeAssertion(testCase.assertions.judge)
+    const judgeAssertion = normalizeJudgeAssertion(caseSnapshot.assertions.judge)
 
     if (judgeAssertion?.rubric) {
       try {
@@ -363,6 +396,7 @@ async function runCase({
           caseId: testCase.id,
           name: testCase.name,
           prompt: testCase.prompt,
+          caseSnapshot,
           response,
           status: "error",
           failures,
@@ -395,6 +429,7 @@ async function runCase({
       caseId: testCase.id,
       name: testCase.name,
       prompt: testCase.prompt,
+      caseSnapshot,
       response,
       status: failures.length > 0 ? "failed" : "passed",
       failures,
@@ -413,6 +448,7 @@ async function runCase({
       caseId: testCase.id,
       name: testCase.name,
       prompt: testCase.prompt,
+      caseSnapshot,
       response: "",
       status: "error",
       failures: [],
@@ -446,7 +482,10 @@ export async function runSuite({
   const runId = v4()
   const startedAt = new Date().toISOString()
   const results: AgentEvalCaseResult[] = []
-  const snapshot = buildRunSnapshot({ agent, suite })
+  const aiConfig = agent.aiconfig
+    ? await sdk.ai.configs.find(agent.aiconfig)
+    : undefined
+  const snapshot = buildRunSnapshot({ agent, suite, aiConfig })
 
   for (const testCase of suite.cases) {
     results.push(

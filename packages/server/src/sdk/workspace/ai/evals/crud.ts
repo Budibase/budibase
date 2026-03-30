@@ -1,4 +1,5 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
+import { UNICODE_MAX } from "@budibase/types"
 import type {
   AgentEvalCase,
   AgentEvalRun,
@@ -12,16 +13,6 @@ const buildDefaultSuite = (agentId: string): AgentEvalSuite => ({
   _id: docIds.getAgentEvalSuiteID(agentId),
   agentId,
   cases: [],
-})
-
-const normalizeCase = (
-  testCase: Partial<AgentEvalCase>,
-  index: number
-): AgentEvalCase => ({
-  id: testCase.id?.trim() || v4(),
-  name: testCase.name?.trim() || `Case ${index + 1}`,
-  prompt: testCase.prompt?.trim() || "",
-  assertions: normalizeAssertions(testCase.assertions),
 })
 
 export async function fetchSuite(agentId: string): Promise<AgentEvalSuite> {
@@ -45,7 +36,12 @@ export async function saveSuite({
   const existing = await db.tryGet<AgentEvalSuite>(
     docIds.getAgentEvalSuiteID(agentId)
   )
-  const cases = (request.cases || []).map(normalizeCase)
+  const cases: AgentEvalCase[] = request.cases.map((testCase, idx) => ({
+    id: testCase.id ?? v4(),
+    name: testCase.name ?? `Case ${idx + 1}`,
+    prompt: testCase.prompt ?? "",
+    assertions: normalizeAssertions(testCase.assertions),
+  }))
 
   for (const testCase of cases) {
     const failures = validateEvalCase(testCase)
@@ -74,21 +70,38 @@ export async function saveSuite({
 
 export async function fetchLatestRun(
   agentId: string
-): Promise<AgentEvalRun | null> {
-  const db = context.getWorkspaceDB()
-  return await db.tryGet<AgentEvalRun>(docIds.getAgentEvalRunID(agentId))
+): Promise<AgentEvalRun | undefined> {
+  const [latestRun] = await fetchRuns(agentId, 1)
+  return latestRun
 }
 
-export async function saveLatestRun(
-  run: Omit<AgentEvalRun, "_id" | "_rev">
+export async function fetchRuns(
+  agentId: string,
+  limit = 10
+): Promise<AgentEvalRun[]> {
+  const db = context.getWorkspaceDB()
+  const startkey = docIds.getAgentEvalRunPrefix(agentId)
+  const response = await db.allDocs<AgentEvalRun>({
+    startkey: `${startkey}${UNICODE_MAX}`,
+    endkey: startkey,
+    include_docs: true,
+    descending: true,
+    limit,
+  })
+
+  return response.rows
+    .map(row => row.doc)
+    .filter((run): run is AgentEvalRun => Boolean(run))
+}
+
+export async function saveRun(
+  run: Omit<AgentEvalRun, "_id" | "_rev" | "createdAt" | "updatedAt">
 ): Promise<AgentEvalRun> {
   const db = context.getWorkspaceDB()
-  const existing = await fetchLatestRun(run.agentId)
   const nextRun: AgentEvalRun = {
     ...run,
-    _id: docIds.getAgentEvalRunID(run.agentId),
-    _rev: existing?._rev,
-    createdAt: existing?.createdAt || run.startedAt,
+    _id: docIds.getAgentEvalRunID(run.agentId, run.runId),
+    createdAt: run.startedAt,
     updatedAt: run.completedAt,
   }
 
