@@ -52,6 +52,10 @@
   this can be used to access the test API under `new TestConfiguration().api`, a list of functions and
   request/response types can be found in `packages/server/src/tests/utilities/api`.
 
+## Git commit
+
+Only commit changes when explicitly asked to do so.
+
 ## Pull requests
 
 - Always respect the format of pull_request_template.md. Some sections may not
