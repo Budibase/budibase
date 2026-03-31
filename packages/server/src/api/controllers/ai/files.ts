@@ -1,10 +1,6 @@
 import { readFile, unlink } from "node:fs/promises"
 import { HTTPError } from "@budibase/backend-core"
-import {
-  FetchKnowledgeBaseFilesResponse,
-  KnowledgeBaseFileUploadResponse,
-  UserCtx,
-} from "@budibase/types"
+import { AgentFileUploadResponse, FetchAgentFilesResponse, UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
 
 const normalizeUpload = (fileInput: any) => {
@@ -28,33 +24,19 @@ const unlinkSafe = async (path?: string) => {
   }
 }
 
-export async function fetchKnowledgeBaseFiles(
-  ctx: UserCtx<void, FetchKnowledgeBaseFilesResponse>
+export async function fetchAgentFiles(
+  ctx: UserCtx<void, FetchAgentFilesResponse, { agentId: string }>
 ) {
-  const { knowledgeBaseId } = ctx.params
-  const knowledgeBase = await sdk.ai.knowledgeBase.find(knowledgeBaseId)
-  if (!knowledgeBase) {
-    throw new HTTPError("Knowledge base not found", 404)
-  }
-  const files =
-    await sdk.ai.knowledgeBase.listKnowledgeBaseFiles(knowledgeBaseId)
+  const { agentId } = ctx.params
+  const files = await sdk.ai.rag.listFilesForAgent(agentId)
   ctx.body = { files }
   ctx.status = 200
 }
 
-export async function uploadKnowledgeBaseFile(
-  ctx: UserCtx<
-    void,
-    KnowledgeBaseFileUploadResponse,
-    { knowledgeBaseId: string }
-  >
+export async function uploadAgentFile(
+  ctx: UserCtx<void, AgentFileUploadResponse, { agentId: string }>
 ) {
-  const { knowledgeBaseId } = ctx.params
-  const knowledgeBase = await sdk.ai.knowledgeBase.find(knowledgeBaseId)
-  if (!knowledgeBase) {
-    throw new HTTPError("Knowledge base not found", 404)
-  }
-
+  const { agentId } = ctx.params
   const upload = normalizeUpload(
     ctx.request.files?.file ||
       ctx.request.files?.knowledgeBaseFile ||
@@ -69,8 +51,7 @@ export async function uploadKnowledgeBaseFile(
     throw new HTTPError("Invalid upload payload", 400)
   }
 
-  const filename =
-    upload.originalFilename || upload.name || "knowledge-base-document"
+  const filename = upload.originalFilename || upload.name || "agent-document"
   const mimetype = upload.mimetype || upload.type
   const fileSize =
     typeof upload.size === "number"
@@ -80,8 +61,7 @@ export async function uploadKnowledgeBaseFile(
   const buffer = await readFile(filePath)
 
   try {
-    const updated = await sdk.ai.knowledgeBase.uploadKnowledgeBaseFile({
-      knowledgeBaseId,
+    const updated = await sdk.ai.rag.uploadFileForAgent(agentId, {
       filename,
       mimetype,
       size: fileSize ?? buffer.byteLength,
@@ -91,7 +71,7 @@ export async function uploadKnowledgeBaseFile(
     ctx.body = { file: updated }
     ctx.status = 201
   } catch (error: any) {
-    console.error("Failed to upload knowledge base file", error)
+    console.error("Failed to upload agent file", error)
     throw new HTTPError(
       error?.message || "Failed to process uploaded file",
       400
@@ -101,23 +81,11 @@ export async function uploadKnowledgeBaseFile(
   }
 }
 
-export async function deleteKnowledgeBaseFile(
-  ctx: UserCtx<
-    void,
-    { deleted: true },
-    { knowledgeBaseId: string; fileId: string }
-  >
+export async function deleteAgentFile(
+  ctx: UserCtx<void, { deleted: true }, { agentId: string; fileId: string }>
 ) {
-  const { knowledgeBaseId, fileId } = ctx.params
-  const file = await sdk.ai.knowledgeBase.getKnowledgeBaseFileOrThrow(fileId)
-  if (file.knowledgeBaseId !== knowledgeBaseId) {
-    throw new HTTPError("File does not belong to this knowledge base", 404)
-  }
-  const knowledgeBase = await sdk.ai.knowledgeBase.find(knowledgeBaseId)
-  if (!knowledgeBase) {
-    throw new HTTPError("Knowledge base not found", 404)
-  }
-  await sdk.ai.knowledgeBase.removeKnowledgeBaseFile(knowledgeBase, file)
+  const { agentId, fileId } = ctx.params
+  await sdk.ai.rag.deleteFileForAgent(agentId, fileId)
   ctx.body = { deleted: true }
   ctx.status = 200
 }

@@ -6,7 +6,8 @@ import {
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
 } from "@budibase/types"
-import { knowledgeBase as knowledgeBaseSdk } from ".."
+import { HTTPError } from "@budibase/backend-core"
+import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
 
@@ -31,6 +32,106 @@ const resolveKnowledgeBasesForAgent = async (
   }
 
   return knowledgeBases
+}
+
+const getAgentKnowledgeBase = async (
+  knowledgeBaseIds: string[] | undefined
+): Promise<KnowledgeBase | undefined> => {
+  const validIds = (knowledgeBaseIds || []).filter(Boolean)
+  for (const id of validIds) {
+    const knowledgeBase = await knowledgeBaseSdk.find(id)
+    if (knowledgeBase) {
+      return knowledgeBase
+    }
+  }
+  return undefined
+}
+
+export const ensureKnowledgeBaseForAgent = async (
+  agentId: string
+): Promise<KnowledgeBase> => {
+  const agent = await agentsSdk.getOrThrow(agentId)
+  const existing = await getAgentKnowledgeBase(agent.knowledgeBases)
+  if (existing) {
+    return existing
+  }
+
+  const created = await knowledgeBaseSdk.create({
+    name: `Agent files (${agent._id})`,
+    type: KnowledgeBaseType.GEMINI,
+  })
+
+  await agentsSdk.update({
+    ...agent,
+    knowledgeBases: created._id ? [created._id] : [],
+  })
+
+  return created
+}
+
+const getKnowledgeBaseIdsForAgent = async (agentId: string): Promise<string[]> => {
+  const agent = await agentsSdk.getOrThrow(agentId)
+  return (agent.knowledgeBases || []).filter(Boolean)
+}
+
+export const listFilesForAgent = async (
+  agentId: string
+): Promise<KnowledgeBaseFile[]> => {
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
+  if (knowledgeBaseIds.length === 0) {
+    return []
+  }
+
+  return (
+    await Promise.all(
+      knowledgeBaseIds.map(id => knowledgeBaseSdk.listKnowledgeBaseFiles(id))
+    )
+  ).flat()
+}
+
+interface UploadFileForAgentInput {
+  filename: string
+  mimetype?: string
+  size?: number
+  buffer: Buffer
+  uploadedBy: string
+}
+
+export const uploadFileForAgent = async (
+  agentId: string,
+  input: UploadFileForAgentInput
+): Promise<KnowledgeBaseFile> => {
+  const knowledgeBase = await ensureKnowledgeBaseForAgent(agentId)
+  const knowledgeBaseId = knowledgeBase._id
+  if (!knowledgeBaseId) {
+    throw new HTTPError("Failed to create agent file storage", 500)
+  }
+
+  return await knowledgeBaseSdk.uploadKnowledgeBaseFile({
+    knowledgeBaseId,
+    filename: input.filename,
+    mimetype: input.mimetype,
+    size: input.size ?? input.buffer.byteLength,
+    buffer: input.buffer,
+    uploadedBy: input.uploadedBy,
+  })
+}
+
+export const deleteFileForAgent = async (
+  agentId: string,
+  fileId: string
+): Promise<void> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
+  if (!knowledgeBaseIds.includes(file.knowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this agent", 404)
+  }
+
+  const knowledgeBase = await knowledgeBaseSdk.find(file.knowledgeBaseId)
+  if (!knowledgeBase) {
+    throw new HTTPError("Agent file storage not found", 404)
+  }
+  await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
 }
 
 function getProcessor(kb: KnowledgeBase) {

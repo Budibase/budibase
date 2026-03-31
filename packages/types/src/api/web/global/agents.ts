@@ -5,6 +5,7 @@ import {
   ChatConversation,
   ChatConversationRequest,
   CreateChatConversationRequest,
+  KnowledgeBaseFile,
 } from "../../../documents"
 
 export type ChatAgentRequest = ChatConversationRequest
@@ -21,6 +22,14 @@ export type UpdateChatAppRequest = Omit<ChatApp, "createdAt" | "updatedAt">
 
 export interface FetchAgentsResponse {
   agents: Agent[]
+}
+
+export interface FetchAgentFilesResponse {
+  files: KnowledgeBaseFile[]
+}
+
+export interface AgentFileUploadResponse {
+  file: KnowledgeBaseFile
 }
 
 export interface FetchChatAppAgentsResponse {
