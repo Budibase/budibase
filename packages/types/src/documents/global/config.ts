@@ -73,6 +73,15 @@ export interface GoogleInnerConfig {
 
 export interface GoogleConfig extends Config<GoogleInnerConfig> {}
 
+export interface MicrosoftInnerConfig {
+  clientID: string
+  clientSecret: string
+  tenantId?: string
+  activated: boolean
+}
+
+export interface MicrosoftConfig extends Config<MicrosoftInnerConfig> {}
+
 export interface OIDCStrategyConfiguration {
   issuer: string
   authorizationURL: string
@@ -154,6 +163,9 @@ export const isSMTPConfig = (config: Config): config is SMTPConfig =>
 export const isGoogleConfig = (config: Config): config is GoogleConfig =>
   config.type === ConfigType.GOOGLE
 
+export const isMicrosoftConfig = (config: Config): config is MicrosoftConfig =>
+  config.type === ConfigType.MICROSOFT
+
 export const isOIDCConfig = (config: Config): config is OIDCConfig =>
   config.type === ConfigType.OIDC
 
@@ -177,6 +189,7 @@ export enum ConfigType {
   ACCOUNT = "account",
   SMTP = "smtp",
   GOOGLE = "google",
+  MICROSOFT = "microsoft",
   OIDC = "oidc",
   OIDC_LOGOS = "logos_oidc",
   SCIM = "scim",
@@ -193,14 +206,16 @@ export type ConfigTypeToConfig<T extends ConfigType> =
       ? SMTPConfig
       : T extends ConfigType.GOOGLE
         ? GoogleConfig
-        : T extends ConfigType.OIDC
-          ? OIDCConfig
-          : T extends ConfigType.OIDC_LOGOS
-            ? OIDCLogosConfig
-            : T extends ConfigType.SCIM
-              ? SCIMConfig
-              : T extends ConfigType.RECAPTCHA
-                ? RecaptchaConfig
-                : T extends ConfigType.TRANSLATIONS
-                  ? TranslationsConfig
-                  : never
+        : T extends ConfigType.MICROSOFT
+          ? MicrosoftConfig
+          : T extends ConfigType.OIDC
+            ? OIDCConfig
+            : T extends ConfigType.OIDC_LOGOS
+              ? OIDCLogosConfig
+              : T extends ConfigType.SCIM
+                ? SCIMConfig
+                : T extends ConfigType.RECAPTCHA
+                  ? RecaptchaConfig
+                  : T extends ConfigType.TRANSLATIONS
+                    ? TranslationsConfig
+                    : never

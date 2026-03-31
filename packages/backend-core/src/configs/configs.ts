@@ -3,6 +3,8 @@ import {
   ConfigType,
   GoogleConfig,
   GoogleInnerConfig,
+  MicrosoftConfig,
+  MicrosoftInnerConfig,
   OIDCConfig,
   OIDCInnerConfig,
   OIDCLogosConfig,
@@ -249,6 +251,49 @@ export function getDefaultGoogleConfig(): GoogleInnerConfig | undefined {
     return {
       clientID: env.GOOGLE_CLIENT_ID!,
       clientSecret: env.GOOGLE_CLIENT_SECRET!,
+      activated: true,
+    }
+  }
+}
+
+// MICROSOFT
+
+async function getMicrosoftConfigDoc(): Promise<MicrosoftConfig | undefined> {
+  return await getConfig<MicrosoftConfig>(ConfigType.MICROSOFT)
+}
+
+export async function getMicrosoftConfig(): Promise<
+  MicrosoftInnerConfig | undefined
+> {
+  const config = await getMicrosoftConfigDoc()
+  return config?.config
+}
+
+export async function getMicrosoftDatasourceConfig(): Promise<
+  MicrosoftInnerConfig | undefined
+> {
+  if (!env.SELF_HOSTED) {
+    // always use the env vars in cloud
+    return getDefaultMicrosoftConfig()
+  }
+
+  // prefer the config in self-host
+  let config = await getMicrosoftConfig()
+
+  // fallback to env vars
+  if (!config || !config.activated) {
+    config = getDefaultMicrosoftConfig()
+  }
+
+  return config
+}
+
+export function getDefaultMicrosoftConfig(): MicrosoftInnerConfig | undefined {
+  if (env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET) {
+    return {
+      clientID: env.MICROSOFT_CLIENT_ID!,
+      clientSecret: env.MICROSOFT_CLIENT_SECRET!,
+      tenantId: env.MICROSOFT_TENANT_ID || "common",
       activated: true,
     }
   }
