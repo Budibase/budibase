@@ -31,6 +31,7 @@
   import { PKCEMethod } from "@budibase/types"
   import Scim from "./scim.svelte"
   import Google from "./google.svelte"
+  import Microsoft from "./microsoft.svelte"
 
   const ConfigTypes = {
     OIDC: "oidc",
@@ -350,6 +351,7 @@
     </Body>
   </Layout>
   <Google />
+  <Microsoft />
   {#if providers.oidc}
     <Divider noMargin />
     <Layout gap="XS" noPadding>

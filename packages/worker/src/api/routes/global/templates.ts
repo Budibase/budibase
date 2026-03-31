@@ -7,16 +7,24 @@ import Joi from "joi"
 const { joiValidator } = authCore
 
 function buildTemplateSaveValidation() {
-  // prettier-ignore
-  return joiValidator.body(Joi.object({
-    _id: Joi.string().allow(null, ""),
-    _rev: Joi.string().allow(null, ""),
-    ownerId: Joi.string().allow(null, ""),
-    name: Joi.string().allow(null, ""),
-    contents: Joi.string().required(),
-    purpose: Joi.string().required().valid(...Object.values(TemplatePurpose)),
-    type: Joi.string().required().valid(...Object.values(TemplateType)),
-  }).required().unknown(true).optional())
+  return joiValidator.body(
+    Joi.object({
+      _id: Joi.string().allow(null, ""),
+      _rev: Joi.string().allow(null, ""),
+      ownerId: Joi.string().allow(null, ""),
+      name: Joi.string().allow(null, ""),
+      contents: Joi.string().required(),
+      purpose: Joi.string()
+        .required()
+        .valid(...Object.values(TemplatePurpose)),
+      type: Joi.string()
+        .required()
+        .valid(...Object.values(TemplateType)),
+    })
+      .required()
+      .unknown(true)
+      .optional()
+  )
 }
 
 loggedInRoutes

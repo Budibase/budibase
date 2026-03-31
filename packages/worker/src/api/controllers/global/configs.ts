@@ -25,8 +25,10 @@ import {
   GetPublicSettingsResponse,
   GetPublicTranslationsResponse,
   GoogleInnerConfig,
+  MicrosoftInnerConfig,
   TranslationOverrides,
   isGoogleConfig,
+  isMicrosoftConfig,
   isOIDCConfig,
   isRecaptchaConfig,
   isSettingsConfig,
@@ -237,6 +239,15 @@ async function processGoogleConfig(
   }
 }
 
+async function processMicrosoftConfig(
+  config: MicrosoftInnerConfig,
+  existing?: MicrosoftInnerConfig
+) {
+  if (existing && config.clientSecret === PASSWORD_REPLACEMENT) {
+    config.clientSecret = existing.clientSecret
+  }
+}
+
 async function processOIDCConfig(config: OIDCConfigs, existing?: OIDCConfigs) {
   await verifySSOConfig(ConfigType.OIDC, config.configs[0])
 
@@ -371,6 +382,9 @@ export async function save(
       case ConfigType.GOOGLE:
         await processGoogleConfig(config, existingConfig?.config)
         break
+      case ConfigType.MICROSOFT:
+        await processMicrosoftConfig(config, existingConfig?.config)
+        break
       case ConfigType.OIDC:
         await processOIDCConfig(config, existingConfig?.config)
         break
@@ -494,6 +508,8 @@ function stripSecrets(config: Config, ctx?: UserCtx) {
       config.config.auth.pass = PASSWORD_REPLACEMENT
     }
   } else if (isGoogleConfig(config)) {
+    config.config.clientSecret = PASSWORD_REPLACEMENT
+  } else if (isMicrosoftConfig(config)) {
     config.config.clientSecret = PASSWORD_REPLACEMENT
   } else if (isOIDCConfig(config)) {
     for (const c of config.config.configs) {

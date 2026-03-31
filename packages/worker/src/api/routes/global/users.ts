@@ -27,32 +27,39 @@ function buildAdminInitValidation() {
 }
 
 function buildInviteValidation() {
-  // prettier-ignore
-  return auth.joiValidator.body(Joi.object({
-    email: Joi.string().required(),
-    userInfo: Joi.object().optional(),
-  }).required())
+  return auth.joiValidator.body(
+    Joi.object({
+      email: Joi.string().required(),
+      userInfo: Joi.object().optional(),
+    }).required()
+  )
 }
 
 function buildInviteMultipleValidation() {
-  // prettier-ignore
-  return auth.joiValidator.body(Joi.array().required().items(
-    Joi.object({
-      email: Joi.string(),
-      userInfo: Joi.object().optional(),
-    })
-  ))
+  return auth.joiValidator.body(
+    Joi.array()
+      .required()
+      .items(
+        Joi.object({
+          email: Joi.string(),
+          userInfo: Joi.object().optional(),
+        })
+      )
+  )
 }
 
 function buildInviteAcceptValidation() {
-  // prettier-ignore
-  return auth.joiValidator.body(Joi.object({
-    inviteCode: Joi.string().required(),
-    password: Joi.string().optional(),
-    firstName: Joi.string().optional(),
-    lastName: Joi.string().optional(),
-    tenantId: Joi.string().optional(),
-  }).required().unknown(true))
+  return auth.joiValidator.body(
+    Joi.object({
+      inviteCode: Joi.string().required(),
+      password: Joi.string().optional(),
+      firstName: Joi.string().optional(),
+      lastName: Joi.string().optional(),
+      tenantId: Joi.string().optional(),
+    })
+      .required()
+      .unknown(true)
+  )
 }
 
 function buildChangeTenantOwnerEmailValidation() {

@@ -5,23 +5,30 @@ import Joi from "joi"
 import { adminRoutes } from "../endpointGroups"
 
 function buildEmailSendValidation() {
-  // prettier-ignore
-  return auth.joiValidator.body(Joi.object({
-    email: Joi.string().email({
-      multiple: true,
-    }),
-    cc: Joi.string().email({
-      multiple: true,
-    }).allow("", null),
-    bcc: Joi.string().email({
-      multiple: true,
-    }).allow("", null),
-    purpose: Joi.string().valid(...Object.values(EmailTemplatePurpose)),
-    workspaceId: Joi.string().allow("", null),
-    from: Joi.string().allow("", null),
-    contents: Joi.string().allow("", null),
-    subject: Joi.string().allow("", null),
-  }).required().unknown(true))
+  return auth.joiValidator.body(
+    Joi.object({
+      email: Joi.string().email({
+        multiple: true,
+      }),
+      cc: Joi.string()
+        .email({
+          multiple: true,
+        })
+        .allow("", null),
+      bcc: Joi.string()
+        .email({
+          multiple: true,
+        })
+        .allow("", null),
+      purpose: Joi.string().valid(...Object.values(EmailTemplatePurpose)),
+      workspaceId: Joi.string().allow("", null),
+      from: Joi.string().allow("", null),
+      contents: Joi.string().allow("", null),
+      subject: Joi.string().allow("", null),
+    })
+      .required()
+      .unknown(true)
+  )
 }
 
 adminRoutes.post(

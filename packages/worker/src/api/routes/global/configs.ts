@@ -5,7 +5,6 @@ import * as controller from "../../controllers/global/configs"
 import { adminRoutes, loggedInRoutes } from "../endpointGroups"
 
 function smtpValidation() {
-  // prettier-ignore
   return Joi.object({
     port: Joi.number().required(),
     host: Joi.string().required(),
@@ -20,7 +19,6 @@ function smtpValidation() {
 }
 
 function settingValidation() {
-  // prettier-ignore
   return Joi.object({
     platformUrl: Joi.string().optional(),
     logoUrl: Joi.string().optional().allow("", null),
@@ -30,7 +28,6 @@ function settingValidation() {
 }
 
 function googleValidation() {
-  // prettier-ignore
   return Joi.object({
     clientID: Joi.string().required(),
     clientSecret: Joi.string().required(),
@@ -38,27 +35,39 @@ function googleValidation() {
   }).unknown(true)
 }
 
-function oidcValidation() {
-  // prettier-ignore
+function microsoftValidation() {
   return Joi.object({
-    configs: Joi.array().items(
-      Joi.object({
-        clientID: Joi.string().required(),
-        clientSecret: Joi.string().required(),
-        configUrl: Joi.string().required(),
-        logo: Joi.string().allow("", null),
-        name: Joi.string().allow("", null),
-        uuid: Joi.string().required(),
-        activated: Joi.boolean().required(),
-        scopes: Joi.array().optional(),
-        pkce: Joi.string().valid(...Object.values(PKCEMethod)).optional().allow(null)
-      })
-    ).required()
+    clientID: Joi.string().required(),
+    clientSecret: Joi.string().required(),
+    tenantId: Joi.string().optional().allow("", null),
+    activated: Joi.boolean().required(),
+  }).unknown(true)
+}
+
+function oidcValidation() {
+  return Joi.object({
+    configs: Joi.array()
+      .items(
+        Joi.object({
+          clientID: Joi.string().required(),
+          clientSecret: Joi.string().required(),
+          configUrl: Joi.string().required(),
+          logo: Joi.string().allow("", null),
+          name: Joi.string().allow("", null),
+          uuid: Joi.string().required(),
+          activated: Joi.boolean().required(),
+          scopes: Joi.array().optional(),
+          pkce: Joi.string()
+            .valid(...Object.values(PKCEMethod))
+            .optional()
+            .allow(null),
+        })
+      )
+      .required(),
   }).unknown(true)
 }
 
 function scimValidation() {
-  // prettier-ignore
   return Joi.object({
     enabled: Joi.boolean().required(),
   }).unknown(true)
@@ -91,44 +100,58 @@ function translationsValidation() {
 }
 
 function buildConfigSaveValidation() {
-  // prettier-ignore
-  return auth.joiValidator.body(Joi.object({
-    _id: Joi.string().optional(),
-    _rev: Joi.string().optional(),
-    workspace: Joi.string().optional(),
-    type: Joi.string().valid(...Object.values(ConfigType)).required(),
-    createdAt: Joi.string().optional(),
-    updatedAt: Joi.string().optional(),
-    config: Joi.alternatives()
-      .conditional("type", {
+  return auth.joiValidator.body(
+    Joi.object({
+      _id: Joi.string().optional(),
+      _rev: Joi.string().optional(),
+      workspace: Joi.string().optional(),
+      type: Joi.string()
+        .valid(...Object.values(ConfigType))
+        .required(),
+      createdAt: Joi.string().optional(),
+      updatedAt: Joi.string().optional(),
+      config: Joi.alternatives().conditional("type", {
         switch: [
           { is: ConfigType.SMTP, then: smtpValidation() },
           { is: ConfigType.SETTINGS, then: settingValidation() },
           { is: ConfigType.ACCOUNT, then: Joi.object().unknown(true) },
           { is: ConfigType.GOOGLE, then: googleValidation() },
+          { is: ConfigType.MICROSOFT, then: microsoftValidation() },
           { is: ConfigType.OIDC, then: oidcValidation() },
           { is: ConfigType.SCIM, then: scimValidation() },
           { is: ConfigType.RECAPTCHA, then: recaptchaValidation() },
           { is: ConfigType.TRANSLATIONS, then: translationsValidation() },
         ],
       }),
-  }).required().unknown(true),
+    })
+      .required()
+      .unknown(true)
   )
 }
 
 function buildUploadValidation() {
-  // prettier-ignore
-  return auth.joiValidator.params(Joi.object({
-    type: Joi.string().valid(...Object.values(ConfigType)).required(),
-    name: Joi.string().required(),
-  }).required().unknown(true))
+  return auth.joiValidator.params(
+    Joi.object({
+      type: Joi.string()
+        .valid(...Object.values(ConfigType))
+        .required(),
+      name: Joi.string().required(),
+    })
+      .required()
+      .unknown(true)
+  )
 }
 
 function buildConfigGetValidation() {
-  // prettier-ignore
-  return auth.joiValidator.params(Joi.object({
-    type: Joi.string().valid(...Object.values(ConfigType)).required()
-  }).required().unknown(true))
+  return auth.joiValidator.params(
+    Joi.object({
+      type: Joi.string()
+        .valid(...Object.values(ConfigType))
+        .required(),
+    })
+      .required()
+      .unknown(true)
+  )
 }
 
 adminRoutes

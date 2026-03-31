@@ -33,12 +33,10 @@ export function queryValidation() {
 }
 
 export function generateQueryValidation() {
-  // prettier-ignore
   return auth.joiValidator.body(queryValidation())
 }
 
 export function generateQueryPreviewValidation() {
-  // prettier-ignore
   return auth.joiValidator.body(
     Joi.object({
       ...baseQueryValidation(),
