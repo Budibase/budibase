@@ -129,10 +129,15 @@
   })
 
   onMount(async () => {
-    if (!$agentsStore.agentsLoaded) {
-      await agentsStore.init()
+    try {
+      if (!$agentsStore.agentsLoaded) {
+        await agentsStore.init()
+      }
+      await loadAgentFiles()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to load files")
     }
-    await loadAgentFiles()
   })
 
   async function handleFileUpload(event: Event) {
