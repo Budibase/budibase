@@ -35,7 +35,6 @@ export class AIConfigStore extends DerivedBudiStore<
           },
           {
             [AIConfigType.COMPLETIONS]: [],
-            [AIConfigType.EMBEDDINGS]: [],
           }
         ),
       }))

@@ -14,7 +14,7 @@ import { quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
-import type { LanguageModelV3, EmbeddingModelV3 } from "@ai-sdk/provider"
+import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai/chatConversations"
 import { MockLanguageModelV3 } from "ai/test"
 
@@ -681,7 +681,6 @@ describe("chat conversation transient behavior", () => {
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
     ).mockResolvedValue({
       chat: createChatTestLanguageModel() as LanguageModelV3,
-      embedding: {} as EmbeddingModelV3,
       providerOptions: jest.fn(),
       uploadFile: jest.fn(),
     })
@@ -1060,7 +1059,6 @@ describe("Agent chat tool call tracking", () => {
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
     ).mockResolvedValue({
       chat: {} as any,
-      embedding: {} as any,
       providerOptions: jest.fn().mockReturnValue({}),
       uploadFile: jest.fn(),
     })

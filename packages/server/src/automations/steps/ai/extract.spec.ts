@@ -76,7 +76,6 @@ describe("extract file data step unit tests", () => {
 
     getDefaultLLMMock.mockResolvedValue({
       chat: chatModel,
-      embedding: {} as any,
       providerOptions: undefined,
       uploadFile,
     })
@@ -135,7 +134,6 @@ describe("extract file data step unit tests", () => {
 
     getDefaultLLMMock.mockResolvedValue({
       chat: chatModel,
-      embedding: {} as any,
       providerOptions: undefined,
       uploadFile: jest
         .fn()
@@ -184,7 +182,6 @@ describe("extract file data step unit tests", () => {
 
     getDefaultLLMMock.mockResolvedValue({
       chat: chatModel,
-      embedding: {} as any,
       uploadFile,
       providerOptions: undefined,
     })
@@ -225,7 +222,6 @@ describe("extract file data step unit tests", () => {
 
     getDefaultLLMMock.mockResolvedValue({
       chat: createExtractMockLanguageModel([]),
-      embedding: {} as any,
       providerOptions: undefined,
       uploadFile: jest.fn().mockResolvedValue("file-123"),
     })
@@ -259,7 +255,6 @@ describe("extract file data step unit tests", () => {
 
     getDefaultLLMMock.mockResolvedValue({
       chat: {} as any,
-      embedding: {} as any,
       providerOptions: undefined,
       uploadFile: jest.fn(),
     })

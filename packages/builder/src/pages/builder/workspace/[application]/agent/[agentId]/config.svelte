@@ -89,11 +89,7 @@ Any constraints the agent must follow.
   let getCaretPosition: CaretPositionFn | undefined = $state.raw()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
-  let completionConfigs = $derived(
-    ($aiConfigsStore.customConfigs || []).filter(
-      config => config.configType !== AIConfigType.EMBEDDINGS
-    )
-  )
+  let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
   let modelOptions = $derived(
     completionConfigs.map(config => ({
       label: config.name || config._id || "Unnamed",
