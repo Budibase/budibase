@@ -59,7 +59,6 @@ import { buildWorkspaceHomeEndpoints } from "./workspaceHome"
 import { buildRecaptchaEndpoints } from "./recaptcha"
 import { buildAIConfigEndpoints } from "./aiConfig"
 import { buildVectorDbEndpoints } from "./vectorDbs"
-import { buildKnowledgeBaseEndpoints } from "./knowledgeBases"
 
 export type { APIClient } from "./types"
 
@@ -334,6 +333,5 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     recaptcha: buildRecaptchaEndpoints(API),
     aiConfig: buildAIConfigEndpoints(API),
     vectorDb: buildVectorDbEndpoints(API),
-    knowledgeBase: buildKnowledgeBaseEndpoints(API),
   }
 }

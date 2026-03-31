@@ -46,7 +46,6 @@ import { WorkspaceHomeEndpoints } from "./workspaceHome"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
 import { VectorDbEndpoints } from "./vectorDbs"
-import { KnowledgeBaseEndpoints } from "./knowledgeBases"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -167,5 +166,4 @@ export type APIClient = BaseAPIClient &
     recaptcha: RecaptchaEndpoints
     aiConfig: AIConfigEndpoints
     vectorDb: VectorDbEndpoints
-    knowledgeBase: KnowledgeBaseEndpoints
   }

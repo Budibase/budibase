@@ -40,8 +40,6 @@ import Recaptcha from "@/settings/pages/recaptcha.svelte"
 // AI config
 import AIConfigsPage from "@/settings/pages/ai/completion-models/index.svelte"
 import AIConfigForm from "@/settings/pages/ai/completion-models/AIConfigForm.svelte"
-import KnowledgeBasesPage from "@/settings/pages/ai/knowledge-bases/index.svelte"
-import KnowledgeBaseForm from "@/settings/pages/ai/knowledge-bases/KnowledgeBaseForm.svelte"
 
 const componentMap = {
   profile: ProfilePage,
@@ -58,8 +56,6 @@ const componentMap = {
   audit_logs: AuditLogsPage,
   ai_configs: AIConfigsPage,
   ai_config: AIConfigForm,
-  knowledgeBases: KnowledgeBasesPage,
-  knowledgeBase: KnowledgeBaseForm,
   auth: AuthPage,
   org: OrgPage,
   branding: BrandingPage,
