@@ -1,7 +1,9 @@
 import {
   Agent,
+  AgentFileUploadResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  FetchAgentFilesResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
@@ -13,7 +15,7 @@ import {
   UpdateAgentRequest,
   UpdateAgentResponse,
 } from "@budibase/types"
-import { Expectations, TestAPI } from "../base"
+import { AttachedFile, Expectations, TestAPI } from "../base"
 
 export class AgentAPI extends TestAPI {
   fetch = async (expectations?: Expectations): Promise<{ agents: Agent[] }> => {
@@ -121,6 +123,42 @@ export class AgentAPI extends TestAPI {
           ...expectations,
           status: expectations?.status || 201,
         },
+      }
+    )
+  }
+
+  fetchFiles = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<FetchAgentFilesResponse> => {
+    return await this._get<FetchAgentFilesResponse>(`/api/agent/${agentId}/files`, {
+      expectations,
+    })
+  }
+
+  uploadFile = async (
+    agentId: string,
+    file: AttachedFile,
+    expectations?: Expectations
+  ): Promise<AgentFileUploadResponse> => {
+    return await this._post<AgentFileUploadResponse>(`/api/agent/${agentId}/files`, {
+      files: { file },
+      expectations: {
+        ...expectations,
+        status: expectations?.status || 201,
+      },
+    })
+  }
+
+  removeFile = async (
+    agentId: string,
+    fileId: string,
+    expectations?: Expectations
+  ): Promise<{ deleted: true }> => {
+    return await this._delete<{ deleted: true }>(
+      `/api/agent/${agentId}/files/${fileId}`,
+      {
+        expectations,
       }
     )
   }
