@@ -2,6 +2,8 @@ import {
   ConfigType,
   GoogleConfig,
   GoogleInnerConfig,
+  MicrosoftConfig,
+  MicrosoftInnerConfig,
   JwtClaims,
   OAuth2,
   OIDCInnerConfig,
@@ -127,5 +129,24 @@ export function googleConfigDoc(): GoogleConfig {
     _id: "config_google",
     type: ConfigType.GOOGLE,
     config: googleConfig(),
+  }
+}
+
+// MICROSOFT
+
+export function microsoftConfig(): MicrosoftInnerConfig {
+  return {
+    activated: true,
+    clientID: generator.string(),
+    clientSecret: generator.string(),
+    tenantId: generator.string(),
+  }
+}
+
+export function microsoftConfigDoc(): MicrosoftConfig {
+  return {
+    _id: "config_microsoft",
+    type: ConfigType.MICROSOFT,
+    config: microsoftConfig(),
   }
 }

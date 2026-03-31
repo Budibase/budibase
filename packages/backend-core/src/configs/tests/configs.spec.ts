@@ -1,7 +1,7 @@
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration, testEnv } from "../../../tests/extra"
 import { ConfigType } from "@budibase/types"
-import env from "../../environment"
+import env, { withEnv } from "../../environment"
 import * as configs from "../configs"
 
 const DEFAULT_URL = "http://localhost:10000"
@@ -115,14 +115,9 @@ describe("configs", () => {
   })
 
   describe("getGoogleDatasourceConfig", () => {
-    function setEnvVars() {
-      env.GOOGLE_CLIENT_SECRET = "test"
-      env.GOOGLE_CLIENT_ID = "test"
-    }
-
-    function unsetEnvVars() {
-      env.GOOGLE_CLIENT_SECRET = undefined
-      env.GOOGLE_CLIENT_ID = undefined
+    const googleEnv = {
+      GOOGLE_CLIENT_SECRET: "test",
+      GOOGLE_CLIENT_ID: "test",
     }
 
     describe("cloud", () => {
@@ -132,14 +127,13 @@ describe("configs", () => {
 
       it("returns from env vars", async () => {
         await config.doInTenant(async () => {
-          setEnvVars()
-          const config = await configs.getGoogleDatasourceConfig()
-          unsetEnvVars()
-
-          expect(config).toEqual({
-            activated: true,
-            clientID: "test",
-            clientSecret: "test",
+          await withEnv(googleEnv, async () => {
+            const config = await configs.getGoogleDatasourceConfig()
+            expect(config).toEqual({
+              activated: true,
+              clientID: "test",
+              clientSecret: "test",
+            })
           })
         })
       })
@@ -168,13 +162,81 @@ describe("configs", () => {
 
       it("falls back to env vars when config is disabled", async () => {
         await config.doInTenant(async () => {
-          setEnvVars()
-          const config = await configs.getGoogleDatasourceConfig()
-          unsetEnvVars()
-          expect(config).toEqual({
-            activated: true,
-            clientID: "test",
-            clientSecret: "test",
+          await withEnv(googleEnv, async () => {
+            const config = await configs.getGoogleDatasourceConfig()
+            expect(config).toEqual({
+              activated: true,
+              clientID: "test",
+              clientSecret: "test",
+            })
+          })
+        })
+      })
+    })
+  })
+
+  describe("getMicrosoftDatasourceConfig", () => {
+    const microsoftEnv = {
+      MICROSOFT_CLIENT_SECRET: "test",
+      MICROSOFT_CLIENT_ID: "test",
+      MICROSOFT_TENANT_ID: "test-tenant",
+    }
+
+    describe("cloud", () => {
+      beforeEach(() => {
+        testEnv.cloudHosted()
+      })
+
+      it("returns from env vars", async () => {
+        await config.doInTenant(async () => {
+          await withEnv(microsoftEnv, async () => {
+            const config = await configs.getMicrosoftDatasourceConfig()
+            expect(config).toEqual({
+              activated: true,
+              clientID: "test",
+              clientSecret: "test",
+              tenantId: "test-tenant",
+            })
+          })
+        })
+      })
+
+      it("returns undefined when no env vars are configured", async () => {
+        await config.doInTenant(async () => {
+          const config = await configs.getMicrosoftDatasourceConfig()
+          expect(config).toBeUndefined()
+        })
+      })
+    })
+
+    describe("self host", () => {
+      beforeEach(() => {
+        testEnv.selfHosted()
+      })
+
+      it("returns from config", async () => {
+        await config.doInTenant(async () => {
+          const microsoftDoc = structures.sso.microsoftConfigDoc()
+          await configs.save(microsoftDoc)
+          const config = await configs.getMicrosoftDatasourceConfig()
+          expect(config).toEqual(microsoftDoc.config)
+        })
+      })
+
+      it("falls back to env vars when config is disabled", async () => {
+        await config.doInTenant(async () => {
+          const microsoftDoc = structures.sso.microsoftConfigDoc()
+          microsoftDoc.config.activated = false
+          await configs.save(microsoftDoc)
+
+          await withEnv(microsoftEnv, async () => {
+            const config = await configs.getMicrosoftDatasourceConfig()
+            expect(config).toEqual({
+              activated: true,
+              clientID: "test",
+              clientSecret: "test",
+              tenantId: "test-tenant",
+            })
           })
         })
       })
