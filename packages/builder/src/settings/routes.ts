@@ -1,8 +1,5 @@
 import { sdk, helpers } from "@budibase/shared-core"
-import {
-  AIConfigType,
-  GetGlobalSelfResponse,
-} from "@budibase/types"
+import { AIConfigType, GetGlobalSelfResponse } from "@budibase/types"
 import { UserAvatar } from "@budibase/frontend-core"
 
 import { Target, type Route } from "@/types/routing"

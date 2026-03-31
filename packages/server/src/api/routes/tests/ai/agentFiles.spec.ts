@@ -129,7 +129,10 @@ describe("agent files", () => {
 
       mockAutoKnowledgeBaseCreate()
       const ingestScope = mockGeminiIngest("gemini-file-2")
-      const deleteScope = mockGeminiFileDelete("vector-store-1", "gemini-file-2")
+      const deleteScope = mockGeminiFileDelete(
+        "vector-store-1",
+        "gemini-file-2"
+      )
 
       const upload = await config.api.agent.uploadFile(created._id!, {
         file: fileBuffer,

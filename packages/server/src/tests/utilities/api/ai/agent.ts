@@ -131,9 +131,12 @@ export class AgentAPI extends TestAPI {
     agentId: string,
     expectations?: Expectations
   ): Promise<FetchAgentFilesResponse> => {
-    return await this._get<FetchAgentFilesResponse>(`/api/agent/${agentId}/files`, {
-      expectations,
-    })
+    return await this._get<FetchAgentFilesResponse>(
+      `/api/agent/${agentId}/files`,
+      {
+        expectations,
+      }
+    )
   }
 
   uploadFile = async (
@@ -141,13 +144,16 @@ export class AgentAPI extends TestAPI {
     file: AttachedFile,
     expectations?: Expectations
   ): Promise<AgentFileUploadResponse> => {
-    return await this._post<AgentFileUploadResponse>(`/api/agent/${agentId}/files`, {
-      files: { file },
-      expectations: {
-        ...expectations,
-        status: expectations?.status || 201,
-      },
-    })
+    return await this._post<AgentFileUploadResponse>(
+      `/api/agent/${agentId}/files`,
+      {
+        files: { file },
+        expectations: {
+          ...expectations,
+          status: expectations?.status || 201,
+        },
+      }
+    )
   }
 
   removeFile = async (

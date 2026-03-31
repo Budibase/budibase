@@ -69,7 +69,9 @@ export const ensureKnowledgeBaseForAgent = async (
   return created
 }
 
-const getKnowledgeBaseIdsForAgent = async (agentId: string): Promise<string[]> => {
+const getKnowledgeBaseIdsForAgent = async (
+  agentId: string
+): Promise<string[]> => {
   const agent = await agentsSdk.getOrThrow(agentId)
   return (agent.knowledgeBases || []).filter(Boolean)
 }

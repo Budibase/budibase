@@ -1,6 +1,10 @@
 import { readFile, unlink } from "node:fs/promises"
 import { HTTPError } from "@budibase/backend-core"
-import { AgentFileUploadResponse, FetchAgentFilesResponse, UserCtx } from "@budibase/types"
+import {
+  AgentFileUploadResponse,
+  FetchAgentFilesResponse,
+  UserCtx,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 
 const normalizeUpload = (fileInput: any) => {
