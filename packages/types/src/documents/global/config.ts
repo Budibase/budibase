@@ -199,23 +199,18 @@ export enum ConfigType {
   TRANSLATIONS = "translations",
 }
 
-export type ConfigTypeToConfig<T extends ConfigType> =
-  T extends ConfigType.SETTINGS
-    ? SettingsConfig
-    : T extends ConfigType.SMTP
-      ? SMTPConfig
-      : T extends ConfigType.GOOGLE
-        ? GoogleConfig
-        : T extends ConfigType.MICROSOFT
-          ? MicrosoftConfig
-          : T extends ConfigType.OIDC
-            ? OIDCConfig
-            : T extends ConfigType.OIDC_LOGOS
-              ? OIDCLogosConfig
-              : T extends ConfigType.SCIM
-                ? SCIMConfig
-                : T extends ConfigType.RECAPTCHA
-                  ? RecaptchaConfig
-                  : T extends ConfigType.TRANSLATIONS
-                    ? TranslationsConfig
-                    : never
+export interface ConfigTypeMap {
+  [ConfigType.SETTINGS]: SettingsConfig
+  [ConfigType.ACCOUNT]: never
+  [ConfigType.SMTP]: SMTPConfig
+  [ConfigType.GOOGLE]: GoogleConfig
+  [ConfigType.MICROSOFT]: MicrosoftConfig
+  [ConfigType.OIDC]: OIDCConfig
+  [ConfigType.OIDC_LOGOS]: OIDCLogosConfig
+  [ConfigType.SCIM]: SCIMConfig
+  [ConfigType.AI]: never
+  [ConfigType.RECAPTCHA]: RecaptchaConfig
+  [ConfigType.TRANSLATIONS]: TranslationsConfig
+}
+
+export type ConfigTypeToConfig<T extends ConfigType> = ConfigTypeMap[T]
