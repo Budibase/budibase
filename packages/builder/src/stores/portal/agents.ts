@@ -2,7 +2,9 @@ import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
   Agent,
+  AgentFileUploadResponse,
   CreateAgentRequest,
+  FetchAgentFilesResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
@@ -149,6 +151,17 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await this.runAndRefreshAgents(() =>
       API.toggleAgentSlackDeployment(agentId, enabled)
     )
+
+  fetchAgentFiles = async (agentId: string): Promise<FetchAgentFilesResponse> =>
+    await API.fetchAgentFiles(agentId)
+
+  uploadAgentFile = async (
+    agentId: string,
+    file: File
+  ): Promise<AgentFileUploadResponse> => await API.uploadAgentFile(agentId, file)
+
+  deleteAgentFile = async (agentId: string, fileId: string) =>
+    await API.deleteAgentFile(agentId, fileId)
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state =>
