@@ -1,5 +1,5 @@
 <script>
-  import { CoreEmailField } from "@budibase/bbui"
+  import { CoreTextField } from "@budibase/bbui"
   import Field from "./Field.svelte"
 
   export let field
@@ -44,7 +44,7 @@
   bind:fieldApi
 >
   {#if fieldState}
-    <CoreEmailField
+    <CoreTextField
       updateOnChange={false}
       value={fieldState.value}
       on:change={handleChange}
@@ -53,6 +53,7 @@
       readonly={fieldState.readonly}
       id={fieldState.fieldId}
       {placeholder}
+      type="email"
       {align}
     />
   {/if}

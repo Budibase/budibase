@@ -28,6 +28,9 @@ export const getComponentForField = (field, schema) => {
   if (!field || !schema?.[field]) {
     return null
   }
+  if (schema[field].type === FieldType.STRING && schema[field].constraints?.email) {
+    return "emailfield"
+  }
   const type = schema[field].type
   return FieldTypeToComponentMap[type]
 }

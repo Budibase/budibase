@@ -38,6 +38,9 @@
     if (!fieldSchema) {
       return null
     }
+    if (fieldSchema.type === FieldType.STRING && fieldSchema.constraints?.email) {
+      return "emailfield"
+    }
     const { type } = fieldSchema
     return FieldTypeToComponentMap[type]
   }
