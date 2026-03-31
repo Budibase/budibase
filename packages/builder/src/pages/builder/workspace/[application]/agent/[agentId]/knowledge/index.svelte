@@ -256,6 +256,7 @@
 
   .loading-state {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: var(--spacing-s);
     padding: 24px 0;
