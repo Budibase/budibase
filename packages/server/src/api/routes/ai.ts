@@ -18,10 +18,6 @@ import {
   createAIConfigValidator,
   updateAIConfigValidator,
 } from "./utils/validators/aiConfig"
-import {
-  createVectorDbValidator,
-  updateVectorDbValidator,
-} from "./utils/validators/vectorDb"
 
 export const licensedRoutes = endpointGroupList.group(middleware.licenseAuth)
 
@@ -88,10 +84,6 @@ aiRagBuilderAdminRoutes
   .get("/api/agent/:agentId/files", ai.fetchAgentFiles)
   .post("/api/agent/:agentId/files", ai.uploadAgentFile)
   .delete("/api/agent/:agentId/files/:fileId", ai.deleteAgentFile)
-  .get("/api/vectordb", ai.fetchVectorDbConfigs)
-  .post("/api/vectordb", createVectorDbValidator(), ai.createVectorDbConfig)
-  .put("/api/vectordb", updateVectorDbValidator(), ai.updateVectorDbConfig)
-  .delete("/api/vectordb/:id", ai.deleteVectorDbConfig)
 
 builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
 
