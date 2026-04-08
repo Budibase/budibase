@@ -3,6 +3,30 @@ entries:
   budibase:
   - apiVersion: v2
     appVersion: 3.35.3
+    created: "2026-04-08T11:27:19.717524479Z"
+    dependencies:
+    - condition: services.couchdb.enabled
+      name: couchdb
+      repository: https://apache.github.io/couchdb-helm
+      version: 4.5.6
+    description: Budibase is an open source low-code platform, helping thousands of
+      teams build apps for their workplace in minutes.
+    digest: 739ee461f40780b80e3f3e9b3e6206372c7f3c0a06ee219f638c35f2fd26cf54
+    icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - budibase-3.0.582.tgz
+    version: 3.0.582
+  - apiVersion: v2
+    appVersion: 3.35.3
     created: "2026-04-08T06:38:06.646885195Z"
     dependencies:
     - condition: services.couchdb.enabled
@@ -16341,7 +16365,7 @@ entries:
     version: 0.1.0
   - apiVersion: v2
     appVersion: 3.35.3
-    created: "2026-04-08T06:38:10.041656591Z"
+    created: "2026-04-08T11:27:22.257959984Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -16349,7 +16373,7 @@ entries:
       version: 4.5.6
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: 249ebf727187595cccdae2f6cff5ba980de2e5c4d99020d5f7c2b5f39dfb283e
+    digest: 487319990717f5113ea4ca7a1eee1213c340ca850aec80fa8d41920650852d4d
     icon: https://res.cloudinary.com/daog6scxm/image/upload/v1696515187/Branding/Assets/Logo/RGB/Full%20Colour/bb_logo_fullcolor_uejofd.svg
     keywords:
     - low-code
@@ -33824,4 +33848,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2026-04-08T10:44:13.281906105Z"
+generated: "2026-04-08T11:27:22.252637315Z"
