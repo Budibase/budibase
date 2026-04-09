@@ -18,6 +18,16 @@ interface DerivedAIConfigState extends AIConfigState {
   customConfigsPerType: Record<AIConfigType, AIConfigResponse[]>
 }
 
+const normalizeConfigType = (configType?: string): AIConfigType | undefined => {
+  switch (configType) {
+    case AIConfigType.COMPLETIONS:
+    case "AIConfigType.COMPLETIONS":
+      return AIConfigType.COMPLETIONS
+    default:
+      return
+  }
+}
+
 export class AIConfigStore extends DerivedBudiStore<
   AIConfigState,
   DerivedAIConfigState
@@ -30,7 +40,12 @@ export class AIConfigStore extends DerivedBudiStore<
           DerivedAIConfigState["customConfigsPerType"]
         >(
           (acc, config) => {
-            acc[config.configType].push(config)
+            const configType = normalizeConfigType(config.configType)
+            if (!configType) {
+              return acc
+            }
+
+            acc[configType].push(config)
             return acc
           },
           {

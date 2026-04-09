@@ -181,6 +181,29 @@ describe("BudibaseAI", () => {
       ).toBeTrue()
     })
 
+    it("defaults configType to completions when omitted on create", async () => {
+      const liteLLMScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-default-type", key: "secret-default" })
+        .post("/health/test_connection")
+        .reply(200, { status: "success" })
+        .post("/model/new")
+        .reply(200, { model_id: "model-default-type" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const { configType: _configType, ...requestWithoutConfigType } =
+        defaultRequest
+
+      const created = await config.api.ai.createConfig(requestWithoutConfigType)
+
+      expect(created.configType).toBe(AIConfigType.COMPLETIONS)
+      expect(liteLLMScope.isDone()).toBe(true)
+
+      const persistedConfig = await getPersistedConfigAI(created._id)
+      expect(persistedConfig.configType).toBe(AIConfigType.COMPLETIONS)
+    })
+
     it("resolves environment variable credentials before validating and creating a model", async () => {
       await config.api.environment.create({
         name: "openai_key",

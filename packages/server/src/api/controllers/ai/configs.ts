@@ -85,6 +85,8 @@ export const createAIConfig = async (
     throw new HTTPError("Config name is required", 400)
   }
 
+  const configType = body.configType ?? AIConfigType.COMPLETIONS
+
   const createRequest: RequiredKeys<
     Parameters<typeof sdk.ai.configs.create>[0]
   > = {
@@ -94,7 +96,7 @@ export const createAIConfig = async (
     model: body.model,
 
     webSearchConfig: body.webSearchConfig,
-    configType: body.configType,
+    configType,
     reasoningEffort: body.reasoningEffort,
     isDefault: body.isDefault,
   }
