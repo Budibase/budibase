@@ -28,12 +28,13 @@ jobs:
         id: tag
         run: |
           if [ -n "${{ github.event.inputs.tag_suffix }}" ]; then
-            TAG="experimental-${{ github.event.inputs.tag_suffix }}"
+            RAW="${{ github.event.inputs.tag_suffix }}"
           else
-            # Sanitise branch name for use as a Docker tag
-            RAW_REF="${GITHUB_REF_NAME}"
-            TAG="experimental-$(echo "$RAW_REF" | sed 's/[^a-zA-Z0-9._-]/-/g' | cut -c1-128)"
+            RAW="${GITHUB_REF_NAME}"
           fi
+          # Sanitise for Docker tag: replace any character not in [a-zA-Z0-9._-]
+          SAFE="$(echo "$RAW" | tr '/' '-' | sed 's/[^a-zA-Z0-9._-]/-/g' | cut -c1-128)"
+          TAG="experimental-${SAFE}"
           SHORT_SHA=$(git rev-parse --short HEAD)
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "sha_tag=$TAG-$SHORT_SHA" >> "$GITHUB_OUTPUT"
