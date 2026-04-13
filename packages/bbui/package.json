@@ -39,7 +39,7 @@
     "@spectrum-css/checkbox": "3.0.2",
     "@spectrum-css/dialog": "3.0.1",
     "@spectrum-css/divider": "1.0.3",
-    "@spectrum-css/dropzone": "3.0.2",
+    "@spectrum-css/dropzone": "8.2.0",
     "@spectrum-css/fieldgroup": "3.0.2",
     "@spectrum-css/fieldlabel": "3.0.1",
     "@spectrum-css/illustratedmessage": "3.0.2",

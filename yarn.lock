@@ -7178,10 +7178,10 @@
   dependencies:
     "@spectrum-css/vars" "^3.0.2"
 
-"@spectrum-css/dropzone@3.0.2":
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/dropzone/-/dropzone-3.0.2.tgz#34f137851054442b219fed7f32006b93fc5e0bcf"
-  integrity sha512-BuBBzm5re6lM0AWgd6V+mI5eEGnnmFEtcFiJBEn9jYNEQYgflFhvnERUt89jMX5WmspiecwI2JBWJFrtFsOzug==
+"@spectrum-css/dropzone@8.2.0":
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/dropzone/-/dropzone-8.2.0.tgz#b48cf8bc1894aa9a7b847a1d9143ead06171eeae"
+  integrity sha512-TEbmDv7KMgRpmj2AP9lG/IlQbZku50g4UQ3wVVIprqynCDGk0QWqqF7wPlWEEy2GIwWKURmE3o4MMvMhmSHSMw==
 
 "@spectrum-css/fieldgroup@3.0.2":
   version "3.0.2"
