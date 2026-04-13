@@ -13,7 +13,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
-    "rollup": "4.59.0",
+    "rollup": "4.60.1",
     "rollup-plugin-polyfill-node": "^0.13.0"
   }
 }
