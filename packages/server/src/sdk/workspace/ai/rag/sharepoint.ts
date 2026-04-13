@@ -621,7 +621,9 @@ export const syncSharePointSourcesForAgent = async (
         const siteId = trimString(source.config.site?.id)
         return siteId ? ([siteId, source] as const) : null
       })
-      .filter((entry): entry is readonly [string, AgentKnowledgeSource] => !!entry)
+      .filter(
+        (entry): entry is readonly [string, AgentKnowledgeSource] => !!entry
+      )
   )
   const siteIds = finalRunSites.map(site => site.id)
 

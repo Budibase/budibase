@@ -1,6 +1,9 @@
 <script lang="ts">
   import { Body, Modal, ModalContent, Select, TreeView } from "@budibase/bbui"
-  import type { KnowledgeSourceEntry, KnowledgeSourceOption } from "@budibase/types"
+  import type {
+    KnowledgeSourceEntry,
+    KnowledgeSourceOption,
+  } from "@budibase/types"
   import SharePointEntryTreeItem, {
     type SharePointEntryTreeNode,
   } from "./SharePointEntryTreeItem.svelte"
@@ -57,7 +60,9 @@
     const roots: SharePointEntryTreeNode[] = []
     const byPath = new Map<string, SharePointEntryTreeNode>()
 
-    for (const entry of [...entries].sort((a, b) => a.path.localeCompare(b.path))) {
+    for (const entry of [...entries].sort((a, b) =>
+      a.path.localeCompare(b.path)
+    )) {
       const parts = entry.path.split("/").filter(Boolean)
       let parent = roots
       let currentPath = ""
@@ -116,9 +121,7 @@
       : "Select all"
   )
 
-  const selectedCountLabel = $derived(
-    `${selectedEntryPaths.length} selected`
-  )
+  const selectedCountLabel = $derived(`${selectedEntryPaths.length} selected`)
 </script>
 
 <Modal bind:this={modal}>

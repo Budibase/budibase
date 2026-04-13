@@ -13,7 +13,7 @@
   export interface Props {
     node: SharePointEntryTreeNode
     selectedPaths: string[]
-    onToggle: (path: string) => void
+    onToggle: (_path: string) => void
   }
 
   let { node, selectedPaths, onToggle }: Props = $props()

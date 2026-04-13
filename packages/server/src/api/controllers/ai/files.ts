@@ -261,7 +261,10 @@ export async function setAgentKnowledgeSources(
           webUrl: fetchedSite?.webUrl || existingSite?.webUrl,
         },
         filters:
-          includePaths || excludePaths || existingIncludePaths || existingExcludePaths
+          includePaths ||
+          excludePaths ||
+          existingIncludePaths ||
+          existingExcludePaths
             ? {
                 includePaths: includePaths || existingIncludePaths,
                 excludePaths: excludePaths || existingExcludePaths,
