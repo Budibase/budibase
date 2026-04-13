@@ -6,8 +6,10 @@ import {
   CreateAgentRequest,
   DisconnectAgentKnowledgeSourcesResponse,
   FetchAgentFilesResponse,
+  FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   KnowledgeSourceOption,
+  KnowledgeSourceEntry,
   KnowledgeSourceSyncRun,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -34,6 +36,10 @@ interface AgentStoreState {
   filesByAgentId: Record<string, KnowledgeBaseFile[]>
   knowledgeSourceOptionsByAgentId: Record<string, KnowledgeSourceOption[]>
   knowledgeSourceRunsByAgentId: Record<string, KnowledgeSourceSyncRun[]>
+  knowledgeSourceEntriesByAgentId: Record<
+    string,
+    Record<string, KnowledgeSourceEntry[]>
+  >
 }
 
 export class AgentsStore extends BudiStore<AgentStoreState> {
@@ -51,6 +57,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       filesByAgentId: {},
       knowledgeSourceOptionsByAgentId: {},
       knowledgeSourceRunsByAgentId: {},
+      knowledgeSourceEntriesByAgentId: {},
     })
   }
 
@@ -69,6 +76,20 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     this.update(state => {
       state.knowledgeSourceOptionsByAgentId[agentId] = options
       state.knowledgeSourceRunsByAgentId[agentId] = runs
+      return state
+    })
+  }
+
+  private setAgentKnowledgeSourceEntries = (
+    agentId: string,
+    siteId: string,
+    entries: KnowledgeSourceEntry[]
+  ) => {
+    this.update(state => {
+      state.knowledgeSourceEntriesByAgentId[agentId] = {
+        ...(state.knowledgeSourceEntriesByAgentId[agentId] || {}),
+        [siteId]: entries,
+      }
       return state
     })
   }
@@ -275,6 +296,15 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       response.options,
       response.runs
     )
+    return response
+  }
+
+  fetchAgentKnowledgeSourceEntries = async (
+    agentId: string,
+    siteId: string
+  ): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
+    const response = await API.fetchAgentKnowledgeSourceEntries(agentId, siteId)
+    this.setAgentKnowledgeSourceEntries(agentId, siteId, response.entries)
     return response
   }
 

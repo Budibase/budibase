@@ -5,6 +5,7 @@ import {
   DisconnectAgentKnowledgeSourcesResponse,
   DuplicateAgentResponse,
   FetchAgentFilesResponse,
+  FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
@@ -69,6 +70,10 @@ export interface AgentEndpoints {
   fetchAgentKnowledgeSourceOptions: (
     agentId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
+  fetchAgentKnowledgeSourceEntries: (
+    agentId: string,
+    siteId: string
+  ) => Promise<FetchAgentKnowledgeSourceEntriesResponse>
   setAgentKnowledgeSources: (
     agentId: string,
     body: SetAgentKnowledgeSourcesRequest
@@ -208,6 +213,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   fetchAgentKnowledgeSourceOptions: async (agentId: string) => {
     return await API.get<FetchAgentKnowledgeSourceOptionsResponse>({
       url: `/api/agent/${agentId}/knowledge-sources/options`,
+    })
+  },
+
+  fetchAgentKnowledgeSourceEntries: async (agentId: string, siteId: string) => {
+    return await API.get<FetchAgentKnowledgeSourceEntriesResponse>({
+      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/entries?siteId=${encodeURIComponent(siteId)}`,
     })
   },
 
