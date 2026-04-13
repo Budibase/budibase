@@ -4,9 +4,8 @@
     KnowledgeSourceEntry,
     KnowledgeSourceOption,
   } from "@budibase/types"
-  import SharePointEntryTreeItem, {
-    type SharePointEntryTreeNode,
-  } from "./SharePointEntryTreeItem.svelte"
+  import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
+  import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
 
   export interface Props {
     title?: string

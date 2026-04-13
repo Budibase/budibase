@@ -1,14 +1,7 @@
 <script lang="ts">
   import { TreeItem } from "@budibase/bbui"
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
-
-  export interface SharePointEntryTreeNode {
-    id: string
-    name: string
-    path: string
-    type: "folder" | "file"
-    children: SharePointEntryTreeNode[]
-  }
+  import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
 
   export interface Props {
     node: SharePointEntryTreeNode
