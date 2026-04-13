@@ -4,11 +4,13 @@ import {
   type AgentKnowledgeSourceSyncState,
   AgentKnowledgeSourceSyncRunStatus,
   AgentKnowledgeSourceType,
+  type AgentKnowledgeSourceFilterConfig,
   type AgentKnowledgeSource,
   DocumentType,
   type FetchAgentKnowledgeSourceEntriesResponse,
   type FetchAgentKnowledgeSourceOptionsResponse,
   isKnowledgeFileSupported,
+  type KnowledgeSourceEntry,
   type KnowledgeSourceOption,
   type SyncAgentKnowledgeSourcesResponse,
 } from "@budibase/types"
@@ -24,6 +26,7 @@ import { ensureKnowledgeBaseForAgent } from "./files"
 
 interface SharePointDrive {
   id?: string
+  name?: string
 }
 
 interface SharePointDriveListResponse {
@@ -291,6 +294,7 @@ interface SharePointFileRef {
   driveId: string
   itemId: string
   filename: string
+  path: string
   mimetype?: string
 }
 
@@ -301,10 +305,56 @@ const isSupportedSharePointFile = (file: SharePointFileRef) => {
   })
 }
 
+const normalizeSourceFilters = (
+  filters?: AgentKnowledgeSourceFilterConfig
+): { includePaths?: string[]; excludePaths?: string[] } => {
+  const normalize = (value?: string[]) => {
+    if (!Array.isArray(value)) {
+      return undefined
+    }
+    const normalized = Array.from(
+      new Set(value.map(entry => trimString(entry)).filter(Boolean))
+    )
+    return normalized.length > 0 ? normalized : undefined
+  }
+  return {
+    includePaths: normalize(filters?.includePaths),
+    excludePaths: normalize(filters?.excludePaths),
+  }
+}
+
+export const isSharePointFileIncludedByFilters = (
+  file: SharePointFileRef,
+  filters?: AgentKnowledgeSourceFilterConfig
+) => {
+  const normalizedPath = trimString(file.path).toLowerCase()
+  const normalizedName = trimString(file.filename).toLowerCase()
+  const { includePaths, excludePaths } = normalizeSourceFilters(filters)
+  const matches = (pattern: string) => {
+    const normalizedPattern = trimString(pattern).toLowerCase()
+    if (!normalizedPattern) {
+      return false
+    }
+    return (
+      normalizedPath.includes(normalizedPattern) ||
+      normalizedName.includes(normalizedPattern)
+    )
+  }
+
+  if (includePaths?.length && !includePaths.some(matches)) {
+    return false
+  }
+  if (excludePaths?.length && excludePaths.some(matches)) {
+    return false
+  }
+  return true
+}
+
 const collectFilesRecursive = async (
   bearerToken: string,
   driveId: string,
-  folderId?: string
+  folderId?: string,
+  parentPath = ""
 ): Promise<SharePointFileRef[]> => {
   const items = await listDriveItems(bearerToken, driveId, folderId)
   const files: SharePointFileRef[] = []
@@ -317,7 +367,10 @@ const collectFilesRecursive = async (
     }
 
     if (item.folder) {
-      files.push(...(await collectFilesRecursive(bearerToken, driveId, itemId)))
+      const nextPath = parentPath ? `${parentPath}/${name}` : name
+      files.push(
+        ...(await collectFilesRecursive(bearerToken, driveId, itemId, nextPath))
+      )
       continue
     }
 
@@ -329,6 +382,7 @@ const collectFilesRecursive = async (
       driveId,
       itemId,
       filename: name,
+      path: parentPath ? `${parentPath}/${name}` : name,
       mimetype: trimString(item.file.mimeType) || undefined,
     })
   }
@@ -549,17 +603,27 @@ export const syncSharePointSourcesForAgent = async (
   const sourceIdSet = new Set(
     sourceIds?.map(id => trimString(id)).filter(Boolean)
   )
-  const sites =
+  const allSources = getSharePointSources(agent)
+  const runSources =
     sourceIdSet.size > 0
-      ? normalizeSites(
-          getSharePointSources(agent)
-            .filter(source => sourceIdSet.has(trimString(source.id)))
-            .map(source => source.config.site)
-            .filter((site): site is SharePointSourceSite => !!site?.id)
-        )
-      : []
-  const runSites = sites.length > 0 ? sites : normalizeSites(existingSites)
-  const siteIds = runSites.map(site => site.id)
+      ? allSources.filter(source => sourceIdSet.has(trimString(source.id)))
+      : allSources
+  const runSites = normalizeSites(
+    runSources
+      .map(source => source.config.site)
+      .filter((site): site is SharePointSourceSite => !!site?.id)
+  )
+  const fallbackSites = normalizeSites(existingSites)
+  const finalRunSites = runSites.length > 0 ? runSites : fallbackSites
+  const sourceBySiteId = new Map(
+    runSources
+      .map(source => {
+        const siteId = trimString(source.config.site?.id)
+        return siteId ? ([siteId, source] as const) : null
+      })
+      .filter((entry): entry is readonly [string, AgentKnowledgeSource] => !!entry)
+  )
+  const siteIds = finalRunSites.map(site => site.id)
 
   console.log("Starting SharePoint sync for agent", {
     agentId: trimmedAgentId,
@@ -615,6 +679,8 @@ export const syncSharePointSourcesForAgent = async (
       siteId,
     })
     try {
+      const source = sourceBySiteId.get(siteId)
+      const sourceFilters = source?.config.filters
       const driveIds = await listDrives(bearerToken, siteId)
       console.log("Fetched SharePoint drives for site", {
         agentId: trimmedAgentId,
@@ -626,6 +692,11 @@ export const syncSharePointSourcesForAgent = async (
         siteTotalDiscovered += files.length
         totalDiscovered += files.length
         for (const file of files) {
+          if (!isSharePointFileIncludedByFilters(file, sourceFilters)) {
+            skipped++
+            siteSkipped++
+            continue
+          }
           if (!isSupportedSharePointFile(file)) {
             skipped++
             siteSkipped++

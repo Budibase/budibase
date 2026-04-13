@@ -42,6 +42,20 @@ const unlinkSafe = async (path?: string) => {
   }
 }
 
+const normalizePathFilters = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined
+  }
+  const normalized = Array.from(
+    new Set(
+      value
+        .map(entry => (typeof entry === "string" ? entry.trim() : ""))
+        .filter(Boolean)
+    )
+  )
+  return normalized.length > 0 ? normalized : undefined
+}
+
 export async function fetchAgentFiles(
   ctx: UserCtx<void, FetchAgentFilesResponse, { agentId: string }>
 ) {
@@ -177,6 +191,9 @@ export async function setAgentKnowledgeSources(
         .filter((id): id is string => !!id)
     )
   )
+  const rawSourceFilters: NonNullable<
+    SetAgentKnowledgeSourcesRequest["sourceFilters"]
+  > = ctx.request.body.sourceFilters || {}
 
   const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
   const hasWorkspaceConnection =
@@ -219,10 +236,23 @@ export async function setAgentKnowledgeSources(
   )
   const nextSources = siteIds.map(siteId => {
     const sourceSiteId = siteId.replace(/[^a-zA-Z0-9_-]/g, "_")
+    const sourceId = `sharepoint_site_${sourceSiteId}`
     const existingSite = existingById.get(siteId)
+    const existingSource = sharePointSources.find(
+      source => source.config.site?.id === siteId
+    )
     const fetchedSite = availableById.get(siteId)
+    const requestedFilters = rawSourceFilters[siteId]
+    const includePaths = normalizePathFilters(requestedFilters?.includePaths)
+    const excludePaths = normalizePathFilters(requestedFilters?.excludePaths)
+    const existingIncludePaths = normalizePathFilters(
+      existingSource?.config.filters?.includePaths
+    )
+    const existingExcludePaths = normalizePathFilters(
+      existingSource?.config.filters?.excludePaths
+    )
     return {
-      id: `sharepoint_site_${sourceSiteId}`,
+      id: sourceId,
       type: AgentKnowledgeSourceType.SHAREPOINT,
       config: {
         site: {
@@ -230,6 +260,13 @@ export async function setAgentKnowledgeSources(
           name: fetchedSite?.name || existingSite?.name,
           webUrl: fetchedSite?.webUrl || existingSite?.webUrl,
         },
+        filters:
+          includePaths || excludePaths || existingIncludePaths || existingExcludePaths
+            ? {
+                includePaths: includePaths || existingIncludePaths,
+                excludePaths: excludePaths || existingExcludePaths,
+              }
+            : undefined,
       },
     }
   })

@@ -145,6 +145,19 @@ export function setAgentKnowledgeSourcesValidator() {
   return auth.joiValidator.body(
     Joi.object({
       sourceIds: Joi.array().items(Joi.string().trim().disallow("")).required(),
+      sourceFilters: Joi.object()
+        .pattern(
+          Joi.string().trim().disallow(""),
+          Joi.object({
+            includePaths: Joi.array()
+              .items(Joi.string().trim().disallow(""))
+              .optional(),
+            excludePaths: Joi.array()
+              .items(Joi.string().trim().disallow(""))
+              .optional(),
+          }).optional()
+        )
+        .optional(),
     }).required()
   )
 }

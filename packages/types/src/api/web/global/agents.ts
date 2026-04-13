@@ -1,6 +1,7 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
+  AgentKnowledgeSourceFilterConfig,
   AgentKnowledgeSourceSyncRunStatus,
   ChatApp,
   ChatConversation,
@@ -81,6 +82,7 @@ export interface SyncAgentKnowledgeSourcesResponse {
 
 export interface SetAgentKnowledgeSourcesRequest {
   sourceIds: string[]
+  sourceFilters?: Record<string, AgentKnowledgeSourceFilterConfig>
 }
 
 export type SetAgentKnowledgeSourcesResponse =

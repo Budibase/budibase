@@ -49,6 +49,11 @@ export enum AgentKnowledgeSourceType {
   SHAREPOINT = "sharepoint",
 }
 
+export interface AgentKnowledgeSourceFilterConfig {
+  includePaths?: string[]
+  excludePaths?: string[]
+}
+
 export interface AgentSharePointKnowledgeSource {
   id: string
   type: AgentKnowledgeSourceType.SHAREPOINT
@@ -58,6 +63,7 @@ export interface AgentSharePointKnowledgeSource {
       name?: string
       webUrl?: string
     }
+    filters?: AgentKnowledgeSourceFilterConfig
   }
 }
 
