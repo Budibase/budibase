@@ -6,6 +6,7 @@ import {
   AgentKnowledgeSourceType,
   type AgentKnowledgeSource,
   DocumentType,
+  type FetchAgentKnowledgeSourceEntriesResponse,
   type FetchAgentKnowledgeSourceOptionsResponse,
   isKnowledgeFileSupported,
   type KnowledgeSourceOption,
@@ -196,6 +197,47 @@ const listDrives = async (
     .filter(Boolean)
 }
 
+const listDrivesWithNames = async (
+  bearerToken: string,
+  siteId: string
+): Promise<Array<{ id: string; name: string }>> => {
+  const normalizedSiteId = trimString(siteId)
+  if (!isValidSharePointSiteId(normalizedSiteId)) {
+    throw new HTTPError("Invalid SharePoint site id", 400)
+  }
+
+  const response = await fetch(
+    `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(
+      normalizedSiteId
+    )}/drives?$top=200&$select=id,name`,
+    {
+      headers: {
+        Authorization: bearerToken,
+      },
+    }
+  )
+  if (!response.ok) {
+    console.error("Failed to list SharePoint drives for entries", {
+      status: response.status,
+      siteId: normalizedSiteId,
+    })
+    throw new HTTPError(
+      response.status === 401 || response.status === 403
+        ? "Access denied by Microsoft Graph. Ensure delegated SharePoint read permissions are granted."
+        : `Failed to list SharePoint drives (${response.status})`,
+      400
+    )
+  }
+
+  const payload = (await response.json()) as SharePointDriveListResponse
+  return (payload.value || [])
+    .map(drive => ({
+      id: trimString(drive.id),
+      name: trimString(drive.name) || "Drive",
+    }))
+    .filter(drive => !!drive.id)
+}
+
 const listDriveItems = async (
   bearerToken: string,
   driveId: string,
@@ -342,6 +384,82 @@ export const fetchSharePointSitesForAgent = async (
     ),
     runs,
   }
+}
+
+const collectEntriesRecursive = async (
+  bearerToken: string,
+  driveId: string,
+  folderId?: string,
+  parentPath = ""
+): Promise<KnowledgeSourceEntry[]> => {
+  const items = await listDriveItems(bearerToken, driveId, folderId)
+  const entries: KnowledgeSourceEntry[] = []
+
+  for (const item of items) {
+    const itemId = trimString(item.id)
+    const name = trimString(item.name)
+    if (!itemId || !name) {
+      continue
+    }
+
+    const path = parentPath ? `${parentPath}/${name}` : name
+    if (item.folder) {
+      entries.push({
+        id: `${driveId}:${itemId}`,
+        name,
+        path,
+        type: "folder",
+      })
+      entries.push(
+        ...(await collectEntriesRecursive(bearerToken, driveId, itemId, path))
+      )
+      continue
+    }
+
+    if (!item.file) {
+      continue
+    }
+
+    entries.push({
+      id: `${driveId}:${itemId}`,
+      name,
+      path,
+      type: "file",
+    })
+  }
+
+  return entries
+}
+
+export const fetchSharePointEntriesForAgent = async (
+  agentId: string,
+  siteId: string
+): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
+  const trimmedAgentId = trimString(agentId)
+  const trimmedSiteId = trimString(siteId)
+  if (!trimmedAgentId) {
+    throw new HTTPError("agentId is required", 400)
+  }
+  if (!trimmedSiteId) {
+    throw new HTTPError("siteId is required", 400)
+  }
+  if (!isValidSharePointSiteId(trimmedSiteId)) {
+    throw new HTTPError("Invalid SharePoint site id", 400)
+  }
+  await agentsSdk.getOrThrow(trimmedAgentId)
+  const bearerToken = await getSharePointBearerToken(
+    getSharePointCurrentWorkspaceConnectionKey()
+  )
+  const drives = await listDrivesWithNames(bearerToken, trimmedSiteId)
+
+  const entries: KnowledgeSourceEntry[] = []
+  for (const drive of drives) {
+    const driveEntries = await collectEntriesRecursive(bearerToken, drive.id)
+    entries.push(...driveEntries)
+  }
+
+  entries.sort((a, b) => a.path.localeCompare(b.path))
+  return { entries }
 }
 
 export const fetchKnowledgeSourceSyncStateForAgent = async (

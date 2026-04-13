@@ -76,6 +76,10 @@ aiRagBuilderAdminRoutes
     "/api/agent/:agentId/knowledge-sources/options",
     ai.fetchAgentKnowledgeSourceOptions
   )
+  .get(
+    "/api/agent/:agentId/knowledge-sources/sharepoint/entries",
+    ai.fetchAgentKnowledgeSourceEntries
+  )
   .put(
     "/api/agent/:agentId/knowledge-sources",
     setAgentKnowledgeSourcesValidator(),

@@ -44,6 +44,17 @@ export interface FetchAgentKnowledgeSourceOptionsResponse {
   runs: KnowledgeSourceSyncRun[]
 }
 
+export interface KnowledgeSourceEntry {
+  id: string
+  name: string
+  path: string
+  type: "folder" | "file"
+}
+
+export interface FetchAgentKnowledgeSourceEntriesResponse {
+  entries: KnowledgeSourceEntry[]
+}
+
 export interface KnowledgeSourceSyncRun {
   sourceId: string
   lastRunAt: string

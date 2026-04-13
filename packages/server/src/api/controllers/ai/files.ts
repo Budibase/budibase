@@ -5,6 +5,7 @@ import {
   AgentFileUploadResponse,
   DisconnectAgentKnowledgeSourcesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
+  FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentFilesResponse,
   isKnowledgeFileSupported,
   SetAgentKnowledgeSourcesRequest,
@@ -120,6 +121,22 @@ export async function fetchAgentKnowledgeSourceOptions(
 ) {
   const { agentId } = ctx.params
   ctx.body = await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
+  ctx.status = 200
+}
+
+export async function fetchAgentKnowledgeSourceEntries(
+  ctx: UserCtx<
+    void,
+    FetchAgentKnowledgeSourceEntriesResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const siteId = String(ctx.query.siteId || "").trim()
+  if (!siteId) {
+    throw new HTTPError("siteId is required", 400)
+  }
+  ctx.body = await sdk.ai.rag.fetchSharePointEntriesForAgent(agentId, siteId)
   ctx.status = 200
 }
 
