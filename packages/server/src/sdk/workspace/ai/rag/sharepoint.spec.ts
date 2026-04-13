@@ -1,4 +1,7 @@
-import { isValidSharePointSiteId } from "./sharepoint"
+import {
+  isSharePointFileIncludedByFilters,
+  isValidSharePointSiteId,
+} from "./sharepoint"
 
 describe("sharepoint site id validation", () => {
   it("accepts valid Graph site ids", () => {
@@ -20,5 +23,59 @@ describe("sharepoint site id validation", () => {
   it("rejects non canonical site ids", () => {
     expect(isValidSharePointSiteId("not-a-site-id")).toBe(false)
     expect(isValidSharePointSiteId("")).toBe(false)
+  })
+})
+
+describe("sharepoint source filters", () => {
+  it("includes only matching paths when include filters are set", () => {
+    expect(
+      isSharePointFileIncludedByFilters(
+        {
+          driveId: "drive-1",
+          itemId: "item-1",
+          filename: "budget.xlsx",
+          path: "Finance/Q1/budget.xlsx",
+        },
+        { includePaths: ["Finance/Q1"] }
+      )
+    ).toBe(true)
+
+    expect(
+      isSharePointFileIncludedByFilters(
+        {
+          driveId: "drive-1",
+          itemId: "item-2",
+          filename: "notes.txt",
+          path: "Engineering/notes.txt",
+        },
+        { includePaths: ["Finance/Q1"] }
+      )
+    ).toBe(false)
+  })
+
+  it("excludes matching files when exclude filters are set", () => {
+    expect(
+      isSharePointFileIncludedByFilters(
+        {
+          driveId: "drive-1",
+          itemId: "item-3",
+          filename: "draft-plan.md",
+          path: "Product/draft-plan.md",
+        },
+        { excludePaths: ["draft"] }
+      )
+    ).toBe(false)
+
+    expect(
+      isSharePointFileIncludedByFilters(
+        {
+          driveId: "drive-1",
+          itemId: "item-4",
+          filename: "plan.md",
+          path: "Product/plan.md",
+        },
+        { excludePaths: ["draft"] }
+      )
+    ).toBe(true)
   })
 })

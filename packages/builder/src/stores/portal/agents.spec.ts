@@ -44,6 +44,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       filesByAgentId: {},
       knowledgeSourceOptionsByAgentId: {},
       knowledgeSourceRunsByAgentId: {},
+      knowledgeSourceEntriesByAgentId: {},
       currentAgentId: undefined,
     })
   })
@@ -133,6 +134,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       },
       knowledgeSourceOptionsByAgentId: {},
       knowledgeSourceRunsByAgentId: {},
+      knowledgeSourceEntriesByAgentId: {},
       currentAgentId: undefined,
     })
 
@@ -180,6 +182,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       },
       knowledgeSourceOptionsByAgentId: {},
       knowledgeSourceRunsByAgentId: {},
+      knowledgeSourceEntriesByAgentId: {},
       currentAgentId: undefined,
     })
 
