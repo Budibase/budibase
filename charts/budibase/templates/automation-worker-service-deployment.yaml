@@ -237,8 +237,12 @@ spec:
               key: {{ .secretKey | quote }}
         {{- end}}
 
-        image: {{ .Values.globals.dockerRegistry }}budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
+        image: {{ .Values.services.automationWorkers.image | default (printf "%sbudibase/apps:%s" (.Values.globals.dockerRegistry | default "") (.Values.globals.appVersion | default .Chart.AppVersion)) }}
         imagePullPolicy: Always
+        {{- with .Values.services.automationWorkers.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- if .Values.services.automationWorkers.startupProbe }}
         {{- with .Values.services.automationWorkers.startupProbe }}
         startupProbe:

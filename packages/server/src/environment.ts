@@ -1,4 +1,4 @@
-import { env as coreEnv } from "@budibase/backend-core"
+import { env as coreEnv, Duration } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 import { join, resolve } from "path"
@@ -30,6 +30,7 @@ const DEFAULTS = {
   LITELLM_READINESS_TIMEOUT_MS: 30000,
   LITELLM_READINESS_POLL_MS: 500,
   JS_PER_EXECUTION_TIME_LIMIT_MS: 1500,
+  SHAREPOINT_SYNC_INTERVAL_MS: Duration.fromDays(1).toMs(),
   TEMPLATE_REPOSITORY: "app",
   PLUGINS_DIR: "/plugins",
   FORKED_PROCESS_NAME: "main",
@@ -139,6 +140,9 @@ const environment = {
   JS_PER_INVOCATION_TIMEOUT_MS:
     parseIntSafe(process.env.JS_PER_EXECUTION_TIME_LIMIT_MS) ||
     DEFAULTS.JS_PER_EXECUTION_TIME_LIMIT_MS,
+  SHAREPOINT_SYNC_INTERVAL_MS:
+    parseIntSafe(process.env.SHAREPOINT_SYNC_INTERVAL_MS) ||
+    DEFAULTS.SHAREPOINT_SYNC_INTERVAL_MS,
   JS_PER_REQUEST_TIMEOUT_MS: parseIntSafe(
     process.env.JS_PER_REQUEST_TIME_LIMIT_MS
   ),

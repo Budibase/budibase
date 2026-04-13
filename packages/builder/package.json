@@ -11,7 +11,7 @@
     "rollup": "rollup -c -w",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check:types": "yarn svelte-check"
+    "check:types": "yarn svelte-check --incremental"
   },
   "jest": {
     "globals": {

@@ -120,7 +120,10 @@ describe.each([
     let keptWorkspaceAppId: string = undefined!
 
     await config.doInContext(getWorkspaceId(), async () => {
+      tk.travel(Date.now() + 1000)
       const workspaceApp1 = await createWorkspaceApp(true)
+      tk.travel(Date.now() + 1000)
+
       const workspaceApp2 = await createWorkspaceApp(true)
 
       tk.travel(Date.now() + 1000)

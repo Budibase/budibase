@@ -1138,6 +1138,14 @@ describe("/api/global/users", () => {
       await config.api.users.searchUsers({}, { status: 403, noHeaders: true })
     })
 
+    it("should throw an error if a public route is injected in the query string", async () => {
+      await config.request
+        .post("/api/global/users/search?x=/api/system/status")
+        .send({})
+        .expect("Content-Type", /json/)
+        .expect(403)
+    })
+
     it("should be able to search using logical conditions", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({

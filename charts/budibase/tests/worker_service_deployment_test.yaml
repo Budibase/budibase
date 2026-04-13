@@ -1,0 +1,137 @@
+suite: worker-service deployment
+templates:
+  - templates/worker-service-deployment.yaml
+release:
+  name: budibase
+chart:
+  version: 3.0.0
+  appVersion: 3.0.0
+tests:
+  - it: should render default image from globals
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "budibase/worker:3.0.0"
+
+  - it: should prepend dockerRegistry to default image
+    set:
+      globals.dockerRegistry: "registry.example.com/"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/budibase/worker:3.0.0"
+
+  - it: should use custom image when set
+    set:
+      services.worker.image: "my-registry.example.com/custom/worker:1.2.3"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "my-registry.example.com/custom/worker:1.2.3"
+
+  - it: should prefer custom image over dockerRegistry
+    set:
+      globals.dockerRegistry: "registry.example.com/"
+      services.worker.image: "my-registry.example.com/custom/worker:1.2.3"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "my-registry.example.com/custom/worker:1.2.3"
+
+  - it: should not render securityContext by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+
+  - it: should render securityContext when set
+    set:
+      services.worker.securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop[0]
+          value: ALL
+
+  - it: should be a Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: should set correct replica count
+    set:
+      services.worker.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should set correct container port
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 4003
+
+  - it: should set imagePullPolicy to Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: should set imagePullSecrets when configured
+    set:
+      imagePullSecrets:
+        - name: my-pull-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: my-pull-secret
+
+  - it: should use appVersion override
+    set:
+      globals.appVersion: "2.5.0"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "budibase/worker:2.5.0"
+
+  - it: should render extra env vars
+    set:
+      services.worker.extraEnv:
+        - name: MY_VAR
+          value: my-value
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MY_VAR
+            value: "my-value"
+
+  - it: should set SMTP vars when configured
+    set:
+      globals.smtp.enabled: true
+      globals.smtp.host: smtp.example.com
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SMTP_FALLBACK_ENABLED
+            value: "true"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SMTP_HOST
+            value: "smtp.example.com"

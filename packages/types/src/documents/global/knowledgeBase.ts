@@ -25,6 +25,7 @@ export interface KnowledgeBaseFile extends Document {
   filename: string
   mimetype?: string
   size?: number
+  externalSourceId?: string
   objectStoreKey: string
   ragSourceId: string
   status: KnowledgeBaseFileStatus

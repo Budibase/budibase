@@ -101,6 +101,7 @@ describe("activeTenant middleware", () => {
         config: { active: false },
       })
 
+      ctx.path = "/api/system/tenants/tenant1"
       ctx.request = { url: "/api/system/tenants/tenant1", method: "DELETE" }
 
       const middleware = activeTenant([
@@ -119,6 +120,7 @@ describe("activeTenant middleware", () => {
         config: { active: false },
       })
 
+      ctx.path = "/api/system/environment"
       ctx.request = { url: "/api/system/environment", method: "GET" }
 
       const middleware = activeTenant([

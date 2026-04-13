@@ -137,6 +137,21 @@ export const generateAgentToolSourceID = () => {
   return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
 }
 
+export const generateAgentKnowledgeSourceSyncStateID = (
+  agentId: string,
+  sourceType: string,
+  sourceId: string
+) => {
+  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_SYNC_STATE}${SEPARATOR}${agentId}${SEPARATOR}${sourceType}${SEPARATOR}${encodeURIComponent(sourceId)}`
+}
+
+export const generateAgentKnowledgeSourceConnectionID = (
+  sourceType: string,
+  connectionKey: string
+) => {
+  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_CONNECTION}${SEPARATOR}${sourceType}${SEPARATOR}${encodeURIComponent(connectionKey)}`
+}
+
 export const generateKnowledgeBaseFileID = (knowledgeBaseId: string) => {
   return `${DocumentType.KNOWLEDGE_BASE_FILE}${SEPARATOR}${knowledgeBaseId}${SEPARATOR}${newid()}`
 }
@@ -161,10 +176,6 @@ export const generateWorkspaceAppID = () => {
 
 export const generateWorkspaceFavouriteID = () => {
   return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
-}
-
-export const generateVectorDbID = () => {
-  return `${DocumentType.VECTOR_STORE}${SEPARATOR}${newid()}`
 }
 
 export const generateKnowledgeBaseID = () => {

@@ -1,6 +1,7 @@
 module.exports = async ({ github, context, core }) => {
   const owner = context.repo.owner
   const repo = context.repo.repo
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
   const isApproved = async prNumber => {
     const { data: reviews } = await github.rest.pulls.listReviews({
@@ -38,33 +39,66 @@ module.exports = async ({ github, context, core }) => {
     return hasApproval && !hasChangesRequested
   }
 
+  const refreshPullRequest = async prNumber => {
+    const maxAttempts = 6
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const { data: pr } = await github.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: prNumber,
+      })
+
+      if (pr.mergeable_state !== "unknown" || attempt === maxAttempts) {
+        return pr
+      }
+
+      core.info(
+        `PR #${prNumber} mergeable_state is unknown (attempt ${attempt}/${maxAttempts}), retrying...`
+      )
+      await sleep(10000)
+    }
+  }
+
   const updateIfEligible = async pr => {
     if (pr.auto_merge == null) {
+      core.info(`Skipping PR #${pr.number}: auto-merge is not enabled`)
       return false
     }
 
     const fromFork = pr.head.repo.full_name !== `${owner}/${repo}`
     if (fromFork) {
+      core.info(`Skipping PR #${pr.number}: branch is from a fork`)
       return false
     }
 
     if (pr.mergeable_state !== "behind") {
+      core.info(
+        `Skipping PR #${pr.number}: mergeable_state is ${pr.mergeable_state}`
+      )
       return false
     }
 
     const approved = await isApproved(pr.number)
     if (!approved) {
+      core.info(`Skipping PR #${pr.number}: not approved`)
       return false
     }
 
-    await github.graphql(
-      `mutation($pullRequestId: ID!, $expectedHeadOid: GitObjectID) {
-        updatePullRequestBranch(input: { pullRequestId: $pullRequestId, expectedHeadOid: $expectedHeadOid }) {
-          pullRequest { number }
-        }
-      }`,
-      { pullRequestId: pr.node_id, expectedHeadOid: pr.head.sha }
-    )
+    try {
+      await github.graphql(
+        `mutation($pullRequestId: ID!, $expectedHeadOid: GitObjectID) {
+          updatePullRequestBranch(input: { pullRequestId: $pullRequestId, expectedHeadOid: $expectedHeadOid }) {
+            pullRequest { number }
+          }
+        }`,
+        { pullRequestId: pr.node_id, expectedHeadOid: pr.head.sha }
+      )
+    } catch (err) {
+      core.warning(
+        `Failed to request branch update for PR #${pr.number}: ${err.message}`
+      )
+      return false
+    }
 
     core.info(`Branch update requested for PR #${pr.number}`)
     return true
@@ -82,11 +116,7 @@ module.exports = async ({ github, context, core }) => {
     if (!prSummary.auto_merge) {
       continue
     }
-    const { data: pr } = await github.rest.pulls.get({
-      owner,
-      repo,
-      pull_number: prSummary.number,
-    })
+    const pr = await refreshPullRequest(prSummary.number)
     if (await updateIfEligible(pr)) {
       updated++
     }

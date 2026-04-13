@@ -488,7 +488,10 @@
         {/if}
         {#if sortedRows?.length}
           {#each sortedRows as row}
-            <div class="spectrum-Table-row" class:clickable={allowClickRows}>
+            <div
+              class="spectrum-Table-row"
+              class:clickable={allowClickRows || !!row.__clickable}
+            >
               {#if showEditColumn && editColumnPosition === "left"}
                 <div
                   class:noBorderCheckbox={!showHeaderBorder}
@@ -518,7 +521,10 @@
                   class:spectrum-Table-cell--divider={!!schema[field].divider}
                   style={cellStyles[field]}
                   on:click={() => {
-                    if (!schema[field]?.preventSelectRow) {
+                    if (
+                      !schema[field]?.preventSelectRow &&
+                      (allowClickRows || !!row.__clickable)
+                    ) {
                       dispatch("click", row)
                       if (selectOnRowClick) {
                         toggleSelectRow(row)

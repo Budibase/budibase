@@ -45,6 +45,24 @@ export interface SlackAgentIntegration extends ChatAgentIntegration {
   messagingEndpointUrl?: string
 }
 
+export enum AgentKnowledgeSourceType {
+  SHAREPOINT = "sharepoint",
+}
+
+export interface AgentSharePointKnowledgeSource {
+  id: string
+  type: AgentKnowledgeSourceType.SHAREPOINT
+  config: {
+    site?: {
+      id: string
+      name?: string
+      webUrl?: string
+    }
+  }
+}
+
+export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
+
 export interface Agent extends Document {
   name: string
   description?: string
@@ -61,6 +79,7 @@ export interface Agent extends Document {
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
+  knowledgeSources?: AgentKnowledgeSource[]
 }
 
 export interface AgentMessageRagSource {

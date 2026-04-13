@@ -1,10 +1,6 @@
 import { context, docIds, encryption, HTTPError } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
-import type {
-  Agent,
-  CreateAgentRequest,
-  UpdateAgentRequest,
-} from "@budibase/types"
+import type { Agent, Optional } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 
@@ -224,7 +220,12 @@ export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
   return withAgentDefaults(agent)
 }
 
-export async function create(request: CreateAgentRequest): Promise<Agent> {
+export async function create(
+  request: Optional<
+    Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt" | "publishedAt">,
+    "aiconfig"
+  >
+): Promise<Agent> {
   const db = context.getWorkspaceDB()
   const now = new Date().toISOString()
 
@@ -245,6 +246,7 @@ export async function create(request: CreateAgentRequest): Promise<Agent> {
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
     knowledgeBases: request.knowledgeBases || [],
+    knowledgeSources: request.knowledgeSources,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
@@ -287,7 +289,7 @@ export async function duplicate(
   })
 }
 
-export async function update(agent: UpdateAgentRequest): Promise<Agent> {
+export async function update(agent: Agent): Promise<Agent> {
   const { _id, _rev } = agent
   if (!_id || !_rev) {
     throw new HTTPError("_id and _rev are required", 400)
@@ -296,13 +298,16 @@ export async function update(agent: UpdateAgentRequest): Promise<Agent> {
   const db = context.getWorkspaceDB()
   const existingRaw = await db.tryGet<Agent>(_id)
   const existing = existingRaw ? withAgentDefaults(existingRaw) : undefined
-  const normalizedName = helpers.normalizeForComparison(agent.name)
-  const normalizedExistingName = helpers.normalizeForComparison(
-    existing?.name || ""
-  )
+  if (!existing) {
+    throw new HTTPError("Agent not found", 404)
+  }
 
-  if (existing && normalizedName !== normalizedExistingName) {
-    await guardName(agent.name, _id)
+  const incomingName = agent.name ?? existing.name
+  const normalizedName = helpers.normalizeForComparison(incomingName)
+  const normalizedExistingName = helpers.normalizeForComparison(existing.name)
+
+  if (normalizedName !== normalizedExistingName) {
+    await guardName(incomingName, _id)
   }
 
   const now = new Date().toISOString()

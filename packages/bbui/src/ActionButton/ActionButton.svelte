@@ -4,6 +4,7 @@
   import Icon from "../Icon/Icon.svelte"
   import { fade } from "svelte/transition"
   import { hexToRGBA } from "../helpers"
+  import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
 
   export let quiet: boolean = false
   export let selected: boolean = false
@@ -15,10 +16,17 @@
   export let noPadding: boolean = false
   export let tooltip: string = ""
   export let accentColor: string | null = null
+  export let loading: boolean = false
 
   let showTooltip = false
 
   $: accentStyle = getAccentStyle(accentColor)
+  $: isCustomIconSource =
+    !!icon &&
+    (icon.includes("/") ||
+      icon.startsWith("http://") ||
+      icon.startsWith("https://") ||
+      icon.startsWith("data:"))
 
   const getAccentStyle = (color: string | null) => {
     if (!color) {
@@ -52,14 +60,25 @@
   {disabled}
   style={accentStyle}
 >
-  {#if icon}
-    <Icon
-      name={icon}
-      {size}
-      color={`var(--spectrum-global-color-gray-${$$slots.default ? 600 : 700})`}
-    />
+  {#if icon && !loading}
+    {#if isCustomIconSource}
+      <img
+        class="custom-icon custom-icon-{size}"
+        src={icon}
+        alt=""
+        aria-hidden="true"
+      />
+    {:else}
+      <Icon
+        name={icon}
+        {size}
+        color={`var(--spectrum-global-color-gray-${$$slots.default ? 600 : 700})`}
+      />
+    {/if}
   {/if}
-  {#if $$slots}
+  {#if loading}
+    <ProgressCircle size="S" />
+  {:else if $$slots}
     <span class="spectrum-ActionButton-label"><slot /></span>
   {/if}
   {#if tooltip && showTooltip}
@@ -142,6 +161,22 @@
   }
   .spectrum-ActionButton-label {
     font-weight: 600;
+  }
+  .custom-icon {
+    object-fit: contain;
+    display: block;
+  }
+  .custom-icon-S {
+    width: 14px;
+    height: 14px;
+  }
+  .custom-icon-M {
+    width: 16px;
+    height: 16px;
+  }
+  .custom-icon-L {
+    width: 18px;
+    height: 18px;
   }
   .tooltip {
     position: absolute;

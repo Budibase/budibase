@@ -1,6 +1,7 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
+  AgentKnowledgeSourceSyncRunStatus,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
@@ -30,6 +31,53 @@ export interface FetchAgentFilesResponse {
 
 export interface AgentFileUploadResponse {
   file: KnowledgeBaseFile
+}
+
+export interface KnowledgeSourceOption {
+  id: string
+  name?: string
+  webUrl?: string
+}
+
+export interface FetchAgentKnowledgeSourceOptionsResponse {
+  options: KnowledgeSourceOption[]
+  runs: KnowledgeSourceSyncRun[]
+}
+
+export interface KnowledgeSourceSyncRun {
+  sourceId: string
+  lastRunAt: string
+  synced: number
+  failed: number
+  skipped: number
+  unsupported: number
+  totalDiscovered: number
+  status: AgentKnowledgeSourceSyncRunStatus
+}
+
+export interface SyncAgentKnowledgeSourcesRequest {
+  sourceIds?: string[]
+}
+
+export interface SyncAgentKnowledgeSourcesResponse {
+  agentId: string
+  synced: number
+  failed: number
+  skipped: number
+  unsupported: number
+  totalDiscovered: number
+}
+
+export interface SetAgentKnowledgeSourcesRequest {
+  sourceIds: string[]
+}
+
+export type SetAgentKnowledgeSourcesResponse =
+  FetchAgentKnowledgeSourceOptionsResponse
+
+export interface DisconnectAgentKnowledgeSourcesResponse {
+  agentId: string
+  disconnected: true
 }
 
 export interface FetchChatAppAgentsResponse {
@@ -80,14 +128,33 @@ export interface ToggleAgentDeploymentResponse {
 }
 
 export type CreateAgentRequest = Optional<
-  Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt">,
+  Omit<
+    Agent,
+    | "_id"
+    | "_rev"
+    | "createdAt"
+    | "updatedAt"
+    | "knowledgeSources"
+    | "knowledgeBases"
+  >,
   "aiconfig"
 >
-export type CreateAgentResponse = Agent
+export type CreateAgentResponse = Omit<
+  Agent,
+  "knowledgeSources" | "knowledgeBases"
+>
 export type DuplicateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
   Agent,
-  "createdAt" | "updatedAt" | "_deleted" | "createdBy"
+  | "createdAt"
+  | "updatedAt"
+  | "_deleted"
+  | "createdBy"
+  | "knowledgeSources"
+  | "knowledgeBases"
 >
-export type UpdateAgentResponse = Agent
+export type UpdateAgentResponse = Omit<
+  Agent,
+  "knowledgeSources" | "knowledgeBases"
+>

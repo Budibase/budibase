@@ -1,0 +1,135 @@
+name: Helm Chart Validation
+
+on:
+  pull_request:
+    paths:
+      - "charts/**"
+
+jobs:
+  helm-lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.17.3
+
+      - name: Helm lint
+        run: helm lint charts/budibase
+
+  helm-unittest:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.17.3
+
+      - name: Install helm-unittest plugin
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version 0.7.2
+
+      - name: Update chart dependencies
+        run: helm dependency update charts/budibase
+
+      - name: Run unit tests
+        run: helm unittest charts/budibase
+
+  chart-testing:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.17.3
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2
+
+      - name: Add helm repositories
+        run: helm repo add couchdb https://apache.github.io/couchdb-helm
+
+      - name: List changed charts
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --config ct.yaml)
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Lint changed charts
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct lint --config ct.yaml
+
+  kubeconform:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        k8s_version:
+          - "1.28.0"
+          - "1.29.0"
+          - "1.30.0"
+          - "1.31.0"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.17.3
+
+      - name: Install kubeconform
+        run: |
+          curl -fsSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | \
+            tar xz -C /usr/local/bin kubeconform
+
+      - name: Update chart dependencies
+        run: helm dependency update charts/budibase
+
+      - name: Template and validate with kubeconform
+        run: |
+          helm template budibase charts/budibase \
+            --set services.couchdb.enabled=false | \
+          kubeconform \
+            -kubernetes-version ${{ matrix.k8s_version }} \
+            -strict \
+            -summary \
+            -output text
+
+  kubeval:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.17.3
+
+      - name: Install kubeval
+        run: |
+          curl -fsSL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz | \
+            tar xz -C /usr/local/bin kubeval
+
+      - name: Update chart dependencies
+        run: helm dependency update charts/budibase
+
+      - name: Template and validate with kubeval
+        run: |
+          helm template budibase charts/budibase \
+            --set services.couchdb.enabled=false | \
+          kubeval --strict --ignore-missing-schemas

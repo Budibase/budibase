@@ -5,7 +5,6 @@ import {
   locks,
   tenancy,
 } from "@budibase/backend-core"
-import { utils } from "@budibase/shared-core"
 import {
   AIConfigType,
   BUDIBASE_AI_PROVIDER_ID,
@@ -209,14 +208,12 @@ export async function addModel({
   provider,
   model,
   credentialFields,
-  configType,
   reasoningEffort,
 }: {
   configId?: string
   provider: string
   model: string
   credentialFields: Record<string, string>
-  configType: AIConfigType
   reasoningEffort?: ReasoningEffort
 }): Promise<string> {
   configId ??= docIds.generateAIConfigID()
@@ -224,7 +221,6 @@ export async function addModel({
     provider: await mapToLiteLLMProvider(provider),
     name: model,
     credentialFields,
-    configType,
     reasoningEffort,
   })
 
@@ -255,7 +251,6 @@ export async function updateModel({
   provider,
   name,
   credentialFields,
-  configType,
   reasoningEffort,
 }: {
   configId: string
@@ -263,14 +258,12 @@ export async function updateModel({
   provider: string
   name: string
   credentialFields: Record<string, string>
-  configType: AIConfigType
   reasoningEffort?: ReasoningEffort
 }) {
   const litellmParams = buildLiteLLMParams({
     provider: await mapToLiteLLMProvider(provider),
     name: name,
     credentialFields,
-    configType,
     reasoningEffort,
   })
 
@@ -316,62 +309,6 @@ export async function updateModel({
       400
     )
   }
-}
-
-async function validateEmbeddingConfig(model: {
-  provider: string
-  name: string
-  credentialFields: Record<string, string>
-}) {
-  let modelId: string | undefined
-
-  try {
-    modelId = await addModel({
-      provider: model.provider,
-      model: model.name,
-      credentialFields: model.credentialFields,
-      configType: AIConfigType.EMBEDDINGS,
-    })
-
-    const response = await fetch(`${liteLLMUrl}/v1/embeddings`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: liteLLMAuthorizationHeader,
-      },
-      body: JSON.stringify({
-        model: modelId,
-        input: "Budibase embedding validation",
-      }),
-    })
-
-    if (!response.ok) {
-      const text = await response.text()
-      throw new HTTPError(text || "Embedding validation failed", 500)
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    throw new HTTPError(`Error validating configuration: ${message}`, 400)
-  } finally {
-    if (modelId) {
-      try {
-        await fetch(`${liteLLMUrl}/model/delete`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: liteLLMAuthorizationHeader,
-          },
-          body: JSON.stringify({ id: modelId }),
-        })
-      } catch (e) {
-        console.error(
-          "Error deleting the temporary model for validating embeddings",
-          { e }
-        )
-      }
-    }
-  }
-  return
 }
 
 async function validateCompletionsModel(model: {
@@ -432,14 +369,10 @@ export async function validateConfig(model: {
   credentialFields: Record<string, string>
   configType: AIConfigType
 }) {
-  switch (model.configType) {
-    case AIConfigType.EMBEDDINGS:
-      return validateEmbeddingConfig(model)
-    case AIConfigType.COMPLETIONS:
-      return validateCompletionsModel(model)
-    default:
-      throw utils.unreachable(model.configType)
+  if (model.configType !== AIConfigType.COMPLETIONS) {
+    throw new HTTPError(`Unsupported AI config type: ${model.configType}`, 400)
   }
+  return validateCompletionsModel(model)
 }
 
 export async function getKeySettings(): Promise<{

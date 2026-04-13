@@ -40,8 +40,12 @@ spec:
     spec:
       terminationGracePeriodSeconds: {{ .Values.services.proxy.terminationGracePeriodSeconds }}
       containers:
-      - image: {{ .Values.globals.dockerRegistry }}budibase/proxy:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
+      - image: {{ .Values.services.proxy.image | default (printf "%sbudibase/proxy:%s" (.Values.globals.dockerRegistry | default "") (.Values.globals.appVersion | default .Chart.AppVersion)) }}
         imagePullPolicy: Always
+        {{- with .Values.services.proxy.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         name: proxy-service
         {{- if .Values.services.proxy.startupProbe }}
         {{- with .Values.services.proxy.startupProbe }}

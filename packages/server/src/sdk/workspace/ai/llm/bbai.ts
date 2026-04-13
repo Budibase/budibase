@@ -204,9 +204,6 @@ export async function createBBAIClient(
   })
   return {
     chat,
-    embedding: (() => {
-      throw new Error("BBAI embeddings are not supported")
-    }) as any,
     providerOptions: undefined,
     uploadFile: async (
       stream: Readable,
