@@ -1,7 +1,7 @@
 <script>
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { Icon, Popover } from "@budibase/bbui"
+  import { Icon, Input, Popover } from "@budibase/bbui"
   import { tick } from "svelte"
   import { Constants } from "@budibase/frontend-core"
   import { getSequentialName } from "@/helpers/duplicate"
@@ -86,6 +86,18 @@
     openOption = null
   }
 
+  const handleCustomColorInput = (id, value) => {
+    if (!value) return
+    options.update(state => {
+      state.find(option => option.id === id).color = value
+      return state.slice()
+    })
+  }
+
+  const isCustomColor = color => {
+    return color && !OptionColours.includes(color)
+  }
+
   const handleNameChange = (id, name) => {
     options.update(state => {
       state.find(option => option.id === id).name = name
@@ -130,15 +142,39 @@
               animate={false}
               resizable={false}
             >
-              <div class="colors" data-ignore-click-outside="true">
-                {#each OptionColours as colorOption}
-                  <div
-                    on:click={() => handleColorChange(option.id, colorOption)}
-                    style="--color:{colorOption};"
-                    class="circle"
-                    class:selected={colorOption === option.color}
-                  ></div>
-                {/each}
+              <div class="color-popover" data-ignore-click-outside="true">
+                <div class="colors">
+                  {#each OptionColours as colorOption}
+                    <div
+                      on:click={() => handleColorChange(option.id, colorOption)}
+                      style="--color:{colorOption};"
+                      class="circle"
+                      class:selected={colorOption === option.color}
+                    ></div>
+                  {/each}
+                </div>
+                <div class="custom-color">
+                  <div class="custom-color-label">Custom</div>
+                  <div class="custom-color-input">
+                    <input
+                      type="color"
+                      class="native-color-input"
+                      value={isCustomColor(option.color)
+                        ? option.color
+                        : "#000000"}
+                      on:input={e =>
+                        handleCustomColorInput(option.id, e.target.value)}
+                    />
+                    <Input
+                      updateOnChange={false}
+                      quiet
+                      placeholder="Hex or RGB..."
+                      value={isCustomColor(option.color) ? option.color : ""}
+                      on:change={e =>
+                        handleCustomColorInput(option.id, e.detail)}
+                    />
+                  </div>
+                </div>
               </div>
             </Popover>
           </div>
@@ -223,12 +259,52 @@
     border: 1px solid var(--spectrum-global-color-blue-600);
     cursor: pointer;
   }
+  .color-popover {
+    padding: var(--spacing-m);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+  }
   .colors {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: var(--spacing-xl);
     justify-items: center;
-    margin: var(--spacing-m);
+  }
+  .custom-color {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    padding-top: var(--spacing-m);
+  }
+  .custom-color-label {
+    font-size: var(--font-size-s);
+    font-weight: 600;
+    letter-spacing: 0.14px;
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-s);
+    color: var(--spectrum-global-color-gray-700);
+  }
+  .custom-color-input {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .native-color-input {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    flex-shrink: 0;
+  }
+  .native-color-input::-webkit-color-swatch-wrapper {
+    padding: 0;
+    border-radius: 50%;
+  }
+  .native-color-input::-webkit-color-swatch {
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 50%;
   }
   .option-name {
     border: none;
