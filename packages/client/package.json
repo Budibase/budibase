@@ -31,7 +31,7 @@
     "@spectrum-css/card": "3.0.3",
     "@spectrum-css/tag": "3.0.0",
     "@svelte-put/qr": "^1.2.1",
-    "apexcharts": "^3.48.0",
+    "apexcharts": "^5.10.6",
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",
     "html2pdf.js": "^0.14.0",
