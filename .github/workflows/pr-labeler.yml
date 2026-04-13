@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.action == 'opened' }}
     steps:
-      - uses: rodrigoarias/auto-label-per-user@v1.0.0
+      - uses: rodrigoarias/auto-label-per-user@v1.0.1
         with:
           git-token: ${{ secrets.GITHUB_TOKEN }}
           user-team-map: |
