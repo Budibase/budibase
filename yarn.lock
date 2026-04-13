@@ -7270,10 +7270,10 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/search/-/search-3.0.2.tgz#70e93e321032d40b399498b2324e3b70e050551e"
   integrity sha512-3UbT8yZmNOwrZxq+CUmumE+26ZySZ8OoKNM6U20SLMPLgdx6MrRugVE88r3Bl0sJ0RZX/5bU8nausdiHeX+Jlw==
 
-"@spectrum-css/slider@3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/slider/-/slider-3.0.1.tgz#5281e6f47eb5a4fd3d1816c138bf66d01d7f2e49"
-  integrity sha512-DI2dtMRnQuDM1miVzl3SGyR1khUEKnwdXfO5EHDFwkC3yav43F5QogkfjmjFmWWobMVovdJlAuiaaJ/IHejD0Q==
+"@spectrum-css/slider@6.4.0":
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/slider/-/slider-6.4.0.tgz#cdbd59912b9200d3f08a6fe0706fe0a4b984e313"
+  integrity sha512-rsKDHknSLKgcrmHGI+cN+pv+yg3zhtoy5p+6P2gb+XLJocjovOqz78drlpMuOjgCRQuvzvPpuatVBBHeZlTUSQ==
 
 "@spectrum-css/statuslight@3.0.2":
   version "3.0.2"
