@@ -54,6 +54,7 @@ export const createKnowledgeBaseFile = async (
     filename,
     mimetype,
     size,
+    contentSummary: undefined,
     objectStoreKey,
     ragSourceId: ragSourceId || _id,
     externalSourceId,
