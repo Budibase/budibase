@@ -171,7 +171,7 @@
     "swagger-jsdoc": "6.1.0",
     "timekeeper": "2.2.0",
     "ts-node": "10.8.1",
-    "undici": "^6.24.0",
+    "undici": "^7.24.0",
     "zod": "^4.2.1"
   },
   "nx": {
