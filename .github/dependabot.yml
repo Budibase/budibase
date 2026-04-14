@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "@budibase/*"
     open-pull-requests-limit: 0
     groups:
       all-non-major-security:
