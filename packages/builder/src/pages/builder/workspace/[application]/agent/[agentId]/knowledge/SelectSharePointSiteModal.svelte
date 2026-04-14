@@ -1,13 +1,7 @@
 <script lang="ts">
+  import { Body, Modal, ModalContent, Select, TreeView } from "@budibase/bbui"
+  import type { AgentKnowledgeSourceSyncEntryStatus } from "@budibase/types"
   import {
-    Body,
-    Modal,
-    ModalContent,
-    Select,
-    TreeView,
-  } from "@budibase/bbui"
-  import {
-    AgentKnowledgeSourceSyncEntryStatus,
     type KnowledgeSourceEntry,
     type KnowledgeSourceOption,
     type KnowledgeSourceSyncRun,
@@ -130,7 +124,9 @@
     return map
   })
 
-  const entryTree = $derived(buildEntryTree(sharePointEntries, syncStatusByPath))
+  const entryTree = $derived(
+    buildEntryTree(sharePointEntries, syncStatusByPath)
+  )
 
   const toggleAll = () => {
     const allPaths = sharePointEntries.map(entry => entry.path)
@@ -199,7 +195,7 @@
           <Body size="S">No folders or files found for this site.</Body>
         {:else}
           <div class="entries-list">
-            <TreeView width="100%" standalone={false} selectable>
+            <TreeView width="100%" standalone={false} selectable quiet>
               {#each entryTree as node (node.path)}
                 <SharePointEntryTreeItem
                   {node}

@@ -55,7 +55,7 @@
   {selected}
   checked={selected}
   open={hasChildren}
-  hasChildren={hasChildren}
+  {hasChildren}
   on:select={handleSelect}
 >
   <svelte:fragment slot="post">

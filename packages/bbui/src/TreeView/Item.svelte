@@ -2,6 +2,7 @@
   import { createEventDispatcher, getContext } from "svelte"
   import Checkbox from "../Form/Core/Checkbox.svelte"
   import Icon from "../Icon/Icon.svelte"
+  import type { TreeViewContext } from "./context"
 
   export let selected: boolean = false
   export let checked: boolean | undefined = undefined
@@ -11,16 +12,15 @@
   export let icon: string | undefined
   export let hasChildren: boolean = false
 
-  interface TreeViewContext {
-    selectable: boolean
-  }
-
-  const treeViewContext = getContext<TreeViewContext | undefined>("bbui-treeview")
+  const treeViewContext = getContext<TreeViewContext | undefined>(
+    "bbui-treeview"
+  )
 
   const dispatch = createEventDispatcher<{ toggle: boolean; select: boolean }>()
 
   let isOpen = open
   $: isSelectable = !!treeViewContext?.selectable
+  $: isQuiet = !!treeViewContext?.quiet
   $: isChecked = checked ?? selected
   $: if (!hasChildren) {
     isOpen = false
@@ -57,10 +57,20 @@
   class:is-open={hasChildren && isOpen}
   class="spectrum-TreeView-item"
 >
-  <a on:click class="spectrum-TreeView-itemLink" {href}>
+  <a
+    on:click
+    class:spectrum-TreeView-itemLink--selectable={isSelectable}
+    class="spectrum-TreeView-itemLink"
+    {href}
+  >
     {#if isSelectable}
       <span class="spectrum-TreeView-itemPre">
-        <Checkbox value={isChecked} size="S" on:change={handleCheckboxChange} />
+        <Checkbox
+          value={isChecked}
+          size="S"
+          quiet={isQuiet}
+          on:change={handleCheckboxChange}
+        />
       </span>
     {/if}
 
@@ -104,6 +114,7 @@
     align-items: center;
     justify-content: center;
     margin-inline-end: var(--spacing-xxs);
+    flex-shrink: 0;
   }
 
   .item-post {
@@ -123,5 +134,16 @@
 
   .spectrum-TreeView-itemIndicator :global(i) {
     font-size: 12px;
+  }
+
+  .spectrum-TreeView-itemLink--selectable .spectrum-TreeView-itemIndicator {
+    inset-inline-start: 0;
+    inset-block-start: 0;
+    margin-inline-start: 0;
+    margin-inline-end: var(--spacing-xxs);
+    margin-block-end: 0;
+    padding-inline: 0;
+    padding-block: 0;
+    flex-shrink: 0;
   }
 </style>
