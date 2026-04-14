@@ -15,12 +15,10 @@
   import KnowledgeTable from "./KnowledgeTable.svelte"
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./SelectSharePointSiteModal.svelte"
-  import SharePointFilesStatusModal from "./SharePointFilesStatusModal.svelte"
   import { onDestroy, onMount } from "svelte"
   import type { KnowledgeTableRow } from "./renderers/types"
   import type { PendingUpload } from "./knowledgeTableRows"
   import {
-    getSharePointFilesForSite,
     toFileTableRows,
     toSharePointConnectionRows,
   } from "./knowledgeTableRows"
@@ -76,15 +74,13 @@
   )
   let loadingSharePointSites = $state(false)
   let sharePointSiteModal = $state<SelectSharePointSiteModal>()
-  let sharePointFilesStatusModal = $state<SharePointFilesStatusModal>()
   let selectedSharePointSiteId = $state("")
   let selectedSharePointEntryPaths = $state<string[]>([])
   let loadingSharePointEntries = $state(false)
   let loadedSharePointEntriesSiteId = $state<string | undefined>()
   let configuringExistingSharePointSite = $state(false)
+  let sharePointScopeEditMode = $state(false)
   let selectedSharePointSiteLabel = $state("")
-  let selectedStatusSiteId = $state<string | undefined>()
-  let selectedStatusSiteName = $state<string | undefined>()
   let shouldOpenSharePointPickerAfterOauth = $state(false)
   let sharePointEntries = $derived.by(() => {
     const agentId = currentAgent?._id
@@ -170,27 +166,15 @@
     await agentsStore.fetchAgentFiles(agentId)
   }
 
-  const openSharePointFilesStatusModal = (siteId: string, siteName: string) => {
-    selectedStatusSiteId = siteId
-    selectedStatusSiteName = siteName
-    sharePointFilesStatusModal?.show()
-  }
-
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
     if (row.kind !== "sharepoint_connection") {
       return
     }
-    openSharePointFilesStatusModal(row.siteId, row.filename)
+    openSharePointSiteConfigModal(row.siteId).catch(error => {
+      console.error(error)
+      notifications.error("Failed to load SharePoint folders/files")
+    })
   }
-
-  let selectedStatusSiteFiles = $derived.by(() => {
-    if (!selectedStatusSiteId) {
-      return [] as KnowledgeBaseFile[]
-    }
-    return getSharePointFilesForSite(files, selectedStatusSiteId).sort((a, b) =>
-      a.filename.localeCompare(b.filename)
-    )
-  })
 
   let fileTableRows = $derived.by(() =>
     toFileTableRows(
@@ -219,6 +203,11 @@
   let knowledgeTableRows: KnowledgeTableRow[] = $derived.by(() => {
     return [...sharePointConnectionRows, ...fileTableRows]
   })
+  let selectedSharePointSyncRun = $derived.by(() =>
+    selectedSharePointSiteId
+      ? sharePointSyncRunsBySiteId[selectedSharePointSiteId]
+      : undefined
+  )
 
   const loadInitialKnowledge = async (agentId: string) => {
     loading = true
@@ -342,10 +331,8 @@
     selectedSharePointSiteId = availableSites[0]?.id || ""
     selectedSharePointEntryPaths = []
     configuringExistingSharePointSite = false
+    sharePointScopeEditMode = false
     selectedSharePointSiteLabel = ""
-    if (selectedSharePointSiteId) {
-      await loadSharePointEntries(agentId, selectedSharePointSiteId)
-    }
     sharePointSiteModal?.show()
   }
 
@@ -356,6 +343,7 @@
     }
     selectedSharePointSiteId = siteId
     configuringExistingSharePointSite = true
+    sharePointScopeEditMode = true
     const source = sharePointSources.find(s => s.config.site?.id === siteId)
     selectedSharePointSiteLabel =
       source?.config.site?.name || source?.config.site?.webUrl || siteId
@@ -376,7 +364,7 @@
   $effect(() => {
     const agentId = currentAgent?._id
     const siteId = selectedSharePointSiteId
-    if (!agentId || !siteId) {
+    if (!configuringExistingSharePointSite || !agentId || !siteId) {
       return
     }
     if (loadedSharePointEntriesSiteId !== siteId) {
@@ -574,24 +562,19 @@
 <SelectSharePointSiteModal
   bind:this={sharePointSiteModal}
   title={configuringExistingSharePointSite
-    ? "Configure SharePoint folders/files"
+    ? `SharePoint - ${selectedSharePointSiteLabel}`
     : "Add from SharePoint"}
-  confirmText={configuringExistingSharePointSite ? "Save" : "Add"}
+  isAddingSite={!configuringExistingSharePointSite}
   {loadingSharePointSites}
   {loadingSharePointEntries}
   {sharePointSites}
   {sharePointEntries}
-  disableSiteSelection={configuringExistingSharePointSite}
+  syncRun={selectedSharePointSyncRun}
   selectedSiteLabel={selectedSharePointSiteLabel}
   bind:selectedSiteId={selectedSharePointSiteId}
   bind:selectedEntryPaths={selectedSharePointEntryPaths}
+  bind:scopeEditMode={sharePointScopeEditMode}
   onSave={saveSharePointSites}
-/>
-
-<SharePointFilesStatusModal
-  bind:this={sharePointFilesStatusModal}
-  siteName={selectedStatusSiteName}
-  files={selectedStatusSiteFiles}
 />
 
 <style>

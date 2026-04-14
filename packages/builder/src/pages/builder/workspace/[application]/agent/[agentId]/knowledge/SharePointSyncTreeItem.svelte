@@ -1,18 +1,15 @@
 <script lang="ts">
-  import { CoreCheckbox, StatusLight, TreeItem } from "@budibase/bbui"
+  import { StatusLight, TreeItem } from "@budibase/bbui"
   import { AgentKnowledgeSourceSyncEntryStatus } from "@budibase/types"
-  import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
+  import SharePointSyncTreeItem from "./SharePointSyncTreeItem.svelte"
   import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
 
   export interface Props {
     node: SharePointEntryTreeNode
-    selectedPaths: string[]
-    onToggle: (_path: string) => void
   }
 
-  let { node, selectedPaths, onToggle }: Props = $props()
+  let { node }: Props = $props()
 
-  let selected = $derived(selectedPaths.includes(node.path))
   let hasChildren = $derived(node.children.length > 0)
   let icon = $derived(node.type === "folder" ? "folder" : "file")
 
@@ -26,57 +23,55 @@
         return "Not supported"
       case AgentKnowledgeSourceSyncEntryStatus.FAILED:
         return "Failed"
-      case AgentKnowledgeSourceSyncEntryStatus.EXCLUDED:
-        return "Excluded"
       default:
         return undefined
     }
   }
 
-  const statusProps = (status?: AgentKnowledgeSourceSyncEntryStatus) => {
+  const statusTone = (
+    status?: AgentKnowledgeSourceSyncEntryStatus
+  ): "positive" | "negative" | "notice" | undefined => {
     switch (status) {
       case AgentKnowledgeSourceSyncEntryStatus.SYNCED:
       case AgentKnowledgeSourceSyncEntryStatus.SKIPPED_EXISTING:
-        return { positive: true }
+        return "positive"
       case AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED:
       case AgentKnowledgeSourceSyncEntryStatus.FAILED:
-        return { negative: true }
+        return "negative"
       default:
-        return { notice: true }
+        return "notice"
     }
   }
 
-  const handleClick = (event: MouseEvent) => {
-    event.preventDefault()
-    onToggle(node.path)
-  }
+  let currentStatusText = $derived(
+    node.type === "file" ? statusText(node.status) : undefined
+  )
 
-  const handleCheckboxChange = (_event: CustomEvent<boolean>) => {
-    onToggle(node.path)
+  let currentStatusTone = $derived(
+    node.type === "file" ? statusTone(node.status) : undefined
+  )
+
+  const statusProps = (tone?: "positive" | "negative" | "notice") => {
+    return {
+      positive: tone === "positive",
+      negative: tone === "negative",
+      notice: tone === "notice",
+    }
   }
 </script>
 
-<TreeItem
-  title={node.name}
-  {selected}
-  open={hasChildren}
-  {icon}
-  on:click={handleClick}
->
-  <svelte:fragment slot="pre">
-    <CoreCheckbox value={selected} size="S" on:change={handleCheckboxChange} />
-  </svelte:fragment>
+<TreeItem title={node.name} open={hasChildren} {icon}>
   <svelte:fragment slot="post">
-    {#if node.type === "file" && statusText(node.status)}
-      <StatusLight size="S" {...statusProps(node.status)}>
-        {statusText(node.status)}
+    {#if node.type === "file" && currentStatusText}
+      <StatusLight size="S" {...statusProps(currentStatusTone)}>
+        {currentStatusText}
       </StatusLight>
     {/if}
   </svelte:fragment>
 
   {#if hasChildren}
     {#each node.children as child (child.path)}
-      <SharePointEntryTreeItem node={child} {selectedPaths} {onToggle} />
+      <SharePointSyncTreeItem node={child} />
     {/each}
   {/if}
 </TreeItem>

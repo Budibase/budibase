@@ -33,23 +33,10 @@
       syncing = false
     }
   }
-
-  const configure = async (row: SharePointConnectionTableRow) => {
-    await row.onConfigure?.()
-  }
 </script>
 
 <div class="file-actions" class:loading={processing}>
   {#if row.kind === "sharepoint_connection"}
-    <AbsTooltip text="Configure folders/files">
-      <ActionButton
-        icon={"gear"}
-        size="M"
-        quiet
-        on:click={() => configure(row)}
-        disabled={processing}
-      ></ActionButton>
-    </AbsTooltip>
     <AbsTooltip text="Sync SharePoint">
       <ActionButton
         icon={"arrows-clockwise"}

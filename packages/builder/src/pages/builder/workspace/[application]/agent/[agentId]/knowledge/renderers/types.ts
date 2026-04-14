@@ -35,7 +35,6 @@ export interface SharePointConnectionTableRow {
   runStatus?: AgentKnowledgeSourceSyncRunStatus
   onDelete: () => Promise<void>
   onSync: () => Promise<void>
-  onConfigure: () => Promise<void>
 }
 
 export type KnowledgeTableRow =

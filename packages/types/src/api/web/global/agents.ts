@@ -2,6 +2,7 @@ import { Optional } from "../../../shared"
 import {
   Agent,
   AgentKnowledgeSourceFilterConfig,
+  AgentKnowledgeSourceSyncEntry,
   AgentKnowledgeSourceSyncRunStatus,
   ChatApp,
   ChatConversation,
@@ -65,6 +66,7 @@ export interface KnowledgeSourceSyncRun {
   unsupported: number
   totalDiscovered: number
   status: AgentKnowledgeSourceSyncRunStatus
+  entries?: AgentKnowledgeSourceSyncEntry[]
 }
 
 export interface SyncAgentKnowledgeSourcesRequest {
