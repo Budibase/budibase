@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CoreCheckbox, StatusLight, TreeItem } from "@budibase/bbui"
+  import { StatusLight, TreeItem } from "@budibase/bbui"
   import { AgentKnowledgeSourceSyncEntryStatus } from "@budibase/types"
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
   import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
@@ -45,7 +45,7 @@
     }
   }
 
-  const handleCheckboxChange = (_event: CustomEvent<boolean>) => {
+  const handleSelect = (_event: CustomEvent<boolean>) => {
     onToggle(node.path)
   }
 </script>
@@ -53,12 +53,11 @@
 <TreeItem
   title={node.name}
   {selected}
+  checked={selected}
   open={hasChildren}
   hasChildren={hasChildren}
+  on:select={handleSelect}
 >
-  <svelte:fragment slot="pre">
-    <CoreCheckbox value={selected} size="S" on:change={handleCheckboxChange} />
-  </svelte:fragment>
   <svelte:fragment slot="post">
     {#if node.type === "file" && statusText(node.status)}
       <StatusLight size="S" {...statusProps(node.status)}>

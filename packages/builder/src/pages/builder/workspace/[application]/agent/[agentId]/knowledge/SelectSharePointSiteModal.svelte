@@ -199,7 +199,7 @@
           <Body size="S">No folders or files found for this site.</Body>
         {:else}
           <div class="entries-list">
-            <TreeView width="100%" standalone={false}>
+            <TreeView width="100%" standalone={false} selectable>
               {#each entryTree as node (node.path)}
                 <SharePointEntryTreeItem
                   {node}

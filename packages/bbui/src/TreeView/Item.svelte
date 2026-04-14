@@ -1,17 +1,27 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
+  import Checkbox from "../Form/Core/Checkbox.svelte"
   import Icon from "../Icon/Icon.svelte"
 
   export let selected: boolean = false
+  export let checked: boolean | undefined = undefined
   export let open: boolean = false
   export let href: string | null = null
   export let title: string
   export let icon: string | undefined
   export let hasChildren: boolean = false
 
-  const dispatch = createEventDispatcher<{ toggle: boolean }>()
+  interface TreeViewContext {
+    selectable: boolean
+  }
+
+  const treeViewContext = getContext<TreeViewContext | undefined>("bbui-treeview")
+
+  const dispatch = createEventDispatcher<{ toggle: boolean; select: boolean }>()
 
   let isOpen = open
+  $: isSelectable = !!treeViewContext?.selectable
+  $: isChecked = checked ?? selected
   $: if (!hasChildren) {
     isOpen = false
   }
@@ -36,6 +46,10 @@
       dispatch("toggle", isOpen)
     }
   }
+
+  const handleCheckboxChange = (event: CustomEvent<boolean>) => {
+    dispatch("select", event.detail)
+  }
 </script>
 
 <li
@@ -44,9 +58,9 @@
   class="spectrum-TreeView-item"
 >
   <a on:click class="spectrum-TreeView-itemLink" {href}>
-    {#if $$slots.pre}
+    {#if isSelectable}
       <span class="spectrum-TreeView-itemPre">
-        <slot name="pre" />
+        <Checkbox value={isChecked} size="S" on:change={handleCheckboxChange} />
       </span>
     {/if}
 
