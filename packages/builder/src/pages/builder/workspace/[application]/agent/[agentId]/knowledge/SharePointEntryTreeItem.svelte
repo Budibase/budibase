@@ -14,7 +14,6 @@
 
   let selected = $derived(selectedPaths.includes(node.path))
   let hasChildren = $derived(node.children.length > 0)
-  let icon = $derived(node.type === "folder" ? "folder" : "file")
 
   const statusText = (status?: AgentKnowledgeSourceSyncEntryStatus) => {
     switch (status) {
@@ -51,7 +50,12 @@
   }
 </script>
 
-<TreeItem title={node.name} {selected} open={hasChildren} {icon}>
+<TreeItem
+  title={node.name}
+  {selected}
+  open={hasChildren}
+  hasChildren={hasChildren}
+>
   <svelte:fragment slot="pre">
     <CoreCheckbox value={selected} size="S" on:change={handleCheckboxChange} />
   </svelte:fragment>

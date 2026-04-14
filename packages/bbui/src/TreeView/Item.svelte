@@ -7,11 +7,11 @@
   export let href: string | null = null
   export let title: string
   export let icon: string | undefined
+  export let hasChildren: boolean = false
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ toggle: boolean }>()
 
   let isOpen = open
-  $: hasChildren = !!$$slots.default
   $: if (!hasChildren) {
     isOpen = false
   }
@@ -71,13 +71,13 @@
     <span class="spectrum-TreeView-itemLabel">{title}</span>
 
     {#if $$slots.post}
-      <span class="spectrum-TreeView-itemPost">
+      <span class="item-post">
         <slot name="post" />
       </span>
     {/if}
   </a>
 
-  {#if hasChildren}
+  {#if hasChildren && $$slots.default}
     <ul class="spectrum-TreeView">
       <slot />
     </ul>
@@ -92,13 +92,13 @@
     margin-inline-end: var(--spacing-xxs);
   }
 
-  .spectrum-TreeView-itemPost {
+  .item-post {
     margin-inline-start: auto;
     padding-inline-end: 8px;
     white-space: nowrap;
   }
 
-  .spectrum-TreeView-itemPost :global(.spectrum-StatusLight) {
+  .item-post :global(.spectrum-StatusLight) {
     margin: 0;
   }
 

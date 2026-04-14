@@ -11,7 +11,6 @@
   let { node }: Props = $props()
 
   let hasChildren = $derived(node.children.length > 0)
-  let icon = $derived(node.type === "folder" ? "folder" : "file")
 
   const statusText = (status?: AgentKnowledgeSourceSyncEntryStatus) => {
     switch (status) {
@@ -60,7 +59,11 @@
   }
 </script>
 
-<TreeItem title={node.name} open={hasChildren} {icon}>
+<TreeItem
+  title={node.name}
+  open={hasChildren}
+  hasChildren={hasChildren}
+>
   <svelte:fragment slot="post">
     {#if node.type === "file" && currentStatusText}
       <StatusLight size="S" {...statusProps(currentStatusTone)}>
