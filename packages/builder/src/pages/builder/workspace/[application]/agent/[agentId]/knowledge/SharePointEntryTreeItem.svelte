@@ -46,23 +46,12 @@
     }
   }
 
-  const handleClick = (event: MouseEvent) => {
-    event.preventDefault()
-    onToggle(node.path)
-  }
-
   const handleCheckboxChange = (_event: CustomEvent<boolean>) => {
     onToggle(node.path)
   }
 </script>
 
-<TreeItem
-  title={node.name}
-  {selected}
-  open={hasChildren}
-  {icon}
-  on:click={handleClick}
->
+<TreeItem title={node.name} {selected} open={hasChildren} {icon}>
   <svelte:fragment slot="pre">
     <CoreCheckbox value={selected} size="S" on:change={handleCheckboxChange} />
   </svelte:fragment>
