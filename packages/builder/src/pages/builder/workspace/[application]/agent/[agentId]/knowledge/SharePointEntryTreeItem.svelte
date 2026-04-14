@@ -16,24 +16,64 @@
     return [node.path, ...node.children.flatMap(child => collectPaths(child))]
   }
 
+  const collectNodes = (
+    node: SharePointEntryTreeNode
+  ): SharePointEntryTreeNode[] => {
+    return [node, ...node.children.flatMap(child => collectNodes(child))]
+  }
+
+  const isSelectableNode = (node: SharePointEntryTreeNode): boolean => {
+    return !(
+      node.type === "file" &&
+      node.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
+    )
+  }
+
   let hasChildren = $derived(node.children.length > 0)
+  let allNodes = $derived(collectNodes(node))
+  let nodeByPath = $derived(
+    new Map(allNodes.map(current => [current.path, current] as const))
+  )
   let nodePaths = $derived(collectPaths(node))
   let childPaths = $derived(nodePaths.slice(1))
-  let selectedChildCount = $derived(
-    childPaths.filter(path => selectedPaths.includes(path)).length
+  let selectedSet = $derived(new Set(selectedPaths))
+  let selectableChildPaths = $derived(
+    childPaths.filter(path => {
+      const childNode = nodeByPath.get(path)
+      return !!childNode && isSelectableNode(childNode)
+    })
+  )
+  let targetPaths = $derived(
+    hasChildren
+      ? selectableChildPaths
+      : isSelectableNode(node)
+        ? [node.path]
+        : []
   )
   let selected = $derived.by(() => {
     if (!hasChildren) {
+      if (!isSelectableNode(node)) {
+        return false
+      }
       return selectedPaths.includes(node.path)
     }
-    return childPaths.length > 0 && selectedChildCount === childPaths.length
+    return (
+      selectableChildPaths.length > 0 &&
+      selectableChildPaths.every(path => selectedSet.has(path))
+    )
   })
   let indeterminate = $derived.by(() => {
     if (!hasChildren) {
       return false
     }
-    return selectedChildCount > 0 && selectedChildCount < childPaths.length
+    const selectedChildCount = selectableChildPaths.filter(path =>
+      selectedSet.has(path)
+    ).length
+    return (
+      selectedChildCount > 0 && selectedChildCount < selectableChildPaths.length
+    )
   })
+  let disabled = $derived(targetPaths.length === 0)
 
   const statusText = (status?: AgentKnowledgeSourceSyncEntryStatus) => {
     switch (status) {
@@ -67,7 +107,7 @@
 
   const handleSelect = (_event: CustomEvent<boolean>) => {
     const nextSelected = indeterminate ? true : !selected
-    onTogglePaths(nodePaths, nextSelected)
+    onTogglePaths(targetPaths, nextSelected)
   }
 </script>
 
@@ -76,8 +116,9 @@
   {selected}
   checked={selected}
   {indeterminate}
+  {disabled}
   open={hasChildren}
-  hasChildren={hasChildren}
+  {hasChildren}
   on:select={handleSelect}
 >
   <svelte:fragment slot="post">

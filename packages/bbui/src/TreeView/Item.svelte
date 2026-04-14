@@ -7,6 +7,7 @@
   export let selected: boolean = false
   export let checked: boolean | undefined = undefined
   export let indeterminate: boolean = false
+  export let disabled: boolean = false
   export let open: boolean = false
   export let href: string | null = null
   export let title: string
@@ -57,20 +58,22 @@
   class:is-selected={selected}
   class:is-open={hasChildren && isOpen}
   class="spectrum-TreeView-item"
+  class:is-disabled={disabled}
 >
   <a
     on:click
-    class:spectrum-TreeView-itemLink--selectable={isSelectable}
+    class:spectrum-TreeView-itemLink--selectable={isSelectable && !disabled}
     class="spectrum-TreeView-itemLink"
     {href}
   >
     {#if isSelectable}
-      <span class="spectrum-TreeView-itemPre">
+      <span class="checkbox-wrapper">
         <Checkbox
           value={isChecked}
           {indeterminate}
           size="S"
           quiet={isQuiet}
+          {disabled}
           on:change={handleCheckboxChange}
         />
       </span>
@@ -111,11 +114,11 @@
 </li>
 
 <style>
-  .spectrum-TreeView-itemPre {
+  .checkbox-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-inline-end: var(--spacing-xxs);
+    margin-inline-end: var(--spacing-s);
     flex-shrink: 0;
   }
 
@@ -129,7 +132,7 @@
     margin: 0;
   }
 
-  .spectrum-TreeView-itemPre :global(.spectrum-Checkbox) {
+  .checkbox-wrapper :global(.spectrum-Checkbox) {
     margin: 0;
     min-height: 0;
   }
@@ -142,7 +145,7 @@
     inset-inline-start: 0;
     inset-block-start: 0;
     margin-inline-start: 0;
-    margin-inline-end: var(--spacing-xxs);
+    margin-inline-end: var(--spacing-xs);
     margin-block-end: 0;
     padding-inline: 0;
     padding-block: 0;
