@@ -7,13 +7,33 @@
   export interface Props {
     node: SharePointEntryTreeNode
     selectedPaths: string[]
-    onToggle: (_path: string) => void
+    onTogglePaths: (_paths: string[], _nextSelected: boolean) => void
   }
 
-  let { node, selectedPaths, onToggle }: Props = $props()
+  let { node, selectedPaths, onTogglePaths }: Props = $props()
 
-  let selected = $derived(selectedPaths.includes(node.path))
+  const collectPaths = (node: SharePointEntryTreeNode): string[] => {
+    return [node.path, ...node.children.flatMap(child => collectPaths(child))]
+  }
+
   let hasChildren = $derived(node.children.length > 0)
+  let nodePaths = $derived(collectPaths(node))
+  let childPaths = $derived(nodePaths.slice(1))
+  let selectedChildCount = $derived(
+    childPaths.filter(path => selectedPaths.includes(path)).length
+  )
+  let selected = $derived.by(() => {
+    if (!hasChildren) {
+      return selectedPaths.includes(node.path)
+    }
+    return childPaths.length > 0 && selectedChildCount === childPaths.length
+  })
+  let indeterminate = $derived.by(() => {
+    if (!hasChildren) {
+      return false
+    }
+    return selectedChildCount > 0 && selectedChildCount < childPaths.length
+  })
 
   const statusText = (status?: AgentKnowledgeSourceSyncEntryStatus) => {
     switch (status) {
@@ -46,7 +66,8 @@
   }
 
   const handleSelect = (_event: CustomEvent<boolean>) => {
-    onToggle(node.path)
+    const nextSelected = indeterminate ? true : !selected
+    onTogglePaths(nodePaths, nextSelected)
   }
 </script>
 
@@ -54,8 +75,9 @@
   title={node.name}
   {selected}
   checked={selected}
+  {indeterminate}
   open={hasChildren}
-  {hasChildren}
+  hasChildren={hasChildren}
   on:select={handleSelect}
 >
   <svelte:fragment slot="post">
@@ -68,7 +90,7 @@
 
   {#if hasChildren}
     {#each node.children as child (child.path)}
-      <SharePointEntryTreeItem node={child} {selectedPaths} {onToggle} />
+      <SharePointEntryTreeItem node={child} {selectedPaths} {onTogglePaths} />
     {/each}
   {/if}
 </TreeItem>

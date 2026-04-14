@@ -55,12 +55,16 @@
     await onSave?.()
   }
 
-  const toggleEntryPath = (path: string) => {
-    if (selectedEntryPaths.includes(path)) {
-      selectedEntryPaths = selectedEntryPaths.filter(entry => entry !== path)
-      return
+  const toggleEntryPaths = (paths: string[], nextSelected: boolean) => {
+    const nextPaths = new Set(selectedEntryPaths)
+    for (const path of paths) {
+      if (nextSelected) {
+        nextPaths.add(path)
+      } else {
+        nextPaths.delete(path)
+      }
     }
-    selectedEntryPaths = Array.from(new Set([...selectedEntryPaths, path]))
+    selectedEntryPaths = Array.from(nextPaths)
   }
 
   const buildEntryTree = (
@@ -200,7 +204,7 @@
                 <SharePointEntryTreeItem
                   {node}
                   selectedPaths={selectedEntryPaths}
-                  onToggle={toggleEntryPath}
+                  onTogglePaths={toggleEntryPaths}
                 />
               {/each}
             </TreeView>

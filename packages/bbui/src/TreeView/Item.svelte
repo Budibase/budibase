@@ -6,6 +6,7 @@
 
   export let selected: boolean = false
   export let checked: boolean | undefined = undefined
+  export let indeterminate: boolean = false
   export let open: boolean = false
   export let href: string | null = null
   export let title: string
@@ -67,6 +68,7 @@
       <span class="spectrum-TreeView-itemPre">
         <Checkbox
           value={isChecked}
+          {indeterminate}
           size="S"
           quiet={isQuiet}
           on:change={handleCheckboxChange}
