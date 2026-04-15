@@ -6,7 +6,6 @@
     "allowArbitraryExtensions": true,
     "isolatedModules": false,
     "outDir": "./dist",
-    "baseUrl": ".",
     "rootDir": "."
   },
   "include": ["src/**/*"],

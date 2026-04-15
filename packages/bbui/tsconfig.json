@@ -1,10 +1,10 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
+    "noEmit": true,
     "allowJs": true,
     "outDir": "./dist",
     "lib": ["ESNext"],
-    "baseUrl": ".",
     "paths": {
       "@budibase/*": [
         "../*/src/index.ts",

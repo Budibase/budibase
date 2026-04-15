@@ -10,7 +10,6 @@
     "skipLibCheck": true,
     "declaration": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "sourceMap": true,
     "paths": {
       "@budibase/types": ["./packages/types/src"],
