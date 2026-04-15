@@ -2,14 +2,18 @@
   import { createEventDispatcher } from "svelte"
   import { clickOutside, Icon, ActionMenu, MenuItem } from "@budibase/bbui"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
-  import { customQueryIconColor } from "@/helpers/data/utils"
+  import { customQueryIconColor, QUERY_VERB_MAP } from "@/helpers/data/utils"
   import { applyBaseUrl } from "@budibase/shared-core"
 
   export let verb: string = "read"
   export let url: string = ""
   export let baseUrlOptions: { label: string; url: string }[] = []
-  export let verbOptions: { value: string; label: string }[] = []
   export let disabled: boolean = false
+
+  const verbOptions = Object.entries(QUERY_VERB_MAP).map(([value, label]) => ({
+    value,
+    label,
+  }))
 
   const dispatch = createEventDispatcher()
 

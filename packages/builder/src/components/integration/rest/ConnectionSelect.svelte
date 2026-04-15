@@ -1,8 +1,23 @@
 <script lang="ts">
   import { tick, createEventDispatcher } from "svelte"
   import { bb } from "@/stores/bb"
-  import { ActionMenu, MenuItem, Icon, ActionButton } from "@budibase/bbui"
+  import {
+    ActionMenu,
+    MenuItem,
+    Icon,
+    ActionButton,
+    Divider,
+  } from "@budibase/bbui"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
+  import {
+    restTemplates,
+    featuredTemplates,
+  } from "@/stores/builder/restTemplates"
+  import { datasources } from "@/stores/builder/datasources"
+  import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
+  import { configFromIntegration } from "@/stores/selectors"
+  import { IntegrationTypes } from "@/constants/backend"
+  import { notifications } from "@budibase/bbui"
   import { RestAuthType, type RestAuthConfig } from "@budibase/types"
 
   type AuthConfigType = RestAuthConfig["type"]
@@ -24,6 +39,7 @@
   export let restTemplateId: string | undefined = undefined
   export let datasourceId: string | undefined = undefined
   export let disabled: boolean = false
+  export let editText: string | undefined = "Edit"
 
   const dispatch = createEventDispatcher()
 
@@ -35,6 +51,10 @@
 
   $: selectedDatasourceId = datasourceId
   $: selectedAuthCfgId = authConfigId
+
+  $: featuredItems = featuredTemplates
+    .map(id => restTemplates.flatTemplates.find(t => t.id === id))
+    .filter(t => t != null)
 
   $: savedConnections = $workspaceConnections.list
   $: connection = selectedDatasourceId
@@ -59,6 +79,21 @@
     restTemplateId
   )
 
+  // When search yields no saved connections, suggest matching templates to create
+  $: suggestedTemplates =
+    searchQuery && sortedAuthOptions.length === 0
+      ? restTemplates.flatTemplates
+          .filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()))
+          .slice(0, 5)
+      : []
+
+  $: hasSavedConnections = sortedAuthOptions.length > 0
+  $: hasSuggestions = suggestedTemplates.length > 0
+  $: isEmptyState =
+    !hasSavedConnections &&
+    !hasSuggestions &&
+    !(searchQuery === "" && featuredItems.length > 0)
+
   $: selectedAuth = authOptions.find(
     opt =>
       opt.authCfg._id === selectedAuthCfgId &&
@@ -75,7 +110,7 @@
       )?.name
       if (name) return `${name} - OAuth2`
     }
-    return connection?.name ?? "Select connection"
+    return connection?.name ?? "Select API connection"
   })()
 
   $: buttonIcon = selectedAuth?.connectionIcon ?? connection?.icon ?? null
@@ -126,6 +161,8 @@
     ]
   }
 
+  export const open = () => menuRef?.show()
+
   const focusSearch = async () => {
     await tick()
     searchInput?.focus()
@@ -147,9 +184,33 @@
     menuRef?.hide()
   }
 
-  const addNewConnection = () => {
-    bb.settings("/connections/apis/create")
+  const addNewConnection = (templateId?: string) => {
+    bb.settings(
+      templateId
+        ? `/connections/apis/new/${templateId}`
+        : "/connections/apis/new"
+    )
     menuRef?.hide()
+  }
+
+  const createCustomConnection = async () => {
+    menuRef?.hide()
+    const restIntegration = ($integrations || []).find(
+      i => i.name === IntegrationTypes.REST
+    )
+    if (!restIntegration) return
+    try {
+      const ds = await datasources.create({
+        integration: restIntegration,
+        config: configFromIntegration(restIntegration),
+      })
+      await datasources.fetch()
+      workspaceConnections.updateDraft({ query: { datasourceId: ds._id } })
+      selectConnection("", null, ds._id!)
+      notifications.success("Connection created")
+    } catch {
+      notifications.error("Failed to create connection")
+    }
   }
 
   const editConnection = (e: MouseEvent) => {
@@ -212,7 +273,8 @@
             {#if connection}
               <!-- svelte-ignore a11y-click-events-have-key-events -->
               <!-- svelte-ignore a11y-no-static-element-interactions -->
-              <span class="edit-link" on:click={editConnection}>Edit</span>
+              <span class="edit-link" on:click={editConnection}>{editText}</span
+              >
             {/if}
             {#if !disabled}<Icon
                 name={open ? "ChevronUp" : "ChevronDown"}
@@ -230,64 +292,130 @@
         bind:this={searchInput}
         class="auth-filter"
         type="text"
-        placeholder="Connections"
+        placeholder="Search API connections e.g. Stripe or Jira"
         bind:value={searchQuery}
-        aria-label="Filter connections"
+        aria-label="Search API connections e.g. Stripe or Jira"
       />
     </div>
 
     <div class="auth-menu-content">
-      <div class="auth-section">
-        <MenuItem on:click={addNewConnection}>
-          <div class="auth-item">
-            <Icon name="Add" size="S" />
-            <span class="auth-item-label">Add new connection</span>
-          </div>
-        </MenuItem>
-      </div>
-      <div class="auth-divider"></div>
-      {#if sortedAuthOptions.length === 0 && authOptions.length === 0}
-        <div class="auth-empty">No other connections available.</div>
-      {:else if sortedAuthOptions.length === 0}
-        <div class="auth-empty">No connections match your search.</div>
-      {:else}
+      <div class="auth-fixed-top">
         <div class="auth-section">
-          {#each sortedAuthOptions as option (option.connectionSourceId + ":" + (option.authCfg._id ?? "none"))}
-            {@const isSelected =
-              option.connectionSourceId === selectedDatasourceId &&
-              (option.noAuth
-                ? !selectedAuthCfgId
-                : option.authCfg._id === selectedAuthCfgId)}
-            <MenuItem
-              on:click={() =>
-                selectConnection(
-                  option.authCfg._id || "",
-                  option.authCfg.type,
-                  option.connectionSourceId
-                )}
-            >
+          {#if !searchQuery}
+            <MenuItem on:click={createCustomConnection}>
               <div class="auth-item">
-                {#if option.connectionIcon?.type === "asset"}
-                  <img
-                    src={option.connectionIcon.value}
-                    alt="icon"
-                    height={16}
-                    width={16}
-                  />
-                {:else if option.connectionIcon?.type === "icon"}
-                  <Icon name={option.connectionIcon.value} size="S" />
-                {:else}
-                  <Icon name="lock" size="S" />
-                {/if}
-                <span class="auth-item-label">{getAuthLabel(option)}</span>
-                {#if isSelected}
-                  <div class="auth-item-actions">
-                    <Icon name="check" size="S" />
-                  </div>
-                {/if}
+                <Icon name="globe-simple" size="S" />
+                <span class="auth-item-label">Custom API connection</span>
               </div>
             </MenuItem>
-          {/each}
+          {/if}
+        </div>
+        <Divider noMargin />
+        {#if !searchQuery}
+          {#if sortedAuthOptions.length > 0}
+            <div class="auth-section-header">Saved API connections</div>
+          {/if}
+        {/if}
+      </div>
+      <div class="auth-scrollable">
+        {#if isEmptyState}
+          <div class="auth-empty">No other connections available.</div>
+        {:else if !hasSavedConnections && searchQuery && !hasSuggestions}
+          <div class="auth-empty">No connections match your search.</div>
+        {:else if !hasSavedConnections && hasSuggestions}
+          <div class="auth-section">
+            {#each suggestedTemplates as template (template.id)}
+              <MenuItem
+                on:click={() => {
+                  addNewConnection(template.id)
+                  menuRef?.hide()
+                }}
+              >
+                <div class="auth-item">
+                  {#if template.icon}
+                    <img
+                      src={template.icon}
+                      alt={template.name}
+                      height={16}
+                      width={16}
+                    />
+                  {:else}
+                    <Icon name="globe-simple" size="S" />
+                  {/if}
+                  <span class="auth-item-label">
+                    Add connection - {template.name}
+                  </span>
+                </div>
+              </MenuItem>
+            {/each}
+          </div>
+        {:else if hasSavedConnections}
+          <div class="auth-section">
+            {#each sortedAuthOptions as option (option.connectionSourceId + ":" + (option.authCfg._id ?? "none"))}
+              {@const isSelected =
+                option.connectionSourceId === selectedDatasourceId &&
+                (option.noAuth
+                  ? !selectedAuthCfgId
+                  : option.authCfg._id === selectedAuthCfgId)}
+              <MenuItem
+                on:click={() =>
+                  selectConnection(
+                    option.authCfg._id || "",
+                    option.authCfg.type,
+                    option.connectionSourceId
+                  )}
+              >
+                <div class="auth-item">
+                  {#if option.connectionIcon?.type === "asset"}
+                    <img
+                      src={option.connectionIcon.value}
+                      alt="icon"
+                      height={16}
+                      width={16}
+                    />
+                  {:else if option.connectionIcon?.type === "icon"}
+                    <Icon name={option.connectionIcon.value} size="S" />
+                  {:else}
+                    <Icon name="lock" size="S" />
+                  {/if}
+                  <span class="auth-item-label">{getAuthLabel(option)}</span>
+                  {#if isSelected}
+                    <div class="auth-item-actions">
+                      <Icon name="check" size="S" />
+                    </div>
+                  {/if}
+                </div>
+              </MenuItem>
+            {/each}
+          </div>
+        {/if}
+      </div>
+      {#if !searchQuery && featuredItems.length > 0}
+        <div class="auth-fixed-bottom">
+          <Divider noMargin />
+          <div class="auth-section-header">
+            Featured API connection templates
+          </div>
+          <div class="auth-section">
+            {#each featuredItems as item (item.id)}
+              <MenuItem on:click={() => addNewConnection(item.id)}>
+                <div class="auth-item">
+                  <img src={item.icon} alt={item.name} height={16} width={16} />
+                  <span class="auth-item-label">{item.name}</span>
+                </div>
+              </MenuItem>
+            {/each}
+          </div>
+          <div class="auth-footer">
+            <ActionButton
+              on:click={() => {
+                bb.settings("/connections/apis/create")
+                menuRef?.hide()
+              }}
+            >
+              Create new API connection
+            </ActionButton>
+          </div>
         </div>
       {/if}
     </div>
@@ -313,9 +441,34 @@
   }
 
   .auth-menu-content {
-    max-height: 400px;
+    max-height: 500px;
     width: 300px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .auth-fixed-top {
+    flex-shrink: 0;
+  }
+
+  .auth-scrollable {
     overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .auth-fixed-bottom {
+    flex-shrink: 0;
+  }
+
+  .auth-footer {
+    padding: var(--spacing-s) var(--spectrum-listitem-padding-left);
+  }
+
+  .auth-footer :global(.spectrum-ActionButton) {
+    width: 100%;
+    justify-content: center;
   }
 
   .auth-section {
@@ -323,10 +476,11 @@
     flex-direction: column;
   }
 
-  .auth-divider {
-    height: 1px;
-    background: var(--spectrum-global-color-gray-300);
-    margin: var(--spacing-xs) 0;
+  .auth-section-header {
+    padding: var(--spacing-s) var(--spectrum-listitem-padding-left);
+    font-size: var(--font-size-s);
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .auth-empty {
@@ -355,20 +509,23 @@
 
   .picker-button {
     border-radius: 6px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
+    border: 1px solid var(--spectrum-alias-border-color);
     height: 40px;
     box-sizing: border-box;
     transition:
       background 130ms ease-out,
       border-color 130ms ease-out;
-    background: transparent;
+    background: var(--spectrum-alias-background-color-default);
   }
   .picker-button.has-value {
-    background: var(--spectrum-global-color-gray-75);
+    background: var(--spectrum-alias-background-color-default);
   }
   .picker-button:not(.disabled):hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+  .picker-button:focus-within {
+    border-color: var(--spectrum-alias-border-color-focus);
   }
   .picker-button.disabled :global(*:not(.edit-link)) {
     cursor: default;
@@ -384,8 +541,8 @@
 
   .selected-option {
     transition: opacity 130ms ease-out;
-    min-width: 300px;
-    max-width: 300px;
+    min-width: 375px;
+    max-width: 375px;
     justify-content: space-between;
   }
 

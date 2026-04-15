@@ -41,6 +41,8 @@ describe("agent files", () => {
   })
 
   beforeEach(async () => {
+    await resetHttpMocking()
+    mockAgent = installHttpMocking()
     await config.newTenant()
     jest.restoreAllMocks()
     nock.cleanAll()
@@ -144,16 +146,35 @@ describe("agent files", () => {
     })
   }
 
-  const mockSharePointSitesFetch = (siteIds: string[], times = 6) => {
+  const mockSharePointSitesFetch = (
+    sites: Array<{
+      id: string
+      displayName?: string
+      name?: string
+      webUrl?: string
+    }>,
+    times = 6
+  ) => {
     const graphPool = mockAgent.get("https://graph.microsoft.com")
     for (let i = 0; i < times; i++) {
       graphPool
         .intercept({
-          method: "GET",
-          path: /.*/,
+          method: "POST",
+          path: "/v1.0/search/query",
         })
         .reply(200, {
-          value: siteIds.map(id => ({ id })),
+          value: [
+            {
+              hitsContainers: [
+                {
+                  moreResultsAvailable: false,
+                  hits: sites.map(site => ({
+                    resource: site,
+                  })),
+                },
+              ],
+            },
+          ],
         })
     }
   }
@@ -360,8 +381,14 @@ describe("agent files", () => {
 
       await setSharePointSourceInAgent(created._id!, ["site-1", "site-2"])
       await setSharePointConnection(created._id!)
-      mockSharePointSitesFetch(["site-1", "site-2"])
-      mockSharePointSitesFetch(["site-1", "site-2"])
+      mockSharePointSitesFetch([
+        { id: "site-1", displayName: "Site 1" },
+        { id: "site-2", displayName: "Site 2" },
+      ])
+      mockSharePointSitesFetch([
+        { id: "site-1", displayName: "Site 1" },
+        { id: "site-2", displayName: "Site 2" },
+      ])
       const deleteScope = mockGeminiFileDelete(
         "vector-store-1",
         "gemini-file-a"
@@ -384,6 +411,40 @@ describe("agent files", () => {
       )
       expect(remainingFiles.map(file => file.filename).sort()).toEqual([
         "site-two.txt",
+      ])
+    })
+  })
+
+  it("returns SharePoint options with displayName and webUrl", async () => {
+    await withRagEnabled(async () => {
+      const created = await config.api.agent.create({
+        name: "SharePoint Options Agent",
+        aiconfig: "default",
+      })
+
+      await setSharePointConnection(created._id!)
+      mockSharePointSitesFetch(
+        [
+          {
+            id: "site-1",
+            displayName: "Adria Site",
+            name: "Legacy Name",
+            webUrl: "https://contoso.sharepoint.com/sites/adria",
+          },
+        ],
+        1
+      )
+
+      const response = await config.api.agent.fetchKnowledgeSourceOptions(
+        created._id!
+      )
+
+      expect(response.options).toEqual([
+        {
+          id: "site-1",
+          name: "Adria Site",
+          webUrl: "https://contoso.sharepoint.com/sites/adria",
+        },
       ])
     })
   })

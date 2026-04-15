@@ -25,9 +25,6 @@ interface SharePointConnectionCacheRecord {
 const SHAREPOINT_API_BASE = "https://graph.microsoft.com/v1.0"
 const SHAREPOINT_API_BASE_URL = new URL(SHAREPOINT_API_BASE)
 
-const trimString = (value: unknown) =>
-  typeof value === "string" ? value.trim() : ""
-
 export const isAllowedSharePointNextLink = (value: string): boolean => {
   try {
     const nextUrl = new URL(value)
@@ -175,60 +172,102 @@ export const fetchSharePointSitesByBearerToken = async (
   bearerToken: string
 ): Promise<KnowledgeSourceOption[]> => {
   const sitesById = new Map<string, KnowledgeSourceOption>()
-  let currentPath = "/sites"
-  let currentQuery = "search=*&$top=200&$select=id,name,webUrl"
+  const SEARCH_PAGE_SIZE = 25
+  const MAX_SEARCH_PAGES = 50
 
-  while (currentPath) {
-    const response = await fetch(
-      `${SHAREPOINT_API_BASE}${currentPath}?${currentQuery}`,
-      {
-        headers: {
-          Authorization: bearerToken,
-        },
-      }
-    )
+  interface GraphSearchResponse {
+    value?: Array<{
+      hitsContainers?: Array<{
+        hits?: Array<{
+          resource?: {
+            id?: string
+            name?: string
+            displayName?: string
+            webUrl?: string
+          }
+        }>
+        moreResultsAvailable?: boolean
+      }>
+    }>
+  }
+
+  const fetchSearchPage = async (from: number) => {
+    const response = await fetch(`${SHAREPOINT_API_BASE}/search/query`, {
+      method: "POST",
+      headers: {
+        Authorization: bearerToken,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        requests: [
+          {
+            entityTypes: ["site"],
+            query: {
+              queryString: "*",
+            },
+            fields: ["id", "displayName", "name", "webUrl"],
+            from,
+            size: SEARCH_PAGE_SIZE,
+          },
+        ],
+      }),
+    })
     if (!response.ok) {
       console.error("Failed to fetch SharePoint sites", {
         status: response.status,
       })
-      throw new HTTPError(
-        response.status === 401 || response.status === 403
-          ? "Access denied by Microsoft Graph. Ensure delegated SharePoint read permissions are granted."
-          : `Failed to fetch SharePoint sites (${response.status})`,
-        400
-      )
-    }
-
-    const payload = (await response.json()) as {
-      value?: KnowledgeSourceOption[]
-      "@odata.nextLink"?: string
-    }
-
-    for (const site of Array.isArray(payload?.value) ? payload.value : []) {
-      const id = trimString(site.id)
-      if (!id) {
-        continue
+      let message = `Failed to fetch SharePoint sites (${response.status})`
+      if (response.status === 401 || response.status === 403) {
+        message =
+          "Access denied by Microsoft Graph. Ensure delegated SharePoint read permissions are granted."
       }
-      sitesById.set(id, {
-        id,
-        name: trimString(site.name) || undefined,
-        webUrl: trimString(site.webUrl) || undefined,
-      })
+      throw new HTTPError(message, 400)
+    }
+    const json: GraphSearchResponse = await response.json()
+    return json
+  }
+
+  let from = 0
+  for (let page = 0; page < MAX_SEARCH_PAGES; page++) {
+    const payload = await fetchSearchPage(from)
+    const requestResults = Array.isArray(payload?.value) ? payload.value : []
+
+    let hitsCount = 0
+    let hasMoreResults = false
+
+    for (const requestResult of requestResults) {
+      const containers = Array.isArray(requestResult?.hitsContainers)
+        ? requestResult.hitsContainers
+        : []
+      for (const container of containers) {
+        const hits = Array.isArray(container?.hits) ? container.hits : []
+        hitsCount += hits.length
+        if (container?.moreResultsAvailable) {
+          hasMoreResults = true
+        }
+        for (const hit of hits) {
+          const resource = hit?.resource
+          if (!resource) {
+            continue
+          }
+
+          const id = resource?.id
+          if (!id) {
+            continue
+          }
+          sitesById.set(id, {
+            id,
+            name: resource.displayName || resource.name,
+            webUrl: resource.webUrl,
+          })
+        }
+      }
     }
 
-    const nextLink = trimString(payload?.["@odata.nextLink"])
-    if (!nextLink) {
+    if (!hasMoreResults || hitsCount === 0) {
       break
     }
-    if (!isAllowedSharePointNextLink(nextLink)) {
-      throw new HTTPError("Invalid SharePoint pagination URL", 400)
-    }
-
-    const nextUrl = new URL(nextLink)
-    currentPath = nextUrl.pathname.replace("/v1.0", "") || ""
-    currentQuery = nextUrl.search.startsWith("?")
-      ? nextUrl.search.slice(1)
-      : nextUrl.search
+    from += SEARCH_PAGE_SIZE
   }
 
   return Array.from(sitesById.values())

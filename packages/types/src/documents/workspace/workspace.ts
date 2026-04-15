@@ -59,6 +59,10 @@ export interface AppNavigation {
   hideTitle?: boolean
   navBackground?: string
   navTextColor?: string
+  navLinkHoverTextColor?: string
+  navLinkHoverBackground?: string
+  navLinkActiveTextColor?: string
+  navLinkActiveBackground?: string
   banner?: AppBanner
   links?: AppNavigationLink[]
   textAlign?: "Left" | "Center" | "Right"
