@@ -5,8 +5,7 @@
     "lib": ["es2020"],
     "allowArbitraryExtensions": true,
     "isolatedModules": false,
-    "outDir": "./dist",
-    "rootDir": "."
+    "outDir": "./dist"
   },
   "include": ["src/**/*"],
   "exclude": [
