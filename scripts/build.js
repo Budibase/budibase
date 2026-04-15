@@ -16,6 +16,9 @@ const {
 } = require("@esbuild-plugins/tsconfig-paths")
 const { nodeExternalsPlugin } = require("esbuild-node-externals")
 
+const workspacePackageAllowList =
+  /^@budibase\/(backend-core|shared-core|types|pro|string-templates|frontend-core|bbui)(\/.*)?$/
+
 const svelteCompilePlugin = {
   name: "svelteCompile",
   setup(build) {
@@ -86,7 +89,7 @@ async function runBuild(entry, outfile, opts = {}) {
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin({
         allowList: [
-          "@budibase/frontend-core",
+          workspacePackageAllowList,
           "svelte",
           "chat",
           "@chat-adapter/discord",
