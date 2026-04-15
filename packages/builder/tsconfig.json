@@ -2,17 +2,13 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
     "outDir": "./dist",
     "lib": ["ESNext"],
     "paths": {
-      "@budibase/*": [
-        "../*/src/index.ts",
-        "../*/src/index.js",
-        "../*",
-        "../../node_modules/@budibase/*"
-      ],
-      "assets/*": ["assets/*"],
-      "@/*": ["src/*"]
+      "@budibase/*": ["../*/src/index.ts"],
+      "assets/*": ["./assets/*"],
+      "@/*": ["./src/*"]
     }
   },
   "exclude": []
