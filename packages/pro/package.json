@@ -40,7 +40,7 @@
   "scripts": {
     "setup": "yarn && yarn build",
     "prebuild": "rimraf dist",
-    "build": "node ../../scripts/build.js && yarn build:types",
+    "build": "node ./scripts/build.js && yarn build:types",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
     "check:types": "tsc -p tsconfig.build.json --noEmit --incremental --paths null",
     "test": "jest --runInBand",
