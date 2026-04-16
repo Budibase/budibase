@@ -15,7 +15,10 @@
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
   import { onDestroy, onMount } from "svelte"
-  import type { KnowledgeTableRow } from "./renderers/types"
+  import type {
+    KnowledgeTableRow,
+    SharePointSelectionMode,
+  } from "./renderers/types"
   import type { PendingUpload } from "./knowledgeTableRows"
   import {
     toFileTableRows,
@@ -289,10 +292,20 @@
     await selectSharePointSiteModal?.show()
   }
 
-  async function handleSharePointSelectiveReady(siteId: string) {
+  async function onSharePointSiteCreated(
+    siteId: string,
+    mode: SharePointSelectionMode
+  ) {
+    const agentId = currentAgent?._id
+    debugger
+    if (agentId) {
+      agentsStore.startAgentFilePolling(agentId)
+    }
     selectedSharePointSiteId = siteId
     selectSharePointSiteModal?.hide()
-    displaySharePointSiteModal?.show()
+    if (mode === "selective") {
+      displaySharePointSiteModal?.show()
+    }
   }
 
   async function openSharePointSiteConfigModal(siteId: string) {
@@ -429,7 +442,7 @@
   bind:this={selectSharePointSiteModal}
   agentId={activeAgentId || ""}
   existingSiteIds={selectedSiteIds}
-  onSelectiveReady={handleSharePointSelectiveReady}
+  onCreated={onSharePointSiteCreated}
 />
 
 <DisplaySharePointSiteModal

@@ -11,16 +11,18 @@
   } from "@budibase/bbui"
 
   import { type KnowledgeSourceOption } from "@budibase/types"
-
-  type SharePointSelectionMode = "all" | "selective"
+  import type { SharePointSelectionMode } from "../renderers/types"
 
   export interface Props {
     agentId: string
     existingSiteIds?: string[]
-    onSelectiveReady?: (_siteId: string) => Promise<void> | void
+    onCreated?: (
+      _siteId: string,
+      _mode: SharePointSelectionMode
+    ) => Promise<void> | void
   }
 
-  let { agentId, existingSiteIds = [], onSelectiveReady }: Props = $props()
+  let { agentId, existingSiteIds = [], onCreated }: Props = $props()
 
   let sharePointSites = $state<KnowledgeSourceOption[]>([])
   let availableSites = $derived.by(() => {
@@ -94,9 +96,8 @@
       await agentsStore.fetchAgents()
       notifications.success("SharePoint site added")
       hide()
-      if (mode === "selective") {
-        await onSelectiveReady?.(selectedSiteId)
-      }
+
+      await onCreated?.(selectedSiteId, mode)
     } catch (error) {
       console.error(error)
       notifications.error("Failed to add SharePoint site")
