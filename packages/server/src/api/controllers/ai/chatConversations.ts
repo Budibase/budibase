@@ -48,6 +48,81 @@ import {
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
 
+const KNOWLEDGE_FILES_TOOL_NAME = "list_knowledge_files"
+
+const KNOWLEDGE_FILE_NOUNS = [
+  "file",
+  "files",
+  "attachment",
+  "attachments",
+  "document",
+  "documents",
+]
+
+const KNOWLEDGE_FILE_LISTING_TERMS = [
+  "list",
+  "show",
+  "what files",
+  "which files",
+]
+
+const KNOWLEDGE_FILE_METADATA_TERMS = [
+  "filename",
+  "file name",
+  "size",
+  "sizes",
+  "type",
+  "types",
+  "status",
+  "statuses",
+  "upload",
+  "uploaded",
+  "processing",
+  "failed",
+  "error",
+  "errors",
+]
+
+const normalizeQuestion = (question: string) =>
+  question.toLowerCase().replace(/\s+/g, " ").trim()
+
+const includesAnyTerm = (question: string, terms: string[]) =>
+  terms.some(term => question.includes(term))
+
+const parseKnowledgeFileQuestionIntent = (question: string) => {
+  const normalized = normalizeQuestion(question)
+  if (!normalized) {
+    return "other" as const
+  }
+
+  const hasFileNoun = includesAnyTerm(normalized, KNOWLEDGE_FILE_NOUNS)
+  if (!hasFileNoun) {
+    return "other" as const
+  }
+
+  if (normalized.includes("how many")) {
+    return "inventory" as const
+  }
+
+  if (includesAnyTerm(normalized, KNOWLEDGE_FILE_LISTING_TERMS)) {
+    return "inventory" as const
+  }
+
+  if (includesAnyTerm(normalized, KNOWLEDGE_FILE_METADATA_TERMS)) {
+    return "inventory" as const
+  }
+
+  return "other" as const
+}
+
+const isKnowledgeFileMetadataQuestion = (question: string) => {
+  if (!question.trim()) {
+    return false
+  }
+
+  return parseKnowledgeFileQuestionIntent(question) === "inventory"
+}
+
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
   if (!userId) {
@@ -140,20 +215,41 @@ const prepareAgentChatRun = async ({
     errorLabel,
   })
 
-  const [retrievedContext, promptAndTools, llm, modelMessages] =
-    await Promise.all([
-      getRetrievedAgentContext(agent, latestQuestion),
-      sdk.ai.agents.buildPromptAndTools(agent, {
-        baseSystemPrompt: ai.agentSystemPrompt(user),
-        includeGoal: false,
-      }),
-      sdk.ai.llm.createLLM(agent.aiconfig, sessionId, undefined, agentId),
-      prepareModelMessages(chat.messages),
-    ])
+  const [promptAndTools, llm, modelMessages] = await Promise.all([
+    sdk.ai.agents.buildPromptAndTools(agent, {
+      baseSystemPrompt: ai.agentSystemPrompt(user),
+      includeGoal: false,
+    }),
+    sdk.ai.llm.createLLM(agent.aiconfig, sessionId, undefined, agentId),
+    prepareModelMessages(chat.messages),
+  ])
+
+  const hasKnowledgeFilesTool = Reflect.has(
+    promptAndTools.tools,
+    KNOWLEDGE_FILES_TOOL_NAME
+  )
+  const shouldForceKnowledgeFilesTool =
+    hasKnowledgeFilesTool && isKnowledgeFileMetadataQuestion(latestQuestion)
+
+  const retrievedContext = shouldForceKnowledgeFilesTool
+    ? {
+        text: "",
+        sources: undefined as AgentMessageMetadata["ragSources"] | undefined,
+      }
+    : await getRetrievedAgentContext(agent, latestQuestion)
 
   const trimmedRetrievedContext = retrievedContext.text.trim()
   const ragSourcesMetadata =
     trimmedRetrievedContext.length > 0 ? retrievedContext.sources : undefined
+
+  const tools = shouldForceKnowledgeFilesTool
+    ? ({
+        [KNOWLEDGE_FILES_TOOL_NAME]: Reflect.get(
+          promptAndTools.tools,
+          KNOWLEDGE_FILES_TOOL_NAME
+        ),
+      } as typeof promptAndTools.tools)
+    : promptAndTools.tools
 
   return {
     chatLLM: llm.chat,
@@ -167,7 +263,7 @@ const prepareAgentChatRun = async ({
     sessionLogIndexer,
     system: promptAndTools.systemPrompt,
     toolDisplayNames: promptAndTools.toolDisplayNames,
-    tools: promptAndTools.tools,
+    tools,
   }
 }
 

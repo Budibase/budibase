@@ -1205,6 +1205,172 @@ describe("Agent chat tool call tracking", () => {
       expect(addActionMock).not.toHaveBeenCalled()
     })
 
+    it("restricts tools to list_knowledge_files for file metadata questions", async () => {
+      const listKnowledgeFilesTool = { execute: jest.fn() } as any
+      const otherTool = { execute: jest.fn() } as any
+
+      ;(
+        sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
+          typeof sdk.ai.agents.buildPromptAndTools
+        >
+      ).mockResolvedValue({
+        systemPrompt: "system",
+        tools: {
+          list_knowledge_files: listKnowledgeFilesTool,
+          get_table: otherTool,
+        },
+        toolDisplayNames: {},
+      })
+
+      jest.mocked(streamText).mockImplementation(makeStreamTextMock([]) as any)
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "how many files do I have" }],
+            },
+          ],
+          transient: true,
+        })
+
+      expect(res.status).toBe(200)
+      const streamOptions = jest.mocked(streamText).mock.calls[0]?.[0] as any
+      expect(Object.keys(streamOptions.tools || {})).toEqual([
+        "list_knowledge_files",
+      ])
+      expect(streamOptions.tools?.list_knowledge_files).toBe(
+        listKnowledgeFilesTool
+      )
+    })
+
+    it("keeps all tools for non-metadata file questions", async () => {
+      const listKnowledgeFilesTool = { execute: jest.fn() } as any
+      const otherTool = { execute: jest.fn() } as any
+
+      ;(
+        sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
+          typeof sdk.ai.agents.buildPromptAndTools
+        >
+      ).mockResolvedValue({
+        systemPrompt: "system",
+        tools: {
+          list_knowledge_files: listKnowledgeFilesTool,
+          get_table: otherTool,
+        },
+        toolDisplayNames: {},
+      })
+
+      jest.mocked(streamText).mockImplementation(makeStreamTextMock([]) as any)
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "summarize the pricing file" }],
+            },
+          ],
+          transient: true,
+        })
+
+      expect(res.status).toBe(200)
+      const streamOptions = jest.mocked(streamText).mock.calls[0]?.[0] as any
+      const toolNames = Object.keys(streamOptions.tools || {})
+      expect(toolNames).toHaveLength(2)
+      expect(toolNames).toEqual(
+        expect.arrayContaining(["list_knowledge_files", "get_table"])
+      )
+      expect(streamOptions.tools?.list_knowledge_files).toBe(
+        listKnowledgeFilesTool
+      )
+      expect(streamOptions.tools?.get_table).toBe(otherTool)
+    })
+
+    it("skips RAG retrieval for file metadata questions", async () => {
+      ;(
+        sdk.ai.agents.getOrThrow as jest.MockedFunction<
+          typeof sdk.ai.agents.getOrThrow
+        >
+      ).mockResolvedValue({
+        _id: "agent-1",
+        name: "Test Agent",
+        aiconfig: "config-1",
+        knowledgeBases: ["kb-1"],
+      } as any)
+      ;(
+        sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
+          typeof sdk.ai.agents.buildPromptAndTools
+        >
+      ).mockResolvedValue({
+        systemPrompt: "system",
+        tools: {
+          list_knowledge_files: { execute: jest.fn() } as any,
+          tool1: {} as any,
+        },
+        toolDisplayNames: {},
+      })
+      ;(
+        retrieveContextForAgent as jest.MockedFunction<
+          typeof retrieveContextForAgent
+        >
+      ).mockResolvedValue({
+        text: "Retrieved context",
+        chunks: [],
+        sources: [
+          {
+            sourceId: "pricing-source",
+            filename: "Budibase Enterprise Pricing V8.pdf",
+          },
+        ],
+      })
+      jest.mocked(streamText).mockImplementation(makeStreamTextMock([]) as any)
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await withRagEnabled(async () =>
+        config
+          .getRequest()!
+          .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+          .set(headers)
+          .send({
+            agentId: "agent-1",
+            messages: [
+              {
+                id: "msg-1",
+                role: "user",
+                parts: [{ type: "text", text: "how many files do I have" }],
+              },
+            ],
+            transient: true,
+          })
+      )
+
+      expect(res.status).toBe(200)
+      expect(retrieveContextForAgent).not.toHaveBeenCalled()
+
+      const streamOptions = jest.mocked(streamText).mock.calls[0]?.[0] as any
+      const hasInjectedContext = (streamOptions.messages || []).some(
+        (message: any) =>
+          message.role === "system" &&
+          typeof message.content === "string" &&
+          message.content.includes("Relevant knowledge:")
+      )
+      expect(hasInjectedContext).toBe(false)
+    })
+
     it("does not include ragSources when list_knowledge_files returns successfully", async () => {
       let finishMetadata: Record<string, any> | undefined
       ;(
@@ -1257,7 +1423,7 @@ describe("Agent chat tool call tracking", () => {
               {
                 id: "msg-1",
                 role: "user",
-                parts: [{ type: "text", text: "how many files do I have" }],
+                parts: [{ type: "text", text: "summarize the pricing file" }],
               },
             ],
             transient: true,
@@ -1318,7 +1484,7 @@ describe("Agent chat tool call tracking", () => {
               {
                 id: "msg-1",
                 role: "user",
-                parts: [{ type: "text", text: "how many files do I have" }],
+                parts: [{ type: "text", text: "summarize the pricing file" }],
               },
             ],
             transient: true,
