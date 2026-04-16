@@ -168,18 +168,15 @@ export const getSharePointLastSyncLabel = (
 }
 
 export const toSharePointConnectionRows = ({
-  hasSharePointConnection,
   selectedSiteIds,
   sharePointSites,
   sharePointSources,
   sharePointSyncRunsBySiteId,
   files,
-  loadingSharePointSites,
   onDelete,
   onSync,
   onClick: onConfigure,
 }: {
-  hasSharePointConnection: boolean
   selectedSiteIds: string[]
   sharePointSites: KnowledgeSourceOption[]
   sharePointSources: Array<{
@@ -188,12 +185,11 @@ export const toSharePointConnectionRows = ({
   }>
   sharePointSyncRunsBySiteId: Record<string, KnowledgeSourceSyncRun>
   files: KnowledgeBaseFile[]
-  loadingSharePointSites: boolean
   onDelete: (siteId: string) => Promise<void>
   onSync: (sourceId: string) => Promise<void>
   onClick: (siteId: string) => Promise<void>
 }): SharePointConnectionTableRow[] => {
-  if (!hasSharePointConnection) {
+  if (selectedSiteIds.length === 0) {
     return []
   }
 
@@ -225,13 +221,7 @@ export const toSharePointConnectionRows = ({
         includedProgress?.processed ?? Math.min(ready + failed, total)
       const option = optionById.get(siteId)
       const siteDisplayName =
-        site.name ||
-        site.webUrl ||
-        option?.name ||
-        option?.webUrl ||
-        (loadingSharePointSites
-          ? "Loading SharePoint site..."
-          : "SharePoint site")
+        site.name || site.webUrl || option?.name || option?.webUrl || "SharePoint site"
       const displayStatus = !hasSynced
         ? "Processing"
         : total === 0

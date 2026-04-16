@@ -30,7 +30,6 @@
       source => source.type === AgentKnowledgeSourceType.SHAREPOINT
     )
   )
-  let hasSharePointConnection = $derived(sharePointSources.length > 0)
   let loading = $state(true)
   let pendingUploadsByAgent = $state<Record<string, PendingUpload[]>>({})
   let uploadingByAgent = $state<Record<string, boolean>>({})
@@ -68,7 +67,6 @@
       .map(source => source.config.site?.id)
       .filter((siteId): siteId is string => !!siteId)
   )
-  let loadingSharePointSites = $state(false)
   let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
   let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
   let selectedSharePointSiteId = $state("")
@@ -168,13 +166,11 @@
   )
   let sharePointConnectionRows = $derived.by(() => {
     return toSharePointConnectionRows({
-      hasSharePointConnection,
       selectedSiteIds,
       sharePointSites,
       sharePointSources,
       sharePointSyncRunsBySiteId,
       files,
-      loadingSharePointSites,
       onDelete: removeSharePointSite,
       onSync: async sourceId => {
         await syncSharePointNow([sourceId])
@@ -199,14 +195,6 @@
     }
   }
 
-  const loadSharePointSites = async (agentId: string) => {
-    loadingSharePointSites = true
-    try {
-      await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
-    } finally {
-      loadingSharePointSites = false
-    }
-  }
   $effect(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
@@ -290,7 +278,7 @@
   }
 
   async function openSharePointFlow() {
-    if (!hasSharePointConnection && sharePointSites.length === 0) {
+    if (sharePointSources.length === 0 && sharePointSites.length === 0) {
       connectSharePoint()
       return
     }
@@ -298,12 +286,7 @@
   }
 
   async function openSharePointSiteModal() {
-    const agentId = currentAgent?._id
-    if (!agentId) {
-      return
-    }
-    await loadSharePointSites(agentId)
-    selectSharePointSiteModal?.show()
+    await selectSharePointSiteModal?.show()
   }
 
   async function handleSharePointSelectiveReady(siteId: string) {
@@ -335,7 +318,7 @@
       const result = await agentsStore.syncAgentKnowledgeSources(agentId, {
         sourceIds,
       })
-      await loadSharePointSites(agentId)
+      await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
       await fetchFiles(agentId)
       await agentsStore.fetchAgents()
       showSharePointSyncResult(result)
@@ -347,7 +330,7 @@
 
   async function removeSharePointSite(siteId: string) {
     const agent = currentAgent
-    if (!agent?._id || !hasSharePointConnection) {
+    if (!agent?._id || sharePointSources.length === 0) {
       return
     }
     const agentId = agent._id
@@ -365,7 +348,7 @@
           await agentsStore.disconnectAgentSharePointSite(agentId, siteId)
           await agentsStore.fetchAgents()
           await fetchFiles(agentId)
-          await loadSharePointSites(agentId)
+          await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
           notifications.success("SharePoint site removed")
         } catch (error) {
           console.error(error)

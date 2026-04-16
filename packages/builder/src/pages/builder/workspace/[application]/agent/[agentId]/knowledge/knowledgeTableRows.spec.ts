@@ -174,8 +174,8 @@ describe("knowledgeTableRows", () => {
       }),
     ]
     const rows = toSharePointConnectionRows({
-      hasSharePointConnection: true,
       selectedSiteIds: ["site-1"],
+      sharePointSites: [],
       sharePointSources: [
         {
           id: "source-1",
@@ -229,7 +229,6 @@ describe("knowledgeTableRows", () => {
         },
       },
       files,
-      loadingSharePointSites: false,
       onDelete: async () => {},
       onSync: async () => {},
       onClick: async () => {},

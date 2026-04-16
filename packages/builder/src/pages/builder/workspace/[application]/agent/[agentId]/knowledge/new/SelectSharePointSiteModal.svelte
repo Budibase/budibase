@@ -35,6 +35,7 @@
 
   let selectedSiteId = $state("")
   let modal = $state<Modal>()
+  let loadingSites = $state(false)
 
   const displaySharePointSites = $derived(
     [...availableSites]
@@ -51,9 +52,27 @@
 
   let saving = $state<boolean>()
 
-  export function show() {
-    selectedSiteId = displaySharePointSites[0]?.id || ""
+  const loadSharePointSites = async () => {
+    if (!agentId) {
+      selectedSiteId = ""
+      return
+    }
+    loadingSites = true
+    try {
+      await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
+      selectedSiteId = displaySharePointSites[0]?.id || ""
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to fetch SharePoint sites")
+      selectedSiteId = ""
+    } finally {
+      loadingSites = false
+    }
+  }
+
+  export async function show() {
     modal?.show()
+    await loadSharePointSites()
   }
 
   export function hide() {
@@ -99,7 +118,9 @@
         <Body size="S">Add from SharePoint</Body>
       </div>
 
-      {#if availableSites.length === 0}
+      {#if loadingSites}
+        <Body size="S">Loading SharePoint sites...</Body>
+      {:else if availableSites.length === 0}
         <Body size="S">No SharePoint sites found for this connection.</Body>
       {:else}
         <Select
