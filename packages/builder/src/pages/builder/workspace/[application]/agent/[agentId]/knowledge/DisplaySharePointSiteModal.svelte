@@ -354,7 +354,10 @@
               onclick={event => {
                 event.preventDefault()
                 scopeEditMode = true
-                if (syncMode === "selective" && selectedEntryPaths.length === 0) {
+                if (
+                  syncMode === "selective" &&
+                  selectedEntryPaths.length === 0
+                ) {
                   selectedEntryPaths = [...selectablePaths]
                 }
               }}

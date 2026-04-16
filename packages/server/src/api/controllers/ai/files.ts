@@ -206,9 +206,8 @@ export async function connectAgentSharePointSite(
     ctx.status = 200
     return
   }
-  const availableOptions = await sdk.ai.rag.fetchSharePointSitesForAgent(
-    agentId
-  )
+  const availableOptions =
+    await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
   const selectedOption = availableOptions.options.find(
     option => option.id === siteId
   )

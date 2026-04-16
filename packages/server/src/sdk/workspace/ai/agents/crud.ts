@@ -1,9 +1,6 @@
 import { context, docIds, encryption, HTTPError } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
-import type {
-  Agent,
-  CreateAgentRequest,
-} from "@budibase/types"
+import type { Agent, CreateAgentRequest } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 
@@ -223,9 +220,7 @@ export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
   return withAgentDefaults(agent)
 }
 
-export async function create(
-  request: CreateAgentRequest
-): Promise<Agent> {
+export async function create(request: CreateAgentRequest): Promise<Agent> {
   const db = context.getWorkspaceDB()
   const now = new Date().toISOString()
 
@@ -316,7 +311,8 @@ export async function update(agent: Agent): Promise<Agent> {
     updatedAt: now,
     enabledTools: agent.enabledTools ?? existing?.enabledTools ?? [],
     knowledgeBases: agent.knowledgeBases ?? existing?.knowledgeBases ?? [],
-    knowledgeSources: agent.knowledgeSources ?? existing?.knowledgeSources ?? [],
+    knowledgeSources:
+      agent.knowledgeSources ?? existing?.knowledgeSources ?? [],
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,
