@@ -132,13 +132,15 @@ export const getSharePointIncludedProgress = (
   let processed = 0
 
   for (const entry of entries) {
-    if (entry.status === AgentKnowledgeSourceSyncEntryStatus.EXCLUDED) {
+    if (
+      entry.status === AgentKnowledgeSourceSyncEntryStatus.EXCLUDED ||
+      entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
+    ) {
       continue
     }
     totalSelected++
 
     if (
-      entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED ||
       entry.status === AgentKnowledgeSourceSyncEntryStatus.SKIPPED_EXISTING ||
       entry.status === AgentKnowledgeSourceSyncEntryStatus.FAILED
     ) {

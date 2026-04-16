@@ -155,8 +155,8 @@ describe("knowledgeTableRows", () => {
     }
 
     expect(getSharePointIncludedProgress(files, run)).toEqual({
-      processed: 2,
-      totalSelected: 3,
+      processed: 1,
+      totalSelected: 2,
     })
   })
 
@@ -235,7 +235,7 @@ describe("knowledgeTableRows", () => {
       onConfigure: async () => {},
     })
 
-    expect(rows[0].displayStatus).toBe("2/3 files")
-    expect(rows[0].totalCount).toBe(3)
+    expect(rows[0].displayStatus).toBe("1/2 files")
+    expect(rows[0].totalCount).toBe(2)
   })
 })
