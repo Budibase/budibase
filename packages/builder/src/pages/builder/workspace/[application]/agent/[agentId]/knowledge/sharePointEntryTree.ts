@@ -7,4 +7,5 @@ export interface SharePointEntryTreeNode {
   type: "folder" | "file"
   children: SharePointEntryTreeNode[]
   status?: SharePointDisplayStatus
+  errorMessage?: string
 }

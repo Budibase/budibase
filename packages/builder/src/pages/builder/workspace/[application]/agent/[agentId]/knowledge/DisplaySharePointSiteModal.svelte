@@ -15,7 +15,11 @@
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
   import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
   import { agentsStore, selectedAgent } from "@/stores/portal"
-  import { toSharePointDisplayStatusFromFile } from "./sharePointStatus"
+  import {
+    toSharePointDisplayStatusFromFile,
+    toSharePointDisplayStatusFromSyncEntry,
+    type SharePointDisplayStatus,
+  } from "./sharePointStatus"
 
   export interface Props {
     agentId?: string
@@ -190,13 +194,53 @@
   const buildEntryTree = (
     files: KnowledgeBaseFile[]
   ): SharePointEntryTreeNode[] => {
+    const fileNodesByPath = new Map<
+      string,
+      { path: string; status: SharePointDisplayStatus; errorMessage?: string }
+    >()
+    for (const file of files) {
+      const path = getFilePath(file)
+      if (!path) {
+        continue
+      }
+      fileNodesByPath.set(path, {
+        path,
+        status: toSharePointDisplayStatusFromFile(file.status),
+        errorMessage: file.errorMessage,
+      })
+    }
+
+    for (const entry of sourceRun?.entries || []) {
+      const path = (entry.path || "").trim()
+      if (!path) {
+        continue
+      }
+
+      const existing = fileNodesByPath.get(path)
+      const displayStatus = toSharePointDisplayStatusFromSyncEntry(entry.status)
+      if (!existing) {
+        if (displayStatus === "failed") {
+          fileNodesByPath.set(path, {
+            path,
+            status: displayStatus,
+            errorMessage: entry.errorMessage,
+          })
+        }
+        continue
+      }
+
+      if (!existing.errorMessage && entry.errorMessage) {
+        existing.errorMessage = entry.errorMessage
+      }
+    }
+
     const roots: SharePointEntryTreeNode[] = []
     const byPath = new Map<string, SharePointEntryTreeNode>()
 
-    for (const file of [...files].sort((a, b) =>
-      getFilePath(a).localeCompare(getFilePath(b))
+    for (const fileNode of [...fileNodesByPath.values()].sort((a, b) =>
+      a.path.localeCompare(b.path)
     )) {
-      const path = getFilePath(file)
+      const path = fileNode.path
       if (!path) {
         continue
       }
@@ -215,16 +259,16 @@
             name: segment,
             path: currentPath,
             type: isLeaf ? "file" : "folder",
-            status: isLeaf
-              ? toSharePointDisplayStatusFromFile(file.status)
-              : undefined,
+            status: isLeaf ? fileNode.status : undefined,
+            errorMessage: isLeaf ? fileNode.errorMessage : undefined,
             children: [],
           }
           byPath.set(currentPath, node)
           parent.push(node)
         } else if (isLeaf) {
           node.type = "file"
-          node.status = toSharePointDisplayStatusFromFile(file.status)
+          node.status = fileNode.status
+          node.errorMessage = fileNode.errorMessage
         }
         parent = node.children
       }

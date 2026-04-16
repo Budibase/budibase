@@ -94,9 +94,16 @@
 >
   <svelte:fragment slot="post">
     {#if node.type === "file" && getSharePointStatusText(node.status)}
-      <StatusLight size="S" {...getSharePointStatusLightProps(node.status)}>
-        {getSharePointStatusText(node.status)}
-      </StatusLight>
+      <div class="status-container">
+        <StatusLight size="S" {...getSharePointStatusLightProps(node.status)}>
+          {getSharePointStatusText(node.status)}
+        </StatusLight>
+        {#if node.status === "failed" && node.errorMessage}
+          <span class="error-message" title={node.errorMessage}>
+            {node.errorMessage}
+          </span>
+        {/if}
+      </div>
     {/if}
   </svelte:fragment>
 
@@ -106,3 +113,23 @@
     {/each}
   {/if}
 </TreeItem>
+
+<style>
+  .status-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .error-message {
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--spectrum-semantic-negative-color-default);
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
