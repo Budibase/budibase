@@ -88,9 +88,23 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   ) => {
     this.update(state => {
       const existing = this.getAgentKnowledgeState(state, agentId)
+      const byId = new Map<string, KnowledgeSourceOption>()
+
+      for (const option of existing.sourceOptions) {
+        byId.set(option.id, option)
+      }
+      for (const option of options) {
+        const current = byId.get(option.id)
+        byId.set(option.id, {
+          id: option.id,
+          name: option.name || current?.name,
+          webUrl: option.webUrl || current?.webUrl,
+        })
+      }
+
       state.knowledgeByAgentId[agentId] = {
         ...existing,
-        sourceOptions: options,
+        sourceOptions: Array.from(byId.values()),
         sourceRuns: runs,
       }
       return state

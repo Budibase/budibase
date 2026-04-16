@@ -170,6 +170,7 @@
     return toSharePointConnectionRows({
       hasSharePointConnection,
       selectedSiteIds,
+      sharePointSites,
       sharePointSources,
       sharePointSyncRunsBySiteId,
       files,

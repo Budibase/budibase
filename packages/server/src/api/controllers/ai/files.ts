@@ -311,10 +311,6 @@ export async function setAgentKnowledgeSources(
   const runs = await sdk.ai.rag.fetchKnowledgeSourceSyncStateForAgent(agentId)
   const options = nextSources
     .map(source => source.config.site)
-    .filter(
-      (site): site is { id: string; name?: string; webUrl?: string } =>
-        !!site?.id
-    )
     .map(site => ({
       id: site.id,
       name: site.name,

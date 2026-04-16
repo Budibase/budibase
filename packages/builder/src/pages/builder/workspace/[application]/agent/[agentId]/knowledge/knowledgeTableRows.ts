@@ -2,6 +2,7 @@ import { helpers } from "@budibase/shared-core"
 import {
   AgentKnowledgeSourceSyncEntryStatus,
   KnowledgeBaseFileStatus,
+  type KnowledgeSourceOption,
   type KnowledgeBaseFile,
   type KnowledgeSourceSyncRun,
 } from "@budibase/types"
@@ -169,6 +170,7 @@ export const getSharePointLastSyncLabel = (
 export const toSharePointConnectionRows = ({
   hasSharePointConnection,
   selectedSiteIds,
+  sharePointSites,
   sharePointSources,
   sharePointSyncRunsBySiteId,
   files,
@@ -179,6 +181,7 @@ export const toSharePointConnectionRows = ({
 }: {
   hasSharePointConnection: boolean
   selectedSiteIds: string[]
+  sharePointSites: KnowledgeSourceOption[]
   sharePointSources: Array<{
     id: string
     config: { site?: { id: string; name?: string; webUrl?: string } }
@@ -193,6 +196,8 @@ export const toSharePointConnectionRows = ({
   if (!hasSharePointConnection) {
     return []
   }
+
+  const optionById = new Map(sharePointSites.map(site => [site.id, site]))
 
   return selectedSiteIds
     .map(siteId => {
@@ -218,9 +223,12 @@ export const toSharePointConnectionRows = ({
         (run?.totalDiscovered || 0) - (run?.unsupported || 0)
       const completed =
         includedProgress?.processed ?? Math.min(ready + failed, total)
+      const option = optionById.get(siteId)
       const siteDisplayName =
         site.name ||
         site.webUrl ||
+        option?.name ||
+        option?.webUrl ||
         (loadingSharePointSites
           ? "Loading SharePoint site..."
           : "SharePoint site")
