@@ -231,9 +231,9 @@ export const retrieveContextForAgent = async (
     const readyFileSources = knowledgeBaseFiles
       .filter(
         file =>
-          file.status === KnowledgeBaseFileStatus.READY && file.ragSourceId
+          file.status === KnowledgeBaseFileStatus.READY && file.retrievalFileId
       )
-      .map(file => file.ragSourceId)
+      .map(file => file.retrievalFileId)
 
     if (readyFileSources.length === 0) {
       continue
@@ -259,7 +259,9 @@ const toSourceMetadata = (
   chunks: RetrievedContextChunk[],
   files: KnowledgeBaseFile[]
 ): AgentMessageRagSource[] => {
-  const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
+  const fileBySourceId = new Map(
+    files.map(file => [file.retrievalFileId, file])
+  )
   const summary = new Map<string, AgentMessageRagSource>()
 
   for (const chunk of chunks) {

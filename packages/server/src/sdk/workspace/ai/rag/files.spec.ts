@@ -146,7 +146,7 @@ describe("rag files", () => {
         knowledgeSourceId: "local_upload",
         filename: "test.txt",
         objectStoreKey: "key",
-        ragSourceId: "rag_source_123",
+        retrievalFileId: "rag_source_123",
         status: KnowledgeBaseFileStatus.PROCESSING,
         uploadedBy: "user_123",
       }
@@ -182,7 +182,7 @@ describe("rag files", () => {
         knowledgeSourceId: "local_upload",
         filename: "test.txt",
         objectStoreKey: "key",
-        ragSourceId: "rag_source_123",
+        retrievalFileId: "rag_source_123",
         status: KnowledgeBaseFileStatus.PROCESSING,
         uploadedBy: "user_123",
       }
@@ -305,7 +305,7 @@ describe("rag files", () => {
           knowledgeSourceId: "local_upload",
           filename: "policy.md",
           objectStoreKey: "obj",
-          ragSourceId: "source-1",
+          retrievalFileId: "source-1",
           status: KnowledgeBaseFileStatus.READY,
           uploadedBy: "user_1",
         } as KnowledgeBaseFile,

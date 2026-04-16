@@ -18,7 +18,7 @@ export interface AgentKnowledgeSourceSyncEntry {
   itemId: string
   filename: string
   path: string
-  externalSourceId: string
+  originFileId: string
   mimetype?: string
   status: AgentKnowledgeSourceSyncEntryStatus
   errorMessage?: string

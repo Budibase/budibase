@@ -87,9 +87,7 @@ export const getSharePointFilesForSite = (
   files: KnowledgeBaseFile[],
   siteId: string
 ) =>
-  files.filter(file =>
-    file.externalSourceId?.startsWith(`sharepoint:${siteId}:`)
-  )
+  files.filter(file => file.originFileId?.startsWith(`sharepoint:${siteId}:`))
 
 export const getSharePointFileProcessingCounts = (
   files: KnowledgeBaseFile[],
@@ -120,10 +118,10 @@ export const getSharePointIncludedProgress = (
   const fileStatusByExternalSourceId = new Map(
     files
       .filter(
-        (file): file is KnowledgeBaseFile & { externalSourceId: string } =>
-          !!file.externalSourceId
+        (file): file is KnowledgeBaseFile & { originFileId: string } =>
+          !!file.originFileId
       )
-      .map(file => [file.externalSourceId, file.status] as const)
+      .map(file => [file.originFileId, file.status] as const)
   )
 
   let totalSelected = 0
@@ -144,9 +142,7 @@ export const getSharePointIncludedProgress = (
     }
 
     if (entry.status === AgentKnowledgeSourceSyncEntryStatus.SYNCED) {
-      const fileStatus = fileStatusByExternalSourceId.get(
-        entry.externalSourceId
-      )
+      const fileStatus = fileStatusByExternalSourceId.get(entry.originFileId)
       if (
         fileStatus != null &&
         fileStatus !== KnowledgeBaseFileStatus.PROCESSING

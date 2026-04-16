@@ -23,7 +23,7 @@ const makeFile = (
   knowledgeSourceId: "local_upload",
   filename: "file.txt",
   objectStoreKey: "object/key",
-  ragSourceId: "rag_source_1",
+  retrievalFileId: "rag_source_1",
   status: KnowledgeBaseFileStatus.READY,
   uploadedBy: "user_1",
   ...overrides,
@@ -54,17 +54,17 @@ describe("knowledgeTableRows", () => {
       makeFile({
         _id: "f1",
         status: KnowledgeBaseFileStatus.READY,
-        externalSourceId: "sharepoint:site-1:drive-1:item-1",
+        originFileId: "sharepoint:site-1:drive-1:item-1",
       }),
       makeFile({
         _id: "f2",
         status: KnowledgeBaseFileStatus.PROCESSING,
-        externalSourceId: "sharepoint:site-1:drive-1:item-2",
+        originFileId: "sharepoint:site-1:drive-1:item-2",
       }),
       makeFile({
         _id: "f3",
         status: KnowledgeBaseFileStatus.FAILED,
-        externalSourceId: "sharepoint:site-2:drive-1:item-3",
+        originFileId: "sharepoint:site-2:drive-1:item-3",
       }),
     ]
 
@@ -101,12 +101,12 @@ describe("knowledgeTableRows", () => {
       makeFile({
         _id: "f1",
         status: KnowledgeBaseFileStatus.READY,
-        externalSourceId: "sharepoint:site-1:drive-1:item-1",
+        originFileId: "sharepoint:site-1:drive-1:item-1",
       }),
       makeFile({
         _id: "f2",
         status: KnowledgeBaseFileStatus.PROCESSING,
-        externalSourceId: "sharepoint:site-1:drive-1:item-2",
+        originFileId: "sharepoint:site-1:drive-1:item-2",
       }),
     ]
     const run: KnowledgeSourceSyncRun = {
@@ -124,7 +124,7 @@ describe("knowledgeTableRows", () => {
           itemId: "item-1",
           filename: "a.txt",
           path: "a.txt",
-          externalSourceId: "sharepoint:site-1:drive-1:item-1",
+          originFileId: "sharepoint:site-1:drive-1:item-1",
           status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
         },
         {
@@ -132,7 +132,7 @@ describe("knowledgeTableRows", () => {
           itemId: "item-2",
           filename: "b.txt",
           path: "b.txt",
-          externalSourceId: "sharepoint:site-1:drive-1:item-2",
+          originFileId: "sharepoint:site-1:drive-1:item-2",
           status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
         },
         {
@@ -140,7 +140,7 @@ describe("knowledgeTableRows", () => {
           itemId: "item-3",
           filename: "c.exe",
           path: "c.exe",
-          externalSourceId: "sharepoint:site-1:drive-1:item-3",
+          originFileId: "sharepoint:site-1:drive-1:item-3",
           status: AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED,
         },
         {
@@ -148,7 +148,7 @@ describe("knowledgeTableRows", () => {
           itemId: "item-4",
           filename: "d.txt",
           path: "d.txt",
-          externalSourceId: "sharepoint:site-1:drive-1:item-4",
+          originFileId: "sharepoint:site-1:drive-1:item-4",
           status: AgentKnowledgeSourceSyncEntryStatus.EXCLUDED,
         },
       ],
@@ -165,12 +165,12 @@ describe("knowledgeTableRows", () => {
       makeFile({
         _id: "f1",
         status: KnowledgeBaseFileStatus.READY,
-        externalSourceId: "sharepoint:site-1:drive-1:item-1",
+        originFileId: "sharepoint:site-1:drive-1:item-1",
       }),
       makeFile({
         _id: "f2",
         status: KnowledgeBaseFileStatus.PROCESSING,
-        externalSourceId: "sharepoint:site-1:drive-1:item-2",
+        originFileId: "sharepoint:site-1:drive-1:item-2",
       }),
     ]
     const rows = toSharePointConnectionRows({
@@ -198,7 +198,7 @@ describe("knowledgeTableRows", () => {
               itemId: "item-1",
               filename: "a.txt",
               path: "a.txt",
-              externalSourceId: "sharepoint:site-1:drive-1:item-1",
+              originFileId: "sharepoint:site-1:drive-1:item-1",
               status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
             },
             {
@@ -206,7 +206,7 @@ describe("knowledgeTableRows", () => {
               itemId: "item-2",
               filename: "b.txt",
               path: "b.txt",
-              externalSourceId: "sharepoint:site-1:drive-1:item-2",
+              originFileId: "sharepoint:site-1:drive-1:item-2",
               status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
             },
             {
@@ -214,7 +214,7 @@ describe("knowledgeTableRows", () => {
               itemId: "item-3",
               filename: "c.exe",
               path: "c.exe",
-              externalSourceId: "sharepoint:site-1:drive-1:item-3",
+              originFileId: "sharepoint:site-1:drive-1:item-3",
               status: AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED,
             },
             {
@@ -222,7 +222,7 @@ describe("knowledgeTableRows", () => {
               itemId: "item-4",
               filename: "d.txt",
               path: "d.txt",
-              externalSourceId: "sharepoint:site-1:drive-1:item-4",
+              originFileId: "sharepoint:site-1:drive-1:item-4",
               status: AgentKnowledgeSourceSyncEntryStatus.EXCLUDED,
             },
           ],

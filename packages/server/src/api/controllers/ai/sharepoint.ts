@@ -19,21 +19,21 @@ export const getSharePointSiteIds = (agent?: Agent): Set<string> => {
 }
 
 const isSharePointFile = (
-  file: Pick<KnowledgeBaseFile, "externalSourceId" | "uploadedBy">
+  file: Pick<KnowledgeBaseFile, "originFileId" | "uploadedBy">
 ) =>
-  !!file.externalSourceId?.startsWith("sharepoint:") ||
+  !!file.originFileId?.startsWith("sharepoint:") ||
   !!file.uploadedBy?.startsWith("sharepoint:")
 
 const isSharePointFileForRemovedSite = (
-  file: Pick<KnowledgeBaseFile, "externalSourceId" | "uploadedBy">,
+  file: Pick<KnowledgeBaseFile, "originFileId" | "uploadedBy">,
   removedSharePointSiteIds: string[]
 ) => {
-  const externalSourceId = file.externalSourceId
+  const originFileId = file.originFileId
   const uploadedBy = file.uploadedBy
   return removedSharePointSiteIds.some(siteId => {
     const sourcePrefix = `sharepoint:${siteId}:`
     return (
-      !!externalSourceId?.startsWith(sourcePrefix) ||
+      !!originFileId?.startsWith(sourcePrefix) ||
       uploadedBy === `sharepoint:${siteId}`
     )
   })

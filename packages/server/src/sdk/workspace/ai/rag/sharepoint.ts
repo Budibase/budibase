@@ -599,7 +599,7 @@ export const syncSharePointSourcesForAgent = async (
   const existingFiles =
     await knowledgeBaseSdk.listKnowledgeBaseFiles(knowledgeBaseId)
   const existingExternalIds = new Set(
-    existingFiles.map(file => trimString(file.externalSourceId)).filter(Boolean)
+    existingFiles.map(file => trimString(file.originFileId)).filter(Boolean)
   )
 
   let synced = 0
@@ -640,7 +640,7 @@ export const syncSharePointSourcesForAgent = async (
         siteTotalDiscovered += files.length
         totalDiscovered += files.length
         for (const file of files) {
-          const externalSourceId = `sharepoint:${siteId}:${driveId}:${file.itemId}`
+          const originFileId = `sharepoint:${siteId}:${driveId}:${file.itemId}`
           if (!isSharePointFileIncludedByFilters(file, sourceFilters)) {
             skipped++
             siteSkipped++
@@ -649,7 +649,7 @@ export const syncSharePointSourcesForAgent = async (
               itemId: file.itemId,
               filename: file.filename,
               path: file.path,
-              externalSourceId,
+              originFileId,
               mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.EXCLUDED,
             })
@@ -665,13 +665,13 @@ export const syncSharePointSourcesForAgent = async (
               itemId: file.itemId,
               filename: file.filename,
               path: file.path,
-              externalSourceId,
+              originFileId,
               mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED,
             })
             continue
           }
-          if (existingExternalIds.has(externalSourceId)) {
+          if (existingExternalIds.has(originFileId)) {
             skipped++
             siteSkipped++
             siteEntries.push({
@@ -679,7 +679,7 @@ export const syncSharePointSourcesForAgent = async (
               itemId: file.itemId,
               filename: file.filename,
               path: file.path,
-              externalSourceId,
+              originFileId,
               mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
             })
@@ -701,10 +701,10 @@ export const syncSharePointSourcesForAgent = async (
               size: buffer.byteLength,
               buffer,
               uploadedBy: `sharepoint:${siteId}`,
-              externalSourceId,
+              originFileId,
             })
 
-            existingExternalIds.add(externalSourceId)
+            existingExternalIds.add(originFileId)
             synced++
             siteSynced++
             siteEntries.push({
@@ -712,7 +712,7 @@ export const syncSharePointSourcesForAgent = async (
               itemId: file.itemId,
               filename: file.filename,
               path: file.path,
-              externalSourceId,
+              originFileId,
               mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
             })
@@ -731,7 +731,7 @@ export const syncSharePointSourcesForAgent = async (
               itemId: file.itemId,
               filename: file.filename,
               path: file.path,
-              externalSourceId,
+              originFileId,
               mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.FAILED,
               errorMessage:

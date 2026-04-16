@@ -84,7 +84,7 @@
       }
       return (
         !!sharePointSiteId &&
-        !!file.externalSourceId?.startsWith(`sharepoint:${sharePointSiteId}:`)
+        !!file.originFileId?.startsWith(`sharepoint:${sharePointSiteId}:`)
       )
     })
 

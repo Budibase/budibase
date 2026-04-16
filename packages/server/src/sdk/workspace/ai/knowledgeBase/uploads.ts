@@ -5,15 +5,17 @@ import { enqueueRagFileIngestion } from "../rag/queue"
 import { createKnowledgeBaseFile, updateKnowledgeBaseFile } from "./files"
 import { find as findKnowledgeBase } from "./crud"
 
-interface UploadKnowledgeBaseFileInput {
+type UploadKnowledgeBaseFileInput = Pick<
+  KnowledgeBaseFile,
+  | "knowledgeSourceId"
+  | "filename"
+  | "mimetype"
+  | "size"
+  | "uploadedBy"
+  | "originFileId"
+> & {
   knowledgeBaseId: string
-  knowledgeSourceId: string
-  filename: string
-  mimetype?: string
-  size?: number
   buffer: Buffer
-  uploadedBy: string
-  externalSourceId?: string
 }
 
 const buildKnowledgeBaseFileObjectStoreKey = (
@@ -57,7 +59,7 @@ export const uploadKnowledgeBaseFile = async (
       objectStoreKey,
       size: input.size ?? input.buffer.byteLength,
       uploadedBy: input.uploadedBy,
-      externalSourceId: input.externalSourceId,
+      originFileId: input.originFileId,
     })
 
     try {

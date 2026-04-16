@@ -16,16 +16,18 @@ import {
 import { ObjectStoreBuckets } from "../../../../constants"
 import { deleteKnowledgeBaseFileChunks } from "../rag/files"
 
-interface CreateKnowledgeBaseFileOptions {
+type CreateKnowledgeBaseFileOptions = Pick<
+  KnowledgeBaseFile,
+  | "knowledgeSourceId"
+  | "filename"
+  | "mimetype"
+  | "size"
+  | "uploadedBy"
+  | "objectStoreKey"
+  | "originFileId"
+> & {
   id: string
-  knowledgeSourceId: string
-  filename: string
-  mimetype?: string
-  size?: number
-  uploadedBy: string
-  objectStoreKey: string
-  ragSourceId?: string
-  externalSourceId?: string
+  retrievalFileId?: KnowledgeBaseFile["retrievalFileId"]
 }
 
 export const createKnowledgeBaseFile = async (
@@ -40,8 +42,8 @@ export const createKnowledgeBaseFile = async (
     size,
     uploadedBy,
     objectStoreKey,
-    ragSourceId,
-    externalSourceId,
+    retrievalFileId,
+    originFileId,
   } = options
   const _id = id
   if (!docIds.isKnowledgeBaseFileID(_id)) {
@@ -55,8 +57,8 @@ export const createKnowledgeBaseFile = async (
     mimetype,
     size,
     objectStoreKey,
-    ragSourceId: ragSourceId || _id,
-    externalSourceId,
+    retrievalFileId: retrievalFileId || _id,
+    originFileId,
     status: KnowledgeBaseFileStatus.PROCESSING,
     uploadedBy,
     errorMessage: undefined,
@@ -130,7 +132,7 @@ export const removeKnowledgeBaseFile = async (
   }
 
   if (!isFileInProduction) {
-    await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.ragSourceId])
+    await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.retrievalFileId])
   }
 
   if (file.objectStoreKey) {
