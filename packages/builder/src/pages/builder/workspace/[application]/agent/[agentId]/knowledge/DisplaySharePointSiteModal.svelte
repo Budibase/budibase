@@ -15,6 +15,7 @@
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
   import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
   import { agentsStore, selectedAgent } from "@/stores/portal"
+  import { utils } from "@budibase/shared-core"
 
   export interface Props {
     agentId?: string
@@ -59,8 +60,10 @@
         return AgentKnowledgeSourceSyncEntryStatus.SYNCED
       case KnowledgeBaseFileStatus.FAILED:
         return AgentKnowledgeSourceSyncEntryStatus.FAILED
-      default:
+      case KnowledgeBaseFileStatus.PROCESSING:
         return undefined
+      default:
+        throw utils.unreachable(status)
     }
   }
 
