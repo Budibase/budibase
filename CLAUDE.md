@@ -30,6 +30,7 @@
 - Error handling: Use try/catch
 - Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any.
 - Do not add backwards compatibility paths or broad "handle every scenario" logic unless explicitly instructed to do so for the task.
+- Frontend: Prefer BBUI components over native HTML controls whenever possible (e.g. use BBUI `Button`, `ActionButton`, `Input`, `Select`, etc. instead of raw `<button>`, `<input>`, `<select>` where BBUI equivalents exist).
 - Testing: Jest framework, use describe/it structure, mock external services
   using `nock`.
 - Only comment when it's really necessary to explain an unclear behaviour.
