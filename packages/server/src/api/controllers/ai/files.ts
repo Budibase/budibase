@@ -17,11 +17,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import {
-  cleanupSharePointFilesForAgent,
-  getSharePointSiteIds,
-  getSharePointSources,
-} from "./sharepoint"
+import { getSharePointSiteIds, getSharePointSources } from "./sharepoint"
 
 const normalizeUpload = (fileInput: any) => {
   if (!fileInput) {
@@ -123,11 +119,14 @@ export async function uploadAgentFile(
 }
 
 export async function deleteAgentFile(
-  ctx: UserCtx<void, { deleted: true }, { agentId: string; fileId: string }>
+  ctx: UserCtx<void, void, { agentId: string; fileId: string }>
 ) {
   const { agentId, fileId } = ctx.params
-  await sdk.ai.rag.deleteFileForAgent(agentId, fileId)
-  ctx.body = { deleted: true }
+  await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueDeleteFileJob(
+    agentId,
+    fileId
+  )
+
   ctx.status = 200
 }
 
@@ -326,7 +325,6 @@ export async function disconnectAgentSharePointSite(
   if (!removedSource) {
     throw new HTTPError("SharePoint site is not connected for this agent", 404)
   }
-  const removedSharePointSiteIds = [siteId]
   const nextSharePointSources = getSharePointSources(existingAgent).filter(
     source => source.id !== removedSource.id
   )
@@ -338,14 +336,9 @@ export async function disconnectAgentSharePointSite(
     knowledgeSources: [...nonSharePointSources, ...nextSharePointSources],
   })
   await sdk.ai.rag.knowledgeSourceSyncQueue.reconcileAgentJobs(updated)
-  await cleanupSharePointFilesForAgent({
+  await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueDisconnectSharePointSiteJob(
     agentId,
-    removedSharePointSiteIds,
-    sharePointDisconnected: false,
-  })
-  await sdk.ai.rag.deleteKnowledgeSourceSyncStateForAgent(
-    agentId,
-    removedSharePointSiteIds
+    siteId
   )
   console.log("Disconnected SharePoint site from agent", {
     agentId,

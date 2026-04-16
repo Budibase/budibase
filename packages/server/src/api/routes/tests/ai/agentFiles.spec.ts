@@ -11,6 +11,7 @@ import {
 } from "@budibase/types"
 import environment, { setEnv } from "../../../../environment"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/queue"
+import { getQueue as getKnowledgeSourceSyncQueue } from "../../../../sdk/workspace/ai/rag/knowledgeSourceSyncQueue"
 import { upsertKnowledgeSourceConnection } from "../../../../sdk/workspace/ai/knowledgeSources"
 import { sharePointConnectionCacheKey } from "../../../../sdk/workspace/ai/sharepoint"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
@@ -236,6 +237,9 @@ describe("agent files", () => {
         created._id!,
         upload.file._id!
       )
+      await utils.queue.processMessages(
+        getKnowledgeSourceSyncQueue().getBullQueue()
+      )
       expect(response.deleted).toBe(true)
       expect(deleteScope.isDone()).toBe(true)
 
@@ -429,6 +433,9 @@ describe("agent files", () => {
         created._id!,
         "site-1"
       )
+      await utils.queue.processMessages(
+        getKnowledgeSourceSyncQueue().getBullQueue()
+      )
 
       expect(deleteScope.isDone()).toBe(true)
       expect(response).toEqual({
@@ -548,6 +555,9 @@ describe("agent files", () => {
       const response = await config.api.agent.disconnectSharePointSite(
         created._id!,
         "site-1"
+      )
+      await utils.queue.processMessages(
+        getKnowledgeSourceSyncQueue().getBullQueue()
       )
       expect(response).toEqual({
         agentId: created._id!,
