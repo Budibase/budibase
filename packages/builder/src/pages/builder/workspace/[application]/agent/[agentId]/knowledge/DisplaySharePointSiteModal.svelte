@@ -79,6 +79,9 @@
       )
     })
 
+  const getFilePath = (file: KnowledgeBaseFile) =>
+    (file.sourcePath || file.filename).trim()
+
   let sharePointFiles = $derived.by(() => {
     if (!agentId || !sourceId) {
       return [] as KnowledgeBaseFile[]
@@ -130,7 +133,7 @@
     }
 
     const allPaths = Array.from(
-      new Set(sharePointFiles.map(file => file.filename))
+      new Set(sharePointFiles.map(file => getFilePath(file)))
     )
     const selectedPaths = selectedEntryPaths
     const excludedPaths = allPaths.filter(path => !selectedPaths.includes(path))
@@ -185,9 +188,12 @@
     const byPath = new Map<string, SharePointEntryTreeNode>()
 
     for (const file of [...files].sort((a, b) =>
-      a.filename.localeCompare(b.filename)
+      getFilePath(a).localeCompare(getFilePath(b))
     )) {
-      const path = file.filename
+      const path = getFilePath(file)
+      if (!path) {
+        continue
+      }
       const parts = path.split("/").filter(Boolean)
       let parent = roots
       let currentPath = ""
@@ -233,7 +239,9 @@
 
   const entryTree = $derived(buildEntryTree(sharePointFiles))
 
-  const selectablePaths = $derived(sharePointFiles.map(file => file.filename))
+  const selectablePaths = $derived(
+    sharePointFiles.map(file => getFilePath(file))
+  )
 
   const toggleAll = () => {
     const allPathSet = new Set(selectablePaths)

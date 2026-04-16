@@ -701,6 +701,7 @@ export const syncSharePointSourcesForAgent = async (
               knowledgeBaseId,
               knowledgeSourceId,
               filename: file.filename,
+              sourcePath: file.path,
               mimetype: file.mimetype,
               size: buffer.byteLength,
               buffer,

@@ -20,6 +20,7 @@ type CreateKnowledgeBaseFileOptions = Pick<
   KnowledgeBaseFile,
   | "knowledgeSourceId"
   | "filename"
+  | "sourcePath"
   | "mimetype"
   | "size"
   | "uploadedBy"
@@ -38,6 +39,7 @@ export const createKnowledgeBaseFile = async (
     id,
     knowledgeSourceId,
     filename,
+    sourcePath,
     mimetype,
     size,
     uploadedBy,
@@ -54,6 +56,7 @@ export const createKnowledgeBaseFile = async (
     _id,
     knowledgeSourceId,
     filename,
+    sourcePath,
     mimetype,
     size,
     objectStoreKey,

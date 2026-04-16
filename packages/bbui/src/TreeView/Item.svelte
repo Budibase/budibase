@@ -11,7 +11,7 @@
   export let open: boolean = false
   export let href: string | null = null
   export let title: string
-  export let icon: string | undefined
+  export let icon: string | undefined = undefined
   export let hasChildren: boolean = false
 
   const treeViewContext = getContext<TreeViewContext | undefined>(

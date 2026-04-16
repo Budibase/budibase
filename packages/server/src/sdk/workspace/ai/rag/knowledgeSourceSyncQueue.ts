@@ -6,7 +6,6 @@ import {
   type Agent,
 } from "@budibase/types"
 import env from "../../../../environment"
-import { agents as agentsSdk } from ".."
 import { deleteFileForAgent } from "./files"
 import {
   deleteKnowledgeSourceSyncStateForAgent,

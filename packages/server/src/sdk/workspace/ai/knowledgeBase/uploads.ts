@@ -9,6 +9,7 @@ type UploadKnowledgeBaseFileInput = Pick<
   KnowledgeBaseFile,
   | "knowledgeSourceId"
   | "filename"
+  | "sourcePath"
   | "mimetype"
   | "size"
   | "uploadedBy"
@@ -55,6 +56,7 @@ export const uploadKnowledgeBaseFile = async (
       id: fileId,
       knowledgeSourceId: input.knowledgeSourceId,
       filename: input.filename,
+      sourcePath: input.sourcePath,
       mimetype: input.mimetype,
       objectStoreKey,
       size: input.size ?? input.buffer.byteLength,
