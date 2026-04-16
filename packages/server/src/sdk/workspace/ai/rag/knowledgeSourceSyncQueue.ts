@@ -6,6 +6,7 @@ import {
   type Agent,
 } from "@budibase/types"
 import env from "../../../../environment"
+import { agents as agentsSdk } from ".."
 import { deleteFileForAgent } from "./files"
 import {
   deleteKnowledgeSourceSyncStateForAgent,
@@ -115,8 +116,7 @@ export function getQueue() {
         jobTags: data => ({
           workspaceId: data.workspaceId,
           agentId: data.agentId,
-          sourceType:
-            data.jobType === "sync" ? data.sourceType : data.jobType,
+          sourceType: data.jobType === "sync" ? data.sourceType : data.jobType,
           sourceId:
             data.jobType === "sync"
               ? data.sourceId
@@ -145,7 +145,8 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
           workspaceId,
           agentId,
           jobType: job.data.jobType,
-          sourceType: "sourceType" in job.data ? job.data.sourceType : undefined,
+          sourceType:
+            "sourceType" in job.data ? job.data.sourceType : undefined,
           sourceId: "sourceId" in job.data ? job.data.sourceId : undefined,
           fileId: "fileId" in job.data ? job.data.fileId : undefined,
           siteId: "siteId" in job.data ? job.data.siteId : undefined,
@@ -251,15 +252,18 @@ export async function enqueueAgentJobs(
     return
   }
   await Promise.all(
-    sourceIds.map(sourceId =>
-      enqueueJob({
+    sourceIds.map(sourceId => {
+      const job: KnowledgeSourceSyncJob = {
         workspaceId,
         agentId,
         jobType: "sync",
         sourceType,
         sourceId,
+      }
+      return getQueue().add(job, {
+        jobId: getJobId(job),
       })
-    )
+    })
   )
 }
 

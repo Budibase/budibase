@@ -221,7 +221,11 @@ export const toSharePointConnectionRows = ({
         includedProgress?.processed ?? Math.min(ready + failed, total)
       const option = optionById.get(siteId)
       const siteDisplayName =
-        site.name || site.webUrl || option?.name || option?.webUrl || "SharePoint site"
+        site.name ||
+        site.webUrl ||
+        option?.name ||
+        option?.webUrl ||
+        "SharePoint site"
       const displayStatus = !hasSynced
         ? "Processing"
         : total === 0

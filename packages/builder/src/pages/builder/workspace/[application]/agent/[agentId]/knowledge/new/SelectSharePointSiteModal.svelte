@@ -57,9 +57,8 @@
     sharePointSites = []
     selectedSiteId = ""
     try {
-      const response = await agentsStore.fetchAgentKnowledgeSourceOptions(
-        agentId
-      )
+      const response =
+        await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
       sharePointSites = response.options
       selectedSiteId = displaySharePointSites[0]?.id || ""
     } catch (error) {
