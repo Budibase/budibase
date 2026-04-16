@@ -1,7 +1,9 @@
 import {
   Agent,
   AgentFileUploadResponse,
-  DisconnectAgentKnowledgeSourcesResponse,
+  ConnectAgentSharePointSiteRequest,
+  ConnectAgentSharePointSiteResponse,
+  DisconnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
   FetchAgentFilesResponse,
@@ -10,13 +12,13 @@ import {
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
-  SetAgentKnowledgeSourcesRequest,
-  SetAgentKnowledgeSourcesResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   ToggleAgentDeploymentRequest,
+  UpdateAgentSharePointSiteRequest,
+  UpdateAgentSharePointSiteResponse,
   ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -187,13 +189,13 @@ export class AgentAPI extends TestAPI {
     )
   }
 
-  setKnowledgeSources = async (
+  connectSharePointSite = async (
     agentId: string,
-    body: SetAgentKnowledgeSourcesRequest,
+    body: ConnectAgentSharePointSiteRequest,
     expectations?: Expectations
-  ): Promise<SetAgentKnowledgeSourcesResponse> => {
-    return await this._put<SetAgentKnowledgeSourcesResponse>(
-      `/api/agent/${agentId}/knowledge-sources`,
+  ): Promise<ConnectAgentSharePointSiteResponse> => {
+    return await this._post<ConnectAgentSharePointSiteResponse>(
+      `/api/agent/${agentId}/knowledge-sources/sharepoint/sites`,
       {
         body,
         expectations,
@@ -201,12 +203,28 @@ export class AgentAPI extends TestAPI {
     )
   }
 
-  disconnectKnowledgeSources = async (
+  updateSharePointSite = async (
     agentId: string,
+    siteId: string,
+    body: UpdateAgentSharePointSiteRequest,
     expectations?: Expectations
-  ): Promise<DisconnectAgentKnowledgeSourcesResponse> => {
-    return await this._delete<DisconnectAgentKnowledgeSourcesResponse>(
-      `/api/agent/${agentId}/knowledge-sources`,
+  ): Promise<UpdateAgentSharePointSiteResponse> => {
+    return await this._patch<UpdateAgentSharePointSiteResponse>(
+      `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
+  disconnectSharePointSite = async (
+    agentId: string,
+    siteId: string,
+    expectations?: Expectations
+  ): Promise<DisconnectAgentSharePointSiteResponse> => {
+    return await this._delete<DisconnectAgentSharePointSiteResponse>(
+      `/api/agent/${agentId}/knowledge-sources/sharepoint/sites/${encodeURIComponent(siteId)}`,
       {
         expectations,
       }

@@ -7,15 +7,16 @@ import {
   publicRoutes,
 } from "./endpointGroups"
 import {
+  connectAgentSharePointSiteValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
   provisionAgentMSTeamsChannelValidator,
-  setAgentKnowledgeSourcesValidator,
   syncAgentDiscordCommandsValidator,
   syncAgentKnowledgeSourcesValidator,
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
+  updateAgentSharePointSiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 
@@ -80,14 +81,19 @@ aiRagBuilderAdminRoutes
     "/api/agent/:agentId/knowledge-sources/sharepoint/entries",
     ai.fetchAgentKnowledgeSourceEntries
   )
-  .put(
-    "/api/agent/:agentId/knowledge-sources",
-    setAgentKnowledgeSourcesValidator(),
-    ai.setAgentKnowledgeSources
+  .post(
+    "/api/agent/:agentId/knowledge-sources/sharepoint/sites",
+    connectAgentSharePointSiteValidator(),
+    ai.connectAgentSharePointSite
+  )
+  .patch(
+    "/api/agent/:agentId/knowledge-sources/sharepoint/sites/:siteId",
+    updateAgentSharePointSiteValidator(),
+    ai.updateAgentSharePointSite
   )
   .delete(
-    "/api/agent/:agentId/knowledge-sources",
-    ai.disconnectAgentKnowledgeSources
+    "/api/agent/:agentId/knowledge-sources/sharepoint/sites/:siteId",
+    ai.disconnectAgentSharePointSite
   )
   .post(
     "/api/agent/:agentId/knowledge-sources/sync",

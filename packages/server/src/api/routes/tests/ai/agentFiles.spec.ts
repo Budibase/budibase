@@ -264,16 +264,16 @@ describe("agent files", () => {
     })
   })
 
-  it("returns 400 when setting SharePoint sites without a connected source", async () => {
+  it("returns 400 when connecting a SharePoint site without a connected source", async () => {
     await withRagEnabled(async () => {
       const created = await config.api.agent.create({
         name: "SharePoint Set Sites Agent",
         aiconfig: "default",
       })
 
-      await config.api.agent.setKnowledgeSources(
+      await config.api.agent.connectSharePointSite(
         created._id!,
-        { sourceIds: ["site-1"] },
+        { siteId: "site-1" },
         {
           status: 400,
           body: {
@@ -329,7 +329,39 @@ describe("agent files", () => {
     })
   })
 
-  it("removes Gemini files for removed SharePoint sites when setting SharePoint sites", async () => {
+  it("rejects changing knowledge sources via generic agent update", async () => {
+    await withRagEnabled(async () => {
+      const created = await config.api.agent.create({
+        name: "SharePoint Agent Update Guard",
+        aiconfig: "default",
+      })
+
+      await config.api.agent.update(
+        {
+          ...created,
+          knowledgeSources: [
+            {
+              id: "sharepoint_site_test",
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                site: {
+                  id: "site-1",
+                },
+              },
+            },
+          ],
+        } as any,
+        {
+          status: 400,
+          body: {
+            message: 'Invalid body - "knowledgeSources" is not allowed',
+          },
+        }
+      )
+    })
+  })
+
+  it("removes Gemini files for a removed SharePoint site", async () => {
     await withRagEnabled(async () => {
       const created = await config.api.agent.create({
         name: "SharePoint Cleanup Agent",
@@ -393,15 +425,17 @@ describe("agent files", () => {
         "vector-store-1",
         "gemini-file-a"
       )
-      const response = await config.api.agent.setKnowledgeSources(
+      const response = await config.api.agent.disconnectSharePointSite(
         created._id!,
-        {
-          sourceIds: ["site-2"],
-        }
+        "site-1"
       )
 
       expect(deleteScope.isDone()).toBe(true)
-      expect(response.options.map(site => site.id)).toEqual(["site-2"])
+      expect(response).toEqual({
+        agentId: created._id!,
+        disconnected: true,
+        siteId: "site-1",
+      })
 
       const { files: remainingFiles } = await config.api.agent.fetchFiles(
         created._id!
@@ -446,7 +480,7 @@ describe("agent files", () => {
     })
   })
 
-  it("disconnect endpoint removes all SharePoint files", async () => {
+  it("disconnect endpoint removes SharePoint files for one site", async () => {
     await withRagEnabled(async () => {
       const created = await config.api.agent.create({
         name: "SharePoint Disconnect Endpoint Agent",
@@ -511,20 +545,23 @@ describe("agent files", () => {
         "gemini-file-disconnect-endpoint-b"
       )
 
-      const response = await config.api.agent.disconnectKnowledgeSources(
-        created._id!
+      const response = await config.api.agent.disconnectSharePointSite(
+        created._id!,
+        "site-1"
       )
       expect(response).toEqual({
         agentId: created._id!,
         disconnected: true,
+        siteId: "site-1",
       })
       expect(deleteScopeOne.isDone()).toBe(true)
-      expect(deleteScopeTwo.isDone()).toBe(true)
+      expect(deleteScopeTwo.isDone()).toBe(false)
 
       const { files: remainingFiles } = await config.api.agent.fetchFiles(
         created._id!
       )
-      expect(remainingFiles).toHaveLength(0)
+      expect(remainingFiles).toHaveLength(1)
+      expect(remainingFiles[0].filename).toContain("site-two")
     })
   })
 })

@@ -3,8 +3,10 @@ import { BudiStore } from "../BudiStore"
 import {
   Agent,
   AgentFileUploadResponse,
+  ConnectAgentSharePointSiteRequest,
+  ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
-  DisconnectAgentKnowledgeSourcesResponse,
+  DisconnectAgentSharePointSiteResponse,
   FetchAgentFilesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   KnowledgeSourceOption,
@@ -14,13 +16,13 @@ import {
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   KnowledgeBaseFileStatus,
-  SetAgentKnowledgeSourcesRequest,
-  SetAgentKnowledgeSourcesResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   ToolMetadata,
+  UpdateAgentSharePointSiteRequest,
+  UpdateAgentSharePointSiteResponse,
   UpdateAgentRequest,
   type KnowledgeBaseFile,
 } from "@budibase/types"
@@ -316,11 +318,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return response
   }
 
-  setAgentKnowledgeSources = async (
+  connectAgentSharePointSite = async (
     agentId: string,
-    body: SetAgentKnowledgeSourcesRequest
-  ): Promise<SetAgentKnowledgeSourcesResponse> => {
-    const response = await API.setAgentKnowledgeSources(agentId, body)
+    body: ConnectAgentSharePointSiteRequest
+  ): Promise<ConnectAgentSharePointSiteResponse> => {
+    const response = await API.connectAgentSharePointSite(agentId, body)
     this.setAgentKnowledgeSourceOptions(
       agentId,
       response.options,
@@ -329,10 +331,25 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return response
   }
 
-  disconnectAgentKnowledgeSources = async (
-    agentId: string
-  ): Promise<DisconnectAgentKnowledgeSourcesResponse> =>
-    await API.disconnectAgentKnowledgeSources(agentId)
+  updateAgentSharePointSite = async (
+    agentId: string,
+    siteId: string,
+    body: UpdateAgentSharePointSiteRequest
+  ): Promise<UpdateAgentSharePointSiteResponse> => {
+    const response = await API.updateAgentSharePointSite(agentId, siteId, body)
+    this.setAgentKnowledgeSourceOptions(
+      agentId,
+      response.options,
+      response.runs
+    )
+    return response
+  }
+
+  disconnectAgentSharePointSite = async (
+    agentId: string,
+    siteId: string
+  ): Promise<DisconnectAgentSharePointSiteResponse> =>
+    await API.disconnectAgentSharePointSite(agentId, siteId)
 
   syncAgentKnowledgeSources = async (
     agentId: string,

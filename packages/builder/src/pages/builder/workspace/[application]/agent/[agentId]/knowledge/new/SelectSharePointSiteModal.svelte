@@ -67,11 +67,8 @@
 
     saving = true
     try {
-      const nextSiteIds = Array.from(
-        new Set([...existingSiteIds, selectedSiteId])
-      )
-      await agentsStore.setAgentKnowledgeSources(agentId, {
-        sourceIds: nextSiteIds,
+      await agentsStore.connectAgentSharePointSite(agentId, {
+        siteId: selectedSiteId,
       })
       await agentsStore.fetchAgentFiles(agentId)
       await agentsStore.fetchAgents()

@@ -361,26 +361,11 @@
       body: `Are you sure you want to remove ${siteName}? This action can't be undone.`,
       okText: "Delete",
       onConfirm: async () => {
-        const nextSites = sharePointSources
-          .map(source => source.config.site)
-          .filter(
-            (site): site is { id: string; name?: string; webUrl?: string } =>
-              !!site?.id && site.id !== siteId
-          )
-        const nextSiteIds = nextSites.map(site => site.id)
         try {
-          if (nextSiteIds.length === 0) {
-            await agentsStore.disconnectAgentKnowledgeSources(agentId)
-          } else {
-            await agentsStore.setAgentKnowledgeSources(agentId, {
-              sourceIds: nextSiteIds,
-            })
-          }
+          await agentsStore.disconnectAgentSharePointSite(agentId, siteId)
           await agentsStore.fetchAgents()
           await fetchFiles(agentId)
-          if (nextSiteIds.length === 0) {
-            await loadSharePointSites(agentId)
-          }
+          await loadSharePointSites(agentId)
           notifications.success("SharePoint site removed")
         } catch (error) {
           console.error(error)

@@ -1,6 +1,9 @@
 import { context, docIds, encryption, HTTPError } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
-import type { Agent, Optional } from "@budibase/types"
+import type {
+  Agent,
+  CreateAgentRequest,
+} from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 
@@ -221,10 +224,7 @@ export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
 }
 
 export async function create(
-  request: Optional<
-    Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt" | "publishedAt">,
-    "aiconfig"
-  >
+  request: CreateAgentRequest
 ): Promise<Agent> {
   const db = context.getWorkspaceDB()
   const now = new Date().toISOString()
@@ -245,8 +245,8 @@ export async function create(
     createdAt: now,
     createdBy: request.createdBy,
     enabledTools: request.enabledTools || [],
-    knowledgeBases: request.knowledgeBases || [],
-    knowledgeSources: request.knowledgeSources,
+    knowledgeBases: [],
+    knowledgeSources: [],
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: request.slackIntegration,
@@ -285,7 +285,6 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     enabledTools: source.enabledTools || [],
-    knowledgeBases: source.knowledgeBases || [],
   })
 }
 
@@ -317,6 +316,7 @@ export async function update(agent: Agent): Promise<Agent> {
     updatedAt: now,
     enabledTools: agent.enabledTools ?? existing?.enabledTools ?? [],
     knowledgeBases: agent.knowledgeBases ?? existing?.knowledgeBases ?? [],
+    knowledgeSources: agent.knowledgeSources ?? existing?.knowledgeSources ?? [],
     discordIntegration: mergeDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,

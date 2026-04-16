@@ -26,15 +26,12 @@
   let syncMode = $state<"all" | "selective">("all")
   let includeNewFiles = $state(false)
   let scopeEditMode = $state(false)
-  let hasInitializedSelection = $state(false)
-  let initialExcludedPaths = $state<string[]>([])
-  let currentAgent = $derived($selectedAgent)
 
   const sharePointSource = $derived.by(() => {
     if (!siteId) {
       return undefined
     }
-    return currentAgent?.knowledgeSources?.find(
+    return $selectedAgent?.knowledgeSources?.find(
       source =>
         source.type === AgentKnowledgeSourceType.SHAREPOINT &&
         source.config.site?.id === siteId
@@ -52,12 +49,6 @@
   )
   const initialExcludePaths = $derived(
     sharePointSource?.config.filters?.excludePaths || []
-  )
-  const currentSiteIds = $derived.by(() =>
-    (currentAgent?.knowledgeSources || [])
-      .filter(source => source.type === AgentKnowledgeSourceType.SHAREPOINT)
-      .map(source => source.config.site?.id)
-      .filter((value): value is string => !!value)
   )
 
   const fileStatusToEntryStatus = (
@@ -105,10 +96,19 @@
     syncMode = hasInitialFilters ? "selective" : "all"
     includeNewFiles =
       initialExcludePaths.length > 0 && initialIncludePaths.length === 0
-    selectedEntryPaths = [...initialIncludePaths]
-    initialExcludedPaths = [...initialExcludePaths]
+    if (includeNewFiles) {
+      const excludedPathSet = new Set(initialExcludePaths)
+      selectedEntryPaths = selectablePaths.filter(
+        path => !excludedPathSet.has(path)
+      )
+    } else if (initialIncludePaths.length > 0) {
+      selectedEntryPaths = [...initialIncludePaths]
+    } else if (syncMode === "selective") {
+      selectedEntryPaths = [...selectablePaths]
+    } else {
+      selectedEntryPaths = []
+    }
     scopeEditMode = false
-    hasInitializedSelection = false
     modal?.show()
   }
 
@@ -148,15 +148,11 @@
         selectedPaths.length > 0 ? { includePaths: selectedPaths } : undefined
     }
 
-    const nextSiteIds = Array.from(new Set([...currentSiteIds, siteId]))
     try {
-      await agentsStore.setAgentKnowledgeSources(agentId, {
-        sourceIds: nextSiteIds,
-        sourceFilters: {
-          [siteId]: {
-            includePaths: filters?.includePaths,
-            excludePaths: filters?.excludePaths,
-          },
+      await agentsStore.updateAgentSharePointSite(agentId, siteId, {
+        filters: {
+          includePaths: filters?.includePaths,
+          excludePaths: filters?.excludePaths,
         },
       })
       await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
@@ -239,27 +235,6 @@
 
   const selectablePaths = $derived(sharePointFiles.map(file => file.filename))
 
-  $effect(() => {
-    if (!scopeEditMode || syncMode !== "selective") {
-      return
-    }
-    if (hasInitializedSelection) {
-      return
-    }
-    if (selectablePaths.length === 0) {
-      return
-    }
-    if (includeNewFiles) {
-      const excludedPathSet = new Set(initialExcludedPaths)
-      selectedEntryPaths = selectablePaths.filter(
-        path => !excludedPathSet.has(path)
-      )
-    } else if (selectedEntryPaths.length === 0) {
-      selectedEntryPaths = [...selectablePaths]
-    }
-    hasInitializedSelection = true
-  })
-
   const toggleAll = () => {
     const allPathSet = new Set(selectablePaths)
     const selectedPathCount = selectedEntryPaths.filter(path =>
@@ -324,6 +299,14 @@
                 checked={syncMode === "selective"}
                 onchange={() => {
                   syncMode = "selective"
+                  if (includeNewFiles) {
+                    const excludedPathSet = new Set(initialExcludePaths)
+                    selectedEntryPaths = selectablePaths.filter(
+                      path => !excludedPathSet.has(path)
+                    )
+                  } else if (selectedEntryPaths.length === 0) {
+                    selectedEntryPaths = [...selectablePaths]
+                  }
                 }}
               />
               Selective sync
@@ -336,7 +319,20 @@
         {#if syncMode === "selective"}
           <div class="include-new-toggle">
             <label>
-              <input type="checkbox" bind:checked={includeNewFiles} />
+              <input
+                type="checkbox"
+                checked={includeNewFiles}
+                onchange={event => {
+                  includeNewFiles = (event.currentTarget as HTMLInputElement)
+                    .checked
+                  if (includeNewFiles) {
+                    const excludedPathSet = new Set(initialExcludePaths)
+                    selectedEntryPaths = selectablePaths.filter(
+                      path => !excludedPathSet.has(path)
+                    )
+                  }
+                }}
+              />
               Include new files by default
             </label>
           </div>
@@ -358,6 +354,9 @@
               onclick={event => {
                 event.preventDefault()
                 scopeEditMode = true
+                if (syncMode === "selective" && selectedEntryPaths.length === 0) {
+                  selectedEntryPaths = [...selectablePaths]
+                }
               }}
             >
               Edit files

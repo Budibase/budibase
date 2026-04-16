@@ -82,17 +82,24 @@ export interface SyncAgentKnowledgeSourcesResponse {
   totalDiscovered: number
 }
 
-export interface SetAgentKnowledgeSourcesRequest {
-  sourceIds: string[]
-  sourceFilters?: Record<string, AgentKnowledgeSourceFilterConfig>
+export interface ConnectAgentSharePointSiteRequest {
+  siteId: string
 }
 
-export type SetAgentKnowledgeSourcesResponse =
+export type ConnectAgentSharePointSiteResponse =
   FetchAgentKnowledgeSourceOptionsResponse
 
-export interface DisconnectAgentKnowledgeSourcesResponse {
+export interface UpdateAgentSharePointSiteRequest {
+  filters?: AgentKnowledgeSourceFilterConfig
+}
+
+export type UpdateAgentSharePointSiteResponse =
+  FetchAgentKnowledgeSourceOptionsResponse
+
+export interface DisconnectAgentSharePointSiteResponse {
   agentId: string
   disconnected: true
+  siteId: string
 }
 
 export interface FetchChatAppAgentsResponse {

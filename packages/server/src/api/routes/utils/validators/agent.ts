@@ -69,10 +69,15 @@ export function updateAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
+      createdAt: OPTIONAL_STRING,
+      updatedAt: OPTIONAL_STRING,
+      publishedAt: OPTIONAL_STRING,
+      createdBy: OPTIONAL_STRING,
+      enabledTools: Joi.array().items(Joi.string()).optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
-    }).unknown(true)
+    })
   )
 }
 
@@ -141,23 +146,25 @@ export function syncAgentKnowledgeSourcesValidator() {
   )
 }
 
-export function setAgentKnowledgeSourcesValidator() {
+export function connectAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      sourceIds: Joi.array().items(Joi.string().trim().disallow("")).required(),
-      sourceFilters: Joi.object()
-        .pattern(
-          Joi.string().trim().disallow(""),
-          Joi.object({
-            includePaths: Joi.array()
-              .items(Joi.string().trim().disallow(""))
-              .optional(),
-            excludePaths: Joi.array()
-              .items(Joi.string().trim().disallow(""))
-              .optional(),
-          }).optional()
-        )
-        .optional(),
+      siteId: Joi.string().trim().disallow("").required(),
+    }).required()
+  )
+}
+
+export function updateAgentSharePointSiteValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      filters: Joi.object({
+        includePaths: Joi.array()
+          .items(Joi.string().trim().disallow(""))
+          .optional(),
+        excludePaths: Joi.array()
+          .items(Joi.string().trim().disallow(""))
+          .optional(),
+      }).optional(),
     }).required()
   )
 }
