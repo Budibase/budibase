@@ -44,6 +44,7 @@
     delete customSchema["status"]
     delete customSchema["firstName"]
     delete customSchema["lastName"]
+    delete customSchema["fullName"]
     return Object.entries(customSchema)
   }
 

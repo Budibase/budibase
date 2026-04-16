@@ -4,9 +4,10 @@ import {
   db as dbCore,
   tenancy,
   users as usersCore,
+  utils,
 } from "@budibase/backend-core"
 import { db as userDb } from "../users"
-import { SearchIndex, User } from "@budibase/types"
+import { SCIMDisableAction, SearchIndex, User } from "@budibase/types"
 
 export interface GetUsersFilters {
   equal?: Record<string, any>
@@ -78,4 +79,37 @@ export async function update(
 
 export async function remove(id: string) {
   return await userDb.destroy(id)
+}
+
+async function getAllSCIMUsers(): Promise<User[]> {
+  const allUsers = await usersCore.getAllUsers()
+  return allUsers.filter(u => u.scimInfo?.isSync)
+}
+
+export async function handleDisable(action: SCIMDisableAction): Promise<void> {
+  const scimUsers = await getAllSCIMUsers()
+  if (!scimUsers.length) {
+    return
+  }
+
+  switch (action) {
+    case "remove":
+      await usersCore.UserDB.bulkDelete(
+        scimUsers.map(u => ({ userId: u._id!, email: u.email }))
+      )
+      break
+    case "convert": {
+      const regularUsers = await Promise.all(
+        scimUsers.map(async u => {
+          const user = { ...u }
+          delete user.scimInfo
+          delete user.ssoId
+          user.password = await utils.hash(crypto.randomUUID())
+          return user
+        })
+      )
+      await usersCore.bulkUpdateGlobalUsers(regularUsers)
+      break
+    }
+  }
 }

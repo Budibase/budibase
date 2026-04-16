@@ -86,6 +86,14 @@ describe("Builder dataBinding", () => {
         runtimeBinding: "count",
         type: "context",
       },
+      {
+        category: "Current User",
+        icon: "user",
+        providerId: "user",
+        readableBinding: "Current User.fullName",
+        runtimeBinding: "[user].[fullName]",
+        type: "context",
+      },
     ]
     it("should convert a runtime binding to a readable one", () => {
       const textWithBindings = `Hello {{ [user].[firstName] }}! The count is {{ count }}.`
@@ -111,6 +119,17 @@ describe("Builder dataBinding", () => {
       ).toEqual(
         `Hello {{ Current User.firstName }}! The count is {{ Binding.count }}.`
       )
+    })
+
+    it("should convert fullName user bindings to readable format", () => {
+      const textWithBindings = `Hello {{ [user].[fullName] }}`
+      expect(
+        runtimeToReadableBinding(
+          bindableProperties,
+          textWithBindings,
+          "readableBinding"
+        )
+      ).toEqual(`Hello {{ Current User.fullName }}`)
     })
   })
 
@@ -152,6 +171,14 @@ describe("Builder dataBinding", () => {
         runtimeBinding: "[foo].[baz]",
         type: "context",
       },
+      {
+        category: "Current User",
+        icon: "user",
+        providerId: "user",
+        readableBinding: "Current User.fullName",
+        runtimeBinding: "[user].[fullName]",
+        type: "context",
+      },
     ]
     it("should convert a readable binding to a runtime one", () => {
       const textWithBindings = `Hello {{ Current User.firstName }}! The count is {{ Binding.count }}.`
@@ -184,6 +211,17 @@ describe("Builder dataBinding", () => {
           "runtimeBinding"
         )
       ).toEqual(`{{ [foo].[baz] }}`)
+    })
+
+    it("should convert fullName user bindings to runtime format", () => {
+      const textWithBindings = `{{ Current User.fullName }}`
+      expect(
+        readableToRuntimeBinding(
+          bindableProperties,
+          textWithBindings,
+          "runtimeBinding"
+        )
+      ).toEqual(`{{ [user].[fullName] }}`)
     })
   })
 
