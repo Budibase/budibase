@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { get } from "svelte/store"
 import {
+  AgentKnowledgeSourceType,
   KnowledgeBaseFileStatus,
   type Agent,
   type AgentFileUploadResponse,
@@ -48,6 +49,7 @@ describe("agentsStore sharepoint and file syncing", () => {
 
   afterEach(() => {
     store.stopAgentFilePolling()
+    store.stopAgentKnowledgeSourcePolling()
     vi.useRealTimers()
   })
 
@@ -189,6 +191,72 @@ describe("agentsStore sharepoint and file syncing", () => {
     await vi.advanceTimersByTimeAsync(80)
 
     expect(fetchAgentFiles).not.toHaveBeenCalled()
+  })
+
+  it("startAgentKnowledgeSourcePolling polls until first source run exists", async () => {
+    vi.useFakeTimers()
+    store.set({
+      agents: [
+        {
+          _id: "agent_1",
+          name: "Agent 1",
+          knowledgeSources: [
+            {
+              id: "sharepoint_source_1",
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                site: {
+                  id: "site-1",
+                  name: "Site 1",
+                  webUrl: "https://example.com/sites/1",
+                },
+              },
+            },
+          ],
+        } as Agent,
+      ],
+      tools: [],
+      agentsLoaded: false,
+      knowledgeByAgentId: {
+        agent_1: {
+          files: [],
+          sourceOptions: [],
+          sourceRuns: [],
+        },
+      },
+      currentAgentId: "agent_1",
+    })
+
+    fetchAgentKnowledgeSourceOptions
+      .mockResolvedValueOnce({
+        options: [],
+        runs: [],
+      })
+      .mockResolvedValueOnce({
+        options: [],
+        runs: [
+          {
+            sourceId: "sharepoint_source_1",
+            lastRunAt: "2026-04-16T00:00:00.000Z",
+            synced: 0,
+            failed: 0,
+            skipped: 0,
+            unsupported: 0,
+            totalDiscovered: 0,
+            status: "success",
+          },
+        ],
+      })
+
+    fetchAgentFiles.mockResolvedValue({ files: [] })
+
+    store.startAgentKnowledgeSourcePolling("agent_1", 25)
+    await vi.advanceTimersByTimeAsync(30)
+    await vi.advanceTimersByTimeAsync(30)
+    await vi.advanceTimersByTimeAsync(30)
+
+    expect(fetchAgentKnowledgeSourceOptions).toHaveBeenCalledTimes(2)
+    expect(fetchAgentFiles).toHaveBeenCalledTimes(2)
   })
 })
 

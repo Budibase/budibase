@@ -1,6 +1,7 @@
 import { API } from "@/api"
 import { BudiStore } from "../BudiStore"
 import {
+  AgentKnowledgeSourceType,
   Agent,
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
@@ -44,11 +45,19 @@ interface AgentStoreState {
 }
 
 export class AgentsStore extends BudiStore<AgentStoreState> {
+  private static readonly KNOWLEDGE_SOURCE_BOOTSTRAP_POLLS = 60
+
   private agentFilePolling?: {
     agentId: string
     interval: ReturnType<typeof setInterval>
     inFlight: boolean
   }
+  private agentKnowledgeSourcePolling?: {
+    agentId: string
+    interval: ReturnType<typeof setInterval>
+    inFlight: boolean
+  }
+  private knowledgeSourceBootstrapPollsByAgentId: Record<string, number> = {}
 
   constructor() {
     super({
@@ -139,6 +148,75 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     }
   }
 
+  private shouldPollAgentKnowledgeSources = (agentId: string) => {
+    const state = get(this.store)
+    const agent = state.agents.find(a => a._id === agentId)
+    if (!agent) {
+      return false
+    }
+
+    if ((this.knowledgeSourceBootstrapPollsByAgentId[agentId] || 0) > 0) {
+      return true
+    }
+
+    const sharePointSourceIds = (agent.knowledgeSources || [])
+      .filter(source => source.type === AgentKnowledgeSourceType.SHAREPOINT)
+      .map(source => source.id)
+
+    if (sharePointSourceIds.length === 0) {
+      delete this.knowledgeSourceBootstrapPollsByAgentId[agentId]
+      return false
+    }
+
+    const runs = state.knowledgeByAgentId[agentId]?.sourceRuns || []
+    const runBySourceId = new Set(runs.map(run => run.sourceId))
+    return sharePointSourceIds.some(sourceId => !runBySourceId.has(sourceId))
+  }
+
+  private pollAgentKnowledgeSourcesOnce = async (agentId: string) => {
+    if (
+      !this.agentKnowledgeSourcePolling ||
+      this.agentKnowledgeSourcePolling.agentId !== agentId
+    ) {
+      return
+    }
+    if (
+      this.agentKnowledgeSourcePolling.inFlight ||
+      !this.shouldPollAgentKnowledgeSources(agentId)
+    ) {
+      return
+    }
+
+    this.agentKnowledgeSourcePolling.inFlight = true
+    try {
+      await this.fetchAgentKnowledgeSourceOptions(agentId)
+      await this.fetchAgentFiles(agentId)
+    } finally {
+      const pendingBootstrapPolls =
+        this.knowledgeSourceBootstrapPollsByAgentId[agentId] || 0
+      if (pendingBootstrapPolls > 0) {
+        this.knowledgeSourceBootstrapPollsByAgentId[agentId] =
+          pendingBootstrapPolls - 1
+      }
+      if (this.agentKnowledgeSourcePolling?.agentId === agentId) {
+        this.agentKnowledgeSourcePolling.inFlight = false
+      }
+    }
+  }
+
+  private armKnowledgeSourceBootstrapPolling = (
+    agentId: string,
+    pollCount = AgentsStore.KNOWLEDGE_SOURCE_BOOTSTRAP_POLLS
+  ) => {
+    if (!agentId || pollCount <= 0) {
+      return
+    }
+    this.knowledgeSourceBootstrapPollsByAgentId[agentId] = Math.max(
+      this.knowledgeSourceBootstrapPollsByAgentId[agentId] || 0,
+      pollCount
+    )
+  }
+
   startAgentFilePolling = (agentId: string, intervalMs = 1000) => {
     if (!agentId) {
       return
@@ -167,6 +245,36 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     }
     clearInterval(this.agentFilePolling.interval)
     this.agentFilePolling = undefined
+  }
+
+  startAgentKnowledgeSourcePolling = (agentId: string, intervalMs = 1000) => {
+    if (!agentId) {
+      return
+    }
+    if (this.agentKnowledgeSourcePolling?.agentId === agentId) {
+      return
+    }
+    this.stopAgentKnowledgeSourcePolling()
+
+    const interval = setInterval(() => {
+      this.pollAgentKnowledgeSourcesOnce(agentId).catch(error => {
+        console.error("Failed to poll agent knowledge sources", error)
+      })
+    }, intervalMs)
+
+    this.agentKnowledgeSourcePolling = {
+      agentId,
+      interval,
+      inFlight: false,
+    }
+  }
+
+  stopAgentKnowledgeSourcePolling = () => {
+    if (!this.agentKnowledgeSourcePolling) {
+      return
+    }
+    clearInterval(this.agentKnowledgeSourcePolling.interval)
+    this.agentKnowledgeSourcePolling = undefined
   }
 
   init = async () => {
@@ -328,6 +436,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       response.options,
       response.runs
     )
+    this.armKnowledgeSourceBootstrapPolling(agentId)
     return response
   }
 
@@ -354,8 +463,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   syncAgentKnowledgeSources = async (
     agentId: string,
     body?: SyncAgentKnowledgeSourcesRequest
-  ): Promise<SyncAgentKnowledgeSourcesResponse> =>
-    await API.syncAgentKnowledgeSources(agentId, body)
+  ): Promise<SyncAgentKnowledgeSourcesResponse> => {
+    this.armKnowledgeSourceBootstrapPolling(agentId)
+    return await API.syncAgentKnowledgeSources(agentId, body)
+  }
 }
 export const agentsStore = new AgentsStore()
 export const selectedAgent = derived(agentsStore, state => {

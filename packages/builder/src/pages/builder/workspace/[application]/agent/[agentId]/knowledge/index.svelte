@@ -218,12 +218,15 @@
     const agentId = currentAgent?._id
     if (!agentId) {
       agentsStore.stopAgentFilePolling()
+      agentsStore.stopAgentKnowledgeSourcePolling()
       return
     }
 
     agentsStore.startAgentFilePolling(agentId)
+    agentsStore.startAgentKnowledgeSourcePolling(agentId)
     return () => {
       agentsStore.stopAgentFilePolling()
+      agentsStore.stopAgentKnowledgeSourcePolling()
     }
   })
 
@@ -297,7 +300,6 @@
     mode: SharePointSelectionMode
   ) {
     const agentId = currentAgent?._id
-    debugger
     if (agentId) {
       agentsStore.startAgentFilePolling(agentId)
     }
@@ -397,6 +399,7 @@
 
   onDestroy(() => {
     agentsStore.stopAgentFilePolling()
+    agentsStore.stopAgentKnowledgeSourcePolling()
   })
 </script>
 
