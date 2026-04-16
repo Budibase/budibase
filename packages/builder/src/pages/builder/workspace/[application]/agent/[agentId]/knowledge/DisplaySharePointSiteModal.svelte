@@ -8,6 +8,7 @@
   } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
+    KnowledgeBaseFileStatus,
     type KnowledgeBaseFile,
   } from "@budibase/types"
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
@@ -75,6 +76,24 @@
 
     const files = $agentsStore.knowledgeByAgentId[agentId]?.files || []
     return getKnowledgeSourceFiles(files, sourceId, siteId)
+  })
+  let sourceRun = $derived.by(() => {
+    if (!agentId || !sourceId) {
+      return undefined
+    }
+    const runs = $agentsStore.knowledgeByAgentId[agentId]?.sourceRuns || []
+    return runs.find(run => run.sourceId === sourceId)
+  })
+  let showProcessingState = $derived.by(() => {
+    if (!sourceId) {
+      return false
+    }
+    if (!sourceRun) {
+      return true
+    }
+    return sharePointFiles.some(
+      file => file.status === KnowledgeBaseFileStatus.PROCESSING
+    )
   })
 
   let modal = $state<Modal>()
@@ -336,12 +355,12 @@
 
         <div class="entries-header">
           <Body size="S">
-            {#if !scopeEditMode}
-              {selectedSiteLabel || "Current synced files"}
-            {:else if syncMode === "all"}
-              All files will be synced
-            {:else}
-              Select folders/files to sync
+            {#if scopeEditMode}
+              {#if syncMode === "all"}
+                All files will be synced
+              {:else}
+                Select folders/files to sync
+              {/if}
             {/if}
           </Body>
           {#if !scopeEditMode}
@@ -377,7 +396,11 @@
         </div>
 
         {#if sharePointFiles.length === 0}
-          <Body size="S">No folders or files found for this site.</Body>
+          <Body size="S">
+            {showProcessingState
+              ? "SharePoint sync is in progress. Files will appear here shortly."
+              : "No folders or files found for this site."}
+          </Body>
         {:else}
           <div class="entries-list">
             <TreeView
