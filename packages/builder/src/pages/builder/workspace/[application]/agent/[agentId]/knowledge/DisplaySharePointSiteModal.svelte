@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    ActionButton,
     Body,
     Modal,
     ModalContent,
@@ -292,47 +293,45 @@
       </div>
 
       {#if showScopeControls}
-        <div class="scope-controls">
-          <Body size="S">Sync scope</Body>
+        <div class="scope-controls card">
+          <div class="scope-header">
+            <Body size="S">Sync scope</Body>
+          </div>
           <div class="scope-options">
-            <label>
-              <input
-                type="radio"
-                name="sharepoint-sync-mode"
-                checked={syncMode === "all"}
-                onchange={() => {
-                  syncMode = "all"
-                  includeNewFiles = false
-                }}
-              />
+            <ActionButton
+              size="S"
+              selected={syncMode === "all"}
+              on:click={() => {
+                syncMode = "all"
+                includeNewFiles = false
+              }}
+            >
               Sync all files
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="sharepoint-sync-mode"
-                checked={syncMode === "selective"}
-                onchange={() => {
-                  syncMode = "selective"
-                  if (includeNewFiles) {
-                    const excludedPathSet = new Set(initialExcludePaths)
-                    selectedEntryPaths = selectablePaths.filter(
-                      path => !excludedPathSet.has(path)
-                    )
-                  } else if (selectedEntryPaths.length === 0) {
-                    selectedEntryPaths = [...selectablePaths]
-                  }
-                }}
-              />
+            </ActionButton>
+            <ActionButton
+              size="S"
+              selected={syncMode === "selective"}
+              on:click={() => {
+                syncMode = "selective"
+                if (includeNewFiles) {
+                  const excludedPathSet = new Set(initialExcludePaths)
+                  selectedEntryPaths = selectablePaths.filter(
+                    path => !excludedPathSet.has(path)
+                  )
+                } else if (selectedEntryPaths.length === 0) {
+                  selectedEntryPaths = [...selectablePaths]
+                }
+              }}
+            >
               Selective sync
-            </label>
+            </ActionButton>
           </div>
         </div>
       {/if}
 
       {#if showEntrySelection}
         {#if syncMode === "selective"}
-          <div class="include-new-toggle">
+          <div class="include-new-toggle card">
             <label>
               <input
                 type="checkbox"
@@ -354,7 +353,7 @@
         {/if}
 
         <div class="entries-header">
-          <Body size="S">
+          <Body size="M">
             {#if scopeEditMode}
               {#if syncMode === "all"}
                 All files will be synced
@@ -364,10 +363,10 @@
             {/if}
           </Body>
           {#if !scopeEditMode}
-            <button
-              class="link-btn"
-              onclick={event => {
-                event.preventDefault()
+            <ActionButton
+              quiet
+              size="S"
+              on:click={() => {
                 scopeEditMode = true
                 if (
                   syncMode === "selective" &&
@@ -378,19 +377,19 @@
               }}
             >
               Edit files
-            </button>
+            </ActionButton>
           {/if}
           {#if allowSelection}
-            <button
-              class="link-btn"
-              onclick={event => {
-                event.preventDefault()
+            <ActionButton
+              quiet
+              size="S"
+              on:click={() => {
                 toggleAll()
               }}
               disabled={syncMode !== "selective"}
             >
               {selectAllLabel}
-            </button>
+            </ActionButton>
             <span class="selected-count">{selectedCountLabel}</span>
           {/if}
         </div>
@@ -428,35 +427,53 @@
   .content {
     padding: var(--spacing-l);
     width: min(760px, 95vw);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
   }
 
   .title {
-    padding-bottom: var(--spacing-s);
+    padding-bottom: var(--spacing-xxs);
   }
 
   .entries-header {
-    margin-top: var(--spacing-s);
+    margin-top: var(--spacing-xxs);
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
   }
 
+  .card {
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 8px;
+    background: var(--spectrum-global-color-gray-100);
+  }
+
   .scope-controls {
-    margin-top: var(--spacing-s);
+    margin-top: var(--spacing-xs);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-s);
+    padding: var(--spacing-s);
+  }
+
+  .scope-header {
+    display: flex;
+    align-items: center;
   }
 
   .scope-options {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xxs);
-    font-size: 12px;
+    gap: var(--spacing-xs);
+  }
+
+  .scope-options :global(button) {
+    border-radius: 999px;
   }
 
   .include-new-toggle {
     margin-top: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-s);
     font-size: 12px;
   }
 
@@ -465,17 +482,19 @@
     max-height: 420px;
     overflow: auto;
     border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px;
+    border-radius: 8px;
     padding: var(--spacing-xs);
+    background: var(--spectrum-global-color-gray-100);
   }
 
-  .link-btn {
+  .entries-list :global(.spectrum-TreeView-itemLink) {
+    min-height: 30px;
+    border-radius: 6px;
+    padding-inline-end: 8px;
+  }
+
+  .entries-header :global(.spectrum-ActionButton:first-of-type) {
     margin-left: auto;
-    border: none;
-    background: none;
-    color: var(--spectrum-global-color-blue-600);
-    cursor: pointer;
-    font-size: 12px;
   }
 
   .selected-count {
