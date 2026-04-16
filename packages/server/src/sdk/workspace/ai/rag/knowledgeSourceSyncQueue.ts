@@ -152,6 +152,32 @@ export async function scheduleJob(job: KnowledgeSourceSyncJob) {
   })
 }
 
+export async function enqueueJob(job: KnowledgeSourceSyncJob) {
+  init()
+  return await getQueue().add(job)
+}
+
+export async function enqueueAgentJobs(
+  agentId: string,
+  sourceType: AgentKnowledgeSourceType,
+  sourceIds: string[]
+) {
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId || !agentId || sourceIds.length === 0) {
+    return
+  }
+  await Promise.all(
+    sourceIds.map(sourceId =>
+      enqueueJob({
+        workspaceId,
+        agentId,
+        sourceType,
+        sourceId,
+      })
+    )
+  )
+}
+
 export async function removeJob(job: KnowledgeSourceSyncJob) {
   const jobId = getJobId(job)
   const bullQueue = getQueue().getBullQueue()

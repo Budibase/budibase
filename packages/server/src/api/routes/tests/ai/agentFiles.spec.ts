@@ -401,10 +401,7 @@ describe("agent files", () => {
       )
 
       expect(deleteScope.isDone()).toBe(true)
-      expect(response.options.map(site => site.id)).toEqual([
-        "site-1",
-        "site-2",
-      ])
+      expect(response.options.map(site => site.id)).toEqual(["site-2"])
 
       const { files: remainingFiles } = await config.api.agent.fetchFiles(
         created._id!

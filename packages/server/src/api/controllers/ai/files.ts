@@ -218,13 +218,6 @@ export async function setAgentKnowledgeSources(
     addedSharePointSiteIds,
     removedSharePointSiteIds,
   })
-  const availableSites = await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
-  const availableById = new Map(
-    availableSites.options.map(site => [
-      site.id,
-      { name: site.name, webUrl: site.webUrl },
-    ])
-  )
   const existingById = new Map(
     sharePointSources
       .map(source => source.config.site)
@@ -241,7 +234,6 @@ export async function setAgentKnowledgeSources(
     const existingSource = sharePointSources.find(
       source => source.config.site?.id === siteId
     )
-    const fetchedSite = availableById.get(siteId)
     const requestedFilters = rawSourceFilters[siteId]
     const hasRequestedFilters = Object.prototype.hasOwnProperty.call(
       rawSourceFilters,
@@ -267,8 +259,8 @@ export async function setAgentKnowledgeSources(
       config: {
         site: {
           id: siteId,
-          name: fetchedSite?.name || existingSite?.name,
-          webUrl: fetchedSite?.webUrl || existingSite?.webUrl,
+          name: existingSite?.name,
+          webUrl: existingSite?.webUrl,
         },
         filters:
           nextIncludePaths || nextExcludePaths
@@ -302,7 +294,11 @@ export async function setAgentKnowledgeSources(
 
   const nextSourceIds = nextSources.map(source => source.id)
   if (nextSourceIds.length > 0) {
-    await sdk.ai.rag.syncSharePointSourcesForAgent(agentId, nextSourceIds)
+    await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueAgentJobs(
+      agentId,
+      AgentKnowledgeSourceType.SHAREPOINT,
+      nextSourceIds
+    )
   }
 
   console.log("Updated agent knowledge sources", {
@@ -312,7 +308,22 @@ export async function setAgentKnowledgeSources(
     removedSharePointSiteIds,
   })
 
-  ctx.body = await sdk.ai.rag.fetchSharePointSitesForAgent(agentId)
+  const runs = await sdk.ai.rag.fetchKnowledgeSourceSyncStateForAgent(agentId)
+  const options = nextSources
+    .map(source => source.config.site)
+    .filter(
+      (site): site is { id: string; name?: string; webUrl?: string } =>
+        !!site?.id
+    )
+    .map(site => ({
+      id: site.id,
+      name: site.name,
+      webUrl: site.webUrl,
+    }))
+  ctx.body = {
+    options,
+    runs: runs.runs,
+  }
   ctx.status = 200
 }
 
