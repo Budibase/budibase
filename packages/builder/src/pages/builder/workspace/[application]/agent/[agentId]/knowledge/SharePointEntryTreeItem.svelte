@@ -79,8 +79,6 @@
     switch (status) {
       case AgentKnowledgeSourceSyncEntryStatus.SYNCED:
         return "Ready"
-      case AgentKnowledgeSourceSyncEntryStatus.SKIPPED_EXISTING:
-        return "Already synced"
       case AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED:
         return "Not supported"
       case AgentKnowledgeSourceSyncEntryStatus.FAILED:
@@ -95,7 +93,6 @@
   const statusProps = (status?: AgentKnowledgeSourceSyncEntryStatus) => {
     switch (status) {
       case AgentKnowledgeSourceSyncEntryStatus.SYNCED:
-      case AgentKnowledgeSourceSyncEntryStatus.SKIPPED_EXISTING:
         return { positive: true }
       case AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED:
       case AgentKnowledgeSourceSyncEntryStatus.FAILED:

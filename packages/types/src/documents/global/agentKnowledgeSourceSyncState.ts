@@ -9,7 +9,6 @@ export enum AgentKnowledgeSourceSyncRunStatus {
 export enum AgentKnowledgeSourceSyncEntryStatus {
   SYNCED = "synced",
   FAILED = "failed",
-  SKIPPED_EXISTING = "skipped_existing",
   EXCLUDED = "excluded",
   UNSUPPORTED = "unsupported",
 }

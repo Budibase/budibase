@@ -421,13 +421,7 @@ export const fetchSharePointEntriesForAgent = async (
   if (!isValidSharePointSiteId(trimmedSiteId)) {
     throw new HTTPError("Invalid SharePoint site id", 400)
   }
-  const agent = await agentsSdk.getOrThrow(trimmedAgentId)
-  const sourceExists = getSharePointSources(agent).some(
-    source => trimString(source.config.site?.id) === trimmedSiteId
-  )
-  if (!sourceExists) {
-    return { entries: [] }
-  }
+  await agentsSdk.getOrThrow(trimmedAgentId)
 
   const stateId = docIds.generateAgentKnowledgeSourceSyncStateID(
     trimmedAgentId,
@@ -438,7 +432,9 @@ export const fetchSharePointEntriesForAgent = async (
     .getWorkspaceDB()
     .tryGet<AgentKnowledgeSourceSyncState>(stateId)
   const entriesMap = new Map<string, KnowledgeSourceEntry>()
-  for (const entry of syncState?.entries || []) {
+  const syncEntries = syncState?.entries || []
+
+  for (const entry of syncEntries) {
     const path = trimString(entry.path)
     if (!path) {
       continue
@@ -678,7 +674,7 @@ export const syncSharePointSourcesForAgent = async (
               path: file.path,
               externalSourceId,
               mimetype: file.mimetype,
-              status: AgentKnowledgeSourceSyncEntryStatus.SKIPPED_EXISTING,
+              status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
             })
             continue
           }

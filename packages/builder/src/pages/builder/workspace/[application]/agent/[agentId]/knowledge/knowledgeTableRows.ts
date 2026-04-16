@@ -120,9 +120,7 @@ export const getSharePointIncludedProgress = (
   const fileStatusByExternalSourceId = new Map(
     files
       .filter(
-        (
-          file
-        ): file is KnowledgeBaseFile & { externalSourceId: string } =>
+        (file): file is KnowledgeBaseFile & { externalSourceId: string } =>
           !!file.externalSourceId
       )
       .map(file => [file.externalSourceId, file.status] as const)
@@ -140,16 +138,15 @@ export const getSharePointIncludedProgress = (
     }
     totalSelected++
 
-    if (
-      entry.status === AgentKnowledgeSourceSyncEntryStatus.SKIPPED_EXISTING ||
-      entry.status === AgentKnowledgeSourceSyncEntryStatus.FAILED
-    ) {
+    if (entry.status === AgentKnowledgeSourceSyncEntryStatus.FAILED) {
       processed++
       continue
     }
 
     if (entry.status === AgentKnowledgeSourceSyncEntryStatus.SYNCED) {
-      const fileStatus = fileStatusByExternalSourceId.get(entry.externalSourceId)
+      const fileStatus = fileStatusByExternalSourceId.get(
+        entry.externalSourceId
+      )
       if (
         fileStatus != null &&
         fileStatus !== KnowledgeBaseFileStatus.PROCESSING
