@@ -176,7 +176,7 @@ export async function buildPromptAndTools(
   })
 
   const resolvedSystemPrompt = hasKnowledgeBases
-    ? `${systemPrompt}\n\nWhen users ask about attached files (for example size, type, upload status, or processing errors), call list_knowledge_files with a filename when possible.`
+    ? `${systemPrompt}\n\nWhen users ask about attached files (for example file names, counts, size, type, upload status, or processing errors), you must call list_knowledge_files before answering. Do not infer or invent file details without tool results. Use filename when possible.`
     : systemPrompt
 
   return {

@@ -81,7 +81,9 @@ describe("buildPromptAndTools", () => {
       "agent_1"
     )
     expect(Reflect.get(result.tools, "list_knowledge_files")).toBeDefined()
-    expect(result.systemPrompt).toContain("call list_knowledge_files")
+    expect(result.systemPrompt).toContain(
+      "you must call list_knowledge_files before answering"
+    )
   })
 
   it("does not add knowledge files helper when no knowledge base exists", async () => {
