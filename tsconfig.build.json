@@ -12,15 +12,15 @@
     "isolatedModules": true,
     "sourceMap": true,
     "paths": {
-      "@budibase/types": ["./packages/types/src"],
-      "@budibase/backend-core": ["./packages/backend-core/src"],
-      "@budibase/backend-core/*": ["./packages/backend-core/*"],
-      "@budibase/shared-core": ["./packages/shared-core/src"],
-      "@budibase/pro": ["./packages/pro/src"],
-      "@budibase/string-templates": ["./packages/string-templates/src"],
-      "@budibase/string-templates/*": ["./packages/string-templates/*"],
-      "@budibase/frontend-core": ["./packages/frontend-core/src"],
-      "@budibase/bbui": ["./packages/bbui/src"]
+      "@budibase/types": ["../types/src"],
+      "@budibase/backend-core": ["../backend-core/src"],
+      "@budibase/backend-core/*": ["../backend-core/*"],
+      "@budibase/shared-core": ["../shared-core/src"],
+      "@budibase/pro": ["../pro/src"],
+      "@budibase/string-templates": ["../string-templates/src"],
+      "@budibase/string-templates/*": ["../string-templates/*"],
+      "@budibase/frontend-core": ["../frontend-core/src"],
+      "@budibase/bbui": ["../bbui/src"]
     }
   },
   "exclude": []

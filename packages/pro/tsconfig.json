@@ -3,11 +3,11 @@
   "compilerOptions": {
     "sourceMap": true,
     "paths": {
-      "@budibase/types": ["./packages/types/src"],
-      "@budibase/backend-core": ["./packages/backend-core/src"],
-      "@budibase/backend-core/*": ["./packages/backend-core/*"],
-      "@budibase/shared-core": ["./packages/shared-core/src"],
-      "@budibase/string-templates": ["./packages/string-templates/src"]
+      "@budibase/types": ["../types/src"],
+      "@budibase/backend-core": ["../backend-core/src"],
+      "@budibase/backend-core/*": ["../backend-core/*"],
+      "@budibase/shared-core": ["../shared-core/src"],
+      "@budibase/string-templates": ["../string-templates/src"]
     }
   },
   "include": ["src/**/*", "tests/**/*"],
