@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from "svelte"
+  import { writable } from "svelte/store"
   import Checkbox from "../Form/Core/Checkbox.svelte"
   import Icon from "../Icon/Icon.svelte"
   import type { TreeViewContext } from "./context"
@@ -16,13 +17,18 @@
 
   const treeViewContext = getContext<TreeViewContext | undefined>(
     "bbui-treeview"
-  )
+  ) || {
+    selectable: writable(false),
+    quiet: writable(false),
+  }
+  const selectableStore = treeViewContext.selectable
+  const quietStore = treeViewContext.quiet
 
   const dispatch = createEventDispatcher<{ toggle: boolean; select: boolean }>()
 
   let isOpen = open
-  $: isSelectable = !!treeViewContext?.selectable
-  $: isQuiet = !!treeViewContext?.quiet
+  $: isSelectable = !!$selectableStore
+  $: isQuiet = !!$quietStore
   $: isChecked = checked ?? selected
   $: if (!hasChildren) {
     isOpen = false

@@ -1,4 +1,6 @@
+import type { Writable } from "svelte/store"
+
 export interface TreeViewContext {
-  selectable: boolean
-  quiet: boolean
+  selectable: Writable<boolean>
+  quiet: Writable<boolean>
 }
