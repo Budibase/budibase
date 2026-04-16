@@ -324,8 +324,24 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return created
   }
 
+  private sanitizeUpdateAgentPayload = (
+    agent: UpdateAgentRequest
+  ): UpdateAgentRequest => {
+    const {
+      knowledgeBases: _knowledgeBases,
+      knowledgeSources: _knowledgeSources,
+      ...rest
+    } = agent as UpdateAgentRequest & {
+      knowledgeBases?: unknown
+      knowledgeSources?: unknown
+    }
+    return rest
+  }
+
   updateAgent = async (agent: UpdateAgentRequest) => {
-    const updated = await API.updateAgent(agent)
+    const updated = await API.updateAgent(
+      this.sanitizeUpdateAgentPayload(agent)
+    )
     this.update(state => {
       const index = state.agents.findIndex(a => a._id === updated._id)
       if (index !== -1) {

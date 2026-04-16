@@ -1,11 +1,4 @@
-import type {
-  AgentKnowledgeSourceSyncEntryStatus,
-  KnowledgeBaseFileStatus,
-} from "@budibase/types"
-
-export type SharePointEntryNodeStatus =
-  | AgentKnowledgeSourceSyncEntryStatus
-  | KnowledgeBaseFileStatus
+import type { SharePointDisplayStatus } from "./sharePointStatus"
 
 export interface SharePointEntryTreeNode {
   id: string
@@ -13,5 +6,5 @@ export interface SharePointEntryTreeNode {
   path: string
   type: "folder" | "file"
   children: SharePointEntryTreeNode[]
-  status?: SharePointEntryNodeStatus
+  status?: SharePointDisplayStatus
 }

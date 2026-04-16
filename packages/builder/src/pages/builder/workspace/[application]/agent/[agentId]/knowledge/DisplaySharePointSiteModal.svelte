@@ -8,14 +8,12 @@
   } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
-    AgentKnowledgeSourceSyncEntryStatus,
-    KnowledgeBaseFileStatus,
     type KnowledgeBaseFile,
   } from "@budibase/types"
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
   import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
   import { agentsStore, selectedAgent } from "@/stores/portal"
-  import { utils } from "@budibase/shared-core"
+  import { toSharePointDisplayStatusFromFile } from "./sharePointStatus"
 
   export interface Props {
     agentId?: string
@@ -51,21 +49,6 @@
   const initialExcludePaths = $derived(
     sharePointSource?.config.filters?.excludePaths || []
   )
-
-  const fileStatusToEntryStatus = (
-    status: KnowledgeBaseFileStatus
-  ): AgentKnowledgeSourceSyncEntryStatus | undefined => {
-    switch (status) {
-      case KnowledgeBaseFileStatus.READY:
-        return AgentKnowledgeSourceSyncEntryStatus.SYNCED
-      case KnowledgeBaseFileStatus.FAILED:
-        return AgentKnowledgeSourceSyncEntryStatus.FAILED
-      case KnowledgeBaseFileStatus.PROCESSING:
-        return undefined
-      default:
-        throw utils.unreachable(status)
-    }
-  }
 
   const getKnowledgeSourceFiles = (
     files: KnowledgeBaseFile[],
@@ -212,14 +195,16 @@
             name: segment,
             path: currentPath,
             type: isLeaf ? "file" : "folder",
-            status: isLeaf ? fileStatusToEntryStatus(file.status) : undefined,
+            status: isLeaf
+              ? toSharePointDisplayStatusFromFile(file.status)
+              : undefined,
             children: [],
           }
           byPath.set(currentPath, node)
           parent.push(node)
         } else if (isLeaf) {
           node.type = "file"
-          node.status = fileStatusToEntryStatus(file.status)
+          node.status = toSharePointDisplayStatusFromFile(file.status)
         }
         parent = node.children
       }
