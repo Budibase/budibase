@@ -22,12 +22,7 @@
 
   let { agentId, existingSiteIds = [], onSelectiveReady }: Props = $props()
 
-  let sharePointSites = $derived.by(() => {
-    if (!agentId) {
-      return [] as KnowledgeSourceOption[]
-    }
-    return $agentsStore.knowledgeByAgentId[agentId]?.sourceOptions || []
-  })
+  let sharePointSites = $state<KnowledgeSourceOption[]>([])
   let availableSites = $derived.by(() => {
     const excluded = new Set(existingSiteIds)
     return sharePointSites.filter(site => !excluded.has(site.id))
@@ -54,16 +49,23 @@
 
   const loadSharePointSites = async () => {
     if (!agentId) {
+      sharePointSites = []
       selectedSiteId = ""
       return
     }
     loadingSites = true
+    sharePointSites = []
+    selectedSiteId = ""
     try {
-      await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
+      const response = await agentsStore.fetchAgentKnowledgeSourceOptions(
+        agentId
+      )
+      sharePointSites = response.options
       selectedSiteId = displaySharePointSites[0]?.id || ""
     } catch (error) {
       console.error(error)
       notifications.error("Failed to fetch SharePoint sites")
+      sharePointSites = []
       selectedSiteId = ""
     } finally {
       loadingSites = false
@@ -71,8 +73,8 @@
   }
 
   export async function show() {
-    modal?.show()
     await loadSharePointSites()
+    modal?.show()
   }
 
   export function hide() {
