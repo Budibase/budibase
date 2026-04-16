@@ -179,7 +179,7 @@ export const toSharePointConnectionRows = ({
   loadingSharePointSites,
   onDelete,
   onSync,
-  onConfigure,
+  onClick: onConfigure,
 }: {
   hasSharePointConnection: boolean
   selectedSiteIds: string[]
@@ -192,7 +192,7 @@ export const toSharePointConnectionRows = ({
   loadingSharePointSites: boolean
   onDelete: (siteId: string) => Promise<void>
   onSync: (sourceId: string) => Promise<void>
-  onConfigure: (siteId: string) => Promise<void>
+  onClick: (siteId: string) => Promise<void>
 }): SharePointConnectionTableRow[] => {
   if (!hasSharePointConnection) {
     return []

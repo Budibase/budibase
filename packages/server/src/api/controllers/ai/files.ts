@@ -243,6 +243,10 @@ export async function setAgentKnowledgeSources(
     )
     const fetchedSite = availableById.get(siteId)
     const requestedFilters = rawSourceFilters[siteId]
+    const hasRequestedFilters = Object.prototype.hasOwnProperty.call(
+      rawSourceFilters,
+      siteId
+    )
     const includePaths = normalizePathFilters(requestedFilters?.includePaths)
     const excludePaths = normalizePathFilters(requestedFilters?.excludePaths)
     const existingIncludePaths = normalizePathFilters(
@@ -251,6 +255,12 @@ export async function setAgentKnowledgeSources(
     const existingExcludePaths = normalizePathFilters(
       existingSource?.config.filters?.excludePaths
     )
+    const nextIncludePaths = hasRequestedFilters
+      ? includePaths
+      : includePaths || existingIncludePaths
+    const nextExcludePaths = hasRequestedFilters
+      ? excludePaths
+      : excludePaths || existingExcludePaths
     return {
       id: sourceId,
       type: AgentKnowledgeSourceType.SHAREPOINT,
@@ -261,13 +271,10 @@ export async function setAgentKnowledgeSources(
           webUrl: fetchedSite?.webUrl || existingSite?.webUrl,
         },
         filters:
-          includePaths ||
-          excludePaths ||
-          existingIncludePaths ||
-          existingExcludePaths
+          nextIncludePaths || nextExcludePaths
             ? {
-                includePaths: includePaths || existingIncludePaths,
-                excludePaths: excludePaths || existingExcludePaths,
+                includePaths: nextIncludePaths,
+                excludePaths: nextExcludePaths,
               }
             : undefined,
       },

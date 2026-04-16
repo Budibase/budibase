@@ -41,10 +41,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       agents: [],
       tools: [],
       agentsLoaded: false,
-      filesByAgentId: {},
-      knowledgeSourceOptionsByAgentId: {},
-      knowledgeSourceRunsByAgentId: {},
-      knowledgeSourceEntriesByAgentId: {},
+      knowledgeByAgentId: {},
       currentAgentId: undefined,
     })
   })
@@ -78,7 +75,7 @@ describe("agentsStore sharepoint and file syncing", () => {
     const files: KnowledgeBaseFile[] = [
       {
         _id: "kb_file_1",
-        knowledgeBaseId: "kb_1",
+        knowledgeSourceId: "local_upload",
         ragSourceId: "rag_source_1",
         filename: "notes.md",
         objectStoreKey: "object/key",
@@ -92,7 +89,7 @@ describe("agentsStore sharepoint and file syncing", () => {
 
     expect(fetchAgentFiles).toHaveBeenCalledWith("agent_1")
     expect(response.files).toHaveLength(1)
-    expect(get(store.store).filesByAgentId["agent_1"]).toEqual(files)
+    expect(get(store.store).knowledgeByAgentId["agent_1"]?.files).toEqual(files)
   })
 
   it("fetchAgentKnowledgeSourceOptions forwards request", async () => {
@@ -105,10 +102,10 @@ describe("agentsStore sharepoint and file syncing", () => {
 
     expect(fetchAgentKnowledgeSourceOptions).toHaveBeenCalledWith("agent_1")
     expect(result.options).toHaveLength(1)
-    expect(get(store.store).knowledgeSourceOptionsByAgentId["agent_1"]).toEqual(
-      result.options
-    )
-    expect(get(store.store).knowledgeSourceRunsByAgentId["agent_1"]).toEqual(
+    expect(
+      get(store.store).knowledgeByAgentId["agent_1"]?.sourceOptions
+    ).toEqual(result.options)
+    expect(get(store.store).knowledgeByAgentId["agent_1"]?.sourceRuns).toEqual(
       result.runs
     )
   })
@@ -119,22 +116,23 @@ describe("agentsStore sharepoint and file syncing", () => {
       agents: [],
       tools: [],
       agentsLoaded: false,
-      filesByAgentId: {
-        agent_1: [
-          {
-            _id: "kb_file_1",
-            knowledgeBaseId: "kb_1",
-            ragSourceId: "rag_source_1",
-            filename: "notes.md",
-            objectStoreKey: "object/key",
-            status: KnowledgeBaseFileStatus.PROCESSING,
-            uploadedBy: "user_1",
-          },
-        ],
+      knowledgeByAgentId: {
+        agent_1: {
+          files: [
+            {
+              _id: "kb_file_1",
+              knowledgeSourceId: "local_upload",
+              ragSourceId: "rag_source_1",
+              filename: "notes.md",
+              objectStoreKey: "object/key",
+              status: KnowledgeBaseFileStatus.PROCESSING,
+              uploadedBy: "user_1",
+            },
+          ],
+          sourceOptions: [],
+          sourceRuns: [],
+        },
       },
-      knowledgeSourceOptionsByAgentId: {},
-      knowledgeSourceRunsByAgentId: {},
-      knowledgeSourceEntriesByAgentId: {},
       currentAgentId: undefined,
     })
 
@@ -142,7 +140,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       files: [
         {
           _id: "kb_file_1",
-          knowledgeBaseId: "kb_1",
+          knowledgeSourceId: "local_upload",
           ragSourceId: "rag_source_1",
           filename: "notes.md",
           objectStoreKey: "object/key",
@@ -156,9 +154,9 @@ describe("agentsStore sharepoint and file syncing", () => {
     await vi.advanceTimersByTimeAsync(60)
 
     expect(fetchAgentFiles).toHaveBeenCalledTimes(1)
-    expect(get(store.store).filesByAgentId["agent_1"][0].status).toBe(
-      KnowledgeBaseFileStatus.READY
-    )
+    expect(
+      get(store.store).knowledgeByAgentId["agent_1"]?.files[0].status
+    ).toBe(KnowledgeBaseFileStatus.READY)
   })
 
   it("startAgentFilePolling does not fetch when there are no processing files", async () => {
@@ -167,22 +165,23 @@ describe("agentsStore sharepoint and file syncing", () => {
       agents: [],
       tools: [],
       agentsLoaded: false,
-      filesByAgentId: {
-        agent_1: [
-          {
-            _id: "kb_file_1",
-            knowledgeBaseId: "kb_1",
-            ragSourceId: "rag_source_1",
-            filename: "notes.md",
-            objectStoreKey: "object/key",
-            status: KnowledgeBaseFileStatus.READY,
-            uploadedBy: "user_1",
-          },
-        ],
+      knowledgeByAgentId: {
+        agent_1: {
+          files: [
+            {
+              _id: "kb_file_1",
+              knowledgeSourceId: "local_upload",
+              ragSourceId: "rag_source_1",
+              filename: "notes.md",
+              objectStoreKey: "object/key",
+              status: KnowledgeBaseFileStatus.READY,
+              uploadedBy: "user_1",
+            },
+          ],
+          sourceOptions: [],
+          sourceRuns: [],
+        },
       },
-      knowledgeSourceOptionsByAgentId: {},
-      knowledgeSourceRunsByAgentId: {},
-      knowledgeSourceEntriesByAgentId: {},
       currentAgentId: undefined,
     })
 

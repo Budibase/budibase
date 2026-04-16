@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 const { execSync, spawnSync } = require("node:child_process")
+const { existsSync } = require("node:fs")
 
 const mode = process.argv[2] || "check"
 
 if (!["check", "fix"].includes(mode)) {
-  console.error('Usage: node scripts/lintChanged.js [check|fix]')
+  console.error("Usage: node scripts/lintChanged.js [check|fix]")
   process.exit(1)
 }
 
@@ -29,7 +30,9 @@ const originDefaultBranch = (() => {
   return head.replace("refs/remotes/origin/", "")
 })()
 
-const baseRef = originDefaultBranch ? `origin/${originDefaultBranch}` : "origin/master"
+const baseRef = originDefaultBranch
+  ? `origin/${originDefaultBranch}`
+  : "origin/master"
 const mergeBase = runGit(`git merge-base ${baseRef} HEAD`) || "HEAD~1"
 
 const changedSets = [
@@ -41,6 +44,8 @@ const changedSets = [
 
 const lintableFiles = [...new Set(changedSets.join("\n").split("\n"))].filter(
   file =>
+    file &&
+    existsSync(file) &&
     file.startsWith("packages/") &&
     (file.endsWith(".js") || file.endsWith(".ts") || file.endsWith(".svelte"))
 )

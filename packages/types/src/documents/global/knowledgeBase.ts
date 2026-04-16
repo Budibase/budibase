@@ -21,7 +21,7 @@ export enum KnowledgeBaseFileStatus {
 }
 
 export interface KnowledgeBaseFile extends Document {
-  knowledgeBaseId: string
+  knowledgeSourceId: string
   filename: string
   mimetype?: string
   size?: number

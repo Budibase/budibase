@@ -6,10 +6,8 @@ import {
   CreateAgentRequest,
   DisconnectAgentKnowledgeSourcesResponse,
   FetchAgentFilesResponse,
-  FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   KnowledgeSourceOption,
-  KnowledgeSourceEntry,
   KnowledgeSourceSyncRun,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -33,12 +31,13 @@ interface AgentStoreState {
   currentAgentId?: string
   tools: ToolMetadata[]
   agentsLoaded: boolean
-  filesByAgentId: Record<string, KnowledgeBaseFile[]>
-  knowledgeSourceOptionsByAgentId: Record<string, KnowledgeSourceOption[]>
-  knowledgeSourceRunsByAgentId: Record<string, KnowledgeSourceSyncRun[]>
-  knowledgeSourceEntriesByAgentId: Record<
+  knowledgeByAgentId: Record<
     string,
-    Record<string, KnowledgeSourceEntry[]>
+    {
+      files: KnowledgeBaseFile[]
+      sourceOptions: KnowledgeSourceOption[]
+      sourceRuns: KnowledgeSourceSyncRun[]
+    }
   >
 }
 
@@ -54,16 +53,30 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       agents: [],
       tools: [],
       agentsLoaded: false,
-      filesByAgentId: {},
-      knowledgeSourceOptionsByAgentId: {},
-      knowledgeSourceRunsByAgentId: {},
-      knowledgeSourceEntriesByAgentId: {},
+      knowledgeByAgentId: {},
     })
+  }
+
+  private getAgentKnowledgeState = (
+    state: AgentStoreState,
+    agentId: string
+  ) => {
+    return (
+      state.knowledgeByAgentId[agentId] || {
+        files: [],
+        sourceOptions: [],
+        sourceRuns: [],
+      }
+    )
   }
 
   private setAgentFiles = (agentId: string, files: KnowledgeBaseFile[]) => {
     this.update(state => {
-      state.filesByAgentId[agentId] = files
+      const existing = this.getAgentKnowledgeState(state, agentId)
+      state.knowledgeByAgentId[agentId] = {
+        ...existing,
+        files,
+      }
       return state
     })
   }
@@ -74,21 +87,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     runs: KnowledgeSourceSyncRun[]
   ) => {
     this.update(state => {
-      state.knowledgeSourceOptionsByAgentId[agentId] = options
-      state.knowledgeSourceRunsByAgentId[agentId] = runs
-      return state
-    })
-  }
-
-  private setAgentKnowledgeSourceEntries = (
-    agentId: string,
-    siteId: string,
-    entries: KnowledgeSourceEntry[]
-  ) => {
-    this.update(state => {
-      state.knowledgeSourceEntriesByAgentId[agentId] = {
-        ...(state.knowledgeSourceEntriesByAgentId[agentId] || {}),
-        [siteId]: entries,
+      const existing = this.getAgentKnowledgeState(state, agentId)
+      state.knowledgeByAgentId[agentId] = {
+        ...existing,
+        sourceOptions: options,
+        sourceRuns: runs,
       }
       return state
     })
@@ -96,7 +99,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   private shouldPollAgentFiles = (agentId: string) => {
     const state = get(this.store)
-    const files = state.filesByAgentId[agentId] || []
+    const files = state.knowledgeByAgentId[agentId]?.files || []
     return files.some(
       file => file.status === KnowledgeBaseFileStatus.PROCESSING
     )
@@ -299,15 +302,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return response
   }
 
-  fetchAgentKnowledgeSourceEntries = async (
-    agentId: string,
-    siteId: string
-  ): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
-    const response = await API.fetchAgentKnowledgeSourceEntries(agentId, siteId)
-    this.setAgentKnowledgeSourceEntries(agentId, siteId, response.entries)
-    return response
-  }
-
   setAgentKnowledgeSources = async (
     agentId: string,
     body: SetAgentKnowledgeSourcesRequest
@@ -333,6 +327,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     await API.syncAgentKnowledgeSources(agentId, body)
 }
 export const agentsStore = new AgentsStore()
-export const selectedAgent = derived(agentsStore, state =>
-  state.agents.find(a => a._id === state.currentAgentId)
-)
+export const selectedAgent = derived(agentsStore, state => {
+  const agent = state.agents.find(a => a._id === state.currentAgentId)
+  if (!agent) {
+    return agent
+  }
+
+  return { _id: agent._id!, _rev: agent._rev!, ...agent }
+})

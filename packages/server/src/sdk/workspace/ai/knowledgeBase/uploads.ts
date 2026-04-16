@@ -7,6 +7,7 @@ import { find as findKnowledgeBase } from "./crud"
 
 interface UploadKnowledgeBaseFileInput {
   knowledgeBaseId: string
+  knowledgeSourceId: string
   filename: string
   mimetype?: string
   size?: number
@@ -50,7 +51,7 @@ export const uploadKnowledgeBaseFile = async (
 
     const knowledgeBaseFile = await createKnowledgeBaseFile({
       id: fileId,
-      knowledgeBaseId: input.knowledgeBaseId,
+      knowledgeSourceId: input.knowledgeSourceId,
       filename: input.filename,
       mimetype: input.mimetype,
       objectStoreKey,

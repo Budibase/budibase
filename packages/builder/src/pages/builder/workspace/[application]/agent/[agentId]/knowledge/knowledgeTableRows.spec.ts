@@ -20,7 +20,7 @@ const makeFile = (
   overrides: Partial<KnowledgeBaseFile>
 ): KnowledgeBaseFile => ({
   _id: "file_1",
-  knowledgeBaseId: "kb_1",
+  knowledgeSourceId: "local_upload",
   filename: "file.txt",
   objectStoreKey: "object/key",
   ragSourceId: "rag_source_1",
@@ -232,7 +232,7 @@ describe("knowledgeTableRows", () => {
       loadingSharePointSites: false,
       onDelete: async () => {},
       onSync: async () => {},
-      onConfigure: async () => {},
+      onClick: async () => {},
     })
 
     expect(rows[0].displayStatus).toBe("1/2 files")

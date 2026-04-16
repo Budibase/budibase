@@ -621,6 +621,13 @@ export const syncSharePointSourcesForAgent = async (
     })
     try {
       const source = sourceBySiteId.get(siteId)
+      const knowledgeSourceId = source?.id
+      if (!knowledgeSourceId) {
+        throw new HTTPError(
+          `SharePoint source not found for site ${siteId}`,
+          400
+        )
+      }
       const sourceFilters = source?.config.filters
       const driveIds = await listDrives(bearerToken, siteId)
       console.log("Fetched SharePoint drives for site", {
@@ -688,6 +695,7 @@ export const syncSharePointSourcesForAgent = async (
 
             await knowledgeBaseSdk.uploadKnowledgeBaseFile({
               knowledgeBaseId,
+              knowledgeSourceId,
               filename: file.filename,
               mimetype: file.mimetype,
               size: buffer.byteLength,

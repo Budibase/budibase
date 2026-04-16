@@ -1,4 +1,5 @@
 import {
+  DocumentType,
   AgentMessageRagSource,
   type Agent,
   type KnowledgeBase,
@@ -12,6 +13,24 @@ import { HTTPError, locks } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
+
+const LOCAL_KNOWLEDGE_SOURCE_ID = "local_upload"
+
+const getKnowledgeBaseIdFromFileId = (fileId?: string): string | undefined => {
+  if (!fileId) {
+    return undefined
+  }
+  const prefix = `${DocumentType.KNOWLEDGE_BASE_FILE}_`
+  if (!fileId.startsWith(prefix)) {
+    return undefined
+  }
+  const suffix = fileId.slice(prefix.length)
+  const lastSeparator = suffix.lastIndexOf("_")
+  if (lastSeparator < 1) {
+    return undefined
+  }
+  return suffix.slice(0, lastSeparator)
+}
 
 const resolveKnowledgeBasesForAgent = async (
   agent: Agent
@@ -124,6 +143,7 @@ export const uploadFileForAgent = async (
 
   return await knowledgeBaseSdk.uploadKnowledgeBaseFile({
     knowledgeBaseId,
+    knowledgeSourceId: LOCAL_KNOWLEDGE_SOURCE_ID,
     filename: input.filename,
     mimetype: input.mimetype,
     size: input.size ?? input.buffer.byteLength,
@@ -137,12 +157,16 @@ export const deleteFileForAgent = async (
   fileId: string
 ): Promise<void> => {
   const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = getKnowledgeBaseIdFromFileId(file._id)
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
   const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
-  if (!knowledgeBaseIds.includes(file.knowledgeBaseId)) {
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
     throw new HTTPError("File does not belong to this agent", 404)
   }
 
-  const knowledgeBase = await knowledgeBaseSdk.find(file.knowledgeBaseId)
+  const knowledgeBase = await knowledgeBaseSdk.find(fileKnowledgeBaseId)
   if (!knowledgeBase) {
     throw new HTTPError("Agent file storage not found", 404)
   }

@@ -54,12 +54,10 @@ describe("agents crud", () => {
       const files = [
         {
           _id: "file_1",
-          knowledgeBaseId: "kb_1",
           filename: "doc-1.pdf",
         },
         {
           _id: "file_2",
-          knowledgeBaseId: "kb_1",
           filename: "doc-2.pdf",
         },
       ] as KnowledgeBaseFile[]
@@ -134,7 +132,6 @@ describe("agents crud", () => {
       const files = [
         {
           _id: "file_3",
-          knowledgeBaseId: "kb_3",
           filename: "doc-3.pdf",
         },
       ] as KnowledgeBaseFile[]

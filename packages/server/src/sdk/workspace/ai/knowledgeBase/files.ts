@@ -18,7 +18,7 @@ import { deleteKnowledgeBaseFileChunks } from "../rag/files"
 
 interface CreateKnowledgeBaseFileOptions {
   id: string
-  knowledgeBaseId: string
+  knowledgeSourceId: string
   filename: string
   mimetype?: string
   size?: number
@@ -34,7 +34,7 @@ export const createKnowledgeBaseFile = async (
   const db = context.getWorkspaceDB()
   const {
     id,
-    knowledgeBaseId,
+    knowledgeSourceId,
     filename,
     mimetype,
     size,
@@ -43,14 +43,14 @@ export const createKnowledgeBaseFile = async (
     ragSourceId,
     externalSourceId,
   } = options
-  const _id = id || docIds.generateKnowledgeBaseFileID(knowledgeBaseId)
+  const _id = id
   if (!docIds.isKnowledgeBaseFileID(_id)) {
     throw new Error(`Id ${_id} is not valid for a knowledge base file`)
   }
 
   const doc: RequiredKeys<ToDocCreateMetadata<KnowledgeBaseFile>> = {
     _id,
-    knowledgeBaseId,
+    knowledgeSourceId,
     filename,
     mimetype,
     size,
