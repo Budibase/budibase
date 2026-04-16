@@ -1,5 +1,6 @@
 import { helpers } from "@budibase/shared-core"
 import {
+  AgentKnowledgeSourceSyncEntryStatus,
   KnowledgeBaseFileStatus,
   type KnowledgeBaseFile,
   type KnowledgeSourceSyncRun,
@@ -107,6 +108,58 @@ export const getSharePointFileProcessingCounts = (
   return { ready, failed, processing }
 }
 
+export const getSharePointIncludedProgress = (
+  files: KnowledgeBaseFile[],
+  run?: KnowledgeSourceSyncRun
+) => {
+  const entries = run?.entries || []
+  if (entries.length === 0) {
+    return undefined
+  }
+
+  const fileStatusByExternalSourceId = new Map(
+    files
+      .filter(
+        (
+          file
+        ): file is KnowledgeBaseFile & { externalSourceId: string } =>
+          !!file.externalSourceId
+      )
+      .map(file => [file.externalSourceId, file.status] as const)
+  )
+
+  let totalSelected = 0
+  let processed = 0
+
+  for (const entry of entries) {
+    if (entry.status === AgentKnowledgeSourceSyncEntryStatus.EXCLUDED) {
+      continue
+    }
+    totalSelected++
+
+    if (
+      entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED ||
+      entry.status === AgentKnowledgeSourceSyncEntryStatus.SKIPPED_EXISTING ||
+      entry.status === AgentKnowledgeSourceSyncEntryStatus.FAILED
+    ) {
+      processed++
+      continue
+    }
+
+    if (entry.status === AgentKnowledgeSourceSyncEntryStatus.SYNCED) {
+      const fileStatus = fileStatusByExternalSourceId.get(entry.externalSourceId)
+      if (
+        fileStatus != null &&
+        fileStatus !== KnowledgeBaseFileStatus.PROCESSING
+      ) {
+        processed++
+      }
+    }
+  }
+
+  return { processed, totalSelected }
+}
+
 export const getSharePointLastSyncLabel = (
   runsBySiteId: Record<string, KnowledgeSourceSyncRun>,
   siteId: string
@@ -161,8 +214,15 @@ export const toSharePointConnectionRows = ({
         files,
         siteId
       )
-      const total = (run?.totalDiscovered || 0) - (run?.unsupported || 0)
-      const completed = Math.min(ready + failed, total)
+      const includedProgress = getSharePointIncludedProgress(
+        getSharePointFilesForSite(files, siteId),
+        run
+      )
+      const total =
+        includedProgress?.totalSelected ??
+        (run?.totalDiscovered || 0) - (run?.unsupported || 0)
+      const completed =
+        includedProgress?.processed ?? Math.min(ready + failed, total)
       const siteDisplayName =
         site.name ||
         site.webUrl ||
