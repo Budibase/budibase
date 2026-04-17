@@ -1251,6 +1251,87 @@ describe("Agent chat tool call tracking", () => {
       )
     })
 
+    it("keeps RAG and all tools for document content questions that ask how many", async () => {
+      const listKnowledgeFilesTool = { execute: jest.fn() } as any
+      const otherTool = { execute: jest.fn() } as any
+
+      ;(
+        sdk.ai.agents.getOrThrow as jest.MockedFunction<
+          typeof sdk.ai.agents.getOrThrow
+        >
+      ).mockResolvedValue({
+        _id: "agent-1",
+        name: "Test Agent",
+        aiconfig: "config-1",
+        knowledgeBases: ["kb-1"],
+      } as any)
+      ;(
+        sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
+          typeof sdk.ai.agents.buildPromptAndTools
+        >
+      ).mockResolvedValue({
+        systemPrompt: "system",
+        tools: {
+          list_knowledge_files: listKnowledgeFilesTool,
+          get_table: otherTool,
+        },
+        toolDisplayNames: {},
+      })
+      ;(
+        retrieveContextForAgent as jest.MockedFunction<
+          typeof retrieveContextForAgent
+        >
+      ).mockResolvedValue({
+        text: "Retrieved context",
+        chunks: [],
+        sources: [
+          {
+            sourceId: "pricing-source",
+            filename: "pricing.pdf",
+          },
+        ],
+      })
+
+      jest.mocked(streamText).mockImplementation(makeStreamTextMock([]) as any)
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await withRagEnabled(async () =>
+        config
+          .getRequest()!
+          .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+          .set(headers)
+          .send({
+            agentId: "agent-1",
+            messages: [
+              {
+                id: "msg-1",
+                role: "user",
+                parts: [
+                  {
+                    type: "text",
+                    text: "How many users does the pricing document allow?",
+                  },
+                ],
+              },
+            ],
+            transient: true,
+          })
+      )
+
+      expect(res.status).toBe(200)
+      expect(retrieveContextForAgent).toHaveBeenCalledWith(
+        expect.objectContaining({ _id: "agent-1" }),
+        "How many users does the pricing document allow?"
+      )
+
+      const streamOptions = jest.mocked(streamText).mock.calls[0]?.[0] as any
+      const toolNames = Object.keys(streamOptions.tools || {})
+      expect(toolNames).toHaveLength(2)
+      expect(toolNames).toEqual(
+        expect.arrayContaining(["list_knowledge_files", "get_table"])
+      )
+    })
+
     it("keeps all tools for non-metadata file questions", async () => {
       const listKnowledgeFilesTool = { execute: jest.fn() } as any
       const otherTool = { execute: jest.fn() } as any

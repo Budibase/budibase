@@ -83,6 +83,14 @@ const KNOWLEDGE_FILE_METADATA_TERMS = [
   "errors",
 ]
 
+const isKnowledgeFileCountQuestion = (question: string) =>
+  KNOWLEDGE_FILE_NOUNS.some(noun =>
+    new RegExp(
+      `(^|[^\\p{L}\\p{N}_])how many(?:\\s+[\\p{L}\\p{N}_-]+){0,2}\\s+${escapeRegex(noun)}(?=$|[^\\p{L}\\p{N}_])`,
+      "u"
+    ).test(question)
+  )
+
 const normalizeQuestion = (question: string) =>
   question.toLowerCase().replace(/\s+/g, " ").trim()
 
@@ -109,7 +117,7 @@ const parseKnowledgeFileQuestionIntent = (question: string) => {
     return "other" as const
   }
 
-  if (normalized.includes("how many")) {
+  if (isKnowledgeFileCountQuestion(normalized)) {
     return "inventory" as const
   }
 
