@@ -429,14 +429,60 @@
             "nested": true,
             "defaultValue": [
               {
-                "type": "cta",
-                "text": "Button 1"
+                "text": "Button 1",
+                "type": "inherit",
+                "size": "inherit"
               },
               {
-                "type": "primary",
-                "text": "Button 2"
+                "text": "Button 2",
+                "type": "inherit",
+                "size": "inherit"
               }
             ]
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Button style",
+        "settings": [
+          {
+            "type": "select",
+            "label": "Variant",
+            "key": "buttonType",
+            "options": [
+              {
+                "label": "Action",
+                "value": "cta"
+              },
+              {
+                "label": "Primary",
+                "value": "primary"
+              },
+              {
+                "label": "Secondary",
+                "value": "secondary"
+              },
+              {
+                "label": "Warning",
+                "value": "warning"
+              },
+              {
+                "label": "Over background",
+                "value": "overBackground"
+              }
+            ],
+            "defaultValue": "primary"
+          },
+          {
+            "type": "boolean",
+            "label": "Quiet",
+            "key": "buttonQuiet"
+          },
+          {
+            "type": "boolean",
+            "label": "Disabled",
+            "key": "buttonDisabled"
           }
         ]
       },
@@ -461,6 +507,34 @@
             "label": "Collapsed button size",
             "key": "collapsedSize",
             "dependsOn": "collapsed",
+            "options": [
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              },
+              {
+                "label": "Extra Large",
+                "value": "XL"
+              }
+            ],
+            "defaultValue": "M"
+          },
+          {
+            "type": "select",
+            "label": "Button size",
+            "key": "buttonSize",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            },
             "options": [
               {
                 "label": "Small",

@@ -38,6 +38,7 @@ import TableConditionEditor from "./controls/TableConditionEditor.svelte"
 import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
+import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 import { setComponentSettingsResolver } from "./componentSettingsRegistry"
 
 const componentMap = {
@@ -110,6 +111,7 @@ const componentMap = {
   "validation/signature_single": ValidationEditor,
   "validation/link": ValidationEditor,
   "validation/bb_reference": ValidationEditor,
+  infoDisplay: InfoDisplay,
 }
 
 export const getComponentForSetting = setting => {

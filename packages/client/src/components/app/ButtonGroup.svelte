@@ -13,6 +13,10 @@
   export let collapsed = false
   export let collapsedText = "Action"
   export let collapsedSize = "M"
+  export let buttonSize = "M"
+  export let buttonType = undefined
+  export let buttonQuiet = undefined
+  export let buttonDisabled = undefined
 
   const { enrichButtonActions } = getContext("sdk")
   const context = getContext("context")
@@ -51,12 +55,18 @@
           props={{
             text: button?.text || "Button",
             onClick: button?.onClick,
-            type: button?.type,
-            quiet: button?.quiet,
-            disabled: button?.disabled,
+            type:
+              button?.type === "inherit" || button?.type == null
+                ? buttonType || "primary"
+                : button?.type,
+            quiet: button?.quiet ?? buttonQuiet,
+            disabled: button?.disabled ?? buttonDisabled,
             icon: button?.icon,
             gap: button?.gap,
-            size: button?.size || "M",
+            size:
+              button?.size === "inherit" || button?.size == null
+                ? buttonSize || "M"
+                : button?.size,
             _conditions: button?._conditions || button?.conditions,
           }}
         />
