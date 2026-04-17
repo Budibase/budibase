@@ -46,6 +46,7 @@
       <CollapsedButtonGroup
         text={collapsedText || "Action"}
         buttons={collapsedButtons}
+        type={buttonType || "primary"}
         size={collapsedSize}
       />
     {:else}

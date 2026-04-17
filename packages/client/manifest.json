@@ -475,14 +475,42 @@
             "defaultValue": "primary"
           },
           {
-            "type": "boolean",
-            "label": "Quiet",
-            "key": "buttonQuiet"
+            "type": "select",
+            "label": "Size",
+            "key": "buttonSize",
+            "dependsOn": {
+              "setting": "collapsed",
+              "invert": true
+            },
+            "options": [
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              },
+              {
+                "label": "Extra Large",
+                "value": "XL"
+              }
+            ],
+            "defaultValue": "M"
           },
           {
             "type": "boolean",
             "label": "Disabled",
             "key": "buttonDisabled"
+          },
+          {
+            "type": "boolean",
+            "label": "Quiet",
+            "key": "buttonQuiet"
           }
         ]
       },
@@ -507,34 +535,6 @@
             "label": "Collapsed button size",
             "key": "collapsedSize",
             "dependsOn": "collapsed",
-            "options": [
-              {
-                "label": "Small",
-                "value": "S"
-              },
-              {
-                "label": "Medium",
-                "value": "M"
-              },
-              {
-                "label": "Large",
-                "value": "L"
-              },
-              {
-                "label": "Extra Large",
-                "value": "XL"
-              }
-            ],
-            "defaultValue": "M"
-          },
-          {
-            "type": "select",
-            "label": "Button size",
-            "key": "buttonSize",
-            "dependsOn": {
-              "setting": "collapsed",
-              "invert": true
-            },
             "options": [
               {
                 "label": "Small",
@@ -715,6 +715,21 @@
             "dependsOn": {
               "setting": "collapsed",
               "invert": true
+            }
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Conditions",
+        "settings": [
+          {
+            "type": "buttonConditions",
+            "label": "Conditions",
+            "key": "conditions",
+            "contextAccess": {
+              "global": true,
+              "self": true
             }
           }
         ]
