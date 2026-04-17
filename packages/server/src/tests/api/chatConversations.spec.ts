@@ -1300,6 +1300,106 @@ describe("Agent chat tool call tracking", () => {
       expect(streamOptions.tools?.get_table).toBe(otherTool)
     })
 
+    it("keeps all tools when file metadata terms only appear inside larger words", async () => {
+      const listKnowledgeFilesTool = { execute: jest.fn() } as any
+      const otherTool = { execute: jest.fn() } as any
+
+      ;(
+        sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
+          typeof sdk.ai.agents.buildPromptAndTools
+        >
+      ).mockResolvedValue({
+        systemPrompt: "system",
+        tools: {
+          list_knowledge_files: listKnowledgeFilesTool,
+          get_table: otherTool,
+        },
+        toolDisplayNames: {},
+      })
+
+      jest.mocked(streamText).mockImplementation(makeStreamTextMock([]) as any)
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [
+                {
+                  type: "text",
+                  text: "what typeface should we use on the profile page?",
+                },
+              ],
+            },
+          ],
+          transient: true,
+        })
+
+      expect(res.status).toBe(200)
+      const streamOptions = jest.mocked(streamText).mock.calls[0]?.[0] as any
+      const toolNames = Object.keys(streamOptions.tools || {})
+      expect(toolNames).toHaveLength(2)
+      expect(toolNames).toEqual(
+        expect.arrayContaining(["list_knowledge_files", "get_table"])
+      )
+    })
+
+    it("keeps all tools when file listing terms only appear inside larger words", async () => {
+      const listKnowledgeFilesTool = { execute: jest.fn() } as any
+      const otherTool = { execute: jest.fn() } as any
+
+      ;(
+        sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
+          typeof sdk.ai.agents.buildPromptAndTools
+        >
+      ).mockResolvedValue({
+        systemPrompt: "system",
+        tools: {
+          list_knowledge_files: listKnowledgeFilesTool,
+          get_table: otherTool,
+        },
+        toolDisplayNames: {},
+      })
+
+      jest.mocked(streamText).mockImplementation(makeStreamTextMock([]) as any)
+
+      const headers = await config.defaultHeaders({}, true)
+      const res = await config
+        .getRequest()!
+        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [
+                {
+                  type: "text",
+                  text: "should the profile page use a showcase layout?",
+                },
+              ],
+            },
+          ],
+          transient: true,
+        })
+
+      expect(res.status).toBe(200)
+      const streamOptions = jest.mocked(streamText).mock.calls[0]?.[0] as any
+      const toolNames = Object.keys(streamOptions.tools || {})
+      expect(toolNames).toHaveLength(2)
+      expect(toolNames).toEqual(
+        expect.arrayContaining(["list_knowledge_files", "get_table"])
+      )
+    })
+
     it("skips RAG retrieval for file metadata questions", async () => {
       ;(
         sdk.ai.agents.getOrThrow as jest.MockedFunction<

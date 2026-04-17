@@ -86,8 +86,17 @@ const KNOWLEDGE_FILE_METADATA_TERMS = [
 const normalizeQuestion = (question: string) =>
   question.toLowerCase().replace(/\s+/g, " ").trim()
 
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+const includesWholeTerm = (question: string, term: string) =>
+  new RegExp(
+    `(^|[^\\p{L}\\p{N}_])${escapeRegex(term)}(?=$|[^\\p{L}\\p{N}_])`,
+    "u"
+  ).test(question)
+
 const includesAnyTerm = (question: string, terms: string[]) =>
-  terms.some(term => question.includes(term))
+  terms.some(term => includesWholeTerm(question, term))
 
 const parseKnowledgeFileQuestionIntent = (question: string) => {
   const normalized = normalizeQuestion(question)
