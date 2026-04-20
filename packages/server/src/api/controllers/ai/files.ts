@@ -103,11 +103,14 @@ export async function uploadAgentFile(
 }
 
 export async function deleteAgentFile(
-  ctx: UserCtx<void, { deleted: true }, { agentId: string; fileId: string }>
+  ctx: UserCtx<void, void, { agentId: string; fileId: string }>
 ) {
   const { agentId, fileId } = ctx.params
-  await sdk.ai.rag.deleteFileForAgent(agentId, fileId)
-  ctx.body = { deleted: true }
+  await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueDeleteFileJob(
+    agentId,
+    fileId
+  )
+
   ctx.status = 200
 }
 

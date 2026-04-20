@@ -19,7 +19,11 @@ import {
   isAllowedSharePointNextLink,
   sharePointConnectionCacheKey,
 } from "../sharepoint"
-import { ensureKnowledgeBaseForAgent } from "./files"
+import {
+  deleteFileForAgent,
+  ensureKnowledgeBaseForAgent,
+  listFilesForAgent,
+} from "./files"
 
 interface SharePointDrive {
   id?: string
@@ -604,4 +608,45 @@ export const syncSharePointSourcesForAgent = async (
 
     totalDiscovered,
   }
+}
+
+export const deleteSharePointFilesForAgentSites = async (
+  agentId: string,
+  siteIds: string[]
+) => {
+  const trimmedAgentId = trimString(agentId)
+  if (!trimmedAgentId) {
+    return
+  }
+  const normalizedSiteIds = Array.from(
+    new Set(siteIds.map(siteId => trimString(siteId)).filter(Boolean))
+  )
+  if (normalizedSiteIds.length === 0) {
+    return
+  }
+
+  const files = await listFilesForAgent(trimmedAgentId)
+  const fileIdsToDelete = files
+    .filter(file => {
+      const externalSourceId = trimString(file.externalSourceId)
+      const uploadedBy = trimString(file.uploadedBy)
+      return normalizedSiteIds.some(
+        siteId =>
+          externalSourceId.startsWith(`sharepoint:${siteId}:`) ||
+          uploadedBy === `sharepoint:${siteId}`
+      )
+    })
+    .map(file => file._id)
+    .filter((fileId): fileId is string => !!fileId)
+
+  const results = await Promise.allSettled(
+    fileIdsToDelete.map(fileId => deleteFileForAgent(trimmedAgentId, fileId))
+  )
+  const failed = results.filter(result => result.status === "rejected").length
+  console.log("SharePoint file cleanup completed for sites", {
+    agentId: trimmedAgentId,
+    siteIds: normalizedSiteIds,
+    deleted: fileIdsToDelete.length - failed,
+    failed,
+  })
 }
