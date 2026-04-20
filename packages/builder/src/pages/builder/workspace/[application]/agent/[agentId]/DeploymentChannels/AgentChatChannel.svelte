@@ -29,6 +29,7 @@
   let attemptedWorkspaceId: string | undefined
   let currentWorkspaceId: string | undefined
   let settingsOpen = false
+  let hasCurrentChatApp = false
 
   interface ChatAppAgentConfig {
     agentId: string
@@ -59,9 +60,9 @@
   }) =>
     Boolean(
       workspaceId &&
-        workspaceId !== attemptedWorkspaceId &&
-        !hasCurrentChatApp &&
-        !loadingChatApp
+      workspaceId !== attemptedWorkspaceId &&
+      !hasCurrentChatApp &&
+      !loadingChatApp
     )
 
   const canToggleAgentChat = ({
@@ -73,6 +74,7 @@
   }) => Boolean(workspaceId && !toggling)
 
   $: workspaceId = $params.application
+  $: hasCurrentChatApp = Boolean($currentChatApp?._id)
   $: selectedAgent = { agentId, name: agentName }
   $: currentChatAgents = $currentChatApp?.agents || []
   $: selectedAgentConfig = currentChatAgents.find(
@@ -91,13 +93,14 @@
   $: if (workspaceId !== currentWorkspaceId) {
     currentWorkspaceId = workspaceId
     attemptedWorkspaceId = undefined
+    chatAppsStore.reset()
   }
 
   $: if (
     shouldEnsureChatApp({
       workspaceId,
       attemptedWorkspaceId,
-      hasCurrentChatApp: Boolean($currentChatApp),
+      hasCurrentChatApp,
       loadingChatApp,
     })
   ) {
@@ -122,7 +125,7 @@
   }
 
   const onToggle = async () => {
-    if (!canToggleAgentChat({ workspaceId, toggling })) {
+    if (!hasCurrentChatApp || !canToggleAgentChat({ workspaceId, toggling })) {
       return
     }
 
@@ -235,23 +238,25 @@
       >
     </div>
   </div>
-  <div class="row-action">
-    {#if enabled && chatUrl}
-      <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
-        Open chat
-      </a>
-    {/if}
-    <ActionButton
-      size="S"
-      icon="gear"
-      accentColor="Blue"
-      disabled={loadingChatApp || !workspaceId}
-      on:click={() => (settingsOpen = true)}
-    >
-      Manage
-    </ActionButton>
-    <Toggle value={enabled} {disabled} on:change={onToggle} />
-  </div>
+  {#if hasCurrentChatApp}
+    <div class="row-action">
+      {#if enabled && chatUrl}
+        <a class="chat-link" href={chatUrl} target="_blank" rel="noreferrer">
+          Open chat
+        </a>
+      {/if}
+      <ActionButton
+        size="S"
+        icon="gear"
+        accentColor="Blue"
+        disabled={loadingChatApp || !workspaceId}
+        on:click={() => (settingsOpen = true)}
+      >
+        Manage
+      </ActionButton>
+      <Toggle value={enabled} {disabled} on:change={onToggle} />
+    </div>
+  {/if}
 </div>
 
 <AgentSettingsModal

@@ -162,10 +162,11 @@ export const buildChatAppEndpoints = (
           [Header.APP_ID]: workspaceId,
         }
       : undefined
-    return await API.get({
+    const response = await API.get<ChatApp | null>({
       url,
       ...(headers && { headers }),
     })
+    return response || null
   },
 
   setChatAppAgent: async (chatAppId: string, agentId: string) => {

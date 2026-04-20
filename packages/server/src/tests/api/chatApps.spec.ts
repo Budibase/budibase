@@ -209,6 +209,34 @@ describe("chat apps create validation", () => {
   })
 })
 
+describe("chat apps fetch behavior", () => {
+  const config = new TestConfiguration()
+
+  beforeAll(async () => {
+    await config.init("chat-app-fetch-behavior")
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("returns no content from GET /api/chatapps when no chat app exists", async () => {
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const existing = await sdk.ai.chatApps.getSingle()
+        expect(existing).toBeUndefined()
+      }
+    )
+
+    const headers = await config.defaultHeaders({}, true)
+    const res = await config.getRequest()!.get("/api/chatapps").set(headers)
+
+    expect(res.status).toBe(204)
+    expect(res.text).toBe("")
+  })
+})
+
 describe("chat route auth split", () => {
   const config = new TestConfiguration()
   let chatApp: ChatApp

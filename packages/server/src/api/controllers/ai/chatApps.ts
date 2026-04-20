@@ -74,11 +74,7 @@ export async function fetchChatApp(ctx: UserCtx<void, ChatApp | null>) {
     return
   }
 
-  const created = await sdk.ai.chatApps.create({
-    agents: [],
-  })
-  assertChatAppIsLiveForUser(ctx, created)
-  ctx.body = created
+  ctx.body = null
 }
 
 export async function updateChatApp(
