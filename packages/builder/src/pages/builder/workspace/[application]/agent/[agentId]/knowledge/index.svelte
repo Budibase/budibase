@@ -46,6 +46,8 @@
   })
 
   let initialKnowledgeLoadedForAgent = $state<string | undefined>()
+  let initialKnowledgeLoadingForAgent = $state<string | undefined>()
+  let initialKnowledgeFailedForAgent = $state<string | undefined>()
   let sharePointSites = $derived.by(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
@@ -189,11 +191,16 @@
 
   const loadInitialKnowledge = async (agentId: string) => {
     loading = true
+    initialKnowledgeLoadingForAgent = agentId
     try {
       await agentsStore.fetchAgentFiles(agentId)
       await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
       initialKnowledgeLoadedForAgent = agentId
+      initialKnowledgeFailedForAgent = undefined
     } finally {
+      if (initialKnowledgeLoadingForAgent === agentId) {
+        initialKnowledgeLoadingForAgent = undefined
+      }
       loading = false
     }
   }
@@ -203,13 +210,22 @@
     if (!agentId) {
       loading = false
       initialKnowledgeLoadedForAgent = undefined
+      initialKnowledgeLoadingForAgent = undefined
+      initialKnowledgeFailedForAgent = undefined
       return
     }
     if (initialKnowledgeLoadedForAgent === agentId) {
       return
     }
+    if (initialKnowledgeLoadingForAgent === agentId) {
+      return
+    }
+    if (initialKnowledgeFailedForAgent === agentId) {
+      return
+    }
     loadInitialKnowledge(agentId).catch(error => {
       console.error(error)
+      initialKnowledgeFailedForAgent = agentId
       notifications.error("Failed to load knowledge")
     })
   })
@@ -265,6 +281,8 @@
       }
       if (currentAgent?._id && microsoftConnected) {
         initialKnowledgeLoadedForAgent = undefined
+        initialKnowledgeLoadingForAgent = undefined
+        initialKnowledgeFailedForAgent = undefined
       }
     } catch (error) {
       console.error(error)
