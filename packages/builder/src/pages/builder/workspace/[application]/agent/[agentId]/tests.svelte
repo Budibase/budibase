@@ -86,7 +86,10 @@
 
   const persistCases = async (
     cases: AgentTestCase[],
-    { nextSelectedCaseId, successMessage }: {
+    {
+      nextSelectedCaseId,
+      successMessage,
+    }: {
       nextSelectedCaseId?: string | null
       successMessage?: string
     } = {}
@@ -128,13 +131,38 @@
     })
   }
 
+  const saveAndRunCase = async (testCase: AgentTestCase) => {
+    const saved = await saveCase(testCase)
+    if (!saved) return false
+    const agentId = currentAgent?._id
+    if (!agentId) return false
+    running = true
+    try {
+      const { run } = await API.runAgentTestSuite(agentId, {
+        caseId: testCase.id,
+      })
+      lastRun = run
+      notifications.success(`Run complete · ${run.passed}/${run.total} passed`)
+      return true
+    } catch (error) {
+      console.error("Failed to run test", error)
+      notifications.error("Failed to run test")
+      return false
+    } finally {
+      running = false
+    }
+  }
+
   const duplicateSelected = async () => {
     if (!selectedCase) return
     const duplicated: AgentTestCase = {
       ...selectedCase,
       id: Helpers.uuid(),
       name: `${selectedCase.name} copy`,
-      reviewers: selectedCase.reviewers.map(r => ({ ...r, id: Helpers.uuid() })),
+      reviewers: selectedCase.reviewers.map(r => ({
+        ...r,
+        id: Helpers.uuid(),
+      })),
     }
     await persistCases([...suite.cases, duplicated], {
       nextSelectedCaseId: duplicated.id,
@@ -187,7 +215,6 @@
     <div class="tests-list-panel">
       <TestCaseList
         cases={suite.cases}
-        hasLatestRun={!!lastRun}
         {selectedCaseId}
         {loading}
         onSelectCase={id => (selectedCaseId = id)}
@@ -214,7 +241,7 @@
     bind:this={testCaseModal}
     {toolOptions}
     isExisting={id => suite.cases.some(c => c.id === id)}
-    onSave={saveCase}
+    onSave={saveAndRunCase}
   />
 </div>
 
@@ -237,11 +264,12 @@
   }
 
   .tests-list-panel {
-    flex: 0 0 clamp(260px, 26vw, 340px);
+    flex: 0 0 clamp(300px, 32vw, 400px);
     min-width: 0;
-    max-width: 380px;
+    max-width: 440px;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     min-height: 0;
     overflow: hidden;
     border-right: 1px solid var(--spectrum-global-color-gray-200);

@@ -94,7 +94,11 @@
         </Body>
       </div>
       <div class="editor-actions">
-        <Button primary disabled={running || saving || loading} on:click={onRun}>
+        <Button
+          primary
+          disabled={running || saving || loading}
+          on:click={onRun}
+        >
           {running ? "Running..." : "Run"}
         </Button>
         <ActionButton
@@ -200,11 +204,18 @@
                   {@const status = (reviewerResult?.status ??
                     "idle") as Verdict}
                   <li class="reviewer-row">
-                    <div class="reviewer-info">
-                      <div class="reviewer-top">
+                    <div class="reviewer-result-row">
+                      <div class="reviewer-result-copy">
                         <span class="reviewer-type">
                           {getReviewerLabel(reviewer.type)}
                         </span>
+                        {#if reviewerResult?.message}
+                          <span class="reviewer-message">
+                            {reviewerResult.message}
+                          </span>
+                        {/if}
+                      </div>
+                      <div class="reviewer-result-status">
                         <StatusLight
                           size="S"
                           positive={status === "passed"}
@@ -213,16 +224,6 @@
                           {verdictLabel(status)}
                         </StatusLight>
                       </div>
-                      {#if getReviewerConfigSummary(reviewer)}
-                        <span class="reviewer-config">
-                          {getReviewerConfigSummary(reviewer)}
-                        </span>
-                      {/if}
-                      {#if reviewerResult?.message}
-                        <span class="reviewer-message">
-                          {reviewerResult.message}
-                        </span>
-                      {/if}
                     </div>
                   </li>
                 {/each}
@@ -468,18 +469,24 @@
     border-bottom: none;
   }
 
-  .reviewer-info {
+  .reviewer-result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    min-width: 0;
+  }
+
+  .reviewer-result-copy {
     display: flex;
     flex-direction: column;
     gap: 2px;
     min-width: 0;
+    flex: 1;
   }
 
-  .reviewer-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
+  .reviewer-result-status {
+    flex-shrink: 0;
   }
 
   .reviewer-type {

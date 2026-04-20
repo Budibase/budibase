@@ -227,7 +227,12 @@ async function runCase({
       toolChoice: hasTools ? "auto" : "none",
       stopWhen: stepCountIs(30),
       providerOptions: llm.providerOptions?.(hasTools),
-      async onStepFinish({ content, toolCalls: stepToolCalls, toolResults, response }) {
+      async onStepFinish({
+        content,
+        toolCalls: stepToolCalls,
+        toolResults,
+        response,
+      }) {
         if (response?.id) sessionLogIndexer.addRequestId(response.id)
         for (const toolCall of stepToolCalls) {
           if (toolCall.toolName) toolCalls.push(toolCall.toolName)
@@ -289,7 +294,9 @@ async function runCase({
           })
         }
       } else {
-        reviewerResults.push(evaluateReviewer({ reviewer, response, toolCalls }))
+        reviewerResults.push(
+          evaluateReviewer({ reviewer, response, toolCalls })
+        )
       }
     }
 
@@ -331,10 +338,7 @@ export async function runSuite({
   const suite = await fetchSuite(agentId)
 
   if (suite.cases.length === 0) {
-    throw new HTTPError(
-      "Add at least one test before running the suite.",
-      400
-    )
+    throw new HTTPError("Add at least one test before running the suite.", 400)
   }
 
   let casesToRun: AgentTestCase[] = suite.cases

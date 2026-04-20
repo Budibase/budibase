@@ -36,8 +36,14 @@
     draftCase = updater(draftCase)
   }
 
+  let canRunTest = $derived(
+    !!draftCase &&
+      (draftCase.input.trim().length > 0 || draftCase.reviewers.length > 0)
+  )
+
   const handleConfirm = async () => {
     if (!draftCase || loading) return keepOpen
+    if (!canRunTest) return keepOpen
 
     loading = true
     try {
@@ -56,15 +62,15 @@
   let editing = $derived(draftCase ? isExisting(draftCase.id) : false)
 </script>
 
-<Modal bind:this={modal}>
+<Modal size="L" bind:this={modal}>
   <ModalContent
     title={editing ? "Edit test" : "Add test"}
-    confirmText={editing ? "Save changes" : "Add test"}
+    confirmText="Run test"
     size="L"
     showConfirmButton
     showCancelButton
     showCloseIcon
-    disabled={loading || !draftCase}
+    disabled={loading || !draftCase || !canRunTest}
     onConfirm={handleConfirm}
   >
     {#if draftCase}

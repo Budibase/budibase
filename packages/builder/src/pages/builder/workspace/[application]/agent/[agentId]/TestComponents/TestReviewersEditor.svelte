@@ -2,7 +2,6 @@
   import {
     ActionButton,
     Body,
-    Button,
     DetailSummary,
     Helpers,
     Input,
@@ -29,7 +28,6 @@
 
   let { selectedCase, toolOptions, onUpdateCase }: Props = $props()
 
-  let reviewerChooserOpen = $state(false)
   let reviewerIdsOpenOnAdd = $state<Set<string>>(new Set())
 
   const updateReviewerField =
@@ -51,7 +49,6 @@
       ...testCase,
       reviewers: [...testCase.reviewers, reviewer],
     }))
-    reviewerChooserOpen = false
   }
 
   const removeReviewer = (reviewerId: string) => {
@@ -64,9 +61,7 @@
   }
 
   const truncate = (value: string, max: number) =>
-    value.length <= max
-      ? value
-      : `${value.slice(0, Math.max(0, max - 1))}…`
+    value.length <= max ? value : `${value.slice(0, Math.max(0, max - 1))}…`
 
   const reviewerSummaryTitle = (reviewer: AgentTestReviewer) => {
     const label = REVIEWERS[reviewer.type].label
@@ -76,34 +71,20 @@
 </script>
 
 <div class="reviewers">
-  <div class="reviewer-toolbar">
-    <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      Add checks for the final response or tool usage.
-    </Body>
-    <Button
-      secondary
-      on:click={() => (reviewerChooserOpen = !reviewerChooserOpen)}
-    >
-      Add reviewer
-    </Button>
+  <div class="reviewer-chooser">
+    {#each REVIEWER_TYPES as type (type)}
+      <button
+        class="reviewer-option"
+        type="button"
+        onclick={() => addReviewer(type)}
+      >
+        <span class="reviewer-option-title">{REVIEWERS[type].label}</span>
+        <span class="reviewer-option-description">
+          {REVIEWERS[type].description}
+        </span>
+      </button>
+    {/each}
   </div>
-
-  {#if reviewerChooserOpen}
-    <div class="reviewer-chooser">
-      {#each REVIEWER_TYPES as type (type)}
-        <button
-          class="reviewer-option"
-          type="button"
-          onclick={() => addReviewer(type)}
-        >
-          <span class="reviewer-option-title">{REVIEWERS[type].label}</span>
-          <span class="reviewer-option-description">
-            {REVIEWERS[type].description}
-          </span>
-        </button>
-      {/each}
-    </div>
-  {/if}
 
   {#if selectedCase.reviewers.length === 0}
     <div class="reviewer-empty">
@@ -129,7 +110,7 @@
           on:click={() => removeReviewer(reviewer.id)}
         />
 
-        {#if def.inputKind === "textarea"}
+        {#if def.inputType === "textarea"}
           <TextArea
             label={reviewer.type === "exact_match"
               ? "Expected final response"
@@ -140,13 +121,13 @@
             height={reviewer.type === "llm_judge" ? 110 : 90}
             on:change={updateReviewerField(reviewer.id, def.contentField)}
           />
-        {:else if def.inputKind === "input"}
+        {:else if def.inputType === "input"}
           <Input
             label="Text to find"
             value={reviewer[def.contentField] as string}
             on:change={updateReviewerField(reviewer.id, def.contentField)}
           />
-        {:else if def.inputKind === "select"}
+        {:else if def.inputType === "select"}
           <Select
             label="Tool name"
             value={reviewer[def.contentField] as string}
@@ -169,16 +150,9 @@
     gap: var(--spacing-s);
   }
 
-  .reviewer-toolbar {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--spacing-m);
-  }
-
   .reviewer-chooser {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--spacing-s);
   }
 

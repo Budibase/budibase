@@ -1,36 +1,26 @@
 <script lang="ts">
-  import { ActionButton, Body, Button } from "@budibase/bbui"
+  import { Body, Button } from "@budibase/bbui"
   import type { AgentTestCase } from "@budibase/types"
 
   type Props = {
     cases: AgentTestCase[]
-    hasLatestRun: boolean
     selectedCaseId: string | null
     loading: boolean
     onSelectCase: (_caseId: string) => void
     onAddCase: () => void
   }
 
-  let {
-    cases,
-    hasLatestRun,
-    selectedCaseId,
-    loading,
-    onSelectCase,
-    onAddCase,
-  }: Props = $props()
+  let { cases, selectedCaseId, loading, onSelectCase, onAddCase }: Props =
+    $props()
 </script>
 
-<div class="case-list-header">
-  <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-    {#if hasLatestRun}
-      Status from the latest run
-    {:else}
-      Add tests, then run them to generate results
-    {/if}
-  </Body>
-  <ActionButton quiet icon="plus" on:click={onAddCase}>Add test</ActionButton>
-</div>
+{#if cases.length > 0}
+  <div class="case-list-header">
+    <Button secondary icon="plus" size="M" on:click={onAddCase}>
+      Add test
+    </Button>
+  </div>
+{/if}
 
 <div class="case-list-body">
   {#if loading && !cases.length}
@@ -69,9 +59,13 @@
 
 <style>
   .case-list-header {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
+    align-self: stretch;
+    width: 100%;
+    max-width: 100%;
     gap: var(--spacing-m);
     padding: var(--spacing-l) var(--spacing-l) var(--spacing-s);
     flex-shrink: 0;

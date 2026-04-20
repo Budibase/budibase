@@ -1,8 +1,4 @@
-import {
-  evaluateReviewer,
-  getCaseStatus,
-  validateTestCase,
-} from "./reviewers"
+import { evaluateReviewer, getCaseStatus, validateTestCase } from "./reviewers"
 
 describe("agent test reviewers", () => {
   it("validates required input and reviewers", () => {

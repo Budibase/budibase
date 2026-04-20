@@ -26,7 +26,7 @@ export interface ReviewerDefinition<T extends ReviewerType> {
   label: string
   description: string
   contentField: ContentField<T>
-  inputKind: "input" | "textarea" | "select"
+  inputType: "input" | "textarea" | "select"
   requiredMessage: string
   create: (id: string) => ReviewerOfType<T>
   evaluate:
@@ -54,7 +54,7 @@ export const REVIEWERS: { [T in ReviewerType]: ReviewerDefinition<T> } = {
     label: "Exact match",
     description: "Require the final response to exactly match some text.",
     contentField: "text",
-    inputKind: "textarea",
+    inputType: "textarea",
     requiredMessage: "exact match text is required",
     create: id => ({ id, type: "exact_match", text: "" }),
     evaluate: (r, { response }) => {
@@ -71,7 +71,7 @@ export const REVIEWERS: { [T in ReviewerType]: ReviewerDefinition<T> } = {
     label: "Contains text",
     description: "Require the final response to include some text.",
     contentField: "text",
-    inputKind: "input",
+    inputType: "input",
     requiredMessage: "contains text is required",
     create: id => ({ id, type: "contains_text", text: "" }),
     evaluate: (r, { response }) => {
@@ -88,7 +88,7 @@ export const REVIEWERS: { [T in ReviewerType]: ReviewerDefinition<T> } = {
     label: "LLM judge",
     description: "Grade the response against a free-form rubric.",
     contentField: "rubric",
-    inputKind: "textarea",
+    inputType: "textarea",
     requiredMessage: "judge rubric is required",
     create: id => ({ id, type: "llm_judge", rubric: "" }),
     evaluate: "async",
@@ -97,7 +97,7 @@ export const REVIEWERS: { [T in ReviewerType]: ReviewerDefinition<T> } = {
     label: "Tool used",
     description: "Pass when a specific tool was used during the run.",
     contentField: "tool",
-    inputKind: "select",
+    inputType: "select",
     requiredMessage: "tool name is required",
     create: id => ({ id, type: "tool_used", tool: "" }),
     evaluate: (r, { toolCalls }) => {
@@ -132,7 +132,9 @@ export const describeReviewer = (
   return v || undefined
 }
 
-export const validateReviewer = (reviewer: AgentTestReviewer): string | null => {
+export const validateReviewer = (
+  reviewer: AgentTestReviewer
+): string | null => {
   const def = REVIEWERS[reviewer.type]
   const v = reviewerContent(reviewer)
   return v ? null : def.requiredMessage

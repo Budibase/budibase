@@ -15,6 +15,5 @@ export function formatRunTime(dateStr?: string | null): string {
 export const getReviewerLabel = (type: AgentTestReviewer["type"]): string =>
   REVIEWERS[type].label
 
-export const getReviewerConfigSummary = (
-  reviewer: AgentTestReviewer
-): string => describeReviewer(reviewer) ?? ""
+export const getReviewerConfigSummary = (reviewer: AgentTestReviewer): string =>
+  describeReviewer(reviewer) ?? ""
