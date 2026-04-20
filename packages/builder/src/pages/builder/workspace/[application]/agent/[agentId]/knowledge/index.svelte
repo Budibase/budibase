@@ -23,6 +23,7 @@
     toFileTableRows,
     toSharePointConnectionRows,
   } from "./knowledgeTableRows"
+  import { EXCLUDE_ALL_PATTERN } from "./sharepoint/sharePointModalUtils"
   import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
   import SelectSharePointFilesModal from "./sharepoint/SelectSharePointFilesModal.svelte"
 
@@ -321,6 +322,20 @@
     selectedSharePointSiteId = siteId
     selectSharePointSiteModal?.hide()
     if (mode === "selective") {
+      if (!agentId) {
+        return
+      }
+      try {
+        await agentsStore.applyAgentSharePointSiteFilters(agentId, siteId, {
+          filters: {
+            patterns: [EXCLUDE_ALL_PATTERN],
+          },
+        })
+      } catch (error) {
+        console.error(error)
+        notifications.error("Failed to initialize selective sync")
+        return
+      }
       selectSharePointFilesModal?.show()
     }
   }

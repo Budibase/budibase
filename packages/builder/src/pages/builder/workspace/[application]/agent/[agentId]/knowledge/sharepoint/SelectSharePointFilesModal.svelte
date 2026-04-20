@@ -17,6 +17,7 @@
     buildEntryTreeFromSourceEntries,
     buildPatternsFromSelection,
     collectSelectablePaths,
+    isExcludeNewByDefaultPatterns,
     flattenNodesByPath,
     rehydrateFromPatterns,
     wrapSelectionTreeWithSiteRoot,
@@ -33,6 +34,7 @@
   let hasHydratedSelection = $state(false)
   let loadingEntries = $state(false)
   let allEntries = $state<KnowledgeSourceEntry[]>([])
+  let includeNewFilesByDefault = $state(true)
   let modal = $state<Modal>()
 
   const sharePointSource = $derived.by(() => {
@@ -92,20 +94,13 @@
   }
 
   export async function show() {
-    const hasInitialFilters = initialPatterns.length > 0
     selectedEntryPaths = []
     hasHydratedSelection = false
+    includeNewFilesByDefault = !isExcludeNewByDefaultPatterns(initialPatterns)
 
     await loadAllEntries()
 
-    if (hasInitialFilters) {
-      selectedEntryPaths = rehydrateFromPatterns(
-        initialPatterns,
-        selectablePaths
-      )
-    } else {
-      selectedEntryPaths = [...selectablePaths]
-    }
+    selectedEntryPaths = rehydrateFromPatterns(initialPatterns, selectablePaths)
 
     modal?.show()
   }
@@ -126,7 +121,8 @@
     const filters = buildPatternsFromSelection(
       selectedEntryPaths,
       selectablePaths,
-      selectionNodeByPath
+      selectionNodeByPath,
+      includeNewFilesByDefault
     )
 
     try {
@@ -198,6 +194,26 @@
     onCancel={hide}
   >
     <div class="entries-header">
+      <div class="sync-mode">
+        <label class="sync-mode-option">
+          <input
+            type="radio"
+            name="sharepoint-new-files-mode"
+            checked={includeNewFilesByDefault}
+            onchange={() => (includeNewFilesByDefault = true)}
+          />
+          Include new files by default
+        </label>
+        <label class="sync-mode-option">
+          <input
+            type="radio"
+            name="sharepoint-new-files-mode"
+            checked={!includeNewFilesByDefault}
+            onchange={() => (includeNewFilesByDefault = false)}
+          />
+          Exclude new files by default
+        </label>
+      </div>
       <ActionButton quiet size="S" on:click={toggleAll}>
         {selectAllLabel}
       </ActionButton>
@@ -235,6 +251,18 @@
 
   .entries-header :global(.spectrum-ActionButton:first-of-type) {
     margin-left: auto;
+  }
+
+  .sync-mode {
+    display: flex;
+    gap: var(--spacing-m);
+  }
+
+  .sync-mode-option {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xxs);
+    font-size: 12px;
   }
 
   .selected-count {

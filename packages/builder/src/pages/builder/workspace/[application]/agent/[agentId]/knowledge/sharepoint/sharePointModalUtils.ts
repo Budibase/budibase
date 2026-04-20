@@ -17,6 +17,7 @@ export interface TreeEntryInput {
 }
 
 export const SITE_ROOT_PATH = "__site_root__"
+export const EXCLUDE_ALL_PATTERN = "!*"
 
 const getFilePath = (file: Pick<TreeEntryInput, "sourcePath" | "filename">) =>
   (file.sourcePath || file.filename).trim()
@@ -79,15 +80,19 @@ export const matchesConfiguredPatterns = (path: string, patterns: string[]) => {
   return included
 }
 
-const toPatternFolderPath = (rawPattern: string) => {
-  if (!rawPattern || rawPattern.startsWith("!")) {
-    return undefined
-  }
-  const pattern = rawPattern.trim()
-  if (!pattern) {
-    return undefined
-  }
-  return pattern.endsWith("/**") ? pattern.slice(0, -3) : pattern
+const toSelectionPattern = (
+  path: string,
+  selectionNodeByPath: Map<string, SharePointEntryTreeNode>,
+  negated: boolean
+) => {
+  const node = selectionNodeByPath.get(path)
+  const basePattern = node?.type === "file" ? path : `${path}/**`
+  return negated ? `!${basePattern}` : basePattern
+}
+
+export const isExcludeNewByDefaultPatterns = (patterns: string[]) => {
+  const firstPattern = patterns.find(pattern => pattern.trim().length > 0)
+  return firstPattern?.trim() === EXCLUDE_ALL_PATTERN
 }
 
 export const rehydrateFromPatterns = (
@@ -95,38 +100,27 @@ export const rehydrateFromPatterns = (
   selectablePaths: string[],
   currentSelection: string[] = []
 ) => {
-  const pathSet = new Set(selectablePaths)
-  const nextSelection = new Set<string>()
+  const selectableWithoutRoot = selectablePaths.filter(
+    path => path !== SITE_ROOT_PATH
+  )
 
-  for (const rawPattern of patterns) {
-    const normalizedPattern = toPatternFolderPath(rawPattern)
-    if (!normalizedPattern) {
-      continue
-    }
-    if (pathSet.has(normalizedPattern)) {
-      nextSelection.add(normalizedPattern)
-      continue
-    }
-
-    const parentMatch = selectablePaths
-      .filter(path => normalizedPattern.startsWith(`${path}/`))
-      .sort((a, b) => b.length - a.length)[0]
-    if (parentMatch) {
-      nextSelection.add(parentMatch)
-    }
+  if (!patterns.length) {
+    return [...selectablePaths]
   }
 
-  if (nextSelection.size > 0) {
-    return Array.from(nextSelection)
+  const includedPaths = selectableWithoutRoot.filter(path =>
+    matchesConfiguredPatterns(path, patterns)
+  )
+
+  if (selectableWithoutRoot.length === 0) {
+    return currentSelection.filter(path => path === SITE_ROOT_PATH)
   }
 
-  if (selectablePaths.length === 0) {
-    return patterns.map(toPatternFolderPath).filter(Boolean) as string[]
+  if (includedPaths.length === selectableWithoutRoot.length) {
+    return [SITE_ROOT_PATH, ...includedPaths]
   }
 
-  return currentSelection
-    .filter(path => pathSet.has(path))
-    .sort((a, b) => a.localeCompare(b))
+  return includedPaths
 }
 
 export const buildEntryTree = (
@@ -355,11 +349,13 @@ export const filterTreeByPatterns = (
 export const buildPatternsFromSelection = (
   selectedEntryPaths: string[],
   selectablePaths: string[],
-  selectionNodeByPath: Map<string, SharePointEntryTreeNode>
+  selectionNodeByPath: Map<string, SharePointEntryTreeNode>,
+  includeNewFilesByDefault: boolean
 ): { patterns?: string[] } => {
   const selectedWithoutRoot = selectedEntryPaths.filter(
     path => path !== SITE_ROOT_PATH
   )
+  const selectedPathSet = new Set(selectedWithoutRoot)
   const selectableWithoutRoot = selectablePaths.filter(
     path => path !== SITE_ROOT_PATH
   )
@@ -369,16 +365,22 @@ export const buildPatternsFromSelection = (
     selectableWithoutRoot.length > 0 &&
     selectedWithoutRoot.length === selectableWithoutRoot.length
 
-  if (isEffectivelySelectAll) {
+  if (includeNewFilesByDefault && isEffectivelySelectAll) {
     return {}
   }
 
-  const patterns = selectedWithoutRoot.map(path => {
-    const node = selectionNodeByPath.get(path)
-    if (node?.type === "file") {
-      return path
-    }
-    return `${path}/**`
-  })
-  return patterns.length > 0 ? { patterns } : {}
+  if (includeNewFilesByDefault) {
+    const patterns = selectableWithoutRoot
+      .filter(path => !selectedPathSet.has(path))
+      .map(path => toSelectionPattern(path, selectionNodeByPath, true))
+    return patterns.length > 0 ? { patterns } : {}
+  }
+
+  const patterns = [
+    EXCLUDE_ALL_PATTERN,
+    ...selectedWithoutRoot.map(path =>
+      toSelectionPattern(path, selectionNodeByPath, false)
+    ),
+  ]
+  return { patterns }
 }
