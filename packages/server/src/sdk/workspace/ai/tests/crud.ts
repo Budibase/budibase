@@ -35,13 +35,28 @@ export async function saveSuite({
     docIds.getAgentTestSuiteID(agentId)
   )
 
-  const cases: AgentTestCase[] = request.cases.map((testCase, idx) => ({
-    id: testCase.id ?? v4(),
-    name: testCase.name?.trim() || `Test ${idx + 1}`,
-    input: testCase.input,
-    context: testCase.context,
-    reviewers: testCase.reviewers,
-  }))
+  const cases: AgentTestCase[] = request.cases.map((testCase, idx) => {
+    const id = testCase.id ?? v4()
+    const existingCase =
+      testCase.id != null
+        ? existing?.cases.find(c => c.id === testCase.id)
+        : undefined
+    const reviewers = testCase.reviewers.map((reviewer, rIdx) => ({
+      ...reviewer,
+      id:
+        reviewer.id ||
+        existingCase?.reviewers[rIdx]?.id ||
+        v4(),
+    })) as AgentTestCase["reviewers"]
+
+    return {
+      id,
+      name: testCase.name?.trim() || `Test ${idx + 1}`,
+      input: testCase.input,
+      context: testCase.context,
+      reviewers,
+    }
+  })
 
   for (const testCase of cases) {
     const failures = validateTestCase(testCase)
