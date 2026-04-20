@@ -2,17 +2,17 @@ import { features } from "@budibase/backend-core"
 import { FeatureFlag } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
-describe("agent eval routes", () => {
+describe("agent test routes", () => {
   const config = new TestConfiguration()
 
   afterAll(() => {
     config.end()
   })
 
-  const withEvalsDisabled = async <T>(f: () => Promise<T>) => {
+  const withTestsDisabled = async <T>(f: () => Promise<T>) => {
     return await features.testutils.withFeatureFlags(
       config.getTenantId(),
-      { [FeatureFlag.AI_EVALS]: false },
+      { [FeatureFlag.AI_TESTS]: false },
       f
     )
   }
@@ -21,15 +21,15 @@ describe("agent eval routes", () => {
     await config.newTenant()
   })
 
-  it("returns 403 when evals feature is disabled", async () => {
-    await withEvalsDisabled(async () => {
-      await config.api.agent.fetchEvalSuite("agent_test", { status: 403 })
-      await config.api.agent.updateEvalSuite(
+  it("returns 403 when tests feature is disabled", async () => {
+    await withTestsDisabled(async () => {
+      await config.api.agent.fetchTestSuite("agent_test", { status: 403 })
+      await config.api.agent.updateTestSuite(
         "agent_test",
         { cases: [] },
         { status: 403 }
       )
-      await config.api.agent.runEvalSuite("agent_test", { status: 403 })
+      await config.api.agent.runTestSuite("agent_test", { status: 403 })
     })
   })
 })

@@ -133,28 +133,20 @@ export const generateChatConversationID = () => {
   return `${DocumentType.CHAT_CONVERSATION}${SEPARATOR}${newid()}`
 }
 
-export const getAgentEvalSuiteID = (agentId: string) => {
-  return `${DocumentType.AGENT_EVAL_SUITE}${SEPARATOR}${agentId}`
+export const getAgentTestSuiteID = (agentId: string) => {
+  return `${DocumentType.AGENT_TEST_SUITE}${SEPARATOR}${agentId}`
 }
 
-export const getAgentEvalRunID = (
+export const getAgentTestRunID = (
   agentId: string,
-  startedAt?: string,
-  runId?: string
+  startedAt: string,
+  runId: string
 ) => {
-  if (!startedAt) {
-    return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}`
-  }
-
-  if (!runId) {
-    return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}${SEPARATOR}${startedAt}`
-  }
-
-  return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}${SEPARATOR}${startedAt}${SEPARATOR}${runId}`
+  return `${DocumentType.AGENT_TEST_RUN}${SEPARATOR}${agentId}${SEPARATOR}${startedAt}${SEPARATOR}${runId}`
 }
 
-export const getAgentEvalRunPrefix = (agentId: string) => {
-  return `${DocumentType.AGENT_EVAL_RUN}${SEPARATOR}${agentId}${SEPARATOR}`
+export const getAgentTestRunPrefix = (agentId: string) => {
+  return `${DocumentType.AGENT_TEST_RUN}${SEPARATOR}${agentId}${SEPARATOR}`
 }
 
 export const generateAgentToolSourceID = () => {

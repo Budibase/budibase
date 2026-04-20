@@ -3,15 +3,15 @@ import { ai, quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import type {
   Agent,
-  AgentEvalCase,
-  AgentEvalCaseSnapshot,
-  AgentEvalCaseResult,
-  AgentEvalModelSnapshot,
-  AgentEvalReviewer,
-  AgentEvalReviewerResult,
-  AgentEvalRun,
-  AgentEvalSnapshot,
-  AgentEvalSuite,
+  AgentTestCase,
+  AgentTestCaseSnapshot,
+  AgentTestCaseResult,
+  AgentTestModelSnapshot,
+  AgentTestReviewer,
+  AgentTestReviewerResult,
+  AgentTestRun,
+  AgentTestSnapshot,
+  AgentTestSuite,
   ContextUser,
   CustomAIProviderConfig,
 } from "@budibase/types"
@@ -37,12 +37,12 @@ import {
   getCaseStatus,
   normalizeCaseContext,
   normalizeReviewers,
-  validateEvalCase,
+  validateTestCase,
 } from "./reviewers"
 import { fetchSuite, saveRun } from "./crud"
 import { v4 } from "uuid"
 
-type EvalLLM = Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+type TestLLM = Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
 type SessionLogIndexer = ReturnType<typeof createSessionLogIndexer>
 
 interface JudgeOutput {
@@ -75,7 +75,7 @@ const buildCaseContextMessage = (context?: string): ModelMessage[] =>
     ? [
         {
           role: "system",
-          content: `Additional evaluation context:\n${context}\n\nUse this context when answering the user.`,
+          content: `Additional test context:\n${context}\n\nUse this context when answering the user.`,
         },
       ]
     : []
@@ -93,10 +93,10 @@ const buildJudgePrompt = ({
 }) => `Rubric:
 ${rubric}
 
-Case input:
+Test input:
 ${input}
 
-${context ? `Case context:\n${context}\n\n` : ""}Agent response:
+${context ? `Test context:\n${context}\n\n` : ""}Agent response:
 ${response}`
 
 const normalizeReviewerMessage = (message?: string) =>
@@ -119,7 +119,7 @@ const addRequestId = ({
   sessionLogIndexer.addRequestId(responseId)
 }
 
-const buildCaseSnapshot = (testCase: AgentEvalCase): AgentEvalCaseSnapshot => ({
+const buildCaseSnapshot = (testCase: AgentTestCase): AgentTestCaseSnapshot => ({
   id: testCase.id,
   name: testCase.name,
   input: testCase.input,
@@ -129,7 +129,7 @@ const buildCaseSnapshot = (testCase: AgentEvalCase): AgentEvalCaseSnapshot => ({
 
 const buildAIConfigSnapshot = (
   aiConfig?: CustomAIProviderConfig
-): AgentEvalModelSnapshot | undefined => {
+): AgentTestModelSnapshot | undefined => {
   if (!aiConfig?._id) {
     return undefined
   }
@@ -150,9 +150,9 @@ const buildRunSnapshot = ({
   aiConfig,
 }: {
   agent: Agent
-  suite: AgentEvalSuite
+  suite: AgentTestSuite
   aiConfig?: CustomAIProviderConfig
-}): AgentEvalSnapshot => ({
+}): AgentTestSnapshot => ({
   agentId: agent._id!,
   agentName: agent.name,
   agentRev: agent._rev,
@@ -179,18 +179,18 @@ const buildCaseResult = ({
   startedAtMs,
   error,
 }: {
-  testCase: AgentEvalCase
-  caseSnapshot: AgentEvalCaseSnapshot
+  testCase: AgentTestCase
+  caseSnapshot: AgentTestCaseSnapshot
   response: string
-  status: AgentEvalCaseResult["status"]
-  reviewerResults: AgentEvalReviewerResult[]
+  status: AgentTestCaseResult["status"]
+  reviewerResults: AgentTestReviewerResult[]
   toolCalls: string[]
   sessionId: string
   requestIds: string[]
   startedAt: string
   startedAtMs: number
   error?: string
-}): AgentEvalCaseResult => {
+}): AgentTestCaseResult => {
   const completedAt = new Date().toISOString()
 
   return {
@@ -219,14 +219,14 @@ async function runJudge({
   requestIds,
   sessionLogIndexer,
 }: {
-  llm: EvalLLM
+  llm: TestLLM
   input: string
   context?: string
   response: string
-  reviewer: Extract<AgentEvalReviewer, { type: "llm_judge" }>
+  reviewer: Extract<AgentTestReviewer, { type: "llm_judge" }>
   requestIds: Set<string>
   sessionLogIndexer: SessionLogIndexer
-}): Promise<AgentEvalReviewerResult> {
+}): Promise<AgentTestReviewerResult> {
   const judge = new ToolLoopAgent({
     model: wrapLanguageModel({
       model: llm.chat,
@@ -299,21 +299,21 @@ async function runCase({
 }: {
   agent: Agent
   user: ContextUser
-  testCase: AgentEvalCase
+  testCase: AgentTestCase
   runId: string
-}): Promise<AgentEvalCaseResult> {
-  const validationFailures = validateEvalCase(testCase)
+}): Promise<AgentTestCaseResult> {
+  const validationFailures = validateTestCase(testCase)
   const caseSnapshot = buildCaseSnapshot(testCase)
   const startedAt = new Date().toISOString()
   const startedAtMs = Date.now()
-  const sessionId = `eval:${runId}:${testCase.id}`
+  const sessionId = `test:${runId}:${testCase.id}`
   const requestIds = new Set<string>()
   const executedToolCalls: string[] = []
   const sessionLogIndexer = createSessionLogIndexer({
     agentId: agent._id!,
     sessionId,
     firstInput: testCase.input,
-    errorLabel: "agent eval",
+    errorLabel: "agent test",
     startedAt,
   })
 
@@ -399,7 +399,7 @@ async function runCase({
         })
       },
       onError({ error }) {
-        console.error("Agent eval streaming error", {
+        console.error("Agent test streaming error", {
           agentId: agent._id,
           sessionId,
           error,
@@ -433,7 +433,7 @@ async function runCase({
     }
 
     const response = textResult.value || ""
-    const reviewerResults: AgentEvalReviewerResult[] = []
+    const reviewerResults: AgentTestReviewerResult[] = []
 
     for (const reviewer of caseSnapshot.reviewers) {
       if (reviewer.type === "llm_judge") {
@@ -516,29 +516,40 @@ async function runCase({
 export async function runSuite({
   agentId,
   user,
+  caseId,
 }: {
   agentId: string
   user: ContextUser
-}): Promise<AgentEvalRun> {
+  caseId?: string
+}): Promise<AgentTestRun> {
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const suite = await fetchSuite(agentId)
 
   if (suite.cases.length === 0) {
     throw new HTTPError(
-      "Add at least one eval case before running the suite.",
+      "Add at least one test before running the suite.",
       400
     )
   }
 
+  let casesToRun = suite.cases
+  if (caseId) {
+    const match = suite.cases.find(testCase => testCase.id === caseId)
+    if (!match) {
+      throw new HTTPError("That test was not found in the saved suite.", 400)
+    }
+    casesToRun = [match]
+  }
+
   const runId = v4()
   const startedAt = new Date().toISOString()
-  const results: AgentEvalCaseResult[] = []
+  const results: AgentTestCaseResult[] = []
   const aiConfig = agent.aiconfig
     ? await sdk.ai.configs.find(agent.aiconfig)
     : undefined
   const snapshot = buildRunSnapshot({ agent, suite, aiConfig })
 
-  for (const testCase of suite.cases) {
+  for (const testCase of casesToRun) {
     results.push(
       await runCase({
         agent,

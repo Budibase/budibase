@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { ActionButton, Badge, Body, Button, Heading } from "@budibase/bbui"
-  import type { AgentEvalCase, AgentEvalCaseResult } from "@budibase/types"
-  import { getResultStatus, resultSummary, statusToBadgeProps } from "./utils"
+  import { ActionButton, Body, Button } from "@budibase/bbui"
+  import type { AgentTestCase } from "@budibase/types"
 
   type Props = {
-    cases: AgentEvalCase[]
-    resultsByCaseId: Map<string, AgentEvalCaseResult>
+    cases: AgentTestCase[]
     hasLatestRun: boolean
     selectedCaseId: string | null
     loading: boolean
@@ -15,73 +13,51 @@
 
   let {
     cases,
-    resultsByCaseId,
     hasLatestRun,
     selectedCaseId,
     loading,
     onSelectCase,
     onAddCase,
   }: Props = $props()
-
-  const getCaseResultLabel = (result?: AgentEvalCaseResult) => {
-    if (result) {
-      return resultSummary(result)
-    }
-
-    if (hasLatestRun) {
-      return "Not in latest run"
-    }
-
-    return "No runs yet"
-  }
 </script>
 
 <div class="case-list-header">
-  <div class="case-list-heading">
-    <Heading size="XS">Cases</Heading>
-    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-      {#if hasLatestRun}
-        Status from the latest suite run
-      {:else}
-        Add cases, then run the suite to generate results
-      {/if}
-    </Body>
-  </div>
-  <ActionButton quiet icon="plus" on:click={onAddCase}>Add case</ActionButton>
+  <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+    {#if hasLatestRun}
+      Status from the latest run
+    {:else}
+      Add tests, then run them to generate results
+    {/if}
+  </Body>
+  <ActionButton quiet icon="plus" on:click={onAddCase}>Add test</ActionButton>
 </div>
 
 <div class="case-list-body">
   {#if loading && !cases.length}
     <div class="empty-state">
       <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        Loading evaluation suite...
+        Loading tests...
       </Body>
     </div>
   {:else if !cases.length}
     <div class="empty-state">
       <div class="empty-state-content">
         <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          No evaluation cases yet.
+          No tests yet.
         </Body>
-        <Button secondary on:click={onAddCase}>Add first case</Button>
+        <Button secondary on:click={onAddCase}>Add first test</Button>
       </div>
     </div>
   {:else}
     <div class="case-items">
       {#each cases as testCase (testCase.id)}
-        {@const result = resultsByCaseId.get(testCase.id)}
-        {@const status = getResultStatus(result)}
-        {@const badgeProps = statusToBadgeProps(status)}
         <button
           class:selected={testCase.id === selectedCaseId}
           class="case-item"
           type="button"
           onclick={() => onSelectCase(testCase.id)}
         >
-          <div class="case-item-top">
-            <span class="case-item-name">{testCase.name}</span>
-            <Badge {...badgeProps} size="S">{getCaseResultLabel(result)}</Badge>
-          </div>
+          <span class="case-item-name">{testCase.name}</span>
           <div class="case-item-subtitle">
             {testCase.input || "No input yet"}
           </div>
@@ -94,18 +70,11 @@
 <style>
   .case-list-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: var(--spacing-m);
     padding: var(--spacing-l) var(--spacing-l) var(--spacing-s);
     flex-shrink: 0;
-  }
-
-  .case-list-heading {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
   }
 
   .case-list-body {
@@ -157,15 +126,7 @@
   }
 
   .case-item.selected {
-    border-color: var(--bb-blue);
     background: var(--background-alt);
-  }
-
-  .case-item-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-xs);
   }
 
   .case-item-name {

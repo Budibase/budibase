@@ -20,10 +20,11 @@ import {
   ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
-  UpdateAgentEvalSuiteRequest,
-  UpdateAgentEvalSuiteResponse,
-  FetchAgentEvalSuiteResponse,
-  RunAgentEvalSuiteResponse,
+  FetchAgentTestSuiteResponse,
+  RunAgentTestSuiteRequest,
+  RunAgentTestSuiteResponse,
+  UpdateAgentTestSuiteRequest,
+  UpdateAgentTestSuiteResponse,
 } from "@budibase/types"
 import { AttachedFile, Expectations, TestAPI } from "../base"
 
@@ -137,25 +138,25 @@ export class AgentAPI extends TestAPI {
     )
   }
 
-  fetchEvalSuite = async (
+  fetchTestSuite = async (
     agentId: string,
     expectations?: Expectations
-  ): Promise<FetchAgentEvalSuiteResponse> => {
-    return await this._get<FetchAgentEvalSuiteResponse>(
-      `/api/agent/${agentId}/evals`,
+  ): Promise<FetchAgentTestSuiteResponse> => {
+    return await this._get<FetchAgentTestSuiteResponse>(
+      `/api/agent/${agentId}/tests`,
       {
         expectations,
       }
     )
   }
 
-  updateEvalSuite = async (
+  updateTestSuite = async (
     agentId: string,
-    body: UpdateAgentEvalSuiteRequest,
+    body: UpdateAgentTestSuiteRequest,
     expectations?: Expectations
-  ): Promise<UpdateAgentEvalSuiteResponse> => {
-    return await this._put<UpdateAgentEvalSuiteResponse>(
-      `/api/agent/${agentId}/evals`,
+  ): Promise<UpdateAgentTestSuiteResponse> => {
+    return await this._put<UpdateAgentTestSuiteResponse>(
+      `/api/agent/${agentId}/tests`,
       {
         body,
         expectations,
@@ -163,13 +164,15 @@ export class AgentAPI extends TestAPI {
     )
   }
 
-  runEvalSuite = async (
+  runTestSuite = async (
     agentId: string,
-    expectations?: Expectations
-  ): Promise<RunAgentEvalSuiteResponse> => {
-    return await this._post<RunAgentEvalSuiteResponse>(
-      `/api/agent/${agentId}/evals/run`,
+    expectations?: Expectations,
+    body?: RunAgentTestSuiteRequest
+  ): Promise<RunAgentTestSuiteResponse> => {
+    return await this._post<RunAgentTestSuiteResponse>(
+      `/api/agent/${agentId}/tests/run`,
       {
+        body,
         expectations,
       }
     )

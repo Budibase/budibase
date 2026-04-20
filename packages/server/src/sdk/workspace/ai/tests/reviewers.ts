@@ -1,10 +1,10 @@
 import type {
-  AgentEvalCase,
-  AgentEvalReviewer,
-  AgentEvalReviewerResult,
+  AgentTestCase,
+  AgentTestReviewer,
+  AgentTestReviewerResult,
 } from "@budibase/types"
 
-interface AgentEvalValidationFailure {
+interface AgentTestValidationFailure {
   message: string
 }
 
@@ -13,8 +13,8 @@ export const normalizeResponseText = (value?: string) => {
 }
 
 export const normalizeReviewer = (
-  reviewer: AgentEvalReviewer
-): AgentEvalReviewer => {
+  reviewer: AgentTestReviewer
+): AgentTestReviewer => {
   switch (reviewer.type) {
     case "exact_match":
     case "contains_text":
@@ -36,8 +36,8 @@ export const normalizeReviewer = (
 }
 
 export const normalizeReviewers = (
-  reviewers: AgentEvalReviewer[]
-): AgentEvalReviewer[] => {
+  reviewers: AgentTestReviewer[]
+): AgentTestReviewer[] => {
   return reviewers.map(normalizeReviewer)
 }
 
@@ -46,15 +46,15 @@ export const normalizeCaseContext = (context?: string) => {
   return normalized ? normalized : undefined
 }
 
-export const validateEvalCase = (
-  testCase: AgentEvalCase
-): AgentEvalValidationFailure[] => {
-  const failures: AgentEvalValidationFailure[] = []
+export const validateTestCase = (
+  testCase: AgentTestCase
+): AgentTestValidationFailure[] => {
+  const failures: AgentTestValidationFailure[] = []
   const reviewers = normalizeReviewers(testCase.reviewers)
 
   if (!testCase.name?.trim()) {
     failures.push({
-      message: "Case name is required.",
+      message: "Test name is required.",
     })
   }
 
@@ -113,10 +113,10 @@ export const evaluateReviewer = ({
   response,
   toolCalls,
 }: {
-  reviewer: Exclude<AgentEvalReviewer, { type: "llm_judge" }>
+  reviewer: Exclude<AgentTestReviewer, { type: "llm_judge" }>
   response: string
   toolCalls: string[]
-}): AgentEvalReviewerResult => {
+}): AgentTestReviewerResult => {
   const normalizedResponse = normalizeResponseText(response)
 
   switch (reviewer.type) {
@@ -164,9 +164,9 @@ export const buildErroredReviewerResults = ({
   reviewers,
   message,
 }: {
-  reviewers: AgentEvalReviewer[]
+  reviewers: AgentTestReviewer[]
   message: string
-}): AgentEvalReviewerResult[] => {
+}): AgentTestReviewerResult[] => {
   return reviewers.map(reviewer => ({
     reviewerId: reviewer.id,
     type: reviewer.type,
@@ -176,7 +176,7 @@ export const buildErroredReviewerResults = ({
 }
 
 export const getCaseStatus = (
-  reviewerResults: AgentEvalReviewerResult[]
+  reviewerResults: AgentTestReviewerResult[]
 ): "passed" | "failed" | "error" => {
   if (reviewerResults.some(result => result.status === "error")) {
     return "error"

@@ -1,10 +1,10 @@
-import type { AgentEvalReviewer } from "@budibase/types"
+import type { AgentTestReviewer } from "@budibase/types"
 
-export type EvalCaseStatus = "passed" | "failed" | "error" | "idle"
+export type TestCaseStatus = "passed" | "failed" | "error" | "idle"
 
 export function getResultStatus(
   result?: { status: string } | null
-): EvalCaseStatus {
+): TestCaseStatus {
   if (!result) {
     return "idle"
   }
@@ -31,7 +31,7 @@ export function resultSummary(result?: { status: string } | null): string {
   return "Error"
 }
 
-export function statusToBadgeProps(status: EvalCaseStatus): {
+export function statusToBadgeProps(status: TestCaseStatus): {
   green?: boolean
   red?: boolean
   grey?: boolean
@@ -54,7 +54,7 @@ export function formatRunTime(dateStr?: string | null): string {
   return new Date(dateStr).toLocaleString()
 }
 
-export function getReviewerLabel(type: AgentEvalReviewer["type"]): string {
+export function getReviewerLabel(type: AgentTestReviewer["type"]): string {
   switch (type) {
     case "exact_match":
       return "Exact match"
@@ -67,7 +67,7 @@ export function getReviewerLabel(type: AgentEvalReviewer["type"]): string {
   }
 }
 
-export function getReviewerConfigSummary(reviewer: AgentEvalReviewer): string {
+export function getReviewerConfigSummary(reviewer: AgentTestReviewer): string {
   switch (reviewer.type) {
     case "exact_match":
     case "contains_text":

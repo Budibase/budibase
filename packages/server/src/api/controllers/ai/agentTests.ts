@@ -1,9 +1,10 @@
 import { db, HTTPError } from "@budibase/backend-core"
 import type {
-  FetchAgentEvalSuiteResponse,
-  RunAgentEvalSuiteResponse,
-  UpdateAgentEvalSuiteRequest,
-  UpdateAgentEvalSuiteResponse,
+  FetchAgentTestSuiteResponse,
+  RunAgentTestSuiteRequest,
+  RunAgentTestSuiteResponse,
+  UpdateAgentTestSuiteRequest,
+  UpdateAgentTestSuiteResponse,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -18,13 +19,13 @@ const getAgentId = async (ctx: UserCtx) => {
   return agentId
 }
 
-export async function fetchAgentEvalSuite(
-  ctx: UserCtx<void, FetchAgentEvalSuiteResponse>
+export async function fetchAgentTestSuite(
+  ctx: UserCtx<void, FetchAgentTestSuiteResponse>
 ) {
   const agentId = await getAgentId(ctx)
   const [suite, runs] = await Promise.all([
-    sdk.ai.evals.fetchSuite(agentId),
-    sdk.ai.evals.fetchRuns(agentId),
+    sdk.ai.tests.fetchSuite(agentId),
+    sdk.ai.tests.fetchRuns(agentId),
   ])
 
   ctx.body = {
@@ -33,28 +34,29 @@ export async function fetchAgentEvalSuite(
   }
 }
 
-export async function updateAgentEvalSuite(
-  ctx: UserCtx<UpdateAgentEvalSuiteRequest, UpdateAgentEvalSuiteResponse>
+export async function updateAgentTestSuite(
+  ctx: UserCtx<UpdateAgentTestSuiteRequest, UpdateAgentTestSuiteResponse>
 ) {
   const agentId = await getAgentId(ctx)
   const updatedBy = ctx.user?._id
     ? db.getGlobalIDFromUserMetadataID(ctx.user._id)
     : undefined
 
-  ctx.body = await sdk.ai.evals.saveSuite({
+  ctx.body = await sdk.ai.tests.saveSuite({
     agentId,
     request: ctx.request.body,
     updatedBy,
   })
 }
 
-export async function runAgentEvalSuite(
-  ctx: UserCtx<void, RunAgentEvalSuiteResponse>
+export async function runAgentTestSuite(
+  ctx: UserCtx<RunAgentTestSuiteRequest, RunAgentTestSuiteResponse>
 ) {
   const agentId = await getAgentId(ctx)
-  const run = await sdk.ai.evals.runSuite({
+  const run = await sdk.ai.tests.runSuite({
     agentId,
     user: ctx.user,
+    caseId: ctx.request.body?.caseId || undefined,
   })
 
   ctx.body = { run }

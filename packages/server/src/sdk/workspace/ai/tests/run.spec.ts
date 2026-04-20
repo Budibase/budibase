@@ -73,7 +73,7 @@ jest.mock("ai", () => ({
   wrapLanguageModel: jest.fn().mockReturnValue({}),
 }))
 
-describe("agent eval runner", () => {
+describe("agent test runner", () => {
   const sdk = jest.requireMock("../../..").default
   const ai = jest.requireMock("ai")
   const { createSessionLogIndexer } = jest.requireMock("../agentLogs")
@@ -484,5 +484,36 @@ describe("agent eval runner", () => {
       ],
       error: "Judge failed: structured output failed",
     })
+  })
+
+  it("runs only the requested case when caseId is set", async () => {
+    fetchSuite.mockResolvedValue({
+      agentId: "agent-1",
+      cases: [
+        {
+          id: "case-a",
+          name: "First",
+          input: "a",
+          reviewers: [],
+        },
+        {
+          id: "case-b",
+          name: "Second",
+          input: "b",
+          reviewers: [],
+        },
+      ],
+    })
+    mockAgentRun({ response: "ok" })
+
+    const run = await runSuite({
+      agentId: "agent-1",
+      user,
+      caseId: "case-b",
+    })
+
+    expect(run.total).toBe(1)
+    expect(run.results).toHaveLength(1)
+    expect(run.results[0].caseId).toBe("case-b")
   })
 })

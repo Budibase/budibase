@@ -174,7 +174,7 @@ const AGENT_EVAL_CASE_SCHEMA = Joi.object({
   reviewers: Joi.array().items(AGENT_EVAL_REVIEWER_SCHEMA).required(),
 }).required()
 
-export function updateAgentEvalSuiteValidator() {
+export function updateAgentTestSuiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
       _rev: OPTIONAL_STRING,

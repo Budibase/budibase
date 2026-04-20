@@ -32,7 +32,7 @@
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
   let ragEnabled = $derived($featureFlags[FeatureFlag.AI_RAG])
-  let evalsEnabled = $derived($featureFlags[FeatureFlag.AI_EVALS])
+  let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
 
   let activeTab = $derived.by(() => {
     if (ragEnabled && $isActive("./knowledge")) {
@@ -41,8 +41,8 @@
     if ($isActive("./deployment")) {
       return "Deployment"
     }
-    if (evalsEnabled && $isActive("./evals")) {
-      return "Evals"
+    if (testsEnabled && $isActive("./tests")) {
+      return "Tests"
     }
     if ($isActive("./logs")) {
       return "Logs"
@@ -56,7 +56,7 @@
       $goto("./config")
     }
 
-    if (!evalsEnabled && $isActive("./evals")) {
+    if (!testsEnabled && $isActive("./tests")) {
       $goto("./config")
     }
   })
@@ -126,13 +126,13 @@
       >
         Deployment
       </ActionButton>
-      {#if evalsEnabled}
+      {#if testsEnabled}
         <ActionButton
           quiet
-          selected={activeTab === "Evals"}
-          on:click={() => $goto("./evals")}
+          selected={activeTab === "Tests"}
+          on:click={() => $goto("./tests")}
         >
-          Evals
+          Tests
         </ActionButton>
       {/if}
       <ActionButton
@@ -171,15 +171,15 @@
   </div>
   <div
     class="config-page"
-    class:full-width={activeTab === "Logs" || activeTab === "Evals"}
+    class:full-width={activeTab === "Logs" || activeTab === "Tests"}
   >
     <div
       class="config-content"
-      class:full-width={activeTab === "Logs" || activeTab === "Evals"}
-      class:logs-tab={activeTab === "Logs" || activeTab === "Evals"}
+      class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+      class:logs-tab={activeTab === "Logs" || activeTab === "Tests"}
     >
       <div class="config-form">
-        {#if activeTab === "Logs" || activeTab === "Evals"}
+        {#if activeTab === "Logs" || activeTab === "Tests"}
           <!-- svelte-ignore slot_element_deprecated -->
           <slot />
         {:else}
@@ -190,7 +190,7 @@
         {/if}
       </div>
     </div>
-    {#if activeTab !== "Logs" && activeTab !== "Evals"}
+    {#if activeTab !== "Logs" && activeTab !== "Tests"}
       <div class="config-preview">
         <AgentChatPanel
           agentId={currentAgent?._id}

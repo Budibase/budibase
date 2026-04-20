@@ -1,4 +1,4 @@
-import type { AgentEvalRun } from "@budibase/types"
+import type { AgentTestRun } from "@budibase/types"
 import { fetchRuns, saveRun } from "./crud"
 
 let db: {
@@ -8,12 +8,12 @@ let db: {
 }
 
 let docIds: {
-  getAgentEvalSuiteID: (agentId: string) => string
-  getAgentEvalRunPrefix: (agentId: string) => string
-  getAgentEvalRunID: (
+  getAgentTestSuiteID: (agentId: string) => string
+  getAgentTestRunPrefix: (agentId: string) => string
+  getAgentTestRunID: (
     agentId: string,
-    startedAt?: string,
-    runId?: string
+    startedAt: string,
+    runId: string
   ) => string
 }
 
@@ -42,7 +42,7 @@ const createRun = ({
 }: {
   runId: string
   completedAt: string
-}): AgentEvalRun => ({
+}): AgentTestRun => ({
   _id: `run_agent-1_${runId}`,
   agentId: "agent-1",
   runId,
@@ -61,7 +61,7 @@ const createRun = ({
   results: [],
 })
 
-describe("agent eval crud", () => {
+describe("agent test crud", () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -91,7 +91,7 @@ describe("agent eval crud", () => {
     })
 
     const runs = await fetchRuns("agent-1", 2)
-    const runPrefix = docIds.getAgentEvalRunPrefix("agent-1")
+    const runPrefix = docIds.getAgentTestRunPrefix("agent-1")
 
     expect(runs.map(run => run.runId)).toEqual(["run-3", "run-2"])
     expect(db.allDocs).toHaveBeenCalledWith({
@@ -127,7 +127,7 @@ describe("agent eval crud", () => {
 
     expect(db.put).toHaveBeenCalledWith(
       expect.objectContaining({
-        _id: docIds.getAgentEvalRunID(
+        _id: docIds.getAgentTestRunID(
           "agent-1",
           "2025-01-01T00:00:00.000Z",
           "run-1"

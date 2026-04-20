@@ -1,7 +1,7 @@
 import type { ReasoningEffort } from "./ai"
 import { Document } from "../../"
 
-export type AgentEvalReviewer =
+export type AgentTestReviewer =
   | {
       id: string
       type: "exact_match"
@@ -23,30 +23,30 @@ export type AgentEvalReviewer =
       tool: string
     }
 
-export interface AgentEvalReviewerResult {
+export interface AgentTestReviewerResult {
   reviewerId: string
-  type: AgentEvalReviewer["type"]
+  type: AgentTestReviewer["type"]
   status: "passed" | "failed" | "error"
   message?: string
 }
 
-export interface AgentEvalCase {
+export interface AgentTestCase {
   id: string
   name: string
   input: string
   context?: string
-  reviewers: AgentEvalReviewer[]
+  reviewers: AgentTestReviewer[]
 }
 
-export interface AgentEvalCaseSnapshot {
+export interface AgentTestCaseSnapshot {
   id: string
   name: string
   input: string
   context?: string
-  reviewers: AgentEvalReviewer[]
+  reviewers: AgentTestReviewer[]
 }
 
-export interface AgentEvalModelSnapshot {
+export interface AgentTestModelSnapshot {
   aiConfigId: string
   name?: string
   provider?: string
@@ -55,33 +55,33 @@ export interface AgentEvalModelSnapshot {
   reasoningEffort?: ReasoningEffort
 }
 
-export interface AgentEvalSuite extends Document {
+export interface AgentTestSuite extends Document {
   agentId: string
-  cases: AgentEvalCase[]
+  cases: AgentTestCase[]
   updatedBy?: string
 }
 
-export interface AgentEvalSnapshot {
+export interface AgentTestSnapshot {
   agentId: string
   agentName: string
   agentRev?: string
   agentUpdatedAt?: string
   suiteRev?: string
   aiconfig: string
-  aiConfig?: AgentEvalModelSnapshot
+  aiConfig?: AgentTestModelSnapshot
   promptInstructions?: string
   goal?: string
   enabledTools: string[]
   knowledgeBases: string[]
 }
 
-export interface AgentEvalCaseResult {
+export interface AgentTestCaseResult {
   caseId: string
   name: string
-  caseSnapshot: AgentEvalCaseSnapshot
+  caseSnapshot: AgentTestCaseSnapshot
   response: string
   status: "passed" | "failed" | "error"
-  reviewerResults: AgentEvalReviewerResult[]
+  reviewerResults: AgentTestReviewerResult[]
   toolCalls: string[]
   sessionId: string
   requestIds: string[]
@@ -91,7 +91,7 @@ export interface AgentEvalCaseResult {
   error?: string
 }
 
-export interface AgentEvalRun extends Document {
+export interface AgentTestRun extends Document {
   agentId: string
   runId: string
   total: number
@@ -99,6 +99,6 @@ export interface AgentEvalRun extends Document {
   failed: number
   startedAt: string
   completedAt: string
-  snapshot: AgentEvalSnapshot
-  results: AgentEvalCaseResult[]
+  snapshot: AgentTestSnapshot
+  results: AgentTestCaseResult[]
 }

@@ -1,29 +1,29 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { UNICODE_MAX } from "@budibase/types"
 import type {
-  AgentEvalCase,
-  AgentEvalReviewer,
-  AgentEvalRun,
-  AgentEvalSuite,
-  UpdateAgentEvalSuiteRequest,
+  AgentTestCase,
+  AgentTestReviewer,
+  AgentTestRun,
+  AgentTestSuite,
+  UpdateAgentTestSuiteRequest,
 } from "@budibase/types"
 import { v4 } from "uuid"
 import {
   normalizeCaseContext,
   normalizeReviewers,
-  validateEvalCase,
+  validateTestCase,
 } from "./reviewers"
 
-const buildDefaultSuite = (agentId: string): AgentEvalSuite => ({
-  _id: docIds.getAgentEvalSuiteID(agentId),
+const buildDefaultSuite = (agentId: string): AgentTestSuite => ({
+  _id: docIds.getAgentTestSuiteID(agentId),
   agentId,
   cases: [],
 })
 
-export async function fetchSuite(agentId: string): Promise<AgentEvalSuite> {
+export async function fetchSuite(agentId: string): Promise<AgentTestSuite> {
   const db = context.getWorkspaceDB()
-  const suite = await db.tryGet<AgentEvalSuite>(
-    docIds.getAgentEvalSuiteID(agentId)
+  const suite = await db.tryGet<AgentTestSuite>(
+    docIds.getAgentTestSuiteID(agentId)
   )
   return suite || buildDefaultSuite(agentId)
 }
@@ -34,24 +34,24 @@ export async function saveSuite({
   updatedBy,
 }: {
   agentId: string
-  request: UpdateAgentEvalSuiteRequest
+  request: UpdateAgentTestSuiteRequest
   updatedBy?: string
-}): Promise<AgentEvalSuite> {
+}): Promise<AgentTestSuite> {
   const db = context.getWorkspaceDB()
-  const existing = await db.tryGet<AgentEvalSuite>(
-    docIds.getAgentEvalSuiteID(agentId)
+  const existing = await db.tryGet<AgentTestSuite>(
+    docIds.getAgentTestSuiteID(agentId)
   )
   const normalizeReviewer = (
-    reviewer: AgentEvalReviewer
-  ): AgentEvalReviewer => {
+    reviewer: AgentTestReviewer
+  ): AgentTestReviewer => {
     return {
       ...reviewer,
       id: reviewer.id || v4(),
     }
   }
-  const cases: AgentEvalCase[] = request.cases.map((testCase, idx) => ({
+  const cases: AgentTestCase[] = request.cases.map((testCase, idx) => ({
     id: testCase.id ?? v4(),
-    name: testCase.name?.trim() || `Case ${idx + 1}`,
+    name: testCase.name?.trim() || `Test ${idx + 1}`,
     input: testCase.input ?? "",
     context: normalizeCaseContext(testCase.context),
     reviewers: normalizeReviewers(testCase.reviewers || []).map(
@@ -60,15 +60,15 @@ export async function saveSuite({
   }))
 
   for (const testCase of cases) {
-    const failures = validateEvalCase(testCase)
+    const failures = validateTestCase(testCase)
     if (failures.length > 0) {
       throw new HTTPError(failures[0].message, 400)
     }
   }
 
   const now = new Date().toISOString()
-  const suite: AgentEvalSuite = {
-    _id: docIds.getAgentEvalSuiteID(agentId),
+  const suite: AgentTestSuite = {
+    _id: docIds.getAgentTestSuiteID(agentId),
     _rev: request._rev || existing?._rev,
     agentId,
     cases,
@@ -87,10 +87,10 @@ export async function saveSuite({
 export async function fetchRuns(
   agentId: string,
   limit = 10
-): Promise<AgentEvalRun[]> {
+): Promise<AgentTestRun[]> {
   const db = context.getWorkspaceDB()
-  const startkey = docIds.getAgentEvalRunPrefix(agentId)
-  const response = await db.allDocs<AgentEvalRun>({
+  const startkey = docIds.getAgentTestRunPrefix(agentId)
+  const response = await db.allDocs<AgentTestRun>({
     startkey: `${startkey}${UNICODE_MAX}`,
     endkey: startkey,
     include_docs: true,
@@ -99,7 +99,7 @@ export async function fetchRuns(
 
   return response.rows
     .map(row => row.doc)
-    .filter((run): run is AgentEvalRun => Boolean(run))
+    .filter((run): run is AgentTestRun => Boolean(run))
     .sort((a, b) => {
       const aTime = new Date(a.completedAt || a.startedAt).getTime()
       const bTime = new Date(b.completedAt || b.startedAt).getTime()
@@ -109,12 +109,12 @@ export async function fetchRuns(
 }
 
 export async function saveRun(
-  run: Omit<AgentEvalRun, "_id" | "_rev" | "createdAt" | "updatedAt">
-): Promise<AgentEvalRun> {
+  run: Omit<AgentTestRun, "_id" | "_rev" | "createdAt" | "updatedAt">
+): Promise<AgentTestRun> {
   const db = context.getWorkspaceDB()
-  const nextRun: AgentEvalRun = {
+  const nextRun: AgentTestRun = {
     ...run,
-    _id: docIds.getAgentEvalRunID(run.agentId, run.startedAt, run.runId),
+    _id: docIds.getAgentTestRunID(run.agentId, run.startedAt, run.runId),
     createdAt: run.startedAt,
     updatedAt: run.completedAt,
   }

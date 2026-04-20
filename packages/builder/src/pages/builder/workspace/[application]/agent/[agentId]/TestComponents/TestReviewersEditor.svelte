@@ -1,48 +1,47 @@
 <script lang="ts">
   import {
+    ActionButton,
     Body,
     Button,
-    Divider,
+    DetailSummary,
     Helpers,
     Input,
     Select,
     TextArea,
   } from "@budibase/bbui"
-  import type { AgentEvalCase, AgentEvalReviewer } from "@budibase/types"
+  import type { AgentTestCase, AgentTestReviewer } from "@budibase/types"
   import { getReviewerLabel } from "./utils"
 
   type ToolOption = { label: string; value: string }
 
   type Props = {
-    selectedCase: AgentEvalCase
+    selectedCase: AgentTestCase
     toolOptions: ToolOption[]
     onUpdateCase: (
-      _updater: (_testCase: AgentEvalCase) => AgentEvalCase
+      _updater: (_testCase: AgentTestCase) => AgentTestCase
     ) => void
   }
 
   type ReviewerOption = {
-    type: AgentEvalReviewer["type"]
+    type: AgentTestReviewer["type"]
     description: string
   }
 
   let { selectedCase, toolOptions, onUpdateCase }: Props = $props()
 
   let reviewerChooserOpen = $state(false)
-
-  const updateField =
-    (field: "name" | "input") => (event: CustomEvent<string>) =>
-      onUpdateCase(testCase => ({ ...testCase, [field]: event.detail }))
+  let reviewerIdsOpenOnAdd = $state<Set<string>>(new Set())
 
   const updateReviewerField =
-    (reviewerId: string, field: string) => (event: CustomEvent<string>) =>
+    (reviewerId: string, field: string) =>
+    (event: CustomEvent<string | undefined>) =>
       updateReviewer(
         reviewerId,
         current =>
           ({
             ...current,
             [field]: event.detail,
-          }) as AgentEvalReviewer
+          }) as AgentTestReviewer
       )
 
   const reviewerOptions: ReviewerOption[] = [
@@ -65,8 +64,8 @@
   ]
 
   const createReviewer = (
-    type: AgentEvalReviewer["type"]
-  ): AgentEvalReviewer => {
+    type: AgentTestReviewer["type"]
+  ): AgentTestReviewer => {
     const id = Helpers.uuid()
 
     switch (type) {
@@ -94,7 +93,7 @@
 
   const updateReviewer = (
     reviewerId: string,
-    updater: (_reviewer: AgentEvalReviewer) => AgentEvalReviewer
+    updater: (_reviewer: AgentTestReviewer) => AgentTestReviewer
   ) => {
     onUpdateCase(testCase => ({
       ...testCase,
@@ -104,10 +103,12 @@
     }))
   }
 
-  const addReviewer = (type: AgentEvalReviewer["type"]) => {
+  const addReviewer = (type: AgentTestReviewer["type"]) => {
+    const reviewer = createReviewer(type)
+    reviewerIdsOpenOnAdd = new Set([...reviewerIdsOpenOnAdd, reviewer.id])
     onUpdateCase(testCase => ({
       ...testCase,
-      reviewers: [...testCase.reviewers, createReviewer(type)],
+      reviewers: [...testCase.reviewers, reviewer],
     }))
     reviewerChooserOpen = false
   }
@@ -120,80 +121,89 @@
       ),
     }))
   }
+
+  const truncate = (value: string, max: number) => {
+    const t = value.trim()
+    if (t.length <= max) {
+      return t
+    }
+    return `${t.slice(0, Math.max(0, max - 1))}…`
+  }
+
+  const reviewerSummaryTitle = (reviewer: AgentTestReviewer) => {
+    const label = getReviewerLabel(reviewer.type)
+    switch (reviewer.type) {
+      case "tool_used":
+        return reviewer.tool ? `${label} · ${reviewer.tool}` : label
+      case "exact_match":
+      case "contains_text":
+        return reviewer.text
+          ? `${label} · ${truncate(reviewer.text, 48)}`
+          : label
+      case "llm_judge":
+        return reviewer.rubric
+          ? `${label} · ${truncate(reviewer.rubric, 48)}`
+          : label
+      default:
+        return label
+    }
+  }
 </script>
 
-<div class="config">
-  <div class="config-fields">
-    <Input
-      label="Case name"
-      value={selectedCase.name}
-      on:change={updateField("name")}
-    />
+<div class="reviewers">
+  <div class="reviewer-toolbar">
+    <Body size="S" color="var(--spectrum-global-color-gray-600)">
+      Add checks for the final response or tool usage.
+    </Body>
+    <Button
+      secondary
+      on:click={() => (reviewerChooserOpen = !reviewerChooserOpen)}
+    >
+      Add reviewer
+    </Button>
+  </div>
 
-    <TextArea
-      label="Input"
-      value={selectedCase.input}
-      height={140}
-      on:change={updateField("input")}
-    />
-
-    <Divider size="S" noMargin />
-
-    <div class="reviewer-header">
-      <div>
-        <Body size="S" color="var(--spectrum-global-color-gray-900)">
-          Reviewer list
-        </Body>
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          Add one or more checks for the final response or tool usage.
-        </Body>
-      </div>
-      <Button secondary on:click={() => (reviewerChooserOpen = true)}>
-        Add reviewer
-      </Button>
+  {#if reviewerChooserOpen}
+    <div class="reviewer-chooser">
+      {#each reviewerOptions as option (option.type)}
+        <button
+          class="reviewer-option"
+          type="button"
+          onclick={() => addReviewer(option.type)}
+        >
+          <span class="reviewer-option-title">
+            {getReviewerLabel(option.type)}
+          </span>
+          <span class="reviewer-option-description">
+            {option.description}
+          </span>
+        </button>
+      {/each}
     </div>
+  {/if}
 
-    {#if reviewerChooserOpen}
-      <div class="reviewer-chooser">
-        {#each reviewerOptions as option (option.type)}
-          <button
-            class="reviewer-option"
-            type="button"
-            onclick={() => addReviewer(option.type)}
-          >
-            <span class="reviewer-option-title">
-              {getReviewerLabel(option.type)}
-            </span>
-            <span class="reviewer-option-description">
-              {option.description}
-            </span>
-          </button>
-        {/each}
-      </div>
-    {/if}
+  {#if selectedCase.reviewers.length === 0}
+    <div class="reviewer-empty">
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        No reviewers yet.
+      </Body>
+    </div>
+  {/if}
 
-    {#if selectedCase.reviewers.length === 0}
-      <div class="reviewer-empty">
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          No reviewers yet.
-        </Body>
-      </div>
-    {/if}
-
-    {#each selectedCase.reviewers as reviewer (reviewer.id)}
-      <div class="reviewer-card">
-        <div class="reviewer-card-header">
-          <Body size="S" color="var(--spectrum-global-color-gray-900)">
-            {getReviewerLabel(reviewer.type)}
-          </Body>
-          <button
-            class="reviewer-remove"
-            type="button"
-            onclick={() => removeReviewer(reviewer.id)}
-          >
-            Remove
-          </button>
-        </div>
+  {#each selectedCase.reviewers as reviewer (reviewer.id)}
+    <div class="reviewer-card">
+      <DetailSummary
+        name={reviewerSummaryTitle(reviewer)}
+        initiallyShow={reviewerIdsOpenOnAdd.has(reviewer.id)}
+        padded={false}
+      >
+        <ActionButton
+          slot="actions"
+          quiet
+          icon="trash"
+          tooltip="Remove reviewer"
+          on:click={() => removeReviewer(reviewer.id)}
+        />
 
         {#if reviewer.type === "exact_match"}
           <TextArea
@@ -226,23 +236,19 @@
             on:change={updateReviewerField(reviewer.id, "tool")}
           />
         {/if}
-      </div>
-    {/each}
-  </div>
+      </DetailSummary>
+    </div>
+  {/each}
 </div>
 
 <style>
-  .config {
-    padding: var(--spacing-m) 0;
-  }
-
-  .config-fields {
+  .reviewers {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
   }
 
-  .reviewer-header {
+  .reviewer-toolbar {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -259,7 +265,8 @@
   .reviewer-card {
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 8px;
-    background: var(--background);
+    background: var(--background-alt);
+    overflow: hidden;
   }
 
   .reviewer-option {
@@ -277,7 +284,7 @@
 
   .reviewer-option:hover {
     border-color: var(--spectrum-global-color-gray-400);
-    background: var(--background-alt);
+    background: var(--background);
   }
 
   .reviewer-option-title {
@@ -298,27 +305,23 @@
     border-radius: 8px;
   }
 
-  .reviewer-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-    padding: var(--spacing-s);
+  .reviewer-card :global(.property-group-container) {
+    border-bottom: none;
   }
 
-  .reviewer-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s);
+  .reviewer-card :global(.property-group-name) {
+    padding: var(--spacing-s) var(--spacing-m);
+    min-height: 40px;
   }
 
-  .reviewer-remove {
-    border: none;
-    background: transparent;
-    color: var(--bb-blue);
-    cursor: pointer;
-    font-size: 12px;
+  .reviewer-card :global(.property-group-name .name) {
+    font-size: 13px;
     font-weight: 600;
-    padding: 0;
+    white-space: nowrap;
+  }
+
+  .reviewer-card :global(.property-panel.show) {
+    padding: 0 var(--spacing-m) var(--spacing-m);
+    gap: var(--spacing-s);
   }
 </style>

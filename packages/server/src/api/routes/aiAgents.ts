@@ -1,5 +1,5 @@
 import { auth } from "@budibase/backend-core"
-import { aiEvalsEnabled } from "../../middleware/aiEvalsEnabled"
+import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
 import { aiRagEnabled } from "../../middleware/aiRagEnabled"
 import * as ai from "../controllers/ai"
 import {
@@ -17,7 +17,7 @@ import {
   toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
-  updateAgentEvalSuiteValidator,
+  updateAgentTestSuiteValidator,
   updateAgentValidator,
 } from "./utils/validators/agent"
 
@@ -62,17 +62,17 @@ builderAdminRoutes
   .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
 
-const aiEvalBuilderAdminRoutes = endpointGroupList
+const aiTestBuilderAdminRoutes = endpointGroupList
   .group(auth.builderOrAdmin)
-  .addGroupMiddleware(aiEvalsEnabled)
-aiEvalBuilderAdminRoutes
-  .get("/api/agent/:agentId/evals", ai.fetchAgentEvalSuite)
+  .addGroupMiddleware(aiTestsEnabled)
+aiTestBuilderAdminRoutes
+  .get("/api/agent/:agentId/tests", ai.fetchAgentTestSuite)
   .put(
-    "/api/agent/:agentId/evals",
-    updateAgentEvalSuiteValidator(),
-    ai.updateAgentEvalSuite
+    "/api/agent/:agentId/tests",
+    updateAgentTestSuiteValidator(),
+    ai.updateAgentTestSuite
   )
-  .post("/api/agent/:agentId/evals/run", ai.runAgentEvalSuite)
+  .post("/api/agent/:agentId/tests/run", ai.runAgentTestSuite)
 
 const aiRagBuilderAdminRoutes = endpointGroupList
   .group(auth.builderOrAdmin)

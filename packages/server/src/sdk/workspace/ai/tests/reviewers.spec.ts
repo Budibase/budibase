@@ -3,10 +3,10 @@ import {
   getCaseStatus,
   normalizeCaseContext,
   normalizeReviewers,
-  validateEvalCase,
+  validateTestCase,
 } from "./reviewers"
 
-describe("agent eval reviewers", () => {
+describe("agent test reviewers", () => {
   it("normalizes reviewer values and blank context", () => {
     expect(
       normalizeReviewers([
@@ -48,7 +48,7 @@ describe("agent eval reviewers", () => {
 
   it("validates required input and reviewers", () => {
     expect(
-      validateEvalCase({
+      validateTestCase({
         id: "case-1",
         name: "Case 1",
         input: "",

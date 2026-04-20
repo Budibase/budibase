@@ -83,8 +83,8 @@ export function extractError(
 }
 
 export function determineTrigger(sessionId: string): string {
-  if (sessionId.startsWith("eval:")) {
-    return "Eval"
+  if (sessionId.startsWith("test:")) {
+    return "Test"
   }
 
   if (isPreviewSession(sessionId)) {
