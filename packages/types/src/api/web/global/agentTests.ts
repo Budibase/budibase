@@ -2,7 +2,6 @@ import { AgentTestRun, AgentTestSuite } from "../../../documents"
 
 export interface FetchAgentTestSuiteResponse {
   suite: AgentTestSuite
-  runs: AgentTestRun[]
 }
 
 export interface UpdateAgentTestSuiteRequest {

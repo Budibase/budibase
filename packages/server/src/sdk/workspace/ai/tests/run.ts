@@ -32,7 +32,7 @@ import {
   evaluateReviewer,
   getCaseStatus,
 } from "./reviewers"
-import { fetchSuite, saveRun } from "./crud"
+import { fetchSuite } from "./crud"
 import { v4 } from "uuid"
 
 type TestLLM = Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
@@ -381,7 +381,7 @@ export async function runSuite({
   }
 
   const passed = results.filter(r => r.status === "passed").length
-  return saveRun({
+  return {
     agentId,
     runId,
     total: results.length,
@@ -391,5 +391,5 @@ export async function runSuite({
     completedAt: new Date().toISOString(),
     snapshot,
     results,
-  })
+  }
 }

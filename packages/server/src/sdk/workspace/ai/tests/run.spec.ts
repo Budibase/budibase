@@ -58,7 +58,6 @@ jest.mock("../agents", () => ({
 
 jest.mock("./crud", () => ({
   fetchSuite: jest.fn(),
-  saveRun: jest.fn(),
 }))
 
 jest.mock("ai", () => ({
@@ -77,7 +76,7 @@ describe("agent test runner", () => {
   const sdk = jest.requireMock("../../..").default
   const ai = jest.requireMock("ai")
   const { createSessionLogIndexer } = jest.requireMock("../agentLogs")
-  const { fetchSuite, saveRun } = jest.requireMock("./crud")
+  const { fetchSuite } = jest.requireMock("./crud")
   const user = {} as ContextUser
 
   const makeIndexer = () => {
@@ -209,10 +208,6 @@ describe("agent test runner", () => {
       chat: {},
       providerOptions: jest.fn().mockReturnValue(undefined),
     })
-    saveRun.mockImplementation(async (run: Record<string, unknown>) => ({
-      ...run,
-      _id: "run-doc",
-    }))
     createSessionLogIndexer.mockImplementation(makeIndexer)
   })
 

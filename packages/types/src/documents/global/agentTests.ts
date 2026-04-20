@@ -85,7 +85,7 @@ export interface AgentTestCaseResult {
   error?: string
 }
 
-export interface AgentTestRun extends Document {
+export interface AgentTestRun {
   agentId: string
   runId: string
   total: number

@@ -137,18 +137,6 @@ export const getAgentTestSuiteID = (agentId: string) => {
   return `${DocumentType.AGENT_TEST_SUITE}${SEPARATOR}${agentId}`
 }
 
-export const getAgentTestRunID = (
-  agentId: string,
-  startedAt: string,
-  runId: string
-) => {
-  return `${DocumentType.AGENT_TEST_RUN}${SEPARATOR}${agentId}${SEPARATOR}${startedAt}${SEPARATOR}${runId}`
-}
-
-export const getAgentTestRunPrefix = (agentId: string) => {
-  return `${DocumentType.AGENT_TEST_RUN}${SEPARATOR}${agentId}${SEPARATOR}`
-}
-
 export const generateAgentToolSourceID = () => {
   return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
 }

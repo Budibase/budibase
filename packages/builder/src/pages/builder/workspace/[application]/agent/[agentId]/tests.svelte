@@ -26,7 +26,7 @@
   })
 
   let suite = $state<AgentTestSuite>(emptySuite())
-  let runs = $state<AgentTestRun[]>([])
+  let lastRun = $state<AgentTestRun | null>(null)
   let loading = $state(false)
   let saving = $state(false)
   let running = $state(false)
@@ -43,9 +43,8 @@
       .filter(t => enabled.has(t.name))
       .map(t => ({ label: t.readableName || t.name, value: t.name }))
   })
-  let latestRun = $derived(runs[0] ?? null)
   let latestResultsByCaseId = $derived(
-    new Map((latestRun?.results ?? []).map(r => [r.caseId, r]))
+    new Map((lastRun?.results ?? []).map(r => [r.caseId, r]))
   )
   let selectedCase = $derived(
     suite.cases.find(c => c.id === selectedCaseId) || null
@@ -56,7 +55,7 @@
 
   const resetState = (agentId?: string) => {
     suite = emptySuite(agentId)
-    runs = []
+    lastRun = null
     selectedCaseId = null
   }
 
@@ -75,7 +74,6 @@
     try {
       const response = await API.fetchAgentTestSuite(agentId)
       suite = response.suite
-      runs = response.runs
       selectedCaseId = suite.cases[0]?.id ?? null
     } catch (error) {
       console.error("Failed to load agent test suite", error)
@@ -86,8 +84,6 @@
     }
   }
 
-  // Saves a new cases array and returns success. nextSelectedCaseId falls back
-  // to the first remaining case when the requested id was removed.
   const persistCases = async (
     cases: AgentTestCase[],
     { nextSelectedCaseId, successMessage }: {
@@ -163,7 +159,7 @@
     running = true
     try {
       const { run } = await API.runAgentTestSuite(agentId, { caseId })
-      runs = [run, ...runs.filter(item => item.runId !== run.runId)]
+      lastRun = run
       notifications.success(`Run complete · ${run.passed}/${run.total} passed`)
     } catch (error) {
       console.error("Failed to run test", error)
@@ -191,7 +187,7 @@
     <div class="tests-list-panel">
       <TestCaseList
         cases={suite.cases}
-        hasLatestRun={!!latestRun}
+        hasLatestRun={!!lastRun}
         {selectedCaseId}
         {loading}
         onSelectCase={id => (selectedCaseId = id)}
@@ -202,7 +198,7 @@
       <TestDetail
         {selectedCase}
         latestResult={latestResultForSelected}
-        hasLatestRun={!!latestRun}
+        hasLatestRun={!!lastRun}
         {saving}
         {running}
         {loading}

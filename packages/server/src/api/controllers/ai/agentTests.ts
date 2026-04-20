@@ -23,14 +23,10 @@ export async function fetchAgentTestSuite(
   ctx: UserCtx<void, FetchAgentTestSuiteResponse>
 ) {
   const agentId = await getAgentId(ctx)
-  const [suite, runs] = await Promise.all([
-    sdk.ai.tests.fetchSuite(agentId),
-    sdk.ai.tests.fetchRuns(agentId),
-  ])
+  const suite = await sdk.ai.tests.fetchSuite(agentId)
 
   ctx.body = {
     suite,
-    runs,
   }
 }
 

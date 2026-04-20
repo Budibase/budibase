@@ -1,8 +1,6 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
-import { UNICODE_MAX } from "@budibase/types"
 import type {
   AgentTestCase,
-  AgentTestRun,
   AgentTestSuite,
   UpdateAgentTestSuiteRequest,
 } from "@budibase/types"
@@ -65,43 +63,4 @@ export async function saveSuite({
 
   const response = await db.put(suite)
   return { ...suite, _rev: response.rev }
-}
-
-export async function fetchRuns(
-  agentId: string,
-  limit = 10
-): Promise<AgentTestRun[]> {
-  const db = context.getWorkspaceDB()
-  const startkey = docIds.getAgentTestRunPrefix(agentId)
-  const response = await db.allDocs<AgentTestRun>({
-    startkey: `${startkey}${UNICODE_MAX}`,
-    endkey: startkey,
-    include_docs: true,
-    descending: true,
-  })
-
-  return response.rows
-    .map(row => row.doc)
-    .filter((run): run is AgentTestRun => Boolean(run))
-    .sort((a, b) => {
-      const aTime = new Date(a.completedAt || a.startedAt).getTime()
-      const bTime = new Date(b.completedAt || b.startedAt).getTime()
-      return bTime - aTime
-    })
-    .slice(0, limit)
-}
-
-export async function saveRun(
-  run: Omit<AgentTestRun, "_id" | "_rev" | "createdAt" | "updatedAt">
-): Promise<AgentTestRun> {
-  const db = context.getWorkspaceDB()
-  const nextRun: AgentTestRun = {
-    ...run,
-    _id: docIds.getAgentTestRunID(run.agentId, run.startedAt, run.runId),
-    createdAt: run.startedAt,
-    updatedAt: run.completedAt,
-  }
-
-  const response = await db.put(nextRun)
-  return { ...nextRun, _rev: response.rev }
 }
