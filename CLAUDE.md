@@ -56,8 +56,12 @@
 ## Git
 
 Never auto-commit changes unless explicitly asked to do so. You may ask permission to commit.
+Each commit requires permission.
 
 Never auto-push changes unless explicitly asked to do so. You may ask permission to push.
+Each push requires permission.
+
+For example, if I command `git add, commit, push` go ahead and do that once. Any subsequent changes will require permission. You may ask for permission on a per commit basis.
 
 ## Pull requests
 

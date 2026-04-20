@@ -1,4 +1,7 @@
-<script lang="ts" generics="O extends any,V">
+<script
+  lang="ts"
+  generics="O extends any, V, P extends string | boolean = string | boolean"
+>
   import Field from "./Field.svelte"
   import Select from "./Core/Select.svelte"
   import { createEventDispatcher } from "svelte"
@@ -11,7 +14,7 @@
   export let readonly: boolean = false
   export let labelPosition: LabelPosition = "above"
   export let error: string | undefined = undefined
-  export let placeholder: string | boolean = "Choose an option"
+  export let placeholder: P = "Choose an option" as P
   export let options: O[] = []
   export let getOptionLabel = (option: O, _index?: number) =>
     extractProperty(option, "label")
@@ -53,8 +56,10 @@
   export let wrapText: boolean = false
   export let description: string | undefined = undefined
 
-  const dispatch = createEventDispatcher<{ change: V | undefined }>()
-  const onChange = (e: CustomEvent<any>) => {
+  type ChangeValue = P extends false | "" ? V : V | undefined
+
+  const dispatch = createEventDispatcher<{ change: ChangeValue }>()
+  const onChange = (e: CustomEvent<ChangeValue>) => {
     value = e.detail
     dispatch("change", e.detail)
   }

@@ -216,6 +216,7 @@ export function setCookie(
     expires: MAX_VALID_DATE,
     path: "/",
     httpOnly: opts.httpOnly ?? false,
+    secure: ctx.secure,
     overwrite: true,
   }
 

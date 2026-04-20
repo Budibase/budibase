@@ -2,4 +2,4 @@
 . "$(dirname "$0")/_/husky.sh"
 
 # Helm chart validation (only runs when charts/ files are staged)
-sh "$(dirname "$0")/../scripts/helm-pre-commit.sh"
+"$(dirname "$0")/../scripts/helm-pre-commit.sh"

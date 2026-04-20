@@ -445,7 +445,8 @@ export function initializeLoopStorage(
 export function processStandardResult(
   storage: LoopStorage,
   result: AutomationStepResult,
-  iteration: number
+  iteration: number,
+  updateSummary = true
 ): void {
   let toStore: AutomationStepResult = result
   if (result.stepId === AutomationActionStepId.BRANCH) {
@@ -459,6 +460,9 @@ export function processStandardResult(
     if (outputs.branchName !== undefined) {
       sanitizedOutputs.branchName = outputs.branchName
     }
+    if (outputs.branchId !== undefined) {
+      sanitizedOutputs.branchId = outputs.branchId
+    }
 
     toStore = {
       id: result.id,
@@ -468,24 +472,29 @@ export function processStandardResult(
     }
   }
 
-  storage.summary.totalProcessed++
-  if (toStore.outputs.success) {
-    storage.summary.successCount++
-  } else {
-    storage.summary.failureCount++
-    if (!storage.summary.firstFailure) {
-      storage.summary.firstFailure = {
-        iteration,
-        error:
-          toStore.outputs.response ||
-          toStore.outputs.error ||
-          toStore.outputs.response?.message ||
-          "Unknown error",
+  if (updateSummary) {
+    storage.summary.totalProcessed++
+    if (toStore.outputs.success) {
+      storage.summary.successCount++
+    } else {
+      storage.summary.failureCount++
+      if (!storage.summary.firstFailure) {
+        storage.summary.firstFailure = {
+          iteration,
+          error:
+            toStore.outputs.response ||
+            toStore.outputs.error ||
+            toStore.outputs.response?.message ||
+            "Unknown error",
+        }
       }
     }
   }
 
   if (toStore.outputs.summary) {
+    if (!storage.nestedSummaries[toStore.id]) {
+      storage.nestedSummaries[toStore.id] = []
+    }
     storage.nestedSummaries[toStore.id].push(toStore.outputs.summary)
   }
 
