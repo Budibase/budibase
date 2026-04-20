@@ -11,6 +11,7 @@ import {
 } from "@budibase/types"
 import environment, { setEnv } from "../../../../environment"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/queue"
+import { getQueue as getKnowledgeSourceSyncQueue } from "../../../../sdk/workspace/ai/rag/knowledgeSourceSyncQueue"
 import { upsertKnowledgeSourceConnection } from "../../../../sdk/workspace/ai/knowledgeSources"
 import { sharePointConnectionCacheKey } from "../../../../sdk/workspace/ai/sharepoint"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
@@ -232,11 +233,11 @@ describe("agent files", () => {
       await utils.queue.processMessages(getQueue().getBullQueue())
       expect(ingestScope.isDone()).toBe(true)
 
-      const response = await config.api.agent.removeFile(
-        created._id!,
-        upload.file._id!
+      await config.api.agent.removeFile(created._id!, upload.file._id!)
+      await utils.queue.processMessages(
+        getKnowledgeSourceSyncQueue().getBullQueue()
       )
-      expect(response.deleted).toBe(true)
+
       expect(deleteScope.isDone()).toBe(true)
 
       const { files } = await config.api.agent.fetchFiles(created._id!)
