@@ -253,10 +253,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       return true
     }
 
-    return snapshots.some(
-      snapshot =>
-        snapshot.status === "connecting" || snapshot.status === "syncing"
-    )
+    return snapshots.some(snapshot => !snapshot.lastRunAt)
   }
 
   private armKnowledgeSourceBootstrapPolling = (
