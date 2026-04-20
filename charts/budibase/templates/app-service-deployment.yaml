@@ -26,6 +26,9 @@ spec:
     metadata:
       annotations:
         ad.datadoghq.com/bbapps.logs: '[{"source":"nodejs"}]'
+{{- if .Values.services.couchdb.enabled }}
+        checksum/couchdb-secret: {{ (lookup "v1" "Secret" .Release.Namespace (include "couchdb.fullname" .)) | toYaml | sha256sum }}
+{{- end }}
 {{ if .Values.services.apps.templateAnnotations }}
 {{- toYaml .Values.services.apps.templateAnnotations | indent 8 -}}
 {{ end }}
