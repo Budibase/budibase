@@ -18,6 +18,7 @@
   import {
     toSharePointDisplayStatusFromFile,
     toSharePointDisplayStatusFromSyncEntry,
+    isSelectableSharePointStatus,
     type SharePointDisplayStatus,
   } from "./sharePointStatus"
 
@@ -26,11 +27,13 @@
     siteId?: string
   }
 
+  const SITE_ROOT_PATH = "__site_root__"
   let { agentId, siteId }: Props = $props()
   let selectedEntryPaths = $state<string[]>([])
   let syncMode = $state<"all" | "selective">("all")
-  let includeNewFiles = $state(false)
   let scopeEditMode = $state(false)
+  let isOpen = $state(false)
+  let hasHydratedSelection = $state(false)
 
   const sharePointSource = $derived.by(() => {
     if (!siteId) {
@@ -49,12 +52,7 @@
       siteId ||
       ""
   )
-  const initialIncludePaths = $derived(
-    sharePointSource?.config.filters?.includePaths || []
-  )
-  const initialExcludePaths = $derived(
-    sharePointSource?.config.filters?.excludePaths || []
-  )
+  const initialPatterns = $derived(sharePointSource?.config.filters?.patterns || [])
 
   const getKnowledgeSourceFiles = (
     files: KnowledgeBaseFile[],
@@ -103,29 +101,74 @@
 
   let modal = $state<Modal>()
 
+  const toPatternFolderPath = (rawPattern: string) => {
+    if (!rawPattern || rawPattern.startsWith("!")) {
+      return undefined
+    }
+    const pattern = rawPattern.trim()
+    if (!pattern) {
+      return undefined
+    }
+    return pattern.endsWith("/**") ? pattern.slice(0, -3) : pattern
+  }
+
+  const rehydrateFromPatterns = (
+    patterns: string[],
+    folders: string[],
+    currentSelection: string[] = []
+  ) => {
+    const folderSet = new Set(folders)
+    const nextSelection = new Set<string>()
+
+    for (const rawPattern of patterns) {
+      const normalizedPattern = toPatternFolderPath(rawPattern)
+      if (!normalizedPattern) {
+        continue
+      }
+      if (folderSet.has(normalizedPattern)) {
+        nextSelection.add(normalizedPattern)
+        continue
+      }
+
+      const parentMatch = folders
+        .filter(path => normalizedPattern.startsWith(`${path}/`))
+        .sort((a, b) => b.length - a.length)[0]
+      if (parentMatch) {
+        nextSelection.add(parentMatch)
+      }
+    }
+
+    if (nextSelection.size > 0) {
+      return Array.from(nextSelection)
+    }
+
+    if (folders.length === 0) {
+      return patterns.map(toPatternFolderPath).filter(Boolean) as string[]
+    }
+
+    return currentSelection
+      .filter(path => folderSet.has(path))
+      .sort((a, b) => a.localeCompare(b))
+  }
+
   export function show() {
-    const hasInitialFilters =
-      initialIncludePaths.length > 0 || initialExcludePaths.length > 0
+    const hasInitialFilters = initialPatterns.length > 0
     syncMode = hasInitialFilters ? "selective" : "all"
-    includeNewFiles =
-      initialExcludePaths.length > 0 && initialIncludePaths.length === 0
-    if (includeNewFiles) {
-      const excludedPathSet = new Set(initialExcludePaths)
-      selectedEntryPaths = selectablePaths.filter(
-        path => !excludedPathSet.has(path)
-      )
-    } else if (initialIncludePaths.length > 0) {
-      selectedEntryPaths = [...initialIncludePaths]
+    if (initialPatterns.length > 0) {
+      selectedEntryPaths = rehydrateFromPatterns(initialPatterns, selectablePaths)
     } else if (syncMode === "selective") {
       selectedEntryPaths = [...selectablePaths]
     } else {
       selectedEntryPaths = []
     }
+    hasHydratedSelection = false
+    isOpen = true
     scopeEditMode = false
     modal?.show()
   }
 
   export function hide() {
+    isOpen = false
     modal?.hide()
   }
 
@@ -138,34 +181,41 @@
       return
     }
     if (syncMode === "selective" && selectedEntryPaths.length === 0) {
-      notifications.error("Please select at least one folder/file to sync")
+      notifications.error("Please select at least one folder to sync")
       return
     }
 
-    const allPaths = Array.from(
-      new Set(sharePointFiles.map(file => getFilePath(file)))
+    let filters: { patterns?: string[] } | undefined
+    const selectedWithoutRoot = selectedEntryPaths.filter(
+      path => path !== SITE_ROOT_PATH
     )
-    const selectedPaths = selectedEntryPaths
-    const excludedPaths = allPaths.filter(path => !selectedPaths.includes(path))
+    const selectableWithoutRoot = selectablePaths.filter(
+      path => path !== SITE_ROOT_PATH
+    )
+    const hasSelectedSiteRoot = selectedEntryPaths.includes(SITE_ROOT_PATH)
+    const isEffectivelySelectAll =
+      hasSelectedSiteRoot &&
+      selectableWithoutRoot.length > 0 &&
+      selectedWithoutRoot.length === selectableWithoutRoot.length
 
-    let filters:
-      | { includePaths?: string[]; excludePaths?: string[] }
-      | undefined
-    if (syncMode === "all") {
+    if (syncMode === "all" || isEffectivelySelectAll) {
       filters = undefined
-    } else if (includeNewFiles) {
-      filters =
-        excludedPaths.length > 0 ? { excludePaths: excludedPaths } : undefined
     } else {
-      filters =
-        selectedPaths.length > 0 ? { includePaths: selectedPaths } : undefined
+      const patterns = selectedWithoutRoot
+        .map(path => {
+          const node = selectionNodeByPath.get(path)
+          if (node?.type === "file") {
+            return path
+          }
+          return `${path}/**`
+        })
+      filters = patterns.length > 0 ? { patterns } : undefined
     }
 
     try {
       await agentsStore.updateAgentSharePointSite(agentId, siteId, {
         filters: {
-          includePaths: filters?.includePaths,
-          excludePaths: filters?.excludePaths,
+          patterns: filters?.patterns,
         },
       })
       await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
@@ -291,9 +341,57 @@
 
   const entryTree = $derived(buildEntryTree(sharePointFiles))
 
-  const selectablePaths = $derived(
-    sharePointFiles.map(file => getFilePath(file))
-  )
+  const wrapSelectionTreeWithSiteRoot = (
+    nodes: SharePointEntryTreeNode[]
+  ): SharePointEntryTreeNode[] => {
+    if (nodes.length === 0) {
+      return []
+    }
+
+    return [
+      {
+        id: SITE_ROOT_PATH,
+        name: "Site root",
+        path: SITE_ROOT_PATH,
+        type: "folder",
+        children: nodes,
+      },
+    ]
+  }
+
+  const collectSelectablePaths = (nodes: SharePointEntryTreeNode[]): string[] => {
+    const paths: string[] = []
+    for (const node of nodes) {
+      if (
+        node.type === "folder" ||
+        (node.type === "file" && isSelectableSharePointStatus(node.status))
+      ) {
+        paths.push(node.path)
+      }
+      paths.push(...collectSelectablePaths(node.children))
+    }
+    return paths
+  }
+
+  const flattenNodesByPath = (
+    nodes: SharePointEntryTreeNode[]
+  ): Map<string, SharePointEntryTreeNode> => {
+    const byPath = new Map<string, SharePointEntryTreeNode>()
+    const visit = (node: SharePointEntryTreeNode) => {
+      byPath.set(node.path, node)
+      for (const child of node.children) {
+        visit(child)
+      }
+    }
+    for (const node of nodes) {
+      visit(node)
+    }
+    return byPath
+  }
+
+  const selectionTree = $derived(wrapSelectionTreeWithSiteRoot(entryTree))
+  const selectablePaths = $derived(collectSelectablePaths(selectionTree))
+  const selectionNodeByPath = $derived(flattenNodesByPath(selectionTree))
 
   const toggleAll = () => {
     const allPathSet = new Set(selectablePaths)
@@ -317,6 +415,21 @@
   const showScopeControls = $derived(scopeEditMode && !!sourceId)
   const showEntrySelection = $derived(!!sourceId)
   const allowSelection = $derived(scopeEditMode && syncMode === "selective")
+  const displayTree = $derived(allowSelection ? selectionTree : entryTree)
+
+  $effect(() => {
+    if (!isOpen || hasHydratedSelection || syncMode !== "selective") {
+      return
+    }
+    selectedEntryPaths = rehydrateFromPatterns(
+      initialPatterns,
+      selectablePaths,
+      selectedEntryPaths
+    )
+    if (selectablePaths.length > 0 || initialPatterns.length === 0) {
+      hasHydratedSelection = true
+    }
+  })
 </script>
 
 <Modal bind:this={modal}>
@@ -347,7 +460,6 @@
               selected={syncMode === "all"}
               on:click={() => {
                 syncMode = "all"
-                includeNewFiles = false
               }}
             >
               Sync all files
@@ -357,12 +469,7 @@
               selected={syncMode === "selective"}
               on:click={() => {
                 syncMode = "selective"
-                if (includeNewFiles) {
-                  const excludedPathSet = new Set(initialExcludePaths)
-                  selectedEntryPaths = selectablePaths.filter(
-                    path => !excludedPathSet.has(path)
-                  )
-                } else if (selectedEntryPaths.length === 0) {
+                if (selectedEntryPaths.length === 0) {
                   selectedEntryPaths = [...selectablePaths]
                 }
               }}
@@ -374,35 +481,13 @@
       {/if}
 
       {#if showEntrySelection}
-        {#if syncMode === "selective"}
-          <div class="include-new-toggle card">
-            <label>
-              <input
-                type="checkbox"
-                checked={includeNewFiles}
-                onchange={event => {
-                  includeNewFiles = (event.currentTarget as HTMLInputElement)
-                    .checked
-                  if (includeNewFiles) {
-                    const excludedPathSet = new Set(initialExcludePaths)
-                    selectedEntryPaths = selectablePaths.filter(
-                      path => !excludedPathSet.has(path)
-                    )
-                  }
-                }}
-              />
-              Include new files by default
-            </label>
-          </div>
-        {/if}
-
         <div class="entries-header">
           <Body size="M">
             {#if scopeEditMode}
               {#if syncMode === "all"}
                 All files will be synced
               {:else}
-                Select folders/files to sync
+                Select folders to sync
               {/if}
             {/if}
           </Body>
@@ -452,7 +537,7 @@
               selectable={allowSelection}
               quiet
             >
-              {#each entryTree as node (node.path)}
+              {#each displayTree as node (node.path)}
                 <SharePointEntryTreeItem
                   {node}
                   selectedPaths={selectedEntryPaths}
@@ -513,12 +598,6 @@
 
   .scope-options :global(button) {
     border-radius: 999px;
-  }
-
-  .include-new-toggle {
-    margin-top: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-s);
-    font-size: 12px;
   }
 
   .entries-list {

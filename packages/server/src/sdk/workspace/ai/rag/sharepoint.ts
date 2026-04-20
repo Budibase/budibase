@@ -277,7 +277,7 @@ const isSupportedSharePointFile = (file: SharePointFileRef) => {
 
 const normalizeSourceFilters = (
   filters?: AgentKnowledgeSourceFilterConfig
-): { includePaths?: string[]; excludePaths?: string[] } => {
+): { patterns?: string[] } => {
   const normalize = (value?: string[]) => {
     if (!Array.isArray(value)) {
       return undefined
@@ -287,10 +287,16 @@ const normalizeSourceFilters = (
     )
     return normalized.length > 0 ? normalized : undefined
   }
-  return {
-    includePaths: normalize(filters?.includePaths),
-    excludePaths: normalize(filters?.excludePaths),
-  }
+  return { patterns: normalize(filters?.patterns) }
+}
+
+const globToRegExp = (pattern: string) => {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&")
+  const withGlob = escaped
+    .replace(/\\\*\\\*/g, ".*")
+    .replace(/\\\*/g, "[^/]*")
+    .replace(/\\\?/g, "[^/]")
+  return new RegExp(`^${withGlob}$`)
 }
 
 export const isSharePointFileIncludedByFilters = (
@@ -298,26 +304,29 @@ export const isSharePointFileIncludedByFilters = (
   filters?: AgentKnowledgeSourceFilterConfig
 ) => {
   const normalizedPath = trimString(file.path).toLowerCase()
-  const normalizedName = trimString(file.filename).toLowerCase()
-  const { includePaths, excludePaths } = normalizeSourceFilters(filters)
-  const matches = (pattern: string) => {
-    const normalizedPattern = trimString(pattern).toLowerCase()
-    if (!normalizedPattern) {
-      return false
-    }
-    return (
-      normalizedPath.includes(normalizedPattern) ||
-      normalizedName.includes(normalizedPattern)
-    )
+  const { patterns } = normalizeSourceFilters(filters)
+
+  if (!patterns?.length) {
+    return true
   }
 
-  if (includePaths?.length && !includePaths.some(matches)) {
-    return false
+  const hasPositivePatterns = patterns.some(pattern => !pattern.startsWith("!"))
+  let included = !hasPositivePatterns
+
+  for (const rawPattern of patterns) {
+    const isExcludePattern = rawPattern.startsWith("!")
+    const normalizedPattern = trimString(
+      isExcludePattern ? rawPattern.slice(1) : rawPattern
+    ).toLowerCase()
+    if (!normalizedPattern) {
+      continue
+    }
+    const globMatcher = globToRegExp(normalizedPattern)
+    if (globMatcher.test(normalizedPath)) {
+      included = !isExcludePattern
+    }
   }
-  if (excludePaths?.length && excludePaths.some(matches)) {
-    return false
-  }
-  return true
+  return included
 }
 
 const collectFilesRecursive = async (

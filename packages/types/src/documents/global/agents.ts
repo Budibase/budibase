@@ -50,8 +50,7 @@ export enum AgentKnowledgeSourceType {
 }
 
 export interface AgentKnowledgeSourceFilterConfig {
-  includePaths?: string[]
-  excludePaths?: string[]
+  patterns?: string[]
 }
 
 export interface AgentSharePointKnowledgeSource {

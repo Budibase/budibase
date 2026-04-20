@@ -27,7 +27,7 @@ describe("sharepoint site id validation", () => {
 })
 
 describe("sharepoint source filters", () => {
-  it("includes only matching paths when include filters are set", () => {
+  it("includes only matching paths when positive patterns are set", () => {
     expect(
       isSharePointFileIncludedByFilters(
         {
@@ -36,7 +36,7 @@ describe("sharepoint source filters", () => {
           filename: "budget.xlsx",
           path: "Finance/Q1/budget.xlsx",
         },
-        { includePaths: ["Finance/Q1"] }
+        { patterns: ["finance/**"] }
       )
     ).toBe(true)
 
@@ -48,12 +48,12 @@ describe("sharepoint source filters", () => {
           filename: "notes.txt",
           path: "Engineering/notes.txt",
         },
-        { includePaths: ["Finance/Q1"] }
+        { patterns: ["finance/**"] }
       )
     ).toBe(false)
   })
 
-  it("excludes matching files when exclude filters are set", () => {
+  it("supports negated patterns", () => {
     expect(
       isSharePointFileIncludedByFilters(
         {
@@ -62,7 +62,7 @@ describe("sharepoint source filters", () => {
           filename: "draft-plan.md",
           path: "Product/draft-plan.md",
         },
-        { excludePaths: ["draft"] }
+        { patterns: ["product/**", "!product/draft*"] }
       )
     ).toBe(false)
 
@@ -74,7 +74,7 @@ describe("sharepoint source filters", () => {
           filename: "plan.md",
           path: "Product/plan.md",
         },
-        { excludePaths: ["draft"] }
+        { patterns: ["product/**", "!product/draft*"] }
       )
     ).toBe(true)
   })

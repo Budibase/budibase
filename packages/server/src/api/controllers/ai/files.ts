@@ -40,7 +40,7 @@ const unlinkSafe = async (path?: string) => {
   }
 }
 
-const normalizePathFilters = (value: unknown): string[] | undefined => {
+const normalizeSourcePatterns = (value: unknown): string[] | undefined => {
   if (!Array.isArray(value)) {
     return undefined
   }
@@ -262,18 +262,12 @@ export async function updateAgentSharePointSite(
   if (!source) {
     throw new HTTPError("SharePoint site is not connected for this agent", 404)
   }
-  const includePaths = normalizePathFilters(
-    ctx.request.body?.filters?.includePaths
-  )
-  const excludePaths = normalizePathFilters(
-    ctx.request.body?.filters?.excludePaths
-  )
+  const patterns = normalizeSourcePatterns(ctx.request.body?.filters?.patterns)
   console.log("Updating SharePoint site filters for agent", {
     agentId,
     siteId,
     sourceId: source.id,
-    hasIncludePaths: !!includePaths?.length,
-    hasExcludePaths: !!excludePaths?.length,
+    patternCount: patterns?.length || 0,
   })
   const nextSharePointSources = getSharePointSources(existingAgent).map(
     existingSource =>
@@ -282,13 +276,7 @@ export async function updateAgentSharePointSite(
             ...existingSource,
             config: {
               ...existingSource.config,
-              filters:
-                includePaths || excludePaths
-                  ? {
-                      includePaths,
-                      excludePaths,
-                    }
-                  : undefined,
+              filters: patterns ? { patterns } : undefined,
             },
           }
         : existingSource

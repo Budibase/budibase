@@ -27,7 +27,10 @@
   }
 
   const isSelectableNode = (node: SharePointEntryTreeNode): boolean => {
-    return !(node.type === "file" && !isSelectableSharePointStatus(node.status))
+    if (node.type === "folder") {
+      return true
+    }
+    return isSelectableSharePointStatus(node.status)
   }
 
   let hasChildren = $derived(node.children.length > 0)
@@ -38,41 +41,33 @@
   let nodePaths = $derived(collectPaths(node))
   let childPaths = $derived(nodePaths.slice(1))
   let selectedSet = $derived(new Set(selectedPaths))
-  let selectableChildPaths = $derived(
+  let selectableDescendantPaths = $derived(
     childPaths.filter(path => {
       const childNode = nodeByPath.get(path)
       return !!childNode && isSelectableNode(childNode)
     })
   )
-  let targetPaths = $derived(
-    hasChildren
-      ? selectableChildPaths
-      : isSelectableNode(node)
-        ? [node.path]
-        : []
-  )
-  let selected = $derived.by(() => {
-    if (!hasChildren) {
-      if (!isSelectableNode(node)) {
-        return false
-      }
-      return selectedPaths.includes(node.path)
+  let targetPaths = $derived.by(() => {
+    if (!isSelectableNode(node)) {
+      return []
     }
-    return (
-      selectableChildPaths.length > 0 &&
-      selectableChildPaths.every(path => selectedSet.has(path))
-    )
+    if (node.type === "file") {
+      return [node.path]
+    }
+    return [node.path, ...selectableDescendantPaths]
   })
-  let indeterminate = $derived.by(() => {
-    if (!hasChildren) {
+  let selected = $derived.by(() => {
+    if (targetPaths.length === 0) {
       return false
     }
-    const selectedChildCount = selectableChildPaths.filter(path =>
-      selectedSet.has(path)
-    ).length
-    return (
-      selectedChildCount > 0 && selectedChildCount < selectableChildPaths.length
-    )
+    return targetPaths.every(path => selectedSet.has(path))
+  })
+  let indeterminate = $derived.by(() => {
+    if (targetPaths.length === 0) {
+      return false
+    }
+    const selectedCount = targetPaths.filter(path => selectedSet.has(path)).length
+    return selectedCount > 0 && selectedCount < targetPaths.length
   })
   let disabled = $derived(targetPaths.length === 0)
 
