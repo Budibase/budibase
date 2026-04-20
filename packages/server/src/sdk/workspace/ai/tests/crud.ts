@@ -43,10 +43,7 @@ export async function saveSuite({
         : undefined
     const reviewers = testCase.reviewers.map((reviewer, rIdx) => ({
       ...reviewer,
-      id:
-        reviewer.id ||
-        existingCase?.reviewers[rIdx]?.id ||
-        v4(),
+      id: reviewer.id || existingCase?.reviewers[rIdx]?.id || v4(),
     })) as AgentTestCase["reviewers"]
 
     return {

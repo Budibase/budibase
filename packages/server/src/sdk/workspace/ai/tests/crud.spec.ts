@@ -18,7 +18,10 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-import type { AgentTestSuite, UpdateAgentTestSuiteRequest } from "@budibase/types"
+import type {
+  AgentTestSuite,
+  UpdateAgentTestSuiteRequest,
+} from "@budibase/types"
 import * as testsCrud from "./crud"
 
 describe("agent tests crud", () => {
