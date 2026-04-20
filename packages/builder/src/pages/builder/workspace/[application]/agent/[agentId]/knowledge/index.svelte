@@ -121,23 +121,30 @@
   const showSharePointSyncResult = (
     result: SyncAgentKnowledgeSourcesResponse
   ) => {
-    const skipped = result.skipped - result.unsupported
-    const discovered = result.totalDiscovered ?? result.synced + skipped
+    const alreadySynced = result.alreadySynced
+    const excluded = result.excluded || 0
+    const discovered = result.totalDiscovered ?? result.synced + alreadySynced
 
     if (result.synced === 0 && result.failed === 0) {
       if (discovered === 0) {
         notifications.info("No files found in selected SharePoint site(s)")
         return
       }
-      if (skipped > 0) {
+      if (alreadySynced > 0 || excluded > 0) {
+        const details = [
+          alreadySynced > 0 ? `${alreadySynced} already synced` : "",
+          excluded > 0 ? `${excluded} excluded by filters` : "",
+        ]
+          .filter(Boolean)
+          .join(", ")
         notifications.info(
-          `SharePoint sync complete (0 new files, ${skipped} already synced)`
+          `SharePoint sync complete (0 new files${details ? `, ${details}` : ""})`
         )
         return
       }
     }
 
-    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${skipped > 0 ? `, ${skipped} skipped` : ""})`
+    const message = `SharePoint sync complete (${result.synced} synced${result.failed > 0 ? `, ${result.failed} failed` : ""}${alreadySynced > 0 ? `, ${alreadySynced} already synced` : ""}${excluded > 0 ? `, ${excluded} excluded` : ""})`
 
     if (result.failed > 0 && result.synced === 0) {
       notifications.error(message)

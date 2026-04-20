@@ -81,6 +81,10 @@ aiRagBuilderAdminRoutes
     "/api/agent/:agentId/knowledge-sources/sharepoint/entries",
     ai.fetchAgentKnowledgeSourceEntries
   )
+  .get(
+    "/api/agent/:agentId/knowledge-sources/sharepoint/entries/all",
+    ai.fetchAgentKnowledgeSourceAllEntries
+  )
   .post(
     "/api/agent/:agentId/knowledge-sources/sharepoint/sites",
     connectAgentSharePointSiteValidator(),

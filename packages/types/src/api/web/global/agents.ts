@@ -77,7 +77,8 @@ export interface SyncAgentKnowledgeSourcesResponse {
   agentId: string
   synced: number
   failed: number
-  skipped: number
+  alreadySynced: number
+  excluded: number
   unsupported: number
   totalDiscovered: number
 }

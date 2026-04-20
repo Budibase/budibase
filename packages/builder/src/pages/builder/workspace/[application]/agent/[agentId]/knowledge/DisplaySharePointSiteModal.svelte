@@ -11,29 +11,36 @@
     AgentKnowledgeSourceType,
     KnowledgeBaseFileStatus,
     type KnowledgeBaseFile,
+    type KnowledgeSourceEntry,
   } from "@budibase/types"
-  import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
-  import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
   import { agentsStore, selectedAgent } from "@/stores/portal"
+  import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
   import {
-    toSharePointDisplayStatusFromFile,
-    toSharePointDisplayStatusFromSyncEntry,
-    isSelectableSharePointStatus,
-    type SharePointDisplayStatus,
-  } from "./sharePointStatus"
+    buildEntryTree,
+    buildEntryTreeFromSourceEntries,
+    buildPatternsFromSelection,
+    collectSelectablePaths,
+    flattenNodesByPath,
+    rehydrateFromPatterns,
+    wrapSelectionTreeWithSiteRoot,
+  } from "./sharePointModalUtils"
 
   export interface Props {
     agentId?: string
     siteId?: string
   }
 
-  const SITE_ROOT_PATH = "__site_root__"
   let { agentId, siteId }: Props = $props()
+
   let selectedEntryPaths = $state<string[]>([])
   let syncMode = $state<"all" | "selective">("all")
   let scopeEditMode = $state(false)
   let isOpen = $state(false)
   let hasHydratedSelection = $state(false)
+  let loadingSourceEntries = $state(false)
+  let loadingAllSourceEntries = $state(false)
+  let allSourceEntries = $state<KnowledgeSourceEntry[] | undefined>()
+  let modal = $state<Modal>()
 
   const sharePointSource = $derived.by(() => {
     if (!siteId) {
@@ -45,6 +52,7 @@
         source.config.site?.id === siteId
     )
   })
+
   const sourceId = $derived(sharePointSource?.id)
   const selectedSiteLabel = $derived(
     sharePointSource?.config.site?.name ||
@@ -52,7 +60,9 @@
       siteId ||
       ""
   )
-  const initialPatterns = $derived(sharePointSource?.config.filters?.patterns || [])
+  const initialPatterns = $derived(
+    sharePointSource?.config.filters?.patterns || []
+  )
 
   const getKnowledgeSourceFiles = (
     files: KnowledgeBaseFile[],
@@ -69,10 +79,7 @@
       )
     })
 
-  const getFilePath = (file: KnowledgeBaseFile) =>
-    (file.sourcePath || file.filename).trim()
-
-  let sharePointFiles = $derived.by(() => {
+  const sharePointFiles = $derived.by(() => {
     if (!agentId || !sourceId) {
       return [] as KnowledgeBaseFile[]
     }
@@ -80,14 +87,27 @@
     const files = $agentsStore.knowledgeByAgentId[agentId]?.files || []
     return getKnowledgeSourceFiles(files, sourceId, siteId)
   })
-  let sourceRun = $derived.by(() => {
+
+  const sourceRun = $derived.by(() => {
     if (!agentId || !sourceId) {
       return undefined
     }
     const runs = $agentsStore.knowledgeByAgentId[agentId]?.sourceRuns || []
     return runs.find(run => run.sourceId === sourceId)
   })
-  let showProcessingState = $derived.by(() => {
+
+  const sourceEntriesResponse = $derived.by(() => {
+    if (!agentId || !siteId) {
+      return undefined
+    }
+    return $agentsStore.knowledgeByAgentId[agentId]?.sourceEntriesBySiteId?.[
+      siteId
+    ]
+  })
+
+  const sourceEntries = $derived(sourceEntriesResponse?.entries || [])
+
+  const showProcessingState = $derived.by(() => {
     if (!sourceId) {
       return false
     }
@@ -99,76 +119,60 @@
     )
   })
 
-  let modal = $state<Modal>()
+  const loadSourceEntries = async () => {
+    if (!agentId || !siteId) {
+      return
+    }
 
-  const toPatternFolderPath = (rawPattern: string) => {
-    if (!rawPattern || rawPattern.startsWith("!")) {
-      return undefined
+    loadingSourceEntries = true
+    try {
+      await agentsStore.fetchAgentKnowledgeSourceEntries(agentId, siteId)
+    } finally {
+      loadingSourceEntries = false
     }
-    const pattern = rawPattern.trim()
-    if (!pattern) {
-      return undefined
-    }
-    return pattern.endsWith("/**") ? pattern.slice(0, -3) : pattern
   }
 
-  const rehydrateFromPatterns = (
-    patterns: string[],
-    folders: string[],
-    currentSelection: string[] = []
-  ) => {
-    const folderSet = new Set(folders)
-    const nextSelection = new Set<string>()
-
-    for (const rawPattern of patterns) {
-      const normalizedPattern = toPatternFolderPath(rawPattern)
-      if (!normalizedPattern) {
-        continue
-      }
-      if (folderSet.has(normalizedPattern)) {
-        nextSelection.add(normalizedPattern)
-        continue
-      }
-
-      const parentMatch = folders
-        .filter(path => normalizedPattern.startsWith(`${path}/`))
-        .sort((a, b) => b.length - a.length)[0]
-      if (parentMatch) {
-        nextSelection.add(parentMatch)
-      }
+  const loadAllSourceEntries = async () => {
+    if (!agentId || !siteId) {
+      return
     }
-
-    if (nextSelection.size > 0) {
-      return Array.from(nextSelection)
+    loadingAllSourceEntries = true
+    try {
+      const response = await agentsStore.fetchAgentKnowledgeSourceAllEntries(
+        agentId,
+        siteId
+      )
+      allSourceEntries = response.entries
+    } finally {
+      loadingAllSourceEntries = false
     }
-
-    if (folders.length === 0) {
-      return patterns.map(toPatternFolderPath).filter(Boolean) as string[]
-    }
-
-    return currentSelection
-      .filter(path => folderSet.has(path))
-      .sort((a, b) => a.localeCompare(b))
   }
 
   export function show() {
     const hasInitialFilters = initialPatterns.length > 0
     syncMode = hasInitialFilters ? "selective" : "all"
-    if (initialPatterns.length > 0) {
-      selectedEntryPaths = rehydrateFromPatterns(initialPatterns, selectablePaths)
-    } else if (syncMode === "selective") {
-      selectedEntryPaths = [...selectablePaths]
-    } else {
-      selectedEntryPaths = []
-    }
+    selectedEntryPaths = hasInitialFilters
+      ? rehydrateFromPatterns(initialPatterns, selectablePaths)
+      : syncMode === "selective"
+        ? [...selectablePaths]
+        : []
+
     hasHydratedSelection = false
     isOpen = true
     scopeEditMode = false
+    allSourceEntries = undefined
+
+    loadSourceEntries().catch(error => {
+      console.error(error)
+      notifications.error("Failed to load SharePoint files")
+    })
+
     modal?.show()
   }
 
   export function hide() {
     isOpen = false
+    allSourceEntries = undefined
     modal?.hide()
   }
 
@@ -185,42 +189,19 @@
       return
     }
 
-    let filters: { patterns?: string[] } | undefined
-    const selectedWithoutRoot = selectedEntryPaths.filter(
-      path => path !== SITE_ROOT_PATH
-    )
-    const selectableWithoutRoot = selectablePaths.filter(
-      path => path !== SITE_ROOT_PATH
-    )
-    const hasSelectedSiteRoot = selectedEntryPaths.includes(SITE_ROOT_PATH)
-    const isEffectivelySelectAll =
-      hasSelectedSiteRoot &&
-      selectableWithoutRoot.length > 0 &&
-      selectedWithoutRoot.length === selectableWithoutRoot.length
-
-    if (syncMode === "all" || isEffectivelySelectAll) {
-      filters = undefined
-    } else {
-      const patterns = selectedWithoutRoot
-        .map(path => {
-          const node = selectionNodeByPath.get(path)
-          if (node?.type === "file") {
-            return path
-          }
-          return `${path}/**`
-        })
-      filters = patterns.length > 0 ? { patterns } : undefined
-    }
+    const filters =
+      syncMode === "all"
+        ? undefined
+        : buildPatternsFromSelection(
+            selectedEntryPaths,
+            selectablePaths,
+            selectionNodeByPath
+          )
 
     try {
-      await agentsStore.updateAgentSharePointSite(agentId, siteId, {
-        filters: {
-          patterns: filters?.patterns,
-        },
+      await agentsStore.applyAgentSharePointSiteFilters(agentId, siteId, {
+        filters,
       })
-      await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
-      await agentsStore.fetchAgentFiles(agentId)
-      await agentsStore.fetchAgents()
       notifications.success("SharePoint folders/files updated")
       hide()
     } catch (error) {
@@ -241,155 +222,35 @@
     selectedEntryPaths = Array.from(nextPaths)
   }
 
-  const buildEntryTree = (
-    files: KnowledgeBaseFile[]
-  ): SharePointEntryTreeNode[] => {
-    const fileNodesByPath = new Map<
-      string,
-      { path: string; status: SharePointDisplayStatus; errorMessage?: string }
-    >()
-    for (const file of files) {
-      const path = getFilePath(file)
-      if (!path) {
-        continue
-      }
-      fileNodesByPath.set(path, {
-        path,
-        status: toSharePointDisplayStatusFromFile(file.status),
+  const entryTree = $derived(
+    buildEntryTree(
+      sharePointFiles.map(file => ({
+        filename: file.filename,
+        sourcePath: file.sourcePath,
+        status: file.status,
         errorMessage: file.errorMessage,
-      })
-    }
+      })),
+      sourceRun?.entries || []
+    )
+  )
 
-    for (const entry of sourceRun?.entries || []) {
-      const path = (entry.path || "").trim()
-      if (!path) {
-        continue
-      }
+  const sourceEntriesTree = $derived(
+    buildEntryTreeFromSourceEntries(sourceEntries)
+  )
+  const allSourceEntriesTree = $derived(
+    buildEntryTreeFromSourceEntries(allSourceEntries || [])
+  )
 
-      const existing = fileNodesByPath.get(path)
-      const displayStatus = toSharePointDisplayStatusFromSyncEntry(entry.status)
-      if (!existing) {
-        if (displayStatus === "failed") {
-          fileNodesByPath.set(path, {
-            path,
-            status: displayStatus,
-            errorMessage: entry.errorMessage,
-          })
-        }
-        continue
-      }
-
-      if (!existing.errorMessage && entry.errorMessage) {
-        existing.errorMessage = entry.errorMessage
-      }
-    }
-
-    const roots: SharePointEntryTreeNode[] = []
-    const byPath = new Map<string, SharePointEntryTreeNode>()
-
-    for (const fileNode of [...fileNodesByPath.values()].sort((a, b) =>
-      a.path.localeCompare(b.path)
-    )) {
-      const path = fileNode.path
-      if (!path) {
-        continue
-      }
-      const parts = path.split("/").filter(Boolean)
-      let parent = roots
-      let currentPath = ""
-
-      for (let i = 0; i < parts.length; i++) {
-        const segment = parts[i]
-        currentPath = currentPath ? `${currentPath}/${segment}` : segment
-        const isLeaf = i === parts.length - 1
-        let node = byPath.get(currentPath)
-        if (!node) {
-          node = {
-            id: currentPath,
-            name: segment,
-            path: currentPath,
-            type: isLeaf ? "file" : "folder",
-            status: isLeaf ? fileNode.status : undefined,
-            errorMessage: isLeaf ? fileNode.errorMessage : undefined,
-            children: [],
-          }
-          byPath.set(currentPath, node)
-          parent.push(node)
-        } else if (isLeaf) {
-          node.type = "file"
-          node.status = fileNode.status
-          node.errorMessage = fileNode.errorMessage
-        }
-        parent = node.children
-      }
-    }
-
-    const sortNodes = (nodes: SharePointEntryTreeNode[]) => {
-      nodes.sort((a, b) => {
-        if (a.type !== b.type) {
-          return a.type === "folder" ? -1 : 1
-        }
-        return a.name.localeCompare(b.name)
-      })
-      for (const node of nodes) {
-        sortNodes(node.children)
-      }
-    }
-    sortNodes(roots)
-    return roots
-  }
-
-  const entryTree = $derived(buildEntryTree(sharePointFiles))
-
-  const wrapSelectionTreeWithSiteRoot = (
-    nodes: SharePointEntryTreeNode[]
-  ): SharePointEntryTreeNode[] => {
-    if (nodes.length === 0) {
-      return []
-    }
-
-    return [
-      {
-        id: SITE_ROOT_PATH,
-        name: "Site root",
-        path: SITE_ROOT_PATH,
-        type: "folder",
-        children: nodes,
-      },
-    ]
-  }
-
-  const collectSelectablePaths = (nodes: SharePointEntryTreeNode[]): string[] => {
-    const paths: string[] = []
-    for (const node of nodes) {
-      if (
-        node.type === "folder" ||
-        (node.type === "file" && isSelectableSharePointStatus(node.status))
-      ) {
-        paths.push(node.path)
-      }
-      paths.push(...collectSelectablePaths(node.children))
-    }
-    return paths
-  }
-
-  const flattenNodesByPath = (
-    nodes: SharePointEntryTreeNode[]
-  ): Map<string, SharePointEntryTreeNode> => {
-    const byPath = new Map<string, SharePointEntryTreeNode>()
-    const visit = (node: SharePointEntryTreeNode) => {
-      byPath.set(node.path, node)
-      for (const child of node.children) {
-        visit(child)
-      }
-    }
-    for (const node of nodes) {
-      visit(node)
-    }
-    return byPath
-  }
-
-  const selectionTree = $derived(wrapSelectionTreeWithSiteRoot(entryTree))
+  const selectionTreeBase = $derived(
+    scopeEditMode && syncMode === "selective" && allSourceEntries
+      ? allSourceEntriesTree
+      : sourceEntriesTree.length > 0
+        ? sourceEntriesTree
+        : entryTree
+  )
+  const selectionTree = $derived(
+    wrapSelectionTreeWithSiteRoot(selectionTreeBase)
+  )
   const selectablePaths = $derived(collectSelectablePaths(selectionTree))
   const selectionNodeByPath = $derived(flattenNodesByPath(selectionTree))
 
@@ -398,10 +259,12 @@
     const selectedPathCount = selectedEntryPaths.filter(path =>
       allPathSet.has(path)
     ).length
+
     if (selectedPathCount === selectablePaths.length) {
       selectedEntryPaths = []
       return
     }
+
     selectedEntryPaths = [...selectablePaths]
   }
 
@@ -410,22 +273,32 @@
       ? "Clear selection"
       : "Select all"
   )
-
   const selectedCountLabel = $derived(`${selectedEntryPaths.length} selected`)
   const showScopeControls = $derived(scopeEditMode && !!sourceId)
   const showEntrySelection = $derived(!!sourceId)
   const allowSelection = $derived(scopeEditMode && syncMode === "selective")
-  const displayTree = $derived(allowSelection ? selectionTree : entryTree)
+
+  const displayTree = $derived.by(() => {
+    if (allowSelection) {
+      return selectionTree
+    }
+    if (syncMode === "selective") {
+      return sourceEntriesTree
+    }
+    return entryTree
+  })
 
   $effect(() => {
     if (!isOpen || hasHydratedSelection || syncMode !== "selective") {
       return
     }
+
     selectedEntryPaths = rehydrateFromPatterns(
       initialPatterns,
       selectablePaths,
       selectedEntryPaths
     )
+
     if (selectablePaths.length > 0 || initialPatterns.length === 0) {
       hasHydratedSelection = true
     }
@@ -495,7 +368,9 @@
             <ActionButton
               quiet
               size="S"
-              on:click={() => {
+              loading={loadingAllSourceEntries}
+              on:click={async () => {
+                await loadAllSourceEntries()
                 scopeEditMode = true
                 if (
                   syncMode === "selective" &&
@@ -523,11 +398,15 @@
           {/if}
         </div>
 
-        {#if sharePointFiles.length === 0}
+        {#if allowSelection && (loadingSourceEntries || loadingAllSourceEntries)}
+          <Body size="S">Loading SharePoint files...</Body>
+        {:else if displayTree.length === 0}
           <Body size="S">
-            {showProcessingState
-              ? "SharePoint sync is in progress. Files will appear here shortly."
-              : "No folders or files found for this site."}
+            {allowSelection
+              ? "No folders or files found for this site."
+              : showProcessingState
+                ? "SharePoint sync is in progress. Files will appear here shortly."
+                : "No folders or files found for this site."}
           </Body>
         {:else}
           <div class="entries-list">

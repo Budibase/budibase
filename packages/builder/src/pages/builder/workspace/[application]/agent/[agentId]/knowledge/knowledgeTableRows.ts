@@ -156,6 +156,61 @@ export const getSharePointIncludedProgress = (
   return { processed, totalSelected }
 }
 
+export const getSharePointSelectedStatusCounts = (
+  files: KnowledgeBaseFile[],
+  run?: KnowledgeSourceSyncRun
+) => {
+  const entries = run?.entries || []
+  if (entries.length === 0) {
+    return undefined
+  }
+
+  const fileStatusByExternalSourceId = new Map(
+    files
+      .filter(
+        (file): file is KnowledgeBaseFile & { originFileId: string } =>
+          !!file.originFileId
+      )
+      .map(file => [file.originFileId, file.status] as const)
+  )
+
+  let totalSelected = 0
+  let synced = 0
+  let failed = 0
+  let processing = 0
+
+  for (const entry of entries) {
+    if (
+      entry.status === AgentKnowledgeSourceSyncEntryStatus.EXCLUDED ||
+      entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
+    ) {
+      continue
+    }
+    totalSelected++
+
+    if (entry.status === AgentKnowledgeSourceSyncEntryStatus.FAILED) {
+      failed++
+      continue
+    }
+
+    const fileStatus = fileStatusByExternalSourceId.get(entry.originFileId)
+    if (
+      fileStatus == null ||
+      fileStatus === KnowledgeBaseFileStatus.PROCESSING
+    ) {
+      processing++
+      continue
+    }
+    if (fileStatus === KnowledgeBaseFileStatus.FAILED) {
+      failed++
+      continue
+    }
+    synced++
+  }
+
+  return { totalSelected, synced, failed, processing }
+}
+
 export const getSharePointLastSyncLabel = (
   runsBySiteId: Record<string, KnowledgeSourceSyncRun>,
   siteId: string
@@ -214,11 +269,17 @@ export const toSharePointConnectionRows = ({
         getSharePointFilesForSite(files, siteId),
         run
       )
+      const selectedStatusCounts = getSharePointSelectedStatusCounts(
+        getSharePointFilesForSite(files, siteId),
+        run
+      )
       const total =
+        selectedStatusCounts?.totalSelected ??
         includedProgress?.totalSelected ??
         (run?.totalDiscovered || 0) - (run?.unsupported || 0)
-      const completed =
-        includedProgress?.processed ?? Math.min(ready + failed, total)
+      const completed = selectedStatusCounts
+        ? selectedStatusCounts.synced + selectedStatusCounts.failed
+        : (includedProgress?.processed ?? Math.min(ready + failed, total))
       const option = optionById.get(siteId)
       const siteDisplayName =
         site.name ||
@@ -243,10 +304,10 @@ export const toSharePointConnectionRows = ({
           siteId
         ),
         displayStatus,
-        syncedCount: ready,
+        syncedCount: selectedStatusCounts?.synced ?? ready,
         totalCount: total,
-        failedCount: failed,
-        processingCount: processing,
+        failedCount: selectedStatusCounts?.failed ?? failed,
+        processingCount: selectedStatusCounts?.processing ?? processing,
         hasSynced,
         runStatus: run?.status,
         onDelete: () => onDelete(siteId),

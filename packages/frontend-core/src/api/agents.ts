@@ -76,6 +76,10 @@ export interface AgentEndpoints {
     agentId: string,
     siteId: string
   ) => Promise<FetchAgentKnowledgeSourceEntriesResponse>
+  fetchAgentKnowledgeSourceAllEntries: (
+    agentId: string,
+    siteId: string
+  ) => Promise<FetchAgentKnowledgeSourceEntriesResponse>
   connectAgentSharePointSite: (
     agentId: string,
     body: ConnectAgentSharePointSiteRequest
@@ -227,6 +231,15 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   fetchAgentKnowledgeSourceEntries: async (agentId: string, siteId: string) => {
     return await API.get<FetchAgentKnowledgeSourceEntriesResponse>({
       url: `/api/agent/${agentId}/knowledge-sources/sharepoint/entries?siteId=${encodeURIComponent(siteId)}`,
+    })
+  },
+
+  fetchAgentKnowledgeSourceAllEntries: async (
+    agentId: string,
+    siteId: string
+  ) => {
+    return await API.get<FetchAgentKnowledgeSourceEntriesResponse>({
+      url: `/api/agent/${agentId}/knowledge-sources/sharepoint/entries/all?siteId=${encodeURIComponent(siteId)}`,
     })
   },
 

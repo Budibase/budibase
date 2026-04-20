@@ -66,7 +66,9 @@
     if (targetPaths.length === 0) {
       return false
     }
-    const selectedCount = targetPaths.filter(path => selectedSet.has(path)).length
+    const selectedCount = targetPaths.filter(path =>
+      selectedSet.has(path)
+    ).length
     return selectedCount > 0 && selectedCount < targetPaths.length
   })
   let disabled = $derived(targetPaths.length === 0)

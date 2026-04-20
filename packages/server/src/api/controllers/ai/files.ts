@@ -158,6 +158,22 @@ export async function fetchAgentKnowledgeSourceEntries(
   ctx.status = 200
 }
 
+export async function fetchAgentKnowledgeSourceAllEntries(
+  ctx: UserCtx<
+    void,
+    FetchAgentKnowledgeSourceEntriesResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const siteId = String(ctx.query.siteId || "").trim()
+  if (!siteId) {
+    throw new HTTPError("siteId is required", 400)
+  }
+  ctx.body = await sdk.ai.rag.fetchAllSharePointEntriesForAgent(agentId, siteId)
+  ctx.status = 200
+}
+
 export async function syncAgentKnowledgeSources(
   ctx: UserCtx<
     SyncAgentKnowledgeSourcesRequest,
