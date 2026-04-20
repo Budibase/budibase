@@ -187,6 +187,7 @@ export type CreateAgentRequest = Optional<
     | "updatedAt"
     | "knowledgeSources"
     | "knowledgeBases"
+    | "publishedAt"
   >,
   "aiconfig"
 >

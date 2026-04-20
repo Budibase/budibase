@@ -1,4 +1,4 @@
-import type { SharePointDisplayStatus } from "./sharepoint/sharePointStatus"
+import type { SharePointDisplayStatus } from "../sharePointStatus"
 
 export interface SharePointEntryTreeNode {
   id: string

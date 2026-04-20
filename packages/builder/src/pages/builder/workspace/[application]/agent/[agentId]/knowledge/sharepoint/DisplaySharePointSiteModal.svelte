@@ -41,9 +41,9 @@
     if (!agentId || !siteId) {
       return undefined
     }
-    return ($agentsStore.knowledgeByAgentId[agentId]?.sharePointSources || []).find(
-      source => source.siteId === siteId
-    )
+    return (
+      $agentsStore.knowledgeByAgentId[agentId]?.sharePointSources || []
+    ).find(source => source.siteId === siteId)
   })
 
   const sharePointFiles = $derived.by(() => {
@@ -73,7 +73,9 @@
     return (
       sourceSnapshot.status === "connecting" ||
       sourceSnapshot.status === "syncing" ||
-      sharePointFiles.some(file => file.status === KnowledgeBaseFileStatus.PROCESSING)
+      sharePointFiles.some(
+        file => file.status === KnowledgeBaseFileStatus.PROCESSING
+      )
     )
   })
 

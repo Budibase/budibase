@@ -254,8 +254,6 @@ export async function createAgent(
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
-    knowledgeSources: undefined,
-    knowledgeBases: undefined,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)

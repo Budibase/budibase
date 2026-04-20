@@ -171,7 +171,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     })
   }
 
-  private removeSharePointSourceFromAgent = (agentId: string, siteId: string) => {
+  private removeSharePointSourceFromAgent = (
+    agentId: string,
+    siteId: string
+  ) => {
     this.update(state => {
       const index = state.agents.findIndex(agent => agent._id === agentId)
       if (index === -1) {
@@ -231,9 +234,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
           this.shouldPollAgentKnowledgeSources(agentId)
         if (!shouldContinuePolling) {
           this.stopAgentFilePolling()
-          return
+        } else {
+          this.agentFilePolling.inFlight = false
         }
-        this.agentFilePolling.inFlight = false
       }
     }
   }
@@ -259,8 +262,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       return false
     }
 
-    const snapshots =
-      state.knowledgeByAgentId[agentId]?.sharePointSources || []
+    const snapshots = state.knowledgeByAgentId[agentId]?.sharePointSources || []
     const snapshotBySiteId = new Map(
       snapshots.map(snapshot => [snapshot.siteId, snapshot])
     )
@@ -499,7 +501,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   ): Promise<ConnectAgentSharePointSiteResponse> => {
     const response = await API.connectAgentSharePointSite(agentId, body)
     this.setAgentKnowledgeSourceOptions(agentId, response.options)
-    const connectedSite = response.options.find(option => option.id === body.siteId)
+    const connectedSite = response.options.find(
+      option => option.id === body.siteId
+    )
     this.addSharePointSourceToAgent(agentId, {
       id: body.siteId,
       name: connectedSite?.name,

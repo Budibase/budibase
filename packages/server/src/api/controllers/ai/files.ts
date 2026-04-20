@@ -79,7 +79,8 @@ export async function fetchAgentKnowledge(
     sdk.ai.agents.getOrThrow(agentId),
     sdk.ai.rag.fetchKnowledgeSourceSyncStateForAgent(agentId),
   ])
-  const hasSharePointConnection = await sdk.ai.rag.hasSharePointWorkspaceConnection()
+  const hasSharePointConnection =
+    await sdk.ai.rag.hasSharePointWorkspaceConnection()
   const runsBySiteId = new Map(syncState.runs.map(run => [run.sourceId, run]))
   const sharePointSources: SharePointKnowledgeSourceSnapshot[] =
     getSharePointSources(agent)
@@ -98,7 +99,10 @@ export async function fetchAgentKnowledge(
         let processingCount = 0
 
         if (run?.entries?.length) {
-          const fileStatusByOriginId = new Map<string, KnowledgeBaseFileStatus>()
+          const fileStatusByOriginId = new Map<
+            string,
+            KnowledgeBaseFileStatus
+          >()
           for (const file of filesForSource) {
             if (!file.originFileId) {
               continue

@@ -134,7 +134,8 @@ export const toSharePointConnectionRows = ({
     .map(snapshot => {
       const hasSynced = !!snapshot.lastRunAt
       const completed = snapshot.syncedCount + snapshot.failedCount
-      const siteDisplayName = snapshot.name || snapshot.webUrl || "SharePoint site"
+      const siteDisplayName =
+        snapshot.name || snapshot.webUrl || "SharePoint site"
       const displayStatus =
         snapshot.status === "empty"
           ? "No files found"
