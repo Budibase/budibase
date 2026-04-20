@@ -16,10 +16,10 @@ const makeFile = (
   overrides: Partial<KnowledgeBaseFile>
 ): KnowledgeBaseFile => ({
   _id: "file_1",
-  knowledgeSourceId: "local_upload",
+  knowledgeBaseId: "local_upload",
   filename: "file.txt",
   objectStoreKey: "object/key",
-  retrievalFileId: "rag_source_1",
+  ragSourceId: "rag_source_1",
   status: KnowledgeBaseFileStatus.READY,
   uploadedBy: "user_1",
   ...overrides,
@@ -50,17 +50,17 @@ describe("knowledgeTableRows", () => {
       makeFile({
         _id: "f1",
         status: KnowledgeBaseFileStatus.READY,
-        originFileId: "sharepoint:site-1:drive-1:item-1",
+        externalSourceId: "sharepoint:site-1:drive-1:item-1",
       }),
       makeFile({
         _id: "f2",
         status: KnowledgeBaseFileStatus.PROCESSING,
-        originFileId: "sharepoint:site-1:drive-1:item-2",
+        externalSourceId: "sharepoint:site-1:drive-1:item-2",
       }),
       makeFile({
         _id: "f3",
         status: KnowledgeBaseFileStatus.FAILED,
-        originFileId: "sharepoint:site-2:drive-1:item-3",
+        externalSourceId: "sharepoint:site-2:drive-1:item-3",
       }),
     ]
 

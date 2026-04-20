@@ -169,7 +169,7 @@
 
   let fileTableRows = $derived.by(() =>
     toFileTableRows(
-      files.filter(file => !file.originFileId?.startsWith("sharepoint:")),
+      files.filter(file => !file.externalSourceId?.startsWith("sharepoint:")),
       removeFile,
       activePendingUploads
     )

@@ -29,7 +29,7 @@ describe("knowledgeBase uploads", () => {
     await expect(
       uploadKnowledgeBaseFile({
         knowledgeBaseId: "kb_missing",
-        knowledgeSourceId: "local_upload",
+        knowledgeBaseId: "local_upload",
         filename: "notes.txt",
         buffer: Buffer.from("test"),
         uploadedBy: "user_1",

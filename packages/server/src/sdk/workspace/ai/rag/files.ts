@@ -143,7 +143,7 @@ export const uploadFileForAgent = async (
 
   return await knowledgeBaseSdk.uploadKnowledgeBaseFile({
     knowledgeBaseId,
-    knowledgeSourceId: LOCAL_KNOWLEDGE_SOURCE_ID,
+    knowledgeBaseId: LOCAL_KNOWLEDGE_SOURCE_ID,
     filename: input.filename,
     mimetype: input.mimetype,
     size: input.size ?? input.buffer.byteLength,
@@ -231,9 +231,9 @@ export const retrieveContextForAgent = async (
     const readyFileSources = knowledgeBaseFiles
       .filter(
         file =>
-          file.status === KnowledgeBaseFileStatus.READY && file.retrievalFileId
+          file.status === KnowledgeBaseFileStatus.READY && file.ragSourceId
       )
-      .map(file => file.retrievalFileId)
+      .map(file => file.ragSourceId)
 
     if (readyFileSources.length === 0) {
       continue
@@ -259,9 +259,7 @@ const toSourceMetadata = (
   chunks: RetrievedContextChunk[],
   files: KnowledgeBaseFile[]
 ): AgentMessageRagSource[] => {
-  const fileBySourceId = new Map(
-    files.map(file => [file.retrievalFileId, file])
-  )
+  const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
   const summary = new Map<string, AgentMessageRagSource>()
 
   for (const chunk of chunks) {

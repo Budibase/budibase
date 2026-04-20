@@ -407,11 +407,11 @@ describe("agent files", () => {
         const siteTwoDoc = await db.tryGet<KnowledgeBaseFile>(siteTwo!._id!)
         await db.put({
           ...siteOneDoc!,
-          originFileId: "sharepoint:site-1:drive-1:item-1",
+          externalSourceId: "sharepoint:site-1:drive-1:item-1",
         })
         await db.put({
           ...siteTwoDoc!,
-          originFileId: "sharepoint:site-2:drive-2:item-2",
+          externalSourceId: "sharepoint:site-2:drive-2:item-2",
         })
       })
 
@@ -531,12 +531,12 @@ describe("agent files", () => {
         const siteTwoDoc = await db.tryGet<KnowledgeBaseFile>(siteTwo!._id!)
         await db.put({
           ...siteOneDoc!,
-          originFileId: "sharepoint:site-1:drive-1:item-1",
+          externalSourceId: "sharepoint:site-1:drive-1:item-1",
           uploadedBy: "sharepoint:site-1",
         })
         await db.put({
           ...siteTwoDoc!,
-          originFileId: "sharepoint:site-2:drive-2:item-2",
+          externalSourceId: "sharepoint:site-2:drive-2:item-2",
           uploadedBy: "sharepoint:site-2",
         })
       })

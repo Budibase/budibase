@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { Body, Modal, ModalContent, TreeView, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Modal,
+    ModalContent,
+    TreeView,
+    notifications,
+  } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
     type KnowledgeBaseFile,
@@ -50,7 +56,7 @@
       return [] as KnowledgeBaseFile[]
     }
     const files = $agentsStore.knowledgeByAgentId[agentId]?.files || []
-    return files.filter(file => file.knowledgeSourceId === sharePointSource.id)
+    return files.filter(file => file.knowledgeBaseId === sharePointSource.id)
   })
 
   const entryTree = $derived(

@@ -7,13 +7,13 @@ import { find as findKnowledgeBase } from "./crud"
 
 type UploadKnowledgeBaseFileInput = Pick<
   KnowledgeBaseFile,
-  | "knowledgeSourceId"
+  | "knowledgeBaseId"
   | "filename"
   | "sourcePath"
   | "mimetype"
   | "size"
   | "uploadedBy"
-  | "originFileId"
+  | "externalSourceId"
 > & {
   knowledgeBaseId: string
   buffer: Buffer
@@ -54,14 +54,14 @@ export const uploadKnowledgeBaseFile = async (
 
     const knowledgeBaseFile = await createKnowledgeBaseFile({
       id: fileId,
-      knowledgeSourceId: input.knowledgeSourceId,
+      knowledgeBaseId: input.knowledgeBaseId,
       filename: input.filename,
       sourcePath: input.sourcePath,
       mimetype: input.mimetype,
       objectStoreKey,
       size: input.size ?? input.buffer.byteLength,
       uploadedBy: input.uploadedBy,
-      originFileId: input.originFileId,
+      externalSourceId: input.externalSourceId,
     })
 
     try {

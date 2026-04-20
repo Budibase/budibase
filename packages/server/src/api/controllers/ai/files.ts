@@ -90,7 +90,7 @@ export async function fetchAgentKnowledge(
         const siteId = site!.id
         const run = runsBySiteId.get(siteId)
         const filesForSource = files.filter(
-          file => file.knowledgeSourceId === source.id
+          file => file.knowledgeBaseId === source.id
         )
 
         let totalCount = 0
@@ -104,10 +104,10 @@ export async function fetchAgentKnowledge(
             KnowledgeBaseFileStatus
           >()
           for (const file of filesForSource) {
-            if (!file.originFileId) {
+            if (!file.externalSourceId) {
               continue
             }
-            fileStatusByOriginId.set(file.originFileId, file.status)
+            fileStatusByOriginId.set(file.externalSourceId, file.status)
           }
 
           for (const entry of run.entries) {
@@ -124,7 +124,7 @@ export async function fetchAgentKnowledge(
               continue
             }
 
-            const status = fileStatusByOriginId.get(entry.originFileId)
+            const status = fileStatusByOriginId.get(entry.externalSourceId)
             if (
               status == null ||
               status === KnowledgeBaseFileStatus.PROCESSING

@@ -500,7 +500,8 @@ export const fetchKnowledgeSourceSyncStateForAgent = async (
         entry => entry.status === AgentKnowledgeSourceSyncEntryStatus.EXCLUDED
       ).length
       const unsupported = entries.filter(
-        entry => entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
+        entry =>
+          entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
       ).length
       return {
         sourceId: doc.sourceId,
@@ -635,7 +636,7 @@ export const syncSharePointSourcesForAgent = async (
     { fileId: string; siteId: string }
   >()
   for (const file of existingFiles) {
-    const externalId = trimString(file.originFileId)
+    const externalId = trimString(file.externalSourceId)
     const fileId = trimString(file._id)
     if (!externalId || !fileId || !externalId.startsWith("sharepoint:")) {
       continue
@@ -678,8 +679,8 @@ export const syncSharePointSourcesForAgent = async (
     })
     try {
       const source = sourceBySiteId.get(siteId)
-      const knowledgeSourceId = source?.id
-      if (!knowledgeSourceId) {
+      const knowledgeBaseId = source?.id
+      if (!knowledgeBaseId) {
         throw new HTTPError(
           `SharePoint source not found for site ${siteId}`,
           400
@@ -697,14 +698,14 @@ export const syncSharePointSourcesForAgent = async (
         siteTotalDiscovered += files.length
         totalDiscovered += files.length
         for (const file of files) {
-          const originFileId = `sharepoint:${siteId}:${driveId}:${file.itemId}`
+          const externalSourceId = `sharepoint:${siteId}:${driveId}:${file.itemId}`
           if (!isSharePointFileIncludedByFilters(file, sourceFilters)) {
             excluded++
             siteExcluded++
             siteSkipped++
             siteEntries.push({
               path: file.path,
-              originFileId,
+              externalSourceId,
               status: AgentKnowledgeSourceSyncEntryStatus.EXCLUDED,
             })
             continue
@@ -716,19 +717,19 @@ export const syncSharePointSourcesForAgent = async (
             siteUnsupported++
             siteEntries.push({
               path: file.path,
-              originFileId,
+              externalSourceId,
               status: AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED,
             })
             continue
           }
-          desiredExternalIds.add(originFileId)
-          if (existingExternalIds.has(originFileId)) {
+          desiredExternalIds.add(externalSourceId)
+          if (existingExternalIds.has(externalSourceId)) {
             skipped++
             siteSkipped++
             siteAlreadySynced++
             siteEntries.push({
               path: file.path,
-              originFileId,
+              externalSourceId,
               status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
             })
             continue
@@ -743,22 +744,22 @@ export const syncSharePointSourcesForAgent = async (
 
             await knowledgeBaseSdk.uploadKnowledgeBaseFile({
               knowledgeBaseId,
-              knowledgeSourceId,
+              knowledgeBaseId,
               filename: file.filename,
               sourcePath: file.path,
               mimetype: file.mimetype,
               size: buffer.byteLength,
               buffer,
               uploadedBy: `sharepoint:${siteId}`,
-              originFileId,
+              externalSourceId,
             })
 
-            existingExternalIds.add(originFileId)
+            existingExternalIds.add(externalSourceId)
             synced++
             siteSynced++
             siteEntries.push({
               path: file.path,
-              originFileId,
+              externalSourceId,
               status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
             })
           } catch (error) {
@@ -773,7 +774,7 @@ export const syncSharePointSourcesForAgent = async (
             siteFailed++
             siteEntries.push({
               path: file.path,
-              originFileId,
+              externalSourceId,
               status: AgentKnowledgeSourceSyncEntryStatus.FAILED,
               errorMessage:
                 error instanceof Error ? error.message : "Upload failed",
@@ -887,11 +888,11 @@ export const deleteSharePointFilesForAgentSites = async (
   const files = await listFilesForAgent(trimmedAgentId)
   const fileIdsToDelete = files
     .filter(file => {
-      const originFileId = trimString(file.originFileId)
+      const externalSourceId = trimString(file.externalSourceId)
       const uploadedBy = trimString(file.uploadedBy)
       return normalizedSiteIds.some(
         siteId =>
-          originFileId.startsWith(`sharepoint:${siteId}:`) ||
+          externalSourceId.startsWith(`sharepoint:${siteId}:`) ||
           uploadedBy === `sharepoint:${siteId}`
       )
     })

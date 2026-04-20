@@ -15,7 +15,7 @@ export enum AgentKnowledgeSourceSyncEntryStatus {
 
 export interface AgentKnowledgeSourceSyncEntry {
   path: string
-  originFileId: string
+  externalSourceId: string
   status: AgentKnowledgeSourceSyncEntryStatus
   errorMessage?: string
 }

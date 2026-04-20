@@ -18,17 +18,17 @@ import { deleteKnowledgeBaseFileChunks } from "../rag/files"
 
 type CreateKnowledgeBaseFileOptions = Pick<
   KnowledgeBaseFile,
-  | "knowledgeSourceId"
+  | "knowledgeBaseId"
   | "filename"
   | "sourcePath"
   | "mimetype"
   | "size"
   | "uploadedBy"
   | "objectStoreKey"
-  | "originFileId"
+  | "externalSourceId"
 > & {
   id: string
-  retrievalFileId?: KnowledgeBaseFile["retrievalFileId"]
+  ragSourceId?: KnowledgeBaseFile["ragSourceId"]
 }
 
 export const createKnowledgeBaseFile = async (
@@ -37,15 +37,15 @@ export const createKnowledgeBaseFile = async (
   const db = context.getWorkspaceDB()
   const {
     id,
-    knowledgeSourceId,
+    knowledgeBaseId,
     filename,
     sourcePath,
     mimetype,
     size,
     uploadedBy,
     objectStoreKey,
-    retrievalFileId,
-    originFileId,
+    ragSourceId,
+    externalSourceId,
   } = options
   const _id = id
   if (!docIds.isKnowledgeBaseFileID(_id)) {
@@ -54,14 +54,14 @@ export const createKnowledgeBaseFile = async (
 
   const doc: RequiredKeys<ToDocCreateMetadata<KnowledgeBaseFile>> = {
     _id,
-    knowledgeSourceId,
+    knowledgeBaseId,
     filename,
     sourcePath,
     mimetype,
     size,
     objectStoreKey,
-    retrievalFileId: retrievalFileId || _id,
-    originFileId,
+    ragSourceId: ragSourceId || _id,
+    externalSourceId,
     status: KnowledgeBaseFileStatus.PROCESSING,
     uploadedBy,
     errorMessage: undefined,
@@ -135,7 +135,7 @@ export const removeKnowledgeBaseFile = async (
   }
 
   if (!isFileInProduction) {
-    await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.retrievalFileId])
+    await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.ragSourceId])
   }
 
   if (file.objectStoreKey) {
