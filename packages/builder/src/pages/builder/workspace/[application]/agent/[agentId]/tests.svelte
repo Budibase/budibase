@@ -16,19 +16,16 @@
   const { goto } = routify
   $goto
 
-  const createEmptySuite = (agentId = ""): AgentTestSuite => ({
-    agentId,
-    cases: [],
-  })
+  const emptySuite = (agentId = ""): AgentTestSuite => ({ agentId, cases: [] })
 
-  const createCase = (index: number): AgentTestCase => ({
+  const newCase = (index: number): AgentTestCase => ({
     id: Helpers.uuid(),
     name: `Test ${index + 1}`,
     input: "",
     reviewers: [],
   })
 
-  let suite = $state<AgentTestSuite>(createEmptySuite())
+  let suite = $state<AgentTestSuite>(emptySuite())
   let runs = $state<AgentTestRun[]>([])
   let loading = $state(false)
   let saving = $state(false)
@@ -48,33 +45,19 @@
   })
   let latestRun = $derived(runs[0] ?? null)
   let latestResultsByCaseId = $derived(
-    new Map((latestRun?.results ?? []).map(result => [result.caseId, result]))
+    new Map((latestRun?.results ?? []).map(r => [r.caseId, r]))
   )
   let selectedCase = $derived(
-    suite.cases.find(testCase => testCase.id === selectedCaseId) || null
+    suite.cases.find(c => c.id === selectedCaseId) || null
   )
   let latestResultForSelected = $derived(
     selectedCaseId ? (latestResultsByCaseId.get(selectedCaseId) ?? null) : null
   )
 
   const resetState = (agentId?: string) => {
-    suite = createEmptySuite(agentId)
+    suite = emptySuite(agentId)
     runs = []
     selectedCaseId = null
-  }
-
-  const ensureSelection = () => {
-    if (!suite.cases.length) {
-      selectedCaseId = null
-      return
-    }
-
-    if (
-      !selectedCaseId ||
-      !suite.cases.some(testCase => testCase.id === selectedCaseId)
-    ) {
-      selectedCaseId = suite.cases[0].id
-    }
   }
 
   const loadSuite = async (agentId?: string) => {
@@ -93,7 +76,7 @@
       const response = await API.fetchAgentTestSuite(agentId)
       suite = response.suite
       runs = response.runs
-      ensureSelection()
+      selectedCaseId = suite.cases[0]?.id ?? null
     } catch (error) {
       console.error("Failed to load agent test suite", error)
       resetState(agentId)
@@ -103,17 +86,17 @@
     }
   }
 
+  // Saves a new cases array and returns success. nextSelectedCaseId falls back
+  // to the first remaining case when the requested id was removed.
   const persistCases = async (
     cases: AgentTestCase[],
-    {
-      nextSelectedCaseId,
-      successMessage,
-    }: { nextSelectedCaseId?: string | null; successMessage?: string } = {}
+    { nextSelectedCaseId, successMessage }: {
+      nextSelectedCaseId?: string | null
+      successMessage?: string
+    } = {}
   ) => {
     const agentId = currentAgent?._id
-    if (!agentId || saving) {
-      return false
-    }
+    if (!agentId || saving) return false
 
     saving = true
     try {
@@ -121,21 +104,13 @@
         _rev: suite._rev,
         cases,
       })
-
-      if (nextSelectedCaseId !== undefined) {
-        selectedCaseId =
-          suite.cases.find(testCase => testCase.id === nextSelectedCaseId)
-            ?.id ??
-          suite.cases[0]?.id ??
-          null
-      } else {
-        ensureSelection()
-      }
-
-      if (successMessage) {
-        notifications.success(successMessage)
-      }
-
+      selectedCaseId =
+        (nextSelectedCaseId !== undefined
+          ? suite.cases.find(c => c.id === nextSelectedCaseId)?.id
+          : suite.cases.find(c => c.id === selectedCaseId)?.id) ??
+        suite.cases[0]?.id ??
+        null
+      if (successMessage) notifications.success(successMessage)
       return true
     } catch (error) {
       console.error("Failed to save test suite", error)
@@ -146,78 +121,44 @@
     }
   }
 
-  const openCreateCaseModal = () => {
-    testCaseModal?.showCreate(createCase(suite.cases.length))
-  }
-
-  const openEditCaseModal = () => {
-    if (!selectedCase) {
-      return
-    }
-
-    testCaseModal?.showEdit(selectedCase)
-  }
-
-  const addCase = async (testCase: AgentTestCase) => {
-    return persistCases([...suite.cases, testCase], {
+  const saveCase = async (testCase: AgentTestCase) => {
+    const isNew = !suite.cases.some(c => c.id === testCase.id)
+    const cases = isNew
+      ? [...suite.cases, testCase]
+      : suite.cases.map(c => (c.id === testCase.id ? testCase : c))
+    return persistCases(cases, {
       nextSelectedCaseId: testCase.id,
-      successMessage: "Test added",
+      successMessage: isNew ? "Test added" : "Test updated",
     })
   }
 
-  const updateCase = async (testCase: AgentTestCase) => {
-    return persistCases(
-      suite.cases.map(currentCase =>
-        currentCase.id === testCase.id ? testCase : currentCase
-      ),
-      {
-        nextSelectedCaseId: testCase.id,
-        successMessage: "Test updated",
-      }
-    )
-  }
-
-  const duplicateSelectedCase = async () => {
-    if (!selectedCase) {
-      return
-    }
-
+  const duplicateSelected = async () => {
+    if (!selectedCase) return
     const duplicated: AgentTestCase = {
       ...selectedCase,
       id: Helpers.uuid(),
       name: `${selectedCase.name} copy`,
-      reviewers: selectedCase.reviewers.map(reviewer => ({
-        ...reviewer,
-        id: Helpers.uuid(),
-      })),
+      reviewers: selectedCase.reviewers.map(r => ({ ...r, id: Helpers.uuid() })),
     }
-
     await persistCases([...suite.cases, duplicated], {
       nextSelectedCaseId: duplicated.id,
       successMessage: "Test duplicated",
     })
   }
 
-  const removeSelectedCase = async () => {
-    if (!selectedCaseId) {
-      return
-    }
-
-    const remainingCases = suite.cases.filter(
-      testCase => testCase.id !== selectedCaseId
-    )
-    await persistCases(remainingCases, {
-      nextSelectedCaseId: remainingCases[0]?.id ?? null,
+  const removeSelected = async () => {
+    if (!selectedCaseId) return
+    const remaining = suite.cases.filter(c => c.id !== selectedCaseId)
+    await persistCases(remaining, {
+      nextSelectedCaseId: remaining[0]?.id ?? null,
       successMessage: "Test deleted",
     })
   }
 
-  const runSelectedCase = async () => {
+  const runSelected = async () => {
     const agentId = currentAgent?._id
     const caseId = selectedCaseId
-    if (!agentId || !caseId || running || saving) {
-      return
-    }
+    if (!agentId || !caseId || running || saving) return
 
     running = true
     try {
@@ -237,12 +178,8 @@
       $goto("../config")
       return
     }
-
     const agentId = currentAgent?._id
-    if (agentId === lastAgentId) {
-      return
-    }
-
+    if (agentId === lastAgentId) return
     lastAgentId = agentId
     resetState(agentId)
     loadSuite(agentId)
@@ -258,7 +195,7 @@
         {selectedCaseId}
         {loading}
         onSelectCase={id => (selectedCaseId = id)}
-        onAddCase={openCreateCaseModal}
+        onAddCase={() => testCaseModal?.show(newCase(suite.cases.length))}
       />
     </div>
     <div class="detail-panel">
@@ -269,10 +206,10 @@
         {saving}
         {running}
         {loading}
-        onRun={runSelectedCase}
-        onEditCase={openEditCaseModal}
-        onDuplicateCase={duplicateSelectedCase}
-        onRemoveCase={removeSelectedCase}
+        onRun={runSelected}
+        onEditCase={() => selectedCase && testCaseModal?.show(selectedCase)}
+        onDuplicateCase={duplicateSelected}
+        onRemoveCase={removeSelected}
       />
     </div>
   </div>
@@ -280,12 +217,8 @@
   <TestCaseModal
     bind:this={testCaseModal}
     {toolOptions}
-    onSave={async testCase => {
-      const exists = suite.cases.some(
-        currentCase => currentCase.id === testCase.id
-      )
-      return exists ? updateCase(testCase) : addCase(testCase)
-    }}
+    isExisting={id => suite.cases.some(c => c.id === id)}
+    onSave={saveCase}
   />
 </div>
 

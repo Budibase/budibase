@@ -8,14 +8,14 @@
 
   type Props = {
     toolOptions: ToolOption[]
+    isExisting: (_id: string) => boolean
     onSave: (_testCase: AgentTestCase) => Promise<boolean>
   }
 
-  let { toolOptions, onSave }: Props = $props()
+  let { toolOptions, isExisting, onSave }: Props = $props()
 
   let modal: Modal
   let loading = $state(false)
-  let mode = $state<"create" | "edit">("create")
   let draftCase = $state<AgentTestCase | null>(null)
 
   const cloneCase = (testCase: AgentTestCase): AgentTestCase => ({
@@ -23,15 +23,7 @@
     reviewers: testCase.reviewers.map(reviewer => ({ ...reviewer })),
   })
 
-  export const showCreate = (testCase: AgentTestCase) => {
-    mode = "create"
-    draftCase = cloneCase(testCase)
-    loading = false
-    modal.show()
-  }
-
-  export const showEdit = (testCase: AgentTestCase) => {
-    mode = "edit"
+  export const show = (testCase: AgentTestCase) => {
     draftCase = cloneCase(testCase)
     loading = false
     modal.show()
@@ -40,25 +32,17 @@
   const updateDraftCase = (
     updater: (_testCase: AgentTestCase) => AgentTestCase
   ) => {
-    if (!draftCase) {
-      return
-    }
-
+    if (!draftCase) return
     draftCase = updater(draftCase)
   }
 
   const handleConfirm = async () => {
-    if (!draftCase || loading) {
-      return keepOpen
-    }
+    if (!draftCase || loading) return keepOpen
 
     loading = true
     try {
       const saved = await onSave(cloneCase(draftCase))
-      if (!saved) {
-        return keepOpen
-      }
-
+      if (!saved) return keepOpen
       modal.hide()
     } catch (error) {
       console.error("Failed to save test", error)
@@ -68,12 +52,14 @@
       loading = false
     }
   }
+
+  let editing = $derived(draftCase ? isExisting(draftCase.id) : false)
 </script>
 
 <Modal bind:this={modal}>
   <ModalContent
-    title={mode === "create" ? "Add test" : "Edit test"}
-    confirmText={mode === "create" ? "Add test" : "Save changes"}
+    title={editing ? "Edit test" : "Add test"}
+    confirmText={editing ? "Save changes" : "Add test"}
     size="L"
     showConfirmButton
     showCancelButton

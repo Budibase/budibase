@@ -4,16 +4,12 @@ import { helpers } from "@budibase/shared-core"
 import type {
   Agent,
   AgentTestCase,
-  AgentTestCaseSnapshot,
   AgentTestCaseResult,
-  AgentTestModelSnapshot,
   AgentTestReviewer,
   AgentTestReviewerResult,
   AgentTestRun,
   AgentTestSnapshot,
-  AgentTestSuite,
   ContextUser,
-  CustomAIProviderConfig,
 } from "@budibase/types"
 import {
   Output,
@@ -37,7 +33,6 @@ import {
   getCaseStatus,
   normalizeCaseContext,
   normalizeReviewers,
-  validateTestCase,
 } from "./reviewers"
 import { fetchSuite, saveRun } from "./crud"
 import { v4 } from "uuid"
@@ -54,12 +49,8 @@ const judgeOutputSchema =
   helpers.structuredOutput.normalizeSchemaForStructuredOutput({
     type: "object",
     properties: {
-      passed: {
-        type: "boolean",
-      },
-      reason: {
-        type: "string",
-      },
+      passed: { type: "boolean" },
+      reason: { type: "string" },
     },
     required: ["passed", "reason"],
   })
@@ -69,16 +60,6 @@ Use only the rubric, the case input, optional case context, and the response.
 Do not invent extra requirements.
 Return passed=true only when the response clearly satisfies the rubric.
 Keep the reason concise and specific.`
-
-const buildCaseContextMessage = (context?: string): ModelMessage[] =>
-  context
-    ? [
-        {
-          role: "system",
-          content: `Additional test context:\n${context}\n\nUse this context when answering the user.`,
-        },
-      ]
-    : []
 
 const buildJudgePrompt = ({
   input,
@@ -99,124 +80,12 @@ ${input}
 ${context ? `Test context:\n${context}\n\n` : ""}Agent response:
 ${response}`
 
-const normalizeReviewerMessage = (message?: string) =>
-  message?.trim() || "Reviewer did not return a message."
-
-const addRequestId = ({
-  requestIds,
-  sessionLogIndexer,
-  responseId,
-}: {
-  requestIds: Set<string>
-  sessionLogIndexer: SessionLogIndexer
-  responseId?: string
-}) => {
-  if (!responseId) {
-    return
-  }
-
-  requestIds.add(responseId)
-  sessionLogIndexer.addRequestId(responseId)
-}
-
-const buildCaseSnapshot = (testCase: AgentTestCase): AgentTestCaseSnapshot => ({
-  id: testCase.id,
-  name: testCase.name,
-  input: testCase.input,
-  context: normalizeCaseContext(testCase.context),
-  reviewers: normalizeReviewers(testCase.reviewers),
-})
-
-const buildAIConfigSnapshot = (
-  aiConfig?: CustomAIProviderConfig
-): AgentTestModelSnapshot | undefined => {
-  if (!aiConfig?._id) {
-    return undefined
-  }
-
-  return {
-    aiConfigId: aiConfig._id,
-    name: aiConfig.name,
-    provider: aiConfig.provider,
-    model: aiConfig.model,
-    liteLLMModelId: aiConfig.liteLLMModelId,
-    reasoningEffort: aiConfig.reasoningEffort,
-  }
-}
-
-const buildRunSnapshot = ({
-  agent,
-  suite,
-  aiConfig,
-}: {
-  agent: Agent
-  suite: AgentTestSuite
-  aiConfig?: CustomAIProviderConfig
-}): AgentTestSnapshot => ({
-  agentId: agent._id!,
-  agentName: agent.name,
-  agentRev: agent._rev,
-  agentUpdatedAt: agent.updatedAt,
-  suiteRev: suite._rev,
-  aiconfig: agent.aiconfig,
-  aiConfig: buildAIConfigSnapshot(aiConfig),
-  promptInstructions: agent.promptInstructions,
-  goal: agent.goal,
-  enabledTools: [...(agent.enabledTools || [])],
-  knowledgeBases: [...(agent.knowledgeBases || [])],
-})
-
-const buildCaseResult = ({
-  testCase,
-  caseSnapshot,
-  response,
-  status,
-  reviewerResults,
-  toolCalls,
-  sessionId,
-  requestIds,
-  startedAt,
-  startedAtMs,
-  error,
-}: {
-  testCase: AgentTestCase
-  caseSnapshot: AgentTestCaseSnapshot
-  response: string
-  status: AgentTestCaseResult["status"]
-  reviewerResults: AgentTestReviewerResult[]
-  toolCalls: string[]
-  sessionId: string
-  requestIds: string[]
-  startedAt: string
-  startedAtMs: number
-  error?: string
-}): AgentTestCaseResult => {
-  const completedAt = new Date().toISOString()
-
-  return {
-    caseId: testCase.id,
-    name: testCase.name,
-    caseSnapshot,
-    response,
-    status,
-    reviewerResults,
-    toolCalls,
-    sessionId,
-    requestIds,
-    startedAt,
-    completedAt,
-    durationMs: Date.now() - startedAtMs,
-    ...(error ? { error } : {}),
-  }
-}
-
 async function runJudge({
   llm,
   input,
   context,
   response,
   reviewer,
-  requestIds,
   sessionLogIndexer,
 }: {
   llm: TestLLM
@@ -224,30 +93,23 @@ async function runJudge({
   context?: string
   response: string
   reviewer: Extract<AgentTestReviewer, { type: "llm_judge" }>
-  requestIds: Set<string>
   sessionLogIndexer: SessionLogIndexer
 }): Promise<AgentTestReviewerResult> {
   const judge = new ToolLoopAgent({
     model: wrapLanguageModel({
       model: llm.chat,
-      middleware: extractReasoningMiddleware({
-        tagName: "think",
-      }),
+      middleware: extractReasoningMiddleware({ tagName: "think" }),
     }),
     instructions: judgeInstructions,
     stopWhen: stepCountIs(1),
     providerOptions: llm.providerOptions?.(false),
     output: Output.object({ schema: jsonSchema(judgeOutputSchema) }),
     async onStepFinish({ response }) {
-      addRequestId({
-        requestIds,
-        sessionLogIndexer,
-        responseId: response?.id,
-      })
+      if (response?.id) sessionLogIndexer.addRequestId(response.id)
     },
   })
 
-  const result = await judge.stream({
+  const stream = await judge.stream({
     prompt: buildJudgePrompt({
       input,
       context,
@@ -256,29 +118,13 @@ async function runJudge({
     }),
   })
 
-  const [judgeOutputResult, judgeResponseResult] = await Promise.allSettled([
-    result.output as Promise<JudgeOutput>,
-    result.response,
+  const [output, judgeResponse] = await Promise.all([
+    stream.output as Promise<JudgeOutput>,
+    stream.response,
   ])
 
-  const responseId =
-    judgeResponseResult.status === "fulfilled"
-      ? (judgeResponseResult.value?.id ?? undefined)
-      : undefined
-  addRequestId({
-    requestIds,
-    sessionLogIndexer,
-    responseId,
-  })
+  if (judgeResponse?.id) sessionLogIndexer.addRequestId(judgeResponse.id)
 
-  if (judgeOutputResult.status === "rejected") {
-    throw judgeOutputResult.reason
-  }
-  if (judgeResponseResult.status === "rejected") {
-    throw judgeResponseResult.reason
-  }
-
-  const output = judgeOutputResult.value
   if (!output || typeof output.passed !== "boolean") {
     throw new Error("Judge did not return a valid verdict.")
   }
@@ -287,7 +133,7 @@ async function runJudge({
     reviewerId: reviewer.id,
     type: reviewer.type,
     status: output.passed ? "passed" : "failed",
-    message: normalizeReviewerMessage(output.reason),
+    message: output.reason?.trim() || "Reviewer did not return a message.",
   }
 }
 
@@ -302,13 +148,18 @@ async function runCase({
   testCase: AgentTestCase
   runId: string
 }): Promise<AgentTestCaseResult> {
-  const validationFailures = validateTestCase(testCase)
-  const caseSnapshot = buildCaseSnapshot(testCase)
+  const caseSnapshot: AgentTestCase = {
+    id: testCase.id,
+    name: testCase.name,
+    input: testCase.input,
+    context: normalizeCaseContext(testCase.context),
+    reviewers: normalizeReviewers(testCase.reviewers),
+  }
+
   const startedAt = new Date().toISOString()
   const startedAtMs = Date.now()
   const sessionId = `test:${runId}:${testCase.id}`
-  const requestIds = new Set<string>()
-  const executedToolCalls: string[] = []
+  const toolCalls: string[] = []
   const sessionLogIndexer = createSessionLogIndexer({
     agentId: agent._id!,
     sessionId,
@@ -317,28 +168,33 @@ async function runCase({
     startedAt,
   })
 
-  if (validationFailures.length > 0) {
-    const error = validationFailures.map(failure => failure.message).join(" ")
-    return buildCaseResult({
-      testCase,
-      caseSnapshot,
-      response: "",
-      status: "error",
-      reviewerResults: buildErroredReviewerResults({
-        reviewers: caseSnapshot.reviewers,
-        message: error,
-      }),
-      toolCalls: executedToolCalls,
-      sessionId,
-      requestIds: [],
-      startedAt,
-      error,
-      startedAtMs,
-    })
-  }
+  const finish = ({
+    response,
+    status,
+    reviewerResults,
+    error,
+  }: {
+    response: string
+    status: AgentTestCaseResult["status"]
+    reviewerResults: AgentTestReviewerResult[]
+    error?: string
+  }): AgentTestCaseResult => ({
+    caseId: testCase.id,
+    name: testCase.name,
+    caseSnapshot,
+    response,
+    status,
+    reviewerResults,
+    toolCalls,
+    sessionId,
+    requestIds: sessionLogIndexer.getRequestIds(),
+    startedAt,
+    completedAt: new Date().toISOString(),
+    durationMs: Date.now() - startedAtMs,
+    ...(error ? { error } : {}),
+  })
 
   try {
-    const latestQuestion = testCase.input
     const [promptAndTools, llm] = await Promise.all([
       sdk.ai.agents.buildPromptAndTools(agent, {
         baseSystemPrompt: ai.agentSystemPrompt(user),
@@ -350,19 +206,21 @@ async function runCase({
     const pendingToolCalls = new Set<string>()
     const hasTools = Object.keys(promptAndTools.tools).length > 0
     const messages: ModelMessage[] = [
-      ...buildCaseContextMessage(testCase.context),
-      {
-        role: "user",
-        content: latestQuestion,
-      },
+      ...(testCase.context
+        ? [
+            {
+              role: "system" as const,
+              content: `Additional test context:\n${testCase.context}\n\nUse this context when answering the user.`,
+            },
+          ]
+        : []),
+      { role: "user", content: testCase.input },
     ]
 
-    const result = streamText({
+    const stream = streamText({
       model: wrapLanguageModel({
         model: llm.chat,
-        middleware: extractReasoningMiddleware({
-          tagName: "think",
-        }),
+        middleware: extractReasoningMiddleware({ tagName: "think" }),
       }),
       messages,
       system: promptAndTools.systemPrompt,
@@ -370,18 +228,12 @@ async function runCase({
       toolChoice: hasTools ? "auto" : "none",
       stopWhen: stepCountIs(30),
       providerOptions: llm.providerOptions?.(hasTools),
-      async onStepFinish({ content, toolCalls, toolResults, response }) {
-        addRequestId({
-          requestIds,
-          sessionLogIndexer,
-          responseId: response?.id,
-        })
-        for (const toolCall of toolCalls) {
-          if (toolCall.toolName) {
-            executedToolCalls.push(toolCall.toolName)
-          }
+      async onStepFinish({ content, toolCalls: stepToolCalls, toolResults, response }) {
+        if (response?.id) sessionLogIndexer.addRequestId(response.id)
+        for (const toolCall of stepToolCalls) {
+          if (toolCall.toolName) toolCalls.push(toolCall.toolName)
         }
-        updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+        updatePendingToolCalls(pendingToolCalls, stepToolCalls, toolResults)
         for (const part of content) {
           if (part.type === "tool-error") {
             pendingToolCalls.delete(part.toolCallId)
@@ -392,11 +244,7 @@ async function runCase({
         }
       },
       onFinish({ response }) {
-        addRequestId({
-          requestIds,
-          sessionLogIndexer,
-          responseId: response?.id,
-        })
+        if (response?.id) sessionLogIndexer.addRequestId(response.id)
       },
       onError({ error }) {
         console.error("Agent test streaming error", {
@@ -407,32 +255,17 @@ async function runCase({
       },
     })
 
-    const [textResult, responseResult] = await Promise.allSettled([
-      result.text,
-      result.response,
+    const [text, streamResponse] = await Promise.all([
+      stream.text,
+      stream.response,
     ])
-
-    const responseId =
-      responseResult.status === "fulfilled"
-        ? (responseResult.value.id ?? undefined)
-        : undefined
-    addRequestId({
-      requestIds,
-      sessionLogIndexer,
-      responseId,
-    })
+    if (streamResponse?.id) sessionLogIndexer.addRequestId(streamResponse.id)
 
     if (pendingToolCalls.size > 0) {
       throw new Error(formatIncompleteToolCallError([]))
     }
-    if (textResult.status === "rejected") {
-      throw textResult.reason
-    }
-    if (responseResult.status === "rejected") {
-      throw responseResult.reason
-    }
 
-    const response = textResult.value || ""
+    const response = text || ""
     const reviewerResults: AgentTestReviewerResult[] = []
 
     for (const reviewer of caseSnapshot.reviewers) {
@@ -445,7 +278,6 @@ async function runCase({
               context: testCase.context,
               response,
               reviewer,
-              requestIds,
               sessionLogIndexer,
             })
           )
@@ -457,58 +289,32 @@ async function runCase({
             message: `Judge failed: ${getErrorMessage(error)}`,
           })
         }
-        continue
+      } else {
+        reviewerResults.push(evaluateReviewer({ reviewer, response, toolCalls }))
       }
-
-      reviewerResults.push(
-        evaluateReviewer({
-          reviewer,
-          response,
-          toolCalls: executedToolCalls,
-        })
-      )
     }
 
     await sessionLogIndexer.index()
 
-    const caseStatus = getCaseStatus(reviewerResults)
+    const status = getCaseStatus(reviewerResults)
     const error =
-      caseStatus === "error"
-        ? reviewerResults.find(result => result.status === "error")?.message
+      status === "error"
+        ? reviewerResults.find(r => r.status === "error")?.message
         : undefined
 
-    return buildCaseResult({
-      testCase,
-      caseSnapshot,
-      response,
-      status: caseStatus,
-      reviewerResults,
-      toolCalls: executedToolCalls,
-      sessionId,
-      requestIds: [...requestIds],
-      startedAt,
-      startedAtMs,
-      error,
-    })
+    return finish({ response, status, reviewerResults, error })
   } catch (error) {
     await sessionLogIndexer.index()
 
-    const errorMessage = getErrorMessage(error)
-    return buildCaseResult({
-      testCase,
-      caseSnapshot,
+    const message = getErrorMessage(error)
+    return finish({
       response: "",
       status: "error",
       reviewerResults: buildErroredReviewerResults({
         reviewers: caseSnapshot.reviewers,
-        message: errorMessage,
+        message,
       }),
-      toolCalls: executedToolCalls,
-      sessionId,
-      requestIds: [...requestIds],
-      startedAt,
-      error: errorMessage,
-      startedAtMs,
+      error: message,
     })
   }
 }
@@ -532,9 +338,9 @@ export async function runSuite({
     )
   }
 
-  let casesToRun = suite.cases
+  let casesToRun: AgentTestCase[] = suite.cases
   if (caseId) {
-    const match = suite.cases.find(testCase => testCase.id === caseId)
+    const match = suite.cases.find(c => c.id === caseId)
     if (!match) {
       throw new HTTPError("That test was not found in the saved suite.", 400)
     }
@@ -543,34 +349,47 @@ export async function runSuite({
 
   const runId = v4()
   const startedAt = new Date().toISOString()
-  const results: AgentTestCaseResult[] = []
   const aiConfig = agent.aiconfig
     ? await sdk.ai.configs.find(agent.aiconfig)
     : undefined
-  const snapshot = buildRunSnapshot({ agent, suite, aiConfig })
 
-  for (const testCase of casesToRun) {
-    results.push(
-      await runCase({
-        agent,
-        user,
-        testCase,
-        runId,
-      })
-    )
+  const snapshot: AgentTestSnapshot = {
+    agentId: agent._id!,
+    agentName: agent.name,
+    agentRev: agent._rev,
+    agentUpdatedAt: agent.updatedAt,
+    suiteRev: suite._rev,
+    aiconfig: agent.aiconfig,
+    aiConfig: aiConfig?._id
+      ? {
+          aiConfigId: aiConfig._id,
+          name: aiConfig.name,
+          provider: aiConfig.provider,
+          model: aiConfig.model,
+          liteLLMModelId: aiConfig.liteLLMModelId,
+          reasoningEffort: aiConfig.reasoningEffort,
+        }
+      : undefined,
+    promptInstructions: agent.promptInstructions,
+    goal: agent.goal,
+    enabledTools: [...(agent.enabledTools || [])],
+    knowledgeBases: [...(agent.knowledgeBases || [])],
   }
 
-  const completedAt = new Date().toISOString()
-  const passed = results.filter(result => result.status === "passed").length
+  const results: AgentTestCaseResult[] = []
+  for (const testCase of casesToRun) {
+    results.push(await runCase({ agent, user, testCase, runId }))
+  }
 
-  return await saveRun({
+  const passed = results.filter(r => r.status === "passed").length
+  return saveRun({
     agentId,
     runId,
     total: results.length,
     passed,
     failed: results.length - passed,
     startedAt,
-    completedAt,
+    completedAt: new Date().toISOString(),
     snapshot,
     results,
   })

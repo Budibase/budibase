@@ -80,10 +80,16 @@ describe("agent test runner", () => {
   const { fetchSuite, saveRun } = jest.requireMock("./crud")
   const user = {} as ContextUser
 
-  const makeIndexer = () => ({
-    addRequestId: jest.fn(),
-    index: jest.fn().mockResolvedValue(undefined),
-  })
+  const makeIndexer = () => {
+    const ids = new Set<string>()
+    return {
+      addRequestId: jest.fn((id?: string | null) => {
+        if (id) ids.add(id)
+      }),
+      index: jest.fn().mockResolvedValue(undefined),
+      getRequestIds: jest.fn(() => [...ids]),
+    }
+  }
 
   const setSuite = (reviewers: unknown[]) => {
     fetchSuite.mockResolvedValue({

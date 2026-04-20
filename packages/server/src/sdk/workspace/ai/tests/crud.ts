@@ -2,17 +2,13 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { UNICODE_MAX } from "@budibase/types"
 import type {
   AgentTestCase,
-  AgentTestReviewer,
   AgentTestRun,
   AgentTestSuite,
   UpdateAgentTestSuiteRequest,
 } from "@budibase/types"
+import { normalizeReviewer, normalizeCaseContext } from "@budibase/shared-core"
 import { v4 } from "uuid"
-import {
-  normalizeCaseContext,
-  normalizeReviewers,
-  validateTestCase,
-} from "./reviewers"
+import { validateTestCase } from "./reviewers"
 
 const buildDefaultSuite = (agentId: string): AgentTestSuite => ({
   _id: docIds.getAgentTestSuiteID(agentId),
@@ -41,21 +37,14 @@ export async function saveSuite({
   const existing = await db.tryGet<AgentTestSuite>(
     docIds.getAgentTestSuiteID(agentId)
   )
-  const normalizeReviewer = (
-    reviewer: AgentTestReviewer
-  ): AgentTestReviewer => {
-    return {
-      ...reviewer,
-      id: reviewer.id || v4(),
-    }
-  }
+
   const cases: AgentTestCase[] = request.cases.map((testCase, idx) => ({
     id: testCase.id ?? v4(),
     name: testCase.name?.trim() || `Test ${idx + 1}`,
     input: testCase.input ?? "",
     context: normalizeCaseContext(testCase.context),
-    reviewers: normalizeReviewers(testCase.reviewers || []).map(
-      normalizeReviewer
+    reviewers: (testCase.reviewers || []).map(reviewer =>
+      normalizeReviewer({ ...reviewer, id: reviewer.id || v4() })
     ),
   }))
 
@@ -78,10 +67,7 @@ export async function saveSuite({
   }
 
   const response = await db.put(suite)
-  return {
-    ...suite,
-    _rev: response.rev,
-  }
+  return { ...suite, _rev: response.rev }
 }
 
 export async function fetchRuns(
@@ -120,8 +106,5 @@ export async function saveRun(
   }
 
   const response = await db.put(nextRun)
-  return {
-    ...nextRun,
-    _rev: response.rev,
-  }
+  return { ...nextRun, _rev: response.rev }
 }

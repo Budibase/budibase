@@ -10,7 +10,12 @@
     TextArea,
   } from "@budibase/bbui"
   import type { AgentTestCase, AgentTestReviewer } from "@budibase/types"
-  import { getReviewerLabel } from "./utils"
+  import {
+    REVIEWERS,
+    REVIEWER_TYPES,
+    describeReviewer,
+    type ReviewerType,
+  } from "@budibase/shared-core"
 
   type ToolOption = { label: string; value: string }
 
@@ -22,11 +27,6 @@
     ) => void
   }
 
-  type ReviewerOption = {
-    type: AgentTestReviewer["type"]
-    description: string
-  }
-
   let { selectedCase, toolOptions, onUpdateCase }: Props = $props()
 
   let reviewerChooserOpen = $state(false)
@@ -35,76 +35,17 @@
   const updateReviewerField =
     (reviewerId: string, field: string) =>
     (event: CustomEvent<string | undefined>) =>
-      updateReviewer(
-        reviewerId,
-        current =>
-          ({
-            ...current,
-            [field]: event.detail,
-          }) as AgentTestReviewer
-      )
+      onUpdateCase(testCase => ({
+        ...testCase,
+        reviewers: testCase.reviewers.map(reviewer =>
+          reviewer.id === reviewerId
+            ? ({ ...reviewer, [field]: event.detail } as AgentTestReviewer)
+            : reviewer
+        ),
+      }))
 
-  const reviewerOptions: ReviewerOption[] = [
-    {
-      type: "exact_match",
-      description: "Require the final response to exactly match some text.",
-    },
-    {
-      type: "contains_text",
-      description: "Require the final response to include some text.",
-    },
-    {
-      type: "llm_judge",
-      description: "Grade the response against a free-form rubric.",
-    },
-    {
-      type: "tool_used",
-      description: "Pass when a specific tool was used during the run.",
-    },
-  ]
-
-  const createReviewer = (
-    type: AgentTestReviewer["type"]
-  ): AgentTestReviewer => {
-    const id = Helpers.uuid()
-
-    switch (type) {
-      case "exact_match":
-      case "contains_text":
-        return {
-          id,
-          type,
-          text: "",
-        }
-      case "llm_judge":
-        return {
-          id,
-          type,
-          rubric: "",
-        }
-      case "tool_used":
-        return {
-          id,
-          type,
-          tool: "",
-        }
-    }
-  }
-
-  const updateReviewer = (
-    reviewerId: string,
-    updater: (_reviewer: AgentTestReviewer) => AgentTestReviewer
-  ) => {
-    onUpdateCase(testCase => ({
-      ...testCase,
-      reviewers: testCase.reviewers.map(reviewer =>
-        reviewer.id === reviewerId ? updater(reviewer) : reviewer
-      ),
-    }))
-  }
-
-  const addReviewer = (type: AgentTestReviewer["type"]) => {
-    const reviewer = createReviewer(type)
+  const addReviewer = (type: ReviewerType) => {
+    const reviewer = REVIEWERS[type].create(Helpers.uuid())
     reviewerIdsOpenOnAdd = new Set([...reviewerIdsOpenOnAdd, reviewer.id])
     onUpdateCase(testCase => ({
       ...testCase,
@@ -124,29 +65,13 @@
 
   const truncate = (value: string, max: number) => {
     const t = value.trim()
-    if (t.length <= max) {
-      return t
-    }
-    return `${t.slice(0, Math.max(0, max - 1))}…`
+    return t.length <= max ? t : `${t.slice(0, Math.max(0, max - 1))}…`
   }
 
   const reviewerSummaryTitle = (reviewer: AgentTestReviewer) => {
-    const label = getReviewerLabel(reviewer.type)
-    switch (reviewer.type) {
-      case "tool_used":
-        return reviewer.tool ? `${label} · ${reviewer.tool}` : label
-      case "exact_match":
-      case "contains_text":
-        return reviewer.text
-          ? `${label} · ${truncate(reviewer.text, 48)}`
-          : label
-      case "llm_judge":
-        return reviewer.rubric
-          ? `${label} · ${truncate(reviewer.rubric, 48)}`
-          : label
-      default:
-        return label
-    }
+    const label = REVIEWERS[reviewer.type].label
+    const summary = describeReviewer(reviewer)
+    return summary ? `${label} · ${truncate(summary, 48)}` : label
   }
 </script>
 
@@ -165,17 +90,15 @@
 
   {#if reviewerChooserOpen}
     <div class="reviewer-chooser">
-      {#each reviewerOptions as option (option.type)}
+      {#each REVIEWER_TYPES as type (type)}
         <button
           class="reviewer-option"
           type="button"
-          onclick={() => addReviewer(option.type)}
+          onclick={() => addReviewer(type)}
         >
-          <span class="reviewer-option-title">
-            {getReviewerLabel(option.type)}
-          </span>
+          <span class="reviewer-option-title">{REVIEWERS[type].label}</span>
           <span class="reviewer-option-description">
-            {option.description}
+            {REVIEWERS[type].description}
           </span>
         </button>
       {/each}
@@ -191,6 +114,7 @@
   {/if}
 
   {#each selectedCase.reviewers as reviewer (reviewer.id)}
+    {@const def = REVIEWERS[reviewer.type]}
     <div class="reviewer-card">
       <DetailSummary
         name={reviewerSummaryTitle(reviewer)}
@@ -205,35 +129,32 @@
           on:click={() => removeReviewer(reviewer.id)}
         />
 
-        {#if reviewer.type === "exact_match"}
+        {#if def.inputKind === "textarea"}
           <TextArea
-            label="Expected final response"
-            value={reviewer.text}
-            height={90}
-            on:change={updateReviewerField(reviewer.id, "text")}
+            label={reviewer.type === "exact_match"
+              ? "Expected final response"
+              : reviewer.type === "llm_judge"
+                ? "Rubric"
+                : "Text"}
+            value={reviewer[def.contentField] as string}
+            height={reviewer.type === "llm_judge" ? 110 : 90}
+            on:change={updateReviewerField(reviewer.id, def.contentField)}
           />
-        {:else if reviewer.type === "contains_text"}
+        {:else if def.inputKind === "input"}
           <Input
             label="Text to find"
-            value={reviewer.text}
-            on:change={updateReviewerField(reviewer.id, "text")}
+            value={reviewer[def.contentField] as string}
+            on:change={updateReviewerField(reviewer.id, def.contentField)}
           />
-        {:else if reviewer.type === "llm_judge"}
-          <TextArea
-            label="Rubric"
-            value={reviewer.rubric}
-            height={110}
-            on:change={updateReviewerField(reviewer.id, "rubric")}
-          />
-        {:else if reviewer.type === "tool_used"}
+        {:else if def.inputKind === "select"}
           <Select
             label="Tool name"
-            value={reviewer.tool}
+            value={reviewer[def.contentField] as string}
             options={toolOptions}
             getOptionLabel={o => o.label}
             getOptionValue={o => o.value}
             placeholder="Choose a tool"
-            on:change={updateReviewerField(reviewer.id, "tool")}
+            on:change={updateReviewerField(reviewer.id, def.contentField)}
           />
         {/if}
       </DetailSummary>

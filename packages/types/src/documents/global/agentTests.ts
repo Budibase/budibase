@@ -38,13 +38,9 @@ export interface AgentTestCase {
   reviewers: AgentTestReviewer[]
 }
 
-export interface AgentTestCaseSnapshot {
-  id: string
-  name: string
-  input: string
-  context?: string
-  reviewers: AgentTestReviewer[]
-}
+// Snapshot of the case at run time - structurally identical to AgentTestCase
+// today, but kept as an alias so the run document schema can diverge later.
+export type AgentTestCaseSnapshot = AgentTestCase
 
 export interface AgentTestModelSnapshot {
   aiConfigId: string

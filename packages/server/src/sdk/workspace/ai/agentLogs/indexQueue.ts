@@ -181,6 +181,9 @@ export function createSessionLogIndexer({
         requestIds.add(requestId)
       }
     },
+    getRequestIds() {
+      return [...requestIds]
+    },
     async index() {
       if (!requestIds.size) {
         return

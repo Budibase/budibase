@@ -9,7 +9,6 @@
     StatusLight,
   } from "@budibase/bbui"
   import type { AgentTestCase, AgentTestCaseResult } from "@budibase/types"
-  import DetailPane from "./DetailPane.svelte"
   import {
     formatRunTime,
     getReviewerConfigSummary,
@@ -78,35 +77,43 @@
   }
 </script>
 
-<DetailPane
-  title={selectedCase?.name ?? ""}
-  {subtitle}
-  emptyText="Select a test to edit its configuration"
-  isEmpty={!selectedCase}
->
-  {#snippet actions()}
-    <div class="editor-actions">
-      <Button primary disabled={running || saving || loading} on:click={onRun}>
-        {running ? "Running..." : "Run"}
-      </Button>
-      <ActionButton
-        quiet
-        icon="copy"
-        tooltip="Duplicate"
-        disabled={saving || loading || running}
-        on:click={onDuplicateCase}
-      />
-      <ActionButton
-        quiet
-        icon="trash"
-        tooltip="Delete"
-        disabled={saving || loading || running}
-        on:click={onRemoveCase}
-      />
+{#if !selectedCase}
+  <div class="detail-empty">
+    <Icon name="clock" size="L" color="var(--spectrum-global-color-gray-500)" />
+    <Body size="S" color="var(--spectrum-global-color-gray-600)">
+      Select a test to edit its configuration
+    </Body>
+  </div>
+{:else}
+  <div class="detail-content">
+    <div class="detail-header">
+      <div class="detail-heading">
+        <h3 class="detail-title">{selectedCase.name}</h3>
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          {subtitle}
+        </Body>
+      </div>
+      <div class="editor-actions">
+        <Button primary disabled={running || saving || loading} on:click={onRun}>
+          {running ? "Running..." : "Run"}
+        </Button>
+        <ActionButton
+          quiet
+          icon="copy"
+          tooltip="Duplicate"
+          disabled={saving || loading || running}
+          on:click={onDuplicateCase}
+        />
+        <ActionButton
+          quiet
+          icon="trash"
+          tooltip="Delete"
+          disabled={saving || loading || running}
+          on:click={onRemoveCase}
+        />
+      </div>
     </div>
-  {/snippet}
 
-  {#if selectedCase}
     <div class="detail-stack">
       <section class="card">
         <div class="card-header">
@@ -259,10 +266,53 @@
         {/if}
       </section>
     </div>
-  {/if}
-</DetailPane>
+  </div>
+{/if}
 
 <style>
+  .detail-content {
+    padding: var(--spacing-l);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+  }
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-m);
+  }
+
+  .detail-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .detail-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .detail-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-m);
+    height: 100%;
+    padding: var(--spacing-xl);
+    min-height: 200px;
+  }
+
   .editor-actions {
     display: flex;
     align-items: center;

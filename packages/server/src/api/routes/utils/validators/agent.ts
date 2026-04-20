@@ -1,4 +1,5 @@
 import { auth } from "@budibase/backend-core"
+import { REVIEWERS, REVIEWER_TYPES } from "@budibase/shared-core"
 import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
@@ -133,52 +134,34 @@ export function generateAgentInstructionsValidator() {
   )
 }
 
-const EXACT_MATCH_REVIEWER_SCHEMA = Joi.object({
-  id: Joi.string().required(),
-  type: Joi.string().valid("exact_match").required(),
-  text: Joi.string().trim().disallow("").required(),
-}).required()
-
-const CONTAINS_TEXT_REVIEWER_SCHEMA = Joi.object({
-  id: Joi.string().required(),
-  type: Joi.string().valid("contains_text").required(),
-  text: Joi.string().trim().disallow("").required(),
-}).required()
-
-const LLM_JUDGE_REVIEWER_SCHEMA = Joi.object({
-  id: Joi.string().required(),
-  type: Joi.string().valid("llm_judge").required(),
-  rubric: Joi.string().trim().disallow("").required(),
-}).required()
-
-const TOOL_USED_REVIEWER_SCHEMA = Joi.object({
-  id: Joi.string().required(),
-  type: Joi.string().valid("tool_used").required(),
-  tool: Joi.string().trim().disallow("").required(),
-}).required()
-
-const AGENT_EVAL_REVIEWER_SCHEMA = Joi.alternatives()
+const AGENT_TEST_REVIEWER_SCHEMA = Joi.alternatives()
   .try(
-    EXACT_MATCH_REVIEWER_SCHEMA,
-    CONTAINS_TEXT_REVIEWER_SCHEMA,
-    LLM_JUDGE_REVIEWER_SCHEMA,
-    TOOL_USED_REVIEWER_SCHEMA
+    ...REVIEWER_TYPES.map(type =>
+      Joi.object({
+        id: Joi.string().required(),
+        type: Joi.string().valid(type).required(),
+        [REVIEWERS[type].contentField]: Joi.string()
+          .trim()
+          .disallow("")
+          .required(),
+      }).required()
+    )
   )
   .required()
 
-const AGENT_EVAL_CASE_SCHEMA = Joi.object({
+const AGENT_TEST_CASE_SCHEMA = Joi.object({
   id: Joi.string().optional(),
   name: Joi.string().required(),
   input: Joi.string().required(),
   context: Joi.string().allow("").optional(),
-  reviewers: Joi.array().items(AGENT_EVAL_REVIEWER_SCHEMA).required(),
+  reviewers: Joi.array().items(AGENT_TEST_REVIEWER_SCHEMA).required(),
 }).required()
 
 export function updateAgentTestSuiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
       _rev: OPTIONAL_STRING,
-      cases: Joi.array().items(AGENT_EVAL_CASE_SCHEMA).required(),
+      cases: Joi.array().items(AGENT_TEST_CASE_SCHEMA).required(),
     }).required()
   )
 }

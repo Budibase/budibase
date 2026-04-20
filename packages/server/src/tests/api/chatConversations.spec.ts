@@ -81,6 +81,7 @@ jest.mock("../../sdk/workspace/ai/rag", () => {
 const createMockSessionLogIndexer = () => ({
   addRequestId: jest.fn(),
   index: jest.fn().mockResolvedValue(undefined),
+  getRequestIds: jest.fn().mockReturnValue([]),
 })
 
 const aiActual = jest.requireActual<typeof import("ai")>("ai")

@@ -204,5 +204,3 @@ const tidyUrl = (url: string | null) => {
   }
   return url === "" ? null : url
 }
-
-export { Duration, DurationType } from "./duration"
