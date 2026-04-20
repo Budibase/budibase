@@ -219,7 +219,7 @@
 
               const sanitized = sanitizeOperator({
                 ...editableFilter,
-                operator: e.detail,
+                operator: e.detail as any,
               })
 
               editableFilter = { ...(sanitized || editableFilter) }

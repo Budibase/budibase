@@ -64,7 +64,7 @@
     <TextField
       quiet
       value={searchString}
-      on:change={e => (searchString = e.detail)}
+      on:change={e => (searchString = e.detail || "")}
       autocomplete={false}
       placeholder="Search icons"
       autofocus
