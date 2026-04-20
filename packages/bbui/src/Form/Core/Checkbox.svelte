@@ -25,11 +25,13 @@
 <label
   class="spectrum-Checkbox {sizeClass}"
   class:spectrum-Checkbox--emphasized={!disabled && !quiet}
+  class:is-indeterminate={indeterminate}
   class:is-disabled={disabled}
   class:readonly
 >
   <input
-    checked={value || indeterminate}
+    checked={value}
+    {indeterminate}
     {disabled}
     on:change={onChange}
     type="checkbox"
