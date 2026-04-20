@@ -19,7 +19,7 @@ describe("agent test reviewers", () => {
     ])
   })
 
-  it("evaluates exact match reviewers using normalized text", () => {
+  it("evaluates exact match reviewers using the final response string as-is", () => {
     expect(
       evaluateReviewer({
         reviewer: {
@@ -27,7 +27,7 @@ describe("agent test reviewers", () => {
           type: "exact_match",
           text: "Alice Smith Product manager",
         },
-        response: "  Alice   Smith\nProduct Manager  ",
+        response: "Alice Smith Product manager",
         toolCalls: [],
       })
     ).toMatchObject({
@@ -37,7 +37,7 @@ describe("agent test reviewers", () => {
     })
   })
 
-  it("evaluates contains text reviewers using normalized text", () => {
+  it("evaluates contains text reviewers using substring search on the final response", () => {
     expect(
       evaluateReviewer({
         reviewer: {
@@ -45,7 +45,7 @@ describe("agent test reviewers", () => {
           type: "contains_text",
           text: "Product manager",
         },
-        response: "  Alice   Smith\nProduct Manager  ",
+        response: "Alice Smith Product manager",
         toolCalls: [],
       })
     ).toMatchObject({

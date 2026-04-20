@@ -63,10 +63,10 @@
     }))
   }
 
-  const truncate = (value: string, max: number) => {
-    const t = value.trim()
-    return t.length <= max ? t : `${t.slice(0, Math.max(0, max - 1))}…`
-  }
+  const truncate = (value: string, max: number) =>
+    value.length <= max
+      ? value
+      : `${value.slice(0, Math.max(0, max - 1))}…`
 
   const reviewerSummaryTitle = (reviewer: AgentTestReviewer) => {
     const label = REVIEWERS[reviewer.type].label

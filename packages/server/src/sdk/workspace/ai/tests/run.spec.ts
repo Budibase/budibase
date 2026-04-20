@@ -221,10 +221,10 @@ describe("agent test runner", () => {
       {
         id: "reviewer-2",
         type: "contains_text",
-        text: "hello",
+        text: "Hello",
       },
     ])
-    mockAgentRun({ response: " Hello   there " })
+    mockAgentRun({ response: "Hello there" })
 
     const run = await runSuite({
       agentId: "agent-1",
@@ -259,7 +259,7 @@ describe("agent test runner", () => {
           {
             id: "reviewer-2",
             type: "contains_text",
-            text: "hello",
+            text: "Hello",
           },
         ],
       },

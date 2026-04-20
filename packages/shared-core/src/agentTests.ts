@@ -37,9 +37,6 @@ export interface ReviewerDefinition<T extends ReviewerType> {
     | "async"
 }
 
-export const normalizeResponseText = (value?: string) =>
-  value?.trim().replace(/\s+/g, " ").toLowerCase() || ""
-
 function reviewerContent(reviewer: AgentTestReviewer): string {
   switch (reviewer.type) {
     case "exact_match":
@@ -61,8 +58,7 @@ export const REVIEWERS: { [T in ReviewerType]: ReviewerDefinition<T> } = {
     requiredMessage: "exact match text is required",
     create: id => ({ id, type: "exact_match", text: "" }),
     evaluate: (r, { response }) => {
-      const passed =
-        normalizeResponseText(response) === normalizeResponseText(r.text)
+      const passed = response === r.text
       return {
         passed,
         message: passed
@@ -79,9 +75,7 @@ export const REVIEWERS: { [T in ReviewerType]: ReviewerDefinition<T> } = {
     requiredMessage: "contains text is required",
     create: id => ({ id, type: "contains_text", text: "" }),
     evaluate: (r, { response }) => {
-      const passed = normalizeResponseText(response).includes(
-        normalizeResponseText(r.text)
-      )
+      const passed = response.includes(r.text)
       return {
         passed,
         message: passed
