@@ -1,12 +1,16 @@
 <script lang="ts">
-  import { goto as gotoStore } from "@roxi/routify"
+  import { goto as gotoStore, beforeUrlChange } from "@roxi/routify"
   import { flags, appStore } from "@/stores/builder"
   import {
     datasources,
     hasRestTemplate,
     getRestTemplateIdentifier,
   } from "@/stores/builder/datasources"
-  import { queries } from "@/stores/builder/queries"
+  import {
+    queries,
+    consumeSkipUnsavedPrompt,
+    markSkipUnsavedPrompt,
+  } from "@/stores/builder/queries"
   import { integrations } from "@/stores/builder/integrations"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { isEqual } from "lodash"
@@ -34,6 +38,7 @@
     type Datasource,
     type ImportEndpoint,
     type RestTemplateSpec,
+    type RestTemplateId,
     type PreviewQueryResponse,
     type UIInternalDatasource,
     type EnrichedBinding,
@@ -43,7 +48,6 @@
     getRestTemplateQueryDisplayName,
     QUERY_VERB_MAP,
   } from "@/helpers/data/utils"
-  import { capitalise } from "@/helpers"
   import {
     RestBodyTypes,
     PaginationTypes,
@@ -52,6 +56,7 @@
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
   import CustomEndpointInput from "./CustomEndpointInput.svelte"
+  import TemplateEndpointInput from "./TemplateEndpointInput.svelte"
   import DescriptionViewer from "@/components/common/DescriptionViewer.svelte"
   import {
     buildUrl,
@@ -80,17 +85,20 @@
   import ConnectionSelect from "./rest/ConnectionSelect.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
   import { getErrorMessage } from "@/helpers/errors"
+  import { confirm } from "@/helpers"
   import {
     urlParamHighlightPlugin,
     urlParamHighlightTheme,
   } from "../common/CodeEditor/urlParamHighlight"
   import { environment } from "@/stores/portal"
+  import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { onMount } from "svelte"
 
   export let queryId
   export let datasourceId: string | undefined = undefined
   export let initialDatasourceId: string | undefined = undefined
 
+  $beforeUrlChange
   $: goto = $gotoStore
 
   type EndpointWithIcon = ImportEndpoint & {
@@ -106,6 +114,7 @@
 
   let _pickedDatasourceId: string | undefined =
     datasourceId || initialDatasourceId
+  let connectionSelectRef: ConnectionSelect
   let sidebarElement: HTMLDivElement
   let isTransitioning = false
 
@@ -133,25 +142,17 @@
 
   // Custom query mode state
   let customUrl: string = ""
+  let selectedChildTemplateId: string | undefined
 
   // ── DATASOURCE / MODE ────────────────────────────────────────────────────
-  $: selectedDatasourceId = datasourceId || _pickedDatasourceId
+  $: draftDatasourceId = $workspaceConnections.draft?.query?.datasourceId
+  $: selectedDatasourceId =
+    datasourceId || _pickedDatasourceId || draftDatasourceId
   $: datasourceLookupId = selectedDatasourceId || storeQuery?.datasourceId
   $: datasource = structuredClone(
     $datasources.list.find(d => d._id === datasourceLookupId)
   )
   $: isCustomMode = !hasRestTemplate(datasource)
-  $: datasourceType = datasource?.source
-  $: integrationInfo = datasourceType
-    ? $integrations[datasourceType]
-    : undefined
-  $: queryConfig = integrationInfo?.query
-  $: verbOptions = Object.keys(queryConfig || {}).map(verb => ({
-    value: verb,
-    label: queryConfig?.[verb]?.displayName || capitalise(verb),
-    colour: customQueryIconColor(verb),
-  }))
-
   // ── QUERY INITIALISATION ─────────────────────────────────────────────────
   $: if (!datasourceId && queryId) {
     const dsId = $queries.list.find(q => q._id === queryId)?.datasourceId
@@ -175,11 +176,6 @@
     }
   }
 
-  $: if (editableQuery && datasource && isNewQuery && !selectedAuth) {
-    const withAuth = applyDefaultAuth(editableQuery, datasource)
-    if (withAuth) editableQuery = withAuth
-  }
-
   $: if (editableQuery) {
     ensureQueryDefaults(editableQuery)
     syncEndpointFromQuery(editableQuery, endpoints)
@@ -188,50 +184,11 @@
   // Reset endpoint state when the datasource changes
   $: if (selectedDatasourceId) {
     selectedEndpointOption = undefined
+    selectedChildTemplateId = undefined
     endpoints = undefined
     endpointLoadError = undefined
     queryParams = undefined
     originalBuiltQuery = undefined
-  }
-
-  // ── TEMPLATE SPEC & ENDPOINTS ────────────────────────────────────────────
-  $: template =
-    hasRestTemplate(datasource) && $restTemplates
-      ? restTemplates.get(getRestTemplateIdentifier(datasource))
-      : undefined
-  $: spec = template?.specs?.[0]
-
-  // Skip loading if the query already has metadata — endpoints aren't needed
-  $: if (
-    spec &&
-    !endpoints &&
-    !endpointsLoading &&
-    !endpointLoadError &&
-    !(editableQuery?._id && editableQuery?.restTemplateMetadata)
-  ) {
-    loadEndpoints(spec)
-  }
-
-  $: endpointOptions = buildEndpointOptions(endpoints, selectedEndpointOption)
-  $: endpointVerbColor = isCustomMode
-    ? customQueryIconColor(editableQuery?.queryVerb)
-    : selectedEndpointOption?.icon?.props?.color
-  $: endpointDocs = selectedEndpointOption?.docsUrl
-
-  // defaultSpecServerUrl (servers[0]) is used as the base so fields.path is
-  // stable regardless of config.url — the server swaps it at runtime
-  $: if (
-    editableQuery &&
-    isNewQuery &&
-    selectedEndpointOption &&
-    selectedEndpointOption.id !==
-      editableQuery.restTemplateMetadata?.operationId
-  ) {
-    editableQuery = applyEndpointDefaults(
-      editableQuery,
-      selectedEndpointOption,
-      defaultSpecServerUrl || templateBaseUrl
-    )
   }
 
   // ── CUSTOM MODE URL ───────────────────────────────────────────────────────
@@ -338,9 +295,74 @@
     originalBuiltQuery = structuredClone(builtQuery)
   }
 
+  $: if (editableQuery && datasource && !selectedAuth) {
+    const withAuth = applyDefaultAuth(editableQuery, datasource)
+    if (withAuth) editableQuery = withAuth
+  }
+
   $: queryDirty =
     (!!originalBuiltQuery && !isEqual(builtQuery, originalBuiltQuery)) ||
     !!localDynamicVariables
+
+  $: if (isNewQuery && $workspaceConnections.draft && !saveDisabled) {
+    workspaceConnections.markDraftDirty()
+  }
+
+  // BB Rest template specs
+  $: template =
+    hasRestTemplate(datasource) && $restTemplates
+      ? restTemplates.get(getRestTemplateIdentifier(datasource))
+      : undefined
+  $: isSharedCollection =
+    template?.connectionMode === "shared" &&
+    (template.templates?.length ?? 0) > 1
+  $: isIndependentCollection = template?.connectionMode === "independent"
+  $: activeChildTemplate = isIndependentCollection
+    ? (template?.templates?.find(
+        t => t.id === getRestTemplateIdentifier(datasource)
+      ) ?? template?.templates?.[0])
+    : isSharedCollection && selectedChildTemplateId
+      ? template?.templates?.find(t => t.id === selectedChildTemplateId)
+      : undefined
+  $: spec =
+    isIndependentCollection || isSharedCollection
+      ? activeChildTemplate?.specs?.[0]
+      : template?.specs?.[0]
+
+  $: if (
+    spec &&
+    !endpoints &&
+    !endpointsLoading &&
+    !endpointLoadError &&
+    !(editableQuery?._id && editableQuery?.restTemplateMetadata)
+  ) {
+    loadEndpoints(spec)
+  }
+
+  $: endpointOptions = buildEndpointOptions(endpoints, selectedEndpointOption)
+  $: endpointVerbColor = isCustomMode
+    ? customQueryIconColor(editableQuery?.queryVerb)
+    : selectedEndpointOption?.icon?.props?.color
+  $: endpointDocs = selectedEndpointOption?.docsUrl
+  $: if (
+    editableQuery &&
+    isNewQuery &&
+    selectedEndpointOption &&
+    selectedEndpointOption.operationId !==
+      editableQuery.restTemplateMetadata?.operationId
+  ) {
+    editableQuery = applyEndpointDefaults(
+      editableQuery,
+      selectedEndpointOption,
+      defaultSpecServerUrl || templateBaseUrl
+    )
+    if ($workspaceConnections.draft) {
+      workspaceConnections.updateDraftQuery({
+        queryVerb: editableQuery.queryVerb,
+        name: editableQuery.name,
+      })
+    }
+  }
 
   // ── SAVE / RUN STATE ──────────────────────────────────────────────────────
   $: isValidCustomUrl = !isCustomMode || isValidEndpointUrl(requestUrl)
@@ -451,8 +473,6 @@
     return options
   }
 
-  const compareEndpoints = (option: any, value: any) => option.id === value?.id
-
   /**
    * This initialises the query data with either the actual query or a default
    * For queries without request metadata, it will also perform a sync
@@ -490,6 +510,9 @@
       }
 
       selectedEndpointOption = endpoint
+      if (metadata.restTemplateId) {
+        selectedChildTemplateId = metadata.restTemplateId
+      }
       return
     }
 
@@ -588,6 +611,8 @@
       notifications.success(`Request saved successfully`)
 
       if (isNew && redirectIfNew) {
+        markSkipUnsavedPrompt(_id)
+        workspaceConnections.discardDraft()
         goto(`/builder/workspace/${$appStore.appId}/apis/query/${_id}`)
         return { ok: true }
       }
@@ -644,6 +669,44 @@
     runningQuery = false
   }
 
+  const onConnectionChange = (e: CustomEvent) => {
+    const {
+      authConfigId,
+      authConfigType,
+      datasourceId: newDatasourceId,
+    } = e.detail
+    selectedAuth = true
+    if (
+      isNewQuery &&
+      newDatasourceId &&
+      newDatasourceId !== _pickedDatasourceId
+    ) {
+      _pickedDatasourceId = newDatasourceId
+      const newQuery = getSelectedQuery("", newDatasourceId) as Query
+      editableQuery = {
+        ...newQuery,
+        fields: { ...newQuery.fields, authConfigId, authConfigType },
+      } as Query
+      const ds = $datasources.list.find(d => d._id === newDatasourceId) as
+        | Datasource
+        | undefined
+      const templateId = ds?.restTemplateId as string | undefined
+      workspaceConnections.updateDraft({
+        templateId,
+        query: {
+          datasourceId: newDatasourceId,
+          queryVerb: templateId ? undefined : "read",
+          name: "Untitled request",
+        },
+      })
+    } else if (editableQuery) {
+      editableQuery = {
+        ...editableQuery,
+        fields: { ...editableQuery.fields, authConfigId, authConfigType },
+      } as Query
+    }
+  }
+
   // UPDATE HANDLERS
   const onUpdateParams = (
     e: CustomEvent<{
@@ -661,8 +724,10 @@
     }>
   ) => {
     const newBindings = keyValueArrayToRecord(e.detail.fields)
-    requestBindings = newBindings
-    editableQuery!.parameters = restUtils.keyValueToQueryParameters(newBindings)
+    editableQuery = {
+      ...editableQuery!,
+      parameters: restUtils.keyValueToQueryParameters(newBindings),
+    }
   }
 
   const setPaginationField = (field: string, value: unknown) => {
@@ -898,15 +963,47 @@
           originalPath: endpoint.originalPath,
           originalRequestBody: endpoint.originalRequestBody,
           defaultBindings: endpoint.defaultBindings,
+          ...(selectedChildTemplateId
+            ? { restTemplateId: selectedChildTemplateId as RestTemplateId }
+            : {}),
         }
       : undefined
 
     return updated
   }
 
+  $beforeUrlChange(async () => {
+    const dirty = isNewQuery ? !saveDisabled : queryDirty
+    if (!dirty || consumeSkipUnsavedPrompt(editableQuery?._id)) {
+      return true
+    }
+    return await confirm({
+      title: "Your changes are not saved",
+      body: "Your changes are not yet saved. Do you want to save them before leaving?",
+      okText: "Save and continue",
+      cancelText: "Discard and continue",
+      size: "M",
+      onConfirm: async () => {
+        const saveResult = await saveQuery(false)
+        if (!saveResult?.ok) {
+          return false
+        }
+        return true
+      },
+      onCancel: () => {
+        workspaceConnections.discardDraft()
+        return true
+      },
+      onClose: () => false,
+    })
+  })
+
   onMount(() => {
     if (!$environment.loaded) {
       environment.loadVariables()
+    }
+    if ($workspaceConnections.draft && !datasourceId) {
+      connectionSelectRef.open()
     }
   })
 </script>
@@ -928,6 +1025,11 @@
           on:blur={e => {
             if (editableQuery) {
               editableQuery = { ...editableQuery, name: e.currentTarget.value }
+              if (isNewQuery && $workspaceConnections.draft) {
+                workspaceConnections.updateDraftQuery({
+                  name: e.currentTarget.value,
+                })
+              }
             }
           }}
         />
@@ -969,35 +1071,13 @@
   <div class="request" style:--verb-color={endpointVerbColor}>
     <div class="request-top">
       <ConnectionSelect
+        bind:this={connectionSelectRef}
         authConfigId={editableQuery?.fields?.authConfigId}
         restTemplateId={datasource?.restTemplateId}
         datasourceId={datasourceLookupId}
         disabled={!isNewQuery}
-        on:change={e => {
-          const {
-            authConfigId,
-            authConfigType,
-            datasourceId: selectedDatasourceId,
-          } = e.detail
-          selectedAuth = true
-          if (
-            isNewQuery &&
-            selectedDatasourceId &&
-            selectedDatasourceId !== _pickedDatasourceId
-          ) {
-            _pickedDatasourceId = selectedDatasourceId
-            editableQuery = getSelectedQuery("", selectedDatasourceId) as Query
-          } else if (editableQuery) {
-            editableQuery = {
-              ...editableQuery,
-              fields: {
-                ...editableQuery.fields,
-                authConfigId,
-                authConfigType,
-              },
-            } as Query
-          }
-        }}
+        editText="Edit connection + auth"
+        on:change={onConnectionChange}
       />
       {#if isCustomMode}
         <div class="picker">
@@ -1006,13 +1086,15 @@
             verb={editableQuery?.queryVerb ?? "read"}
             url={customUrl}
             {baseUrlOptions}
-            {verbOptions}
             on:verbChange={e => {
               if (editableQuery) {
                 editableQuery.queryVerb = e.detail
                 if (e.detail === "read") {
                   editableQuery.fields.bodyType = BodyType.NONE
                   editableQuery.fields.requestBody = undefined
+                }
+                if (isNewQuery && $workspaceConnections.draft) {
+                  workspaceConnections.updateDraftQuery({ queryVerb: e.detail })
                 }
               }
             }}
@@ -1037,8 +1119,21 @@
         </div>
       {:else}
         <div class="picker">
-          <Select
-            on:change={e => {
+          <TemplateEndpointInput
+            templates={isSharedCollection ? (template?.templates ?? []) : []}
+            {endpointOptions}
+            selectedEndpoint={selectedEndpointOption}
+            {endpointsLoading}
+            disabled={!selectedDatasourceId}
+            readonly={!!editableQuery?._id}
+            selectedChildId={selectedChildTemplateId}
+            on:childChange={e => {
+              selectedChildTemplateId = e.detail
+              selectedEndpointOption = undefined
+              endpoints = undefined
+              endpointLoadError = undefined
+            }}
+            on:endpointChange={e => {
               selectedEndpointOption = e.detail
               if (!e.detail) {
                 endpoints = undefined
@@ -1053,15 +1148,6 @@
                 }
               }
             }}
-            value={selectedEndpointOption}
-            options={endpointOptions}
-            getOptionValue={endpoint => endpoint}
-            getOptionLabel={endpoint => endpoint.name}
-            compare={compareEndpoints}
-            disabled={endpointsLoading || !selectedDatasourceId}
-            readonly={!!editableQuery?._id}
-            loading={endpointsLoading}
-            autocomplete={true}
           />
         </div>
       {/if}

@@ -3759,6 +3759,7 @@ if (descriptions.length) {
                         _id: user._id,
                         email: user.email,
                         firstName: user.firstName,
+                        fullName: expect.any(String),
                         lastName: user.lastName,
                         primaryDisplay: user.email,
                       },

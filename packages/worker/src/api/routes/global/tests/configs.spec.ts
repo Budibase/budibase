@@ -5,6 +5,7 @@ import {
   ConfigType,
   GetPublicSettingsResponse,
   PKCEMethod,
+  SCIMConfig,
   TranslationsConfig,
 } from "@budibase/types"
 import { TestConfiguration, mocks, structures } from "../../../../tests"
@@ -399,6 +400,71 @@ describe("configs", () => {
         name: "Budibuddy",
       })
       expect(boundValue).toEqual("Welcome Budibuddy")
+    })
+  })
+
+  describe("scim", () => {
+    const scimConfig = (enabled: boolean, disableAction?: string): SCIMConfig =>
+      ({
+        type: ConfigType.SCIM,
+        config: { enabled, ...(disableAction ? { disableAction } : {}) },
+      }) as SCIMConfig
+
+    beforeEach(async () => {
+      await config.deleteConfig(ConfigType.SCIM)
+      jest.clearAllMocks()
+      mocks.pro.scimUsers.handleDisable.mockResolvedValue(undefined)
+    })
+
+    afterEach(async () => {
+      await config.deleteConfig(ConfigType.SCIM)
+    })
+
+    it("calls handleDisable with 'remove' when SCIM is disabled with remove action", async () => {
+      await config.api.configs.saveConfig(scimConfig(true))
+      jest.clearAllMocks()
+
+      await config.api.configs.saveConfig(scimConfig(false, "remove"))
+      await new Promise<void>(resolve => setImmediate(resolve))
+
+      expect(mocks.pro.scimUsers.handleDisable).toHaveBeenCalledTimes(1)
+      expect(mocks.pro.scimUsers.handleDisable).toHaveBeenCalledWith("remove")
+    })
+
+    it("calls handleDisable with 'convert' when SCIM is disabled with convert action", async () => {
+      await config.api.configs.saveConfig(scimConfig(true))
+      jest.clearAllMocks()
+
+      await config.api.configs.saveConfig(scimConfig(false, "convert"))
+      await new Promise<void>(resolve => setImmediate(resolve))
+
+      expect(mocks.pro.scimUsers.handleDisable).toHaveBeenCalledTimes(1)
+      expect(mocks.pro.scimUsers.handleDisable).toHaveBeenCalledWith("convert")
+    })
+
+    it("does not call handleDisable when SCIM is disabled without a disableAction", async () => {
+      await config.api.configs.saveConfig(scimConfig(true))
+      jest.clearAllMocks()
+
+      await config.api.configs.saveConfig(scimConfig(false))
+      await new Promise<void>(resolve => setImmediate(resolve))
+
+      expect(mocks.pro.scimUsers.handleDisable).not.toHaveBeenCalled()
+    })
+
+    it("does not call handleDisable when SCIM is being enabled", async () => {
+      await config.api.configs.saveConfig(scimConfig(true, "remove"))
+      await new Promise<void>(resolve => setImmediate(resolve))
+
+      expect(mocks.pro.scimUsers.handleDisable).not.toHaveBeenCalled()
+    })
+
+    it("does not persist disableAction to the saved config", async () => {
+      await config.api.configs.saveConfig(scimConfig(true))
+      await config.api.configs.saveConfig(scimConfig(false, "remove"))
+
+      const saved = await config.api.configs.getConfig(ConfigType.SCIM)
+      expect(saved.config).not.toHaveProperty("disableAction")
     })
   })
 

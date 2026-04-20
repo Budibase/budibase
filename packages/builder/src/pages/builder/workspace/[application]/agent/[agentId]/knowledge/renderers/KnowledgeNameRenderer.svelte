@@ -1,19 +1,23 @@
 <script lang="ts">
   import { Helpers } from "@budibase/bbui"
   import { KnowledgeBaseFileStatus } from "@budibase/types"
+  import type { KnowledgeTableRow } from "./types"
 
-  export let row: {
-    filename: string
-    mimetype?: string
-    errorMessage?: string
-    status: KnowledgeBaseFileStatus
+  export interface Props {
+    row: KnowledgeTableRow
   }
+
+  let { row }: Props = $props()
 </script>
 
 <div class="file-name">
   <span class="file-title">{row.filename}</span>
-  <span class="file-meta">{Helpers.capitalise(row.mimetype || "text")}</span>
-  {#if row.status === KnowledgeBaseFileStatus.FAILED && row.errorMessage}
+  <span class="file-meta"
+    >{row.kind === "sharepoint_connection"
+      ? row.subtitle || "SharePoint"
+      : Helpers.capitalise(row.mimetype || "text")}</span
+  >
+  {#if row.kind !== "sharepoint_connection" && row.status === KnowledgeBaseFileStatus.FAILED && row.errorMessage}
     <span class="file-error">{row.errorMessage}</span>
   {/if}
 </div>

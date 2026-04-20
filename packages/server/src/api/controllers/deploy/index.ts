@@ -130,6 +130,32 @@ async function initDeployedApp(prodAppId: string) {
   console.log(
     `Cleared ${count} old CRON/email, enabled ${enabledCount} new CRON/email triggers for app deployment`
   )
+
+  const knowledgeSourceSyncSummary = await context.doInWorkspaceContext(
+    prodAppId,
+    async () => {
+      const agents = await sdk.ai.agents.fetch()
+      const results = await Promise.all(
+        agents.map(agent =>
+          sdk.ai.rag.knowledgeSourceSyncQueue.reconcileAgentJobs(
+            agent,
+            prodAppId
+          )
+        )
+      )
+      return results.reduce(
+        (summary, result) => ({
+          cleared: summary.cleared + result.clearedSchedules,
+          enabled: summary.enabled + result.enabledSchedules,
+        }),
+        { cleared: 0, enabled: 0 }
+      )
+    }
+  )
+  console.log(
+    `Cleared ${knowledgeSourceSyncSummary.cleared} old knowledge-source sync schedules, enabled ${knowledgeSourceSyncSummary.enabled} new knowledge-source sync schedules for app deployment`
+  )
+
   // sync the automations back to the dev DB - since there is now CRON
   // information attached
   await sdk.workspaces.syncWorkspace(dbCore.getDevWorkspaceID(prodAppId), {

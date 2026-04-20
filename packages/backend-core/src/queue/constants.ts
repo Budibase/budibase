@@ -8,6 +8,7 @@ export enum JobQueue {
   DEV_REVERT_PROCESSOR = "devRevertProcessorQueue",
   BATCH_USER_SYNC_PROCESSOR = "batchUserSyncProcessorQueue",
   RAG_INGESTION = "ragIngestionQueue",
+  KNOWLEDGE_SOURCE_SYNC = "knowledgeSourceSyncQueue",
   AGENT_LOG_INDEXING = "agentLogIndexingQueue",
   ESCALATION = "escalationQueue",
 }

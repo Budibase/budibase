@@ -186,7 +186,10 @@
     opacity: 0.75;
     color: var(--navTextColor);
     font-size: var(--spectrum-global-dimension-font-size-150);
-    transition: opacity 130ms ease-out;
+    transition:
+      opacity 130ms ease-out,
+      color 130ms ease-out,
+      background-color 130ms ease-out;
     user-select: none;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -195,17 +198,30 @@
   a.builderActive:not(.sublink),
   .dropdown.left a.sublink.active,
   .dropdown.left a.sublink.builderActive {
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--navLinkActiveBackground, rgba(0, 0, 0, 0.15));
+    color: var(--navLinkActiveTextColor, var(--navTextColor));
+    opacity: 1;
+  }
+  .dropdown:not(.left) a.sublink.active,
+  .dropdown:not(.left) a.sublink.builderActive {
+    background: var(--navLinkActiveBackground, rgba(0, 0, 0, 0.15));
+    color: var(--navLinkActiveTextColor, var(--spectrum-alias-text-color));
     opacity: 1;
   }
   a:hover,
+  .text:hover,
   .text:hover span {
     cursor: pointer;
+    color: var(--navLinkHoverTextColor, var(--navTextColor));
     opacity: 1;
+  }
+  a:hover,
+  .text:hover {
+    background-color: var(--navLinkHoverBackground, transparent);
   }
   a:hover.collapsed,
   .text:hover.collapsed {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: var(--navLinkHoverBackground, rgba(255, 255, 255, 0.25));
   }
 
   .nav-item-letter {

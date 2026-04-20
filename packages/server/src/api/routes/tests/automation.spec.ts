@@ -21,6 +21,7 @@ import {
   BUILTIN_ACTION_DEFINITIONS,
   TRIGGER_DEFINITIONS,
 } from "../../../automations"
+import { withEnv } from "../../../environment"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import sdk from "../../../sdk"
 import { basicTable } from "../../../tests/utilities/structures"
@@ -418,6 +419,49 @@ describe("/automations", () => {
           }
         )
       )
+    })
+
+    it("triggers an asynchronous automation in dev when ALLOW_DEV_AUTOMATIONS is enabled", async () => {
+      const { automation } = await config.api.automation.post(newAutomation())
+
+      await withEnv({ ALLOW_DEV_AUTOMATIONS: "1" }, async () => {
+        await config.api.automation.trigger(
+          automation._id!,
+          {
+            fields: {},
+            timeout: 1000,
+          },
+          {
+            status: 200,
+            body: {
+              message: `Automation ${automation._id} has been triggered.`,
+            },
+          }
+        )
+      })
+    })
+
+    it("triggers an asynchronous automation in production when ALLOW_DEV_AUTOMATIONS is enabled", async () => {
+      const { automation } = await config.api.automation.post(newAutomation())
+      await config.publish()
+
+      await withEnv({ ALLOW_DEV_AUTOMATIONS: "1" }, async () => {
+        await config.withProdApp(() =>
+          config.api.automation.trigger(
+            automation._id!,
+            {
+              fields: {},
+              timeout: 1000,
+            },
+            {
+              status: 200,
+              body: {
+                message: `Automation ${automation._id} has been triggered.`,
+              },
+            }
+          )
+        )
+      })
     })
   })
 

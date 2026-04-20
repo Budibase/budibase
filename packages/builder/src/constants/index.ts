@@ -32,6 +32,7 @@ export const UNEDITABLE_USER_FIELDS = [
   "status",
   "firstName",
   "lastName",
+  "fullName",
 ]
 
 export const LAYOUT_NAMES = {

@@ -14,9 +14,9 @@ export async function confirm(props: {
   okText?: string
   cancelText?: string
   size?: "S" | "M" | "L" | "XL"
-  onConfirm?: () => Promise<void> | void
-  onCancel?: () => void
-  onClose?: () => void
+  onConfirm?: () => Promise<boolean | void> | boolean | void
+  onCancel?: () => boolean | void
+  onClose?: () => boolean | void
   warning?: boolean
 }) {
   return await new Promise(resolve => {
@@ -43,7 +43,7 @@ export async function confirm(props: {
           await tick()
           const result = await props.onConfirm?.()
           cleanup()
-          resolve(result || true)
+          resolve(result ?? true)
         },
         onCancel: () => {
           if (!mounted) return

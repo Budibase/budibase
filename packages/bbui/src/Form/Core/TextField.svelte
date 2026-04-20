@@ -1,10 +1,10 @@
-<script lang="ts">
+<script lang="ts" generics="V extends string | number">
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher, onMount, tick } from "svelte"
   import type { FullAutoFill } from "svelte/elements"
   import type { UIEvent } from "@budibase/types"
 
-  export let value: string | null = null
+  export let value: V | null = null
   export let placeholder: string | undefined = undefined
   export let type = "text"
   export let disabled = false
@@ -16,7 +16,7 @@
   export let autofocus: boolean | null = false
   export let autocomplete: FullAutoFill | boolean | null | undefined = undefined
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: V | null }>()
 
   let field: any
   let focus = false

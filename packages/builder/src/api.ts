@@ -45,21 +45,15 @@ const newClient = (opts?: { production?: boolean }) =>
       // Log all errors to console
       console.warn(`[Builder] HTTP ${status} on ${method}:${url}\n\t${message}`)
 
-      // In the event that the server has terminated the session, we need to
-      // manually clear the auth user, trigger a redirect to auth.
-      const hasAuthCookie = !!CookieUtils.getCookie(Constants.Cookies.Auth)
-
-      if (!hasAuthCookie && get(auth).user) {
+      // On 401 the server has explicitly rejected the credentials.
+      // Clear the client session and let the layout redirect to login
+      if (status === 401 && get(auth).user) {
         auth.clearSession()
-        // Let the user be redirected to auth by the core layout
         return
       }
 
       // Logout on 403's
       if (status === 403) {
-        // Remove cookies
-        CookieUtils.removeCookie(Constants.Cookies.Auth)
-
         const isAuthenticated = !!get(auth).user
         if (isAuthenticated) {
           // Clear return URL to prevent redirect loops with invalid URLs

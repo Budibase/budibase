@@ -1,3 +1,5 @@
+import type { RestAuthConfig } from "../documents/workspace/datasource"
+
 export interface RestTemplateSpec {
   version: string
   url?: string
@@ -97,10 +99,15 @@ export type RestTemplateId =
   | "workable"
   | "openrouter"
   | "x"
+  | "hubspot"
   | HubSpotRestTemplateId
+  | "microsoft-sharepoint"
   | MicrosoftSharepointRestTemplateId
+  | "splunk"
   | SplunkRestTemplateId
+  | "twilio"
   | TwilioRestTemplateId
+  | "zendesk"
   | ZendeskRestTemplateId
 
 export type HubSpotRestTemplateId =
@@ -258,313 +265,25 @@ export type MicrosoftSharepointRestTemplateId =
   | "microsoft-sharepoint-shares"
   | "microsoft-sharepoint-sites"
 
-export type RestTemplateName =
-  | "Ansible AWX"
-  | "Attio"
-  | "BambooHR"
-  | "Confluence"
-  | "Discord"
-  | "Figma"
-  | "GitHub"
-  | "Jira Cloud"
-  | "Okta Management"
-  | "PagerDuty"
-  | "ServiceNow"
-  | "Slack Web API"
-  | "Stripe"
-  | "VirusTotal"
-  | "Ashby"
-  | "Banksapi"
-  | "Baremetrics"
-  | "Billsby"
-  | "Breezy HR"
-  | "Brevo"
-  | "BulkSMS"
-  | "Buttondown"
-  | "Clever"
-  | "Clickup"
-  | "Deel"
-  | "Dixa"
-  | "Dodo Payments"
-  | "Dots"
-  | "Factorial"
-  | "Fastspring"
-  | "Fountain"
-  | "Gitlab"
-  | "Goody"
-  | "Helcim"
-  | "Hibob"
-  | "Homerun"
-  | "Hypatos"
-  | "Intercom"
-  | "Ironclad"
-  | "Jina AI"
-  | "Jobsoid"
-  | "Keatext AI"
-  | "Kenjo"
-  | "Lambda"
-  | "Lob"
-  | "Localizely"
-  | "LogisticsOS"
-  | "Mastercard"
-  | "Measureone"
-  | "Microsoft Teams"
-  | "Nanonets"
-  | "Notion"
-  | "OpenRouter"
-  | "Oyster HR"
-  | "Peach Payments"
-  | "Pinpoint"
-  | "Podium"
-  | "Remote"
-  | "Resend"
-  | "Rivery"
-  | "Sage"
-  | "Secoda"
-  | "Shipengine"
-  | "Shippo"
-  | "Shortcut"
-  | "Smartrecruiters"
-  | "SoftLedger"
-  | "SpotDraft"
-  | "Sumsub"
-  | "SuprSend"
-  | "Terminal"
-  | "Theirstack"
-  | "Tilled"
-  | "Trello"
-  | "Tremendous"
-  | "Verifiable"
-  | "Volt IO"
-  | "Workable"
-  | "X"
-  | HubSpotRestTemplateName
-  | MicrosoftSharepointRestTemplateName
-  | SplunkRestTemplateName
-  | TwilioRestTemplateName
-  | ZendeskRestTemplateName
+export type RestTemplateName = string
 
-export type RestTemplateGroupName =
-  | "HubSpot"
-  | "Microsoft SharePoint"
-  | "Splunk"
-  | "Twilio"
-  | "Zendesk"
+export type ConnectionMode = "shared" | "independent"
 
-export type RestTemplateGroups = {
-  HubSpot: HubSpotRestTemplateName
-  "Microsoft SharePoint": MicrosoftSharepointRestTemplateName
-  Splunk: SplunkRestTemplateName
-  Twilio: TwilioRestTemplateName
-  Zendesk: ZendeskRestTemplateName
+export interface RestTemplateMixin {
+  servers?: OpenAPIServer[]
+  auth?: RestAuthConfig[]
 }
-
-export type RestTemplateGroupIds = {
-  HubSpot: HubSpotRestTemplateId
-  "Microsoft SharePoint": MicrosoftSharepointRestTemplateId
-  Splunk: SplunkRestTemplateId
-  Twilio: TwilioRestTemplateId
-  Zendesk: ZendeskRestTemplateId
-}
-
-export type HubSpotRestTemplateName =
-  | "HubSpot Account Info"
-  | "HubSpot Actions V4"
-  | "HubSpot App Uninstalls"
-  | "HubSpot Appointments"
-  | "HubSpot Associations"
-  | "HubSpot Associations Schema"
-  | "HubSpot Audit Logs"
-  | "HubSpot Authors"
-  | "HubSpot Automation V4"
-  | "HubSpot Blog Settings"
-  | "HubSpot Bucket_Test111"
-  | "HubSpot Business Units"
-  | "HubSpot Calling Extensions"
-  | "HubSpot Calls"
-  | "HubSpot Campaigns Public Api"
-  | "HubSpot Carts"
-  | "HubSpot Cms Content Audit"
-  | "HubSpot Commerce Payments"
-  | "HubSpot Commerce Subscriptions"
-  | "HubSpot Communications"
-  | "HubSpot Companies"
-  | "HubSpot Contacts"
-  | "HubSpot Contracts"
-  | "HubSpot Conversations"
-  | "HubSpot Conversations Inbox & Messages"
-  | "HubSpot Courses"
-  | "HubSpot CRM Meetings"
-  | "HubSpot Crm Owners"
-  | "HubSpot Custom Channels"
-  | "HubSpot Custom Objects"
-  | "HubSpot Deal Splits"
-  | "HubSpot Deals"
-  | "HubSpot Discounts"
-  | "HubSpot Domains"
-  | "HubSpot Emails"
-  | "HubSpot Events"
-  | "HubSpot Exports"
-  | "HubSpot Feedback Submissions"
-  | "HubSpot Fees"
-  | "HubSpot Files"
-  | "HubSpot Forms"
-  | "HubSpot Goal Targets"
-  | "HubSpot Hubdb"
-  | "HubSpot Imports"
-  | "HubSpot Invoices"
-  | "HubSpot Leads"
-  | "HubSpot Limits Tracking"
-  | "HubSpot Line Items"
-  | "HubSpot Listings"
-  | "HubSpot Lists"
-  | "HubSpot Manage Event Definitions"
-  | "HubSpot Marketing Emails"
-  | "HubSpot Marketing Emails V3"
-  | "HubSpot Marketing Events"
-  | "HubSpot Media Bridge"
-  | "HubSpot Multicurrency"
-  | "HubSpot Notes"
-  | "HubSpot Oauth"
-  | "HubSpot Object Library"
-  | "HubSpot Objects"
-  | "HubSpot Orders"
-  | "HubSpot Origins"
-  | "HubSpot Pages"
-  | "HubSpot Partner Clients"
-  | "HubSpot Partner Services"
-  | "HubSpot Payments"
-  | "HubSpot Pipelines"
-  | "HubSpot Postal Mail"
-  | "HubSpot Posts"
-  | "HubSpot Products"
-  | "HubSpot Projects"
-  | "HubSpot Properties"
-  | "HubSpot Property Validations"
-  | "HubSpot Public App Crm Cards"
-  | "HubSpot Public App Feature Flags V3"
-  | "HubSpot Quotes"
-  | "HubSpot Scheduler Meetings"
-  | "HubSpot Schemas"
-  | "HubSpot Send Event Completions"
-  | "HubSpot Sequences"
-  | "HubSpot Services"
-  | "HubSpot Single-send"
-  | "HubSpot Site Search"
-  | "HubSpot Source Code"
-  | "HubSpot Subscription Lifecycle"
-  | "HubSpot Subscriptions"
-  | "HubSpot Tags"
-  | "HubSpot Tasks"
-  | "HubSpot Tax Rates"
-  | "HubSpot Taxes"
-  | "HubSpot Test Child Api"
-  | "HubSpot Tickets"
-  | "HubSpot Timeline"
-  | "HubSpot Transactional Single Send"
-  | "HubSpot Transcriptions"
-  | "HubSpot Url Redirects"
-  | "HubSpot User Provisioning"
-  | "HubSpot Users"
-  | "HubSpot Video Conferencing Extension"
-  | "HubSpot Visitor Identification"
-  | "HubSpot Webhooks"
-
-export type TwilioRestTemplateName =
-  | "Twilio Accounts"
-  | "Twilio Assistants"
-  | "Twilio Bulk Exports"
-  | "Twilio Chat"
-  | "Twilio Content"
-  | "Twilio Conversations"
-  | "Twilio Events"
-  | "Twilio Flex"
-  | "Twilio Frontline"
-  | "Twilio IAM"
-  | "Twilio IAM Organizations"
-  | "Twilio IAM SCIM"
-  | "Twilio Insights"
-  | "Twilio Intelligence"
-  | "Twilio IP Messaging"
-  | "Twilio Knowledge"
-  | "Twilio Lookups"
-  | "Twilio Marketplace"
-  | "Twilio Messaging"
-  | "Twilio Monitor"
-  | "Twilio Notify"
-  | "Twilio Numbers"
-  | "Twilio OAuth"
-  | "Twilio Preview"
-  | "Twilio Pricing"
-  | "Twilio Proxy"
-  | "Twilio Routes"
-  | "Twilio Serverless"
-  | "Twilio Studio"
-  | "Twilio Super SIM"
-  | "Twilio Sync"
-  | "Twilio TaskRouter"
-  | "Twilio Trunking"
-  | "Twilio TrustHub"
-  | "Twilio Verify"
-  | "Twilio Video"
-  | "Twilio Voice"
-  | "Twilio Wireless"
-
-export type SplunkRestTemplateName =
-  | "Splunk Admin Config Service"
-  | "Splunk Enterprise Security"
-  | "Splunk Mission Control Automation"
-
-export type ZendeskRestTemplateName = "Sunshine Conversations"
-
-export type MicrosoftSharepointRestTemplateName = "Drives" | "Shares" | "Sites"
 
 export interface RestTemplate {
   id: RestTemplateId
   name: RestTemplateName
+  icon?: string
   description: string
-  specs: RestTemplateSpec[]
-  icon: string
   operationsCount: number
-}
-
-export interface RestTemplateWithoutIcon<Name, Id = RestTemplateId> {
-  id: Id
-  name: Name
-  description: string
-  specs: RestTemplateSpec[]
-  operationsCount: number
-}
-
-export interface RestTemplateGroup<
-  TemplateGroupName extends keyof RestTemplateGroups,
-> {
-  name: TemplateGroupName
-  description: string
-  icon: string
-  operationsCount: number
-  templates: RestTemplateWithoutIcon<
-    RestTemplateGroups[TemplateGroupName],
-    RestTemplateGroupIds[TemplateGroupName]
-  >[]
-}
-
-export type GroupTemplateSelection = {
-  kind: "group"
-  groupName: RestTemplateGroupName
-  template: RestTemplateWithoutIcon<
-    RestTemplateGroups[RestTemplateGroupName],
-    RestTemplateGroupIds[RestTemplateGroupName]
-  >
-}
-
-export type GroupTemplateSelectionDetail = {
-  kind: "group"
-  groupName: RestTemplateGroupName
-  template: RestTemplateWithoutIcon<
-    RestTemplateGroups[RestTemplateGroupName],
-    RestTemplateGroupIds[RestTemplateGroupName]
-  >
+  specs?: RestTemplateSpec[]
+  templates?: RestTemplate[]
+  connectionMode?: ConnectionMode
+  mixin?: RestTemplateMixin
 }
 
 export interface TemplateSelectionContext {
@@ -574,32 +293,3 @@ export interface TemplateSelectionContext {
   icon?: string
   restTemplateId?: RestTemplateId
 }
-
-export type TemplateSelectionDetail = {
-  kind: "template"
-  template: RestTemplate
-}
-
-export type TemplateSelectionEventDetail =
-  | TemplateSelectionDetail
-  | GroupTemplateSelectionDetail
-
-export type TemplateSelection = TemplateSelectionDetail | GroupTemplateSelection
-
-export type ConnectorCard =
-  | {
-      type: "group"
-      name: RestTemplateGroupName
-      icon: string
-      key: string
-      group: RestTemplateGroup<RestTemplateGroupName>
-    }
-  | {
-      type: "template"
-      name: RestTemplateName
-      icon: string
-      key: string
-      template: RestTemplate
-    }
-
-export type GroupTemplateName = RestTemplateGroups[RestTemplateGroupName]

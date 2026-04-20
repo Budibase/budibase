@@ -2,15 +2,21 @@ import {
   AgentFileUploadResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  DisconnectAgentKnowledgeSourcesResponse,
   DuplicateAgentResponse,
   FetchAgentFilesResponse,
+  FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
+  SetAgentKnowledgeSourcesRequest,
+  SetAgentKnowledgeSourcesResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
+  SyncAgentKnowledgeSourcesRequest,
+  SyncAgentKnowledgeSourcesResponse,
   ToggleAgentDeploymentRequest,
   ToggleAgentDeploymentResponse,
   ToolMetadata,
@@ -60,6 +66,20 @@ export interface AgentEndpoints {
     agentId: string,
     fileId: string
   ) => Promise<{ deleted: true }>
+  fetchAgentKnowledgeSourceOptions: (
+    agentId: string
+  ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
+  setAgentKnowledgeSources: (
+    agentId: string,
+    body: SetAgentKnowledgeSourcesRequest
+  ) => Promise<SetAgentKnowledgeSourcesResponse>
+  disconnectAgentKnowledgeSources: (
+    agentId: string
+  ) => Promise<DisconnectAgentKnowledgeSourcesResponse>
+  syncAgentKnowledgeSources: (
+    agentId: string,
+    body?: SyncAgentKnowledgeSourcesRequest
+  ) => Promise<SyncAgentKnowledgeSourcesResponse>
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
@@ -182,6 +202,41 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   deleteAgentFile: async (agentId: string, fileId: string) => {
     return await API.delete({
       url: `/api/agent/${agentId}/files/${fileId}`,
+    })
+  },
+
+  fetchAgentKnowledgeSourceOptions: async (agentId: string) => {
+    return await API.get<FetchAgentKnowledgeSourceOptionsResponse>({
+      url: `/api/agent/${agentId}/knowledge-sources/options`,
+    })
+  },
+
+  setAgentKnowledgeSources: async (agentId: string, body) => {
+    return await API.put<
+      SetAgentKnowledgeSourcesRequest,
+      SetAgentKnowledgeSourcesResponse
+    >({
+      url: `/api/agent/${agentId}/knowledge-sources`,
+      body,
+    })
+  },
+
+  disconnectAgentKnowledgeSources: async (agentId: string) => {
+    return await API.delete<void, DisconnectAgentKnowledgeSourcesResponse>({
+      url: `/api/agent/${agentId}/knowledge-sources`,
+    })
+  },
+
+  syncAgentKnowledgeSources: async (
+    agentId: string,
+    body?: SyncAgentKnowledgeSourcesRequest
+  ) => {
+    return await API.post<
+      SyncAgentKnowledgeSourcesRequest | undefined,
+      SyncAgentKnowledgeSourcesResponse
+    >({
+      url: `/api/agent/${agentId}/knowledge-sources/sync`,
+      body,
     })
   },
 })

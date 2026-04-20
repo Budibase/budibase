@@ -2,67 +2,19 @@
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { bb } from "@/stores/bb"
   import { Heading, Button, CollapsibleSearch } from "@budibase/bbui"
-  import type {
-    RestTemplate,
-    RestTemplateGroup,
-    RestTemplateGroupName,
-  } from "@budibase/types"
   import RouteActions from "@/settings/components/RouteActions.svelte"
-  import TemplateGroupSelect from "./_components/TemplateGroupSelect.svelte"
-
-  type TemplateCard = {
-    type: "template"
-    template: RestTemplate
-  }
-
-  type GroupCard = {
-    type: "group"
-    group: RestTemplateGroup<RestTemplateGroupName>
-  }
-
-  type ConnectionCard = TemplateCard | GroupCard
 
   let searchValue: string = ""
 
-  $: templates = $restTemplates?.templates || []
-  $: templateGroups = $restTemplates?.templateGroups || []
-
-  // Filter out templates that are already in a group
-  $: groupedTemplateNames = new Set<string>(
-    templateGroups.flatMap(group => group.templates.map(t => t.name))
-  )
-  $: visibleTemplates = templates.filter(t => !groupedTemplateNames.has(t.name))
-
-  // Combine groups and templates into a single sorted list
-  $: connectionCards = [
-    ...templateGroups.map<ConnectionCard>(group => ({
-      type: "group",
-      group,
-    })),
-    ...visibleTemplates.map<ConnectionCard>(template => ({
-      type: "template",
-      template,
-    })),
-  ]
-    .filter(card => {
+  $: connectionCards = restTemplates.flatTemplates
+    .filter(t => {
       if (!searchValue) return true
-      const query = searchValue.toLowerCase()
-      if (card.type === "template") {
-        return card.template.name.toLowerCase().includes(query)
-      }
-      return (
-        card.group.name.toLowerCase().includes(query) ||
-        card.group.templates.some(t => t.name.toLowerCase().includes(query))
-      )
+      return t.name.toLowerCase().includes(searchValue.toLowerCase())
     })
-    .sort((a, b) => {
-      const nameA = a.type === "group" ? a.group.name : a.template.name
-      const nameB = b.type === "group" ? b.group.name : b.template.name
-      return nameA.localeCompare(nameB)
-    })
+    .sort((a, b) => a.name.localeCompare(b.name))
 
-  const handleTemplateSelect = (template: RestTemplate) => {
-    bb.settings(`/connections/apis/new/${template.id}`)
+  const handleSelect = (id: string) => {
+    bb.settings(`/connections/apis/new/${id}`)
   }
 </script>
 
@@ -87,25 +39,15 @@
   <div class="connection-group">
     <Heading size="XS">APIs</Heading>
     <div class="grid">
-      {#each connectionCards as card}
-        {#if card.type === "group"}
-          <TemplateGroupSelect
-            group={card.group}
-            on:select={e => handleTemplateSelect(e.detail)}
-          />
-        {:else}
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <div
-            class="connection"
-            on:click={() => handleTemplateSelect(card.template)}
-          >
-            <div class="connection-icon">
-              <img src={card.template.icon} alt={card.template.name} />
-            </div>
-            {card.template.name}
+      {#each connectionCards as card (card.id)}
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div class="connection" on:click={() => handleSelect(card.id)}>
+          <div class="connection-icon">
+            <img src={card.icon} alt={card.name} />
           </div>
-        {/if}
+          {card.name}
+        </div>
       {/each}
     </div>
   </div>

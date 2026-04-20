@@ -41,6 +41,7 @@ import {
 import { allocateAutoColumnValues } from "./autoColumnState"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import { fixAutoColumnSubType, processFormulas } from "./utils"
+import { getUserFullName } from "../users"
 
 export * from "./attachments"
 export * from "./utils"
@@ -137,7 +138,11 @@ export async function processAutoColumn(
 }
 
 async function processDefaultValues(table: Table, row: Row) {
-  const ctx: { ["Current User"]?: User; user?: User } = {}
+  type UserDefaultsContext = User & { fullName?: string }
+  const ctx: {
+    ["Current User"]?: UserDefaultsContext
+    user?: UserDefaultsContext
+  } = {}
 
   const identity = context.getIdentity()
   if (identity?._id && identity.type === IdentityType.USER) {
@@ -145,9 +150,13 @@ async function processDefaultValues(table: Table, row: Row) {
       userId: identity._id,
     })
     delete user.password
+    const userWithFullName: UserDefaultsContext = {
+      ...user,
+      fullName: getUserFullName(user),
+    }
 
-    ctx["Current User"] = user
-    ctx.user = user
+    ctx["Current User"] = userWithFullName
+    ctx.user = userWithFullName
   }
 
   for (const [key, schema] of Object.entries(table.schema)) {

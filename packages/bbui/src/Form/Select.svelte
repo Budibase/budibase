@@ -53,7 +53,7 @@
   export let wrapText: boolean = false
   export let description: string | undefined = undefined
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: V | undefined }>()
   const onChange = (e: CustomEvent<any>) => {
     value = e.detail
     dispatch("change", e.detail)

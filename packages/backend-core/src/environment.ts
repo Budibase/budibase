@@ -167,6 +167,12 @@ const environment = {
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  MICROSOFT_CLIENT_ID: process.env.MICROSOFT_CLIENT_ID,
+  MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET,
+  MICROSOFT_TENANT_ID: process.env.MICROSOFT_TENANT_ID,
+  RAG_SHAREPOINT_DEFAULT_SCOPE:
+    process.env.RAG_SHAREPOINT_DEFAULT_SCOPE ||
+    "offline_access https://graph.microsoft.com/Sites.Read.All",
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_URL: process.env.REDIS_URL || "localhost:6379",
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
@@ -312,6 +318,7 @@ export const SECRETS: EnvironmentKey[] = [
   "COUCH_DB_SQL_URL",
   "COUCH_DB_URL",
   "GOOGLE_CLIENT_SECRET",
+  "MICROSOFT_CLIENT_SECRET",
   "INTERNAL_API_KEY_FALLBACK",
   "INTERNAL_API_KEY",
   "JWT_SECRET",

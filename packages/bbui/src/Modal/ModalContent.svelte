@@ -71,6 +71,7 @@
   class:spectrum-Dialog--large={size === "L"}
   class:spectrum-Dialog--extraLarge={size === "XL"}
   class:no-grid={custom}
+  class:noDivider={!showDivider}
   style="position: relative;"
   role="dialog"
   tabindex="-1"
@@ -80,7 +81,6 @@
     {#if title || $$slots.header}
       <h1
         class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
-        class:noDivider={!showDivider}
         class:header-spacing={$$slots.header}
       >
         {#if title}
@@ -178,7 +178,7 @@
     overflow: visible;
   }
 
-  .no-grid .spectrum-Dialog-content {
+  .no-grid:not(.noDivider) .spectrum-Dialog-content {
     border-top: 2px solid var(--spectrum-global-color-gray-200);
     border-bottom: 2px solid var(--spectrum-global-color-gray-200);
   }
@@ -204,7 +204,7 @@
     font-family: var(--font-accent);
     font-weight: 600;
   }
-  .spectrum-Dialog-heading.noDivider {
+  .noDivider:not(.no-grid) .spectrum-Dialog-heading {
     margin-bottom: 12px;
   }
 

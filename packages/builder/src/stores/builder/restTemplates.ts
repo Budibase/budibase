@@ -1,10 +1,4 @@
-import type {
-  RestTemplate,
-  RestTemplateGroup,
-  RestTemplateGroupName,
-  RestTemplateId,
-  RestTemplateName,
-} from "@budibase/types"
+import type { RestTemplate, RestTemplateId } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
 import AttioLogo from "assets/rest-template-icons/attio.svg"
@@ -93,15 +87,26 @@ import ZendeskLogo from "assets/rest-template-icons/zendesk.svg"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
-  templateGroups: RestTemplateGroup<RestTemplateGroupName>[]
 }
 
-const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
+export const featuredTemplates: RestTemplateId[] = [
+  "slack-web-api",
+  "jira-cloud",
+  "bamboohr",
+  "hubspot",
+  "stripe",
+  "github",
+]
+
+const hubspotRestTemplateGroup: RestTemplate = {
+  id: "hubspot",
   name: "HubSpot",
   icon: HubSpotLogo,
   description:
     "CRM, marketing, CMS, and automation APIs for HubSpot's platform.",
   operationsCount: 1274,
+  connectionMode: "shared",
+  mixin: { servers: [{ url: "https://api.hubapi.com" }] },
   templates: [
     {
       id: "hubspot-account-info",
@@ -1369,11 +1374,13 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
   ],
 }
 
-const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
+const twilioRestTemplateGroup: RestTemplate = {
+  id: "twilio",
   name: "Twilio",
   icon: TwilioLogo,
   description:
     "Combines powerful communications APIs with AI and first-party data.",
+  connectionMode: "independent",
   operationsCount: 795,
   templates: [
     {
@@ -1793,11 +1800,13 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
   ],
 }
 
-const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
+const zendeskRestTemplateGroup: RestTemplate = {
+  id: "zendesk",
   name: "Zendesk",
   icon: ZendeskLogo,
   description: "Customer support and messaging APIs from Zendesk.",
   operationsCount: 68,
+  connectionMode: "independent",
   templates: [
     {
       id: "zendesk-sunshine-conversations",
@@ -1823,58 +1832,62 @@ export const MICROSOFT_SHAREPOINT_NAME_ALIASES: Record<string, string> = {
   "SharePoint Shares": "Shares",
 }
 
-const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePoint"> =
-  {
-    name: "Microsoft SharePoint",
-    icon: MicrosoftSharepointLogo,
-    description:
-      "Microsoft Graph SharePoint APIs for sites, drives, and shared items.",
-    operationsCount: 2826,
-    templates: [
-      {
-        id: "microsoft-sharepoint-sites",
-        name: "Sites",
-        description: "SharePoint sites, lists, and content types.",
-        specs: [
-          {
-            version: "v1.0",
-            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/sites/openapi.yaml",
-          },
-        ],
-        operationsCount: 650,
-      },
-      {
-        id: "microsoft-sharepoint-drives",
-        name: "Drives",
-        description: "Drive items and file operations for SharePoint.",
-        specs: [
-          {
-            version: "v1.0",
-            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/drives/openapi.yaml",
-          },
-        ],
-        operationsCount: 2024,
-      },
-      {
-        id: "microsoft-sharepoint-shares",
-        name: "Shares",
-        description: "Shared items and sharing operations for SharePoint.",
-        specs: [
-          {
-            version: "v1.0",
-            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/shares/openapi.yaml",
-          },
-        ],
-        operationsCount: 152,
-      },
-    ],
-  }
+const microsoftSharepointRestTemplateGroup: RestTemplate = {
+  id: "microsoft-sharepoint",
+  name: "Microsoft SharePoint",
+  icon: MicrosoftSharepointLogo,
+  description:
+    "Microsoft Graph SharePoint APIs for sites, drives, and shared items.",
+  operationsCount: 2826,
+  connectionMode: "shared",
+  mixin: { servers: [{ url: "https://graph.microsoft.com" }] },
+  templates: [
+    {
+      id: "microsoft-sharepoint-sites",
+      name: "Sites",
+      description: "SharePoint sites, lists, and content types.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/sites/openapi.yaml",
+        },
+      ],
+      operationsCount: 650,
+    },
+    {
+      id: "microsoft-sharepoint-drives",
+      name: "Drives",
+      description: "Drive items and file operations for SharePoint.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/drives/openapi.yaml",
+        },
+      ],
+      operationsCount: 2024,
+    },
+    {
+      id: "microsoft-sharepoint-shares",
+      name: "Shares",
+      description: "Shared items and sharing operations for SharePoint.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/shares/openapi.yaml",
+        },
+      ],
+      operationsCount: 152,
+    },
+  ],
+}
 
-const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
+const splunkRestTemplateGroup: RestTemplate = {
+  id: "splunk",
   name: "Splunk",
   icon: SplunkLogo,
   description:
     "Official OpenAPI specifications for Splunk Cloud and Splunk Enterprise Security.",
+  connectionMode: "independent",
   operationsCount: 151,
   templates: [
     {
@@ -3004,8 +3017,6 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       operationsCount: 80,
       icon: XLogo,
     },
-  ],
-  templateGroups: [
     hubspotRestTemplateGroup,
     microsoftSharepointRestTemplateGroup,
     splunkRestTemplateGroup,
@@ -3027,33 +3038,24 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
     return templates
   }
 
-  get templateGroups(): RestTemplateGroup<RestTemplateGroupName>[] {
-    let templateGroups: RestTemplateGroup<RestTemplateGroupName>[] = []
-    this.subscribe(state => {
-      templateGroups = state.templateGroups
-    })()
-    return templateGroups
+  // Returns top-level entries only — collections appear as single entries.
+  get flatTemplates(): RestTemplate[] {
+    return this.templates
   }
 
-  getByName(name?: string) {
+  getByName(name?: string): RestTemplate | undefined {
     if (!name) {
       return undefined
     }
     const actualName = MICROSOFT_SHAREPOINT_NAME_ALIASES[name] || name
-    const template = this.templates.find(
-      template => template.name === actualName
-    )
-    if (template) {
-      return template
-    }
-    for (const group of this.templateGroups) {
-      const groupTemplate = group.templates.find(
-        template => template.name === actualName
-      )
-      if (groupTemplate) {
-        return {
-          ...groupTemplate,
-          icon: group.icon,
+    for (const template of this.templates) {
+      if (template.name === actualName) {
+        return template
+      }
+      if (template.templates?.length) {
+        const child = template.templates.find(t => t.name === actualName)
+        if (child) {
+          return { ...child, icon: child.icon ?? template.icon }
         }
       }
     }
@@ -3069,23 +3071,23 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
       .replace(/^-|-$/g, "")
   }
 
-  getById(id: string, groupName?: string) {
-    const searchId = (targetId: string) => {
-      const template = this.templates.find(t => t.id === targetId)
-      if (template) {
-        return template
-      }
-
-      for (const group of this.templateGroups) {
-        const groupTemplate = group.templates.find(t => t.id === targetId)
-        if (groupTemplate) {
-          return { ...groupTemplate, icon: group.icon }
+  getById(id: string, groupName?: string): RestTemplate | undefined {
+    const searchId = (targetId: string): RestTemplate | undefined => {
+      for (const template of this.templates) {
+        if (template.id === targetId) {
+          return template
+        }
+        if (template.templates?.length) {
+          const child = template.templates.find(t => t.id === targetId)
+          if (child) {
+            // Legacy: child id stored on datasource — return parent collection
+            return template
+          }
         }
       }
       return undefined
     }
 
-    // If group provided, try with group prefix first
     if (groupName) {
       const groupSlug = this.slugify(groupName)
       const withPrefix = `${groupSlug}-${id}`
@@ -3093,19 +3095,16 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
       if (found) return found
     }
 
-    // Fall back to just the id as-is
     return searchId(id)
   }
 
   // getByName is legacy behaviour
   // Makes no sense to have a lookup be the display value.
-  get(nameOrId?: RestTemplateName | RestTemplateId) {
+  get(nameOrId?: string) {
     if (!nameOrId) {
       return undefined
     }
-    return (
-      this.getById(nameOrId) || this.getByName(nameOrId as RestTemplateName)
-    )
+    return this.getById(nameOrId) || this.getByName(nameOrId)
   }
 }
 

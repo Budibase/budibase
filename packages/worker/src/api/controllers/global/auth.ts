@@ -95,7 +95,10 @@ async function passportCallback(
   const loginResult = await authSdk.loginUser(user)
 
   // set a cookie for browser access
-  setCookie(ctx, loginResult.token, Cookie.Auth, { sign: false })
+  setCookie(ctx, loginResult.token, Cookie.Auth, {
+    sign: false,
+    httpOnly: true,
+  })
   // set the token in a header as well for APIs
   ctx.set(Header.TOKEN, loginResult.token)
 
@@ -282,14 +285,20 @@ export const datasourcePreAuth = async (
   next: Next
 ) => {
   const provider = ctx.params.provider
+  const returnPath =
+    typeof ctx.query.returnPath === "string" ? ctx.query.returnPath : undefined
   const { middleware } = require(`@budibase/backend-core`)
   const handler = middleware.datasource[provider]
+  if (!handler) {
+    ctx.throw(400, "Unsupported datasource provider")
+  }
 
   setCookie(
     ctx,
     {
       provider,
       appId: ctx.query.appId,
+      returnPath,
     },
     Cookie.DatasourceAuth
   )
@@ -308,6 +317,9 @@ export const datasourceAuth = async (ctx: UserCtx<void, void>, next: Next) => {
   const provider = authStateCookie.provider
   const { middleware } = require(`@budibase/backend-core`)
   const handler = middleware.datasource[provider]
+  if (!handler) {
+    ctx.throw(400, "Unsupported datasource provider")
+  }
   return handler.postAuth(passport, ctx, next)
 }
 

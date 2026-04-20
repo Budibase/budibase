@@ -4,16 +4,13 @@
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { queries } from "@/stores/builder"
-  import { configFromIntegration } from "@/stores/selectors" //??
+  import { configFromIntegration } from "@/stores/selectors"
   import { datasources } from "@/stores/builder/datasources"
   import { IntegrationTypes } from "@/constants/backend"
   import {
     type RestTemplateSpec,
     type RestTemplate,
-    type RestTemplateGroupName,
-    type RestTemplateGroup,
     type TemplateSelectionContext,
-    type TemplateSelectionEventDetail,
     type UIIntegration,
   } from "@budibase/types"
   import { goto as gotoStore } from "@roxi/routify"
@@ -28,8 +25,6 @@
 
   let selectedTemplate: TemplateSelectionContext | null = null
   let targetSpec: RestTemplateSpec | null = null
-  let templatesValue: RestTemplate[] = []
-  let templateGroupsValue: RestTemplateGroup<RestTemplateGroupName>[] = []
 
   $beforeUrlChange(() => {
     return true
@@ -38,12 +33,10 @@
   $: goto = $gotoStore
 
   $: templatesValue = $restTemplates?.templates || []
-  $: templateGroupsValue = $restTemplates?.templateGroups || []
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === IntegrationTypes.REST
   )
 
-  // CUSTOM REST
   const handleCustom = async (integration?: UIIntegration) => {
     if (!integration || loading) return
     try {
@@ -54,8 +47,6 @@
           config: configFromIntegration(integration),
         })
         await datasources.fetch()
-
-        // Go to the new query page.
         goto(`./query/new/${ds._id}`)
       }
     } catch {
@@ -143,8 +134,7 @@
       loading = true
       selectedTemplate = template
 
-      // Initially we only support 1 type
-      targetSpec = template.specs[0] || null
+      targetSpec = template.specs?.[0] || null
 
       const config = configFromIntegration(restIntegration)
       const templateInfo = await loadTemplateInfo(targetSpec)
@@ -155,17 +145,17 @@
         integration: restIntegration,
         config,
         name: buildDatasourceName(selectedTemplate, targetSpec),
-        ...(template.restTemplateId && targetSpec?.version
+        ...(template.restTemplateId
           ? {
               restTemplateId: template.restTemplateId,
-              restTemplateVersion: targetSpec.version,
+              ...(targetSpec?.version
+                ? { restTemplateVersion: targetSpec.version }
+                : {}),
             }
           : {}),
       })
 
       await datasources.fetch()
-
-      // Go to the newly created datasource page.
       goto(`./datasource/${ds._id}`)
 
       notifications.success(`${selectedTemplate.name} API created`)
@@ -185,51 +175,20 @@
     template: TemplateSelectionContext,
     spec?: RestTemplateSpec | null
   ) => {
-    if (spec && template.specs.length > 1 && spec.version) {
+    if (spec && (template.specs?.length ?? 0) > 1 && spec.version) {
       return `${template.name} (${spec.version})`
     }
     return template.name
   }
 
-  const onSelectTemplate = (
-    event: CustomEvent<TemplateSelectionEventDetail>
-  ) => {
-    if (event.detail.kind === "template") {
-      handleTemplateSelection({
-        name: event.detail.template.name,
-        description: event.detail.template.description,
-        specs: event.detail.template.specs,
-        icon: event.detail.template.icon,
-        restTemplateId: event.detail.template.id,
-      })
-      return
-    }
-
-    const groupSelection = event.detail
-    const group = templateGroupsValue.find(
-      templateGroup => templateGroup.name === groupSelection.groupName
-    )
-
-    if (!group) {
-      notifications.error("Template group configuration is missing.")
-      return
-    }
-
-    const selectedTemplate = group.templates.find(
-      template => template.name === groupSelection.template.name
-    )
-
-    if (!selectedTemplate) {
-      notifications.error("Selected template could not be found.")
-      return
-    }
-
+  const onSelectTemplate = (event: CustomEvent<RestTemplate>) => {
+    const template = event.detail
     handleTemplateSelection({
-      name: selectedTemplate.name,
-      description: selectedTemplate.description,
-      specs: selectedTemplate.specs,
-      icon: group.icon,
-      restTemplateId: selectedTemplate.id,
+      name: template.name,
+      description: template.description,
+      specs: template.specs ?? [],
+      icon: template.icon,
+      restTemplateId: template.id,
     })
   }
 </script>
@@ -244,7 +203,6 @@
     >
       <SelectCategoryAPIModal
         templates={templatesValue}
-        templateGroups={templateGroupsValue}
         {loading}
         customDisabled={!restIntegration}
         on:custom={() => handleCustom(restIntegration)}

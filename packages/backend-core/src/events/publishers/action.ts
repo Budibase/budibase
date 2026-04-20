@@ -20,11 +20,13 @@ async function crudExecuted(
   await publishEvent(Event.ACTION_CRUD_EXECUTED, action, timestamp)
 }
 
-async function aiAgentExecuted(
+function aiAgentExecuted(
   action: ActionAiAgentExecuted,
   timestamp?: string | number
 ) {
-  await publishEvent(Event.ACTION_AI_AGENT_EXECUTED, action, timestamp)
+  publishEvent(Event.ACTION_AI_AGENT_EXECUTED, action, timestamp).catch(err => {
+    console.error("aiAgentExecuted telemetry failed", { action, err })
+  })
 }
 
 export default {

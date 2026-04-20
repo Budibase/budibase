@@ -1,6 +1,7 @@
 import { Document } from "../document"
 import { RestAuthType } from "./datasource"
 import { Row } from "./row"
+import type { RestTemplateId } from "../../ui/rest"
 
 export interface QuerySchema {
   name?: string
@@ -149,6 +150,7 @@ export interface RestTemplateQueryMetadata {
   originalPath?: string
   originalRequestBody?: unknown
   defaultBindings?: Record<string, string>
+  restTemplateId?: RestTemplateId
 }
 
 // OpenAPI Security Scheme types
