@@ -5,9 +5,8 @@
   import {
     AgentKnowledgeSourceType,
     type Agent,
-    type KnowledgeSourceOption,
     type KnowledgeBaseFile,
-    type KnowledgeSourceSyncRun,
+    type SharePointKnowledgeSourceSnapshot,
   } from "@budibase/types"
   import { appStore } from "@/stores/builder/app"
   import { agentsStore, selectedAgent } from "@/stores/portal"
@@ -49,24 +48,21 @@
   let initialKnowledgeLoadedForAgent = $state<string | undefined>()
   let initialKnowledgeLoadingForAgent = $state<string | undefined>()
   let initialKnowledgeFailedForAgent = $state<string | undefined>()
-  let sharePointSites = $derived.by(() => {
+  let sharePointSourceSnapshots = $derived.by(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
-      return [] as KnowledgeSourceOption[]
+      return [] as SharePointKnowledgeSourceSnapshot[]
     }
-    return $agentsStore.knowledgeByAgentId[agentId]?.sourceOptions || []
+    return $agentsStore.knowledgeByAgentId[agentId]?.sharePointSources || []
   })
-  let sharePointSyncRunsBySiteId = $derived.by(() => {
+  let hasSharePointConnection = $derived.by(() => {
     const agentId = currentAgent?._id
     if (!agentId) {
-      return {} as Record<string, KnowledgeSourceSyncRun>
+      return false
     }
-    return Object.fromEntries(
-      ($agentsStore.knowledgeByAgentId[agentId]?.sourceRuns || []).map(run => [
-        run.sourceId,
-        run,
-      ])
-    ) as Record<string, KnowledgeSourceSyncRun>
+    return (
+      $agentsStore.knowledgeByAgentId[agentId]?.hasSharePointConnection || false
+    )
   })
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
@@ -180,11 +176,7 @@
   )
   let sharePointConnectionRows = $derived.by(() => {
     return toSharePointConnectionRows({
-      selectedSiteIds,
-      sharePointSites,
-      sharePointSources,
-      sharePointSyncRunsBySiteId,
-      files,
+      sharePointSourceSnapshots,
       onDelete: removeSharePointSite,
       onSync: async sourceId => {
         await syncSharePointNow([sourceId])
@@ -307,7 +299,7 @@
   }
 
   async function openSharePointFlow() {
-    if (sharePointSources.length === 0 && sharePointSites.length === 0) {
+    if (!hasSharePointConnection) {
       connectSharePoint()
       return
     }

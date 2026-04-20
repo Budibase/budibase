@@ -1,10 +1,8 @@
 import { helpers } from "@budibase/shared-core"
 import {
-  AgentKnowledgeSourceSyncEntryStatus,
   KnowledgeBaseFileStatus,
-  type KnowledgeSourceOption,
   type KnowledgeBaseFile,
-  type KnowledgeSourceSyncRun,
+  type SharePointKnowledgeSourceSnapshot,
 } from "@budibase/types"
 import type {
   FileKnowledgeTableRow,
@@ -107,66 +105,10 @@ export const getSharePointFileProcessingCounts = (
   return { ready, failed, processing }
 }
 
-export const getSharePointSelectedStatusCounts = (
-  files: KnowledgeBaseFile[],
-  run?: KnowledgeSourceSyncRun
-) => {
-  const entries = run?.entries || []
-  if (entries.length === 0) {
-    return undefined
-  }
-
-  const fileStatusByExternalSourceId = new Map(
-    files
-      .filter(
-        (file): file is KnowledgeBaseFile & { originFileId: string } =>
-          !!file.originFileId
-      )
-      .map(file => [file.originFileId, file.status] as const)
-  )
-
-  let totalSelected = 0
-  let synced = 0
-  let failed = 0
-  let processing = 0
-
-  for (const entry of entries) {
-    if (
-      entry.status === AgentKnowledgeSourceSyncEntryStatus.EXCLUDED ||
-      entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
-    ) {
-      continue
-    }
-    totalSelected++
-
-    if (entry.status === AgentKnowledgeSourceSyncEntryStatus.FAILED) {
-      failed++
-      continue
-    }
-
-    const fileStatus = fileStatusByExternalSourceId.get(entry.originFileId)
-    if (
-      fileStatus == null ||
-      fileStatus === KnowledgeBaseFileStatus.PROCESSING
-    ) {
-      processing++
-      continue
-    }
-    if (fileStatus === KnowledgeBaseFileStatus.FAILED) {
-      failed++
-      continue
-    }
-    synced++
-  }
-
-  return { totalSelected, synced, failed, processing }
-}
-
 export const getSharePointLastSyncLabel = (
-  runsBySiteId: Record<string, KnowledgeSourceSyncRun>,
-  siteId: string
+  snapshot?: SharePointKnowledgeSourceSnapshot
 ) => {
-  const run = runsBySiteId[siteId]
+  const run = snapshot
   if (!run?.lastRunAt) {
     return "SharePoint"
   }
@@ -174,89 +116,50 @@ export const getSharePointLastSyncLabel = (
 }
 
 export const toSharePointConnectionRows = ({
-  selectedSiteIds,
-  sharePointSites,
-  sharePointSources,
-  sharePointSyncRunsBySiteId,
-  files,
+  sharePointSourceSnapshots,
   onDelete,
   onSync,
   onClick: onConfigure,
 }: {
-  selectedSiteIds: string[]
-  sharePointSites: KnowledgeSourceOption[]
-  sharePointSources: Array<{
-    id: string
-    config: { site?: { id: string; name?: string; webUrl?: string } }
-  }>
-  sharePointSyncRunsBySiteId: Record<string, KnowledgeSourceSyncRun>
-  files: KnowledgeBaseFile[]
+  sharePointSourceSnapshots: SharePointKnowledgeSourceSnapshot[]
   onDelete: (siteId: string) => Promise<void>
   onSync: (sourceId: string) => Promise<void>
   onClick: (siteId: string) => Promise<void>
 }): SharePointConnectionTableRow[] => {
-  if (selectedSiteIds.length === 0) {
+  if (sharePointSourceSnapshots.length === 0) {
     return []
   }
 
-  const optionById = new Map(sharePointSites.map(site => [site.id, site]))
-
-  return selectedSiteIds
-    .map(siteId => {
-      const source = sharePointSources.find(
-        source => source.config.site?.id === siteId
-      )
-      const site = source?.config.site
-      if (!source || !site) {
-        return null
-      }
-      const run = sharePointSyncRunsBySiteId[siteId]
-      const hasSynced = !!run?.lastRunAt
-      const selectedStatusCounts = getSharePointSelectedStatusCounts(
-        getSharePointFilesForSite(files, siteId),
-        run
-      )
-      if (!selectedStatusCounts) {
-        return null
-      }
-      const total = selectedStatusCounts.totalSelected
-      const completed =
-        selectedStatusCounts.synced + selectedStatusCounts.failed
-      const option = optionById.get(siteId)
-      const siteDisplayName =
-        site.name ||
-        site.webUrl ||
-        option?.name ||
-        option?.webUrl ||
-        "SharePoint site"
-      const displayStatus = !hasSynced
-        ? "Processing"
-        : total === 0
+  return sharePointSourceSnapshots
+    .map(snapshot => {
+      const hasSynced = !!snapshot.lastRunAt
+      const completed = snapshot.syncedCount + snapshot.failedCount
+      const siteDisplayName = snapshot.name || snapshot.webUrl || "SharePoint site"
+      const displayStatus =
+        snapshot.status === "empty"
           ? "No files found"
-          : `${completed}/${total} files`
+          : snapshot.status === "connecting" || snapshot.status === "syncing"
+            ? "Processing"
+            : `${completed}/${snapshot.totalCount} files`
       return {
         kind: "sharepoint_connection" as const,
         __clickable: true,
-        _id: siteId,
-        sourceId: source.id,
-        siteId,
+        _id: snapshot.siteId,
+        sourceId: snapshot.sourceId,
+        siteId: snapshot.siteId,
         filename: siteDisplayName,
-        subtitle: getSharePointLastSyncLabel(
-          sharePointSyncRunsBySiteId,
-          siteId
-        ),
+        subtitle: getSharePointLastSyncLabel(snapshot),
         displayStatus,
-        syncedCount: selectedStatusCounts.synced,
-        totalCount: total,
-        failedCount: selectedStatusCounts.failed,
-        processingCount: selectedStatusCounts.processing,
+        syncedCount: snapshot.syncedCount,
+        totalCount: snapshot.totalCount,
+        failedCount: snapshot.failedCount,
+        processingCount: snapshot.processingCount,
         hasSynced,
-        runStatus: run?.status,
-        onDelete: () => onDelete(siteId),
-        onSync: () => onSync(source.id),
-        onConfigure: () => onConfigure(siteId),
+        runStatus: snapshot.runStatus,
+        onDelete: () => onDelete(snapshot.siteId),
+        onSync: () => onSync(snapshot.sourceId),
+        onConfigure: () => onConfigure(snapshot.siteId),
       }
     })
-    .filter(s => s !== null)
     .sort((a, b) => a.filename.localeCompare(b.filename))
 }

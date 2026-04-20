@@ -86,7 +86,11 @@ describe("agentsStore sharepoint and file syncing", () => {
         uploadedBy: "user_1",
       },
     ]
-    fetchAgentKnowledge.mockResolvedValue({ files, options: [], runs: [] })
+    fetchAgentKnowledge.mockResolvedValue({
+      files,
+      hasSharePointConnection: true,
+      sharePointSources: [],
+    })
 
     const response = await store.fetchAgentKnowledge("agent_1")
 
@@ -108,9 +112,9 @@ describe("agentsStore sharepoint and file syncing", () => {
     expect(
       get(store.store).knowledgeByAgentId["agent_1"]?.sourceOptions
     ).toEqual(result.options)
-    expect(get(store.store).knowledgeByAgentId["agent_1"]?.sourceRuns).toEqual(
-      result.runs
-    )
+    expect(
+      get(store.store).knowledgeByAgentId["agent_1"]?.sharePointSources
+    ).toEqual([])
   })
 
   it("startAgentFilePolling fetches while files are processing", async () => {
@@ -133,7 +137,8 @@ describe("agentsStore sharepoint and file syncing", () => {
             },
           ],
           sourceOptions: [],
-          sourceRuns: [],
+          hasSharePointConnection: true,
+          sharePointSources: [],
         },
       },
       currentAgentId: undefined,
@@ -151,8 +156,8 @@ describe("agentsStore sharepoint and file syncing", () => {
           uploadedBy: "user_1",
         },
       ],
-      options: [],
-      runs: [],
+      hasSharePointConnection: true,
+      sharePointSources: [],
     })
 
     store.startAgentFilePolling("agent_1", 25)
@@ -184,7 +189,8 @@ describe("agentsStore sharepoint and file syncing", () => {
             },
           ],
           sourceOptions: [],
-          sourceRuns: [],
+          hasSharePointConnection: true,
+          sharePointSources: [],
         },
       },
       currentAgentId: undefined,
@@ -224,7 +230,8 @@ describe("agentsStore sharepoint and file syncing", () => {
         agent_1: {
           files: [],
           sourceOptions: [],
-          sourceRuns: [],
+          hasSharePointConnection: true,
+          sharePointSources: [],
         },
       },
       currentAgentId: "agent_1",
@@ -233,22 +240,33 @@ describe("agentsStore sharepoint and file syncing", () => {
     fetchAgentKnowledge
       .mockResolvedValueOnce({
         files: [],
-        options: [],
-        runs: [],
+        hasSharePointConnection: true,
+        sharePointSources: [
+          {
+            sourceId: "sharepoint_source_1",
+            siteId: "site-1",
+            status: "connecting",
+            syncedCount: 0,
+            failedCount: 0,
+            processingCount: 0,
+            totalCount: 0,
+          },
+        ],
       })
       .mockResolvedValue({
         files: [],
-        options: [],
-        runs: [
+        hasSharePointConnection: true,
+        sharePointSources: [
           {
-            sourceId: "site-1",
+            sourceId: "sharepoint_source_1",
+            siteId: "site-1",
             lastRunAt: "2026-04-16T00:00:00.000Z",
-            synced: 0,
-            failed: 0,
-            skipped: 0,
-            unsupported: 0,
-            totalDiscovered: 0,
-            status: "success",
+            status: "empty",
+            runStatus: "success",
+            syncedCount: 0,
+            failedCount: 0,
+            processingCount: 0,
+            totalCount: 0,
           },
         ],
       })

@@ -9,9 +9,10 @@ import {
   CreateAgentRequest,
   DisconnectAgentSharePointSiteResponse,
   FetchAgentKnowledgeResponse,
+  FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   KnowledgeSourceOption,
-  KnowledgeSourceSyncRun,
+  SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
@@ -39,7 +40,8 @@ interface AgentStoreState {
     {
       files: KnowledgeBaseFile[]
       sourceOptions: KnowledgeSourceOption[]
-      sourceRuns: KnowledgeSourceSyncRun[]
+      hasSharePointConnection: boolean
+      sharePointSources: SharePointKnowledgeSourceSnapshot[]
     }
   >
 }
@@ -72,7 +74,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       state.knowledgeByAgentId[agentId] || {
         files: [],
         sourceOptions: [],
-        sourceRuns: [],
+        hasSharePointConnection: false,
+        sharePointSources: [],
       }
     )
   }
@@ -90,8 +93,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   private setAgentKnowledgeSourceOptions = (
     agentId: string,
-    options: KnowledgeSourceOption[],
-    runs: KnowledgeSourceSyncRun[]
+    options: KnowledgeSourceOption[]
   ) => {
     this.update(state => {
       const existing = this.getAgentKnowledgeState(state, agentId)
@@ -112,7 +114,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       state.knowledgeByAgentId[agentId] = {
         ...existing,
         sourceOptions: Array.from(byId.values()),
-        sourceRuns: runs,
       }
       return state
     })
@@ -122,8 +123,16 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     agentId: string,
     knowledge: FetchAgentKnowledgeResponse
   ) => {
-    this.setAgentFiles(agentId, knowledge.files)
-    this.setAgentKnowledgeSourceOptions(agentId, knowledge.options, knowledge.runs)
+    this.update(state => {
+      const existing = this.getAgentKnowledgeState(state, agentId)
+      state.knowledgeByAgentId[agentId] = {
+        ...existing,
+        files: knowledge.files,
+        hasSharePointConnection: knowledge.hasSharePointConnection,
+        sharePointSources: knowledge.sharePointSources,
+      }
+      return state
+    })
   }
 
   private addSharePointSourceToAgent = (
@@ -250,9 +259,18 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       return false
     }
 
-    const runs = state.knowledgeByAgentId[agentId]?.sourceRuns || []
-    const runBySourceId = new Set(runs.map(run => run.sourceId))
-    return sharePointSourceIds.some(sourceId => !runBySourceId.has(sourceId))
+    const snapshots =
+      state.knowledgeByAgentId[agentId]?.sharePointSources || []
+    const snapshotBySiteId = new Map(
+      snapshots.map(snapshot => [snapshot.siteId, snapshot])
+    )
+    return sharePointSourceIds.some(siteId => {
+      const snapshot = snapshotBySiteId.get(siteId)
+      if (!snapshot) {
+        return true
+      }
+      return snapshot.status === "connecting" || snapshot.status === "syncing"
+    })
   }
 
   private armKnowledgeSourceBootstrapPolling = (
@@ -464,11 +482,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     agentId: string
   ): Promise<FetchAgentKnowledgeSourceOptionsResponse> => {
     const response = await API.fetchAgentKnowledgeSourceOptions(agentId)
-    this.setAgentKnowledgeSourceOptions(
-      agentId,
-      response.options,
-      response.runs
-    )
+    this.setAgentKnowledgeSourceOptions(agentId, response.options)
     return response
   }
 
@@ -484,11 +498,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     body: ConnectAgentSharePointSiteRequest
   ): Promise<ConnectAgentSharePointSiteResponse> => {
     const response = await API.connectAgentSharePointSite(agentId, body)
-    this.setAgentKnowledgeSourceOptions(
-      agentId,
-      response.options,
-      response.runs
-    )
+    this.setAgentKnowledgeSourceOptions(agentId, response.options)
     const connectedSite = response.options.find(option => option.id === body.siteId)
     this.addSharePointSourceToAgent(agentId, {
       id: body.siteId,
@@ -505,11 +515,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     body: UpdateAgentSharePointSiteRequest
   ): Promise<UpdateAgentSharePointSiteResponse> => {
     const response = await API.updateAgentSharePointSite(agentId, siteId, body)
-    this.setAgentKnowledgeSourceOptions(
-      agentId,
-      response.options,
-      response.runs
-    )
+    this.setAgentKnowledgeSourceOptions(agentId, response.options)
     return response
   }
 

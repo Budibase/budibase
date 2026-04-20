@@ -1,11 +1,14 @@
 import { readFile, unlink } from "node:fs/promises"
 import { HTTPError } from "@budibase/backend-core"
 import {
+  AgentKnowledgeSourceSyncEntryStatus,
   AgentKnowledgeSourceType,
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
   DisconnectAgentSharePointSiteResponse,
+  KnowledgeBaseFileStatus,
+  SharePointKnowledgeSourceSnapshot,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
@@ -71,14 +74,118 @@ export async function fetchAgentKnowledge(
   ctx: UserCtx<void, FetchAgentKnowledgeResponse, { agentId: string }>
 ) {
   const { agentId } = ctx.params
-  const [files, sourceOptions] = await Promise.all([
+  const [files, agent, syncState] = await Promise.all([
     sdk.ai.rag.listFilesForAgent(agentId),
-    sdk.ai.rag.fetchSharePointSitesForAgent(agentId),
+    sdk.ai.agents.getOrThrow(agentId),
+    sdk.ai.rag.fetchKnowledgeSourceSyncStateForAgent(agentId),
   ])
+  const hasSharePointConnection = await sdk.ai.rag.hasSharePointWorkspaceConnection()
+  const runsBySiteId = new Map(syncState.runs.map(run => [run.sourceId, run]))
+  const sharePointSources: SharePointKnowledgeSourceSnapshot[] =
+    getSharePointSources(agent)
+      .filter(source => !!source.config.site?.id)
+      .map(source => {
+        const site = source.config.site
+        const siteId = site!.id
+        const run = runsBySiteId.get(siteId)
+        const filesForSource = files.filter(
+          file => file.knowledgeSourceId === source.id
+        )
+
+        let totalCount = 0
+        let syncedCount = 0
+        let failedCount = 0
+        let processingCount = 0
+
+        if (run?.entries?.length) {
+          const fileStatusByOriginId = new Map<string, KnowledgeBaseFileStatus>()
+          for (const file of filesForSource) {
+            if (!file.originFileId) {
+              continue
+            }
+            fileStatusByOriginId.set(file.originFileId, file.status)
+          }
+
+          for (const entry of run.entries) {
+            if (
+              entry.status === AgentKnowledgeSourceSyncEntryStatus.EXCLUDED ||
+              entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
+            ) {
+              continue
+            }
+            totalCount++
+
+            if (entry.status === AgentKnowledgeSourceSyncEntryStatus.FAILED) {
+              failedCount++
+              continue
+            }
+
+            const status = fileStatusByOriginId.get(entry.originFileId)
+            if (
+              status == null ||
+              status === KnowledgeBaseFileStatus.PROCESSING
+            ) {
+              processingCount++
+              continue
+            }
+            if (status === KnowledgeBaseFileStatus.FAILED) {
+              failedCount++
+              continue
+            }
+            syncedCount++
+          }
+        } else {
+          totalCount = filesForSource.length
+          syncedCount = filesForSource.filter(
+            file => file.status === KnowledgeBaseFileStatus.READY
+          ).length
+          failedCount = filesForSource.filter(
+            file => file.status === KnowledgeBaseFileStatus.FAILED
+          ).length
+          processingCount = filesForSource.filter(
+            file => file.status === KnowledgeBaseFileStatus.PROCESSING
+          ).length
+        }
+
+        const status = (() => {
+          if (processingCount > 0) {
+            return "syncing" as const
+          }
+          if (!run?.lastRunAt) {
+            return "connecting" as const
+          }
+          if (totalCount === 0) {
+            return "empty" as const
+          }
+          if (failedCount === 0) {
+            return "ready" as const
+          }
+          if (syncedCount === 0) {
+            return "failed" as const
+          }
+          return "partial" as const
+        })()
+
+        return {
+          sourceId: source.id,
+          siteId,
+          name: site?.name,
+          webUrl: site?.webUrl,
+          status,
+          runStatus: run?.status,
+          lastRunAt: run?.lastRunAt,
+          syncedCount,
+          failedCount,
+          processingCount,
+          totalCount,
+          entries: run?.entries,
+        }
+      })
+
   ctx.body = {
     files,
-    options: sourceOptions.options,
-    runs: sourceOptions.runs,
+    hasSharePointConnection,
+    sharePointSources,
   }
   ctx.status = 200
 }

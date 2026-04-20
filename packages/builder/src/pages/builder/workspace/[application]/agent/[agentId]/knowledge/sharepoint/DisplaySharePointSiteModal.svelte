@@ -37,28 +37,21 @@
       ""
   )
 
-  const sharePointFiles = $derived.by(() => {
-    if (!agentId || !siteId) {
-      return [] as KnowledgeBaseFile[]
-    }
-    const files = $agentsStore.knowledgeByAgentId[agentId]?.files || []
-    const sharepointFiles = files.filter(file => {
-      if (siteId && file.knowledgeSourceId === siteId) {
-        return true
-      }
-      return (
-        !!siteId && !!file.originFileId?.startsWith(`sharepoint:${siteId}:`)
-      )
-    })
-    return sharepointFiles
-  })
-
-  const sourceRun = $derived.by(() => {
+  const sourceSnapshot = $derived.by(() => {
     if (!agentId || !siteId) {
       return undefined
     }
-    const runs = $agentsStore.knowledgeByAgentId[agentId]?.sourceRuns || []
-    return runs.find(run => run.sourceId === siteId)
+    return ($agentsStore.knowledgeByAgentId[agentId]?.sharePointSources || []).find(
+      source => source.siteId === siteId
+    )
+  })
+
+  const sharePointFiles = $derived.by(() => {
+    if (!agentId || !sharePointSource?.id) {
+      return [] as KnowledgeBaseFile[]
+    }
+    const files = $agentsStore.knowledgeByAgentId[agentId]?.files || []
+    return files.filter(file => file.knowledgeSourceId === sharePointSource.id)
   })
 
   const entryTree = $derived(
@@ -69,19 +62,18 @@
         status: file.status,
         errorMessage: file.errorMessage,
       })),
-      sourceRun?.entries || []
+      sourceSnapshot?.entries || []
     )
   )
 
   const showProcessingState = $derived.by(() => {
-    if (!siteId) {
+    if (!sourceSnapshot) {
       return false
     }
-    if (!sourceRun) {
-      return true
-    }
-    return sharePointFiles.some(
-      file => file.status === KnowledgeBaseFileStatus.PROCESSING
+    return (
+      sourceSnapshot.status === "connecting" ||
+      sourceSnapshot.status === "syncing" ||
+      sharePointFiles.some(file => file.status === KnowledgeBaseFileStatus.PROCESSING)
     )
   })
 

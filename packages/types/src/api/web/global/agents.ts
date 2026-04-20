@@ -1,8 +1,8 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
-  AgentKnowledgeSourceFilterConfig,
   AgentKnowledgeSourceSyncEntry,
+  AgentKnowledgeSourceFilterConfig,
   AgentKnowledgeSourceSyncRunStatus,
   ChatApp,
   ChatConversation,
@@ -46,9 +46,33 @@ export interface FetchAgentKnowledgeSourceOptionsResponse {
   runs: KnowledgeSourceSyncRun[]
 }
 
-export interface FetchAgentKnowledgeResponse
-  extends FetchAgentFilesResponse,
-    FetchAgentKnowledgeSourceOptionsResponse {}
+export type KnowledgeSourceSnapshotStatus =
+  | "connecting"
+  | "syncing"
+  | "ready"
+  | "partial"
+  | "failed"
+  | "empty"
+
+export interface SharePointKnowledgeSourceSnapshot {
+  sourceId: string
+  siteId: string
+  name?: string
+  webUrl?: string
+  status: KnowledgeSourceSnapshotStatus
+  runStatus?: AgentKnowledgeSourceSyncRunStatus
+  lastRunAt?: string
+  syncedCount: number
+  failedCount: number
+  processingCount: number
+  totalCount: number
+  entries?: AgentKnowledgeSourceSyncEntry[]
+}
+
+export interface FetchAgentKnowledgeResponse extends FetchAgentFilesResponse {
+  hasSharePointConnection: boolean
+  sharePointSources: SharePointKnowledgeSourceSnapshot[]
+}
 
 export interface KnowledgeSourceEntry {
   id: string
