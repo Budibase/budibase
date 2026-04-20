@@ -14,12 +14,8 @@ export enum AgentKnowledgeSourceSyncEntryStatus {
 }
 
 export interface AgentKnowledgeSourceSyncEntry {
-  driveId: string
-  itemId: string
-  filename: string
   path: string
   originFileId: string
-  mimetype?: string
   status: AgentKnowledgeSourceSyncEntryStatus
   errorMessage?: string
 }
@@ -29,11 +25,6 @@ export interface AgentKnowledgeSourceSyncState extends Document {
   sourceType: AgentKnowledgeSourceType
   sourceId: string
   lastRunAt: string
-  synced: number
-  failed: number
-  skipped: number
-  unsupported: number
-  totalDiscovered: number
   status: AgentKnowledgeSourceSyncRunStatus
   entries?: AgentKnowledgeSourceSyncEntry[]
 }

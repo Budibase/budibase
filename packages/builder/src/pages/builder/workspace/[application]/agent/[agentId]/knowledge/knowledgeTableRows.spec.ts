@@ -41,7 +41,7 @@ describe("knowledgeTableRows", () => {
     )
 
     expect(rows.map(row => row.filename)).toEqual(["a.md", "z.md"])
-    await rows[0].onDelete()
+    await rows[0].onDelete?.()
     expect(onDelete).toHaveBeenCalledTimes(1)
   })
 
@@ -80,7 +80,6 @@ describe("knowledgeTableRows", () => {
         sourceId: "source-1",
         siteId: "site-1",
         lastRunAt: "2026-04-08T10:00:00.000Z",
-        status: "ready",
         syncedCount: 1,
         failedCount: 0,
         processingCount: 0,
@@ -97,8 +96,6 @@ describe("knowledgeTableRows", () => {
           sourceId: "source-1",
           siteId: "site-1",
           name: "Site A",
-          status: "partial",
-          runStatus: "partial",
           lastRunAt: "2026-04-08T10:00:00.000Z",
           syncedCount: 1,
           failedCount: 0,

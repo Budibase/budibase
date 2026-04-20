@@ -243,8 +243,9 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
   private shouldPollAgentKnowledgeSources = (agentId: string) => {
     const state = get(this.store)
-    const agent = state.agents.find(a => a._id === agentId)
-    if (!agent) {
+    const snapshots = state.knowledgeByAgentId[agentId]?.sharePointSources || []
+    if (snapshots.length === 0) {
+      delete this.knowledgeSourceBootstrapPollsByAgentId[agentId]
       return false
     }
 
@@ -252,27 +253,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       return true
     }
 
-    const sharePointSourceIds = (agent.knowledgeSources || [])
-      .filter(source => source.type === AgentKnowledgeSourceType.SHAREPOINT)
-      .map(source => source.config.site?.id)
-      .filter((siteId): siteId is string => !!siteId)
-
-    if (sharePointSourceIds.length === 0) {
-      delete this.knowledgeSourceBootstrapPollsByAgentId[agentId]
-      return false
-    }
-
-    const snapshots = state.knowledgeByAgentId[agentId]?.sharePointSources || []
-    const snapshotBySiteId = new Map(
-      snapshots.map(snapshot => [snapshot.siteId, snapshot])
+    return snapshots.some(
+      snapshot =>
+        snapshot.status === "connecting" || snapshot.status === "syncing"
     )
-    return sharePointSourceIds.some(siteId => {
-      const snapshot = snapshotBySiteId.get(siteId)
-      if (!snapshot) {
-        return true
-      }
-      return snapshot.status === "connecting" || snapshot.status === "syncing"
-    })
   }
 
   private armKnowledgeSourceBootstrapPolling = (

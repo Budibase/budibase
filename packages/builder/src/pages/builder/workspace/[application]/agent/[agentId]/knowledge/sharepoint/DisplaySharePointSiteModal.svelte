@@ -2,7 +2,6 @@
   import { Body, Modal, ModalContent, TreeView } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
-    KnowledgeBaseFileStatus,
     type KnowledgeBaseFile,
   } from "@budibase/types"
   import { agentsStore, selectedAgent } from "@/stores/portal"
@@ -67,16 +66,10 @@
   )
 
   const showProcessingState = $derived.by(() => {
-    if (!sourceSnapshot) {
-      return false
+    if (!sourceSnapshot?.lastRunAt) {
+      return true
     }
-    return (
-      sourceSnapshot.status === "connecting" ||
-      sourceSnapshot.status === "syncing" ||
-      sharePointFiles.some(
-        file => file.status === KnowledgeBaseFileStatus.PROCESSING
-      )
-    )
+    return true
   })
 
   export function show() {

@@ -152,22 +152,13 @@ export async function fetchAgentKnowledge(
         }
 
         const status = (() => {
-          if (processingCount > 0) {
-            return "syncing" as const
-          }
           if (!run?.lastRunAt) {
             return "connecting" as const
           }
-          if (totalCount === 0) {
-            return "empty" as const
+          if (processingCount > 0) {
+            return "syncing" as const
           }
-          if (failedCount === 0) {
-            return "ready" as const
-          }
-          if (syncedCount === 0) {
-            return "failed" as const
-          }
-          return "partial" as const
+          return "synced" as const
         })()
 
         return {

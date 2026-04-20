@@ -46,20 +46,11 @@ export interface FetchAgentKnowledgeSourceOptionsResponse {
   runs: KnowledgeSourceSyncRun[]
 }
 
-export type KnowledgeSourceSnapshotStatus =
-  | "connecting"
-  | "syncing"
-  | "ready"
-  | "partial"
-  | "failed"
-  | "empty"
-
 export interface SharePointKnowledgeSourceSnapshot {
   sourceId: string
   siteId: string
   name?: string
   webUrl?: string
-  status: KnowledgeSourceSnapshotStatus
   runStatus?: AgentKnowledgeSourceSyncRunStatus
   lastRunAt?: string
   syncedCount: number

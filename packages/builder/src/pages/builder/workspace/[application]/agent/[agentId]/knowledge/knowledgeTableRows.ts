@@ -137,10 +137,10 @@ export const toSharePointConnectionRows = ({
       const siteDisplayName =
         snapshot.name || snapshot.webUrl || "SharePoint site"
       const displayStatus =
-        snapshot.status === "empty"
-          ? "No files found"
-          : snapshot.status === "connecting" || snapshot.status === "syncing"
-            ? "Processing"
+        snapshot.lastRunAt == null
+          ? "Processing"
+          : !snapshot.totalCount
+            ? "No files found"
             : `${completed}/${snapshot.totalCount} files`
       return {
         kind: "sharepoint_connection" as const,

@@ -130,19 +130,11 @@ const saveSharePointSyncRunState = async ({
   agentId,
   siteId,
   lastRunAt,
-  synced,
-  failed,
-  skipped,
-  totalDiscovered,
   entries,
 }: {
   agentId: string
   siteId: string
   lastRunAt: string
-  synced: number
-  failed: number
-  skipped: number
-  totalDiscovered: number
   entries: AgentKnowledgeSourceSyncEntry[]
 }) => {
   const db = context.getWorkspaceDB()
@@ -160,14 +152,14 @@ const saveSharePointSyncRunState = async ({
     sourceType: SHAREPOINT_SOURCE_TYPE,
     sourceId: siteId,
     lastRunAt,
-    synced,
-    failed,
-    skipped,
-    unsupported: entries.filter(
-      entry => entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
-    ).length,
-    totalDiscovered,
-    status: getSharePointSyncRunStatus(synced, failed),
+    status: getSharePointSyncRunStatus(
+      entries.filter(
+        entry => entry.status === AgentKnowledgeSourceSyncEntryStatus.SYNCED
+      ).length,
+      entries.filter(
+        entry => entry.status === AgentKnowledgeSourceSyncEntryStatus.FAILED
+      ).length
+    ),
     entries,
     createdAt: existing?.createdAt || now,
     updatedAt: now,
@@ -496,17 +488,32 @@ export const fetchKnowledgeSourceSyncStateForAgent = async (
   const runs = result.rows
     .map(row => row.doc)
     .filter((doc): doc is AgentKnowledgeSourceSyncState => !!doc?.sourceId)
-    .map(doc => ({
-      sourceId: doc.sourceId,
-      lastRunAt: doc.lastRunAt,
-      synced: doc.synced,
-      failed: doc.failed,
-      skipped: doc.skipped,
-      unsupported: doc.unsupported,
-      totalDiscovered: doc.totalDiscovered,
-      status: doc.status,
-      entries: doc.entries,
-    }))
+    .map(doc => {
+      const entries = doc.entries || []
+      const synced = entries.filter(
+        entry => entry.status === AgentKnowledgeSourceSyncEntryStatus.SYNCED
+      ).length
+      const failed = entries.filter(
+        entry => entry.status === AgentKnowledgeSourceSyncEntryStatus.FAILED
+      ).length
+      const excluded = entries.filter(
+        entry => entry.status === AgentKnowledgeSourceSyncEntryStatus.EXCLUDED
+      ).length
+      const unsupported = entries.filter(
+        entry => entry.status === AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED
+      ).length
+      return {
+        sourceId: doc.sourceId,
+        lastRunAt: doc.lastRunAt,
+        synced,
+        failed,
+        skipped: excluded + unsupported,
+        unsupported,
+        totalDiscovered: entries.length,
+        status: doc.status,
+        entries: doc.entries,
+      }
+    })
 
   return { runs }
 }
@@ -696,12 +703,8 @@ export const syncSharePointSourcesForAgent = async (
             siteExcluded++
             siteSkipped++
             siteEntries.push({
-              driveId,
-              itemId: file.itemId,
-              filename: file.filename,
               path: file.path,
               originFileId,
-              mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.EXCLUDED,
             })
             continue
@@ -712,12 +715,8 @@ export const syncSharePointSourcesForAgent = async (
             unsupported++
             siteUnsupported++
             siteEntries.push({
-              driveId,
-              itemId: file.itemId,
-              filename: file.filename,
               path: file.path,
               originFileId,
-              mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.UNSUPPORTED,
             })
             continue
@@ -728,12 +727,8 @@ export const syncSharePointSourcesForAgent = async (
             siteSkipped++
             siteAlreadySynced++
             siteEntries.push({
-              driveId,
-              itemId: file.itemId,
-              filename: file.filename,
               path: file.path,
               originFileId,
-              mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
             })
             continue
@@ -762,12 +757,8 @@ export const syncSharePointSourcesForAgent = async (
             synced++
             siteSynced++
             siteEntries.push({
-              driveId,
-              itemId: file.itemId,
-              filename: file.filename,
               path: file.path,
               originFileId,
-              mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.SYNCED,
             })
           } catch (error) {
@@ -781,12 +772,8 @@ export const syncSharePointSourcesForAgent = async (
             failed++
             siteFailed++
             siteEntries.push({
-              driveId,
-              itemId: file.itemId,
-              filename: file.filename,
               path: file.path,
               originFileId,
-              mimetype: file.mimetype,
               status: AgentKnowledgeSourceSyncEntryStatus.FAILED,
               errorMessage:
                 error instanceof Error ? error.message : "Upload failed",
@@ -842,10 +829,6 @@ export const syncSharePointSourcesForAgent = async (
         agentId: trimmedAgentId,
         siteId,
         lastRunAt,
-        synced: siteSynced,
-        failed: siteFailed,
-        skipped: siteSkipped,
-        totalDiscovered: siteTotalDiscovered,
         entries: siteEntries,
       })
       console.log("Completed SharePoint site sync for agent", {
