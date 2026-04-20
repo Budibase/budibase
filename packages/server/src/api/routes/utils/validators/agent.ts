@@ -140,10 +140,7 @@ const AGENT_TEST_REVIEWER_SCHEMA = Joi.alternatives()
       Joi.object({
         id: Joi.string().required(),
         type: Joi.string().valid(type).required(),
-        [REVIEWERS[type].contentField]: Joi.string()
-          .trim()
-          .disallow("")
-          .required(),
+        [REVIEWERS[type].contentField]: Joi.string().trim().min(1).required(),
       }).required()
     )
   )

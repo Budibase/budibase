@@ -31,8 +31,6 @@ import {
   buildErroredReviewerResults,
   evaluateReviewer,
   getCaseStatus,
-  normalizeCaseContext,
-  normalizeReviewers,
 } from "./reviewers"
 import { fetchSuite, saveRun } from "./crud"
 import { v4 } from "uuid"
@@ -133,7 +131,8 @@ async function runJudge({
     reviewerId: reviewer.id,
     type: reviewer.type,
     status: output.passed ? "passed" : "failed",
-    message: output.reason?.trim() || "Reviewer did not return a message.",
+    message:
+      (output.reason ?? "").trim() || "Reviewer did not return a message.",
   }
 }
 
@@ -152,8 +151,8 @@ async function runCase({
     id: testCase.id,
     name: testCase.name,
     input: testCase.input,
-    context: normalizeCaseContext(testCase.context),
-    reviewers: normalizeReviewers(testCase.reviewers),
+    context: testCase.context,
+    reviewers: testCase.reviewers,
   }
 
   const startedAt = new Date().toISOString()

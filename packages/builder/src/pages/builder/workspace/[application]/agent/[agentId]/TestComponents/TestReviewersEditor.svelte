@@ -37,7 +37,7 @@
     (event: CustomEvent<string | undefined>) =>
       onUpdateCase(testCase => ({
         ...testCase,
-        reviewers: testCase.reviewers.map(reviewer =>
+        reviewers: testCase.reviewers.map((reviewer: AgentTestReviewer) =>
           reviewer.id === reviewerId
             ? ({ ...reviewer, [field]: event.detail } as AgentTestReviewer)
             : reviewer
@@ -58,7 +58,7 @@
     onUpdateCase(testCase => ({
       ...testCase,
       reviewers: testCase.reviewers.filter(
-        reviewer => reviewer.id !== reviewerId
+        (reviewer: AgentTestReviewer) => reviewer.id !== reviewerId
       ),
     }))
   }

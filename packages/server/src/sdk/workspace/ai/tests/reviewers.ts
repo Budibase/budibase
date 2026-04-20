@@ -3,14 +3,7 @@ import type {
   AgentTestReviewer,
   AgentTestReviewerResult,
 } from "@budibase/types"
-import {
-  normalizeReviewers,
-  normalizeCaseContext,
-  validateReviewer,
-  withReviewerDefinition,
-} from "@budibase/shared-core"
-
-export { normalizeReviewer, normalizeReviewers, normalizeCaseContext } from "@budibase/shared-core"
+import { validateReviewer, withReviewerDefinition } from "@budibase/shared-core"
 
 interface AgentTestValidationFailure {
   message: string
@@ -20,12 +13,12 @@ export const validateTestCase = (
   testCase: AgentTestCase
 ): AgentTestValidationFailure[] => {
   const failures: AgentTestValidationFailure[] = []
-  const reviewers = normalizeReviewers(testCase.reviewers)
+  const reviewers = testCase.reviewers
 
-  if (!testCase.name?.trim()) {
+  if (!testCase.name.trim()) {
     failures.push({ message: "Test name is required." })
   }
-  if (!testCase.input?.trim()) {
+  if (!testCase.input.trim()) {
     failures.push({ message: "Input is required." })
   }
   if (!reviewers.length) {
@@ -53,7 +46,6 @@ export const evaluateReviewer = ({
 }): AgentTestReviewerResult =>
   withReviewerDefinition(reviewer, (def, r) => {
     if (def.evaluate === "async") {
-      // Caller is responsible for gating async reviewers out of this function.
       throw new Error(`${reviewer.type} cannot be evaluated synchronously`)
     }
     const { passed, message } = def.evaluate(r, { response, toolCalls })

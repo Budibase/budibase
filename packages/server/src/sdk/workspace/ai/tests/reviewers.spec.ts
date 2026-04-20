@@ -1,51 +1,10 @@
 import {
   evaluateReviewer,
   getCaseStatus,
-  normalizeCaseContext,
-  normalizeReviewers,
   validateTestCase,
 } from "./reviewers"
 
 describe("agent test reviewers", () => {
-  it("normalizes reviewer values and blank context", () => {
-    expect(
-      normalizeReviewers([
-        {
-          id: "reviewer-1",
-          type: "exact_match",
-          text: "  Alice Smith  ",
-        },
-        {
-          id: "reviewer-2",
-          type: "llm_judge",
-          rubric: "  be polite  ",
-        },
-        {
-          id: "reviewer-3",
-          type: "tool_used",
-          tool: "  search_rows  ",
-        },
-      ])
-    ).toEqual([
-      {
-        id: "reviewer-1",
-        type: "exact_match",
-        text: "Alice Smith",
-      },
-      {
-        id: "reviewer-2",
-        type: "llm_judge",
-        rubric: "be polite",
-      },
-      {
-        id: "reviewer-3",
-        type: "tool_used",
-        tool: "search_rows",
-      },
-    ])
-    expect(normalizeCaseContext("   ")).toBeUndefined()
-  })
-
   it("validates required input and reviewers", () => {
     expect(
       validateTestCase({

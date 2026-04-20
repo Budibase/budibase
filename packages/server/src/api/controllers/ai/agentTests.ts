@@ -56,7 +56,7 @@ export async function runAgentTestSuite(
   const run = await sdk.ai.tests.runSuite({
     agentId,
     user: ctx.user,
-    caseId: ctx.request.body?.caseId || undefined,
+    caseId: ctx.request.body?.caseId,
   })
 
   ctx.body = { run }

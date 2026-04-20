@@ -6,7 +6,6 @@ import type {
   AgentTestSuite,
   UpdateAgentTestSuiteRequest,
 } from "@budibase/types"
-import { normalizeReviewer, normalizeCaseContext } from "@budibase/shared-core"
 import { v4 } from "uuid"
 import { validateTestCase } from "./reviewers"
 
@@ -40,12 +39,10 @@ export async function saveSuite({
 
   const cases: AgentTestCase[] = request.cases.map((testCase, idx) => ({
     id: testCase.id ?? v4(),
-    name: testCase.name?.trim() || `Test ${idx + 1}`,
-    input: testCase.input ?? "",
-    context: normalizeCaseContext(testCase.context),
-    reviewers: (testCase.reviewers || []).map(reviewer =>
-      normalizeReviewer({ ...reviewer, id: reviewer.id || v4() })
-    ),
+    name: testCase.name.trim() || `Test ${idx + 1}`,
+    input: testCase.input,
+    context: testCase.context,
+    reviewers: testCase.reviewers,
   }))
 
   for (const testCase of cases) {
