@@ -42,7 +42,7 @@ describe("knowledgeTableRows", () => {
     )
 
     expect(rows.map(row => row.filename)).toEqual(["a.md", "z.md"])
-    await rows[0].onDelete()
+    await rows[0].onDelete?.()
     expect(onDelete).toHaveBeenCalledTimes(1)
   })
 
@@ -83,6 +83,7 @@ describe("knowledgeTableRows", () => {
         synced: 1,
         failed: 0,
         skipped: 0,
+        unsupported: 0,
         totalDiscovered: 1,
         status: AgentKnowledgeSourceSyncRunStatus.SUCCESS,
       },

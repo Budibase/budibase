@@ -7,6 +7,7 @@
     automationStore,
     selectedAutomation,
   } from "@/stores/builder"
+  import ResizablePanel from "@/components/common/ResizablePanel.svelte"
   import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
   import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
@@ -39,7 +40,7 @@
   onDestroy(stopSyncing)
 </script>
 
-<div class="wrapper">
+<div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
   <TopBar
     breadcrumbs={[
       { text: "Automations", url: "../" },
@@ -53,8 +54,18 @@
     </div>
 
     {#if blockRefs[$automationStore.selectedNodeId] && $automationStore.selectedNodeId}
-      <div class="step-panel">
-        <StepPanel />
+      <div class="step-panel-container">
+        <ResizablePanel
+          storageKey="automation-side-panel-width"
+          defaultWidth={480}
+          minWidth={360}
+          maxWidthRatio={0.6}
+          position="right"
+        >
+          <div class="step-panel">
+            <StepPanel />
+          </div>
+        </ResizablePanel>
       </div>
     {/if}
 
@@ -114,17 +125,24 @@
     align-items: stretch;
     overflow: auto;
   }
+  .step-panel-container {
+    position: fixed;
+    right: 0;
+    z-index: 99;
+    height: calc(100% - 60px);
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+  }
   .step-panel {
-    border-left: var(--border-light);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     background-color: var(--background);
     overflow: auto;
-    grid-column: 3;
-    width: 400px;
-    max-width: 400px;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .logs-panel-container {
@@ -169,5 +187,11 @@
     align-items: stretch;
     background-color: var(--background);
     overflow: auto;
+  }
+  .wrapper.resizing-panel {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
 </style>

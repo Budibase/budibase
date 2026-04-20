@@ -189,7 +189,7 @@
         <Input
           placeholder={valuePlaceholder}
           readonly={readOnly}
-          bind:value={field.value}
+          bind:value={field.value as any}
           on:blur={changed}
         />
       {/if}

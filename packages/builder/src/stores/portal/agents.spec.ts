@@ -59,6 +59,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       synced: 2,
       failed: 0,
       skipped: 1,
+      unsupported: 0,
       totalDiscovered: 3,
     })
 

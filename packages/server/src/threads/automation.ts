@@ -678,6 +678,7 @@ class Orchestrator {
           children,
           maxStoredResults
         )
+        const childrenById = new Map(children.map(child => [child.id, child]))
 
         const totalIterations = Math.min(iterable.length, maxIterations)
 
@@ -730,15 +731,23 @@ class Orchestrator {
             ctx._stepIndex = savedStepIndex
 
             // Process results based on their type
+            let collectingBranchResults = false
             for (const result of iterationResults) {
-              const isDirectChild = children.some(
-                child => child.id === result.id
-              )
-              if (isDirectChild) {
+              const directChild = childrenById.get(result.id)
+              if (directChild) {
                 automationUtils.processStandardResult(
                   storage,
                   result,
                   iterations
+                )
+                collectingBranchResults =
+                  directChild.stepId === AutomationActionStepId.BRANCH
+              } else if (collectingBranchResults) {
+                automationUtils.processStandardResult(
+                  storage,
+                  result,
+                  iterations,
+                  false
                 )
               }
             }

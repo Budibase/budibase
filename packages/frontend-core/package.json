@@ -6,7 +6,7 @@
   "license": "MPL-2.0",
   "svelte": "./src/index.ts",
   "scripts": {
-    "check:types": "yarn svelte-check --incremental",
+    "check:types": "yarn svelte-check",
     "test": "vitest run",
     "test:watch": "vitest"
   },
