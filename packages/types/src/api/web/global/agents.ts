@@ -46,6 +46,10 @@ export interface FetchAgentKnowledgeSourceOptionsResponse {
   runs: KnowledgeSourceSyncRun[]
 }
 
+export interface FetchAgentKnowledgeResponse
+  extends FetchAgentFilesResponse,
+    FetchAgentKnowledgeSourceOptionsResponse {}
+
 export interface KnowledgeSourceEntry {
   id: string
   name: string

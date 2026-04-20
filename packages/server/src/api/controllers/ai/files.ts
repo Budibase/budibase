@@ -6,6 +6,7 @@ import {
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
   DisconnectAgentSharePointSiteResponse,
+  FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   FetchAgentFilesResponse,
@@ -63,6 +64,22 @@ export async function fetchAgentFiles(
   const { agentId } = ctx.params
   const files = await sdk.ai.rag.listFilesForAgent(agentId)
   ctx.body = { files }
+  ctx.status = 200
+}
+
+export async function fetchAgentKnowledge(
+  ctx: UserCtx<void, FetchAgentKnowledgeResponse, { agentId: string }>
+) {
+  const { agentId } = ctx.params
+  const [files, sourceOptions] = await Promise.all([
+    sdk.ai.rag.listFilesForAgent(agentId),
+    sdk.ai.rag.fetchSharePointSitesForAgent(agentId),
+  ])
+  ctx.body = {
+    files,
+    options: sourceOptions.options,
+    runs: sourceOptions.runs,
+  }
   ctx.status = 200
 }
 

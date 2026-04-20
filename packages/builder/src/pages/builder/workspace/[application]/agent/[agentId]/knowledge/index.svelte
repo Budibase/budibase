@@ -158,7 +158,7 @@
   }
 
   const fetchFiles = async (agentId: string) => {
-    await agentsStore.fetchAgentFiles(agentId)
+    await agentsStore.fetchAgentKnowledge(agentId)
   }
 
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
@@ -202,8 +202,7 @@
     loading = true
     initialKnowledgeLoadingForAgent = agentId
     try {
-      await agentsStore.fetchAgentFiles(agentId)
-      await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
+      await agentsStore.fetchAgentKnowledge(agentId)
       initialKnowledgeLoadedForAgent = agentId
       initialKnowledgeFailedForAgent = undefined
     } finally {
@@ -367,9 +366,7 @@
       const result = await agentsStore.syncAgentKnowledgeSources(agentId, {
         sourceIds,
       })
-      await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
       await fetchFiles(agentId)
-      await agentsStore.fetchAgents()
       showSharePointSyncResult(result)
     } catch (error) {
       console.error(error)
@@ -395,9 +392,7 @@
       onConfirm: async () => {
         try {
           await agentsStore.disconnectAgentSharePointSite(agentId, siteId)
-          await agentsStore.fetchAgents()
           await fetchFiles(agentId)
-          await agentsStore.fetchAgentKnowledgeSourceOptions(agentId)
           notifications.success("SharePoint site removed")
         } catch (error) {
           console.error(error)

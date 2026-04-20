@@ -92,8 +92,6 @@
       await agentsStore.connectAgentSharePointSite(agentId, {
         siteId: selectedSiteId,
       })
-      await agentsStore.fetchAgentFiles(agentId)
-      await agentsStore.fetchAgents()
       notifications.success("SharePoint site added")
       hide()
 

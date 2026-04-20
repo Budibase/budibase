@@ -15,6 +15,7 @@ vi.mock("@/api", () => {
     API: {
       fetchAgents: vi.fn(),
       fetchAgentFiles: vi.fn(),
+      fetchAgentKnowledge: vi.fn(),
       uploadAgentFile: vi.fn(),
       deleteAgentFile: vi.fn(),
       syncAgentKnowledgeSources: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock("@/api", () => {
 
 const fetchAgents = vi.mocked(API.fetchAgents)
 const fetchAgentFiles = vi.mocked(API.fetchAgentFiles)
+const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
 const uploadAgentFile = vi.mocked(API.uploadAgentFile)
 const deleteAgentFile = vi.mocked(API.deleteAgentFile)
 const syncAgentKnowledgeSources = vi.mocked(API.syncAgentKnowledgeSources)
@@ -49,7 +51,6 @@ describe("agentsStore sharepoint and file syncing", () => {
 
   afterEach(() => {
     store.stopAgentFilePolling()
-    store.stopAgentKnowledgeSourcePolling()
     vi.useRealTimers()
   })
 
@@ -140,7 +141,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       currentAgentId: undefined,
     })
 
-    fetchAgentFiles.mockResolvedValue({
+    fetchAgentKnowledge.mockResolvedValue({
       files: [
         {
           _id: "kb_file_1",
@@ -152,12 +153,14 @@ describe("agentsStore sharepoint and file syncing", () => {
           uploadedBy: "user_1",
         },
       ],
+      options: [],
+      runs: [],
     })
 
     store.startAgentFilePolling("agent_1", 25)
     await vi.advanceTimersByTimeAsync(60)
 
-    expect(fetchAgentFiles).toHaveBeenCalledTimes(1)
+    expect(fetchAgentKnowledge).toHaveBeenCalledTimes(1)
     expect(
       get(store.store).knowledgeByAgentId["agent_1"]?.files[0].status
     ).toBe(KnowledgeBaseFileStatus.READY)
@@ -195,7 +198,7 @@ describe("agentsStore sharepoint and file syncing", () => {
     expect(fetchAgentFiles).not.toHaveBeenCalled()
   })
 
-  it("startAgentKnowledgeSourcePolling polls until first source run exists", async () => {
+  it("startAgentFilePolling polls until first source run exists", async () => {
     vi.useFakeTimers()
     store.set({
       agents: [
@@ -229,16 +232,18 @@ describe("agentsStore sharepoint and file syncing", () => {
       currentAgentId: "agent_1",
     })
 
-    fetchAgentKnowledgeSourceOptions
+    fetchAgentKnowledge
       .mockResolvedValueOnce({
+        files: [],
         options: [],
         runs: [],
       })
-      .mockResolvedValueOnce({
+      .mockResolvedValue({
+        files: [],
         options: [],
         runs: [
           {
-            sourceId: "sharepoint_source_1",
+            sourceId: "site-1",
             lastRunAt: "2026-04-16T00:00:00.000Z",
             synced: 0,
             failed: 0,
@@ -250,15 +255,13 @@ describe("agentsStore sharepoint and file syncing", () => {
         ],
       })
 
-    fetchAgentFiles.mockResolvedValue({ files: [] })
-
-    store.startAgentKnowledgeSourcePolling("agent_1", 25)
+    store.startAgentFilePolling("agent_1", 25)
     await vi.advanceTimersByTimeAsync(30)
     await vi.advanceTimersByTimeAsync(30)
     await vi.advanceTimersByTimeAsync(30)
 
-    expect(fetchAgentKnowledgeSourceOptions).toHaveBeenCalledTimes(2)
-    expect(fetchAgentFiles).toHaveBeenCalledTimes(2)
+    expect(fetchAgentKnowledge).toHaveBeenCalledTimes(2)
+    expect(fetchAgentFiles).not.toHaveBeenCalled()
   })
 })
 
