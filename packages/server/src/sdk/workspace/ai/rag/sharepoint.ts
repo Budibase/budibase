@@ -744,7 +744,6 @@ export const syncSharePointSourcesForAgent = async (
 
             await knowledgeBaseSdk.uploadKnowledgeBaseFile({
               knowledgeBaseId,
-              knowledgeBaseId,
               filename: file.filename,
               sourcePath: file.path,
               mimetype: file.mimetype,

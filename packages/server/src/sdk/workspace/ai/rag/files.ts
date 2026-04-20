@@ -14,8 +14,6 @@ import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
 
-const LOCAL_KNOWLEDGE_SOURCE_ID = "local_upload"
-
 const getKnowledgeBaseIdFromFileId = (fileId?: string): string | undefined => {
   if (!fileId) {
     return undefined
@@ -143,7 +141,6 @@ export const uploadFileForAgent = async (
 
   return await knowledgeBaseSdk.uploadKnowledgeBaseFile({
     knowledgeBaseId,
-    knowledgeBaseId: LOCAL_KNOWLEDGE_SOURCE_ID,
     filename: input.filename,
     mimetype: input.mimetype,
     size: input.size ?? input.buffer.byteLength,

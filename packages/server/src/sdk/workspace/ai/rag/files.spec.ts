@@ -143,7 +143,7 @@ describe("rag files", () => {
 
       const knowledgeBaseFile: KnowledgeBaseFile = {
         _id: "file_123",
-        knowledgeBaseId: "local_upload",
+        knowledgeBaseId: "kb_123",
         filename: "test.txt",
         objectStoreKey: "key",
         ragSourceId: "rag_source_123",
@@ -179,7 +179,7 @@ describe("rag files", () => {
 
       const knowledgeBaseFile: KnowledgeBaseFile = {
         _id: "file_123",
-        knowledgeBaseId: "local_upload",
+        knowledgeBaseId: "kb_123",
         filename: "test.txt",
         objectStoreKey: "key",
         ragSourceId: "rag_source_123",
@@ -302,7 +302,7 @@ describe("rag files", () => {
       mockKnowledgeBaseListFiles.mockResolvedValue([
         {
           _id: "file_1",
-          knowledgeBaseId: "local_upload",
+          knowledgeBaseId: "kb_123",
           filename: "policy.md",
           objectStoreKey: "obj",
           ragSourceId: "source-1",

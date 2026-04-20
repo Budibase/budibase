@@ -15,7 +15,6 @@ type UploadKnowledgeBaseFileInput = Pick<
   | "uploadedBy"
   | "externalSourceId"
 > & {
-  knowledgeBaseId: string
   buffer: Buffer
 }
 

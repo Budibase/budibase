@@ -46,7 +46,7 @@ describe("AI Tools - Knowledge files", () => {
       .mockResolvedValue([
         {
           _id: "file_1",
-          knowledgeBaseId: "local_upload",
+          knowledgeBaseId: "kb_1",
           filename: "policy.md",
           mimetype: "text/markdown",
           size: 101,
@@ -59,7 +59,7 @@ describe("AI Tools - Knowledge files", () => {
         } satisfies KnowledgeBaseFile,
         {
           _id: "file_2",
-          knowledgeBaseId: "local_upload",
+          knowledgeBaseId: "kb_1",
           filename: "faq.pdf",
           mimetype: "application/pdf",
           size: 202,
@@ -72,7 +72,7 @@ describe("AI Tools - Knowledge files", () => {
         } satisfies KnowledgeBaseFile,
         {
           _id: "file_3",
-          knowledgeBaseId: "local_upload",
+          knowledgeBaseId: "kb_2",
           filename: "runbook.txt",
           mimetype: "text/plain",
           size: 303,
@@ -162,7 +162,7 @@ describe("AI Tools - Knowledge files", () => {
     jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
       {
         _id: "file_1",
-        knowledgeBaseId: "local_upload",
+        knowledgeBaseId: "kb_1",
         filename: "policy.pdf",
         objectStoreKey: "obj_1",
         ragSourceId: "source_1",
@@ -171,7 +171,7 @@ describe("AI Tools - Knowledge files", () => {
       } satisfies KnowledgeBaseFile,
       {
         _id: "file_2",
-        knowledgeBaseId: "local_upload",
+        knowledgeBaseId: "kb_1",
         filename: "fileName.pdf",
         size: 512,
         createdAt: "2026-02-01T00:00:00.000Z",
@@ -212,7 +212,7 @@ describe("AI Tools - Knowledge files", () => {
     jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
       {
         _id: "file_1",
-        knowledgeBaseId: "local_upload",
+        knowledgeBaseId: "kb_1",
         filename: "policy-v2.pdf",
         size: 102,
         createdAt: "2026-03-01T00:00:00.000Z",
@@ -223,7 +223,7 @@ describe("AI Tools - Knowledge files", () => {
       } satisfies KnowledgeBaseFile,
       {
         _id: "file_2",
-        knowledgeBaseId: "local_upload",
+        knowledgeBaseId: "kb_1",
         filename: "policy-v1.pdf",
         size: 101,
         createdAt: "2026-02-01T00:00:00.000Z",
@@ -259,7 +259,7 @@ describe("AI Tools - Knowledge files", () => {
     jest.spyOn(sdk.ai.rag, "listFilesForAgent").mockResolvedValue([
       {
         _id: "file_1",
-        knowledgeBaseId: "local_upload",
+        knowledgeBaseId: "kb_1",
         filename: "project-filename.pdf",
         objectStoreKey: "obj_1",
         ragSourceId: "source_1",
@@ -268,7 +268,7 @@ describe("AI Tools - Knowledge files", () => {
       } satisfies KnowledgeBaseFile,
       {
         _id: "file_2",
-        knowledgeBaseId: "local_upload",
+        knowledgeBaseId: "kb_1",
         filename: "notes.txt",
         objectStoreKey: "obj_2",
         ragSourceId: "source_2",
