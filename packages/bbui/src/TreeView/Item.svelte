@@ -61,7 +61,7 @@
 </script>
 
 <li
-  class:is-selected={selected}
+  class:is-selected={selected && !isQuiet}
   class:is-open={hasChildren && isOpen}
   class="spectrum-TreeView-item"
   class:is-disabled={disabled}
