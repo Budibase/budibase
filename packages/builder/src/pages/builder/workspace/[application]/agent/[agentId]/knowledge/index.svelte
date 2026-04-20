@@ -24,8 +24,8 @@
     toFileTableRows,
     toSharePointConnectionRows,
   } from "./knowledgeTableRows"
-  import DisplaySharePointSiteModal from "./DisplaySharePointSiteModal.svelte"
-  import SelectSharePointFilesModal from "./SelectSharePointFilesModal.svelte"
+  import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
+  import SelectSharePointFilesModal from "./sharepoint/SelectSharePointFilesModal.svelte"
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let activeAgentId = $derived(currentAgent?._id)

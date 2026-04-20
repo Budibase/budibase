@@ -6,12 +6,12 @@
     getSharePointStatusLightProps,
     getSharePointStatusText,
     isSelectableSharePointStatus,
-  } from "./sharePointStatus"
+  } from "../sharePointStatus"
 
   export interface Props {
     node: SharePointEntryTreeNode
-    selectedPaths: string[]
-    onTogglePaths: (_paths: string[], _nextSelected: boolean) => void
+    selectedPaths?: string[]
+    onTogglePaths?: (_paths: string[], _nextSelected: boolean) => void
   }
 
   let { node, selectedPaths, onTogglePaths }: Props = $props()
@@ -75,7 +75,7 @@
 
   const handleSelect = (_event: CustomEvent<boolean>) => {
     const nextSelected = indeterminate ? true : !selected
-    onTogglePaths(targetPaths, nextSelected)
+    onTogglePaths?.(targetPaths, nextSelected)
   }
 </script>
 

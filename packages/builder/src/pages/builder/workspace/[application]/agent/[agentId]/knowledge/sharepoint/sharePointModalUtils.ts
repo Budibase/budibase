@@ -3,7 +3,7 @@ import {
   type AgentKnowledgeSourceSyncEntry,
   type KnowledgeSourceEntry,
 } from "@budibase/types"
-import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
+import type { SharePointEntryTreeNode } from "./tree/sharePointEntryTree"
 import {
   isSelectableSharePointStatus,
   toSharePointDisplayStatusFromFile,

@@ -12,7 +12,7 @@
     type KnowledgeSourceEntry,
   } from "@budibase/types"
   import { agentsStore, selectedAgent } from "@/stores/portal"
-  import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
+  import SharePointEntryTreeItem from "./tree/SharePointEntryTreeItem.svelte"
   import {
     buildEntryTreeFromSourceEntries,
     buildPatternsFromSelection,
