@@ -5,41 +5,26 @@
     Modal,
     ModalContent,
     TreeView,
-    notifications,
   } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
     KnowledgeBaseFileStatus,
     type KnowledgeBaseFile,
-    type KnowledgeSourceEntry,
   } from "@budibase/types"
   import { agentsStore, selectedAgent } from "@/stores/portal"
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
-  import {
-    buildEntryTree,
-    buildEntryTreeFromSourceEntries,
-    buildPatternsFromSelection,
-    collectSelectablePaths,
-    flattenNodesByPath,
-    rehydrateFromPatterns,
-    wrapSelectionTreeWithSiteRoot,
-  } from "./sharePointModalUtils"
+  import { buildEntryTree } from "./sharePointModalUtils"
+  import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
 
   export interface Props {
     agentId?: string
     siteId?: string
+    onEdit?: (_siteId: string) => Promise<void> | void
   }
 
-  let { agentId, siteId }: Props = $props()
+  let { agentId, siteId, onEdit }: Props = $props()
 
-  let selectedEntryPaths = $state<string[]>([])
-  let syncMode = $state<"all" | "selective">("all")
-  let scopeEditMode = $state(false)
-  let isOpen = $state(false)
-  let hasHydratedSelection = $state(false)
-  let loadingSourceEntries = $state(false)
-  let loadingAllSourceEntries = $state(false)
-  let allSourceEntries = $state<KnowledgeSourceEntry[] | undefined>()
+  let editing = $state(false)
   let modal = $state<Modal>()
 
   const sharePointSource = $derived.by(() => {
@@ -59,9 +44,6 @@
       sharePointSource?.config.site?.webUrl ||
       siteId ||
       ""
-  )
-  const initialPatterns = $derived(
-    sharePointSource?.config.filters?.patterns || []
   )
 
   const getKnowledgeSourceFiles = (
@@ -83,7 +65,6 @@
     if (!agentId || !sourceId) {
       return [] as KnowledgeBaseFile[]
     }
-
     const files = $agentsStore.knowledgeByAgentId[agentId]?.files || []
     return getKnowledgeSourceFiles(files, sourceId, siteId)
   })
@@ -96,131 +77,15 @@
     return runs.find(run => run.sourceId === sourceId)
   })
 
-  const sourceEntriesResponse = $derived.by(() => {
+  const sourceEntries = $derived.by(() => {
     if (!agentId || !siteId) {
-      return undefined
+      return []
     }
-    return $agentsStore.knowledgeByAgentId[agentId]?.sourceEntriesBySiteId?.[
-      siteId
-    ]
-  })
-
-  const sourceEntries = $derived(sourceEntriesResponse?.entries || [])
-
-  const showProcessingState = $derived.by(() => {
-    if (!sourceId) {
-      return false
-    }
-    if (!sourceRun) {
-      return true
-    }
-    return sharePointFiles.some(
-      file => file.status === KnowledgeBaseFileStatus.PROCESSING
+    return (
+      $agentsStore.knowledgeByAgentId[agentId]?.sourceEntriesBySiteId?.[siteId]
+        ?.entries || []
     )
   })
-
-  const loadSourceEntries = async () => {
-    if (!agentId || !siteId) {
-      return
-    }
-
-    loadingSourceEntries = true
-    try {
-      await agentsStore.fetchAgentKnowledgeSourceEntries(agentId, siteId)
-    } finally {
-      loadingSourceEntries = false
-    }
-  }
-
-  const loadAllSourceEntries = async () => {
-    if (!agentId || !siteId) {
-      return
-    }
-    loadingAllSourceEntries = true
-    try {
-      const response = await agentsStore.fetchAgentKnowledgeSourceAllEntries(
-        agentId,
-        siteId
-      )
-      allSourceEntries = response.entries
-    } finally {
-      loadingAllSourceEntries = false
-    }
-  }
-
-  export function show() {
-    const hasInitialFilters = initialPatterns.length > 0
-    syncMode = hasInitialFilters ? "selective" : "all"
-    selectedEntryPaths = hasInitialFilters
-      ? rehydrateFromPatterns(initialPatterns, selectablePaths)
-      : syncMode === "selective"
-        ? [...selectablePaths]
-        : []
-
-    hasHydratedSelection = false
-    isOpen = true
-    scopeEditMode = false
-    allSourceEntries = undefined
-
-    loadSourceEntries().catch(error => {
-      console.error(error)
-      notifications.error("Failed to load SharePoint files")
-    })
-
-    modal?.show()
-  }
-
-  export function hide() {
-    isOpen = false
-    allSourceEntries = undefined
-    modal?.hide()
-  }
-
-  const handleConfirm = async () => {
-    if (!scopeEditMode) {
-      hide()
-      return
-    }
-    if (!agentId || !siteId) {
-      return
-    }
-    if (syncMode === "selective" && selectedEntryPaths.length === 0) {
-      notifications.error("Please select at least one folder to sync")
-      return
-    }
-
-    const filters =
-      syncMode === "all"
-        ? undefined
-        : buildPatternsFromSelection(
-            selectedEntryPaths,
-            selectablePaths,
-            selectionNodeByPath
-          )
-
-    try {
-      await agentsStore.applyAgentSharePointSiteFilters(agentId, siteId, {
-        filters,
-      })
-      notifications.success("SharePoint folders/files updated")
-      hide()
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to sync SharePoint")
-    }
-  }
-
-  const toggleEntryPaths = (paths: string[], nextSelected: boolean) => {
-    const nextPaths = new Set(selectedEntryPaths)
-    for (const path of paths) {
-      if (nextSelected) {
-        nextPaths.add(path)
-      } else {
-        nextPaths.delete(path)
-      }
-    }
-    selectedEntryPaths = Array.from(nextPaths)
-  }
 
   const entryTree = $derived(
     buildEntryTree(
@@ -234,75 +99,67 @@
     )
   )
 
-  const sourceEntriesTree = $derived(
-    buildEntryTreeFromSourceEntries(sourceEntries)
-  )
-  const allSourceEntriesTree = $derived(
-    buildEntryTreeFromSourceEntries(allSourceEntries || [])
-  )
+  const filterTreeByPaths = (
+    nodes: SharePointEntryTreeNode[],
+    allowedPaths: Set<string>
+  ): SharePointEntryTreeNode[] => {
+    const nextNodes: SharePointEntryTreeNode[] = []
+    for (const node of nodes) {
+      if (node.type === "file") {
+        if (allowedPaths.has(node.path)) {
+          nextNodes.push(node)
+        }
+        continue
+      }
 
-  const selectionTreeBase = $derived(
-    scopeEditMode && syncMode === "selective" && allSourceEntries
-      ? allSourceEntriesTree
-      : sourceEntriesTree.length > 0
-        ? sourceEntriesTree
-        : entryTree
-  )
-  const selectionTree = $derived(
-    wrapSelectionTreeWithSiteRoot(selectionTreeBase)
-  )
-  const selectablePaths = $derived(collectSelectablePaths(selectionTree))
-  const selectionNodeByPath = $derived(flattenNodesByPath(selectionTree))
-
-  const toggleAll = () => {
-    const allPathSet = new Set(selectablePaths)
-    const selectedPathCount = selectedEntryPaths.filter(path =>
-      allPathSet.has(path)
-    ).length
-
-    if (selectedPathCount === selectablePaths.length) {
-      selectedEntryPaths = []
-      return
+      const children = filterTreeByPaths(node.children, allowedPaths)
+      if (children.length > 0) {
+        nextNodes.push({ ...node, children })
+      }
     }
-
-    selectedEntryPaths = [...selectablePaths]
+    return nextNodes
   }
 
-  const selectAllLabel = $derived(
-    selectedEntryPaths.length === selectablePaths.length
-      ? "Clear selection"
-      : "Select all"
-  )
-  const selectedCountLabel = $derived(`${selectedEntryPaths.length} selected`)
-  const showScopeControls = $derived(scopeEditMode && !!sourceId)
-  const showEntrySelection = $derived(!!sourceId)
-  const allowSelection = $derived(scopeEditMode && syncMode === "selective")
-
   const displayTree = $derived.by(() => {
-    if (allowSelection) {
-      return selectionTree
+    if (sourceEntries.length === 0) {
+      return entryTree
     }
-    if (syncMode === "selective") {
-      return sourceEntriesTree
-    }
-    return entryTree
+    const allowedPaths = new Set(sourceEntries.map(entry => entry.path))
+    return filterTreeByPaths(entryTree, allowedPaths)
   })
 
-  $effect(() => {
-    if (!isOpen || hasHydratedSelection || syncMode !== "selective") {
+  const showProcessingState = $derived.by(() => {
+    if (!sourceId) {
+      return false
+    }
+    if (!sourceRun) {
+      return true
+    }
+    return sharePointFiles.some(
+      file => file.status === KnowledgeBaseFileStatus.PROCESSING
+    )
+  })
+
+  export function show() {
+    modal?.show()
+  }
+
+  export function hide() {
+    modal?.hide()
+  }
+
+  const handleEdit = async () => {
+    if (!siteId || !onEdit) {
       return
     }
-
-    selectedEntryPaths = rehydrateFromPatterns(
-      initialPatterns,
-      selectablePaths,
-      selectedEntryPaths
-    )
-
-    if (selectablePaths.length > 0 || initialPatterns.length === 0) {
-      hasHydratedSelection = true
+    editing = true
+    try {
+      await onEdit(siteId)
+      hide()
+    } finally {
+      editing = false
     }
-  })
+  }
 </script>
 
 <Modal bind:this={modal}>
@@ -310,11 +167,11 @@
     custom
     showCloseIcon={false}
     showDivider={false}
-    showConfirmButton={scopeEditMode}
-    confirmText={scopeEditMode ? "Save" : "Close"}
-    cancelText={scopeEditMode ? "Cancel" : "Close"}
+    showConfirmButton
+    confirmText="Close"
+    cancelText="Close"
     disabled={!sourceId}
-    onConfirm={handleConfirm}
+    onConfirm={hide}
     onCancel={hide}
   >
     <div class="content">
@@ -322,110 +179,27 @@
         <Body size="S">SharePoint - {selectedSiteLabel}</Body>
       </div>
 
-      {#if showScopeControls}
-        <div class="scope-controls card">
-          <div class="scope-header">
-            <Body size="S">Sync scope</Body>
-          </div>
-          <div class="scope-options">
-            <ActionButton
-              size="S"
-              selected={syncMode === "all"}
-              on:click={() => {
-                syncMode = "all"
-              }}
-            >
-              Sync all files
-            </ActionButton>
-            <ActionButton
-              size="S"
-              selected={syncMode === "selective"}
-              on:click={() => {
-                syncMode = "selective"
-                if (selectedEntryPaths.length === 0) {
-                  selectedEntryPaths = [...selectablePaths]
-                }
-              }}
-            >
-              Selective sync
-            </ActionButton>
-          </div>
-        </div>
-      {/if}
+      <div class="entries-header">
+        <Body size="M">Synced files</Body>
+        <ActionButton quiet size="S" loading={editing} on:click={handleEdit}>
+          Edit files
+        </ActionButton>
+      </div>
 
-      {#if showEntrySelection}
-        <div class="entries-header">
-          <Body size="M">
-            {#if scopeEditMode}
-              {#if syncMode === "all"}
-                All files will be synced
-              {:else}
-                Select folders to sync
-              {/if}
-            {/if}
-          </Body>
-          {#if !scopeEditMode}
-            <ActionButton
-              quiet
-              size="S"
-              loading={loadingAllSourceEntries}
-              on:click={async () => {
-                await loadAllSourceEntries()
-                scopeEditMode = true
-                if (
-                  syncMode === "selective" &&
-                  selectedEntryPaths.length === 0
-                ) {
-                  selectedEntryPaths = [...selectablePaths]
-                }
-              }}
-            >
-              Edit files
-            </ActionButton>
-          {/if}
-          {#if allowSelection}
-            <ActionButton
-              quiet
-              size="S"
-              on:click={() => {
-                toggleAll()
-              }}
-              disabled={syncMode !== "selective"}
-            >
-              {selectAllLabel}
-            </ActionButton>
-            <span class="selected-count">{selectedCountLabel}</span>
-          {/if}
+      {#if displayTree.length === 0}
+        <Body size="S">
+          {showProcessingState
+            ? "SharePoint sync is in progress. Files will appear here shortly."
+            : "No selected files found for this site."}
+        </Body>
+      {:else}
+        <div class="entries-list">
+          <TreeView width="100%" standalone={false} quiet>
+            {#each displayTree as node (node.path)}
+              <SharePointEntryTreeItem {node} />
+            {/each}
+          </TreeView>
         </div>
-
-        {#if allowSelection && (loadingSourceEntries || loadingAllSourceEntries)}
-          <Body size="S">Loading SharePoint files...</Body>
-        {:else if displayTree.length === 0}
-          <Body size="S">
-            {allowSelection
-              ? "No folders or files found for this site."
-              : showProcessingState
-                ? "SharePoint sync is in progress. Files will appear here shortly."
-                : "No folders or files found for this site."}
-          </Body>
-        {:else}
-          <div class="entries-list">
-            <TreeView
-              width="100%"
-              standalone={false}
-              selectable={allowSelection}
-              quiet
-            >
-              {#each displayTree as node (node.path)}
-                <SharePointEntryTreeItem
-                  {node}
-                  selectedPaths={selectedEntryPaths}
-                  onTogglePaths={toggleEntryPaths}
-                />
-              {/each}
-            </TreeView>
-          </div>
-        {/if}
       {/if}
     </div>
   </ModalContent>
@@ -451,32 +225,8 @@
     gap: var(--spacing-xs);
   }
 
-  .card {
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 8px;
-    background: var(--spectrum-global-color-gray-100);
-  }
-
-  .scope-controls {
-    margin-top: var(--spacing-xs);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-    padding: var(--spacing-s);
-  }
-
-  .scope-header {
-    display: flex;
-    align-items: center;
-  }
-
-  .scope-options {
-    display: flex;
-    gap: var(--spacing-xs);
-  }
-
-  .scope-options :global(button) {
-    border-radius: 999px;
+  .entries-header :global(.spectrum-ActionButton:first-of-type) {
+    margin-left: auto;
   }
 
   .entries-list {
@@ -493,14 +243,5 @@
     min-height: 30px;
     border-radius: 6px;
     padding-inline-end: 8px;
-  }
-
-  .entries-header :global(.spectrum-ActionButton:first-of-type) {
-    margin-left: auto;
-  }
-
-  .selected-count {
-    color: var(--spectrum-global-color-gray-600);
-    font-size: 12px;
   }
 </style>

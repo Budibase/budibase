@@ -25,6 +25,7 @@
     toSharePointConnectionRows,
   } from "./knowledgeTableRows"
   import DisplaySharePointSiteModal from "./DisplaySharePointSiteModal.svelte"
+  import SelectSharePointFilesModal from "./SelectSharePointFilesModal.svelte"
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let activeAgentId = $derived(currentAgent?._id)
@@ -74,6 +75,7 @@
   )
   let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
   let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
+  let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
   let selectedSharePointSiteId = $state("")
   let shouldOpenSharePointPickerAfterOauth = $state(false)
   let activePendingUploads = $derived(
@@ -241,15 +243,12 @@
     const agentId = currentAgent?._id
     if (!agentId) {
       agentsStore.stopAgentFilePolling()
-      agentsStore.stopAgentKnowledgeSourcePolling()
       return
     }
 
     agentsStore.startAgentFilePolling(agentId)
-    agentsStore.startAgentKnowledgeSourcePolling(agentId)
     return () => {
       agentsStore.stopAgentFilePolling()
-      agentsStore.stopAgentKnowledgeSourcePolling()
     }
   })
 
@@ -331,7 +330,7 @@
     selectedSharePointSiteId = siteId
     selectSharePointSiteModal?.hide()
     if (mode === "selective") {
-      displaySharePointSiteModal?.show()
+      selectSharePointFilesModal?.show()
     }
   }
 
@@ -340,8 +339,18 @@
     if (!agentId) {
       return
     }
+    await agentsStore.fetchAgentKnowledgeSourceEntries(agentId, siteId)
     selectedSharePointSiteId = siteId
     displaySharePointSiteModal?.show()
+  }
+
+  async function openSharePointSiteSelectionModal(siteId: string) {
+    const agentId = currentAgent?._id
+    if (!agentId) {
+      return
+    }
+    selectedSharePointSiteId = siteId
+    await selectSharePointFilesModal?.show()
   }
 
   async function syncSharePointNow(sourceIds: string[]) {
@@ -424,7 +433,6 @@
 
   onDestroy(() => {
     agentsStore.stopAgentFilePolling()
-    agentsStore.stopAgentKnowledgeSourcePolling()
   })
 </script>
 
@@ -477,7 +485,14 @@
   bind:this={displaySharePointSiteModal}
   agentId={currentAgent?._id}
   siteId={selectedSharePointSiteId}
+  onEdit={openSharePointSiteSelectionModal}
 ></DisplaySharePointSiteModal>
+
+<SelectSharePointFilesModal
+  bind:this={selectSharePointFilesModal}
+  agentId={currentAgent?._id}
+  siteId={selectedSharePointSiteId}
+/>
 
 <style>
   .section-header {
