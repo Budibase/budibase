@@ -30,6 +30,7 @@ import {
   isCronTrigger,
   isEmailTrigger,
   isLogicalFilter,
+  EscalationStepInputs,
   LoopV2Step,
   LoopV2StepInputs,
 } from "@budibase/types"
@@ -440,6 +441,24 @@ class Orchestrator {
       }
       await enrichBaseContext(ctx)
 
+      // Restore prior step bindings when resuming after an escalation suspension.
+      // Replays the same index assignments as addToContext() so that bindings like
+      // {{ steps.stepName.x }} and {{ steps[n].x }} resolve correctly in remaining steps.
+      const resumeContext = this.job.data.event.resumeContext
+      if (resumeContext) {
+        ctx.state = resumeContext.state
+        for (const result of resumeContext.stepResults) {
+          ctx.steps[result.id] = result.outputs
+          ctx.steps[result.name || result.id] = result.outputs
+          ctx.stepsById[result.id] = result.outputs
+          ctx.stepsByName[result.name || result.id] = result.outputs
+          ctx.steps[ctx._stepIndex] = result.outputs
+          ctx._stepIndex++
+          ctx._stepResults.push(result)
+          ctx.previous = result.outputs
+        }
+      }
+
       const timeout =
         this.job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT
 
@@ -451,7 +470,12 @@ class Orchestrator {
         )
         stepResults = outputs
         if (this.stopped) {
-          result.status = AutomationStatus.STOPPED
+          const wasSuspended = stepResults.some(
+            s => s.outputs.status === AutomationStatus.SUSPENDED
+          )
+          result.status = wasSuspended
+            ? AutomationStatus.SUSPENDED
+            : AutomationStatus.STOPPED
         } else if (this.hasErrored(ctx)) {
           result.status = AutomationStatus.ERROR
         }
@@ -490,6 +514,7 @@ class Orchestrator {
         [AutomationStatus.SUCCESS]: "success",
         [AutomationStatus.ERROR]: "error",
         [AutomationStatus.STOPPED]: "stopped",
+        [AutomationStatus.SUSPENDED]: "stopped",
       }
 
       this.onProgress?.({
@@ -519,6 +544,9 @@ class Orchestrator {
           return "error"
         }
         if (result.outputs.status === AutomationStatus.STOPPED) {
+          return "stopped"
+        }
+        if (result.outputs.status === AutomationStatus.SUSPENDED) {
           return "stopped"
         }
         return "success"
@@ -863,7 +891,20 @@ class Orchestrator {
         // function that runs it. EXECUTE_BASH also handles its own templating
         // so it can reject bindings in the command name while still allowing
         // templated args. So we skip this next bit for those steps.
+        //
+        // For ESCALATION, resolutionStrategy is stored as an encoded JS binding and
+        // must be preserved as-is so the escalation processor can decode and run
+        // it later. Strip it before processObject then restore it after.
+        const escalationInputs =
+          step.stepId === AutomationActionStepId.ESCALATION
+            ? (inputs as EscalationStepInputs)
+            : undefined
+        const resolutionStrategy = escalationInputs?.resolutionStrategy
         inputs = await processObject(inputs, ctx)
+        if (escalationInputs && resolutionStrategy !== undefined) {
+          ;(inputs as EscalationStepInputs).resolutionStrategy =
+            resolutionStrategy
+        }
       }
 
       inputs = automationUtils.cleanInputValues(
@@ -879,6 +920,8 @@ class Orchestrator {
             appId: this.appId,
             emitter: this.emitter,
             context: ctx,
+            automationId: this.automation._id,
+            stepId: step.id,
           })
         )
       } catch (err: any) {
@@ -902,6 +945,10 @@ class Orchestrator {
         outputs.status === AutomationStatus.STOPPED
       ) {
         this.stopped = true
+      }
+      if (step.stepId === AutomationActionStepId.ESCALATION) {
+        this.stopped = true
+        ;(outputs as any).status = AutomationStatus.SUSPENDED
       }
 
       span.addTags({ outputsKeys: Object.keys(outputs) })

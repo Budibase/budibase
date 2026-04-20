@@ -17,6 +17,7 @@ import { AddressInfo } from "net"
 import * as api from "../api"
 import * as automations from "../automations"
 import * as bullboard from "../automations/bullboard"
+import * as escalation from "../escalation/queue"
 import env from "../environment"
 import { default as eventEmitter, init as eventInit } from "../events"
 import { automationsEnabled, printFeatures } from "../features"
@@ -173,6 +174,7 @@ export async function startup(
     )
   )
   queuePromises.push(rag.queue.init())
+  queuePromises.push(escalation.init())
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())

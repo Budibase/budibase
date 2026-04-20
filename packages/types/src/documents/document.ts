@@ -54,6 +54,8 @@ export enum DocumentType {
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
   AUTO_COLUMN_STATE = "autocolumn_state",
+  ESCALATION_CONTEXT = "escalation_context",
+  ESCALATION_NOTIFICATION = "escalation_notification",
 }
 
 // these are the core documents that make up the data, design

@@ -8,6 +8,7 @@ import { UserSyncProcessor } from "../events/docUpdates/syncUsers"
 import * as automation from "../threads/automation"
 import { getAppMigrationQueue } from "../workspaceMigrations/queue"
 import { rag } from "../sdk/workspace/ai"
+import * as escalation from "../escalation/queue"
 
 export const automationQueue = new queue.BudibaseQueue<AutomationData>(
   queue.JobQueue.AUTOMATION,
@@ -43,6 +44,7 @@ export async function init() {
 
   queues.push(new BullAdapter(UserSyncProcessor.queue.getBullQueue()))
   queues.push(new BullAdapter(rag.queue.getQueue().getBullQueue()))
+  queues.push(new BullAdapter(escalation.getQueue().getBullQueue()))
 
   const serverAdapter = new KoaAdapter()
   createBullBoard({ queues, serverAdapter })
