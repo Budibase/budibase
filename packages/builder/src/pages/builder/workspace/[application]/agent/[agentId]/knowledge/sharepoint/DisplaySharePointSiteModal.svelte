@@ -30,7 +30,6 @@
     )
   })
 
-  const sourceId = $derived(sharePointSource?.id)
   const selectedSiteLabel = $derived(
     sharePointSource?.config.site?.name ||
       sharePointSource?.config.site?.webUrl ||
@@ -38,35 +37,28 @@
       ""
   )
 
-  const getKnowledgeSourceFiles = (
-    files: KnowledgeBaseFile[],
-    knowledgeSourceId?: string,
-    sharePointSiteId?: string
-  ): KnowledgeBaseFile[] =>
-    files.filter(file => {
-      if (knowledgeSourceId && file.knowledgeSourceId === knowledgeSourceId) {
-        return true
-      }
-      return (
-        !!sharePointSiteId &&
-        !!file.originFileId?.startsWith(`sharepoint:${sharePointSiteId}:`)
-      )
-    })
-
   const sharePointFiles = $derived.by(() => {
-    if (!agentId || !sourceId) {
+    if (!agentId || !siteId) {
       return [] as KnowledgeBaseFile[]
     }
     const files = $agentsStore.knowledgeByAgentId[agentId]?.files || []
-    return getKnowledgeSourceFiles(files, sourceId, siteId)
+    const sharepointFiles = files.filter(file => {
+      if (siteId && file.knowledgeSourceId === siteId) {
+        return true
+      }
+      return (
+        !!siteId && !!file.originFileId?.startsWith(`sharepoint:${siteId}:`)
+      )
+    })
+    return sharepointFiles
   })
 
   const sourceRun = $derived.by(() => {
-    if (!agentId || !sourceId) {
+    if (!agentId || !siteId) {
       return undefined
     }
     const runs = $agentsStore.knowledgeByAgentId[agentId]?.sourceRuns || []
-    return runs.find(run => run.sourceId === sourceId)
+    return runs.find(run => run.sourceId === siteId)
   })
 
   const entryTree = $derived(
@@ -82,7 +74,7 @@
   )
 
   const showProcessingState = $derived.by(() => {
-    if (!sourceId) {
+    if (!siteId) {
       return false
     }
     if (!sourceRun) {
@@ -115,15 +107,12 @@
   <ModalContent
     title={`SharePoint - ${selectedSiteLabel}`}
     showDivider={false}
-    disabled={!sourceId}
-    onConfirm={hide}
-    onCancel={hide}
+    disabled={!siteId}
     size="XL"
-    showConfirmButton={false}
-    showCancelButton={false}
-    showSecondaryButton
-    secondaryButtonText="Edit files"
-    secondaryAction={handleEdit}
+    confirmText="Edit files"
+    onConfirm={handleEdit}
+    onCancel={hide}
+    showCloseIcon={false}
   >
     {#if entryTree.length === 0}
       <Body size="S">
@@ -150,13 +139,9 @@
     overflow: auto;
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 8px;
-    padding: var(--spacing-xs);
-    background: var(--spectrum-global-color-gray-100);
   }
 
   .entries-list :global(.spectrum-TreeView-itemLink) {
-    min-height: 30px;
-    border-radius: 6px;
     padding-inline-end: 8px;
   }
 </style>
