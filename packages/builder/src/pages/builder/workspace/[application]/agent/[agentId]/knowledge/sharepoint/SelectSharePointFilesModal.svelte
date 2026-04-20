@@ -74,12 +74,18 @@
       return
     }
     loadingEntries = true
+    allEntries = []
     try {
       const response = await agentsStore.fetchAgentKnowledgeSourceAllEntries(
         agentId,
         siteId
       )
       allEntries = response.entries
+    } catch (error) {
+      console.error(error)
+      notifications.error(
+        "Failed to load SharePoint files. Check your network connection and try again."
+      )
     } finally {
       loadingEntries = false
     }

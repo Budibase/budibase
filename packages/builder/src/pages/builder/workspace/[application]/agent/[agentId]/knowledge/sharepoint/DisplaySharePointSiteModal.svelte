@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Modal, ModalContent, TreeView } from "@budibase/bbui"
+  import { Body, Modal, ModalContent, TreeView, notifications } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
     type KnowledgeBaseFile,
@@ -85,8 +85,15 @@
       return
     }
 
-    await onEdit(siteId)
-    hide()
+    try {
+      await onEdit(siteId)
+      hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error(
+        "Failed to load SharePoint files. Check your network connection and try again."
+      )
+    }
   }
 </script>
 
